@@ -88,6 +88,12 @@ header.suite-nav{position:fixed;top:0;left:0;right:0;z-index:35;display:flex;ali
 .ib-btn.on{background:var(--accent);color:#05070b;font-weight:700}
 .ib-lbl{font:600 9.5px IBM Plex Mono;color:var(--faint);padding:0 4px;text-transform:uppercase;letter-spacing:.08em}
 
+/* Live poem verse ticker */
+.linebar{position:fixed;bottom:54px;left:50%;transform:translateX(-50%) translateY(30px);z-index:28;padding:8px 18px;border-radius:12px;background:rgba(5,7,11,.92);border:1px solid var(--line2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;align-items:center;gap:12px;max-width:min(900px,94vw);box-shadow:0 12px 36px rgba(0,0,0,.7);opacity:0;pointer-events:none;transition:opacity .4s,transform .4s}
+.linebar.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.lb-label{font:600 10.5px IBM Plex Mono;color:var(--accent);letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;flex:none}
+.lb-txt{font:400 14px/1.3 Fraunces,serif;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 /* Mobile floating bottom dock */
 #mDock{display:none;position:fixed;bottom:10px;left:10px;right:10px;z-index:30;padding:6px;justify-content:space-around;gap:6px}
 .m-tab{flex:1;font:600 11px Inter;padding:8px 6px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer;text-align:center;min-height:42px;display:flex;align-items:center;justify-content:center}
@@ -189,8 +195,18 @@ body.inside #left{transform:translateX(-290px)}
     <button class="ib-btn" data-s="ink">Ink Only</button>
     <button class="ib-btn" data-s="notan">Notan</button>
   </div>
+  <span class="ib-lbl">Hero:</span>
+  <div class="ib-grp" id="grpHero">
+    <button class="ib-btn on" id="bToggleChar" title="Toggle 2D Cartoon Character on Plane 2">🎭 P2 Character</button>
+    <button class="ib-btn" id="bToggleDrone" title="Toggle ambient drone audio bed">🔊 Drone</button>
+  </div>
   <button class="ib-btn" id="bSnapFront" title="Align camera straight-on with zero distortion">🎯 Snap Frontal</button>
   <button class="ib-btn" id="bCloseInspect" style="color:var(--rose)">✕</button>
+</div>
+
+<div id="linebar" class="linebar">
+  <span class="lb-label" id="lbLabel">—</span>
+  <span class="lb-txt" id="lbTxt">—</span>
 </div>
 
 <aside id="left">
@@ -259,6 +275,9 @@ body.inside #left{transform:translateX(-290px)}
   <button id="bStart">Enter the world</button>
 </div></div>
 
+<script src="cartoon_character.js"></script>
+<script src="film/audio_drone.js"></script>
+<script src="film/poems_data.js"></script>
 <script src="world_data.js"></script>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
@@ -509,6 +528,19 @@ function loadSheets(o) {
     o.grp.add(m); o.sheets.push(m);
     tex(s.backdrop, t => { mat.uniforms.map.value = t; m.visible = true; if (o.sheets && o.sheets.every(x => x.visible)) { o.state = "near"; o.card.visible = false; } });
   }
+
+  // Mount 2D Cartoon Character on Plane 2 (Hero)
+  const p2Sheet = s.sheets.find(x => x.plane === 'P2') || s.sheets[Math.floor(s.sheets.length / 2)];
+  if (p2Sheet && window.CartoonCharacter) {
+    const zh = p2Sheet.z * 0.98;
+    const charMesh = CartoonCharacter.createCharacterMesh(THREE, { worldHeight: o.tw(zh) * 0.28 });
+    charMesh.position.set(0, -o.tw(zh) / s.aspect * 0.20, -zh);
+    charMesh.userData.dio = s.i;
+    charMesh.userData.plane = 'P2';
+    charMesh.visible = showHeroChar;
+    o.grp.add(charMesh);
+    o.heroCharMesh = charMesh;
+  }
 }
 function loadHi(o) {
   if (o.hi || !o.sheets) return; o.hi = true;
@@ -516,6 +548,13 @@ function loadHi(o) {
 }
 function unloadSheets(o) {
   if (!o.sheets) return;
+  if (o.heroCharMesh) {
+    o.heroCharMesh.geometry.dispose();
+    o.heroCharMesh.material.map?.dispose();
+    o.heroCharMesh.material.dispose();
+    o.grp.remove(o.heroCharMesh);
+    o.heroCharMesh = null;
+  }
   for (const m of o.sheets) { m.material.uniforms.map.value?.dispose(); m.geometry.dispose(); m.material.dispose(); o.grp.remove(m); }
   o.sheets = null; o.hi = false; o.state = 'far'; o.card.visible = true;
 }
@@ -603,6 +642,22 @@ $('bSnapFront').onclick = () => {
   camera.position.copy(o.eye); camera.quaternion.copy(o.q);
 };
 
+let showHeroChar = true;
+$('bToggleChar').onclick = () => {
+  showHeroChar = !showHeroChar;
+  $('bToggleChar').classList.toggle('on', showHeroChar);
+  DIO.forEach(o => {
+    if (o && o.heroCharMesh) o.heroCharMesh.visible = showHeroChar;
+  });
+};
+let worldDroneOn = false;
+$('bToggleDrone').onclick = () => {
+  if (!window.AudioDrone) return;
+  worldDroneOn = AudioDrone.toggle();
+  $('bToggleDrone').classList.toggle('on', worldDroneOn);
+  $('bToggleDrone').textContent = worldDroneOn ? '🔊 Drone On' : '🔊 Drone';
+};
+
 // ------------------------------------------------------------------ mobile drawer handling
 function closeDrawers() {
   $('left').classList.remove('open');
@@ -685,6 +740,22 @@ function enterShot(si, opts = {}) {
     document.body.classList.add('inside'); $('frame').classList.add('show');
     fillPanel(o); $('right').classList.add('show');
     setPlaneSolo(soloPlane);
+
+    // Sync poem movement and live verse line ticker
+    const activeReel = W.reels.find(r => r.shots.includes(o.s.id));
+    if (activeReel) {
+      const sData = activeReel.shots.find(x => x.id === o.s.id);
+      const line = sData?.movement_line || sData?.action || '';
+      const lbl = sData?.movement_label || activeReel.title;
+      $('lbLabel').textContent = `${activeReel.num} · ${lbl}`;
+      $('lbTxt').textContent = line ? `“${line}”` : '';
+      $('linebar').classList.add('show');
+      if (activeReel.drone && window.AudioDrone) {
+        AudioDrone.setPoemDrone(activeReel.drone);
+      }
+    } else {
+      $('linebar').classList.remove('show');
+    }
   };
   flyTo(eyePose(o), opts.dur, go, opts.arc !== false);
 }
@@ -693,6 +764,7 @@ function exitInside(silent) {
   DIO.forEach(x => x && (x.grp.visible = true, x.fr.visible = showFrus, x.lan.visible = true));
   ROUTES.forEach(R => R.mesh && (R.mesh.visible = showRoutes));
   document.body.classList.remove('inside'); $('frame').classList.remove('show'); $('right').classList.remove('show');
+  $('linebar').classList.remove('show');
   if (deskMode !== 'world') setDesk('world');
   if (!silent) {
     const back = o.eye.clone().add(new THREE.Vector3(0, 0, 1).applyQuaternion(o.q).multiplyScalar(26)).add(new THREE.Vector3(0, 8, 0));
@@ -728,6 +800,25 @@ function stepInside(dt) {
   camera.quaternion.copy(o.q);
   camera.fov = dioFov(o); camera.updateProjectionMatrix();
   $('lawProg').style.width = (e * 100).toFixed(1) + '%';
+
+  // Animate 2D Cartoon Character on Plane 2
+  if (o.heroCharMesh && showHeroChar) {
+    const cph = I.t * 1.6;
+    const isWalk = o.s.move === 'truck' || o.s.move === 'crane_push';
+    o.heroCharMesh.updatePose({
+      mode: isWalk ? 'walk' : 'stand',
+      phase: cph,
+      face: 1,
+      guise: 'poet',
+      arms: isWalk ? 'swing' : (o.s.move === 'push' ? 'reach' : 'down'),
+      lean: isWalk ? 0.08 : 0.03,
+      breath: 1
+    }, {
+      mode: deskMode === 'notan' ? 'notan' : 'cel',
+      accentTone: o.Dd.d.color
+    });
+  }
+
   if (I.auto && I.t > T + 0.4) { const d = I.onDone; I.onDone = null; d && d(); }
 }
 

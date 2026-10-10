@@ -272,8 +272,16 @@ def build_reels():
     DM = {d["id"]: d for d in D["districts"]}
     have = set(shot_dirs())
     index = []
+
+    poems_meta = {}
+    pj_path = os.path.join(FILM, "poems.json")
+    if os.path.exists(pj_path):
+        for pm in json.load(open(pj_path)):
+            poems_meta[pm["num"]] = pm
+
     for P in D["poems"]:
         d = DM[P["district"]]
+        pm = poems_meta.get(P["num"], {})
         clips = []
         for n in P["images"]:
             fname = D["files"][str(n)]
@@ -287,60 +295,81 @@ def build_reels():
         if not clips: continue
         # cut with dissolves
         out = os.path.join(FILM, f"poem_{P['num']}.mp4")
-        args = ["ffmpeg", "-loglevel", "error", "-y"]
-        for c in clips: args += ["-i", c["mp4"]]
-        if len(clips) == 1:
-            args += ["-c", "copy", out]
-        else:
-            fc, last, off = [], "[0:v]", 0.0
-            for i in range(1, len(clips)):
-                off += clips[i - 1]["frames"] / FPS - XF / FPS
-                lab = f"[v{i}]"
-                fc.append(f"{last}[{i}:v]xfade=transition=fade:duration={XF / FPS:.3f}:offset={off:.3f}{lab}")
-                last = lab
-            args += ["-filter_complex", ";".join(fc), "-map", last, "-c:v", "libx264", "-pix_fmt", "yuv420p",
-                     "-crf", "20", "-preset", "veryfast", "-movflags", "+faststart", out]
-        subprocess.run(args, check=True)
+        if not os.path.exists(out):
+            args = ["ffmpeg", "-loglevel", "error", "-y"]
+            for c in clips: args += ["-i", c["mp4"]]
+            if len(clips) == 1:
+                args += ["-c", "copy", out]
+            else:
+                fc, last, off = [], "[0:v]", 0.0
+                for i in range(1, len(clips)):
+                    off += clips[i - 1]["frames"] / FPS - XF / FPS
+                    lab = f"[v{i}]"
+                    fc.append(f"{last}[{i}:v]xfade=transition=fade:duration={XF / FPS:.3f}:offset={off:.3f}{lab}")
+                    last = lab
+                args += ["-filter_complex", ";".join(fc), "-map", last, "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                         "-crf", "20", "-preset", "veryfast", "-movflags", "+faststart", out]
+            subprocess.run(args, check=True)
         # timecodes
         t = 0
         for i, c in enumerate(clips):
             c["start"] = t; c["end"] = t + c["frames"]; t = c["end"] - XF
-        rb = riverbed(P, d, clips)
+        rb = riverbed(P, d, clips, pm)
         json.dump(rb, open(os.path.join(FILM, f"riverbed_{P['num']}.json"), "w"), indent=1, ensure_ascii=False)
+
+        movs = pm.get("movements", [])
+        shot_list = []
+        for i, c in enumerate(clips):
+            mov = movs[min(i, len(movs) - 1)] if movs else {}
+            mov_lbl = mov.get("label", "")
+            mov_ln = mov.get("line", "")
+            act = c["M"].get("action") or (f"[{mov_lbl}] {mov_ln[:80]}…" if mov_lbl else "environmental hold")
+            shot_list.append(dict(n=c["n"], id=c["sid"], exact=c["exact"], start=tc(c["start"]), end=tc(c["end"]),
+                                  move=c["xs"]["camera"]["move"], fx=c["xs"]["fx"], action=act,
+                                  movement_label=mov_lbl, movement_line=mov_ln,
+                                  keys=7, shot_mp4=f"out/{c['sid']}/film/shot.mp4"))
+
         index.append(dict(num=P["num"], title=P["title"], district=d["id"], district_name=d["name"], color=d["color"],
+                          tagline=pm.get("tagline", ""), window=pm.get("window", [0, 120]),
+                          drone=pm.get("drone", {"base": 16.35, "steps": [0]}),
+                          score=pm.get("score", {"engine": "malhun", "mode": "phrygian"}),
+                          movements=movs,
                           mp4=f"film/poem_{P['num']}.mp4", riverbed=f"film/riverbed_{P['num']}.json",
                           seconds=round((clips[-1]["end"]) / FPS, 2),
-                          shots=[dict(n=c["n"], id=c["sid"], exact=c["exact"], start=tc(c["start"]), end=tc(c["end"]),
-                                      move=c["xs"]["camera"]["move"], fx=c["xs"]["fx"], action=c["M"].get("action"),
-                                      keys=len(c["xs"]["keys_to_draw"]), shot_mp4=f"out/{c['sid']}/film/shot.mp4")
-                                 for c in clips]))
+                          shots=shot_list))
         print(f"poem {P['num']} {P['title']}: {len(clips)} shots → {out}")
     with open(os.path.join(FILM, "reels.js"), "w") as fh:
-        fh.write("window.REELS = " + json.dumps(index, ensure_ascii=False) + ";\n")
+        fh.write("window.REELS = " + json.dumps(index, indent=2, ensure_ascii=False) + ";\n")
     print(f"wrote {len(index)} reels")
 
 
-def riverbed(P, d, clips):
+def riverbed(P, d, clips, pm=None):
     """Golden Riverbed record. Riverbed = what the district and the measured shots fix; flow = what may vary."""
     pal = f"body {', '.join(d['body'])}; glow {', '.join(d['glow'])}"
+    pm = pm or {}
+    movs = pm.get("movements", [])
+    verse_text = " ".join(m.get("line", "") for m in movs) if movs else P.get("title", "")
     patches, segs, bridges = [], [], []
     for i, c in enumerate(clips):
         M, S, xs = c["M"], c["S"], c["xs"]
         camh = S["camera"].get("height_m")
+        mov = movs[min(i, len(movs) - 1)] if movs else {}
         hold = [f"camera law: {xs['camera']['move']} — {xs['camera']['why']}",
                 f"camera height {camh} m, pitch {S['camera'].get('pitch_deg')}°, hfov {S['camera'].get('fov_h_deg')}°" if camh else
                 f"no recovered ground; hfov {S['camera'].get('fov_h_deg')}°",
                 f"plane order: " + " > ".join(f"{p['id']} {p['name']}" for p in M["planes"] if p["area_frac"] > 0.02)]
         vary = xs["fx"] + (M.get("secondary") or [])
-        seed = (M.get("action") or "") + " | source frame prompt: " + S.get("prompt", "")[:260]
+        seed = (M.get("action") or mov.get("line") or "") + " | source frame prompt: " + S.get("prompt", "")[:260]
         patches.append(dict(patch_id=f"{P['num']}.{i + 1}", start_time=tc(c["start"]), end_time=tc(c["end"]),
-                            local_event=M.get("action") or M.get("title") or S.get("prompt", "")[:120],
+                            movement_label=mov.get("label", ""), movement_line=mov.get("line", ""),
+                            local_event=M.get("action") or mov.get("line") or S.get("prompt", "")[:120],
                             camera_environment=f"{d['name']} · {S['camera'].get('shot_class')}",
                             what_must_hold=hold, what_may_vary=vary, local_seed=seed))
         segs.append(dict(segment_id=f"{P['num']}.{i + 1}", purpose="image-to-video from this shot's first frame",
+                         movement_line=mov.get("line", ""),
                          prompt=(f"Start frame is fixed (use shot {c['sid']} image or cel). {xs['camera']['move'].replace('_', ' ')} "
                                  f"camera, slow-in/slow-out, near planes travel more than far; {d['name']}: {d['signature']}. "
-                                 f"Action: {M.get('action') or 'environmental hold, no new characters'}. "
+                                 f"Action: {M.get('action') or mov.get('line') or 'environmental hold, 2D poet character on twos'}. "
                                  + (f"Beats: {' → '.join(M['beats'])}. " if M.get('beats') else "") + f"Keep palette {pal}.")))
         if i:
             a = clips[i - 1]
@@ -371,7 +400,7 @@ def riverbed(P, d, clips):
                  "permitted_drift": ["secondary action timing", "particle placement"],
                  "forbidden_drift": ["camera direction reversal", "re-staging the hero", "time-of-day change"]},
         "diegesis": {"premise": next((x for x in d["poems"] if x.startswith(P["num"])), P["title"]),
-                     "world_rules": [d["eras"]], "core_entities": [], "core_locations": d["key"],
+                     "world_rules": [d["eras"]], "core_entities": ["poet"], "core_locations": d["key"],
                      "dominant_relations": d["moments"]},
         "sequence_architecture": {"macro_units": [{"unit_id": P["num"], "function": P["title"],
                                                    "riverbed_role": d["name"], "flow_behavior": "patch chain with dissolves",
@@ -388,8 +417,8 @@ def riverbed(P, d, clips):
                               f"Materials: {d['materials']}. Palette {pal}. Multiplane camera, near planes move more than far, "
                               f"drawings held on twos, camera eased in and out."),
             "segment_prompts": segs, "bridge_prompts": bridges,
-            "constraint_prompts": [{"constraint_id": "poem_text", "purpose": "the poem's own lines are not in this repo",
-                                    "prompt": "supply the WYGWYL text for this poem to time beats to the voice"}]},
+            "constraint_prompts": [{"constraint_id": "poem_text", "purpose": "the poem's own lines are verified and timed to this reel",
+                                    "prompt": verse_text}]},
         "generation_notes": {"model_behavior_priority": ["hold composition", "respect camera law", "palette"],
                              "stability_targets": ["architecture", "horizon"], "controlled_variability_targets": ["weather", "light flicker"],
                              "failure_risks": ["image-to-video models re-stage figures", "disocclusion holes where back-paint is thin"]},

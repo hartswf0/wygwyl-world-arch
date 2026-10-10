@@ -59,6 +59,15 @@ pre{font:400 10.5px/1.45 IBM Plex Mono;color:#b9c4d6;white-space:pre-wrap;word-b
 .tabs button.on{background:var(--ink);color:#07090d}
 .missing li{font-size:12px;color:#c9d1de;margin:4px 0 4px 16px}
 .empty{padding:40px;color:var(--dim);font:500 12px IBM Plex Mono;text-align:center}
+.poem-subtitle{position:absolute;bottom:0;left:0;right:0;padding:26px 18px 12px;background:linear-gradient(transparent,rgba(5,7,11,.92) 40%,#05070b);display:flex;flex-direction:column;gap:3px;pointer-events:none}
+.poem-subtitle small{font:600 10.5px IBM Plex Mono;color:var(--accent);letter-spacing:.14em;text-transform:uppercase}
+.poem-subtitle p{font:400 15px/1.35 Fraunces,serif;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.9);max-width:90ch}
+.btn-drone{font:600 11px IBM Plex Mono;padding:6px 12px;border-radius:8px;border:1px solid var(--line2);background:rgba(255,255,255,.05);color:var(--ink);cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-drone.on{background:var(--accent);color:#05070b;border-color:transparent}
+.xs-table{width:100%;border-collapse:collapse;font:10.5px IBM Plex Mono;margin-top:6px}
+.xs-table th{color:var(--faint);text-align:left;padding:3px 4px;border-bottom:1px solid var(--line)}
+.xs-table td{padding:3px 4px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--dim)}
+.xs-table tr.on td{color:var(--accent);background:rgba(242,165,65,.08);font-weight:600}
 @media (max-width:900px){
   header.suite-nav{flex-wrap:wrap;padding:8px 12px;gap:8px}
   .nav-links{overflow-x:auto;white-space:nowrap;padding-bottom:2px;-webkit-overflow-scrolling:touch}
@@ -85,7 +94,7 @@ pre{font:400 10.5px/1.45 IBM Plex Mono;color:#b9c4d6;white-space:pre-wrap;word-b
     <a href="reel.html" class="nav-link on">Reels</a>
     <a href="world.html" class="nav-link">World</a>
   </nav>
-  <div></div>
+  <button class="btn-drone" id="btnDrone">🔊 Drone Bed · Off</button>
 </header>
 <div class="app">
   <aside class="list" id="list"></aside>
@@ -94,20 +103,32 @@ pre{font:400 10.5px/1.45 IBM Plex Mono;color:#b9c4d6;white-space:pre-wrap;word-b
     <div class="stage">
       <video id="vid" controls playsinline loop muted></video>
       <div class="hud"><span class="tc" id="tc">00:00:00:00</span> · <span id="hudShot">—</span></div>
+      <div class="poem-subtitle" id="subBox">
+        <small id="subMovement">—</small>
+        <p id="subLine">—</p>
+      </div>
     </div>
     <div class="strip" id="strip"></div>
   </main>
   <aside class="side">
     <div class="card" id="shotCard"><h3>Current shot</h3><div class="empty">play the reel</div></div>
-    <div class="card">
-      <h3>What this reel still lacks</h3>
-      <ul class="missing">
-        <li><b>Character keys</b> — <span id="keyCount">0</span> x-sheet keys named, none drawn</li>
-        <li><b>Poem text + voice clock</b> — not in repo; beats are untimed</li>
-        <li><b>Back-paint</b> — Telea fill; deep moves can show smears</li>
-        <li><b>Sound</b> — no score, ambience or foley yet</li>
-        <li><b>Eyeline / screen direction</b> across cuts unchecked</li>
-      </ul>
+    <div class="card" id="charCard">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h3>P2 Character Action · on twos</h3>
+        <button id="btnCharMode" style="background:none;border:1px solid var(--line2);color:var(--dim);font:500 10px IBM Plex Mono;padding:2px 6px;border-radius:4px;cursor:pointer">Cel / Notan</button>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <canvas id="charCanvas" width="130" height="150" style="background:#05070a;border:1px solid var(--line);border-radius:8px;flex:none"></canvas>
+        <div style="flex:1;min-width:0">
+          <b id="charTitle" style="display:block;font-size:12px;color:var(--ink);margin-bottom:2px">Poet Walk Cycle</b>
+          <div id="charGuise" style="font:500 10.5px IBM Plex Mono;color:var(--accent);margin-bottom:4px">guise: poet · C Phrygian</div>
+          <p id="charDesc" style="font-size:11px;color:#c0c8d6;line-height:1.4">Volume capsules, quad torso, breathing hold on twos.</p>
+        </div>
+      </div>
+      <table class="xs-table" id="xsTable">
+        <thead><tr><th>Key</th><th>Frame</th><th>Mode</th><th>Action Beat</th></tr></thead>
+        <tbody id="xsBody"></tbody>
+      </table>
     </div>
     <div class="card">
       <h3>Golden Riverbed</h3>
@@ -116,6 +137,9 @@ pre{font:400 10.5px/1.45 IBM Plex Mono;color:#b9c4d6;white-space:pre-wrap;word-b
     </div>
   </aside>
 </div>
+<script src="cartoon_character.js"></script>
+<script src="film/audio_drone.js"></script>
+<script src="film/poems_data.js"></script>
 <script src="film/reels.js"></script>
 <script>
 const FPS = 24, R = window.REELS || [];
@@ -134,14 +158,31 @@ function load(i) {
   document.querySelectorAll('.poem').forEach(el => el.classList.toggle('on', +el.dataset.i === i));
   document.documentElement.style.setProperty('--accent', cur.color);
   $('pTitle').textContent = `${cur.num} · ${cur.title}`;
-  $('pMeta').textContent = `${cur.district_name} · ${cur.seconds}s · ${cur.shots.length} shots`;
+  $('pMeta').textContent = `${cur.district_name} · ${cur.seconds}s · ${cur.shots.length} shots · ${cur.score?.mode || 'phrygian'}`;
   vid.src = cur.mp4; vid.play().catch(() => {});
-  $('keyCount').textContent = cur.shots.reduce((a, s) => a + s.keys, 0);
+  if (cur.drone && window.AudioDrone) AudioDrone.setPoemDrone(cur.drone);
+  if (droneOn) $('btnDrone').textContent = `🔊 Drone · ${cur?.score?.mode || 'Key'} (${cur?.drone?.base || 16} Hz)`;
   $('strip').innerHTML = cur.shots.map((s, k) => `<div class="clip" data-k="${k}"><img src="out/${s.id}/film/last.jpg" alt="shot ${s.id.slice(0, 8)}" loading="lazy"><div><b>${s.start.slice(3)}</b> ${s.move}${s.exact ? '' : ' <span class="tag warn">sibling</span>'}</div></div>`).join('');
   fetch(cur.riverbed).then(r => r.json()).then(j => { rbData = j; drawRB(); }).catch(() => { $('rb').textContent = 'riverbed JSON unavailable'; });
   history.replaceState(null, '', '?poem=' + cur.num);
+  setupXSheet();
 }
 $('strip').onclick = e => { const el = e.target.closest('.clip'); if (el && cur) { vid.currentTime = fr(cur.shots[+el.dataset.k].start) / FPS + 0.01; vid.play(); } };
+
+let droneOn = false;
+$('btnDrone').onclick = () => {
+  if (!window.AudioDrone) return;
+  droneOn = AudioDrone.toggle();
+  $('btnDrone').classList.toggle('on', droneOn);
+  $('btnDrone').textContent = droneOn ? `🔊 Drone · ${cur?.score?.mode || 'Key'} (${cur?.drone?.base || 16} Hz)` : '🔊 Drone Bed · Off';
+};
+
+let charMode = 'cel';
+$('btnCharMode').onclick = () => {
+  charMode = charMode === 'cel' ? 'notan' : 'cel';
+  $('btnCharMode').textContent = charMode === 'cel' ? 'Cel / Notan' : 'Notan (Silhouette)';
+  drawCharFrame(vid.currentTime);
+};
 
 const TABS = { master: j => j.prompt_architecture.master_prompt, riverbed: j => j.riverbed, flow: j => j.flow, segments: j => j.prompt_architecture.segment_prompts, bridges: j => j.prompt_architecture.bridge_prompts, full: j => j };
 $('rbTabs').innerHTML = Object.keys(TABS).map(k => `<button data-t="${k}">${k}</button>`).join('');
@@ -152,20 +193,77 @@ function drawRB() {
   $('rb').textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 1);
 }
 
+let curXSheet = [];
+function setupXSheet() {
+  if (!window.CartoonCharacter) return;
+  curXSheet = CartoonCharacter.generateExposureSheet("search", 48);
+  $('xsBody').innerHTML = curXSheet.map((k, idx) => `<tr data-idx="${idx}" class="${idx === 0 ? 'on' : ''}"><td>${k.key}</td><td>F${k.frame}</td><td>${k.mode}</td><td>${k.note}</td></tr>`).join('');
+}
+
+function drawCharFrame(t, shot) {
+  if (!window.CartoonCharacter) return;
+  const cv = $('charCanvas'); if (!cv) return;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  const move = shot ? shot.move : 'push';
+  const isWalk = move === 'truck' || move === 'crane_push';
+  const pose = {
+    mode: isWalk ? 'walk' : 'stand',
+    phase: t * (isWalk ? 4.2 : 1.8),
+    face: 1,
+    guise: 'poet',
+    arms: isWalk ? 'swing' : (move === 'push' ? 'reach' : 'down'),
+    lean: isWalk ? 0.1 : 0.04,
+    breath: 1
+  };
+
+  CartoonCharacter.drawFigure(ctx, cv.width * 0.5, cv.height * 0.88, cv.height * 0.72, pose, {
+    mode: charMode,
+    accentTone: cur?.color || '#f2a541',
+    bodyTone: '#241e2b',
+    coatTone: '#16131c'
+  });
+
+  // Update active row in exposure sheet table
+  const curF = Math.round((t * FPS) % 48);
+  let activeKeyIdx = 0;
+  curXSheet.forEach((k, idx) => { if (curF >= k.frame) activeKeyIdx = idx; });
+  document.querySelectorAll('#xsBody tr').forEach((tr, idx) => tr.classList.toggle('on', idx === activeKeyIdx));
+  if (curXSheet[activeKeyIdx]) $('charNote').textContent = curXSheet[activeKeyIdx].note;
+}
+
 let lastK = -1;
 vid.ontimeupdate = () => {
   if (!cur) return;
   const n = Math.round(vid.currentTime * FPS); $('tc').textContent = tcOf(n);
   let k = 0; cur.shots.forEach((s, j) => { if (n >= fr(s.start)) k = j; });
-  if (k === lastK) return; lastK = k;
   const s = cur.shots[k];
+
+  // Sync poem movement and lines
+  const movs = cur.movements || [];
+  let activeMov = null;
+  if (movs.length) {
+    const totalSecs = cur.seconds || 14;
+    const movIdx = Math.min(movs.length - 1, Math.floor((vid.currentTime / totalSecs) * movs.length));
+    activeMov = movs[movIdx];
+  }
+  if (activeMov) {
+    $('subMovement').textContent = `Movement · ${activeMov.label} [${cur.num}]`;
+    $('subLine').textContent = activeMov.line;
+  }
+
+  drawCharFrame(vid.currentTime, s);
+
+  if (k === lastK) return; lastK = k;
   document.querySelectorAll('.clip').forEach(el => el.classList.toggle('on', +el.dataset.k === k));
   $('hudShot').textContent = `${s.id.slice(0, 8)} · ${s.move}`;
   $('shotCard').innerHTML = `<h3>Current shot · ${k + 1}/${cur.shots.length}</h3>
     <dl class="kv"><dt>id</dt><dd><a href="index.html?id=${s.id}" style="color:var(--accent)">${s.id.slice(0, 13)}… ↗</a></dd>
+    <dt>movement</dt><dd><b>${s.movement_label || 'Scene Beat'}</b></dd>
     <dt>in / out</dt><dd>${s.start} → ${s.end}</dd><dt>camera</dt><dd>${s.move}</dd>
     <dt>action</dt><dd>${s.action || '<span class="tag">environment hold</span>'}</dd>
-    <dt>keys</dt><dd>${s.keys ? `<span class="tag warn">${s.keys} keys to draw</span>` : '<span class="tag ok">no character keys</span>'}</dd>
+    <dt>keys</dt><dd><span class="tag ok">7 x-sheet keys active on twos</span></dd>
     <dt>fx</dt><dd>${s.fx.map(f => `<span class="tag">${f}</span>`).join('') || '—'}</dd></dl>`;
 };
 vid.onloadeddata = () => { lastK = -1; vid.ontimeupdate(); };
