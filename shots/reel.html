@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WYGWYL · Reels — Multiplane Animatics per Poem</title>
+<meta name="description" content="Per-poem multiplane animatic reels for Where You Go When You Leave: camera law, parallax, secondary action, open character keys and Golden Riverbed prompt records.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07090d;--panel:#0d1118;--panel2:#121823;--line:#1e2633;--line2:#2a3446;--ink:#e8ecf3;--dim:#8a95a8;--faint:#566074;--amber:#f2a541;--teal:#2ad4c0;--indigo:#7c8cff;--rose:#ff6b8b;--accent:#f2a541}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:radial-gradient(1200px 600px at 80% -10%,#16203a 0%,transparent 60%),radial-gradient(900px 500px at -10% 110%,#2a1a10 0%,transparent 55%),var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif;overflow:hidden}
+a{color:inherit;text-decoration:none}
+header.suite-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;background:rgba(9,12,18,.8);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
+.suite-brand{display:flex;align-items:center;gap:10px}
+.suite-brand h1{font:700 18px/1 Fraunces,serif}
+.suite-brand h1 span{background:linear-gradient(90deg,var(--amber),var(--rose) 50%,var(--indigo));-webkit-background-clip:text;background-clip:text;color:transparent}
+.suite-brand small{font:500 10.5px IBM Plex Mono,monospace;color:var(--dim);border-left:1px solid var(--line);padding-left:10px;text-transform:uppercase;letter-spacing:.1em}
+.nav-links{display:flex;gap:4px}
+.nav-link{font:500 12px Inter;padding:6px 12px;border-radius:8px;color:var(--dim);border:1px solid transparent;transition:.2s}
+.nav-link:hover{color:var(--ink);background:var(--panel)}
+.nav-link.on{background:var(--panel2);color:var(--ink);border-color:var(--line2)}
+.app{display:grid;grid-template-columns:260px 1fr 400px;height:calc(100vh - 49px)}
+aside.list{border-right:1px solid var(--line);overflow:auto;padding:10px}
+.poem{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;cursor:pointer;border:1px solid transparent;transition:.2s}
+.poem:hover{background:var(--panel)}
+.poem.on{background:var(--panel2);border-color:var(--line2)}
+.poem .sw{width:8px;height:34px;border-radius:4px;flex:none}
+.poem b{font:600 12.5px Inter;display:block}
+.poem i{font:400 10.5px IBM Plex Mono;color:var(--dim);font-style:normal}
+main{display:flex;flex-direction:column;gap:12px;padding:14px 18px;min-width:0;min-height:0}
+.stage{position:relative;background:#000;border:1px solid var(--line);border-radius:14px;overflow:hidden;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px -30px rgba(0,0,0,.8)}
+.stage video{max-width:100%;max-height:100%;display:block}
+.hud{position:absolute;left:14px;top:12px;font:500 11px IBM Plex Mono;background:rgba(0,0,0,.55);padding:6px 10px;border-radius:8px;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08)}
+.hud .tc{color:var(--accent);font-weight:600}
+.title{display:flex;align-items:baseline;gap:12px}
+.title h2{font:700 24px Fraunces,serif}
+.title span{font:500 11px IBM Plex Mono;color:var(--dim);text-transform:uppercase;letter-spacing:.1em}
+.strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.clip{flex:none;width:150px;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;transition:.2s}
+.clip:hover{transform:translateY(-2px);border-color:var(--line2)}
+.clip.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.clip img{width:100%;height:84px;object-fit:cover;display:block}
+.clip div{padding:6px 8px;font:500 10px IBM Plex Mono;color:var(--dim)}
+.clip div b{color:var(--ink)}
+.tag{display:inline-block;padding:1px 6px;border-radius:5px;background:var(--panel2);border:1px solid var(--line2);margin:2px 2px 0 0;font:500 10px IBM Plex Mono;color:var(--dim)}
+.tag.warn{color:var(--rose);border-color:#4a2230}
+.tag.ok{color:var(--teal);border-color:#164a44}
+aside.side{border-left:1px solid var(--line);overflow:auto;padding:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+.card h3{font:600 11px IBM Plex Mono;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+.card p{font-size:12.5px;color:#c9d1de}
+.kv{display:grid;grid-template-columns:90px 1fr;gap:4px 8px;font-size:12px}
+.kv dt{color:var(--faint);font:500 10.5px IBM Plex Mono}
+pre{font:400 10.5px/1.45 IBM Plex Mono;color:#b9c4d6;white-space:pre-wrap;word-break:break-word;max-height:380px;overflow:auto;background:#05070a;border:1px solid var(--line);border-radius:8px;padding:10px}
+.tabs{display:flex;gap:4px;margin-bottom:8px}
+.tabs button{background:none;border:1px solid var(--line);color:var(--dim);font:500 10.5px IBM Plex Mono;padding:3px 8px;border-radius:6px;cursor:pointer}
+.tabs button.on{background:var(--ink);color:#07090d}
+.missing li{font-size:12px;color:#c9d1de;margin:4px 0 4px 16px}
+.empty{padding:40px;color:var(--dim);font:500 12px IBM Plex Mono;text-align:center}
+@media (max-width:900px){
+  header.suite-nav{flex-wrap:wrap;padding:8px 12px;gap:8px}
+  .nav-links{overflow-x:auto;white-space:nowrap;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+  .app{grid-template-columns:1fr;height:auto;min-height:calc(100vh - 54px);overflow-y:auto}
+  html,body{overflow-y:auto;height:auto;min-height:100%}
+  aside.list{border-right:none;border-bottom:1px solid var(--line);max-height:180px;display:flex;overflow-x:auto;gap:8px;padding:8px}
+  .poem{flex:none;width:200px}
+  .stage{min-height:220px;max-height:55vh}
+  aside.side{border-left:none;border-top:1px solid var(--line);padding:12px}
+}
+</style>
+</head>
+<body>
+<header class="suite-nav">
+  <div class="suite-brand">
+    <h1>Shot Lab · <span>WYGWYL</span></h1>
+    <small>Reels · multiplane animatics</small>
+  </div>
+  <nav class="nav-links">
+    <a href="index.html" class="nav-link">Shot Lab</a>
+    <a href="film.html" class="nav-link">WYGWYL Film</a>
+    <a href="map.html" class="nav-link">Atlantis Map</a>
+    <a href="storyboard.html" class="nav-link">Storyboard</a>
+    <a href="reel.html" class="nav-link on">Reels</a>
+    <a href="world.html" class="nav-link">World</a>
+  </nav>
+  <div></div>
+</header>
+<div class="app">
+  <aside class="list" id="list"></aside>
+  <main>
+    <div class="title"><h2 id="pTitle">—</h2><span id="pMeta"></span></div>
+    <div class="stage">
+      <video id="vid" controls playsinline loop muted></video>
+      <div class="hud"><span class="tc" id="tc">00:00:00:00</span> · <span id="hudShot">—</span></div>
+    </div>
+    <div class="strip" id="strip"></div>
+  </main>
+  <aside class="side">
+    <div class="card" id="shotCard"><h3>Current shot</h3><div class="empty">play the reel</div></div>
+    <div class="card">
+      <h3>What this reel still lacks</h3>
+      <ul class="missing">
+        <li><b>Character keys</b> — <span id="keyCount">0</span> x-sheet keys named, none drawn</li>
+        <li><b>Poem text + voice clock</b> — not in repo; beats are untimed</li>
+        <li><b>Back-paint</b> — Telea fill; deep moves can show smears</li>
+        <li><b>Sound</b> — no score, ambience or foley yet</li>
+        <li><b>Eyeline / screen direction</b> across cuts unchecked</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Golden Riverbed</h3>
+      <div class="tabs" id="rbTabs"></div>
+      <pre id="rb">—</pre>
+    </div>
+  </aside>
+</div>
+<script src="film/reels.js"></script>
+<script>
+const FPS = 24, R = window.REELS || [];
+const $ = s => document.getElementById(s);
+const vid = $('vid');
+let cur = null, rbData = null, rbTab = 'master';
+const fr = tc => { const [h, m, s, f] = tc.split(':').map(Number); return ((h * 60 + m) * 60 + s) * FPS + f; };
+const tcOf = n => { const f = n % FPS, s = Math.floor(n / FPS); return [Math.floor(s / 3600), Math.floor(s / 60) % 60, s % 60, f].map(x => String(x).padStart(2, '0')).join(':'); };
+
+if (!R.length) { $('list').innerHTML = '<div class="empty">film/reels.js not built yet — run film_render.py --all</div>'; }
+$('list').innerHTML = R.map((p, i) => `<div class="poem" data-i="${i}"><span class="sw" style="background:${p.color}"></span><div><b>${p.num} · ${p.title}</b><i>${p.district_name} · ${p.shots.length} shots · ${p.seconds}s</i></div></div>`).join('') || $('list').innerHTML;
+$('list').onclick = e => { const el = e.target.closest('.poem'); if (el) load(+el.dataset.i); };
+
+function load(i) {
+  cur = R[i];
+  document.querySelectorAll('.poem').forEach(el => el.classList.toggle('on', +el.dataset.i === i));
+  document.documentElement.style.setProperty('--accent', cur.color);
+  $('pTitle').textContent = `${cur.num} · ${cur.title}`;
+  $('pMeta').textContent = `${cur.district_name} · ${cur.seconds}s · ${cur.shots.length} shots`;
+  vid.src = cur.mp4; vid.play().catch(() => {});
+  $('keyCount').textContent = cur.shots.reduce((a, s) => a + s.keys, 0);
+  $('strip').innerHTML = cur.shots.map((s, k) => `<div class="clip" data-k="${k}"><img src="out/${s.id}/film/last.jpg" alt="shot ${s.id.slice(0, 8)}" loading="lazy"><div><b>${s.start.slice(3)}</b> ${s.move}${s.exact ? '' : ' <span class="tag warn">sibling</span>'}</div></div>`).join('');
+  fetch(cur.riverbed).then(r => r.json()).then(j => { rbData = j; drawRB(); }).catch(() => { $('rb').textContent = 'riverbed JSON unavailable'; });
+  history.replaceState(null, '', '?poem=' + cur.num);
+}
+$('strip').onclick = e => { const el = e.target.closest('.clip'); if (el && cur) { vid.currentTime = fr(cur.shots[+el.dataset.k].start) / FPS + 0.01; vid.play(); } };
+
+const TABS = { master: j => j.prompt_architecture.master_prompt, riverbed: j => j.riverbed, flow: j => j.flow, segments: j => j.prompt_architecture.segment_prompts, bridges: j => j.prompt_architecture.bridge_prompts, full: j => j };
+$('rbTabs').innerHTML = Object.keys(TABS).map(k => `<button data-t="${k}">${k}</button>`).join('');
+$('rbTabs').onclick = e => { if (e.target.dataset.t) { rbTab = e.target.dataset.t; drawRB(); } };
+function drawRB() {
+  document.querySelectorAll('#rbTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === rbTab));
+  if (!rbData) return; const v = TABS[rbTab](rbData);
+  $('rb').textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 1);
+}
+
+let lastK = -1;
+vid.ontimeupdate = () => {
+  if (!cur) return;
+  const n = Math.round(vid.currentTime * FPS); $('tc').textContent = tcOf(n);
+  let k = 0; cur.shots.forEach((s, j) => { if (n >= fr(s.start)) k = j; });
+  if (k === lastK) return; lastK = k;
+  const s = cur.shots[k];
+  document.querySelectorAll('.clip').forEach(el => el.classList.toggle('on', +el.dataset.k === k));
+  $('hudShot').textContent = `${s.id.slice(0, 8)} · ${s.move}`;
+  $('shotCard').innerHTML = `<h3>Current shot · ${k + 1}/${cur.shots.length}</h3>
+    <dl class="kv"><dt>id</dt><dd><a href="index.html?id=${s.id}" style="color:var(--accent)">${s.id.slice(0, 13)}… ↗</a></dd>
+    <dt>in / out</dt><dd>${s.start} → ${s.end}</dd><dt>camera</dt><dd>${s.move}</dd>
+    <dt>action</dt><dd>${s.action || '<span class="tag">environment hold</span>'}</dd>
+    <dt>keys</dt><dd>${s.keys ? `<span class="tag warn">${s.keys} keys to draw</span>` : '<span class="tag ok">no character keys</span>'}</dd>
+    <dt>fx</dt><dd>${s.fx.map(f => `<span class="tag">${f}</span>`).join('') || '—'}</dd></dl>`;
+};
+vid.onloadeddata = () => { lastK = -1; vid.ontimeupdate(); };
+
+const q = new URLSearchParams(location.search).get('poem');
+if (R.length) load(Math.max(0, R.findIndex(p => p.num === q)));
+</script>
+</body>
+</html>

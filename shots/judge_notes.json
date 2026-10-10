@@ -1,0 +1,61 @@
+{
+  "_doc": "Judge notes (written by the human/LLM judge after looking at program/compare.jpg + cartoon.html). Style decisions live here; the metric only enforces a fidelity budget. Keys: lines (bool), line_max (int), line_focal_min (0 = lines anywhere), style_budget (max relative loss increase), smooth (contour blur px), verdict, notes[].",
+  "3603f621-18f4-4711-ab93-946cab123329_0": {
+    "round": 1,
+    "lines": true,
+    "line_max": 30,
+    "verdict": "PASS. The four towers read clearly, and the warm-vs-violet glow contrast survives. Strong silhouette staging.",
+    "notes": [
+      "lattice towers became solid slabs with holes; structure lines help, but a lattice really wants a hatch/cross pattern fill",
+      "ground plane is one flat red mass, which works as a stage floor"
+    ]
+  },
+  "3a0da51b-4c03-45a0-bf3f-d03e5092c4be_0": {
+    "round": 1,
+    "verdict": "PASS (best of six). Reads like a painted background plate: haze gradient, light pools, three walkers in silhouette.",
+    "notes": [
+      "ceiling lights became soft blobs; fine as a style, could be crisp ellipses + glow"
+    ]
+  },
+  "7fae27c3-7bd0-4f8b-805b-4ccd740595b2_0": {
+    "round": 1,
+    "smooth": 5,
+    "verdict": "FAIL. Overhead crowd plaza collapses into blob soup. The concentric ring structure, which is the whole design, is lost.",
+    "notes": [
+      "needs radial/concentric structure (circle fits, not straight LSD lines)",
+      "the crowd should be a stipple texture layer, not traced shapes",
+      "plane map put 71% of the frame in P4, so the semantic seed had too little to work with"
+    ]
+  },
+  "d3d25411-5610-40fd-ad76-e36a25eca80c_1": {
+    "round": 5,
+    "lines": true,
+    "line_max": 36,
+    "style_budget": 0.03,
+    "verdict": "PASS. The semantic seed reads as a designed corridor (ceiling/walls/stair block/water), and the 9 silhouettes are strong. The colour seed (round 1) scored better on ΔE but looked like camouflage blotches, so it was rejected.",
+    "notes": [
+      "step lines now on the stairs (round 5)",
+      "ceiling lost its bright panel pattern; acceptable for a cartoon",
+      "water reflections still blotchy; horizontal streak convention would read better than traced patches"
+    ]
+  },
+  "e9c68c53-270a-40d3-be47-b19b47b4068c_0": {
+    "round": 2,
+    "lines": true,
+    "line_max": 40,
+    "line_focal_min": 0.0,
+    "verdict": "PARTIAL → better. Round 2: frame-wide structure lines restore the receding deck planks, so the perspective now reads (edge F 0.36→0.39 within a 3% fidelity budget). The laundry reads well with real fabric colours. The star-field sky is still flat grey.",
+    "notes": [
+      "allow structure lines across the whole frame so the deck planks converge",
+      "sky needs a star stipple layer; pixel metrics will always reject it, so it must be a judge-requested style layer"
+    ]
+  },
+  "ef9f6c7e-e507-421d-b028-2d76f14d0c11_3": {
+    "round": 1,
+    "verdict": "PASS. Wall, lit stairs, water and distant mountains are clean masses; the sky gradient is right.",
+    "notes": [
+      "the child (P2, to be drawn) is still missing; place them on the stairs",
+      "stars lost (same stipple issue as Ankhu)"
+    ]
+  }
+}

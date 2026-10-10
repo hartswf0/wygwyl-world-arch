@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shot Lab — Atlantis Urbanism · camera, segments & depth per shot</title>
+<meta name="description" content="Per-shot analysis of the Islands of Atlantis Midjourney set: open-vocabulary segmentation, estimated camera height, pitch and lens, depth layers and point clouds for 3D and virtual-production rebuilds.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090d;--panel:#0d1118;--panel2:#121823;--line:#1e2633;--line2:#2a3446;
+  --ink:#e8ecf3;--dim:#8a95a8;--faint:#566074;
+  --amber:#f2a541;--teal:#2ad4c0;--indigo:#7c8cff;--rose:#ff6b8b;--lime:#b8f26b;
+  --glass:rgba(18,24,35,.62);
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:radial-gradient(1200px 600px at 80% -10%,#16203a 0%,transparent 60%),radial-gradient(900px 500px at -10% 110%,#2a1a10 0%,transparent 55%),var(--bg);
+  color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif;overflow:hidden}
+header.suite-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 18px;background:rgba(9,12,18,.85);border-bottom:1px solid var(--line);backdrop-filter:blur(12px);z-index:20}
+.suite-brand{display:flex;align-items:center;gap:10px}
+.suite-brand h1{font:700 17px/1 Fraunces,serif;letter-spacing:.2px}
+.suite-brand h1 span{background:linear-gradient(90deg,var(--amber),var(--rose) 50%,var(--indigo));-webkit-background-clip:text;background-clip:text;color:transparent}
+.suite-brand small{font:500 10.5px JetBrains Mono,monospace;color:var(--dim);border-left:1px solid var(--line);padding-left:10px;text-transform:uppercase;letter-spacing:.1em}
+.nav-links{display:flex;gap:4px}
+.nav-link{font:500 12px Inter;padding:5px 12px;border-radius:8px;color:var(--dim);border:1px solid transparent;text-decoration:none;transition:.2s}
+.nav-link:hover{color:var(--ink);background:var(--panel)}
+.nav-link.on{background:var(--panel2);color:var(--ink);border-color:var(--line2)}
+.app{display:grid;grid-template-columns:300px 1fr 380px;height:calc(100vh - 47px)}
+/* ---------- sidebar */
+aside.list{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:rgba(9,12,18,.7);backdrop-filter:blur(10px)}
+.brand{padding:22px 20px 14px}
+.brand h1{font:600 22px/1.1 Fraunces,serif;letter-spacing:.2px}
+.brand h1 span{background:linear-gradient(90deg,var(--amber),var(--rose) 50%,var(--indigo));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand p{color:var(--dim);font-size:12px;margin-top:6px}
+.filters{display:flex;gap:6px;flex-wrap:wrap;padding:0 20px 12px}
+.chip{border:1px solid var(--line2);background:transparent;color:var(--dim);border-radius:99px;padding:3px 10px;font-size:11px;cursor:pointer;transition:.2s}
+.chip:hover{color:var(--ink);border-color:var(--faint)}
+.chip.on{background:var(--ink);color:#0b0e14;border-color:var(--ink)}
+.items{overflow:auto;padding:4px 12px 20px;flex:1}
+.item{display:grid;grid-template-columns:96px 1fr;gap:10px;padding:8px;border-radius:12px;cursor:pointer;transition:background .2s,transform .2s;border:1px solid transparent}
+.item:hover{background:var(--panel2);transform:translateX(2px)}
+.item.on{background:var(--panel2);border-color:var(--line2)}
+.item img{width:96px;height:54px;object-fit:cover;border-radius:8px;display:block}
+.item .t{font-size:12px;color:var(--ink);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item .m{font:500 10px JetBrains Mono,monospace;color:var(--dim);margin-top:4px;display:flex;gap:6px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+/* ---------- stage */
+main{display:flex;flex-direction:column;min-width:0;min-height:0;padding:18px 20px;gap:14px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;background:var(--panel);border:1px solid var(--line);padding:4px;border-radius:12px;width:max-content;max-width:100%}
+.tabsep{width:1px;background:var(--line2);margin:4px 4px}
+.tab.mp.on{background:linear-gradient(180deg,#3a2a14,#2a1d0e);color:var(--amber);box-shadow:inset 0 0 0 1px #5a4020}
+.planes{display:flex;flex-direction:column;gap:6px}
+.pl{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:start;padding:8px 8px;border-radius:9px;background:var(--panel2);border:1px solid var(--line)}
+.pl .id{font:600 12px JetBrains Mono;color:#0b0e14;border-radius:6px;text-align:center;padding:3px 0}
+.pl .nm{font-size:12.5px;color:var(--ink)}
+.pl .ct{font-size:11px;color:var(--dim);margin-top:2px}
+.pl .mo{font-size:10.5px;color:var(--amber);margin-top:3px;opacity:.85}
+.pl .px{font:11px JetBrains Mono;color:var(--dim);text-align:right;white-space:nowrap}
+.pl.empty{opacity:.35}
+.xs{width:100%;border-collapse:collapse;font:11px JetBrains Mono}
+.xs td,.xs th{padding:4px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.xs th{color:var(--faint);font-weight:500}
+.xs td:last-child{font-family:Inter;color:var(--dim)}
+.action{font:400 15px/1.45 Fraunces,serif;color:var(--ink)}
+.beats{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px}
+.beats span{font-size:11px;color:var(--dim)}
+.beats span:not(:last-child)::after{content:" →";color:var(--faint)}
+.warn{font-size:12px;color:var(--rose);background:rgba(255,107,139,.08);border:1px solid rgba(255,107,139,.25);border-radius:8px;padding:8px 10px;margin-top:10px}
+.tab{background:none;border:0;color:var(--dim);padding:7px 14px;border-radius:9px;cursor:pointer;font:500 12px Inter;transition:.2s}
+.tab:hover{color:var(--ink)}
+.tab.on{background:linear-gradient(180deg,#232c3d,#1a2130);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line2)}
+.stage{position:relative;flex:1;min-height:0;border-radius:var(--r);overflow:hidden;background:#000;border:1px solid var(--line);box-shadow:0 30px 80px -30px rgba(0,0,0,.8)}
+.stage img.main{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transition:opacity .35s}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#three{position:absolute;inset:0;display:none}
+.hud{position:absolute;left:14px;bottom:14px;display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:var(--glass);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.08);padding:6px 11px;border-radius:99px;font:500 11px JetBrains Mono,monospace;color:var(--ink)}
+.pill b{color:var(--amber);font-weight:500}
+.prompt{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;color:var(--dim);font-size:12.5px;max-height:92px;overflow:auto}
+.prompt mark{background:rgba(42,212,192,.16);color:var(--teal);border-radius:3px;padding:0 2px}
+.prompt mark.miss{background:rgba(255,107,139,.14);color:var(--rose)}
+/* ---------- right panel */
+aside.info{border-left:1px solid var(--line);overflow:auto;padding:18px;display:flex;flex-direction:column;gap:14px;background:rgba(9,12,18,.7);backdrop-filter:blur(10px)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;animation:rise .5s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card h3{font:600 11px Inter;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.big{font:600 30px/1 Fraunces,serif}
+.big small{font:400 13px Inter;color:var(--dim);margin-left:4px}
+.cls{display:inline-block;margin-top:6px;font:500 11px JetBrains Mono;color:#0b0e14;background:var(--amber);padding:2px 8px;border-radius:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-top:12px}
+.kv .k{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em}
+.kv .v{font:500 14px JetBrains Mono,monospace}
+.kv .v.bad{color:var(--rose)} .kv .v.good{color:var(--teal)}
+.bar{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--rose),var(--amber),var(--teal));border-radius:9px;transition:width .6s}
+svg.side{width:100%;height:150px;display:block;margin-top:10px}
+.dets{display:flex;flex-direction:column;gap:3px;max-height:260px;overflow:auto}
+.det{display:grid;grid-template-columns:10px 1fr auto auto;gap:8px;align-items:center;padding:5px 6px;border-radius:7px;cursor:default;font-size:12px}
+.det:hover{background:var(--panel2)}
+.det .s{font:11px JetBrains Mono;color:var(--dim)}
+.det .a{font:11px JetBrains Mono;color:var(--faint);width:44px;text-align:right}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--panel2);border:1px solid var(--line2);color:var(--dim)}
+.tag.ok{color:var(--teal);border-color:rgba(42,212,192,.35)}
+.tag.no{color:var(--rose);border-color:rgba(255,107,139,.3);text-decoration:line-through;text-decoration-color:rgba(255,107,139,.5)}
+.tag.ex{color:var(--indigo);border-color:rgba(124,140,255,.35)}
+.stuff{display:flex;height:14px;border-radius:6px;overflow:hidden;margin-top:4px}
+.stuff i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:8px;font-size:11px;color:var(--dim)}
+.legend span{display:flex;align-items:center;gap:5px}
+.sub{font-size:11px;color:var(--faint);margin-top:6px}
+a{color:var(--indigo)}
+.empty{display:grid;place-items:center;height:100%;color:var(--dim);text-align:center;padding:40px}
+code{font:12px JetBrains Mono}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#1f2836;border-radius:9px}
+.tab.ct{color:#ff9fb4}.tab.ct.on{background:linear-gradient(135deg,rgba(255,90,120,.22),rgba(242,165,65,.14));color:#fff;border-color:rgba(255,120,150,.45)}
+.vl{display:grid;grid-template-columns:34px 1fr 1fr 44px;gap:6px;align-items:center;font:11px JetBrains Mono;color:var(--dim);margin:3px 0}
+.vl .sw{height:16px;border-radius:4px;border:1px solid rgba(255,255,255,.08);position:relative}
+.vl .sw::after{content:attr(data-v);position:absolute;right:4px;top:1px;font-size:9px;mix-blend-mode:difference;color:#fff}
+.sugg{margin:8px 0 0;padding:0;list-style:none}.sugg li{font-size:11.5px;color:var(--dim);padding:6px 8px;margin-top:5px;border-left:2px solid #ff7a90;background:rgba(255,122,144,.06);border-radius:0 6px 6px 0;line-height:1.45}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}.metrics div{background:rgba(255,255,255,.03);border-radius:8px;padding:6px 8px}.metrics b{display:block;font:600 14px JetBrains Mono;color:var(--ink)}.metrics span{font-size:10px;color:var(--faint)}
+.diag{background:#121823;color:#8a95a8;border:1px solid #232c3b;border-radius:9px;padding:6px 10px;font:12px Inter;cursor:pointer}
+.diag:focus{outline:1px solid #f2a541}
+.hist{display:flex;align-items:flex-end;gap:2px;height:38px;margin-top:10px}.hist i{flex:1;background:linear-gradient(#f2a541,#ff5a78);border-radius:2px 2px 0 0;opacity:.8}
+.verdict{font-size:12px;line-height:1.5;color:var(--ink);margin-top:10px;padding:8px 10px;border-radius:8px;background:rgba(42,212,192,.07);border-left:2px solid #2ad4c0}
+@media (max-width:900px){
+  header.suite-nav{flex-wrap:wrap;padding:8px 12px;gap:8px}
+  .nav-links{overflow-x:auto;white-space:nowrap;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+  .app{grid-template-columns:1fr;height:auto;min-height:calc(100vh - 54px);overflow-y:auto}
+  html,body{overflow-y:auto;height:auto;min-height:100%}
+  aside.list{border-right:none;border-bottom:1px solid var(--line);max-height:220px}
+  .stage{min-height:260px;max-height:55vh}
+  aside.info{border-left:none;border-top:1px solid var(--line)}
+}
+</style>
+</head>
+<body>
+<header class="suite-nav">
+  <div class="suite-brand">
+    <h1>Shot Lab · <span>Atlantis</span></h1>
+    <small>Deleuze Cineosis &amp; Multiplane Studio</small>
+  </div>
+  <nav class="nav-links">
+    <a href="index.html" class="nav-link on">Shot Lab</a>
+    <a href="film.html" class="nav-link">WYGWYL Film</a>
+    <a href="map.html" class="nav-link">Atlantis Map</a>
+    <a href="storyboard.html" class="nav-link">Storyboard</a>
+    <a href="reel.html" class="nav-link">Reels</a>
+    <a href="world.html" class="nav-link">World</a>
+  </nav>
+</header>
+<div class="app">
+  <aside class="list">
+    <div class="brand">
+      <h1>Shot Lab · <span>Atlantis</span></h1>
+      <p>Segments, camera &amp; depth inferred per Midjourney frame</p>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="items" id="items"></div>
+  </aside>
+
+  <main>
+    <div class="tabs" id="tabs">
+      <button class="tab" data-v="image" id="tab-image">Original</button>
+      <button class="tab mp" data-v="mpm" id="tab-mpm">Plane map</button>
+      <button class="tab" data-v="ground" id="tab-ground">Ground / Sky</button>
+      <span class="tabsep"></span>
+      <button class="tab ct on" data-v="pg" id="tab-pg">Cartoon ▶</button>
+      <button class="tab ct" data-v="pgc" id="tab-pgc">Judge sheet</button>
+      <span class="tabsep"></span>
+      <select class="diag" id="diag" aria-label="Diagnostics">
+        <option value="">Diagnostics…</option>
+        <option value="pgs">Squint ladder (blur passes)</option>
+        <option value="overlay">Segments</option><option value="depth">Depth</option><option value="layers">FG · MG · BG</option><option value="3d">3D points</option>
+        <option value="mp">Multiplane parallax (raster)</option><option value="mpx">Exploded</option><option value="mpd">Layout drawing</option><option value="mps">Silhouette</option>
+        <option value="ctc">Cel</option><option value="ctl">Layout sheet</option><option value="ctn">Notan</option><option value="ctg">Planes × ground/sky</option><option value="ctp">Plane silhouettes</option><option value="ctv">Consensus</option>
+      </select>
+    </div>
+    <div class="stage" id="stage">
+      <img class="main" id="mainimg" alt="">
+      <canvas id="cv"></canvas>
+      <div id="three"></div>
+      <iframe id="pgframe" title="cartoon" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#07090d"></iframe>
+      <div class="hud" id="hud"></div>
+    </div>
+    <div class="prompt" id="prompt"></div>
+  </main>
+
+  <aside class="info" id="info"></aside>
+</div>
+
+<script src="shots_data.js"></script>
+<script src="multiplane_data.js"></script>
+<script src="cartoon_data.js"></script>
+<script src="program_data.js"></script>
+<script src="perceive_data.js"></script>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+<script>
+const COLORS=['#ff6348','#00d2d3','#feca57','#5f27cd','#1dd1a1','#ff9ff3','#54a0ff','#ee5253','#10ac84','#f368e0','#48dbfb','#ff6b6b'];
+const DCOL={naraka:'#2ad4c0',haze:'#f2a541',hive:'#7c8cff',overseer:'#5b7bd6',bay:'#38c6e8',commons:'#c3a6ff',plaza:'#ff8fb1',ankhu:'#e07a5f',cenotaph:'#a3b18a',arcade:'#ff4d8d',temple:'#e9e4d0',ascent:'#9b8cff'};
+const S=(window.SHOTS||[]);let cur=null,view='pg',filter='all',layerIx=0,three=null,JUDGE={};
+fetch('judge_notes.json').then(r=>r.ok?r.json():{}).then(j=>{JUDGE=j;if(cur)renderInfo()}).catch(()=>{});
+const $=id=>document.getElementById(id);
+const title=s=>s.prompt.split(/[,.;]/)[0].replace(/^4\.\s*/,'').slice(0,70);
+const dir=s=>'out/'+s.id+'/';
+
+function renderList(){
+  const ds=['all',...new Set(S.map(s=>s.district).filter(Boolean))];
+  $('filters').innerHTML=ds.map(d=>`<button class="chip ${d===filter?'on':''}" data-d="${d}" id="filter-${d}">${d}</button>`).join('');
+  $('filters').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{filter=b.dataset.d;renderList()});
+  const L=S.filter(s=>filter==='all'||s.district===filter);
+  $('items').innerHTML=L.map(s=>`<div class="item ${cur&&cur.id===s.id?'on':''}" data-id="${s.id}" id="shot-${s.id}">
+    <img src="${dir(s)}image.jpg" loading="lazy" alt="">
+    <div><div class="t">${title(s)}</div>
+    <div class="m"><span class="dot" style="background:${DCOL[s.district]||'#888'}"></span>${s.district||'—'} · ${(s.camera.shot_class||'').split(' ')[0]}</div></div></div>`).join('');
+  $('items').querySelectorAll('.item').forEach(e=>e.onclick=()=>select(S.find(s=>s.id===e.dataset.id)));
+}
+
+function select(s){cur=s;renderList();renderInfo();setView(view)}
+
+function setView(v){
+  if(v==='pg'&&!(window.PG||{})[cur.id])v='mpm';
+  view=v;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v));
+  $('diag').value=[...$('diag').options].some(o=>o.value===v)?v:'';
+  const img=$('mainimg'),th=$('three'),fr=$('pgframe');
+  th.style.display=v==='3d'?'block':'none';img.style.display=(v==='3d'||v==='pg')?'none':'block';
+  fr.style.display=v==='pg'?'block':'none';$('hud').style.display=v==='pg'?'none':'';
+  if(v==='pg'){const u=dir(cur)+'program/cartoon.html';if(!fr.src.endsWith(u))fr.src=u}
+  const src={overlay:'overlay.jpg',image:'image.jpg',depth:'depth.jpg',ground:'ground.jpg',layers:`layers/${['fg','mg','bg'][layerIx]}.png`,pgc:'program/compare.jpg',pgs:'program/perceive.jpg',
+    mp:'multiplane/parallax.webp',mpm:'multiplane/plane_map.jpg',mpx:'multiplane/exploded.jpg',mpd:'multiplane/layout_drawing.png',mps:'multiplane/silhouette.png',
+    ctc:'cartoon/cel.png',ctl:'cartoon/layout_sheet.png',ctn:'cartoon/notan.png',ctg:'cartoon/planes_gs.png',ctp:'cartoon/plane_silhouettes.png',ctv:'cartoon/consensus.png'}[v];
+  if(src){img.style.opacity=.2;img.onload=()=>{img.style.opacity=1;drawBoxes()};img.src=dir(cur)+src}
+  if(v==='layers'){layerIx=(layerIx+1)%3}
+  if(v==='3d')load3D();
+  const c=cur.camera;
+  const mp=(window.MP||{})[cur.id];
+  const ct=(window.CT||{})[cur.id];
+  const CTH={ctc:'flats · plane-weighted ink · focal detail',ctl:'paper · plane contours · horizon/VP · 1.7 m scale ladder',ctn:'one value per plane · hero flipped',ctg:'plane map × consensus ground grid × painted sky',ctp:'each plane alone, black on white',ctv:'yellow = sky added · magenta = sky removed · teal = ground votes'};
+  $('hud').innerHTML=v==='layers'?`<span class="pill">layer <b>${['bg','fg','mg'][layerIx]}</b> · click tab to cycle</span>`:
+   v.startsWith('ct')&&ct?`<span class="pill">${CTH[v]}</span><span class="pill">${ct.regions} cels</span>${ct.value_merges.length?`<span class="pill" style="color:#ff9fb4">${ct.value_merges.length} value merge${ct.value_merges.length>1?'s':''}</span>`:''}`:
+   v.startsWith('mp')&&mp?`<span class="pill">camera <b>${mp.camera.move.replace('_',' ')}</b></span><span class="pill">${mp.sheets.length} sheets</span><span class="pill">on twos · ease in/out</span>`:
+   `<span class="pill">h <b>${c.height_m??'—'}${c.height_m!=null?' m':''}</b></span><span class="pill">pitch <b>${c.pitch_deg??'—'}°</b></span><span class="pill">hfov <b>${c.fov_h_deg}°</b></span><span class="pill">${cur.detections.length} segments</span>`;
+  clearBoxes();
+}
+
+function fit(){const st=$('stage').getBoundingClientRect(),[W,H]=cur.size,k=Math.min(st.width/W,st.height/H);return{k,ox:(st.width-W*k)/2,oy:(st.height-H*k)/2,st}}
+function clearBoxes(){const cv=$('cv'),r=$('stage').getBoundingClientRect();cv.width=r.width*devicePixelRatio;cv.height=r.height*devicePixelRatio;cv.getContext('2d').clearRect(0,0,cv.width,cv.height)}
+function drawBoxes(hi){
+  clearBoxes();if(hi==null||view==='3d')return;
+  const {k,ox,oy}=fit(),cv=$('cv'),g=cv.getContext('2d'),d=devicePixelRatio,b=cur.detections[hi].box;
+  g.scale(d,d);g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,0,cv.width,cv.height);
+  const x=ox+b[0]*k,y=oy+b[1]*k,w=(b[2]-b[0])*k,h=(b[3]-b[1])*k;
+  g.clearRect(x,y,w,h);g.strokeStyle=COLORS[hi%COLORS.length];g.lineWidth=2;g.strokeRect(x,y,w,h);
+}
+
+function sideView(c){
+  // camera side elevation: ground line, camera at height, frustum by vertical FOV & pitch
+  const [W,H]=cur.size,vf=2*Math.atan((H/2)/c.focal_px)*180/Math.PI;
+  if(c.height_m==null) return `<svg class="side" viewBox="0 0 320 150"><text x="160" y="80" fill="#566074" font-size="12" text-anchor="middle" font-family="Inter">no ground plane recovered — ${c.shot_class||''}</text></svg>`;
+  const hs=Math.max(1,c.height_m),scale=Math.min(90/hs,60),cy=128-Math.min(c.height_m*scale,110),cx=40,p=(c.pitch_deg||0)*Math.PI/180,R=260;
+  const a1=p+vf/2*Math.PI/180,a2=p-vf/2*Math.PI/180;
+  const ray=a=>{let x=cx+R*Math.cos(a),y=cy-R*Math.sin(a);if(y>128&&Math.sin(a)<0){const t=(128-cy)/(-Math.sin(a));x=cx+t*Math.cos(a);y=128}return[x,y]};
+  const [x1,y1]=ray(a1),[x2,y2]=ray(a2),[xm,ym]=ray(p);
+  return `<svg class="side" viewBox="0 0 320 150">
+   <defs><linearGradient id="fr" x1="0" x2="1"><stop offset="0" stop-color="#f2a541" stop-opacity=".45"/><stop offset="1" stop-color="#f2a541" stop-opacity="0"/></linearGradient></defs>
+   <line x1="0" y1="128" x2="320" y2="128" stroke="#2ad4c0" stroke-width="1.5"/>
+   ${Array.from({length:16},(_,i)=>`<line x1="${i*20}" y1="128" x2="${i*20-8}" y2="138" stroke="#1e3a3a"/>`).join('')}
+   <polygon points="${cx},${cy} ${x1},${y1} ${x2},${y2}" fill="url(#fr)"/>
+   <line x1="${cx}" y1="${cy}" x2="${xm}" y2="${ym}" stroke="#f2a541" stroke-dasharray="3 3"/>
+   <line x1="${cx}" y1="${cy}" x2="${cx}" y2="128" stroke="#566074" stroke-dasharray="2 3"/>
+   <rect x="${cx-9}" y="${cy-6}" width="18" height="12" rx="3" fill="#e8ecf3"/><circle cx="${cx+9}" cy="${cy}" r="3" fill="#f2a541"/>
+   <text x="${cx+8}" y="${(cy+128)/2+4}" fill="#8a95a8" font-size="10" font-family="JetBrains Mono">${c.height_m} m</text>
+   <text x="300" y="20" fill="#8a95a8" font-size="10" text-anchor="end" font-family="JetBrains Mono">vfov ${vf.toFixed(0)}° · pitch ${c.pitch_deg}°</text>
+  </svg>`;
+}
+
+function renderInfo(){
+  const s=cur,c=s.camera,f=s.fidelity;
+  const conf=Math.round((c.physics_confidence||0)*100);
+  const stuffKeys=Object.entries(s.stuff).slice(0,8),SC=['#54a0ff','#2ad4c0','#f2a541','#ff6b8b','#7c8cff','#b8f26b','#e07a5f','#c3a6ff'];
+  $('info').innerHTML=`
+  <div class="card"><h3>Camera <span style="color:${DCOL[s.district]||'#888'}">${s.district||''} ${s.bible_no?'#'+s.bible_no:''}</span></h3>
+    <div class="big">${c.height_m??'—'}<small>${c.height_m!=null?'m above ground':''}</small></div>
+    <span class="cls">${c.shot_class||'—'}</span>
+    ${sideView(c)}
+    <div class="grid2">
+      <div class="kv"><div class="k">Pitch / Roll</div><div class="v">${c.pitch_deg??'—'}° / ${c.roll_deg??'—'}°</div></div>
+      <div class="kv"><div class="k">H-FOV</div><div class="v">${c.fov_h_deg}°</div></div>
+      <div class="kv"><div class="k">Lens est. (35mm eq)</div><div class="v">${c.focal_35mm_equiv} mm</div></div>
+      <div class="kv"><div class="k">Lens prompted</div><div class="v ${c.focal_agrees===false?'bad':c.focal_agrees?'good':''}">${c.focal_prompted_mm?c.focal_prompted_mm+' mm':'—'}</div></div>
+      <div class="kv"><div class="k">Prompt hint</div><div class="v">${c.height_hint_prompt||'—'}</div></div>
+      <div class="kv"><div class="k">Scale refs</div><div class="v">${c.scale_refs??0} · ×${c.scale_factor??1}</div></div>
+    </div>
+    <div class="kv" style="margin-top:12px"><div class="k">Physics confidence · ${conf}%</div><div class="bar"><i style="width:${conf}%"></i></div></div>
+    <div class="sub">ground ${Math.round(c.ground_frac*100)}% · sky ${Math.round(c.sky_frac*100)}% of frame${c.ground_inlier_frac?` · plane inliers ${Math.round(c.ground_inlier_frac*100)}%`:''}</div>
+  </div>
+  <div class="card"><h3>Prompt fidelity <span>${f.score!=null?Math.round(f.score*100)+'%':''}</span></h3>
+    <div class="tags">${f.found_from_prompt.map(t=>`<span class="tag ok">${t}</span>`).join('')}${f.missing.map(t=>`<span class="tag no">${t}</span>`).join('')}</div>
+    <div class="sub" style="margin:10px 0 6px">Found but not asked for</div>
+    <div class="tags">${f.unprompted.map(t=>`<span class="tag ex">${t}</span>`).join('')||'<span class="sub">—</span>'}</div>
+  </div>
+  <div class="card"><h3>Segments <span>${s.detections.length}</span></h3>
+    <div class="dets">${s.detections.map((d,i)=>`<div class="det" data-i="${i}"><span class="dot" style="background:${COLORS[i%COLORS.length]}"></span><span>${d.label}</span><span class="s">${d.score.toFixed(2)}</span><span class="a">${(d.area_frac*100).toFixed(1)}%</span></div>`).join('')}</div>
+  </div>
+  <div class="card"><h3>Scene layout <span>ADE20K</span></h3>
+    <div class="stuff">${stuffKeys.map(([k,v],i)=>`<i style="width:${v*100}%;background:${SC[i]}" title="${k}"></i>`).join('')}</div>
+    <div class="legend">${stuffKeys.map(([k,v],i)=>`<span><span class="dot" style="background:${SC[i]}"></span>${k} ${(v*100).toFixed(0)}%</span>`).join('')}</div>
+    <div class="sub" style="margin-top:10px">Depth bands: FG ≤ ${s.layers.fg.max_depth_m} m · MG ≤ ${s.layers.mg.max_depth_m} m · BG beyond</div>
+  </div>
+  <div class="card"><h3>Files</h3><div class="sub" style="margin:0">
+    <a href="${dir(s)}shot.json" target="_blank">shot.json</a> · <a href="${dir(s)}points.ply" download>points.ply</a> ·
+    <a href="${dir(s)}layers/fg.png" target="_blank">fg</a> / <a href="${dir(s)}layers/mg.png" target="_blank">mg</a> / <a href="${dir(s)}layers/bg.png" target="_blank">bg</a>
+    <br><a href="https://www.midjourney.com/jobs/${s.job_id}?index=${s.grid_index}" target="_blank">open job in Midjourney ↗</a></div></div>`;
+  $('info').querySelectorAll('.det').forEach(e=>{e.onmouseenter=()=>drawBoxes(+e.dataset.i);e.onmouseleave=()=>drawBoxes()});
+  renderMP(s);
+  // prompt with fidelity highlighting
+  let p=s.prompt.replace(/</g,'&lt;');
+  f.found_from_prompt.forEach(t=>{p=p.replace(new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','i'),'<mark>$1</mark>')});
+  $('prompt').innerHTML=p;
+}
+
+async function load3D(){
+  const THREE=await import('three');const {OrbitControls}=await import('three/addons/controls/OrbitControls.js');const {PLYLoader}=await import('three/addons/loaders/PLYLoader.js');
+  const el=$('three');
+  if(!three){
+    const r=new THREE.WebGLRenderer({antialias:true});r.setPixelRatio(devicePixelRatio);el.appendChild(r.domElement);
+    const scene=new THREE.Scene();scene.background=new THREE.Color('#05070a');
+    const cam=new THREE.PerspectiveCamera(50,1,0.05,5000);const ctl=new OrbitControls(cam,r.domElement);ctl.enableDamping=true;
+    three={r,scene,cam,ctl,pts:null,THREE};
+    (function loop(){requestAnimationFrame(loop);ctl.update();r.render(scene,cam)})();
+  }
+  const {r,scene,cam,ctl}=three,b=el.getBoundingClientRect();r.setSize(b.width,b.height);cam.aspect=b.width/b.height;cam.updateProjectionMatrix();
+  if(three.loaded===cur.id)return;
+  new PLYLoader().load(dir(cur)+'points.ply',g=>{
+    if(three.pts){scene.remove(three.pts);three.pts.geometry.dispose()}
+    g.computeBoundingSphere();const rad=g.boundingSphere.radius;
+    const m=new THREE.PointsMaterial({size:rad/600,vertexColors:true,sizeAttenuation:true});
+    three.pts=new THREE.Points(g,m);scene.add(three.pts);three.loaded=cur.id;
+    // start at the recovered camera (origin), looking down -z, then pull back slightly
+    cam.position.set(rad*0.04,rad*0.03,rad*0.06);ctl.target.copy(g.boundingSphere.center);cam.lookAt(ctl.target);
+  });
+}
+
+const PC={P0:'#9aa0ab',P1:'#c49a6c',P2:'#ff5a5f',P3:'#f2a541',P4:'#5b8def',P5:'#8fb8f0',P6:'#a6e3f0'};
+function renderMP(s){
+  const mp=(window.MP||{})[s.id];if(!mp)return;
+  const hero=mp.silhouette||{};
+  const dir=mp.action?`<div class="card"><h3>Director <span>${mp.duration_frames?mp.duration_frames+' f · '+(mp.duration_frames/24).toFixed(1)+' s':''}</span></h3>
+    ${mp.title?`<div class="sub" style="margin:0 0 6px;color:var(--amber)">${mp.title}</div>`:''}
+    <div class="action">${mp.action}</div>
+    <div class="beats">${(mp.beats||[]).map(b=>`<span>${b}</span>`).join('')}</div>
+    <div class="sub" style="margin-top:10px"><b style="color:var(--ink)">Camera · ${mp.camera.move.replace('_',' ')}</b> — ${mp.camera.why}</div>
+    ${hero.hero_kind==='to_draw'?`<div class="warn">${hero.note}</div>`:''}
+    ${mp.staging?`<div class="sub" style="margin-top:8px">${mp.staging}</div>`:''}</div>`:'';
+  const planes=`<div class="card"><h3>Multiplane stack <span>${mp.sheets.length} sheets</span></h3><div class="planes">${mp.planes.map(p=>{
+    const e=p.area_frac===0;return `<div class="pl ${e?'empty':''}"><div class="id" style="background:${PC[p.id]}">${p.id}</div>
+      <div><div class="nm">${p.name}${p.id==='P2'&&hero.hero_labels?` · <span style="color:${PC.P2}">${hero.hero_labels.join(', ')}</span>`:''}</div>
+      <div class="ct">${e?(p.id==='P2'&&hero.hero_kind==='to_draw'?'to be drawn':'—'):p.contents.slice(0,6).join(', ')}</div>
+      ${p.motion.length&&!e?`<div class="mo">${p.motion.slice(0,2).join(' · ')}</div>`:''}</div>
+      <div class="px">${e?'':`${Math.round(p.area_frac*100)}%<br>×${p.parallax??'—'}<br>${p.z_median_m!=null?p.z_median_m+' m':'∞'}`}</div></div>`}).join('')}</div>
+    ${hero.contrast!=null?`<div class="sub">Silhouette: contrast ${Math.round(hero.contrast*100)}% · tangency ${Math.round(hero.tangency*100)}% · hero ${hero.hero_count} body/ies</div>`:''}
+    <div class="sub">× = parallax vs hero plane (screen motion ∝ 1/depth) · paint-behind strips sized to the camera move</div></div>`;
+  const xs=mp.xsheet&&mp.xsheet.length?`<div class="card"><h3>X-sheet <span>24 fps · on twos</span></h3><table class="xs"><tr><th>Fr</th><th>Dwg</th><th>Exp</th><th>Action</th></tr>
+    ${mp.xsheet.map(r=>`<tr><td>${String(r.frame).padStart(3,'0')}</td><td>${r.drawing}</td><td>${r.exposure}</td><td>${r.action}</td></tr>`).join('')}</table>
+    ${mp.secondary?`<div class="sub" style="margin-top:8px">Secondary: ${mp.secondary.join(' · ')}</div>`:''}</div>`:'';
+  const pg=(window.PG||{})[s.id],jd=JUDGE[s.id];
+  let prog='';
+  if(pg){const sc=pg.score,H=pg.history||[],ls=H.map(h=>h.loss),mx=Math.max(...ls),mn=Math.min(...ls);
+    prog=`<div class="card"><h3>Scene program <span>${sc.shapes} shapes · ${sc.lines||0} lines · ${sc.verts} verts</span></h3>
+    <div class="metrics"><div><b>${sc.dE}</b><span>ΔE colour</span></div><div><b>${sc.value_ssim}</b><span>value SSIM</span></div><div><b>${sc.edge_f}</b><span>edge F</span></div></div>
+    <div class="hist" title="loss per accepted edit (lower = better)">${ls.map(l=>`<i style="height:${mx>mn?12+88*(l-mn)/(mx-mn):50}%"></i>`).join('')}</div>
+    <div class="sub">${H.length} accepted edits: ${H.slice(-3).map(h=>h.op).join(' · ')}</div>
+    ${jd?`<div class="verdict"><b>Judge · round ${jd.round||'—'}</b><br>${jd.verdict||''}</div>${(jd.notes||[]).length?`<ul class="sugg">${jd.notes.map(n=>`<li>${n}</li>`).join('')}</ul>`:''}`:'<div class="sub">Not judged yet.</div>'}
+    <div class="sub">One source of truth: <a href="out/${s.id}/program/scene.json" target="_blank">scene.json</a> · <a href="out/${s.id}/program/cartoon.html" target="_blank">cartoon.html ↗</a></div></div>`}
+  const pc=(window.PC||{})[s.id];
+  const perc=pc?`<div class="card"><h3>Perception <span>squint · CLIP · senses</span></h3>
+    <div class="metrics"><div><b>σ${pc.reads_at_sigma??'—'}</b><span>reads at blur</span></div><div><b>${pc.whole.prompt_rank_orig}→${pc.whole.prompt_rank_cartoon}</b><span>own-prompt rank /${pc.whole.n_prompts}</span></div><div><b>${pc.whole.img_img}</b><span>CLIP img↔img</span></div></div>
+    ${Object.entries(pc.clip_layers).map(([k,v])=>`<div class="vl" style="grid-template-columns:30px 1fr 48px"><span style="font-weight:600;color:${v.same?'#2ad4c0':'#ff7a90'}">${k}</span><span>${v.reads_as_orig}${v.same?'':' → <b style="color:#ff7a90">'+v.reads_as_cartoon+'</b>'}</span><span>${v.clip_sim}</span></div>`).join('')}
+    ${pc.weakest_planes.length?`<div class="sub">weakest planes: ${pc.weakest_planes.join(', ')}</div>`:''}
+    <div class="verdict" style="border-color:#c3a6ff;background:rgba(195,166,255,.07)"><b>Felt</b><br>${pc.senses.felt}</div>
+    <div class="sub">enclosure ${pc.senses.enclosure} · openness ${pc.senses.openness} · warmth ${pc.senses.warmth} · weight ${pc.senses.weight} · tempo ${pc.senses.tempo}</div></div>`:'';
+  const first=$('info').firstElementChild;
+  first.insertAdjacentHTML('afterend',prog+perc+dir+planes+xs);
+}
+
+$('tabs').querySelectorAll('.tab').forEach(t=>t.onclick=()=>setView(t.dataset.v));
+$('diag').onchange=e=>{if(e.target.value)setView(e.target.value)};
+addEventListener('resize',()=>{if(cur)setView(view==='layers'?'overlay':view)});
+addEventListener('keydown',e=>{if(!cur)return;const L=S.filter(s=>filter==='all'||s.district===filter),i=L.indexOf(cur);
+  if(e.key==='ArrowDown'||e.key==='j')select(L[Math.min(L.length-1,i+1)]);if(e.key==='ArrowUp'||e.key==='k')select(L[Math.max(0,i-1)])});
+const urlParams=new URLSearchParams(window.location.search);
+const targetId=urlParams.get('id');
+const initShot=(targetId&&S.find(s=>s.id===targetId||s.id.startsWith(targetId)))||S[0];
+if(S.length){renderList();select(initShot)}else{document.querySelector('main').innerHTML='<div class="empty">No shots yet — run <code>shots/analyze.py</code></div>'}
+</script>
+</body>
+</html>

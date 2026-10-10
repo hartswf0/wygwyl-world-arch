@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WYGWYL · Four Cuts — Film Studio</title>
+<meta name="description" content="Four cuts of Mark Anthony Thomas's Where You Go When You Leave, staged through the Islands of Atlantis urbanism archive with Deleuze cinematic signs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090d;--panel:#0d1118;--panel2:#121823;--line:#1e2633;--line2:#2a3446;
+  --ink:#e8ecf3;--dim:#8a95a8;--faint:#566074;
+  --amber:#f2a541;--teal:#2ad4c0;--indigo:#7c8cff;--rose:#ff6b8b;--lime:#b8f26b;
+  --perception:#e9d9a8;--affect:#f0b9a4;--action:#e7a37c;--reflection:#b9cfa0;--mental:#a9c9c9;--break:#d9d3c7;--time:#b8b3d8;--read:#d9b8d2;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:radial-gradient(1200px 600px at 80% -10%,#16203a 0%,transparent 60%),radial-gradient(900px 500px at -10% 110%,#2a1a10 0%,transparent 55%),var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif;overflow:hidden}
+a{color:inherit;text-decoration:none}
+/* top suite nav */
+header.suite-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;background:rgba(9,12,18,.8);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
+.suite-brand{display:flex;align-items:center;gap:10px}
+.suite-brand h1{font:700 18px/1 Fraunces,serif;letter-spacing:.2px}
+.suite-brand h1 span{background:linear-gradient(90deg,var(--amber),var(--rose) 50%,var(--indigo));-webkit-background-clip:text;background-clip:text;color:transparent}
+.suite-brand small{font:500 10.5px IBM Plex Mono,monospace;color:var(--dim);border-left:1px solid var(--line);padding-left:10px;text-transform:uppercase;letter-spacing:.1em}
+.nav-links{display:flex;gap:4px}
+.nav-link{font:500 12px Inter;padding:6px 12px;border-radius:8px;color:var(--dim);border:1px solid transparent;transition:.2s}
+.nav-link:hover{color:var(--ink);background:var(--panel)}
+.nav-link.on{background:var(--panel2);color:var(--ink);border-color:var(--line2)}
+.cuts-bar{display:flex;gap:4px;align-items:center}
+.cut-btn{background:none;border:1px solid var(--line);color:var(--dim);font:500 11.5px IBM Plex Mono;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.2s}
+.cut-btn:hover{color:var(--ink);border-color:var(--faint)}
+.cut-btn.on{background:var(--ink);color:#07090d;border-color:var(--ink);font-weight:600}
+.view-btn{font:500 11px IBM Plex Mono;background:var(--panel2);border:1px solid var(--line2);color:var(--amber);padding:4px 10px;border-radius:6px;cursor:pointer}
+
+/* main layout */
+.app{display:grid;grid-template-columns:1fr 380px;height:calc(100vh - 49px)}
+main{display:flex;flex-direction:column;min-width:0;min-height:0;padding:14px 18px;gap:12px}
+
+/* stage */
+.stage-wrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+.stage{position:relative;flex:1;min-height:0;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 80px -30px rgba(0,0,0,.8)}
+.stage img.media{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transition:opacity .3s}
+.hud-top{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.pill{background:rgba(18,24,35,.75);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);padding:5px 11px;border-radius:99px;font:500 11px IBM Plex Mono,monospace;color:var(--ink);pointer-events:auto}
+.pill b{color:var(--amber);font-weight:600}
+.sign-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:6px;font:800 14px/1 Fraunces,serif;color:#12100e;box-shadow:0 4px 12px rgba(0,0,0,.35);cursor:pointer;pointer-events:auto}
+.sign-badge i{font-style:normal;font-weight:800;letter-spacing:-.02em}
+.sign-badge span{font:500 10.5px IBM Plex Mono;letter-spacing:.05em;opacity:.85}
+
+/* caption bar */
+.caption-bar{position:absolute;bottom:0;left:0;right:0;padding:40px 24px 16px;background:linear-gradient(transparent,rgba(7,9,13,.95));display:flex;flex-direction:column;gap:6px}
+.chap-tag{font:500 11px IBM Plex Mono;color:var(--amber);letter-spacing:.12em;text-transform:uppercase}
+.line-txt{font:400 clamp(16px,2.2vw,24px)/1.35 Fraunces,serif;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.8);max-width:85ch}
+
+/* quad grid view */
+.quad-grid{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;background:#000;display:none}
+.quad-cell{position:relative;background:#07090d;overflow:hidden;border:1px solid var(--line);cursor:pointer}
+.quad-cell img{width:100%;height:100%;object-fit:cover}
+.quad-tag{position:absolute;left:8px;top:8px;font:600 10.5px IBM Plex Mono;background:rgba(0,0,0,.7);color:var(--amber);padding:2px 6px;border-radius:4px}
+.quad-cell:hover{outline:2px solid var(--amber)}
+
+/* transport & timeline */
+.transport-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.controls{display:flex;align-items:center;gap:10px}
+.t-btn{background:var(--ink);color:#07090d;border:0;border-radius:6px;padding:6px 14px;font:600 12px IBM Plex Mono;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.t-btn:hover{background:#fff}
+.t-btn.ghost{background:none;border:1px solid var(--line2);color:var(--dim);padding:5px 9px}
+.t-btn.ghost:hover{color:var(--ink);border-color:var(--faint)}
+.timecode{font:500 13px IBM Plex Mono;color:var(--dim);font-variant-numeric:tabular-nums}
+.timecode b{color:var(--ink)}
+.vis-modes{margin-left:auto;display:flex;gap:4px}
+.vis-btn{background:none;border:1px solid var(--line);color:var(--dim);padding:3px 8px;border-radius:4px;font:500 10.5px IBM Plex Mono;cursor:pointer}
+.vis-btn.on{background:var(--panel2);color:var(--teal);border-color:var(--teal)}
+
+/* scrubber track */
+.scrubber{position:relative;height:42px;background:var(--panel2);border-radius:6px;overflow:hidden;cursor:pointer;border:1px solid var(--line);display:flex}
+.beat-block{position:relative;height:100%;border-right:1px solid rgba(0,0,0,.6);opacity:.75;transition:opacity .15s}
+.beat-block:hover,.beat-block.cur{opacity:1;outline:2px solid var(--amber);outline-offset:-2px;z-index:2}
+.beat-block span{position:absolute;left:4px;top:3px;font:500 9px IBM Plex Mono;color:#fff;text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 6px)}
+.playhead{position:absolute;top:0;bottom:0;width:2px;background:#ff4d6d;pointer-events:none;z-index:10;box-shadow:0 0 6px #ff4d6d}
+
+/* right inspector panel */
+aside.sidebar{border-left:1px solid var(--line);background:rgba(9,12,18,.7);backdrop-filter:blur(10px);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h2{font:600 11px IBM Plex Mono;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.cut-summary h3{font:700 20px/1.2 Fraunces,serif;color:var(--ink);margin-bottom:4px}
+.cut-summary p{font-size:12.5px;color:var(--dim);line-height:1.45}
+.beat-detail .num{font:600 11px IBM Plex Mono;color:var(--amber)}
+.beat-detail h4{font:600 17px/1.3 Fraunces,serif;color:var(--ink);margin:4px 0 8px}
+.beat-detail .poem-quote{font:italic 13.5px/1.45 Fraunces,serif;color:#e8dccb;padding-left:10px;border-left:2px solid var(--amber);margin:10px 0}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin:12px 0}
+.meta-item .k{font:500 10px IBM Plex Mono;color:var(--faint);text-transform:uppercase}
+.meta-item .v{font:500 13px IBM Plex Mono;color:var(--ink)}
+
+/* sign card */
+.sign-card{padding:14px;border-radius:8px;border:1px solid var(--line);margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.sign-card-head{display:flex;align-items:center;gap:10px}
+.sign-big{width:46px;height:46px;border-radius:6px;display:grid;place-items:center;font:800 24px/1 Fraunces,serif;color:#12100e}
+.sign-card-title b{font:700 15px Fraunces,serif;display:block}
+.sign-card-title small{font:500 10.5px IBM Plex Mono;color:var(--dim)}
+.sign-gloss{font:400 13px/1.4 Fraunces,serif;color:var(--ink)}
+.sign-test{font:italic 12px/1.4 IBM Plex Mono;color:var(--dim);background:rgba(255,255,255,.03);padding:8px;border-radius:6px}
+
+/* quick links */
+.actions{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.action-link{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);font:500 11.5px Inter;color:var(--dim);transition:.2s}
+.action-link:hover{color:var(--ink);border-color:var(--line2);background:#1a2334}
+::-webkit-scrollbar{width:7px;height:7px}::-webkit-scrollbar-thumb{background:#1f2836;border-radius:9px}
+</style>
+</head>
+<body>
+
+<header class="suite-nav">
+  <div class="suite-brand">
+    <h1>Shot Lab · <span>WYGWYL</span></h1>
+    <small>Film Studio · Deleuze Cineosis</small>
+  </div>
+  <nav class="nav-links">
+    <a href="index.html" class="nav-link">Shot Lab</a>
+    <a href="film.html" class="nav-link on">WYGWYL Film</a>
+    <a href="map.html" class="nav-link">Atlantis Map</a>
+    <a href="storyboard.html" class="nav-link">Storyboard</a>
+    <a href="reel.html" class="nav-link">Reels</a>
+    <a href="world.html" class="nav-link">World</a>
+  </nav>
+  <div class="cuts-bar" id="cutsBar"></div>
+  <button class="view-btn" id="bQuadToggle" title="Toggle 2x2 synchronized grid of all four cuts">Quad Grid 2×2</button>
+</header>
+
+<div class="app">
+  <main>
+    <div class="stage-wrap">
+      <div class="stage" id="stage">
+        <img class="media" id="screenImg" alt="">
+        <div class="quad-grid" id="quadGrid">
+          <div class="quad-cell" id="qc0"><img id="qi0" alt=""><span class="quad-tag">A · Narrative Arc</span></div>
+          <div class="quad-cell" id="qc1"><img id="qi1" alt=""><span class="quad-tag">B · Spatial Drift</span></div>
+          <div class="quad-cell" id="qc2"><img id="qi2" alt=""><span class="quad-tag">C · Memory Corridors</span></div>
+          <div class="quad-cell" id="qc3"><img id="qi3" alt=""><span class="quad-tag">D · Kinetic Beat</span></div>
+        </div>
+        <div class="hud-top" id="hudTop">
+          <span class="pill" id="hudCam">camera <b>SLO PUSH IN</b></span>
+          <div class="sign-badge" id="hudSign"><i id="sbSym">Op</i><span id="sbName">Opsign</span></div>
+          <span class="pill" id="hudDist">district <b>Naraka Market</b></span>
+        </div>
+        <div class="caption-bar" id="captionBar">
+          <span class="chap-tag" id="chapTag">01 · Out of Life</span>
+          <div class="line-txt" id="lineTxt">Look from the high-rise window as the market drowns in teal.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="transport-card">
+      <div class="controls">
+        <button class="t-btn" id="bPlay">▶ PLAY</button>
+        <button class="t-btn ghost" id="bPrev">⏮</button>
+        <button class="t-btn ghost" id="bNext">⏭</button>
+        <button class="t-btn ghost" id="bLoop">🔁 LOOP</button>
+        <span class="timecode" id="tcDisplay"><b>00:00.0</b> / 04:18.0</span>
+        <div class="vis-modes">
+          <button class="vis-btn on" data-m="image">Original</button>
+          <button class="vis-btn" data-m="cel">Cartoon Cel</button>
+          <button class="vis-btn" data-m="notan">Notan</button>
+          <button class="vis-btn" data-m="layout">Layout Sheet</button>
+          <button class="vis-btn" data-m="parallax">Parallax</button>
+        </div>
+      </div>
+      <div class="scrubber" id="scrubber">
+        <div class="playhead" id="playhead"></div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="card cut-summary">
+      <h2>Active Cut <span id="cutCode">Cut A</span></h2>
+      <h3 id="cutTitle">The Narrative Arc</h3>
+      <p id="cutTagline">The canonical sequence: dusk in The Severn, through the New Boroughs, arriving at the Light Gate and the Ascent.</p>
+    </div>
+
+    <div class="card beat-detail">
+      <h2>Beat &amp; Scene Reading <span class="num" id="beatIndex">Beat 1 / 42</span></h2>
+      <div class="poem-quote" id="poemQuote">"His high-rise room in The Severn above the market, dusk into night."</div>
+      
+      <div class="meta-grid">
+        <div class="meta-item"><div class="k">District</div><div class="v" id="mDist">Naraka Market</div></div>
+        <div class="meta-item"><div class="k">Duration</div><div class="v" id="mDur">6.5 s</div></div>
+        <div class="meta-item"><div class="k">Camera Move</div><div class="v" id="mCam">SLO PUSH IN</div></div>
+        <div class="meta-item"><div class="k">Camera Height</div><div class="v" id="mHgt">1.4 m</div></div>
+      </div>
+
+      <div class="sign-card" id="signCard">
+        <div class="sign-card-head">
+          <div class="sign-big" id="scSym" style="background:var(--break)">Op</div>
+          <div class="sign-card-title">
+            <b id="scName">Opsign</b>
+            <small id="scCat">Break · Pure Optical Situation</small>
+          </div>
+        </div>
+        <p class="sign-gloss" id="scGloss">Seeing without being able to act: the eye wandering over ruins.</p>
+        <div class="sign-test" id="scTest">Test: Does the spectator or character simply gaze into a vast stillness?</div>
+      </div>
+
+      <div class="actions">
+        <a class="action-link" id="aShotLab" href="#"><span>Open in Shot Lab (Segments &amp; Depth)</span> <span>→</span></a>
+        <a class="action-link" id="aMap" href="#"><span>Locate on Atlantis Map</span> <span>→</span></a>
+        <a class="action-link" id="aStoryboard" href="#"><span>Open Beat in Storyboard Studio</span> <span>→</span></a>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script src="shots_data.js"></script>
+<script src="film_data.js"></script>
+<script src="city_data.js"></script>
+<script>
+const S = (window.SHOTS || []);
+const F = (window.FILM || { cuts: {}, signs: {}, poems: [] });
+const shotMap = Object.fromEntries(S.map(s => [s.id, s]));
+
+let curCutKey = 'A';
+let curBeatIdx = 0;
+let isPlaying = false;
+let isQuad = false;
+let loopMode = true;
+let visMode = 'image';
+let playTimer = null;
+let curTime = 0.0;
+let lastTick = null;
+
+const $ = id => document.getElementById(id);
+
+function init(){
+  renderCutsBar();
+  loadCut('A');
+  setupEvents();
+}
+
+function renderCutsBar(){
+  const bar = $('cutsBar');
+  bar.innerHTML = Object.keys(F.cuts).map(k => {
+    const c = F.cuts[k];
+    return `<button class="cut-btn ${k === curCutKey ? 'on' : ''}" data-k="${k}">${k} · ${c.name.split(' ')[1] || c.name}</button>`;
+  }).join('');
+  bar.querySelectorAll('.cut-btn').forEach(b => {
+    b.onclick = () => { loadCut(b.dataset.k); };
+  });
+}
+
+function loadCut(k){
+  curCutKey = k;
+  curBeatIdx = 0;
+  curTime = 0.0;
+  document.querySelectorAll('.cut-btn').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  const cut = F.cuts[k];
+  $('cutCode').textContent = `Cut ${k}`;
+  $('cutTitle').textContent = cut.name;
+  $('cutTagline').textContent = cut.tagline;
+  buildScrubber();
+  seekBeat(0);
+}
+
+function buildScrubber(){
+  const cut = F.cuts[curCutKey];
+  const scr = $('scrubber');
+  const ph = $('playhead');
+  scr.innerHTML = '';
+  scr.appendChild(ph);
+
+  const total = cut.total_sec || 1;
+  cut.beats.forEach((b, idx) => {
+    const blk = document.createElement('div');
+    blk.className = 'beat-block';
+    blk.style.flex = `${b.duration / total} 0 0`;
+    const signCol = (b.sign_meta && b.sign_meta.col) || '#888';
+    blk.style.background = `linear-gradient(180deg, ${signCol}22, ${signCol}55)`;
+    blk.innerHTML = `<span>${b.id} ${b.sign}</span>`;
+    blk.onclick = (e) => { e.stopPropagation(); seekBeat(idx); };
+    scr.appendChild(blk);
+  });
+}
+
+function getShotSrc(sid, mode){
+  if(!sid) return '';
+  if(mode === 'cel') return `out/${sid}/cartoon/cel.png`;
+  if(mode === 'notan') return `out/${sid}/cartoon/notan.png`;
+  if(mode === 'layout') return `out/${sid}/cartoon/layout_sheet.png`;
+  if(mode === 'parallax') return `out/${sid}/multiplane/parallax.webp`;
+  return `out/${sid}/image.jpg`;
+}
+
+function seekBeat(idx){
+  const cut = F.cuts[curCutKey];
+  if(!cut || !cut.beats.length) return;
+  curBeatIdx = Math.max(0, Math.min(idx, cut.beats.length - 1));
+  const b = cut.beats[curBeatIdx];
+  curTime = b.t_start;
+  renderCurrent();
+}
+
+function renderCurrent(){
+  const cut = F.cuts[curCutKey];
+  const b = cut.beats[curBeatIdx];
+  const s = shotMap[b.shot_id] || {};
+  const cam = (s.camera || {});
+
+  // update stage image
+  $('screenImg').src = getShotSrc(b.shot_id, visMode);
+
+  // HUD
+  $('hudCam').innerHTML = `camera <b>${b.camera}</b>`;
+  $('hudDist').innerHTML = `district <b>${(b.district || '').replace('_',' ')}</b>`;
+  const sm = b.sign_meta || { name: b.sign, col: '#888', cat: '' };
+  $('sbSym').textContent = b.sign;
+  $('sbName').textContent = sm.name;
+  $('hudSign').style.background = sm.col;
+
+  // Caption
+  const p = F.poems.find(p => p.num === b.id.split('.')[0]) || {};
+  $('chapTag').textContent = `${p.num || '01'} · ${p.title || ''}`;
+  $('lineTxt').textContent = b.line;
+
+  // Scrubber highlights
+  const blocks = $('scrubber').querySelectorAll('.beat-block');
+  blocks.forEach((blk, i) => blk.classList.toggle('cur', i === curBeatIdx));
+  const pct = (curTime / (cut.total_sec || 1)) * 100;
+  $('playhead').style.left = `${pct}%`;
+
+  // Timecode
+  $('tcDisplay').innerHTML = `<b>${fmtTime(curTime)}</b> / ${fmtTime(cut.total_sec)}`;
+
+  // Sidebar beat detail
+  $('beatIndex').textContent = `Beat ${curBeatIdx + 1} / ${cut.beats.length}`;
+  $('poemQuote').textContent = `"${p.quote || b.line}"`;
+  $('mDist').textContent = (b.district || '-');
+  $('mDur').textContent = `${b.duration} s`;
+  $('mCam').textContent = b.camera;
+  $('mHgt').textContent = cam.height_m ? `${cam.height_m} m` : '—';
+
+  // Sign card
+  $('scSym').textContent = b.sign;
+  $('scSym').style.background = sm.col;
+  $('scName').textContent = sm.name;
+  $('scCat').textContent = `${sm.cat ? sm.cat.toUpperCase() : ''} · Peircean ${sm.code || ''}`;
+  $('scGloss').textContent = sm.gloss || '';
+  $('scTest').textContent = `Test: ${sm.test || ''}`;
+
+  // Quick links
+  $('aShotLab').href = `index.html?id=${b.shot_id}`;
+  $('aMap').href = `map.html?district=${b.district}&shot=${b.shot_id}`;
+  $('aStoryboard').href = `storyboard.html?beat=${b.id}`;
+
+  if(isQuad) renderQuad();
+}
+
+function renderQuad(){
+  const keys = ['A','B','C','D'];
+  keys.forEach((k, i) => {
+    const c = F.cuts[k];
+    if(!c) return;
+    // find beat matching curTime proportionally
+    const tRatio = curTime / (F.cuts[curCutKey].total_sec || 1);
+    const targetT = tRatio * (c.total_sec || 1);
+    const b = c.beats.find(beat => targetT >= beat.t_start && targetT <= beat.t_end) || c.beats[0];
+    if(b){
+      $(`qi${i}`).src = getShotSrc(b.shot_id, visMode);
+    }
+  });
+}
+
+function fmtTime(sec){
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  const ms = Math.floor((sec % 1) * 10);
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${ms}`;
+}
+
+function play(){
+  if(isPlaying) return;
+  isPlaying = true;
+  $('bPlay').textContent = '⏸ PAUSE';
+  lastTick = performance.now();
+  tick();
+}
+
+function pause(){
+  isPlaying = false;
+  $('bPlay').textContent = '▶ PLAY';
+  if(playTimer) cancelAnimationFrame(playTimer);
+}
+
+function tick(){
+  if(!isPlaying) return;
+  const now = performance.now();
+  const dt = (now - lastTick) / 1000;
+  lastTick = now;
+
+  curTime += dt;
+  const cut = F.cuts[curCutKey];
+  const curBeat = cut.beats[curBeatIdx];
+
+  if(curTime > curBeat.t_end){
+    if(curBeatIdx + 1 < cut.beats.length){
+      curBeatIdx++;
+      renderCurrent();
+    } else {
+      if(loopMode){
+        seekBeat(0);
+      } else {
+        pause();
+        return;
+      }
+    }
+  } else {
+    // update playhead smoothly
+    const pct = (curTime / (cut.total_sec || 1)) * 100;
+    $('playhead').style.left = `${pct}%`;
+    $('tcDisplay').innerHTML = `<b>${fmtTime(curTime)}</b> / ${fmtTime(cut.total_sec)}`;
+    if(isQuad) renderQuad();
+  }
+  playTimer = requestAnimationFrame(tick);
+}
+
+function setupEvents(){
+  $('bPlay').onclick = () => { isPlaying ? pause() : play(); };
+  $('bPrev').onclick = () => { seekBeat(curBeatIdx - 1); };
+  $('bNext').onclick = () => { seekBeat(curBeatIdx + 1); };
+  $('bLoop').onclick = () => {
+    loopMode = !loopMode;
+    $('bLoop').style.color = loopMode ? 'var(--amber)' : 'var(--dim)';
+  };
+
+  document.querySelectorAll('.vis-btn').forEach(b => {
+    b.onclick = () => {
+      visMode = b.dataset.m;
+      document.querySelectorAll('.vis-btn').forEach(btn => btn.classList.toggle('on', btn === b));
+      renderCurrent();
+    };
+  });
+
+  $('bQuadToggle').onclick = () => {
+    isQuad = !isQuad;
+    $('bQuadToggle').classList.toggle('on', isQuad);
+    $('quadGrid').style.display = isQuad ? 'grid' : 'none';
+    $('screenImg').style.display = isQuad ? 'none' : 'block';
+    if(isQuad) renderQuad();
+  };
+
+  window.addEventListener('keydown', e => {
+    if(e.code === 'Space'){ e.preventDefault(); isPlaying ? pause() : play(); }
+    if(e.code === 'ArrowRight'){ seekBeat(curBeatIdx + 1); }
+    if(e.code === 'ArrowLeft'){ seekBeat(curBeatIdx - 1); }
+  });
+}
+
+window.onload = init;
+</script>
+</body>
+</html>

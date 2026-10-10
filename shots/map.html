@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Atlantis Urbanism · Interactive Cartography &amp; Camera Map</title>
+<meta name="description" content="Spatial cartography and camera elevation atlas of Atlantis: 12 districts, altitude profiles, measured palettes, and camera frustums for virtual production.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090d;--panel:#0d1118;--panel2:#121823;--line:#1e2633;--line2:#2a3446;
+  --ink:#e8ecf3;--dim:#8a95a8;--faint:#566074;
+  --amber:#f2a541;--teal:#2ad4c0;--indigo:#7c8cff;--rose:#ff6b8b;--lime:#b8f26b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:radial-gradient(1200px 600px at 80% -10%,#16203a 0%,transparent 60%),radial-gradient(900px 500px at -10% 110%,#2a1a10 0%,transparent 55%),var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif;overflow:hidden}
+a{color:inherit;text-decoration:none}
+
+/* top suite nav */
+header.suite-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;background:rgba(9,12,18,.8);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
+.suite-brand{display:flex;align-items:center;gap:10px}
+.suite-brand h1{font:700 18px/1 Fraunces,serif;letter-spacing:.2px}
+.suite-brand h1 span{background:linear-gradient(90deg,var(--amber),var(--rose) 50%,var(--indigo));-webkit-background-clip:text;background-clip:text;color:transparent}
+.suite-brand small{font:500 10.5px IBM Plex Mono,monospace;color:var(--dim);border-left:1px solid var(--line);padding-left:10px;text-transform:uppercase;letter-spacing:.1em}
+.nav-links{display:flex;gap:4px}
+.nav-link{font:500 12px Inter;padding:6px 12px;border-radius:8px;color:var(--dim);border:1px solid transparent;transition:.2s}
+.nav-link:hover{color:var(--ink);background:var(--panel)}
+.nav-link.on{background:var(--panel2);color:var(--ink);border-color:var(--line2)}
+.district-chips{display:flex;gap:4px;overflow-x:auto;max-width:50vw;scrollbar-width:none}
+.chip{background:none;border:1px solid var(--line);color:var(--dim);font:500 11px IBM Plex Mono;padding:4px 9px;border-radius:6px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;transition:.2s}
+.chip i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.chip:hover{color:var(--ink);border-color:var(--faint)}
+.chip.on{background:var(--panel2);color:var(--ink);border-color:var(--line2);box-shadow:inset 0 0 0 1px currentColor}
+
+/* layout */
+.app{display:grid;grid-template-columns:300px 1fr 380px;height:calc(100vh - 49px)}
+aside.districts-list{border-right:1px solid var(--line);background:rgba(9,12,18,.7);backdrop-filter:blur(10px);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.dist-item{padding:10px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--line);cursor:pointer;transition:.2s}
+.dist-item:hover{background:var(--panel2);transform:translateX(2px)}
+.dist-item.on{background:var(--panel2);border-color:var(--line2);box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.dist-item-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.dist-item-head b{font:600 13.5px Fraunces,serif;display:flex;align-items:center;gap:7px}
+.dist-item-head span{font:500 10.5px IBM Plex Mono;color:var(--dim)}
+.dist-item p{font-size:11.5px;color:var(--dim);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* stage / map */
+main{display:flex;flex-direction:column;min-width:0;min-height:0;padding:14px 18px;gap:12px;position:relative}
+.map-stage{position:relative;flex:1;min-height:0;background:#05070a;border-radius:12px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 80px -30px rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center}
+svg.city-map{width:100%;height:100%;max-height:85vh;cursor:grab}
+svg.city-map:active{cursor:grabbing}
+
+/* map elements */
+.realm-label{font:600 11px IBM Plex Mono,monospace;letter-spacing:.16em;text-transform:uppercase;fill:#566074;user-select:none}
+.district-zone{stroke-dasharray:3 3;fill-opacity:.06;stroke-opacity:.35;transition:fill-opacity .2s,stroke-opacity .2s;cursor:pointer}
+.district-zone:hover,.district-zone.on{fill-opacity:.18;stroke-opacity:.85}
+.dist-pin{cursor:pointer;transition:transform .2s}
+.dist-pin:hover{transform:scale(1.25)}
+.shot-pin{cursor:pointer;transition:transform .15s}
+.shot-pin:hover,.shot-pin.on{transform:scale(1.4)}
+.shot-frustum{fill-opacity:.12;stroke-opacity:.4;pointer-events:none}
+.rail-line{stroke:#f06629;stroke-width:2;stroke-dasharray:4 4;fill:none}
+
+/* altitude bar */
+.alt-strip{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 12px;overflow-x:auto}
+.alt-label{font:600 10.5px IBM Plex Mono;color:var(--faint);letter-spacing:.1em;text-transform:uppercase;margin-right:6px;white-space:nowrap}
+.alt-btn{background:none;border:1px solid var(--line);color:var(--dim);font:500 11px IBM Plex Mono;padding:3px 9px;border-radius:6px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:.2s}
+.alt-btn:hover{color:var(--ink);border-color:var(--faint)}
+.alt-btn.on{background:var(--panel2);color:var(--ink);border-color:var(--line2)}
+.alt-btn i{width:6px;height:6px;border-radius:50%}
+
+/* right inspector panel */
+aside.info{border-left:1px solid var(--line);background:rgba(9,12,18,.7);backdrop-filter:blur(10px);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h2{font:600 11px IBM Plex Mono;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.dist-hero h3{font:700 22px/1.1 Fraunces,serif;color:var(--ink);margin-bottom:4px}
+.dist-hero .realm{font:500 11px IBM Plex Mono;color:var(--amber);margin-bottom:8px}
+.dist-hero p{font-size:12.5px;color:var(--dim);line-height:1.45}
+.mood-quote{font:italic 13.5px/1.45 Fraunces,serif;color:#fff1da;padding-left:10px;border-left:2px solid var(--amber);margin:12px 0}
+
+/* palette swatches */
+.pal-sec{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.pal-row{display:flex;align-items:center;gap:6px}
+.pal-label{width:70px;font:500 10.5px IBM Plex Mono;color:var(--faint)}
+.swatch-box{display:flex;gap:4px;flex:1}
+.swatch{width:24px;height:18px;border-radius:3px;border:1px solid rgba(255,255,255,.1);position:relative}
+.swatch.glow{box-shadow:0 0 8px currentColor}
+
+/* shot card */
+.shot-card-frame{position:relative;aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;margin-bottom:10px;border:1px solid var(--line)}
+.shot-card-frame img{width:100%;height:100%;object-fit:cover;display:block}
+.shot-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font:11px IBM Plex Mono;margin:8px 0}
+.shot-meta div span{color:var(--faint)}
+.shot-meta div b{color:var(--ink)}
+
+/* vis switcher */
+.vis-bar{display:flex;gap:4px;margin-bottom:8px}
+.v-btn{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--dim);font:500 10px IBM Plex Mono;padding:4px 0;border-radius:4px;cursor:pointer;text-align:center}
+.v-btn.on{color:var(--teal);border-color:var(--teal)}
+
+.actions{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.action-link{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);font:500 11.5px Inter;color:var(--dim);transition:.2s}
+.action-link:hover{color:var(--ink);border-color:var(--line2);background:#1a2334}
+::-webkit-scrollbar{width:7px;height:7px}::-webkit-scrollbar-thumb{background:#1f2836;border-radius:9px}
+</style>
+</head>
+<body>
+
+<header class="suite-nav">
+  <div class="suite-brand">
+    <h1>Shot Lab · <span>Atlantis</span></h1>
+    <small>Urbanism Cartography &amp; Camera Map</small>
+  </div>
+  <nav class="nav-links">
+    <a href="index.html" class="nav-link">Shot Lab</a>
+    <a href="film.html" class="nav-link">WYGWYL Film</a>
+    <a href="map.html" class="nav-link on">Atlantis Map</a>
+    <a href="storyboard.html" class="nav-link">Storyboard</a>
+    <a href="reel.html" class="nav-link">Reels</a>
+    <a href="world.html" class="nav-link">World</a>
+  </nav>
+  <div class="district-chips" id="districtChips"></div>
+</header>
+
+<div class="app">
+  <aside class="districts-list" id="districtsList"></aside>
+
+  <main>
+    <div class="map-stage">
+      <svg class="city-map" id="cityMap" viewBox="0 0 600 480">
+        <defs>
+          <radialGradient id="oceanGlow" cx="20%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#142236" stop-opacity=".7"/>
+            <stop offset="100%" stop-color="#07090d" stop-opacity="1"/>
+          </radialGradient>
+          <linearGradient id="frustumGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="var(--amber)" stop-opacity=".45"/>
+            <stop offset="100%" stop-color="var(--amber)" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Base terrain background -->
+        <rect x="15" y="15" width="570" height="450" rx="8" fill="url(#oceanGlow)" stroke="#1a2334" stroke-width="1.5"/>
+
+        <!-- Waterways & Shoreline (Realm C) -->
+        <path d="M 20 180 Q 90 200, 160 190 T 260 320 T 360 440 L 20 440 Z" fill="#0f1926" opacity=".85"/>
+        <path d="M 70 190 Q 130 180, 170 210 T 230 330" fill="none" stroke="#2a4565" stroke-width="3" opacity=".6"/>
+
+        <!-- Realm labels -->
+        <text x="140" y="44" class="realm-label">B · The Old Harbor City</text>
+        <text x="450" y="280" class="realm-label">A · Atlantis High Ground</text>
+        <text x="310" y="440" class="realm-label">C · The Shore &amp; Colonnades</text>
+
+        <!-- Cenotaph Rail Line -->
+        <path d="M 167 244 C 230 272, 314 279, 378 268" class="rail-line"/>
+        <text x="279" y="262" font-size="10" font-family="IBM Plex Mono" fill="#f06629" text-anchor="middle">Cenotaph Rail Line</text>
+
+        <!-- District Zones & Boundaries -->
+        <g id="districtZones"></g>
+
+        <!-- Shot Camera Frustums & Pins -->
+        <g id="shotFrustums"></g>
+        <g id="shotPins"></g>
+
+        <!-- District Center Pins & Labels -->
+        <g id="districtPins"></g>
+      </svg>
+    </div>
+
+    <div class="alt-strip" id="altStrip">
+      <span class="alt-label">Elevation Zones:</span>
+    </div>
+  </main>
+
+  <aside class="info" id="info">
+    <div class="card dist-hero">
+      <div class="realm" id="dRealm">B · The Old Harbor City</div>
+      <h3 id="dName">Naraka Market</h3>
+      <p id="dWhere">The nightlife district around The Severn and its fire escapes.</p>
+      <div class="mood-quote" id="dMood">twilight that never ends · humid, crowded, devotional, improvised · someone else's rain</div>
+      
+      <div class="pal-sec">
+        <div class="pal-row">
+          <span class="pal-label">Made of</span>
+          <div class="swatch-box" id="bodySwatches"></div>
+        </div>
+        <div class="pal-row">
+          <span class="pal-label">Glows with</span>
+          <div class="swatch-box" id="glowSwatches"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shot-card" id="shotCard">
+      <h2>Camera &amp; Inferred Ground <span id="scId">—</span></h2>
+      <div class="vis-bar">
+        <button class="v-btn on" data-m="image">Original</button>
+        <button class="v-btn" data-m="cel">Cel</button>
+        <button class="v-btn" data-m="notan">Notan</button>
+        <button class="v-btn" data-m="layout">Layout</button>
+      </div>
+      <div class="shot-card-frame">
+        <img id="scImg" alt="">
+      </div>
+      <p id="scPrompt" style="font-size:12px;color:var(--ink);line-height:1.35;margin-bottom:8px"></p>
+      <div class="shot-meta">
+        <div><span>Height:</span> <b id="scHgt">—</b></div>
+        <div><span>Pitch:</span> <b id="scPitch">—</b></div>
+        <div><span>H-FOV:</span> <b id="scFov">—</b></div>
+        <div><span>Class:</span> <b id="scCls">—</b></div>
+      </div>
+
+      <div class="actions">
+        <a class="action-link" id="scLinkLab" href="#"><span>Open in Shot Lab (Point Cloud &amp; Segments)</span> <span>→</span></a>
+        <a class="action-link" id="scLinkFilm" href="#"><span>View in WYGWYL Film Cut</span> <span>→</span></a>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script src="shots_data.js"></script>
+<script src="city_data.js"></script>
+<script src="film_data.js"></script>
+<script>
+const S = (window.SHOTS || []);
+const C = (window.CITY || { districts: [], altitudes: [] });
+const F = (window.FILM || { poems: [] });
+
+let curDistId = 'naraka';
+let curShotId = null;
+let curAltFilter = null;
+let visMode = 'image';
+
+const $ = id => document.getElementById(id);
+
+function init(){
+  renderChips();
+  renderDistrictsList();
+  renderAltitudeStrip();
+  drawMap();
+  selectDistrict('naraka');
+}
+
+function renderChips(){
+  const wrap = $('districtChips');
+  wrap.innerHTML = C.districts.map(d => `
+    <button class="chip ${d.id === curDistId ? 'on' : ''}" data-id="${d.id}">
+      <i style="background:${d.color}"></i> ${d.name}
+    </button>
+  `).join('');
+  wrap.querySelectorAll('.chip').forEach(b => {
+    b.onclick = () => selectDistrict(b.dataset.id);
+  });
+}
+
+function renderDistrictsList(){
+  const list = $('districtsList');
+  list.innerHTML = C.districts.map(d => {
+    const sCount = d.shots ? d.shots.length : 0;
+    return `
+      <div class="dist-item ${d.id === curDistId ? 'on' : ''}" data-id="${d.id}" id="di-${d.id}">
+        <div class="dist-item-head">
+          <b style="color:${d.color}"><i style="width:9px;height:9px;border-radius:2px;background:${d.color};display:inline-block"></i> ${d.name}</b>
+          <span>${sCount} shots</span>
+        </div>
+        <p>${d.mood}</p>
+      </div>
+    `;
+  }).join('');
+  list.querySelectorAll('.dist-item').forEach(e => {
+    e.onclick = () => selectDistrict(e.dataset.id);
+  });
+}
+
+function renderAltitudeStrip(){
+  const strip = $('altStrip');
+  const allBtn = document.createElement('button');
+  allBtn.className = 'alt-btn on';
+  allBtn.textContent = 'All Altitudes';
+  allBtn.onclick = () => { curAltFilter = null; updateAltBtns(allBtn); filterShotsByAltitude(); };
+  strip.appendChild(allBtn);
+
+  C.altitudes.forEach(a => {
+    const b = document.createElement('button');
+    b.className = 'alt-btn';
+    b.innerHTML = `<i style="background:${a.color}"></i> ${a.label} (${a.min_m}m to ${a.max_m}m)`;
+    b.onclick = () => { curAltFilter = a; updateAltBtns(b); filterShotsByAltitude(); };
+    strip.appendChild(b);
+  });
+}
+
+function updateAltBtns(active){
+  $('altStrip').querySelectorAll('.alt-btn').forEach(b => b.classList.toggle('on', b === active));
+}
+
+function filterShotsByAltitude(){
+  document.querySelectorAll('.shot-group').forEach(g => {
+    const sid = g.dataset.sid;
+    const shot = S.find(s => s.id === sid);
+    if(!shot) return;
+    const h = (shot.camera && shot.camera.height_m) || 0;
+    let show = true;
+    if(curAltFilter){
+      show = (h >= curAltFilter.min_m && h <= curAltFilter.max_m);
+    }
+    g.style.opacity = show ? '1' : '0.15';
+  });
+}
+
+function drawMap(){
+  const gZones = $('districtZones');
+  const gPins = $('districtPins');
+  const gFrust = $('shotFrustums');
+  const gShotPins = $('shotPins');
+
+  // Zones
+  C.districts.forEach(d => {
+    const cx = d.coords.x, cy = d.coords.y;
+    const rad = 38;
+    gZones.innerHTML += `
+      <circle class="district-zone" id="zone-${d.id}" cx="${cx}" cy="${cy}" r="${rad}" fill="${d.color}" stroke="${d.color}" stroke-width="1.5" data-id="${d.id}"/>
+    `;
+    gPins.innerHTML += `
+      <g class="dist-pin" data-id="${d.id}" transform="translate(${cx}, ${cy})">
+        <circle r="7" fill="${d.color}" stroke="#07090d" stroke-width="2"/>
+        <text y="19" font-family="IBM Plex Mono" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" paint-order="stroke" stroke="#07090d" stroke-width="3">${d.name}</text>
+      </g>
+    `;
+  });
+
+  // Plot individual shots
+  S.forEach(s => {
+    const d = C.districts.find(di => di.id === s.district) || C.districts[0];
+    const base = d.coords || { x: 300, y: 200 };
+    // deterministic jitter per shot id
+    const seed = (s.id.charCodeAt(0) * 17 + s.id.charCodeAt(1) * 31) % 100;
+    const ang = (seed / 100) * 2 * Math.PI;
+    const r = 12 + (seed % 24);
+    const sx = base.x + Math.cos(ang) * r;
+    const sy = base.y + Math.sin(ang) * r;
+
+    const cam = s.camera || {};
+    const pitch = cam.pitch_deg || 0;
+    const fov = cam.fov_h_deg || 60;
+    const fovRad = (fov / 2) * Math.PI / 180;
+    const coneLen = 28;
+    // Azimuth direction
+    const az = (seed % 360) * Math.PI / 180;
+    const x1 = sx + Math.cos(az - fovRad) * coneLen;
+    const y1 = sy + Math.sin(az - fovRad) * coneLen;
+    const x2 = sx + Math.cos(az + fovRad) * coneLen;
+    const y2 = sy + Math.sin(az + fovRad) * coneLen;
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.className = 'shot-group';
+    g.dataset.sid = s.id;
+    g.dataset.did = s.district;
+    g.innerHTML = `
+      <polygon points="${sx},${sy} ${x1},${y1} ${x2},${y2}" class="shot-frustum" fill="${d.color}" stroke="${d.color}"/>
+      <circle cx="${sx}" cy="${sy}" r="4.5" fill="#e8ecf3" stroke="${d.color}" stroke-width="1.8" class="shot-pin"/>
+    `;
+    g.onclick = (e) => { e.stopPropagation(); selectShot(s.id); };
+    gShotPins.appendChild(g);
+  });
+
+  document.querySelectorAll('.district-zone, .dist-pin').forEach(el => {
+    el.onclick = () => selectDistrict(el.dataset.id);
+  });
+}
+
+function selectDistrict(did){
+  curDistId = did;
+  document.querySelectorAll('.chip').forEach(b => b.classList.toggle('on', b.dataset.id === did));
+  document.querySelectorAll('.dist-item').forEach(e => e.classList.toggle('on', e.dataset.id === did));
+  document.querySelectorAll('.district-zone').forEach(z => z.classList.toggle('on', z.dataset.id === did));
+
+  const d = C.districts.find(di => di.id === did);
+  if(!d) return;
+
+  $('dRealm').textContent = d.realm;
+  $('dName').textContent = d.name;
+  $('dWhere').textContent = d.where;
+  $('dMood').textContent = d.mood;
+  $('dMood').style.borderLeftColor = d.color;
+
+  // Swatches
+  $('bodySwatches').innerHTML = (d.body || []).map(c => `
+    <div class="swatch" style="background:${c}" title="${c}"></div>
+  `).join('');
+  $('glowSwatches').innerHTML = (d.glow || []).map(c => `
+    <div class="swatch glow" style="background:${c};color:${c}" title="${c}"></div>
+  `).join('');
+
+  // Pick first shot of district if none selected or not in district
+  const dShots = S.filter(s => s.district === did);
+  if(dShots.length && (!curShotId || !dShots.some(s => s.id === curShotId))){
+    selectShot(dShots[0].id);
+  }
+}
+
+function selectShot(sid){
+  curShotId = sid;
+  const s = S.find(shot => shot.id === sid);
+  if(!s) return;
+
+  document.querySelectorAll('.shot-pin').forEach(p => {
+    const parent = p.closest('.shot-group');
+    p.classList.toggle('on', parent && parent.dataset.sid === sid);
+  });
+
+  const cam = s.camera || {};
+  $('scId').textContent = sid.slice(0, 8);
+  $('scImg').src = getShotSrc(sid, visMode);
+  $('scPrompt').textContent = s.prompt.slice(0, 110) + '…';
+  $('scHgt').textContent = cam.height_m != null ? `${cam.height_m} m` : '—';
+  $('scPitch').textContent = cam.pitch_deg != null ? `${cam.pitch_deg}°` : '—';
+  $('scFov').textContent = cam.fov_h_deg ? `${cam.fov_h_deg}°` : '—';
+  $('scCls').textContent = (cam.shot_class || '-').split(' ')[0];
+
+  $('scLinkLab').href = `index.html?id=${sid}`;
+  $('scLinkFilm').href = `film.html?shot=${sid}`;
+
+  if(s.district && s.district !== curDistId){
+    selectDistrict(s.district);
+  }
+}
+
+function getShotSrc(sid, mode){
+  if(!sid) return '';
+  if(mode === 'cel') return `out/${sid}/cartoon/cel.png`;
+  if(mode === 'notan') return `out/${sid}/cartoon/notan.png`;
+  if(mode === 'layout') return `out/${sid}/cartoon/layout_sheet.png`;
+  return `out/${sid}/image.jpg`;
+}
+
+// visual mode switcher
+document.querySelectorAll('.v-btn').forEach(b => {
+  b.onclick = () => {
+    visMode = b.dataset.m;
+    document.querySelectorAll('.v-btn').forEach(btn => btn.classList.toggle('on', btn === b));
+    if(curShotId) selectShot(curShotId);
+  };
+});
+
+window.onload = init;
+</script>
+</body>
+</html>
