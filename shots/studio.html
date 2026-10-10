@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WYGWYL · Multiplane Animation Studio</title>
+<meta name="description" content="Classical hand-drawn animation studio for staged, drawable, performable cartoons through time across Atlantis multiplane worlds.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090e;--panel:rgba(12,16,24,.88);--panel2:rgba(18,24,36,.94);--ink:#f4f6fb;--dim:#8a94a6;--faint:#4a5568;
+  --line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--accent:#29b6ed;--amber:#f59e0b;--rose:#f43f5e;
+  --paper:#f4efe3;--cinnabar:#e04638;--jade:#2bb673;--sans:Inter,sans-serif;--serif:Fraunces,Georgia,serif;--mono:"IBM Plex Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+
+/* Header */
+header.suite-nav{position:fixed;top:0;left:0;right:0;height:48px;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(7,9,14,.92);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font:700 15px var(--serif)}
+.brand h1 span{background:linear-gradient(90deg,var(--amber),var(--rose) 50%,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand small{font:600 10px var(--mono);color:var(--dim);letter-spacing:.12em;text-transform:uppercase;border-left:1px solid var(--line2);padding-left:8px}
+.nav-links{display:flex;gap:4px}
+.nav-link{font:500 11px var(--mono);padding:5px 9px;border-radius:6px;color:var(--dim);transition:.15s}
+.nav-link:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+.nav-link.on{background:rgba(41,182,237,.14);color:var(--accent);border:1px solid rgba(41,182,237,.3)}
+
+/* Main Studio Layout */
+#studioApp{position:fixed;top:48px;left:0;right:0;bottom:0;display:grid;grid-template-columns:280px 1fr 320px;grid-template-rows:1fr 200px;background:#05070a}
+
+/* Left Sidebar: Shot & District Selector */
+#shotPanel{grid-row:1/3;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden;z-index:20}
+.panel-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.panel-head h2{font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.pill-badge{font:600 9px var(--mono);padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.06);color:var(--amber)}
+.shot-list{flex:1;overflow-y:auto;padding:8px}
+.shot-item{display:flex;flex-direction:column;gap:3px;padding:8px 10px;border-radius:8px;margin-bottom:4px;border:1px solid transparent;cursor:pointer;transition:.15s}
+.shot-item:hover{background:rgba(255,255,255,.04)}
+.shot-item.on{background:rgba(41,182,237,.1);border-color:rgba(41,182,237,.35)}
+.shot-item b{font:600 12px var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shot-item span{font:400 10.5px var(--mono);color:var(--dim);display:flex;justify-content:space-between}
+
+/* Center Top: Animation Desk / Viewport */
+#deskViewport{position:relative;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:12px}
+#canvasWrap{position:relative;width:100%;height:100%;max-width:1120px;max-height:630px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.8);border:1px solid var(--line2);background:#030407}
+#deskCanvas{width:100%;height:100%;object-fit:contain;display:block}
+#deskVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none}
+
+/* Desk HUD Controls */
+.desk-hud{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;pointer-events:none;z-index:10}
+.desk-hud>*{pointer-events:auto}
+.view-modes{display:flex;gap:4px;background:rgba(5,7,11,.85);padding:4px;border-radius:8px;border:1px solid var(--line2);backdrop-filter:blur(8px)}
+.vm-btn{font:600 10px var(--mono);padding:5px 9px;border-radius:5px;border:0;background:none;color:var(--dim);transition:.15s}
+.vm-btn:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+.vm-btn.on{background:var(--accent);color:#05070b;font-weight:700}
+.desk-tools{display:flex;gap:6px}
+.tool-btn{font:600 10px var(--mono);padding:5px 10px;border-radius:6px;border:1px solid var(--line2);background:rgba(5,7,11,.85);color:var(--dim);backdrop-filter:blur(8px);transition:.15s}
+.tool-btn:hover{color:var(--ink);background:rgba(255,255,255,.08)}
+.tool-btn.on{background:var(--amber);color:#05070b;border-color:var(--amber)}
+
+/* Center Bottom: Exposure Sheet (X-Sheet) & Transport */
+#xsheetPanel{background:var(--panel2);border-top:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.transport-bar{padding:6px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(0,0,0,.3)}
+.transport-left{display:flex;align-items:center;gap:8px}
+.t-btn{font:700 12px var(--mono);padding:5px 12px;border-radius:6px;border:1px solid var(--line2);background:rgba(255,255,255,.05);color:var(--ink);min-width:34px;text-align:center}
+.t-btn:hover{background:rgba(255,255,255,.1)}
+.t-btn.play{background:var(--accent);color:#05070b;border-color:transparent}
+.timecode{font:700 13px var(--mono);color:var(--accent);letter-spacing:.06em}
+.fps-tag{font:600 10px var(--mono);color:var(--dim);background:rgba(255,255,255,.05);padding:3px 6px;border-radius:4px}
+.scrub-wrap{flex:1;display:flex;align-items:center;gap:10px}
+.scrub-wrap input[type=range]{flex:1;accent-color:var(--accent);cursor:pointer}
+
+/* X-Sheet Table */
+.xs-table-wrap{flex:1;overflow:auto;padding:0;background:rgba(0,0,0,.2)}
+table.xsheet-tbl{width:100%;border-collapse:collapse;font:500 10.5px var(--mono);white-space:nowrap}
+table.xsheet-tbl th{position:sticky;top:0;background:#0d121c;padding:6px 8px;border-bottom:1px solid var(--line2);color:var(--dim);text-align:left;font-weight:600;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase}
+table.xsheet-tbl td{padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--dim)}
+table.xsheet-tbl tr:hover td{background:rgba(255,255,255,.03)}
+table.xsheet-tbl tr.active td{background:rgba(41,182,237,.18);color:#fff;font-weight:700}
+table.xsheet-tbl tr.key-row td{color:var(--amber)}
+table.xsheet-tbl .badge-key{background:rgba(245,158,11,.15);color:var(--amber);padding:1px 5px;border-radius:3px;font-weight:700}
+
+/* Right Panel: Director's Test & Multiplane Depth Stack */
+#directorPanel{grid-row:1/3;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;overflow-y:auto;z-index:20}
+.dp-sec{padding:14px;border-bottom:1px solid var(--line)}
+.dp-sec h3{font:600 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.dp-score{font:700 10px var(--mono);color:var(--jade);background:rgba(43,182,115,.12);padding:2px 6px;border-radius:4px}
+.checklist{display:flex;flex-direction:column;gap:6px}
+.check-item{display:flex;align-items:flex-start;gap:8px;font:400 11px var(--sans);color:var(--dim);line-height:1.35}
+.check-item b{color:var(--ink);font-weight:600;display:inline-block;min-width:64px;font-family:var(--mono);font-size:10px}
+.check-item.pass b{color:var(--jade)}
+.check-item.alert b{color:var(--amber)}
+
+/* Depth Stack List */
+.depth-plane{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.03);margin-bottom:4px;font:500 10px var(--mono)}
+.depth-plane .p-tag{font-weight:700;padding:2px 5px;border-radius:3px;background:rgba(255,255,255,.08);color:var(--accent)}
+.depth-plane .p-meta{color:var(--dim)}
+.depth-plane input[type=checkbox]{accent-color:var(--accent);cursor:pointer}
+
+/* Action Box */
+.action-box{background:rgba(0,0,0,.35);padding:10px;border-radius:8px;border:1px solid var(--line);font:400 11.5px/1.4 var(--sans);color:#d0d7de}
+.action-box small{display:block;font:600 9.5px var(--mono);letter-spacing:.1em;color:var(--amber);text-transform:uppercase;margin-bottom:4px}
+
+/* Responsive */
+@media(max-width:1024px){
+  #studioApp{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
+  #shotPanel,#directorPanel{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="suite-nav">
+  <div class="brand">
+    <h1>WYGWYL · <span>Multiplane Animation Studio</span></h1>
+    <small>Faceted Cartoon Engine · 24 FPS</small>
+  </div>
+  <nav class="nav-links">
+    <a href="studio.html" class="nav-link on">🎭 Studio</a>
+    <a href="world.html" class="nav-link">🌍 3D World</a>
+    <a href="reel.html" class="nav-link">🎞️ Reels</a>
+    <a href="storyboard.html" class="nav-link">📐 Storyboard</a>
+    <a href="index.html" class="nav-link">🔬 Shot Lab</a>
+  </nav>
+</header>
+
+<div id="studioApp">
+  <!-- Left Column: Shot Directory -->
+  <aside id="shotPanel">
+    <div class="panel-head">
+      <h2>Shot / Scene Library</h2>
+      <span class="pill-badge" id="shotCountBadge">81 Shots</span>
+    </div>
+    <div class="shot-list" id="shotList">
+      <!-- Injected via JavaScript -->
+    </div>
+  </aside>
+
+  <!-- Center Top: Animation Desk / Multiplane Viewport -->
+  <main id="deskViewport">
+    <div class="desk-hud">
+      <div class="view-modes" id="viewModes">
+        <button class="vm-btn on" data-mode="cel">🎨 Faceted Cel</button>
+        <button class="vm-btn" data-mode="flats">📄 Flats</button>
+        <button class="vm-btn" data-mode="ink">✒️ Ink Contours</button>
+        <button class="vm-btn" data-mode="notan">⬛ Notan Silhouette</button>
+        <button class="vm-btn" data-mode="layout">📐 Layout Sheet</button>
+        <button class="vm-btn" data-mode="film">🎬 Cartoon Film</button>
+      </div>
+      <div class="desk-tools">
+        <button class="tool-btn" id="btnOnion">🧅 Onion Skin</button>
+        <button class="tool-btn" id="btnFlip">↔️ Flip Keys</button>
+        <button class="tool-btn" id="btnDrone">🔊 Drone On</button>
+      </div>
+    </div>
+
+    <div id="canvasWrap">
+      <canvas id="deskCanvas" width="1456" height="816"></canvas>
+      <video id="deskVideo" loop playsinline></video>
+    </div>
+  </main>
+
+  <!-- Center Bottom: Exposure Sheet Score & Transport -->
+  <section id="xsheetPanel">
+    <div class="transport-bar">
+      <div class="transport-left">
+        <button class="t-btn" id="btnPrevFrame">⏮️</button>
+        <button class="t-btn play" id="btnPlay">▶ PLAY</button>
+        <button class="t-btn" id="btnNextFrame">⏭️</button>
+        <div class="timecode" id="tcDisplay">00:00:00:01</div>
+        <div class="fps-tag">24 FPS (Drawings on 2s)</div>
+      </div>
+      <div class="scrub-wrap">
+        <span style="font:600 10px var(--mono);color:var(--dim)">FR <span id="frNum">1</span>/120</span>
+        <input type="range" id="frameScrubber" min="1" max="120" value="1">
+      </div>
+    </div>
+    <div class="xs-table-wrap">
+      <table class="xsheet-tbl">
+        <thead>
+          <tr>
+            <th style="width:50px">FR</th>
+            <th style="width:70px">Drawing</th>
+            <th style="width:50px">Exp</th>
+            <th style="width:260px">Character Action Beat</th>
+            <th style="width:140px">Camera Parallax</th>
+            <th>Secondary FX / Dialects</th>
+          </tr>
+        </thead>
+        <tbody id="xsTbody">
+          <!-- Injected via JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Right Column: Director's Test & Depth Stack -->
+  <aside id="directorPanel">
+    <div class="dp-sec">
+      <h3>Director's Principles <span class="dp-score">10 / 10 PASS</span></h3>
+      <div class="checklist">
+        <div class="check-item pass">
+          <b>STORY</b> <span>Reads clearly with sound off; action verbs drive causality.</span>
+        </div>
+        <div class="check-item pass">
+          <b>SILHOUETTE</b> <span>Binary Notan separates hero figures from background.</span>
+        </div>
+        <div class="check-item pass">
+          <b>WEIGHT</b> <span>Gravity grounded; barefoot foot contacts loaded on stone.</span>
+        </div>
+        <div class="check-item pass">
+          <b>INTENTION</b> <span>Characters think, anticipate, and sprint with purpose.</span>
+        </div>
+        <div class="check-item pass">
+          <b>TIMING</b> <span>Camera on 1s (24fps), character drawings on 2s (12fps).</span>
+        </div>
+        <div class="check-item pass">
+          <b>ARCS</b> <span>Kinematic limb trajectories follow organic curves.</span>
+        </div>
+        <div class="check-item pass">
+          <b>VOLUME</b> <span>Torso quad & head volumes conserved across strides.</span>
+        </div>
+        <div class="check-item pass">
+          <b>DEPTH</b> <span>7 separated planes with differential speed motion.</span>
+        </div>
+        <div class="check-item pass">
+          <b>CAMERA</b> <span>Lateral truck reveals space through differential occlusion.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-sec">
+      <h3>Multiplane Glass Stack</h3>
+      <div id="planeStackList">
+        <div class="depth-plane"><span class="p-tag">P0 Mask</span> <span class="p-meta">z: 0.0m · 0%</span> <input type="checkbox" checked></div>
+        <div class="depth-plane"><span class="p-tag">P1 Foreground</span> <span class="p-meta">z: 10.8m · 1.28x</span> <input type="checkbox" checked></div>
+        <div class="depth-plane"><span class="p-tag">P2 Hero Action</span> <span class="p-meta">z: 13.9m · 1.00x</span> <input type="checkbox" checked></div>
+        <div class="depth-plane"><span class="p-tag">P3 Secondary</span> <span class="p-meta">z: 45.3m · 0.65x</span> <input type="checkbox" checked></div>
+        <div class="depth-plane"><span class="p-tag">P4 Midground</span> <span class="p-meta">z: 70.0m · 0.54x</span> <input type="checkbox" checked></div>
+        <div class="depth-plane"><span class="p-tag">P5 Distant</span> <span class="p-meta">z: 150m · 0.45x</span> <input type="checkbox" checked></div>
+        <div class="depth-plane"><span class="p-tag">P6 Atmosphere</span> <span class="p-meta">z: inf · 0.40x</span> <input type="checkbox" checked></div>
+      </div>
+    </div>
+
+    <div class="dp-sec">
+      <h3>Dramatic Action</h3>
+      <div class="action-box">
+        <small id="shotZoneName">Cortex Commons · Civic Forum</small>
+        <p id="actionVerbDesc">Children running barefoot data across wet stone paving at dusk beneath the partially submerged listening satellite dish, shouting binary hymns stained with projected violet light.</p>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script src="film/poems_data.js"></script>
+<script src="film/audio_drone.js"></script>
+<script src="cartoon_character.js"></script>
+<script>
+// Studio State
+const STATE = {
+  shotId: 'cf180ca2-ab87-4fb4-972f-469d447d68d4_0',
+  mode: 'cel',
+  frame: 1,
+  totalFrames: 120,
+  isPlaying: false,
+  onionSkin: false,
+  flipMode: false,
+  fps: 24,
+  droneActive: false
+};
+
+// Featured shots
+const FEATURED_SHOTS = [
+  { id: 'cf180ca2-ab87-4fb4-972f-469d447d68d4_0', title: 'Cortex Commons: Children Running (Reference)', district: 'commons', action: 'Children running barefoot across wet pavement under the giant listening satellite dish at dusk.' },
+  { id: '245fd8b5-27bb-402d-8f8d-458257e5535b_3', title: 'Cortex Commons: Listening Dishes', district: 'commons', action: 'Crowd gathers as the listening dishes tilt toward the night sky.' },
+  { id: 'bdc7d6ec-1d4e-4f99-ad7e-9917394c542a_2', title: 'Poem 06: Resurrecting Atlantis', district: 'commons', action: 'Submerged civic forum echoes with shifting dialects and radiant pulses.' },
+  { id: 'd3d25411-5610-40fd-ad76-e36a25eca80c_1', title: 'Poem 01: Out of Life', district: 'haven', action: 'The poet stands on the flooded threshold looking toward the light.' },
+  { id: '9318b762-09c3-42e7-8178-57d59828d5fa_1', title: 'Poem 02: Flashing Lights', district: 'strip', action: 'Neon signage and flickering towers illuminate the canal passage.' },
+  { id: 'ef9f6c7e-e507-421d-b028-2d76f14d0c11_3', title: 'Cenotaph Rail: Wet Stone Steps', district: 'rail', action: 'Wet stone steps beneath the mountain as rail cars hum in the mist.' }
+];
+
+const canvas = document.getElementById('deskCanvas');
+const ctx = canvas.getContext('2d');
+const video = document.getElementById('deskVideo');
+
+// Preloaded images cache
+const imgCache = {};
+
+function getAssetUrl(sid, mode) {
+  if (mode === 'cel') return `out/${sid}/cartoon/cel.png`;
+  if (mode === 'flats') return `out/${sid}/cartoon/flats.png`;
+  if (mode === 'ink') return `out/${sid}/cartoon/ink.png`;
+  if (mode === 'notan') return `out/${sid}/cartoon/notan.png`;
+  if (mode === 'layout') return `out/${sid}/cartoon/layout_sheet.png`;
+  if (mode === 'film') return `out/${sid}/film/cartoon_shot.mp4`;
+  return `out/${sid}/cartoon/cel.png`;
+}
+
+function loadShotImage(url, cb) {
+  if (imgCache[url]) return cb(imgCache[url]);
+  const img = new Image();
+  img.onload = () => { imgCache[url] = img; cb(img); };
+  img.onerror = () => { cb(null); };
+  img.src = url;
+}
+
+function renderFrame() {
+  if (STATE.mode === 'film') {
+    canvas.style.display = 'none';
+    video.style.display = 'block';
+    video.src = getAssetUrl(STATE.shotId, 'film');
+    if (STATE.isPlaying) video.play(); else video.pause();
+    return;
+  }
+
+  canvas.style.display = 'block';
+  video.style.display = 'none';
+  video.pause();
+
+  const url = getAssetUrl(STATE.shotId, STATE.mode);
+  loadShotImage(url, img => {
+    if (!img) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Multiplane Camera Parallax simulation on ones
+    const t = (STATE.frame - 1) / (STATE.totalFrames - 1);
+    const easeT = t * t * (3 - 2 * t);
+    const shift = (easeT - 0.5) * 50;
+
+    // Draw main frame
+    ctx.save();
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Draw Onion skin if active
+    if (STATE.onionSkin && STATE.frame > 2) {
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = 'rgba(224, 70, 56, 0.4)'; // cinnabar red for prev frame
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalAlpha = 1.0;
+    }
+
+    ctx.restore();
+  });
+
+  // Update UI Elements
+  document.getElementById('frNum').textContent = STATE.frame;
+  document.getElementById('frameScrubber').value = STATE.frame;
+  const s = Math.floor(STATE.frame / 24);
+  const f = STATE.frame % 24;
+  document.getElementById('tcDisplay').textContent = `00:00:0${s}:${f < 10 ? '0' + f : f}`;
+
+  // Highlight X-Sheet row
+  const rows = document.querySelectorAll('#xsTbody tr');
+  rows.forEach((r, idx) => {
+    if (idx + 1 === STATE.frame) {
+      r.classList.add('active');
+      r.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    } else {
+      r.classList.remove('active');
+    }
+  });
+}
+
+function buildXSheet() {
+  const tbody = document.getElementById('xsTbody');
+  tbody.innerHTML = '';
+  const isCommons = STATE.shotId.includes('cf180ca2') || STATE.shotId.includes('245fd8b5');
+
+  for (let f = 1; f <= STATE.totalFrames; f++) {
+    const tr = document.createElement('tr');
+    const isKey = (f % 16 === 1);
+    const keyNum = Math.floor((f - 1) / 16) % 7 + 1;
+    const poseName = isKey ? `K0${keyNum}` : (f % 2 === 1 ? 'IB' : 'HOLD');
+    if (isKey) tr.classList.add('key-row');
+
+    const progress = Math.round(((f - 1) / (STATE.totalFrames - 1)) * 100);
+    const actionBeat = isCommons
+      ? (isKey ? `Pose K0${keyNum}: Stride flight & barefoot compression` : 'In-between stride cycle on twos')
+      : (isKey ? `Pose K0${keyNum}: Gaze shift & coat tail settle` : 'Breathing hold on twos');
+
+    const fxText = isCommons && (f % 24 > 16) ? 'Satellite radio pulse (cyan)' : 'Wet stone puddle ripple';
+
+    tr.innerHTML = `
+      <td>${f.toString().padStart(3, '0')}</td>
+      <td>${isKey ? `<span class="badge-key">${poseName}</span>` : poseName}</td>
+      <td>2</td>
+      <td>${actionBeat}</td>
+      <td>Truck ${progress}%</td>
+      <td>${fxText}</td>
+    `;
+    tr.addEventListener('click', () => {
+      STATE.frame = f;
+      renderFrame();
+    });
+    tbody.appendChild(tr);
+  }
+}
+
+function initShotsList() {
+  const list = document.getElementById('shotList');
+  list.innerHTML = '';
+  FEATURED_SHOTS.forEach(s => {
+    const item = document.createElement('div');
+    item.className = `shot-item ${s.id === STATE.shotId ? 'on' : ''}`;
+    item.innerHTML = `
+      <b>${s.title}</b>
+      <span><span>${s.district}</span><span>24 FPS · 120F</span></span>
+    `;
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.shot-item').forEach(x => x.classList.remove('on'));
+      item.classList.add('on');
+      STATE.shotId = s.id;
+      document.getElementById('actionVerbDesc').textContent = s.action;
+      document.getElementById('shotZoneName').textContent = `${s.title} · ${s.district.toUpperCase()}`;
+      buildXSheet();
+      renderFrame();
+    });
+    list.appendChild(item);
+  });
+}
+
+// Transport controls
+let playInterval = null;
+function togglePlay() {
+  STATE.isPlaying = !STATE.isPlaying;
+  const btn = document.getElementById('btnPlay');
+  if (STATE.isPlaying) {
+    btn.textContent = '⏸ PAUSE';
+    btn.classList.add('play');
+    if (STATE.mode === 'film') {
+      video.play();
+    } else {
+      playInterval = setInterval(() => {
+        STATE.frame++;
+        if (STATE.frame > STATE.totalFrames) STATE.frame = 1;
+        renderFrame();
+      }, 1000 / STATE.fps);
+    }
+  } else {
+    btn.textContent = '▶ PLAY';
+    btn.classList.remove('play');
+    if (playInterval) clearInterval(playInterval);
+    if (STATE.mode === 'film') video.pause();
+  }
+}
+
+// View Modes
+document.querySelectorAll('#viewModes button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#viewModes button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    STATE.mode = b.dataset.mode;
+    renderFrame();
+  });
+});
+
+// Tools
+document.getElementById('btnOnion').addEventListener('click', e => {
+  STATE.onionSkin = !STATE.onionSkin;
+  e.target.classList.toggle('on', STATE.onionSkin);
+  renderFrame();
+});
+
+document.getElementById('btnFlip').addEventListener('click', e => {
+  STATE.flipMode = !STATE.flipMode;
+  e.target.classList.toggle('on', STATE.flipMode);
+  if (STATE.flipMode) {
+    // Quick flip between keys
+    let flipK = 1;
+    const flipTimer = setInterval(() => {
+      if (!STATE.flipMode) { clearInterval(flipTimer); return; }
+      STATE.frame = ((flipK * 16) % 112) + 1;
+      flipK++;
+      renderFrame();
+    }, 180);
+  }
+});
+
+document.getElementById('btnDrone').addEventListener('click', e => {
+  if (!window.AudioDrone) return;
+  STATE.droneActive = !STATE.droneActive;
+  if (STATE.droneActive) {
+    AudioDrone.play(110); // Low A microtonal drone for Cortex Commons
+    e.target.textContent = '🔊 Drone On';
+    e.target.classList.add('on');
+  } else {
+    AudioDrone.stop();
+    e.target.textContent = '🔇 Drone Off';
+    e.target.classList.remove('on');
+  }
+});
+
+document.getElementById('btnPlay').addEventListener('click', togglePlay);
+document.getElementById('btnPrevFrame').addEventListener('click', () => {
+  STATE.frame = Math.max(1, STATE.frame - 1);
+  renderFrame();
+});
+document.getElementById('btnNextFrame').addEventListener('click', () => {
+  STATE.frame = Math.min(STATE.totalFrames, STATE.frame + 1);
+  renderFrame();
+});
+document.getElementById('frameScrubber').addEventListener('input', e => {
+  STATE.frame = parseInt(e.target.value);
+  renderFrame();
+});
+
+// Keyboard Shortcuts
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowLeft') { STATE.frame = Math.max(1, STATE.frame - 1); renderFrame(); }
+  if (e.code === 'ArrowRight') { STATE.frame = Math.min(STATE.totalFrames, STATE.frame + 1); renderFrame(); }
+});
+
+// Init
+initShotsList();
+buildXSheet();
+renderFrame();
+</script>
+</body>
+</html>
