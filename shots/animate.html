@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WYGWYL · Cartoon Animator & Director Desk</title>
+<meta name="description" content="Live multiplane cartoon animation studio. Brings segmented characters, vehicles, lights, water, and atmosphere to life with director beats and atlas archive footage.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090e;
+  --panel: rgba(12, 16, 24, 0.92);
+  --panel-solid: #0d121c;
+  --card: rgba(19, 26, 38, 0.85);
+  --ink: #f2f5fb;
+  --dim: #8b96a8;
+  --faint: #475366;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --accent: #29b6ed;
+  --accent-glow: rgba(41, 182, 237, 0.3);
+  --amber: #f59e0b;
+  --rose: #f43f5e;
+  --emerald: #10b981;
+  --violet: #a855f7;
+  --sans: Inter, -apple-system, sans-serif;
+  --serif: Fraunces, Georgia, serif;
+  --mono: "IBM Plex Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: inherit; cursor: pointer; border: 0; outline: none; }
+input, select { font-family: var(--mono); }
+
+/* Suite Navigation Bar */
+header.suite-nav {
+  position: fixed; top: 0; left: 0; right: 0; height: 46px; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; background: rgba(7, 9, 14, 0.94);
+  border-bottom: 1px solid var(--line); backdrop-filter: blur(12px);
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand a.back-idx {
+  font: 600 11px var(--mono); color: var(--accent);
+  background: rgba(41, 182, 237, 0.12); border: 1px solid rgba(41, 182, 237, 0.3);
+  padding: 4px 10px; border-radius: 6px; text-decoration: none; transition: .15s;
+}
+.brand a.back-idx:hover { background: rgba(41, 182, 237, 0.25); color: #fff; }
+.brand h1 { font: 700 14px var(--serif); letter-spacing: -0.01em; }
+.brand h1 span {
+  background: linear-gradient(90deg, var(--amber), var(--rose) 50%, var(--accent));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.brand small {
+  font: 600 10px var(--mono); color: var(--dim);
+  letter-spacing: .1em; text-transform: uppercase;
+  border-left: 1px solid var(--line-strong); padding-left: 8px;
+}
+.nav-actions { display: flex; align-items: center; gap: 8px; }
+.nav-btn {
+  font: 500 11px var(--mono); padding: 5px 10px; border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05); color: var(--dim);
+  border: 1px solid var(--line); text-decoration: none; transition: .15s;
+}
+.nav-btn:hover { color: var(--ink); background: rgba(255, 255, 255, 0.1); }
+.nav-btn.active { background: rgba(41, 182, 237, 0.15); color: var(--accent); border-color: rgba(41, 182, 237, 0.4); }
+
+/* App Workspace Grid */
+#animatorApp {
+  position: fixed; top: 46px; left: 0; right: 0; bottom: 0;
+  display: grid;
+  grid-template-columns: 290px 1fr 340px;
+  grid-template-rows: 1fr 220px;
+  background: #040508;
+}
+
+/* Left Panel: Shot Picker & Director Notes */
+#leftPanel {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; overflow: hidden; z-index: 20;
+}
+.panel-section-title {
+  padding: 10px 14px;
+  font: 600 10.5px var(--mono); letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--dim);
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.badge-count {
+  font: 700 9px var(--mono); padding: 2px 6px; border-radius: 10px;
+  background: rgba(41, 182, 237, 0.15); color: var(--accent);
+}
+.shot-selector-wrap { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+select.shot-select {
+  width: 100%; background: #070a10; color: var(--ink);
+  border: 1px solid var(--line-strong); border-radius: 6px;
+  padding: 7px 10px; font-size: 11px;
+}
+.curated-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.curated-chip {
+  font: 600 10px var(--mono); padding: 4px 8px; border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04); color: var(--dim);
+  border: 1px solid var(--line); cursor: pointer; transition: .15s;
+}
+.curated-chip:hover { color: var(--ink); border-color: rgba(255, 255, 255, 0.2); }
+.curated-chip.active { background: rgba(245, 158, 11, 0.15); color: var(--amber); border-color: rgba(245, 158, 11, 0.4); }
+
+.director-card {
+  padding: 12px 14px; border-bottom: 1px solid var(--line);
+  overflow-y: auto; flex: 1;
+}
+.director-title { font: 700 13px var(--serif); color: #fff; margin-bottom: 4px; }
+.director-district {
+  font: 600 10px var(--mono); color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;
+}
+.director-meta-block {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line);
+  border-radius: 6px; padding: 8px 10px; margin-bottom: 10px;
+}
+.director-meta-label { font: 600 9px var(--mono); text-transform: uppercase; color: var(--dim); margin-bottom: 2px; }
+.director-meta-val { font: 400 11.5px/1.45 var(--sans); color: #e2e8f0; }
+
+.director-beats-list { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+.beat-item {
+  display: flex; align-items: baseline; gap: 7px;
+  font: 400 11px var(--mono); color: var(--dim);
+  padding: 4px 6px; border-radius: 4px; background: rgba(0, 0, 0, 0.2);
+}
+.beat-item b { color: var(--amber); font-weight: 600; }
+
+/* Center Stage Viewport */
+#viewportWrap {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative; background: #020306;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; padding: 12px;
+}
+#stageContainer {
+  position: relative; width: 100%; height: 100%;
+  max-width: 1280px; max-height: 720px; aspect-ratio: 1456 / 816;
+  border-radius: 8px; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85);
+  border: 1px solid var(--line-strong);
+  background: #000;
+}
+#svgStage {
+  width: 100%; height: 100%; display: block;
+  shape-rendering: geometricPrecision;
+}
+#puppetCanvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+
+/* Stage HUD & Controls */
+.stage-hud-top {
+  position: absolute; top: 14px; left: 14px; right: 14px;
+  display: flex; justify-content: space-between; align-items: center;
+  pointer-events: none; z-index: 15;
+}
+.hud-pills { display: flex; gap: 6px; pointer-events: auto; }
+.hud-pill {
+  font: 600 10.5px var(--mono); padding: 5px 9px; border-radius: 6px;
+  background: rgba(8, 11, 18, 0.88); border: 1px solid var(--line-strong);
+  color: var(--dim); backdrop-filter: blur(8px);
+}
+.hud-pill.highlight { color: var(--accent); border-color: rgba(41, 182, 237, 0.4); }
+
+.render-mode-tabs {
+  display: flex; gap: 3px; background: rgba(8, 11, 18, 0.88);
+  padding: 3px; border-radius: 7px; border: 1px solid var(--line-strong);
+  backdrop-filter: blur(8px); pointer-events: auto;
+}
+.mode-tab {
+  font: 600 10px var(--mono); padding: 4px 8px; border-radius: 5px;
+  background: transparent; color: var(--dim); transition: .15s;
+}
+.mode-tab:hover { color: #fff; }
+.mode-tab.active { background: var(--accent); color: #020306; font-weight: 700; }
+
+/* Right Panel: Cast, Verbs, & Live Actor Controls */
+#rightPanel {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  display: flex; flex-direction: column; overflow: hidden; z-index: 20;
+}
+.actor-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.actor-card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 7px; padding: 9px 10px; transition: .15s;
+}
+.actor-card:hover { border-color: var(--line-strong); }
+.actor-card.muted { opacity: 0.4; }
+.actor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.actor-title { display: flex; align-items: center; gap: 6px; }
+.actor-kind-tag {
+  font: 700 8.5px var(--mono); text-transform: uppercase;
+  padding: 2px 5px; border-radius: 4px;
+}
+.tag-person { background: rgba(244, 63, 94, 0.2); color: var(--rose); border: 1px solid rgba(244, 63, 94, 0.35); }
+.tag-vehicle { background: rgba(245, 158, 11, 0.2); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.35); }
+.tag-light { background: rgba(41, 182, 237, 0.2); color: var(--accent); border: 1px solid rgba(41, 182, 237, 0.35); }
+.tag-water { background: rgba(16, 185, 129, 0.2); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.35); }
+.tag-sky { background: rgba(168, 85, 247, 0.2); color: var(--violet); border: 1px solid rgba(168, 85, 247, 0.35); }
+.tag-signal { background: rgba(234, 179, 8, 0.2); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.35); }
+.tag-sway { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.35); }
+
+.actor-id-text { font: 600 11px var(--mono); color: var(--ink); }
+.actor-plane-badge { font: 600 9px var(--mono); color: var(--dim); background: rgba(255, 255, 255, 0.05); padding: 1px 4px; border-radius: 3px; }
+
+.actor-controls { display: grid; grid-template-columns: 1fr auto auto; gap: 6px; align-items: center; margin-top: 6px; }
+.actor-verb-select {
+  background: #07090f; color: var(--ink); border: 1px solid var(--line-strong);
+  border-radius: 5px; padding: 4px 6px; font-size: 10px;
+}
+.actor-btn {
+  font: 600 9px var(--mono); padding: 4px 7px; border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05); color: var(--dim); border: 1px solid var(--line);
+  transition: .15s;
+}
+.actor-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.12); }
+.actor-btn.active { background: rgba(41, 182, 237, 0.2); color: var(--accent); border-color: rgba(41, 182, 237, 0.4); }
+
+/* Bottom Control Desk: Timeline, Director Cues, & Atlas Archive */
+#bottomDesk {
+  grid-column: 2;
+  grid-row: 2;
+  background: var(--panel-solid);
+  border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.desk-tabs {
+  display: flex; border-bottom: 1px solid var(--line); background: rgba(0, 0, 0, 0.2);
+}
+.desk-tab {
+  font: 600 11px var(--mono); padding: 8px 14px; color: var(--dim);
+  border-right: 1px solid var(--line); background: transparent; transition: .15s;
+}
+.desk-tab:hover { color: var(--ink); background: rgba(255, 255, 255, 0.02); }
+.desk-tab.active { color: var(--accent); background: var(--panel-solid); border-top: 2px solid var(--accent); }
+
+.desk-pane { flex: 1; padding: 10px 14px; overflow-y: auto; display: none; }
+.desk-pane.active { display: block; }
+
+/* Transport & Timeline Bar */
+.transport-strip {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.play-btn {
+  font: 700 11px var(--mono); padding: 7px 14px; border-radius: 6px;
+  background: var(--accent); color: #040508; display: flex; align-items: center; gap: 6px;
+}
+.play-btn.paused { background: var(--amber); }
+.frame-slider { flex: 1; accent-color: var(--accent); cursor: pointer; height: 5px; }
+.time-readout { font: 600 11px var(--mono); color: var(--ink); min-width: 90px; text-align: right; }
+
+.director-cue-strip { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.cue-chip {
+  font: 600 10.5px var(--mono); padding: 6px 12px; border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line-strong);
+  color: #fff; cursor: pointer; display: flex; align-items: center; gap: 6px;
+  transition: .15s;
+}
+.cue-chip:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); }
+.cue-chip:active { transform: scale(0.97); }
+.cue-chip.cue-alert { border-color: rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.15); color: #fecdd3; }
+.cue-chip.cue-run { border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.15); color: #fef3c7; }
+.cue-chip.cue-vehicle { border-color: rgba(41, 182, 237, 0.4); background: rgba(41, 182, 237, 0.15); color: #bae6fd; }
+.cue-chip.cue-blackout { border-color: rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.15); color: #f3e8ff; }
+
+/* Atlas Archive Drawer */
+.atlas-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px;
+}
+.atlas-card {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line);
+  border-radius: 6px; padding: 8px 10px; transition: .15s;
+}
+.atlas-card:hover { border-color: rgba(41, 182, 237, 0.4); background: rgba(41, 182, 237, 0.05); }
+.atlas-card-title {
+  font: 600 11px var(--mono); color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px;
+}
+.atlas-card-meta {
+  font: 400 9.5px var(--mono); color: var(--dim); display: flex; justify-content: space-between;
+}
+.atlas-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.atlas-tag-item {
+  font: 500 8.5px var(--mono); padding: 1px 4px; border-radius: 3px;
+  background: rgba(255, 255, 255, 0.05); color: var(--dim);
+}
+
+/* Character Rig Overlay Toggle Notice */
+.puppet-badge {
+  font: 700 9px var(--mono); padding: 2px 6px; border-radius: 4px;
+  background: rgba(16, 185, 129, 0.2); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.4);
+}
+</style>
+</head>
+<body>
+
+<header class="suite-nav">
+  <div class="brand">
+    <a href="../index.html" class="back-idx">&larr; Index</a>
+    <h1>WYGWYL <span>Cartoon Animator</span></h1>
+    <small>Action &middot; Atlas Footage &middot; Multiplane</small>
+  </div>
+  <div class="nav-actions">
+    <a href="studio.html" class="nav-btn">Studio Desk</a>
+    <a href="film.html" class="nav-btn">Film Player</a>
+    <a href="world.html" class="nav-btn">Diorama World</a>
+    <button id="btnSound" class="nav-btn" style="color:var(--amber)">&#128264; Room Drone</button>
+  </div>
+</header>
+
+<div id="animatorApp">
+  <!-- LEFT: Shot Library & Director's Score -->
+  <aside id="leftPanel">
+    <div class="panel-section-title">
+      <span>1. Shot &amp; Sequence</span>
+      <span class="badge-count" id="shotCountBadge">80 SHOTS</span>
+    </div>
+    <div class="shot-selector-wrap">
+      <select id="shotSelect" class="shot-select"></select>
+      <div class="curated-chips">
+        <span class="curated-chip active" data-sid="bdc7d6ec-1d4e-4f99-ad7e-9917394c542a_2">Cortex (Crowd)</span>
+        <span class="curated-chip" data-sid="d3d25411-5610-40fd-ad76-e36a25eca80c_1">Naraka (Pool)</span>
+        <span class="curated-chip" data-sid="06881630-142e-41b3-80ed-4ee8a6ec38b1_0">Ankhu (Vehicles)</span>
+        <span class="curated-chip" data-sid="3a0da51b-4c03-45a0-bf3f-d03e5092c4be_0">Orange Catwalk</span>
+      </div>
+    </div>
+
+    <div class="panel-section-title">
+      <span>2. Director's Score &amp; Acting</span>
+      <span style="font-size:9px;color:var(--amber)" id="districtBadge">COMMONS</span>
+    </div>
+    <div class="director-card" id="directorCard">
+      <h3 class="director-title" id="dirTitle">Cortex Commons &mdash; Public Square</h3>
+      <div class="director-district" id="dirEmotion">Excitement &middot; Staggered Crowd Action</div>
+
+      <div class="director-meta-block">
+        <div class="director-meta-label">Director Action Prompt</div>
+        <div class="director-meta-val" id="dirAction">Afrofuturist public square, Cortex Commons built atop a partially submerged satellite dish. Walkers stream across light paths while children run across foreground planes.</div>
+      </div>
+
+      <div class="director-meta-block">
+        <div class="director-meta-label">Acting Beats &amp; Keys</div>
+        <div class="director-beats-list" id="dirBeats">
+          <div class="beat-item"><b>K01</b> Staggered walk cycle on twos across plane 2</div>
+          <div class="beat-item"><b>K02</b> Satellite dish signals pulse in blue-green arc</div>
+          <div class="beat-item"><b>K03</b> Streetlights breathe and flicker on 8s</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CENTER: Multiplane Viewport Stage -->
+  <main id="viewportWrap">
+    <div id="stageContainer">
+      <svg id="svgStage" viewBox="0 0 1456 816" preserveAspectRatio="xMidYMid meet"></svg>
+      <canvas id="puppetCanvas" width="1456" height="816"></canvas>
+
+      <div class="stage-hud-top">
+        <div class="hud-pills">
+          <span class="hud-pill highlight" id="hudFps">12 FPS &middot; ON TWOS</span>
+          <span class="hud-pill" id="hudParallax">PARALLAX TRUCK</span>
+          <span class="hud-pill" id="hudCleanPlate">CLEAN PLATE: ON</span>
+        </div>
+        <div class="render-mode-tabs" id="renderModeTabs">
+          <button class="mode-tab active" data-mode="full">Color Cel</button>
+          <button class="mode-tab" data-mode="behind">Clean Plates</button>
+          <button class="mode-tab" data-mode="ink">Ink Only</button>
+          <button class="mode-tab" data-mode="notan">Notan Silhouette</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT: Cast & Actor Control Deck -->
+  <aside id="rightPanel">
+    <div class="panel-section-title">
+      <span>3. Active Cast &amp; Segmented Elements</span>
+      <span class="badge-count" id="castCountBadge">0 ACTORS</span>
+    </div>
+    <div style="padding:8px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.2)">
+      <label style="font:600 10px var(--mono);color:var(--dim);display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="chkPuppetOverlay" checked>
+        <span>Kinematic Puppet Rig</span>
+      </label>
+      <span class="puppet-badge">CARTOON RIG</span>
+    </div>
+    <div class="actor-list" id="actorList"></div>
+  </aside>
+
+  <!-- BOTTOM: Timeline, Director Cue Pad, & Atlas Footage Archive -->
+  <section id="bottomDesk">
+    <div class="desk-tabs">
+      <button class="desk-tab active" data-target="tabTimeline">Timeline &amp; Director Cues</button>
+      <button class="desk-tab" data-target="tabAtlas">Atlas Archive Footage (1,367 Clips)</button>
+      <button class="desk-tab" data-target="tabRig">Kinematic Rig Solver</button>
+    </div>
+
+    <!-- PANE 1: Timeline & Director Cues -->
+    <div class="desk-pane active" id="tabTimeline">
+      <div class="transport-strip">
+        <button id="btnPlay" class="play-btn">&#9654; PLAY</button>
+        <button id="btnTwos" class="nav-btn" style="font-weight:700">TWOS (12 FPS)</button>
+        <input type="range" id="frameSlider" class="frame-slider" min="0" max="96" value="0">
+        <div class="time-readout" id="timeReadout">f000 / 096</div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+        <span style="font:700 10px var(--mono);letter-spacing:.08em;color:var(--dim);text-transform:uppercase">Trigger Director Action Cues:</span>
+        <span style="font:400 10px var(--mono);color:var(--faint)">Applies real-time emotion &amp; action overrides to active actors</span>
+      </div>
+
+      <div class="director-cue-strip">
+        <button class="cue-chip cue-run" id="cueRun">&#9889; SCATTER / RUN (Accelerate Stride)</button>
+        <button class="cue-chip cue-alert" id="cueLookBack">&#128065; LOOK BACK (Glance Behind)</button>
+        <button class="cue-chip cue-alert" id="cueHalt">&#9995; HALT / ATTENTION (Hold Passing Pose)</button>
+        <button class="cue-chip cue-vehicle" id="cueVehiclePass">&#128663; SPEEDER FLYBY (High Speed Dash)</button>
+        <button class="cue-chip cue-blackout" id="cueBlackout">&#127763; POWER SURGE / FLICKER</button>
+        <button class="cue-chip" id="cueReset">&#8635; Normal Acting</button>
+      </div>
+    </div>
+
+    <!-- PANE 2: Atlas Archive Footage -->
+    <div class="desk-pane" id="tabAtlas">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font:600 11px var(--mono);color:var(--ink)">
+          Matched Atlas Video Clips &middot; Sourced from <a href="https://hartswf0.github.io/butterfly-halfworld/wygwyl/atlas.html" target="_blank" style="color:var(--accent);text-decoration:underline">Atlas Archive</a>
+        </span>
+        <span style="font:400 10px var(--mono);color:var(--dim)">Rotomation &amp; Optical Flow Reference</span>
+      </div>
+      <div class="atlas-grid" id="atlasGrid">
+        <div style="font:400 11px var(--mono);color:var(--dim);padding:10px">Loading atlas archive index...</div>
+      </div>
+    </div>
+
+    <!-- PANE 3: Kinematic Rig Specs -->
+    <div class="desk-pane" id="tabRig">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font:400 11px var(--sans);color:var(--dim)">
+        <div>
+          <b style="color:var(--ink);display:block;margin-bottom:4px">Volume, Silhouette, Notan &amp; Two-Frame Quantisation:</b>
+          In accordance with the <i>Multiplane Animation Studio</i> laws, characters are rendered with tapered limb capsules, quadrilateral torsos, and mass-conserved heads. Action is quantised on <b>twos (12 drawings per second)</b> while the camera multiplane truck glides smoothly on <b>ones (60 fps)</b>.
+        </div>
+        <div>
+          <b style="color:var(--ink);display:block;margin-bottom:4px">Clean-Plate Background Preservation:</b>
+          When a segmented actor translates away from its origin, the underlying <code>behind</code> clean plate sampled from farther planes fills the void, ensuring zero silhouette tearing or hollow shapes.
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Kinematic Puppet Rig Engine -->
+<script src="cartoon_character.js"></script>
+
+<script>
+// State Management
+const STATE = {
+  shotId: 'bdc7d6ec-1d4e-4f99-ad7e-9917394c542a_2',
+  shotData: null,
+  actorsIndex: [],
+  directorNotes: {},
+  atlasFootage: null,
+  frame: 0,
+  totalFrames: 96,
+  isPlaying: true,
+  onTwos: true,
+  renderMode: 'full', // full, behind, ink, notan
+  puppetOverlay: true,
+  activeCue: null, // 'run', 'lookBack', 'halt', 'vehiclePass', 'blackout'
+  actorOverrides: {}, // actorId -> { verb, speed, muted }
+  cameraParallax: true,
+  soundOn: false
+};
+
+// WebAudio Procedural Ambience & Plane Drone
+let AC = null, SND = null;
+function toggleSound() {
+  if (!AC) {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    const master = AC.createGain(); master.gain.value = 0.35;
+    master.connect(AC.destination);
+    
+    // Ambient lowpass filter
+    const lp = AC.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 450;
+    lp.connect(master);
+    
+    // Sub oscillator (55Hz room tone)
+    const sub = AC.createOscillator(); sub.frequency.value = 55;
+    const subGain = AC.createGain(); subGain.gain.value = 0.2;
+    sub.connect(subGain); subGain.connect(lp); sub.start();
+
+    // Harmonics
+    const fifth = AC.createOscillator(); fifth.frequency.value = 82.4;
+    const fifthGain = AC.createGain(); fifthGain.gain.value = 0.12;
+    fifth.connect(fifthGain); fifthGain.connect(lp); fifth.start();
+    
+    SND = { master, lp, sub, fifth };
+    document.getElementById('btnSound').textContent = '🔊 Drone ON';
+    document.getElementById('btnSound').style.color = 'var(--emerald)';
+  } else {
+    if (AC.state === 'suspended') {
+      AC.resume();
+      document.getElementById('btnSound').textContent = '🔊 Drone ON';
+    } else {
+      AC.suspend();
+      document.getElementById('btnSound').textContent = '🔇 Room Drone';
+      document.getElementById('btnSound').style.color = 'var(--amber)';
+    }
+  }
+}
+document.getElementById('btnSound').onclick = toggleSound;
+
+// Initialize & Load Shot
+async function init() {
+  try {
+    // 1. Load Actors Index
+    const rIdx = await fetch('out/actors_index.json');
+    STATE.actorsIndex = await rIdx.json();
+    populateShotPicker();
+
+    // 2. Load Director Notes
+    try {
+      const rDir = await fetch('director_notes.json');
+      STATE.directorNotes = await rDir.json();
+    } catch(e) { console.warn('director_notes not loaded', e); }
+
+    // 3. Load Atlas Footage Index
+    try {
+      const rAtlas = await fetch('atlas_footage.json');
+      STATE.atlasFootage = await rAtlas.json();
+      populateAtlasGrid();
+    } catch(e) { console.warn('atlas_footage not loaded', e); }
+
+    // Read URL param if given
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('shot')) {
+      STATE.shotId = urlParams.get('shot');
+    }
+
+    // Load active shot
+    await loadShot(STATE.shotId);
+  } catch (err) {
+    console.error('Init error:', err);
+  }
+}
+
+function populateShotPicker() {
+  const sel = document.getElementById('shotSelect');
+  sel.innerHTML = '';
+  document.getElementById('shotCountBadge').textContent = `${STATE.actorsIndex.length} SHOTS`;
+  STATE.actorsIndex.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = `${s.id.slice(0, 8)} · ${s.district.toUpperCase()} (${s.actors} actors: ${s.kinds.join(', ')})`;
+    if (s.id === STATE.shotId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  sel.onchange = e => {
+    STATE.shotId = e.target.value;
+    loadShot(STATE.shotId);
+  };
+
+  document.querySelectorAll('.curated-chip').forEach(ch => {
+    ch.onclick = () => {
+      document.querySelectorAll('.curated-chip').forEach(x => x.classList.remove('active'));
+      ch.classList.add('active');
+      STATE.shotId = ch.dataset.sid;
+      sel.value = STATE.shotId;
+      loadShot(STATE.shotId);
+    };
+  });
+}
+
+async function loadShot(sid) {
+  try {
+    const res = await fetch(`out/${sid}/program/actors.json`);
+    STATE.shotData = await res.json();
+    STATE.actorOverrides = {};
+    STATE.frame = 0;
+    STATE.totalFrames = STATE.shotData.camera?.frames || 96;
+    document.getElementById('frameSlider').max = STATE.totalFrames;
+
+    updateDirectorCard(sid);
+    buildSVGScene();
+    populateActorList();
+    populateAtlasGrid();
+  } catch(e) {
+    console.error('Failed to load shot:', sid, e);
+  }
+}
+
+function updateDirectorCard(sid) {
+  const s = STATE.shotData;
+  const dNote = STATE.directorNotes[sid] || {};
+  document.getElementById('dirTitle').textContent = dNote.title || `${s.district.toUpperCase()} · Scene ${sid.slice(0, 8)}`;
+  document.getElementById('dirEmotion').textContent = dNote.emotion || `Atmospheric · ${s.district.toUpperCase()}`;
+  document.getElementById('districtBadge').textContent = s.district.toUpperCase();
+  document.getElementById('dirAction').textContent = dNote.action || s.prompt || 'Atmospheric animation cycle across multiplane perspective.';
+
+  const beatsCont = document.getElementById('dirBeats');
+  beatsCont.innerHTML = '';
+  if (dNote.keys && dNote.keys.length > 0) {
+    dNote.keys.forEach(k => {
+      const row = document.createElement('div');
+      row.className = 'beat-item';
+      row.innerHTML = `<b>${k[0]}</b> <span>${k[1]} (${k[2]}f)</span>`;
+      beatsCont.appendChild(row);
+    });
+  } else {
+    beatsCont.innerHTML = `
+      <div class="beat-item"><b>K01</b> Camera ${s.camera?.move || 'truck'} amplitude ${s.camera?.amplitude || 0.035}</div>
+      <div class="beat-item"><b>K02</b> Multiplane character cycles on twos</div>
+      <div class="beat-item"><b>K03</b> Background atmospheric lighting pulsation</div>
+    `;
+  }
+}
+
+// Build SVG DOM with clean plates and actor groups
+function buildSVGScene() {
+  const svg = document.getElementById('svgStage');
+  svg.innerHTML = '';
+  const s = STATE.shotData;
+  svg.setAttribute('viewBox', `0 0 ${s.W} ${s.H}`);
+
+  // 1. Defs: Linear Gradients & Clean Plate Patterns
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  s.shapes.forEach(shape => {
+    if (shape.g && shape.g.length >= 6) {
+      const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+      grad.setAttribute('id', `g_${shape.id}`);
+      grad.setAttribute('gradientUnits', 'userSpaceOnUse');
+      grad.setAttribute('x1', shape.g[0]);
+      grad.setAttribute('y1', shape.g[1]);
+      grad.setAttribute('x2', shape.g[2]);
+      grad.setAttribute('y2', shape.g[3]);
+
+      const s1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+      s1.setAttribute('offset', '0%');
+      s1.setAttribute('stop-color', shape.g[4]);
+      const s2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+      s2.setAttribute('offset', '100%');
+      s2.setAttribute('stop-color', shape.g[5]);
+      grad.appendChild(s1);
+      grad.appendChild(s2);
+      defs.appendChild(grad);
+    }
+  });
+  svg.appendChild(defs);
+
+  // 2. Planes Groups (P6 to P0)
+  const planeNames = ['P6', 'P5', 'P4', 'P3', 'P2', 'P1', 'P0'];
+  const planeGroups = {};
+  planeNames.forEach(p => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('id', `plane_${p}`);
+    g.setAttribute('class', 'plane-layer');
+    g.dataset.par = s.parallax[p] ?? 0;
+    svg.appendChild(g);
+    planeGroups[p] = g;
+  });
+
+  // Group shapes by actor or static plane
+  const actorMap = {};
+  s.actors.forEach(a => { actorMap[a.id] = a; });
+
+  // Map each shape to its plane group
+  s.shapes.forEach(shape => {
+    const pg = planeGroups[shape.plane] || planeGroups['P2'];
+
+    // If shape has an actor, create/find actor group
+    let container = pg;
+    if (shape.actor) {
+      let ag = pg.querySelector(`g#group_${shape.actor}`);
+      if (!ag) {
+        ag = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        ag.setAttribute('id', `group_${shape.actor}`);
+        ag.setAttribute('class', 'actor-group');
+        ag.dataset.actorId = shape.actor;
+        pg.appendChild(ag);
+
+        // Prepend Clean Plate Fill underneath the actor group
+        const act = actorMap[shape.actor];
+        if (act && act.behind) {
+          const behindG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          behindG.setAttribute('id', `cleanplate_${shape.actor}`);
+          behindG.setAttribute('class', 'cleanplate-patch');
+          for (const [shId, hex] of Object.entries(act.behind)) {
+            const origShape = s.shapes.find(x => String(x.id) === String(shId));
+            if (origShape) {
+              const cpPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              cpPath.setAttribute('d', origShape.d);
+              cpPath.setAttribute('fill', hex || '#111622');
+              behindG.appendChild(cpPath);
+            }
+          }
+          pg.insertBefore(behindG, ag);
+        }
+      }
+      container = ag;
+    }
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('id', `shape_${shape.id}`);
+    path.setAttribute('class', 'cel-shape');
+    path.setAttribute('d', shape.d);
+    path.setAttribute('fill', shape.g ? `url(#g_${shape.id})` : '#222');
+    if (shape.stroke && shape.stroke[1] > 0) {
+      path.setAttribute('stroke', shape.stroke[0]);
+      path.setAttribute('stroke-width', shape.stroke[1]);
+    }
+    container.appendChild(path);
+  });
+}
+
+function populateActorList() {
+  const list = document.getElementById('actorList');
+  list.innerHTML = '';
+  const s = STATE.shotData;
+  document.getElementById('castCountBadge').textContent = `${s.actors.length} ACTORS`;
+
+  s.actors.forEach(act => {
+    const card = document.createElement('div');
+    card.className = 'actor-card';
+    card.id = `card_${act.id}`;
+
+    const kindClass = `tag-${act.kind || 'person'}`;
+    card.innerHTML = `
+      <div class="actor-header">
+        <div class="actor-title">
+          <span class="actor-kind-tag ${kindClass}">${act.kind}</span>
+          <span class="actor-id-text">${act.id}</span>
+          <span class="actor-plane-badge">${act.plane}</span>
+        </div>
+        <button class="actor-btn" id="mute_${act.id}">SOLO</button>
+      </div>
+      <div class="actor-controls">
+        <select class="actor-verb-select" id="verb_${act.id}">
+          <option value="run" ${act.verb==='run'?'selected':''}>Run (stride shear)</option>
+          <option value="walk" ${act.verb==='walk'?'selected':''}>Walk (staggered twos)</option>
+          <option value="idle" ${act.verb==='idle'?'selected':''}>Idle (breathing)</option>
+          <option value="drive" ${act.verb==='drive'?'selected':''}>Drive / Cruise</option>
+          <option value="hover" ${act.verb==='hover'?'selected':''}>Hover (suspension)</option>
+          <option value="pulse" ${act.verb==='pulse'?'selected':''}>Pulse (light)</option>
+          <option value="flicker" ${act.verb==='flicker'?'selected':''}>Flicker (neon)</option>
+          <option value="ripple" ${act.verb==='ripple'?'selected':''}>Ripple (water)</option>
+          <option value="drift" ${act.verb==='drift'?'selected':''}>Atmospheric Drift</option>
+          <option value="sway" ${act.verb==='sway'?'selected':''}>Wind Sway</option>
+        </select>
+        <button class="actor-btn" id="toggle_${act.id}">HIDE</button>
+      </div>
+    `;
+
+    list.appendChild(card);
+
+    // Event listeners
+    const verbSel = card.querySelector(`#verb_${act.id}`);
+    verbSel.onchange = e => {
+      if (!STATE.actorOverrides[act.id]) STATE.actorOverrides[act.id] = {};
+      STATE.actorOverrides[act.id].verb = e.target.value;
+    };
+
+    const toggleBtn = card.querySelector(`#toggle_${act.id}`);
+    toggleBtn.onclick = () => {
+      if (!STATE.actorOverrides[act.id]) STATE.actorOverrides[act.id] = {};
+      STATE.actorOverrides[act.id].hidden = !STATE.actorOverrides[act.id].hidden;
+      card.classList.toggle('muted', STATE.actorOverrides[act.id].hidden);
+      toggleBtn.textContent = STATE.actorOverrides[act.id].hidden ? 'SHOW' : 'HIDE';
+    };
+
+    const soloBtn = card.querySelector(`#mute_${act.id}`);
+    soloBtn.onclick = () => {
+      s.actors.forEach(other => {
+        if (other.id !== act.id) {
+          if (!STATE.actorOverrides[other.id]) STATE.actorOverrides[other.id] = {};
+          STATE.actorOverrides[other.id].hidden = true;
+          document.getElementById(`card_${other.id}`).classList.add('muted');
+        } else {
+          if (!STATE.actorOverrides[act.id]) STATE.actorOverrides[act.id] = {};
+          STATE.actorOverrides[act.id].hidden = false;
+          card.classList.remove('muted');
+        }
+      });
+    };
+  });
+}
+
+function populateAtlasGrid() {
+  const grid = document.getElementById('atlasGrid');
+  grid.innerHTML = '';
+  if (!STATE.atlasFootage) return;
+
+  // Find poem clips (defaulting to poem 01-14)
+  const clips = STATE.atlasFootage.by_poem['01'] || [];
+  clips.slice(0, 8).forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'atlas-card';
+    card.innerHTML = `
+      <div class="atlas-card-title">${c.file}</div>
+      <div class="atlas-card-meta">
+        <span>${c.source.toUpperCase()}</span>
+        <span>${c.dur}s &middot; 24 FPS</span>
+      </div>
+      <div class="atlas-tags">
+        ${c.tags.map(t => `<span class="atlas-tag-item">${t}</span>`).join('')}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ANIMATION ENGINE LOOP
+function renderStep() {
+  if (!STATE.shotData) return;
+  const s = STATE.shotData;
+  const N = STATE.totalFrames;
+  const u = STATE.frame / N; // 0..1 normalised time
+  const tSec = (STATE.frame / 24);
+
+  // Ease for camera move
+  const easeU = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+
+  // 1. Camera Parallax Trucking
+  const cam = s.camera || { move: 'truck', amplitude: 0.035, focus: [s.W / 2, s.H / 2] };
+  const [fx, fy] = cam.focus || [s.W / 2, s.H / 2];
+
+  document.querySelectorAll('.plane-layer').forEach(pl => {
+    const k = parseFloat(pl.dataset.par || 0) * easeU;
+    let t = '';
+    if (cam.move === 'truck') {
+      t = `translate(${-cam.amplitude * s.W * k} 0)`;
+    } else if (cam.move === 'push') {
+      const scale = 1 + cam.amplitude * k;
+      t = `translate(${fx} ${fy}) scale(${scale}) translate(${-fx} ${-fy})`;
+    } else if (cam.move === 'tilt_up') {
+      t = `translate(0 ${cam.amplitude * s.H * k})`;
+    }
+    pl.setAttribute('transform', t);
+  });
+
+  // 2. Clear Puppet Canvas
+  const canvas = document.getElementById('puppetCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // 3. Deform and Animate Segmented Actors
+  s.actors.forEach(act => {
+    const overrides = STATE.actorOverrides[act.id] || {};
+    const ag = document.getElementById(`group_${act.id}`);
+    const cp = document.getElementById(`cleanplate_${act.id}`);
+    if (!ag) return;
+
+    if (overrides.hidden) {
+      ag.style.display = 'none';
+      if (cp) cp.style.display = 'none';
+      return;
+    } else {
+      ag.style.display = '';
+      if (cp) cp.style.display = STATE.renderMode === 'behind' || STATE.renderMode === 'full' ? '' : 'none';
+    }
+
+    let verb = overrides.verb || act.verb || 'walk';
+    if (STATE.activeCue === 'run' && act.kind === 'person') verb = 'run';
+    if (STATE.activeCue === 'lookBack' && act.kind === 'person') verb = 'idle';
+    if (STATE.activeCue === 'halt' && act.kind === 'person') verb = 'idle';
+    if (STATE.activeCue === 'vehiclePass' && act.kind === 'vehicle') verb = 'drive';
+
+    const phase = act.phase || 0;
+    const [bx0, by0, bx1, by1] = act.box;
+    const bw = bx1 - bx0;
+    const bh = by1 - by0;
+    const [px, py] = act.pivot || [bx0 + bw / 2, by1];
+
+    // Compute transformations based on kind & verb
+    let dx = 0, dy = 0, rot = 0, sx = 1, sy = 1;
+
+    // A) CHARACTER / PERSON
+    if (act.kind === 'person') {
+      const walkFreq = verb === 'run' ? 3.2 : 1.8;
+      const walkPhase = (tSec * walkFreq * Math.PI * 2) + phase * 6.28;
+      
+      // Quantise on twos if enabled (12 fps hold)
+      const quantPhase = STATE.onTwos ? Math.floor(walkPhase * 4) / 4 : walkPhase;
+
+      if (verb === 'run' || verb === 'walk') {
+        const speed = (verb === 'run' ? 140 : 60) * (act.dir || 1);
+        dx = (tSec * speed) % (s.W + bw) - (act.dir > 0 ? bw : -s.W);
+        dy = -Math.abs(Math.sin(quantPhase)) * (verb === 'run' ? 16 : 8);
+        rot = Math.sin(quantPhase) * (verb === 'run' ? 6 : 2.5) * (act.dir || 1);
+      } else if (verb === 'idle') {
+        dy = -Math.sin(tSec * 1.5 + phase) * 3; // breathing
+      }
+
+      // Draw Kinematic Puppet Rig if enabled
+      if (STATE.puppetOverlay && window.CartoonCharacter && bh > 40) {
+        ag.style.opacity = '0.15'; // Ghost original SAM flat to showcase rig
+        ctx.save();
+        const guise = bh < 120 ? 'child' : (act.plane === 'P2' ? 'poet' : 'everyman');
+        const charX = px + dx;
+        const charY = py + dy;
+        const charH = bh;
+        const pose = {
+          guise: guise,
+          mode: verb === 'run' ? 'run' : (verb === 'walk' ? 'walk' : 'stand'),
+          phase: (quantPhase / (Math.PI * 2)) % 1,
+          face: (act.dir || 1),
+          lean: verb === 'run' ? 0.35 : 0.08,
+          crouch: STATE.activeCue === 'lookBack' ? 0.2 : 0
+        };
+        const style = {
+          mode: STATE.renderMode === 'notan' ? 'notan' : 'cel',
+          inkColor: '#0a0d14',
+          bodyTone: '#2b2333',
+          skinTone: '#cf9877',
+          coatTone: '#1b1522',
+          accentTone: '#f59e0b'
+        };
+        try {
+          CartoonCharacter.drawFigure(ctx, charX, charY, charH, pose, style);
+        } catch(e) {}
+        ctx.restore();
+      } else {
+        ag.style.opacity = '1';
+      }
+    }
+
+    // B) VEHICLE
+    else if (act.kind === 'vehicle') {
+      const vSpeed = (STATE.activeCue === 'vehiclePass' ? 650 : 180) * (act.dir || -1);
+      dx = (tSec * vSpeed) % (s.W + bw * 2) - (act.dir < 0 ? -bw : s.W);
+      dy = Math.sin(tSec * 12 + phase) * 2.5; // suspension road hum
+    }
+
+    // C) LIGHT & NEON
+    else if (act.kind === 'light') {
+      const flickerVal = STATE.activeCue === 'blackout' 
+        ? (Math.random() < 0.3 ? 0.1 : 1.4) 
+        : (verb === 'flicker' 
+            ? (0.85 + 0.15 * Math.sin(tSec * 28 + phase) + (Math.random() < 0.05 ? -0.4 : 0))
+            : (0.9 + 0.1 * Math.sin(tSec * 4 + phase)));
+      ag.style.opacity = Math.max(0.1, Math.min(1.5, flickerVal));
+    }
+
+    // D) WATER
+    else if (act.kind === 'water') {
+      dy = Math.sin(tSec * 3 + phase) * 4;
+      sx = 1 + Math.cos(tSec * 2 + phase) * 0.02;
+    }
+
+    // E) SKY & CLOUDS
+    else if (act.kind === 'sky') {
+      dx = (tSec * 8) % s.W;
+    }
+
+    // F) SIGNAL TOWER / DISH
+    else if (act.kind === 'signal') {
+      const pulseScale = 1 + 0.04 * Math.sin(tSec * 8);
+      sx = pulseScale; sy = pulseScale;
+    }
+
+    // G) SWAY
+    else if (act.kind === 'sway') {
+      rot = Math.sin(tSec * 2.2 + phase) * 4;
+    }
+
+    // Apply affine transform to actor SVG group
+    let tr = `translate(${dx} ${dy})`;
+    if (rot !== 0) tr += ` rotate(${rot} ${px} ${py})`;
+    if (sx !== 1 || sy !== 1) tr += ` scale(${sx} ${sy})`;
+    ag.setAttribute('transform', tr);
+  });
+
+  // 4. Update Time Readout & Slider
+  document.getElementById('frameSlider').value = STATE.frame;
+  document.getElementById('timeReadout').textContent = `f${String(STATE.frame).padStart(3, '0')} / ${String(N).padStart(3, '0')}`;
+}
+
+// Tick loop running at 24fps
+setInterval(() => {
+  if (!STATE.isPlaying) return;
+  STATE.frame = (STATE.frame + 1) % (STATE.totalFrames + 1);
+  renderStep();
+}, 1000 / 24);
+
+// Transport event listeners
+const btnPlay = document.getElementById('btnPlay');
+btnPlay.onclick = () => {
+  STATE.isPlaying = !STATE.isPlaying;
+  btnPlay.textContent = STATE.isPlaying ? '❚❚ PAUSE' : '▶ PLAY';
+  btnPlay.classList.toggle('paused', !STATE.isPlaying);
+};
+
+document.getElementById('frameSlider').oninput = e => {
+  STATE.frame = parseInt(e.target.value, 10);
+  renderStep();
+};
+
+const btnTwos = document.getElementById('btnTwos');
+btnTwos.onclick = () => {
+  STATE.onTwos = !STATE.onTwos;
+  btnTwos.textContent = STATE.onTwos ? 'TWOS (12 FPS)' : 'ONES (24 FPS)';
+  document.getElementById('hudFps').textContent = STATE.onTwos ? '12 FPS · ON TWOS' : '24 FPS · ON ONES';
+};
+
+document.getElementById('chkPuppetOverlay').onchange = e => {
+  STATE.puppetOverlay = e.target.checked;
+};
+
+// Render Mode switcher
+document.querySelectorAll('#renderModeTabs button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#renderModeTabs button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    STATE.renderMode = b.dataset.mode;
+    
+    const svg = document.getElementById('svgStage');
+    svg.classList.toggle('ink-only', STATE.renderMode === 'ink');
+    svg.classList.toggle('notan-mode', STATE.renderMode === 'notan');
+    
+    document.querySelectorAll('.cleanplate-patch').forEach(cp => {
+      cp.style.display = (STATE.renderMode === 'behind' || STATE.renderMode === 'full') ? '' : 'none';
+    });
+  };
+});
+
+// Director Cues
+document.getElementById('cueRun').onclick = () => { STATE.activeCue = 'run'; setTimeout(() => STATE.activeCue = null, 4000); };
+document.getElementById('cueLookBack').onclick = () => { STATE.activeCue = 'lookBack'; setTimeout(() => STATE.activeCue = null, 3000); };
+document.getElementById('cueHalt').onclick = () => { STATE.activeCue = 'halt'; setTimeout(() => STATE.activeCue = null, 3000); };
+document.getElementById('cueVehiclePass').onclick = () => { STATE.activeCue = 'vehiclePass'; setTimeout(() => STATE.activeCue = null, 2500); };
+document.getElementById('cueBlackout').onclick = () => { STATE.activeCue = 'blackout'; setTimeout(() => STATE.activeCue = null, 3000); };
+document.getElementById('cueReset').onclick = () => { STATE.activeCue = null; };
+
+// Desk Tabs switcher
+document.querySelectorAll('.desk-tab').forEach(tb => {
+  tb.onclick = () => {
+    document.querySelectorAll('.desk-tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.desk-pane').forEach(x => x.classList.remove('active'));
+    tb.classList.add('active');
+    document.getElementById(tb.dataset.target).classList.add('active');
+  };
+});
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
