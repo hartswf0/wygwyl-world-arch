@@ -59,7 +59,7 @@ def main():
             if s["plane"] == "P6": s["z_m"] = max(s["z_m"], 400.0)
             lo = os.path.join(dd, s["file"].replace(".png", ".webp"))
             save_webp(Image.open(src).convert("RGBA"), lo)
-            sheets.append(dict(lo=os.path.relpath(lo, SH), hi=os.path.relpath(src, SH), z=zc(s["z_m"]), zm=s["z_m"],
+            sheets.append(dict(lo=os.path.relpath(lo, SH), hi=os.path.relpath(lo, SH), z=zc(s["z_m"]), zm=s["z_m"],
                                plane=s["plane"], label=s["label"],
                                water=bool(re.search(r"water|pool|canal|lagoon|sea|river|reflect|lake", s["label"], re.I)),
                                sway=bool(re.search(r"\b(fabric|laundry|cloth|flag|curtain|plant|trees?|palms?|garden|lanterns?)\b", s["label"], re.I))))
