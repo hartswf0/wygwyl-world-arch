@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0d18">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="WYGWYL · Atlantis Urbanism">
+<meta property="og:description" content="81 stills redrawn as layered angular cartoons — eight tools to watch, walk and take them apart.">
+<meta property="og:image" content="landing/cortex/poster.webp">
+<title>WYGWYL · Atlantis Urbanism — choose a tool</title>
+<meta name="description" content="81 Midjourney stills, redrawn as layered angular cartoons and set in motion. Eight tools: film cuts, poem reels, a walkable world, a city map, a district guide, a shot lab, a storyboard and an animation studio.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d18; --ink:#f4eedd; --mute:#9aa3bd; --line:rgba(244,238,221,.16); --amber:#f2a541; --acc:#f2a541;
+  --dock-h:72px; --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+  --vh:100vh; --sans:'Outfit',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@supports (height:100svh){:root{--vh:100svh}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg);scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;color:var(--ink);font:400 16px/1.5 var(--sans);overflow-x:hidden;-webkit-text-size-adjust:100%}
+a{color:inherit}
+button{font:inherit;color:inherit;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:6px}
+
+/* ---------- mark ---------- */
+.mark{position:fixed;z-index:30;left:0;right:0;top:0;padding:calc(14px + var(--safe-t)) 18px 0;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.mark a{pointer-events:auto;text-decoration:none}
+.mark .repo{font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);opacity:.8;padding:10px 12px;margin:-10px -12px;display:inline-flex;gap:6px}
+.mark .repo:hover{opacity:1}
+
+/* ---------- stage (multiplane) ---------- */
+.stage{position:absolute;inset:0;overflow:hidden;background:#0a0d18 center/cover no-repeat}
+.cam{position:absolute;left:0;top:0;will-change:transform}
+.cam .poster,.cam .lyr{position:absolute;display:block;max-width:none;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.cam .poster{inset:0;width:100%;height:100%}
+.cam .lyr{opacity:0;transition:opacity .5s}
+.cam .lyr.ready{opacity:1}
+
+/* ---------- hero ---------- */
+#hero{position:relative;height:calc(var(--vh) + 40px);min-height:620px;isolation:isolate}
+#hero .stage{background-image:url(landing/cortex/poster.webp)}
+#hero .scrim{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(8,11,22,.94) 0%,rgba(8,11,22,.80) 28%,rgba(8,11,22,.25) 52%,transparent 70%),
+             linear-gradient(0deg,rgba(8,11,22,.55),transparent 28%)}
+#hero .ui{position:relative;z-index:2;height:var(--vh);min-height:620px;display:flex;flex-direction:column;justify-content:center;padding:0 clamp(18px,5vw,64px);max-width:560px}
+h1{margin:0;font:300 clamp(40px,7.4vw,84px)/1 var(--sans);letter-spacing:.34em;text-indent:.34em;text-indent:0;color:#fff6df;text-shadow:0 2px 30px rgba(0,0,0,.4)}
+.tag{margin:12px 0 0;font:500 12px var(--mono);letter-spacing:.34em;text-transform:uppercase;color:#aab6d8}
+.lede{margin:22px 0 26px;max-width:34ch;color:#d8d9e3;font-size:17px}
+.tools{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.tools li{border-bottom:1px solid var(--line)}
+.tools a{display:grid;grid-template-columns:minmax(98px,auto) 1fr auto;align-items:baseline;gap:16px;min-height:46px;padding:9px 4px;text-decoration:none;transition:background .15s,padding .15s}
+.tools b{font:500 clamp(20px,2.2vw,24px)/1.1 var(--sans);color:#fff6df}
+.tools span{font:400 13px var(--mono);color:#a9b4d4;letter-spacing:.01em}
+.tools i{font-style:normal;color:var(--amber);transition:transform .15s}
+.tools a:hover,.tools a:focus-visible{background:rgba(244,238,221,.06);padding-left:10px}
+.tools a:hover i{transform:translateX(4px)}
+.cue{display:inline-flex;align-items:center;gap:8px;margin-top:18px;min-height:44px;font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#c9d0e6;text-decoration:none}
+.cue::after{content:'↓';color:var(--amber);animation:nudge 1.8s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateY(4px)}}
+@media (prefers-reduced-motion:reduce){.cue::after{animation:none}}
+
+/* ---------- how it is made: layer explode ---------- */
+#made{position:relative;height:400vh;height:calc(var(--vh) * 4);background:linear-gradient(#0a0d18,#0c1224 40%,#0a0d18)}
+#made .sticky{position:sticky;top:0;height:var(--vh);display:grid;grid-template-rows:auto 1fr auto;padding:calc(64px + var(--safe-t)) clamp(14px,4vw,48px) calc(var(--dock-h) + 22px + var(--safe-b));overflow:hidden}
+.x-head{font:500 12px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+.x-wrap{position:relative;display:grid;place-items:center;perspective:1600px;min-height:0}
+.xcam{position:relative;width:min(100%,1040px,calc((var(--vh) - 290px) * 1.784));aspect-ratio:1456/816;transform-style:preserve-3d;will-change:transform}
+.xcam .lyr{position:absolute;display:block;max-width:none;pointer-events:none;will-change:transform,opacity}
+.xframe{position:absolute;inset:0;border:1px dashed rgba(244,238,221,.55);pointer-events:none;transform-style:preserve-3d}
+.xframe::after{content:'camera frame';position:absolute;left:6px;top:-18px;font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:rgba(244,238,221,.7)}
+.x-cap{max-width:760px;min-height:112px}
+.x-cap small{display:block;font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+.x-cap h2{margin:4px 0 6px;font:400 clamp(24px,4vw,40px)/1.1 var(--sans)}
+.x-cap p{margin:0;color:#c5cbe0;max-width:56ch}
+.x-chips{display:flex;gap:6px;margin-top:10px}
+.x-chips i{flex:0 0 auto;font:500 11px var(--mono);font-style:normal;padding:5px 8px;border:1px solid var(--line);border-radius:999px;color:var(--mute);transition:.2s}
+.x-chips i.on{color:#0a0d18;background:var(--acc);border-color:var(--acc)}
+
+/* ---------- chapters ---------- */
+.chap{position:relative;height:calc(var(--vh) * 1.7);color:#fff6df}
+.chap .sticky{position:sticky;top:0;height:var(--vh);overflow:hidden;isolation:isolate}
+.chap .scrim{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(8,11,22,.88),rgba(8,11,22,.45) 38%,transparent 64%),linear-gradient(0deg,rgba(8,11,22,.7),transparent 40%)}
+.card{position:absolute;z-index:3;left:clamp(18px,5vw,64px);bottom:calc(var(--dock-h) + 28px + var(--safe-b));max-width:520px;opacity:0;transform:translateY(22px);transition:opacity .45s,transform .45s}
+.chap.on .card{opacity:1;transform:none}
+.card .k{font:500 12px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--acc)}
+.card .n{display:block;font:200 clamp(64px,13vw,150px)/.9 var(--sans);color:transparent;-webkit-text-stroke:1px rgba(255,246,223,.55);margin:0 0 6px -4px}
+.card h2{margin:0 0 8px;font:400 clamp(30px,5.6vw,56px)/1.04 var(--sans);text-shadow:0 2px 24px rgba(0,0,0,.5)}
+.card p{margin:0 0 18px;max-width:38ch;color:#e0e2ee;font-size:clamp(16px,1.6vw,19px)}
+.card .go{display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 22px;border:1px solid var(--acc);border-radius:999px;background:rgba(10,13,24,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff6df;font:500 15px var(--sans);text-decoration:none;transition:background .15s,color .15s}
+.card .go:hover,.card .go:focus-visible{background:var(--acc);color:#0a0d18}
+.credit{position:absolute;z-index:3;right:clamp(14px,3vw,36px);top:calc(64px + var(--safe-t));font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:rgba(255,246,223,.7);text-align:right}
+.credit b{color:var(--acc);font-weight:600}
+.bar{position:absolute;z-index:3;left:0;right:0;top:0;height:3px;background:rgba(255,255,255,.08)}
+.bar i{display:block;height:100%;width:calc(var(--cp,0) * 100%);background:var(--acc)}
+
+/* ---------- ending ---------- */
+#end{position:relative;padding:72px clamp(18px,5vw,64px) calc(var(--dock-h) + 80px + var(--safe-b));background:#0a0d18}
+#end h2{margin:0 0 18px;font:300 clamp(26px,4vw,40px) var(--sans);letter-spacing:.04em}
+#end .tools{max-width:620px}
+#end .meta{margin-top:34px;display:flex;flex-wrap:wrap;gap:6px 22px;font:500 12px var(--mono);letter-spacing:.06em;color:var(--mute)}
+#end .meta a{display:inline-flex;min-height:40px;align-items:center}
+
+/* ---------- operator dock ---------- */
+.dock{position:fixed;z-index:40;left:50%;bottom:calc(10px + var(--safe-b));transform:translate(-50%,140%);visibility:hidden;width:min(calc(100vw - 20px),880px);height:var(--dock-h);
+  display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:22px;background:rgba(12,16,30,.82);
+  backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);box-shadow:0 18px 50px rgba(0,0,0,.5);transition:transform .45s cubic-bezier(.2,.8,.2,1),visibility 0s .45s}
+.dock.on{transform:translate(-50%,0);visibility:visible;transition:transform .45s cubic-bezier(.2,.8,.2,1),visibility 0s 0s}
+.dock button,.dock .d-open{min-width:48px;min-height:48px;border:1px solid var(--line);border-radius:14px;background:rgba(244,238,221,.06);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.dock button:hover{background:rgba(244,238,221,.12)}
+.dock svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.d-cur{flex:1;min-width:0;text-align:left;justify-content:flex-start!important;padding:0 12px;gap:10px;background:transparent!important;border-color:transparent!important}
+.d-cur small{display:block;font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.d-cur b{display:block;font:500 18px/1.1 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff6df}
+.d-open{padding:0 18px;gap:8px;text-decoration:none;font:600 15px var(--sans);background:var(--acc)!important;color:#0a0d18!important;border-color:var(--acc)!important}
+.d-open[aria-disabled=true]{opacity:.5;pointer-events:none}
+.d-chips{display:none;gap:4px;flex:1;min-width:0;overflow:hidden}
+.d-chips button{flex:1 1 0;min-width:0;padding:0 6px;font:500 12px var(--sans);white-space:nowrap}
+.d-chips button.on{background:rgba(244,238,221,.16);border-color:var(--acc);color:#fff6df}
+@media (min-width:980px){.d-chips{display:flex}.d-cur,.d-prev,.d-next{display:none!important}.dock{width:min(calc(100vw - 40px),1040px)}}
+
+/* sheet: every tool, one tap, thumb-reachable */
+.sheet{position:fixed;inset:0;z-index:60;visibility:hidden}
+.sheet.on{visibility:visible}
+.sheet .bd{position:absolute;inset:0;background:rgba(5,7,12,.7);opacity:0;transition:opacity .25s}
+.sheet.on .bd{opacity:1}
+.sheet .pn{position:absolute;left:50%;bottom:0;width:min(100%,760px);max-height:86vh;max-height:86dvh;overflow:auto;transform:translate(-50%,100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);
+  background:#0d1222;border:1px solid var(--line);border-radius:22px 22px 0 0;padding:10px 14px calc(16px + var(--safe-b))}
+.sheet.on .pn{transform:translate(-50%,0)}
+.grab{width:44px;height:4px;border-radius:4px;background:var(--line);margin:2px auto 10px}
+.sheet header{display:flex;justify-content:space-between;align-items:center;margin:0 4px 10px;font:500 12px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.sheet header button{min-height:44px;min-width:44px;border:1px solid var(--line);border-radius:12px;background:transparent;cursor:pointer}
+.tiles{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:640px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tile{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:104px;padding:10px 12px;border-radius:14px;overflow:hidden;text-decoration:none;border:1px solid var(--line);background:#111 center/cover no-repeat;isolation:isolate}
+.tile::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(0deg,rgba(8,11,22,.92),rgba(8,11,22,.1) 70%)}
+.tile b{font:500 17px/1.1 var(--sans);color:#fff6df}.tile span{font:400 11px/1.3 var(--mono);color:#b9c2de}
+.tile:hover,.tile:focus-visible{border-color:var(--amber)}
+.tile.cur{border-color:var(--acc)}
+
+@media (max-width:760px){
+  #hero{height:auto;min-height:0}
+  #hero .stage{inset:0}
+  #hero .ui{max-width:none;min-height:var(--vh);height:auto;justify-content:flex-end;padding:calc(64px + var(--safe-t)) 14px calc(18px + var(--safe-b))}
+  #hero .scrim{background:linear-gradient(0deg,rgba(8,11,22,.97) 0%,rgba(8,11,22,.9) 46%,rgba(8,11,22,.3) 72%,transparent 90%)}
+  h1{letter-spacing:.26em;font-size:clamp(36px,11vw,52px)}
+  .tag{letter-spacing:.24em;font-size:11px}
+  .lede{margin:12px 0 14px;font-size:15px}
+  .tools{display:grid;grid-template-columns:1fr 1fr;column-gap:10px;border-top:0}
+  .tools li{border-top:1px solid var(--line);border-bottom:0}
+  .tools a{grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:0 6px;min-height:54px;padding:8px 2px;align-items:center}
+  .tools b{font-size:19px}
+  .tools span{grid-column:1;font-size:11px;line-height:1.25;margin-top:1px}
+  .tools i{grid-row:1/3;grid-column:2}
+  .cue{margin-top:6px}
+  .chap{height:calc(var(--vh) * 1.5)}
+  .chap .scrim{background:linear-gradient(0deg,rgba(8,11,22,.92) 0%,rgba(8,11,22,.55) 38%,transparent 66%)}
+  .card{right:14px;left:14px;bottom:calc(var(--dock-h) + 22px + var(--safe-b))}
+  .card .go{display:none}                    /* the dock's Open is the single primary action on touch */
+  .card .n{font-size:72px}
+  .credit{left:14px;right:auto;text-align:left;top:calc(54px + var(--safe-t))}
+  .mark .repo{font-size:11px}
+}
+@media (max-height:560px) and (orientation:landscape){
+  #hero .ui{justify-content:flex-start;padding-top:56px}.tools{grid-template-columns:repeat(4,1fr)}
+}
+@media (prefers-reduced-motion:reduce){.card{transition:none}.dock{transition:none}.cam .lyr{transition:none}}
+noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
+</style>
+</head>
+<body>
+
+<header class="mark">
+  <span></span>
+  <a class="repo" href="https://github.com/hartswf0/wygwyl-world-arch">Repository <span aria-hidden="true">↗</span></a>
+</header>
+
+<main id="top">
+  <!-- 1 · the eight tools, immediately -->
+  <section id="hero" aria-labelledby="h1">
+    <div class="stage" data-key="cortex" data-role="hero" aria-hidden="true"></div>
+    <div class="scrim"></div>
+    <div class="ui">
+      <h1 id="h1">WYGWYL</h1>
+      <p class="tag">Atlantis Urbanism</p>
+      <p class="lede">81 stills, redrawn as layered cartoons and set in motion. Open a tool.</p>
+      <nav aria-label="Tools">
+        <ol class="tools" id="tools">
+          <li><a href="shots/film.html"       data-key="film"       data-shot="haze"><b>Film</b><span>Compare film cuts</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/reel.html"       data-key="reels"      data-shot="moon"><b>Reels</b><span>Watch a poem sequence</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/world.html"      data-key="world"      data-shot="temple"><b>World</b><span>Walk through shot dioramas</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/map.html"        data-key="map"        data-shot="overseer"><b>Map</b><span>Locate shots in the city</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="_city/index.html"      data-key="guide"      data-shot="hive"><b>World guide</b><span>Read the districts</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/index.html"      data-key="shotlab"    data-shot="arcade"><b>Shot Lab</b><span>Inspect a shot and its layers</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/storyboard.html" data-key="storyboard" data-shot="cenotaph"><b>Storyboard</b><span>Inspect scene staging</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/studio.html"     data-key="studio"     data-shot="commons"><b>Studio</b><span>Inspect animation</span><i aria-hidden="true">→</i></a></li>
+        </ol>
+      </nav>
+      <a class="cue" href="#made">How it's made</a>
+    </div>
+  </section>
+
+  <!-- 2 · one cartoon is six sheets -->
+  <section id="made" aria-label="How a cartoon becomes layers" hidden>
+    <div class="sticky">
+      <div class="x-head">Cortex Commons · the same drawing, taken apart</div>
+      <div class="x-wrap"><div class="xcam" id="xcam"></div></div>
+      <div class="x-cap" aria-live="polite">
+        <small id="xk">01</small><h2 id="xh">One cartoon.</h2><p id="xp">Angular shapes, one light, no outlines.</p>
+        <div class="x-chips" id="xchips"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · chapters are generated from the list above -->
+  <div id="chapters"></div>
+</main>
+
+<section id="end" aria-labelledby="endh" hidden>
+  <h2 id="endh">Choose a tool</h2>
+  <ol class="tools" id="tools2"></ol>
+  <div class="meta">
+    <a href="README.md">About this suite</a>
+    <a href="https://github.com/hartswf0/wygwyl-world-arch">Repository</a>
+    <span>Every drawing here is a program's own output; nothing is hand-traced.</span>
+  </div>
+</section>
+
+<!-- operator dock + sheet -->
+<div class="dock" id="dock" role="toolbar" aria-label="Tool switcher" hidden>
+  <button class="d-grid" id="dGrid" type="button" aria-label="All tools" aria-haspopup="dialog"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></button>
+  <button class="d-prev" id="dPrev" type="button" aria-label="Previous tool"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button class="d-cur" id="dCur" type="button" aria-label="Choose a tool"><span><small id="dN">00 / 08</small><b id="dName">Choose a tool</b></span></button>
+  <button class="d-next" id="dNext" type="button" aria-label="Next tool"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <div class="d-chips" id="dChips"></div>
+  <a class="d-open" id="dOpen" href="#hero">Open <span aria-hidden="true">→</span></a>
+</div>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="All tools">
+  <div class="bd" data-close></div>
+  <div class="pn">
+    <div class="grab"></div>
+    <header><span>Open a tool</span><button type="button" data-close aria-label="Close">✕</button></header>
+    <ul class="tiles" id="tiles"></ul>
+  </div>
+</div>
+
+<noscript><p class="nojs">Scripts are off: the list above still opens every tool.</p></noscript>
+
+<script src="landing/manifest.js"></script>
+<script>
+(function () {
+  'use strict';
+  var L = window.LANDING || {};
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
+  var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+  var ease = function (t) { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var fine = matchMedia('(pointer:fine)').matches;
+
+  // brighten an accent so it reads on the dark UI
+  function lift(hex) {
+    var r = parseInt(hex.slice(1, 3), 16) / 255, g = parseInt(hex.slice(3, 5), 16) / 255, b = parseInt(hex.slice(5, 7), 16) / 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn, h = 0, s = 0;
+    if (d) { s = d / (1 - Math.abs(2 * l - 1)); h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; if (h < 0) h += 360; }
+    return 'hsl(' + Math.round(h) + ',' + Math.round(clamp(s, .45, .95) * 100) + '%,' + Math.round(clamp(l, .62, .72) * 100) + '%)';
+  }
+
+  /* ---------- copy for each chapter (what the tool is for; no claims about state it does not keep) ---------- */
+  var COPY = {
+    film:       ['Cut it, then cut it again.', 'Compare film cuts assembled from the same set of shots.'],
+    reels:      ['A poem, as a sequence.', 'Watch a poem sequence: one reel per poem, each shot a camera move over layered drawings.'],
+    world:      ['Walk into the picture.', 'Shot dioramas you can walk through, across twelve districts.'],
+    map:        ['Find where it happens.', 'Locate shots in the city.'],
+    guide:      ['Twelve districts.', 'Read the districts, their palettes and their stills.'],
+    shotlab:    ['Under the picture.', 'Inspect a shot and its layers: camera, segments and depth.'],
+    storyboard: ['Stage the scene.', 'Inspect scene staging, shot by shot.'],
+    studio:     ['Draw it through time.', 'Inspect animation: keys, exposures, and the camera moving over layers.']
+  };
+
+  /* ---------- multiplane stage ---------- */
+  function Stage(el, key, opts) {
+    opts = opts || {};
+    this.el = el; this.m = L[key]; this.key = key; this.dir = opts.dir || 1; this.travel = opts.travel || .085; this.reveal = !!opts.reveal; this.hero = !!opts.hero;
+    this.loaded = false; this.cam = document.createElement('div'); this.cam.className = 'cam';
+    var m = this.m; if (!m) return;
+    var poster = new Image(); poster.className = 'poster'; poster.alt = ''; poster.decoding = 'async'; poster.src = m.poster; this.cam.appendChild(poster);
+    this.layers = m.planes.map(function (p) {
+      var im = new Image(); im.className = 'lyr'; im.alt = ''; im.decoding = 'async'; im.draggable = false;
+      im.style.left = (-m.padx / m.w * 100) + '%'; im.style.top = (-m.pady / m.h * 100) + '%';
+      im.style.width = ((m.w + 2 * m.padx) / m.w * 100) + '%'; im.style.height = ((m.h + 2 * m.pady) / m.h * 100) + '%';
+      im.dataset.src = p.src; im.dataset.par = p.par; this.cam.appendChild(im); return im;
+    }, this);
+    el.appendChild(this.cam);
+    this.mx = 0; this.my = 0; this.layout();
+  }
+  Stage.prototype.load = function () {
+    if (this.loaded || !this.m) return; this.loaded = true;
+    this.layers.forEach(function (im) { im.onload = function () { im.classList.add('ready'); }; im.src = im.dataset.src; });
+  };
+  Stage.prototype.layout = function () {
+    if (!this.m) return; var m = this.m, vw = this.el.clientWidth, vh = this.el.clientHeight, a = m.w / m.h;
+    var W = Math.max(vw, vh * a), H = W / a; this.vw = vw; this.vh = vh; this.W = W; this.H = H;
+    this.cam.style.width = W + 'px'; this.cam.style.height = H + 'px';
+    this.cam.style.transformOrigin = (m.focus[0] * 100) + '% ' + (m.focus[1] * 100) + '%';
+    this.ox0 = clamp(vw / 2 - m.focus[0] * W, vw - W, 0); this.oy = clamp(vh / 2 - m.focus[1] * H, vh - H, 0);
+  };
+  Stage.prototype.set = function (p) {                      // p: 0 → 1 through the chapter
+    if (!this.m) return; var W = this.W, over = W - this.vw;
+    var q = reduce ? .5 : (this.hero ? .5 + p * .5 : p), s = (.5 - q) * this.dir;
+    var ox = clamp(this.ox0 + s * over * .45, this.vw - W, 0);
+    this.cam.style.transform = 'translate3d(' + ox + 'px,' + this.oy + 'px,0) scale(' + (1 + .035 * (reduce ? 0 : p)) + ')';
+    var n = this.layers.length, T = this.travel * W, K = .028 * W;
+    for (var i = 0; i < n; i++) {
+      var im = this.layers[i], par = +im.dataset.par, x = s * T * par + this.mx * K * par, y = this.my * K * par * .5, op = 1;
+      if (this.reveal && !reduce) {                           // layers assemble as the chapter arrives
+        var a = ease(clamp(p / .28 * 1.5 - i * .14, 0, 1)); y += (1 - a) * (26 + i * 10); op = a;
+      }
+      im.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)'; im.style.opacity = op < 1 ? op.toFixed(2) : '';
+    }
+  };
+
+  /* ---------- build chapters + dock + sheet from the one list in the markup ---------- */
+  var anchors = $$('#tools a'), TOOLS = anchors.map(function (a, i) {
+    return { i: i, key: a.dataset.key, shot: a.dataset.shot, href: a.getAttribute('href'), name: $('b', a).textContent, does: $('span', a).textContent };
+  });
+  var chaptersEl = $('#chapters'), hero = $('#hero'), made = $('#made'), dock = $('#dock'), endEl = $('#end');
+  var stages = [], chaps = [];
+
+  var heroStage = new Stage($('#hero .stage'), 'cortex', { dir: 1, travel: .085, hero: true }); heroStage.load(); stages.push({ s: heroStage, kind: 'hero', el: hero });
+
+  TOOLS.forEach(function (t) {
+    var m = L[t.shot]; if (m) t.acc = lift(m.accent);
+    t.acc = t.acc || '#f2a541';
+    var sec = document.createElement('section'); sec.className = 'chap'; sec.id = t.key; sec.setAttribute('aria-label', t.name);
+    var num = String(t.i + 1).padStart(2, '0');
+    sec.style.setProperty('--acc', t.acc);
+    sec.innerHTML = '<div class="sticky"><div class="stage" aria-hidden="true"></div><div class="scrim"></div><div class="bar"><i></i></div>' +
+      '<div class="credit">cartoon · <b>' + ((m && m.district) || '') + '</b><br>' + (m ? m.sid.slice(0, 8) : '') + '</div>' +
+      '<div class="card"><span class="n" aria-hidden="true">' + num + '</span><div class="k">' + num + ' / 08 · ' + t.name + '</div>' +
+      '<h2>' + COPY[t.key][0] + '</h2><p>' + COPY[t.key][1] + '</p><a class="go" href="' + t.href + '">Open ' + t.name + ' <span aria-hidden="true">→</span></a></div></div>';
+    chaptersEl.appendChild(sec);
+    var st = new Stage($('.stage', sec), t.shot, { dir: t.i % 2 ? -1 : 1, reveal: true, travel: .085 });
+    var c = { t: t, el: sec, s: st, card: $('.card', sec) };
+    chaps.push(c); stages.push({ s: st, kind: 'chap', el: sec, c: c });
+  });
+  document.documentElement.style.setProperty('--acc', '#f2a541');
+
+  // closing list (same links)
+  $('#tools2').innerHTML = $('#tools').innerHTML; endEl.hidden = false;
+
+  // sheet tiles
+  $('#tiles').innerHTML = TOOLS.map(function (t) {
+    var m = L[t.shot];
+    return '<li><a class="tile" data-i="' + t.i + '" href="' + t.href + '" style="' + (m ? 'background-image:url(' + m.poster + ')' : '') + '"><b>' + t.name + '</b><span>' + t.does + '</span></a></li>';
+  }).join('');
+  // desktop chips
+  $('#dChips').innerHTML = TOOLS.map(function (t) { return '<button type="button" data-i="' + t.i + '">' + t.name + '</button>'; }).join('');
+  dock.hidden = false;
+
+  /* ---------- how it's made: the Cortex layers, taken apart ---------- */
+  var X = null, xcam = $('#xcam');
+  if (L.cortex) {
+    made.hidden = false; var m = L.cortex;
+    X = m.planes.map(function (p, i) {
+      var im = new Image(); im.className = 'lyr'; im.alt = ''; im.decoding = 'async'; im.draggable = false; im.src = p.src;
+      im.style.left = (-m.padx / m.w * 100) + '%'; im.style.top = (-m.pady / m.h * 100) + '%';
+      im.style.width = ((m.w + 2 * m.padx) / m.w * 100) + '%'; im.style.height = ((m.h + 2 * m.pady) / m.h * 100) + '%';
+      xcam.appendChild(im); return im;
+    });
+    var fr = document.createElement('div'); fr.className = 'xframe'; xcam.appendChild(fr);
+    $('#xchips').innerHTML = m.planes.map(function (p) { return '<i>' + p.id + '</i>'; }).join('');
+  }
+  var DESC = { P6: 'never moves; the camera cannot touch the sky', P5: 'barely drifts, far away', P4: 'the midground, slides with the camera', P3: 'secondary action and effects', P2: 'the action itself, the reference speed', P1: 'foreground, moves faster than the frame' };
+  function setMade(p) {
+    if (!X) return; var m = L.cortex, n = X.length;
+    var e = ease((p - .12) / .24) * (1 - ease((p - .92) / .08)), hi = p > .42 && p < .93 ? Math.min(n - 1, Math.floor((p - .42) / (.5 / n))) : -1;
+    var W = xcam.clientWidth, step = W * .085, W2 = W;
+    xcam.style.transform = 'rotateX(' + (9 * e).toFixed(1) + 'deg) rotateY(' + (-27 * e).toFixed(1) + 'deg) scale(' + (1 - .08 * e).toFixed(3) + ')';
+    for (var i = 0; i < n; i++) {
+      var z = (i - (n - 1) / 2) * step * e, dim = hi >= 0 && i !== hi;
+      X[i].style.transform = 'translateZ(' + z.toFixed(1) + 'px)'; X[i].style.opacity = dim ? '.1' : '1';
+    }
+    var k = $('#xk'), h = $('#xh'), pp = $('#xp'), chips = $$('#xchips i');
+    chips.forEach(function (c, i) { c.classList.toggle('on', i === hi); });
+    if (p < .15) { k.textContent = '01 · the drawing'; h.textContent = 'One cartoon.'; pp.textContent = 'Angular shapes, one light, no outlines.'; }
+    else if (hi < 0 && p < .5) { k.textContent = '02 · taken apart'; h.textContent = 'It was never one picture.'; pp.textContent = 'Six sheets of drawing, stacked far to near. The dashed frame is the camera; the paint outside it is what the camera will uncover.'; }
+    else if (hi >= 0) { var pl = m.planes[hi]; k.textContent = pl.id + ' · moves ' + pl.par.toFixed(2) + '× the camera'; h.textContent = pl.name; pp.textContent = DESC[pl.id] || ''; }
+    else { k.textContent = '03 · put back'; h.textContent = 'Slide them at different speeds.'; pp.textContent = 'That is the whole trick. Scroll on to watch it work in every tool.'; }
+  }
+
+  /* ---------- scroll driver ---------- */
+  var vh = innerHeight, dirty = true, active = -1, mxT = 0, myT = 0, dockOn = false;
+  var io = new IntersectionObserver(function (es) { es.forEach(function (e) { e.target._vis = e.isIntersecting; if (e.isIntersecting && e.target._stage) e.target._stage.load(); }); }, { rootMargin: '120% 0px 120% 0px' });
+  stages.forEach(function (o) { o.el._stage = o.s; io.observe(o.el); });
+  io.observe(made); made._vis = false;
+
+  function frame() {
+    dirty = false; var sy = scrollY; vh = innerHeight;
+    stages.forEach(function (o) {
+      if (!o.el._vis && o.kind !== 'hero') return; var r = o.el.getBoundingClientRect(), p;
+      if (o.kind === 'hero') { p = clamp(-r.top / Math.max(1, r.height), 0, 1); }
+      else { p = clamp(-r.top / Math.max(1, r.height - vh), 0, 1); }
+      if (o.kind === 'hero') { o.s.mx += (mxT - o.s.mx) * .12; o.s.my += (myT - o.s.my) * .12; }
+      o.s.set(p);
+      if (o.c) {
+        var c = o.c; c.el.classList.toggle('on', p > .04 && p < .985); c.el.style.setProperty('--cp', p.toFixed(3));
+      }
+    });
+    var r2 = made.getBoundingClientRect(); if (r2.bottom > -vh && r2.top < 2 * vh) setMade(clamp(-r2.top / Math.max(1, r2.height - vh), 0, 1));
+    // scrollspy: the chapter whose top has passed the middle of the screen
+    var a = -1; for (var i = 0; i < chaps.length; i++) { if (chaps[i].el.getBoundingClientRect().top <= vh * .5) a = i; }
+    var endTop = endEl.getBoundingClientRect().top; if (endTop <= vh * .35) a = -1;
+    if (a !== active) { active = a; syncDock(); }
+    var heroBottom = hero.getBoundingClientRect().bottom, on = heroBottom < vh * .35;
+    if (on !== dockOn) { dockOn = on; dock.classList.toggle('on', on); }
+    if (fine && Math.abs(mxT - heroStage.mx) + Math.abs(myT - heroStage.my) > .002 && sy < vh * 1.2) dirty = true;
+  }
+  function req() { dirty = true; }
+  addEventListener('scroll', req, { passive: true });
+  addEventListener('resize', function () { stages.forEach(function (o) { o.s.layout(); }); req(); });
+  if (fine) addEventListener('pointermove', function (e) { mxT = e.clientX / innerWidth - .5; myT = e.clientY / innerHeight - .5; if (scrollY < innerHeight * 1.2) dirty = true; }, { passive: true });
+  function loop() { if (dirty) frame(); requestAnimationFrame(loop); }
+
+  /* ---------- dock ---------- */
+  var dOpen = $('#dOpen'), dN = $('#dN'), dName = $('#dName');
+  function syncDock() {
+    var t = TOOLS[active];
+    $$('#dChips button').forEach(function (b) { b.classList.toggle('on', +b.dataset.i === active); });
+    $$('.tile').forEach(function (b) { b.classList.toggle('cur', +b.dataset.i === active); });
+    if (t) {
+      dN.textContent = String(t.i + 1).padStart(2, '0') + ' / 08'; dName.textContent = t.name;
+      dOpen.href = t.href; dOpen.innerHTML = 'Open ' + t.name + ' <span aria-hidden="true">→</span>'; dOpen.removeAttribute('aria-disabled');
+      dock.style.setProperty('--acc', t.acc); history.replaceState(null, '', '#' + t.key);
+    } else {
+      dN.textContent = '08 tools'; dName.textContent = 'Choose a tool'; dOpen.href = '#'; dOpen.innerHTML = 'All tools'; dOpen.removeAttribute('aria-disabled');
+      dock.style.setProperty('--acc', '#f2a541'); if (location.hash && TOOLS.some(function (x) { return '#' + x.key === location.hash; })) history.replaceState(null, '', location.pathname + location.search);
+    }
+  }
+  function go(i) { i = clamp(i, 0, chaps.length - 1); chaps[i].el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); }
+  $('#dPrev').onclick = function () { active <= 0 ? hero.scrollIntoView({ behavior: 'smooth' }) : go(active - 1); };
+  $('#dNext').onclick = function () { go(active + 1); };
+  $$('#dChips button').forEach(function (b) { b.onclick = function () { go(+b.dataset.i); }; });
+  dOpen.addEventListener('click', function (e) { if (active < 0) { e.preventDefault(); openSheet(); } });
+
+  var sheet = $('#sheet'), lastFocus = null;
+  function openSheet() { lastFocus = document.activeElement; sheet.classList.add('on'); var f = $('.tile', sheet); f && f.focus(); document.body.style.overflow = 'hidden'; }
+  function closeSheet() { sheet.classList.remove('on'); document.body.style.overflow = ''; (lastFocus || $('#dGrid')).focus(); }
+  $('#dGrid').onclick = openSheet; $('#dCur').onclick = openSheet;
+  sheet.addEventListener('click', function (e) { if (e.target.closest('[data-close]')) closeSheet(); });
+  // swipe the sheet down to dismiss
+  (function () { var pn = $('.pn', sheet), y0 = null, dy = 0;
+    pn.addEventListener('touchstart', function (e) { if (pn.scrollTop <= 0) y0 = e.touches[0].clientY; }, { passive: true });
+    pn.addEventListener('touchmove', function (e) { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); pn.style.transition = 'none'; pn.style.transform = 'translate(-50%,' + dy + 'px)'; }, { passive: true });
+    pn.addEventListener('touchend', function () { if (y0 === null) return; pn.style.transition = ''; pn.style.transform = ''; if (dy > 90) closeSheet(); y0 = null; dy = 0; });
+  })();
+
+  addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey || /input|textarea|select/i.test((e.target.tagName || ''))) return;
+    if (sheet.classList.contains('on')) { if (e.key === 'Escape') { e.preventDefault(); closeSheet(); } return; }
+    if (e.key === 'j' || e.key === 'ArrowRight') go(active + 1);
+    else if (e.key === 'k' || e.key === 'ArrowLeft') { active <= 0 ? hero.scrollIntoView({ behavior: 'smooth' }) : go(active - 1); }
+    else if (e.key === 'o' && active >= 0) location.href = TOOLS[active].href;
+    else if (e.key === 'g') openSheet();
+  });
+
+  // deep link: return to the same chapter
+  if (location.hash) { var h = TOOLS.filter(function (t) { return '#' + t.key === location.hash; })[0]; if (h) { var el = document.getElementById(h.key); if (el) { document.documentElement.style.scrollBehavior = 'auto'; el.scrollIntoView(); document.documentElement.style.scrollBehavior = ''; } } }
+  // honour restored scroll when coming Back from a tool
+  addEventListener('pageshow', req);
+  frame(); req(); loop();
+})();
+</script>
+</body>
+</html>
