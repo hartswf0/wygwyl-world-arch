@@ -82,6 +82,10 @@ h1{margin:0;font:300 clamp(40px,7.4vw,84px)/1 var(--sans);letter-spacing:.34em;t
 .now{position:absolute;left:0;right:0;top:0;padding:12px 16px;background:linear-gradient(rgba(0,0,0,.7),transparent);pointer-events:none;font:500 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:#fff6df;display:flex;gap:10px;align-items:center}
 .now i{width:9px;height:9px;border-radius:50%;background:var(--c,#f2a541);flex:none}
 .screen.err::after{content:attr(data-err);position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:20px;background:#0a0d18;color:#d8d9e3;font:400 15px var(--sans)}
+.seg{display:inline-flex;margin-top:12px;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;min-height:40px;padding:0 16px;display:inline-flex;align-items:center;font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:#c4c9dc}
+.seg button[aria-pressed=true]{background:var(--amber);color:#1a1206}
+.seg button:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
 .cap{margin:12px 2px 0;color:#c4c9dc;font-size:15px}
 .cap b{display:block;color:#fff6df;font:500 18px var(--sans)}
 .reel{list-style:none;margin:0;padding:0;display:grid;gap:2px;border-top:1px solid var(--line)}
@@ -246,10 +250,11 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
     <div class="w-in">
       <p class="kick">The film</p>
       <h2 id="wh">Fourteen poems, one city.</h2>
-      <p class="sub">Each poem is a short cartoon cut from the stills. Press play and all fourteen run in order, 3 minutes 12 seconds in all. The clips carry no sound; <a href="shots/reel.html" style="color:var(--amber)">Reels</a> plays them with the score.</p>
+      <p class="sub">Each poem is drawn as an angular cartoon from the stills; switch to the original stills to compare. Press play and all fourteen run in order, 3 minutes 12 seconds in all. The clips carry no sound; <a href="shots/reel.html" style="color:var(--amber)">Reels</a> plays them with the score.</p>
       <div class="theater">
         <div>
           <div class="screen" id="screen"><video id="vid" controls playsinline preload="metadata" aria-label="WYGWYL film"></video><div class="now" id="now" aria-hidden="true"><i></i><span></span></div></div>
+          <div class="seg" id="seg" role="group" aria-label="Version"><button type="button" data-m="cartoon" aria-pressed="true">Cartoon</button><button type="button" data-m="original" aria-pressed="false">Original stills</button></div>
           <p class="cap" id="cap" aria-live="polite"></p>
         </div>
         <ol class="reel" id="reel" aria-label="Poems"></ol>
@@ -320,7 +325,16 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
   list.innerHTML = P.map(function (p, i) {
     return '<li style="--c:' + p[4] + '"><button type="button" data-i="' + i + '"><em>' + p[0] + '</em><span><strong>' + esc(p[1]) + '</strong><small>' + esc(p[3]) + '</small></span><span>' + dur(i) + '</span></button></li>';
   }).join('');
-  vid.src = 'shots/film/wygwyl_film.mp4';
+  var SRC = { cartoon: 'shots/film/wygwyl_cartoon.mp4', original: 'shots/film/wygwyl_film.mp4' }, mode = 'cartoon';
+  vid.src = SRC.cartoon;
+  var seg = document.getElementById('seg');
+  seg.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || b.getAttribute('data-m') === mode) return;
+    var t = vid.currentTime, wasPlaying = !vid.paused; mode = b.getAttribute('data-m');
+    [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    screen.classList.remove('err'); vid.src = SRC[mode];
+    vid.addEventListener('loadedmetadata', function f() { vid.removeEventListener('loadedmetadata', f); try { vid.currentTime = t; } catch (x) {} if (wasPlaying) { var r = vid.play(); if (r && r.catch) r.catch(function () {}); } });
+  });
   function mark() {
     [].forEach.call(list.children, function (li, i) { if (i === cur) li.setAttribute('aria-current', 'true'); else li.removeAttribute('aria-current'); });
     var a = list.children[cur]; if (a && list.scrollHeight > list.clientHeight && getComputedStyle(list).overflowY === 'auto') list.scrollTop = a.offsetTop - list.offsetTop - 4;
