@@ -236,7 +236,7 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
           <li><a href="shots/studio.html"     data-key="studio"     data-shot="commons"><b>Studio</b><span>Inspect animation</span><i aria-hidden="true">→</i></a></li>
         </ol>
       </nav>
-      <a class="play" id="playCta" href="#watch"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Watch the film <small>14 poems · 3:16</small></a>
+      <a class="play" id="playCta" href="#watch"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Watch the film <small>14 poems · 3:12</small></a>
       <a class="cue" href="#watch">Or scroll</a>
     </div>
   </section>
@@ -246,7 +246,7 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
     <div class="w-in">
       <p class="kick">The film</p>
       <h2 id="wh">Fourteen poems, one city.</h2>
-      <p class="sub">Each poem is a 14-second cartoon cut from the stills. Press play and they run in order, about three minutes in all. The clips carry no sound; <a href="shots/reel.html" style="color:var(--amber)">Reels</a> plays them with the score.</p>
+      <p class="sub">Each poem is a short cartoon cut from the stills. Press play and all fourteen run in order, 3 minutes 12 seconds in all. The clips carry no sound; <a href="shots/reel.html" style="color:var(--amber)">Reels</a> plays them with the score.</p>
       <div class="theater">
         <div>
           <div class="screen" id="screen"><video id="vid" controls playsinline preload="metadata" aria-label="WYGWYL film"></video><div class="now" id="now" aria-hidden="true"><i></i><span></span></div></div>
@@ -310,32 +310,36 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
 /* the film: 14 poem clips as one playlist */
 (function () {
   var P = [["01","OUT OF LIFE","the maze, the haze, the fall, the ember","Naraka Market","#01acd4"],["02","FLASHING LIGHTS","the scream that travels inward","The Overseer","#1078da"],["03","HOW TO BREAK OFF AN ENGAGEMENT","the storm takes everything that was ever called goods","Mirror Thread Bay","#465fb1"],["04","NEVERMORE","a trail followed twice, a vow made twice","Mirror Thread Bay","#465fb1"],["05","BLOODLINES","he names the stars after the people who made him","The Ascent","#2560e1"],["06","RESURRECTING ATLANTIS","a city comes up out of the water","The Light Gate & Atlantis Central Plaza","#bb7362"],["07","DJ TURN ME UP","amplitude, and eleven petals","Naraka Market","#01acd4"],["08","NEWLY SINGLE","a soul leaves a body on a dance floor","Ankhu Spires","#d36f46"],["09","YET, HEARD","three calls before leaving","The Shrouded Arcade","#be5791"],["10","MAGIC RIDE","night replaced by morning, dot by dot","The Orange Haze","#fa8d15"],["11","NEW DAY","the temple assembles, one course at a time","Cenotaph Rail","#a94022"],["12","REUNION","less time for words, more space for laughter","The White Temple & its Pools","#c99765"],["13","HOW TO WIN MY HEART","orbits, close and counted","Mirror Thread Bay","#465fb1"],["14","HOT MINUTE","everything learns to be weather, then a door","The Ascent","#2560e1"]];
+  var D = [14,14,14,14,14,14,9.5,14,14,14,14,14,14,14], S = [], t0 = 0;
+  D.forEach(function (d) { S.push(t0); t0 += d; });
+  function dur(i) { var d = Math.round(D[i]); return '0:' + (d < 10 ? '0' : '') + d; }
   var vid = document.getElementById('vid'), screen = document.getElementById('screen'), list = document.getElementById('reel'),
       cap = document.getElementById('cap'), now = document.getElementById('now'), cta = document.getElementById('playCta'), cur = -1;
   if (!vid) return;
   function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
   list.innerHTML = P.map(function (p, i) {
-    return '<li style="--c:' + p[4] + '"><button type="button" data-i="' + i + '"><em>' + p[0] + '</em><span><strong>' + esc(p[1]) + '</strong><small>' + esc(p[3]) + '</small></span><span>0:14</span></button></li>';
+    return '<li style="--c:' + p[4] + '"><button type="button" data-i="' + i + '"><em>' + p[0] + '</em><span><strong>' + esc(p[1]) + '</strong><small>' + esc(p[3]) + '</small></span><span>' + dur(i) + '</span></button></li>';
   }).join('');
+  vid.src = 'shots/film/wygwyl_film.mp4';
   function mark() {
     [].forEach.call(list.children, function (li, i) { if (i === cur) li.setAttribute('aria-current', 'true'); else li.removeAttribute('aria-current'); });
-    var a = list.children[cur]; if (a && list.scrollHeight > list.clientHeight) list.scrollTop = a.offsetTop - list.offsetTop - 4;
+    var a = list.children[cur]; if (a && list.scrollHeight > list.clientHeight && getComputedStyle(list).overflowY === 'auto') list.scrollTop = a.offsetTop - list.offsetTop - 4;
   }
-  function load(i, play) {
-    cur = i; var p = P[i];
-    screen.classList.remove('err');
-    vid.src = 'shots/film/poem_' + p[0] + '.mp4';
+  function show(i) {
+    if (i === cur) return; cur = i; var p = P[i];
     cap.innerHTML = '<b>' + p[0] + ' · ' + esc(p[1]) + '</b>' + esc(p[2]) + ' — ' + esc(p[3]);
-    now.firstChild.style.setProperty('--c', p[4]); now.firstChild.style.background = p[4];
+    now.firstChild.style.background = p[4];
     now.lastChild.textContent = p[0] + ' / 14 · ' + p[1];
     mark();
-    if (play) { var r = vid.play(); if (r && r.catch) r.catch(function () {}); }
   }
-  vid.addEventListener('ended', function () { if (cur < P.length - 1) load(cur + 1, true); else load(0, false); });
-  vid.addEventListener('error', function () { screen.setAttribute('data-err', 'This clip didn’t load. Try another poem, or open Reels.'); screen.classList.add('err'); });
-  list.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) { load(+b.getAttribute('data-i'), true); } });
-  if (cta) cta.addEventListener('click', function () { setTimeout(function () { if (cur < 0) load(0, true); else vid.play().catch(function () {}); }, 0); });
-  load(0, false);
+  function which(t) { var i = 0; while (i < S.length - 1 && t >= S[i + 1] - 0.05) i++; return i; }
+  function seek(i, play) { show(i); screen.classList.remove('err'); try { vid.currentTime = S[i] + 0.01; } catch (e) {} if (play) { var r = vid.play(); if (r && r.catch) r.catch(function () {}); } }
+  vid.addEventListener('timeupdate', function () { show(which(vid.currentTime)); });
+  vid.addEventListener('ended', function () { seek(0, false); });
+  vid.addEventListener('error', function () { screen.setAttribute('data-err', 'The film didn’t load. Try Reels instead.'); screen.classList.add('err'); });
+  list.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) seek(+b.getAttribute('data-i'), true); });
+  if (cta) cta.addEventListener('click', function () { setTimeout(function () { var r = vid.play(); if (r && r.catch) r.catch(function () {}); }, 0); });
+  show(0);
 })();
 </script>
 <script>
