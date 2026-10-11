@@ -165,8 +165,8 @@ aside.info{border-left:1px solid var(--line);background:rgba(9,12,18,.7);backdro
       <div class="strip-head">
         <span class="strip-title" id="stripTitle">Panels for Chapter 01 · Out of Life</span>
         <div class="view-modes">
-          <button class="vm-btn on" data-m="layout">Layout Sheet</button>
-          <button class="vm-btn" data-m="cel">Painted Cel</button>
+          <button class="vm-btn on" data-m="cel">Painted Cel</button>
+          <button class="vm-btn" data-m="layout">Layout Sheet</button>
           <button class="vm-btn" data-m="notan">Notan Values</button>
           <button class="vm-btn" data-m="image">Original Photo</button>
         </div>
@@ -225,7 +225,7 @@ const F = (window.FILM || { poems: [] });
 
 let curPoemNum = '01';
 let curPanelIdx = 0;
-let visMode = 'layout';
+let visMode = 'cel';
 
 const $ = id => document.getElementById(id);
 
@@ -268,7 +268,7 @@ function renderStrip(panels){
   const strip = $('panelsStrip');
   strip.innerHTML = panels.map((p, idx) => `
     <div class="thumb-card ${idx === curPanelIdx ? 'on' : ''}" data-idx="${idx}">
-      <img src="${getShotSrc(p.shot_id, 'layout')}" alt="">
+      <img src="${getShotSrc(p.shot_id, 'cel')}" alt="">
       <span>${p.id.replace('p_','')}</span>
     </div>
   `).join('');

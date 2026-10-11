@@ -192,14 +192,12 @@ body.inside #left{transform:translateX(-290px)}
   </div>
   <span class="ib-lbl">Signal:</span>
   <div class="ib-grp" id="grpSig">
-    <button class="ib-btn on" data-s="comp">Master</button>
-    <button class="ib-btn" data-s="cel">Cel Wash</button>
+    <button class="ib-btn" data-s="comp">Master</button>
+    <button class="ib-btn on" data-s="cel">Cel Wash</button>
     <button class="ib-btn" data-s="ink">Ink Only</button>
     <button class="ib-btn" data-s="notan">Notan</button>
   </div>
-  <span class="ib-lbl">Hero:</span>
   <div class="ib-grp" id="grpHero">
-    <button class="ib-btn on" id="bToggleChar" title="Toggle 2D Cartoon Character on Plane 2">🎭 P2 Character</button>
     <button class="ib-btn" id="bToggleDrone" title="Toggle ambient drone audio bed">🔊 Drone</button>
   </div>
   <button class="ib-btn" id="bSnapFront" title="Align camera straight-on with zero distortion">🎯 Snap Frontal</button>
@@ -220,7 +218,7 @@ body.inside #left{transform:translateX(-290px)}
   </div>
   <div class="glass sec" style="flex:none">
     <h3>Cartoon Shaders</h3>
-    <div class="ctl"><span>cel paint</span><input id="sCel" type="range" min="0" max="1" step="0.01" value="0"><span id="vCel">0.00</span></div>
+    <div class="ctl"><span>cel paint</span><input id="sCel" type="range" min="0" max="1" step="0.01" value="1.0"><span id="vCel">1.00</span></div>
     <div class="ctl"><span>ink line</span><input id="sInk" type="range" min="0" max="1" step="0.01" value="0.35"><span id="vInk">0.35</span></div>
     <div class="toggles">
       <button class="tg on" id="tFrus">frustums</button>
@@ -241,7 +239,7 @@ body.inside #left{transform:translateX(-290px)}
   <div style="font:500 10px IBM Plex Mono;color:var(--faint);margin-bottom:8px" id="lawTxt">camera law</div>
   <div class="btns">
     <button class="btn pri" id="bReplay">↻ Replay</button>
-    <button class="btn" id="bFilm">▶ Footage</button>
+    <button class="btn" id="bFilm">🎨 Cel Film</button>
     <button class="btn" id="bPrev">← Prev</button>
     <button class="btn" id="bNext">Next →</button>
     <button class="btn" id="bExit">Exit</button>
@@ -277,7 +275,6 @@ body.inside #left{transform:translateX(-290px)}
   <button id="bStart">Enter the world</button>
 </div></div>
 
-<script src="cartoon_character.js"></script>
 <script src="film/audio_drone.js"></script>
 <script src="film/poems_data.js"></script>
 <script src="world_data.js"></script>
@@ -460,7 +457,7 @@ const sheetFS = `uniform sampler2D map, celMap, inkMap; uniform float uCel,uInk,
     #include <colorspace_fragment>
   }`;
 const TL = new THREE.TextureLoader();
-const U = { uCel: { value: 0 }, uInk: { value: 0.35 }, uNotan: { value: 0 }, uTime: { value: 0 }, uFogD: { value: 0.0011 }, uFogC: { value: FOG_C } };
+const U = { uCel: { value: 1.0 }, uInk: { value: 0.35 }, uNotan: { value: 0 }, uTime: { value: 0 }, uFogD: { value: 0.0011 }, uFogC: { value: FOG_C } };
 const DIO = [];
 let loading = 0, loadedTotal = 0;
 function tex(url, cb) {
@@ -489,7 +486,7 @@ for (const [did, list] of Object.entries(shotsBy)) {
     const zc = s.z_hero, cw = tw(zc);
     const card = new THREE.Mesh(new THREE.PlaneGeometry(cw, cw / s.aspect), new THREE.MeshBasicMaterial({ color: '#333', side: THREE.DoubleSide }));
     card.position.z = -zc; card.userData.dio = si; grp.add(card);
-    tex(s.thumb, t => { card.material.map = t; card.material.color.set('#fff'); card.material.needsUpdate = true; });
+    tex(s.cel || s.thumb, t => { card.material.map = t; card.material.color.set('#fff'); card.material.needsUpdate = true; });
     const zf = Math.max(...s.sheets.map(x => x.z)), fw = tw(zf) / 2, fh = fw / s.aspect;
     const V = (x, y, z) => new THREE.Vector3(x, y, z), O = V(0, 0, 0);
     const c4 = [V(-fw, -fh, -zf), V(fw, -fh, -zf), V(fw, fh, -zf), V(-fw, fh, -zf)];
@@ -531,18 +528,6 @@ function loadSheets(o) {
     tex(s.backdrop, t => { mat.uniforms.map.value = t; m.visible = true; if (o.sheets && o.sheets.every(x => x.visible)) { o.state = "near"; o.card.visible = false; } });
   }
 
-  // Mount 2D Cartoon Character on Plane 2 (Hero)
-  const p2Sheet = s.sheets.find(x => x.plane === 'P2') || s.sheets[Math.floor(s.sheets.length / 2)];
-  if (p2Sheet && window.CartoonCharacter) {
-    const zh = p2Sheet.z * 0.98;
-    const charMesh = CartoonCharacter.createCharacterMesh(THREE, { worldHeight: o.tw(zh) * 0.28 });
-    charMesh.position.set(0, -o.tw(zh) / s.aspect * 0.20, -zh);
-    charMesh.userData.dio = s.i;
-    charMesh.userData.plane = 'P2';
-    charMesh.visible = showHeroChar;
-    o.grp.add(charMesh);
-    o.heroCharMesh = charMesh;
-  }
 }
 function loadHi(o) {
   if (o.hi || !o.sheets) return; o.hi = true;
@@ -550,13 +535,6 @@ function loadHi(o) {
 }
 function unloadSheets(o) {
   if (!o.sheets) return;
-  if (o.heroCharMesh) {
-    o.heroCharMesh.geometry.dispose();
-    o.heroCharMesh.material.map?.dispose();
-    o.heroCharMesh.material.dispose();
-    o.grp.remove(o.heroCharMesh);
-    o.heroCharMesh = null;
-  }
   for (const m of o.sheets) { m.material.uniforms.map.value?.dispose(); m.geometry.dispose(); m.material.dispose(); o.grp.remove(m); }
   o.sheets = null; o.hi = false; o.state = 'far'; o.card.visible = true;
 }
@@ -644,14 +622,6 @@ $('bSnapFront').onclick = () => {
   camera.position.copy(o.eye); camera.quaternion.copy(o.q);
 };
 
-let showHeroChar = true;
-$('bToggleChar').onclick = () => {
-  showHeroChar = !showHeroChar;
-  $('bToggleChar').classList.toggle('on', showHeroChar);
-  DIO.forEach(o => {
-    if (o && o.heroCharMesh) o.heroCharMesh.visible = showHeroChar;
-  });
-};
 let worldDroneOn = false;
 $('bToggleDrone').onclick = () => {
   if (!window.AudioDrone) return;
@@ -803,24 +773,6 @@ function stepInside(dt) {
   camera.fov = dioFov(o); camera.updateProjectionMatrix();
   $('lawProg').style.width = (e * 100).toFixed(1) + '%';
 
-  // Animate 2D Cartoon Character on Plane 2
-  if (o.heroCharMesh && showHeroChar) {
-    const cph = I.t * 1.6;
-    const isWalk = o.s.move === 'truck' || o.s.move === 'crane_push';
-    o.heroCharMesh.updatePose({
-      mode: isWalk ? 'walk' : 'stand',
-      phase: cph,
-      face: 1,
-      guise: 'poet',
-      arms: isWalk ? 'swing' : (o.s.move === 'push' ? 'reach' : 'down'),
-      lean: isWalk ? 0.08 : 0.03,
-      breath: 1
-    }, {
-      mode: deskMode === 'notan' ? 'notan' : 'cel',
-      accentTone: o.Dd.d.color
-    });
-  }
-
   if (I.auto && I.t > T + 0.4) { const d = I.onDone; I.onDone = null; d && d(); }
 }
 
@@ -840,7 +792,18 @@ function fillPanel(o) {
 }
 $('bExit').onclick = () => { tour = null; exitInside(); };
 $('bReplay').onclick = () => { if (inside) inside.t = 0; };
-$('bFilm').onclick = () => { if (!inside) return; $('vid').src = inside.o.s.film; $('vidModal').classList.add('show'); $('vid').play(); };
+$('bFilm').onclick = () => {
+  if (!inside) return;
+  const s = inside.o.s;
+  const pm = (window.POEMS || []).find(p => (p.shots || []).some(ps => ps.id === s.id));
+  if (pm && pm.num) {
+    $('vid').src = `video/poem_${pm.num}/cartoon.mp4`;
+  } else {
+    $('vid').src = s.film;
+  }
+  $('vidModal').classList.add('show');
+  $('vid').play();
+};
 $('vClose').onclick = () => { $('vid').pause(); $('vidModal').classList.remove('show'); };
 const sib = d => { if (!inside) return; const L = shotsBy[inside.o.s.district]; const k = L.indexOf(inside.o.s.i); const n = L[(k + d + L.length) % L.length]; exitInside(true); enterShot(n, { arc: false, dur: 2.0 }); };
 $('bPrev').onclick = () => sib(-1); $('bNext').onclick = () => sib(1);

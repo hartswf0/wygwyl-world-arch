@@ -96,6 +96,7 @@ pre{font:400 10.5px/1.45 IBM Plex Mono;color:#b9c4d6;white-space:pre-wrap;word-b
     <a href="reel.html" class="nav-link on">Reels</a>
     <a href="world.html" class="nav-link">World</a>
   </nav>
+  <button class="nav-link on" id="btnReelMode" style="cursor:pointer;font:600 11px var(--mono);color:var(--amber);background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);padding:4px 9px;border-radius:6px">🎨 Cartoon Cel Mode</button>
   <button class="btn-drone" id="btnDrone">🔊 Drone Bed · Off</button>
 </header>
 <div class="app">
@@ -114,21 +115,24 @@ pre{font:400 10.5px/1.45 IBM Plex Mono;color:#b9c4d6;white-space:pre-wrap;word-b
   </main>
   <aside class="side">
     <div class="card" id="shotCard"><h3>Current shot</h3><div class="empty">play the reel</div></div>
-    <div class="card" id="charCard">
+    <div class="card" id="celKeyCard">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <h3>P2 Character Action · on twos</h3>
-        <button id="btnCharMode" style="background:none;border:1px solid var(--line2);color:var(--dim);font:500 10px IBM Plex Mono;padding:2px 6px;border-radius:4px;cursor:pointer">Cel / Notan</button>
+        <h3>🎨 Cartoon Cel Keyframes · on twos</h3>
+        <span id="celFrCounter" style="font:600 11px IBM Plex Mono;color:var(--amber)">F000 / F168</span>
       </div>
       <div style="display:flex;gap:12px;align-items:center">
-        <canvas id="charCanvas" width="130" height="150" style="background:#05070a;border:1px solid var(--line);border-radius:8px;flex:none"></canvas>
+        <div style="position:relative;width:140px;height:78px;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:#05070a;flex:none">
+          <img id="celKfImg" src="" style="width:100%;height:100%;object-fit:cover;display:block">
+          <span id="celKfBadge" style="position:absolute;left:4px;bottom:4px;font:700 9.5px IBM Plex Mono;background:rgba(0,0,0,.75);color:var(--amber);padding:1px 5px;border-radius:3px">KF 00</span>
+        </div>
         <div style="flex:1;min-width:0">
-          <b id="charTitle" style="display:block;font-size:12px;color:var(--ink);margin-bottom:2px">Poet Walk Cycle</b>
-          <div id="charGuise" style="font:500 10.5px IBM Plex Mono;color:var(--accent);margin-bottom:4px">guise: poet · C Phrygian</div>
-          <p id="charDesc" style="font-size:11px;color:#c0c8d6;line-height:1.4">Volume capsules, quad torso, breathing hold on twos.</p>
+          <b id="celSeqTitle" style="display:block;font-size:12px;color:var(--ink);margin-bottom:2px">Poem 01 Cel Animation</b>
+          <div id="celSeqMeta" style="font:500 10.5px IBM Plex Mono;color:var(--accent);margin-bottom:4px">12 FPS · On Twos · 168 Cels</div>
+          <p id="celSeqDesc" style="font-size:11px;color:#c0c8d6;line-height:1.35">Decisive faceted angular planes with internal gradient wash.</p>
         </div>
       </div>
-      <table class="xs-table" id="xsTable">
-        <thead><tr><th>Key</th><th>Frame</th><th>Mode</th><th>Action Beat</th></tr></thead>
+      <table class="xs-table" id="xsTable" style="margin-top:10px">
+        <thead><tr><th>Key</th><th>Frame</th><th>Time</th><th>Cel Action</th></tr></thead>
         <tbody id="xsBody"></tbody>
       </table>
     </div>
@@ -139,7 +143,6 @@ pre{font:400 10.5px/1.45 IBM Plex Mono;color:#b9c4d6;white-space:pre-wrap;word-b
     </div>
   </aside>
 </div>
-<script src="cartoon_character.js"></script>
 <script src="film/audio_drone.js"></script>
 <script src="film/poems_data.js"></script>
 <script src="film/reels.js"></script>
@@ -155,16 +158,30 @@ if (!R.length) { $('list').innerHTML = '<div class="empty">film/reels.js not bui
 $('list').innerHTML = R.map((p, i) => `<div class="poem" data-i="${i}"><span class="sw" style="background:${p.color}"></span><div><b>${p.num} · ${p.title}</b><i>${p.district_name} · ${p.shots.length} shots · ${p.seconds}s</i></div></div>`).join('') || $('list').innerHTML;
 $('list').onclick = e => { const el = e.target.closest('.poem'); if (el) load(+el.dataset.i); };
 
+let reelMode = 'cartoon';
+$('btnReelMode').onclick = () => {
+  reelMode = reelMode === 'cartoon' ? 'film' : 'cartoon';
+  $('btnReelMode').textContent = reelMode === 'cartoon' ? '🎨 Cartoon Cel Mode' : '🎞️ Filmed Footage';
+  $('btnReelMode').classList.toggle('on', reelMode === 'cartoon');
+  if (cur) {
+    const t = vid.currentTime;
+    vid.src = reelMode === 'cartoon' ? `video/poem_${cur.num}/cartoon.mp4` : cur.mp4;
+    vid.currentTime = t;
+    vid.play().catch(() => {});
+  }
+};
+
 function load(i) {
   cur = R[i];
   document.querySelectorAll('.poem').forEach(el => el.classList.toggle('on', +el.dataset.i === i));
   document.documentElement.style.setProperty('--accent', cur.color);
   $('pTitle').textContent = `${cur.num} · ${cur.title}`;
   $('pMeta').textContent = `${cur.district_name} · ${cur.seconds}s · ${cur.shots.length} shots · ${cur.score?.mode || 'phrygian'}`;
-  vid.src = cur.mp4; vid.play().catch(() => {});
+  vid.src = reelMode === 'cartoon' ? `video/poem_${cur.num}/cartoon.mp4` : cur.mp4;
+  vid.play().catch(() => {});
   if (cur.drone && window.AudioDrone) AudioDrone.setPoemDrone(cur.drone);
   if (droneOn) $('btnDrone').textContent = `🔊 Drone · ${cur?.score?.mode || 'Key'} (${cur?.drone?.base || 16} Hz)`;
-  $('strip').innerHTML = cur.shots.map((s, k) => `<div class="clip" data-k="${k}"><img src="out/${s.id}/film/last.jpg" alt="shot ${s.id.slice(0, 8)}" loading="lazy"><div><b>${s.start.slice(3)}</b> ${s.move}${s.exact ? '' : ' <span class="tag warn">sibling</span>'}</div></div>`).join('');
+  $('strip').innerHTML = cur.shots.map((s, k) => `<div class="clip" data-k="${k}"><img src="out/${s.id}/cartoon/cel.png" alt="shot ${s.id.slice(0, 8)}" loading="lazy"><div><b>${s.start.slice(3)}</b> ${s.move}${s.exact ? '' : ' <span class="tag warn">sibling</span>'}</div></div>`).join('');
   fetch(cur.riverbed).then(r => r.json()).then(j => { rbData = j; drawRB(); }).catch(() => { $('rb').textContent = 'riverbed JSON unavailable'; });
   history.replaceState(null, '', '?poem=' + cur.num);
   setupXSheet();
@@ -179,14 +196,14 @@ $('btnDrone').onclick = () => {
   $('btnDrone').textContent = droneOn ? `🔊 Drone · ${cur?.score?.mode || 'Key'} (${cur?.drone?.base || 16} Hz)` : '🔊 Drone Bed · Off';
 };
 
-let charMode = 'cel';
-$('btnCharMode').onclick = () => {
-  charMode = charMode === 'cel' ? 'notan' : 'cel';
-  $('btnCharMode').textContent = charMode === 'cel' ? 'Cel / Notan' : 'Notan (Silhouette)';
-  drawCharFrame(vid.currentTime);
-};
+let curSeq = null;
+let sequences = [];
+fetch('cartoon_sequences.json').then(r => r.json()).then(data => {
+  sequences = data;
+  if (cur) setupXSheet();
+}).catch(() => {});
 
-const TABS = { master: j => j.prompt_architecture.master_prompt, riverbed: j => j.riverbed, flow: j => j.flow, segments: j => j.prompt_architecture.segment_prompts, bridges: j => j.prompt_architecture.bridge_prompts, full: j => j };
+const TABS = { master: j => j.prompt_architecture?.master_prompt || j.master_prompt || '', riverbed: j => j.riverbed || '', flow: j => j.flow || '', segments: j => j.prompt_architecture?.segment_prompts || j.segments || '', full: j => j };
 $('rbTabs').innerHTML = Object.keys(TABS).map(k => `<button data-t="${k}">${k}</button>`).join('');
 $('rbTabs').onclick = e => { if (e.target.dataset.t) { rbTab = e.target.dataset.t; drawRB(); } };
 function drawRB() {
@@ -195,44 +212,61 @@ function drawRB() {
   $('rb').textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 1);
 }
 
-let curXSheet = [];
 function setupXSheet() {
-  if (!window.CartoonCharacter) return;
-  curXSheet = CartoonCharacter.generateExposureSheet("search", 48);
-  $('xsBody').innerHTML = curXSheet.map((k, idx) => `<tr data-idx="${idx}" class="${idx === 0 ? 'on' : ''}"><td>${k.key}</td><td>F${k.frame}</td><td>${k.mode}</td><td>${k.note}</td></tr>`).join('');
-}
-
-function drawCharFrame(t, shot) {
-  if (!window.CartoonCharacter) return;
-  const cv = $('charCanvas'); if (!cv) return;
-  const ctx = cv.getContext('2d');
-  ctx.clearRect(0, 0, cv.width, cv.height);
-
-  const move = shot ? shot.move : 'push';
-  const isWalk = move === 'truck' || move === 'crane_push';
-  const pose = {
-    mode: isWalk ? 'walk' : 'stand',
-    phase: t * (isWalk ? 4.2 : 1.8),
-    face: 1,
-    guise: 'poet',
-    arms: isWalk ? 'swing' : (move === 'push' ? 'reach' : 'down'),
-    lean: isWalk ? 0.1 : 0.04,
-    breath: 1
+  if (!cur) return;
+  curSeq = (sequences || []).find(sq => sq.num === cur.num) || {
+    keyframes: ['kf00000_0.png','kf00012_0.png','kf00024_0.png','kf00036_0.png','kf00048_0.png','kf00060_0.png','kf00072_0.png','kf00084_0.png','kf00096_0.png','kf00108_0.png','kf00120_0.png','kf00132_0.png','kf00144_0.png','kf00156_0.png'],
+    total_frames: 168
   };
 
-  CartoonCharacter.drawFigure(ctx, cv.width * 0.5, cv.height * 0.88, cv.height * 0.72, pose, {
-    mode: charMode,
-    accentTone: cur?.color || '#f2a541',
-    bodyTone: '#241e2b',
-    coatTone: '#16131c'
+  $('celSeqTitle').textContent = `Poem ${cur.num} · ${cur.title}`;
+  $('celSeqMeta').textContent = `12 FPS Animation · On Twos · ${curSeq.total_frames || 168} Cels`;
+  if (curSeq.keyframes && curSeq.keyframes.length) {
+    $('celKfImg').src = `video/poem_${cur.num}/keyframes/${curSeq.keyframes[0]}`;
+    $('celKfBadge').textContent = 'KF 00';
+  }
+
+  const kfs = curSeq.keyframes || [];
+  $('xsBody').innerHTML = kfs.map((kf, idx) => {
+    const f = parseInt(kf.slice(2, 7)) || (idx * 12);
+    const sec = (f / 12).toFixed(1);
+    const movs = cur.movements || [];
+    const beat = movs[Math.min(movs.length - 1, Math.floor(idx / Math.max(1, kfs.length / movs.length)))]?.label || 'Cel Beat';
+    return `<tr data-kf="${kf}" data-f="${f}" class="${idx === 0 ? 'on' : ''}" style="cursor:pointer">
+      <td style="color:var(--amber);font-weight:600">KF${idx}</td>
+      <td>F${String(f).padStart(3,'0')}</td>
+      <td>${sec}s</td>
+      <td>${beat}</td>
+    </tr>`;
+  }).join('');
+
+  $('xsBody').querySelectorAll('tr').forEach(tr => {
+    tr.onclick = () => {
+      const f = +tr.dataset.f;
+      vid.currentTime = (f / 12) + 0.01;
+      vid.play();
+    };
+  });
+}
+
+function syncCelKeyframe(t) {
+  if (!cur || !curSeq || !curSeq.keyframes || !curSeq.keyframes.length) return;
+  const curF = Math.round(t * 12);
+  $('celFrCounter').textContent = `F${String(curF).padStart(3, '0')} / F${curSeq.total_frames || 168}`;
+
+  let activeIdx = 0;
+  curSeq.keyframes.forEach((kf, idx) => {
+    const f = parseInt(kf.slice(2, 7)) || (idx * 12);
+    if (curF >= f) activeIdx = idx;
   });
 
-  // Update active row in exposure sheet table
-  const curF = Math.round((t * FPS) % 48);
-  let activeKeyIdx = 0;
-  curXSheet.forEach((k, idx) => { if (curF >= k.frame) activeKeyIdx = idx; });
-  document.querySelectorAll('#xsBody tr').forEach((tr, idx) => tr.classList.toggle('on', idx === activeKeyIdx));
-  if (curXSheet[activeKeyIdx]) $('charNote').textContent = curXSheet[activeKeyIdx].note;
+  const activeKf = curSeq.keyframes[activeIdx];
+  $('celKfImg').src = `video/poem_${cur.num}/keyframes/${activeKf}`;
+  $('celKfBadge').textContent = `KF ${activeIdx}`;
+
+  document.querySelectorAll('#xsBody tr').forEach((tr, idx) => {
+    tr.classList.toggle('on', idx === activeIdx);
+  });
 }
 
 let lastK = -1;
@@ -255,7 +289,7 @@ vid.ontimeupdate = () => {
     $('subLine').textContent = activeMov.line;
   }
 
-  drawCharFrame(vid.currentTime, s);
+  syncCelKeyframe(vid.currentTime);
 
   if (k === lastK) return; lastK = k;
   document.querySelectorAll('.clip').forEach(el => el.classList.toggle('on', +el.dataset.k === k));

@@ -251,6 +251,7 @@ def build(sid, notes):
     env = ~sky & ~P2 & ~P3
     lz = np.log(Z)
     if env.sum() < 100: env = ~sky & ~P2
+    if env.sum() < 100: env = np.ones((H, W), bool)      # all sky/hero frame (video keyframes): bands from the whole frame
     c = kmeans1d(lz[env][:: max(1, env.sum() // 60000)], 3)
     b1, b2 = (c[0] + c[1]) / 2, (c[1] + c[2]) / 2
     if Zh:
