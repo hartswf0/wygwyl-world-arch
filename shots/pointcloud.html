@@ -1,0 +1,1546 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <title>WYGWYL · 3D Point Clouds & Gaussian Splats</title>
+  <meta name="description"
+    content="Metric depth point clouds and 3D Gaussian Splats reconstructed from DepthPro across the 12 districts of Atlantis.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #05070b;
+      --panel: rgba(12, 16, 24, 0.88);
+      --panel2: rgba(20, 26, 38, 0.94);
+      --line: rgba(255, 255, 255, 0.09);
+      --line2: rgba(255, 255, 255, 0.18);
+      --ink: #eef1f6;
+      --dim: #8f9ab0;
+      --faint: #5b6579;
+      --amber: #f2a541;
+      --rose: #ff6b8b;
+      --indigo: #7c8cff;
+      --teal: #2ad4c0;
+      --accent: #f2a541;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font: 13px/1.5 Inter, system-ui, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    canvas#viewport {
+      position: fixed;
+      inset: 0;
+      display: block;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    canvas#viewport.grabbing {
+      cursor: grabbing;
+    }
+
+    /* Top Suite Navigation */
+    header.suite-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 16px;
+      background: linear-gradient(180deg, rgba(5, 7, 11, 0.94) 0%, rgba(5, 7, 11, 0.72) 75%, transparent 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .suite-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: none;
+    }
+
+    .suite-brand h1 {
+      font: 700 16px/1 Fraunces, serif;
+    }
+
+    .suite-brand h1 span {
+      background: linear-gradient(90deg, var(--amber), var(--rose) 50%, var(--indigo));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .suite-brand small {
+      font: 500 10px 'IBM Plex Mono', monospace;
+      color: var(--dim);
+      border-left: 1px solid var(--line2);
+      padding-left: 8px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+    }
+
+    .nav-links::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-link {
+      font: 500 11.5px Inter;
+      padding: 5px 10px;
+      border-radius: 7px;
+      color: var(--dim);
+      border: 1px solid transparent;
+      transition: .18s;
+      flex: none;
+    }
+
+    .nav-link:hover {
+      color: var(--ink);
+      background: var(--panel);
+    }
+
+    .nav-link.on {
+      background: var(--panel2);
+      color: var(--ink);
+      border-color: var(--line2);
+    }
+
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      backdrop-filter: blur(16px) saturate(1.2);
+      -webkit-backdrop-filter: blur(16px) saturate(1.2);
+      box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.85);
+    }
+
+    /* Left Sidebar: Shot Selector */
+    #leftPanel {
+      position: fixed;
+      left: 14px;
+      top: 58px;
+      bottom: 14px;
+      width: 310px;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform .35s cubic-bezier(.2, .8, .2, 1);
+    }
+
+    #leftPanel.collapsed {
+      transform: translateX(-340px);
+    }
+
+    .panel-head {
+      padding: 12px 14px 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-head h3 {
+      font: 600 11px 'IBM Plex Mono', monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--amber);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-box {
+      margin-top: 8px;
+      width: 100%;
+      padding: 6px 10px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--line2);
+      border-radius: 8px;
+      color: var(--ink);
+      font: 12px Inter;
+      outline: none;
+    }
+
+    .search-box:focus {
+      border-color: var(--amber);
+    }
+
+    .dist-chips {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--line);
+      scrollbar-width: none;
+    }
+
+    .dist-chips::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font: 500 10.5px 'IBM Plex Mono';
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--dim);
+      border: 1px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: .15s;
+    }
+
+    .chip:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--ink);
+    }
+
+    .chip.on {
+      background: var(--amber);
+      color: #05070b;
+      font-weight: 600;
+    }
+
+    .shot-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .shot-card {
+      display: flex;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: .18s;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .shot-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--line2);
+    }
+
+    .shot-card.on {
+      background: rgba(242, 165, 65, 0.12);
+      border-color: var(--amber);
+    }
+
+    .shot-thumb {
+      width: 58px;
+      height: 58px;
+      border-radius: 6px;
+      flex: none;
+      background: #000;
+      object-fit: cover;
+      border: 1px solid var(--line);
+    }
+
+    .shot-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .shot-title {
+      font: 600 12px Inter;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .shot-sub {
+      font: 500 10px 'IBM Plex Mono';
+      color: var(--dim);
+      margin-top: 2px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .shot-sub .badge {
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--amber);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    /* Floating Controls Toolbar */
+    #toolbar {
+      position: fixed;
+      left: 50%;
+      top: 58px;
+      transform: translateX(-50%);
+      z-index: 35;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+    }
+
+    .tb-group {
+      display: flex;
+      gap: 3px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+
+    .tb-btn {
+      font: 600 11px 'IBM Plex Mono', monospace;
+      padding: 5px 9px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--dim);
+      cursor: pointer;
+      transition: .15s;
+    }
+
+    .tb-btn:hover {
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .tb-btn.on {
+      background: var(--amber);
+      color: #05070b;
+    }
+
+    /* Right Inspector Panel */
+    #rightPanel {
+      position: fixed;
+      right: 14px;
+      top: 58px;
+      width: 330px;
+      z-index: 30;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+    }
+
+    .meta-field {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 4px 10px;
+      font-size: 11.5px;
+    }
+
+    .meta-field dt {
+      font: 500 10px 'IBM Plex Mono';
+      color: var(--faint);
+    }
+
+    .meta-field dd {
+      font: 500 11.5px 'IBM Plex Mono';
+      color: var(--ink);
+    }
+
+    .slider-row {
+      display: grid;
+      grid-template-columns: 80px 1fr 40px;
+      align-items: center;
+      gap: 8px;
+      font: 500 10.5px 'IBM Plex Mono';
+      color: var(--dim);
+    }
+
+    .slider-row input[type=range] {
+      width: 100%;
+      accent-color: var(--amber);
+      cursor: pointer;
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .action-btn {
+      font: 600 11px Inter;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--line2);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--ink);
+      cursor: pointer;
+      transition: .18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--amber);
+    }
+
+    .action-btn.pri {
+      background: var(--amber);
+      color: #05070b;
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    /* HUD Bottom Bar */
+    #hud {
+      position: fixed;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      z-index: 30;
+      padding: 6px 14px;
+      font: 500 11px 'IBM Plex Mono';
+      color: var(--dim);
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    #hud b {
+      color: var(--ink);
+    }
+
+    #hud .pts {
+      color: var(--teal);
+    }
+
+    /* Picture in Picture Preview */
+    #pipRef {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      width: 180px;
+      height: 101px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--line2);
+      z-index: 32;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      cursor: pointer;
+      background: #000;
+      transition: transform .2s, width .2s, height .2s;
+    }
+
+    #pipRef:hover {
+      transform: scale(1.05);
+    }
+
+    #pipRef.expanded {
+      width: 440px;
+      height: 247px;
+    }
+
+    #pipRef img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #pipRef span {
+      position: absolute;
+      bottom: 4px;
+      left: 6px;
+      font: 600 9px 'IBM Plex Mono';
+      background: rgba(0, 0, 0, 0.7);
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #fff;
+    }
+
+    /* Spinner */
+    #spinner {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5, 7, 11, 0.6);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    #spinner.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .spin-circle {
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: rot 0.8s linear infinite;
+    }
+
+    @keyframes rot {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 900px) {
+      #leftPanel {
+        width: 260px;
+      }
+
+      #rightPanel {
+        width: 280px;
+      }
+
+      #pipRef {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <a id="wy-index" href="../index.html"
+    style="position:fixed;left:10px;top:10px;z-index:2147483645;display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border:1px solid #232a38;border-radius:8px;background:rgba(11,14,20,.9);color:#e9ecf3;font:600 11px/1 ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;text-decoration:none">&larr;
+    Index</a>
+
+  <canvas id="viewport"></canvas>
+
+  <header class="suite-nav">
+    <div class="suite-brand">
+      <h1>WYGWYL · <span>3D Point Clouds & Gaussians</span></h1>
+      <small>DepthPro Metric Volumetric Viewer</small>
+    </div>
+    <nav class="nav-links">
+      <a href="studio.html" class="nav-link">🎭 Studio</a>
+      <a href="index.html" class="nav-link">Shot Lab</a>
+      <a href="film.html" class="nav-link">WYGWYL Film</a>
+      <a href="map.html" class="nav-link">Atlantis Map</a>
+      <a href="storyboard.html" class="nav-link">Storyboard</a>
+      <a href="reel.html" class="nav-link">Reels</a>
+      <a href="world.html" class="nav-link">World</a>
+      <a href="pointcloud.html" class="nav-link on">3D Points & Splats</a>
+    </nav>
+  </header>
+
+  <!-- Floating Toolbar -->
+  <div id="toolbar" class="glass">
+    <div class="tb-group" id="grpMode">
+      <button class="tb-btn on" data-mode="splat">✨ Gaussian Splats</button>
+      <button class="tb-btn" data-mode="rgb">RGB Cloud</button>
+      <button class="tb-btn" data-mode="lego" id="btnModeLego">🧱 Lego Arch</button>
+      <button class="tb-btn" data-mode="mesh" id="btnModeMesh">🔺 Poly Mesh</button>
+      <button class="tb-btn" data-mode="wire" id="btnModeWire">⚡ Wireframe</button>
+      <button class="tb-btn" data-mode="hybrid" id="btnModeHybrid">🔗 Hybrid</button>
+    </div>
+    <div class="tb-group" id="grpCam">
+      <button class="tb-btn" data-cam="original" title="Reset to original camera viewpoint">Original Eye</button>
+      <button class="tb-btn" data-cam="catwalk" title="Step directly onto the catwalk deck at eye level">Catwalk
+        Walk</button>
+      <button class="tb-btn" data-cam="overpass" title="High industrial girder overpass view">Overpass</button>
+      <button class="tb-btn" data-cam="aerial" title="Elevated perspective">Aerial</button>
+      <button class="tb-btn" data-cam="turntable" id="bTurntable" title="Toggle orbit rotation">Turntable</button>
+    </div>
+  </div>
+
+  <!-- Left Panel: Shot Catalog -->
+  <aside id="leftPanel" class="glass">
+    <div class="panel-head">
+      <h3>Reconstructed Shots <span id="shotCount" style="color:var(--dim)">81</span></h3>
+      <input type="text" id="searchBox" class="search-box" placeholder="Filter by district or prompt...">
+    </div>
+    <div class="dist-chips" id="distChips">
+      <button class="chip on" data-d="ALL">All Districts</button>
+    </div>
+    <div class="shot-list" id="shotList"></div>
+  </aside>
+
+  <!-- Right Panel: Inspector & Controls -->
+  <aside id="rightPanel" class="glass">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <h3 style="font:700 14px Fraunces,serif;color:var(--amber)" id="curDistrict">Cortex Commons</h3>
+      <span style="font:600 10px 'IBM Plex Mono';color:var(--dim)" id="curSid">sid_0</span>
+    </div>
+
+    <p id="curPrompt"
+      style="font-size:11.5px;color:#c4cbd7;line-height:1.4;max-height:80px;overflow-y:auto;background:rgba(0,0,0,0.3);padding:6px;border-radius:6px">
+    </p>
+
+    <div id="archStatsBox"
+      style="display:none;background:rgba(255,140,40,0.08);border:1px solid rgba(255,140,40,0.35);border-radius:6px;padding:8px;font-size:11px">
+      <div style="color:var(--amber);font-weight:700;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>🧱 LEGO ARCHITECTURE</span>
+        <span id="mArchCount">85 Primitives</span>
+      </div>
+      <div style="color:#d4dbe8;line-height:1.35;font-size:10.5px" id="mArchDesc">
+        85m Brutalist Viaduct Catwalk with luminescent sodium guardrails, 5 support pylons, 4 portal gantries &
+        transverse overpass.
+      </div>
+    </div>
+
+    <dl class="meta-field">
+      <dt>Primitives</dt>
+      <dd id="mPts">129,540</dd>
+      <dt>Focal / FOV</dt>
+      <dd id="mFocal">1456 px (48.2°)</dd>
+      <dt>Camera</dt>
+      <dd id="mCam">H=1.65m, P=2.4°</dd>
+      <dt>3D Extent</dt>
+      <dd id="mBounds">24.2m × 12.8m × 48.0m</dd>
+    </dl>
+
+    <div style="border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px">
+      <div class="slider-row">
+        <span>Point / Splat</span>
+        <input type="range" id="slSize" min="1" max="25" step="0.5" value="6">
+        <span id="vSize">6.0px</span>
+      </div>
+      <div class="slider-row">
+        <span>Density</span>
+        <input type="range" id="slDensity" min="1" max="4" step="1" value="1">
+        <span id="vDensity">100%</span>
+      </div>
+      <div class="slider-row">
+        <span>Near Clip</span>
+        <input type="range" id="slNear" min="0.1" max="15" step="0.2" value="0.5">
+        <span id="vNear">0.5m</span>
+      </div>
+      <div class="slider-row">
+        <span>Far Clip</span>
+        <input type="range" id="slFar" min="10" max="250" step="5" value="140">
+        <span id="vFar">140m</span>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--line);padding-top:10px" class="btn-grid">
+      <button class="action-btn" id="bGrid">Grid Plane</button>
+      <button class="action-btn" id="bAxes">Show Axes</button>
+      <button class="action-btn" id="bDownloadPly">📥 Points .PLY</button>
+      <button class="action-btn pri" id="bDownloadSplat">✨ .SPLAT</button>
+      <button class="action-btn" id="bDownloadMesh" style="grid-column:span 2">🔺 Download Triangle Mesh .PLY</button>
+      <button class="action-btn" id="bDownloadArch" style="grid-column:span 2">🧱 Download Lego Architecture
+        .JSON</button>
+    </div>
+  </aside>
+
+  <!-- Picture in picture -->
+  <div id="pipRef" title="Click to expand source photo">
+    <img id="pipImg" src="" alt="Source Photo">
+    <span>ORIGINAL PHOTO</span>
+  </div>
+
+  <!-- Bottom HUD -->
+  <div id="hud" class="glass">
+    <span>Shot: <b id="hudShot">-</b></span>
+    <span>Vertices: <b class="pts" id="hudPts">-</b></span>
+    <span>Format: <b id="hudFmt">PLY + 3DGS</b></span>
+    <span style="color:var(--faint)">Rotate: Drag | Pan: Right-Click | Zoom: Scroll</span>
+  </div>
+
+  <div id="spinner">
+    <div class="spin-circle"></div>
+  </div>
+
+  <script src="shots_data.js"></script>
+  <script
+    type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const SHOTS = window.SHOTS || [];
+    const $ = id => document.getElementById(id);
+
+    // ------------------------------------------------------------------ WebGL Scene Setup
+    const canvas = $('viewport');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#05070b');
+    scene.fog = new THREE.FogExp2('#05070b', 0.003);
+
+    const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 1000);
+    camera.position.set(0, 0, 1.5);
+
+    const controls = new OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.maxDistance = 250;
+    controls.minDistance = 0.2;
+
+    // Ground Grid
+    const grid = new THREE.GridHelper(100, 100, 0xf2a541, 0x1f2736);
+    grid.position.y = 0.0;
+    scene.add(grid);
+
+    // Axes Helper
+    const axes = new THREE.AxesHelper(3);
+    axes.visible = false;
+    scene.add(axes);
+
+    // Scene Lighting for Polygonal Architecture & Meshes
+    const ambLight = new THREE.AmbientLight(0xffeedd, 1.2);
+    scene.add(ambLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffa550, 1.8);
+    dirLight.position.set(30, 50, 40);
+    scene.add(dirLight);
+
+    const blueBounce = new THREE.DirectionalLight(0x335588, 0.7);
+    blueBounce.position.set(-30, -10, -20);
+    scene.add(blueBounce);
+
+    // Architecture Group & Surface Mesh
+    const currentArchGroup = new THREE.Group();
+    scene.add(currentArchGroup);
+    let currentSurfaceMesh = null;
+    let currentArchData = null;
+    let activeRenderMode = 'splat';
+
+    // ------------------------------------------------------------------ Point Cloud Shader Material
+    const pointShaderUniforms = {
+      uPointSize: { value: 6.0 },
+      uMode: { value: 1.0 }, // 0: RGB, 1: Gaussian Splat, 2: Depth Ramp, 3: Height
+      uNearClip: { value: 0.5 },
+      uFarClip: { value: 140.0 },
+      uFocal: { value: 1200.0 }
+    };
+
+    const pointMaterial = new THREE.ShaderMaterial({
+      uniforms: pointShaderUniforms,
+      transparent: true,
+      depthWrite: true,
+      vertexShader: `
+    uniform float uPointSize;
+    uniform float uMode;
+    uniform float uFocal;
+    uniform float uNearClip;
+    uniform float uFarClip;
+    attribute vec3 color;
+    varying vec3 vColor;
+    varying float vDepth;
+    varying float vHeight;
+    varying float vDist;
+
+    void main() {
+      vColor = color;
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      float dist = -mvPosition.z;
+      vDist = dist;
+      vDepth = dist;
+      vHeight = position.y;
+
+      if (dist < uNearClip || dist > uFarClip) {
+        gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // Clip away
+        return;
+      }
+
+      // Attenuate point size by distance
+      float pSize = uPointSize * (uFocal / max(dist, 0.5)) * 0.003;
+      if (uMode == 1.0) {
+        // Gaussian Splat mode: larger soft billboards
+        pSize *= 2.4;
+      }
+      gl_PointSize = clamp(pSize, 1.0, 60.0);
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+      fragmentShader: `
+    uniform float uMode;
+    uniform float uNearClip;
+    uniform float uFarClip;
+    varying vec3 vColor;
+    varying float vDepth;
+    varying float vHeight;
+    varying float vDist;
+
+    // Turbo / Inferno depth color palette
+    vec3 depthPalette(float t) {
+      t = clamp(t, 0.0, 1.0);
+      return vec3(
+        0.5 + 0.5 * sin(6.28318 * (t + 0.00)),
+        0.5 + 0.5 * sin(6.28318 * (t + 0.33)),
+        0.5 + 0.5 * sin(6.28318 * (t + 0.67))
+      );
+    }
+
+    void main() {
+      vec2 coord = gl_PointCoord - vec2(0.5);
+      float r2 = dot(coord, coord);
+      if (r2 > 0.25) discard;
+
+      vec3 finalCol = vColor;
+      float alpha = 1.0;
+
+      if (uMode == 1.0) {
+        // Gaussian Splat soft falloff: exp(-r^2 * 8.0)
+        alpha = exp(-r2 * 8.0);
+      } else if (uMode == 2.0) {
+        // Depth Ramp
+        float normD = (vDist - uNearClip) / (uFarClip - uNearClip);
+        finalCol = depthPalette(normD);
+      } else if (uMode == 3.0) {
+        // Elevation Height Ramp
+        float normH = clamp((vHeight + 2.0) / 10.0, 0.0, 1.0);
+        finalCol = depthPalette(normH);
+      }
+
+      gl_FragColor = vec4(finalCol, alpha);
+    }
+  `
+    });
+
+    let currentPointsMesh = null;
+    let currentRawData = null;
+    let activeShot = null;
+    let turntable = false;
+
+    // ------------------------------------------------------------------ Load Architecture (Lego Blocks)
+    async function loadArchitecture(sid) {
+      while (currentArchGroup.children.length > 0) {
+        const obj = currentArchGroup.children[0];
+        currentArchGroup.remove(obj);
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+          else obj.material.dispose();
+        }
+      }
+
+      $('archStatsBox').style.display = 'none';
+      currentArchData = null;
+
+      try {
+        const res = await fetch(`out/${sid}/architecture.json`);
+        if (!res.ok) return;
+        const arch = await res.json();
+        currentArchData = arch;
+
+        if (arch.blocks && arch.blocks.length > 0) {
+          $('archStatsBox').style.display = 'block';
+          $('mArchCount').textContent = `${arch.blocks.length} Blocks`;
+          $('mArchDesc').textContent = arch.name || 'Parametric Lego Architecture';
+
+          arch.blocks.forEach(b => {
+            if (b.geom === 'box') {
+              const geom = new THREE.BoxGeometry(...b.size);
+              let mat;
+              if (b.material === 'emissive_sodium') {
+                mat = new THREE.MeshStandardMaterial({
+                  color: 0xff7700,
+                  emissive: 0xff6600,
+                  emissiveIntensity: b.emissive_intensity || 2.5,
+                  roughness: 0.2
+                });
+              } else if (b.material === 'emissive_cyan') {
+                mat = new THREE.MeshStandardMaterial({
+                  color: 0x00e5ff,
+                  emissive: 0x00d4ff,
+                  emissiveIntensity: b.emissive_intensity || 3.0,
+                  roughness: 0.2
+                });
+              } else if (b.material === 'emissive_crimson') {
+                mat = new THREE.MeshStandardMaterial({
+                  color: 0xff3322,
+                  emissive: 0xff2211,
+                  emissiveIntensity: b.emissive_intensity || 2.8,
+                  roughness: 0.2
+                });
+              } else if (b.material === 'concrete_brutalist' || b.material === 'concrete_weathered') {
+                mat = new THREE.MeshStandardMaterial({
+                  color: b.color || '#2c2826',
+                  roughness: 0.85,
+                  metalness: 0.15
+                });
+              } else if (b.material === 'timber_cedar') {
+                mat = new THREE.MeshStandardMaterial({
+                  color: b.color || '#332018',
+                  roughness: 0.75,
+                  metalness: 0.1
+                });
+              } else {
+                mat = new THREE.MeshStandardMaterial({
+                  color: b.color || '#221e1c',
+                  roughness: 0.7,
+                  metalness: 0.25
+                });
+              }
+              const mesh = new THREE.Mesh(geom, mat);
+              mesh.position.set(...b.position);
+              mesh.rotation.set(...b.rotation);
+              currentArchGroup.add(mesh);
+
+              // Add wireframe edge contour to give that crisp Lego / CAD block feel
+              if (b.wire_color || b.type.includes('deck') || b.type.includes('pylon') || b.type.includes('beam') || b.type.includes('mast') || b.type.includes('tier') || b.type.includes('stall')) {
+                const edgeGeom = new THREE.EdgesGeometry(geom, 25);
+                const edgeMat = new THREE.LineBasicMaterial({
+                  color: b.wire_color ? new THREE.Color(b.wire_color) : 0xffaa44,
+                  transparent: true,
+                  opacity: 0.55
+                });
+                const edgeLines = new THREE.LineSegments(edgeGeom, edgeMat);
+                edgeLines.position.copy(mesh.position);
+                edgeLines.rotation.copy(mesh.rotation);
+                currentArchGroup.add(edgeLines);
+              }
+            } else if (b.geom === 'custom_mesh' && b.vertices && b.faces) {
+              // Watertight Extruded 3D Character Figurine ("Lego Minifigure")
+              const geom = new THREE.BufferGeometry();
+              const posArr = new Float32Array(b.vertices.flat());
+              const idxArr = new Uint32Array(b.faces.flat());
+              geom.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+              geom.setIndex(new THREE.BufferAttribute(idxArr, 1));
+              geom.computeVertexNormals();
+
+              const mat = new THREE.MeshStandardMaterial({
+                color: b.color ? new THREE.Color(b.color) : 0xb85533,
+                roughness: 0.6,
+                metalness: 0.2,
+                side: THREE.DoubleSide
+              });
+              const figMesh = new THREE.Mesh(geom, mat);
+              figMesh.position.set(...(b.position || [0, 0, 0]));
+              figMesh.rotation.set(...(b.rotation || [0, 0, 0]));
+              currentArchGroup.add(figMesh);
+
+              // Figurine silhouette contour edges
+              const edgeGeom = new THREE.EdgesGeometry(geom, 20);
+              const edgeMat = new THREE.LineBasicMaterial({
+                color: b.wire_color ? new THREE.Color(b.wire_color) : 0xffaa33,
+                transparent: true,
+                opacity: 0.8
+              });
+              const figEdges = new THREE.LineSegments(edgeGeom, edgeMat);
+              figEdges.position.copy(figMesh.position);
+              figEdges.rotation.copy(figMesh.rotation);
+              currentArchGroup.add(figEdges);
+            } else if (b.geom === 'wire_box') {
+              // Bounding Box Cage
+              const boxGeom = new THREE.BoxGeometry(...b.size);
+              const edges = new THREE.EdgesGeometry(boxGeom);
+              const lineMat = new THREE.LineBasicMaterial({ color: b.wire_color ? new THREE.Color(b.wire_color) : 0xff8833, transparent: true, opacity: 0.4 });
+              const cage = new THREE.LineSegments(edges, lineMat);
+              cage.position.set(...b.position);
+              currentArchGroup.add(cage);
+            }
+          });
+        }
+      } catch (e) {
+        // Architecture file optional
+      }
+    }
+
+    // ------------------------------------------------------------------ Load Polygonal Surface Mesh
+    async function loadMeshPLY(sid) {
+      if (currentSurfaceMesh) {
+        scene.remove(currentSurfaceMesh);
+        if (currentSurfaceMesh.geometry) currentSurfaceMesh.geometry.dispose();
+        if (currentSurfaceMesh.material) currentSurfaceMesh.material.dispose();
+        currentSurfaceMesh = null;
+      }
+
+      try {
+        const res = await fetch(`out/${sid}/mesh.ply`);
+        if (!res.ok) return;
+        const buf = await res.arrayBuffer();
+
+        const decoder = new TextDecoder('ascii');
+        let headerStr = '';
+        let offset = 0;
+        const bytes = new Uint8Array(buf);
+
+        for (let i = 0; i < Math.min(bytes.length, 1024); i++) {
+          if (bytes[i] === 10) {
+            const line = decoder.decode(bytes.subarray(offset, i)).trim();
+            headerStr += line + '\n';
+            offset = i + 1;
+            if (line === 'end_header') break;
+          }
+        }
+
+        let nVerts = 0, nFaces = 0;
+        headerStr.split('\n').forEach(line => {
+          if (line.startsWith('element vertex')) nVerts = parseInt(line.split(/\s+/)[2], 10);
+          if (line.startsWith('element face')) nFaces = parseInt(line.split(/\s+/)[2], 10);
+        });
+
+        if (!nVerts || !nFaces) return;
+
+        const dataView = new DataView(buf);
+        const positions = new Float32Array(nVerts * 3);
+        const colors = new Float32Array(nVerts * 3);
+
+        for (let i = 0; i < nVerts; i++) {
+          const bOff = offset + i * 15;
+          positions[i * 3 + 0] = dataView.getFloat32(bOff, true);
+          positions[i * 3 + 1] = dataView.getFloat32(bOff + 4, true);
+          positions[i * 3 + 2] = dataView.getFloat32(bOff + 8, true);
+
+          colors[i * 3 + 0] = dataView.getUint8(bOff + 12) / 255.0;
+          colors[i * 3 + 1] = dataView.getUint8(bOff + 13) / 255.0;
+          colors[i * 3 + 2] = dataView.getUint8(bOff + 14) / 255.0;
+        }
+
+        const faceOffset = offset + nVerts * 15;
+        const indices = new Uint32Array(nFaces * 3);
+        for (let i = 0; i < nFaces; i++) {
+          const bOff = faceOffset + i * 13;
+          indices[i * 3 + 0] = dataView.getInt32(bOff + 1, true);
+          indices[i * 3 + 1] = dataView.getInt32(bOff + 5, true);
+          indices[i * 3 + 2] = dataView.getInt32(bOff + 9, true);
+        }
+
+        const geom = new THREE.BufferGeometry();
+        geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geom.setIndex(new THREE.BufferAttribute(indices, 1));
+        geom.computeVertexNormals();
+
+        const meshMat = new THREE.MeshStandardMaterial({
+          vertexColors: true,
+          flatShading: true,
+          roughness: 0.8,
+          metalness: 0.15,
+          side: THREE.DoubleSide
+        });
+
+        currentSurfaceMesh = new THREE.Mesh(geom, meshMat);
+        scene.add(currentSurfaceMesh);
+        updateRenderMode(activeRenderMode);
+      } catch (e) {
+        // mesh.ply optional
+      }
+    }
+
+    // ------------------------------------------------------------------ Load Binary PLY (Points)
+    async function loadPLY(sid) {
+      $('spinner').classList.add('show');
+      try {
+        const plyUrl = `out/${sid}/points.ply`;
+        const res = await fetch(plyUrl);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const buf = await res.arrayBuffer();
+
+        // Parse Header
+        const decoder = new TextDecoder('ascii');
+        let headerStr = '';
+        let offset = 0;
+        const bytes = new Uint8Array(buf);
+
+        for (let i = 0; i < Math.min(bytes.length, 1024); i++) {
+          if (bytes[i] === 10) { // newline
+            const line = decoder.decode(bytes.subarray(offset, i)).trim();
+            headerStr += line + '\n';
+            offset = i + 1;
+            if (line === 'end_header') break;
+          }
+        }
+
+        let nVerts = 0;
+        headerStr.split('\n').forEach(line => {
+          if (line.startsWith('element vertex')) {
+            nVerts = parseInt(line.split(/\s+/)[2], 10);
+          }
+        });
+
+        if (!nVerts) throw new Error('No vertices in header');
+
+        // Binary Little Endian Layout: float32 x, y, z (12 bytes) + uint8 r, g, b (3 bytes) = 15 bytes/vertex
+        const vertexStride = 15;
+        const positions = new Float32Array(nVerts * 3);
+        const colors = new Float32Array(nVerts * 3);
+        const dataView = new DataView(buf, offset);
+
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+        let minZ = Infinity, maxZ = -Infinity;
+
+        for (let i = 0; i < nVerts; i++) {
+          const byteOff = i * vertexStride;
+          const x = dataView.getFloat32(byteOff, true);
+          const y = dataView.getFloat32(byteOff + 4, true);
+          const z = dataView.getFloat32(byteOff + 8, true);
+
+          positions[i * 3 + 0] = x;
+          positions[i * 3 + 1] = y;
+          positions[i * 3 + 2] = z;
+
+          minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+          minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+          minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
+
+          colors[i * 3 + 0] = dataView.getUint8(byteOff + 12) / 255.0;
+          colors[i * 3 + 1] = dataView.getUint8(byteOff + 13) / 255.0;
+          colors[i * 3 + 2] = dataView.getUint8(byteOff + 14) / 255.0;
+        }
+
+        currentRawData = { positions, colors, nVerts, bounds: { minX, maxX, minY, maxY, minZ, maxZ } };
+        buildPointsMesh(parseInt($('slDensity').value, 10));
+
+        // Also load architecture and surface mesh if available
+        await loadArchitecture(sid);
+        await loadMeshPLY(sid);
+
+        // Update UI Stats
+        $('mPts').textContent = nVerts.toLocaleString();
+        $('hudPts').textContent = nVerts.toLocaleString();
+        $('mBounds').textContent = `${(maxX - minX).toFixed(1)}m × ${(maxY - minY).toFixed(1)}m × ${(maxZ - minZ).toFixed(1)}m`;
+
+        // Apply active render mode
+        updateRenderMode(activeRenderMode);
+
+        // Reset camera to original viewpoint
+        setCameraPreset('original');
+
+      } catch (err) {
+        console.error('Failed to load PLY:', err);
+        alert(`Could not load 3D data for ${sid}: ${err.message}`);
+      } finally {
+        $('spinner').classList.remove('show');
+      }
+    }
+
+    function buildPointsMesh(step = 1) {
+      if (!currentRawData) return;
+      if (currentPointsMesh) scene.remove(currentPointsMesh);
+
+      const { positions, colors, nVerts } = currentRawData;
+      const count = Math.floor(nVerts / step);
+
+      const subPos = new Float32Array(count * 3);
+      const subCol = new Float32Array(count * 3);
+
+      for (let i = 0; i < count; i++) {
+        const src = i * step;
+        subPos[i * 3 + 0] = positions[src * 3 + 0];
+        subPos[i * 3 + 1] = positions[src * 3 + 1];
+        subPos[i * 3 + 2] = positions[src * 3 + 2];
+
+        subCol[i * 3 + 0] = colors[src * 3 + 0];
+        subCol[i * 3 + 1] = colors[src * 3 + 1];
+        subCol[i * 3 + 2] = colors[src * 3 + 2];
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(subPos, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(subCol, 3));
+
+      currentPointsMesh = new THREE.Points(geometry, pointMaterial);
+      scene.add(currentPointsMesh);
+    }
+
+    // ------------------------------------------------------------------ Render Mode Controller
+    function updateRenderMode(mode) {
+      activeRenderMode = mode;
+      $('hudFmt').textContent = mode.toUpperCase();
+
+      const isLego = (mode === 'lego');
+      const isMesh = (mode === 'mesh');
+      const isWire = (mode === 'wire');
+      const isHybrid = (mode === 'hybrid');
+      const isSplat = (mode === 'splat');
+      const isRGB = (mode === 'rgb');
+
+      if (isSplat) pointShaderUniforms.uMode.value = 1.0;
+      else if (isRGB) pointShaderUniforms.uMode.value = 0.0;
+      else if (isHybrid) pointShaderUniforms.uMode.value = 1.0;
+
+      // Points visibility
+      if (currentPointsMesh) {
+        currentPointsMesh.visible = (isSplat || isRGB || isHybrid);
+      }
+
+      // Architecture (Lego blocks) visibility
+      currentArchGroup.visible = (isLego || isMesh || isWire || isHybrid);
+
+      // Surface mesh visibility
+      if (currentSurfaceMesh) {
+        currentSurfaceMesh.visible = (isMesh || isWire || isHybrid);
+        currentSurfaceMesh.material.wireframe = isWire;
+      }
+
+      // If mesh/wire requested but no mesh exists on disk, keep points visible as fallback
+      if (!currentSurfaceMesh && (isMesh || isWire) && currentPointsMesh) {
+        currentPointsMesh.visible = true;
+      }
+    }
+
+    // ------------------------------------------------------------------ Camera Presets
+    function setCameraPreset(type) {
+      if (!currentRawData) return;
+      const b = currentRawData.bounds;
+      const midX = (b.minX + b.maxX) / 2;
+      const midY = (b.minY + b.maxY) / 2;
+      const midZ = (b.minZ + b.maxZ) / 2;
+
+      if (activeShot && activeShot.isDistrict) {
+        const isCommons = activeShot.id.includes('commons');
+        const isNaraka = activeShot.id.includes('naraka');
+        if (type === 'catwalk' || type === 'walk') {
+          if (isCommons) {
+            camera.position.set(0, 1.8, 3.0);
+            controls.target.set(0, 1.5, -20.0);
+          } else if (isNaraka) {
+            camera.position.set(0, 1.4, 2.0);
+            controls.target.set(0, 1.6, -7.0);
+          } else {
+            camera.position.set(0, 1.6, 2.0);
+            controls.target.set(0, 1.6, -35.0);
+          }
+        } else if (type === 'overpass') {
+          if (isCommons) {
+            camera.position.set(0, 14.0, -5.0);
+            controls.target.set(0, 2.0, -22.0);
+          } else if (isNaraka) {
+            camera.position.set(0, 4.5, -13.0);
+            controls.target.set(0, 1.0, -3.0);
+          } else {
+            camera.position.set(0, 10.5, -12.0);
+            controls.target.set(0, 1.2, -40.0);
+          }
+        } else if (type === 'original') {
+          if (isNaraka) {
+            camera.position.set(0, 1.54, 1.5);
+            controls.target.set(0, 1.8, -6.5);
+          } else if (isCommons) {
+            camera.position.set(0, 3.5, 4.0);
+            controls.target.set(0, 1.8, -20.0);
+          } else {
+            camera.position.set(0, 2.5, 3.0);
+            controls.target.set(0, 1.8, -32.0);
+          }
+        } else if (type === 'aerial') {
+          if (isCommons) {
+            camera.position.set(38.0, 32.0, 10.0);
+            controls.target.set(0.0, 2.0, -20.0);
+          } else if (isNaraka) {
+            camera.position.set(0.0, 13.0, 4.0);
+            controls.target.set(0.0, 1.0, -7.0);
+          } else {
+            camera.position.set(28.0, 22.0, 8.0);
+            controls.target.set(0.0, 2.0, -35.0);
+          }
+        }
+      } else {
+        if (type === 'catwalk' || type === 'ground' || type === 'original') {
+          camera.position.set(0, 0, 0.2);
+          controls.target.set(0, 0, midZ);
+        } else if (type === 'aerial') {
+          camera.position.set(midX + 15, Math.max(b.maxY + 12, 15), midZ + 20);
+          controls.target.set(midX, midY, midZ);
+        }
+      }
+      controls.update();
+    }
+
+    function maxY(b) { return b.maxY; }
+
+    const FUSED_DISTRICTS = [
+      {
+        id: "districts/naraka_fused",
+        isDistrict: true,
+        hasMesh: true,
+        hasArch: true,
+        district: "naraka",
+        district_name: "Naraka Market",
+        shots_count: "3 SHOTS ASSEMBLED",
+        pts_label: "270k tris · 32 Blocks",
+        title: "🏮 Naraka Market · Hidden Stairwell Alleyway",
+        prompt: "Architectural Staging: Afro-Diasporic Hidden Staircase Alleyway. 3 co-registered camera angles (alley entry, mid-stair ascent, upper overlook landing) firmly grounded at Y=0.0m with synth-concrete walls, stacked air conditioners, and steel handrails. Zero floating stairs, zero curtain spikes.",
+        thumb: "out/05a0677a-e3e8-49d1-a313-eb729b649cad_3/image.jpg",
+        camera: { focal_px: 1151, fov_h_deg: 65, height_m: 1.54, pitch_deg: -3.7, shot_class: "Stairwell Alleyway" }
+      },
+      {
+        id: "districts/haze_fused",
+        isDistrict: true,
+        hasMesh: true,
+        hasArch: true,
+        district: "haze",
+        district_name: "The Orange Haze",
+        shots_count: "5 SHOTS ASSEMBLED",
+        pts_label: "136k tris · 85 Legos",
+        title: "🌫️ Orange Haze · Polygonal Catwalk & Skyway",
+        prompt: "Architectural Staging: Continuous 85m elevated catwalk viaduct with sodium guardrails, 5 brutalist support pylons, 4 portal gantries, high girder overpass (Y=+8.5m), purged of curtain tears and firmly grounded.",
+        thumb: "out/c8158a76-90f8-41b7-81c6-076a892834c8_1/image.jpg",
+        camera: { focal_px: 1905, fov_h_deg: 65, height_m: 1.6, pitch_deg: -2.7, shot_class: "Catwalk Viaduct" }
+      },
+      {
+        id: "districts/commons_fused",
+        isDistrict: true,
+        hasMesh: true,
+        hasArch: true,
+        district: "commons",
+        district_name: "Cortex Commons",
+        shots_count: "4 SHOTS ASSEMBLED",
+        pts_label: "186k tris · 23 Blocks",
+        title: "🏛️ Cortex Commons · Tiered Agora & Concourse",
+        prompt: "Architectural Staging: Concentric amphitheater agora at Y=0.0m, 4 monumental antenna masts with cyan beacons, upper promenade concourse, and citizen figurines. Zero curtain spikes.",
+        thumb: "out/bdc7d6ec-1d4e-4f99-ad7e-9917394c542a_2/image.jpg",
+        camera: { focal_px: 1200, fov_h_deg: 85, height_m: 1.65, pitch_deg: 0, shot_class: "Agora Concourse" }
+      },
+      {
+        id: "districts/ankhu_fused",
+        isDistrict: true,
+        district: "ankhu",
+        district_name: "Ankhu Spires",
+        shots_count: "11 SHOTS FUSED",
+        pts_label: "511k pts",
+        title: "🏙️ Ankhu Spires · Fused District",
+        prompt: "Experiment 1: Unified metric co-registration of 11 Ankhu Spires viewpoints. 511,194 3D Gaussians spanning a 129m × 127m vertical spire precinct.",
+        thumb: "out/646ab0f0-8950-495f-9f61-f2db42db81ce_0/image.jpg",
+        camera: { focal_px: 1200, fov_h_deg: 80, height_m: 1.5, pitch_deg: 0, shot_class: "Fused Spires" }
+      }
+    ];
+
+    // ------------------------------------------------------------------ Populate UI
+    function initCatalog() {
+      const distSet = new Set();
+      SHOTS.forEach(s => { if (s.district) distSet.add(s.district); });
+
+      const distChips = $('distChips');
+      Array.from(distSet).sort().forEach(d => {
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.dataset.d = d;
+        btn.textContent = d.charAt(0).toUpperCase() + d.slice(1);
+        distChips.appendChild(btn);
+      });
+
+      renderShotList();
+    }
+
+    function renderShotList(filterDist = 'ALL', search = '') {
+      const list = $('shotList');
+      list.innerHTML = '';
+      search = search.toLowerCase();
+
+      // Combine fused district plazas with regular shots
+      const allEntries = [...FUSED_DISTRICTS, ...SHOTS];
+
+      const filtered = allEntries.filter(s => {
+        const mDist = filterDist === 'ALL' || s.district === filterDist;
+        const mSearch = !search || (s.id + ' ' + (s.district || '') + ' ' + (s.title || '') + ' ' + (s.prompt || '')).toLowerCase().includes(search);
+        return mDist && mSearch;
+      });
+
+      $('shotCount').textContent = `${filtered.length} / ${allEntries.length}`;
+
+      filtered.forEach(s => {
+        const card = document.createElement('div');
+        const isAct = activeShot && activeShot.id === s.id;
+        card.className = `shot-card ${isAct ? 'on' : ''} ${s.isDistrict ? 'fused-card' : ''}`;
+        card.dataset.sid = s.id;
+        if (s.isDistrict) card.style.borderColor = 'var(--teal)';
+        const thumbUrl = s.thumb || `out/${s.id}/image.jpg`;
+        card.innerHTML = `
+      <img class="shot-thumb" src="${thumbUrl}" alt="" loading="lazy">
+      <div class="shot-info">
+        <div class="shot-title" style="${s.isDistrict ? 'color:var(--teal);font-weight:700' : ''}">${s.title || (s.prompt ? s.prompt.substring(0, 48) + '...' : s.id)}</div>
+        <div class="shot-sub">
+          <span class="badge" style="${s.isDistrict ? 'background:rgba(42,212,192,0.2);color:var(--teal)' : ''}">${s.isDistrict ? 'FUSED' : (s.district || 'atlantis')}</span>
+          <span>${s.isDistrict ? (s.pts_label || 'Fused') : (s.camera?.fov_h_deg ? s.camera.fov_h_deg.toFixed(0) + '°' : '50°')}</span>
+          <span>${s.camera?.shot_class || 'shot'}</span>
+        </div>
+      </div>
+    `;
+        card.onclick = () => selectShot(s);
+        list.appendChild(card);
+      });
+    }
+
+    function selectShot(s) {
+      activeShot = s;
+      document.querySelectorAll('.shot-card').forEach(c => {
+        c.classList.toggle('on', c.dataset.sid === s.id);
+      });
+
+      $('curDistrict').textContent = s.isDistrict ? (s.district_name || s.district).toUpperCase() + ' (ARCHITECTURAL)' : (s.district || 'Atlantis').toUpperCase();
+      $('curSid').textContent = s.isDistrict ? (s.shots_count || 'FUSED') : s.id.substring(0, 14);
+      $('curPrompt').textContent = s.prompt || 'No prompt recorded';
+      $('hudShot').textContent = s.isDistrict ? (s.title || 'Fused District') : (s.district ? `${s.district} · ${s.id.substring(0, 8)}` : s.id.substring(0, 8));
+      $('pipImg').src = s.thumb || `out/${s.id}/image.jpg`;
+
+      if (s.camera) {
+        const c = s.camera;
+        $('mFocal').textContent = `${c.focal_px?.toFixed(0) || '1200'} px (${c.fov_h_deg?.toFixed(1) || '50'}°)`;
+        $('mCam').textContent = `H=${c.height_m?.toFixed(2) || '1.6'}m, Pitch=${c.pitch_deg?.toFixed(1) || '0'}°`;
+        pointShaderUniforms.uFocal.value = c.focal_px || 1200.0;
+      }
+
+      loadPLY(s.id);
+    }
+
+    // ------------------------------------------------------------------ Event Handlers
+    $('distChips').onclick = e => {
+      const btn = e.target.closest('.chip');
+      if (!btn) return;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+      btn.classList.add('on');
+      renderShotList(btn.dataset.d, $('searchBox').value);
+    };
+
+    $('searchBox').oninput = e => {
+      const activeChip = document.querySelector('.chip.on');
+      renderShotList(activeChip ? activeChip.dataset.d : 'ALL', e.target.value);
+    };
+
+    // Render Mode
+    $('grpMode').onclick = e => {
+      const btn = e.target.closest('.tb-btn');
+      if (!btn) return;
+      document.querySelectorAll('#grpMode .tb-btn').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+
+      updateRenderMode(btn.dataset.mode);
+    };
+
+    // Camera Presets
+    $('grpCam').onclick = e => {
+      const btn = e.target.closest('.tb-btn');
+      if (!btn) return;
+      const camType = btn.dataset.cam;
+      if (camType === 'turntable') {
+        turntable = !turntable;
+        btn.classList.toggle('on', turntable);
+      } else {
+        document.querySelectorAll('#grpCam .tb-btn').forEach(b => {
+          if (b.dataset.cam !== 'turntable') b.classList.remove('on');
+        });
+        btn.classList.add('on');
+        setCameraPreset(camType);
+      }
+    };
+
+    // Sliders
+    $('slSize').oninput = e => {
+      pointShaderUniforms.uPointSize.value = parseFloat(e.target.value);
+      $('vSize').textContent = `${parseFloat(e.target.value).toFixed(1)}px`;
+    };
+
+    $('slDensity').oninput = e => {
+      const step = parseInt(e.target.value, 10);
+      const labels = { 1: '100%', 2: '50%', 3: '33%', 4: '25%' };
+      $('vDensity').textContent = labels[step] || '100%';
+      buildPointsMesh(step);
+    };
+
+    $('slNear').oninput = e => {
+      pointShaderUniforms.uNearClip.value = parseFloat(e.target.value);
+      $('vNear').textContent = `${parseFloat(e.target.value).toFixed(1)}m`;
+    };
+
+    $('slFar').oninput = e => {
+      pointShaderUniforms.uFarClip.value = parseFloat(e.target.value);
+      $('vFar').textContent = `${parseFloat(e.target.value).toFixed(0)}m`;
+    };
+
+    // Buttons
+    $('bGrid').onclick = () => { grid.visible = !grid.visible; $('bGrid').classList.toggle('on', grid.visible); };
+    $('bAxes').onclick = () => { axes.visible = !axes.visible; $('bAxes').classList.toggle('on', axes.visible); };
+
+    $('bDownloadPly').onclick = () => {
+      if (!activeShot) return;
+      window.open(`out/${activeShot.id}/points.ply`, '_blank');
+    };
+    $('bDownloadSplat').onclick = () => {
+      if (!activeShot) return;
+      window.open(`out/${activeShot.id}/scene.splat`, '_blank');
+    };
+    $('bDownloadMesh').onclick = () => {
+      if (!activeShot) return;
+      window.open(`out/${activeShot.id}/mesh.ply`, '_blank');
+    };
+    $('bDownloadArch').onclick = () => {
+      if (!activeShot) return;
+      window.open(`out/${activeShot.id}/architecture.json`, '_blank');
+    };
+
+    $('pipRef').onclick = () => $('pipRef').classList.toggle('expanded');
+
+    window.onresize = () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    };
+
+    // Animation Loop
+    function animate() {
+      requestAnimationFrame(animate);
+      if (turntable) {
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.4;
+      } else {
+        controls.autoRotate = false;
+      }
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // Startup
+    initCatalog();
+    if (SHOTS.length > 0) {
+      const urlParam = new URLSearchParams(window.location.search).get('shot');
+      let targetShot = null;
+      if (urlParam) {
+        targetShot = SHOTS.find(s => s.id === urlParam || s.id.includes(urlParam));
+      }
+      if (!targetShot) {
+        targetShot = SHOTS.find(s => s.id.includes('naraka_fused')) || SHOTS.find(s => s.id.includes('bdc7d6ec')) || SHOTS[0];
+      }
+      selectShot(targetShot);
+    }
+    animate();
+  </script>
+  <script src="../nav.js"></script>
+</body>
+
+</html>

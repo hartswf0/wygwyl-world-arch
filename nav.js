@@ -23,7 +23,8 @@
     { id: 'shotlab',    name: 'Shot Lab',   does: 'Inspect a shot and its layers',   path: 'shots/index.html' },
     { id: 'storyboard', name: 'Storyboard', does: 'Inspect scene staging',           path: 'shots/storyboard.html' },
     { id: 'studio',     name: 'Studio',     does: 'Inspect animation',               path: 'shots/studio.html' },
-    { id: 'animator',   name: 'Animator',   does: 'Live cartoon action & cues',       path: 'shots/animate.html' }
+    { id: 'animator',   name: 'Animator',   does: 'Live cartoon action & cues',       path: 'shots/animate.html' },
+    { id: 'pointcloud', name: '3D Points & Splats', does: 'Metric depth point clouds & Gaussians', path: 'shots/pointcloud.html' }
   ];
   window.WYGWYL_ROUTES = ROUTES;
 
