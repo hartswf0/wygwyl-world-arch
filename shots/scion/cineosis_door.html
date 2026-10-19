@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SCION · door card for Cineosis Lab</title>
+<meta name="description" content="A ready-to-paste Cineosis Lab door linking to the WYGWYL SCION multiplane animation engine, in the Lab's own markup.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* the Lab's own door styles, copied from hartswf0.github.io/cineosis-lab so the preview matches */
+:root{--bg:#0b0a09;--ink:#ece6da;--dim:#b3ab9e;--rule:#2e2a26;--red:#e0483a;--lime:#c4f46a}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "IBM Plex Mono",ui-monospace,Menlo,monospace}
+main{width:min(1160px,100%);margin:0 auto;padding:48px 16px}
+h1{font:800 44px/.95 "Fraunces",Georgia,serif;margin:0 0 8px}
+p.sub{color:var(--dim);font:italic 400 18px/1.4 "Fraunces",Georgia,serif;margin:0 0 30px;max-width:60ch}
+.doors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+a.door{position:relative;display:block;border:1px solid var(--rule);border-top:3px solid var(--c)!important;border-radius:6px;padding:20px 18px 18px;color:inherit;text-decoration:none;transition:border-color .15s ease,transform .15s ease}
+a.door:hover{border-color:var(--ink);transform:translateY(-2px)}
+a.door u{display:inline-block;text-decoration:none;font-size:9.5px;letter-spacing:.16em;color:var(--c);margin-bottom:4px}
+.door b{display:block;font:700 23px/1.12 "Fraunces",Georgia,serif;margin-bottom:9px}
+.door span{color:var(--dim);font-size:13.5px;line-height:1.55;display:block}
+.door em{display:block;margin-top:13px;font-style:normal;color:var(--red);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.door .signs{display:flex;gap:3px;margin:10px 0 0}.door .signs i{flex:1;height:5px;border-radius:1px}
+pre{background:#171513;border:1px solid var(--rule);border-radius:6px;padding:14px;overflow:auto;font-size:12px;color:var(--dim);margin-top:28px;white-space:pre-wrap}
+button{font:500 11px "IBM Plex Mono",monospace;letter-spacing:.08em;color:var(--ink);background:none;border:1px solid var(--rule);border-radius:14px;padding:6px 12px;cursor:pointer;margin-top:10px}
+button:hover{border-color:var(--ink)}
+@media (max-width:900px){.doors{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>Door cards for the Lab</h1>
+<p class="sub">Paste these into the <code>#wygwyl</code> section of cineosis-lab/index.html. They use the Lab's <code>data-p</code> / <code>data-m</code> attributes, so the WATCH / MAKE / READ filters and the search box pick them up.</p>
+
+<div class="doors" id="doors">
+<a class="door" data-p="wygwyl" data-m="MAKE" href="https://hartswf0.github.io/wygwyl-world-arch/shots/scion.html" style="--c:#c4f46a"><u>MAKE · NEW</u><b>SCION · Multiplane Animation Engine</b><span>The 14 WYGWYL cel sequences compiled into State Graphs: a beat chain tagged with Cineosis signs, a 7-plane multiplane stack, an executable 24 fps X-sheet, and five measured animation gates (silhouette, volume, contact, arcs, vitality). Type a director's note and it re-times the X-sheet live.</span><span class="signs"><i style="background:#e9d9a8"></i><i style="background:#f0b9a4"></i><i style="background:#e7a37c"></i><i style="background:#b9cfa0"></i><i style="background:#a9c9c9"></i><i style="background:#d9d3c7"></i><i style="background:#b8b3d8"></i></span><em>Direct the cel →</em></a>
+<a class="door" data-p="wygwyl" data-m="WATCH" href="https://hartswf0.github.io/wygwyl-world-arch/shots/scion.html?poem=poem_07" style="--c:#c4f46a"><u>WATCH · NEW</u><b>DJ Turn Me Up · drawn keys</b><span>Six keys and two asymmetric breakdowns drawn from the compiled beat chain (anticipation → extreme → contact → settle → perception → settle), flipped at their measured X-sheet timing.</span><em>Flip the keys →</em></a>
+<a class="door" data-p="wygwyl" data-m="READ" href="https://hartswf0.github.io/wygwyl-world-arch/shots/scion/cineosis_export.json" style="--c:#c4f46a"><u>READ · NEW</u><b>WYGWYL cel beats as Cineosis shots</b><span>Every SCION beat exported as a shot record with sign family, deciding test, causal role and poem line, ready to load as a <code>wygwyl-cel</code> collection on the Lab wall.</span><em>Read the export →</em></a>
+</div>
+
+<button id="copy">COPY DOOR HTML</button>
+<pre id="src"></pre>
+</main>
+<script>
+const html = [...document.querySelectorAll('#doors a.door')].map(a => a.outerHTML).join('\n');
+document.getElementById('src').textContent = html;
+document.getElementById('copy').onclick = () => navigator.clipboard.writeText(html).then(() => { document.getElementById('copy').textContent = 'COPIED ✓'; });
+</script>
+</body>
+</html>

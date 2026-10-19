@@ -24,7 +24,8 @@
     { id: 'storyboard', name: 'Storyboard', does: 'Inspect scene staging',           path: 'shots/storyboard.html' },
     { id: 'studio',     name: 'Studio',     does: 'Inspect animation',               path: 'shots/studio.html' },
     { id: 'animator',   name: 'Animator',   does: 'Live cartoon action & cues',       path: 'shots/animate.html' },
-    { id: 'pointcloud', name: '3D Points & Splats', does: 'Metric depth point clouds & Gaussians', path: 'shots/pointcloud.html' }
+    { id: 'pointcloud', name: '3D Points & Splats', does: 'Metric depth point clouds & Gaussians', path: 'shots/pointcloud.html' },
+    { id: 'scion',      name: 'SCION',      does: 'Direct the cel: beats, X-sheet, gates', path: 'shots/scion.html' }
   ];
   window.WYGWYL_ROUTES = ROUTES;
 

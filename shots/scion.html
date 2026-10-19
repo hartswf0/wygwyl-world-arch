@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WYGWYL · SCION Multiplane Animation Engine</title>
+<meta name="description" content="SCION: the 14 WYGWYL cel sequences compiled into one State Graph each — a beat chain tagged with Cineosis signs, a multiplane stack, an executable 24fps X-sheet and five measured animation gates. Director notes change the timing live.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,800;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0a09;--panel:#12100e;--card:#171513;--rule:#2e2a26;--rule2:#3d3833;
+  --ink:#ece6da;--dim:#b3ab9e;--faint:#6f685e;--red:#e0483a;--lime:#c4f46a;--amber:#f2b134;
+  --perception:#e9d9a8;--affect:#f0b9a4;--action:#e7a37c;--reflection:#b9cfa0;--mental:#a9c9c9;--break:#d9d3c7;--time:#b8b3d8;
+  --serif:Fraunces,Georgia,serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;--sans:Inter,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font:13px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+body{display:grid;grid-template-rows:48px 1fr;overflow:hidden}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:1px solid var(--rule);border-radius:14px;padding:4px 10px;font:500 11px var(--mono);letter-spacing:.06em;color:var(--dim);transition:.15s}
+button:hover{border-color:var(--ink);color:var(--ink)}
+button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+a{color:inherit}
+
+/* top bar */
+header{display:flex;align-items:center;gap:14px;padding:0 14px;border-bottom:1px solid var(--rule);background:rgba(11,10,9,.96)}
+#wy-index{font:600 11px var(--mono);color:var(--lime);border:1px solid #3c4a2a;padding:4px 10px;border-radius:6px;text-decoration:none}
+header h1{font:800 19px var(--serif);letter-spacing:-.01em}
+header h1 em{font-style:italic;font-weight:400;color:var(--dim)}
+header .sp{flex:1}
+header .ext{font:500 11px var(--mono);color:var(--dim);text-decoration:none;border:1px solid var(--rule);padding:4px 10px;border-radius:14px}
+header .ext:hover{color:var(--ink);border-color:var(--ink)}
+.strip{display:flex;gap:2px}
+.strip i{width:14px;height:16px;border-radius:2px;display:block}
+
+/* layout */
+main{display:grid;grid-template-columns:230px minmax(0,1fr) 380px;min-height:0}
+aside,section.right{overflow-y:auto;border-right:1px solid var(--rule);min-height:0}
+section.right{border-right:0;border-left:1px solid var(--rule)}
+.center{display:grid;grid-template-rows:auto auto auto minmax(0,1fr);min-height:0;overflow:hidden}
+
+/* poem list */
+.plist{padding:10px}
+.plist h2,.panel h2{font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:6px 0 10px;display:flex;gap:10px;align-items:center}
+.plist h2::after,.panel h2::after{content:"";flex:1;border-top:1px solid var(--rule)}
+.poem{display:block;width:100%;text-align:left;color:var(--ink);font:inherit;letter-spacing:0;border:1px solid var(--rule);border-left:4px solid var(--c,#888);border-radius:6px;padding:8px 9px;margin-bottom:6px;background:var(--panel);cursor:pointer;transition:.15s}
+.poem:hover{transform:translateX(2px);border-color:var(--rule2)}
+.poem.on{background:#1d1a17;color:var(--ink);border-color:var(--ink);border-left-color:var(--c)}
+.poem b{display:block;font:700 13.5px/1.2 var(--serif)}
+.poem small{display:block;color:var(--faint);font:400 10.5px var(--mono);margin:2px 0 5px}
+.pills{display:flex;gap:3px;flex-wrap:wrap}
+.pill{font:600 9px var(--mono);padding:1px 4px;border-radius:3px;border:1px solid var(--rule)}
+.pill.PASS{color:var(--lime);border-color:#3c4a2a}.pill.FAIL{color:var(--red);border-color:#5a2a24}.pill.NA{color:var(--faint)}
+.signrow{display:flex;gap:2px;margin-top:5px}.signrow i{flex:1;height:4px;border-radius:1px}
+
+/* stage */
+.stagewrap{padding:12px 14px 6px;display:flex;flex-direction:column;align-items:center}
+.titleline{width:100%;display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
+.titleline h2{font:800 26px/1 var(--serif);letter-spacing:-.015em}
+.titleline p{color:var(--dim);font:italic 400 14px var(--serif)}
+.stage{position:relative;width:100%;max-width:min(100%,calc((100vh - 360px) * 16 / 9));aspect-ratio:16/9;background:#000;border-radius:6px;overflow:hidden;border:1px solid var(--rule)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%}
+.hud{position:absolute;left:10px;top:8px;font:500 11px var(--mono);color:#fff;text-shadow:0 1px 3px #000;pointer-events:none;display:flex;flex-direction:column;gap:2px}
+.hud .tag{display:inline-block;padding:1px 6px;border-radius:3px;color:#1d1b18;font-weight:600}
+.hudr{position:absolute;right:10px;top:8px;text-align:right;font:500 11px var(--mono);color:#fff;text-shadow:0 1px 3px #000;pointer-events:none}
+.breaker{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(224,72,58,.94);color:#fff;font:600 13px var(--mono);padding:12px 18px;border-radius:6px;opacity:0;transition:.3s;pointer-events:none;text-align:center;max-width:80%}
+.breaker.show{opacity:1}
+
+/* transport */
+.transport{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 14px;border-top:1px solid var(--rule)}
+.transport .grp{display:flex;gap:4px;align-items:center;padding-right:8px;border-right:1px solid var(--rule)}
+.transport .grp:last-child{border-right:0}
+.transport label{font:500 10px var(--mono);color:var(--faint);letter-spacing:.12em;margin-right:2px}
+#play{width:34px;height:28px;border-radius:6px;font-size:13px;padding:0}
+#fcount{font:500 11px var(--mono);color:var(--dim);min-width:150px}
+
+/* beat ribbon */
+.ribbonwrap{padding:4px 14px 8px}
+#ribbon{position:relative;height:52px;border:1px solid var(--rule);border-radius:5px;overflow:hidden;cursor:pointer;background:var(--panel)}
+#ribbon .bt{position:absolute;top:0;bottom:18px;border-right:1px solid var(--bg);padding:3px 5px;overflow:hidden;color:#1d1b18;font:600 9.5px/1.2 var(--mono);white-space:nowrap}
+#ribbon .bt small{display:block;font-weight:400;opacity:.75}
+#ribbon .cut{position:absolute;top:0;bottom:0;width:2px;background:var(--red)}
+#ribbon .kf{position:absolute;bottom:4px;width:7px;height:7px;margin-left:-3px;transform:rotate(45deg);background:var(--ink);border:1px solid var(--bg)}
+#ribbon .energy{position:absolute;left:0;right:0;bottom:0;height:18px}
+#ribbon .ph{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 6px #fff;pointer-events:none}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;font:500 10px var(--mono);color:var(--dim)}
+.legend span{display:flex;align-items:center;gap:4px}.legend i{width:9px;height:9px;border-radius:2px;display:inline-block}
+
+/* lower tabs */
+.lower{min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);border-top:1px solid var(--rule)}
+.tabs{display:flex;gap:4px;padding:6px 14px}
+.tabbody{overflow:auto;padding:4px 14px 14px;min-height:0}
+.tabbody>div{display:none}.tabbody>div.on{display:block}
+
+/* x-sheet */
+table.xs{width:100%;border-collapse:collapse;font:400 11px var(--mono)}
+table.xs th{position:sticky;top:0;background:var(--bg);color:var(--faint);font-weight:500;text-align:left;padding:4px 6px;border-bottom:1px solid var(--rule);letter-spacing:.06em}
+table.xs td{padding:2px 6px;border-bottom:1px solid #1c1a17;white-space:nowrap}
+table.xs tr.cur td{background:#2a2520;color:#fff}
+table.xs tr.k td:first-child::after{content:" ◆";color:var(--amber)}
+table.xs tr.c td{border-top:2px solid var(--red)}
+table.xs .sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
+
+/* right panels */
+.panel{padding:12px 14px;border-bottom:1px solid var(--rule)}
+.gate{border:1px solid var(--rule);border-radius:6px;padding:8px 10px;margin-bottom:6px;background:var(--panel)}
+.gate header{all:unset;display:flex;justify-content:space-between;align-items:center}
+.gate b{font:700 13px var(--serif)}
+.gate .st{font:600 10px var(--mono);padding:1px 6px;border-radius:3px}
+.st.PASS{background:#26331a;color:var(--lime)}.st.FAIL{background:#3a1a16;color:var(--red)}.st.NA{background:#1e1c19;color:var(--faint)}
+.gate p{color:var(--dim);font-size:11.5px;margin-top:3px}
+.gate .m{font:400 10.5px var(--mono);color:var(--faint);margin-top:3px}
+.flaw{border:1px solid #5a2a24;background:#1e1210;border-radius:6px;padding:9px 11px;margin-top:8px}
+.flaw b{font:600 10px var(--mono);letter-spacing:.12em;color:var(--red)}
+.flaw p{margin-top:3px;font:italic 400 13.5px/1.35 var(--serif)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+#dirtext{width:100%;margin-top:8px;background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:7px 9px;font:400 12px var(--mono)}
+#dirtext:focus{outline:none;border-color:var(--ink)}
+.hist{margin-top:8px;font:400 11px var(--mono);color:var(--dim)}
+.hist div{display:flex;justify-content:space-between;gap:6px;padding:3px 0;border-bottom:1px dashed var(--rule)}
+.hist div.rev{color:var(--red);text-decoration:line-through}
+.hist em{font-style:normal;color:var(--faint)}
+.beatlist .b{border-left:3px solid var(--c);padding:4px 8px;margin-bottom:5px;cursor:pointer;border-radius:0 4px 4px 0;background:var(--panel)}
+.beatlist .b:hover{background:#1d1a17}
+.beatlist .b b{font:600 10.5px var(--mono);letter-spacing:.06em}
+.beatlist .b span{display:block;color:var(--dim);font-size:11.5px}
+.beatlist .b q{display:block;font:italic 400 12px/1.35 var(--serif);color:var(--ink);margin-top:2px}
+.before{font:italic 400 13px/1.45 var(--serif);color:var(--dim);margin-bottom:8px}
+.topos{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.topos figure{position:relative;border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.topos figure.sel{border-color:var(--lime)}
+.topos canvas{display:block;width:100%;aspect-ratio:16/9}
+.topos figcaption{font:400 9.5px/1.3 var(--mono);color:var(--dim);padding:3px 4px}
+.mp svg{width:100%;height:auto;display:block}
+.mprow{display:grid;grid-template-columns:28px 1fr 46px;gap:6px;align-items:center;font:400 10.5px var(--mono);padding:2px 0;color:var(--dim)}
+.mprow .bar{height:8px;background:#1f1c19;border-radius:2px;overflow:hidden}
+.mprow .bar i{display:block;height:100%}
+.drawn{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.drawn figure{border:1px solid var(--rule);border-radius:4px;overflow:hidden;cursor:pointer}
+.drawn img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.drawn figcaption{font:400 9.5px/1.3 var(--mono);color:var(--dim);padding:3px 4px}
+.note{color:var(--faint);font-size:11px;margin-top:6px}
+.cine a{display:block;border:1px solid var(--rule);border-top:3px solid var(--time);border-radius:6px;padding:10px;text-decoration:none;margin-top:6px}
+.cine a:hover{border-color:var(--ink)}
+.cine b{font:700 15px var(--serif)}
+.cine span{display:block;color:var(--dim);font-size:11.5px}
+@media (max-width:1200px){main{grid-template-columns:190px minmax(0,1fr) 320px}}
+@media (max-width:900px){body{overflow:auto;grid-template-rows:auto 1fr}main{grid-template-columns:1fr}aside,section.right{border:0}.center{overflow:visible}}
+</style>
+</head>
+<body>
+<header>
+  <a id="wy-index" href="../index.html">← Index</a>
+  <h1>SCION <em>multiplane animation engine</em></h1>
+  <div class="strip" aria-hidden="true">
+    <i style="background:var(--perception)"></i><i style="background:var(--affect)"></i><i style="background:var(--action)"></i><i style="background:var(--reflection)"></i><i style="background:var(--mental)"></i><i style="background:var(--break)"></i><i style="background:var(--time)"></i>
+  </div>
+  <div class="sp"></div>
+  <a class="ext" href="scion/cineosis_export.json" target="_blank" id="exportLink">Cineosis export ↓</a>
+  <a class="ext" href="https://hartswf0.github.io/cineosis-lab/" target="_blank" rel="noopener">Cineosis Lab ↗</a>
+</header>
+
+<main>
+  <aside>
+    <div class="plist">
+      <h2>14 cel sequences</h2>
+      <div id="poems"></div>
+      <p class="note">Gates: G1 silhouette · G2 volume · G3 contact · G4 arcs · G5 vitality. All are measured from the footage by <code>scion_compile.py</code>.</p>
+    </div>
+  </aside>
+
+  <div class="center">
+    <div class="stagewrap">
+      <div class="titleline"><h2 id="ptitle">—</h2><p id="ptag"></p></div>
+      <div class="stage" id="stage">
+        <canvas id="cv" width="1024" height="576"></canvas>
+        <div class="hud" id="hud"></div>
+        <div class="hudr" id="hudr"></div>
+        <div class="breaker" id="breaker"></div>
+      </div>
+    </div>
+
+    <div class="transport">
+      <div class="grp"><button id="play" title="Play / pause (space)">▶</button><span id="fcount">f 0</span></div>
+      <div class="grp"><label>VIEW</label>
+        <button data-view="cel" class="on">CEL</button><button data-view="rough">ROUGH</button><button data-view="split">SPLIT</button><button data-view="sil">SILHOUETTE</button><button data-view="onion">ONION</button>
+      </div>
+      <div class="grp"><label>OVERLAY</label><button id="ovArcs">ARCS</button><button id="ovPlanes">PLANES</button></div>
+      <div class="grp"><label>TEST</label><button id="flip" title="Key-only flip test: keys alone, no in-betweens">KEY FLIP</button></div>
+    </div>
+
+    <div class="ribbonwrap">
+      <div id="ribbon"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="lower">
+      <div class="tabs">
+        <button data-tab="xs" class="on">X-SHEET</button><button data-tab="beats">BEAT GRAPH</button><button data-tab="stack">MULTIPLANE</button><button data-tab="drawn">DRAWN KEYS</button>
+      </div>
+      <div class="tabbody">
+        <div data-tab="xs" class="on"><table class="xs"><thead><tr><th>f24</th><th>drawing</th><th>exp</th><th>src</th><th>beat</th><th>sign</th><th>pin</th><th>camera px</th><th>fx</th></tr></thead><tbody id="xsb"></tbody></table></div>
+        <div data-tab="beats"><p class="before" id="before"></p><div class="beatlist" id="beatlist"></div><h2 style="font:600 10.5px var(--mono);letter-spacing:.16em;color:var(--dim);margin:12px 0 6px">3 STAGING TOPOLOGIES</h2><div class="topos" id="topos"></div></div>
+        <div data-tab="stack" class="mp"><div id="mpsvg"></div><div id="mprows"></div><p class="note" id="mpcam"></p></div>
+        <div data-tab="drawn"><div id="drawn"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="right">
+    <div class="panel">
+      <h2>Director → state mutation</h2>
+      <div class="chips" id="chips"></div>
+      <input id="dirtext" placeholder="type a note: “heavier and funnier”, “make the world huge”…" aria-label="Director note">
+      <div class="hist" id="hist"></div>
+      <p class="note">Each note becomes edits to the X-sheet: holds, snaps, contact pins, shake, scale, occluders. Gate 5 checks every edit. If an edit flattens the contrast between stillness and motion, it is undone.</p>
+    </div>
+    <div class="panel">
+      <h2>Invariant gates</h2>
+      <div id="gates"></div>
+      <div class="flaw" id="flaw"></div>
+    </div>
+    <div class="panel cine">
+      <h2>Cineosis bridge</h2>
+      <p class="note" style="margin-top:0">Every beat carries a Cineosis sign family. The export lists the beats as shots that the Lab wall can filter.</p>
+      <a href="https://hartswf0.github.io/cineosis-lab/periodic-table.html" target="_blank" rel="noopener"><b>Periodic table of signs ↗</b><span>Read each beat's sign against its deciding test.</span></a>
+      <a href="scion/cineosis_door.html" target="_blank"><b>Door card for the Lab</b><span>A ready-to-paste door that links the Lab back to this studio.</span></a>
+    </div>
+  </section>
+</main>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const SIGN_COL = {perception:'#e9d9a8',affect:'#f0b9a4',action:'#e7a37c',reflection:'#b9cfa0',mental:'#a9c9c9',break:'#d9d3c7',time:'#b8b3d8'};
+const ROLE_SHORT = {STIMULUS:'STIM',PERCEPTION:'PERC',THOUGHT:'THINK',ANTICIPATION:'ANTIC',ACTION_EXTREME:'EXTREME',CONTACT_OVERSHOOT:'CONTACT',SETTLE:'SETTLE'};
+const PLANE_COL = {P0:'#5b534a',P1:'#8a7a66',P2:'#e7a37c',P3:'#f0b9a4',P4:'#b9cfa0',P5:'#a9c9c9',P6:'#b8b3d8'};
+
+const S = {
+  index:null, st:null, imgCel:null, imgRough:null, imgMask:null, drawn:null,
+  base:[], sched:[], view:'cel', arcs:false, planes:false, flip:false,
+  playing:false, pos:0, last:0, hist:[], viewp:{scale:1, occl:0, parallaxFar:1, shake:0}, keyFlipSched:null,
+};
+
+// ─────────────────────────────────────── load
+async function boot(){
+  S.index = await (await fetch('scion/index.json')).json();
+  const box = $('poems');
+  S.index.poems.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'poem'; b.style.setProperty('--c', p.color || '#888'); b.dataset.id = p.id;
+    const pills = Object.entries(p.gates).map(([k,v]) => `<span class="pill ${v.replace('/','')}" title="${k}: ${v}">${k.split('_')[0]}</span>`).join('');
+    b.innerHTML = `<b>${p.num} · ${p.title}</b><small>${p.district || 'Atlantis'} · ${p.beats} beats · ${p.cuts} cuts</small><div class="pills">${pills}</div><div class="signrow">${p.signs.map(s=>`<i style="background:${SIGN_COL[s]}"></i>`).join('')}</div>`;
+    b.onclick = () => loadPoem(p.id);
+    box.appendChild(b);
+  });
+  $('legend').innerHTML = Object.entries(S.index.signs).map(([k,v]) => `<span title="${v.test}"><i style="background:${v.color}"></i>${v.image}</span>`).join('');
+  const q = new URLSearchParams(location.search);
+  await loadPoem(q.get('poem') || S.index.poems[0].id, q.get('beat'));
+}
+
+function loadImg(src){ return new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; }); }
+
+async function loadPoem(id, beat){
+  S.playing = false; $('play').textContent = '▶';
+  document.querySelectorAll('.poem').forEach(b => b.classList.toggle('on', b.dataset.id === id));
+  const st = await (await fetch(`scion/state/${id}.json`)).json();
+  S.st = st;
+  [S.imgCel, S.imgRough, S.imgMask] = await Promise.all([loadImg('scion/' + st.assets.cel), loadImg('scion/' + st.assets.rough), st.assets.masks ? loadImg('scion/' + st.assets.masks) : null]);
+  try { S.drawn = await (await fetch(`scion/drawn/${id}/manifest.json`)).json(); } catch(e) { S.drawn = null; }
+  const beats = Object.fromEntries(st.dramatic.beats.map(b => [b.id, b]));
+  S.beats = beats;
+  S.base = st.xsheet.rows.map(r => ({src:r[1], drawing:r[2], exp:r[3], pin:r[4], cam:r[5], beat:r[6], key:r[7], cut:r[8], role:beats[r[6]].role, sign:beats[r[6]].sign, fx:''}));
+  const firstOf = {}; S.base.forEach(r => { if (!(r.drawing in firstOf)) firstOf[r.drawing] = r.src; });
+  S.base.forEach(r => { r.disp = firstOf[r.drawing]; }); // exposure: a held drawing shows ONE image for its whole hold
+  S.hist = []; S.viewp = {scale:1, occl:0, parallaxFar:1, shake:0};
+  S.sched = S.base.map(o => ({...o}));
+  S.baseContrast = contrastIndex(S.sched);
+  S.pos = 0;
+  if (beat && beats[beat]) S.pos = S.sched.findIndex(r => r.beat === beat);
+  { const u = new URL(location.href); u.searchParams.set('poem', id); u.searchParams.delete('beat'); history.replaceState(null, '', u); }
+  $('ptitle').textContent = `${st.num} · ${st.title}`;
+  $('ptag').textContent = st.tagline || '';
+  renderRibbon(); renderXS(); renderGates(); renderBeats(); renderStack(); renderDrawn(); renderChips(); renderHist();
+  draw();
+}
+
+// ─────────────────────────────────────── schedule ops (director → X-sheet)
+function segments(sched){
+  const segs = []; let cur = null;
+  sched.forEach(r => { if (!cur || cur.beat !== r.beat || r.cut) { cur = {beat:r.beat, role:r.role, rows:[]}; segs.push(cur); } cur.rows.push(r); });
+  return segs;
+}
+function resample(rows, k){
+  const n = Math.max(2, Math.round(rows.length * k)); const out = [];
+  for (let i = 0; i < n; i++) out.push({...rows[Math.min(rows.length - 1, Math.floor(i / k))]});
+  return out;
+}
+function flat(segs){ return segs.flatMap(s => s.rows); }
+const OPS = {
+  hold_scale(s, role, k){ return flat(segments(s).map(g => g.role === role ? {...g, rows:resample(g.rows, k)} : g)); },
+  snap(s, role, n){ return flat(segments(s).map(g => { if (g.role !== role) return g; const step = g.rows.length / n; const rows = []; for (let i = 0; i < n; i++) { const r = g.rows[Math.floor(i * step)]; rows.push({...r}, {...r}); } return {...g, rows}; })); },
+  extend_contact(s, n){ return flat(segments(s).map(g => g.role === 'CONTACT_OVERSHOOT' ? {...g, rows:[...Array(n * 2).fill(0).map(() => ({...g.rows[0], pin:1, fx:'pin'})), ...g.rows]} : g)); },
+  shake_on_contact(s, px){ let out = flat(segments(s).map(g => { if (g.role !== 'CONTACT_OVERSHOOT') return g; return {...g, rows:g.rows.map((r, i) => ({...r, shake: i < 8 ? px * Math.pow(0.7, i) : 0, fx: i < 8 ? 'shake' : r.fx}))}; })); return out; },
+  slow_in(s, k){ return flat(segments(s).map((g, i, all) => { const nx = all[i + 1]; if (!nx || nx.role !== 'ACTION_EXTREME') return g; const cut = Math.floor(g.rows.length * 0.7); return {...g, rows:[...g.rows.slice(0, cut), ...resample(g.rows.slice(cut), k)]}; })); },
+  slow_out(s, k){ return flat(segments(s).map((g, i, all) => { const pv = all[i - 1]; if (!pv || pv.role !== 'ACTION_EXTREME') return g; const cut = Math.ceil(g.rows.length * 0.3); return {...g, rows:[...resample(g.rows.slice(0, cut), k), ...g.rows.slice(cut)]}; })); },
+  jitter_holds(s, px){ return s.map(r => r.exp === 'HOLD' || r.role === 'PERCEPTION' ? {...r, jitter:px, fx:'eye-dart'} : r); },
+  global_rate(s, k){ return resample(s, k); },
+  on_ones(s){ return s.map(r => ({...r, exp:'1s'})); },
+  scale_focal(s, k){ S.viewp.scale = k; return s; },
+  occluder(s, a){ S.viewp.occl = a; return s; },
+  parallax_far(s, k){ S.viewp.parallaxFar = k; return s; },
+};
+function contrastIndex(s){ // stillness-vs-velocity contrast: CV of run lengths of identical drawings
+  const runs = []; let n = 1;
+  for (let i = 1; i < s.length; i++) { if (s[i].disp === s[i - 1].disp) n++; else { runs.push(n); n = 1; } }
+  runs.push(n);
+  const m = runs.reduce((a, b) => a + b, 0) / runs.length; const sd = Math.sqrt(runs.reduce((a, b) => a + (b - m) ** 2, 0) / runs.length);
+  return sd / (m || 1);
+}
+function applyNote(key){
+  const rule = S.st.director_rules[key]; if (!rule) return;
+  const prev = S.sched, prevView = {...S.viewp};
+  let s = prev;
+  rule.ops.forEach(([op, ...args]) => { s = OPS[op](s, ...args); });
+  const before = contrastIndex(prev), after = contrastIndex(s);
+  const entry = {key, label:rule.label, ops:rule.ops.map(o => o[0]).join(' · '), frames:`${prev.length}→${s.length}`, contrast:after};
+  // GATE 5 for timing edits: refuse if stillness/velocity contrast drops > 15% below the rough checkpoint AND below the previous state
+  if (after < S.baseContrast * 0.85 && after < before * 0.98 && !['huge','dreamy'].includes(key)) {
+    entry.reverted = true; S.viewp = prevView;
+    flashBreaker(`GATE 5 circuit breaker · “${rule.label}” flattened hold/move contrast ${before.toFixed(2)} → ${after.toFixed(2)}. Restored previous checkpoint.`);
+  } else {
+    S.sched = s;
+  }
+  S.hist.push(entry);
+  S.pos = Math.min(S.pos, S.sched.length - 1);
+  renderHist(); renderRibbon(); renderXS(); draw();
+}
+function parseNote(txt){
+  const t = txt.toLowerCase(); const keys = [];
+  const map = {scared:/scar|nerv|afraid|anx|tense/, heavy:/heav|weight|mass|thud/, huge:/huge|vast|big world|epic|tiny|scale/, funny:/funn|comed|gag|joke|laugh/, faster:/fast|snap|quick|punch/, dreamy:/slow|dream|float|linger/};
+  Object.entries(map).forEach(([k, re]) => { if (re.test(t)) keys.push(k); });
+  return keys;
+}
+function flashBreaker(msg){ const b = $('breaker'); b.textContent = msg; b.classList.add('show'); setTimeout(() => b.classList.remove('show'), 3200); }
+
+// ─────────────────────────────────────── render: stage
+const cv = $('cv'), ctx = cv.getContext('2d');
+function cell(img, idx, atlas, dx, dy, dw, dh, sx0 = 0, sw0 = 1){
+  if (!img) return;
+  const [cw, ch] = atlas.cell; const x = (idx % atlas.cols) * cw, y = Math.floor(idx / atlas.cols) * ch;
+  ctx.drawImage(img, x + sx0 * cw, y, cw * sw0, ch, dx, dy, dw, dh);
+}
+function nearestMaskIdx(src){
+  const hull = S.st.hull; if (!hull.length) return -1;
+  const shot = f => S.st.cuts.filter(c => c <= f).length;
+  let best = -1, bd = 1e9;
+  hull.forEach((h, i) => { const d = (shot(h.frame) !== shot(src) ? 1000 : 0) + Math.abs(h.frame - src); if (d < bd) { bd = d; best = i; } });
+  return best;
+}
+function draw(){
+  const st = S.st; if (!st) return;
+  const sched = S.flip ? S.keyFlipSched : S.sched;
+  const r = sched[Math.min(S.pos, sched.length - 1)];
+  const W = cv.width, H = cv.height, at = st.assets.atlas, ra = st.assets.rough_atlas || at;
+  const F = r.disp ?? r.src;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none';
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  // camera: scale (world feels huge), shake, eye-dart jitter
+  const sc = S.viewp.scale; let ox = 0, oy = 0;
+  if (r.shake) { ox += (Math.random() - .5) * r.shake * 2; oy += (Math.random() - .5) * r.shake * 2; }
+  if (r.jitter && S.playing) { ox += (Math.random() - .5) * r.jitter; }
+  const dw = W * sc, dh = H * sc, dx = (W - dw) / 2 + ox, dy = (H - dh) / 2 + oy;
+  if (sc < 1) { // the world beyond the frame: far plane stretched, blurred, darker
+    ctx.filter = 'blur(10px) brightness(.45)'; cell(S.imgCel, F, at, -W * .1, -H * .1, W * 1.2, H * 1.2); ctx.filter = 'none';
+  }
+  if (S.view === 'cel' || S.view === 'onion') cell(S.imgCel, F, at, dx, dy, dw, dh);
+  else if (S.view === 'rough') cell(S.imgRough, F, ra, dx, dy, dw, dh);
+  else if (S.view === 'split') { cell(S.imgRough, F, ra, dx, dy, dw / 2, dh, 0, .5); cell(S.imgCel, F, at, dx + dw / 2, dy, dw / 2, dh, .5, .5); ctx.fillStyle = '#fff'; ctx.fillRect(dx + dw / 2 - 1, dy, 2, dh); }
+  else if (S.view === 'sil') {
+    ctx.fillStyle = '#fff'; ctx.fillRect(dx, dy, dw, dh);
+    const mi = nearestMaskIdx(r.src);
+    if (mi >= 0 && S.imgMask && !S.st.hull[mi].empty) { ctx.filter = 'invert(1)'; ctx.globalCompositeOperation = 'multiply'; cell(S.imgMask, mi, st.assets.mask_atlas, dx, dy, dw, dh); ctx.globalCompositeOperation = 'source-over'; ctx.filter = 'none'; }
+    else { ctx.fillStyle = '#999'; ctx.font = '600 22px IBM Plex Mono'; ctx.textAlign = 'center'; ctx.fillText('no character on Plane 2 here: G1 is N/A', W / 2, H / 2); ctx.textAlign = 'left'; }
+  }
+  if (S.view === 'onion') {
+    const prev = findDistinct(sched, S.pos, -1), next = findDistinct(sched, S.pos, 1);
+    ctx.globalAlpha = .33;
+    if (prev != null) { ctx.filter = 'sepia(1) saturate(4) hue-rotate(-40deg)'; cell(S.imgCel, prev, at, dx, dy, dw, dh); }
+    if (next != null) { ctx.filter = 'sepia(1) saturate(4) hue-rotate(70deg)'; cell(S.imgCel, next, at, dx, dy, dw, dh); }
+    ctx.globalAlpha = 1; ctx.filter = 'none';
+  }
+  if (S.viewp.occl > 0) { // Plane 0 lens occluders
+    ctx.fillStyle = 'rgba(8,7,6,.96)';
+    const a = S.viewp.occl;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(W * a * 1.3, 0); ctx.bezierCurveTo(W * a * .9, H * .3, W * a * 1.2, H * .7, W * a * .7, H); ctx.lineTo(0, H); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(W, H); ctx.lineTo(W * (1 - a * .8), H); ctx.bezierCurveTo(W * (1 - a * .6), H * .8, W * (1 - a * .3), H * .75, W, H * .55); ctx.fill();
+  }
+  if (S.arcs) drawArcs(r, dx, dy, dw, dh);
+  if (S.planes) drawPlaneOverlay(r);
+  // HUD
+  const b = S.beats[r.beat];
+  $('hud').innerHTML = `<span><span class="tag" style="background:${SIGN_COL[b.sign]}">${b.sign_image}</span></span><span>${b.id} · ${b.role.replace('_', ' ')}</span><span style="opacity:.8;max-width:520px;white-space:normal">${b.verb}</span>`;
+  $('hudr').innerHTML = `${S.flip ? 'KEY FLIP · keys only, no in-betweens<br>' : ''}drawing ${r.drawing} · src ${r.src}<br>${r.exp}${r.pin ? ' · PINNED' : ''}${r.key ? ' · ◆ KEY' : ''}${r.cut ? ' · CUT' : ''}`;
+  $('fcount').textContent = `f24 ${S.pos} / ${sched.length - 1} · ${(S.pos / 24).toFixed(2)}s`;
+  // playhead + x-sheet row
+  const ph = $('ribbon').querySelector('.ph'); if (ph) ph.style.left = `${(S.pos / (sched.length - 1)) * 100}%`;
+  highlightXS();
+}
+function findDistinct(s, i, dir){ const cur = s[i].disp; for (let j = i + dir; j >= 0 && j < s.length; j += dir) if (s[j].disp !== cur) return s[j].disp; return null; }
+function drawArcs(r, dx, dy, dw, dh){
+  const c = S.st.motion.centroid, cuts = S.st.cuts; const shot = f => cuts.filter(x => x <= f).length;
+  const s0 = shot(r.src); const pts = [];
+  for (let f = Math.max(0, r.src - 18); f <= Math.min(c.length - 1, r.src + 18); f++) if (c[f] && shot(f) === s0) pts.push([f, dx + c[f][0] * dw, dy + c[f][1] * dh]);
+  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(242,177,52,.85)'; ctx.beginPath();
+  pts.forEach(([f, x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke();
+  pts.forEach(([f, x, y]) => { ctx.fillStyle = f === r.src ? '#fff' : (f < r.src ? 'rgba(224,72,58,.9)' : 'rgba(196,244,106,.9)'); ctx.beginPath(); ctx.arc(x, y, f === r.src ? 5 : 2.5, 0, 7); ctx.fill(); });
+  (S.st.gates.G4_arcs.breakdowns || []).forEach(bd => { if (bd.breakdown && c[bd.breakdown] && Math.abs(bd.breakdown - r.src) < 18 && shot(bd.breakdown) === s0) { const x = dx + c[bd.breakdown][0] * dw, y = dy + c[bd.breakdown][1] * dh; ctx.strokeStyle = bd.linear_blend ? '#e0483a' : '#c4f46a'; ctx.strokeRect(x - 6, y - 6, 12, 12); } });
+  ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(8, cv.height - 26, 420, 20); ctx.fillStyle = '#f2b134'; ctx.font = '500 12px IBM Plex Mono';
+  ctx.fillText('moving-mass centroid ±18f · ◻ breakdown (red = 50% linear blend)', 14, cv.height - 12);
+}
+function drawPlaneOverlay(r){
+  const key = nearestStack(r.src); if (!key) return;
+  const W = cv.width, H = cv.height, n = key.planes.length;
+  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(W - 210, H - 14 - n * 18, 200, n * 18 + 6);
+  ctx.font = '500 11px IBM Plex Mono';
+  key.planes.forEach((p, i) => { const y = H - 10 - (n - i) * 18 + 12; ctx.fillStyle = PLANE_COL[p.id]; ctx.fillRect(W - 204, y - 9, Math.max(2, (p.area || 0) * 120), 10); ctx.fillStyle = '#fff'; ctx.fillText(`${p.id} Z${p.z_scion ?? '∞'} ${(p.contents[0] || '').slice(0, 10)}`, W - 200 + 64, y); });
+}
+function nearestStack(src){ const by = S.st.multiplane.by_key; if (!by.length) return null; return by.reduce((a, b) => Math.abs(b.frame - src) < Math.abs(a.frame - src) ? b : a); }
+
+// ─────────────────────────────────────── render: ribbon / xsheet / panels
+function renderRibbon(){
+  const sched = S.sched, N = sched.length, rb = $('ribbon');
+  const segs = segments(sched); let x = 0, html = '';
+  segs.forEach(g => { const b = S.beats[g.beat]; const w = g.rows.length / N * 100; html += `<div class="bt" style="left:${x}%;width:${w}%;background:${SIGN_COL[b.sign]}" title="${b.id} ${b.role} · ${b.sign_image}\n${b.verb}">${b.id} ${ROLE_SHORT[b.role]}<small>${b.sign}</small></div>`; x += w; });
+  sched.forEach((r, i) => { if (r.cut) html += `<div class="cut" style="left:${i / N * 100}%"></div>`; if (r.key) html += `<div class="kf" style="left:${i / N * 100}%" title="key"></div>`; });
+  // energy sparkline
+  const e = S.st.motion.subject, mx = Math.max(...e.filter(v => v != null)) || 1;
+  const pts = sched.map((r, i) => `${(i / (N - 1) * 1000).toFixed(1)},${(18 - (e[r.src] || 0) / mx * 16).toFixed(1)}`).join(' ');
+  html += `<svg class="energy" viewBox="0 0 1000 18" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="#ece6da" stroke-width="1.2" opacity=".7"/></svg><div class="ph"></div>`;
+  rb.innerHTML = html;
+  rb.onclick = ev => { const rc = rb.getBoundingClientRect(); S.pos = Math.round((ev.clientX - rc.left) / rc.width * (N - 1)); draw(); };
+}
+function renderXS(){
+  $('xsb').innerHTML = S.sched.map((r, i) => `<tr data-i="${i}" class="${r.key ? 'k' : ''} ${r.cut ? 'c' : ''}"><td>${i}</td><td>D${String(r.drawing).padStart(3, '0')}</td><td>${r.exp}</td><td>${r.src}</td><td>${r.beat}</td><td><span class="sw" style="background:${SIGN_COL[r.sign]}"></span>${r.sign}</td><td>${r.pin ? '📌' : ''}</td><td>${r.cam ? r.cam.join(', ') : ''}</td><td>${r.fx || ''}</td></tr>`).join('');
+  $('xsb').onclick = ev => { const tr = ev.target.closest('tr'); if (tr) { S.pos = +tr.dataset.i; draw(); } };
+}
+let lastHi = -1;
+function highlightXS(){
+  if (S.flip) return;
+  const tb = $('xsb'); const prev = tb.children[lastHi]; if (prev) prev.classList.remove('cur');
+  const cur = tb.children[S.pos]; if (cur) { cur.classList.add('cur'); if (!S.playing || S.pos % 12 === 0) { const body = tb.closest('.tabbody'); if (body && cur.offsetParent) body.scrollTop = cur.offsetTop - body.clientHeight / 2; } }
+  lastHi = S.pos;
+}
+function renderGates(){
+  const G = S.st.gates;
+  const desc = {
+    G1_silhouette:['Silhouette separability','Plane 2 as a binary mask: the gesture must read from the contour and negative space alone.', g => g.keys && g.keys.length ? `pass ${g.pass_rate} · ${g.keys.filter(k => !k.pass).map(k => `f${k.frame}: ${k.why.join(', ')}`).slice(0, 2).join(' | ')}` : g.reason],
+    G2_volume:['Volume conservation','area × z² of each mass held within ±5% between keys in one shot.', g => g.pairs && g.pairs.length ? `median drift ${(g.median_dev * 100).toFixed(0)}% · ${g.pairs.filter(p => p.boil).length} boiling pairs` : g.reason],
+    G3_contact:['Contact pinning','A pinned foot keeps zero world velocity (camera-compensated).', g => g.pairs && g.pairs.length ? `pass ${g.pass_rate} · max slide ${Math.max(...g.pairs.map(p => p.slide)).toFixed(3)} frame-widths` : g.reason],
+    G4_arcs:['Arcs & phase-lag','Curved paths, uneven spacing, and breakdowns that are not 50% blends.', g => `zig-zag ${g.zigzag_rate ?? '—'} · speed CV ${g.speed_cv ?? '—'} · linear breakdowns ${g.linear_breakdown_rate ?? '—'}`],
+    G5_vitality:['Monotonic vitality','Is the cel (composite) at least as alive as the rough source?', g => `vitality ${g.vitality} · motion corr ${g.motion_corr} · punch ${g.punch_ratio ?? '—'} · line ${g.edge_ratio} · boil on still px ${g.boil_static ?? '—'}×${g.reasons && g.reasons.length ? ' → ' + g.reasons.join('; ') : ''}`],
+  };
+  $('gates').innerHTML = Object.entries(desc).map(([k, [t, d, m]]) => { const g = G[k]; const s = g.status.replace('/', ''); return `<div class="gate"><header><b>${k.split('_')[0]} · ${t}</b><span class="st ${s}">${g.status}</span></header><p>${d}</p><div class="m">${m(g)}</div></div>`; }).join('');
+  const a = S.st.audit;
+  $('flaw').innerHTML = `<b>HIGHEST-LEVERAGE FLAW · ${a.highest_leverage_flaw || 'none'}</b><p>${a.fix}</p>`;
+}
+function renderBeats(){
+  const d = S.st.dramatic;
+  $('before').textContent = '2 seconds before: ' + d.two_seconds_before + (d.flip_test ? `  Key-only flip test: ${d.flip_test.reads ? 'reads' : 'does NOT read'} (mean key change ${d.flip_test.mean_key_change}).` : '');
+  $('beatlist').innerHTML = d.beats.map(b => `<div class="b" style="--c:${SIGN_COL[b.sign]}" data-b="${b.id}"><b>${b.id} · ${b.role.replace('_', ' ')} · ${b.sign_image} · ${b.dur_24}f</b><span>${b.verb}</span>${b.line ? `<q>${b.movement}: ${b.line}</q>` : ''}</div>`).join('');
+  $('beatlist').onclick = ev => { const el = ev.target.closest('.b'); if (el) { S.pos = Math.max(0, S.sched.findIndex(r => r.beat === el.dataset.b)); draw(); } };
+  const tp = $('topos'); tp.innerHTML = '';
+  (d.staging_topologies || []).forEach(t => {
+    const f = document.createElement('figure'); if (t.selected) f.className = 'sel';
+    const c = document.createElement('canvas'); c.width = 256; c.height = 144; const x = c.getContext('2d');
+    const at = S.st.assets.atlas; x.drawImage(S.imgRough, (t.frame % at.cols) * 256, Math.floor(t.frame / at.cols) * 144, 256, 144, 0, 0, 256, 144);
+    if (t.horizon != null) { x.strokeStyle = '#c4f46a'; x.setLineDash([4, 3]); x.beginPath(); x.moveTo(0, t.horizon * 144); x.lineTo(256, t.horizon * 144); x.stroke(); }
+    f.appendChild(c);
+    const cap = document.createElement('figcaption'); cap.innerHTML = `${t.selected ? '✓ SELECTED · ' : ''}f${t.frame} · fig ${t.figure_scale || 0} · contrast ${t.silhouette_contrast ?? '—'} · P0 ${t.occluder_P0}`;
+    f.appendChild(cap); f.onclick = () => { S.pos = Math.max(0, S.sched.findIndex(r => r.src >= t.frame)); draw(); };
+    tp.appendChild(f);
+  });
+}
+function renderStack(){
+  const key = nearestStack(S.sched[S.pos]?.src || 0);
+  if (!key) { $('mpsvg').innerHTML = '<p class="note">no multiplane data</p>'; return; }
+  // exploded multiplane: 7 glass planes receding in Z
+  const planes = key.planes; let svg = '<svg viewBox="0 0 600 190">';
+  planes.forEach((p, i) => { const z = i / (planes.length - 1); const x = 40 + i * 74, w = 60 + z * 30, h = 120 - z * 10, y = 30 + z * 10; svg += `<polygon points="${x},${y + 14} ${x + w},${y} ${x + w},${y + h} ${x},${y + h + 14}" fill="${PLANE_COL[p.id]}" fill-opacity="${0.12 + (p.area || 0) * 1.6}" stroke="${PLANE_COL[p.id]}" stroke-width="1.2"/><text x="${x + 4}" y="${y + h + 32}" fill="#b3ab9e" font-family="IBM Plex Mono" font-size="11">${p.id} · Z ${p.z_scion ?? '∞'}</text><text x="${x + 4}" y="${y + 30}" fill="#ece6da" font-family="IBM Plex Mono" font-size="10">${(p.contents || []).slice(0, 2).join(' ')}</text>`; });
+  svg += '<text x="10" y="16" fill="#6f685e" font-family="IBM Plex Mono" font-size="10">CAMERA → lens mask … focal plane … sky dome   (screen velocity ∝ camera velocity / Z)</text></svg>';
+  $('mpsvg').innerHTML = svg;
+  $('mprows').innerHTML = planes.map(p => `<div class="mprow"><b style="color:${PLANE_COL[p.id]}">${p.id}</b><div><div class="bar"><i style="width:${Math.min(100, (p.area || 0) * 100)}%;background:${PLANE_COL[p.id]}"></i></div><small style="color:var(--faint)">${p.role} · ${p.name || ''} · ${p.z_m != null ? p.z_m + ' m' : '—'} · parallax ${p.parallax ?? '—'} · haze ${p.haze ?? '—'}</small></div><span>${((p.area || 0) * 100).toFixed(1)}%</span></div>`).join('');
+  const cam = key.camera || {};
+  $('mpcam').textContent = `Key f${key.frame} · camera ${cam.move || '—'} (${cam.why || ''}) · amplitude ${cam.amplitude ?? '—'} · z_ref ${cam.z_ref_m ?? '—'} m`;
+}
+function renderDrawn(){
+  const d = S.drawn, box = $('drawn');
+  if (!d) { const dp = (S.index.drawn || ['poem_07'])[0]; box.innerHTML = `<p class="note">No drawn keys for this poem yet. SCION drew new keys and breakdowns from the State Graph for <a href="?poem=${dp}">${dp}</a>. The other sequences are audited and re-timed only, because the compiler cannot invent drawings.</p>`; return; }
+  box.innerHTML = `<p class="before">${d.chain}</p><div class="drawn">${d.drawings.map((k, i) => `<figure data-i="${i}"><img src="scion/drawn/${S.st.id}/${k.file}" alt="${k.id} ${k.role}" loading="lazy"><figcaption><b>${k.id}</b> · ${k.role} · ${k.frames}f @ f${k.f24_in}<br>${k.note}<br><span style="color:${k.plate_locked ? 'var(--lime)' : 'var(--red)'}">plate drift ${k.plate_drift_gray}</span></figcaption></figure>`).join('')}</div><p class="note">${d.method}${(d.rejected || []).map(r => `<br><span style="color:var(--red)">Rejected ${r.id}: drift ${r.plate_drift_gray}. ${r.why}</span>`).join('')}</p><button id="playDrawn" style="margin-top:8px">▶ FLIP DRAWN KEYS (X-sheet timing)</button><canvas id="drawnCv" width="640" height="360" style="width:100%;margin-top:6px;border:1px solid var(--rule);border-radius:4px;display:none"></canvas>`;
+  $('playDrawn').onclick = flipDrawn;
+}
+async function flipDrawn(){
+  const d = S.drawn, c = $('drawnCv'); c.style.display = 'block'; const x = c.getContext('2d');
+  const imgs = await Promise.all(d.drawings.map(k => loadImg(`scion/drawn/${S.st.id}/${k.file}`)));
+  for (let i = 0; i < d.drawings.length; i++) { if (!imgs[i]) continue; x.drawImage(imgs[i], 0, 0, 640, 360); x.fillStyle = 'rgba(0,0,0,.6)'; x.fillRect(0, 0, 640, 22); x.fillStyle = '#fff'; x.font = '500 12px IBM Plex Mono'; x.fillText(`${d.drawings[i].id} · ${d.drawings[i].role} · held ${d.drawings[i].frames}f @24`, 8, 15); await new Promise(r => setTimeout(r, d.drawings[i].frames / 24 * 1000)); }
+}
+function renderChips(){
+  $('chips').innerHTML = Object.entries(S.st.director_rules).map(([k, v]) => `<button data-k="${k}" title="${v.ops.map(o => o.join(' ')).join('\n')}">${v.label}</button>`).join('') + '<button data-k="__reset" style="color:var(--red)">RESET TO ROUGH CHECKPOINT</button>';
+  $('chips').onclick = ev => { const b = ev.target.closest('button'); if (!b) return; if (b.dataset.k === '__reset') { S.sched = S.base.map(o => ({...o})); S.viewp = {scale:1, occl:0, parallaxFar:1, shake:0}; S.hist = []; renderHist(); renderRibbon(); renderXS(); draw(); } else applyNote(b.dataset.k); };
+}
+function renderHist(){
+  $('hist').innerHTML = `<div><span>CHECKPOINT · rough X-sheet</span><em>${S.base.length}f · contrast ${S.baseContrast.toFixed(2)}</em></div>` + S.hist.map(h => `<div class="${h.reverted ? 'rev' : ''}"><span>${h.label}<br><em>${h.ops}</em></span><em>${h.frames} · c ${h.contrast.toFixed(2)}${h.reverted ? ' · REVERTED' : ''}</em></div>`).join('');
+}
+
+// ─────────────────────────────────────── transport
+function tick(t){
+  if (S.playing) {
+    if (!S.last) S.last = t;
+    const step = 1000 / 24;
+    while (t - S.last >= step) { S.last += step; const len = (S.flip ? S.keyFlipSched : S.sched).length; S.pos = (S.pos + 1) % len; }
+    draw();
+  }
+  requestAnimationFrame(tick);
+}
+function togglePlay(){ S.playing = !S.playing; S.last = 0; $('play').textContent = S.playing ? '❚❚' : '▶'; }
+$('play').onclick = togglePlay;
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowRight') { S.pos = Math.min(S.pos + 1, S.sched.length - 1); draw(); }
+  if (e.code === 'ArrowLeft') { S.pos = Math.max(S.pos - 1, 0); draw(); }
+});
+document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => { S.view = b.dataset.view; document.querySelectorAll('[data-view]').forEach(x => x.classList.toggle('on', x === b)); draw(); });
+$('ovArcs').onclick = () => { S.arcs = !S.arcs; $('ovArcs').classList.toggle('on', S.arcs); draw(); };
+$('ovPlanes').onclick = () => { S.planes = !S.planes; $('ovPlanes').classList.toggle('on', S.planes); draw(); };
+$('flip').onclick = () => {
+  S.flip = !S.flip; $('flip').classList.toggle('on', S.flip);
+  if (S.flip) { // keys only, each held 12 frames (½ s), sound off
+    const keys = S.st.dramatic.keys; S.keyFlipSched = [];
+    keys.forEach(k => { const r = S.base.find(x => x.src === k.frame) || S.base[0]; for (let i = 0; i < 12; i++) S.keyFlipSched.push({...r, key:1}); });
+    S.pos = 0;
+  } else S.pos = 0;
+  draw();
+};
+document.querySelectorAll('[data-tab]').forEach(b => { if (b.tagName !== 'BUTTON') return; b.onclick = () => { document.querySelectorAll('.tabs [data-tab]').forEach(x => x.classList.toggle('on', x === b)); document.querySelectorAll('.tabbody>[data-tab]').forEach(x => x.classList.toggle('on', x.dataset.tab === b.dataset.tab)); if (b.dataset.tab === 'stack') renderStack(); }; });
+$('dirtext').addEventListener('keydown', e => { if (e.key !== 'Enter') return; const ks = parseNote(e.target.value); if (!ks.length) { flashBreaker('No rule matched. Try: scared, heavier, huge, funnier, faster, dreamier'); return; } ks.forEach(applyNote); e.target.value = ''; });
+
+async function applyParams(){
+  const q = new URLSearchParams(location.search);
+  if (q.get('view')) document.querySelector(`[data-view="${q.get('view')}"]`)?.click();
+  if (q.get('tab')) document.querySelector(`.tabs [data-tab="${q.get('tab')}"]`)?.click();
+  if (q.get('arcs')) $('ovArcs').click();
+  if (q.get('planes')) $('ovPlanes').click();
+  (q.get('note') || '').split(',').filter(Boolean).forEach(k => applyNote(k));
+  if (q.get('flip')) $('flip').click();
+  if (q.get('f')) { S.pos = Math.min(+q.get('f'), (S.flip ? S.keyFlipSched : S.sched).length - 1); draw(); }
+  if (q.has('selftest')) await selftest();
+}
+async function selftest(){
+  const pre = document.createElement('pre'); pre.id = 'selftest'; pre.style.cssText = 'position:fixed;inset:60px 40px auto auto;z-index:99;background:#000d;color:#c4f46a;padding:12px;font:12px IBM Plex Mono;max-height:80vh;overflow:auto';
+  document.body.appendChild(pre);
+  const log = { push: s => { pre.textContent += s + '\n'; } }, ok = (name, cond, extra = '') => log.push(`${cond ? 'PASS' : 'FAIL'} ${name}${extra ? ' · ' + extra : ''}`);
+  const errs = []; window.addEventListener('error', e => errs.push(e.message));
+  try {
+    ok('index loaded', S.index && S.index.poems.length === 14, `${S.index.poems.length} poems`);
+    ok('cel atlas', !!S.imgCel && S.imgCel.naturalWidth > 0, `${S.imgCel?.naturalWidth}x${S.imgCel?.naturalHeight}`);
+    ok('rough atlas', !!S.imgRough && S.imgRough.naturalWidth > 0);
+    ok('x-sheet rows rendered', $('xsb').children.length === S.sched.length, `${S.sched.length} rows`);
+    ok('ribbon beats', $('ribbon').querySelectorAll('.bt').length >= 1, `${$('ribbon').querySelectorAll('.bt').length} segments`);
+    ok('gate cards', $('gates').querySelectorAll('.gate').length === 5);
+    const p0 = S.pos; S.playing = true; S.last = 0; await new Promise(r => setTimeout(r, 600)); S.playing = false;
+    ok('playback advances', S.pos !== p0, `pos ${p0}→${S.pos}`);
+    for (const v of ['split', 'sil', 'onion', 'rough', 'cel']) { document.querySelector(`[data-view="${v}"]`).click(); ok(`view ${v}`, S.view === v); }
+    $('ovArcs').click(); draw(); ok('arcs overlay', S.arcs); $('ovArcs').click();
+    $('flip').click(); ok('key flip schedule', S.keyFlipSched.length === S.st.dramatic.keys.length * 12, `${S.keyFlipSched.length}f`); $('flip').click();
+    const L0 = S.sched.length;
+    applyNote('heavy'); ok('note heavy', S.hist.length === 1, `${L0}→${S.sched.length}f ${S.hist[0].reverted ? '(reverted)' : ''}`);
+    applyNote('funny'); ok('note funny', S.hist.length === 2, `→${S.sched.length}f ${S.hist[1].reverted ? '(reverted by G5)' : ''}`);
+    applyNote('huge'); ok('note huge', S.viewp.scale < 1 && S.viewp.occl > 0);
+    const ks = parseNote('make him more scared and slower'); ok('free-text parse', ks.includes('scared') && ks.includes('dreamy'), ks.join(','));
+    ks.forEach(applyNote); ok('history', $('hist').children.length === S.hist.length + 1, `${S.hist.length} edits`);
+    document.querySelector('[data-k="__reset"]').click(); ok('reset to rough', S.sched.length === S.base.length && S.hist.length === 0);
+    for (const t of ['beats', 'stack', 'drawn', 'xs']) document.querySelector(`.tabs [data-tab="${t}"]`).click();
+    ok('beat list', $('beatlist').children.length === S.st.dramatic.beats.length);
+    ok('topologies', $('topos').children.length >= 1, `${$('topos').children.length}`);
+    ok('multiplane svg', !!$('mpsvg').querySelector('svg'));
+    ok('drawn keys', !!S.drawn === (S.index.drawn || []).includes(S.st.id), S.drawn ? `${S.drawn.drawings.length} drawings` : 'none for this poem');
+    const other = S.index.poems.find(p => p.id !== S.st.id).id; await loadPoem(other); ok('switch poem', S.st.id === other, other);
+  } catch (e) { log.push('FAIL exception · ' + e.message); }
+  errs.forEach(e => log.push('FAIL window.error · ' + e));
+  log.push('DONE');
+}
+boot().then(() => { requestAnimationFrame(tick); return applyParams(); }).catch(e => {
+  const p = document.createElement('pre'); p.id = 'selftest'; p.textContent = 'FAIL boot · ' + e.message + '\n' + (e.stack || '');
+  p.style.cssText = 'position:fixed;left:20px;bottom:20px;z-index:99;background:#300;color:#fff;padding:10px;font:12px IBM Plex Mono'; document.body.appendChild(p);
+});
+</script>
+<script src="../nav.js"></script>
+</body>
+</html>
