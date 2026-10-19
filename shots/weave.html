@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WYGWYL · The Weave · archive, cel and AI in one shot</title>
+<meta name="description" content="One registered cut-out passage from WYGWYL poem 07: her recorded line, a 1956 archive console she can touch, and the AI Atlantis canopy that the archive plays on. Every frame is rendered from a manifest.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--obs:#7fd3c4;--inv:#e7a35a;--ret:#d98bb0;--drw:#b9c46a;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
+header{display:flex;align-items:center;gap:16px;padding:12px 18px;border-bottom:1px solid var(--line)}
+header h1{font:400 22px 'Permanent Marker',cursive;margin:0;letter-spacing:.02em}
+header h1 small{font:12px var(--mono);color:var(--dim);margin-left:10px;letter-spacing:.08em}
+header a{color:var(--dim);font:12px var(--mono);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:999px}
+header a:hover{color:var(--ink);border-color:var(--card)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:0;min-height:calc(100vh - 54px)}
+#stagewrap{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+canvas#c{width:100%;aspect-ratio:16/9;background:#000;border-radius:6px;box-shadow:0 20px 60px #000a;display:block}
+.bar{display:flex;align-items:center;gap:10px;font:12px var(--mono);color:var(--dim)}
+.bar button{background:var(--panel);border:1px solid var(--line);color:var(--ink);font:12px var(--mono);padding:6px 12px;border-radius:999px;cursor:pointer;transition:border-color .15s,transform .1s}
+.bar button:hover{border-color:var(--card)}.bar button:active{transform:scale(.97)}
+.bar button.on{background:var(--card);color:#1a120b;border-color:var(--card)}
+#scrub{flex:1;accent-color:var(--card)}
+#ribbon{position:relative;height:46px;border-radius:6px;overflow:hidden;background:var(--panel);border:1px solid var(--line);cursor:pointer}
+#ribbon .st{position:absolute;top:0;bottom:0;border-right:1px solid #0006;padding:4px 6px;font:10px var(--mono);color:#1a120b;overflow:hidden;white-space:nowrap}
+#ribbon .ph{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 6px #fff}
+#ribbon .wd{position:absolute;bottom:3px;font:10px var(--mono);color:#1a120bcc;transform:translateX(-50%)}
+#graph{width:100%;height:70px;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+aside{border-left:1px solid var(--line);padding:16px;overflow:auto;max-height:calc(100vh - 54px)}
+aside h2{font:600 10.5px var(--mono);letter-spacing:.16em;color:var(--dim);margin:18px 0 8px;text-transform:uppercase}
+aside h2:first-child{margin-top:0}
+.ledger div{display:grid;grid-template-columns:92px 1fr;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+.ledger b{font:600 10px var(--mono);letter-spacing:.08em;padding:2px 6px;border-radius:4px;color:#120d09;align-self:start;text-align:center}
+.OBSERVED{background:var(--obs)}.INVENTED{background:var(--inv)}.RETOUCHED{background:var(--ret)}.DRAWN{background:var(--drw)}
+.joins li{margin:0 0 6px;font-size:12.5px}.joins{padding-left:18px;margin:0}
+.kv{font:12px var(--mono);display:grid;grid-template-columns:1fr auto;gap:4px 10px}
+.kv span:nth-child(odd){color:var(--dim)}
+.pass{color:#9fe08a}.fail{color:#ff7b6b}
+#now{font:12px var(--mono);color:var(--dim);min-height:36px}
+#now em{color:var(--ink);font-style:normal}
+body.capture header,body.capture aside,body.capture .bar,body.capture #ribbon,body.capture #graph,body.capture #now{display:none}
+body.capture main{display:block}body.capture #stagewrap{padding:0}
+body.capture canvas#c{width:1920px;height:1080px;border-radius:0;box-shadow:none}
+</style>
+</head>
+<body>
+<header>
+  <a href="../index.html" id="wy-index">← Index</a>
+  <h1>The Weave <small>POEM 07 · "SO DJ PLEASE TURN ME UP"</small></h1>
+  <span style="flex:1"></span>
+  <a href="weave/clips/p07_turn_me_up.json" id="dl-clip">clip json ↓</a>
+  <a href="weave/passage.mp4" id="dl-mp4">passage.mp4 ↓</a>
+  <a href="scion.html?poem=poem_07" id="to-scion">SCION ↗</a>
+</header>
+<main>
+  <section id="stagewrap">
+    <canvas id="c" width="1920" height="1080"></canvas>
+    <div class="bar">
+      <button id="play">▶ play</button>
+      <span id="tc">0.00 s</span>
+      <input id="scrub" type="range" min="0" max="330" value="0">
+      <button id="dbg">sockets</button>
+      <button id="raw">no finish</button>
+    </div>
+    <div id="ribbon"></div>
+    <canvas id="graph" width="1200" height="140"></canvas>
+    <div id="now"></div>
+  </section>
+  <aside>
+    <h2>What this is</h2>
+    <p style="margin:0;font-size:13px;color:var(--dim)">Her recorded line asks; the 1956 film answers. The console she touches is cut from <i>Sound And The Story</i> (1956). The canopy is the AI Atlantis plate, and the archive plays on it. She is a cardboard cut-out solved to the knob by IK. Every frame is drawn from <code>clips/p07_turn_me_up.json</code>; nothing is filtered video.</p>
+    <h2>Ledger</h2>
+    <div class="ledger" id="ledger"></div>
+    <h2>Joins in this shot</h2>
+    <ol class="joins">
+      <li><b>Touch</b>: her fingertip is on the 1956 knob; the knob angle sets the level.</li>
+      <li><b>Screen</b>: the archive plays on the AI canopy, behind its palms and pillars.</li>
+      <li><b>Answer</b>: after the line, the 1956 hand on the same knob, captioned.</li>
+    </ol>
+    <h2>Measured</h2>
+    <div class="kv" id="measured"></div>
+    <h2>Now</h2>
+    <div class="kv" id="state"></div>
+  </aside>
+</main>
+<pre id="selftest" style="display:none"></pre>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const q = new URLSearchParams(location.search);
+if (q.get('capture')) document.body.classList.add('capture');
+const cv = $('#c'), ctx = cv.getContext('2d');
+const W = 1920, H = 1080;
+let CLIP, SET, ASSETS, IMG = {}, ARCH = [], fIdx = 0, playing = false, showDbg = !!q.get('debug'), noFinish = false;
+const audio = new Audio('weave/voice/p07_659_675.wav'); audio.preload = 'auto';
+const AUDIO_OFF = 2.0; // the wav starts at 659.0 s on her clock; the passage starts at 661.0 s
+
+const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('img ' + src)); i.src = src; });
+const json = u => fetch(u).then(r => { if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); });
+
+async function boot() {
+  [CLIP, SET, ASSETS] = await Promise.all([json('weave/clips/p07_turn_me_up.json'), json('weave/set/set.json'), json('weave/assets/assets.json')]);
+  const need = {};
+  for (const a of ASSETS.assets) if (a.kind !== 'plate') need[a.id] = 'weave/' + a.file;
+  need.plate = 'weave/set/plate.jpg'; need.canopy = 'weave/set/canopy_mask.png'; need.led = 'weave/set/led.png'; need.crowdmask = 'weave/set/crowd_mask.png';
+  for (const c of SET.crowd) need[c.id] = 'weave/' + c.file;
+  const ids = Object.keys(need);
+  const ims = await Promise.all(ids.map(k => load(need[k])));
+  ids.forEach((k, i) => IMG[k] = ims[i]);
+  // archive frames used by the passage (canopy + inset)
+  const used = new Set();
+  for (const fr of CLIP.frames) { used.add(fr.arch); if (fr.inset) used.add(fr.inset.frame); }
+  const list = [...used].sort((a, b) => a - b);
+  const aims = await Promise.all(list.map(n => load('weave/archive/da69_frames/' + String(n).padStart(4, '0') + '.jpg')));
+  list.forEach((n, i) => ARCH[n] = aims[i]);
+  await document.fonts.ready;
+  buildStatic();
+  buildUI();
+  render(0);
+  window.WEAVE_READY = true;
+}
+
+// ---------- static layers ----------
+let canopyMask, ledTex, grain = [], crowdTint;
+function lumaToAlpha(img) { // the masks are greyscale PNGs; canvas compositing needs alpha
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height);
+  for (let i = 0; i < d.data.length; i += 4) { d.data[i + 3] = d.data[i]; d.data[i] = d.data[i + 1] = d.data[i + 2] = 255; }
+  x.putImageData(d, 0, 0); return c;
+}
+function buildStatic() {
+  canopyMask = lumaToAlpha(IMG.canopy); ledTex = IMG.led;
+  crowdTint = document.createElement('canvas'); crowdTint.width = W; crowdTint.height = H;
+  { const x = crowdTint.getContext('2d'); x.fillStyle = 'rgb(232,170,110)'; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'destination-in'; x.drawImage(lumaToAlpha(IMG.crowdmask), 0, 0); }
+  for (let g = 0; g < 6; g++) { // deterministic grain plates
+    const c = document.createElement('canvas'); c.width = 480; c.height = 270;
+    const x = c.getContext('2d'), d = x.createImageData(480, 270);
+    let s = 1234 + g * 99991;
+    for (let i = 0; i < d.data.length; i += 4) { s = (s * 1103515245 + 12345) & 0x7fffffff; const v = 128 + ((s >> 8) % 70) - 35; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+    x.putImageData(d, 0, 0); grain.push(c);
+  }
+}
+
+// ---------- perspective: archive frame onto the canopy quad, by affine triangles ----------
+function homography(src, dst) {
+  const A = [], b = [];
+  for (let i = 0; i < 4; i++) {
+    const [x, y] = src[i], [u, v] = dst[i];
+    A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v);
+  }
+  // gaussian elimination
+  for (let i = 0; i < 8; i++) {
+    let p = i; for (let r = i + 1; r < 8; r++) if (Math.abs(A[r][i]) > Math.abs(A[p][i])) p = r;
+    [A[i], A[p]] = [A[p], A[i]]; [b[i], b[p]] = [b[p], b[i]];
+    for (let r = 0; r < 8; r++) if (r !== i) { const f = A[r][i] / A[i][i]; for (let c = i; c < 8; c++) A[r][c] -= f * A[i][c]; b[r] -= f * b[i]; }
+  }
+  const h = b.map((v, i) => v / A[i][i]);
+  return (x, y) => { const w = h[6] * x + h[7] * y + 1; return [(h[0] * x + h[1] * y + h[2]) / w, (h[3] * x + h[4] * y + h[5]) / w]; };
+}
+function tri(c, img, s0, s1, s2, d0, d1, d2) {
+  c.save(); c.beginPath(); c.moveTo(...d0); c.lineTo(...d1); c.lineTo(...d2); c.closePath(); c.clip();
+  const [x0, y0] = s0, [x1, y1] = s1, [x2, y2] = s2, [u0, v0] = d0, [u1, v1] = d1, [u2, v2] = d2;
+  const den = x0 * (y1 - y2) + x1 * (y2 - y0) + x2 * (y0 - y1);
+  const a = (u0 * (y1 - y2) + u1 * (y2 - y0) + u2 * (y0 - y1)) / den, b = (v0 * (y1 - y2) + v1 * (y2 - y0) + v2 * (y0 - y1)) / den;
+  const cc = (u0 * (x2 - x1) + u1 * (x0 - x2) + u2 * (x1 - x0)) / den, d = (v0 * (x2 - x1) + v1 * (x0 - x2) + v2 * (x1 - x0)) / den;
+  const e = (u0 * (x1 * y2 - x2 * y1) + u1 * (x2 * y0 - x0 * y2) + u2 * (x0 * y1 - x1 * y0)) / den;
+  const f = (v0 * (x1 * y2 - x2 * y1) + v1 * (x2 * y0 - x0 * y2) + v2 * (x0 * y1 - x1 * y0)) / den;
+  c.transform(a, b, cc, d, e, f); c.drawImage(img, 0, 0); c.restore();
+}
+const canopyCv = document.createElement('canvas'); canopyCv.width = W; canopyCv.height = H;
+let HOM = null;
+function drawCanopy(img, alpha, frame) {
+  const c = canopyCv.getContext('2d');
+  c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; c.clearRect(0, 0, W, H);
+  const iw = img.width, ih = img.height;
+  if (!HOM) HOM = homography([[0, 0], [iw, 0], [iw, ih], [0, ih]], SET.canopy.quad);
+  const n = 10;
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const p = (a, b) => [a * iw / n, b * ih / n];
+    const s00 = p(i, j), s10 = p(i + 1, j), s01 = p(i, j + 1), s11 = p(i + 1, j + 1);
+    const d = s => HOM(s[0], s[1]);
+    // pad each destination triangle a hair to hide seams
+    tri(c, img, s00, s10, s11, d(s00), d(s10), d(s11)); tri(c, img, s00, s11, s01, d(s00), d(s11), d(s01));
+  }
+  // grade: the 1956 film is warm sepia; the LED canopy shows it through its dot pattern
+  c.globalCompositeOperation = 'color'; c.fillStyle = 'rgba(214,150,92,0.55)'; c.fillRect(0, 0, W, H);
+  c.globalCompositeOperation = 'overlay'; c.globalAlpha = 0.85; c.drawImage(ledTex, 0, 0);
+  c.globalAlpha = 1; c.globalCompositeOperation = 'destination-in'; c.drawImage(canopyMask, 0, 0);
+  ctx.save(); ctx.globalAlpha = alpha; ctx.drawImage(canopyCv, 0, 0); ctx.restore();
+}
+
+// ---------- the frame ----------
+function setCam(fr, k) { // camera for a plane with parallax factor k: zoom 1+(z-1)k about a centre that moves k of the way
+  const z = 1 + (fr.cam.z - 1) * k, [cx, cy] = fr.cam.c;
+  const ox = 960 + (cx - 960) * Math.min(1, k), oy = 540 + (cy - 540) * Math.min(1, k);
+  ctx.setTransform(z, 0, 0, z, 960 - ox * z, 540 - oy * z);
+}
+function weave(f) { // gate weave, deterministic
+  const s = Math.sin(f * 1.7) * 0.6 + Math.sin(f * 0.37) * 0.5;
+  return [s, Math.cos(f * 1.3) * 0.5];
+}
+function render(f) {
+  fIdx = f;
+  const fr = CLIP.frames[f], sc = CLIP.scene;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  const [wx, wy] = noFinish ? [0, 0] : weave(f);
+  ctx.translate(wx, wy);
+  ctx.save();
+  // ---- plate group (k = 0.35): AI plate, canopy screen, crowd ----
+  setCam(fr, 0.35); ctx.translate(wx, wy);
+  ctx.drawImage(IMG.plate, 0, 0);
+  drawCanopy(ARCH[fr.arch], 0.12 + 0.86 * fr.mix, f);
+  // canopy light falls on the crowd
+  ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.55 * fr.mix; ctx.drawImage(crowdTint, 0, 0); ctx.restore();
+  SET.crowd.forEach((c, i) => {
+    const im = IMG[c.id], a = (fr.tilt[i] || 0) * Math.PI / 180;
+    ctx.save(); ctx.translate(c.pos[0] + c.pivot[0], c.pos[1] + c.pivot[1]); ctx.rotate(a); ctx.drawImage(im, -c.pivot[0], -c.pivot[1]); ctx.restore();
+  });
+  if (fr.label_canopy > 0) { // the archive is labelled as long as it shows
+    ctx.save(); ctx.globalAlpha = fr.label_canopy; ctx.translate(1080, 150); ctx.rotate(-0.05);
+    letter('ARCHIVE · SOUND AND THE STORY · 1956', 0, 0, 26, '#fff3e0', '#2a1608');
+    ctx.restore();
+  }
+  ctx.restore();
+  // ---- stage group (k = 1): floor, box, console, puppet ----
+  ctx.save(); setCam(fr, 1.0); ctx.translate(wx, wy);
+  drawFloor(); drawBox(sc.box);
+  const con = IMG.console_base, cs = sc.console.scale, [cx0, cy0] = sc.console.tl;
+  shadowRect(cx0 + 10, cy0 + 12, con.width * cs, con.height * cs);
+  ctx.drawImage(con, cx0, cy0, con.width * cs, con.height * cs);
+  // knob: the 1956 knob turns with her hand
+  const kn = IMG.knob_mid, kA = ASSETS.assets.find(a => a.id === 'knob_mid');
+  ctx.save(); ctx.translate(sc.knob_center[0], sc.knob_center[1]); ctx.rotate(fr.knob * Math.PI / 180); ctx.scale(cs, cs);
+  ctx.drawImage(kn, -kA.pivot[0], -kA.pivot[1]); ctx.restore();
+  // drawn needle (grease pencil): reads level x measured archive loudness
+  drawNeedle(sc, fr, f);
+  ctx.save(); ctx.translate(cx0 + con.width * cs - 190, cy0 + 34); ctx.rotate(0.03);
+  letter('ARCHIVE · 1956', 0, 0, 20, '#1d130b', '#f1e3c8'); ctx.restore();
+  // contact shadow under the feet
+  ctx.save(); ctx.globalCompositeOperation = 'multiply'; const g = ctx.createRadialGradient(sc.hip[0] + 20, sc.ground, 4, sc.hip[0] + 20, sc.ground, 150);
+  g.addColorStop(0, 'rgba(0,0,0,.55)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(sc.hip[0] + 20, sc.ground + 2, 150, 18, 0, 0, 7); ctx.fill(); ctx.restore();
+  // puppet, back to front
+  for (const o of fr.ops) {
+    const [id, a, b, c, d, e, ff] = o;
+    ctx.save(); ctx.transform(a, b, c, d, e, ff);
+    ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 10; ctx.shadowOffsetX = 5; ctx.shadowOffsetY = 6;
+    ctx.drawImage(IMG[id], 0, 0); ctx.restore();
+  }
+  // rim light from the canopy on the puppet, in proportion to the canopy
+  if (showDbg) drawDebug(fr);
+  ctx.restore();
+  // ---- screen space: the answer inset ----
+  if (fr.inset) drawInset(fr.inset);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (!noFinish) finish(f);
+  if (!document.body.classList.contains('capture')) updateUI(fr);
+}
+function letter(txt, x, y, size, fill, back) { // hand-lettered tape label
+  ctx.font = `${size}px 'Permanent Marker', cursive`;
+  const w = ctx.measureText(txt).width;
+  ctx.fillStyle = back; ctx.beginPath();
+  ctx.moveTo(x - 10, y - size * 0.95); ctx.lineTo(x + w + 12, y - size * 1.02); ctx.lineTo(x + w + 9, y + size * 0.32); ctx.lineTo(x - 8, y + size * 0.38); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = fill; ctx.fillText(txt, x, y);
+}
+function drawFloor() {
+  const y = CLIP.scene.ground;
+  const g = ctx.createLinearGradient(0, y - 10, 0, H + 40); g.addColorStop(0, '#6b4a2c'); g.addColorStop(1, '#2a1a0e');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-200, y - 6); for (let x = -200; x <= W + 200; x += 40) ctx.lineTo(x, y - 6 + ((x * 7919) % 5)); ctx.lineTo(W + 200, H + 200); ctx.lineTo(-200, H + 200); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 2; for (let x = -200; x < W + 200; x += 9) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, H + 200); ctx.stroke(); }
+}
+function drawBox(b) { // cardboard stand under the console (drawn, invented)
+  const [x0, y0, x1, y1] = b;
+  const g = ctx.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, '#8a6038'); g.addColorStop(.5, '#a8794a'); g.addColorStop(1, '#7a5230');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0 + 2); ctx.lineTo(x1 - 4, y1); ctx.lineTo(x0 + 3, y1); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(40,24,10,.35)'; ctx.lineWidth = 2; for (let x = x0 + 6; x < x1; x += 11) { ctx.beginPath(); ctx.moveTo(x, y0 + 4); ctx.lineTo(x - 2, y1); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(30,18,8,.6)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x0 + 10, y0 + 120); ctx.lineTo(x1 - 14, y0 + 124); ctx.stroke();
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(x0, y0, x1 - x0, 14);
+}
+function shadowRect(x, y, w, h) { ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.filter = 'blur(12px)'; ctx.fillRect(x, y, w, h); ctx.restore(); }
+function drawNeedle(sc, fr, f) {
+  const [px, py] = sc.needle_pivot, a = fr.needle * Math.PI / 180, L = sc.needle_len;
+  const j = (f >> 1) * 7.13; // boils on twos: a drawn line, on purpose, on its own layer
+  ctx.save(); ctx.strokeStyle = '#1b0e08'; ctx.lineCap = 'round';
+  for (let k = 0; k < 2; k++) {
+    ctx.lineWidth = 3.2 - k; ctx.beginPath();
+    ctx.moveTo(px + Math.sin(j + k) * 0.8, py + Math.cos(j * 1.3 + k) * 0.8);
+    ctx.lineTo(px + Math.cos(a) * L + Math.sin(j * 0.7 + k) * 1.2, py + Math.sin(a) * L + Math.cos(j + k) * 1.2); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawInset(ins) { // the archive answers: a 1956 hand on the same knob
+  const im = ARCH[ins.frame]; if (!im) return;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = ins.alpha;
+  ctx.translate(1440, 650); ctx.rotate(0.03);
+  const w = 400, h = 300;
+  ctx.fillStyle = '#efe8dc'; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10; ctx.fillRect(-12, -12, w + 24, h + 64);
+  ctx.shadowColor = 'transparent'; ctx.drawImage(im, 0, 0, w, h);
+  ctx.font = "22px 'Permanent Marker', cursive"; ctx.fillStyle = '#20140c';
+  ctx.fillText('1956 · a hand on the same knob', 2, h + 30);
+  ctx.font = "13px 'JetBrains Mono', monospace"; ctx.fillStyle = '#5a4634'; ctx.fillText('ARCHIVE · Sound And The Story (1956)', 2, h + 48);
+  ctx.restore();
+}
+function finish(f) { // one film finish over the whole frame
+  ctx.save(); ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.16; ctx.drawImage(grain[f % 6], 0, 0, W, H); ctx.restore();
+  const v = ctx.createRadialGradient(960, 540, 420, 960, 540, 1150); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.55)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(18,10,4,.06)'; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over';
+}
+function drawDebug(fr) {
+  ctx.save(); ctx.lineWidth = 3;
+  ctx.strokeStyle = fr.contact === 'grip' ? '#5dff8a' : '#ff5d5d';
+  ctx.beginPath(); ctx.arc(fr.grip[0], fr.grip[1], 9, 0, 7); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(fr.tip[0], fr.tip[1], 4, 0, 7); ctx.fill();
+  // path of the fingertip over the passage (arc check)
+  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.5; ctx.beginPath();
+  CLIP.frames.forEach((g, i) => i ? ctx.lineTo(g.tip[0], g.tip[1]) : ctx.moveTo(g.tip[0], g.tip[1])); ctx.stroke();
+  ctx.restore();
+}
+
+// ---------- UI ----------
+const COLORS = ['#7fd3c4', '#9fc6e8', '#e7a35a', '#e98f6a', '#f0c36a', '#ffd38a', '#d98bb0', '#b9c46a', '#a9a0d6'];
+function buildUI() {
+  const N = CLIP.frames.length, dur = N / 24;
+  $('#scrub').max = N - 1;
+  const rb = $('#ribbon');
+  CLIP.states.forEach((s, i) => {
+    const d = document.createElement('div'); d.className = 'st'; d.style.left = (100 * s.t[0] / dur) + '%'; d.style.width = (100 * (s.t[1] - s.t[0]) / dur) + '%';
+    d.style.background = COLORS[i % COLORS.length]; d.title = s.visible; d.textContent = s.id.replace(/^S\d_/, ''); rb.appendChild(d);
+  });
+  for (const w of CLIP.words) { const t = w.t0 - CLIP.clock.t0; if (t < 0 || t > dur) continue; const d = document.createElement('div'); d.className = 'wd'; d.style.left = (100 * t / dur) + '%'; d.textContent = w.w; rb.appendChild(d); }
+  const ph = document.createElement('div'); ph.className = 'ph'; ph.id = 'ph'; rb.appendChild(ph);
+  rb.onclick = e => { const r = rb.getBoundingClientRect(); seek(Math.round((e.clientX - r.left) / r.width * (N - 1))); };
+  $('#scrub').oninput = e => seek(+e.target.value);
+  $('#play').onclick = () => playing ? pause() : play();
+  $('#dbg').onclick = e => { showDbg = !showDbg; e.target.classList.toggle('on', showDbg); render(fIdx); };
+  $('#raw').onclick = e => { noFinish = !noFinish; e.target.classList.toggle('on', noFinish); render(fIdx); };
+  // ledger
+  const L = [
+    ['OBSERVED', 'Her voice: "So DJ please turn me up" (WYGWYL suite recording, 661.0–674.8 s). Word times by faster-whisper.'],
+    ['OBSERVED', 'Sound And The Story (1956), clip da69b1ba: the canopy footage, the knob, the inset hand. <a style="color:var(--obs)" href="' + SET.archive.page + '" target="_blank">archive page</a>'],
+    ['RETOUCHED', 'The console: one 1956 frame (3.75 s), upscaled 4×, meter needle painted out so a drawn needle can show the level.'],
+    ['INVENTED', 'Atlantis: WYGWYL poem 07 AI plate (keyframe 60, held). Crowd figures cut from it; the floor under them painted.'],
+    ['INVENTED', 'The puppet: generated cardboard parts, cut and rigged here. The rule that the knob drives the canopy.'],
+    ['DRAWN', 'The needle, the labels, the cardboard stand and floor.'],
+  ];
+  $('#ledger').innerHTML = L.map(([k, v]) => `<div><b class="${k}">${k}</b><span>${v}</span></div>`).join('');
+  const v = CLIP.validation;
+  const ok = v.fingertip_err_pct_height < 1;
+  $('#measured').innerHTML = [
+    ['puppet height', v.puppet_height_px + ' px'], ['grip frames', v.grip_frames],
+    ['fingertip error max', `<span class="${ok ? 'pass' : 'fail'}">${v.fingertip_err_px.max} px (${v.fingertip_err_pct_height}% of height)</span>`],
+    ['sole drift', v.sole_drift_px + ' px'],
+    ...v.overlaps.map(o => [`overlap @${o.t}s`, `body/console ${o.body_over_console_px} · arm/meter ${o.arm_over_meter_px}`]),
+  ].map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('');
+  drawGraph();
+}
+function drawGraph() {
+  const g = $('#graph'), x = g.getContext('2d'), N = CLIP.frames.length;
+  x.clearRect(0, 0, g.width, g.height);
+  const line = (key, col, sc = 1) => { x.strokeStyle = col; x.lineWidth = 2; x.beginPath(); CLIP.frames.forEach((fr, i) => { const v = typeof key === 'function' ? key(fr) : fr[key]; const px = i / (N - 1) * g.width, py = g.height - 8 - (v * sc) * (g.height - 16); i ? x.lineTo(px, py) : x.moveTo(px, py); }); x.stroke(); };
+  line('level', '#e7a35a'); line('mix', '#7fd3c4'); line('loud', 'rgba(255,255,255,.35)'); line(fr => fr.err == null ? 0 : fr.err / 10, '#ff7b6b');
+  x.font = '18px JetBrains Mono'; x.fillStyle = '#e7a35a'; x.fillText('level', 8, 22); x.fillStyle = '#7fd3c4'; x.fillText('canopy', 80, 22); x.fillStyle = '#bbb'; x.fillText('archive loudness', 170, 22); x.fillStyle = '#ff7b6b'; x.fillText('tip error /10px', 370, 22);
+}
+function updateUI(fr) {
+  $('#tc').textContent = fr.t.toFixed(2) + ' s · clock ' + fr.clock.toFixed(2);
+  $('#scrub').value = fr.f;
+  $('#ph').style.left = (100 * fr.f / (CLIP.frames.length - 1)) + '%';
+  const st = CLIP.states.find(s => fr.t >= s.t[0] && fr.t < s.t[1]) || CLIP.states[CLIP.states.length - 1];
+  const word = CLIP.words.filter(w => w.t0 - CLIP.clock.t0 <= fr.t).pop();
+  $('#now').innerHTML = `<em>${st.id}</em> — ${st.visible}${word ? ' · word: <em>' + word.w + '</em>' : ''}`;
+  $('#state').innerHTML = [['knob', fr.knob.toFixed(1) + '°'], ['level', fr.level.toFixed(2)], ['canopy', fr.mix.toFixed(2)], ['archive frame', fr.arch], ['contact', fr.contact + (fr.err != null ? ' · ' + fr.err.toFixed(2) + ' px' : '')], ['camera', 'z ' + fr.cam.z.toFixed(2)]]
+    .map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('');
+}
+function seek(f) { render(Math.max(0, Math.min(CLIP.frames.length - 1, f))); if (playing) audio.currentTime = fIdx / 24 + AUDIO_OFF; }
+let t0wall = 0, raf = 0;
+function play() { playing = true; $('#play').textContent = '❚❚ pause'; audio.currentTime = fIdx / 24 + AUDIO_OFF; audio.play().catch(() => {}); t0wall = performance.now() - fIdx / 24 * 1000; tick(); }
+function pause() { playing = false; $('#play').textContent = '▶ play'; audio.pause(); cancelAnimationFrame(raf); }
+function tick() {
+  if (!playing) return;
+  const t = !audio.paused && audio.currentTime > 0 ? audio.currentTime - AUDIO_OFF : (performance.now() - t0wall) / 1000;
+  const f = Math.floor(t * 24);
+  if (f >= CLIP.frames.length) { pause(); render(CLIP.frames.length - 1); return; }
+  if (f !== fIdx) render(Math.max(0, f));
+  raf = requestAnimationFrame(tick);
+}
+window.renderFrame = f => { render(f); return true; };
+window.frameJPEG = (f, qual = 0.92) => { render(f); return cv.toDataURL('image/jpeg', qual); };
+boot().then(() => {
+  if (q.get('f')) render(+q.get('f'));
+  if (q.get('selftest')) selftest();
+}).catch(e => { document.body.insertAdjacentHTML('afterbegin', `<pre style="color:#ff7b6b;padding:12px">boot failed: ${e.message}</pre>`); console.error(e); });
+
+function selftest() {
+  const out = $('#selftest'); out.style.display = 'block'; const L = [];
+  const ok = (c, m) => L.push((c ? 'PASS ' : 'FAIL ') + m);
+  ok(CLIP.frames.length === CLIP.clock.frames, 'frame count matches clock');
+  ok(Object.keys(IMG).length >= 15, 'images loaded: ' + Object.keys(IMG).length);
+  ok(CLIP.validation.fingertip_err_pct_height < 1, 'fingertip error under 1% of height');
+  ok(CLIP.frames.every(fr => fr.ops.length === 11), 'every frame has 11 puppet parts');
+  const a = cv.toDataURL('image/png'); render(0); const b = cv.toDataURL('image/png'); render(fIdx);
+  ok(a.length > 1000 && b.length > 1000, 'canvas draws');
+  render(10); const r1 = cv.toDataURL(); render(200); render(10); const r2 = cv.toDataURL(); ok(r1 === r2, 'frame 10 renders the same after frame 200 (deterministic)');
+  ok(CLIP.frames.some(fr => fr.inset), 'answer inset present');
+  ok(CLIP.frames.filter(fr => fr.mix > 0.6).length > 48, 'result held on screen > 2 s');
+  out.textContent = L.join('\n') + '\nDONE';
+}
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>
