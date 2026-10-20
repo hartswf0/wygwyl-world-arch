@@ -1,0 +1,148 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WYGWYL · Arena Compare · Bolas / coded cardboard / generated</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#17110a;color:#f0e3d0;font:14px/1.5 ui-monospace,Menlo,monospace;padding:0 16px 60px}
+.wrap{max-width:1600px;margin:0 auto}
+header{padding:20px 0 14px;border-bottom:2px solid #4a3a28;display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+h1{font:800 17px/1 ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#e6a15c}
+a{color:#e6a15c}
+select,input,button{background:#241a10;color:#f0e3d0;border:1px solid #4a3a28;font:inherit;padding:6px 9px}
+button{cursor:pointer}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 0}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px}
+@media(max-width:1000px){.three{grid-template-columns:1fr}}
+.pane{border:1px solid #4a3a28;background:#0f0b06;display:flex;flex-direction:column;min-width:0}
+.pane h2{font:800 11px/1 ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;
+ padding:9px 10px;border-bottom:1px solid #4a3a28;color:#caa06a;display:flex;justify-content:space-between}
+.pane h2 em{font-style:normal;color:#7a6a58}
+canvas{width:100%;height:auto;display:block;background:#0b0804}
+.notes{padding:9px 10px;font:11px/1.55 ui-monospace,monospace;color:#a08a6a;min-height:92px;border-top:1px solid #241a10}
+.bad{color:#ff8a6a}.good{color:#8ad88a}.none{color:#6a5a48}
+.verdict{font-weight:700}
+.legend{margin-top:18px;border-top:1px solid #4a3a28;padding-top:14px;color:#a08a6a;font-size:12px;max-width:95ch}
+.legend b{color:#f0e3d0}
+.count{color:#caa06a}
+</style></head><body><div class="wrap">
+<header>
+ <a href="arena.html">← Acting Arena</a>
+ <h1>Compare</h1>
+ <span style="color:#7a6a58">the same frame three ways: what Bolas did, what the cards do, what was generated</span>
+</header>
+
+<div class="bar">
+ <label>challenge <select id="ch"></select></label>
+ <label>cardboard <select id="skin"><option value="man">man</option><option value="poet">poet</option></select></label>
+ <button id="prev">◀</button>
+ <input id="f" type="range" min="0" value="0" style="width:min(460px,46vw)">
+ <button id="next">▶</button>
+ <span id="fno" class="count">0 / 0</span>
+ <button id="jump">jump to a generated frame</button>
+</div>
+
+<div class="three">
+ <div class="pane"><h2>1 · Bolas <em>3D ground truth</em></h2>
+   <canvas id="c0" width="860" height="620"></canvas><div class="notes" id="n0"></div></div>
+ <div class="pane"><h2>2 · Coded cardboard <em>cards on the skeleton</em></h2>
+   <canvas id="c1" width="860" height="620"></canvas><div class="notes" id="n1"></div></div>
+ <div class="pane"><h2>3 · Generated <em>in situ, decompiled</em></h2>
+   <canvas id="c2" width="860" height="620"></canvas><div class="notes" id="n2"></div></div>
+</div>
+
+<div class="legend">
+ <p><b>What this is for.</b> Panel 2 is panel 1 with flat cards hung on it, so every
+ difference between them is a defect of the cards, not of the motion. Panel 3 is the
+ same frame as a pose generated already in that perspective and cut up — when one
+ exists.</p>
+ <p id="cover"></p>
+</div>
+
+<script>
+const PANES=[0,1,2], IMG={}, CLIPS={};
+const $=s=>document.querySelector(s);
+const load=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error(src));i.src=src;});
+const IDS=[...Array(32)].map((_,i)=>'ACT-'+String(i+1).padStart(3,'0'));
+IDS.forEach(id=>{const o=document.createElement('option');o.value=id;o.textContent=id;$('#ch').appendChild(o);});
+
+async function getClip(name){
+  if(CLIPS[name]) return CLIPS[name];
+  const r=await fetch('arena/clips/'+name+'.json');
+  if(!r.ok) return null;
+  const d=await r.json();
+  const ids=Object.keys(d.images||{}).filter(k=>!IMG[k]);
+  const ims=await Promise.all(ids.map(k=>load('arena/'+d.images[k]).catch(()=>null)));
+  ids.forEach((k,i)=>{ if(ims[i]) IMG[k]=ims[i]; });
+  CLIPS[name]=d; return d;
+}
+function draw(cv, clip, fi, useCards){
+  const c=cv.getContext('2d');
+  c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,cv.width,cv.height);
+  if(!clip){ c.fillStyle='#6a5a48'; c.font='13px ui-monospace'; c.fillText('no clip',16,28); return; }
+  const fr=clip.frames[Math.min(fi,clip.frames.length-1)]; if(!fr) return;
+  // on a swapped frame the clip now carries both: the cards AND the generated
+  // pose. Panel 2 draws the cards, panel 3 the swap, so the difference is visible.
+  let ops=fr.draw;
+  if(useCards==='cards'&&fr.cards) ops=fr.draw.filter(o=>o.t!=='img').concat(fr.cards);
+  if(useCards==='gen'&&!fr.cards&&fr.draw) ops=fr.draw;
+  // fit the staged world into the canvas
+  const S=cv.height/1100, OX=cv.width/2-860*S/2*0+0;
+  c.save(); c.scale(S,S); c.translate((cv.width/S-1720)/2,0);
+  for(const o of ops){
+    if(o.t==='bg'){ c.fillStyle='#2a1d10'; c.fillRect(-2000,-2000,8000,8000); }
+    else if(o.t==='floor'){ c.fillStyle='#43301c'; c.fillRect(-2000,o.y,8000,3000); c.strokeStyle='#6a5030'; c.beginPath(); c.moveTo(-2000,o.y); c.lineTo(6000,o.y); c.stroke(); }
+    else if(o.t==='shadow'){ c.save(); c.fillStyle='rgba(0,0,0,.45)'; c.beginPath(); c.ellipse(o.x,o.y,o.rx||40,(o.rx||40)*0.2,0,0,7); c.fill(); c.restore(); }
+    else if(o.t==='img'){ const im=IMG[o.id]; if(!im) continue; c.save(); c.transform(...o.m); c.drawImage(im,0,0); c.restore(); }
+    else if(o.t==='poly'&&o.pts){ c.beginPath(); o.pts.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1])); c.closePath();
+      if(o.fill){c.fillStyle=o.fill;c.fill();} if(o.stroke){c.strokeStyle=o.stroke;c.lineWidth=o.w||2;c.stroke();} }
+    else if(o.t==='line'&&o.pts){ c.beginPath(); o.pts.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));
+      c.strokeStyle=o.color||'#d9c49a'; c.lineWidth=o.w||3; c.stroke(); }
+  }
+  c.restore();
+  return fr;
+}
+function notes(el, clip, fr, kind){
+  if(!clip){ el.innerHTML='<span class="none">no clip for this combination.</span>'; return; }
+  const T=clip.technical||{};
+  if(kind==='gen'){
+    const ok=(fr&&fr.ok||[]).filter(x=>/in situ/.test(x));
+    el.innerHTML = ok.length
+      ? '<span class="good verdict">generated pose in use</span><br>'+ok.join('<br>')
+      : '<span class="none">Nothing has been generated for this frame.</span><br>'
+        +'<span class="none">Three poses exist in the whole arena — man crouch f72, poet crouch f72, '
+        +'poet floor recovery — covering 37 of 7,160 frames.</span>';
+    return;
+  }
+  const fl=(fr&&fr.flags)||[];
+  const swapped=!!(fr&&fr.cards);
+  const v=T.result==='pass'?'<span class="good verdict">PASS</span>':'<span class="bad verdict">FAIL</span>';
+  el.innerHTML = v+'  <span class="none">'+(fr&&fr.beat?fr.beat:'')+'</span><br>'
+   +(kind==='bolas'
+     ? '<span class="none">drift '+(T.worst_planted_drift_cm_per_frame??'–')+' cm/f · balance '+(T.balanced_pct_of_grounded_frames??'–')+'%</span>'
+     : 'worst brad gap '+(T.worst_brad_gap_cm??'–')+' cm <span class="none">(tol 2.0)</span><br>'
+       +(fl.length?'<span class="bad">'+fl.join('<br>')+'</span>':'<span class="good">no flag on this frame</span>')
+       +(swapped?'<br><span class="none">cards shown; this frame is swapped in the film</span>':''));
+}
+let N=0;
+async function render(){
+  const id=$('#ch').value, skin=$('#skin').value, fi=+$('#f').value;
+  const [b,card,gen]=await Promise.all([getClip(id+'__bolas'),getClip(id+'__'+skin),getClip(id+'__'+skin)]);
+  N=Math.max(b?b.frames.length:0, card?card.frames.length:0);
+  $('#f').max=Math.max(0,N-1); $('#fno').textContent=fi+' / '+N;
+  const f0=draw($('#c0'),b,fi), f1=draw($('#c1'),card,fi,'cards'), f2=draw($('#c2'),gen,fi,'gen');
+  notes($('#n0'),b,f0,'bolas'); notes($('#n1'),card,f1,'card'); notes($('#n2'),gen,f2,'gen');
+  const tot=(card&&card.frames||[]).filter(x=>(x.ok||[]).some(k=>/in situ/.test(k))).length;
+  $('#cover').innerHTML='<b>Coverage.</b> This clip has <span class="count">'+tot+'</span> frames with a generated pose, of '
+    +(card?card.frames.length:0)+'. Across the whole arena: <span class="count">37 of 7,160</span> — 0.5%, from three generated images, in two of thirty-two challenges.';
+}
+$('#ch').onchange=$('#skin').onchange=$('#f').oninput=render;
+$('#prev').onclick=()=>{$('#f').value=Math.max(0,+$('#f').value-1);render();};
+$('#next').onclick=()=>{$('#f').value=Math.min(N-1,+$('#f').value+1);render();};
+$('#jump').onclick=async()=>{
+  const id=$('#ch').value,skin=$('#skin').value; const d=await getClip(id+'__'+skin); if(!d)return;
+  const i=d.frames.findIndex(x=>(x.ok||[]).some(k=>/in situ/.test(k)));
+  if(i<0){ $('#cover').innerHTML='<b>Nothing generated in '+id+'.</b> Try ACT-003 (man or poet) or ACT-008 (poet) — they are the only two.'; return; }
+  $('#f').value=i; render();
+};
+$('#ch').value='ACT-003'; $('#f').value=72; render();
+</script></div></body></html>

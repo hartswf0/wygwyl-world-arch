@@ -584,27 +584,42 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
             is_crouch_peak = (tid == 'T103' and 66 <= fi <= 78)
             is_floor_peak = (tid == 'T108' and 115 <= fi <= 125)
 
+            cards_alt = None
+            if (is_crouch_peak or is_floor_peak) and skin in ('man', 'poet'):
+                try:
+                    if skin == 'poet':
+                        cards_alt = draw_poet(jj, H_fig, flip=flip,
+                                              far_arm_side=far_arm_side, near_arm_side=near_arm_side,
+                                              far_leg_side=far_leg_side, near_leg_side=near_leg_side)
+                    else:
+                        cards_alt = draw_man(jj, H_fig, flip=flip, fwd_ang=fwd_ang, is_front=is_front,
+                                             far_arm_side=far_arm_side, near_arm_side=near_arm_side,
+                                             far_leg_side=far_leg_side, near_leg_side=near_leg_side,
+                                             h_shape_L=get_hand_shape('L'), h_shape_R=get_hand_shape('R'))
+                except Exception as _e:
+                    cards_alt = None
+
             if is_crouch_peak and skin == 'man':
                 S_man = H_fig / 984.0
                 tx = pelvis_2d[0] - 250 * S_man
                 ty = floor_y - 723 * S_man
                 draw.append({'t': 'img', 'id': 'man.pose.crouch_f72',
                              'm': [round(S_man, 5), 0.0, 0.0, round(S_man, 5), round(tx, 2), round(ty, 2)]})
-                ok_flags.append('in situ pose swap: man.pose.crouch_f72 (0cm brad gap)')
+                ok_flags.append('in situ pose swap: man.pose.crouch_f72 (gap not measured: the whole figure is one card)')
             elif is_crouch_peak and skin == 'poet':
                 S_poet = H_fig / 1109.0
                 tx = pelvis_2d[0] - 280 * S_poet
                 ty = floor_y - 747 * S_poet
                 draw.append({'t': 'img', 'id': 'poet.pose.crouch_f72',
                              'm': [round(S_poet, 5), 0.0, 0.0, round(S_poet, 5), round(tx, 2), round(ty, 2)]})
-                ok_flags.append('in situ pose swap: poet.pose.crouch_f72 (0cm brad gap)')
+                ok_flags.append('in situ pose swap: poet.pose.crouch_f72 (gap not measured: the whole figure is one card)')
             elif is_floor_peak and skin == 'poet':
                 S_poet = H_fig / 1109.0
                 tx = pelvis_2d[0] - 400 * S_poet
                 ty = floor_y - 896 * S_poet + 20
                 draw.append({'t': 'img', 'id': 'poet.pose.floor_recovery',
                              'm': [round(S_poet, 5), 0.0, 0.0, round(S_poet, 5), round(tx, 2), round(ty, 2)]})
-                ok_flags.append('in situ pose swap: poet.pose.floor_recovery (0cm brad gap)')
+                ok_flags.append('in situ pose swap: poet.pose.floor_recovery (gap not measured: the whole figure is one card)')
             elif skin == 'poet':
                 draw.extend(draw_poet(jj, H_fig, flip=flip,
                                       far_arm_side=far_arm_side, near_arm_side=near_arm_side,
@@ -633,7 +648,12 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
                 draw.extend(draw_leg(near_leg_side, is_far=False))
                 draw.extend(draw_arm(near_arm_side, is_far=False))
 
-            # Failure / Defect instrumentation (skipped on in situ pose swapped frames)
+            # Failure / Defect instrumentation. Skipped on a swapped frame because
+            # there are no cards to measure between — the swap draws ONE image. So
+            # '0cm brad gap' was never a result: it is what you get for asking a
+            # question about joints of a picture that has none. The honest reading
+            # is 'not measured', and it stays that way until the generated pose is
+            # decompiled into pieces that register to the joints.
             if not is_crouch_peak and not is_floor_peak:
                 cm_scale = H_fig / 170.0
                 if skin == 'poet':
@@ -756,6 +776,7 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
             'dbg': dbg,
             'flags': flags,
             'ok': ok_flags,
+            **({'cards': cards_alt} if cards_alt else {}),
             'beat': ''   # filled from the detected beats once the motion is known
         })
 
