@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WYGWYL · Acting Arena · cut-out performance challenges with technical checks</title>
+<meta name="description" content="The Acting Arena: 32 situated performance challenges run on a cardboard cut-out rig, solved frame by frame in Python, with contact, weight, penetration and prop checks recorded separately from performance notes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--ok:#9fe08a;--bad:#ff7b6b;--acc:#e7a35a;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font:400 22px 'Permanent Marker',cursive;margin:0}
+header h1 small{font:12px var(--mono);color:var(--dim);margin-left:10px;letter-spacing:.08em}
+header a{color:var(--dim);font:12px var(--mono);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:999px;transition:border-color .15s,color .15s}
+header a:hover{color:var(--ink);border-color:var(--card)}
+main{display:grid;grid-template-columns:260px minmax(0,1fr) 360px;min-height:calc(100vh - 54px)}
+nav#list{border-right:1px solid var(--line);overflow:auto;max-height:calc(100vh - 54px);padding:10px}
+nav#list .fam{font:600 10px var(--mono);letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin:12px 4px 4px}
+nav#list button{display:grid;grid-template-columns:62px 1fr auto;gap:6px;width:100%;text-align:left;background:none;border:1px solid transparent;color:var(--ink);padding:5px 6px;border-radius:6px;cursor:pointer;font:12px Inter}
+nav#list button:hover{border-color:var(--line);background:var(--panel)}
+nav#list button.on{border-color:var(--card);background:#21190f}
+nav#list button[disabled]{opacity:.38;cursor:default}
+nav#list code{font:11px var(--mono);color:var(--dim)}
+.pill{font:600 9.5px var(--mono);padding:1px 6px;border-radius:999px;align-self:center}
+.pill.pass{background:#1f3a1a;color:var(--ok)}.pill.fail{background:#3d1712;color:var(--bad)}.pill.none{color:var(--dim)}
+#stagewrap{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+canvas#c{width:100%;aspect-ratio:16/9;background:#000;border-radius:6px;box-shadow:0 20px 60px #000a;display:block}
+.bar{display:flex;align-items:center;gap:10px;font:12px var(--mono);color:var(--dim);flex-wrap:wrap}
+.bar button,.bar select{background:var(--panel);border:1px solid var(--line);color:var(--ink);font:12px var(--mono);padding:6px 12px;border-radius:999px;cursor:pointer;transition:border-color .15s,transform .1s}
+.bar button:hover{border-color:var(--card)}.bar button:active{transform:scale(.97)}
+.bar button.on{background:var(--card);color:#1a120b;border-color:var(--card)}
+#scrub{flex:1;accent-color:var(--card);min-width:200px}
+#strip{position:relative;height:40px;border-radius:6px;background:var(--panel);border:1px solid var(--line);cursor:pointer;overflow:hidden}
+#strip .bt{position:absolute;top:2px;font:10px var(--mono);color:var(--dim);white-space:nowrap;transform:translateX(-1px);border-left:1px solid #fff3;padding-left:3px}
+#strip .fl{position:absolute;bottom:0;height:8px;background:var(--bad)}
+#strip .ac{position:absolute;bottom:8px;height:4px;background:#e7a35a99}
+#strip .ph{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 6px #fff}
+aside{border-left:1px solid var(--line);padding:16px;overflow:auto;max-height:calc(100vh - 54px)}
+aside h2{font:600 10.5px var(--mono);letter-spacing:.16em;color:var(--dim);margin:18px 0 8px;text-transform:uppercase}
+aside h2:first-child{margin-top:0}
+.kv{font:12px var(--mono);display:grid;grid-template-columns:1fr auto;gap:4px 10px}
+.kv span:nth-child(odd){color:var(--dim)}
+.pass{color:var(--ok)}.fail{color:var(--bad)}
+.flags div{font:11.5px var(--mono);padding:3px 0;border-bottom:1px dashed var(--line)}
+.flags b{color:var(--bad);font-weight:600}
+#now{font:12px var(--mono);color:var(--dim);min-height:34px}
+#now em{color:var(--ink);font-style:normal}
+#now .f{color:var(--bad)}
+p.small{font-size:12.5px;color:var(--dim);margin:4px 0}
+body.capture header,body.capture aside,body.capture nav,body.capture .bar,body.capture #strip,body.capture #now{display:none}
+body.capture main{display:block}body.capture #stagewrap{padding:0}
+body.capture canvas#c{width:auto;height:auto;border-radius:0;box-shadow:none}
+@media (max-width:1200px){main{grid-template-columns:1fr}nav#list,aside{border:0;max-height:none}}
+</style>
+</head>
+<body>
+<header>
+  <a href="../index.html" id="wy-index">← Index</a>
+  <h1>Acting Arena <small id="ptitle">cut-out performance challenges</small></h1>
+  <span style="flex:1"></span>
+  <a href="arena/README.md" id="to-readme">README</a>
+  <a href="arena/requirements/arena_requirements.md" id="to-req">what to generate</a>
+  <a href="#" id="dl-clip">clip json ↓</a>
+</header>
+<main>
+  <nav id="list" aria-label="challenges"></nav>
+  <section id="stagewrap">
+    <canvas id="c" width="1920" height="1080"></canvas>
+    <div class="bar">
+      <button id="play">▶ play</button>
+      <span id="tc">0 / 0</span>
+      <input id="scrub" type="range" min="0" max="1" value="0" aria-label="frame">
+      <button id="dbg" class="on">checks overlay</button>
+      <select id="variant" aria-label="take"></select>
+    </div>
+    <div id="strip" title="beats above, flagged frames (red) and accepted declared flags (amber) below"></div>
+    <div id="now"></div>
+  </section>
+  <aside>
+    <h2>Situation</h2>
+    <p class="small" id="sit"></p>
+    <h2>Success observation (spec)</h2>
+    <p class="small" id="succ"></p>
+    <h2>Technical result</h2>
+    <div class="kv" id="tech"></div>
+    <h2>Flagged frames</h2>
+    <div class="flags" id="flags"></div>
+    <h2>Performance note</h2>
+    <p class="small" id="perf"></p>
+    <h2>Not checked</h2>
+    <ul id="notck" style="padding-left:16px;margin:0;font-size:12px;color:var(--dim)"></ul>
+    <h2>Ledger</h2>
+    <div id="ledger" style="font-size:12px;color:var(--dim)"></div>
+  </aside>
+</main>
+<script>
+'use strict';
+// Draws clips compiled by shots/arena/run_arena.py: frames[f].draw is a display list (img ops use the weave matrix format).
+const $ = s => document.querySelector(s);
+const q = new URLSearchParams(location.search);
+if (q.get('capture')) document.body.classList.add('capture');
+const cv = $('#c'), ctx = cv.getContext('2d');
+const W = 1920, H = 1080;
+let RES, CLIP, IMG = {}, fIdx = 0, playing = false, showDbg = q.get('dbg') !== '0';
+const json = u => fetch(u, {cache: 'no-store'}).then(r => { if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); });
+const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('img ' + src)); i.src = src; });
+
+const FAM = {locomotion: 'Locomotion', air_water: 'Air and water', objects: 'Objects', combat: 'Combat', dance: 'Dance', acting: 'Acting', sports: 'Sports', ensemble: 'Ensemble'};
+async function boot() {
+  const [spec, res] = await Promise.all([json('arena/spec/acting_arena_v0.2.json'), json('arena/results/arena_results.json')]);
+  RES = res;
+  let html = '', fam = '';
+  for (const c of spec.challenges) {
+    if (c.family !== fam) { fam = c.family; html += `<div class="fam">${FAM[fam] || fam}</div>`; }
+    const r = res.challenges[c.id] || {}; const takes = r.takes || [];
+    const st = r.result === 'tested_pass' ? ['pass', 'pass'] : r.result === 'tested_fail' ? ['fail', 'fail'] : ['none', '—'];
+    html += `<button id="btn-${c.id}" data-id="${c.id}" ${takes.length ? '' : 'disabled title="not authored in the arena yet"'}><code>${c.id}</code><span>${c.title}</span><span class="pill ${st[0]}">${st[1]}</span></button>`;
+  }
+  $('#list').innerHTML = html;
+  $('#list').onclick = e => { const b = e.target.closest('button'); if (b && !b.disabled) open(b.dataset.id); };
+  const first = q.get('a') || Object.keys(res.challenges).find(k => (res.challenges[k].takes || []).length);
+  await open(first, q.get('take'));
+  if (q.get('f')) render(+q.get('f'));
+  if (q.get('sheet')) sheet(+q.get('sheet'));
+  window.ARENA_READY = true;
+}
+async function open(id, take) {
+  pause();
+  const r = RES.challenges[id]; const takes = r.takes || [];
+  const t = takes.find(x => x.take === take) || takes.filter(x => x.variant === 'standard').pop() || takes[takes.length - 1];
+  CLIP = await json(t.clip.replace(/^arena\//, 'arena/'));
+  const ids = Object.keys(CLIP.images).filter(k => !IMG[k]);
+  const ims = await Promise.all(ids.map(k => load('arena/' + CLIP.images[k])));
+  ids.forEach((k, i) => IMG[k] = ims[i]);
+  document.querySelectorAll('#list button').forEach(b => b.classList.toggle('on', b.dataset.id === id));
+  $('#variant').innerHTML = takes.map(x => `<option value="${x.take}" ${x === t ? 'selected' : ''}>${x.take} · ${x.run_at} · ${x.technical.result}</option>`).join('');
+  $('#variant').onchange = e => open(id, e.target.value);
+  $('#ptitle').textContent = CLIP.title;
+  $('#dl-clip').href = t.clip.replace(/^arena\//, 'arena/');
+  $('#sit').textContent = CLIP.situation; $('#succ').textContent = CLIP.success_observation;
+  const T = CLIP.technical;
+  const kv = [['result', T.result, T.result === 'pass'], ['worst planted drift', T.worst_planted_drift_cm_per_frame + ' cm/f (≤ 0.6)', T.worst_planted_drift_cm_per_frame <= 0.6],
+    ['worst hand-to-target', T.worst_contact_error_cm + ' cm (≤ 2)', T.worst_contact_error_cm <= 2], ['max arm reach', T.max_arm_reach_ratio + ' (card: ≤ 1)', null],
+    ['max leg error', T.max_leg_error_cm + ' cm (≤ 1.5)', T.max_leg_error_cm <= 1.5], ['balanced (grounded frames)', T.balanced_pct_of_grounded_frames + ' %', null],
+    ['airborne frames', T.airborne_frames, null], ['contact frames measured', T.contact_frames, null], ['prop owner changes', T.prop_owner_changes, null]];
+  if (T.cup_max_tilt_deg != null) kv.push(['cup max tilt', T.cup_max_tilt_deg + '° (≤ 20)', T.cup_max_tilt_deg <= 20], ['cup max accel', T.cup_max_acc_cm_per_frame2 + ' cm/f² (≤ 0.45)', T.cup_max_acc_cm_per_frame2 <= 0.45]);
+  kv.push(['body', CLIP.cast.map(c => `${c.name} ${c.variant} · 1 cm = ${c.cm_px} px`).join('; '), null]);
+  $('#tech').innerHTML = kv.map(([a, b, ok]) => `<span>${a}</span><span class="${ok === true ? 'pass' : ok === false ? 'fail' : ''}">${b}</span>`).join('');
+  const fl = Object.entries(T.flagged_frame_ranges), ac = Object.entries(T.accepted_frame_ranges || {});
+  $('#flags').innerHTML = (fl.length ? fl.map(([m, r]) => `<div><b>${m.replace(' # ', ' ')}</b> · ${r}</div>`).join('') : '<div class="pass">none</div>')
+    + (T.declared_flags || []).map(d => `<div>declared ${d.kind} ${d.frames}: ${d.why}</div>`).join('')
+    + ac.map(([m, r]) => `<div style="color:var(--acc)">accepted: ${m.replace(' # ', ' ')} · ${r}</div>`).join('');
+  $('#perf').innerHTML = `${t.performance_note}<br><i>${t.performance_review}</i>`;
+  $('#notck').innerHTML = CLIP.not_checked.map(x => `<li>${x}</li>`).join('');
+  $('#ledger').innerHTML = CLIP.ledger.map(([k, v]) => `<div><b>${k}</b> ${v}</div>`).join('');
+  buildStrip(); $('#scrub').max = CLIP.frames.length - 1; render(0);
+}
+function buildStrip() {
+  const s = $('#strip'), N = CLIP.frames.length; s.innerHTML = '';
+  for (const b of CLIP.beats) { if (/passing|heel strike/.test(b.beat)) continue; const d = document.createElement('div'); d.className = 'bt'; d.style.left = (100 * b.f / N) + '%'; d.textContent = b.beat; d.title = b.who + ': ' + b.beat; s.appendChild(d); }
+  CLIP.frames.forEach((fr, i) => { if (fr.flags.length) { const d = document.createElement('div'); d.className = 'fl'; d.style.left = (100 * i / N) + '%'; d.style.width = Math.max(0.2, 100 / N) + '%'; s.appendChild(d); }
+    if (fr.ok.length) { const d = document.createElement('div'); d.className = 'ac'; d.style.left = (100 * i / N) + '%'; d.style.width = Math.max(0.2, 100 / N) + '%'; s.appendChild(d); } });
+  const ph = document.createElement('div'); ph.className = 'ph'; ph.id = 'ph'; s.appendChild(ph);
+  s.onclick = e => { const r = s.getBoundingClientRect(); render(Math.round((e.clientX - r.left) / r.width * (N - 1))); };
+}
+
+// ---------- drawing
+let grainC;
+function grain() { if (grainC) return grainC; grainC = document.createElement('canvas'); grainC.width = 480; grainC.height = 270;
+  const x = grainC.getContext('2d'), d = x.createImageData(480, 270); let s = 99;
+  for (let i = 0; i < d.data.length; i += 4) { s = (s * 1103515245 + 12345) & 0x7fffffff; const v = 128 + ((s >> 8) % 60) - 30; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0); return grainC; }
+function drawOp(c, o) {
+  switch (o.t) {
+    case 'bg': { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2b2420'); g.addColorStop(1, '#4a3a2c'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+      c.strokeStyle = 'rgba(255,240,220,.05)'; c.lineWidth = 1; for (let x = 0; x < W; x += 96) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); } return; }
+    case 'floor': { const g = c.createLinearGradient(0, o.y, 0, H); g.addColorStop(0, '#6b4a2c'); g.addColorStop(1, '#2a1a0e'); c.fillStyle = g; c.fillRect(0, o.y, W, H - o.y);
+      c.fillStyle = 'rgba(255,230,190,.25)'; c.fillRect(0, o.y - 1, W, 2); c.fillStyle = 'rgba(255,240,220,.35)'; c.font = '13px JetBrains Mono';
+      for (let x = 0; x < W; x += 96) { c.fillRect(x, o.y + 2, 1, 10); } return; }
+    case 'water': { c.save(); c.globalAlpha = o.under ? 0.35 : 0.45; c.fillStyle = '#2d5b7a'; c.fillRect(o.x0, o.y, o.x1 - o.x0, H - o.y); c.restore(); return; }
+    case 'shadow': { c.save(); c.globalAlpha = o.a; const g = c.createRadialGradient(o.x, o.y, 2, o.x, o.y, o.rx); g.addColorStop(0, 'rgba(0,0,0,.7)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = g; c.beginPath(); c.ellipse(o.x, o.y + 2, o.rx, o.rx * 0.12, 0, 0, 7); c.fill(); c.restore(); return; }
+    case 'img': { const im = IMG[o.id]; if (!im) return; c.save(); c.transform(...o.m); c.drawImage(im, 0, 0); c.restore(); return; }
+    case 'poly': { c.save(); c.beginPath(); o.pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath(); c.fillStyle = o.fill; c.globalAlpha = o.a ?? 1; c.fill();
+      c.lineWidth = o.w || 2; c.strokeStyle = o.stroke || '#000'; c.stroke(); c.restore(); return; }
+    case 'line': { c.save(); c.strokeStyle = o.color; c.lineWidth = o.w; c.lineCap = 'round'; c.beginPath(); o.pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); c.restore(); return; }
+  }
+}
+function drawFrame(c, f, dbg) {
+  const fr = CLIP.frames[f];
+  c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
+  for (const o of fr.draw) drawOp(c, o);
+  c.save(); c.globalCompositeOperation = 'overlay'; c.globalAlpha = 0.12; c.drawImage(grain(), 0, 0, W, H); c.restore();
+  if (dbg) {
+    c.save(); c.lineWidth = 3;
+    for (const [x, y] of fr.dbg.sup) { c.strokeStyle = '#5dff8a'; c.beginPath(); c.arc(x, y, 7, 0, 7); c.stroke(); }
+    for (const [x, y] of fr.dbg.com) { c.fillStyle = '#ffd35d'; c.beginPath(); c.arc(x, y, 8, 0, 7); c.fill(); c.strokeStyle = '#ffd35d88'; c.setLineDash([6, 6]); c.beginPath(); c.moveTo(x, y); c.lineTo(x, CLIP.floor); c.stroke(); c.setLineDash([]); }
+    for (const [x, y, e] of fr.dbg.tgt) { c.strokeStyle = e > 2 ? '#ff5d5d' : '#5dc8ff'; c.beginPath(); c.arc(x, y, 11, 0, 7); c.stroke(); }
+    c.restore();
+  }
+  c.font = "28px 'Permanent Marker', cursive"; c.fillStyle = '#efe6da'; c.fillText(CLIP.title + (CLIP.variant !== 'standard' ? '  [' + CLIP.variant + ']' : ''), 36, 56);
+  c.font = '20px JetBrains Mono'; c.fillStyle = '#c9b9a5'; c.fillText(`f ${f}  ${fr.beat}`, 36, 90);
+  if (fr.flags.length) { c.fillStyle = '#ff7b6b'; fr.flags.slice(0, 4).forEach((m, i) => c.fillText('✗ ' + m, 36, 124 + i * 26)); }
+}
+function render(f) {
+  fIdx = Math.max(0, Math.min(CLIP.frames.length - 1, f));
+  drawFrame(ctx, fIdx, showDbg);
+  const fr = CLIP.frames[fIdx];
+  $('#tc').textContent = `${fIdx} / ${CLIP.frames.length - 1} · ${(fIdx / CLIP.clock.fps).toFixed(2)} s`;
+  $('#scrub').value = fIdx; const ph = $('#ph'); if (ph) ph.style.left = (100 * fIdx / CLIP.frames.length) + '%';
+  $('#now').innerHTML = `<em>${fr.beat}</em>` + (fr.flags.length ? '<br><span class="f">' + fr.flags.join(' · ') + '</span>' : '') + (fr.ok.length ? '<br>accepted: ' + fr.ok.join(' · ') : '');
+}
+// contact sheet: n frames evenly spaced, in a grid, for review (used by shots/arena/sheet.mjs)
+function sheet(n) {
+  const cols = 4, rows = Math.ceil(n / cols), cw = 640, ch = 360;
+  const big = document.createElement('canvas'); big.width = cols * cw; big.height = rows * ch;
+  const off = document.createElement('canvas'); off.width = W; off.height = H; const oc = off.getContext('2d');
+  const bc = big.getContext('2d'); const N = CLIP.frames.length;
+  for (let i = 0; i < n; i++) { const f = Math.round(i * (N - 1) / (n - 1)); drawFrame(oc, f, showDbg); bc.drawImage(off, (i % cols) * cw, Math.floor(i / cols) * ch, cw, ch); }
+  cv.width = big.width; cv.height = big.height; ctx.drawImage(big, 0, 0);
+  window.SHEET_DONE = true;
+}
+$('#scrub').oninput = e => render(+e.target.value);
+$('#dbg').onclick = e => { showDbg = !showDbg; e.target.classList.toggle('on', showDbg); render(fIdx); };
+$('#play').onclick = () => playing ? pause() : play();
+let raf = 0, t0 = 0;
+function play() { playing = true; $('#play').textContent = '❚❚ pause'; t0 = performance.now() - fIdx / CLIP.clock.fps * 1000; tick(); }
+function pause() { playing = false; $('#play').textContent = '▶ play'; cancelAnimationFrame(raf); }
+function tick() { if (!playing) return; const f = Math.floor((performance.now() - t0) / 1000 * CLIP.clock.fps); if (f >= CLIP.frames.length) { pause(); return; } if (f !== fIdx) render(f); raf = requestAnimationFrame(tick); }
+window.renderFrame = f => { render(f); return true; };
+boot().catch(e => { document.body.insertAdjacentHTML('afterbegin', `<pre style="color:#ff7b6b;padding:12px">boot failed: ${e.message}</pre>`); console.error(e); });
+</script>
+<script src="../nav.js" defer></script>
+</body>
+</html>
