@@ -338,3 +338,69 @@ print('frames', N, 'height', v['puppet_height_px'], 'grip frames', v['grip_frame
 for o in over:
     print(o)
 print({k: round(x, 2) for k, x in T.items()})
+
+# ---------- display list (drawn by the generic shots/weave.html) ----------
+import sys
+sys.path.insert(0, ROOT)
+from weave_lib import op_img, op_label
+sc = clip['scene']
+con_w, con_h = con['size'][0] * C_SCALE, con['size'][1] * C_SCALE
+KP = 0.35  # plate group parallax
+for fr in frames:
+    D = [op_img('plate', box=[0, 0, 1920, 1080], k=KP)]
+    D.append({'t': 'warp', 'id': 'seq:da69:%d' % fr['arch'], 'quad': SET['canopy']['quad'], 'grade': [214, 150, 92, 0.55], 'tex': 'led', 'texa': 0.85,
+              'mask': 'canopy', 'a': round(0.12 + 0.86 * fr['mix'], 4), 'k': KP})
+    D.append({'t': 'tint', 'color': 'rgb(232,170,110)', 'mask': 'crowdmask', 'op': 'soft-light', 'a': round(0.55 * fr['mix'], 4), 'k': KP})
+    for i, c in enumerate(SET['crowd']):
+        a = math.radians(fr['tilt'][i] if i < len(fr['tilt']) else 0)
+        px, py = c['pos'][0] + c['pivot'][0], c['pos'][1] + c['pivot'][1]
+        ca, sa = math.cos(a), math.sin(a)
+        tx = px - (ca * c['pivot'][0] - sa * c['pivot'][1]); ty = py - (sa * c['pivot'][0] + ca * c['pivot'][1])
+        D.append(op_img(c['id'], m=[ca, sa, -sa, ca, tx, ty], k=KP))
+    if fr['label_canopy'] > 0:
+        D.append(op_label('ARCHIVE · SOUND AND THE STORY · 1956', 1080, 150, 26, -0.05, '#fff3e0', '#2a1608', fr['label_canopy'], KP))
+    D.append({'t': 'proc', 'name': 'floor', 'y': GROUND, 'k': 1.0})
+    D.append({'t': 'proc', 'name': 'box', 'b': BOX, 'k': 1.0})
+    D.append({'t': 'proc', 'name': 'softrect', 'r': [C_TL[0] + 10, C_TL[1] + 12, con_w, con_h], 'k': 1.0})
+    D.append(op_img('console_base', box=[C_TL[0], C_TL[1], con_w, con_h], k=1.0))
+    ka = math.radians(fr['knob']); kc, ks = math.cos(ka) * C_SCALE, math.sin(ka) * C_SCALE
+    kp = knob['pivot']
+    D.append(op_img('knob_mid', m=[kc, ks, -ks, kc, KNOB_C[0] - (kc * kp[0] - ks * kp[1]), KNOB_C[1] - (ks * kp[0] + kc * kp[1])], k=1.0))
+    na = math.radians(fr['needle'])
+    D.append({'t': 'line', 'pts': [[round(NEEDLE_P[0], 2), round(NEEDLE_P[1], 2)], [round(NEEDLE_P[0] + math.cos(na) * NEEDLE_LEN, 2), round(NEEDLE_P[1] + math.sin(na) * NEEDLE_LEN, 2)]],
+              'w': 3.2, 'color': '#1b0e08', 'boil': 1.0, 'k': 1.0})
+    D.append(op_label('ARCHIVE · 1956', C_TL[0] + con_w - 190, C_TL[1] + 34, 20, 0.03, '#1d130b', '#f1e3c8', 1.0, 1.0))
+    D.append({'t': 'proc', 'name': 'shadows', 'e': [[HX + 20, GROUND + 1, 150, 18]], 'k': 1.0})
+    for o in fr['ops']:
+        D.append(op_img(o[0], m=o[1:7], k=1.0, sh=1))
+    if fr['inset']:
+        D.append({'t': 'inset', 'id': 'seq:da69:%d' % fr['inset']['frame'], 'x': 1440, 'y': 650, 'w': 400, 'h': 300, 'rot': 0.03,
+                  'cap': '1956 · a hand on the same knob', 'sub': 'ARCHIVE · Sound And The Story (1956)', 'a': round(fr['inset']['alpha'], 3), 'k': 0})
+    fr['draw'] = D
+    fr['g'] = {'level': fr['level'], 'canopy': fr['mix'], 'loud': fr['loud'], 'tip_err/10': 0 if fr['err'] is None else round(fr['err'] / 10, 3)}
+    fr['dbg'] = [[fr['grip'][0], fr['grip'][1], 'on' if fr['contact'] == 'grip' else ('released' if fr['contact'] == 'released' else 'free')]]
+v = clip['validation']
+clip.update({
+    'title': 'POEM 07 · "SO DJ PLEASE TURN ME UP"',
+    'audio': {'mix': 'passage.wav', 'voice': 'voice/p07_659_675.wav', 'voice_offset': 2.0},
+    'images': {'plate': 'set/plate.jpg', 'canopy': 'set/canopy_mask.png', 'led': 'set/led.png', 'crowdmask': 'set/crowd_mask.png',
+               **{c['id']: c['file'] for c in SET['crowd']}, **{a['id']: a['file'] for a in A['assets'] if a['kind'] in ('puppet_part', 'prop_part')}},
+    'masks': ['canopy', 'crowdmask'],
+    'seqs': {'da69': 'archive/da69_frames/%04d.jpg'},
+    'joins': [['Touch', 'her fingertip is on the 1956 knob; the knob angle sets the level'],
+              ['Screen', 'the archive plays on the AI canopy, behind its palms and pillars'],
+              ['Answer', 'after the line, the 1956 hand on the same knob, captioned']],
+    'ledger': [['OBSERVED', 'Her voice: "So DJ please turn me up" (WYGWYL suite recording, 661.0-674.8 s). Word times by faster-whisper.'],
+               ['OBSERVED', 'Sound And The Story (1956), clip da69b1ba: the canopy footage, the knob, the inset hand.'],
+               ['RETOUCHED', 'The console: one 1956 frame (3.75 s), upscaled 4x, meter needle painted out so a drawn needle can show the level.'],
+               ['INVENTED', 'Atlantis: WYGWYL poem 07 AI plate (keyframe 60, held). Crowd figures cut from it; the floor under them painted.'],
+               ['INVENTED', 'The puppet: generated cardboard parts, cut and rigged here. The rule that the knob drives the canopy.'],
+               ['DRAWN', 'The needle, the labels, the cardboard stand and floor.']],
+    'measured': [['puppet height', '%s px' % v['puppet_height_px'], None], ['grip frames', v['grip_frames'], None],
+                 ['fingertip error < 1% of height', '%s px (%s%%)' % (v['fingertip_err_px']['max'], v['fingertip_err_pct_height']), v['fingertip_err_pct_height'] < 1],
+                 ['sole drift', '%s px' % v['sole_drift_px'], v['sole_drift_px'] == 0]] +
+                [['overlap @%ss' % o['t'], 'body/console %d · arm/meter %d' % (o['body_over_console_px'], o['arm_over_meter_px']), None] for o in v['overlaps']],
+    'tracks': [['level', '#e7a35a'], ['canopy', '#7fd3c4'], ['loud', '#bbbbbb'], ['tip_err/10', '#ff7b6b']],
+})
+json.dump(clip, open(os.path.join(ROOT, 'clips', 'p07_turn_me_up.json'), 'w'), separators=(',', ':'), default=lambda o: o.item() if hasattr(o, 'item') else str(o))
+print('display list compiled;', sum(len(fr['draw']) for fr in frames), 'ops')

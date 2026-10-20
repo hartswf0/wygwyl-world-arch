@@ -3,20 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WYGWYL · The Weave · archive, cel and AI in one shot</title>
-<meta name="description" content="One registered cut-out passage from WYGWYL poem 07: her recorded line, a 1956 archive console she can touch, and the AI Atlantis canopy that the archive plays on. Every frame is rendered from a manifest.">
+<title>WYGWYL · The Weave · archive, cel and AI in one registered shot</title>
+<meta name="description" content="Registered cut-out passages from WYGWYL: her recorded line, archive film placed inside the AI world as objects, skies and citizens, and a cardboard puppet solved by IK. Every frame is drawn from a display list compiled in Python.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--obs:#7fd3c4;--inv:#e7a35a;--ret:#d98bb0;--drw:#b9c46a;--mono:'JetBrains Mono',ui-monospace,monospace}
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--obs:#7fd3c4;--inv:#e7a35a;--ret:#d98bb0;--drw:#b9c46a;--bel:#a9a0d6;--mono:'JetBrains Mono',ui-monospace,monospace}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
-header{display:flex;align-items:center;gap:16px;padding:12px 18px;border-bottom:1px solid var(--line)}
+header{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 header h1{font:400 22px 'Permanent Marker',cursive;margin:0;letter-spacing:.02em}
 header h1 small{font:12px var(--mono);color:var(--dim);margin-left:10px;letter-spacing:.08em}
-header a{color:var(--dim);font:12px var(--mono);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:999px}
-header a:hover{color:var(--ink);border-color:var(--card)}
-main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:0;min-height:calc(100vh - 54px)}
+header a,.tabs button{color:var(--dim);font:12px var(--mono);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:999px;background:none;cursor:pointer;transition:border-color .15s,color .15s}
+header a:hover,.tabs button:hover{color:var(--ink);border-color:var(--card)}
+.tabs{display:flex;gap:6px}.tabs button.on{background:var(--card);color:#1a120b;border-color:var(--card)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 360px;min-height:calc(100vh - 54px)}
 #stagewrap{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
 canvas#c{width:100%;aspect-ratio:16/9;background:#000;border-radius:6px;box-shadow:0 20px 60px #000a;display:block}
 .bar{display:flex;align-items:center;gap:10px;font:12px var(--mono);color:var(--dim)}
@@ -33,8 +34,8 @@ aside{border-left:1px solid var(--line);padding:16px;overflow:auto;max-height:ca
 aside h2{font:600 10.5px var(--mono);letter-spacing:.16em;color:var(--dim);margin:18px 0 8px;text-transform:uppercase}
 aside h2:first-child{margin-top:0}
 .ledger div{display:grid;grid-template-columns:92px 1fr;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
-.ledger b{font:600 10px var(--mono);letter-spacing:.08em;padding:2px 6px;border-radius:4px;color:#120d09;align-self:start;text-align:center}
-.OBSERVED{background:var(--obs)}.INVENTED{background:var(--inv)}.RETOUCHED{background:var(--ret)}.DRAWN{background:var(--drw)}
+.ledger b{font:600 9.5px var(--mono);letter-spacing:.06em;padding:2px 5px;border-radius:4px;color:#120d09;align-self:start;text-align:center}
+.OBSERVED{background:var(--obs)}.INVENTED{background:var(--inv)}.RETOUCHED{background:var(--ret)}.DRAWN{background:var(--drw)}.BELIEF{background:var(--bel)}
 .joins li{margin:0 0 6px;font-size:12.5px}.joins{padding-left:18px;margin:0}
 .kv{font:12px var(--mono);display:grid;grid-template-columns:1fr auto;gap:4px 10px}
 .kv span:nth-child(odd){color:var(--dim)}
@@ -44,16 +45,18 @@ aside h2:first-child{margin-top:0}
 body.capture header,body.capture aside,body.capture .bar,body.capture #ribbon,body.capture #graph,body.capture #now{display:none}
 body.capture main{display:block}body.capture #stagewrap{padding:0}
 body.capture canvas#c{width:1920px;height:1080px;border-radius:0;box-shadow:none}
+@media (max-width:1000px){main{grid-template-columns:1fr}aside{border-left:0;border-top:1px solid var(--line);max-height:none}}
 </style>
 </head>
 <body>
 <header>
   <a href="../index.html" id="wy-index">← Index</a>
-  <h1>The Weave <small>POEM 07 · "SO DJ PLEASE TURN ME UP"</small></h1>
+  <h1>The Weave <small id="ptitle"></small></h1>
+  <nav class="tabs" id="tabs" aria-label="passages"></nav>
   <span style="flex:1"></span>
-  <a href="weave/clips/p07_turn_me_up.json" id="dl-clip">clip json ↓</a>
-  <a href="weave/passage.mp4" id="dl-mp4">passage.mp4 ↓</a>
-  <a href="scion.html?poem=poem_07" id="to-scion">SCION ↗</a>
+  <a href="#" id="dl-clip">clip json ↓</a>
+  <a href="#" id="dl-mp4">passage.mp4 ↓</a>
+  <a href="weave/README.md" id="to-readme">README</a>
 </header>
 <main>
   <section id="stagewrap">
@@ -61,8 +64,8 @@ body.capture canvas#c{width:1920px;height:1080px;border-radius:0;box-shadow:none
     <div class="bar">
       <button id="play">▶ play</button>
       <span id="tc">0.00 s</span>
-      <input id="scrub" type="range" min="0" max="330" value="0">
-      <button id="dbg">sockets</button>
+      <input id="scrub" type="range" min="0" max="1" value="0" aria-label="frame">
+      <button id="dbg">contacts</button>
       <button id="raw">no finish</button>
     </div>
     <div id="ribbon"></div>
@@ -71,15 +74,11 @@ body.capture canvas#c{width:1920px;height:1080px;border-radius:0;box-shadow:none
   </section>
   <aside>
     <h2>What this is</h2>
-    <p style="margin:0;font-size:13px;color:var(--dim)">Her recorded line asks; the 1956 film answers. The console she touches is cut from <i>Sound And The Story</i> (1956). The canopy is the AI Atlantis plate, and the archive plays on it. She is a cardboard cut-out solved to the knob by IK. Every frame is drawn from <code>clips/p07_turn_me_up.json</code>; nothing is filtered video.</p>
+    <p id="about" style="margin:0;font-size:13px;color:var(--dim)"></p>
     <h2>Ledger</h2>
     <div class="ledger" id="ledger"></div>
-    <h2>Joins in this shot</h2>
-    <ol class="joins">
-      <li><b>Touch</b>: her fingertip is on the 1956 knob; the knob angle sets the level.</li>
-      <li><b>Screen</b>: the archive plays on the AI canopy, behind its palms and pillars.</li>
-      <li><b>Answer</b>: after the line, the 1956 hand on the same knob, captioned.</li>
-    </ol>
+    <h2>Joins in this passage</h2>
+    <ol class="joins" id="joins"></ol>
     <h2>Measured</h2>
     <div class="kv" id="measured"></div>
     <h2>Now</h2>
@@ -89,76 +88,115 @@ body.capture canvas#c{width:1920px;height:1080px;border-radius:0;box-shadow:none
 <pre id="selftest" style="display:none"></pre>
 <script>
 'use strict';
+// The renderer knows nothing about any passage. It draws frames[f].draw (a display list compiled by the
+// passage's build_clip.py) under the frame's camera. See shots/weave/weave_lib.py for the op list.
 const $ = s => document.querySelector(s);
 const q = new URLSearchParams(location.search);
 if (q.get('capture')) document.body.classList.add('capture');
 const cv = $('#c'), ctx = cv.getContext('2d');
 const W = 1920, H = 1080;
-let CLIP, SET, ASSETS, IMG = {}, ARCH = [], fIdx = 0, playing = false, showDbg = !!q.get('debug'), noFinish = false;
-const audio = new Audio('weave/voice/p07_659_675.wav'); audio.preload = 'auto';
-const AUDIO_OFF = 2.0; // the wav starts at 659.0 s on her clock; the passage starts at 661.0 s
+let PASSAGES, PID, CLIP, IMG = {}, fIdx = 0, playing = false, showDbg = !!q.get('debug'), noFinish = false, audio = null;
 
 const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('img ' + src)); i.src = src; });
 const json = u => fetch(u).then(r => { if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); });
-
-async function boot() {
-  [CLIP, SET, ASSETS] = await Promise.all([json('weave/clips/p07_turn_me_up.json'), json('weave/set/set.json'), json('weave/assets/assets.json')]);
-  const need = {};
-  for (const a of ASSETS.assets) if (a.kind !== 'plate') need[a.id] = 'weave/' + a.file;
-  need.plate = 'weave/set/plate.jpg'; need.canopy = 'weave/set/canopy_mask.png'; need.led = 'weave/set/led.png'; need.crowdmask = 'weave/set/crowd_mask.png';
-  for (const c of SET.crowd) need[c.id] = 'weave/' + c.file;
-  const ids = Object.keys(need);
-  const ims = await Promise.all(ids.map(k => load(need[k])));
-  ids.forEach((k, i) => IMG[k] = ims[i]);
-  // archive frames used by the passage (canopy + inset)
-  const used = new Set();
-  for (const fr of CLIP.frames) { used.add(fr.arch); if (fr.inset) used.add(fr.inset.frame); }
-  const list = [...used].sort((a, b) => a - b);
-  const aims = await Promise.all(list.map(n => load('weave/archive/da69_frames/' + String(n).padStart(4, '0') + '.jpg')));
-  list.forEach((n, i) => ARCH[n] = aims[i]);
-  await document.fonts.ready;
-  buildStatic();
-  buildUI();
-  render(0);
-  window.WEAVE_READY = true;
-}
-
-// ---------- static layers ----------
-let canopyMask, ledTex, grain = [], crowdTint;
-function lumaToAlpha(img) { // the masks are greyscale PNGs; canvas compositing needs alpha
+function lumaToAlpha(img) { // greyscale masks -> alpha masks (canvas compositing uses alpha)
   const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
   const x = c.getContext('2d'); x.drawImage(img, 0, 0);
   const d = x.getImageData(0, 0, c.width, c.height);
   for (let i = 0; i < d.data.length; i += 4) { d.data[i + 3] = d.data[i]; d.data[i] = d.data[i + 1] = d.data[i + 2] = 255; }
   x.putImageData(d, 0, 0); return c;
 }
+
+async function boot() {
+  PASSAGES = await json('weave/passages.json');
+  PID = q.get('p') || PASSAGES.default;
+  const P = PASSAGES.passages.find(p => p.id === PID) || PASSAGES.passages[0]; PID = P.id;
+  CLIP = await json('weave/' + P.clip);
+  const ids = Object.keys(CLIP.images);
+  const ims = await Promise.all(ids.map(k => load('weave/' + CLIP.images[k])));
+  ids.forEach((k, i) => IMG[k] = (CLIP.masks || []).includes(k) ? lumaToAlpha(ims[i]) : ims[i]);
+  // sequence frames actually referenced by the display lists
+  const used = new Set();
+  for (const fr of CLIP.frames) for (const o of fr.draw) for (const key of ['id']) if (typeof o[key] === 'string' && o[key].startsWith('seq:')) used.add(o[key]);
+  const list = [...used];
+  const sims = await Promise.all(list.map(s => { const [, name, n] = s.split(':'); return load('weave/' + CLIP.seqs[name].replace('%04d', String(n).padStart(4, '0'))); }));
+  list.forEach((s, i) => IMG[s] = sims[i]);
+  await document.fonts.ready;
+  buildStatic(); buildUI(P);
+  audio = new Audio('weave/' + (CLIP.audio.mix || CLIP.audio.voice)); audio.preload = 'auto';
+  render(0);
+  window.WEAVE_READY = true;
+}
+
+// ---------- static helpers ----------
+let grain = [], dustTex, off1, off2;
 function buildStatic() {
-  canopyMask = lumaToAlpha(IMG.canopy); ledTex = IMG.led;
-  crowdTint = document.createElement('canvas'); crowdTint.width = W; crowdTint.height = H;
-  { const x = crowdTint.getContext('2d'); x.fillStyle = 'rgb(232,170,110)'; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'destination-in'; x.drawImage(lumaToAlpha(IMG.crowdmask), 0, 0); }
-  for (let g = 0; g < 6; g++) { // deterministic grain plates
+  grain = [];
+  for (let g = 0; g < 6; g++) {
     const c = document.createElement('canvas'); c.width = 480; c.height = 270;
-    const x = c.getContext('2d'), d = x.createImageData(480, 270);
-    let s = 1234 + g * 99991;
+    const x = c.getContext('2d'), d = x.createImageData(480, 270); let s = 1234 + g * 99991;
     for (let i = 0; i < d.data.length; i += 4) { s = (s * 1103515245 + 12345) & 0x7fffffff; const v = 128 + ((s >> 8) % 70) - 35; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
     x.putImageData(d, 0, 0); grain.push(c);
   }
+  dustTex = document.createElement('canvas'); dustTex.width = dustTex.height = 256;
+  { const x = dustTex.getContext('2d'); let s = 77; for (let i = 0; i < 1400; i++) { s = (s * 1103515245 + 12345) & 0x7fffffff; const px = s % 256; s = (s * 1103515245 + 12345) & 0x7fffffff; const py = s % 256; s = (s * 1103515245 + 12345) & 0x7fffffff;
+      x.fillStyle = `rgba(${170 + s % 40},${150 + s % 30},${120 + s % 25},${0.35 + (s % 50) / 100})`; x.beginPath(); x.arc(px, py, 0.6 + (s % 23) / 10, 0, 7); x.fill(); } }
+  off1 = document.createElement('canvas'); off1.width = W; off1.height = H;
+  off2 = document.createElement('canvas'); off2.width = W; off2.height = H;
 }
 
-// ---------- perspective: archive frame onto the canopy quad, by affine triangles ----------
+// ---------- camera ----------
+function camT(fr, k) { // parallax plane k: zoom 1+(z-1)k about a centre that moves k of the way
+  const z = 1 + (fr.cam.z - 1) * k, [cx, cy] = fr.cam.c;
+  const ox = 960 + (cx - 960) * Math.min(1, k), oy = 540 + (cy - 540) * Math.min(1, k);
+  return [z, 0, 0, z, 960 - ox * z, 540 - oy * z];
+}
+function weaveOff(f) { const s = Math.sin(f * 1.7) * 0.6 + Math.sin(f * 0.37) * 0.5; return [s, Math.cos(f * 1.3) * 0.5]; }
+
+// ---------- ops ----------
+function tornWipe(x, y, seed, jag) { // a torn paper edge along y, everything above it kept
+  x.beginPath(); x.moveTo(-300, -300); x.lineTo(W + 300, -300);
+  let s = seed * 7919 + 13;
+  for (let px = W + 300; px >= -300; px -= 22) { s = (s * 1103515245 + 12345) & 0x7fffffff; x.lineTo(px, y + ((s >> 8) % 1000) / 1000 * jag - jag / 2 + Math.sin(px * 0.013 + seed) * jag * 0.4); }
+  x.closePath();
+}
+function drawImgOp(o, T) {
+  const im = IMG[o.id]; if (!im) return;
+  const needOff = o.mask || o.wipe || o.dust;
+  const tgt = needOff ? off1.getContext('2d') : ctx;
+  if (needOff) { tgt.setTransform(1, 0, 0, 1, 0, 0); tgt.globalCompositeOperation = 'source-over'; tgt.globalAlpha = 1; tgt.clearRect(0, 0, W, H); }
+  tgt.save(); tgt.setTransform(...T);
+  const place = c => { if (o.m) { c.transform(...o.m); c.drawImage(im, 0, 0); } else { const [x, y, w, h] = o.box; c.drawImage(im, x, y, w, h); } };
+  if (!needOff) {
+    if (o.a != null) tgt.globalAlpha = o.a; if (o.op) tgt.globalCompositeOperation = o.op;
+    if (o.sh) { tgt.shadowColor = 'rgba(0,0,0,.45)'; tgt.shadowBlur = 10 * T[0]; tgt.shadowOffsetX = 5 * T[0]; tgt.shadowOffsetY = 6 * T[0]; }
+    place(tgt); tgt.restore(); return;
+  }
+  place(tgt); tgt.restore();
+  if (o.dust) { // dust stays on what touched the ground: speckle inside the part's own alpha
+    tgt.save(); tgt.globalCompositeOperation = 'source-atop'; tgt.globalAlpha = o.dust; tgt.setTransform(...T);
+    if (o.m) tgt.transform(...o.m); tgt.fillStyle = tgt.createPattern(dustTex, 'repeat'); tgt.fillRect(-50, -50, 2000, 2000); tgt.restore();
+  }
+  if (o.mask) { // the mask shares the image's placement
+    const mk = IMG[o.mask]; tgt.save(); tgt.globalCompositeOperation = 'destination-in'; tgt.setTransform(...T);
+    if (o.m) { tgt.transform(...o.m); tgt.drawImage(mk, 0, 0); } else { const [x, y, w, h] = o.box; tgt.drawImage(mk, x, y, w, h); } tgt.restore();
+  }
+  if (o.wipe) { // a registered wipe: inside a full-plane mask (e.g. the plate's sky), above a torn edge
+    tgt.save(); tgt.setTransform(...T);
+    if (o.wipe.clip) { tgt.globalCompositeOperation = 'destination-in'; tgt.drawImage(IMG[o.wipe.clip], 0, 0, W, H); }
+    tgt.globalCompositeOperation = 'destination-in'; tornWipe(tgt, o.wipe.y, o.wipe.seed || 1, o.wipe.jag || 20); tgt.fillStyle = '#fff'; tgt.fill();
+    tgt.restore();
+  }
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (o.sh) { ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 10 * T[0]; ctx.shadowOffsetX = 5 * T[0]; ctx.shadowOffsetY = 6 * T[0]; }
+  if (o.a != null) ctx.globalAlpha = o.a; if (o.op) ctx.globalCompositeOperation = o.op;
+  ctx.drawImage(off1, 0, 0); ctx.restore();
+}
 function homography(src, dst) {
   const A = [], b = [];
-  for (let i = 0; i < 4; i++) {
-    const [x, y] = src[i], [u, v] = dst[i];
-    A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
-    A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v);
-  }
-  // gaussian elimination
-  for (let i = 0; i < 8; i++) {
-    let p = i; for (let r = i + 1; r < 8; r++) if (Math.abs(A[r][i]) > Math.abs(A[p][i])) p = r;
-    [A[i], A[p]] = [A[p], A[i]]; [b[i], b[p]] = [b[p], b[i]];
-    for (let r = 0; r < 8; r++) if (r !== i) { const f = A[r][i] / A[i][i]; for (let c = i; c < 8; c++) A[r][c] -= f * A[i][c]; b[r] -= f * b[i]; }
-  }
+  for (let i = 0; i < 4; i++) { const [x, y] = src[i], [u, v] = dst[i]; A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u); A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v); }
+  for (let i = 0; i < 8; i++) { let p = i; for (let r = i + 1; r < 8; r++) if (Math.abs(A[r][i]) > Math.abs(A[p][i])) p = r; [A[i], A[p]] = [A[p], A[i]]; [b[i], b[p]] = [b[p], b[i]];
+    for (let r = 0; r < 8; r++) if (r !== i) { const f = A[r][i] / A[i][i]; for (let c = i; c < 8; c++) A[r][c] -= f * A[i][c]; b[r] -= f * b[i]; } }
   const h = b.map((v, i) => v / A[i][i]);
   return (x, y) => { const w = h[6] * x + h[7] * y + 1; return [(h[0] * x + h[1] * y + h[2]) / w, (h[3] * x + h[4] * y + h[5]) / w]; };
 }
@@ -168,171 +206,116 @@ function tri(c, img, s0, s1, s2, d0, d1, d2) {
   const den = x0 * (y1 - y2) + x1 * (y2 - y0) + x2 * (y0 - y1);
   const a = (u0 * (y1 - y2) + u1 * (y2 - y0) + u2 * (y0 - y1)) / den, b = (v0 * (y1 - y2) + v1 * (y2 - y0) + v2 * (y0 - y1)) / den;
   const cc = (u0 * (x2 - x1) + u1 * (x0 - x2) + u2 * (x1 - x0)) / den, d = (v0 * (x2 - x1) + v1 * (x0 - x2) + v2 * (x1 - x0)) / den;
-  const e = (u0 * (x1 * y2 - x2 * y1) + u1 * (x2 * y0 - x0 * y2) + u2 * (x0 * y1 - x1 * y0)) / den;
-  const f = (v0 * (x1 * y2 - x2 * y1) + v1 * (x2 * y0 - x0 * y2) + v2 * (x0 * y1 - x1 * y0)) / den;
+  const e = (u0 * (x1 * y2 - x2 * y1) + u1 * (x2 * y0 - x0 * y2) + u2 * (x0 * y1 - x1 * y0)) / den, f = (v0 * (x1 * y2 - x2 * y1) + v1 * (x2 * y0 - x0 * y2) + v2 * (x0 * y1 - x1 * y0)) / den;
   c.transform(a, b, cc, d, e, f); c.drawImage(img, 0, 0); c.restore();
 }
-const canopyCv = document.createElement('canvas'); canopyCv.width = W; canopyCv.height = H;
-let HOM = null;
-function drawCanopy(img, alpha, frame) {
-  const c = canopyCv.getContext('2d');
-  c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; c.clearRect(0, 0, W, H);
-  const iw = img.width, ih = img.height;
-  if (!HOM) HOM = homography([[0, 0], [iw, 0], [iw, ih], [0, ih]], SET.canopy.quad);
-  const n = 10;
+const HOMS = {};
+function drawWarp(o, T) { // an image mapped onto a quad (by affine triangles), graded, textured, masked
+  const im = IMG[o.id]; if (!im) return;
+  const c = off2.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; c.clearRect(0, 0, W, H);
+  const iw = im.width, ih = im.height, hk = iw + 'x' + ih + JSON.stringify(o.quad);
+  const Hm = HOMS[hk] || (HOMS[hk] = homography([[0, 0], [iw, 0], [iw, ih], [0, ih]], o.quad));
+  const n = o.n || 10;
   for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
-    const p = (a, b) => [a * iw / n, b * ih / n];
-    const s00 = p(i, j), s10 = p(i + 1, j), s01 = p(i, j + 1), s11 = p(i + 1, j + 1);
-    const d = s => HOM(s[0], s[1]);
-    // pad each destination triangle a hair to hide seams
-    tri(c, img, s00, s10, s11, d(s00), d(s10), d(s11)); tri(c, img, s00, s11, s01, d(s00), d(s11), d(s01));
+    const p = (a, b) => [a * iw / n, b * ih / n], s00 = p(i, j), s10 = p(i + 1, j), s01 = p(i, j + 1), s11 = p(i + 1, j + 1), d = s => Hm(s[0], s[1]);
+    tri(c, im, s00, s10, s11, d(s00), d(s10), d(s11)); tri(c, im, s00, s11, s01, d(s00), d(s11), d(s01));
   }
-  // grade: the 1956 film is warm sepia; the LED canopy shows it through its dot pattern
-  c.globalCompositeOperation = 'color'; c.fillStyle = 'rgba(214,150,92,0.55)'; c.fillRect(0, 0, W, H);
-  c.globalCompositeOperation = 'overlay'; c.globalAlpha = 0.85; c.drawImage(ledTex, 0, 0);
-  c.globalAlpha = 1; c.globalCompositeOperation = 'destination-in'; c.drawImage(canopyMask, 0, 0);
-  ctx.save(); ctx.globalAlpha = alpha; ctx.drawImage(canopyCv, 0, 0); ctx.restore();
+  if (o.grade) { c.globalCompositeOperation = 'color'; c.fillStyle = `rgba(${o.grade.join(',')})`; c.fillRect(0, 0, W, H); }
+  if (o.tex) { c.globalCompositeOperation = 'overlay'; c.globalAlpha = o.texa ?? 0.85; c.drawImage(IMG[o.tex], 0, 0); c.globalAlpha = 1; }
+  if (o.mask) { c.globalCompositeOperation = 'destination-in'; c.drawImage(IMG[o.mask], 0, 0); }
+  ctx.save(); ctx.setTransform(...T); ctx.globalAlpha = o.a ?? 1; ctx.drawImage(off2, 0, 0); ctx.restore();
 }
-
-// ---------- the frame ----------
-function setCam(fr, k) { // camera for a plane with parallax factor k: zoom 1+(z-1)k about a centre that moves k of the way
-  const z = 1 + (fr.cam.z - 1) * k, [cx, cy] = fr.cam.c;
-  const ox = 960 + (cx - 960) * Math.min(1, k), oy = 540 + (cy - 540) * Math.min(1, k);
-  ctx.setTransform(z, 0, 0, z, 960 - ox * z, 540 - oy * z);
+function letter(c, txt, x, y, size, fill, back) {
+  c.font = `${size}px 'Permanent Marker', cursive`; const w = c.measureText(txt).width;
+  c.fillStyle = back; c.beginPath(); c.moveTo(x - 10, y - size * 0.95); c.lineTo(x + w + 12, y - size * 1.02); c.lineTo(x + w + 9, y + size * 0.32); c.lineTo(x - 8, y + size * 0.38); c.closePath(); c.fill();
+  c.fillStyle = fill; c.fillText(txt, x, y);
 }
-function weave(f) { // gate weave, deterministic
-  const s = Math.sin(f * 1.7) * 0.6 + Math.sin(f * 0.37) * 0.5;
-  return [s, Math.cos(f * 1.3) * 0.5];
+const PROC = {
+  floor(o) { const y = o.y; const g = ctx.createLinearGradient(0, y - 10, 0, H + 40); g.addColorStop(0, '#6b4a2c'); g.addColorStop(1, '#2a1a0e');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-200, y - 6); for (let x = -200; x <= W + 200; x += 40) ctx.lineTo(x, y - 6 + ((x * 7919) % 5)); ctx.lineTo(W + 200, H + 200); ctx.lineTo(-200, H + 200); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 2; for (let x = -200; x < W + 200; x += 9) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, H + 200); ctx.stroke(); } },
+  ground(o) { // the bare ground: a torn strip of dark painted card
+    const y = o.y; let s = 4111;
+    const g = ctx.createLinearGradient(0, y - 20, 0, H + 60); g.addColorStop(0, '#3b3026'); g.addColorStop(0.25, '#2a221b'); g.addColorStop(1, '#120e0b');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-300, H + 300);
+    for (let x = -300; x <= W + 300; x += 18) { s = (s * 1103515245 + 12345) & 0x7fffffff; ctx.lineTo(x, y - 4 + ((s >> 8) % 7)); }
+    ctx.lineTo(W + 300, H + 300); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(205,180,140,.18)'; ctx.lineWidth = 2; ctx.beginPath(); s = 4111;
+    for (let x = -300; x <= W + 300; x += 18) { s = (s * 1103515245 + 12345) & 0x7fffffff; const yy = y - 4 + ((s >> 8) % 7); x === -300 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy); } ctx.stroke();
+    ctx.fillStyle = 'rgba(0,0,0,.22)'; for (let i = 0; i < 260; i++) { s = (s * 1103515245 + 12345) & 0x7fffffff; const px = (s % 2400) - 240; s = (s * 1103515245 + 12345) & 0x7fffffff; ctx.fillRect(px, y + 8 + (s % 160), 3 + (s % 9), 1.5); } },
+  box(o) { const [x0, y0, x1, y1] = o.b;
+    const g = ctx.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, '#8a6038'); g.addColorStop(.5, '#a8794a'); g.addColorStop(1, '#7a5230');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0 + 2); ctx.lineTo(x1 - 4, y1); ctx.lineTo(x0 + 3, y1); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(40,24,10,.35)'; ctx.lineWidth = 2; for (let x = x0 + 6; x < x1; x += 11) { ctx.beginPath(); ctx.moveTo(x, y0 + 4); ctx.lineTo(x - 2, y1); ctx.stroke(); }
+    ctx.strokeStyle = 'rgba(30,18,8,.6)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x0 + 10, y0 + 120); ctx.lineTo(x1 - 14, y0 + 124); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(x0, y0, x1 - x0, 14); },
+  shadows(o) { ctx.save(); ctx.globalCompositeOperation = 'multiply';
+    for (const [x, y, rx, ry] of o.e) { const g = ctx.createRadialGradient(x, y, 2, x, y, rx); g.addColorStop(0, 'rgba(0,0,0,.6)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y + 1, rx, ry, 0, 0, 7); ctx.fill(); }
+    ctx.restore(); },
+  softrect(o) { ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.filter = 'blur(12px)'; ctx.fillRect(...o.r); ctx.restore(); },
+};
+function drawOp(o, fr, f, wx, wy) {
+  const T = camT(fr, o.k ?? 1); T[4] += wx; T[5] += wy;
+  switch (o.t) {
+    case 'img': return drawImgOp(o, T);
+    case 'warp': return drawWarp(o, T);
+    case 'rect': ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = o.a ?? 1; if (o.op) ctx.globalCompositeOperation = o.op; ctx.fillStyle = o.color; ctx.fillRect(0, 0, W, H); ctx.restore(); return;
+    case 'tint': { const c = off2.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; c.clearRect(0, 0, W, H);
+      c.fillStyle = o.color; c.fillRect(0, 0, W, H); c.globalCompositeOperation = 'destination-in'; c.drawImage(IMG[o.mask], 0, 0);
+      ctx.save(); ctx.setTransform(...T); ctx.globalAlpha = o.a ?? 1; if (o.op) ctx.globalCompositeOperation = o.op; ctx.drawImage(off2, 0, 0); ctx.restore(); return; }
+    case 'glow': { ctx.save(); ctx.setTransform(...T); ctx.globalCompositeOperation = o.op || 'screen'; ctx.globalAlpha = o.a ?? 1;
+      ctx.translate(o.x, o.y); ctx.scale(1, (o.ry || o.r) / (o.rx || o.r)); const R = o.rx || o.r;
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R); const [r, gg, b] = o.color; g.addColorStop(0, `rgba(${r},${gg},${b},1)`); g.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.fill(); ctx.restore(); return; }
+    case 'dots': ctx.save(); ctx.setTransform(...T); ctx.fillStyle = o.color; for (const [x, y, r, a] of o.pts) { ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); } ctx.restore(); return;
+    case 'line': { ctx.save(); ctx.setTransform(...T); ctx.strokeStyle = o.color; ctx.lineCap = 'round'; const j = (f >> 1) * 7.13, bo = o.boil || 0;
+      for (let k = 0; k < (bo ? 2 : 1); k++) { ctx.lineWidth = o.w - k; ctx.beginPath(); o.pts.forEach(([x, y], i) => { const dx = bo ? Math.sin(j * (0.7 + i * 0.3) + k) * bo : 0, dy = bo ? Math.cos(j * (1.3 + i * 0.2) + k) * bo : 0; i ? ctx.lineTo(x + dx, y + dy) : ctx.moveTo(x + dx, y + dy); }); ctx.stroke(); }
+      ctx.restore(); return; }
+    case 'label': ctx.save(); ctx.setTransform(...T); ctx.globalAlpha = o.a ?? 1; ctx.translate(o.x, o.y); ctx.rotate(o.rot || 0); letter(ctx, o.txt, 0, 0, o.size, o.fill, o.back); ctx.restore(); return;
+    case 'proc': ctx.save(); ctx.setTransform(...T); PROC[o.name](o); ctx.restore(); return;
+    case 'inset': { const im = IMG[o.id]; if (!im) return; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = o.a ?? 1; ctx.translate(o.x, o.y); ctx.rotate(o.rot || 0);
+      ctx.fillStyle = '#efe8dc'; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10; ctx.fillRect(-12, -12, o.w + 24, o.h + 64);
+      ctx.shadowColor = 'transparent'; ctx.drawImage(im, 0, 0, o.w, o.h);
+      ctx.font = "22px 'Permanent Marker', cursive"; ctx.fillStyle = '#20140c'; ctx.fillText(o.cap, 2, o.h + 30);
+      ctx.font = "13px 'JetBrains Mono', monospace"; ctx.fillStyle = '#5a4634'; ctx.fillText(o.sub, 2, o.h + 48); ctx.restore(); return; }
+  }
 }
 function render(f) {
   fIdx = f;
-  const fr = CLIP.frames[f], sc = CLIP.scene;
-  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-  const [wx, wy] = noFinish ? [0, 0] : weave(f);
-  ctx.translate(wx, wy);
-  ctx.save();
-  // ---- plate group (k = 0.35): AI plate, canopy screen, crowd ----
-  setCam(fr, 0.35); ctx.translate(wx, wy);
-  ctx.drawImage(IMG.plate, 0, 0);
-  drawCanopy(ARCH[fr.arch], 0.12 + 0.86 * fr.mix, f);
-  // canopy light falls on the crowd
-  ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.55 * fr.mix; ctx.drawImage(crowdTint, 0, 0); ctx.restore();
-  SET.crowd.forEach((c, i) => {
-    const im = IMG[c.id], a = (fr.tilt[i] || 0) * Math.PI / 180;
-    ctx.save(); ctx.translate(c.pos[0] + c.pivot[0], c.pos[1] + c.pivot[1]); ctx.rotate(a); ctx.drawImage(im, -c.pivot[0], -c.pivot[1]); ctx.restore();
-  });
-  if (fr.label_canopy > 0) { // the archive is labelled as long as it shows
-    ctx.save(); ctx.globalAlpha = fr.label_canopy; ctx.translate(1080, 150); ctx.rotate(-0.05);
-    letter('ARCHIVE · SOUND AND THE STORY · 1956', 0, 0, 26, '#fff3e0', '#2a1608');
-    ctx.restore();
-  }
-  ctx.restore();
-  // ---- stage group (k = 1): floor, box, console, puppet ----
-  ctx.save(); setCam(fr, 1.0); ctx.translate(wx, wy);
-  drawFloor(); drawBox(sc.box);
-  const con = IMG.console_base, cs = sc.console.scale, [cx0, cy0] = sc.console.tl;
-  shadowRect(cx0 + 10, cy0 + 12, con.width * cs, con.height * cs);
-  ctx.drawImage(con, cx0, cy0, con.width * cs, con.height * cs);
-  // knob: the 1956 knob turns with her hand
-  const kn = IMG.knob_mid, kA = ASSETS.assets.find(a => a.id === 'knob_mid');
-  ctx.save(); ctx.translate(sc.knob_center[0], sc.knob_center[1]); ctx.rotate(fr.knob * Math.PI / 180); ctx.scale(cs, cs);
-  ctx.drawImage(kn, -kA.pivot[0], -kA.pivot[1]); ctx.restore();
-  // drawn needle (grease pencil): reads level x measured archive loudness
-  drawNeedle(sc, fr, f);
-  ctx.save(); ctx.translate(cx0 + con.width * cs - 190, cy0 + 34); ctx.rotate(0.03);
-  letter('ARCHIVE · 1956', 0, 0, 20, '#1d130b', '#f1e3c8'); ctx.restore();
-  // contact shadow under the feet
-  ctx.save(); ctx.globalCompositeOperation = 'multiply'; const g = ctx.createRadialGradient(sc.hip[0] + 20, sc.ground, 4, sc.hip[0] + 20, sc.ground, 150);
-  g.addColorStop(0, 'rgba(0,0,0,.55)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(sc.hip[0] + 20, sc.ground + 2, 150, 18, 0, 0, 7); ctx.fill(); ctx.restore();
-  // puppet, back to front
-  for (const o of fr.ops) {
-    const [id, a, b, c, d, e, ff] = o;
-    ctx.save(); ctx.transform(a, b, c, d, e, ff);
-    ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 10; ctx.shadowOffsetX = 5; ctx.shadowOffsetY = 6;
-    ctx.drawImage(IMG[id], 0, 0); ctx.restore();
-  }
-  // rim light from the canopy on the puppet, in proportion to the canopy
+  const fr = CLIP.frames[f];
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  const [wx, wy] = noFinish ? [0, 0] : weaveOff(f);
+  for (const o of fr.draw) drawOp(o, fr, f, wx, wy);
   if (showDbg) drawDebug(fr);
-  ctx.restore();
-  // ---- screen space: the answer inset ----
-  if (fr.inset) drawInset(fr.inset);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   if (!noFinish) finish(f);
   if (!document.body.classList.contains('capture')) updateUI(fr);
 }
-function letter(txt, x, y, size, fill, back) { // hand-lettered tape label
-  ctx.font = `${size}px 'Permanent Marker', cursive`;
-  const w = ctx.measureText(txt).width;
-  ctx.fillStyle = back; ctx.beginPath();
-  ctx.moveTo(x - 10, y - size * 0.95); ctx.lineTo(x + w + 12, y - size * 1.02); ctx.lineTo(x + w + 9, y + size * 0.32); ctx.lineTo(x - 8, y + size * 0.38); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = fill; ctx.fillText(txt, x, y);
-}
-function drawFloor() {
-  const y = CLIP.scene.ground;
-  const g = ctx.createLinearGradient(0, y - 10, 0, H + 40); g.addColorStop(0, '#6b4a2c'); g.addColorStop(1, '#2a1a0e');
-  ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-200, y - 6); for (let x = -200; x <= W + 200; x += 40) ctx.lineTo(x, y - 6 + ((x * 7919) % 5)); ctx.lineTo(W + 200, H + 200); ctx.lineTo(-200, H + 200); ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 2; for (let x = -200; x < W + 200; x += 9) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, H + 200); ctx.stroke(); }
-}
-function drawBox(b) { // cardboard stand under the console (drawn, invented)
-  const [x0, y0, x1, y1] = b;
-  const g = ctx.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, '#8a6038'); g.addColorStop(.5, '#a8794a'); g.addColorStop(1, '#7a5230');
-  ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0 + 2); ctx.lineTo(x1 - 4, y1); ctx.lineTo(x0 + 3, y1); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = 'rgba(40,24,10,.35)'; ctx.lineWidth = 2; for (let x = x0 + 6; x < x1; x += 11) { ctx.beginPath(); ctx.moveTo(x, y0 + 4); ctx.lineTo(x - 2, y1); ctx.stroke(); }
-  ctx.strokeStyle = 'rgba(30,18,8,.6)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x0 + 10, y0 + 120); ctx.lineTo(x1 - 14, y0 + 124); ctx.stroke();
-  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(x0, y0, x1 - x0, 14);
-}
-function shadowRect(x, y, w, h) { ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.filter = 'blur(12px)'; ctx.fillRect(x, y, w, h); ctx.restore(); }
-function drawNeedle(sc, fr, f) {
-  const [px, py] = sc.needle_pivot, a = fr.needle * Math.PI / 180, L = sc.needle_len;
-  const j = (f >> 1) * 7.13; // boils on twos: a drawn line, on purpose, on its own layer
-  ctx.save(); ctx.strokeStyle = '#1b0e08'; ctx.lineCap = 'round';
-  for (let k = 0; k < 2; k++) {
-    ctx.lineWidth = 3.2 - k; ctx.beginPath();
-    ctx.moveTo(px + Math.sin(j + k) * 0.8, py + Math.cos(j * 1.3 + k) * 0.8);
-    ctx.lineTo(px + Math.cos(a) * L + Math.sin(j * 0.7 + k) * 1.2, py + Math.sin(a) * L + Math.cos(j + k) * 1.2); ctx.stroke();
-  }
-  ctx.restore();
-}
-function drawInset(ins) { // the archive answers: a 1956 hand on the same knob
-  const im = ARCH[ins.frame]; if (!im) return;
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = ins.alpha;
-  ctx.translate(1440, 650); ctx.rotate(0.03);
-  const w = 400, h = 300;
-  ctx.fillStyle = '#efe8dc'; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10; ctx.fillRect(-12, -12, w + 24, h + 64);
-  ctx.shadowColor = 'transparent'; ctx.drawImage(im, 0, 0, w, h);
-  ctx.font = "22px 'Permanent Marker', cursive"; ctx.fillStyle = '#20140c';
-  ctx.fillText('1956 · a hand on the same knob', 2, h + 30);
-  ctx.font = "13px 'JetBrains Mono', monospace"; ctx.fillStyle = '#5a4634'; ctx.fillText('ARCHIVE · Sound And The Story (1956)', 2, h + 48);
-  ctx.restore();
-}
-function finish(f) { // one film finish over the whole frame
+function finish(f) {
   ctx.save(); ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.16; ctx.drawImage(grain[f % 6], 0, 0, W, H); ctx.restore();
   const v = ctx.createRadialGradient(960, 540, 420, 960, 540, 1150); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.55)');
   ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(18,10,4,.06)'; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over';
 }
-function drawDebug(fr) {
-  ctx.save(); ctx.lineWidth = 3;
-  ctx.strokeStyle = fr.contact === 'grip' ? '#5dff8a' : '#ff5d5d';
-  ctx.beginPath(); ctx.arc(fr.grip[0], fr.grip[1], 9, 0, 7); ctx.stroke();
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(fr.tip[0], fr.tip[1], 4, 0, 7); ctx.fill();
-  // path of the fingertip over the passage (arc check)
-  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.5; ctx.beginPath();
-  CLIP.frames.forEach((g, i) => i ? ctx.lineTo(g.tip[0], g.tip[1]) : ctx.moveTo(g.tip[0], g.tip[1])); ctx.stroke();
+function drawDebug(fr) { // contact marks compiled into the clip (fr.dbg: [[x, y, kind], ...]) on the stage plane
+  if (!fr.dbg) return; const T = camT(fr, 1); ctx.save(); ctx.setTransform(...T); ctx.lineWidth = 3;
+  for (const [x, y, kind] of fr.dbg) { ctx.strokeStyle = kind === 'on' ? '#5dff8a' : kind === 'released' ? '#ffb35d' : '#ff5d5d'; ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.stroke(); }
   ctx.restore();
 }
 
 // ---------- UI ----------
-const COLORS = ['#7fd3c4', '#9fc6e8', '#e7a35a', '#e98f6a', '#f0c36a', '#ffd38a', '#d98bb0', '#b9c46a', '#a9a0d6'];
-function buildUI() {
-  const N = CLIP.frames.length, dur = N / 24;
+const COLORS = ['#7fd3c4', '#9fc6e8', '#e7a35a', '#e98f6a', '#f0c36a', '#ffd38a', '#d98bb0', '#b9c46a', '#a9a0d6', '#8fd0a0', '#e0b0f0', '#c0c8d0'];
+function buildUI(P) {
+  const N = CLIP.frames.length, dur = N / CLIP.clock.fps;
+  $('#ptitle').textContent = CLIP.title || P.title;
+  $('#about').textContent = CLIP.about;
+  $('#dl-clip').href = 'weave/' + P.clip; $('#dl-mp4').href = 'weave/' + P.mp4;
+  $('#tabs').innerHTML = PASSAGES.passages.map(p => `<button data-p="${p.id}" class="${p.id === PID ? 'on' : ''}" id="tab-${p.id}">${p.tab}</button>`).join('');
+  $('#tabs').onclick = e => { const p = e.target.dataset.p; if (p && p !== PID) location.search = '?p=' + p; };
   $('#scrub').max = N - 1;
-  const rb = $('#ribbon');
-  CLIP.states.forEach((s, i) => {
-    const d = document.createElement('div'); d.className = 'st'; d.style.left = (100 * s.t[0] / dur) + '%'; d.style.width = (100 * (s.t[1] - s.t[0]) / dur) + '%';
-    d.style.background = COLORS[i % COLORS.length]; d.title = s.visible; d.textContent = s.id.replace(/^S\d_/, ''); rb.appendChild(d);
-  });
+  const rb = $('#ribbon'); rb.innerHTML = '';
+  CLIP.states.forEach((s, i) => { const d = document.createElement('div'); d.className = 'st'; d.style.left = (100 * s.t[0] / dur) + '%'; d.style.width = (100 * (s.t[1] - s.t[0]) / dur) + '%';
+    d.style.background = COLORS[i % COLORS.length]; d.title = s.visible; d.textContent = s.id.replace(/^S\d+_/, ''); rb.appendChild(d); });
   for (const w of CLIP.words) { const t = w.t0 - CLIP.clock.t0; if (t < 0 || t > dur) continue; const d = document.createElement('div'); d.className = 'wd'; d.style.left = (100 * t / dur) + '%'; d.textContent = w.w; rb.appendChild(d); }
   const ph = document.createElement('div'); ph.className = 'ph'; ph.id = 'ph'; rb.appendChild(ph);
   rb.onclick = e => { const r = rb.getBoundingClientRect(); seek(Math.round((e.clientX - r.left) / r.width * (N - 1))); };
@@ -340,51 +323,37 @@ function buildUI() {
   $('#play').onclick = () => playing ? pause() : play();
   $('#dbg').onclick = e => { showDbg = !showDbg; e.target.classList.toggle('on', showDbg); render(fIdx); };
   $('#raw').onclick = e => { noFinish = !noFinish; e.target.classList.toggle('on', noFinish); render(fIdx); };
-  // ledger
-  const L = [
-    ['OBSERVED', 'Her voice: "So DJ please turn me up" (WYGWYL suite recording, 661.0–674.8 s). Word times by faster-whisper.'],
-    ['OBSERVED', 'Sound And The Story (1956), clip da69b1ba: the canopy footage, the knob, the inset hand. <a style="color:var(--obs)" href="' + SET.archive.page + '" target="_blank">archive page</a>'],
-    ['RETOUCHED', 'The console: one 1956 frame (3.75 s), upscaled 4×, meter needle painted out so a drawn needle can show the level.'],
-    ['INVENTED', 'Atlantis: WYGWYL poem 07 AI plate (keyframe 60, held). Crowd figures cut from it; the floor under them painted.'],
-    ['INVENTED', 'The puppet: generated cardboard parts, cut and rigged here. The rule that the knob drives the canopy.'],
-    ['DRAWN', 'The needle, the labels, the cardboard stand and floor.'],
-  ];
-  $('#ledger').innerHTML = L.map(([k, v]) => `<div><b class="${k}">${k}</b><span>${v}</span></div>`).join('');
-  const v = CLIP.validation;
-  const ok = v.fingertip_err_pct_height < 1;
-  $('#measured').innerHTML = [
-    ['puppet height', v.puppet_height_px + ' px'], ['grip frames', v.grip_frames],
-    ['fingertip error max', `<span class="${ok ? 'pass' : 'fail'}">${v.fingertip_err_px.max} px (${v.fingertip_err_pct_height}% of height)</span>`],
-    ['sole drift', v.sole_drift_px + ' px'],
-    ...v.overlaps.map(o => [`overlap @${o.t}s`, `body/console ${o.body_over_console_px} · arm/meter ${o.arm_over_meter_px}`]),
-  ].map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('');
+  $('#ledger').innerHTML = CLIP.ledger.map(([k, v]) => `<div><b class="${k.split(' ').pop() === 'BELIEF' ? 'BELIEF' : k}">${k}</b><span>${v}</span></div>`).join('');
+  $('#joins').innerHTML = CLIP.joins.map(([a, b]) => `<li><b>${a}</b>: ${b}</li>`).join('');
+  $('#measured').innerHTML = (CLIP.measured || []).map(([a, b, ok]) => `<span>${a}</span><span class="${ok === true ? 'pass' : ok === false ? 'fail' : ''}">${b}</span>`).join('');
   drawGraph();
 }
 function drawGraph() {
-  const g = $('#graph'), x = g.getContext('2d'), N = CLIP.frames.length;
-  x.clearRect(0, 0, g.width, g.height);
-  const line = (key, col, sc = 1) => { x.strokeStyle = col; x.lineWidth = 2; x.beginPath(); CLIP.frames.forEach((fr, i) => { const v = typeof key === 'function' ? key(fr) : fr[key]; const px = i / (N - 1) * g.width, py = g.height - 8 - (v * sc) * (g.height - 16); i ? x.lineTo(px, py) : x.moveTo(px, py); }); x.stroke(); };
-  line('level', '#e7a35a'); line('mix', '#7fd3c4'); line('loud', 'rgba(255,255,255,.35)'); line(fr => fr.err == null ? 0 : fr.err / 10, '#ff7b6b');
-  x.font = '18px JetBrains Mono'; x.fillStyle = '#e7a35a'; x.fillText('level', 8, 22); x.fillStyle = '#7fd3c4'; x.fillText('canopy', 80, 22); x.fillStyle = '#bbb'; x.fillText('archive loudness', 170, 22); x.fillStyle = '#ff7b6b'; x.fillText('tip error /10px', 370, 22);
+  const g = $('#graph'), x = g.getContext('2d'), N = CLIP.frames.length; x.clearRect(0, 0, g.width, g.height);
+  let lx = 8;
+  for (const [key, col] of CLIP.tracks) {
+    x.strokeStyle = col; x.lineWidth = 2; x.beginPath();
+    CLIP.frames.forEach((fr, i) => { const v = Math.max(0, Math.min(1, fr.g[key] ?? 0)); const px = i / (N - 1) * g.width, py = g.height - 8 - v * (g.height - 16); i ? x.lineTo(px, py) : x.moveTo(px, py); }); x.stroke();
+    x.font = '18px JetBrains Mono'; x.fillStyle = col; x.fillText(key, lx, 22); lx += x.measureText(key).width + 18;
+  }
 }
 function updateUI(fr) {
   $('#tc').textContent = fr.t.toFixed(2) + ' s · clock ' + fr.clock.toFixed(2);
-  $('#scrub').value = fr.f;
-  $('#ph').style.left = (100 * fr.f / (CLIP.frames.length - 1)) + '%';
+  $('#scrub').value = fr.f; $('#ph').style.left = (100 * fr.f / (CLIP.frames.length - 1)) + '%';
   const st = CLIP.states.find(s => fr.t >= s.t[0] && fr.t < s.t[1]) || CLIP.states[CLIP.states.length - 1];
   const word = CLIP.words.filter(w => w.t0 - CLIP.clock.t0 <= fr.t).pop();
   $('#now').innerHTML = `<em>${st.id}</em> — ${st.visible}${word ? ' · word: <em>' + word.w + '</em>' : ''}`;
-  $('#state').innerHTML = [['knob', fr.knob.toFixed(1) + '°'], ['level', fr.level.toFixed(2)], ['canopy', fr.mix.toFixed(2)], ['archive frame', fr.arch], ['contact', fr.contact + (fr.err != null ? ' · ' + fr.err.toFixed(2) + ' px' : '')], ['camera', 'z ' + fr.cam.z.toFixed(2)]]
+  $('#state').innerHTML = [...Object.entries(fr.g).map(([k, v]) => [k, typeof v === 'number' ? v.toFixed(2) : v]), ['contact', fr.contact], ['camera', 'z ' + fr.cam.z.toFixed(2)]]
     .map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('');
 }
-function seek(f) { render(Math.max(0, Math.min(CLIP.frames.length - 1, f))); if (playing) audio.currentTime = fIdx / 24 + AUDIO_OFF; }
+function seek(f) { render(Math.max(0, Math.min(CLIP.frames.length - 1, f))); if (playing) audio.currentTime = fIdx / CLIP.clock.fps; }
 let t0wall = 0, raf = 0;
-function play() { playing = true; $('#play').textContent = '❚❚ pause'; audio.currentTime = fIdx / 24 + AUDIO_OFF; audio.play().catch(() => {}); t0wall = performance.now() - fIdx / 24 * 1000; tick(); }
+function play() { playing = true; $('#play').textContent = '❚❚ pause'; audio.currentTime = fIdx / CLIP.clock.fps; audio.play().catch(() => {}); t0wall = performance.now() - fIdx / CLIP.clock.fps * 1000; tick(); }
 function pause() { playing = false; $('#play').textContent = '▶ play'; audio.pause(); cancelAnimationFrame(raf); }
 function tick() {
   if (!playing) return;
-  const t = !audio.paused && audio.currentTime > 0 ? audio.currentTime - AUDIO_OFF : (performance.now() - t0wall) / 1000;
-  const f = Math.floor(t * 24);
+  const t = !audio.paused && audio.currentTime > 0 ? audio.currentTime : (performance.now() - t0wall) / 1000;
+  const f = Math.floor(t * CLIP.clock.fps);
   if (f >= CLIP.frames.length) { pause(); render(CLIP.frames.length - 1); return; }
   if (f !== fIdx) render(Math.max(0, f));
   raf = requestAnimationFrame(tick);
@@ -400,15 +369,13 @@ function selftest() {
   const out = $('#selftest'); out.style.display = 'block'; const L = [];
   const ok = (c, m) => L.push((c ? 'PASS ' : 'FAIL ') + m);
   ok(CLIP.frames.length === CLIP.clock.frames, 'frame count matches clock');
-  ok(Object.keys(IMG).length >= 15, 'images loaded: ' + Object.keys(IMG).length);
-  ok(CLIP.validation.fingertip_err_pct_height < 1, 'fingertip error under 1% of height');
-  ok(CLIP.frames.every(fr => fr.ops.length === 11), 'every frame has 11 puppet parts');
-  const a = cv.toDataURL('image/png'); render(0); const b = cv.toDataURL('image/png'); render(fIdx);
-  ok(a.length > 1000 && b.length > 1000, 'canvas draws');
-  render(10); const r1 = cv.toDataURL(); render(200); render(10); const r2 = cv.toDataURL(); ok(r1 === r2, 'frame 10 renders the same after frame 200 (deterministic)');
-  ok(CLIP.frames.some(fr => fr.inset), 'answer inset present');
-  ok(CLIP.frames.filter(fr => fr.mix > 0.6).length > 48, 'result held on screen > 2 s');
-  out.textContent = L.join('\n') + '\nDONE';
+  const missing = new Set(); for (const fr of CLIP.frames) for (const o of fr.draw) { if (o.id && !IMG[o.id]) missing.add(o.id); if (o.mask && !IMG[o.mask]) missing.add(o.mask); }
+  ok(missing.size === 0, 'every image a display list names is loaded' + (missing.size ? ': missing ' + [...missing].join(',') : ''));
+  const a = cv.toDataURL('image/png'); ok(a.length > 1000, 'canvas draws');
+  const mid = Math.floor(CLIP.frames.length / 2);
+  render(10); const r1 = cv.toDataURL(); render(mid); render(10); const r2 = cv.toDataURL(); ok(r1 === r2, `frame 10 renders the same after frame ${mid} (deterministic)`);
+  for (const [name, val, pass] of (CLIP.measured || [])) if (pass === true || pass === false) ok(pass, name + ': ' + val);
+  out.textContent = PID + '\n' + L.join('\n') + '\nDONE';
 }
 </script>
 <script src="../nav.js" defer></script>
