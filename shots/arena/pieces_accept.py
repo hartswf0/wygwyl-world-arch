@@ -72,6 +72,47 @@ def judge(path, piece=None):
                 want=round(want, 2) if want else None, off_vertical=round(ang, 1),
                 one_piece=round(frac, 3), ok=not why, why=why)
 
+def views_distinct(paths, thresh=0.90):
+    """A card that claims to be a second view must BE a second view.
+
+       man torso.profile and torso.front are the same picture: IoU 0.973, and
+       both 220px wide where a real side view of a torso is about 60% the width
+       of its front. The renderer drew the 'profile' 7,484 times — more often
+       than the front — so most of the arena is a man facing the camera with a
+       profile head stuck on, which is exactly what it looks like. Nothing
+       caught it because nothing compared the two files.
+    """
+    import itertools
+    def norm(fp):
+        im = cv2.imread(fp, cv2.IMREAD_UNCHANGED)
+        if im is None or im.ndim < 3 or im.shape[2] < 4: return None
+        a = (im[:, :, 3] > 24).astype(np.uint8)
+        ys, xs = np.nonzero(a)
+        if not len(ys): return None
+        a = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+        return cv2.resize(a, (96, 96), interpolation=cv2.INTER_AREA) > 0, int(np.ptp(xs)) + 1
+    groups = {}
+    for fp in paths:
+        b = os.path.basename(fp)
+        parts = b[:-4].split('.')
+        # proc.farm and proc.thigh are different PIECES, not two views of one;
+        # group on the piece name, which is the last meaningful token
+        stem = parts[1] if parts[0] in ('proc', 'man', 'poet') and len(parts) > 1 else parts[0]
+        groups.setdefault(stem, []).append(fp)
+    out = []
+    for stem, fs in groups.items():
+        if len(fs) < 2: continue
+        for a, b in itertools.combinations(fs, 2):
+            if os.path.basename(a) == os.path.basename(b): continue   # same card, two folders
+            na, nb = norm(a), norm(b)
+            if not na or not nb: continue
+            iou = float((na[0] & nb[0]).sum()) / float((na[0] | nb[0]).sum() or 1)
+            if iou > thresh:
+                out.append((os.path.basename(a), os.path.basename(b), round(iou, 3),
+                            round(nb[1] / max(1, na[1]), 2)))
+    return out
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     if '--library' in sys.argv:
@@ -81,6 +122,12 @@ def main():
         args = [f for f in args if 'crouch' not in f and 'pose' not in f
                 and 'console' not in f and 'knob' not in f and 'atlas' not in f]
     rows = [judge(f) for f in args]
+    dup = views_distinct(args)
+    if dup:
+        print('\nCARDS THAT CLAIM A VIEW THEY DO NOT HAVE:')
+        for a, b, iou, wr in dup:
+            print(f'   {a} vs {b}: IoU {iou}, width ratio {wr} — the same picture twice')
+        print()
     ok = sum(1 for r in rows if r['ok'])
     print(f'{"file":34s} {"piece":8s} {"aspect":>7s} {"want":>6s} {"off_v":>6s}  verdict')
     for r in rows:

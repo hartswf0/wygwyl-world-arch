@@ -51,19 +51,29 @@ OUT = os.path.join(HERE, 'pieces.json')
 #   garment    torso, pelvis          generated once, no articulation
 #   procedural uarm, farm, thigh, shin  drawn in code, 50% of the figure, 0 cards
 
+# The body has no side view. torso.profile and torso.front are the same picture
+# (IoU 0.973, both 220px wide where a real side torso is about 60% the width);
+# pelvis the same at 0.983; head.back is head.front at 0.964; and profile_L is
+# threequarter_L at 0.917. Of six head 'views' about three are distinct, and the
+# torso and pelvis have one each under two names. The renderer drew the fake
+# 'profile' torso 7,484 times, more often than the front — so most of the arena
+# is a man facing the camera wearing a profile head.
+#
+# And the hands have neither handedness nor facing: four shapes, one card each,
+# so the same palm faces the camera whether the arm reaches toward it or away.
 MAKE = {'head': 'generate', 'hand': 'generate', 'boot': 'generate',
-        'torso': 'garment', 'pelvis': 'garment',
+        'torso': 'generate', 'pelvis': 'generate',
         'uarm': 'procedural', 'farm': 'procedural',
         'thigh': 'procedural', 'shin': 'procedural'}
 
 # bone = (joint A, joint B). A is the pivot; B is straight down the card.
 BONES = [
     ('head',   'headBase', 'headTop',   20.0, 'front|threequarter_L|threequarter_R|profile_L|profile_R|back'),
-    ('torso',  'pelvis',   'neckBase',  36.0, 'front|threequarter|profile|back'),
+    ('torso',  'pelvis',   'neckBase',  36.0, 'front|threequarter|profile|back'),   # profile must be ~22cm deep, not 36
     ('pelvis', 'pelvis',   'hipL',      34.0, 'front|threequarter|profile|back'),
     ('uarm',   'shoulderL','elbowL',    11.0, 'profile'),
     ('farm',   'elbowL',   'wristL',     9.0, 'profile'),
-    ('hand',   'wristL',   'wristL',     9.0, 'open|grip|fist|point'),
+    ('hand',   'wristL',   'wristL',     9.0, 'open_palm|open_back|grip|fist|point'),
     ('thigh',  'hipL',     'kneeL',     16.0, 'profile'),
     ('shin',   'kneeL',    'ankleL',    11.0, 'profile'),
     ('boot',   'ankleL',   'ballL',     10.0, 'flat|toe'),

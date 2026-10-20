@@ -1,4 +1,4 @@
-# Piece briefs — 68 cards
+# Piece briefs — 72 cards
 
 12 px/cm · 1 yaw buckets · lengths measured from the Bolas skeleton
 
@@ -30,6 +30,8 @@
 | `man.hand.y+0.R` | 19.0×9.0 | 132×252 | 2.11 |
 | `man.hand.y+0.L` | 19.0×9.0 | 132×252 | 2.11 |
 | `man.hand.y+0.R` | 19.0×9.0 | 132×252 | 2.11 |
+| `man.hand.y+0.L` | 19.0×9.0 | 132×252 | 2.11 |
+| `man.hand.y+0.R` | 19.0×9.0 | 132×252 | 2.11 |
 | `man.thigh.y+0.L` | 44.0×16.0 | 216×552 | 2.75 |
 | `man.thigh.y+0.R` | 44.0×16.0 | 216×552 | 2.75 |
 | `man.shin.y+0.L` | 43.0×11.0 | 156×540 | 3.91 |
@@ -42,10 +44,8 @@
 | `poet.head.threequarter_L` | 36.0×20.0 | 264×456 | 1.8 |
 | `poet.head.threequarter_R` | 36.0×20.0 | 264×456 | 1.8 |
 | `poet.head.profile_L` | 36.0×20.0 | 264×456 | 1.8 |
-| `poet.head.profile_R` | 36.0×20.0 | 264×456 | 1.8 |
-| `poet.head.back` | 36.0×20.0 | 264×456 | 1.8 |
 
-…and 28 more in pieces_brief.json
+…and 32 more in pieces_brief.json
 
 ## Acceptance
 

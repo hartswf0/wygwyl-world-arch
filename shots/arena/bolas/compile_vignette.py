@@ -622,6 +622,10 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
             is_crouch_peak = (tid == 'T103' and 66 <= fi <= 78)
             is_floor_peak = (tid == 'T108' and 115 <= fi <= 125)
 
+            if abs(fwd_ang) > 45 and abs(fwd_ang) < 135:
+                cast_limits['the body has no side view: torso.profile is torso.front '
+                            '(IoU 0.973, same width), so this frame is a front body '
+                            'turned sideways'] += 1
             cards_alt = None
             if (is_crouch_peak or is_floor_peak) and skin in ('man', 'poet'):
                 try:
