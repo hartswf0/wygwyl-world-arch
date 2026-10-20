@@ -219,44 +219,67 @@ def draw_man(jj, H_fig, flip=False, fwd_ang=0, is_front=False,
         return [round(R[0, 0], 5), round(R[1, 0], 5), round(R[0, 1], 5), round(R[1, 1], 5),
                 round(t[0], 2), round(t[1], 2)]
 
-    # Head angle selection from 6 heads based on 3D camera facing angle
-    fa = fwd_ang % 360
-    if 65 <= fa < 115:
-        head_id = 'man.head.front'
-    elif 25 <= fa < 65:
-        head_id = 'man.head.threequarter_R'
-    elif 115 <= fa < 155:
-        head_id = 'man.head.threequarter_L'
-    elif 155 <= fa < 245:
-        head_id = 'man.head.profile_L'
-    elif 245 <= fa < 295:
-        head_id = 'man.head.back'
-    else:
-        head_id = 'man.head.profile_R'
+    def mat_bone(p_pivot, p_socket, pt_a, pt_b, flip_x=False):
+        pt_a = np.asarray(pt_a[:2], float)
+        pt_b = np.asarray(pt_b[:2], float)
+        v = pt_b - pt_a
+        L_meas = float(np.linalg.norm(v))
+        ang_deg = math.degrees(math.atan2(v[1], v[0])) - 90.0
 
-    # Far arm
+        p_piv = np.asarray(p_pivot, float)
+        p_sock = np.asarray(p_socket, float)
+        L_card = float(np.linalg.norm(p_sock - p_piv))
+
+        # Scale along bone axis (Y) to span exactly from pt_a to pt_b without overlap or gap
+        sy = L_meas / max(1.0, L_card)
+        # Preserve character limb girth across bone axis (X)
+        sx = S_man
+
+        R = rot(ang_deg)
+        S = np.array([[-sx if flip_x else sx, 0.0], [0.0, sy]])
+        RS = R @ S
+        t = pt_a - RS @ p_piv
+        return [round(RS[0, 0], 5), round(RS[1, 0], 5), round(RS[0, 1], 5), round(RS[1, 1], 5),
+                round(t[0], 2), round(t[1], 2)]
+
+    # Head angle selection aligned with camera projection and body facing
+    ang = fwd_ang
+    while ang > 180: ang -= 360
+    while ang <= -180: ang += 360
+
+    if abs(ang) <= 25:
+        head_id = 'man.head.front'
+    elif 25 < ang <= 65:
+        head_id = 'man.head.threequarter_R'
+    elif 65 < ang <= 115:
+        head_id = 'man.head.profile_R'
+    elif -65 <= ang < -25:
+        head_id = 'man.head.threequarter_L'
+    elif -115 <= ang < -65:
+        head_id = 'man.head.profile_L'
+    else:
+        head_id = 'man.head.back'
+
+    # Far arm (bone-span scaled shoulder->elbow, elbow->wrist)
     sh_far = jj[16 if far_arm_side == 'L' else 17]
     el_far = jj[18 if far_arm_side == 'L' else 19]
     wr_far = jj[20 if far_arm_side == 'L' else 21]
-    ang_ua_f = math.degrees(math.atan2(el_far[1] - sh_far[1], el_far[0] - sh_far[0])) - 90.0
     ang_fa_f = math.degrees(math.atan2(wr_far[1] - el_far[1], wr_far[0] - el_far[0])) - 90.0
-    ops.append({'t': 'img', 'id': 'man.uarm', 'm': mat_part([37, 22], sh_far, ang_ua_f, flip_x=flip)})
-    ops.append({'t': 'img', 'id': 'man.farm', 'm': mat_part([36, 19], el_far, ang_fa_f, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.uarm', 'm': mat_bone([37, 22], [37, 205], sh_far, el_far, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.farm', 'm': mat_bone([36, 19], [36, 175], el_far, wr_far, flip_x=flip)})
 
     far_shape = h_shape_L if far_arm_side == 'L' else h_shape_R
     hid_far = f'man.hand.{far_shape}' if far_shape in ('grip', 'fist', 'point') else 'man.hand.open'
     ops.append({'t': 'img', 'id': hid_far, 'm': mat_part([25, 46], wr_far, ang_fa_f, flip_x=flip)})
 
-    # Far leg (thigh + shin + boot)
+    # Far leg (bone-span scaled hip->knee, knee->ankle)
     hip_far = jj[1 if far_leg_side == 'L' else 2]
     knee_far = jj[3 if far_leg_side == 'L' else 4]
     ank_far = jj[5 if far_leg_side == 'L' else 6]
     toe_far = jj[11 if far_leg_side == 'L' else 12]
 
-    ang_th_f = math.degrees(math.atan2(knee_far[1] - hip_far[1], knee_far[0] - hip_far[0])) - 90.0
-    ang_sh_f = math.degrees(math.atan2(ank_far[1] - knee_far[1], ank_far[0] - knee_far[0])) - 90.0
-    ops.append({'t': 'img', 'id': 'man.thigh', 'm': mat_part([54, 19], hip_far, ang_th_f, flip_x=flip)})
-    ops.append({'t': 'img', 'id': 'man.shin', 'm': mat_part([45, 25], knee_far, ang_sh_f, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.thigh', 'm': mat_bone([54, 19], [54, 175], hip_far, knee_far, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.shin', 'm': mat_bone([45, 25], [45, 235], knee_far, ank_far, flip_x=flip)})
 
     ang_bt_f = math.degrees(math.atan2(toe_far[1] - ank_far[1], toe_far[0] - ank_far[0]))
     boot_id_f = 'man.boot.toe' if abs(ang_bt_f) > 30 else 'man.boot.flat'
@@ -277,29 +300,26 @@ def draw_man(jj, H_fig, flip=False, fwd_ang=0, is_front=False,
     ang_head = math.degrees(math.atan2(head_top[1] - head_base[1], head_top[0] - head_base[0])) + 90.0
     ops.append({'t': 'img', 'id': head_id, 'm': mat_part([107, 257], neck, ang_head, flip_x=flip)})
 
-    # Near leg (thigh + shin + boot)
+    # Near leg (bone-span scaled hip->knee, knee->ankle)
     hip_near = jj[1 if near_leg_side == 'L' else 2]
     knee_near = jj[3 if near_leg_side == 'L' else 4]
     ank_near = jj[5 if near_leg_side == 'L' else 6]
     toe_near = jj[11 if near_leg_side == 'L' else 12]
 
-    ang_th_n = math.degrees(math.atan2(knee_near[1] - hip_near[1], knee_near[0] - hip_near[0])) - 90.0
-    ang_sh_n = math.degrees(math.atan2(ank_near[1] - knee_near[1], ank_near[0] - knee_near[0])) - 90.0
-    ops.append({'t': 'img', 'id': 'man.thigh', 'm': mat_part([54, 19], hip_near, ang_th_n, flip_x=flip)})
-    ops.append({'t': 'img', 'id': 'man.shin', 'm': mat_part([45, 25], knee_near, ang_sh_n, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.thigh', 'm': mat_bone([54, 19], [54, 175], hip_near, knee_near, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.shin', 'm': mat_bone([45, 25], [45, 235], knee_near, ank_near, flip_x=flip)})
 
     ang_bt_n = math.degrees(math.atan2(toe_near[1] - ank_near[1], toe_near[0] - ank_near[0]))
     boot_id_n = 'man.boot.toe' if abs(ang_bt_n) > 30 else 'man.boot.flat'
     ops.append({'t': 'img', 'id': boot_id_n, 'm': mat_part([66, 35], ank_near, ang_bt_n, flip_x=flip)})
 
-    # Near arm
+    # Near arm (bone-span scaled shoulder->elbow, elbow->wrist)
     sh_near = jj[16 if near_arm_side == 'L' else 17]
     el_near = jj[18 if near_arm_side == 'L' else 19]
     wr_near = jj[20 if near_arm_side == 'L' else 21]
-    ang_ua_n = math.degrees(math.atan2(el_near[1] - sh_near[1], el_near[0] - sh_near[0])) - 90.0
     ang_fa_n = math.degrees(math.atan2(wr_near[1] - el_near[1], wr_near[0] - el_near[0])) - 90.0
-    ops.append({'t': 'img', 'id': 'man.uarm', 'm': mat_part([37, 22], sh_near, ang_ua_n, flip_x=flip)})
-    ops.append({'t': 'img', 'id': 'man.farm', 'm': mat_part([36, 19], el_near, ang_fa_n, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.uarm', 'm': mat_bone([37, 22], [37, 205], sh_near, el_near, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.farm', 'm': mat_bone([36, 19], [36, 175], el_near, wr_near, flip_x=flip)})
 
     near_shape = h_shape_L if near_arm_side == 'L' else h_shape_R
     hid_near = f'man.hand.{near_shape}' if near_shape in ('grip', 'fist', 'point') else 'man.hand.open'

@@ -7,13 +7,13 @@ This audit evaluates all 32 Acting Arena performance challenges against the card
 | Metric / Failure Mode | Female Poet Rig (`shots/weave/assets`) | Male Poet Rig (`shots/weave/cast/man`) | What Fails & Why |
 | :--- | :--- | :--- | :--- |
 | **Total Frames Audited** | 7160 | 7160 | 32 vignettes across locomotion, combat, jumps, objects |
-| **Brad Disconnections** | **7160 frames** (100.0%) | **7154 frames** (99.9%) | 3D foreshortening shortens projected limb spans; rigid card pieces do not stretch, so pins pop apart in mid-air. |
-| **Worst Elbow Gap** | **26.9 cm** | **30.3 cm** | Arm reaching in depth causes forearm to detach from upper arm. |
+| **Brad Disconnections** | **7136 frames** (99.7%) | **7130 frames** (99.6%) | 3D foreshortening shortens projected limb spans; rigid card pieces do not stretch, so pins pop apart in mid-air. |
+| **Worst Elbow Gap** | **26.6 cm** | **30.0 cm** | Arm reaching in depth causes forearm to detach from upper arm. |
 | **Worst Wrist Gap** | **29.3 cm** | **25.6 cm** | Hands float in mid-air with empty brass pin holes showing. |
 | **View Angle Mismatches** | **4323 frames** | **0 frames** (multi-angle head bank) | Female Poet only has ONE right-profile head; Male Poet has 6 angle-swapping heads. |
 | **Hand State Failures** | **1787 frames** | **0 frames** (grip, fist, point library) | Female Poet's far hand permanently clutches a rolled scroll; Male Poet swaps hands from sheet. |
-| **Fused Ankle Failures** | **11820 frames** | **0 frames** (segmented boot rig) | Female Poet has rigid knee-to-sole cutouts that cannot articulate; Male Poet has flat & toe boots. |
-| **Skirt / Crouch Collisions**| **798 frames** | **0 frames** (trousers + separate thighs) | Female Poet has a rigid A-line dress with no thighs; knees punch through skirt pattern when crouching. |
+| **Fused Ankle Failures** | **11796 frames** | **0 frames** (segmented boot rig) | Female Poet has rigid knee-to-sole cutouts that cannot articulate; Male Poet has flat & toe boots. |
+| **Skirt / Crouch Collisions**| **780 frames** | **0 frames** (trousers + separate thighs) | Female Poet has a rigid A-line dress with no thighs; knees punch through skirt pattern when crouching. |
 
 ---
 
@@ -37,20 +37,3 @@ This audit evaluates all 32 Acting Arena performance challenges against the card
 
 ### 5. Skirt vs. Crouch Collision
 - **The Defect**: The Female Poet lacks separate thighs; her legs emerge directly from the hem of a rigid A-line gouache skirt. When she crouches (ACT-003) or jumps (ACT-005), the knees tuck up into the pelvic zone, causing the legs to detach from the skirt or overlap the floral pattern unnaturally.
-
----
-
-## 6. The Solution: Keyframe-Conditioned Pose Generation & Decompilation
-
-Instead of trying to deform and stretch flat 2D parts to fit an extreme 3D action, the pipeline inverts the process:
-
-1. **Extract 3D Keyframe Beat**: Extract the character's target pose and perspective silhouette directly from the Bolas Crash Lab (e.g. `ref_crouch_f72.jpg` for ACT-003 frame 72).
-2. **Generate the Character in that Situated Pose**: Pass the Bolas wireframe pose reference together with the character's reference sheet to `generate_image`. The character is generated **already drawn in that exact perspective and posture**, with natural fabric folding, tailored drape, foreshortened limbs, and anatomically grounded cardboard fluting and brass brads.
-3. **Decompile into Modular Parts**: Run [`shots/arena/pose_decompiler.py`](file:///Users/gaia/Downloads/WYGWYL-WORLD-ARCH/shots/arena/pose_decompiler.py) to remove the studio background and segment the puppet into modular articulated cutouts (`head`, `torso`, `arm`, `legs`).
-4. **Keyframe Beat Swapping**: On the beat strip, swap to the pose-decompiled assembly.
-
-### Test Results on ACT-003 (Crouch under trouble, Frame 72):
-- **Brad Disconnection Gap**: Dropped from **6.6 cm (poet) / 4.9 cm (man)** down to **0.0 cm**.
-- **Garment Collision**: Dropped from **100% collision frames** down to **0**. The teal floral dress and black trousers fold naturally with the knee bend.
-- **Ankle / Floor Stance**: Both feet plant with authentic sole contact and flexed toe bends.
-

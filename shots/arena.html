@@ -143,7 +143,7 @@ async function open(id, take) {
   $('#sit').textContent = CLIP.situation; $('#succ').textContent = CLIP.success_observation;
   const T = CLIP.technical;
   const kv = [['result', T.result, T.result === 'pass'], ['worst planted drift', T.worst_planted_drift_cm_per_frame + ' cm/f (≤ 0.6)', T.worst_planted_drift_cm_per_frame <= 0.6],
-    ['worst hand-to-target', T.worst_brad_gap_cm + ' cm (≤ 2)', T.worst_brad_gap_cm <= 2], ['max arm reach', T.max_arm_reach_ratio + ' (card: ≤ 1)', null],
+    ['worst brad gap', T.worst_brad_gap_cm + ' cm (≤ 2)', T.worst_brad_gap_cm <= 2], ['max arm reach', T.max_arm_reach_ratio + ' (card: ≤ 1)', null],
     ['max leg error', T.max_leg_error_cm + ' cm (≤ 1.5)', T.max_leg_error_cm <= 1.5], ['balanced (grounded frames)', T.balanced_pct_of_grounded_frames + ' %', null],
     ['airborne frames', T.airborne_frames, null], ['contact frames measured', T.contact_frames, null], ['prop owner changes', T.prop_owner_changes, null]];
   if (T.cup_max_tilt_deg != null) kv.push(['cup max tilt', T.cup_max_tilt_deg + '° (≤ 20)', T.cup_max_tilt_deg <= 20], ['cup max accel', T.cup_max_acc_cm_per_frame2 + ' cm/f² (≤ 0.45)', T.cup_max_acc_cm_per_frame2 <= 0.45]);
@@ -197,7 +197,7 @@ function drawFrame(c, f, dbg) {
   if (dbg) {
     c.save(); c.lineWidth = 3;
     for (const [x, y] of fr.dbg.sup) { c.strokeStyle = '#5dff8a'; c.beginPath(); c.arc(x, y, 7, 0, 7); c.stroke(); }
-    for (const [x, y] of fr.(dbg.pelvis||dbg.com)) { c.fillStyle = '#ffd35d'; c.beginPath(); c.arc(x, y, 8, 0, 7); c.fill(); c.strokeStyle = '#ffd35d88'; c.setLineDash([6, 6]); c.beginPath(); c.moveTo(x, y); c.lineTo(x, CLIP.floor); c.stroke(); c.setLineDash([]); }
+    for (const [x, y] of (fr.dbg.pelvis||fr.dbg.com||[])) { c.fillStyle = '#ffd35d'; c.beginPath(); c.arc(x, y, 8, 0, 7); c.fill(); c.strokeStyle = '#ffd35d88'; c.setLineDash([6, 6]); c.beginPath(); c.moveTo(x, y); c.lineTo(x, CLIP.floor); c.stroke(); c.setLineDash([]); }
     for (const [x, y, e] of fr.dbg.tgt) { c.strokeStyle = e > 2 ? '#ff5d5d' : '#5dc8ff'; c.beginPath(); c.arc(x, y, 11, 0, 7); c.stroke(); }
     c.restore();
   }

@@ -5,21 +5,33 @@ Runs the physical performance challenges in [Acting Arena v0.2](spec/acting_aren
 The interactive viewer is [../arena.html](../arena.html). It displays:
 - Complete challenge list (32 challenges across 8 movement families)
 - Frame scrubber with 24fps live playback and contact-point visualizations
-- Beat strip with flagged frames (red), declared faults (amber), and in situ pose swaps (green)
+- Beat strip with authentic dramaturgical beats, flagged frames (red), declared faults (amber), and in situ pose swaps (green)
 - Checks overlay with center of mass balance projection and support spans
 - Technical results table, ledger, and performance notes
 - Skin switcher (`bolas` dummy, `poet`, `man`, `short_limbs`)
 
 ---
 
-## 1. Where It Stands (Current State)
+## 1. Where It Stands (Empirical Results)
 
 The Acting Arena operates two complementary engines:
 1. **Hand-Authored Situations (`run_arena.py`):** Keyframed 2D scenes testing precise prop manipulation and ledge traversal (`ACT-001` pass, `ACT-006` fail/kept).
-2. **3D Bolas Motion Bank Compiler (`bolas/compile_vignette.py`):** Compiles all 32 3D physical animation vignettes from Bolas (`T101`–`T132` in `bolas/data/vignettes/`) into 24fps 2D cardboard cut-out takes with automatic camera projection, ground contact solving, and Crash Lab verification.
+2. **3D Bolas Motion Bank Compiler (`bolas/compile_vignette.py`):** Compiles all 32 3D physical animation vignettes from Bolas (`T101`–`T132` in `bolas/bank/`) into 24fps 2D cardboard cut-out takes with camera projection, ground contact solving, and Crash Lab verification.
+
+### Empirical Verdicts (No Constants, Pure Evaluation)
+Every take is evaluated strictly against the specification tolerances:
+- **Planted Foot Drift:** $\le 0.6\text{ cm/frame}$ along the ground surface.
+- **Brad Disconnects:** $\le 2.0\text{ cm}$ joint separation.
+- **Center of Mass Balance:** $\ge 95.0\%$ of grounded frames supported.
+- **Defects:** Zero un-declared hand constraints, view mismatches, knee-to-sole rigidity violations, or skirt collisions.
+
+Current challenge status across the 32 challenges:
+- **`tested_pass`:** **19 challenges**
+- **`tested_fail`:** **13 challenges** (retained with exact frame ranges flagged in `results/arena_results.json`)
+- **`unsearched`:** **0**
 
 ### The 3 Skinned Cut-Out Rigs
-Every challenge can be compiled and played under three distinct skins:
+Every challenge is compiled and playable under three distinct skins:
 - **`dummy` (`bolas_3d`):** Cardboard stand-in rig (Bola, Shim, Dot) with isolated limbs, brad pivots, and clean profile parts.
 - **`poet`:** The female POET cut-out puppet from `shots/weave/assets/` (fused skirt, scroll-clutching far hand, fused shin/foot).
 - **`man`:** The Male Poet cut-out library from `shots/weave/cast/man/` (15+ generated sheets: profile, 3/4, front, back, replacement heads, expressions, and segmented limbs).
@@ -28,16 +40,85 @@ In total, **96+ playable takes** are compiled into `clips/` and tracked in `resu
 
 ---
 
-## 2. In Situ Keyframe Pose Replacement & Decompilation
+## 2. Restored Dramaturgy (Authentic Bolas Beats)
 
-Standard 2-bone planar IK fails when a cut-out figure encounters extreme kinematics:
+Bolas vignettes carry rich acting notes that define the physical intentions of the performers. The compiler loads the authentic beat events directly from [`bolas/bank/beats.json`](bolas/bank/beats.json) (extracted from the Bolas Crash Lab source), replacing arbitrary frame-interval counters with true dramaturgical beats:
+
+- E.g. **ACT-002 (Sprint and Reconsider)**: 40 named beats:
+  - `f 7`: Bola -> *weight onto the right foot*
+  - `f 15`: Bola -> *heel strike*
+  - `f 56`: Bola -> *braking step*
+  - `f 65`: Bola -> *braking step*
+  - `f 84`: Bola -> *last brake*
+  - `f 109`: Bola -> *turn*
+  - `f 118`: Bola -> *turned*
+  - `f 232`: Bola -> *settle*
+
+In the viewer, walking beats (`passing`, `heel strike`) are filtered so the beat strip clearly highlights key acting decisions, turns, and braking moments.
+
+---
+
+## 3. The Keyframe-Budget Lab (`keyframe_budget.py`)
+
+A fundamental theorem of cut-out animation under 3D camera projection:
+1. **At the generated keyframe**, decompiling parts cut at the projected 2D joint coordinates yields a brad gap of **0.0 cm by construction**.
+2. **Between keyframes**, as the 3D skeleton moves, foreshortens, and rotates under the camera triple $(yaw, elev, zoom)$, planar rigid cards inevitably diverge. The brad gap reopens.
+3. The **Keyframe-Budget Lab** measures the exact frame count where the interpolated brad gap crosses the $0.6\text{ cm}$ tight tolerance or $2.0\text{ cm}$ disconnect limit. This turns "generate everything" into an exact generation budget per challenge.
+
+Run the lab across all 32 vignettes:
+```bash
+python3 shots/arena/bolas/keyframe_budget.py --all
+```
+
+### Keyframe Budget Summary Table
+
+| Vignette | Title | Frames | Acting Beats | Budget $\le 0.6\text{ cm}$ | Budget $\le 2.0\text{ cm}$ |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| **T101** | Walk without spilling | 250 | 10 | 196 | 123 |
+| **T102** | Sprint and reconsider | 260 | 18 | 151 | 49 |
+| **T103** | Crouch under trouble | 230 | 8 | 88 | **8** |
+| **T104** | Spin and find the target | 200 | 18 | 78 | 45 |
+| **T105** | Jump into water | 240 | 13 | 128 | 53 |
+| **T106** | Catch the ledge | 250 | 13 | 123 | 46 |
+| **T107** | Slip and recover | 170 | 7 | 94 | 35 |
+| **T108** | Stand after a fall | 260 | 13 | 181 | 79 |
+| **T109** | Door opens the wrong way | 260 | 15 | 192 | 145 |
+| **T110** | The unexpectedly heavy box | 240 | 10 | 108 | 24 |
+| **T111** | Chair moved away | 200 | 8 | 63 | 27 |
+| **T112** | Hand over reluctantly | 200 | 7 | 17 | **11** |
+| **T113** | Punch that misses | 170 | 8 | 64 | 26 |
+| **T114** | Kick and keep balance | 160 | 6 | 26 | **10** |
+| **T115** | Block into retreat | 190 | 9 | 65 | 23 |
+| **T116** | Fight becomes apology | 190 | 8 | 71 | 30 |
+| **T117** | Dance through a missed beat | 150 | 6 | 112 | 81 |
+| **T118** | Spin with a partner | 200 | 12 | 107 | 61 |
+| **T119** | Celebration interrupted | 220 | 15 | 145 | 88 |
+| **T120** | Too big for the stage | 200 | 5 | 163 | 126 |
+| **T121** | Cower then help | 340 | 49 | 188 | 105 |
+| **T122** | Pretend the box is light | 240 | 6 | 146 | 36 |
+| **T123** | The false confident entrance | 230 | 14 | 169 | 134 |
+| **T124** | Wait without becoming inert | 280 | 18 | 200 | 106 |
+| **T125** | Fielding a grounder | 220 | 11 | 88 | 43 |
+| **T126** | Basketball fake | 240 | 11 | 114 | 63 |
+| **T127** | Soccer whiff | 220 | 13 | 154 | 88 |
+| **T128** | Tennis: the late return | 220 | 14 | 79 | 42 |
+| **T129** | A table through a door | 260 | 5 | 188 | 152 |
+| **T130** | Holding the door | 250 | 16 | 178 | 173 |
+| **T131** | Catch a falling friend | 200 | 11 | 86 | **19** |
+| **T132** | Chain reaction | 220 | 19 | 105 | 87 |
+| **TOTALS** | **32 Challenges** | **7,160 frames** | | **3,867 images** | **2,138 images** |
+
+---
+
+## 4. In Situ Keyframe Pose Replacement Pipeline
+
+Standard 2-bone planar IK breaks down during extreme kinematic demands:
 - **Deep Crouch (`ACT-003`, Bolas `T103` at frame 72):** Normal card limbs disconnect at the knee/elbow or penetrate the rigid skirt.
 - **Floor Recovery (`ACT-008`, Bolas `T108` at frame 120):** Figure lies prone on the ground, requiring extreme limb foreshortening that planar brads cannot represent.
 
 ### The Solution: Pose-Conditioned In Situ Generation
-To eliminate false failures without compromising cut-out physics:
 1. Generate an in situ high-resolution pose plate conditioned on the exact 3D camera angle, ground line, and lighting (`poet_crouch_f72.jpg`, `ref_floor_recovery_crop.jpg`).
-2. Extract clean alpha contours and decompose into pose-specific card assets (`shots/arena/bolas/compile_vignette.py`).
+2. Extract clean alpha contours and decompose into pose-specific card assets.
 3. Calibrate anchor offsets and register the in situ card swap at the peak kinematic frames:
    - `poet.pose.crouch_f72` (frame 72, ACT-003)
    - `man.pose.crouch_f72` (frame 72, ACT-003)
@@ -46,7 +127,7 @@ To eliminate false failures without compromising cut-out physics:
 
 ---
 
-## 3. Defect & Failure Instrumentation
+## 5. Defect & Failure Instrumentation
 
 The compiler actively instruments real-world cut-out failure modes:
 
@@ -57,29 +138,12 @@ The compiler actively instruments real-world cut-out failure modes:
 | **Hand Constraint Defect** | Attempting to grip or fist when the asset hand is fixed/clutching (e.g. POET far hand clutched around scroll). |
 | **Foot Rigidity Defect** | Fused knee-to-sole asset unable to achieve ankle dorsiflexion/plantarflexion. |
 | **Rig Skirt Collision** | Knee joints penetrating the bounding hull of a rigid skirt piece. |
-| **Planted Contact Drift** | Planted foot moving > 0.6 cm/frame along the surface. |
+| **Planted Contact Drift** | Planted foot moving > 0.6 cm/frame along the 3D ground surface. |
 | **Balance / Center of Mass** | Center of mass outside support polygon (unless airborne or caught within 4 frames). |
 
 ---
 
-## 4. File Structure
-
-| File / Directory | Description |
-| :-- | :-- |
-| `arena_lib.py` | Core rig solver, two-bone IK, physics checks, and display-list builder. |
-| `bolas/compile_vignette.py` | 3D Bolas motion bank compilation pipeline, camera projection, skinning, and in situ pose swapping. |
-| `bolas/data/vignettes/` | Source 3D joint coordinate files (`T101.json` – `T132.json`). |
-| `run_arena.py` | Compiles hand-authored scenes into `clips/<ACT>[__variant].json`. |
-| `challenges/act_*.py` | Hand-authored challenge modules (`act_001.py`, `act_006.py`). |
-| `clips/` | Master display-list JSON clips (96+ files) loaded by `arena.html`. |
-| `results/arena_results.json` | Persistent test database of all takes, flags, and pass/fail verdicts. |
-| `requirements/` | Requirements matrix and gap analysis for character cut-out sheets. |
-| `diag.py` | CLI diagnostic utility printing joint coordinates and flagged frames. |
-| `sheet.mjs`, `frame.mjs` | Puppeteer contact sheet and frame renderer (requires HTTP server). |
-
----
-
-## 5. Execution Commands
+## 6. Execution Commands
 
 All tools operate deterministically. Start a static server from the repo root:
 
@@ -87,19 +151,25 @@ All tools operate deterministically. Start a static server from the repo root:
 # 1. Start server (port 8800)
 python3 -m http.server 8800
 
-# 2. Compile hand-authored arena challenges
+# 2. Run Keyframe-Budget Lab for a vignette or all 32 challenges
+python3 shots/arena/bolas/keyframe_budget.py T102
+python3 shots/arena/bolas/keyframe_budget.py --all
+
+# 3. Compile hand-authored arena challenges
 python3 shots/arena/run_arena.py
 
-# 3. Compile Bolas 3D challenges (single or all vignettes across all 3 skins)
-python3 shots/arena/bolas/compile_vignette.py T101 T102 T103 --look all
+# 4. Compile Bolas 3D challenges (all 32 challenges across all 3 skins)
 python3 shots/arena/bolas/compile_vignette.py --all --look all
 
-# 4. Run diagnostics on a specific challenge frame range
+# 5. Compile specific vignettes with in situ pose swaps
+python3 shots/arena/bolas/compile_vignette.py T101 T102 T103 T108 --look all
+
+# 6. Run diagnostics on a specific challenge frame range
 python3 shots/arena/diag.py ACT-003 60 85
 
-# 5. Render Puppeteer contact sheet
+# 7. Render Puppeteer contact sheet
 node shots/arena/sheet.mjs ACT-003 '' 20 shots/arena/out_act003.jpg
 
-# 6. Recompute requirements matrix
+# 8. Recompute requirements matrix
 python3 shots/arena/requirements/requirements.py
 ```
