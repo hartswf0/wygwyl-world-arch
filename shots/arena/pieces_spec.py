@@ -36,6 +36,26 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 BANK = os.path.join(HERE, 'bolas', 'bank')
 OUT = os.path.join(HERE, 'pieces.json')
 
+# HOW EACH PIECE IS MADE. Measured: tubes are 80% of the figure by card area and
+# carry no identity — a sleeve is a sleeve. They should never be generated,
+# because a drawn PNG has a fixed length and a bone does not, and that mismatch
+# IS the brad gap. Drawn in code at exactly the bone length, the gap is zero by
+# construction for half the body and there is nothing to accept or reject.
+#
+# What must be generated is what a tube cannot be: the head, the hands, the
+# boots. 20% of the area and all of the likeness. The torso and pelvis sit
+# between — featureless in shape but carrying the garment, so generated once and
+# never articulated.
+#
+#   generate   head, hand, boot      18 cards per character, every view
+#   garment    torso, pelvis          generated once, no articulation
+#   procedural uarm, farm, thigh, shin  drawn in code, 50% of the figure, 0 cards
+
+MAKE = {'head': 'generate', 'hand': 'generate', 'boot': 'generate',
+        'torso': 'garment', 'pelvis': 'garment',
+        'uarm': 'procedural', 'farm': 'procedural',
+        'thigh': 'procedural', 'shin': 'procedural'}
+
 # bone = (joint A, joint B). A is the pivot; B is straight down the card.
 BONES = [
     ('head',   'headBase', 'headTop',   20.0, 'front|threequarter_L|threequarter_R|profile_L|profile_R|back'),
@@ -78,10 +98,12 @@ def main():
             width_cm=w, width_source='authored — a stick figure has no width',
             pivot=[0.5, 0.0],      # joint A sits at the top centre of the card
             axis='joint B straight down the card; place at atan2(B-A) - 90',
+            make=MAKE[name],
             views=views.split('|'),
             sides=['L', 'R'] if name in ('uarm', 'farm', 'hand', 'thigh', 'shin', 'boot') else ['-'],
         ))
-    total_cards = sum(len(p['views']) * len(p['sides']) for p in pieces)
+    total_cards = sum(len(p['views']) * len(p['sides']) for p in pieces
+                      if p['make'] != 'procedural')
     spec = dict(
         about='PIECE SPEC for the WYGWYL cut-out cast. Lengths measured from the '
               'Bolas skeleton; widths authored. One axis rule for every piece.',
@@ -98,7 +120,13 @@ def main():
     for p in pieces:
         print(f'{p["id"]:8s} {p["bone"][0]+" -> "+p["bone"][1]:24s} {p["length_cm"]:6.1f} '
               f'{len(p["views"]):6d} {len(p["sides"]):6d} {len(p["views"])*len(p["sides"]):6d}')
-    print(f'\n{total_cards} cards per character at one camera view.')
+    import collections
+    by = collections.Counter()
+    for p in pieces:
+        by[p['make']] += len(p['views']) * len(p['sides'])
+    print(f'\n{total_cards} cards to generate per character at one camera view.')
+    print(f'   {by["generate"]} generated (head, hands, boots) · {by["garment"]} garment '
+          f'(torso, pelvis) · {by["procedural"]} would-be cards replaced by code')
     print(f'-> {os.path.relpath(OUT, os.getcwd())}')
 
 if __name__ == '__main__':
