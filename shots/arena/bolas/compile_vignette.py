@@ -293,8 +293,8 @@ def draw_man(jj, H_fig, flip=False, fwd_ang=0, is_front=False,
     el_far = jj[18 if far_arm_side == 'L' else 19]
     wr_far = jj[20 if far_arm_side == 'L' else 21]
     ang_fa_f = math.degrees(math.atan2(wr_far[1] - el_far[1], wr_far[0] - el_far[0])) - 90.0
-    ops.append({'t': 'img', 'id': 'man.uarm', 'm': mat_bone([37, 22], [37, 205], sh_far, el_far, flip_x=flip)})
-    ops.append({'t': 'img', 'id': 'man.farm', 'm': mat_bone([36, 19], [36, 175], el_far, wr_far, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.uarm', 'm': mat_bone([39, 10], [39, 158], sh_far, el_far, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.farm', 'm': mat_bone([35, 10], [35, 148], el_far, wr_far, flip_x=flip)})
 
     far_shape = h_shape_L if far_arm_side == 'L' else h_shape_R
     hid_far = f'man.hand.{far_shape}' if far_shape in ('grip', 'fist', 'point') else 'man.hand.open'
@@ -306,8 +306,8 @@ def draw_man(jj, H_fig, flip=False, fwd_ang=0, is_front=False,
     ank_far = jj[5 if far_leg_side == 'L' else 6]
     toe_far = jj[11 if far_leg_side == 'L' else 12]
 
-    ops.append({'t': 'img', 'id': 'man.thigh', 'm': mat_bone([54, 19], [54, 175], hip_far, knee_far, flip_x=flip)})
-    ops.append({'t': 'img', 'id': 'man.shin', 'm': mat_bone([45, 25], [45, 235], knee_far, ank_far, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.thigh', 'm': mat_bone([52, 10], [52, 244], hip_far, knee_far, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.shin', 'm': mat_bone([43, 10], [43, 238], knee_far, ank_far, flip_x=flip)})
 
     dx_f = -(toe_far[0] - ank_far[0]) if flip else (toe_far[0] - ank_far[0])
     dy_f = toe_far[1] - ank_far[1]
@@ -336,8 +336,8 @@ def draw_man(jj, H_fig, flip=False, fwd_ang=0, is_front=False,
     ank_near = jj[5 if near_leg_side == 'L' else 6]
     toe_near = jj[11 if near_leg_side == 'L' else 12]
 
-    ops.append({'t': 'img', 'id': 'man.thigh', 'm': mat_bone([54, 19], [54, 175], hip_near, knee_near, flip_x=flip)})
-    ops.append({'t': 'img', 'id': 'man.shin', 'm': mat_bone([45, 25], [45, 235], knee_near, ank_near, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.thigh', 'm': mat_bone([52, 10], [52, 244], hip_near, knee_near, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.shin', 'm': mat_bone([43, 10], [43, 238], knee_near, ank_near, flip_x=flip)})
 
     dx_n = -(toe_near[0] - ank_near[0]) if flip else (toe_near[0] - ank_near[0])
     dy_n = toe_near[1] - ank_near[1]
@@ -350,8 +350,8 @@ def draw_man(jj, H_fig, flip=False, fwd_ang=0, is_front=False,
     el_near = jj[18 if near_arm_side == 'L' else 19]
     wr_near = jj[20 if near_arm_side == 'L' else 21]
     ang_fa_n = math.degrees(math.atan2(wr_near[1] - el_near[1], wr_near[0] - el_near[0])) - 90.0
-    ops.append({'t': 'img', 'id': 'man.uarm', 'm': mat_bone([37, 22], [37, 205], sh_near, el_near, flip_x=flip)})
-    ops.append({'t': 'img', 'id': 'man.farm', 'm': mat_bone([36, 19], [36, 175], el_near, wr_near, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.uarm', 'm': mat_bone([39, 10], [39, 158], sh_near, el_near, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.farm', 'm': mat_bone([35, 10], [35, 148], el_near, wr_near, flip_x=flip)})
 
     near_shape = h_shape_L if near_arm_side == 'L' else h_shape_R
     hid_near = f'man.hand.{near_shape}' if near_shape in ('grip', 'fist', 'point') else 'man.hand.open'
@@ -418,8 +418,8 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
             'man.pelvis.profile': '../weave/cast/man/parts/pelvis.profile.png',
             'man.torso.front': '../weave/cast/man/parts/torso.front.png',
             'man.pelvis.front': '../weave/cast/man/parts/pelvis.front.png',
-            'man.uarm': '../weave/cast/man/parts/uarm.profile.png',
-            'man.farm': '../weave/cast/man/parts/farm.profile.png',
+            'man.uarm': '../weave/cast/man/parts/proc.uarm.png',
+            'man.farm': '../weave/cast/man/parts/proc.farm.png',
             'man.hand.open': '../weave/cast/man/parts/hand.profile.open.png',
             'man.hand.grip': '../weave/cast/man/parts/hand.grip.png',
             'man.hand.fist': '../weave/cast/man/parts/hand.fist.png',
@@ -430,8 +430,8 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
             'man.head.threequarter_L': '../weave/cast/man/parts/head.threequarter_L.png',
             'man.head.profile_L': '../weave/cast/man/parts/head.profile_L.png',
             'man.head.back': '../weave/cast/man/parts/head.back.png',
-            'man.thigh': '../weave/cast/man/parts/thigh.profile.png',
-            'man.shin': '../weave/cast/man/parts/shin.profile.png',
+            'man.thigh': '../weave/cast/man/parts/proc.thigh.png',
+            'man.shin': '../weave/cast/man/parts/proc.shin.png',
             'man.boot.flat': '../weave/cast/man/parts/boot.flat.png',
             'man.boot.toe': '../weave/cast/man/parts/boot.toe.png',
             'man.pose.crouch_f72': '../weave/cast/man/parts/man.pose.crouch_f72.png',
@@ -713,10 +713,10 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
                     if knee_y < pelvis_2d[1] + 70 * (H_fig / 400.0):
                         flags.append("rig collision: knees penetrate rigid skirt")
                 elif skin == 'man':
-                    L_ua_exp = 183.0 * (H_fig / 984.0)
-                    L_fa_exp = 156.0 * (H_fig / 984.0)
-                    L_th_exp = 156.0 * (H_fig / 984.0)
-                    L_sh_exp = 210.0 * (H_fig / 984.0)
+                    L_ua_exp = 148.0 * (H_fig / 984.0)
+                    L_fa_exp = 138.0 * (H_fig / 984.0)
+                    L_th_exp = 234.0 * (H_fig / 984.0)
+                    L_sh_exp = 228.0 * (H_fig / 984.0)
                     d_ua = np.linalg.norm(np.array(jj[18][:2]) - np.array(jj[16][:2]))
                     d_fa = np.linalg.norm(np.array(jj[20][:2]) - np.array(jj[18][:2]))
                     d_th = np.linalg.norm(np.array(jj[3][:2]) - np.array(jj[1][:2]))
