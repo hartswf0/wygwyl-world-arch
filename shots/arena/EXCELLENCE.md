@@ -352,3 +352,16 @@ it is **zero**, because the cold read has never been run.
 6. **Turn Gate G on in `compile_vignette.py`**, so impossible frames fail the
    render instead of decorating it.
 7. **Reconcile `README.md` and `results/failure_audit.md`** with `FAILINGS.md`.
+
+---
+
+## The loop that enforces this
+
+- `critic/`: renders each authored beat three ways: as compiled, re-pinned on
+  the drawn brads, and assembled from the part library. It measures the pixels
+  and writes boards, loupes and key-only sheets for the critics in
+  `critic/CRITICS.md`. Every turn is in `critic/LOG.md`.
+- `parts/`: one contract for code-drawn, image and traced parts. Connection
+  points are constructed or registered by eye, never inferred. Hands, faces
+  and props are picked per frame from what the Bolas bank asks for. See
+  `parts/PARTS.md`.
