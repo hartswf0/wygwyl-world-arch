@@ -30,14 +30,19 @@ def r2(v):
     return [round(float(v[0]), 1), round(float(v[1]), 1)]
 
 
-def place(pid, A, B, H_fig, flip=False, thick=1.0):
+def place(pid, A, B, H_fig, flip=False, thick=1.0, uniform=True):
     m = PARTS['parts'][pid]
     A = np.asarray(A[:2], float); B = np.asarray(B[:2], float)
     v_ = B - A
     Lw = float(np.linalg.norm(v_))
     th = math.atan2(v_[1], v_[0])
-    sx = max(Lw, 1e-3) / m['len']
-    sy = (H_fig / REF_H) / m['unit'] * thick * (-1 if flip else 1)
+    s_base = (H_fig / REF_H) / m['unit']
+    if uniform or pid.startswith(('bola.head', 'shim.head', 'dot.head', 'bola.foot', 'shim.foot', 'dot.foot')):
+        sx = s_base
+    else:
+        s_meas = max(Lw, 1e-3) / m['len']
+        sx = max(s_base * 0.9, min(s_base * 1.1, s_meas))
+    sy = s_base * thick * (-1 if flip else 1)
     c, s = math.cos(th), math.sin(th)
     M = np.array([[c * sx, -s * sy], [s * sx, c * sy]])
     t = A - M @ np.array(m['pivot'], float)
@@ -45,7 +50,75 @@ def place(pid, A, B, H_fig, flip=False, thick=1.0):
                                           round(t[0], 2), round(t[1], 2)]}
 
 
-def compile_vignette(tid, custom_yaw=None, out_act=None):
+def draw_poet(jj, H_fig, flip=False, far_arm_side='L', near_arm_side='R', far_leg_side='L', near_leg_side='R'):
+    S_poet = H_fig / 1109.0
+    ops = []
+
+    def rot(deg):
+        c, s = math.cos(math.radians(deg)), math.sin(math.radians(deg))
+        return np.array([[c, -s], [s, c]])
+
+    def mat_part(p_pivot, pos, ang_deg, flip_x=False):
+        R = rot(ang_deg) * S_poet
+        if flip_x:
+            R = R @ np.array([[-1.0, 0.0], [0.0, 1.0]])
+        t = np.array(pos[:2], float) - R @ np.array(p_pivot, float)
+        return [round(R[0, 0], 5), round(R[1, 0], 5), round(R[0, 1], 5), round(R[1, 1], 5),
+                round(t[0], 2), round(t[1], 2)]
+
+    # Far arm
+    sh_far = jj[16 if far_arm_side == 'L' else 17]
+    el_far = jj[18 if far_arm_side == 'L' else 19]
+    wr_far = jj[20 if far_arm_side == 'L' else 21]
+
+    ang_ua_f = math.degrees(math.atan2(el_far[1] - sh_far[1], el_far[0] - sh_far[0])) - 2.8
+    ang_fa_f = math.degrees(math.atan2(wr_far[1] - el_far[1], wr_far[0] - el_far[0])) - 0.7
+    ang_ha_f = ang_fa_f - 40.0
+
+    ops.append({'t': 'img', 'id': 'poet.uarm.far', 'm': mat_part([25, 33], sh_far, ang_ua_f, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'poet.farm.far', 'm': mat_part([19, 35], el_far, ang_fa_f, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'poet.hand.far', 'm': mat_part([26, 48], wr_far, ang_ha_f, flip_x=flip)})
+
+    # Far leg
+    knee_far = jj[3 if far_leg_side == 'L' else 4]
+    ank_far = jj[5 if far_leg_side == 'L' else 6]
+    ang_leg_f = math.degrees(math.atan2(ank_far[1] - knee_far[1], ank_far[0] - knee_far[0])) - 97.3
+    ops.append({'t': 'img', 'id': 'poet.leg.far', 'm': mat_part([112, 26], knee_far, ang_leg_f, flip_x=flip)})
+
+    # Skirt & Torso
+    pelvis = jj[0]
+    neck = jj[14]
+    ang_tors = math.degrees(math.atan2(neck[1] - pelvis[1], neck[0] - pelvis[0])) + 90.0
+    ops.append({'t': 'img', 'id': 'poet.skirt', 'm': mat_part([157, 15], pelvis, 0, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'poet.torso', 'm': mat_part([109, 261], pelvis, ang_tors, flip_x=flip)})
+
+    # Head
+    head_base = jj[22]
+    head_top = jj[24]
+    ang_head = math.degrees(math.atan2(head_top[1] - head_base[1], head_top[0] - head_base[0])) + 90.0
+    ops.append({'t': 'img', 'id': 'poet.head', 'm': mat_part([166, 317], neck, ang_head, flip_x=flip)})
+
+    # Near leg
+    knee_near = jj[3 if near_leg_side == 'L' else 4]
+    ank_near = jj[5 if near_leg_side == 'L' else 6]
+    ang_leg_n = math.degrees(math.atan2(ank_near[1] - knee_near[1], ank_near[0] - knee_near[0])) - 80.3
+    ops.append({'t': 'img', 'id': 'poet.leg.near', 'm': mat_part([44, 25], knee_near, ang_leg_n, flip_x=flip)})
+
+    # Near arm
+    sh_near = jj[16 if near_arm_side == 'L' else 17]
+    el_near = jj[18 if near_arm_side == 'L' else 19]
+    wr_near = jj[20 if near_arm_side == 'L' else 21]
+    ang_ua_n = math.degrees(math.atan2(el_near[1] - sh_near[1], el_near[0] - sh_near[0])) - 3.2
+    ang_fa_n = math.degrees(math.atan2(wr_near[1] - el_near[1], wr_near[0] - el_near[0]))
+    ang_ha_n = ang_fa_n
+    ops.append({'t': 'img', 'id': 'poet.uarm.near', 'm': mat_part([23, 32], sh_near, ang_ua_n, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'poet.farm.near', 'm': mat_part([22, 30], el_near, ang_fa_n, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'poet.hand.near', 'm': mat_part([15.8, 52.4], wr_near, ang_ha_n, flip_x=flip)})
+
+    return ops
+
+
+def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
     bank_path = os.path.join(BANK, f"{tid}.json")
     if not os.path.exists(bank_path):
         print(f"Error: {bank_path} not found")
@@ -53,7 +126,8 @@ def compile_vignette(tid, custom_yaw=None, out_act=None):
 
     V = json.load(open(bank_path))
     act_id = out_act or T_TO_ACT.get(tid)
-    clip_id = f"{act_id}__bolas" if act_id else f"{tid}__bolas"
+    suffix = 'poet' if skin == 'poet' else 'bolas'
+    clip_id = f"{act_id}__{suffix}" if act_id else f"{tid}__{suffix}"
 
     W, H = 1920, 1080
     view = dict(V['view'] or {})
@@ -80,13 +154,28 @@ def compile_vignette(tid, custom_yaw=None, out_act=None):
     images = {}
 
     # Gather images needed
-    for a in V['actors']:
-        lk = a['name'].lower()
-        if lk not in ('bola', 'shim', 'dot'):
-            lk = 'bola'
-        for k, v_ in PARTS['parts'].items():
-            if k.startswith(lk + '.'):
-                images[k] = v_['file']
+    if skin == 'poet':
+        images.update({
+            'poet.head': '../weave/assets/parts/head.png',
+            'poet.torso': '../weave/assets/parts/torso.png',
+            'poet.skirt': '../weave/assets/parts/skirt.png',
+            'poet.uarm.near': '../weave/assets/parts/upper_arm_near.png',
+            'poet.uarm.far': '../weave/assets/parts/upper_arm_far.png',
+            'poet.farm.near': '../weave/assets/parts/forearm_near.png',
+            'poet.farm.far': '../weave/assets/parts/forearm_far.png',
+            'poet.hand.near': '../weave/assets/parts/hand_near.png',
+            'poet.hand.far': '../weave/assets/parts/hand_far.png',
+            'poet.leg.near': '../weave/assets/parts/leg_near.png',
+            'poet.leg.far': '../weave/assets/parts/leg_far.png',
+        })
+    else:
+        for a in V['actors']:
+            lk = a['name'].lower()
+            if lk not in ('bola', 'shim', 'dot'):
+                lk = 'bola'
+            for k, v_ in PARTS['parts'].items():
+                if k.startswith(lk + '.'):
+                    images[k] = v_['file']
 
     N = V['len']
     # Tracking for checks
@@ -138,7 +227,7 @@ def compile_vignette(tid, custom_yaw=None, out_act=None):
             if look not in ('bola', 'shim', 'dot'):
                 look = 'bola'
             scale_fac = ameta.get('scale', 1.0)
-            H_fig = 400.0 * scale_fac
+            H_fig = 185.0 * scale_fac * scale
 
             jj_3d = A['j']
             if jj_3d[0] is None:
@@ -258,22 +347,28 @@ def compile_vignette(tid, custom_yaw=None, out_act=None):
                 ]
                 return ops
 
-            # Layer order: far arm -> far leg -> torso -> head -> near leg -> near arm
-            draw.extend(draw_arm(far_arm_side, is_far=True))
-            draw.extend(draw_leg(far_leg_side, is_far=True))
+            if skin == 'poet':
+                draw.extend(draw_poet(jj, H_fig, flip=flip,
+                                      far_arm_side=far_arm_side, near_arm_side=near_arm_side,
+                                      far_leg_side=far_leg_side, near_leg_side=near_leg_side))
+            else:
+                # Layer order: far arm -> far leg -> torso -> head -> near leg -> near arm
+                draw.extend(draw_arm(far_arm_side, is_far=True))
+                draw.extend(draw_leg(far_leg_side, is_far=True))
 
-            # Torso
-            torso_id = f"{look}.torso_{view_str}"
-            draw.append(place(torso_id, pelvis_2d, neck_2d, H_fig, flip=flip and not is_front))
+                # Torso
+                torso_id = f"{look}.torso_{view_str}"
+                draw.append(place(torso_id, pelvis_2d, neck_2d, H_fig, flip=flip and not is_front))
 
-            # Head: from neckBase (14) to headTop (24)
-            head_id = f"{look}.head.{'front' if is_front else 'side'}.{face_name}"
-            head_top = jj[24]
-            draw.append(place(head_id, neck_2d, head_top, H_fig, flip=flip and not is_front))
+                # Head: from headBase (22) to headTop (24)
+                head_id = f"{look}.head.{'front' if is_front else 'side'}.{face_name}"
+                head_base = jj[22]
+                head_top = jj[24]
+                draw.append(place(head_id, head_base, head_top, H_fig, flip=flip and not is_front))
 
-            # Near leg & near arm
-            draw.extend(draw_leg(near_leg_side, is_far=False))
-            draw.extend(draw_arm(near_arm_side, is_far=False))
+                # Near leg & near arm
+                draw.extend(draw_leg(near_leg_side, is_far=False))
+                draw.extend(draw_arm(near_arm_side, is_far=False))
 
             # Support points & contact check
             for s in ('L', 'R'):
@@ -384,34 +479,34 @@ def compile_vignette(tid, custom_yaw=None, out_act=None):
 
     # Register in arena_results.json if it corresponds to an ACT challenge
     if act_id:
-        update_arena_results(act_id, clip_id, clip_data, tid)
+        update_arena_results(act_id, clip_id, clip_data, tid, skin=skin)
 
     return clip_id
 
 
-def update_arena_results(act_id, clip_id, clip_data, tid):
+def update_arena_results(act_id, clip_id, clip_data, tid, skin='dummy'):
     if not os.path.exists(RESULTS_PATH):
         return
     res = json.load(open(RESULTS_PATH))
     ch_entry = res['challenges'].setdefault(act_id, {'id': act_id, 'title': clip_data['title'], 'takes': []})
     takes = ch_entry.setdefault('takes', [])
 
-    take_name = f"{act_id}__bolas"
+    take_name = clip_id
     # Replace existing take with same name or append
     new_take = {
         'run_at': '2026-10-20',
-        'instrument': f"Bolas 3D Motion Bank ({tid}) + Cardboard Cut-out Skin",
+        'instrument': f"Bolas 3D Motion Bank ({tid}) + {'POET Cutout Skin' if skin == 'poet' else 'Cardboard Cut-out Skin'}",
         'take': take_name,
-        'variant': 'bolas_3d',
+        'variant': 'poet' if skin == 'poet' else 'bolas_3d',
         'tier_reached': 'complete acted situation',
-        'execution_note': f"Baked from hartswf0/bolas {tid} ({clip_data['title']}). 3D joints projected and skinned with cardboard cut-out puppet pieces.",
+        'execution_note': f"Baked from hartswf0/bolas {tid} ({clip_data['title']}). 3D joints projected and skinned with {'POET cut-out puppet pieces (shots/weave assets)' if skin == 'poet' else 'cardboard cut-out puppet pieces'}.",
         'frames': len(clip_data['frames']),
         'fps': 24,
-        'cast': [c['name'] for c in clip_data['cast']],
+        'cast': ['The Poet'] if skin == 'poet' else [c['name'] for c in clip_data['cast']],
         'props': list(clip_data['frames'][0].get('p', {}).keys()) if clip_data['frames'] else [],
         'clip': f"arena/clips/{clip_id}.json",
         'technical': clip_data['technical'],
-        'performance_note': f"3D authored motion from Bolas Crash Lab ({tid}: {clip_data['title']}) driving the cardboard cut-out puppet. Poses, foot contacts and center of mass balance are preserved.",
+        'performance_note': f"3D authored motion from Bolas Crash Lab ({tid}: {clip_data['title']}) driving the {'POET cut-out puppet' if skin == 'poet' else 'cardboard cut-out puppet'}. Poses, foot contacts and center of mass balance are preserved.",
         'performance_review': 'Automated kinematic mapping test against 3D reference performance.'
     }
 
@@ -437,6 +532,7 @@ if __name__ == '__main__':
     parser.add_argument('vignettes', nargs='*', help="Vignette IDs (e.g. T101 T102 T001)")
     parser.add_argument('--all', action='store_true', help="Compile all 32 Acting Arena vignettes (T101-T132)")
     parser.add_argument('--yaw', type=float, help="Override camera yaw")
+    parser.add_argument('--look', choices=['dummy', 'poet', 'both'], default='both', help="Skin to apply: dummy, poet, or both")
     args = parser.parse_args()
 
     vigs = args.vignettes
@@ -446,4 +542,7 @@ if __name__ == '__main__':
         vigs = ['T101', 'T102', 'T104', 'T111', 'T112']
 
     for tid in vigs:
-        compile_vignette(tid, custom_yaw=args.yaw)
+        if args.look in ('dummy', 'both'):
+            compile_vignette(tid, custom_yaw=args.yaw, skin='dummy')
+        if args.look in ('poet', 'both'):
+            compile_vignette(tid, custom_yaw=args.yaw, skin='poet')
