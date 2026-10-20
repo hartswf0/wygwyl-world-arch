@@ -196,7 +196,7 @@ def draw_poet(jj, H_fig, flip=False, far_arm_side='L', near_arm_side='R', far_le
     ank_far = jj[5 if far_leg_side == 'L' else 6]
     ball_far = jj[9 if far_leg_side == 'L' else 10]
     ops.append({'t': 'img', 'id': 'poet.shin.far', 'm': fit_bone([45, 0], [45, 205], knee_far, ank_far, girth=S_poet, flip_x=flip)})
-    ops.append({'t': 'img', 'id': 'poet.boot.far', 'm': fit_bone([38, 6], [140, 6], ank_far, ball_far, girth=S_poet, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'poet.boot.far', 'm': fit_bone([112, 6], [8, 6], ank_far, ball_far, girth=S_poet, flip_x=flip)})
 
     # Skirt & Torso
     pelvis = jj[0]
