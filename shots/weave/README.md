@@ -2,7 +2,7 @@
 
 Open [`shots/weave.html`](../weave.html) and pick a passage tab (`?p=p04_hands` or `?p=p07_turn_me_up`), or watch the films:
 
-- [`p04_hands/passage.mp4`](p04_hands/passage.mp4): poem 04, "I put them back on". 28.6 s, sound, 1920×1080, 24 fps, −16 LUFS. Joins: **wipe**, **citizen**, **touch**.
+- [`p04_hands/passage.mp4`](p04_hands/passage.mp4): poem 04, "I put them back on". 28.6 s, sound, 1920×1080, 24 fps, −16.5 LUFS. Joins: **wipe**, **citizen**, **touch**.
 - [`passage.mp4`](passage.mp4): poem 07, "So DJ please turn me up". 13.8 s, −15.6 LUFS. Joins: **touch**, **screen**, **answer**.
 
 ## The problem this answers
