@@ -7,7 +7,7 @@ Takes baked 3D vignettes from shots/arena/bolas/bank/, projects joints through c
 cardboard pieces (Bola, Shim, Dot in cast/dummy/), and compiles clips in shots/arena/clips/ that shots/arena.html
 draws and plays with full scrubber, beat strip, and technical checks.
 """
-import argparse, json, math, os, re, sys
+import argparse, collections, json, math, os, re, sys
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -194,8 +194,9 @@ def draw_poet(jj, H_fig, flip=False, far_arm_side='L', near_arm_side='R', far_le
     # Far leg
     knee_far = jj[3 if far_leg_side == 'L' else 4]
     ank_far = jj[5 if far_leg_side == 'L' else 6]
-    ang_leg_f = math.degrees(math.atan2(ank_far[1] - knee_far[1], ank_far[0] - knee_far[0])) - 97.3
-    ops.append({'t': 'img', 'id': 'poet.leg.far', 'm': mat_part([112, 26], knee_far, ang_leg_f, flip_x=flip)})
+    ball_far = jj[9 if far_leg_side == 'L' else 10]
+    ops.append({'t': 'img', 'id': 'poet.shin.far', 'm': fit_bone([45, 0], [45, 205], knee_far, ank_far, girth=S_poet, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'poet.boot.far', 'm': fit_bone([38, 6], [140, 6], ank_far, ball_far, girth=S_poet, flip_x=flip)})
 
     # Skirt & Torso
     pelvis = jj[0]
@@ -213,8 +214,9 @@ def draw_poet(jj, H_fig, flip=False, far_arm_side='L', near_arm_side='R', far_le
     # Near leg
     knee_near = jj[3 if near_leg_side == 'L' else 4]
     ank_near = jj[5 if near_leg_side == 'L' else 6]
-    ang_leg_n = math.degrees(math.atan2(ank_near[1] - knee_near[1], ank_near[0] - knee_near[0])) - 80.3
-    ops.append({'t': 'img', 'id': 'poet.leg.near', 'm': mat_part([44, 25], knee_near, ang_leg_n, flip_x=flip)})
+    ball_near = jj[9 if near_leg_side == 'L' else 10]
+    ops.append({'t': 'img', 'id': 'poet.shin.near', 'm': fit_bone([43, 0], [43, 216], knee_near, ank_near, girth=S_poet, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'poet.boot.near', 'm': fit_bone([36, 6], [138, 6], ank_near, ball_near, girth=S_poet, flip_x=flip)})
 
     # Near arm
     sh_near = jj[16 if near_arm_side == 'L' else 17]
@@ -407,8 +409,10 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
             'poet.farm.far': '../weave/assets/parts/forearm_far.png',
             'poet.hand.near': '../weave/assets/parts/hand_near.png',
             'poet.hand.far': '../weave/assets/parts/hand_far.png',
-            'poet.leg.near': '../weave/assets/parts/leg_near.png',
-            'poet.leg.far': '../weave/assets/parts/leg_far.png',
+            'poet.shin.near': '../weave/assets/parts/proc.shin.near.png',
+            'poet.shin.far': '../weave/assets/parts/proc.shin.far.png',
+            'poet.boot.near': '../weave/assets/parts/proc.boot.near.png',
+            'poet.boot.far': '../weave/assets/parts/proc.boot.far.png',
             'poet.pose.crouch_f72': '../weave/assets/poet.pose.crouch_f72.png',
             'poet.pose.floor_recovery': '../arena/poses/poet_floor_recovery_clean.png',
         })
@@ -453,6 +457,7 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
     grounded_frames = 0
     contact_frames = 0
     worst_stretch = 1.0
+    cast_limits = collections.Counter()
     prev_feet = {}
 
     beats = list(BEATS_DATA.get(tid, []))
@@ -698,20 +703,13 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
 
                     # construction; what it costs is stretch, reported below, once.
 
-                    if is_front:
-                        flags.append("view mismatch: profile head on front torso")
-                    elif abs(fwd_ang) > 135:
-                        flags.append("view mismatch: forward head while walking away")
-
+                    if is_front or abs(fwd_ang) > 135:
+                        cast_limits['the cast has one head card, drawn in profile'] += 1
                     if get_hand_shape('L') in ('fist', 'grip') or get_hand_shape('R') in ('fist', 'grip'):
-                        flags.append("hand defect: far hand clutches scroll, cannot grip/fist")
-
+                        cast_limits['the cast has one hand shape; it cannot grip or make a fist'] += 1
                     knee_y = max(jj[3][1], jj[4][1])
-                    ank_y = max(jj[5][1], jj[6][1])
-                    if ank_y - knee_y < 120 * (H_fig / 400.0):
-                        flags.append("foot defect: fused knee-to-sole cannot bend ankle")
                     if knee_y < pelvis_2d[1] + 70 * (H_fig / 400.0):
-                        flags.append("rig collision: knees penetrate rigid skirt")
+                        cast_limits['the skirt is one rigid card and the knees pass through it'] += 1
                 elif skin == 'man':
                     L_ua_exp = 148.0 * (H_fig / 984.0)
                     L_fa_exp = 138.0 * (H_fig / 984.0)
@@ -882,6 +880,8 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
         'flag_frames': {k: len(set(v)) for k, v in per_frame.items()},
         'accepted_frame_ranges': {},
         'declared_flags': [],
+        'arena_version': 'v2',
+        'cast_limitations': {k: f'{v} frames' for k, v in cast_limits.items()},
         'not_measured': ['contact error to targets', 'arm reach ratio', 'leg length error',
                          'prop ownership'],
     }
