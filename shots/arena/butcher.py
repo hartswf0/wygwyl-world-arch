@@ -143,6 +143,59 @@ def capsule(shape, a, b, r):
     cv2.circle(m,tuple(map(int,a)),int(r),1,-1); cv2.circle(m,tuple(map(int,b)),int(r),1,-1)
     return m.astype(bool)
 
+VITPOSE = 'usyd-community/vitpose-base-simple'
+COCO = ['nose','eyeL','eyeR','earL','earR','shoulderL','shoulderR','elbowL','elbowR',
+        'wristL','wristR','hipL','hipR','kneeL','kneeR','ankleL','ankleR']
+
+def read_pose(bgr):
+    """Read the joints off the drawing with an off-the-shelf pose estimator.
+
+       This was the thing worth testing first and I tested it last. ViTPose is
+       trained on photographs of people and the cast is a flat cardboard cut-out,
+       so it should be out of distribution — it is not. On the 1024px renders it
+       returns 17 of 17 keypoints above 0.5 confidence, and they land correctly
+       on a man lifting a box, a man falling backwards, a man crouching and a man
+       hanging from a ledge. No training, no colour marks, no fitting a known
+       skeleton onto a silhouette and hoping.
+
+       It does need the resolution. On a 144px harvested panel it drops to 11 of
+       17 and puts the ankles at 0.13, so cut from the full renders, not the
+       thumbnails."""
+    import torch
+    from PIL import Image
+    from transformers import AutoProcessor, VitPoseForPoseEstimation
+    proc = AutoProcessor.from_pretrained(VITPOSE)
+    mdl = VitPoseForPoseEstimation.from_pretrained(VITPOSE).eval()
+    dev = 'mps' if torch.backends.mps.is_available() else 'cpu'
+    mdl = mdl.to(dev)
+    H, W = bgr.shape[:2]
+    pil = Image.fromarray(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
+    boxes = [[[0, 0, W, H]]]
+    inp = proc(pil, boxes=boxes, return_tensors='pt').to(dev)
+    with torch.no_grad(): out = mdl(**inp)
+    r = proc.post_process_pose_estimation(out, boxes=boxes)[0][0]
+    kp = r['keypoints'].cpu().numpy(); sc = r['scores'].cpu().numpy()
+    pts = {n: (float(p[0]), float(p[1])) for n, p in zip(COCO, kp)}
+    conf = {n: float(c) for n, c in zip(COCO, sc)}
+    # the bones this rig cuts on, derived from what COCO gives
+    if conf.get('shoulderL', 0) > .4 and conf.get('hipL', 0) > .4:
+        pts['neckBase'] = ((pts['shoulderL'][0] + pts['shoulderR'][0]) / 2,
+                           (pts['shoulderL'][1] + pts['shoulderR'][1]) / 2)
+        pts['pelvis'] = ((pts['hipL'][0] + pts['hipR'][0]) / 2,
+                         (pts['hipL'][1] + pts['hipR'][1]) / 2)
+        conf['neckBase'] = min(conf['shoulderL'], conf['shoulderR'])
+        conf['pelvis'] = min(conf['hipL'], conf['hipR'])
+    if conf.get('nose', 0) > .4 and 'neckBase' in pts:
+        pts['headBase'] = pts['neckBase']
+        pts['headTop'] = (pts['nose'][0], pts['nose'][1] - abs(pts['nose'][1] - pts['neckBase'][1]))
+        conf['headBase'] = conf['neckBase']; conf['headTop'] = conf['nose']
+    for s_ in 'LR':
+        if conf.get('ankle' + s_, 0) > .3:
+            pts['ball' + s_] = (pts['ankle' + s_][0], pts['ankle' + s_][1])
+            conf['ball' + s_] = conf['ankle' + s_]
+    return pts, conf
+
+
 def read_marks(bgr):
     """Joints read, not fitted. A registration pass draws a flat magenta disc on
        every joint; magenta is 0.00% of every saturated pixel in the cast, so the
