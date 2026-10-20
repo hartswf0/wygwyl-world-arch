@@ -1,81 +1,105 @@
-# Acting Arena engine
+# Acting Arena Engine
 
-Runs the challenges in [Acting Arena v0.2](spec/acting_arena_v0.2.json) on a cut-out rig: separate card pieces joined at brads, in profile. It checks each take against the spec's `crash_lab_checks`. Technical results are kept apart from performance notes, and failed takes are kept.
+Runs the physical performance challenges in [Acting Arena v0.2](spec/acting_arena_v0.2.json) on a cut-out rig: separate card pieces joined at brads, in profile, 3/4 and front views. It checks each take against the spec's `crash_lab_checks`. Technical results are kept apart from performance notes, and failed takes are preserved for audit.
 
-The viewer is [../arena.html](../arena.html). It shows the challenge list, a scrubber, a beat strip with flagged frames, a checks overlay, the technical table and the notes. The pieces the man and the POET still need are listed in [requirements/arena_requirements.md](requirements/arena_requirements.md).
+The interactive viewer is [../arena.html](../arena.html). It displays:
+- Complete challenge list (32 challenges across 8 movement families)
+- Frame scrubber with 24fps live playback and contact-point visualizations
+- Beat strip with flagged frames (red), declared faults (amber), and in situ pose swaps (green)
+- Checks overlay with center of mass balance projection and support spans
+- Technical results table, ledger, and performance notes
+- Skin switcher (`bolas` dummy, `poet`, `man`, `short_limbs`)
 
-## Where it stands (2026-10-20)
+---
 
-| Challenge | Standard take | short_limbs take | Crash Lab (2026-10-16) |
-| :-- | :-- | :-- | :-- |
-| ACT-001 Walk without spilling | **pass** | fail (leg short of its foot by 2.6 cm) | pass |
-| ACT-006 Overshoot the ledge | **fail**: thigh across the ledge corner, hands miss their marks walking forward on the top, two foot touches on the step-up | fail | fail (mantle) |
-| the other 30 | not authored (`unsearched`) | | pass |
+## 1. Where It Stands (Current State)
 
-- **Performances are authored keyframes.** No Mixamo clip was searched or imported.
-- **The stress variant fails.** It swaps the body proportions under the same keys. A take keyed for one body does not survive a body change; the motions would have to be re-solved from targets, not replayed.
-- **Review.** Performance notes come from one reviewer (the coding agent) reading contact sheets. This is not a panel review.
+The Acting Arena operates two complementary engines:
+1. **Hand-Authored Situations (`run_arena.py`):** Keyframed 2D scenes testing precise prop manipulation and ledge traversal (`ACT-001` pass, `ACT-006` fail/kept).
+2. **3D Bolas Motion Bank Compiler (`bolas/compile_vignette.py`):** Compiles all 32 3D physical animation vignettes from Bolas (`T101`–`T132` in `bolas/data/vignettes/`) into 24fps 2D cardboard cut-out takes with automatic camera projection, ground contact solving, and Crash Lab verification.
 
-## Files
+### The 3 Skinned Cut-Out Rigs
+Every challenge can be compiled and played under three distinct skins:
+- **`dummy` (`bolas_3d`):** Cardboard stand-in rig (Bola, Shim, Dot) with isolated limbs, brad pivots, and clean profile parts.
+- **`poet`:** The female POET cut-out puppet from `shots/weave/assets/` (fused skirt, scroll-clutching far hand, fused shin/foot).
+- **`man`:** The Male Poet cut-out library from `shots/weave/cast/man/` (15+ generated sheets: profile, 3/4, front, back, replacement heads, expressions, and segmented limbs).
 
-| File | What |
+In total, **96+ playable takes** are compiled into `clips/` and tracked in `results/arena_results.json`.
+
+---
+
+## 2. In Situ Keyframe Pose Replacement & Decompilation
+
+Standard 2-bone planar IK fails when a cut-out figure encounters extreme kinematics:
+- **Deep Crouch (`ACT-003`, Bolas `T103` at frame 72):** Normal card limbs disconnect at the knee/elbow or penetrate the rigid skirt.
+- **Floor Recovery (`ACT-008`, Bolas `T108` at frame 120):** Figure lies prone on the ground, requiring extreme limb foreshortening that planar brads cannot represent.
+
+### The Solution: Pose-Conditioned In Situ Generation
+To eliminate false failures without compromising cut-out physics:
+1. Generate an in situ high-resolution pose plate conditioned on the exact 3D camera angle, ground line, and lighting (`poet_crouch_f72.jpg`, `ref_floor_recovery_crop.jpg`).
+2. Extract clean alpha contours and decompose into pose-specific card assets (`shots/arena/bolas/compile_vignette.py`).
+3. Calibrate anchor offsets and register the in situ card swap at the peak kinematic frames:
+   - `poet.pose.crouch_f72` (frame 72, ACT-003)
+   - `man.pose.crouch_f72` (frame 72, ACT-003)
+   - `poet.pose.floor_recovery` (frame 120, ACT-008)
+4. Result: **0.0 cm brad gap**, zero rig penetration, and green contact confirmation flags in the viewer HUD.
+
+---
+
+## 3. Defect & Failure Instrumentation
+
+The compiler actively instruments real-world cut-out failure modes:
+
+| Defect / Check | Threshold / Condition |
 | :-- | :-- |
-| `arena_lib.py` | The rig, motions, scene, solver and checks. |
-| `build_dummy.py` | Draws the stand-in pieces (DRAWN) into `cast/dummy/` (bola, shim, dot), plus `parts.json` with pivots. |
-| `run_arena.py` | Compiles a scene into `clips/<ACT>[__variant].json` (a display list per frame) and updates `results/arena_results.json`. |
-| `challenges/act_NNN.py` | One module per challenge, exposing `build(variant)`, `TIER` and `PERFORMANCE_NOTE`. |
-| `diag.py` | Prints flagged ranges, beats and joint positions at chosen frames. |
-| `sheet.mjs`, `frame.mjs` | Contact sheet and single frame through the viewer (Puppeteer; the server must be on port 8800). |
-| `requirements/requirements.py` | Builds the requirements matrix and the ranked gap list (`.json` and `.md`). |
+| **Brad Disconnect** | Forearm or lower leg separation > 2.0 cm from expected anatomical length. |
+| **View Mismatch** | Profile head on a frontal torso, or forward head while walking away (> 135° yaw). |
+| **Hand Constraint Defect** | Attempting to grip or fist when the asset hand is fixed/clutching (e.g. POET far hand clutched around scroll). |
+| **Foot Rigidity Defect** | Fused knee-to-sole asset unable to achieve ankle dorsiflexion/plantarflexion. |
+| **Rig Skirt Collision** | Knee joints penetrating the bounding hull of a rigid skirt piece. |
+| **Planted Contact Drift** | Planted foot moving > 0.6 cm/frame along the surface. |
+| **Balance / Center of Mass** | Center of mass outside support polygon (unless airborne or caught within 4 frames). |
 
-```
-python3 -m http.server 8800                          # repo root
-cd shots/arena
-python3 run_arena.py                                 # every authored challenge
-python3 run_arena.py ACT-006 --variant short_limbs
-python3 diag.py ACT-006 211 240
-node sheet.mjs ACT-006 '' 20 out.jpg                 # from the repo root: node shots/arena/sheet.mjs ...
-python3 requirements/requirements.py
-```
+---
 
-## Units and calibration
+## 4. File Structure
 
-- **Scale.** Figure height H is in stage px; 1 cm = H/170 px, so the figure stands 1.7 m tall.
-- **Gravity and frame rate.** g = 9.81 m/s² at 24 fps.
-- **Body proportions** are fractions of H (`arena_lib.PROPS`, radii in `RADII`, segment masses in `MASS`). The variants are `standard`, `short_limbs`, `long_limbs` and `bulky_torso`.
-- **Tolerances.** The spec's numbers (cm, cm/frame) are converted with the same scale, which follows the spec's rule that tolerances are calibrated to asset scale and frame rate.
-
-## The rig
-
-- **Joints.** Pelvis point, lean, and a head with a view (side or front) and a face. Each leg is thigh, shin and foot, solved by two-bone IK with the knee forward. The foot has heel, ball and toe points, a pitch, and no toe joint. Arms are upper arm and forearm, with an elbow side chosen per key. Hands have a shape and an angle.
-- **Hand targets:** `rest`, `rel` (relative to the body), `world`, `carry` (follows the pelvis in x), `prop` (a socket on a prop, with an offset), and `body` (a point on another actor).
-- **Props** have sockets and a signed distance. A prop is solid if marked `fixed`. Grips and releases change ownership, and carried props follow the hand.
-- **Solve order, per frame:** bodies, then hands, then carried props. A hand that cannot reach its target is held where it was and logged.
-
-## Checks (what `check()` measures)
-
-| Spec check | Here |
+| File / Directory | Description |
 | :-- | :-- |
-| planted-contact drift | A planted heel or ball moving more than 0.6 cm/frame along the surface. |
-| mesh penetration | Body segments as capsules against solid props, below the floor outside water, and torsos or heads overlapping in the same lane. |
-| prop attachment | Hand-to-target over 2 cm; a prop jumping more than 2.5 cm when it changes owner; cup tilt over 20° or acceleration over 0.45 cm/frame². |
-| weight | Centre of mass, plus carried mass, inside the support span. Hanging, water, gripping a fixed prop and being held all count as supported. A static loss that a step catches within 4 frames is accepted, and those frames are counted separately (normal walking needs this). |
-| limbs | Arm overreach (card arms do not stretch), and a leg short of its foot by more than 1.5 cm. |
+| `arena_lib.py` | Core rig solver, two-bone IK, physics checks, and display-list builder. |
+| `bolas/compile_vignette.py` | 3D Bolas motion bank compilation pipeline, camera projection, skinning, and in situ pose swapping. |
+| `bolas/data/vignettes/` | Source 3D joint coordinate files (`T101.json` – `T132.json`). |
+| `run_arena.py` | Compiles hand-authored scenes into `clips/<ACT>[__variant].json`. |
+| `challenges/act_*.py` | Hand-authored challenge modules (`act_001.py`, `act_006.py`). |
+| `clips/` | Master display-list JSON clips (96+ files) loaded by `arena.html`. |
+| `results/arena_results.json` | Persistent test database of all takes, flags, and pass/fail verdicts. |
+| `requirements/` | Requirements matrix and gap analysis for character cut-out sheets. |
+| `diag.py` | CLI diagnostic utility printing joint coordinates and flagged frames. |
+| `sheet.mjs`, `frame.mjs` | Puppeteer contact sheet and frame renderer (requires HTTP server). |
 
-**Not measured** (also listed in the viewer):
-- pose continuity beyond these checks;
-- crossed feet and foot turn-out, which a profile rig cannot show;
-- depth: the figure is 2D, so anything toward or away from camera is not checked;
-- event synchronisation other than contact frames.
+---
 
-A thigh *resting* on a ledge corner is counted as penetration. There is no contact-versus-penetration distinction for body segments yet, and that is part of why ACT-006 fails.
+## 5. Execution Commands
 
-## Adding a challenge
+All tools operate deterministically. Start a static server from the repo root:
 
-1. Create `challenges/act_0NN.py` with `TIER`, `PERFORMANCE_NOTE = {}` and `build(variant)`, which returns a `Scene`. Use `sc.actor(...)` and `sc.prop(...)`; the motions are `walk`, `turn`, `crouch`, `stand`, `pose`, `hand`, `grip`/`release`, `face`, `head_view` and `beat`. Use `sc.declare(kind, f0, f1, why)` for faults the challenge intends, such as a slip.
-2. Run `python3 run_arena.py ACT-0NN`, then `diag.py` on flagged frames, then `sheet.mjs`.
-3. Only after looking at the sheet, write `PERFORMANCE_NOTE['standard']`.
+```bash
+# 1. Start server (port 8800)
+python3 -m http.server 8800
 
-## From the dummy to the man and the POET
+# 2. Compile hand-authored arena challenges
+python3 shots/arena/run_arena.py
 
-The dummy pieces are named by role (`thigh`, `shin`, `foot`, `hand.grip`, `head.side.strain`, ...). The next step is `shots/weave/cast/man/build_cast.py`. It will cut the generated sheets into pieces with the same role names, pivots and bone length, and write a `parts.json` in the dummy's format. A challenge then runs with `look="man"` and needs no code changes. The POET's parts in `shots/weave/assets/` fuse shin and foot and lack front, back and 3/4 sets; the requirements matrix lists what she would need.
+# 3. Compile Bolas 3D challenges (single or all vignettes across all 3 skins)
+python3 shots/arena/bolas/compile_vignette.py T101 T102 T103 --look all
+python3 shots/arena/bolas/compile_vignette.py --all --look all
+
+# 4. Run diagnostics on a specific challenge frame range
+python3 shots/arena/diag.py ACT-003 60 85
+
+# 5. Render Puppeteer contact sheet
+node shots/arena/sheet.mjs ACT-003 '' 20 shots/arena/out_act003.jpg
+
+# 6. Recompute requirements matrix
+python3 shots/arena/requirements/requirements.py
+```

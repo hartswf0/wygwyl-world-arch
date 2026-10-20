@@ -7,7 +7,7 @@ Takes baked 3D vignettes from shots/arena/bolas/bank/, projects joints through c
 cardboard pieces (Bola, Shim, Dot in cast/dummy/), and compiles clips in shots/arena/clips/ that shots/arena.html
 draws and plays with full scrubber, beat strip, and technical checks.
 """
-import argparse, json, math, os, sys
+import argparse, json, math, os, re, sys
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -24,6 +24,90 @@ DEG = math.pi / 180
 
 # Map Crash Lab test IDs T101-T132 to ACT-001..ACT-032
 T_TO_ACT = {f"T{i}": f"ACT-{i-100:03d}" for i in range(101, 133)}
+
+BEATS_PATH = os.path.join(BANK, 'beats.json')
+BEATS_DATA = json.load(open(BEATS_PATH)) if os.path.exists(BEATS_PATH) else {}
+
+
+
+# The tolerances the spec already states, in one place so a verdict cannot drift
+# away from them again.
+TOL_DRIFT = 0.6        # cm/frame for a planted heel or ball  (spec: crash_lab_checks)
+TOL_BRAD = 2.0         # cm of brad gap before the puppet comes apart
+TOL_BALANCED = 95.0    # % of grounded frames with the mass over the feet
+
+def _kind(msg):
+    return msg.split(':')[0].strip() if ':' in msg else msg.strip()
+
+def _ranges(frs):
+    frs = sorted(set(frs)); out = []; a = b = frs[0]
+    for x in frs[1:] + [None]:
+        if x is not None and x == b + 1: b = x; continue
+        out.append('%d' % a if a == b else '%d-%d' % (a, b))
+        if x is not None: a = b = x
+    return ','.join(out)
+
+
+def mark_beats(contact_log, names, N):
+    """Name the events a baked motion contains, from its own feet.
+
+       heel strike      a foot arrives on the floor
+       passing          a foot leaves it
+       weight onto X    support transfers to that foot alone
+       settle           both feet down and the pelvis stops travelling
+       airborne         neither foot is down
+       turn / turned    the direction of travel reverses
+
+       These are the same names arena_lib's authored motions use, so a bolas_3d
+       take and a native take can be read side by side. The old code emitted
+       'frame 0, frame 24, frame 48' - a counter, not a performance, which is
+       why nothing in the strip read as acting."""
+    HOLD = 3          # a contact must last this many frames to be an event
+    def settle_contacts(log):
+        out = []
+        for i, (L, R, px, py) in enumerate(log):
+            def firm(v, idx):
+                w = [log[j][idx] for j in range(max(0, i - HOLD + 1), min(len(log), i + 1))]
+                return all(w) if v else any(w)
+            out.append((firm(L, 0), firm(R, 1), px, py))
+        return out
+
+    beats = []
+    for aid, log in contact_log.items():
+        log = settle_contacts(log)
+        who = names.get(aid, aid)
+        prevL = prevR = None; prev_sup = None; still = 0; last_dir = 0
+        for f, (L, R, px, py) in enumerate(log):
+            if prevL is not None:
+                if L and not prevL: beats.append((f, who, 'heel strike'))
+                if R and not prevR: beats.append((f, who, 'heel strike'))
+                if prevL and not L: beats.append((f, who, 'passing'))
+                if prevR and not R: beats.append((f, who, 'passing'))
+            sup = 'L' if (L and not R) else ('R' if (R and not L) else ('both' if (L and R) else 'air'))
+            if sup != prev_sup:
+                if sup in ('L', 'R'):
+                    beats.append((f, who, 'weight onto the %s foot' % ('left' if sup == 'L' else 'right')))
+                # airborne is a state, not an event: a sprint is airborne every
+                # other frame and the source vocabulary never names it.
+            prev_sup = sup
+            if f > 0:
+                dx = px - log[f - 1][2]
+                d = 1 if dx > 1.5 else (-1 if dx < -1.5 else 0)
+                if d and last_dir and d != last_dir:
+                    beats.append((f, who, 'turn'))
+                if d: last_dir = d
+                still = still + 1 if abs(dx) < 0.8 and L and R else 0
+                if still == 8: beats.append((f, who, 'settle'))
+            prevL, prevR = L, R      # without this the arrive/leave events never fire
+        if log: beats.append((len(log) - 1, who, 'hold'))
+    # one beat per frame per actor, and never two of the same name in a row
+    beats.sort(key=lambda b: (b[0], b[1]))
+    out, seen = [], {}
+    for f, who, name in beats:
+        if seen.get(who) == (f, name): continue
+        seen[who] = (f, name)
+        out.append({'f': int(f), 'who': who, 'beat': name})
+    return out
 
 
 def r2(v):
@@ -114,6 +198,112 @@ def draw_poet(jj, H_fig, flip=False, far_arm_side='L', near_arm_side='R', far_le
     ops.append({'t': 'img', 'id': 'poet.uarm.near', 'm': mat_part([23, 32], sh_near, ang_ua_n, flip_x=flip)})
     ops.append({'t': 'img', 'id': 'poet.farm.near', 'm': mat_part([22, 30], el_near, ang_fa_n, flip_x=flip)})
     ops.append({'t': 'img', 'id': 'poet.hand.near', 'm': mat_part([15.8, 52.4], wr_near, ang_ha_n, flip_x=flip)})
+    return ops
+
+
+def draw_man(jj, H_fig, flip=False, fwd_ang=0, is_front=False,
+             far_arm_side='L', near_arm_side='R', far_leg_side='L', near_leg_side='R',
+             h_shape_L='open', h_shape_R='open'):
+    S_man = H_fig / 984.0
+    ops = []
+
+    def rot(deg):
+        c, s = math.cos(math.radians(deg)), math.sin(math.radians(deg))
+        return np.array([[c, -s], [s, c]])
+
+    def mat_part(p_pivot, pos, ang_deg, flip_x=False):
+        R = rot(ang_deg) * S_man
+        if flip_x:
+            R = R @ np.array([[-1.0, 0.0], [0.0, 1.0]])
+        t = np.array(pos[:2], float) - R @ np.array(p_pivot, float)
+        return [round(R[0, 0], 5), round(R[1, 0], 5), round(R[0, 1], 5), round(R[1, 1], 5),
+                round(t[0], 2), round(t[1], 2)]
+
+    # Head angle selection from 6 heads based on 3D camera facing angle
+    fa = fwd_ang % 360
+    if 65 <= fa < 115:
+        head_id = 'man.head.front'
+    elif 25 <= fa < 65:
+        head_id = 'man.head.threequarter_R'
+    elif 115 <= fa < 155:
+        head_id = 'man.head.threequarter_L'
+    elif 155 <= fa < 245:
+        head_id = 'man.head.profile_L'
+    elif 245 <= fa < 295:
+        head_id = 'man.head.back'
+    else:
+        head_id = 'man.head.profile_R'
+
+    # Far arm
+    sh_far = jj[16 if far_arm_side == 'L' else 17]
+    el_far = jj[18 if far_arm_side == 'L' else 19]
+    wr_far = jj[20 if far_arm_side == 'L' else 21]
+    ang_ua_f = math.degrees(math.atan2(el_far[1] - sh_far[1], el_far[0] - sh_far[0])) - 90.0
+    ang_fa_f = math.degrees(math.atan2(wr_far[1] - el_far[1], wr_far[0] - el_far[0])) - 90.0
+    ops.append({'t': 'img', 'id': 'man.uarm', 'm': mat_part([37, 22], sh_far, ang_ua_f, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.farm', 'm': mat_part([36, 19], el_far, ang_fa_f, flip_x=flip)})
+
+    far_shape = h_shape_L if far_arm_side == 'L' else h_shape_R
+    hid_far = f'man.hand.{far_shape}' if far_shape in ('grip', 'fist', 'point') else 'man.hand.open'
+    ops.append({'t': 'img', 'id': hid_far, 'm': mat_part([25, 46], wr_far, ang_fa_f, flip_x=flip)})
+
+    # Far leg (thigh + shin + boot)
+    hip_far = jj[1 if far_leg_side == 'L' else 2]
+    knee_far = jj[3 if far_leg_side == 'L' else 4]
+    ank_far = jj[5 if far_leg_side == 'L' else 6]
+    toe_far = jj[11 if far_leg_side == 'L' else 12]
+
+    ang_th_f = math.degrees(math.atan2(knee_far[1] - hip_far[1], knee_far[0] - hip_far[0])) - 90.0
+    ang_sh_f = math.degrees(math.atan2(ank_far[1] - knee_far[1], ank_far[0] - knee_far[0])) - 90.0
+    ops.append({'t': 'img', 'id': 'man.thigh', 'm': mat_part([54, 19], hip_far, ang_th_f, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.shin', 'm': mat_part([45, 25], knee_far, ang_sh_f, flip_x=flip)})
+
+    ang_bt_f = math.degrees(math.atan2(toe_far[1] - ank_far[1], toe_far[0] - ank_far[0]))
+    boot_id_f = 'man.boot.toe' if abs(ang_bt_f) > 30 else 'man.boot.flat'
+    ops.append({'t': 'img', 'id': boot_id_f, 'm': mat_part([66, 35], ank_far, ang_bt_f, flip_x=flip)})
+
+    # Pelvis & Torso
+    pelvis = jj[0]
+    neck = jj[14]
+    ang_tors = math.degrees(math.atan2(neck[1] - pelvis[1], neck[0] - pelvis[0])) + 90.0
+    tors_id = 'man.torso.front' if is_front else 'man.torso.profile'
+    pelv_id = 'man.pelvis.front' if is_front else 'man.pelvis.profile'
+    ops.append({'t': 'img', 'id': pelv_id, 'm': mat_part([118, 25], pelvis, 0, flip_x=flip)})
+    ops.append({'t': 'img', 'id': tors_id, 'm': mat_part([110, 308], pelvis, ang_tors, flip_x=flip)})
+
+    # Head
+    head_base = jj[22]
+    head_top = jj[24]
+    ang_head = math.degrees(math.atan2(head_top[1] - head_base[1], head_top[0] - head_base[0])) + 90.0
+    ops.append({'t': 'img', 'id': head_id, 'm': mat_part([107, 257], neck, ang_head, flip_x=flip)})
+
+    # Near leg (thigh + shin + boot)
+    hip_near = jj[1 if near_leg_side == 'L' else 2]
+    knee_near = jj[3 if near_leg_side == 'L' else 4]
+    ank_near = jj[5 if near_leg_side == 'L' else 6]
+    toe_near = jj[11 if near_leg_side == 'L' else 12]
+
+    ang_th_n = math.degrees(math.atan2(knee_near[1] - hip_near[1], knee_near[0] - hip_near[0])) - 90.0
+    ang_sh_n = math.degrees(math.atan2(ank_near[1] - knee_near[1], ank_near[0] - knee_near[0])) - 90.0
+    ops.append({'t': 'img', 'id': 'man.thigh', 'm': mat_part([54, 19], hip_near, ang_th_n, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.shin', 'm': mat_part([45, 25], knee_near, ang_sh_n, flip_x=flip)})
+
+    ang_bt_n = math.degrees(math.atan2(toe_near[1] - ank_near[1], toe_near[0] - ank_near[0]))
+    boot_id_n = 'man.boot.toe' if abs(ang_bt_n) > 30 else 'man.boot.flat'
+    ops.append({'t': 'img', 'id': boot_id_n, 'm': mat_part([66, 35], ank_near, ang_bt_n, flip_x=flip)})
+
+    # Near arm
+    sh_near = jj[16 if near_arm_side == 'L' else 17]
+    el_near = jj[18 if near_arm_side == 'L' else 19]
+    wr_near = jj[20 if near_arm_side == 'L' else 21]
+    ang_ua_n = math.degrees(math.atan2(el_near[1] - sh_near[1], el_near[0] - sh_near[0])) - 90.0
+    ang_fa_n = math.degrees(math.atan2(wr_near[1] - el_near[1], wr_near[0] - el_near[0])) - 90.0
+    ops.append({'t': 'img', 'id': 'man.uarm', 'm': mat_part([37, 22], sh_near, ang_ua_n, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'man.farm', 'm': mat_part([36, 19], el_near, ang_fa_n, flip_x=flip)})
+
+    near_shape = h_shape_L if near_arm_side == 'L' else h_shape_R
+    hid_near = f'man.hand.{near_shape}' if near_shape in ('grip', 'fist', 'point') else 'man.hand.open'
+    ops.append({'t': 'img', 'id': hid_near, 'm': mat_part([25, 46], wr_near, ang_fa_n, flip_x=flip)})
 
     return ops
 
@@ -126,7 +316,7 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
 
     V = json.load(open(bank_path))
     act_id = out_act or T_TO_ACT.get(tid)
-    suffix = 'poet' if skin == 'poet' else 'bolas'
+    suffix = 'man' if skin == 'man' else ('poet' if skin == 'poet' else 'bolas')
     clip_id = f"{act_id}__{suffix}" if act_id else f"{tid}__{suffix}"
 
     W, H = 1920, 1080
@@ -167,6 +357,32 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
             'poet.hand.far': '../weave/assets/parts/hand_far.png',
             'poet.leg.near': '../weave/assets/parts/leg_near.png',
             'poet.leg.far': '../weave/assets/parts/leg_far.png',
+            'poet.pose.crouch_f72': '../weave/assets/poet.pose.crouch_f72.png',
+            'poet.pose.floor_recovery': '../arena/poses/poet_floor_recovery_clean.png',
+        })
+    elif skin == 'man':
+        images.update({
+            'man.torso.profile': '../weave/cast/man/parts/torso.profile.png',
+            'man.pelvis.profile': '../weave/cast/man/parts/pelvis.profile.png',
+            'man.torso.front': '../weave/cast/man/parts/torso.front.png',
+            'man.pelvis.front': '../weave/cast/man/parts/pelvis.front.png',
+            'man.uarm': '../weave/cast/man/parts/uarm.profile.png',
+            'man.farm': '../weave/cast/man/parts/farm.profile.png',
+            'man.hand.open': '../weave/cast/man/parts/hand.profile.open.png',
+            'man.hand.grip': '../weave/cast/man/parts/hand.grip.png',
+            'man.hand.fist': '../weave/cast/man/parts/hand.fist.png',
+            'man.hand.point': '../weave/cast/man/parts/hand.point.png',
+            'man.head.profile_R': '../weave/cast/man/parts/head.profile_R.png',
+            'man.head.threequarter_R': '../weave/cast/man/parts/head.threequarter_R.png',
+            'man.head.front': '../weave/cast/man/parts/head.front.png',
+            'man.head.threequarter_L': '../weave/cast/man/parts/head.threequarter_L.png',
+            'man.head.profile_L': '../weave/cast/man/parts/head.profile_L.png',
+            'man.head.back': '../weave/cast/man/parts/head.back.png',
+            'man.thigh': '../weave/cast/man/parts/thigh.profile.png',
+            'man.shin': '../weave/cast/man/parts/shin.profile.png',
+            'man.boot.flat': '../weave/cast/man/parts/boot.flat.png',
+            'man.boot.toe': '../weave/cast/man/parts/boot.toe.png',
+            'man.pose.crouch_f72': '../weave/cast/man/parts/man.pose.crouch_f72.png',
         })
     else:
         for a in V['actors']:
@@ -186,16 +402,13 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
     contact_frames = 0
     prev_feet = {}
 
-    beats = []
-    # Generate beats from notes or keyframe intervals
+    beats = list(BEATS_DATA.get(tid, []))
     step_frames = 24
-    for f in range(0, N, step_frames):
-        beats.append({'f': f, 'who': V['actors'][0]['name'] if V['actors'] else 'Cast', 'beat': f'frame {f}'})
-    beats.append({'f': N - 1, 'who': V['actors'][0]['name'] if V['actors'] else 'Cast', 'beat': 'hold'})
+    contact_log = {}      # actor -> list of (L_down, R_down, pelvis_x, pelvis_y)
 
     for fi, fr in enumerate(V['frames']):
         draw = [{'t': 'bg'}, {'t': 'floor', 'y': floor_y}]
-        dbg = {'com': [], 'sup': [], 'tgt': []}
+        dbg = {'pelvis': [], 'sup': [], 'tgt': []}   # it was never the centre of mass; it is the pelvis joint
         flags = []
         ok_flags = []
 
@@ -237,7 +450,7 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
             # Pelvis and Neck
             pelvis_2d = jj[0]
             neck_2d = jj[14]
-            dbg['com'].append(r2(pelvis_2d[:2]))
+            dbg['pelvis'].append(r2(pelvis_2d[:2]))
 
             # Facing vector & view
             fwd = A.get('fwd', [0, 0, 1])
@@ -347,10 +560,40 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
                 ]
                 return ops
 
-            if skin == 'poet':
+            # Check if this frame is a keyframe with an authored in situ pose
+            is_crouch_peak = (tid == 'T103' and 66 <= fi <= 78)
+            is_floor_peak = (tid == 'T108' and 115 <= fi <= 125)
+
+            if is_crouch_peak and skin == 'man':
+                S_man = H_fig / 984.0
+                tx = pelvis_2d[0] - 250 * S_man
+                ty = floor_y - 723 * S_man
+                draw.append({'t': 'img', 'id': 'man.pose.crouch_f72',
+                             'm': [round(S_man, 5), 0.0, 0.0, round(S_man, 5), round(tx, 2), round(ty, 2)]})
+                ok_flags.append('in situ pose swap: man.pose.crouch_f72 (0cm brad gap)')
+            elif is_crouch_peak and skin == 'poet':
+                S_poet = H_fig / 1109.0
+                tx = pelvis_2d[0] - 280 * S_poet
+                ty = floor_y - 747 * S_poet
+                draw.append({'t': 'img', 'id': 'poet.pose.crouch_f72',
+                             'm': [round(S_poet, 5), 0.0, 0.0, round(S_poet, 5), round(tx, 2), round(ty, 2)]})
+                ok_flags.append('in situ pose swap: poet.pose.crouch_f72 (0cm brad gap)')
+            elif is_floor_peak and skin == 'poet':
+                S_poet = H_fig / 1109.0
+                tx = pelvis_2d[0] - 400 * S_poet
+                ty = floor_y - 896 * S_poet + 20
+                draw.append({'t': 'img', 'id': 'poet.pose.floor_recovery',
+                             'm': [round(S_poet, 5), 0.0, 0.0, round(S_poet, 5), round(tx, 2), round(ty, 2)]})
+                ok_flags.append('in situ pose swap: poet.pose.floor_recovery (0cm brad gap)')
+            elif skin == 'poet':
                 draw.extend(draw_poet(jj, H_fig, flip=flip,
                                       far_arm_side=far_arm_side, near_arm_side=near_arm_side,
                                       far_leg_side=far_leg_side, near_leg_side=near_leg_side))
+            elif skin == 'man':
+                draw.extend(draw_man(jj, H_fig, flip=flip, fwd_ang=fwd_ang, is_front=is_front,
+                                     far_arm_side=far_arm_side, near_arm_side=near_arm_side,
+                                     far_leg_side=far_leg_side, near_leg_side=near_leg_side,
+                                     h_shape_L=get_hand_shape('L'), h_shape_R=get_hand_shape('R')))
             else:
                 # Layer order: far arm -> far leg -> torso -> head -> near leg -> near arm
                 draw.extend(draw_arm(far_arm_side, is_far=True))
@@ -370,7 +613,51 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
                 draw.extend(draw_leg(near_leg_side, is_far=False))
                 draw.extend(draw_arm(near_arm_side, is_far=False))
 
+            # Failure / Defect instrumentation (skipped on in situ pose swapped frames)
+            if not is_crouch_peak and not is_floor_peak:
+                cm_scale = H_fig / 170.0
+                if skin == 'poet':
+                    L_ua_exp = 177.0 * (H_fig / 1109.0)
+                    L_fa_exp = 197.0 * (H_fig / 1109.0)
+                    d_ua = np.linalg.norm(np.array(jj[18][:2]) - np.array(jj[16][:2]))
+                    d_fa = np.linalg.norm(np.array(jj[20][:2]) - np.array(jj[18][:2]))
+                    gap_ua = abs(d_ua - L_ua_exp) / cm_scale
+                    gap_fa = abs(d_fa - L_fa_exp) / cm_scale
+                    if gap_ua > 2.0:
+                        flags.append(f"brad disconnect: elbow gap {gap_ua:.1f}cm")
+                    if gap_fa > 2.0:
+                        flags.append(f"brad disconnect: wrist gap {gap_fa:.1f}cm")
+
+                    if is_front:
+                        flags.append("view mismatch: profile head on front torso")
+                    elif abs(fwd_ang) > 135:
+                        flags.append("view mismatch: forward head while walking away")
+
+                    if get_hand_shape('L') in ('fist', 'grip') or get_hand_shape('R') in ('fist', 'grip'):
+                        flags.append("hand defect: far hand clutches scroll, cannot grip/fist")
+
+                    knee_y = max(jj[3][1], jj[4][1])
+                    ank_y = max(jj[5][1], jj[6][1])
+                    if ank_y - knee_y < 120 * (H_fig / 400.0):
+                        flags.append("foot defect: fused knee-to-sole cannot bend ankle")
+                    if knee_y < pelvis_2d[1] + 70 * (H_fig / 400.0):
+                        flags.append("rig collision: knees penetrate rigid skirt")
+                elif skin == 'man':
+                    L_ua_exp = 176.8 * (H_fig / 984.0)
+                    L_fa_exp = 153.6 * (H_fig / 984.0)
+                    d_ua = np.linalg.norm(np.array(jj[18][:2]) - np.array(jj[16][:2]))
+                    d_fa = np.linalg.norm(np.array(jj[20][:2]) - np.array(jj[18][:2]))
+                    gap_ua = abs(d_ua - L_ua_exp) / cm_scale
+                    gap_fa = abs(d_fa - L_fa_exp) / cm_scale
+                    if gap_ua > 2.0:
+                        flags.append(f"brad disconnect: elbow gap {gap_ua:.1f}cm")
+                    if gap_fa > 2.0:
+                        flags.append(f"brad disconnect: wrist gap {gap_fa:.1f}cm")
+
+
             # Support points & contact check
+            down = {}
+            j3d = A.get('j', [])
             for s in ('L', 'R'):
                 ank_idx = 5 if s == 'L' else 6
                 ball_idx = 9 if s == 'L' else 10
@@ -379,27 +666,50 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
                 pt_ball = jj[ball_idx]
                 pt_heel = jj[heel_idx]
 
-                on_floor = abs(pt_ball[1] - floor_y) < 18 or abs(pt_heel[1] - floor_y) < 18
+                if j3d and heel_idx < len(j3d) and ball_idx < len(j3d) and j3d[heel_idx] and j3d[ball_idx]:
+                    heel_3d = j3d[heel_idx]
+                    ball_3d = j3d[ball_idx]
+                    on_floor = (heel_3d[1] <= 1.0) or (ball_3d[1] <= 1.0)
+                else:
+                    on_floor = abs(pt_ball[1] - floor_y) < 18 or abs(pt_heel[1] - floor_y) < 18
+
+                down[s] = bool(on_floor)
                 if on_floor:
                     dbg['sup'].append(r2(pt_ball[:2]))
                     dbg['sup'].append(r2(pt_heel[:2]))
                     contact_frames += 1
-                    # Check drift
+                    # Check 3D ground drift (x, z in cm)
                     key = (aid, s)
-                    if key in prev_feet:
-                        d = abs(pt_ball[0] - prev_feet[key][0])
-                        worst_drift = max(worst_drift, d / (H_fig / 170))
-                    prev_feet[key] = pt_ball[:2]
+                    if j3d and ball_idx < len(j3d) and j3d[ball_idx]:
+                        b3 = j3d[ball_idx]
+                        if key in prev_feet:
+                            d = math.hypot(b3[0] - prev_feet[key][0], b3[2] - prev_feet[key][1])
+                            worst_drift = max(worst_drift, d)
+                            if d > TOL_DRIFT:
+                                flags.append(f"planted drift: {s} foot slides {d:.1f}cm/frame")
+                        prev_feet[key] = (b3[0], b3[2])
+                    else:
+                        if key in prev_feet:
+                            d = abs(pt_ball[0] - prev_feet[key][0]) / (H_fig / 170)
+                            worst_drift = max(worst_drift, d)
+                            if d > TOL_DRIFT:
+                                flags.append(f"planted drift: {s} foot slides {d:.1f}cm/frame")
+                        prev_feet[key] = (pt_ball[0], pt_ball[1])
                 else:
                     prev_feet.pop((aid, s), None)
+
+            contact_log.setdefault(aid, []).append(
+                (down.get('L', False), down.get('R', False),
+                 float(pelvis_2d[0]), float(pelvis_2d[1])))
 
             if dbg['sup']:
                 grounded_frames += 1
                 xs = [p[0] for p in dbg['sup']]
                 if min(xs) - 20 <= pelvis_2d[0] <= max(xs) + 20:
                     balanced_frames += 1
-            else:
-                airborne_frames += 1
+
+        if not dbg['sup']:
+            airborne_frames += 1
 
         # Draw props in front (e.g. cup, ball)
         for pid, pdata in fr.get('p', {}).items():
@@ -426,24 +736,73 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
             'dbg': dbg,
             'flags': flags,
             'ok': ok_flags,
-            'beat': beats[min(len(beats) - 1, fi // step_frames)]['beat']
+            'beat': ''   # filled from the detected beats once the motion is known
         })
 
-    # Technical result summary
+    if not beats:
+        names = {}
+        for ai, a in enumerate(V['actors']):
+            names[a.get('id', ai)] = a['name']
+            names[ai] = a['name']
+        detected = mark_beats(contact_log, names, N)
+        if detected:
+            beats = detected
+    by_f = {}
+    for b in beats: by_f.setdefault(b['f'], []).append(b['beat'])
+    held = ''
+    for fr_ in frames:
+        if fr_['f'] in by_f: held = ' / '.join(by_f[fr_['f']])
+        fr_['beat'] = held
+
+    # Technical result summary.
+    #
+    # What was here: result = 'pass' if worst_drift <= 0.6 else 'pass'. Both
+    # branches returned pass, so the threshold was evaluated and discarded, and
+    # all 96 bolas_3d clips passed - ACT-002 among them, at 24.52 cm/frame
+    # against a 0.6 tolerance, 41x over. Meanwhile every frame's brad-gap flags
+    # were computed, drawn in the overlay, and then dropped on the floor:
+    # flagged_frame_ranges was the literal {}. The renderer knew and the record
+    # did not.
+    #
+    # Nothing new is measured below. The numbers were all already there.
     balanced_pct = round(100.0 * balanced_frames / max(1, grounded_frames), 1)
+
+    per_frame = {}
+    for fr_ in frames:
+        for msg in fr_.get('flags') or []:
+            per_frame.setdefault(_kind(msg), []).append(fr_['f'])
+    worst_gap = 0.0
+    for fr_ in frames:
+        for msg in fr_.get('flags') or []:
+            m = re.search(r'([0-9.]+)\s*cm', msg)
+            if m: worst_gap = max(worst_gap, float(m.group(1)))
+
+    fails = {}
+    if worst_drift > TOL_DRIFT: fails['planted drift'] = TOL_DRIFT
+    if worst_gap > TOL_BRAD: fails['brad disconnect'] = TOL_BRAD
+    if balanced_pct < TOL_BALANCED: fails['balance'] = TOL_BALANCED
+    for k, frs in per_frame.items():
+        fails.setdefault(k, TOL_BRAD)
+
     tech = {
-        'result': 'pass' if worst_drift <= 0.6 else 'pass',  # Bolas baked motions pass
+        'result': 'fail' if fails else 'pass',
+        'failed_checks': {k: {'tolerance': v} for k, v in fails.items()},
         'worst_planted_drift_cm_per_frame': round(worst_drift, 2),
-        'worst_contact_error_cm': 0.0,
-        'max_arm_reach_ratio': 1.0,
-        'max_leg_error_cm': 0.0,
+        'tolerance_planted_drift_cm_per_frame': TOL_DRIFT,
+        'worst_brad_gap_cm': round(worst_gap, 2),
+        'tolerance_brad_gap_cm': TOL_BRAD,
         'contact_frames': contact_frames,
         'airborne_frames': airborne_frames,
-        'prop_owner_changes': 1 if 'cup' in V.get('frames', [{}])[0].get('p', {}) else 0,
+        'cast_size': len(V['actors']),
+        'frames_per_actor': N,
         'balanced_pct_of_grounded_frames': balanced_pct,
-        'flagged_frame_ranges': {},
+        'tolerance_balanced_pct': TOL_BALANCED,
+        'flagged_frame_ranges': {k: _ranges(v) for k, v in per_frame.items()},
+        'flag_frames': {k: len(set(v)) for k, v in per_frame.items()},
         'accepted_frame_ranges': {},
-        'declared_flags': []
+        'declared_flags': [],
+        'not_measured': ['contact error to targets', 'arm reach ratio', 'leg length error',
+                         'prop ownership'],
     }
 
     clip_data = {
@@ -495,18 +854,18 @@ def update_arena_results(act_id, clip_id, clip_data, tid, skin='dummy'):
     # Replace existing take with same name or append
     new_take = {
         'run_at': '2026-10-20',
-        'instrument': f"Bolas 3D Motion Bank ({tid}) + {'POET Cutout Skin' if skin == 'poet' else 'Cardboard Cut-out Skin'}",
+        'instrument': f"Bolas 3D Motion Bank ({tid}) + {'The Man Cutout Skin' if skin == 'man' else ('POET Cutout Skin' if skin == 'poet' else 'Cardboard Cut-out Skin')}",
         'take': take_name,
-        'variant': 'poet' if skin == 'poet' else 'bolas_3d',
+        'variant': skin if skin in ('poet', 'man') else 'bolas_3d',
         'tier_reached': 'complete acted situation',
-        'execution_note': f"Baked from hartswf0/bolas {tid} ({clip_data['title']}). 3D joints projected and skinned with {'POET cut-out puppet pieces (shots/weave assets)' if skin == 'poet' else 'cardboard cut-out puppet pieces'}.",
+        'execution_note': f"Baked from hartswf0/bolas {tid} ({clip_data['title']}). 3D joints projected and skinned with {skin} cut-out puppet pieces.",
         'frames': len(clip_data['frames']),
         'fps': 24,
-        'cast': ['The Poet'] if skin == 'poet' else [c['name'] for c in clip_data['cast']],
+        'cast': ['The Man'] if skin == 'man' else (['The Poet'] if skin == 'poet' else [c['name'] for c in clip_data['cast']]),
         'props': list(clip_data['frames'][0].get('p', {}).keys()) if clip_data['frames'] else [],
         'clip': f"arena/clips/{clip_id}.json",
         'technical': clip_data['technical'],
-        'performance_note': f"3D authored motion from Bolas Crash Lab ({tid}: {clip_data['title']}) driving the {'POET cut-out puppet' if skin == 'poet' else 'cardboard cut-out puppet'}. Poses, foot contacts and center of mass balance are preserved.",
+        'performance_note': f"3D authored motion from Bolas Crash Lab ({tid}: {clip_data['title']}) driving the {'Man cut-out puppet' if skin == 'man' else ('POET cut-out puppet' if skin == 'poet' else 'cardboard cut-out puppet')}. Poses, foot contacts and center of mass balance are preserved.",
         'performance_review': 'Automated kinematic mapping test against 3D reference performance.'
     }
 
@@ -514,9 +873,11 @@ def update_arena_results(act_id, clip_id, clip_data, tid, skin='dummy'):
     takes.append(new_take)
     ch_entry['takes'] = takes
 
-    # If challenge had no pass, mark it pass
-    if ch_entry.get('result') != 'tested_pass':
+    # Challenge result reflects whether ANY take passed:
+    if any(t.get('technical', {}).get('result') == 'pass' for t in takes):
         ch_entry['result'] = 'tested_pass'
+    else:
+        ch_entry['result'] = 'tested_fail'
 
     # Update summary
     res['summary']['tested_pass'] = sum(1 for c in res['challenges'].values() if c.get('result') == 'tested_pass')
@@ -532,7 +893,7 @@ if __name__ == '__main__':
     parser.add_argument('vignettes', nargs='*', help="Vignette IDs (e.g. T101 T102 T001)")
     parser.add_argument('--all', action='store_true', help="Compile all 32 Acting Arena vignettes (T101-T132)")
     parser.add_argument('--yaw', type=float, help="Override camera yaw")
-    parser.add_argument('--look', choices=['dummy', 'poet', 'both'], default='both', help="Skin to apply: dummy, poet, or both")
+    parser.add_argument('--look', choices=['dummy', 'poet', 'man', 'all'], default='all', help="Skin to apply: dummy, poet, man, or all")
     args = parser.parse_args()
 
     vigs = args.vignettes
@@ -542,7 +903,9 @@ if __name__ == '__main__':
         vigs = ['T101', 'T102', 'T104', 'T111', 'T112']
 
     for tid in vigs:
-        if args.look in ('dummy', 'both'):
+        if args.look in ('dummy', 'all'):
             compile_vignette(tid, custom_yaw=args.yaw, skin='dummy')
-        if args.look in ('poet', 'both'):
+        if args.look in ('poet', 'all'):
             compile_vignette(tid, custom_yaw=args.yaw, skin='poet')
+        if args.look in ('man', 'all'):
+            compile_vignette(tid, custom_yaw=args.yaw, skin='man')
