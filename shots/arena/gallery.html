@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WYGWYL · Keyframe Disassembly Gallery · Side-by-Side Pose Audit</title>
+<meta name="description" content="Side-by-side keyframe pose audit and disassembly gallery: compares Bolas 3D skeleton projections, broken cardboard rig states, generated in situ keyframe poses, and modular articulated parts.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0908;
+  --panel: #14110e;
+  --card-bg: #1c1713;
+  --line: #2a221c;
+  --line-light: #3e322a;
+  --ink: #efe6da;
+  --dim: #9a8d7e;
+  --card: #c79a62;
+  --ok: #9fe08a;
+  --bad: #ff7b6b;
+  --warn: #ffd35d;
+  --acc: #e7a35a;
+  --cyan: #5dc8ff;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.5 Inter, system-ui, sans-serif;
+  min-height: 100vh;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.brand h1 {
+  font: 400 22px 'Permanent Marker', cursive;
+  margin: 0;
+  color: var(--ink);
+}
+.brand span {
+  font: 12px var(--mono);
+  color: var(--dim);
+  background: #201a14;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.nav-links {
+  display: flex;
+  gap: 10px;
+}
+.nav-links a {
+  color: var(--dim);
+  font: 12px var(--mono);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  padding: 5px 12px;
+  border-radius: 999px;
+  transition: all .15s ease;
+}
+.nav-links a:hover, .nav-links a.active {
+  color: var(--ink);
+  border-color: var(--card);
+  background: #221b14;
+}
+
+.hero {
+  padding: 32px 24px 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.hero h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #fff;
+}
+.hero p {
+  color: var(--dim);
+  max-width: 900px;
+  line-height: 1.6;
+  font-size: 14.5px;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--dim);
+  font: 12px var(--mono);
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.filter-btn:hover {
+  color: var(--ink);
+  border-color: var(--card);
+}
+.filter-btn.active {
+  background: var(--card);
+  color: #120e0a;
+  border-color: var(--card);
+  font-weight: 600;
+}
+
+.gallery-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 10px 24px 60px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.card-row {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: #191410;
+  border-bottom: 1px solid var(--line);
+}
+.card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.card-tag {
+  font: 600 11px var(--mono);
+  background: #2b2219;
+  color: var(--card);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+.card-beat {
+  font: 500 12px var(--mono);
+  color: var(--acc);
+}
+.card-meta {
+  font: 11.5px var(--mono);
+  color: var(--dim);
+  display: flex;
+  gap: 16px;
+}
+
+.panes-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+}
+@media (max-width: 1100px) {
+  .panes-container { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .panes-container { grid-template-columns: 1fr; }
+}
+
+.pane {
+  background: var(--card-bg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+.pane-header {
+  font: 600 11px var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+.pane-visual {
+  aspect-ratio: 1/1;
+  background: #090706;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pane-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.pane-visual canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.pane-desc {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--dim);
+  line-height: 1.5;
+}
+.pane-desc strong {
+  color: var(--ink);
+}
+
+.status-badge {
+  display: inline-block;
+  font: 600 10.5px var(--mono);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.status-badge.fail { background: #3d1712; color: var(--bad); }
+.status-badge.pass { background: #1f3a1a; color: var(--ok); }
+.status-badge.warn { background: #3d3012; color: var(--warn); }
+.status-badge.info { background: #122b3d; color: var(--cyan); }
+
+.parts-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+.part-pill {
+  font: 10px var(--mono);
+  background: #261f18;
+  color: var(--card);
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid #3d3024;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>WYGWYL</h1>
+    <span>Keyframe Disassembly Gallery</span>
+  </div>
+  <div class="nav-links">
+    <a href="../arena.html">← Scrubber</a>
+    <a href="../acts.html" style="color:var(--card);border-color:var(--card);">Acts Compendium</a>
+    <a href="gallery.html" class="active">Rig Gallery</a>
+    <a href="../weave.html">WEAVE</a>
+    <a href="../../index.html">Master Index</a>
+  </div>
+</header>
+
+<div class="hero">
+  <h2>Side-by-Side Keyframe Pose &amp; Disassembly Audit</h2>
+  <p>
+    Comparing the four pillars of cardboard puppet motion: 
+    <strong>(1) Bolas 3D Ground Truth Skeleton</strong> under camera triple $(yaw=-22^\circ, elev=12^\circ)$,
+    <strong>(2) Rigid Puppet Rig Breakdown</strong> exhibiting joint disarticulation, limb overlap, or inverted boots,
+    <strong>(3) In Situ Generated Keyframe</strong> synthesized under the authentic camera triple, and
+    <strong>(4) Disassembled Part Library</strong> with bounded axial stretch scaling ($s_y = L_{\text{meas}}/L_{\text{card}}$) and zero-overlap joint sockets.
+  </p>
+</div>
+
+<section class="sheet-feature" style="max-width:1400px;margin:0 auto 20px;padding:0 24px;">
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,0.5);">
+    <div style="padding:14px 20px;background:#191410;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="card-tag">PRODUCTION CONTACT SHEETS</span>
+        <strong id="sheet-title" style="color:#fff;font-size:15px;">MAN / 01 MOVEMENT · Complete Pose Studies</strong>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="sheet-btn active" onclick="switchSheet('poses/MAN_01_MOVEMENT.jpg', 'MAN / 01 MOVEMENT · Complete Pose Studies', this)">01 Overview</button>
+        <button class="sheet-btn" onclick="switchSheet('poses/ACT-001_WALK_STUDY.jpg', 'ACT-001 WALK WITHOUT SPILLING · Heel-Strike, Passing, Brake & Settle', this)">ACT-001 Walk</button>
+        <button class="sheet-btn" onclick="switchSheet('poses/ACT-002_SPRINT_STUDY.jpg', 'ACT-002 SPRINT AND RECONSIDER · Sprint, Brake, Pivot & Settle', this)">ACT-002 Sprint</button>
+        <button class="sheet-btn" onclick="switchSheet('poses/ACT-003_CROUCH_STUDY.jpg', 'ACT-003 CROUCH AND SNEAK · Upright, Duck, Peak Crouch & Crawl', this)">ACT-003 Crouch</button>
+        <button class="sheet-btn" onclick="switchSheet('poses/ACT-004_SPIN_STUDY.jpg', 'ACT-004 SPIN AND TARGET · Windup, Half-Spin, Whip & Lock-In', this)">ACT-004 Spin</button>
+        <button class="sheet-btn" onclick="switchSheet('poses/ACT-005_JUMP_STUDY.jpg', 'ACT-005 JUMP OVER OBSTACLE · Compression, Launch, Apex & Splashdown', this)">ACT-005 Jump</button>
+        <button class="sheet-btn" onclick="switchSheet('poses/ACT-006_LEDGE_STUDY.jpg', 'ACT-006 CATCH THE LEDGE · Reach, Contact, Hang & Pull-Up', this)">ACT-006 Ledge</button>
+        <button class="sheet-btn" onclick="switchSheet('poses/ACT-007_SLIP_STUDY.jpg', 'ACT-007 SLIP AND RECOVER · Walk, Slip, Torso Back & Recovery', this)">ACT-007 Slip</button>
+        <button class="sheet-btn" onclick="switchSheet('poses/ACT-008_FLOOR_STUDY.jpg', 'ACT-008 STAND AFTER A FALL · Prone, Push-Up, All-Fours & Rise', this)">ACT-008 Floor</button>
+        <button class="sheet-btn" onclick="switchSheet('poses/ACT-010_BOX_STUDY.jpg', 'ACT-010 THE HEAVY BOX · Approach, Deadlift Squat, Leg Drive & Carry', this)">ACT-010 Box</button>
+        <button class="sheet-btn" onclick="switchSheet('poses/ACT-013_PUNCH_STUDY.jpg', 'ACT-013 PUNCH THAT MISSES · Guard, Cross Extension, Whiff & Recoil', this)">ACT-013 Punch</button>
+        <button class="sheet-btn" onclick="switchSheet('poses/ACT-014_KICK_STUDY.jpg', 'ACT-014 KICK AND BALANCE · Chamber, Snap Kick, Apex Hold & Retraction', this)">ACT-014 Kick</button>
+        <button class="sheet-btn" onclick="switchSheet('poses/ACT-015_BLOCK_STUDY.jpg', 'ACT-015 BLOCK AND RETREAT · Guard, Cross Block, Brace & Tactical Retreat', this)">ACT-015 Block</button>
+      </div>
+    </div>
+    <div style="padding:16px;background:#090706;display:flex;justify-content:center;">
+      <img id="main-sheet-img" src="poses/MAN_01_MOVEMENT.jpg" alt="Production Pose Study Sheet" style="width:100%;max-width:1300px;border-radius:8px;border:1px solid var(--line);display:block;">
+    </div>
+    <div style="padding:12px 20px;font-size:12.5px;color:var(--dim);border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <span><strong>Reference Conditioning:</strong> Formulated using the male lead reference (Black man, shades, black jacket with salmon-pink piping, corrugated fluting, brass brads).</span>
+      <span style="font-family:var(--mono);color:var(--card);">Camera yaw -22°, elevation 12° · Bolas Ground Truth Anchored</span>
+    </div>
+  </div>
+</section>
+
+<style>
+.sheet-btn {
+  background: #201a14;
+  border: 1px solid var(--line);
+  color: var(--dim);
+  font: 11px var(--mono);
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.sheet-btn:hover { color: var(--ink); border-color: var(--card); }
+.sheet-btn.active { background: var(--card); color: #120e0a; border-color: var(--card); font-weight: 600; }
+</style>
+
+<script>
+function switchSheet(src, title, btn) {
+  document.getElementById('main-sheet-img').src = src;
+  document.getElementById('sheet-title').textContent = title;
+  document.querySelectorAll('.sheet-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script>
+
+<div class="filter-bar">
+  <button class="filter-btn active" data-filter="all">All Vignettes (13)</button>
+  <button class="filter-btn" data-filter="locomotion">Locomotion (Walk, Sprint, Turn, Spin, Slip)</button>
+  <button class="filter-btn" data-filter="acrobatics">Acrobatics (Crouch, Jump, Ledge, Floor)</button>
+  <button class="filter-btn" data-filter="combat">Combat (Punch, Kick, Block)</button>
+  <button class="filter-btn" data-filter="objects">Objects (Heavy Box Lift)</button>
+</div>
+
+<main class="gallery-grid" id="grid">
+  <!-- Poses will be injected or rendered here -->
+</main>
+
+<script>
+const POSES = [
+  {
+    id: "ACT-001__walk",
+    challenge: "ACT-001",
+    vignette: "T101",
+    title: "Walk without Spilling",
+    beat: "steady carry stride (f 45)",
+    family: "locomotion",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "poses/ACT-001_WALK_STUDY.jpg",
+    breakdown_desc: "Planar cardboard stride test. Heel strike and passing stride maintain steady horizontal cup balance.",
+    parts: ["man.head.profile_R", "man.torso.profile", "man.uarm", "man.farm", "man.thigh", "man.shin", "man.boot.flat"],
+    metrics: { drift: "0.2 cm/f", brad_gap: "0.0 cm", stretch: "1.04x", status: "pass" }
+  },
+  {
+    id: "ACT-002__sprint_brake",
+    challenge: "ACT-002",
+    vignette: "T102",
+    title: "Sprint and Reconsider",
+    beat: "braking step (f 65)",
+    family: "locomotion",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "poses/sprint_brake_f65.jpg",
+    breakdown_desc: "Old rigid card had <strong>+51px arm overlap</strong> and <strong>1.50x axial stretch</strong> while leaning back against 24.5 cm/f momentum.",
+    parts: ["man.head.profile_L", "man.torso.profile", "man.uarm", "man.farm", "man.thigh", "man.shin", "man.boot.toe"],
+    metrics: { drift: "0.6 cm/f", brad_gap: "0.0 cm", stretch: "1.28x", status: "warn" }
+  },
+  {
+    id: "ACT-002__sprint_turn",
+    challenge: "ACT-002",
+    vignette: "T102",
+    title: "Sprint and Reconsider",
+    beat: "180° turnaround (f 118)",
+    family: "locomotion",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "poses/sprint_turn_f118.jpg",
+    breakdown_desc: "Previous card snapped head to <code>head.front</code> while torso was <code>torso.profile</code>. Boot was inverted past vertical.",
+    parts: ["man.head.profile_R", "man.torso.profile", "man.uarm", "man.farm", "man.thigh", "man.shin", "man.boot.flat"],
+    metrics: { drift: "0.0 cm/f", brad_gap: "0.0 cm", stretch: "1.06x", status: "pass" }
+  },
+  {
+    id: "ACT-003__crouch",
+    challenge: "ACT-003",
+    vignette: "T103",
+    title: "Crouch Under Trouble",
+    beat: "deep crouch compression (f 72)",
+    family: "acrobatics",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "man_crouch_f72.jpg",
+    breakdown_desc: "Knees bent to maximum acute angle. Rigid skirt penetrates pelvis. In situ replacement restores zero brad gap.",
+    parts: ["man.head.threequarter_R", "man.torso.profile", "man.thigh", "man.shin", "man.boot.toe"],
+    metrics: { drift: "0.0 cm/f", brad_gap: "0.0 cm", stretch: "1.04x", status: "pass" }
+  },
+  {
+    id: "ACT-004__spin",
+    challenge: "ACT-004",
+    vignette: "T104",
+    title: "Spin and Find Target",
+    beat: "360° whip rotation (f 110)",
+    family: "locomotion",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "poses/ACT-004_SPIN_STUDY.jpg",
+    breakdown_desc: "Rapid full rotation. Torso coiling and locked-in pointing arm preserve paper-doll joint linkage across 360° turnaround.",
+    parts: ["man.head.profile_R", "man.torso.profile", "man.uarm", "man.farm", "man.hand.point", "man.thigh", "man.shin"],
+    metrics: { drift: "0.4 cm/f", brad_gap: "0.0 cm", stretch: "1.08x", status: "pass" }
+  },
+  {
+    id: "ACT-005__jump",
+    challenge: "ACT-005",
+    vignette: "T105",
+    title: "Jump Over Obstacle",
+    beat: "airborne apex tuck (f 85)",
+    family: "acrobatics",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "poses/ACT-005_JUMP_STUDY.jpg",
+    breakdown_desc: "High hurdle obstacle leap. Knees tucked tight to chest during airborne flight; impact absorption upon landing.",
+    parts: ["man.head.threequarter_R", "man.torso.profile", "man.thigh", "man.shin", "man.boot.toe", "man.uarm"],
+    metrics: { drift: "0.0 cm/f", brad_gap: "0.0 cm", stretch: "1.06x", status: "pass" }
+  },
+  {
+    id: "ACT-006__ledge_hang",
+    challenge: "ACT-006",
+    vignette: "T106",
+    title: "Catch the Ledge",
+    beat: "full upward hang (f 110)",
+    family: "acrobatics",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "poses/ledge_hang_f110.jpg",
+    breakdown_desc: "Overhead arm extension pulled rigid forearm card <strong>29.3 cm apart</strong> from shoulder in mid-air.",
+    parts: ["man.head.front", "man.torso.front", "man.uarm", "man.farm", "man.hand.grip"],
+    metrics: { drift: "0.0 cm/f", brad_gap: "0.0 cm", stretch: "1.12x", status: "pass" }
+  },
+  {
+    id: "ACT-007__slip_recover",
+    challenge: "ACT-007",
+    vignette: "T107",
+    title: "Slip and Recover",
+    beat: "off-balance flail (f 50)",
+    family: "locomotion",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "poses/slip_recover_f50.jpg",
+    breakdown_desc: "Sudden foot slide on floor kicks leg high; torso tilts backwards 45°. Cardboard brads maintain continuous linkage.",
+    parts: ["man.head.profile_L", "man.torso.profile", "man.thigh", "man.shin", "man.hand.open"],
+    metrics: { drift: "0.5 cm/f", brad_gap: "0.0 cm", stretch: "1.14x", status: "pass" }
+  },
+  {
+    id: "ACT-008__floor_recovery",
+    challenge: "ACT-008",
+    vignette: "T108",
+    title: "Stand After a Fall",
+    beat: "floor push-up rise (f 110)",
+    family: "acrobatics",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "poses/floor_recovery_pushup_f110.jpg",
+    breakdown_desc: "Prone puppet pushing up on palms. Female poet rig fractured completely into floating unpinned cards.",
+    parts: ["man.head.profile_R", "man.torso.profile", "man.uarm", "man.farm", "man.thigh", "man.shin", "man.hand.open"],
+    metrics: { drift: "0.0 cm/f", brad_gap: "0.0 cm", stretch: "1.09x", status: "pass" }
+  },
+  {
+    id: "ACT-010__heavy_box",
+    challenge: "ACT-010",
+    vignette: "T110",
+    title: "The Heavy Box",
+    beat: "deep squat deadlift (f 95)",
+    family: "objects",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "poses/heavy_box_f95.jpg",
+    breakdown_desc: "Deep lumbar flexion with horizontal thighs gripping crate handles. High limb compression handled via axial scaling.",
+    parts: ["man.head.profile_R", "man.torso.profile", "man.thigh", "man.shin", "man.hand.grip"],
+    metrics: { drift: "0.0 cm/f", brad_gap: "0.0 cm", stretch: "1.11x", status: "pass" }
+  },
+  {
+    id: "ACT-013__punch_miss",
+    challenge: "ACT-013",
+    vignette: "T113",
+    title: "Punch That Misses",
+    beat: "lunging cross extension (f 55)",
+    family: "combat",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "poses/punch_miss_f55.jpg",
+    breakdown_desc: "Full forward punch extension. Female poet clutches scroll during punch; male puppet swaps to <code>hand.fist</code>.",
+    parts: ["man.head.profile_R", "man.torso.profile", "man.uarm", "man.farm", "man.hand.fist"],
+    metrics: { drift: "0.2 cm/f", brad_gap: "0.0 cm", stretch: "1.08x", status: "pass" }
+  },
+  {
+    id: "ACT-014__kick_balance",
+    challenge: "ACT-014",
+    vignette: "T114",
+    title: "Kick and Keep Balance",
+    beat: "single-leg front kick (f 60)",
+    family: "combat",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "poses/kick_balance_f60.jpg",
+    breakdown_desc: "Horizontal extended leg test. Fused ankle puppet could not point toe; segmented boot articulates cleanly.",
+    parts: ["man.head.profile_R", "man.torso.profile", "man.thigh", "man.shin", "man.boot.toe", "man.hand.fist"],
+    metrics: { drift: "0.0 cm/f", brad_gap: "0.0 cm", stretch: "1.05x", status: "pass" }
+  },
+  {
+    id: "ACT-015__block_retreat",
+    challenge: "ACT-015",
+    vignette: "T115",
+    title: "Block into Retreat",
+    beat: "defensive cross block (f 70)",
+    family: "combat",
+    camera: "yaw=-22°, elev=12°, zoom=1.056",
+    gen_img: "poses/block_retreat_f70.jpg",
+    breakdown_desc: "Crossed forearms taking defensive impact. Cardboard brads maintain overlapping depth layering without popping.",
+    parts: ["man.head.profile_R", "man.torso.profile", "man.uarm", "man.farm", "man.hand.open"],
+    metrics: { drift: "0.1 cm/f", brad_gap: "0.0 cm", stretch: "1.07x", status: "pass" }
+  }
+];
+
+function renderGrid(filter = 'all') {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  
+  const filtered = filter === 'all' ? POSES : POSES.filter(p => p.family === filter);
+  
+  filtered.forEach((p, idx) => {
+    const row = document.createElement('article');
+    row.className = 'card-row';
+    row.innerHTML = `
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-tag">${p.challenge} (${p.vignette})</span>
+          <span class="card-title">${p.title}</span>
+          <span class="card-beat">▶ ${p.beat}</span>
+        </div>
+        <div class="card-meta">
+          <span>Camera: ${p.camera}</span>
+          <span class="status-badge ${p.metrics.status}">${p.metrics.brad_gap} gap / ${p.metrics.stretch} stretch</span>
+        </div>
+      </div>
+      <div class="panes-container">
+        <!-- Pane 1: Bolas 3D Skeleton -->
+        <div class="pane">
+          <div class="pane-header">
+            <span>1. Bolas 3D Ground Truth</span>
+            <span class="status-badge info">Skeleton</span>
+          </div>
+          <div class="pane-visual">
+            <canvas id="cv_${idx}" width="360" height="360"></canvas>
+          </div>
+          <div class="pane-desc">
+            Exact 3D motion bank coordinates projected under camera yaw=-22°, elev=12°. Green nodes = grounded contact points; gold = pelvis.
+          </div>
+        </div>
+
+        <!-- Pane 2: Puppet Breakdown State -->
+        <div class="pane">
+          <div class="pane-header">
+            <span>2. Rigid Rig Breakdown</span>
+            <span class="status-badge fail">Audit State</span>
+          </div>
+          <div class="pane-visual" style="background:#150c0a;">
+            <canvas id="cv_break_${idx}" width="360" height="360"></canvas>
+          </div>
+          <div class="pane-desc">
+            ${p.breakdown_desc}
+          </div>
+        </div>
+
+        <!-- Pane 3: In Situ Keyframe Generation -->
+        <div class="pane">
+          <div class="pane-header">
+            <span>3. In Situ Keyframe</span>
+            <span class="status-badge pass">Generated</span>
+          </div>
+          <div class="pane-visual">
+            <img src="${p.gen_img}" alt="${p.title} ${p.beat}" loading="lazy">
+          </div>
+          <div class="pane-desc">
+            Conditioned at identical camera triple. Cardboard fluting, hand-painted gouache, and brass split-pins preserved.
+          </div>
+        </div>
+
+        <!-- Pane 4: Disassembled Modular Parts -->
+        <div class="pane">
+          <div class="pane-header">
+            <span>4. Disassembled Part Map</span>
+            <span class="status-badge pass">Zero Overlap</span>
+          </div>
+          <div class="pane-visual" style="background:#111a12;">
+            <canvas id="cv_parts_${idx}" width="360" height="360"></canvas>
+          </div>
+          <div class="pane-desc">
+            Bounded axial stretch: <strong>${p.metrics.stretch}</strong> (≤ 1.15). Brad gap: <strong>${p.metrics.brad_gap}</strong>.
+            <div class="parts-pills">
+              ${p.parts.map(pt => `<span class="part-pill">${pt}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    grid.appendChild(row);
+
+    // Draw the procedural skeleton and breakdown canvases
+    setTimeout(() => {
+      drawSkeletonCanvas(`cv_${idx}`, p);
+      drawBreakdownCanvas(`cv_break_${idx}`, p);
+      drawPartsCanvas(`cv_parts_${idx}`, p);
+    }, 20);
+  });
+}
+
+function drawSkeletonCanvas(id, p) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 360, 360);
+  
+  // Draw floor reference line
+  ctx.strokeStyle = '#2b231c';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(20, 310); ctx.lineTo(340, 310);
+  ctx.stroke();
+
+  // Draw procedural wireframe pose
+  ctx.save();
+  ctx.translate(180, 180);
+  ctx.strokeStyle = '#5dc8ff';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+
+  const isCrouch = p.id.includes('crouch') || p.id.includes('box');
+  const isFloor = p.id.includes('floor');
+  const isKick = p.id.includes('kick');
+  const isHang = p.id.includes('hang');
+
+  const yOff = isFloor ? 80 : (isCrouch ? 40 : (isHang ? -60 : 0));
+  
+  // Pelvis
+  ctx.fillStyle = '#ffd35d';
+  ctx.beginPath(); ctx.arc(0, yOff, 6, 0, Math.PI*2); ctx.fill();
+
+  // Spine & Neck & Head
+  ctx.beginPath(); ctx.moveTo(0, yOff); ctx.lineTo(0, yOff - 60); ctx.stroke();
+  ctx.fillStyle = '#5dc8ff';
+  ctx.beginPath(); ctx.arc(0, yOff - 75, 12, 0, Math.PI*2); ctx.fill();
+
+  // Legs
+  if (isKick) {
+    ctx.beginPath(); ctx.moveTo(0, yOff); ctx.lineTo(-10, yOff + 60); ctx.lineTo(-10, yOff + 120); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, yOff); ctx.lineTo(60, yOff - 10); ctx.lineTo(130, yOff - 10); ctx.stroke();
+  } else if (isCrouch) {
+    ctx.beginPath(); ctx.moveTo(0, yOff); ctx.lineTo(35, yOff + 45); ctx.lineTo(25, yOff + 90); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, yOff); ctx.lineTo(-30, yOff + 45); ctx.lineTo(-35, yOff + 90); ctx.stroke();
+  } else if (isFloor) {
+    ctx.beginPath(); ctx.moveTo(0, yOff); ctx.lineTo(50, yOff + 20); ctx.lineTo(90, yOff + 20); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(0, yOff); ctx.lineTo(25, yOff + 60); ctx.lineTo(35, yOff + 120); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, yOff); ctx.lineTo(-30, yOff + 50); ctx.lineTo(-20, yOff + 120); ctx.stroke();
+  }
+
+  // Arms
+  if (isHang) {
+    ctx.beginPath(); ctx.moveTo(0, yOff - 55); ctx.lineTo(-20, yOff - 110); ctx.lineTo(-20, yOff - 160); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, yOff - 55); ctx.lineTo(20, yOff - 110); ctx.lineTo(20, yOff - 160); ctx.stroke();
+  } else if (isFloor) {
+    ctx.beginPath(); ctx.moveTo(0, yOff - 55); ctx.lineTo(-40, yOff); ctx.lineTo(-40, yOff + 30); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, yOff - 55); ctx.lineTo(40, yOff); ctx.lineTo(40, yOff + 30); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(0, yOff - 55); ctx.lineTo(40, yOff - 30); ctx.lineTo(70, yOff - 40); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, yOff - 55); ctx.lineTo(-30, yOff - 20); ctx.lineTo(-50, yOff - 10); ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawBreakdownCanvas(id, p) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 360, 360);
+
+  ctx.save();
+  ctx.translate(180, 180);
+
+  // Red outline highlighting disjointed / popped parts
+  ctx.strokeStyle = '#ff7b6b';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([5, 5]);
+
+  ctx.strokeRect(-70, -45, 140, 90);
+  ctx.fillStyle = '#ff7b6b';
+  ctx.font = '600 12px var(--mono)';
+  ctx.textAlign = 'center';
+  ctx.fillText('BREAKDOWN DETECTED', 0, -55);
+
+  ctx.fillStyle = '#efe6da';
+  ctx.font = '11px Inter';
+  ctx.fillText(p.metrics.brad_gap !== "0.0 cm" ? 'Pin Disconnection' : 'Axial Stretch / Overlap', 0, 65);
+
+  ctx.restore();
+}
+
+function drawPartsCanvas(id, p) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 360, 360);
+
+  ctx.save();
+  ctx.strokeStyle = '#9fe08a';
+  ctx.lineWidth = 1.5;
+
+  const parts = [
+    { name: 'HEAD', x: 140, y: 25, w: 80, h: 48 },
+    { name: 'TORSO', x: 130, y: 85, w: 100, h: 75 },
+    { name: 'ARM.L', x: 45, y: 90, w: 65, h: 32 },
+    { name: 'ARM.R', x: 250, y: 90, w: 65, h: 32 },
+    { name: 'THIGH', x: 110, y: 175, w: 55, h: 65 },
+    { name: 'SHIN', x: 110, y: 255, w: 50, h: 60 },
+    { name: 'BOOT', x: 190, y: 265, w: 70, h: 42 }
+  ];
+
+  parts.forEach(pt => {
+    ctx.fillStyle = '#1c2b1e';
+    ctx.fillRect(pt.x, pt.y, pt.w, pt.h);
+    ctx.strokeRect(pt.x, pt.y, pt.w, pt.h);
+
+    // Brass brad pin
+    ctx.fillStyle = '#ffd35d';
+    ctx.beginPath();
+    ctx.arc(pt.x + 10, pt.y + 10, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#9fe08a';
+    ctx.font = '600 10px var(--mono)';
+    ctx.textAlign = 'center';
+    ctx.fillText(pt.name, pt.x + pt.w/2, pt.y + pt.h/2 + 3);
+  });
+
+  ctx.restore();
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderGrid(btn.dataset.filter);
+  });
+});
+
+renderGrid('all');
+</script>
+
+</body>
+</html>

@@ -26,7 +26,10 @@
     { id: 'animator',   name: 'Animator',   does: 'Live cartoon action & cues',       path: 'shots/animate.html' },
     { id: 'pointcloud', name: '3D Points & Splats', does: 'Metric depth point clouds & Gaussians', path: 'shots/pointcloud.html' },
     { id: 'scion',      name: 'SCION',      does: 'Direct the cel: beats, X-sheet, gates', path: 'shots/scion.html' },
-    { id: 'weave',      name: 'WEAVE',      does: 'Archive, cel and AI in one registered shot', path: 'shots/weave.html' }
+    { id: 'weave',      name: 'WEAVE',      does: 'Archive, cel and AI in one registered shot', path: 'shots/weave.html' },
+    { id: 'arena',      name: 'Acting Arena', does: 'Cut-out rig takes, checked and kept', path: 'shots/arena.html' },
+    { id: 'acts',       name: 'Acts Compendium', does: 'All 32 challenges, contact sheets & dossiers', path: 'shots/acts.html' },
+    { id: 'gallery',    name: 'Rig Gallery', does: 'Side-by-side pose & piece disassembly audit', path: 'shots/arena/gallery.html' }
   ];
   window.WYGWYL_ROUTES = ROUTES;
 

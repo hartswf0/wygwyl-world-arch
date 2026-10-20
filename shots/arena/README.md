@@ -110,30 +110,42 @@ python3 shots/arena/bolas/keyframe_budget.py --all
 
 ---
 
-## 4. In Situ Keyframe Pose Replacement Pipeline
+## 4. Keyframe Disassembly Gallery (`gallery.html`)
 
-Standard 2-bone planar IK breaks down during extreme kinematic demands:
-- **Deep Crouch (`ACT-003`, Bolas `T103` at frame 72):** Normal card limbs disconnect at the knee/elbow or penetrate the rigid skirt.
-- **Floor Recovery (`ACT-008`, Bolas `T108` at frame 120):** Figure lies prone on the ground, requiring extreme limb foreshortening that planar brads cannot represent.
+An interactive side-by-side pose audit and disassembly inspector is available at [gallery.html](gallery.html) (also accessible via the top header in [../arena.html](../arena.html)).
 
-### The Solution: Pose-Conditioned In Situ Generation
-1. Generate an in situ high-resolution pose plate conditioned on the exact 3D camera angle, ground line, and lighting (`poet_crouch_f72.jpg`, `ref_floor_recovery_crop.jpg`).
-2. Extract clean alpha contours and decompose into pose-specific card assets.
-3. Calibrate anchor offsets and register the in situ card swap at the peak kinematic frames:
-   - `poet.pose.crouch_f72` (frame 72, ACT-003)
-   - `man.pose.crouch_f72` (frame 72, ACT-003)
-   - `poet.pose.floor_recovery` (frame 120, ACT-008)
-4. Result: **0.0 cm brad gap**, zero rig penetration, and green contact confirmation flags in the viewer HUD.
+For each core dramaturgical key pose, the gallery renders four synchronous columns:
+1. **Bolas 3D Ground Truth Skeleton**: The raw 3D joint telemetry projected at $(yaw=-22^\circ, elev=12^\circ, zoom=1.0556)$, showing active support nodes and pelvic gravity line.
+2. **Rigid Rig Breakdown State**: Visualizing where planar rigid cardboard broke down (popped brad pins, limb overlap, or inverted boots).
+3. **In Situ Generated Keyframe**: High-resolution photorealistic cardboard paper doll synthesis under the exact camera triple.
+4. **Disassembled Modular Part Map**: Cut-out cards with joint socket anchors $(A, B)$, zero-overlap boundary masks, and bounded axial stretch scaling ($s_y = L_{\text{meas}}/L_{\text{card}} \le 1.15$).
 
 ---
 
-## 5. Defect & Failure Instrumentation
+## 5. Architectural Rig Corrections
+
+### 1. Bounded Axial Stretch (Brad Gap $\to$ 0.0 cm by Construction)
+- Rather than uniform 2D card scaling, `mat_bone` scales each limb piece along its anatomical bone vector ($s_y = L_{\text{measured}} / L_{\text{card}}$) while preserving character girth ($s_x = S_{\text{man}}$).
+- The brad gap becomes **0.0 cm by construction**, moving the failure mode from unbounded physical disarticulation to a readable, bounded number: `axial stretch ratio`. Limb stretch is tracked per frame and flagged whenever $s_y / S_{\text{man}} > 1.15$ or $< 0.85$.
+
+### 2. Boot Axis Correction
+- When performers walk left ($fwd\_cam\_x < 0$), horizontal mirroring (`flip_x=True`) combined with a $180^\circ$ coordinate rotation previously inverted the vertical axis, rendering boots upside-down in 389 of 520 frames.
+- Re-anchoring the toe vector to character forward space ($dx = -(toe_x - ank_x)$ if flipped) guarantees boots remain grounded and right-side up.
+
+### 3. Decompiler Segmentation (Disjoint Masks vs. Overlapping Rectangles)
+- Hardcoded rectangular fractional slices in `pose_decompiler.py` created 35%–110% duplicate material across neighboring boxes, causing doubled limbs.
+- The pipeline architecture moves to prompt-guided SAM segmentation where part masks are disjoint by definition: $\text{Part} = \text{Mask} \cap \text{Region}(A, B)$, with joint $A$ as pivot.
+
+---
+
+## 6. Defect & Failure Instrumentation
 
 The compiler actively instruments real-world cut-out failure modes:
 
 | Defect / Check | Threshold / Condition |
 | :-- | :-- |
 | **Brad Disconnect** | Forearm or lower leg separation > 2.0 cm from expected anatomical length. |
+| **Axial Stretch** | Limb stretching > 1.15x or compressing < 0.85x to bridge 3D perspective foreshortening. |
 | **View Mismatch** | Profile head on a frontal torso, or forward head while walking away (> 135° yaw). |
 | **Hand Constraint Defect** | Attempting to grip or fist when the asset hand is fixed/clutching (e.g. POET far hand clutched around scroll). |
 | **Foot Rigidity Defect** | Fused knee-to-sole asset unable to achieve ankle dorsiflexion/plantarflexion. |

@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#0a0d18">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta property="og:title" content="WYGWYL · Atlantis Urbanism">
-<meta property="og:description" content="81 stills redrawn as layered angular cartoons — eight tools to watch, walk and take them apart.">
+<meta property="og:description" content="81 stills redrawn as layered angular cartoons — thirteen tools to watch, walk and take them apart.">
 <meta property="og:image" content="landing/cortex/poster.webp">
 <title>WYGWYL · Atlantis Urbanism — choose a tool</title>
-<meta name="description" content="81 Midjourney stills, redrawn as layered angular cartoons and set in motion. Eight tools: film cuts, poem reels, a walkable world, a city map, a district guide, a shot lab, a storyboard and an animation studio.">
+<meta name="description" content="81 Midjourney stills, redrawn as layered angular cartoons and set in motion. Thirteen tools: film cuts, poem reels, a walkable world, a city map, a district guide, a shot lab, a storyboard, an animation studio, 3D points & splats, animator, SCION, WEAVE, and acting arena.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -243,6 +243,8 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
           <li><a href="shots/scion.html" data-key="scion" data-shot="commons"><b>SCION</b><span>Direct the cel: beats, X-sheet, gates</span><i aria-hidden="true">→</i></a></li>
           <li><a href="shots/weave.html" data-key="weave" data-shot="commons"><b>WEAVE</b><span>Archive, cel and AI in one registered shot</span><i aria-hidden="true">→</i></a></li>
           <li><a href="shots/arena.html" data-key="arena" data-shot="commons"><b>Acting Arena</b><span>Cut-out rig takes, checked and kept</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/acts.html" data-key="acts" data-shot="commons"><b>Acts Compendium</b><span>All 32 challenges, contact sheets &amp; dossiers</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/arena/gallery.html" data-key="gallery" data-shot="commons"><b>Rig Gallery</b><span>Side-by-side pose &amp; piece disassembly audit</span><i aria-hidden="true">→</i></a></li>
         </ol>
       </nav>
       <a class="play" id="playCta" href="#watch"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Watch the film <small>14 poems · 3:12</small></a>
@@ -298,7 +300,7 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
 <div class="dock" id="dock" role="toolbar" aria-label="Tool switcher" hidden>
   <button class="d-grid" id="dGrid" type="button" aria-label="All tools" aria-haspopup="dialog"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></button>
   <button class="d-prev" id="dPrev" type="button" aria-label="Previous tool"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
-  <button class="d-cur" id="dCur" type="button" aria-label="Choose a tool"><span><small id="dN">00 / 08</small><b id="dName">Choose a tool</b></span></button>
+  <button class="d-cur" id="dCur" type="button" aria-label="Choose a tool"><span><small id="dN">00 / 13</small><b id="dName">Choose a tool</b></span></button>
   <button class="d-next" id="dNext" type="button" aria-label="Next tool"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
   <div class="d-chips" id="dChips"></div>
   <a class="d-open" id="dOpen" href="#hero">Open <span aria-hidden="true">→</span></a>
@@ -389,7 +391,12 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
     guide:      ['Twelve districts.', 'Read the districts, their palettes and their stills.'],
     shotlab:    ['Under the picture.', 'Inspect a shot and its layers: camera, segments and depth.'],
     storyboard: ['Stage the scene.', 'Inspect scene staging, shot by shot.'],
-    studio:     ['Draw it through time.', 'Inspect animation: keys, exposures, and the camera moving over layers.']
+    studio:     ['Draw it through time.', 'Inspect animation: keys, exposures, and the camera moving over layers.'],
+    pointcloud: ['3D depth & Gaussians.', 'Metric depth point clouds, interactive camera recovery and 3D Gaussian splat reconstructions.'],
+    animator:   ['Set the cel in motion.', 'Live cartoon action, physics easing curves and interactive camera cues.'],
+    scion:      ['Direct the cel.', 'Direct the cel: beats, exposure sheets, and five quality gates checked on every frame.'],
+    weave:      ['Archive, cel and AI.', 'One registered scene: archive objects, AI sets and cut-out puppets unified in code.'],
+    arena:      ['The Acting Arena.', 'Cut-out rig takes, 32 Bolas physical challenges and automated Crash Lab checks.']
   };
 
   /* ---------- multiplane stage ---------- */
@@ -448,11 +455,13 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
     t.acc = t.acc || '#f2a541';
     var sec = document.createElement('section'); sec.className = 'chap'; sec.id = t.key; sec.setAttribute('aria-label', t.name);
     var num = String(t.i + 1).padStart(2, '0');
+    var tot = String(TOOLS.length).padStart(2, '0');
+    var copy = COPY[t.key] || [t.name, t.does];
     sec.style.setProperty('--acc', t.acc);
     sec.innerHTML = '<div class="sticky"><div class="stage" aria-hidden="true"></div><div class="scrim"></div><div class="bar"><i></i></div>' +
       '<div class="credit">cartoon · <b>' + ((m && m.district) || '') + '</b><br>' + (m ? m.sid.slice(0, 8) : '') + '</div>' +
-      '<div class="card"><span class="n" aria-hidden="true">' + num + '</span><div class="k">' + num + ' / 08 · ' + t.name + '</div>' +
-      '<h2>' + COPY[t.key][0] + '</h2><p>' + COPY[t.key][1] + '</p><a class="go" href="' + t.href + '">Open ' + t.name + ' <span aria-hidden="true">→</span></a></div></div>';
+      '<div class="card"><span class="n" aria-hidden="true">' + num + '</span><div class="k">' + num + ' / ' + tot + ' · ' + t.name + '</div>' +
+      '<h2>' + copy[0] + '</h2><p>' + copy[1] + '</p><a class="go" href="' + t.href + '">Open ' + t.name + ' <span aria-hidden="true">→</span></a></div></div>';
     chaptersEl.appendChild(sec);
     var st = new Stage($('.stage', sec), t.shot, { dir: t.i % 2 ? -1 : 1, reveal: true, travel: .085 });
     var c = { t: t, el: sec, s: st, card: $('.card', sec) };
@@ -539,15 +548,15 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
   /* ---------- dock ---------- */
   var dOpen = $('#dOpen'), dN = $('#dN'), dName = $('#dName');
   function syncDock() {
-    var t = TOOLS[active];
+    var t = TOOLS[active], tot = String(TOOLS.length).padStart(2, '0');
     $$('#dChips button').forEach(function (b) { b.classList.toggle('on', +b.dataset.i === active); });
     $$('.tile').forEach(function (b) { b.classList.toggle('cur', +b.dataset.i === active); });
     if (t) {
-      dN.textContent = String(t.i + 1).padStart(2, '0') + ' / 08'; dName.textContent = t.name;
+      dN.textContent = String(t.i + 1).padStart(2, '0') + ' / ' + tot; dName.textContent = t.name;
       dOpen.href = t.href; dOpen.innerHTML = 'Open ' + t.name + ' <span aria-hidden="true">→</span>'; dOpen.removeAttribute('aria-disabled');
       dock.style.setProperty('--acc', t.acc); history.replaceState(null, '', '#' + t.key);
     } else {
-      dN.textContent = '08 tools'; dName.textContent = 'Choose a tool'; dOpen.href = '#'; dOpen.innerHTML = 'All tools'; dOpen.removeAttribute('aria-disabled');
+      dN.textContent = tot + ' tools'; dName.textContent = 'Choose a tool'; dOpen.href = '#'; dOpen.innerHTML = 'All tools'; dOpen.removeAttribute('aria-disabled');
       dock.style.setProperty('--acc', '#f2a541'); if (location.hash && TOOLS.some(function (x) { return '#' + x.key === location.hash; })) history.replaceState(null, '', location.pathname + location.search);
     }
   }

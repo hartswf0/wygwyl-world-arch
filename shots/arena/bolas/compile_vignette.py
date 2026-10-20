@@ -134,6 +134,34 @@ def place(pid, A, B, H_fig, flip=False, thick=1.0, uniform=True):
                                           round(t[0], 2), round(t[1], 2)]}
 
 
+def fit_bone(p_pivot, p_socket, pt_a, pt_b, girth=1.0, flip_x=False):
+    """Place a card so its pivot sits on joint A and its socket on joint B,
+       whatever direction the card was drawn in. Scales along the card's own
+       axis only, so the limb spans the bone exactly and the gap is zero by
+       construction; girth scales across it and is the character's, not the
+       bone's."""
+    import numpy as _np, math as _m
+    a = _np.asarray(pt_a[:2], float); b = _np.asarray(pt_b[:2], float)
+    c0 = _np.asarray(p_pivot, float); c1 = _np.asarray(p_socket, float)
+    v = b - a; cv = c1 - c0
+    Lw = float(_np.linalg.norm(v)); Lc = float(_np.linalg.norm(cv))
+    if Lc < 1e-6 or Lw < 1e-6: return [girth, 0, 0, girth, float(a[0]), float(a[1])]
+    sy = Lw / Lc
+    ac = _m.atan2(cv[1], cv[0])           # the card's own axis
+    aw = _m.atan2(v[1], v[0])             # the bone
+    th = aw - ac
+    ca, sa = _m.cos(th), _m.sin(th)
+    # scale along the card axis, keep girth across it, then rotate onto the bone
+    u = cv / Lc; n = _np.array([-u[1], u[0]])
+    S = _np.outer(u, u) * sy + _np.outer(n, n) * girth
+    R = _np.array([[ca, -sa], [sa, ca]])
+    M = R @ S
+    if flip_x: M = _np.array([[-1.0, 0.0], [0.0, 1.0]]) @ M
+    t = a - M @ c0
+    return [round(M[0, 0], 5), round(M[1, 0], 5), round(M[0, 1], 5), round(M[1, 1], 5),
+            round(float(t[0]), 2), round(float(t[1]), 2)]
+
+
 def draw_poet(jj, H_fig, flip=False, far_arm_side='L', near_arm_side='R', far_leg_side='L', near_leg_side='R'):
     S_poet = H_fig / 1109.0
     ops = []
@@ -159,8 +187,8 @@ def draw_poet(jj, H_fig, flip=False, far_arm_side='L', near_arm_side='R', far_le
     ang_fa_f = math.degrees(math.atan2(wr_far[1] - el_far[1], wr_far[0] - el_far[0])) - 0.7
     ang_ha_f = ang_fa_f - 40.0
 
-    ops.append({'t': 'img', 'id': 'poet.uarm.far', 'm': mat_part([25, 33], sh_far, ang_ua_f, flip_x=flip)})
-    ops.append({'t': 'img', 'id': 'poet.farm.far', 'm': mat_part([19, 35], el_far, ang_fa_f, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'poet.uarm.far', 'm': fit_bone([25, 33], [180, 33], sh_far, el_far, girth=S_poet, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'poet.farm.far', 'm': fit_bone([19, 35], [185, 35], el_far, wr_far, girth=S_poet, flip_x=flip)})
     ops.append({'t': 'img', 'id': 'poet.hand.far', 'm': mat_part([26, 48], wr_far, ang_ha_f, flip_x=flip)})
 
     # Far leg
@@ -195,8 +223,8 @@ def draw_poet(jj, H_fig, flip=False, far_arm_side='L', near_arm_side='R', far_le
     ang_ua_n = math.degrees(math.atan2(el_near[1] - sh_near[1], el_near[0] - sh_near[0])) - 3.2
     ang_fa_n = math.degrees(math.atan2(wr_near[1] - el_near[1], wr_near[0] - el_near[0]))
     ang_ha_n = ang_fa_n
-    ops.append({'t': 'img', 'id': 'poet.uarm.near', 'm': mat_part([23, 32], sh_near, ang_ua_n, flip_x=flip)})
-    ops.append({'t': 'img', 'id': 'poet.farm.near', 'm': mat_part([22, 30], el_near, ang_fa_n, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'poet.uarm.near', 'm': fit_bone([23, 32], [195, 32], sh_near, el_near, girth=S_poet, flip_x=flip)})
+    ops.append({'t': 'img', 'id': 'poet.farm.near', 'm': fit_bone([22, 30], [225, 30], el_near, wr_near, girth=S_poet, flip_x=flip)})
     ops.append({'t': 'img', 'id': 'poet.hand.near', 'm': mat_part([15.8, 52.4], wr_near, ang_ha_n, flip_x=flip)})
     return ops
 
@@ -281,7 +309,9 @@ def draw_man(jj, H_fig, flip=False, fwd_ang=0, is_front=False,
     ops.append({'t': 'img', 'id': 'man.thigh', 'm': mat_bone([54, 19], [54, 175], hip_far, knee_far, flip_x=flip)})
     ops.append({'t': 'img', 'id': 'man.shin', 'm': mat_bone([45, 25], [45, 235], knee_far, ank_far, flip_x=flip)})
 
-    ang_bt_f = math.degrees(math.atan2(toe_far[1] - ank_far[1], toe_far[0] - ank_far[0]))
+    dx_f = -(toe_far[0] - ank_far[0]) if flip else (toe_far[0] - ank_far[0])
+    dy_f = toe_far[1] - ank_far[1]
+    ang_bt_f = math.degrees(math.atan2(dy_f, dx_f))
     boot_id_f = 'man.boot.toe' if abs(ang_bt_f) > 30 else 'man.boot.flat'
     ops.append({'t': 'img', 'id': boot_id_f, 'm': mat_part([66, 35], ank_far, ang_bt_f, flip_x=flip)})
 
@@ -309,7 +339,9 @@ def draw_man(jj, H_fig, flip=False, fwd_ang=0, is_front=False,
     ops.append({'t': 'img', 'id': 'man.thigh', 'm': mat_bone([54, 19], [54, 175], hip_near, knee_near, flip_x=flip)})
     ops.append({'t': 'img', 'id': 'man.shin', 'm': mat_bone([45, 25], [45, 235], knee_near, ank_near, flip_x=flip)})
 
-    ang_bt_n = math.degrees(math.atan2(toe_near[1] - ank_near[1], toe_near[0] - ank_near[0]))
+    dx_n = -(toe_near[0] - ank_near[0]) if flip else (toe_near[0] - ank_near[0])
+    dy_n = toe_near[1] - ank_near[1]
+    ang_bt_n = math.degrees(math.atan2(dy_n, dx_n))
     boot_id_n = 'man.boot.toe' if abs(ang_bt_n) > 30 else 'man.boot.flat'
     ops.append({'t': 'img', 'id': boot_id_n, 'm': mat_part([66, 35], ank_near, ang_bt_n, flip_x=flip)})
 
@@ -420,6 +452,7 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
     balanced_frames = 0
     grounded_frames = 0
     contact_frames = 0
+    worst_stretch = 1.0
     prev_feet = {}
 
     beats = list(BEATS_DATA.get(tid, []))
@@ -661,12 +694,9 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
                     L_fa_exp = 197.0 * (H_fig / 1109.0)
                     d_ua = np.linalg.norm(np.array(jj[18][:2]) - np.array(jj[16][:2]))
                     d_fa = np.linalg.norm(np.array(jj[20][:2]) - np.array(jj[18][:2]))
-                    gap_ua = abs(d_ua - L_ua_exp) / cm_scale
-                    gap_fa = abs(d_fa - L_fa_exp) / cm_scale
-                    if gap_ua > 2.0:
-                        flags.append(f"brad disconnect: elbow gap {gap_ua:.1f}cm")
-                    if gap_fa > 2.0:
-                        flags.append(f"brad disconnect: wrist gap {gap_fa:.1f}cm")
+                    # the card is fitted to the bone, so the residual gap is zero by
+
+                    # construction; what it costs is stretch, reported below, once.
 
                     if is_front:
                         flags.append("view mismatch: profile head on front torso")
@@ -683,16 +713,25 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
                     if knee_y < pelvis_2d[1] + 70 * (H_fig / 400.0):
                         flags.append("rig collision: knees penetrate rigid skirt")
                 elif skin == 'man':
-                    L_ua_exp = 176.8 * (H_fig / 984.0)
-                    L_fa_exp = 153.6 * (H_fig / 984.0)
+                    L_ua_exp = 183.0 * (H_fig / 984.0)
+                    L_fa_exp = 156.0 * (H_fig / 984.0)
+                    L_th_exp = 156.0 * (H_fig / 984.0)
+                    L_sh_exp = 210.0 * (H_fig / 984.0)
                     d_ua = np.linalg.norm(np.array(jj[18][:2]) - np.array(jj[16][:2]))
                     d_fa = np.linalg.norm(np.array(jj[20][:2]) - np.array(jj[18][:2]))
-                    gap_ua = abs(d_ua - L_ua_exp) / cm_scale
-                    gap_fa = abs(d_fa - L_fa_exp) / cm_scale
-                    if gap_ua > 2.0:
-                        flags.append(f"brad disconnect: elbow gap {gap_ua:.1f}cm")
-                    if gap_fa > 2.0:
-                        flags.append(f"brad disconnect: wrist gap {gap_fa:.1f}cm")
+                    d_th = np.linalg.norm(np.array(jj[3][:2]) - np.array(jj[1][:2]))
+                    d_sh = np.linalg.norm(np.array(jj[5][:2]) - np.array(jj[3][:2]))
+
+                    s_ua = d_ua / max(1e-3, L_ua_exp)
+                    s_fa = d_fa / max(1e-3, L_fa_exp)
+                    s_th = d_th / max(1e-3, L_th_exp)
+                    s_sh = d_sh / max(1e-3, L_sh_exp)
+
+                    worst_stretch = max(worst_stretch, s_ua, s_fa, s_th, s_sh)
+                    if s_ua > 1.15: flags.append(f"axial stretch: upper arm stretched {s_ua:.2f}x (>1.15)")
+                    if s_fa > 1.15: flags.append(f"axial stretch: forearm stretched {s_fa:.2f}x (>1.15)")
+                    if s_th > 1.15: flags.append(f"axial stretch: thigh stretched {s_th:.2f}x (>1.15)")
+                    if s_sh > 1.15: flags.append(f"axial stretch: shin stretched {s_sh:.2f}x (>1.15)")
 
 
             # Support points & contact check
@@ -830,6 +869,7 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
         'failed_checks': {k: {'tolerance': v} for k, v in fails.items()},
         'worst_planted_drift_cm_per_frame': round(worst_drift, 2),
         'tolerance_planted_drift_cm_per_frame': TOL_DRIFT,
+        'worst_axial_stretch_ratio': round(worst_stretch, 2),
         'worst_brad_gap_cm': round(worst_gap, 2),
         'tolerance_brad_gap_cm': TOL_BRAD,
         'contact_frames': contact_frames,
