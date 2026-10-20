@@ -143,6 +143,25 @@ def capsule(shape, a, b, r):
     cv2.circle(m,tuple(map(int,a)),int(r),1,-1); cv2.circle(m,tuple(map(int,b)),int(r),1,-1)
     return m.astype(bool)
 
+def read_marks(bgr):
+    """Joints read, not fitted. A registration pass draws a flat magenta disc on
+       every joint; magenta is 0.00% of every saturated pixel in the cast, so the
+       discs come out exactly with nothing to tune. Returns [] when the pass is
+       absent, which is every body we currently have."""
+    hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+    H, S, V = hsv[:, :, 0].astype(int), hsv[:, :, 1].astype(int), hsv[:, :, 2].astype(int)
+    m = (H >= 135) & (H <= 170) & (S >= 110) & (V >= 90)
+    if m.sum() < 30: return []
+    n, lab, st, cen = cv2.connectedComponentsWithStats(m.astype(np.uint8))
+    out = []
+    for i in range(1, n):
+        a, w, h = st[i, 4], st[i, 2], st[i, 3]
+        if a < 20: continue
+        if max(w, h) / max(1, min(w, h)) > 1.8: continue
+        out.append((float(cen[i][0]), float(cen[i][1]), int(a)))
+    return out
+
+
 def sam_person(path):
     """SAM says where the figure ends; the alpha already does here, but SAM also
        removes the ground shadow and any caption the lift left behind"""
@@ -185,6 +204,12 @@ def main():
         if act and act in (d.get('after') or ''): tid=d['id']; V=d; break
     if tid is None: raise SystemExit(f'no vignette for {act}')
     im, mask, how = sam_person(src)
+    marks = read_marks(im[:, :, :3])
+    if marks:
+        print(f'   registration pass found: {len(marks)} joint marks read directly')
+    else:
+        print('   no registration pass on this body — falling back to fitting the '
+              'skeleton, which is why the pieces below are poor (see REGISTRATION.md)')
     print(f'{os.path.basename(src)}  mask from {how}  {mask.sum():,} px')
     iou,f,aid = find_frame(V, mask)
     print(f'best match: {tid} frame {f} actor {aid}  (silhouette IoU {iou:.3f})')
