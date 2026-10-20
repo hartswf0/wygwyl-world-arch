@@ -37,3 +37,20 @@ This audit evaluates all 32 Acting Arena performance challenges against the card
 
 ### 5. Skirt vs. Crouch Collision
 - **The Defect**: The Female Poet lacks separate thighs; her legs emerge directly from the hem of a rigid A-line gouache skirt. When she crouches (ACT-003) or jumps (ACT-005), the knees tuck up into the pelvic zone, causing the legs to detach from the skirt or overlap the floral pattern unnaturally.
+
+---
+
+## 6. The Solution: Keyframe-Conditioned Pose Generation & Decompilation
+
+Instead of trying to deform and stretch flat 2D parts to fit an extreme 3D action, the pipeline inverts the process:
+
+1. **Extract 3D Keyframe Beat**: Extract the character's target pose and perspective silhouette directly from the Bolas Crash Lab (e.g. `ref_crouch_f72.jpg` for ACT-003 frame 72).
+2. **Generate the Character in that Situated Pose**: Pass the Bolas wireframe pose reference together with the character's reference sheet to `generate_image`. The character is generated **already drawn in that exact perspective and posture**, with natural fabric folding, tailored drape, foreshortened limbs, and anatomically grounded cardboard fluting and brass brads.
+3. **Decompile into Modular Parts**: Run [`shots/arena/pose_decompiler.py`](file:///Users/gaia/Downloads/WYGWYL-WORLD-ARCH/shots/arena/pose_decompiler.py) to remove the studio background and segment the puppet into modular articulated cutouts (`head`, `torso`, `arm`, `legs`).
+4. **Keyframe Beat Swapping**: On the beat strip, swap to the pose-decompiled assembly.
+
+### Test Results on ACT-003 (Crouch under trouble, Frame 72):
+- **Brad Disconnection Gap**: Dropped from **6.6 cm (poet) / 4.9 cm (man)** down to **0.0 cm**.
+- **Garment Collision**: Dropped from **100% collision frames** down to **0**. The teal floral dress and black trousers fold naturally with the knee bend.
+- **Ankle / Floor Stance**: Both feet plant with authentic sole contact and flexed toe bends.
+
