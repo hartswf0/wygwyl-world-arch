@@ -144,7 +144,7 @@ def atlas_section(D):
                  ''.join(f'<tr><td>{esc(w.get("detail"))}</td><td>{esc(w.get("where"))}</td><td>{esc(w.get("as"))}</td></tr>' for w in A['world_details']) + '</tbody></table></div>')
     if A.get('transitions'):
         h.append('<div class="tablewrap"><table><thead><tr><th>Transition</th><th>How</th></tr></thead><tbody>' +
-                 ''.join(f'<tr><td>→ {esc(t.get("to"))}</td><td>{esc(t.get("how"))}</td></tr>' for t in A['transitions']) + '</tbody></table></div>')
+                 ''.join(f'<tr><td>{("→ " + esc(t["to"])) if t.get("to") else ("← " + esc(t.get("from")))}</td><td>{esc(t.get("how"))}</td></tr>' for t in A['transitions']) + '</tbody></table></div>')
     h.append('</section>')
     return '\n'.join(h)
 
