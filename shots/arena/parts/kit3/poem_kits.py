@@ -26,7 +26,7 @@ OUT = os.path.join(POEMS, 'kits')
 STILLS = os.path.join(POEMS, 'refs', 'stills')
 SHEETS = os.path.join(SHOTS, 'weave', 'cast', 'man', 'sheets')
 STYLE_PROPS = [os.path.join(SHEETS, 'set_props.jpg'), os.path.join(SHEETS, 'props.jpg'), os.path.join(HERE, 'style', 'craft_grips.jpg')]
-STYLE_SET = [os.path.join(SHEETS, 'set_props.jpg'), os.path.join(HERE, 'style', 'craft_seated.jpg'), os.path.join(SHEETS, 'props.jpg')]
+STYLE_SET = [os.path.join(SHEETS, 'set_props.jpg'), os.path.join(SHEETS, 'props.jpg')]  # no figures: a set sheet must not seed a body
 
 
 def compose(a_img, still_ids, b_text, style, b_title):
@@ -83,7 +83,8 @@ def props_sheet(P):
             if x + cell > K.SHEET_W - 30:
                 break
             d.rectangle([x, y, x + cell, y + cell], fill=GHOST)
-            d.text((x + 6, y + 4), st[:22], font=font(MONO, 12), fill=INK)
+            for k, ln in enumerate(textwrap.wrap(st, max(12, int(cell / 7.5)))[:3]):
+                d.text((x + 6, y + 4 + k * 14), ln, font=font(MONO, 12), fill=INK)
             cross(d, (x + cell / 2, y + cell * .62), SOCK_A, r=7)
             if p.get('who'):
                 cross(d, (x + cell * .75, y + cell * .45), SOCK_B, r=6)
