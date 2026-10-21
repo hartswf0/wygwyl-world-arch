@@ -7,8 +7,14 @@ import json, os
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = json.load(open(os.path.join(HERE, 'scion', 'scion.json')))
 
-PAGE = r'''<title>Cineosis Takes</title>
+PAGE = r'''<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cineosis Takes</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../../../favicon.svg">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* layout: a workbench of shipping labels; each vignette is one label: the take, its beat chain, its stagings, its gate stamps */
@@ -73,9 +79,13 @@ tr.chosen td:first-child::before { content: "▸ "; color: var(--kraft); }
 details summary { cursor: pointer; font: 500 12px var(--f-mono); color: var(--dim); }
 details img { display: block; margin-top: 8px; border-radius: 3px; }
 @media (max-width: 600px) { .strip img { height: 150px; } .id { grid-row: auto; } .label { grid-template-columns: 1fr; } }
+a#wy-index { font: 500 12px var(--f-mono); color: var(--dim); text-decoration: none; border: 1px solid var(--rule); border-radius: 999px; padding: 4px 10px; justify-self: start; }
 </style>
+</head>
+<body>
 <div class="wrap">
   <header>
+    <a href="../../../index.html" id="wy-index">← Index</a>
     <h1>Cineosis <span>Takes</span></h1>
     <p class="lede">The next fifty Bolas vignettes, T133 to T182, run through the SCION pipeline on the card rig. Each dummy is always the same person: the poet plays Bola, the man plays Shim, Dot is the little one, and extras alternate. For every vignette the authored beats form a chain, three stagings are scored (faces seen, actors kept apart, the action filling the frame) and the best one is shot. The take is timed on the exposure sheet, with dead holds cut to a second, and five gates are measured on it.</p>
     <div class="tally" id="tally"></div>
@@ -133,6 +143,9 @@ function render() {
 render();
 if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
 </script>
+<script src="../../../nav.js" defer></script>
+</body>
+</html>
 '''
 
 out = os.path.join(HERE, 'scion.html')

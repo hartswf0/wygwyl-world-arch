@@ -29,12 +29,10 @@ IDENTITY = {
             "a centre zip, thin red piping running from each shoulder seam down the chest toward the side seams, "
             "elastic cuffs and an elastic hem; black track trousers with an elastic waist and a drawstring, slightly "
             "tapered; black leather Chelsea boots. His black sunglasses are a separate plug-in card, never painted onto "
-            "the head. References: refs/man_tracksuit_front.png, refs/man_tracksuit_threequarter.png, "
-            "refs/man_collage.webp (face and beard)."),
+            "the head. Panel B: his two tracksuit photos, then his cardboard head front and side (no glasses)."),
     'poet': ("THE POET: a Black woman, dark brown skin, a full rounded afro, calm and open face. A teal dress with a "
              "gold floral print: a fitted sleeveless bodice and an A-line skirt to the knee; bare brown arms with one "
-             "slim gold bangle; flat dark teal shoes. References: weave/assets/parts (her current cards) for the dress "
-             "print and colours. She needs her eyes OPEN: her only head today is a profile with closed eyes."),
+             "slim gold bangle; flat dark teal shoes. Panel B: her current cards, for the dress print and colours. She needs her eyes OPEN: her only head today is a profile with closed eyes."),
     'dot': ("DOT, THE LITTLE ONE: a child-sized crash-test dummy, 105 cm, painted mustard yellow on cardboard: a "
             "round head with black-and-yellow quartered crash targets on both sides and a small red bow on top, a "
             "segmented body with brass brads, a red stripe down the chest, mitten hands, flat little feet. Her face "
