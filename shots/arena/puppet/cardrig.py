@@ -161,7 +161,9 @@ class CardRig(p3d.Puppet):
             add(f'boot{s}', z((j['heel' + s] + j['toe' + s]) / 2), boot)
 
             def hand(s=s, j=j):
-                if S['hand'] == 'code':
+                if isinstance(S['hand'], dict) and 'cards' in S['hand']:
+                    self.card_hand(pt, cam, j, Rc, s, hands[s], S['hand'])
+                elif S['hand'] == 'code':
                     self.hand(pt, cam, j, Rc, s, hands[s])
                 elif 'bank' in S['hand']:
                     H = S['hand']
@@ -181,7 +183,9 @@ class CardRig(p3d.Puppet):
             after += [(P(f'thigh{s}'), P('pelvis')), (P(f'shin{s}'), P(f'boot{s}')), (P(f'shin{s}'), P(f'thigh{s}'))]
             if z(j['wrist' + s]) <= z(j['elbow' + s]) + 6:
                 after.append((P(f'uarm{s}'), P(f'farm{s}')))
-            if z(j['wrist' + s] + nrm(j['wrist' + s] - j['elbow' + s]) * 8) <= z(j['wrist' + s]) + 4:
+            if isinstance(S['hand'], dict) and 'cards' in S['hand']:
+                after.append((P(f'hand{s}'), P(f'farm{s}')))       # the eyelet tab sits under the cuff
+            elif z(j['wrist' + s] + nrm(j['wrist' + s] - j['elbow' + s]) * 8) <= z(j['wrist' + s]) + 4:
                 after.append((P(f'farm{s}'), P(f'hand{s}')))
             if z(j['elbow' + s]) > z(j['head']) - 15.0:
                 after.append((P(f'uarm{s}'), P('head')))
@@ -277,6 +281,40 @@ class CardRig(p3d.Puppet):
         # (a real cut-out puts the head's tab behind the vest), the arms still go by depth
         after += [(P('pelvis'), P('torso'))] + ([(P('head'), P('torso'))] if S.get('head_dock', {}).get('under_collar') else [(P('torso'), P('head'))])
         return j
+
+    def card_hand(self, pt, cam, j, Rc, s, state, H):
+        """A drawn hand card on its eyelet: the shape from the bank, palm or back by which way
+        the palm faces, mirrored so the thumb lands where the 3D hand's thumb is (Bolas
+        gloveDraw's frame), scaled at one px-per-cm for every card."""
+        if state['shape'] == 'hidden':
+            return
+        w, el = j['wrist' + s], j['elbow' + s]
+        u = nrm(w - el)
+        sg = 1 if s == 'L' else -1
+        PALM = {'in': [-sg, 0, 0], 'out': [sg, 0, 0], 'down': [0, -1, 0], 'up': [0, 1, 0], 'fwd': [0, 0, 1], 'back': [0, 0, -1]}
+        v = PALM.get(state['palm'], PALM['in'])
+        n = Rc['x'] * v[0] + Rc['up'] * v[1] + Rc['fwd'] * v[2]
+        n = n - u * np.dot(n, u)
+        n = nrm(n) if np.linalg.norm(n) > .1 else nrm(np.cross(u, [0, 1, 0]))
+        thumb = nrm(np.cross(u, n)) * (-1 if s == 'L' else 1)
+        name = H['shape'].get(state['shape'] or '', 'relaxed')
+        if name == 'open':
+            name = 'open_palm' if cam.dir(n)[2] < 0 else 'open_back'
+        spec = H['cards'].get(name) or H['cards']['relaxed']
+        a_c, b_c = np.array(spec['A'], float), np.array(spec['B'], float)
+        cm = np.linalg.norm(b_c - a_c) / H['px_per_cm']
+        # which side of the card's axis the thumb is drawn on, after place()'s rotation to +y
+        uc = b_c - a_c
+        th0 = math.atan2(uc[0], uc[1])
+        R0 = np.array([[math.cos(th0), -math.sin(th0)], [math.sin(th0), math.cos(th0)]])
+        side = float(np.sign((R0 @ np.array(spec['thumb'], float))[0]) or 1.0)
+        a2, b2 = cam.P(w)[:2], cam.P(w + u * cm)[:2]
+        vv = b2 - a2
+        th1 = math.atan2(vv[1], vv[0]) - math.pi / 2
+        canon_x = np.array([math.cos(th1), math.sin(th1)])
+        ts = cam.P(w + thumb * 5)[:2] - a2
+        mirror = side * float(np.dot(ts, canon_x)) < 0
+        self.place(pt, cam, spec, w, w + u * cm, cm, mirror=mirror)
 
     def place_upright(self, pt, cam, spec, A3, B3, cm, mirror=False, upright_axis=None):
         """A head: uniform scale (never squashed), turned to the neck->crown direction."""
