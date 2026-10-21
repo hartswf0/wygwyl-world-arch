@@ -112,3 +112,11 @@ session folder that no longer exists.
     python3 shots/arena/parts/cut_sheet.py <sheet> <dir> a,b,c
     python3 shots/arena/parts/trace.py man.torso.profile
     python3 shots/arena/critic/loop.py ACT-010           # rig | brad | kit, side by side
+
+## Drawn from 3D
+
+The flat-card assembly in `../critic/assemble_kit.py` is now the comparison case.
+The man is drawn from the bank's 3D joints in `../puppet/` (see its README):
+volumes from the main sheet, Bolas's own hand and foot geometry, and heads from
+this library by view and expression. Front expression heads were cut from
+`heads_front.jpg` (12, without sunglasses) so a turnaround keeps one identity.

@@ -57,3 +57,19 @@ to count**: run it with someone who has not seen the challenge.
   separate brow/lid/mouth pieces.
 - **Proportions:** the Bolas skeleton has long legs and arms against a 27cm head.
   This needs a decision on the cartoon canon, not a fix in the assembler.
+
+## 2026-10-21: drawn from 3D (`puppet/`)
+
+The user's critique: the boots don't flex, the hands face the wrong way,
+proportions are off against the main sheet, the side views are broken, and it
+should be steerable in any direction. All five share one cause: flat cards stand
+in for a body that moves in 3D. `puppet/p3d.py` draws the man from the bank's 3D
+joints, the way the Crash Lab draws its dummy, and paints him as the main sheet.
+
+| turn | seen | fix | confirmed |
+| --: | :-- | :-- | :-- |
+| 1 | first render: chunky and right-sized, but the boots are bricks and the heads have a white halo | rounded rings for the boots; defringe in `cut_sheet.py`, heads re-cut | `puppet/out/ACT-010/keys.png` |
+| 2 | palms are round discs (mittens) | palm longer than wide; fingers set at the knuckle line | `closeups_f22.png` |
+| 3 | from behind, the shorts are one trapezoid (a skirt) | each leg takes only its own half of the waist and seat | `closeups_f22.png` (crotch notch) |
+| 3 | hands: do they face true? | measured, not eyeballed: palms in → palm toward the midline 0.79, thumb forward 0.97, both sides | numbers in `puppet/README.md` |
+| 4 | at the strain beats the carried box covers his face; the joint test said "none" | measure on the drawn head's pixels instead | flags f146/219/239 on the vignette camera, none at yaw +30 |

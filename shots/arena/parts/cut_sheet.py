@@ -45,6 +45,13 @@ def cut(sheet, out_dir, names, min_area=4000, pad=4):
         m = (lab[y0:y1, x0:x1] == i)
         m = nd.binary_erosion(m, iterations=1)
         piece = rgba[y0:y1, x0:x1].copy()
+        # defringe: the sheet's white survives a pixel or two inside the cut; drop
+        # near-white pixels that touch the edge (critic, p3d turn 1: a white halo)
+        edge = m & ~nd.binary_erosion(m, iterations=3)
+        rgb = piece[..., :3].astype(int)
+        whiteish = (rgb.min(axis=2) > 170) & (np.ptp(rgb, axis=2) < 40)
+        m = m & ~(edge & whiteish)
+        m = nd.binary_opening(m, iterations=1)
         piece[..., 3] = (m * 255).astype(np.uint8)
         path = os.path.join(out_dir, f'{name}.png')
         Image.fromarray(piece).save(path)
