@@ -60,8 +60,12 @@ def draw(pt, cam, j, a, colour, f=0, bow=True):
     # cut-out animator's habit, so a profile still shows an eye and the mouth
     toward = -nrm(np.array([cam.dir(e)[2] for e in np.eye(3)]))       # world direction to the viewer
     toward_h = nrm(toward - up * np.dot(toward, up))
-    if np.dot(fw, toward_h) > -0.45:
-        fw = nrm(fw + 0.55 * toward_h)
+    if np.dot(fw, toward_h) > -0.6:
+        # turn until the face is clearly on the head, not squashed on its edge (critic, round 2)
+        for _ in range(12):
+            if np.dot(fw, toward_h) >= 0.4:
+                break
+            fw = nrm(fw + 0.25 * toward_h)
     x = nrm(np.cross(up, fw))
     Rh = np.column_stack([x, up, fw])
     Rcm = float(np.linalg.norm(j['headTop'] - j['head'])) * 1.05     # head radius, cm

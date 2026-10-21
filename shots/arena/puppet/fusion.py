@@ -59,7 +59,7 @@ def open_eye(lid=0.0, gx=0.0, gy=0.0):
     S = lambda x, y: (x * SS, y * SS)
     ink = (34, 24, 20, 255)
     back, front = (231, 190), (259, 188)       # back corner, front of the opening (toward the nose)
-    top_peak = (247, 178.0 + 10 * lid)              # the upper lid comes down with lid
+    top_peak = (247, 178.0 + 6 * min(lid, 0.85))              # the upper lid comes down with lid
     low = (246, 195.5)
     up = [back] + [((1 - t) ** 2 * back[0] + 2 * (1 - t) * t * top_peak[0] + t * t * front[0],
                     (1 - t) ** 2 * back[1] + 2 * (1 - t) * t * top_peak[1] + t * t * front[1]) for t in np.linspace(0, 1, 14)]

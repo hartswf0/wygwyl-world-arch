@@ -154,7 +154,7 @@ def foot_slide(R, f0, f1):
 def stagings(R, keys):
     v = R.V['view']
     out = []
-    for name, dy in (('authored', 0), ('swing left', -SWING), ('swing right', SWING)):
+    for name, dy in (('authored', 0), ('swing left', -SWING), ('swing right', SWING), ('wide left', -75), ('wide right', 75)):
         cam = p3d.Camera(v, yaw=v.get('yaw', 0) + dy)
         win = window(R, cam)
         faces, over, fill = [], [], []
@@ -166,7 +166,7 @@ def stagings(R, keys):
             fill.append(sum(m.mean() for m in M.values()))
         sc = {'face': round(float(np.mean(faces)), 3), 'overlap': round(float(np.mean(over)), 3),
               'fill': round(float(np.mean(fill)), 3)}
-        sc['score'] = round(0.5 * sc['face'] + 0.4 * sc['overlap'] + 0.1 * (1 - min(1, sc['fill'] / 0.25))
+        sc['score'] = round(0.45 * sc['face'] + 0.45 * sc['overlap'] + 0.1 * (1 - min(1, sc['fill'] / 0.25))
                             - (0.03 if dy == 0 else 0), 3)
         out.append({'name': name, 'yaw': round(v.get('yaw', 0) + dy, 1), 'cam': cam, 'win': win, **sc})
     return out
@@ -196,18 +196,79 @@ def trimmed(V, beat_frames):
     return out
 
 
+# ---------------------------------------------------------------- the camera
+def prop_points(q):
+    """World points that bound a prop as the Crash Lab draws it (a clock's face sits 66cm
+    above its pivot, a lamp is 2m tall): the old window used the pivot only and cropped
+    the clocks, the bell and the lamps (critics, scion round 2)."""
+    if not q.get('pos'):
+        return []
+    x, y, z = q['pos']
+    s = q.get('size')
+    s = s if isinstance(s, list) else ([s] if s else [])
+    up = {'clock': (-40, 70), 'lamp': (0, 205), 'bell': (-60, 82), 'kite': (-30, 20), 'globe': (0, (s[0] if s else 44) + 8),
+          'door': (0, (s[1] if len(s) > 1 else 200) + 8), 'window': (0, s[1] if len(s) > 1 else 90),
+          'mirror': (0, s[1] if len(s) > 1 else 180), 'fence': (0, s[1] if len(s) > 1 else 110), 'screen': (0, 150),
+          'table': (0, s[1] if len(s) > 1 else 72), 'chair': (0, 90), 'bench': (0, 48), 'stairs': (0, 90)}.get(q.get('type'), (-10, 20))
+    w = (s[0] / 2) if s else 20
+    return [(x + dx, y + dy, z) for dx in (-w, w) for dy in up]
+
+
+def follow_windows(R, cam, frames, span=36, sigma=14.0):
+    """A camera that follows the action at one frame size: per frame, the box of the actors over
+    the next and last `span` frames (and the props near them), smoothed; the size is the
+    largest such box. A long walk no longer leaves most of the frame empty (critic, T153)."""
+    n = len(R.V['frames'])
+    boxes = []
+    for f in range(n):
+        pts = []
+        fr = R.V['frames'][f]
+        for aid, a in fr['a'].items():
+            pts += [cam.P(q)[:2] for q in a['j'] if q is not None]
+        boxes.append(np.array([np.min(pts, 0), np.max(pts, 0)]) if pts else None)
+    good = [b for b in boxes if b is not None]
+    boxes = [b if b is not None else good[0] for b in boxes]
+    m = 30 * cam.s
+    allprops = [q for q in R.V['frames'][0].get('p', {}).values()]
+    sl = []
+    for f in range(n):
+        lo = np.min([b[0] for b in boxes[max(0, f - span):f + span + 1]], 0) - m
+        hi = np.max([b[1] for b in boxes[max(0, f - span):f + span + 1]], 0) + m
+        # props whose pivot falls near this box are kept whole in the frame
+        for q in R.V['frames'][f].get('p', {}).values():
+            pp = [cam.P(w)[:2] for w in prop_points(q)]
+            if pp:
+                c = cam.P(q['pos'])[:2]
+                if lo[0] - 80 * cam.s < c[0] < hi[0] + 80 * cam.s:
+                    pp = np.array(pp)
+                    lo, hi = np.minimum(lo, pp.min(0) - 10 * cam.s), np.maximum(hi, pp.max(0) + 10 * cam.s)
+        hi[1] = max(hi[1], cam.P([cam.c[0], 0, cam.c[2]])[1] + 10 * cam.s)
+        sl.append((lo, hi))
+    W = max(h[0] - l[0] for l, h in sl)
+    H = max(h[1] - l[1] for l, h in sl)
+    W = max(W, H * 1.25)                       # never narrower than 5:4
+    W, H = 2 * int(W / 2), 2 * int(H / 2)
+    cx = np.array([(l[0] + h[0]) / 2 for l, h in sl])
+    cy = np.array([(l[1] + h[1]) / 2 for l, h in sl])
+    from scipy.ndimage import gaussian_filter1d
+    cx, cy = gaussian_filter1d(cx, sigma, mode='nearest'), gaussian_filter1d(cy, sigma, mode='nearest')
+    return {f: (int(cx[f] - W / 2), int(cy[f] - H / 2), int(cx[f] - W / 2) + W, int(cy[f] - H / 2) + H) for f in frames}
+
+
 # ---------------------------------------------------------------- the take
 def video(R, cam, win, xs, stem):
-    W, H = win[2] - win[0], win[3] - win[1]
+    w0 = next(iter(win.values())) if isinstance(win, dict) else win
+    W, H = w0[2] - w0[0], w0[3] - w0[1]
     oh = VIDEO_H
     ow = 2 * int(W * oh / H / 2)
     ff = subprocess.Popen(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{ow}x{oh}',
                            '-r', '24', '-i', '-', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '24', '-preset', 'veryfast',
                            '-movflags', '+faststart', stem + '.mp4'], stdin=subprocess.PIPE)
     last, frame, faces = None, None, []
+    wins = win if isinstance(win, dict) else None
     for n, x in enumerate(xs):
         if x['src'] != last:
-            img, nt = R.render(x['src'], yaw=cam.yaw_deg, window=win)
+            img, nt = R.render(x['src'], yaw=cam.yaw_deg, window=wins[x['src']] if wins else win)
             frame = img.convert('RGB').resize((ow, oh), Image.LANCZOS)
             last = x['src']
             if n == 0:
@@ -227,13 +288,14 @@ def run(tid):
     best = min(S, key=lambda s: s['score'])
     cam, win = best['cam'], best['win']
     cam.yaw_deg = best['yaw']
+    fw = follow_windows(R, cam, range(len(V['frames'])))
     # the chosen staging on every beat
     ims, faces, over, sq = [], [], [], []
     for f in show:
-        img, nt = R.render(f, yaw=best['yaw'], window=win)
+        img, nt = R.render(f, yaw=best['yaw'], window=fw[f])
         ims.append(img)
         faces.append(face_score(nt))
-        over.append(overlap(masks(R, cam, f, win)))
+        over.append(overlap(masks(R, cam, f, fw[f])))
         sq.append(squashed(R, cam, f))
     board.strip(ims, h=360, pad=6).convert('RGB').save(os.path.join(OUT, tid + '.jpg'), quality=84)
     mid = show[len(show) // 2]
@@ -241,7 +303,7 @@ def run(tid):
     board.strip(trip, h=300, pad=6, labels=[f"{s['name']} {s['score']:.2f}" for s in S]).convert('RGB').save(
         os.path.join(OUT, tid + '.stage.jpg'), quality=80)
     xs = trimmed(V, keys)
-    video(R, cam, win, xs, os.path.join(OUT, tid))
+    video(R, cam, fw, xs, os.path.join(OUT, tid))
     f0, f1 = xs[0]['f'], xs[-1]['f']
     slide95, slide_max = foot_slide(R, f0, f1)
     xsum = xsheet.summary(xs)

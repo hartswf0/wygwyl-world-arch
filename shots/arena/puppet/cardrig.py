@@ -23,7 +23,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import p3d, propcards, dummyhead, fusion
+import p3d, propcards, dummyhead, fusion, fx
 from p3d import nrm
 
 SKINS = json.load(open(os.path.join(HERE, 'skins.json')))
@@ -91,6 +91,17 @@ class CardRig(p3d.Puppet):
         name = 'front' if aa < 30 else 'threequarter' if aa < 65 else 'profile' if aa < 120 else 'threequarter_back' if aa < 150 else 'back'
         return name, ang
 
+    @staticmethod
+    def torso_card(T, vname, ang):
+        """Which of the skin's torso cards a view uses (the head follows the same choice)."""
+        near = {'threequarter': ('front', 'profile') if abs(ang) < 47 else ('profile', 'front'),
+                'threequarter_back': ('profile', 'back') if abs(ang) < 135 else ('back', 'profile'),
+                'back': ('back', 'profile'), 'profile': ('profile', 'front'), 'front': ('front',)}
+        for n in (vname,) + near.get(vname, ()):
+            if n in T and isinstance(T[n], dict):
+                return n
+        return 'front'
+
     BOUNDS = (30, 65, 120, 150)
 
     def body_view(self, cam, Rc, R0, aid):
@@ -132,7 +143,18 @@ class CardRig(p3d.Puppet):
         info = {'actor': aid, 'skin': skin, 'near': near, 'hands': hands, 'squash': {}}
         notes.append(info)
         c = cam.P([j['pelvis'][0], 0, j['pelvis'][2]])
-        pt.ellipse_raw(c, 26 * cam.s, 5 * cam.s, (70, 63, 55, 255))
+        # the shadow thins and fades as the body leaves the floor (critic, T160: floor shadows
+        # under bodies that are declared to stand on nothing)
+        lift = min(j[k][1] for k in ('heelL', 'heelR', 'toeL', 'toeR') if k in j)
+        fade = float(np.clip(1 - lift / 45.0, 0, 1))
+        if fade > 0.05:
+            size = SKINS[skin].get('height_cm', 180) / 180.0 * (0.6 + 0.4 * fade)
+            sh = Image.new('RGBA', pt.im.size, (0, 0, 0, 0))
+            from PIL import ImageDraw as _D
+            x, y = pt._xy(c)
+            rx, ry = 26 * cam.s * size * p3d.SS, 5 * cam.s * size * p3d.SS
+            _D.Draw(sh).ellipse([x - rx, y - ry, x + rx, y + ry], fill=(40, 34, 28, int(150 * fade)))
+            pt.im.alpha_composite(sh)
         P = lambda k: f'{aid}.{k}'
 
         def limb(kind, s, A3, B3):
@@ -267,14 +289,17 @@ class CardRig(p3d.Puppet):
         if H.get('view_from_torso'):
             # the head turns with the torso, one view at a time (critic: a front face on a
             # profile body, the back of the head flickering in for single frames)
-            dock['view'] = self.body_view(cam, Rc, R0, aid)
+            # and the head follows the torso CARD actually used: a 3/4-back body wears the
+            # profile vest, so it gets the side head, not the back of the head (critic, T160/T175)
+            tv, tang = self.body_view(cam, Rc, R0, aid)
+            card = self.torso_card(S['torso'], tv, tang)
+            hv = {'front': 'front' if tv == 'front' else 'threequarter', 'profile': 'profile', 'back': 'back'}.get(card, tv)
+            dock['view'] = (hv, tang)
 
         def torso(j=j, R0=R0, Rc=Rc):
             T = S['torso']
             vname, ang = self.body_view(cam, Rc, R0, aid)
-            near = {'threequarter': ('front', 'profile') if abs(ang) < 47 else ('profile', 'front'),
-                    'threequarter_back': ('profile', 'back') if abs(ang) < 135 else ('back', 'profile')}
-            spec = T.get(vname) or next((T[n] for n in near.get(vname, ()) if n in T), None) or T.get('profile') or T['front']
+            spec = T[self.torso_card(T, vname, ang)]
             hem = j['pelvis'] + R0['up'] * 6.0
             mirror = (ang < 0) if vname in ('threequarter', 'profile', 'threequarter_back') else False
             width = 1.0
@@ -396,9 +421,75 @@ class CardRig(p3d.Puppet):
         # the actor's standing height, from the bank's own scale (Bola 1, Shim 1.06, Dot .72)
         k = H / (186.0 * self.actor_scale.get(a.get('_id'), 1.0))
         base = np.array([J[0][0], 0.0, J[0][2]])
+        # sitting: scale about the seat, so the seat stays under the actor and short legs
+        # dangle (critic, T166: the little one hovered above the bench)
+        for top, (sx, sz), half in getattr(self, '_seats', []):
+            if J[0][1] < top + 30 and abs(J[0][0] - sx) < half + 10 and abs(J[0][2] - sz) < 40 and J[0][1] > top - 5:
+                base = np.array([J[0][0], top, J[0][2]])
+                break
         b = dict(a)
         b['j'] = [None if q is None else list(base + (q - base) * k) for q in J]
         return b, k
+
+    def reflection(self, cam, pt, f, q):
+        """What the glass shows: the actors as the mirror sees them (a second camera at the
+        mirror, looking along its normal, at the bank's lagged frame), mapped onto the glass by
+        its corners. Under an orthographic camera that mapping is exact, and a point in front of
+        the mirror lands where its reflection would. Returns an RGBA layer for the main window."""
+        st = q.get('state') or {}
+        r = q.get('rot') or [0, 0, 0]
+        Rm = propcards.rY(r[0]) @ propcards.rX(r[1]) @ propcards.rZ(r[2])
+        c = np.array(q['pos'], float)
+        n = Rm @ np.array([0, 0, 1.0])
+        toward = -np.array([cam.dir(e)[2] for e in np.eye(3)])
+        if np.dot(toward, n) <= 0.05:
+            return None                                    # we see the back of the mirror
+        sz = q.get('size') or [70, 180]
+        w, h = sz[0], (sz[1] if len(sz) > 1 else 180)
+        corners = [c + Rm @ np.array(v, float) for v in ((-w / 2, 0, 0), (w / 2, 0, 0), (w / 2, h, 0), (-w / 2, h, 0))]
+        g = max(0, f - int(st.get('lag', 0) or 0))
+        yaw = math.degrees(math.atan2(n[0], n[2]))
+        vc = p3d.Camera(self.V['view'], yaw=yaw, elev=0, centre=list(c + Rm @ np.array([0, h / 2, 0])))
+        vc.s = cam.s
+        V = np.array([vc.P(x)[:2] for x in corners])
+        x0, y0 = V.min(0) - 2
+        x1, y1 = V.max(0) + 2
+        layer = p3d.Painter(bg=(0, 0, 0), window=(int(x0), int(y0), int(x1), int(y1)))
+        layer.im = Image.new('RGBA', layer.im.size, (0, 0, 0, 0))
+        from PIL import ImageDraw as _D
+        layer.d = _D.Draw(layer.im)
+        drew = False
+        for aid, a in self.V['frames'][g]['a'].items():
+            if np.dot(np.array(a['j'][0], float) - c, n) <= 0:
+                continue                                   # behind the glass
+            b, _ = self.retarget(dict(a, _id=aid), self.cast.get(aid, 'man'))
+            items, after, notes = [], [], []
+            add = lambda key, zz, fn, items=items: items.append([key, zz, fn])
+            self.actor_items(layer, vc, aid, b, add, after, notes, self.cast.get(aid, 'man'))
+            for key, zz, fn in p3d.depth_order(items, after):
+                fn()
+            drew = True
+        if not drew:
+            return None
+        img = layer.im.resize((layer.w, layer.h), Image.LANCZOS)
+        A = np.asarray(img).copy()
+        tint = np.array([214, 222, 230], float)
+        A[..., :3] = (A[..., :3] * 0.78 + tint * 0.22).astype(np.uint8)
+        A[..., 3] = (A[..., 3] * 0.82).astype(np.uint8)
+        img = Image.fromarray(A)
+        # layer px -> main screen, through three of the glass's corners
+        Pm = np.array([cam.P(x)[:2] for x in corners])
+        Vl = V - np.array([layer.x0, layer.y0])
+        M = np.column_stack([Pm[1] - Pm[0], Pm[3] - Pm[0]]) @ np.linalg.inv(np.column_stack([Vl[1] - Vl[0], Vl[3] - Vl[0]]))
+        t = Pm[0] - M @ Vl[0]
+        out = Image.new('RGBA', pt.im.size, (0, 0, 0, 0))
+        tmp = p3d.Painter(bg=(0, 0, 0), window=(pt.x0, pt.y0, pt.x0 + pt.w, pt.y0 + pt.h))
+        tmp.im = out
+        tmp.paste(img, M, t)
+        m = Image.new('L', out.size, 0)
+        _D.Draw(m).polygon([tmp._xy(v) for v in Pm], fill=255)
+        out.putalpha(Image.fromarray((np.asarray(out.getchannel('A')).astype(float) * np.asarray(m) / 255).astype(np.uint8)))
+        return out
 
     def pool_at(self, j, pools):
         """The pool this actor stands in, if any (pelvis over its footprint)."""
@@ -446,6 +537,11 @@ class CardRig(p3d.Puppet):
             fl = [cam.P([cam.c[0] + x, 0, cam.c[2] + zz])[:2] for x, zz in ((-3000, -3000), (3000, -3000), (3000, 3000), (-3000, 3000))]
             pt.poly_raw(fl, (112, 104, 93, 255))
         fr = dict(self.V['frames'][f])
+        self._seats = []
+        for q in fr.get('p', {}).values():
+            if q.get('type') in ('bench', 'chair') and q.get('pos') and not q.get('held'):
+                sz = q.get('size') if isinstance(q.get('size'), list) else None
+                self._seats.append((q['pos'][1] + 46, (q['pos'][0], q['pos'][2]), (sz[0] / 2 if sz else 22)))
         # retarget every actor first, so held props can follow the hand that holds them
         actors, wrists, orig = [], {}, {}
         for aid, a in self.actors(f):
@@ -468,6 +564,14 @@ class CardRig(p3d.Puppet):
             P2[pid] = q
         fr['p'] = P2
         boxes = self.boxes(cam, fr) if props else []
+        # mirrors reflect: each actor mirrored across the glass (with the bank's lag), painted on
+        # its own layer and clipped to the glass (critic, T178: grey slabs with nothing in them)
+        for p in boxes:
+            q = fr['p'].get(p['id'], {})
+            if p['type'] == 'mirror' and (q.get('state') or {}).get('reflect'):
+                layer = self.reflection(cam, pt, f, q)
+                if layer is not None:
+                    p['draw'] = (lambda pt_, d0=p['draw'], L=layer: (d0(pt_), pt_.im.alpha_composite(L)))
         groups = []      # each actor is layered as a whole (critic: two actors fused into one creature)
         for aid, a, skin in actors:
             items, after = [], []
@@ -493,6 +597,9 @@ class CardRig(p3d.Puppet):
                 fn()
             if pool:
                 self.waterline(pt, cam, who[1], pool, before)
+        # the effects track over everything (rain, hearts, sweat, ?, ! ...)
+        fx.draw(pt, cam, self.V, f, {aid: {k: np.array(b['j'][i], float) for k, i in p3d.J.items() if b['j'][i] is not None}
+                                     for aid, b, skin in actors})
         final = np.asarray(pt.im)
         for info in notes:
             snap = info.pop('_head_snapshot', None)

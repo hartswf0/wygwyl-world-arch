@@ -87,7 +87,7 @@ a#wy-index { font: 500 12px var(--f-mono); color: var(--dim); text-decoration: n
   <header>
     <a href="../../../index.html" id="wy-index">← Index</a>
     <h1>Cineosis <span>Takes</span></h1>
-    <p class="lede">The next fifty Bolas vignettes, T133 to T182, run through the SCION pipeline on the card rig. Each dummy is always the same person: the poet plays Bola, the man plays Shim, Dot is the little one, and extras alternate. For every vignette the authored beats form a chain, three stagings are scored (faces seen, actors kept apart, the action filling the frame) and the best one is shot. The take is timed on the exposure sheet, with dead holds cut to a second, and five gates are measured on it.</p>
+    <p class="lede">The next fifty Bolas vignettes, T133 to T182, run through the SCION pipeline on the card rig. Each dummy is always the same person: the poet plays Bola, the man plays Shim, Dot is the little one, and extras alternate. For every vignette the authored beats form a chain, five stagings are scored (faces seen, actors kept apart, the action filling the frame) and the best one is shot. The take is timed on the exposure sheet, with dead holds cut to a second, and five gates are measured on it.</p>
     <div class="tally" id="tally"></div>
   </header>
   <div class="controls">

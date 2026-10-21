@@ -68,7 +68,9 @@ for (const id of ids) {
         if (Object.keys(st).length) P[id].state = st; }
       return { a: A, p: P };
     });
-    return { id: v.id, title: v.title, cat: v.cat, after: v.after || '', note: v.note || '', len: v.len, set: v.set, view: v.view, actors, frames };
+    // the effects track (rain, wind, hearts, sweat, ?, ! ...): each with its frame span and who it follows
+    const fx = (v.fx || []).map(e => ({ k: e.k, a: e.a, b: e.b, who: e.who || null, txt: e.txt || null, p: e.p || null, at: e.at || null, off: e.off || null }));
+    return { id: v.id, title: v.title, cat: v.cat, after: v.after || '', note: v.note || '', len: v.len, set: v.set, view: v.view, actors, frames, fx };
   }, id, JOINTS);
   v.joints = JOINTS; v.units = 'cm, y up, floor y=0'; v.source = 'hartswf0/bolas 04-crash-lab/index.html, baked by its own bakeV()';
   fs.writeFileSync(path.join(OUT, id + '.json'), JSON.stringify(v));
