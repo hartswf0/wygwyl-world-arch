@@ -36,11 +36,12 @@ class CardRig(p3d.Puppet):
         ids = [a['id'] for a in self.V['actors']]
         default = ['man', 'poet']
         self.cast = cast or {aid: default[i % 2] for i, aid in enumerate(ids)}
+        self.actor_scale = {a['id']: a.get('scale', 1.0) for a in self.V['actors']}
         self._cards = {}
 
     def card(self, path):
         if path not in self._cards:
-            self._cards[path] = Image.open(os.path.join(p3d.SHOTS, path)).convert('RGBA')
+            self._cards[path] = kraft_edge(Image.open(os.path.join(p3d.SHOTS, path)).convert('RGBA'))
         return self._cards[path]
 
     def place(self, pt, cam, spec, A3, B3, cm, mirror=False, width=1.0, sockets=('A', 'B')):
@@ -107,8 +108,16 @@ class CardRig(p3d.Puppet):
         P = lambda k: f'{aid}.{k}'
 
         def limb(kind, s, A3, B3):
-            def fn(kind=kind, s=s, A3=A3, B3=B3):
-                info['squash'][kind + s] = round(self.place(pt, cam, S[kind], A3, B3, S[kind]['cm'], mirror=left), 2)
+            K = S[kind]
+            if K.get('hidden'):
+                return
+            spec = dict(K[s], cm=K['cm'], w=K.get('w')) if s in K else K
+            if s in K and left:
+                # a per-side card seen from the other side: the other side's drawing, mirrored
+                spec = dict(K['R' if s == 'L' else 'L'], cm=K['cm'], w=K.get('w'))
+
+            def fn(kind=kind, s=s, A3=A3, B3=B3, spec=spec):
+                info['squash'][kind + s] = round(self.place(pt, cam, spec, A3, B3, spec['cm'], mirror=left), 2)
             add(f'{kind}{s}', z((A3 + B3) / 2), fn)
 
         for s in 'LR':
@@ -147,6 +156,12 @@ class CardRig(p3d.Puppet):
             def hand(s=s, j=j):
                 if S['hand'] == 'code':
                     self.hand(pt, cam, j, Rc, s, hands[s])
+                elif 'bank' in S['hand']:
+                    H = S['hand']
+                    shape = H['shape'].get(hands[s]['shape'] or 'relaxed', 'relaxed')
+                    spec = {'file': H['bank'].format(shape=shape), 'A': H['A'], 'B': H['B']}
+                    w = j['wrist' + s]
+                    self.place(pt, cam, spec, w, w + nrm(w - j['elbow' + s]) * H['cm'], H['cm'], mirror=left)
                 else:
                     H = dict(S['hand'])
                     A = json.load(open(os.path.join(p3d.SHOTS, 'weave/assets/assets.json')))
@@ -163,12 +178,24 @@ class CardRig(p3d.Puppet):
                 after.append((P(f'farm{s}'), P(f'hand{s}')))
             if z(j['elbow' + s]) > z(j['head']) - 15.0:
                 after.append((P(f'uarm{s}'), P('head')))
-            if S['pelvis'].get('skirt'):
+            far = s != near
+            if far:
+                # the far arm and leg stay behind the body unless the hand really crosses in
+                # front of it (critic: a third hand pasted on the hip)
+                crosses = z(j['wrist' + s]) < z(j['chest']) - 10.0
+                if not crosses:
+                    after += [(P(f'{k}{s}'), P('torso')) for k in ('uarm', 'farm', 'hand')]
+                after += [(P(f'{k}{s}'), P('torso')) for k in ('thigh', 'shin')]
+                if S.get('pelvis'):
+                    after += [(P(f'{k}{s}'), P('pelvis')) for k in ('thigh',) + (() if crosses else ('uarm', 'farm', 'hand'))]
+            if S.get('pelvis') and S['pelvis'].get('skirt'):
                 # under a skirt the thigh only shows below the hem: keep it behind
                 after.append((P(f'thigh{s}'), P('pelvis')))
 
         def pelvis(j=j, R0=R0):
-            Pv = S['pelvis']
+            Pv = S.get('pelvis')
+            if not Pv:
+                return
             vname, _ = self.view_of(cam, R0['fwd'])
             width = 1.0 if vname in ('front', 'back') else Pv.get('profile_width', 0.7) if vname == 'profile' else 0.85
             top = j['pelvis'] + R0['up'] * (8.0 if Pv.get('skirt') else 4.0)
@@ -178,7 +205,11 @@ class CardRig(p3d.Puppet):
             else:
                 d = -R0['up']
             self.place(pt, cam, Pv, top, top + d * Pv['cm'], Pv['cm'], mirror=left, width=width)
-        add('pelvis', z(j['pelvis']), pelvis)
+        if S.get('pelvis'):
+            add('pelvis', z(j['pelvis']), pelvis)
+        else:
+            # no pelvis card: the shorts-thighs tuck under the vest hem
+            after += [(P(f'thigh{s}'), P('torso')) for s in 'LR']
 
         # where the torso card's collar lands on screen: the head hangs from it
         hem0 = j['pelvis'] + R0['up'] * 6.0
@@ -192,6 +223,10 @@ class CardRig(p3d.Puppet):
         H = S.get('head_dock', {})
         dock = {'at': collar - axis * 0 + axis * (-H.get('tuck_cm', 7.0) * cam.s),
                 'axis': axis, 'max_tilt': H.get('max_tilt', 30), 'scale': H.get('scale', 1.0)}
+        if H.get('view_from_torso'):
+            # the head turns with the torso, one view at a time (critic: a front face on a
+            # profile body, the back of the head flickering in for single frames)
+            dock['view'] = self.view_of(cam, Rc['fwd'])
 
         def torso(j=j, R0=R0, Rc=Rc):
             T = S['torso']
@@ -213,6 +248,15 @@ class CardRig(p3d.Puppet):
                 self._head_dock = dock
                 info.update(self.head(pt, cam, j, a, a.get('face'), a.get('effort', 0)))
                 self._head_dock = None
+            elif 'bank' in Hs:
+                vname, ang = self.view_of(cam, Rc['fwd'])
+                expr = Hs['expr'].get(p3d.face_to_expression(a.get('face') or {}, a.get('effort', 0)), 'neutral')
+                view = 'front' if vname == 'front' else 'side'
+                spec = {'file': Hs['bank'][view].format(e=expr), 'A': Hs['neck'], 'B': Hs['crown']}
+                L = np.linalg.norm(j['headTop'] - j['neckBase']) * Hs.get('size', 1.0)
+                self.place_upright(pt, cam, spec, j['neckBase'], j['neckBase'] + nrm(j['headTop'] - j['neckBase']) * L, L,
+                                   mirror=(left if view == 'side' else False), upright_axis=axis)
+                info['head'] = spec['file']
             else:
                 hf = nrm(a['hfwd'])
                 d = cam.dir(hf)
@@ -227,7 +271,7 @@ class CardRig(p3d.Puppet):
         after += [(P('pelvis'), P('torso'))] + ([(P('head'), P('torso'))] if S.get('head_dock', {}).get('under_collar') else [(P('torso'), P('head'))])
         return j
 
-    def place_upright(self, pt, cam, spec, A3, B3, cm, mirror=False):
+    def place_upright(self, pt, cam, spec, A3, B3, cm, mirror=False, upright_axis=None):
         """A head: uniform scale (never squashed), turned to the neck->crown direction."""
         img = self.card(spec['file'])
         a_c, b_c = np.array(spec['A'], float), np.array(spec['B'], float)
@@ -239,9 +283,28 @@ class CardRig(p3d.Puppet):
         v = b - a
         th = math.atan2(v[1], v[0]) - math.atan2(b_c[1] - a_c[1], b_c[0] - a_c[0])
         if np.linalg.norm(v) < 0.35 * k * np.linalg.norm(b_c - a_c):
-            th = 0.0
+            v = np.asarray(upright_axis, float) if upright_axis is not None else np.array([0.0, -1.0])
+            th = math.atan2(v[1], v[0]) - math.atan2(b_c[1] - a_c[1], b_c[0] - a_c[0])
         R = np.array([[math.cos(th), -math.sin(th)], [math.sin(th), math.cos(th)]]) * k
         self._head_mask = pt.paste(img, R, a - R @ a_c)
+
+    def retarget(self, a, skin):
+        """One height per person: scale the actor's joints about the floor point under its
+        pelvis so the skin's height holds in every take, whichever Bolas dummy it plays
+        (critic: the man was a giant in one take and child-sized in the next)."""
+        S = SKINS[skin]
+        H = S.get('height_cm')
+        if not H:
+            return a, 1.0
+        J = [np.array(q, float) if q is not None else None for q in a['j']]
+        top = J[p3d.J['headTop']]
+        heel = min(J[p3d.J['heelL']][1], J[p3d.J['heelR']][1])
+        # the actor's standing height, from the bank's own scale (Bola 1, Shim 1.06, Dot .72)
+        k = H / (186.0 * self.actor_scale.get(a.get('_id'), 1.0))
+        base = np.array([J[0][0], 0.0, J[0][2]])
+        b = dict(a)
+        b['j'] = [None if q is None else list(base + (q - base) * k) for q in J]
+        return b, k
 
     def render(self, f, yaw=None, elev=None, zoom=None, centre=None, props=True, floor=True, window=None):
         cam = p3d.Camera(self.V['view'], yaw, elev, zoom, centre)
@@ -251,21 +314,47 @@ class CardRig(p3d.Puppet):
         if floor:
             fl = [cam.P([cam.c[0] + x, 0, cam.c[2] + zz])[:2] for x, zz in ((-400, -400), (400, -400), (400, 400), (-400, 400))]
             pt.poly_raw(fl, (112, 104, 93, 255))
-        fr = self.V['frames'][f]
-        boxes = self.boxes(cam, fr) if props else []
-        items, after = [], []
+        fr = dict(self.V['frames'][f])
+        # retarget every actor first, so held props can follow the hand that holds them
+        actors, wrists, orig = [], {}, {}
         for aid, a in self.actors(f):
-            def add(key, zz, fn, aid=aid):
+            a = dict(a, _id=aid)
+            skin = self.cast.get(aid, 'man')
+            b, k = self.retarget(a, skin)
+            actors.append((aid, b, skin))
+            for s in 'LR':
+                orig[(aid, s)] = np.array(a['j'][p3d.J['wrist' + s]], float)
+                wrists[(aid, s)] = np.array(b['j'][p3d.J['wrist' + s]], float)
+        # a held prop keeps its offset from the holding hand, after retargeting
+        P2 = {}
+        for pid, q in fr.get('p', {}).items():
+            q = dict(q)
+            h = q.get('held')
+            if h and q.get('pos'):
+                who, side = h.split('.')[0], (h.split('.')[1] if '.' in h else 'R')[:1]
+                if (who, side) in wrists:
+                    q['pos'] = list(wrists[(who, side)] + (np.array(q['pos'], float) - orig[(who, side)]))
+            P2[pid] = q
+        fr['p'] = P2
+        boxes = self.boxes(cam, fr) if props else []
+        groups = []      # each actor is layered as a whole (critic: two actors fused into one creature)
+        for aid, a, skin in actors:
+            items, after = [], []
+
+            def add(key, zz, fn, aid=aid, items=items):
                 items.append([f'{aid}.{key}', zz, fn])
-            self.actor_items(pt, cam, aid, a, add, after, notes, self.cast.get(aid, 'man'))
+            j = self.actor_items(pt, cam, aid, a, add, after, notes, skin)
             for p in boxes:
                 if p['held'] and p['held'].startswith(aid + '.'):
-                    after.append((f'{aid}.torso', 'box.' + p['id']))  # a carried prop sits in front of its carrier
+                    items.append(['box.' + p['id'], p['z'], lambda p=p: self.draw_box(pt, p)])
+                    after.append((f'{aid}.torso', 'box.' + p['id']))
+            groups.append((cam.P(j['pelvis'])[2], p3d.depth_order(items, after)))
         for p in boxes:
-            items.append(['box.' + p['id'], p['z'], lambda p=p: self.draw_box(pt, p)])
-        order = p3d.depth_order(items, after)
-        for key, zz, fn in order:
-            fn()
+            if not p['held']:
+                groups.append((p['z'], [['box.' + p['id'], p['z'], lambda p=p: self.draw_box(pt, p)]]))
+        for zz, order in sorted(groups, key=lambda g: -g[0]):
+            for key, z2, fn in order:
+                fn()
         final = np.asarray(pt.im)
         for info in notes:
             snap = info.pop('_head_snapshot', None)
@@ -274,3 +363,21 @@ class CardRig(p3d.Puppet):
                 cov = float((np.abs(final[m].astype(int) - before.astype(int)).sum(axis=1) > 30).mean())
                 info['face_covered'] = round(cov, 3)
         return pt.result(), notes
+
+
+def kraft_edge(img, band=3):
+    """The cut edge of a card is kraft cardboard, not a white glow (critic: pale seams and
+    white bolts made the man read as a glowing Tron suit). Light, unsaturated pixels within
+    `band` px of the cut become kraft brown; a fully white fringe is dropped."""
+    from scipy import ndimage as nd
+    a = np.asarray(img).copy()
+    A = a[..., 3] > 40
+    edge = A & ~nd.binary_erosion(A, iterations=band)
+    rgb = a[..., :3].astype(int)
+    light = (rgb.max(axis=2) > 150) & (np.ptp(rgb, axis=2) < 70)
+    white = (rgb.min(axis=2) > 215)
+    outer = A & ~nd.binary_erosion(A, iterations=1)
+    a[..., 3] = np.where(outer & white, 0, a[..., 3])
+    fix = edge & light & ~(outer & white)
+    a[fix, 0], a[fix, 1], a[fix, 2] = 132, 98, 62
+    return Image.fromarray(a)

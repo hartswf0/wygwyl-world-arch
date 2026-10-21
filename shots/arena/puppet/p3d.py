@@ -357,6 +357,12 @@ class Puppet:
         expr = face_to_expression(face or {}, effort)
         mirror = ang < 0
         aa = abs(ang)
+        dock = getattr(self, '_head_dock', None)
+        if dock is not None and dock.get('view'):
+            tv, tang = dock['view']
+            aa = {'front': 0, 'threequarter': 60, 'profile': 90, 'threequarter_back': 140, 'back': 170}[tv]
+            mirror = tang < 0
+            ang = tang
         if aa < 28:
             # the front bank has no afraid/reluctant/pain/embarrassed: nearest neighbour,
             # never the old sunglasses card (critic, depth turn 1)
@@ -373,7 +379,14 @@ class Puppet:
             p, miss = LIBR.pick(self.parts, 'head', view='back')
             mirror = ang > 0      # the back card faces left-of-screen's opposite
         if p['id'] not in self._img:
-            self._img[p['id']] = Image.open(os.path.join(SHOTS, p['file'])).convert('RGBA')
+            im = Image.open(os.path.join(SHOTS, p['file'])).convert('RGBA')
+            if p['id'].startswith('man.head.front.'):
+                im = match_colour(im, ref_stats(self.parts))    # the front bank is paler: match it to the 3/4 bank
+            if p['id'] == 'man.head.back':
+                a = np.asarray(im).copy()
+                a[..., 3] = np.where(a[..., 3] > 200, 255, 0)  # its neck faded out like a smudge
+                im = Image.fromarray(a)
+            self._img[p['id']] = im
         img = self._img[p['id']]
         sk = p['sockets']
         neck, crown = np.array(sk['neck'], float), np.array(sk['crown'], float)
@@ -525,7 +538,9 @@ def face_to_expression(fc, effort):
     if fc.get('eyes') == 'closed':
         return 'tired'
     if m == 'teeth':
-        return 'strain' if brow < -0.3 or effort > 0.5 else 'forced_grin'
+        # teeth under any effort is a strain, never a grin (critic: grinning while hauling
+        # himself up, grinning for pain)
+        return 'forced_grin' if smile > 0.35 and effort < 0.25 and brow > -0.2 else 'strain'
     if m in ('O', 'open'):
         return 'surprised' if brow >= -0.1 else 'panting'
     if m == 'wavy':
@@ -659,3 +674,28 @@ def props_polys(cam, q):
     if d:
         return _cuboid(cam, pos, d, rot[1], col)
     return []
+
+
+_REF = {}
+
+
+def ref_stats(parts):
+    """Mean/std of skin-and-hair pixels over the man's 3/4 expression heads."""
+    if 'ie' not in _REF:
+        px = []
+        for p in parts:
+            if p['id'].startswith('man.head.ie.'):
+                a = np.asarray(Image.open(os.path.join(SHOTS, p['file'])).convert('RGBA')).reshape(-1, 4)
+                px.append(a[a[:, 3] > 200][:, :3])
+        px = np.concatenate(px).astype(float)
+        _REF['ie'] = (px.mean(0), px.std(0))
+    return _REF['ie']
+
+
+def match_colour(im, stats):
+    a = np.asarray(im).astype(float)
+    m = a[..., 3] > 200
+    mu, sd = a[m][:, :3].mean(0), a[m][:, :3].std(0)
+    tm, ts = stats
+    a[..., :3] = np.clip((a[..., :3] - mu) / np.maximum(sd, 1) * ts + tm, 0, 255)
+    return Image.fromarray(a.astype(np.uint8))
