@@ -6,10 +6,11 @@ import json, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 P = json.load(open(os.path.join(HERE, 'prompts.json')))
+PK = json.load(open(os.path.join(HERE, 'packs.json')))
 R = json.load(open(os.path.join(HERE, 'registry.json')))
 SNIP = json.dumps({'man.body.front.torso': R['man']['body.front']['torso'], 'man.hands.R.point.back': R['man']['hands.R']['point.back'],
                    'poet.face.profile.plate': R['poet']['face.profile']['plate']}, indent=1)
-DATA = {'sheets': P['sheets'], 'style': P['style'], 'rules': P['template_rules']}
+DATA = {'packs': PK}
 
 PAGE = r'''<title>Puppet Kit 3</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -66,7 +67,9 @@ button { font: 500 14px var(--f-body); color: var(--ink); background: var(--card
 button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--kraft); outline-offset: 2px; }
 .sheets { display: grid; gap: 14px; }
-.sheet { background: var(--card); border: 1px solid var(--rule); border-left: 4px solid var(--c, var(--kraft)); border-radius: 4px; padding: 14px; display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.sheet { background: var(--card); border: 1px solid var(--rule); border-left: 4px solid var(--c, var(--kraft)); border-radius: 4px; padding: 14px; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.open { font: 500 14px var(--f-body); color: var(--kraft); }
 .sheet[data-c="man"] { --c: var(--man); } .sheet[data-c="poet"] { --c: var(--poet); } .sheet[data-c="dot"] { --c: var(--dot); }
 @media (max-width: 760px) { .sheet { grid-template-columns: 1fr; } }
 .sheet img { width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 2px; background: #fcfaf5; }
@@ -75,7 +78,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--kraft); outline
 .sheet .id { font: 500 14px var(--f-mono); color: var(--c); }
 .sheet .job { font-size: 15px; }
 details summary { cursor: pointer; font: 500 13px var(--f-mono); color: var(--dim); }
-pre { white-space: pre-wrap; word-wrap: break-word; font: 13px/1.5 var(--f-mono); background: var(--paper); border: 1px solid var(--rule); border-radius: 3px; padding: 10px; margin: 6px 0 0; max-height: 300px; overflow: auto; }
+pre { white-space: pre-wrap; word-wrap: break-word; font: 12.5px/1.5 var(--f-mono); background: var(--paper); border: 1px solid var(--rule); border-radius: 3px; padding: 10px; margin: 0; max-height: 260px; overflow: auto; }
 .copy { justify-self: start; }
 .ok { color: var(--fuse); font: 13px var(--f-mono); }
 .grid-t { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
@@ -90,6 +93,13 @@ ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 72
     <p class="lede">Every part becomes a plug: a hand, an eye, a mouth, a boot, a whole head. A part can be <span class="tag t-gen">generated</span> (a painted card from an image model), <span class="tag t-code">coded</span> (drawn by the rig from the motion bank) or a <span class="tag t-fuse">fusion</span> of both (a painted plate with coded features riding on it). Anything that fits a slot's sockets can replace anything else in that slot.</p>
     <p class="dim">The old parts were made the other way round: a model painted a card, then we guessed where its brads were, and the guesses were off by up to 30 pixels. Here the skeleton comes first. The cut charts, the templates and the socket registry are all drawn from one rest skeleton per character, so the brads are placed before anything is painted.</p>
   </header>
+
+  <section aria-labelledby="packs">
+    <h2 id="packs">One image, one prompt</h2>
+    <p class="dim">Thirty sheets, ten per character. For each: open the image and save it, copy the prompt, and give the generator just those two. The image carries everything in three panels: <b>A</b> the layout to paint into (brads already placed), <b>B</b> who the character is, <b>C</b> cut-out style references from our own cardboard sheets.</p>
+    <div class="controls" id="pchips"><span class="eyebrow">Character</span></div>
+    <div class="sheets" id="plist"></div>
+  </section>
 
   <section aria-labelledby="how">
     <h2 id="how">How a part is made</h2>
@@ -155,21 +165,6 @@ ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 72
     </table></div>
   </section>
 
-  <section aria-labelledby="tpl">
-    <h2 id="tpl">The templates</h2>
-    <p class="dim">Thirty sheets, ten per character, 2048 &times; 1152 at one stated scale with a 10 cm ruler. Ghost shapes to paint inside; green crosses take a brad; red crosses mark where the next card pins. Each image opens at full size.</p>
-    <div class="controls" id="tchips"><span class="eyebrow">Character</span></div>
-    <div class="grid-t" id="tgrid"></div>
-  </section>
-
-  <section aria-labelledby="pr">
-    <h2 id="pr">Prompts</h2>
-    <p class="dim">One prompt per sheet: a shared style, the character, the sheet's job and the template rules. Send each with its template as the layout or control image, plus the character's references. Thirty sheets in all.</p>
-    <details><summary>Shared style block</summary><pre id="style"></pre></details>
-    <div class="controls" id="pchips"><span class="eyebrow">Character</span></div>
-    <div class="sheets" id="plist"></div>
-  </section>
-
   <section aria-labelledby="reg">
     <h2 id="reg">The registry</h2>
     <p class="dim"><code>kit3/registry.json</code> is written by <code>kit3/kit.py</code> from the same skeleton that draws the templates. A card painted into a template keeps these sockets, in sheet pixels. A few entries:</p>
@@ -186,32 +181,29 @@ ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 72
 <script>
 const D = JSON.parse(document.getElementById('data').textContent);
 const SNIP = __SNIP__;
-document.getElementById('style').textContent = D.style;
 document.getElementById('snip').textContent = JSON.stringify(SNIP, null, 1);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
 const NAMES = {all: 'All', man: 'The man', poet: 'The poet', dot: 'Dot'};
-function chips(id, onpick) {
-  const g = document.getElementById(id); let cur = 'all';
-  for (const k of Object.keys(NAMES)) { const b = document.createElement('button'); b.textContent = NAMES[k]; b.setAttribute('aria-pressed', String(k === cur));
-    b.onclick = () => { cur = k; [...g.querySelectorAll('button')].forEach(x => x.setAttribute('aria-pressed', String(x === b))); onpick(k); }; g.appendChild(b); }
-}
-const TPL = D.sheets.filter(s => s.template);
-function tgrid(c) { document.getElementById('tgrid').innerHTML = TPL.filter(s => c === 'all' || s.character === c).map(s =>
-  `<a href="${esc(s.template)}" target="_blank" rel="noopener"><img src="${esc(s.template)}" alt="template ${esc(s.id)}" loading="lazy">${esc(s.id)}</a>`).join(''); }
-function plist(c) { document.getElementById('plist').innerHTML = D.sheets.filter(s => c === 'all' || s.character === c).map((s, i) =>
-  `<article class="sheet" data-c="${esc(s.character)}">${s.template ? `<a href="${esc(s.template)}" target="_blank" rel="noopener"><img src="${esc(s.template)}" alt="template for ${esc(s.id)}" loading="lazy"></a>` : '<div class="noimg">free layout · 10 cm ruler</div>'}
-   <div class="body"><span class="id">${esc(s.id)}</span><p class="job">${esc(s.job)}</p>
-   <details><summary>Full prompt</summary><pre>${esc(s.prompt)}</pre></details>
-   <button class="copy" data-i="${D.sheets.indexOf(s)}">Copy prompt</button><span class="ok" aria-live="polite"></span></div></article>`).join(''); }
+const KIND = {body: 'Body cards', heads: 'Head plates', face: 'Face plug-ins', hands: 'Hands', feet: 'Feet', replacements: 'Replacement poses'};
+let cur = 'all';
+const g = document.getElementById('pchips');
+for (const k of Object.keys(NAMES)) { const b = document.createElement('button'); b.textContent = NAMES[k]; b.setAttribute('aria-pressed', String(k === cur));
+  b.onclick = () => { cur = k; [...g.querySelectorAll('button')].forEach(x => x.setAttribute('aria-pressed', String(x === b))); plist(); }; g.appendChild(b); }
+function plist() { document.getElementById('plist').innerHTML = D.packs.map((s, i) => [s, i]).filter(([s]) => cur === 'all' || s.character === cur).map(([s, i]) =>
+  `<article class="sheet" data-c="${esc(s.character)}" id="${esc(s.id.replace(/\./g, '-'))}">
+   <a href="${esc(s.image)}" target="_blank" rel="noopener"><img src="${esc(s.image)}" alt="pack image for ${esc(s.id)}: layout, character and style panels" loading="lazy"></a>
+   <div class="body"><span class="id">${esc(s.id)}</span><h3>${esc(NAMES[s.character])} · ${esc(KIND[s.sheet.split('.')[0]] || s.sheet)}${s.sheet.includes('.') ? ' · ' + esc(s.sheet.split('.').slice(1).join(' ')) : ''}</h3>
+   <pre>${esc(s.prompt)}</pre>
+   <div class="row"><button class="copy" data-i="${i}">Copy prompt</button><a class="open" href="${esc(s.image)}" target="_blank" rel="noopener">Open image</a><span class="ok" aria-live="polite"></span></div></div></article>`).join(''); }
 document.getElementById('plist').addEventListener('click', e => {
   const b = e.target.closest('button.copy'); if (!b) return;
-  const txt = D.sheets[+b.dataset.i].prompt, ok = b.nextElementSibling;
+  const txt = D.packs[+b.dataset.i].prompt, ok = b.parentElement.querySelector('.ok');
   const done = () => { ok.textContent = 'Copied'; setTimeout(() => ok.textContent = '', 1600); };
-  const fallback = () => { const pre = b.parentElement.querySelector('pre'); b.parentElement.querySelector('details').open = true;
+  const fallback = () => { const pre = b.closest('.body').querySelector('pre');
     const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); ok.textContent = 'Selected: copy with your keyboard'; };
   try { navigator.clipboard.writeText(txt).then(done, fallback); } catch (err) { fallback(); }
 });
-chips('tchips', tgrid); chips('pchips', plist); tgrid('all'); plist('all');
+plist();
 </script>
 '''
 
