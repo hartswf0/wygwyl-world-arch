@@ -383,12 +383,28 @@ class Puppet:
             crown[0] = img.size[0] - crown[0]
         A = cam.P(j['neckBase'] + nrm(j['headBase'] - j['neckBase']) * CANON['head']['neck_drop'])[:2]
         B = cam.P(j['headTop'] + nrm(j['headTop'] - j['headBase']) * CANON['head']['crown_lift'])[:2]
+        scale = CANON['head']['scale']
+        dock = getattr(self, '_head_dock', None)
+        if dock is not None:
+            # a card rig hangs the head from the torso CARD's drawn collar, not from the
+            # skeleton's neck point, so the two never slide apart (critic: the head looked
+            # glued on); the neck tab goes down into the collar and is drawn under it
+            A, scale = np.asarray(dock['at'], float), dock.get('scale', scale)
         # uniform scale from the head's 3D size, not its foreshortened screen length
-        L3 = np.linalg.norm(j['headTop'] - j['neckBase']) * CANON['head']['scale'] * cam.s
+        L3 = np.linalg.norm(j['headTop'] - j['neckBase']) * scale * cam.s
         k = L3 / np.linalg.norm(crown - neck)
         v = B - A
+        if dock is not None and dock.get('axis') is not None:
+            # a cut-out neck turns on one brad: keep the head within MAX_TILT of the torso
+            ax = np.asarray(dock['axis'], float)
+            d = math.atan2(v[1], v[0]) - math.atan2(ax[1], ax[0])
+            d = (d + math.pi) % (2 * math.pi) - math.pi
+            lim = math.radians(dock.get('max_tilt', 30))
+            d = max(-lim, min(lim, d))
+            a0 = math.atan2(ax[1], ax[0]) + d
+            v = np.array([math.cos(a0), math.sin(a0)]) * max(np.linalg.norm(v), 1.0)
         th = math.atan2(v[1], v[0]) - math.atan2(crown[1] - neck[1], crown[0] - neck[0])
-        if np.linalg.norm(v) < 0.35 * L3:            # head pointing at or away from the lens: keep it upright
+        if dock is None and np.linalg.norm(v) < 0.35 * L3:     # head pointing at or away from the lens: keep it upright
             th = 0.0
         R = np.array([[math.cos(th), -math.sin(th)], [math.sin(th), math.cos(th)]]) * k
         self._head_mask = pt.paste(img, R, A - R @ neck)

@@ -46,6 +46,9 @@ article { background: var(--card); border: 1px solid var(--rule); border-radius:
 .label p { margin: 0; color: var(--dim); }
 .fam { font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
 .row { display: grid; gap: 4px; min-width: 0; }
+.pair { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 8px; align-items: start; }
+.pair video { display: block; height: 200px; width: auto; max-width: 100%; border-radius: 3px; background: var(--stage); }
+@media (max-width: 760px) { .pair { grid-template-columns: 1fr; } .pair video { height: auto; width: 100%; } }
 .cast { font: 500 12px var(--f-mono); color: var(--dim); }
 .cast b { color: var(--ink); font-weight: 500; }
 .strip { overflow-x: auto; background: var(--stage); border-radius: 3px; }
@@ -58,7 +61,7 @@ article { background: var(--card); border: 1px solid var(--rule); border-radius:
 <div class="wrap">
   <header>
     <h1>Acting Arena <span>Study</span></h1>
-    <p class="lede">All 32 challenges, each played by the man and by the poet on the same rig. The Bolas Crash Lab motion places and layers every card, and the drawn cards are the look. Each strip shows the authored acting beats in order, on the challenge's own camera. Two-actor scenes put them together, then swap the cast.</p>
+    <p class="lede">All 32 challenges, each played by the man and by the poet on the same rig. The Bolas Crash Lab motion places and layers every card, and the drawn cards are the look. Each row has the take as a video, timed the cut-out way (poses held on twos, ones only for the fastest moments), beside a strip of the authored acting beats. Two-actor scenes put them together, then swap the cast.</p>
   </header>
   <div class="controls">
     <div class="group" id="fam"><span>Family</span></div>
@@ -96,10 +99,12 @@ function render() {
       const cast = Object.entries(x.cast).map(([n, s]) => `${esc(n)} <b>${esc(s)}</b>`).join(' · ');
       const hid = x.face_covered.filter(v => v > .12).length;
       return `<div class="row"><div class="cast">${cast}${hid ? ` <span class="flag">face covered on ${hid} beat${hid > 1 ? 's' : ''}</span>` : ''}</div>
-        <div class="strip"><img loading="lazy" src="study/${esc(x.file)}" alt="${esc(r.id)}, ${esc(Object.values(x.cast).join(' and '))}, key beats"></div></div>`;
+        <div class="pair">${x.video ? `<video controls loop muted playsinline preload="none" poster="study/${esc(x.poster)}" src="study/${esc(x.video)}" aria-label="${esc(r.id)} take, ${esc(Object.values(x.cast).join(' and '))}"></video>` : ''}
+        <div class="strip"><img loading="lazy" src="study/${esc(x.file)}" alt="${esc(r.id)}, ${esc(Object.values(x.cast).join(' and '))}, key beats"></div></div></div>`;
     }).join('');
     return `<article id="${esc(r.id)}"><div class="label"><span class="id">${esc(r.id)}</span><h2>${esc(r.title)}</h2>
-      <p><span class="fam">${esc(r.family.replace('_', ' & '))}</span> · ${esc(r.situation)}</p></div>
+      <p><span class="fam">${esc(r.family.replace('_', ' & '))}</span> · ${esc(r.situation)}</p>
+      ${r.xsheet ? `<p class="fam">${r.xsheet.frames} frames · ${r.xsheet.drawings} drawings · ${r.xsheet.keys} keys · ${r.xsheet.breakdowns} breakdowns · ${r.xsheet.ones} on ones</p>` : ''}</div>
       ${strips}<div class="beats">${r.beats.map(b => `<span><code>f${b[0]}</code>${esc(b[1] || '—')}</span>`).join('')}</div></article>`;
   }).join('');
 }

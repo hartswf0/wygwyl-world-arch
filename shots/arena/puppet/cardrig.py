@@ -180,10 +180,25 @@ class CardRig(p3d.Puppet):
             self.place(pt, cam, Pv, top, top + d * Pv['cm'], Pv['cm'], mirror=left, width=width)
         add('pelvis', z(j['pelvis']), pelvis)
 
+        # where the torso card's collar lands on screen: the head hangs from it
+        hem0 = j['pelvis'] + R0['up'] * 6.0
+        hem_s, neck_s = cam.P(hem0)[:2], cam.P(j['neckBase'])[:2]
+        axis = neck_s - hem_s
+        Ls = np.linalg.norm(axis)
+        axis = axis / Ls if Ls > 1e-3 else np.array([0.0, -1.0])
+        # the torso card squashes no shorter than SQUASH_MIN of its length, so when he bends
+        # toward the camera its collar lands above the skeleton's neck: dock where the card is
+        collar = hem_s + axis * max(Ls, SQUASH_MIN * S['torso']['cm'] * cam.s)
+        H = S.get('head_dock', {})
+        dock = {'at': collar - axis * 0 + axis * (-H.get('tuck_cm', 7.0) * cam.s),
+                'axis': axis, 'max_tilt': H.get('max_tilt', 30), 'scale': H.get('scale', 1.0)}
+
         def torso(j=j, R0=R0, Rc=Rc):
             T = S['torso']
             vname, ang = self.view_of(cam, Rc['fwd'])
-            spec = T.get(vname) or T.get('profile') or T['front']
+            near = {'threequarter': ('front', 'profile') if abs(ang) < 47 else ('profile', 'front'),
+                    'threequarter_back': ('profile', 'back') if abs(ang) < 135 else ('back', 'profile')}
+            spec = T.get(vname) or next((T[n] for n in near.get(vname, ()) if n in T), None) or T.get('profile') or T['front']
             hem = j['pelvis'] + R0['up'] * 6.0
             mirror = (ang < 0) if vname in ('threequarter', 'profile', 'threequarter_back') else False
             if T.get('faces') == 'front':
@@ -195,7 +210,9 @@ class CardRig(p3d.Puppet):
         def head(a=a, j=j):
             Hs = S['head']
             if Hs == 'library':
+                self._head_dock = dock
                 info.update(self.head(pt, cam, j, a, a.get('face'), a.get('effort', 0)))
+                self._head_dock = None
             else:
                 hf = nrm(a['hfwd'])
                 d = cam.dir(hf)
@@ -205,7 +222,9 @@ class CardRig(p3d.Puppet):
                 info['head'] = Hs['file'] + (' (mirrored)' if d[0] < 0 else '')
             info['_head_snapshot'] = (self._head_mask, np.asarray(pt.im)[self._head_mask].copy())
         add('head', z(j['head']), head)
-        after += [(P('pelvis'), P('torso')), (P('torso'), P('head'))]
+        # the neck tab tucks under the collar: the head is drawn before the torso card
+        # (a real cut-out puts the head's tab behind the vest), the arms still go by depth
+        after += [(P('pelvis'), P('torso'))] + ([(P('head'), P('torso'))] if S.get('head_dock', {}).get('under_collar') else [(P('torso'), P('head'))])
         return j
 
     def place_upright(self, pt, cam, spec, A3, B3, cm, mirror=False):
