@@ -72,6 +72,8 @@ img.atl{outline:2px solid #3c6f8a;outline-offset:-2px}
 .stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
 @media (max-width:860px){.stage{grid-template-columns:1fr}}
 .stage .refs img{width:calc(50% - 3px);height:auto;aspect-ratio:16/9}
+ol.ins,ul.ins{line-height:1.55}
+.ins a,p a:not(.btn){color:var(--acc)}
 .layers td:first-child{font:600 12px var(--mono);color:var(--acc);text-transform:uppercase}
 '''
 
@@ -151,7 +153,7 @@ def atlas_section(D):
 
 def nav(dos, cur):
     links = ''.join(f'<a href="{esc(d["num"])}.html"{" aria-current=\"page\"" if d["num"] == cur else ""}>{esc(d["num"])}</a>' for d in dos)
-    return f'''<header class="top"><a href="../../index.html" id="wy-index">← Index</a><a href="index.html">All poems</a>{links}<a href="../kits.html">Character kits</a>{SECTIONS if cur else ''}</header>'''
+    return f'''<header class="top"><a href="../../index.html" id="wy-index">← Index</a><a href="index.html">All poems</a>{links}<a href="../kits.html">Character kits</a><a href="../production.html">Production bible</a>{f'<a href="p{esc(cur)}.html">Finished parts {esc(cur)} →</a>' if cur else ''}{SECTIONS if cur else ''}</header>'''
 
 
 SECTIONS = ''.join(f'<a href="#{k}" style="border-style:dashed">{k}</a>' for k in ('footage', 'atlas', 'cast', 'props', 'places', 'kits'))
@@ -222,7 +224,7 @@ def page(D, dos):
     h.append('</section>')
     # props
     h.append('<section id="props"><h2>Props</h2><div class="grid">' + ''.join(
-        f'''<div class="card"><h3>{"★ " if p.get("hero") else ""}{esc(p.get("name") or p.get("id"))} <span class="dim" style="font:12px var(--mono)">{esc(p.get("scale_cm"))} cm</span></h3>
+        f'''<div class="card" id="p-{esc(p.get("id"))}"><h3>{"★ " if p.get("hero") else ""}{esc(p.get("name") or p.get("id"))} <span class="dim" style="font:12px var(--mono)">{esc(p.get("scale_cm"))} cm</span></h3>
         <p>{esc(p.get("look"))}</p><p class="dim"><b>Build:</b> {esc(p.get("build"))}</p>
         <div class="chips">{"".join(f'<span class="chip hot">{esc(s)}</span>' for s in p.get("states") or [])}{"".join(f'<span class="chip">{esc(w)}</span>' for w in p.get("who") or [])}</div>
         <div class="refs">{"".join(f'<img src="{still(r)}" alt="reference still" loading="lazy">' for r in p.get("refs") or [])}{atlas_imgs(p.get("atlas_refs"))}</div>
@@ -262,8 +264,70 @@ def index(dos):
         h.append(f'''<a class="card" href="{esc(D["num"])}.html" style="text-decoration:none;color:inherit">{f'<img src="{still(b)}" alt="" loading="lazy">' if b else ''}
           <div class="dim" style="font:12px var(--mono)">{esc(D["num"])} · {esc(D.get("district", ""))}</div><h3 style="font-size:19px">{esc(D.get("title"))}</h3><p class="dim">{esc(D.get("essence"))}</p>
           <div class="chips"><span class="chip">{len(D.get("characters") or [])} characters</span><span class="chip">{len(D.get("props") or [])} props</span><span class="chip">{len(D.get("sets") or [])} places</span></div></a>''')
-    h.append('</div></section></main><script id="prompts" type="application/json">[]</script>' + SCRIPT)
+    h.append('</div></section>')
+    h.append(register(dos))
+    h.append('</main><script id="prompts" type="application/json">[]</script>' + SCRIPT)
     return '\n'.join(h)
+
+
+HOWTO = '''<section id="use"><h2>How to use this</h2><ol class="ins">
+<li><b>Read the poem's page top to bottom once</b>: what it is in images, its palette, our best footage, then the atlas (district, staging per scene, hero buildings). That is the brief.</li>
+<li><b>Generate a kit</b>: under <i>Kits to generate</i>, download the image and copy its prompt; give your image model exactly those two. Panel A is the layout it paints into, B is what the thing is, C is the cardboard craft.</li>
+<li><b>Cut it</b>: the green cross on every card is its pivot (a brass brad), red is where a hand grips. Finished, sliced parts live in the production bible's poem pages (<i>Finished parts</i> in each page's header).</li>
+<li><b>Reuse before you build</b>: the register below lists every hero building, place and prop with the poems it appears in. Build once, at the scale its first poem gives.</li>
+<li><b>Change the design in the data, not the page</b>: edit <code>dossier/NN.json</code> and re-run the builders (see <a href="README.md">README</a>).</li></ol></section>'''
+
+
+def register(dos):
+    """Every hero building, place and prop across the fourteen poems, with where each appears; plus downloads."""
+    heroes, places, props, kits = {}, {}, {}, 0
+    for D in dos:
+        n = D['num']
+        for x in (D.get('atlas') or {}).get('heroes') or []:
+            e = heroes.setdefault(x.get('id'), {'name': x.get('name'), 'ref': (x.get('refs') or [None])[0], 'in': []})
+            e['in'].append((n, x.get('in_poem', '')))
+        for s in D.get('sets') or []:
+            e = places.setdefault((s.get('name') or s['id']).lower(), {'name': s.get('name') or s['id'], 'in': [], 'also': set()})
+            e['in'].append((n, s['id']))
+            e['also'] |= set(s.get('reuse') or [])
+        for p in D.get('props') or []:
+            e = props.setdefault((p.get('name') or p['id']).lower().removeprefix('the '), {'name': p.get('name') or p['id'], 'hero': False, 'in': []})
+            e['hero'] |= bool(p.get('hero'))
+            e['in'].append((n, p['id']))
+        kp = os.path.join(POEMS, 'kits', f'{n}.json')
+        kits += len(json.load(open(kp))) if os.path.exists(kp) else 0
+
+    def where(xs, pre):
+        return ''.join(f'<a class="chip" href="{esc(n)}.html#{pre}{esc(i)}">{esc(n)}</a>' for n, i in xs)
+    h = [HOWTO, f'''<section id="register"><h2>Asset register</h2><p class="dim">{len(heroes)} hero buildings, {len(places)} places, {len(props)} props and {kits} kits to generate
+      across the fourteen poems. Chips jump to the poem's card. <a class="btn ghost" href="kits/prompts.md" download>All kit prompts (.md)</a> <a class="btn ghost" href="kits/all.json" download>All kits (.json)</a></p>''']
+    h.append('<h3 style="font-size:20px">Hero buildings</h3><div class="tablewrap"><table><thead><tr><th></th><th>Building</th><th>Poems and how each uses it</th></tr></thead><tbody>' + ''.join(
+        f'<tr><td>{f"<img src=\"{esc(e["ref"])}\" alt=\"\" loading=\"lazy\" style=\"width:110px;border-radius:4px\">" if e["ref"] else ""}</td><td><b>{esc(e["name"])}</b></td>'
+        f'<td>{"".join(f"<div><a class=\"chip\" href=\"{esc(n)}.html#atlas\">{esc(n)}</a> {esc(u)}</div>" for n, u in e["in"])}</td></tr>'
+        for e in sorted(heroes.values(), key=lambda e: (-len(e['in']), e['name'] or ''))) + '</tbody></table></div>')
+    h.append('<h3 style="font-size:20px">Places</h3><div class="tablewrap"><table><thead><tr><th>Place</th><th>Built in</th><th>Reused in</th></tr></thead><tbody>' + ''.join(
+        f'<tr><td>{esc(e["name"])}</td><td><div class="chips">{where(e["in"], "s-")}</div></td><td>{esc(", ".join(sorted(e["also"] - {n for n, _ in e["in"]})))}</td></tr>'
+        for e in sorted(places.values(), key=lambda e: (-len(e['in']) - len(e['also']), e['in'][0][0]))) + '</tbody></table></div>')
+    h.append('<h3 style="font-size:20px">Props</h3><div class="tablewrap"><table><thead><tr><th>Prop</th><th>Poems</th></tr></thead><tbody>' + ''.join(
+        f'<tr><td>{"★ " if e["hero"] else ""}{esc(e["name"])}</td><td><div class="chips">{where(e["in"], "p-")}</div></td></tr>'
+        for e in sorted(props.values(), key=lambda e: (-len(e['in']), not e['hero'], e['in'][0][0]))) + '</tbody></table></div></section>')
+    return '\n'.join(h)
+
+
+def exports(dos):
+    """kits/all.json and kits/prompts.md: every kit of every poem in one file, for batch generation."""
+    allk = []
+    for D in dos:
+        kp = os.path.join(POEMS, 'kits', f"{D['num']}.json")
+        for k in json.load(open(kp)) if os.path.exists(kp) else []:
+            allk.append({'poem': D['num'], 'title_poem': D.get('title')} | k)
+    json.dump(allk, open(os.path.join(POEMS, 'kits', 'all.json'), 'w'), indent=1)
+    md = ['# WYGWYL poem kits: one image + one prompt each', '',
+          'Give an image model the image and the prompt below it, nothing else. Images are relative to `shots/poems/`.', '']
+    for k in allk:
+        md += [f"## {k['id']} · {k['title_poem']} · {k['title']} ({k['kind']})", '', f"Image: `{k['image']}`", '', '```', k['prompt'], '```', '']
+    open(os.path.join(POEMS, 'kits', 'prompts.md'), 'w').write('\n'.join(md))
+    return len(allk)
 
 
 def main():
@@ -275,7 +339,7 @@ def main():
     for D in dos:
         open(os.path.join(POEMS, f"{D['num']}.html"), 'w').write(page(D, dos))
     open(os.path.join(POEMS, 'index.html'), 'w').write(index(dos))
-    print(len(dos), 'poem pages')
+    print(len(dos), 'poem pages,', exports(dos), 'kits exported')
 
 
 if __name__ == '__main__':

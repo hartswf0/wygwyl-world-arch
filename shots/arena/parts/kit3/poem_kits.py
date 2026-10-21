@@ -37,7 +37,7 @@ def compose(a_img, still_ids, b_text, style, b_title):
     d.rectangle([0, 0, 2047, 1151], outline=INK, width=3)
     d.rectangle([0, 1108, 420, 1151], fill=INK)
     d.text((14, 1114), 'A · LAYOUT: paint into this', font=font(FONTB, 22), fill=(255, 255, 255))
-    d.text((2068, 14), 'B · WHAT (our footage)', font=font(FONTB, 26), fill=INK)
+    d.text((2068, 14), 'B · WHAT (footage + atlas references)', font=font(FONTB, 26), fill=INK)
     d.text((2068, 48), b_title[:42], font=font(FONT, 19), fill=(110, 100, 90))
     y = 84
     for sid in still_ids[:3]:

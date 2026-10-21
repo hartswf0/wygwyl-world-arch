@@ -419,9 +419,9 @@ def compile_vignette(tid, custom_yaw=None, out_act=None, skin='dummy'):
     elif skin == 'man':
         images.update({
             'man.torso.profile': '../weave/cast/man/parts/torso.profile.png',
-            'man.pelvis.profile': '../weave/cast/man/parts/pelvis.profile.png',
+            'man.pelvis.profile': '../weave/cast/man/parts/proc.pelvis.profile.png',
             'man.torso.front': '../weave/cast/man/parts/torso.front.png',
-            'man.pelvis.front': '../weave/cast/man/parts/pelvis.front.png',
+            'man.pelvis.front': '../weave/cast/man/parts/proc.pelvis.front.png',
             'man.uarm': '../weave/cast/man/parts/proc.uarm.png',
             'man.farm': '../weave/cast/man/parts/proc.farm.png',
             'man.hand.open': '../weave/cast/man/parts/hand.profile.open.png',
