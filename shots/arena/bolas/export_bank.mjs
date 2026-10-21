@@ -62,7 +62,10 @@ for (const id of ids) {
         };
       }
       const P = {};
-      for (const id in (R.props || {})) { const q = R.props[id]; P[id] = { type: q.type, pos: q.pos ? q.pos.map(r1) : null, rot: q.rot || null, held: q.held || null, size: q.size || null }; }
+      for (const id in (R.props || {})) { const q = R.props[id]; P[id] = { type: q.type, pos: q.pos ? q.pos.map(r1) : null, rot: q.rot || null, held: q.held || null, size: q.size || null };
+        // the prop's state drives how it is drawn: a door's open angle, a clock's hand, a letter opened, a hidden prop
+        const st = {}; for (const k in (q.state || {})) { const x = q.state[k]; if (typeof x === 'number') st[k] = r3(x); else if (typeof x === 'boolean' || typeof x === 'string') st[k] = x; }
+        if (Object.keys(st).length) P[id].state = st; }
       return { a: A, p: P };
     });
     return { id: v.id, title: v.title, cat: v.cat, after: v.after || '', note: v.note || '', len: v.len, set: v.set, view: v.view, actors, frames };

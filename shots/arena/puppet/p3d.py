@@ -54,7 +54,8 @@ def ellipse(c, ax, bx, a, b, n=20):
 
 class Camera:
     def __init__(self, view, yaw=None, elev=None, zoom=None, centre=None):
-        v = dict(view or {})
+        # a few Crash Lab framings come out NaN (null in the bank: T181, T182); fall back to defaults
+        v = {k: x for k, x in dict(view or {}).items() if x is not None}
         self.yaw = math.radians(v.get('yaw', -22) if yaw is None else yaw)
         self.elev = math.radians(v.get('elev', 10) if elev is None else elev)
         self.c = centre if centre is not None else [v.get('x', 0), v.get('y', 90), v.get('z', 0)]
@@ -65,7 +66,12 @@ class Camera:
         x, y, z = p[0] - self.c[0], p[1] - self.c[1], p[2] - self.c[2]
         cy, sy, ce, se = math.cos(self.yaw), math.sin(self.yaw), math.cos(self.elev), math.sin(self.elev)
         x1, z1 = x * cy - z * sy, x * sy + z * cy
-        return np.array([x1, y * ce - z1 * se, y * se + z1 * ce])
+        # Bolas's camera() returns depth TOWARD the viewer (it paints ascending depth); every
+        # rule in this rig reads z as AWAY, so it is negated here. Before this the whole rig
+        # was layered back to front: near limbs under far ones, the face shown when the body
+        # turned away, the table over the actor standing in front of it (checked against a
+        # headless Crash Lab render of T149, frame 150).
+        return np.array([x1, y * ce - z1 * se, -(y * se + z1 * ce)])
 
     def dir(self, v):
         return self.cam(np.asarray(v, float) + np.array(self.c)) - self.cam(np.array(self.c, float))
@@ -143,8 +149,9 @@ class Painter:
 
 class Puppet:
     def __init__(self, act):
-        n = int(act.split('-')[1])
-        self.act, self.tid = act, f'T{n + 100}'
+        # 'ACT-016' (the arena challenges, T116) or a bank id such as 'T140' (the Cineosis set)
+        n = int(act.split('-')[1]) + 100 if act.startswith('ACT-') else int(act.lstrip('T'))
+        self.act, self.tid = act, f'T{n:03d}'
         self.V = json.load(open(os.path.join(ARENA, 'bolas', 'bank', self.tid + '.json')))
         self.parts = LIBR.load()
         self._img = {}

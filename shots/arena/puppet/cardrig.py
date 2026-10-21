@@ -23,7 +23,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import p3d
+import p3d, propcards
 from p3d import nrm
 
 SKINS = json.load(open(os.path.join(HERE, 'skins.json')))
@@ -33,9 +33,7 @@ SQUASH_MIN = 0.5
 class CardRig(p3d.Puppet):
     def __init__(self, act, cast=None):
         super().__init__(act)
-        ids = [a['id'] for a in self.V['actors']]
-        default = ['man', 'poet']
-        self.cast = cast or {aid: default[i % 2] for i, aid in enumerate(ids)}
+        self.cast = cast or cast_by_name(self.V['actors'])
         self.actor_scale = {a['id']: a.get('scale', 1.0) for a in self.V['actors']}
         self._cards = {}
 
@@ -306,13 +304,22 @@ class CardRig(p3d.Puppet):
         b['j'] = [None if q is None else list(base + (q - base) * k) for q in J]
         return b, k
 
+    def boxes(self, cam, fr):
+        """Props the Crash Lab's way (propcards.py): its pivots, rotation and states, in the
+        cast's cardboard, instead of flat-shaded cuboids."""
+        return propcards.prop_items(cam, fr.get('p', {}), getattr(self, '_f', 0))
+
+    def draw_box(self, pt, p):
+        p['draw'](pt)
+
     def render(self, f, yaw=None, elev=None, zoom=None, centre=None, props=True, floor=True, window=None):
         cam = p3d.Camera(self.V['view'], yaw, elev, zoom, centre)
+        self._f = f
         # a warm paper stage: the man's black cards vanished on near-black (critic, study turn 2)
         pt = p3d.Painter(bg=(86, 80, 72), window=window)
         notes = []
         if floor:
-            fl = [cam.P([cam.c[0] + x, 0, cam.c[2] + zz])[:2] for x, zz in ((-400, -400), (400, -400), (400, 400), (-400, 400))]
+            fl = [cam.P([cam.c[0] + x, 0, cam.c[2] + zz])[:2] for x, zz in ((-3000, -3000), (3000, -3000), (3000, 3000), (-3000, 3000))]
             pt.poly_raw(fl, (112, 104, 93, 255))
         fr = dict(self.V['frames'][f])
         # retarget every actor first, so held props can follow the hand that holds them
@@ -363,6 +370,23 @@ class CardRig(p3d.Puppet):
                 cov = float((np.abs(final[m].astype(int) - before.astype(int)).sum(axis=1) > 30).mean())
                 info['face_covered'] = round(cov, 3)
         return pt.result(), notes
+
+
+BY_NAME = {'Bola': 'poet', 'Shim': 'man', 'Dot': 'dot'}
+
+
+def cast_by_name(actors):
+    """Each Bolas dummy is always played by the same person: Bola (she) by the poet, Shim
+    (he) by the man, Dot by the little one; extras alternate man and poet. Casting went by
+    actor id before, and Dot (id C) fell back to the man (rig v2 test, ACT-019)."""
+    out, n = {}, 0
+    for a in actors:
+        if a['name'] in BY_NAME:
+            out[a['id']] = BY_NAME[a['name']]
+        else:
+            out[a['id']] = ('man', 'poet')[n % 2]
+            n += 1
+    return out
 
 
 def kraft_edge(img, band=3):
