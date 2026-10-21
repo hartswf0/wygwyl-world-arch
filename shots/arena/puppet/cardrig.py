@@ -23,7 +23,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import p3d, propcards, dummyhead
+import p3d, propcards, dummyhead, fusion
 from p3d import nrm
 
 SKINS = json.load(open(os.path.join(HERE, 'skins.json')))
@@ -315,6 +315,12 @@ class CardRig(p3d.Puppet):
                 hf = nrm(a['hfwd'])
                 d = cam.dir(hf)
                 spec = {'file': Hs['file'], 'A': Hs['neck'], 'B': Hs['crown']}
+                if Hs.get('fusion') == 'poet':
+                    # the painted plate with her eye plugged in: open, gaze and lid from the bank
+                    img, key = fusion.poet_head(a.get('face'))
+                    if key not in self._cards:
+                        self._cards[key] = kraft_edge(img)
+                    spec['file'] = key
                 L = np.linalg.norm(j['headTop'] - j['neckBase'])
                 self.place_upright(pt, cam, spec, j['neckBase'] - nrm(j['headBase'] - j['neckBase']) * 3, j['headTop'], L, mirror=d[0] < 0)
                 info['head'] = Hs['file'] + (' (mirrored)' if d[0] < 0 else '')
