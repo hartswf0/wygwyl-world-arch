@@ -81,6 +81,7 @@ details>summary{cursor:pointer;font:600 13px var(--mono);color:var(--card);paddi
   <h1>Character Kits v2<small>EVERY CHARACTER · EVERY POEM · ONE IMAGE + ONE PROMPT PER SHEET</small></h1>
   <span class="sp"></span>
   <a href="kit3.html">Puppet Kit 3 →</a>
+  <a href="poems/index.html">Poem pages →</a>
   <a href="arena/parts/kit3/v2/kits.json">kits.json</a>
 </header>
 <main>
