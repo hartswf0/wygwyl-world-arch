@@ -355,6 +355,71 @@ def draw(pen, q, f=0):
     elif t == 'hoop':
         pen.box([0, 22, -14], [56, 40, 3], '#efe9dc')
         pen.line([0, -180, -16], [0, 22, -16], 2)
+    elif t == 'heart':
+        c = P(pen.c)
+        r = 6 * pen.s
+        pts = [(c[0] + 16 * math.sin(a) ** 3 * r / 16, c[1] - (13 * math.cos(a) - 5 * math.cos(2 * a) - 2 * math.cos(3 * a) - math.cos(4 * a)) * r / 16)
+               for a in np.linspace(0, 2 * math.pi, 40)]
+        pen.glow(pen.c, 14, (230, 60, 50, 50))
+        pen.poly2(pts, (196, 34, 40, 255), ink=1.5)
+    elif t == 'tambourine':
+        c = P(pen.c)
+        r = 12 * pen.s
+        pen.circle2(c, r, (222, 196, 150, 255), ink=1.8)
+        pen.circle2(c, r * .8, (240, 228, 205, 255), ink=1)
+        for i in range(5):
+            a = i / 5 * 2 * math.pi
+            pen.circle2((c[0] + math.cos(a) * r * .98, c[1] + math.sin(a) * r * .98), r * .16, (210, 176, 70, 255), ink=1)
+    elif t == 'raven':
+        c = P(pen.c)
+        k = 9 * pen.s
+        flap = math.sin(f * .5) * .6
+        pen.poly2([(c[0] - k * 1.4, c[1] - k * flap), (c[0] - k * .2, c[1] - k * .1), (c[0] + k * .3, c[1] - k * .35), (c[0] + k * .9, c[1] - k * .2),
+                   (c[0] + k * .3, c[1] + k * .15), (c[0] - k * .2, c[1] + k * .05)], (22, 20, 22, 255), ink=1)
+        pen.poly2([(c[0] - k * .2, c[1]), (c[0] + k * .1, c[1]), (c[0] + k * .9, c[1] - k * (1.1 - flap))], (30, 28, 30, 255), ink=1)
+    elif t == 'shard':
+        c = P(pen.c)
+        k = 5 * pen.s
+        for dx, dy, a in ((-1.2, 0, .3), (.6, .3, 1.4), (1.8, -.2, 2.6)):
+            pts = [(c[0] + dx * k + math.cos(a + b) * k * (0.6 + .4 * (b % 2)), c[1] + dy * k + math.sin(a + b) * k * .7) for b in (0, 2.1, 3.9)]
+            pen.poly2(pts, (222, 196, 150, 255), ink=1)
+    elif t == 'star':
+        c = P(pen.c)
+        r = 7 * pen.s
+        pen.glow(pen.c, 20, (255, 230, 140, 60))
+        pts = [(c[0] + (r if i % 2 == 0 else r * .45) * math.cos(-math.pi / 2 + i * math.pi / 5),
+                c[1] + (r if i % 2 == 0 else r * .45) * math.sin(-math.pi / 2 + i * math.pi / 5)) for i in range(10)]
+        pen.poly2(pts, (255, 214, 80, 255), ink=1.4)
+    elif t == 'moon':
+        c = P(pen.c)
+        r = 16 * pen.s
+        pen.circle2(c, r, (240, 236, 214, 255), ink=1.5)
+        pen.circle2((c[0] + r * .4, c[1] - r * .2), r * .82, (110, 104, 93, 255), ink=0)
+    elif t == 'phone':
+        pen.box([0, 0, 0], [7, 14, 1.2], '#1a1c20', ink=1)
+        pen.poly([[-2.8, -5.5, .7], [2.8, -5.5, .7], [2.8, 5.5, .7], [-2.8, 5.5, .7]], _rgb('#3a5a78'), ink=0.5)
+    elif t == 'vape':
+        pen.line([0, -6, 0], [0, 6, 0], 1.0, _rgb('#2a2a30'))
+        pen.glow(T([0, 6.5, 0]), 3, (255, 120, 60, 160))
+    elif t == 'mic':
+        pen.line([0, -9, 0], [0, 4, 0], 1.6, _rgb('#222326'))
+        pen.circle2(P(T([0, 6, 0])), 2.6 * pen.s, (170, 172, 176, 255), ink=1)
+    elif t == 'ring':
+        c = P(pen.c)
+        pen.circle2(c, max(2.5, 1.6 * pen.s), None, ink=1.4)
+        pen.pt.d.ellipse([pen.pt._xy((c[0] - 1.6 * pen.s, c[1] - 1.6 * pen.s)), pen.pt._xy((c[0] + 1.6 * pen.s, c[1] + 1.6 * pen.s))], outline=(214, 176, 60, 255), width=max(2, int(pen.s)))
+    elif t == 'tag':
+        # a prop the kit has no card for yet: a labelled cardboard tag, so the shot still says what is there
+        from PIL import ImageFont
+        c = P(pen.c)
+        label = str(q.get('label') or q.get('id') or '?').replace('_', ' ')[:18]
+        fnt = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', max(14, int(4.2 * pen.s * 2)))
+        x, y = pen.pt._xy(c)
+        w = fnt.getlength(label) + 24
+        h = fnt.size + 16
+        pen.pt.d.rounded_rectangle([x - w / 2, y - h / 2, x + w / 2, y + h / 2], radius=8, fill=(214, 184, 140, 255), outline=(60, 44, 30, 255), width=3)
+        pen.pt.d.ellipse([x - w / 2 + 6, y - 5, x - w / 2 + 16, y + 5], fill=(250, 247, 240, 255), outline=(60, 44, 30, 255))
+        pen.pt.d.text((x + 6, y), label, font=fnt, fill=(40, 30, 22, 255), anchor='mm')
     elif t in ('wall',):
         w, h = (s[0], s[1]) if s and len(s) > 1 else (120, 200)
         pen.poly([[-w / 2, 0, 0], [w / 2, 0, 0], [w / 2, h, 0], [-w / 2, h, 0]], (160, 200, 230, 60) if st.get('glass') or st.get('mime') else _rgb('#5a5048'))

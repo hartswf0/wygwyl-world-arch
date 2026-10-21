@@ -342,7 +342,7 @@ class CardRig(p3d.Puppet):
                 spec = {'file': Hs['file'], 'A': Hs['neck'], 'B': Hs['crown']}
                 if Hs.get('fusion') == 'poet':
                     # the painted plate with her eye plugged in: open, gaze and lid from the bank
-                    img, key = fusion.poet_head(a.get('face'))
+                    img, key = fusion.poet_head(a.get('face'), glasses='sunglasses' in (getattr(self, '_cur_costume', '') or ''))
                     if key not in self._cards:
                         self._cards[key] = kraft_edge(img)
                     spec['file'] = key

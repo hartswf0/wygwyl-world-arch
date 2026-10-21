@@ -184,7 +184,7 @@ def shapes(cid, view):
             out.append((f'{kind}.{s}', capsule(J[a + s], J[b + s], *W[kind]), (a + s, b + s)))
     hc = J['head']
     r = (C['J']['crown'][1] - C['J']['head'][1])
-    nw = {'man': 9.0, 'poet': 7.0, 'dot': 5.0}[cid]
+    nw = {'man': 9.0, 'poet': 7.0, 'dot': 5.0}.get(cid, C['height'] * 0.048)
     nk = J['neck']
     out.append(('neck', [(nk[0] - nw / 2, nk[1] - 3), (nk[0] + nw / 2, nk[1] - 3), (hc[0] + nw / 2, hc[1]), (hc[0] - nw / 2, hc[1])], ('neck', 'head')))
     if C['hair'] == 'afro':

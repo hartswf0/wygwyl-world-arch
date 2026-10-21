@@ -86,9 +86,29 @@ def open_eye(lid=0.0, gx=0.0, gy=0.0):
     return L.resize((W, H), Image.LANCZOS)
 
 
-def poet_head(face):
+def sunglasses(img):
+    """The red/black costume's sunglasses, plugged onto her eye anchor (profile, facing right):
+    a dark lens over the eye and an arm back to the ear."""
+    W, H = img.size
+    L = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0))
+    d = ImageDraw.Draw(L)
+    S = lambda x, y: (x * SS, y * SS)
+    d.rounded_rectangle([S(229, 179), S(264, 197)], radius=6 * SS, fill=(16, 14, 14, 255), outline=(60, 50, 46, 255), width=SS)
+    d.line([S(230, 184), S(196, 182)], fill=(16, 14, 14, 255), width=int(2.6 * SS))
+    d.line([S(238, 183), S(252, 182)], fill=(120, 120, 130, 200), width=int(1.2 * SS))        # a glint
+    out = img.copy()
+    out.alpha_composite(L.resize((W, H), Image.LANCZOS))
+    return out
+
+
+def poet_head(face, glasses=False):
     """The poet's head card for one frame of the bank's face."""
     face = face or {}
+    if glasses:
+        key = ('glasses',)
+        if key not in _cache:
+            _cache[key] = sunglasses(plate())
+        return _cache[key], 'poet.head.glasses'
     eyes = face.get('eyes', 'o')
     lid = float(np.clip(face.get('lid') or 0, 0, 1))
     if eyes == 'closed' or lid > 0.85:
