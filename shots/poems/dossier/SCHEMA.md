@@ -49,3 +49,22 @@ Extras by group. Character ids: poet, ex, young_poet, ghost_child, woman, parent
 ```
 Be specific and visual. 6-12 best_footage entries, every hero prop and every set with at least one still ref
 where one fits (or say none fits). Every still id must exist in stills_index.json.
+
+## Atlas pass (`atlas` key, plus `atlas_refs` on props, sets and characters)
+Source: `shots/poems/atlas/NN.json` (built by `shots/poems/atlas.py` from butterfly-halfworld's world atlas:
+scene book, districts, hero buildings, foundry, archive search) and `atlas/world.json` (gazetteer: customs,
+trades, transit, sayings). Every image is at `shots/poems/<img>` (`refs/atlas/...`). LOOK at the images.
+```json
+"atlas": {
+  "district_language": "how the district's mood, hour, light technology and architecture translate into cardboard (what to paint, what to code, what to never show)",
+  "best": [{"img": "refs/atlas/views/097.jpg", "element": "...", "use_for": "set|prop|light|texture|mood|blocking|character", "why": "..."}],
+  "staging": [{"scene": "04.0", "name": "...", "shot": "the cut-out shot: lens/framing, which layers, who is where, what moves",
+               "set": "<set id>", "refs": ["refs/atlas/..."]}],
+  "heroes": [{"id": "chapel", "name": "...", "in_poem": "how this poem uses it", "build_as_cards": "facade/interior as multiplane cards, what opens, what breaks", "refs": ["refs/atlas/..."]}],
+  "world_details": [{"detail": "the salt line at 4/10 on old walls", "where": "...", "as": "prop|set dressing|fx"}],
+  "transitions": [{"to": "05", "how": "how the cut-out film makes it (shared card, wipe, push through)"}]
+}
+```
+And on each existing prop / set / character: `"atlas_refs": ["refs/atlas/..."]` (2-4 images that are truly it,
+chosen by eye; none rather than wrong). New props or sets the atlas reveals are appended to `props` / `sets`
+with `"from_atlas": true`; new kits to `kits_to_build`; new lessons to `insights` prefixed "Atlas: ".

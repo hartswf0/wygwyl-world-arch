@@ -64,6 +64,14 @@ pre{white-space:pre-wrap;word-wrap:break-word;font:12px/1.55 var(--mono);color:#
 button:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .ok{font:12px var(--mono);color:var(--ok)}
 ul.ins{margin:0;padding-left:20px;display:grid;gap:6px;max-width:80ch}
+img.atl{outline:2px solid #3c6f8a;outline-offset:-2px}
+.chip.atl{border-color:#3c6f8a;color:#8fd0f0}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.facts div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:14px}
+.facts b{display:block;font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#8fd0f0;margin-bottom:3px}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+@media (max-width:860px){.stage{grid-template-columns:1fr}}
+.stage .refs img{width:calc(50% - 3px);height:auto;aspect-ratio:16/9}
 .layers td:first-child{font:600 12px var(--mono);color:var(--acc);text-transform:uppercase}
 '''
 
@@ -79,12 +87,74 @@ def esc(s):
 
 
 def still(sid, w=None):
-    return f'refs/stills/{esc(sid)}.jpg'
+    """A footage still id, or a page-relative path (atlas references are refs/atlas/...)."""
+    return esc(sid) if '/' in str(sid) else f'refs/stills/{esc(sid)}.jpg'
+
+
+def atlas_imgs(xs, w=120, h=68):
+    return ''.join(f'<img src="{esc(r)}" alt="atlas reference" loading="lazy" style="width:{w}px;height:{h}px" class="atl">' for r in xs or [])
+
+
+def atlas_section(D):
+    """What the world atlas knows about the poem: its district, the scene book's staging, hero buildings, world details."""
+    A = D.get('atlas') or {}
+    p = os.path.join(POEMS, 'atlas', f"{D['num']}.json")
+    R = json.load(open(p)) if os.path.exists(p) else {}
+    if not A and not R:
+        return ''
+    h = ['<section id="atlas"><h2>From the atlas</h2><p class="dim">The world atlas (scene book, districts, hero buildings, foundry, the 8,000-image archive) '
+         'read for this poem. Blue-edged images are atlas references.</p>']
+    for d in R.get('districts') or []:
+        sw = ''.join(f'<span style="background:{esc(c)}" title="{esc(c)}"></span>' for c in (d.get('body') or []) + ([d['color']] if d.get('color') else []))
+        facts = ''.join(f'<div><b>{k}</b>{esc(d.get(f))}</div>' for k, f in (('hour', 'hour'), ('weather', 'weather'), ('light', 'light_tech'), ('architecture', 'arch'),
+                                                                          ('camera', 'camera'), ('sound', 'sound'), ('design language', 'language')) if d.get(f))
+        h.append(f'<h3 style="font-size:20px">{esc(d.get("name"))} <span class="dim" style="font:12px var(--mono)">{esc(d.get("mood"))}</span></h3>'
+                 f'<div class="swatches">{sw}</div><div class="facts">{facts}</div>')
+    if A.get('district_language'):
+        h.append(f'<p class="essence" style="font-size:17px">{esc(A["district_language"])}</p>')
+    if A.get('best'):
+        h.append('<div class="grid">' + ''.join(
+            f'<div class="card"><img src="{esc(b.get("img"))}" alt="{esc(b.get("element"))}" loading="lazy" class="atl"><div class="chips"><span class="chip atl">{esc(b.get("use_for"))}</span></div>'
+            f'<h3>{esc(b.get("element"))}</h3><p class="dim">{esc(b.get("why"))}</p></div>' for b in A['best']) + '</div>')
+    scenes = {s['key']: s for s in R.get('scenes') or []}
+    stg = A.get('staging') or [{'scene': k, 'name': s['name'], 'shot': s.get('block') or s.get('camera'),
+                                'refs': [v['img'] for v in s['views'] if v['img']]} for k, s in scenes.items()]
+    if stg:
+        h.append('<h3 style="font-size:20px;margin-top:8px">Staging, scene by scene</h3>')
+        for g in stg:
+            sc = scenes.get(g.get('scene'), {})
+            refs = ''.join(f'<img src="{esc(r)}" alt="" loading="lazy" class="atl">' for r in (g.get('refs') or [])[:4])
+            lines = f'<p class="dim" style="font-style:italic">{esc(" ".join(sc.get("lines") or []))}</p>' if sc.get('lines') else ''
+            book = f'<p class="dim"><b>Scene book:</b> {esc(sc.get("camera"))}. {esc(sc.get("here") or "")}</p>' if sc.get('camera') else ''
+            where = (' · set ' + esc(g['set'])) if g.get('set') else ''
+            h.append(f'<div class="stage"><div class="refs">{refs}</div><div style="display:grid;gap:6px;align-content:start">'
+                     f'<div class="dim" style="font:12px var(--mono)">{esc(g.get("scene"))}{where}</div><h3>{esc(g.get("name") or sc.get("name"))}</h3>'
+                     f'{lines}<p>{esc(g.get("shot"))}</p>{book}</div></div>')
+    if A.get('heroes'):
+        rh = {x['id']: x for x in R.get('heroes') or []}
+        cards = []
+        for x in A['heroes']:
+            rooms = (rh.get(x.get('id')) or {}).get('rooms')
+            rooms = f'<p class="dim" style="font-size:13px"><b>Rooms:</b> {esc("; ".join(rooms))}</p>' if rooms else ''
+            cards.append(f'<div class="card"><div class="refs">{atlas_imgs(x.get("refs"), 130, 90)}</div><h3>{esc(x.get("name"))}</h3><p>{esc(x.get("in_poem"))}</p>'
+                         f'<p class="dim"><b>Build as cards:</b> {esc(x.get("build_as_cards"))}</p>{rooms}</div>')
+        h.append('<h3 style="font-size:20px;margin-top:8px">Hero buildings</h3><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(420px,1fr))">' + ''.join(cards) + '</div>')
+    if A.get('world_details'):
+        h.append('<h3 style="font-size:20px;margin-top:8px">World details to put on screen</h3><div class="tablewrap"><table><thead><tr><th>Detail</th><th>Where</th><th>As</th></tr></thead><tbody>' +
+                 ''.join(f'<tr><td>{esc(w.get("detail"))}</td><td>{esc(w.get("where"))}</td><td>{esc(w.get("as"))}</td></tr>' for w in A['world_details']) + '</tbody></table></div>')
+    if A.get('transitions'):
+        h.append('<div class="tablewrap"><table><thead><tr><th>Transition</th><th>How</th></tr></thead><tbody>' +
+                 ''.join(f'<tr><td>→ {esc(t.get("to"))}</td><td>{esc(t.get("how"))}</td></tr>' for t in A['transitions']) + '</tbody></table></div>')
+    h.append('</section>')
+    return '\n'.join(h)
 
 
 def nav(dos, cur):
     links = ''.join(f'<a href="{esc(d["num"])}.html"{" aria-current=\"page\"" if d["num"] == cur else ""}>{esc(d["num"])}</a>' for d in dos)
-    return f'''<header class="top"><a href="../../index.html" id="wy-index">← Index</a><a href="index.html">All poems</a>{links}<a href="../kits.html">Character kits</a></header>'''
+    return f'''<header class="top"><a href="../../index.html" id="wy-index">← Index</a><a href="index.html">All poems</a>{links}<a href="../kits.html">Character kits</a>{SECTIONS if cur else ''}</header>'''
+
+
+SECTIONS = ''.join(f'<a href="#{k}" style="border-style:dashed">{k}</a>' for k in ('footage', 'atlas', 'cast', 'props', 'places', 'kits'))
 
 
 SCRIPT = '''<script>
@@ -130,6 +200,7 @@ def page(D, dos):
         h.append('<div class="tablewrap"><table><thead><tr><th>Clip</th><th>Use for</th><th>Why</th></tr></thead><tbody>' +
                  ''.join(f'<tr><td style="font:12px var(--mono)">{esc(c.get("file"))}</td><td>{esc(c.get("use_for"))}</td><td>{esc(c.get("why"))}</td></tr>' for c in D['clips']) + '</tbody></table></div>')
     h.append('</section>')
+    h.append(atlas_section(D))
     # cast
     h.append('<section id="cast"><h2>The cast</h2>')
     for c in D.get('characters') or []:
@@ -146,17 +217,19 @@ def page(D, dos):
           <dt>Hands</dt><dd><div class="chips">{"".join(f'<span class="chip">{esc(x)}</span>' for x in c.get("hands") or [])}</div></dd>
           <dt>Props</dt><dd><div class="chips">{"".join(f'<span class="chip">{esc(x)}</span>' for x in c.get("props") or [])}</div></dd>
           <dt>Design</dt><dd>{esc(c.get("design_notes"))}</dd>
-          <dt>New parts</dt><dd>{"<br>".join(esc(x) for x in c.get("new_parts") or [])}</dd></dl></div></div>''')
+          <dt>New parts</dt><dd>{"<br>".join(esc(x) for x in c.get("new_parts") or [])}</dd>
+          {f'<dt>Atlas</dt><dd><div class="refs">{atlas_imgs(c.get("atlas_refs"))}</div></dd>' if c.get("atlas_refs") else ''}</dl></div></div>''')
     h.append('</section>')
     # props
     h.append('<section id="props"><h2>Props</h2><div class="grid">' + ''.join(
         f'''<div class="card"><h3>{"★ " if p.get("hero") else ""}{esc(p.get("name") or p.get("id"))} <span class="dim" style="font:12px var(--mono)">{esc(p.get("scale_cm"))} cm</span></h3>
         <p>{esc(p.get("look"))}</p><p class="dim"><b>Build:</b> {esc(p.get("build"))}</p>
         <div class="chips">{"".join(f'<span class="chip hot">{esc(s)}</span>' for s in p.get("states") or [])}{"".join(f'<span class="chip">{esc(w)}</span>' for w in p.get("who") or [])}</div>
-        <div class="refs">{"".join(f'<img src="{still(r)}" alt="reference still" loading="lazy">' for r in p.get("refs") or [])}</div></div>''' for p in D.get('props') or []) + '</div></section>')
+        <div class="refs">{"".join(f'<img src="{still(r)}" alt="reference still" loading="lazy">' for r in p.get("refs") or [])}{atlas_imgs(p.get("atlas_refs"))}</div>
+        {'<div class="chips"><span class="chip atl">found in the atlas</span></div>' if p.get("from_atlas") else ''}</div>''' for p in D.get('props') or []) + '</div></section>')
     # sets
     h.append('<section id="places"><h2>Places</h2><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(420px,1fr))">' + ''.join(
-        f'''<div class="card" id="s-{esc(s.get("id"))}"><div class="refs">{"".join(f'<img src="{still(r)}" alt="reference still" loading="lazy" style="width:190px;height:107px">' for r in s.get("refs") or [])}</div>
+        f'''<div class="card" id="s-{esc(s.get("id"))}"><div class="refs">{"".join(f'<img src="{still(r)}" alt="reference still" loading="lazy" style="width:190px;height:107px">' for r in s.get("refs") or [])}{atlas_imgs(s.get("atlas_refs"), 190, 107)}</div>
         <h3>{esc(s.get("name"))}</h3><p>{esc(s.get("look"))}</p><p class="dim"><b>Light:</b> {esc(s.get("light"))}</p>
         <div class="tablewrap layers"><table><tbody>{"".join(f'<tr><td>{k}</td><td>{esc((s.get("layers") or {}).get(k))}</td></tr>' for k in ("sky", "back", "mid", "front", "floor"))}</tbody></table></div>
         {f'<p class="dim">Also in: {esc(", ".join(s.get("reuse") or []))}</p>' if s.get("reuse") else ''}</div>''' for s in D.get('sets') or []) + '</div></section>')

@@ -41,7 +41,7 @@ def compose(a_img, still_ids, b_text, style, b_title):
     d.text((2068, 48), b_title[:42], font=font(FONT, 19), fill=(110, 100, 90))
     y = 84
     for sid in still_ids[:3]:
-        p = os.path.join(STILLS, f'{sid}.jpg')
+        p = os.path.join(POEMS, sid) if '/' in sid else os.path.join(STILLS, f'{sid}.jpg')  # atlas refs are paths
         if os.path.exists(p):
             t = Image.open(p).convert('RGB')
             t.thumbnail((600, 300))
@@ -119,6 +119,29 @@ def set_sheet(P, s):
     return im
 
 
+HERO_BANDS = [('facade', 'the front, openings cut through'), ('openings', 'doors, windows, shutters: each on a brad'),
+              ('interior', 'the back wall seen through the openings'), ('floor', 'floor and furniture'), ('broken', 'the changed or ruined state')]
+
+
+def hero_sheet(P, x):
+    """A hero building as cards: facade, openings, interior, floor, broken state, on one ground line."""
+    im, d = sheet_frame(f"{P['num']}.hero.{x['id']}", f"{P['title']} · {x.get('name')} · the building as cards; ground on green, swing pivots on green crosses", 4.0)
+    y, h = 100, 190
+    for k, note in HERO_BANDS:
+        d.rectangle([60, y, K.SHEET_W - 60, y + h], fill=GHOST)
+        d.text((72, y + 8), k.upper(), font=font(FONTB, 18), fill=INK)
+        d.text((190, y + 10), note, font=font(FONT, 14), fill=(90, 82, 72))
+        fl = y + h - 24
+        d.line([(60, fl), (K.SHEET_W - 60, fl)], fill=(60, 140, 80), width=2)
+        if k == 'openings':
+            for i in range(4):
+                cross(d, (300 + i * 380, y + h * .45), SOCK_A, r=8)
+        else:
+            cross(d, (K.SHEET_W / 2, fl), SOCK_A, r=8)
+        y += h + 12
+    return im
+
+
 def fx_sheet(P):
     fx = [f for f in (P.get('fx') or []) if 'paint' in str(f.get('how', '')) or f.get('how') == 'both']
     im, d = sheet_frame(f"{P['num']}.fx", f"{P['title']} · effects painted as cards (the coded ones are drawn by the rig)", 4.0)
@@ -143,8 +166,8 @@ def main():
         # props
         im, props = props_sheet(P)
         refs = []
-        for p in props:
-            refs += [r for r in p.get('refs') or [] if r not in refs]
+        for p in props:  # atlas first: chosen by eye for the object itself
+            refs += [r for r in (p.get('atlas_refs') or [])[:1] + (p.get('refs') or []) if r not in refs]
         txt = '; '.join(f"{p.get('name') or p['id']}: {p.get('look', '')} ({', '.join(p.get('states') or [])})" for p in props[:10])
         compose(im, refs or best, txt, STYLE_PROPS, f"{n} {P['title']} · props").save(os.path.join(OUT, f'{n}.props.jpg'), quality=80)
         prompt = (PKS.TEXT.replace('panel B is who the character is', 'panel B is our footage for these props (reference: copy the object, not the photo style)')
@@ -158,7 +181,7 @@ def main():
             pid = f"{n}.set.{s['id']}"
             L = s.get('layers') or {}
             txt = f"{s.get('name', s['id'])}: {s.get('look', '')} Light: {s.get('light', '')}"
-            compose(im, s.get('refs') or best, txt, STYLE_SET, f"{n} · {s.get('name', s['id'])}").save(os.path.join(OUT, pid + '.jpg'), quality=80)
+            compose(im, (s.get('atlas_refs') or [])[:2] + (s.get('refs') or []) or best, txt, STYLE_SET, f"{n} · {s.get('name', s['id'])}").save(os.path.join(OUT, pid + '.jpg'), quality=80)
             prompt = (PKS.TEXT.replace('panel B is who the character is', 'panel B is our footage for this place (reference: copy the place, not the photo style)')
                       + f"WHAT (panel B): {txt}. SHEET: the place as five separate flat cardboard layers, one per band, painted to stack front to back in a "
                       "multiplane rig: " + '; '.join(f"{k.upper()}: {L.get(k, '')}" for k in LAYERS) +
@@ -167,6 +190,20 @@ def main():
                           'NEVER draw a pelvis, hip, shorts or briefs card (the thighs end in a rounded seat that tucks under the hem), '
                           'a sleeveless vest, lace-up boots, or sunglasses painted onto a head. ', ''))
             out.append({'id': pid, 'kind': 'set', 'title': s.get('name', s['id']), 'image': f'kits/{pid}.jpg', 'prompt': prompt})
+        # hero buildings: facade, openings, interior, broken states, each its own card
+        for x in (P.get('atlas') or {}).get('heroes') or []:
+            im = hero_sheet(P, x)
+            pid = f"{n}.hero.{x['id']}"
+            txt = f"{x.get('name')}: {x.get('in_poem', '')} Build: {x.get('build_as_cards', '')}"
+            compose(im, x.get('refs') or best, txt, STYLE_SET, f"{n} · {x.get('name')}").save(os.path.join(OUT, pid + '.jpg'), quality=80)
+            prompt = (PKS.TEXT.replace('panel B is who the character is', 'panel B is the atlas reference for this building (copy the building, not the photo style)')
+                      + f"WHAT (panel B): {txt}. SHEET: the building as separate flat cardboard cards, one per band: the FACADE with its window and door "
+                      "holes cut clean through; the OPENINGS (doors, shutters, windows) as their own cards on a brass brad at the green cross so they swing; "
+                      "the INTERIOR back wall seen through the openings; the FLOOR and furniture; and its BROKEN or changed state where the poem has one. "
+                      "Keep the ground on the green line in every band so the cards register. " + PKS.RULES.replace(
+                          'NEVER draw a pelvis, hip, shorts or briefs card (the thighs end in a rounded seat that tucks under the hem), '
+                          'a sleeveless vest, lace-up boots, or sunglasses painted onto a head. ', '') + ' No people on this sheet.')
+            out.append({'id': pid, 'kind': 'hero', 'title': x.get('name', x['id']), 'image': f'kits/{pid}.jpg', 'prompt': prompt})
         # painted fx
         im, fx = fx_sheet(P)
         if fx:
