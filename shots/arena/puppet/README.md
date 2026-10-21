@@ -46,6 +46,66 @@ view, and the motion asks for all of them.
     `face_to_expression`.
   - It is sized from the 3D head, not from its foreshortened image.
 
+## What goes in front of what
+
+The cards used to be drawn in one fixed order. Now every part of every actor is
+sorted by its depth from the camera, farthest first, under a few rules that a
+cut-out keeps whatever the angle (`depth_order` in `p3d.py`):
+
+- thighs go under the shorts, the shorts under the vest, the vest under the head;
+- the shin goes under its boot and its thigh;
+- an upper arm goes under its forearm, and the forearm under its hand, unless the
+  piece points away from the camera;
+- **the shoulder rule:** an upper arm goes over the face only when its elbow is in
+  front of the head's surface (15cm in front of its centre). Being nearer than
+  the head's centre isn't enough; that is what put shoulders over chins.
+
+Two actors sort together, so whoever is nearer is drawn in front as the camera
+goes round (`out/ACT-016/turn_f40.png`). Every render measures, on the pixels,
+how much of each drawn head ends up covered by what is painted after it, and
+names what covers it. A head seen from behind counts as covered.
+
+A bug that only showed with two actors: the queued drawing calls looked up each
+actor's joints when they ran, not when they were queued, so actor A's body was
+drawn at actor B's joints and A was left a floating head. Each call now binds its
+own actor.
+
+## In-betweens: the exposure sheet
+
+The bank is Bolas's motion on ones: a new, smoothly eased pose 24 times a second.
+That is how a 3D rig moves. *This Side Up* times its cut-out the stop-motion way
+(TSU-00, the gust test): five keys and four breakdowns, held on twos, switching
+to ones only for the two fastest moments, and never a dissolve or a warp passed
+off as an in-between. `xsheet.py` does the same on the bank:
+
+| mark | meaning |
+| :-- | :-- |
+| K key | an authored acting beat, plus the first and last frame |
+| B breakdown | in each key interval, the frame that strays furthest from a straight key-to-key move (over 6cm): the arc |
+| 1 ones | the take's fastest 8% of frames, and over 5cm a frame |
+| 2 twos | every other frame; the next frame repeats the drawing |
+| H hold | nothing moves more than 0.25cm: the drawing stays up |
+
+Every drawing is a real pose from the bank. ACT-010 is now 104 drawings for 240
+frames: 8 keys and 5 breakdowns, 18 frames on ones, the walk on twos, and holds
+on the thinking beats. A flat 3.2cm-a-frame threshold had put the whole walk on
+ones, so ones are now relative to each take.
+
+## The whole set
+
+    python3 shots/arena/puppet/batch.py         # all 32, four processes, about 10 minutes
+
+For each challenge, `out/<ACT>/` gets:
+
+- `take.mp4`: the take as exposed on the X-sheet;
+- `keys.png`: the cold-read sheet;
+- `xsheet.png`: the dope sheet;
+- `take.json`: the X-sheet, the face checks, and the camera.
+
+`gallery.html` shows them all (serve the repo and open it). Where the authored
+camera hides the faces on the beats, the batch tries the camera at ±30°, ±60° and
+±90° around the vertical and keeps the one that shows the most face.
+
 ## Steering
 
 The camera is free: `Camera(view, yaw, elev, zoom, centre)`. `board.py --yaw --elev`

@@ -84,14 +84,26 @@ class Painter:
     (screen px) painted as one card: rim, then ink edge, then fill, so its internal
     seams disappear and its outline is one line."""
 
-    def __init__(self, bg=(23, 25, 31)):
-        self.im = Image.new('RGBA', (W * SS, H * SS), bg + (255,))
+    def __init__(self, bg=(23, 25, 31), window=None):
+        self.x0, self.y0, x1, y1 = window or (0, 0, W, H)
+        self.w, self.h = int(x1 - self.x0), int(y1 - self.y0)
+        self.im = Image.new('RGBA', (self.w * SS, self.h * SS), bg + (255,))
         self.d = ImageDraw.Draw(self.im)
 
+    def _xy(self, p):
+        return ((p[0] - self.x0) * SS, (p[1] - self.y0) * SS)
+
     def _poly(self, pts, fill, grow=0.0):
-        P = [(p[0] * SS, p[1] * SS) for p in (vec.offset(pts, grow) if grow else pts)]
+        P = [self._xy(p) for p in (vec.offset(pts, grow) if grow else pts)]
         if len(P) >= 3:
             self.d.polygon(P, fill=fill)
+
+    def poly_raw(self, pts, fill, outline=None):
+        self.d.polygon([self._xy(p) for p in pts], fill=fill, outline=outline)
+
+    def ellipse_raw(self, c, rx, ry, fill):
+        x, y = self._xy(c)
+        self.d.ellipse([x - rx * SS, y - ry * SS, x + rx * SS, y + ry * SS], fill=fill)
 
     def card(self, polys, fill, rim=2.4, ink=1.3, rim_col=None):
         polys = [p for p in polys if len(p) >= 3]
@@ -103,10 +115,10 @@ class Painter:
             self._poly(p, vec._hex(fill))
 
     def line(self, pts, col, w):
-        self.d.line([(p[0] * SS, p[1] * SS) for p in pts], fill=vec._hex(col), width=max(1, int(w * SS)), joint='curve')
+        self.d.line([self._xy(p) for p in pts], fill=vec._hex(col), width=max(1, int(w * SS)), joint='curve')
 
     def disc(self, c, r, col, ink=None):
-        x, y = c[0] * SS, c[1] * SS
+        x, y = self._xy(c)
         if ink:
             self.d.ellipse([x - (r + 1) * SS, y - (r + 1) * SS, x + (r + 1) * SS, y + (r + 1) * SS], fill=vec._hex(ink))
         self.d.ellipse([x - r * SS, y - r * SS, x + r * SS, y + r * SS], fill=vec._hex(col))
@@ -118,7 +130,7 @@ class Painter:
     def paste(self, img, M, t):
         """Affine-paste an RGBA image: screen = M @ card + t (screen px)."""
         Ms = M * SS
-        ts = np.asarray(t) * SS
+        ts = (np.asarray(t) - np.array([self.x0, self.y0])) * SS
         Mi = np.linalg.inv(Ms)
         ti = -Mi @ ts
         L = img.transform(self.im.size, Image.AFFINE, (Mi[0, 0], Mi[0, 1], ti[0], Mi[1, 0], Mi[1, 1], ti[1]), resample=Image.BICUBIC)
@@ -126,7 +138,7 @@ class Painter:
         return np.asarray(L.getchannel('A')) > 128
 
     def result(self):
-        return self.im.resize((W, H), Image.LANCZOS).convert('RGB')
+        return self.im.resize((self.w, self.h), Image.LANCZOS).convert('RGB')
 
 
 class Puppet:
@@ -346,10 +358,17 @@ class Puppet:
         mirror = ang < 0
         aa = abs(ang)
         if aa < 28:
-            p, miss = LIBR.pick(self.parts, 'head', view='front', expression=expr)
+            # the front bank has no afraid/reluctant/pain/embarrassed: nearest neighbour,
+            # never the old sunglasses card (critic, depth turn 1)
+            fexpr = {'afraid': 'surprised', 'reluctant': 'strain', 'pain': 'strain', 'embarrassed': 'forced_grin'}.get(expr, expr)
+            p, miss = LIBR.pick(self.parts, 'head', view='front', expression=fexpr)
+            if miss:
+                p, miss = LIBR.pick(self.parts, 'head', view='front', expression='listening')
             mirror = False
         elif aa < 125:
             p, miss = LIBR.pick(self.parts, 'head', view='threequarter_R', expression=expr)
+            if miss:
+                p, miss = LIBR.pick(self.parts, 'head', view='threequarter_R', expression='listening')
         else:
             p, miss = LIBR.pick(self.parts, 'head', view='back')
             mirror = ang > 0      # the back card faces left-of-screen's opposite
@@ -377,65 +396,93 @@ class Puppet:
                 'missing': miss}
 
     # ---------------------------------------------------------------- frame
-    def render(self, f, yaw=None, elev=None, zoom=None, centre=None, props=True, floor=True):
+    def render(self, f, yaw=None, elev=None, zoom=None, centre=None, props=True, floor=True, window=None):
+        """-> (image, notes). window=(x0, y0, x1, y1) in screen px renders only that crop
+        (much faster; a take keeps one window so its frames line up)."""
         cam = Camera(self.V['view'], yaw, elev, zoom, centre)
-        pt = Painter()
+        pt = Painter(window=window)
         notes = []
         if floor:
-            y0 = cam.P([cam.c[0], 0, cam.c[2]])[1]
             fl = [cam.P([cam.c[0] + x, 0, cam.c[2] + z])[:2] for x, z in ((-400, -400), (400, -400), (400, 400), (-400, 400))]
-            pt.d.polygon([(p[0] * SS, p[1] * SS) for p in fl], fill=(31, 34, 41, 255))
+            pt.poly_raw(fl, (31, 34, 41, 255))
         fr = self.V['frames'][f]
         boxes = self.boxes(cam, fr) if props else []
-        for p in boxes:
-            if not p['held']:
-                self.draw_box(pt, p)
+        items, after = [], []          # (key, z, draw); constraints (before, after)
+        K = CANON['limbs']
+        HEAD_R = CANON['head'].get('front_r', 15.0)
         for aid, a in self.actors(f):
             j, Rc, R0 = self.frames_of(a)
-            near = 'L' if cam.P(j['shoulderL'])[2] < cam.P(j['shoulderR'])[2] else 'R'
-            far = 'R' if near == 'L' else 'L'
-            # floor shadow
+            z = lambda p: cam.P(p)[2]
+            near = 'L' if z(j['shoulderL']) < z(j['shoulderR']) else 'R'
             c = cam.P([j['pelvis'][0], 0, j['pelvis'][2]])
-            pt.d.ellipse([(c[0] - 26 * cam.s) * SS, (c[1] - 5 * cam.s) * SS, (c[0] + 26 * cam.s) * SS, (c[1] + 5 * cam.s) * SS], fill=(12, 13, 16, 255))
-            hands = {'L': {'shape': a['hand']['L'], 'grip': a['hand']['gL'], 'palm': a['hand']['pL'] or 'in'},
-                     'R': {'shape': a['hand']['R'], 'grip': a['hand']['gR'], 'palm': a['hand']['pR'] or 'in'}}
-            K = CANON['limbs']
+            pt.ellipse_raw(c, 26 * cam.s, 5 * cam.s, (12, 13, 16, 255))
+            hands = {s: {'shape': a['hand'][s], 'grip': a['hand']['g' + s], 'palm': a['hand']['p' + s] or 'in'} for s in 'LR'}
+            info = {'actor': aid, 'near': near, 'hands': hands}
+            notes.append(info)
 
-            def arm(s):
+            def add(key, zz, fn):
+                items.append([f'{aid}.{key}', zz, fn])
+
+            for s in 'LR':
                 out = R0['x'] * (1 if s == 'L' else -1)
-                self.limb(pt, cam, j['shoulder' + s], j['elbow' + s], *K['uarm'], pipe_dir=out, brads=[j['shoulder' + s], j['elbow' + s]])
-                self.limb(pt, cam, j['elbow' + s], j['wrist' + s], *K['farm'], pipe_dir=out, cuff=K['cuff'])
-                self.hand(pt, cam, j, Rc, s, hands[s])
+                add(f'uarm{s}', z((j['shoulder' + s] + j['elbow' + s]) / 2),
+                    lambda s=s, out=out, j=j: self.limb(pt, cam, j['shoulder' + s], j['elbow' + s], *K['uarm'], pipe_dir=out, brads=[j['shoulder' + s], j['elbow' + s]]))
+                add(f'farm{s}', z((j['elbow' + s] + j['wrist' + s]) / 2),
+                    lambda s=s, out=out, j=j: self.limb(pt, cam, j['elbow' + s], j['wrist' + s], *K['farm'], pipe_dir=out, cuff=K['cuff']))
+                add(f'hand{s}', z(j['wrist' + s] + nrm(j['wrist' + s] - j['elbow' + s]) * 8),
+                    lambda s=s, j=j, Rc=Rc, hands=hands: self.hand(pt, cam, j, Rc, s, hands[s]))
+                add(f'thigh{s}', z((j['hip' + s] + j['knee' + s]) / 2),
+                    lambda s=s, out=out, j=j: self.limb(pt, cam, j['hip' + s], j['knee' + s], *K['thigh'], pipe_dir=out))
+                add(f'shin{s}', z((j['knee' + s] + j['ankle' + s]) / 2),
+                    lambda s=s, out=out, j=j: self.limb(pt, cam, j['knee' + s], j['ankle' + s], *K['shin'], pipe_dir=out, brads=[j['knee' + s]]))
+                add(f'boot{s}', z((j['heel' + s] + j['toe' + s]) / 2),
+                    lambda s=s, j=j: self.boot(pt, cam, j, s, nrm(j['knee' + s] - j['ankle' + s])))
+                P = lambda k: f'{aid}.{k}'
+                after += [(P(f'thigh{s}'), P('shorts')), (P(f'shin{s}'), P(f'boot{s}')), (P(f'shin{s}'), P(f'thigh{s}'))]
+                # an arm piece hangs over its parent unless it points away from the camera
+                if z(j['wrist' + s]) <= z(j['elbow' + s]) + 6:
+                    after.append((P(f'uarm{s}'), P(f'farm{s}')))
+                if z(j['wrist' + s] + nrm(j['wrist' + s] - j['elbow' + s]) * 8) <= z(j['wrist' + s]) + 4:
+                    after.append((P(f'farm{s}'), P(f'hand{s}')))
+                # shoulder rule: the upper arm covers the face only when it is in front of the
+                # head's surface, not merely nearer than its centre (critic: shoulders over chins)
+                if z(j['elbow' + s]) > z(j['head']) - HEAD_R:
+                    after.append((P(f'uarm{s}'), P('head')))
+            add('shorts', z(j['pelvis']), lambda j=j, R0=R0: self.shorts(pt, cam, j, R0))
+            add('vest', z(j['chest']), lambda j=j, Rc=Rc, R0=R0, near=near: (self.vest(pt, cam, j, Rc, R0), pt.brad(cam.P(j['shoulder' + near])[:2], 1.3 * cam.s)))
 
-            def leg(s):
-                out = R0['x'] * (1 if s == 'L' else -1)
-                self.limb(pt, cam, j['knee' + s], j['ankle' + s], *K['shin'], pipe_dir=out, brads=[j['knee' + s]])
-                self.boot(pt, cam, j, s, nrm(j['knee' + s] - j['ankle' + s]))
-                self.limb(pt, cam, j['hip' + s], j['knee' + s], *K['thigh'], pipe_dir=out)
-
-            arm(far)
-            leg(far)
-            leg(near)
-            self.shorts(pt, cam, j, R0)
-            self.vest(pt, cam, j, Rc, R0)
-            pt.brad(cam.P(j['shoulder' + near])[:2], 1.3 * cam.s)
-            info = self.head(pt, cam, j, a, a.get('face'), a.get('effort', 0))
+            def head(a=a, j=j, info=info):
+                info.update(self.head(pt, cam, j, a, a.get('face'), a.get('effort', 0)))
+                info['_head_snapshot'] = (self._head_mask, np.asarray(pt.im)[self._head_mask].copy())
+            # (every queued call binds this actor's joints: a late-bound j drew actor A's
+            # body at actor B's joints and left A a floating head; critic, depth turn 1)
+            add('head', z(j['head']), head)
+            after += [(f'{aid}.shorts', f'{aid}.vest'), (f'{aid}.vest', f'{aid}.head')]
             for p in boxes:
                 if p['held'] and p['held'].startswith(aid + '.'):
-                    self.draw_box(pt, p)
-                    # staging check on the pixels: how much of the drawn head does the
-                    # carried box cover? The skeleton's nose sits behind the drawn face,
-                    # so testing joints missed it (critic, p3d turn 4).
-                    bm = Image.new('L', pt.im.size, 0)
-                    dd = ImageDraw.Draw(bm)
-                    for poly, _ in p['polys']:
-                        dd.polygon([(q[0] * SS, q[1] * SS) for q in poly], fill=255)
-                    hm = self._head_mask
-                    cover = float((np.asarray(bm) > 0)[hm].mean()) if hm.any() else 0.0
-                    if cover > 0.15:
-                        info['face_hidden_by'] = f"{p['id']} ({cover:.0%} of the head)"
-            arm(near)
-            notes.append(dict(info, actor=aid, near=near, hands=hands))
+                    after += [(f'{aid}.vest', 'box.' + p['id'])]
+        for p in boxes:
+            items.append(['box.' + p['id'], p['z'], lambda p=p: self.draw_box(pt, p)])
+        order = depth_order(items, after)
+        drawn_after_head = {}
+        for n, (key, zz, fn) in enumerate(order):
+            fn()
+            if key.endswith('.head'):
+                drawn_after_head[key.split('.')[0]] = [k for k, _, _ in order[n + 1:]]
+        final = np.asarray(pt.im)
+        for info in notes:
+            snap = info.pop('_head_snapshot', None)
+            if snap is None:
+                continue
+            m, before = snap
+            if m.any():
+                changed = np.abs(final[m].astype(int) - before.astype(int)).sum(axis=1) > 30
+                cov = float(changed.mean())
+                info['face_covered'] = round(cov, 3)
+                if cov > 0.12:
+                    info['face_hidden_by'] = f"{cov:.0%} of the head, under: " + ', '.join(
+                        k for k in drawn_after_head.get(info['actor'], []) if not k.startswith(info['actor'] + '.shin'))[:120]
+            info['order'] = [k for k, _, _ in order]
         return pt.result(), notes
 
     def boxes(self, cam, fr):
@@ -453,12 +500,12 @@ class Puppet:
                      'd': ([(-1, -1, -1), (-1, -1, 1), (-1, 1, 1), (-1, 1, -1)], [-1, 0, 0])}
             shade = {'top': '#d9b483', 'bottom': '#8a6a46', 'a': '#c49a6c', 'b': '#b88e60', 'c': '#a77f55', 'd': '#a77f55'}
             polys = [([Pt[i][:2] for i in idx], shade[k]) for k, (idx, nv) in faces.items() if cam.dir(nv)[2] < 0]
-            out.append({'id': pid, 'held': q.get('held'), 'polys': polys})
+            out.append({'id': pid, 'held': q.get('held'), 'polys': polys, 'z': cam.P([cx, cy, cz])[2]})
         return out
 
     def draw_box(self, pt, p):
         for poly, col in p['polys']:
-            pt.d.polygon([(q[0] * SS, q[1] * SS) for q in poly], fill=vec._hex(col), outline=vec._hex('#1a120b'))
+            pt.poly_raw(poly, vec._hex(col), outline=vec._hex('#1a120b'))
 
 
 def face_to_expression(fc, effort):
@@ -491,3 +538,29 @@ def _inside(q, poly):
         if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1 + 1e-12) + x1:
             c = not c
     return c
+
+
+def depth_order(items, after):
+    """Painter's order: farthest first, but every (a, b) in `after` draws a before b.
+    Kahn's algorithm, always taking the farthest part that is free to go."""
+    keys = {k for k, _, _ in items}
+    after = [(a, b) for a, b in after if a in keys and b in keys and a != b]
+    indeg = {k: 0 for k in keys}
+    succ = {k: [] for k in keys}
+    for a, b in after:
+        succ[a].append(b)
+        indeg[b] += 1
+    by = {k: it for it in items for k in [it[0]]}
+    out, free = [], [k for k in keys if indeg[k] == 0]
+    while free:
+        free.sort(key=lambda k: -by[k][1])
+        k = free.pop(0)
+        out.append(by[k])
+        for b in succ[k]:
+            indeg[b] -= 1
+            if indeg[b] == 0:
+                free.append(b)
+    if len(out) < len(items):                      # a cycle: fall back to depth for the rest
+        rest = [it for it in items if it[0] not in {o[0] for o in out}]
+        out += sorted(rest, key=lambda it: -it[1])
+    return out
