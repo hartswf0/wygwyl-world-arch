@@ -42,6 +42,7 @@ BEATS = json.load(open(os.path.join(p3d.ARENA, 'bolas', 'bank', 'beats.json')))
 VIDEO_H = 720
 HOLD_MAX = 24        # frames a held drawing may stay on screen
 TAIL = 18            # frames after the last beat or movement
+MIN_FRAMES = 96      # no take shorter than four seconds
 SWING = 40           # degrees each way for the alternative stagings
 BONES = [('hipL', 'kneeL'), ('kneeL', 'ankleL'), ('hipR', 'kneeR'), ('kneeR', 'ankleR'), ('pelvis', 'neckBase'),
          ('shoulderL', 'elbowL'), ('elbowL', 'wristL'), ('shoulderR', 'elbowR'), ('elbowR', 'wristR'), ('neckBase', 'head')]
@@ -188,6 +189,10 @@ def trimmed(V, beat_frames):
         run = run + 1 if out and x['src'] == out[-1]['src'] else 0
         if run < HOLD_MAX or x['mark'] == 'K':
             out.append(x)
+    if len(out) < MIN_FRAMES:
+        # a near-still vignette (a face, a held breath) keeps its length: cutting every hold
+        # left T136 one second long (critic)
+        out = xs[start:end + 1]
     return out
 
 

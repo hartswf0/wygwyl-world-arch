@@ -110,7 +110,7 @@ class Pen:
         n = max(16, int(r_px))
         self.poly2([(c[0] + r_px * math.cos(t), c[1] + r_px * math.sin(t)) for t in np.linspace(0, 2 * math.pi, n, endpoint=False)], fill, ink)
 
-    def box(self, centre, size, col, ink=1.4, R=None):
+    def box(self, centre, size, col, ink=1.4, R=None, alpha=255):
         """A cuboid about a local centre, faces shaded and only the ones facing the camera."""
         R = self.R if R is None else R
         sx, sy, sz = [v / 2 for v in size]
@@ -123,7 +123,7 @@ class Pen:
                  ((-1, 0, 0), [(-1, -1, -1), (-1, -1, 1), (-1, 1, 1), (-1, 1, -1)], .8)]
         for n, idx, f in faces:
             if self.cam.dir(R @ np.array(n, float))[2] < 0:
-                self.poly2([self.P(V(*i)) for i in idx], _shade(col, f, _rgb(col)[3] if isinstance(col, str) else 255), ink)
+                self.poly2([self.P(V(*i)) for i in idx], _shade(col, f, alpha), ink)
 
     def plane_card(self, img, tl, tr, bl, R=None, min_det=0.12):
         """Map a card onto the local plane through tl, tr, bl (local cm). False if edge-on."""
@@ -343,8 +343,15 @@ def draw(pen, q, f=0):
                  (90, 140, 180, 120), ink=1)
     elif t == 'water':
         w, dp, d = (s + [200, 80, 120][len(s):]) if s else [200, 80, 120]
-        pen.box([0, -dp / 2, 0], [w, dp, d], '#4f86b0', ink=1)
-        pen.poly([[-w / 2, 0, -d / 2], [w / 2, 0, -d / 2], [w / 2, 0, d / 2], [-w / 2, 0, d / 2]], (90, 150, 200, 150), ink=1)
+        dp = min(dp, max(1.0, pen.c[1]))      # a pool ends at the floor: below it the box hung in the air (critic, T141)
+        pen.box([0, -dp / 2, 0], [w, dp, d], '#4f86b0', ink=0, alpha=120)
+        pen.poly([[-w / 2, 0, -d / 2], [w / 2, 0, -d / 2], [w / 2, 0, d / 2], [-w / 2, 0, d / 2]], (120, 170, 210, 90), ink=0)
+        rng = np.random.default_rng(7)           # short light ripples, drifting, no ink
+        for i in range(int(w * d / 900)):
+            x0, z0 = rng.uniform(-w / 2 + 12, w / 2 - 22), rng.uniform(-d / 2 + 6, d / 2 - 6)
+            x0 += 6 * math.sin(f * .05 + i)
+            a, b = P(T([x0, 0.3, z0])), P(T([x0 + rng.uniform(8, 18), 0.3, z0]))
+            pen.pt.d.line([pen.pt._xy(a), pen.pt._xy(b)], fill=(200, 224, 240, 200), width=2)
     elif t == 'hoop':
         pen.box([0, 22, -14], [56, 40, 3], '#efe9dc')
         pen.line([0, -180, -16], [0, 22, -16], 2)

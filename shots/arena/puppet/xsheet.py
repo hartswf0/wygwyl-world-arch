@@ -44,6 +44,25 @@ def joints(V):
     return np.array(F, float)
 
 
+DRIFT_CM = 1.0       # a hold ends once the pose has drifted this far from the drawing on screen
+
+
+def acting(V):
+    """Per frame, what the faces and hands show: a change is a new drawing even when the body
+    holds still (critic: T136 is a seated face changing its mind; it was cut to one second)."""
+    import p3d
+    out = []
+    for fr in V['frames']:
+        k = []
+        for a in fr['a'].values():
+            fc = a.get('face') or {}
+            k.append((p3d.face_to_expression(fc, a.get('effort', 0)), fc.get('eyes'), fc.get('mouth'),
+                      round(float(fc.get('smile') or 0), 1), round(float(fc.get('open') or 0), 1), round(float(fc.get('lid') or 0), 1),
+                      round(float(fc.get('gx') or 0), 1), round(float(fc.get('gy') or 0), 1), a['hand']['L'], a['hand']['R']))
+        out.append(tuple(k))
+    return out
+
+
 def xsheet(V, beat_frames):
     P = joints(V)
     n = len(P)
@@ -63,22 +82,27 @@ def xsheet(V, beat_frames):
         k = int(np.argmax(dev))
         if dev[k] > BREAK_CM and 1 < k < b - a - 1:
             breaks.append(a + k)
+    sig = acting(V)
     out = []
     shown = 0
     for f in range(n):
+        # how far the pose has drifted since the drawing on screen: a slow drift is still a move
+        drift = float(np.linalg.norm(P[f] - P[shown], axis=1).max()) if out else 0.0
         if f in keys:
             mark = 'K'
         elif f in breaks:
             mark = 'B'
+        elif out and sig[f] != sig[shown]:
+            mark = 'F'               # the face or a hand changes: a new drawing, as a cut-out swaps its card
         elif speed[f] > fast:
             mark = '1'
-        elif speed[f] < STILL_CM and out:
+        elif speed[f] < STILL_CM and out and drift < DRIFT_CM:
             mark = 'H'
         elif f % 2 == 0:
             mark = '2'
         else:
             mark = None              # the second exposure of a drawing on twos
-        if mark in ('K', 'B', '1', '2'):
+        if mark in ('K', 'B', 'F', '1', '2'):
             shown = f
         out.append({'f': f, 'src': shown, 'mark': mark or '-', 'speed': round(float(speed[f]), 2)})
     return out
@@ -88,7 +112,7 @@ def summary(xs):
     marks = [x['mark'] for x in xs]
     drawings = len({x['src'] for x in xs})
     return {'frames': len(xs), 'drawings': drawings, 'keys': marks.count('K'), 'breakdowns': marks.count('B'),
-            'ones': marks.count('1'), 'twos': marks.count('2'), 'held_frames': marks.count('H') + marks.count('-'),
+            'faces': marks.count('F'), 'ones': marks.count('1'), 'twos': marks.count('2'), 'held_frames': marks.count('H') + marks.count('-'),
             'saving': round(1 - drawings / max(1, len(xs)), 2)}
 
 

@@ -23,7 +23,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import p3d, propcards
+import p3d, propcards, dummyhead
 from p3d import nrm
 
 SKINS = json.load(open(os.path.join(HERE, 'skins.json')))
@@ -90,6 +90,36 @@ class CardRig(p3d.Puppet):
         aa = abs(ang)
         name = 'front' if aa < 30 else 'threequarter' if aa < 65 else 'profile' if aa < 120 else 'threequarter_back' if aa < 150 else 'back'
         return name, ang
+
+    BOUNDS = (30, 65, 120, 150)
+
+    def body_view(self, cam, Rc, R0, aid):
+        """The view a body is seen in, for its torso and head cards: the horizontal facing of
+        the chest, or of the pelvis when the chest is bent over (a crouching chest points
+        at the floor, and its front/back flipped every frame: critic, T139), with a hold of
+        HYST degrees past each boundary so a view can't strobe."""
+        f = None
+        for v in (Rc['fwd'], R0['fwd'], Rc['up']):
+            h = np.array([v[0], 0.0, v[2]])
+            if np.linalg.norm(h) > 0.5:
+                f = h / np.linalg.norm(h)
+                break
+        if f is None:
+            f = nrm(np.array([Rc['fwd'][0], 0.0, Rc['fwd'][2]]) + 1e-6)
+        d = cam.dir(f)
+        ang = math.degrees(math.atan2(d[0], -d[2]))
+        names = ('front', 'threequarter', 'profile', 'threequarter_back', 'back')
+        aa = abs(ang)
+        idx = sum(aa >= b for b in self.BOUNDS)
+        last = self._views.get(aid) if hasattr(self, '_views') else None
+        if last is not None and last != idx:
+            # stay in the last view until the angle is HYST past the boundary between them
+            b = self.BOUNDS[min(last, idx)]
+            if abs(aa - b) < 8:
+                idx = last
+        self._views = getattr(self, '_views', {})
+        self._views[aid] = idx
+        return names[idx], ang
 
     # ------------------------------------------------------------------ actor
     def actor_items(self, pt, cam, aid, a, add, after, notes, skin):
@@ -237,19 +267,24 @@ class CardRig(p3d.Puppet):
         if H.get('view_from_torso'):
             # the head turns with the torso, one view at a time (critic: a front face on a
             # profile body, the back of the head flickering in for single frames)
-            dock['view'] = self.view_of(cam, Rc['fwd'])
+            dock['view'] = self.body_view(cam, Rc, R0, aid)
 
         def torso(j=j, R0=R0, Rc=Rc):
             T = S['torso']
-            vname, ang = self.view_of(cam, Rc['fwd'])
+            vname, ang = self.body_view(cam, Rc, R0, aid)
             near = {'threequarter': ('front', 'profile') if abs(ang) < 47 else ('profile', 'front'),
                     'threequarter_back': ('profile', 'back') if abs(ang) < 135 else ('back', 'profile')}
             spec = T.get(vname) or next((T[n] for n in near.get(vname, ()) if n in T), None) or T.get('profile') or T['front']
             hem = j['pelvis'] + R0['up'] * 6.0
             mirror = (ang < 0) if vname in ('threequarter', 'profile', 'threequarter_back') else False
+            width = 1.0
             if T.get('faces') == 'front':
                 mirror = left
-            self.place(pt, cam, spec, hem, j['neckBase'], T['cm'], mirror=mirror)
+                # a front-only bodice seen side-on narrows, so the arms do not hang from the
+                # middle of a full-width front view (critic: an arm pinned mid-chest)
+                if 'profile_width' in T:
+                    width = 1.0 - (1.0 - T['profile_width']) * min(1.0, abs(math.sin(math.radians(ang))))
+            self.place(pt, cam, spec, hem, j['neckBase'], T['cm'], mirror=mirror, width=width)
             info['torso_view'] = vname
         add('torso', z(j['chest']), torso)
 
@@ -259,8 +294,16 @@ class CardRig(p3d.Puppet):
                 self._head_dock = dock
                 info.update(self.head(pt, cam, j, a, a.get('face'), a.get('effort', 0)))
                 self._head_dock = None
+            elif Hs.get('code') == 'dummy':
+                dummyhead.draw(pt, cam, j, a, p3d.vec._hex(Hs['colour']), getattr(self, '_f', 0))
+                c, r = cam.P(j['head']), np.linalg.norm(j['headTop'] - j['head']) * 1.05 * cam.s
+                H_, W_ = pt.im.size[1], pt.im.size[0]
+                yy, xx = np.ogrid[:H_, :W_]
+                cx, cy = pt._xy(c)
+                self._head_mask = (xx - cx) ** 2 + (yy - cy) ** 2 < (r * p3d.SS) ** 2
+                info['head'] = 'dummy (Crash Lab face)'
             elif 'bank' in Hs:
-                vname, ang = self.view_of(cam, Rc['fwd'])
+                vname, ang = self.body_view(cam, Rc, R0, aid)
                 expr = Hs['expr'].get(p3d.face_to_expression(a.get('face') or {}, a.get('effort', 0)), 'neutral')
                 view = 'front' if vname == 'front' else 'side'
                 spec = {'file': Hs['bank'][view].format(e=expr), 'A': Hs['neck'], 'B': Hs['crown']}
@@ -351,6 +394,34 @@ class CardRig(p3d.Puppet):
         b['j'] = [None if q is None else list(base + (q - base) * k) for q in J]
         return b, k
 
+    def pool_at(self, j, pools):
+        """The pool this actor stands in, if any (pelvis over its footprint)."""
+        for q in pools:
+            w, dp, d = (q.get('size') or [200, 80, 120]) + [200, 80, 120][len(q.get('size') or []):]
+            if abs(j['pelvis'][0] - q['pos'][0]) < w / 2 and abs(j['pelvis'][2] - q['pos'][2]) < d / 2:
+                return q
+        return None
+
+    def waterline(self, pt, cam, j, q, before):
+        """Wading: whatever of the actor is under the surface is seen through the water, tinted
+        and faint, cut by a ripple line (critic, T141: he walked on top of a blue slab)."""
+        y = q['pos'][1]
+        c = cam.P([j['pelvis'][0], y, j['pelvis'][2]])
+        wy = int((c[1] - pt.y0) * p3d.SS)
+        if wy >= pt.im.size[1]:
+            return
+        wy = max(0, wy)
+        box = (0, wy, pt.im.size[0], pt.im.size[1])
+        a = np.asarray(pt.im.crop(box)).astype(float)
+        b = np.asarray(before.crop(box)).astype(float)
+        tint = np.array([70, 120, 160, 255], float)
+        drawn = (np.abs(a - b).sum(axis=2) > 6)[..., None]      # only the actor's own pixels
+        under = np.where(drawn, b * 0.7 + (a * 0.55 + tint * 0.45) * 0.3, a)
+        pt.im.paste(Image.fromarray(under.astype(np.uint8)), box[:2])
+        r = 30 * cam.s
+        pt.d.ellipse([pt._xy((c[0] - r, c[1] - r * .18)), pt._xy((c[0] + r, c[1] + r * .18))],
+                     outline=(200, 225, 240, 255), width=max(2, int(1.2 * p3d.SS)))
+
     def boxes(self, cam, fr):
         """Props the Crash Lab's way (propcards.py): its pivots, rotation and states, in the
         cast's cardboard, instead of flat-shaded cuboids."""
@@ -376,9 +447,9 @@ class CardRig(p3d.Puppet):
             skin = self.cast.get(aid, 'man')
             b, k = self.retarget(a, skin)
             actors.append((aid, b, skin))
-            for s in 'LR':
-                orig[(aid, s)] = np.array(a['j'][p3d.J['wrist' + s]], float)
-                wrists[(aid, s)] = np.array(b['j'][p3d.J['wrist' + s]], float)
+            for s, jn in (('L', 'wristL'), ('R', 'wristR'), ('h', 'headTop')):    # 'h': a hat held on the head
+                orig[(aid, s)] = np.array(a['j'][p3d.J[jn]], float)
+                wrists[(aid, s)] = np.array(b['j'][p3d.J[jn]], float)
         # a held prop keeps its offset from the holding hand, after retargeting
         P2 = {}
         for pid, q in fr.get('p', {}).items():
@@ -402,13 +473,20 @@ class CardRig(p3d.Puppet):
                 if p['held'] and p['held'].startswith(aid + '.'):
                     items.append(['box.' + p['id'], p['z'], lambda p=p: self.draw_box(pt, p)])
                     after.append((f'{aid}.torso', 'box.' + p['id']))
-            groups.append((cam.P(j['pelvis'])[2], p3d.depth_order(items, after)))
+            groups.append((cam.P(j['pelvis'])[2], p3d.depth_order(items, after), (aid, j)))
+        pools = [q for q in fr.get('p', {}).values() if q.get('type') == 'water' and q.get('pos') and not q.get('held')]
         for p in boxes:
             if not p['held']:
-                groups.append((p['z'], [['box.' + p['id'], p['z'], lambda p=p: self.draw_box(pt, p)]]))
-        for zz, order in sorted(groups, key=lambda g: -g[0]):
+                # a pool is the ground the actors stand in: drawn first, under everything
+                zz = 1e9 if p['type'] == 'water' else p['z']
+                groups.append((zz, [['box.' + p['id'], p['z'], lambda p=p: self.draw_box(pt, p)]], None))
+        for zz, order, who in sorted(groups, key=lambda g: -g[0]):
+            pool = self.pool_at(who[1], pools) if who and pools else None
+            before = pt.im.copy() if pool else None
             for key, z2, fn in order:
                 fn()
+            if pool:
+                self.waterline(pt, cam, who[1], pool, before)
         final = np.asarray(pt.im)
         for info in notes:
             snap = info.pop('_head_snapshot', None)
