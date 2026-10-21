@@ -255,6 +255,7 @@ def generate_poem_page(num, b_data):
 <header class="prod-header">
   <a href="../production.html">← Production Master</a>
   <a href="../kits.html">Kits Explorer</a>
+  <a href="{num}.html">Design brief, atlas &amp; prompts →</a>
   <a href="../../index.html">Suite Index</a>
   <span class="sp"></span>
   <span style="font:600 13px var(--mono);color:var(--card)">POEM {num}</span>
@@ -331,7 +332,7 @@ def generate_poem_page(num, b_data):
     {''.join(scenes_html)}
   </section>
 </main>
-<script src="../nav.js" defer></script>
+<script src="../../nav.js" defer></script>
 </body>
 </html>
 """
@@ -416,6 +417,7 @@ def generate_master_portal(breakdowns):
   <a href="../index.html">← Suite Index</a>
   <h1>WYGWYL Production Bible<small>EVERY POEM · EVERY PLACE · ALL PROPS &amp; KITS</small></h1>
   <span class="sp"></span>
+  <a href="poems/index.html">Poem design pages (briefs, atlas, prompts) →</a>
   <a href="kits.html" style="color:var(--ok);border-color:var(--ok)">Character Kits (140 Parts) →</a>
   <a href="arena/parts/kit3/v2/kits.json">kits.json</a>
 </header>
@@ -471,7 +473,7 @@ def generate_master_portal(breakdowns):
     </div>
   </section>
 </main>
-<script src="nav.js" defer></script>
+<script src="../nav.js" defer></script>
 </body>
 </html>
 """
