@@ -486,21 +486,16 @@ class Puppet:
         return pt.result(), notes
 
     def boxes(self, cam, fr):
+        """Every prop in the frame as flat-shaded polygons (the name is historical: only
+        boxes were drawn at first, which left the ledge, the door, the chair and the balls
+        out of half the challenges; critic, study turn 1)."""
         out = []
         for pid, q in fr.get('p', {}).items():
-            if q.get('type') != 'box' or not q.get('pos') or not q.get('size'):
+            polys = props_polys(cam, q)
+            if not polys:
                 continue
-            (sx, sy, sz), (cx, cy, cz) = q['size'], q['pos']
-            Pt = {(i, k, l): cam.P([cx + i * sx / 2, cy + k * sy / 2, cz + l * sz / 2]) for i in (-1, 1) for k in (-1, 1) for l in (-1, 1)}
-            faces = {'top': ([(-1, 1, -1), (1, 1, -1), (1, 1, 1), (-1, 1, 1)], [0, 1, 0]),
-                     'bottom': ([(-1, -1, -1), (1, -1, -1), (1, -1, 1), (-1, -1, 1)], [0, -1, 0]),
-                     'a': ([(-1, -1, -1), (1, -1, -1), (1, 1, -1), (-1, 1, -1)], [0, 0, -1]),
-                     'b': ([(-1, -1, 1), (1, -1, 1), (1, 1, 1), (-1, 1, 1)], [0, 0, 1]),
-                     'c': ([(1, -1, -1), (1, -1, 1), (1, 1, 1), (1, 1, -1)], [1, 0, 0]),
-                     'd': ([(-1, -1, -1), (-1, -1, 1), (-1, 1, 1), (-1, 1, -1)], [-1, 0, 0])}
-            shade = {'top': '#d9b483', 'bottom': '#8a6a46', 'a': '#c49a6c', 'b': '#b88e60', 'c': '#a77f55', 'd': '#a77f55'}
-            polys = [([Pt[i][:2] for i in idx], shade[k]) for k, (idx, nv) in faces.items() if cam.dir(nv)[2] < 0]
-            out.append({'id': pid, 'held': q.get('held'), 'polys': polys, 'z': cam.P([cx, cy, cz])[2]})
+            pos = q.get('pos') or [0, 0, 0]
+            out.append({'id': pid, 'held': q.get('held'), 'polys': polys, 'z': cam.P(pos)[2], 'type': q.get('type')})
         return out
 
     def draw_box(self, pt, p):
@@ -564,3 +559,87 @@ def depth_order(items, after):
         rest = [it for it in items if it[0] not in {o[0] for o in out}]
         out += sorted(rest, key=lambda it: -it[1])
     return out
+
+
+PROP_COL = {'box': '#c49a6c', 'table': '#7a5232', 'chair': '#8a5a34', 'door': '#6b4a33', 'wall': '#4a4038',
+            'beam': '#8b6b4a', 'water': '#2f5d7c', 'puddle': '#33424f', 'ball': '#d9643a', 'cup': '#e8e2d6',
+            'coin': '#d8b04a', 'book': '#7a2f2f', 'plate': '#e8e2d6', 'stick': '#9b7b52', 'fence': '#7d6a52',
+            'hoop': '#d9643a', 'clock': '#e8e2d6', 'lamp': '#d9c27a', 'candle': '#efe6cf', 'hat': '#2a2a2a',
+            'kite': '#c84a3a', 'pie': '#c99a5a', 'bench': '#7a5232', 'stairs': '#6b5a48', 'suitcase': '#5a3a2a'}
+# sizes for props the bank gives none (cm): cuboid w,h,d
+PROP_DEFAULT = {'cup': [8, 10, 8], 'coin': [3, 0.5, 3], 'book': [16, 3, 22], 'plate': [22, 1.5, 22], 'pie': [22, 5, 22],
+                'clock': [30, 30, 4], 'lamp': [30, 150, 30], 'candle': [3, 14, 3], 'hat': [26, 12, 26], 'kite': [50, 60, 2],
+                'suitcase': [45, 32, 18], 'key': [6, 1, 2], 'letter': [22, 0.5, 14], 'skull': [16, 18, 18], 'globe': [30, 30, 30],
+                'bell': [12, 14, 12], 'broom': [6, 130, 6], 'mirror': [50, 120, 3], 'window': [80, 100, 4], 'screen': [120, 80, 4]}
+
+
+def _shade(hexcol, f):
+    c = [int(hexcol[i:i + 2], 16) for i in (1, 3, 5)]
+    return '#%02x%02x%02x' % tuple(max(0, min(255, int(v * f))) for v in c)
+
+
+def _cuboid(cam, c, size, yaw, col):
+    sx, sy, sz = size
+    cy, sn = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+    def W(i, k, l):
+        x, y, z = i * sx / 2, k * sy / 2, l * sz / 2
+        return [c[0] + x * cy + z * sn, c[1] + y, c[2] - x * sn + z * cy]
+    P = {(i, k, l): cam.P(W(i, k, l)) for i in (-1, 1) for k in (-1, 1) for l in (-1, 1)}
+    faces = [([(-1, 1, -1), (1, 1, -1), (1, 1, 1), (-1, 1, 1)], [0, 1, 0], 1.1),
+             ([(-1, -1, -1), (1, -1, -1), (1, -1, 1), (-1, -1, 1)], [0, -1, 0], 0.6),
+             ([(-1, -1, -1), (1, -1, -1), (1, 1, -1), (-1, 1, -1)], [-sn, 0, -cy], 1.0),
+             ([(-1, -1, 1), (1, -1, 1), (1, 1, 1), (-1, 1, 1)], [sn, 0, cy], 0.92),
+             ([(1, -1, -1), (1, -1, 1), (1, 1, 1), (1, 1, -1)], [cy, 0, -sn], 0.82),
+             ([(-1, -1, -1), (-1, -1, 1), (-1, 1, 1), (-1, 1, -1)], [-cy, 0, sn], 0.82)]
+    return [([P[i][:2] for i in idx], _shade(col, f)) for idx, nv, f in faces if cam.dir(nv)[2] < 0]
+
+
+def _disc(cam, c, r, normal, col, n=28):
+    normal = nrm(normal)
+    a = nrm(np.cross(normal, [0, 0, 1] if abs(normal[2]) < .9 else [1, 0, 0]))
+    b = np.cross(normal, a)
+    return [([cam.P(np.asarray(c) + a * r * math.cos(t) + b * r * math.sin(t))[:2] for t in np.linspace(0, 2 * math.pi, n, endpoint=False)], col)]
+
+
+def props_polys(cam, q):
+    t = q.get('type')
+    pos = q.get('pos')
+    if not pos:
+        return []
+    size = q.get('size')
+    size = size if isinstance(size, list) else ([size] if size else None)
+    rot = q.get('rot') or [0, 0, 0]
+    col = PROP_COL.get(t, '#9a8a70')
+    if t == 'ball':
+        r = (size or [11])[0]
+        c = cam.P(pos)
+        return [([[c[0] + r * cam.s * math.cos(a), c[1] + r * cam.s * math.sin(a)] for a in np.linspace(0, 2 * math.pi, 28, endpoint=False)], col)]
+    if t == 'puddle':
+        return _disc(cam, [pos[0], 0.2, pos[2]], (size or [30])[0], [0, 1, 0], col)
+    if t == 'hoop':
+        return _disc(cam, pos, 23, [0, 1, 0], col)
+    if t in ('door', 'wall', 'fence', 'window', 'mirror', 'screen') and size and len(size) <= 2:
+        w = size[0]
+        h = size[1] if len(size) > 1 else 100
+        yaw = rot[1] + (90 if abs(rot[0]) == 90 and t == 'wall' else 0)
+        return _cuboid(cam, [pos[0], pos[1] + h / 2, pos[2]], [w, h, 4], yaw, col)
+    if t == 'chair':
+        y = pos[1]
+        c = [pos[0], y + 45, pos[2]]
+        out = _cuboid(cam, c, [44, 4, 44], rot[1], col)
+        for dx in (-19, 19):
+            for dz in (-19, 19):
+                out += _cuboid(cam, [pos[0] + dx, y + 22, pos[2] + dz], [3, 44, 3], rot[1], _shade(col, .8))
+        out += _cuboid(cam, [pos[0], y + 70, pos[2] - 20], [44, 46, 3], rot[1], col)
+        return out
+    if t == 'bench':
+        return _cuboid(cam, [pos[0], pos[1] + 45, pos[2]], (size if size and len(size) == 3 else [120, 6, 40]), rot[1], col)
+    if size and len(size) == 3:
+        c = list(pos)
+        if c[1] - size[1] / 2 < 0 and not q.get('held'):
+            c[1] = size[1] / 2               # some props give their base, not their centre
+        return _cuboid(cam, c, size, rot[1], col)
+    d = PROP_DEFAULT.get(t)
+    if d:
+        return _cuboid(cam, pos, d, rot[1], col)
+    return []

@@ -1,3 +1,34 @@
+# One rig, two skins: the whole arena
+
+**Study it:** `study.html` (all 32 challenges, the man and the poet, at their
+authored beats). Rebuild it with `python3 study.py && python3 study_page.py`.
+
+`cardrig.py` is the rig. The Bolas motion bank, in 3D, decides each part's angle,
+which view of it to show, and what goes in front of what (`p3d.depth_order`). The
+drawn cards are the look. `skins.json` says which card each bone wears and where
+its sockets are, by eye or from the poet's `assets.json`. Each card is:
+
+- scaled so its socket-to-socket length is the 3D bone length, and held to the
+  skin's width across the bone (`w`), so cards cut at different scales come out
+  on one body: the man's thigh card is a fat oval that would otherwise be 36cm wide;
+- turned to the bone on screen, and squashed along it (never across it) when the
+  bone points at the camera;
+- mirrored when the body faces screen-left.
+
+Both characters run every challenge, and two-actor scenes cast them together:
+the poet fights the man in ACT-016, then the cast swaps. Props come from the bank
+at real size (boxes, ledges, doors, walls, chairs, balls, water). The stage is
+warm paper, because the man's black cards vanished on near-black.
+
+What the earlier code-drawn version (`p3d.py` alone) taught, and what was kept:
+- **Kept:** hands use the Crash Lab's own geometry; the man still wears them,
+  because his hand cards have no left, right or facing. The boots and the head
+  bank follow the bank's foot joints and face fields.
+- **Lost:** drawing the parts in code lost the cardboard, and it is not used for
+  the look any more.
+
+---
+
 # The puppet, drawn from 3D: the man and the Bolas dummy as one thing
 
     python3 shots/arena/puppet/board.py ACT-010 --turn 80             # keys, turnaround, vs main sheet

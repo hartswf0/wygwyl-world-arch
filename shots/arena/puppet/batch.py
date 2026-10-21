@@ -39,9 +39,11 @@ def window(P, cam):
                     pts.append(cam.P(q)[:2])
         for q in fr.get('p', {}).values():
             if q.get('pos') and q.get('size'):
+                sz = q['size'] if isinstance(q['size'], list) else [q['size']]
+                sx, sy = sz[0], sz[1] if len(sz) > 1 else sz[0]     # a ball's size is one number
                 for dx in (-.5, .5):
                     for dy in (-.5, .5):
-                        pts.append(cam.P([q['pos'][0] + dx * q['size'][0], q['pos'][1] + dy * q['size'][1], q['pos'][2]])[:2])
+                        pts.append(cam.P([q['pos'][0] + dx * sx, q['pos'][1] + dy * sy, q['pos'][2]])[:2])
     pts = np.array(pts)
     m = 34 * cam.s
     x0, y0 = pts.min(0) - m

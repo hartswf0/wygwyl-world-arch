@@ -17,7 +17,7 @@ sys.path.insert(0, HERE)
 import p3d
 
 TEXTURE = ('passing', 'heel strike', 'weight onto', 'trailing foot', 'toe off', 'contact')
-BG = (23, 25, 31)
+BG = (60, 56, 50)
 
 
 def crop(img, cam, pelvis, w_cm=150, h_top=125, h_bot=105):
