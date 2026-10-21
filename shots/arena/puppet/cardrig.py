@@ -113,6 +113,12 @@ class CardRig(p3d.Puppet):
             if s in K and left:
                 # a per-side card seen from the other side: the other side's drawing, mirrored
                 spec = dict(K['R' if s == 'L' else 'L'], cm=K['cm'], w=K.get('w'))
+            if 'bent' in K and kind == 'shin':
+                # a deep knee bend wears the sheet's bunched-fabric shin (replacement, not a warp)
+                th = nrm(j['knee' + s] - j['hip' + s])
+                bend = math.degrees(math.acos(float(np.clip(np.dot(th, nrm(B3 - A3)), -1, 1))))
+                if bend > K['bent'].get('from_deg', 75):
+                    spec = dict(K['bent'], cm=K['cm'], w=K.get('w'))
 
             def fn(kind=kind, s=s, A3=A3, B3=B3, spec=spec):
                 info['squash'][kind + s] = round(self.place(pt, cam, spec, A3, B3, spec['cm'], mirror=left), 2)
@@ -132,7 +138,10 @@ class CardRig(p3d.Puppet):
                 if np.linalg.norm(dsc) < 0.45 * foot3 and 'front' in B:
                     # the foot points at or away from the camera: the front or back card, upright
                     spec = B['front'] if cam.dir(to - he)[2] < 0 else B['back']
-                    self.place(pt, cam, spec, an, an - np.array([0, 8.0, 0]), 8.0 * B['cm'] / 27.0 * 1.0, sockets=('A', 'sole'))
+                    # shaft top a little above the ankle brad, sole on the floor under the foot
+                    top = an + np.array([0, 3.0, 0])
+                    drop = max(6.0, top[1] - min(he[1], to[1]) + 1.0)
+                    self.place(pt, cam, spec, top, top - np.array([0, drop, 0]), drop, sockets=('A', 'sole'))
                     return
                 raised = (he[1] - to[1]) > 3.0
                 spec = B['toe'] if raised and 'toe' in B else B['flat']
