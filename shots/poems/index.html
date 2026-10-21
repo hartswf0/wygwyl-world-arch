@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Poems · production design</title><link rel="icon" href="../../favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--ok:#9fe08a;--acc:#e7a35a;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,system-ui,sans-serif}
+header.top{display:flex;align-items:center;gap:10px;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:5}
+header.top a{color:var(--dim);font:12px var(--mono);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:999px}
+header.top a:hover,header.top a[aria-current]{color:var(--card);border-color:var(--card)}
+main{max-width:1320px;margin:0 auto;padding:28px max(18px,env(safe-area-inset-right)) 90px max(18px,env(safe-area-inset-left));display:grid;gap:48px}
+h1{font:400 clamp(38px,6vw,64px)/1 'Permanent Marker',cursive;margin:0;color:var(--ink)}
+h1 span{color:var(--acc)}
+h2{font:400 28px 'Permanent Marker',cursive;margin:0;color:var(--card)}
+h3{font:600 17px Inter;margin:0}
+p{margin:0;max-width:78ch}
+.dim{color:var(--dim)}
+section{display:grid;gap:16px;min-width:0;scroll-margin-top:70px}
+.hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:24px;align-items:center}
+@media (max-width:860px){.hero{grid-template-columns:1fr}}
+.hero img{width:100%;height:auto;border-radius:8px}
+.essence{font-size:19px;line-height:1.5}
+.swatches{display:flex;gap:6px;flex-wrap:wrap}
+.swatches span{width:44px;height:44px;border-radius:6px;border:1px solid var(--line)}
+.text{columns:2 340px;column-gap:32px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+.text div{break-inside:avoid;margin-bottom:6px}
+.text code{font:11px var(--mono);color:var(--acc);margin-right:8px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:8px;align-content:start;min-width:0}
+.card img{width:100%;height:auto;border-radius:5px;display:block;background:#fff}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:12px var(--mono);color:var(--ink);background:#21190f;border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.chip.hot{border-color:var(--acc);color:var(--acc)}
+.refs{display:flex;gap:6px;flex-wrap:wrap}
+.refs img{width:120px;height:68px;object-fit:cover;border-radius:4px}
+.cast{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+@media (max-width:860px){.cast{grid-template-columns:1fr}}
+.cast img{width:100%;height:auto;border-radius:5px;background:#fff}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}
+dt{font:600 11px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.08em;padding-top:3px}
+dd{margin:0}
+pre{white-space:pre-wrap;word-wrap:break-word;font:12px/1.55 var(--mono);color:#e6dccd;background:#0f0c0a;border:1px solid var(--line);border-radius:6px;padding:10px;margin:0;max-height:180px;overflow:auto}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font:600 13px Inter;color:#1a120a;background:var(--card);border:0;border-radius:999px;padding:6px 14px;cursor:pointer;text-decoration:none}
+.btn.ghost{background:none;color:var(--card);border:1px solid var(--card)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.ok{font:12px var(--mono);color:var(--ok)}
+ul.ins{margin:0;padding-left:20px;display:grid;gap:6px;max-width:80ch}
+img.atl{outline:2px solid #3c6f8a;outline-offset:-2px}
+.chip.atl{border-color:#3c6f8a;color:#8fd0f0}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.facts div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:14px}
+.facts b{display:block;font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#8fd0f0;margin-bottom:3px}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+@media (max-width:860px){.stage{grid-template-columns:1fr}}
+.stage .refs img{width:calc(50% - 3px);height:auto;aspect-ratio:16/9}
+.layers td:first-child{font:600 12px var(--mono);color:var(--acc);text-transform:uppercase}
+</style></head><body>
+<header class="top"><a href="../../index.html" id="wy-index">← Index</a><a href="index.html">All poems</a><a href="01.html">01</a><a href="02.html">02</a><a href="03.html">03</a><a href="04.html">04</a><a href="05.html">05</a><a href="06.html">06</a><a href="07.html">07</a><a href="08.html">08</a><a href="09.html">09</a><a href="10.html">10</a><a href="11.html">11</a><a href="12.html">12</a><a href="13.html">13</a><a href="14.html">14</a><a href="../kits.html">Character kits</a></header>
+<main><section><h1>Where you go <span>when you leave</span></h1>
+<p class="essence">Fourteen poems, one page each: the poem, the best of our footage, the cast with their kits, the props in every state, the places as layers, and every kit to generate.</p></section>
+<section><div class="grid">
+<a class="card" href="01.html" style="text-decoration:none;color:inherit"><img src="refs/stills/abac8bce-fd10-4576-b8bb-49497eb29786_1.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">01 · Naraka Market</div><h3 style="font-size:19px">Out of Life</h3><p class="dim">A dim high-rise bedroom where a man reads a poem to a back that will not turn around: the EX on the fire escape, vaping, while the haze eats the room left to right and the window slides away from every step toward it. Then two bodies fall past streaking towers with a gap between them that breathes and never closes, through a slow-motion vintage party and a hole in its floor, until the only light left in the film is the vape ember, a blue speck on black.</p>
+          <div class="chips"><span class="chip">3 characters</span><span class="chip">9 props</span><span class="chip">5 places</span></div></a>
+<a class="card" href="02.html" style="text-decoration:none;color:inherit"><img src="refs/stills/3603f621-18f4-4711-ab93-946cab123329_0.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">02 · The Overseer</div><h3 style="font-size:19px">Flashing Lights</h3><p class="dim">A silent scream: a scream whose rings travel inward. The man floats in black while walls cave on him, wakes after midnight to a phone that rings twice and a mirror that answers his hand exactly, then his pupil opens and we go through it into a winter living room where he is six, a dead seven-year-old stands one pencil notch taller, his parents argue in a car with its hazards flashing, and he throws the tambourine she gave him through the glass.</p>
+          <div class="chips"><span class="chip">6 characters</span><span class="chip">9 props</span><span class="chip">6 places</span></div></a>
+<a class="card" href="03.html" style="text-decoration:none;color:inherit"><img src="refs/stills/590a0c02-03b9-435f-bdaf-fe5e6a4c398a_0.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">03 · Mirror Thread Bay</div><h3 style="font-size:19px">How to break off an engagement</h3><p class="dim">The tambourine thrown through the window in 02 tumbles through black and sails in through a chapel's rose window, still whole, into an empty temple: empty choir stands, empty prayer lines, a dry baptism pool. In time-lapse the cobwebs are built, the pews go, the wedding gifts left at the side doors are split by lightning, bread rots in the rain and blankets hang from puppet strings with nobody on them; then the storm lifts, two sets of mud footprints walk away out of step, and the tambourine finally lands on the shore and shatters.</p>
+          <div class="chips"><span class="chip">2 characters</span><span class="chip">12 props</span><span class="chip">5 places</span></div></a>
+<a class="card" href="04.html" style="text-decoration:none;color:inherit"><img src="refs/stills/3da7e92e-f002-4973-9ea6-826a8b88f494_3.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">04 · Mirror Thread Bay</div><h3 style="font-size:19px">Nevermore</h3><p class="dim">One trail followed twice, each time ending in a body part taken back and sworn over. On a night shore of ash and tambourine pieces, a man in red and black with his hands in his pockets and a hollow chest finds his own heart throbbing in the sand; it floats up and re-enters him, and he says nevermore. He follows it up an incline into a moonlit garden where faith scatters as mustard seeds and golden blooms turn to face him, and in the deepest dark he finds his two hands palm-down on bare ground, puts them back on, stands, and says it again.</p>
+          <div class="chips"><span class="chip">1 characters</span><span class="chip">10 props</span><span class="chip">5 places</span></div></a>
+<a class="card" href="05.html" style="text-decoration:none;color:inherit"><img src="refs/stills/36c9c157-91b7-4ad9-b1d2-e0b1155147cf_3.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">05 · The Ascent</div><h3 style="font-size:19px">Bloodlines</h3><p class="dim">Still night: the poet walks out of the Nevermore field into a parade of afro-futurist ancestors who put stars in his hands, and he names them one by one until they are a constellation of his kin. The same nine-point constellation comes back as the Southern-pine joists over the basement mattress he grew up on, as the veins of blood-light in his fingerprint, and as the veining in the marble wings of a gate that finally opens. It is a poem about inheritance getting bigger: a small man under a wide sky becomes a print too big for the frame, then a gate that runs off all four edges.</p>
+          <div class="chips"><span class="chip">2 characters</span><span class="chip">8 props</span><span class="chip">4 places</span></div></a>
+<a class="card" href="06.html" style="text-decoration:none;color:inherit"><img src="refs/stills/ba11d121-a924-405f-b55c-97f7a19ba439_3.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">06 · The Light Gate &amp; Atlantis Central Plaza</div><h3 style="font-size:19px">Resurrecting Atlantis</h3><p class="dim">Generations walk a yellow-brick causeway out over black water toward a drowned city whose spire tips barely break the surface, while comets carry souls to the capital dome. The waterline falls once across the whole poem and the city comes up streaming, neon and vines on wet marble; the poet pays a glowing coin at the admission booth, walks candlelit narrow streets where music throws rainbows on the walls, and stands in the plaza while every window lights and a crowd raises its arms. It is the suite's one utopia: populated on purpose, and ending at the door of a house party.</p>
+          <div class="chips"><span class="chip">3 characters</span><span class="chip">7 props</span><span class="chip">8 places</span></div></a>
+<a class="card" href="07.html" style="text-decoration:none;color:inherit"><img src="refs/stills/a883ad75-60db-4be8-8e19-19df9111630f_3.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">07 · Naraka Market</div><h3 style="font-size:19px">DJ Turn Me Up</h3><p class="dim">A full house party in an Atlantis house: the DJ drops onto the decks and scratches, and the poet, standing at the bar as in the part 1 reading video, eyes shut and chin pressed down under the weight of his words, tells the love story while a projection wall behind him shows it: ghosts walking out of a dying vineyard, two wedding bands drifting apart, a house trucked off down one-way streets, eleven petals plucked off a daisy, three roads. The whole poem is one climb in volume: starved at the start, turnt up at the end, chin high, the room erupting.</p>
+          <div class="chips"><span class="chip">3 characters</span><span class="chip">11 props</span><span class="chip">4 places</span></div></a>
+<a class="card" href="08.html" style="text-decoration:none;color:inherit"><img src="refs/stills/434b7bdd-0b65-4c2e-83a6-580d9e7f41c0_1.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">08 · Ankhu Spires</div><h3 style="font-size:19px">Newly Single</h3><p class="dim">He leaves the party for an open-air rooftop club over Atlantis, all strobes and blue-pink light, where the dancers smear in shifted time and he stands still and empty. His soul, a glowing see-through copy of him, peels out and floats up, watches the whole city lit below, is set down on a white-hot plain at the equator of a giant planet, and is cooled by angels pouring ice baths; back in the club the same water lands on his body under the strobe. Haze fills the room, the soul comes home, he leans back and breathes it in, and ends on the ledge staring at far mountains, then walks out into a street where he glimpses the EX's back and cannot reach him.</p>
+          <div class="chips"><span class="chip">4 characters</span><span class="chip">4 props</span><span class="chip">5 places</span></div></a>
+<a class="card" href="09.html" style="text-decoration:none;color:inherit"><img src="refs/stills/3238a164-07ee-40bc-a0e9-b7d150ff5252_1.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">09 · The Shrouded Arcade</div><h3 style="font-size:19px">Yet, Heard</h3><p class="dim">Three calls made at the edge of a harbour before leaving: to the lover under a shared moon, to the mother over a black hole that opens in the water, to the father who walks out of the eastern sky. One night on one quay, and the light is the clock: moon high, the dead hour, first grey, the sun coming up out of the harbour mouth. Each call is a dashed line of light strung between two people, and behind every call the same breakup keeps playing on the sidewalk.</p>
+          <div class="chips"><span class="chip">5 characters</span><span class="chip">11 props</span><span class="chip">6 places</span></div></a>
+<a class="card" href="10.html" style="text-decoration:none;color:inherit"><img src="refs/stills/c8158a76-90f8-41b7-81c6-076a892834c8_1.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">10 · The Orange Haze</div><h3 style="font-size:19px">Magic Ride</h3><p class="dim">Alone on the sidewalk after the breakup, the poet finds a motorcycle he wasn't looking for, rubs his aggressions into its steel and rides. The bike holds frame centre and the world streams past it: neon Atlantis, rows of heads that turn, the city's last towers, then mountains, while the night is replaced by morning one dot at a time. He arrives, chilled and innocent, at a ruined chapel on the shore.</p>
+          <div class="chips"><span class="chip">2 characters</span><span class="chip">7 props</span><span class="chip">7 places</span></div></a>
+<a class="card" href="11.html" style="text-decoration:none;color:inherit"><img src="refs/stills/08fe12af-1077-4515-a156-18353f12265f_0.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">11 · Cenotaph Rail</div><h3 style="font-size:19px">New Day</h3><p class="dim">The poet dismounts at a ruined chapel on a foggy shore and, as the morning comes, a new temple builds itself with him: white, clean, modern, counted into being piece by piece. He walks laps round its edgeless pool, reads from a journal, walks on the still sea, and in the last movement the sun clears the ridge and a line of light runs across the valley to the finished temple and to him.</p>
+          <div class="chips"><span class="chip">2 characters</span><span class="chip">8 props</span><span class="chip">6 places</span></div></a>
+<a class="card" href="12.html" style="text-decoration:none;color:inherit"><img src="refs/stills/08fe12af-1077-4515-a156-18353f12265f_0.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">12 · The White Temple &amp; its Pools</div><h3 style="font-size:19px">Reunion</h3><p class="dim">Decades later, the poet hosts his brothers and friends in the white temple he built in 11: hugs with no reason, laughter, football on a wall screen, an old snapshot restaged. Underneath the noise one quantity only grows, the distance between two brothers, from a hug to talking distance to the width of a memory, while a yard of burning hourglasses goes out one by one until a single one is left, and its last ember drifts out over the sea through the gap the wind opened.</p>
+          <div class="chips"><span class="chip">4 characters</span><span class="chip">8 props</span><span class="chip">4 places</span></div></a>
+<a class="card" href="13.html" style="text-decoration:none;color:inherit"><img src="refs/stills/932cb5b5-6b96-4324-96da-64f66e953a71_2.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">13 · Mirror Thread Bay</div><h3 style="font-size:19px">How to Win My Heart</h3><p class="dim">The poet walks down from the white temple to a corner café on the harbor of the heavens and sits at a small table, watching couples, while the tide comes in under the boats. Dusk counts out Jupiter's moons over the water; his younger self watches from the rail, the elders pray with their pearls, and his love letters burn on the quay stones. He harvests a field of scarlet poppies and purple blossoms until it flowers out of his own arms, and then, across the water, a distant window comes into focus with a woman in it, and he takes off his sunglasses and says hello.</p>
+          <div class="chips"><span class="chip">5 characters</span><span class="chip">12 props</span><span class="chip">5 places</span></div></a>
+<a class="card" href="14.html" style="text-decoration:none;color:inherit"><img src="refs/stills/434b7bdd-0b65-4c2e-83a6-580d9e7f41c0_1.jpg" alt="" loading="lazy">
+          <div class="dim" style="font:12px var(--mono)">14 · The Ascent</div><h3 style="font-size:19px">Hot Minute</h3><p class="dim">The finale. Haze gathers on the water and climbs, and everything the poet built, the city, the temple, the harbor, becomes weather; then it takes him last, from the feet up, while he resists. He floats again in the black of 01, but there are no walls this time, and his life flashes past as a reel of the suite's own motifs. Two of him dance and land the spin as a victory, and an old vintage door appears in the black. He opens it on a slow-motion party, the kind he once fell out of a window to escape, walks into the crowd, and the door closes.</p>
+          <div class="chips"><span class="chip">4 characters</span><span class="chip">7 props</span><span class="chip">5 places</span></div></a>
+</div></section></main><script id="prompts" type="application/json">[]</script><script>
+const P = JSON.parse(document.getElementById('prompts').textContent);
+document.body.addEventListener('click', e => {
+  const b = e.target.closest('button.btn[data-i]'); if (!b) return;
+  const ok = b.parentElement.querySelector('.ok');
+  const done = () => { ok.textContent = 'Copied'; setTimeout(() => ok.textContent = '', 1600); };
+  const fallback = () => { const pre = b.closest('.card,.cast')?.querySelector('pre'); if (pre) { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } ok.textContent = 'Press Ctrl+C / Cmd+C'; };
+  try { navigator.clipboard.writeText(P[+b.dataset.i]).then(done, fallback); } catch (err) { fallback(); }
+});
+if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+</script><script src="../../nav.js" defer></script></body></html>

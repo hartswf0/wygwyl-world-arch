@@ -33,7 +33,8 @@
     { id: 'cineosis',   name: 'Cineosis Takes', does: 'Fifty vignettes on the card rig, gated', path: 'shots/arena/puppet/scion.html' },
     { id: 'kit3',       name: 'Puppet Kit 3', does: 'One image + one prompt per parts sheet', path: 'shots/kit3.html' },
     { id: 'kits2',      name: 'Character Kits v2', does: 'Every character, every poem: sheets to generate', path: 'shots/kits.html' },
-    { id: 'design',     name: 'Production Design', does: 'Each poem: reading, kit, props, places, needs', path: 'shots/design/index.html' }
+    { id: 'design',     name: 'Production Design', does: 'Each poem: reading, kit, props, places, needs', path: 'shots/design/index.html' },
+    { id: 'poems',      name: 'Poem Production Design', does: 'One page per poem: footage, cast, props, places, kits', path: 'shots/poems/index.html' }
   ];
   window.WYGWYL_ROUTES = ROUTES;
 
