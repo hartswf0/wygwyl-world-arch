@@ -29,7 +29,10 @@
     { id: 'weave',      name: 'WEAVE',      does: 'Archive, cel and AI in one registered shot', path: 'shots/weave.html' },
     { id: 'arena',      name: 'Acting Arena', does: 'Cut-out rig takes, checked and kept', path: 'shots/arena.html' },
     { id: 'acts',       name: 'Acts Compendium', does: 'All 32 challenges, contact sheets & dossiers', path: 'shots/acts.html' },
-    { id: 'gallery',    name: 'Rig Gallery', does: 'Side-by-side pose & piece disassembly audit', path: 'shots/arena/gallery.html' }
+    { id: 'gallery',    name: 'Rig Gallery', does: 'Side-by-side pose & piece disassembly audit', path: 'shots/arena/gallery.html' },
+    { id: 'cineosis',   name: 'Cineosis Takes', does: 'Fifty vignettes on the card rig, gated', path: 'shots/arena/puppet/scion.html' },
+    { id: 'kit3',       name: 'Puppet Kit 3', does: 'One image + one prompt per parts sheet', path: 'shots/kit3.html' },
+    { id: 'kits2',      name: 'Character Kits v2', does: 'Every character, every poem: sheets to generate', path: 'shots/kits.html' }
   ];
   window.WYGWYL_ROUTES = ROUTES;
 

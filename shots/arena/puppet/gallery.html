@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acting Arena, drawn from 3D</title>
+<style>
+  :root { --bg: #15171c; --card: #1d2027; --ink: #e8e6e1; --dim: #9aa0aa; --amber: #ffc850; --blue: #78c8ff; --red: #f06e5a; --line: #2c3038; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; }
+  header { padding: 28px 16px 8px; max-width: 1280px; margin: 0 auto; }
+  h1 { margin: 0 0 6px; font-size: 26px; }
+  header p { margin: 4px 0; color: var(--dim); max-width: 900px; }
+  .key { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--dim); margin: 10px 0 0; }
+  .key b { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 0; }
+  .filters button { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 16px; padding: 4px 12px; cursor: pointer; font: inherit; font-size: 13px; }
+  .filters button.on { border-color: var(--amber); color: var(--amber); }
+  main { max-width: 1280px; margin: 0 auto; padding: 8px 16px 60px; display: grid; gap: 18px; }
+  article { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; }
+  .top { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
+  .top h2 { margin: 0; font-size: 18px; }
+  .top h2 small { color: var(--dim); font-weight: 400; margin-left: 6px; }
+  .sit { color: var(--dim); margin: 0; }
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; }
+  .stats span { background: #252932; border-radius: 6px; padding: 2px 8px; }
+  .stats .warn { color: var(--red); }
+  .stats .moved { color: var(--blue); }
+  .media { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; align-items: start; }
+  video, img { width: 100%; height: auto; display: block; border-radius: 6px; background: #000; }
+  .keys { overflow-x: auto; }
+  .keys img { width: auto; max-width: none; height: 220px; }
+  .xs img { border-radius: 4px; }
+  @media (max-width: 760px) { .media { grid-template-columns: 1fr; } .keys img { height: 160px; } }
+  .beats { font-size: 13px; color: var(--dim); }
+  .beats em { color: var(--amber); font-style: normal; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Acting Arena, drawn from 3D</h1>
+  <p>Every challenge, with the man drawn from the Bolas bank's 3D joints and painted as the cardboard puppet on the main sheet. Hands use the Crash Lab's own geometry, boots roll on heel, ball and toe, and parts are layered by depth. The head comes from the drawn banks, chosen by where it points and what the face is doing.</p>
+  <p>Timing follows <a href="https://hartswf0.github.io/bolas/this-side-up/" style="color:var(--amber)">This Side Up</a>: keys on the authored beats, breakdowns where the move arcs, holds on twos, and ones only for the fastest moments. Every drawing is a real pose, never a blend. If the authored camera hid a face on the beats, the camera was turned to show it.</p>
+  <div class="key"><span><b style="background:var(--amber)"></b>key</span><span><b style="background:var(--blue)"></b>breakdown</span><span><b style="background:var(--red)"></b>on ones</span><span><b style="background:#6e7887"></b>on twos</span><span><b style="background:#32363e"></b>held</span></div>
+  <div class="filters" id="filters"></div>
+</header>
+<main id="list"><p>Loading out/arena.json…</p></main>
+<script>
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+let all = [], fam = 'all';
+function render() {
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  for (const r of all.filter(r => fam === 'all' || r.family === fam)) {
+    const s = r.xsheet_summary, c = r.camera;
+    const moved = c.used_yaw !== c.authored_yaw;
+    const a = document.createElement('article');
+    a.innerHTML = `
+      <div class="top"><h2>${esc(r.id)} · ${esc(r.title)}<small>${esc(r.family)} · ${esc((r.cast || []).join(', '))}</small></h2>
+        <div class="stats">
+          <span>${s.drawings} drawings / ${s.frames} frames</span>
+          <span>K ${s.keys} · B ${s.breakdowns} · ones ${s.ones}</span>
+          <span class="${r.face_hidden_share > 0.05 ? 'warn' : ''}">face hidden on ${Math.round(r.face_hidden_share * 100)}% of drawings</span>
+          <span class="${moved ? 'moved' : ''}">camera ${moved ? `turned ${c.authored_yaw}° → ${c.used_yaw}°` : 'as authored'}</span>
+        </div></div>
+      <p class="sit">${esc(r.situation)}</p>
+      <div class="media">
+        <video src="out/${r.id}/take.mp4" controls loop muted playsinline preload="none" poster=""></video>
+        <div class="keys"><img loading="lazy" src="out/${r.id}/keys.png" alt="${esc(r.id)} key poses on the authored beats"></div>
+      </div>
+      <div class="xs"><img loading="lazy" src="out/${r.id}/xsheet.png" alt="${esc(r.id)} exposure sheet"></div>
+      <div class="beats">${(r.beats || []).map(b => `<em>f${b[0]}</em> ${esc(b[1])}`).join(' · ')}</div>`;
+    list.appendChild(a);
+  }
+}
+fetch('out/arena.json').then(r => r.json()).then(d => {
+  all = Object.values(d);
+  const fams = ['all', ...new Set(all.map(r => r.family))];
+  const f = document.getElementById('filters');
+  for (const x of fams) {
+    const b = document.createElement('button');
+    b.textContent = x;
+    b.className = x === fam ? 'on' : '';
+    b.onclick = () => { fam = x; [...f.children].forEach(c => c.className = c.textContent === fam ? 'on' : ''); render(); };
+    f.appendChild(b);
+  }
+  render();
+}).catch(e => { document.getElementById('list').innerHTML = '<p>Could not load out/arena.json: serve the repo (python3 -m http.server) and open shots/arena/puppet/gallery.html.</p>'; });
+</script>
+</body>
+</html>
