@@ -1,0 +1,1288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poem 04 · Nevermore · Production Kit · WYGWYL</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+:root{
+  --bg:#0d0b0a;--panel:#16120f;--panel-card:#1c1713;--line:#2a221c;--line-lit:#42362c;
+  --ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--ok:#9fe08a;--bad:#ff7b6b;--acc:#e7a35a;
+  --gold:#f5b942;--teal:#01acd4;--mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,system-ui,sans-serif}
+header.prod-header{display:flex;align-items:center;gap:12px;padding:12px max(18px,env(safe-area-inset-right)) 12px max(18px,env(safe-area-inset-left));border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:10}
+header.prod-header h1{font:400 24px 'Permanent Marker',cursive;margin:0;color:var(--acc)}
+header.prod-header h1 small{font:12px var(--mono);color:var(--dim);margin-left:10px;letter-spacing:.08em}
+header.prod-header a{color:var(--dim);font:12px var(--mono);text-decoration:none;border:1px solid var(--line);padding:5px 12px;border-radius:999px;transition:all .15s}
+header.prod-header a:hover{color:var(--ink);border-color:var(--card)}
+header.prod-header .sp{flex:1}
+nav.p-nav{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0}
+nav.p-nav a{font:12px var(--mono);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 10px;text-decoration:none;transition:all .15s}
+nav.p-nav a:hover{border-color:var(--card);color:var(--card)}
+nav.p-nav a.active{background:var(--card);color:#16120f;font-weight:600;border-color:var(--card)}
+
+main.prod-main{max-width:1380px;margin:0 auto;padding:24px max(18px,env(safe-area-inset-right)) 100px max(18px,env(safe-area-inset-left));display:grid;gap:36px}
+h2{font:400 32px 'Permanent Marker',cursive;margin:0;color:var(--card)}
+h3{font:600 18px Inter;margin:0;color:var(--ink)}
+h4{font:600 14px var(--mono);margin:0;color:var(--acc);text-transform:uppercase;letter-spacing:.05em}
+p{margin:0;max-width:80ch}
+.dim{color:var(--dim)}
+
+.card-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;display:grid;gap:16px}
+.badge{font:11px var(--mono);padding:3px 9px;border-radius:999px;background:#241c14;border:1px solid var(--line);color:var(--card);display:inline-block}
+.badge.ok{border-color:var(--ok);color:var(--ok)}
+.badge.gold{border-color:var(--gold);color:var(--gold)}
+.badge.teal{border-color:var(--teal);color:var(--teal)}
+
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:18px}
+.grid-parts{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+
+.part-item{background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.part-thumb{height:160px;background:#090807 url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='8' height='8' fill='%23120f0c'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%23120f0c'/%3E%3Crect x='8' width='8' height='8' fill='%23181410'/%3E%3Crect y='8' width='8' height='8' fill='%23181410'/%3E%3C/svg%3E");border-radius:6px;display:flex;align-items:center;justify-content:center;padding:6px;overflow:hidden}
+.part-thumb img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
+
+.foot-item{background:#120f0c;border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px}
+.foot-item .title{font:600 13px var(--mono);color:var(--ink);word-break:break-all}
+.foot-item .tags{display:flex;gap:4px;flex-wrap:wrap}
+.foot-item .tag{font:10px var(--mono);background:#1a1510;border:1px solid var(--line);color:var(--dim);padding:1px 6px;border-radius:4px}
+
+.shot-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+.shot-table th,.shot-table td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+.shot-table th{background:#110e0b;font:600 12px var(--mono);color:var(--acc)}
+.shot-table tr:nth-child(even){background:#13100d}
+
+.btn{font:600 12px Inter;color:#16120f;background:var(--card);border:0;border-radius:999px;padding:5px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.ghost{background:none;color:var(--card);border:1px solid var(--card)}
+.btn:hover{background:var(--gold);color:#16120f}
+.btn.ghost:hover{background:rgba(199,154,98,.1);border-color:var(--gold);color:var(--gold)}
+
+.hero-banner{background:radial-gradient(ellipse at top left,#2d2116 0%,#14100c 70%);border:1px solid var(--card);border-radius:14px;padding:28px;display:grid;gap:14px}
+.hero-banner h1{font:400 36px 'Permanent Marker',cursive;margin:0;color:var(--gold)}
+.hero-banner .meta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font:13px var(--mono);color:var(--dim)}
+
+</style>
+</head>
+<body>
+<header class="prod-header">
+  <a href="../production.html">← Production Master</a>
+  <a href="../kits.html">Kits Explorer</a>
+  <a href="../../index.html">Suite Index</a>
+  <span class="sp"></span>
+  <span style="font:600 13px var(--mono);color:var(--card)">POEM 04</span>
+</header>
+<main class="prod-main">
+  <!-- Nav across poems -->
+  <nav class="p-nav"><a href="p01.html" class="">01</a><a href="p02.html" class="">02</a><a href="p03.html" class="">03</a><a href="p04.html" class="active">04</a><a href="p05.html" class="">05</a><a href="p06.html" class="">06</a><a href="p07.html" class="">07</a><a href="p08.html" class="">08</a><a href="p09.html" class="">09</a><a href="p10.html" class="">10</a><a href="p11.html" class="">11</a><a href="p12.html" class="">12</a><a href="p13.html" class="">13</a><a href="p14.html" class="">14</a></nav>
+
+  <!-- Hero Header -->
+  <section class="hero-banner">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+      <div>
+        <span class="badge gold" style="font-size:12px;margin-bottom:6px">POEM 04 · PRODUCTION DESIGN BIBLE</span>
+        <h1>04. Nevermore</h1>
+        <p style="font-size:17px;color:var(--ink);max-width:70ch">a trail followed twice, a vow made twice</p>
+      </div>
+      <div style="text-align:right;display:grid;gap:6px">
+        <span class="badge teal" style="font-size:12px">District: Mirror Thread Bay</span>
+        <span class="dim" style="font:11px var(--mono)">6 Movements · 4 Sets · 11 Props</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1. The Cardboard Cut Parts & Modular Assets -->
+  <section class="card-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div>
+        <h2>🧩 Cardboard Puppet Parts &amp; Poses for Poem 04</h2>
+        <p class="dim">Physical cut cards with visible brass split-pin brads and eyelets, matched directly to this poem's choreographic requirements.</p>
+      </div>
+      <a class="btn" href="../kits.html#rendered-shelf">Browse All 140 Kit Parts →</a>
+    </div>
+    <div class="grid-parts">
+      
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_01.png" alt="part_01" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_01">part_01</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>297×427px</span>
+                  <span class="badge ok">4 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_01.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_02.png" alt="part_02" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_02">part_02</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>127×220px</span>
+                  <span class="badge ok">2 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_02.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/limb_segment_3.png" alt="limb_segment_3" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="limb_segment_3">limb_segment_3</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>155×419px</span>
+                  <span class="badge ok">6 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/limb_segment_3.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/limb_segment_4.png" alt="limb_segment_4" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="limb_segment_4">limb_segment_4</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>144×424px</span>
+                  <span class="badge ok">4 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/limb_segment_4.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/limb_segment_5.png" alt="limb_segment_5" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="limb_segment_5">limb_segment_5</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>124×637px</span>
+                  <span class="badge ok">0 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/limb_segment_5.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/limb_segment_6.png" alt="limb_segment_6" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="limb_segment_6">limb_segment_6</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>199×677px</span>
+                  <span class="badge ok">0 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/limb_segment_6.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_07.png" alt="part_07" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_07">part_07</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>103×168px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_07.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_08.png" alt="part_08" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_08">part_08</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>103×173px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_08.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/limb_segment_9.png" alt="limb_segment_9" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="limb_segment_9">limb_segment_9</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>121×358px</span>
+                  <span class="badge ok">0 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/limb_segment_9.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_10.png" alt="part_10" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_10">part_10</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>71×72px</span>
+                  <span class="badge ok">0 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_10.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_11.png" alt="part_11" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_11">part_11</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>189×155px</span>
+                  <span class="badge ok">3 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_11.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_12.png" alt="part_12" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_12">part_12</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>181×147px</span>
+                  <span class="badge ok">3 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.front/part_12.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/part_01.png" alt="part_01" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_01">part_01</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>183×293px</span>
+                  <span class="badge ok">2 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/part_01.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/torso_or_body_2.png" alt="torso_or_body_2" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="torso_or_body_2">torso_or_body_2</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>331×432px</span>
+                  <span class="badge ok">5 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/torso_or_body_2.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/limb_segment_3.png" alt="limb_segment_3" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="limb_segment_3">limb_segment_3</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>132×580px</span>
+                  <span class="badge ok">9 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/limb_segment_3.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/limb_segment_4.png" alt="limb_segment_4" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="limb_segment_4">limb_segment_4</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>148×647px</span>
+                  <span class="badge ok">4 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/limb_segment_4.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/limb_segment_5.png" alt="limb_segment_5" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="limb_segment_5">limb_segment_5</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>132×581px</span>
+                  <span class="badge ok">6 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/limb_segment_5.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/part_06.png" alt="part_06" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_06">part_06</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>295×228px</span>
+                  <span class="badge ok">2 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/part_06.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/part_07.png" alt="part_07" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_07">part_07</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>219×173px</span>
+                  <span class="badge ok">2 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.body.profile/part_07.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.feet/part_01.png" alt="part_01" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_01">part_01</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>363×268px</span>
+                  <span class="badge ok">2 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.feet/part_01.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.feet/torso_or_body_2.png" alt="torso_or_body_2" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="torso_or_body_2">torso_or_body_2</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>344×303px</span>
+                  <span class="badge ok">2 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.feet/torso_or_body_2.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.feet/part_03.png" alt="part_03" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_03">part_03</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>353×264px</span>
+                  <span class="badge ok">2 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.feet/part_03.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.feet/part_04.png" alt="part_04" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_04">part_04</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>174×315px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.feet/part_04.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.feet/part_05.png" alt="part_05" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_05">part_05</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>165×309px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.feet/part_05.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.feet/part_06.png" alt="part_06" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_06">part_06</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>353×300px</span>
+                  <span class="badge ok">2 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.feet/part_06.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.palm_open_L.png" alt="hand.palm_open_L" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="hand.palm_open_L">hand.palm_open_L</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>310×185px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.palm_open_L.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.palm_open_R.png" alt="hand.palm_open_R" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="hand.palm_open_R">hand.palm_open_R</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>308×153px</span>
+                  <span class="badge ok">0 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.palm_open_R.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.fist.png" alt="hand.fist" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="hand.fist">hand.fist</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>234×244px</span>
+                  <span class="badge ok">5 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.fist.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.point.png" alt="hand.point" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="hand.point">hand.point</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>235×178px</span>
+                  <span class="badge ok">7 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.point.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.grip_bar.png" alt="hand.grip_bar" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="hand.grip_bar">hand.grip_bar</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>296×157px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.grip_bar.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.cup_palm.png" alt="hand.cup_palm" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="hand.cup_palm">hand.cup_palm</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>279×486px</span>
+                  <span class="badge ok">7 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.cup_palm.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.thumbs_up.png" alt="hand.thumbs_up" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="hand.thumbs_up">hand.thumbs_up</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>303×183px</span>
+                  <span class="badge ok">0 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.thumbs_up.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.pinch_grip.png" alt="hand.pinch_grip" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="hand.pinch_grip">hand.pinch_grip</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>281×168px</span>
+                  <span class="badge ok">5 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.pinch_grip.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.splayed.png" alt="hand.splayed" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="hand.splayed">hand.splayed</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>266×201px</span>
+                  <span class="badge ok">9 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.splayed.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.grip_alt.png" alt="hand.grip_alt" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="hand.grip_alt">hand.grip_alt</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>269×151px</span>
+                  <span class="badge ok">9 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.grip_alt.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.relaxed_curl.png" alt="hand.relaxed_curl" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="hand.relaxed_curl">hand.relaxed_curl</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>311×183px</span>
+                  <span class="badge ok">3 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.hands/hand.relaxed_curl.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.heads/head.front.png" alt="head.front" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="head.front">head.front</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>216×420px</span>
+                  <span class="badge ok">3 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.heads/head.front.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.heads/head.threequarter_R.png" alt="head.threequarter_R" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="head.threequarter_R">head.threequarter_R</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>221×410px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.heads/head.threequarter_R.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.heads/head.profile_R.png" alt="head.profile_R" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="head.profile_R">head.profile_R</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>249×405px</span>
+                  <span class="badge ok">2 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.heads/head.profile_R.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.heads/head.threequarter_back.png" alt="head.threequarter_back" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="head.threequarter_back">head.threequarter_back</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>220×408px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.heads/head.threequarter_back.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.heads/head.back.png" alt="head.back" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="head.back">head.back</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>217×414px</span>
+                  <span class="badge ok">0 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.heads/head.back.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.sitting_chair.png" alt="pose.sitting_chair" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="pose.sitting_chair">pose.sitting_chair</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>285×371px</span>
+                  <span class="badge ok">7 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.sitting_chair.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.kneeling_one_knee.png" alt="pose.kneeling_one_knee" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="pose.kneeling_one_knee">pose.kneeling_one_knee</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>318×352px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.kneeling_one_knee.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.lying_back.png" alt="pose.lying_back" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="pose.lying_back">pose.lying_back</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>494×204px</span>
+                  <span class="badge ok">3 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.lying_back.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.lying_side.png" alt="pose.lying_side" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="pose.lying_side">pose.lying_side</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>414×200px</span>
+                  <span class="badge ok">4 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.lying_side.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.deep_crouch.png" alt="pose.deep_crouch" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="pose.deep_crouch">pose.deep_crouch</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>230×291px</span>
+                  <span class="badge ok">6 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.deep_crouch.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.falling_back.png" alt="pose.falling_back" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="pose.falling_back">pose.falling_back</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>433×344px</span>
+                  <span class="badge ok">4 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.falling_back.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/torso_or_body_1.png" alt="torso_or_body_1" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="torso_or_body_1">torso_or_body_1</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>332×332px</span>
+                  <span class="badge ok">5 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/torso_or_body_1.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_02.png" alt="part_02" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_02">part_02</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>229×210px</span>
+                  <span class="badge ok">0 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_02.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_03.png" alt="part_03" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_03">part_03</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>117×117px</span>
+                  <span class="badge ok">3 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_03.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_04.png" alt="part_04" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_04">part_04</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>124×209px</span>
+                  <span class="badge ok">0 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_04.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_05.png" alt="part_05" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_05">part_05</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>258×270px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_05.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_06.png" alt="part_06" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_06">part_06</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>177×309px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_06.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_07.png" alt="part_07" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_07">part_07</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>176×309px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_07.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_08.png" alt="part_08" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_08">part_08</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>187×386px</span>
+                  <span class="badge ok">0 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_08.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_09.png" alt="part_09" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_09">part_09</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>300×216px</span>
+                  <span class="badge ok">6 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_09.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_10.png" alt="part_10" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_10">part_10</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>228×231px</span>
+                  <span class="badge ok">7 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_10.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_11.png" alt="part_11" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_11">part_11</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>210×392px</span>
+                  <span class="badge ok">1 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_11.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_12.png" alt="part_12" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_12">part_12</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>172×207px</span>
+                  <span class="badge ok">7 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_12.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_13.png" alt="part_13" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_13">part_13</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>255×358px</span>
+                  <span class="badge ok">6 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_13.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_14.png" alt="part_14" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_14">part_14</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>211×134px</span>
+                  <span class="badge ok">6 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_14.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_15.png" alt="part_15" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_15">part_15</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>186×149px</span>
+                  <span class="badge ok">4 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_15.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+              <div class="part-item">
+                <div class="part-thumb"><img src="../arena/parts/kit3/v2/cut/props.narrative.master/part_16.png" alt="part_16" loading="lazy"></div>
+                <div style="font:600 12px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="part_16">part_16</div>
+                <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+                  <span>179×142px</span>
+                  <span class="badge ok">2 Brads</span>
+                </div>
+                <a class="btn ghost" href="../arena/parts/kit3/v2/cut/props.narrative.master/part_16.png" download style="margin-top:4px;text-align:center;justify-content:center">Download</a>
+              </div>
+            
+    </div>
+  </section>
+
+  <!-- 2. Sets and Props Specifications -->
+  <section class="grid-2">
+    <div class="card-box">
+      <h2>🏛️ Stage Sets &amp; Places (4)</h2>
+      <p class="dim">Die-cut multiplane environments and cardboard scenic layers.</p>
+      <div style="display:grid;gap:10px;margin-top:8px">
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <span style="font:600 13px var(--mono);color:var(--teal)">shore_night</span>
+            <p class="dim" style="font-size:12px">night/twilight shore: ash of expired wildfires over the sand, charred stumps, debris lifted from the sea floor, chapel remnants and tambourine pieces along the waterline; calm sea, still trees behind; ravens overhead</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <span style="font:600 13px var(--mono);color:var(--teal)">incline_trail</span>
+            <p class="dim" style="font-size:12px">a trail leading up from the shore over an incline toward the fields, moonlit</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <span style="font:600 13px var(--mono);color:var(--teal)">night_garden_field</span>
+            <p class="dim" style="font-size:12px">vast moonlit garden fields: rows of golden-hued blooms, weeds at the edges, deep shadows between rows, muted trees at the far edge</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <span style="font:600 13px var(--mono);color:var(--teal)">field_dark</span>
+            <p class="dim" style="font-size:12px">the same field under cloud: stars muted, the deepest dark of the film; only the patch of bare ground within the poet&#x27;s reach is visible</p>
+          </div>
+        
+      </div>
+    </div>
+    <div class="card-box">
+      <h2>🧰 Narrative Props Kit (11)</h2>
+      <p class="dim">Physical hand props, scale in centimeters, and joint attachment points.</p>
+      <div style="display:grid;gap:10px;margin-top:8px;max-height:480px;overflow:auto">
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font:600 13px var(--mono);color:var(--gold)">tambourine_pieces</span>
+              <span class="badge">10 cm</span>
+            </div>
+            <p class="dim" style="font-size:12px">the shattered tambourine from 03: rim arcs, torn skin, brass jingles</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font:600 13px var(--mono);color:var(--gold)">chapel_remnants</span>
+              <span class="badge">200 cm</span>
+            </div>
+            <p class="dim" style="font-size:12px">pew ends, rose-window lead tracery, stones from 03, ashed over</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font:600 13px var(--mono);color:var(--gold)">sea_debris</span>
+              <span class="badge">80 cm</span>
+            </div>
+            <p class="dim" style="font-size:12px">weed-wrapped wood, rope, shells lifted from the sea floor</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font:600 13px var(--mono);color:var(--gold)">ravens</span>
+              <span class="badge">60 cm</span>
+            </div>
+            <p class="dim" style="font-size:12px">black ravens, 3-5, flying</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font:600 13px var(--mono);color:var(--gold)">heart</span>
+              <span class="badge">12 cm</span>
+            </div>
+            <p class="dim" style="font-size:12px">the poet&#x27;s own heart, anatomical, deep red, beating, faint inner glow</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font:600 13px var(--mono);color:var(--gold)">puzzle_pieces</span>
+              <span class="badge">4 cm</span>
+            </div>
+            <p class="dim" style="font-size:12px">handcrafted wooden puzzle pieces, gilded edges (faith)</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font:600 13px var(--mono);color:var(--gold)">mustard_seeds</span>
+              <span class="badge">0.2 cm</span>
+            </div>
+            <p class="dim" style="font-size:12px">tiny golden-brown mustard seeds, scattered</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font:600 13px var(--mono);color:var(--gold)">golden_blooms</span>
+              <span class="badge">15 cm</span>
+            </div>
+            <p class="dim" style="font-size:12px">golden-hued flower heads on tall stems that turn to face the poet</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font:600 13px var(--mono);color:var(--gold)">weeds</span>
+              <span class="badge">40 cm</span>
+            </div>
+            <p class="dim" style="font-size:12px">dark spiky weeds that recoil</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font:600 13px var(--mono);color:var(--gold)">hand_L</span>
+              <span class="badge">19 cm</span>
+            </div>
+            <p class="dim" style="font-size:12px">the poet&#x27;s left hand, a separate piece, dusty, palm-down; seats onto the left wrist</p>
+          </div>
+        
+          <div style="background:var(--panel-card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font:600 13px var(--mono);color:var(--gold)">hand_R</span>
+              <span class="badge">19 cm</span>
+            </div>
+            <p class="dim" style="font-size:12px">the poet&#x27;s right hand, a separate piece, dusty, palm-down; seats onto the right wrist</p>
+          </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Archive Footage References & 3D Pointcloud Assets -->
+  <section class="card-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div>
+        <h2>🎞️ Archive Footage &amp; 3D Splat References (8)</h2>
+        <p class="dim">Curated camera shots, volumetric haze passes, and real-world reference footage matching Poem 04.</p>
+      </div>
+      <span class="badge ok">1,367 Archive Assets Connected</span>
+    </div>
+    <div class="grid-3" style="margin-top:8px">
+      
+          <div class="foot-item">
+            <div class="title">04-nevermore.mp4</div>
+            <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+              <span>Source: markov</span>
+              <span>135.2s</span>
+            </div>
+            <div class="tags"><span class="tag">a beach with footprints</span><span class="tag">glitch</span><span class="tag">an island</span><span class="tag">sea</span><span class="tag">a desert</span></div>
+          </div>
+        
+          <div class="foot-item">
+            <div class="title">60828987-a216-5a93-b86e-73be8840881b.mp4</div>
+            <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+              <span>Source: archive</span>
+              <span>37.0s</span>
+            </div>
+            <div class="tags"><span class="tag">black and white footage</span><span class="tag">darkness</span><span class="tag">archive footage</span><span class="tag">a tracking shot</span><span class="tag">a wide establishing shot</span></div>
+          </div>
+        
+          <div class="foot-item">
+            <div class="title">04_Nevermore.mp4</div>
+            <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+              <span>Source: film</span>
+              <span>131.0s</span>
+            </div>
+            <div class="tags"><span class="tag">a hallway</span><span class="tag">blue light</span><span class="tag">a pier at night with lights</span><span class="tag">a ballroom</span><span class="tag">a porch at night</span></div>
+          </div>
+        
+          <div class="foot-item">
+            <div class="title">04-nevermore-lead.mp4</div>
+            <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+              <span>Source: markov</span>
+              <span>32.0s</span>
+            </div>
+            <div class="tags"><span class="tag">birds</span><span class="tag">ravens</span><span class="tag">a tracking shot</span><span class="tag">a man walking</span><span class="tag">archive footage</span></div>
+          </div>
+        
+          <div class="foot-item">
+            <div class="title">1021e4df-eff7-5b3d-b2b7-75f45d998dfd.mp4</div>
+            <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+              <span>Source: archive</span>
+              <span>11.5s</span>
+            </div>
+            <div class="tags"><span class="tag">rain</span><span class="tag">a rooftop at night</span><span class="tag">archive footage</span><span class="tag">a wide establishing shot</span><span class="tag">a porch at night</span></div>
+          </div>
+        
+          <div class="foot-item">
+            <div class="title">MOUSSA_04-nevermore.mp4</div>
+            <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+              <span>Source: markov</span>
+              <span>135.3s</span>
+            </div>
+            <div class="tags"><span class="tag">black and white footage</span><span class="tag">glitch</span><span class="tag">archive footage</span><span class="tag">speed</span><span class="tag">a high angle</span></div>
+          </div>
+        
+          <div class="foot-item">
+            <div class="title">67cff112-72dc-5615-8856-9680d4cc2789.mp4</div>
+            <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+              <span>Source: archive</span>
+              <span>4.2s</span>
+            </div>
+            <div class="tags"><span class="tag">archive footage</span><span class="tag">black and white footage</span><span class="tag">a tracking shot</span><span class="tag">a wide establishing shot</span><span class="tag">an old film</span></div>
+          </div>
+        
+          <div class="foot-item">
+            <div class="title">codex_04_Nevermore.mp4</div>
+            <div style="display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim)">
+              <span>Source: film</span>
+              <span>131.0s</span>
+            </div>
+            <div class="tags"><span class="tag">a dream</span><span class="tag">ashes</span><span class="tag">a memory</span><span class="tag">archive footage</span><span class="tag">glitch</span></div>
+          </div>
+        
+    </div>
+  </section>
+
+  <!-- 4. Detailed Shot Breakdown & Choreography -->
+  <section>
+    <h2>🎬 Shot-by-Shot Scene Breakdown &amp; Choreography</h2>
+    <p class="dim">Complete treatment, camera moves, and puppet body postures for each movement.</p>
+    
+          <div class="card-box" style="margin-top:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <h3>Movement WASHED ASHORE <small class="dim" style="font-size:13px;font-family:var(--mono)">(13s)</small></h3>
+              <span class="badge teal">Scene 04.1</span>
+            </div>
+            <p style="font-style:italic;color:var(--dim);border-left:3px solid var(--card);padding-left:12px;margin:4px 0">"What if i followed this / trail to where the / broken pieces have / washed ashore— / &amp; the ashes of / expired wildfires / cover sands &amp; debris / lifted from the night sea / water&#x27;s floor."</p>
+            <p><b>Staging Treatment:</b> Cut to POET (now in dressed in Red/Black outfit with sunglasses), standing on shore at night/twilight. POET&#x27;s hands are in pockets. POET has no heart. Poet walks along looking at decay, remnants, shattered pieces (never see hands, always in pockets), ravens flying overhead.</p>
+            <table class="shot-table">
+              <thead>
+                <tr>
+                  <th>Shot</th>
+                  <th>Framing / Cam</th>
+                  <th>Set</th>
+                  <th>Action</th>
+                  <th>Puppet Bodies</th>
+                  <th>Props</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+              <tr>
+                <td><b>04.1a</b></td>
+                <td><span class="badge">wide</span><br><span class="dim" style="font-size:11px">eye</span></td>
+                <td>shore_night</td>
+                <td>cut to POET standing on the ash-covered shore at twilight, hands in pockets, chapel remnants and debris around him, ravens wheeling overhead</td>
+                <td><b>POET</b> (red_black_sunglasses): front · stand · <i>stands still, taking in the wreckage</i></td>
+                <td>tambourine_pieces, chapel_remnants, ravens</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.1b</b></td>
+                <td><span class="badge">full</span><br><span class="dim" style="font-size:11px">tracking</span></td>
+                <td>shore_night</td>
+                <td>POET walks the trail of shattered tambourine pieces, head bowed to read it, hands never leaving his pockets</td>
+                <td><b>POET</b> (red_black_sunglasses): profile · walk · <i>walks slowly, head down, reading the trail</i></td>
+                <td>tambourine_pieces, sea_debris</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.1c</b></td>
+                <td><span class="badge">medium</span><br><span class="dim" style="font-size:11px">eye</span></td>
+                <td>shore_night</td>
+                <td>POET&#x27;s chest: an empty hollow where the heart should be, the night visible through it</td>
+                <td><b>POET</b> (red_black_sunglasses): front · stand · <i>stops; the hollow in his chest catches the moonlight</i></td>
+                <td>—</td>
+              </tr>
+            
+              </tbody>
+            </table>
+          </div>
+        
+          <div class="card-box" style="margin-top:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <h3>Movement FOLDED WHISPERS <small class="dim" style="font-size:13px;font-family:var(--mono)">(14s)</small></h3>
+              <span class="badge teal">Scene 04.2</span>
+            </div>
+            <p style="font-style:italic;color:var(--dim);border-left:3px solid var(--card);padding-left:12px;margin:4px 0">"the waves will / calm to folded whispers / &amp; the winds / will mute the trees / for the right / level of silence / to find a throbbing heart / left at the midlife / corner we turn toward / the incline— / a familiar heart / which has shaken / off every / sad blue note / life can perform / to overcome / &amp; spread inspiration / &amp; it used to be mine. / I&#x27;ll lift it with care, / putting it back in place. / &amp; tell myself / nevermore—"</p>
+            <p><b>Staging Treatment:</b> POET finds heart on shore, without using hands (still in pockets), heart floats and reenters POET.</p>
+            <table class="shot-table">
+              <thead>
+                <tr>
+                  <th>Shot</th>
+                  <th>Framing / Cam</th>
+                  <th>Set</th>
+                  <th>Action</th>
+                  <th>Puppet Bodies</th>
+                  <th>Props</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+              <tr>
+                <td><b>04.2a</b></td>
+                <td><span class="badge">wide</span><br><span class="dim" style="font-size:11px">eye</span></td>
+                <td>shore_night</td>
+                <td>the waves calm to folded whispers, the trees go still; POET kneels by a half-buried tambourine rim where something throbs</td>
+                <td><b>POET</b> (red_black_sunglasses): threequarter · kneel · <i>kneels at the pile, head bowed, hands still in pockets</i></td>
+                <td>tambourine_pieces, heart</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.2b</b></td>
+                <td><span class="badge">insert</span><br><span class="dim" style="font-size:11px">eye</span></td>
+                <td>shore_night</td>
+                <td>the heart in the sand, beating, shaking off grit</td>
+                <td></td>
+                <td>heart</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.2c</b></td>
+                <td><span class="badge">medium</span><br><span class="dim" style="font-size:11px">eye</span></td>
+                <td>shore_night</td>
+                <td>without his hands the heart lifts by itself, floats slowly across to him and re-enters his chest; he says nevermore</td>
+                <td><b>POET</b> (red_black_sunglasses): profile · kneel · <i>straightens as the heart slides into his chest</i></td>
+                <td>heart</td>
+              </tr>
+            
+              </tbody>
+            </table>
+          </div>
+        
+          <div class="card-box" style="margin-top:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <h3>Movement MUSTARD SEEDS <small class="dim" style="font-size:13px;font-family:var(--mono)">(13s)</small></h3>
+              <span class="badge teal">Scene 04.3</span>
+            </div>
+            <p style="font-style:italic;color:var(--dim);border-left:3px solid var(--card);padding-left:12px;margin:4px 0">"What if i followed this / reclaimed heart to where / the puzzle pieces / of faith are handcrafted / scrambled &amp; scattered as / mustard seeds / into the vast moonlit / night&#x27;s / garden fields."</p>
+            <p><b>Staging Treatment:</b> POET sees trail and follows it up to field, ravens flying overhead. Walking through field as described, (still hands in pockets).</p>
+            <table class="shot-table">
+              <thead>
+                <tr>
+                  <th>Shot</th>
+                  <th>Framing / Cam</th>
+                  <th>Set</th>
+                  <th>Action</th>
+                  <th>Puppet Bodies</th>
+                  <th>Props</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+              <tr>
+                <td><b>04.3a</b></td>
+                <td><span class="badge">wide</span><br><span class="dim" style="font-size:11px">low</span></td>
+                <td>incline_trail</td>
+                <td>POET follows a new trail up the incline from the shore toward the fields, ravens overhead</td>
+                <td><b>POET</b> (red_black_sunglasses): threequarter_back · walk · <i>climbs the trail, heart glowing faintly in his chest</i></td>
+                <td>ravens</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.3b</b></td>
+                <td><span class="badge">insert</span><br><span class="dim" style="font-size:11px">eye</span></td>
+                <td>night_garden_field</td>
+                <td>puzzle pieces of faith, handcrafted, lock together, then scramble and scatter as mustard seeds over the moonlit rows</td>
+                <td></td>
+                <td>puzzle_pieces, mustard_seeds</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.3c</b></td>
+                <td><span class="badge">full</span><br><span class="dim" style="font-size:11px">tracking</span></td>
+                <td>night_garden_field</td>
+                <td>POET walks into the vast moonlit field, hands in pockets, the seeds landing around his feet</td>
+                <td><b>POET</b> (red_black_sunglasses): threequarter · walk · <i>walks into the rows</i></td>
+                <td>mustard_seeds</td>
+              </tr>
+            
+              </tbody>
+            </table>
+          </div>
+        
+          <div class="card-box" style="margin-top:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <h3>Movement THEY TURN TO FACE ME <small class="dim" style="font-size:13px;font-family:var(--mono)">(14s)</small></h3>
+              <span class="badge teal">Scene 04.4</span>
+            </div>
+            <p style="font-style:italic;color:var(--dim);border-left:3px solid var(--card);padding-left:12px;margin:4px 0">"the plants in a golden / hue bloom &amp; faced toward / me / In anticipation— / the weeds repel, / falling into the shadows / where / our memories hide / &amp; mean so little, / in moment of defeat— / as I&#x27;m called forward."</p>
+            <p><b>Staging Treatment:</b> Walking through field as described, (still hands in pockets).</p>
+            <table class="shot-table">
+              <thead>
+                <tr>
+                  <th>Shot</th>
+                  <th>Framing / Cam</th>
+                  <th>Set</th>
+                  <th>Action</th>
+                  <th>Puppet Bodies</th>
+                  <th>Props</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+              <tr>
+                <td><b>04.4a</b></td>
+                <td><span class="badge">wide</span><br><span class="dim" style="font-size:11px">high</span></td>
+                <td>night_garden_field</td>
+                <td>as POET walks the rows the plants bloom golden and turn their faces toward him in anticipation</td>
+                <td><b>POET</b> (red_black_sunglasses): threequarter · walk · <i>walks slowly between blooming rows</i></td>
+                <td>golden_blooms</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.4b</b></td>
+                <td><span class="badge">insert</span><br><span class="dim" style="font-size:11px">low</span></td>
+                <td>night_garden_field</td>
+                <td>the weeds at the row ends recoil and fall back into the shadows</td>
+                <td></td>
+                <td>weeds</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.4c</b></td>
+                <td><span class="badge">medium</span><br><span class="dim" style="font-size:11px">eye</span></td>
+                <td>night_garden_field</td>
+                <td>POET stops; the field leans toward him; he is called forward and steps on</td>
+                <td><b>POET</b> (red_black_sunglasses): front · stand · <i>pauses, then takes a step forward</i></td>
+                <td>golden_blooms</td>
+              </tr>
+            
+              </tbody>
+            </table>
+          </div>
+        
+          <div class="card-box" style="margin-top:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <h3>Movement DEEPEST DARKNESS <small class="dim" style="font-size:13px;font-family:var(--mono)">(12s)</small></h3>
+              <span class="badge teal">Scene 04.5</span>
+            </div>
+            <p style="font-style:italic;color:var(--dim);border-left:3px solid var(--card);padding-left:12px;margin:4px 0">"The clouds mute the stars / for the deepest level of / darkness— / welcoming / extra hard work / to search the bare ground / for two hands—"</p>
+            <p><b>Staging Treatment:</b> POET looking for hands in fields, and not finding them in shadows, hands in pockets)</p>
+            <table class="shot-table">
+              <thead>
+                <tr>
+                  <th>Shot</th>
+                  <th>Framing / Cam</th>
+                  <th>Set</th>
+                  <th>Action</th>
+                  <th>Puppet Bodies</th>
+                  <th>Props</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+              <tr>
+                <td><b>04.5a</b></td>
+                <td><span class="badge">wide</span><br><span class="dim" style="font-size:11px">high</span></td>
+                <td>field_dark</td>
+                <td>clouds mute the stars one by one until the field is the darkest frame in the film</td>
+                <td><b>POET</b> (red_black_sunglasses): threequarter · crouch · <i>small figure bent low in the field</i></td>
+                <td>—</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.5b</b></td>
+                <td><span class="badge">medium</span><br><span class="dim" style="font-size:11px">tracking</span></td>
+                <td>field_dark</td>
+                <td>POET bent low over the bare ground, hands still in his pockets, searching the shadows with his eyes and forearms; nothing there</td>
+                <td><b>POET</b> (red_black_sunglasses): profile · crouch · <i>sweeps the ground with his forearms, peering into shadow</i></td>
+                <td>—</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.5c</b></td>
+                <td><span class="badge">insert</span><br><span class="dim" style="font-size:11px">eye</span></td>
+                <td>field_dark</td>
+                <td>the reveal: his sleeves come out of the pockets empty; the wrists end in nothing</td>
+                <td><b>POET</b> (red_black_sunglasses): front · crouch · <i>pulls his arms from his pockets: no hands</i></td>
+                <td>—</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.5d</b></td>
+                <td><span class="badge">pov</span><br><span class="dim" style="font-size:11px">top_down</span></td>
+                <td>field_dark</td>
+                <td>at the edge of the lit patch of ground, two hands lie palm-down in the grit</td>
+                <td></td>
+                <td>hand_L, hand_R</td>
+              </tr>
+            
+              </tbody>
+            </table>
+          </div>
+        
+          <div class="card-box" style="margin-top:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <h3>Movement I PUT THEM BACK ON <small class="dim" style="font-size:13px;font-family:var(--mono)">(14s)</small></h3>
+              <span class="badge teal">Scene 04.6</span>
+            </div>
+            <p style="font-style:italic;color:var(--dim);border-left:3px solid var(--card);padding-left:12px;margin:4px 0">"hands that once / could touch dust after dusk / find &amp; celebrate a new / life &amp; feel good— / &amp; they too / used to be mine. / I put them / back on with / the care of my future / at stake / &amp; say to myself— / nevermore. / I have won at the world / &amp; lost my soul— / I want nothing more / that to just be / myself— / &amp; nothing more / &amp; be alright, / I do believe / I&#x27;ll be alright. / this reclaimed / &amp; dusk settled heart; / rediscovered but dusted / hands— / remind me, / but say to me in this / still muted tree / &amp; night garden field / silence— / nevermore. / Now go."</p>
+            <p><b>Staging Treatment:</b> POET finds hands, put them back on, and stands in field reflecting (as described).</p>
+            <table class="shot-table">
+              <thead>
+                <tr>
+                  <th>Shot</th>
+                  <th>Framing / Cam</th>
+                  <th>Set</th>
+                  <th>Action</th>
+                  <th>Puppet Bodies</th>
+                  <th>Props</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+              <tr>
+                <td><b>04.6a</b></td>
+                <td><span class="badge">close</span><br><span class="dim" style="font-size:11px">eye</span></td>
+                <td>field_dark</td>
+                <td>POET kneels over the two hands, arms open, and lowers his left wrist onto the left hand; it seats</td>
+                <td><b>POET</b> (red_black_sunglasses): threequarter · kneel · <i>lowers his left wrist onto the hand on the ground</i></td>
+                <td>hand_L, hand_R</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.6b</b></td>
+                <td><span class="badge">insert</span><br><span class="dim" style="font-size:11px">eye</span></td>
+                <td>field_dark</td>
+                <td>the right hand goes back on; fingers flex in the dust, the left already open</td>
+                <td><b>POET</b> (red_black_sunglasses): front · kneel · <i>seats the right hand, flexes both</i></td>
+                <td>hand_R</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.6c</b></td>
+                <td><span class="badge">full</span><br><span class="dim" style="font-size:11px">low</span></td>
+                <td>field_dark</td>
+                <td>POET rises from his crouch to full height, arms open, hands back on, gaze lifting off the ground; the lit patch around him widens</td>
+                <td><b>POET</b> (red_black_sunglasses): front · stand · <i>unfolds to standing, arms open, hands spread</i></td>
+                <td>—</td>
+              </tr>
+            
+              <tr>
+                <td><b>04.6d</b></td>
+                <td><span class="badge">wide</span><br><span class="dim" style="font-size:11px">eye</span></td>
+                <td>night_garden_field</td>
+                <td>POET stands in the still night field reflecting, hands at his sides, the trees muted; nevermore; now go</td>
+                <td><b>POET</b> (red_black_sunglasses): threequarter · stand · <i>stands reflecting, hands loose at his sides</i></td>
+                <td>golden_blooms</td>
+              </tr>
+            
+              </tbody>
+            </table>
+          </div>
+        
+  </section>
+</main>
+<script src="../nav.js" defer></script>
+</body>
+</html>
