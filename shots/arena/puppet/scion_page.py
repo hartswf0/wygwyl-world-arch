@@ -135,7 +135,7 @@ function render() {
         <div><h3>Beat chain</h3><ol class="chain">${chain}</ol></div>
         <div><h3>Stagings</h3><div style="overflow-x:auto"><table><thead><tr><th>camera</th><th>yaw</th><th>face hidden</th><th>overlap</th><th>fill</th><th>score</th></tr></thead><tbody>${stg}</tbody></table></div></div>
         <div class="xs">frames ${r.span[0]}–${r.span[1]} of ${r.span[2]} · ${x.drawings} drawings · ${x.keys} keys · ${x.breakdowns} breakdowns · ${x.ones} on ones · ${x.twos} on twos</div>
-        <details><summary>The three stagings on the middle beat</summary><img loading="lazy" src="scion/${esc(r.stage)}" alt="${esc(r.id)}, the three stagings tried"></details>
+        <details><summary>The five stagings on the middle beat</summary><img loading="lazy" src="scion/${esc(r.stage)}" alt="${esc(r.id)}, the five stagings tried"></details>
       </div></div>
       <div class="strip"><img loading="lazy" src="scion/${esc(r.strip)}" alt="${esc(r.id)}, key beats on the chosen staging"></div></article>`;
   }).join('');
