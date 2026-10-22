@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cut-Out Playground</title>
+<link rel="icon" href="../../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--acc:#e7a35a;--sel:#5fd0ff;--arch:#d98bb0;--plane:#7fd3c4;--act:#b9c46a;--snd:#ff9f7a;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
+header{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
+header a,.btn,select.btn{font:12px var(--mono);color:var(--dim);background:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;text-decoration:none;cursor:pointer}
+header a:hover,.btn:hover{color:var(--card);border-color:var(--card)}
+.btn.on{color:#1a120a;background:var(--card);border-color:var(--card)}
+select.btn{max-width:260px}
+h1{font:400 26px 'Permanent Marker',cursive;margin:0 8px 0 0}
+h1 span{color:var(--acc)}
+.sp{flex:1}
+main{display:grid;grid-template-columns:minmax(0,1fr) 400px;min-height:calc(100vh - 60px)}
+@media (max-width:1060px){main{grid-template-columns:1fr}}
+#left{padding:12px 16px;display:grid;gap:10px;align-content:start;min-width:0}
+#wrap{position:relative;width:100%;aspect-ratio:16/9;background:#050403;border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+#hud{position:absolute;left:10px;top:8px;font:600 11px var(--mono);color:#fff7ea;background:rgba(10,7,5,.55);padding:1px 7px;border-radius:3px;pointer-events:none}
+.tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.hint{font:11px var(--mono);color:var(--dim)}
+#cast{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px}
+.actor{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--panel);display:grid;gap:4px;cursor:pointer}
+.actor.sel{border-color:var(--sel)}
+.actor .top{display:flex;gap:6px;align-items:center}
+.actor kbd{font:600 11px var(--mono);background:var(--card);color:#1a120a;border-radius:4px;padding:0 6px}
+.actor b{flex:1;font:600 12px Inter;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.actor select{font:11px var(--mono);background:#0f0c0a;color:var(--ink);border:1px solid var(--line);border-radius:6px;max-width:100%}
+.actor .row{display:flex;gap:4px;flex-wrap:wrap}
+.actor button,.mini{font:10.5px var(--mono);background:none;border:1px solid var(--line);border-radius:999px;color:var(--dim);cursor:pointer;padding:1px 7px}
+.actor button:hover,.mini:hover{color:var(--card);border-color:var(--card)}
+.k{font:9px var(--mono);padding:0 4px;border-radius:3px;border:1px solid var(--line)}
+.k.clip{color:#e9d36b}.k.ensemble{color:#9fb7ff}.k.sfx{color:var(--snd)}.k.portal{color:var(--plane)}.k.part,.k.image{color:var(--card)}
+aside{border-left:1px solid var(--line);display:flex;flex-direction:column;max-height:calc(100vh - 60px);position:sticky;top:0}
+@media (max-width:1060px){aside{border-left:0;border-top:1px solid var(--line);max-height:none;position:static}}
+aside h3{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:0;padding:10px 12px 6px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;padding:0 10px 6px}
+#q{width:calc(100% - 24px);margin:0 12px 6px;font:12px var(--mono);background:#0f0c0a;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+#tray{overflow:auto;padding:0 8px 12px;flex:1}
+.grp{font:600 11px var(--mono);color:var(--acc);margin:8px 4px 4px}
+.it{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:6px;border:1px solid var(--line);border-radius:6px;margin:0 0 5px;cursor:copy}
+.it:hover{border-color:var(--act)}
+.it b{font:600 12px Inter}.it span{font:10px var(--mono);color:var(--dim)}.it em{grid-column:1/-1;font:11px Inter;color:var(--dim);font-style:normal}
+.it canvas{grid-column:1/-1;width:100%;height:76px;background:#0f0c0a;border-radius:4px}
+.cells{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:5px}
+.cell{background:repeating-conic-gradient(#221c17 0 25%,#1a1511 0 50%) 0 0/12px 12px;border:1px solid var(--line);border-radius:5px;padding:3px;cursor:copy;display:grid;gap:2px;min-width:0}
+.cell:hover{border-color:var(--card)}.cell img{width:100%;height:54px;object-fit:contain}.cell span{font:9.5px var(--mono);color:var(--dim);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.snd{display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;margin:0 0 4px;font:11px var(--mono)}
+.snd b{color:var(--ink)}.snd em{color:var(--dim);font-style:normal;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.syn{color:var(--snd);font-size:9px;border:1px solid #ff9f7a55;border-radius:3px;padding:0 3px}
+#pads{display:flex;gap:5px;flex-wrap:wrap}
+.pad{font:11px var(--mono);border:1px solid var(--line);border-radius:6px;padding:4px 8px;cursor:pointer;color:var(--dim);background:var(--panel)}
+.pad kbd{font-weight:600;color:var(--snd);margin-right:4px}.pad.hit{border-color:var(--snd);color:var(--ink)}
+.lineup{display:flex;align-items:flex-end;gap:6px;padding:6px;border:1px solid var(--line);border-radius:6px;background:linear-gradient(#0f0c0a 92%,#3a2e24 92%);overflow-x:auto;margin-bottom:6px}
+#send{display:flex;gap:6px;flex-wrap:wrap;align-items:center;border:1px dashed var(--line);border-radius:8px;padding:6px 8px}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--card);color:#1a120a;font:600 13px Inter;padding:6px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+button:focus-visible,a:focus-visible,.it:focus-visible,.cell:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+</style>
+</head>
+<body>
+<header>
+  <a href="../index.html">← Stage</a>
+  <h1>Cut-Out <span>Playground</span></h1>
+  <label class="hint">place <select class="btn" id="place" aria-label="Place"></select></label>
+  <button class="btn" id="bRun" title="Space">❚❚ Pause world</button>
+  <button class="btn" id="bMute">Sound on</button>
+  <span class="sp"></span>
+  <button class="btn" id="bSave">Save JSON</button>
+  <label class="btn" style="cursor:pointer">Load JSON<input type="file" id="fLoad" accept="application/json" hidden></label>
+  <button class="btn" id="bClear">Clear</button>
+</header>
+<main>
+  <div id="left">
+    <div id="wrap"><canvas id="cv" width="1600" height="900"></canvas><div id="hud"></div></div>
+    <div class="tools">
+      <button class="btn" id="bPlayAll" title="Enter">▶ Everyone acts</button>
+      <button class="btn" id="bFlip" title="F">Flip</button>
+      <button class="btn" id="bBack" title="[">Back</button>
+      <button class="btn" id="bFwd" title="]">Forward</button>
+      <button class="btn" id="bAttach" title="A">Attach to nearest ⚓</button>
+      <button class="btn" id="bDetach" title="D">Detach</button>
+      <button class="btn" id="bDel" title="Delete">Remove</button>
+      <span class="sp"></span>
+      <span class="hint">keys: 1–9 actor acts · Space world · arrows move · F flip · A/D attach · O open/close portal · +/− size · dbl-click floor: walk there · Q–P sound pads</span>
+    </div>
+    <div id="pads" aria-label="Sound pads"></div>
+    <div id="cast" aria-label="Who is on stage"></div>
+    <div id="send">
+      <b style="font:600 12px Inter">Send to poem scene</b>
+      <select class="btn" id="sPoem" aria-label="Poem"></select>
+      <select class="btn" id="sScene" aria-label="Scene"></select>
+      <label class="hint"><input type="checkbox" id="sPlace"> include the place</label>
+      <button class="btn" id="bSend">Append to that scene</button>
+      <span class="hint" id="sNote">Adds these pieces to the scene's saved layers in this browser (the stage picks them up) and downloads the fragment.</span>
+    </div>
+  </div>
+  <aside>
+    <h3>Pieces</h3>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <input id="q" placeholder="filter…" aria-label="Filter">
+    <div id="tray"></div>
+  </aside>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="../engine.js"></script>
+<script>
+/* The playground: one big space where every piece can act. Same engine as the stage (../engine.js): clips with
+   every FORMATS op, anchors and events, ensembles, sounds. Its own clock is the wall clock (no reading here);
+   each actor's act runs from when it was last triggered. All paths are stage-relative (E.url resolves them). */
+const E = window.STAGE_ENGINE, $ = id => document.getElementById(id), W = 1600, H = 900;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const kindOf = L => L.kind || (L.part ? 'part' : L.action ? 'action' : 'image');
+const isClip = L => ['clip', 'action'].includes(kindOf(L));
+function toast(t) { const el = $('toast'); el.textContent = t; el.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.opacity = 0, 1700); }
+const store = (() => { try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); return localStorage; } catch (_) { return null; } })();
+const POEMS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14'];
+const PADKEYS = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'];
+
+let ASSETS, CAT, parts = {}, LIB, PLANS = {};
+let S = {place: null, layers: [], pads: [], ppc: 2.2, foot: 780};   // the playground scene (what Save writes)
+let sel = -1, TAB = 'chars', running = true, tWall0 = performance.now(), tPaused = 0, pauseAt = 0;
+const CL = {}, ENS = {};
+const now = () => running ? (performance.now() - tWall0) / 1000 - tPaused : pauseAt;
+const clipOf = L => L.action ? CL['action:' + L.action] : CL[L.src];
+async function loadClip(src) { if (CL[src]) return CL[src]; const C = await E.loadClip(src); if (C) CL[src] = C; return C; }
+async function loadEns(id) { if (ENS[id]) return ENS[id]; const j = await E.loadEnsemble(id, LIB.ens); if (j) { ENS[id] = ENS[j.id] = j; await Promise.all((j.layers || []).filter(l => l.src && /\.json$/.test(l.src)).map(l => loadClip(l.src))); } return j; }
+
+/* ── the world, per frame ── */
+function frameOf(L, C, t) {
+  const mode = L.mode || ((L.loop ?? C.j.loop ?? true) ? 'loop' : 'once');
+  return E.frameAt(C, t, {t: L.t0 || 0, mode}, L.f0 || 0, L.f1 || 0);
+}
+function walkPos(L, t) {   // a walk: travel from a to b over dur, then settle back into the act it had
+  const w = L.walk; if (!w) return null;
+  const p = Math.min(1, Math.max(0, (t - w.t0) / w.dur));
+  if (p >= 1) { L.x = w.x1; if (w.after) { L.src = w.after; L.t0 = t; L.mode = 'loop'; } delete L.walk; return null; }
+  return w.x0 + (w.x1 - w.x0) * p;
+}
+let LAY = {G: [], F: []};
+function layout(t) {
+  const G = [], F = [], busy = new Set();
+  const one = i => {
+    if (G[i]) return G[i]; const L = S.layers[i]; busy.add(i);
+    const k = kindOf(L); let g;
+    if (k === 'ensemble') { const [l, tp, w, h] = E.ensBox(ENS[L.ensemble], L); g = {cx: l + w / 2, cy: tp + h / 2, w, h, rot: 0, flip: !!L.flip}; }
+    else if (k === 'sfx') g = {cx: -999, cy: -999, w: 0, h: 0};
+    else { const wx = walkPos(L, t); g = E.geo(wx == null ? L : {...L, x: wx}, {parts, clipOf}); }
+    const C = isClip(L) ? clipOf(L) : null; if (C) F[i] = frameOf(L, C, t);
+    if (L.attach) {
+      const j = S.layers.findIndex(M => M.uid === L.attach.to), P = j >= 0 ? clipOf(S.layers[j]) : null;
+      if (P && !busy.has(j)) { const pg = one(j), a = E.anchorAt(P, L.attach.anchor, F[j] ?? 0);
+        if (a) { const [ax, ay] = E.toStage(P, pg, a); let mx = 0, my = g.h / 2;
+          if (C) [mx, my] = E.toStage(C, {cx: 0, cy: 0, w: g.w, h: g.h, flip: g.flip}, E.mountPoint(C, F[i] || 0, L.attach.mount));
+          g.cx = ax - mx + (L.attach.dx || 0); g.cy = ay - my + (L.attach.dy || 0); } }
+    }
+    busy.delete(i); return G[i] = g;
+  };
+  S.layers.forEach((L, i) => one(i));
+  return {G, F};
+}
+const cv = $('cv'), g = cv.getContext('2d');
+let lastT = 0, lastF = [];
+function draw() {
+  const t = now(); LAY = layout(t);
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.fillStyle = '#0a0806'; g.fillRect(0, 0, W, H);
+  if (!S.layers.some(L => L.base)) { g.fillStyle = '#17110c'; g.fillRect(0, S.foot, W, H - S.foot); g.strokeStyle = '#3a2e24'; g.lineWidth = 3; g.beginPath(); g.moveTo(0, S.foot); g.lineTo(W, S.foot); g.stroke(); }
+  const env = {parts, CUT: E.CUT, clipOf, ens: L => ENS[L.ensemble], frameOf: (L, C) => L._f ?? E.frameAt(C, now(), {t: 0, mode: (C.j.loop ?? true) ? 'loop' : 'once'})};
+  S.layers.forEach((L, i) => {
+    const k = kindOf(L), G = LAY.G[i];
+    if (k === 'portal') { const p = L.opening; if (p) { const u = Math.min(1, (t - p.t0) / p.dur); L.open = p.dir > 0 ? u * u * (3 - 2 * u) : 1 - u * u * (3 - 2 * u); if (u >= 1) delete L.opening; } }
+    const M = k === 'ensemble' ? {...L, _f: undefined} : {...L, _geo: G, _f: LAY.F[i]};
+    if (k === 'ensemble') { const T = t; E.drawLayer(g, M, {...env, frameOf: (l, C) => E.frameAt(C, T, {t: L.t0 || 0, mode: (C.j.loop ?? true) ? 'loop' : 'once'})}); }
+    else E.drawLayer(g, M, env);
+  });
+  // selection, anchors, slots
+  const L = S.layers[sel], G = LAY.G[sel];
+  if (L && G && kindOf(L) !== 'sfx') { g.save(); g.setLineDash([10, 6]); g.lineWidth = 3; g.strokeStyle = '#5fd0ff'; g.strokeRect(G.cx - G.w / 2, G.cy - G.h / 2, G.w, G.h); g.restore(); }
+  const dots = drag?.anchors ? anchorTargets(sel) : anchorTargets(-1).filter(d => d.i === sel);
+  for (const d of dots) { const hot = hotAnchor && hotAnchor.i === d.i && hotAnchor.name === d.name;
+    g.fillStyle = hot ? '#5fd0ff' : '#ffde59'; g.strokeStyle = '#1a120a'; g.lineWidth = 3; g.beginPath(); g.arc(d.x, d.y, hot ? 13 : 8, 0, 7); g.fill(); g.stroke();
+    g.font = '600 15px JetBrains Mono, monospace'; g.fillStyle = '#ffde59'; g.fillText(d.name, d.x + 12, d.y - 8); }
+  if (L && kindOf(L) === 'ensemble') for (const sl of E.ensSlots(ENS[L.ensemble], L)) { g.save(); g.setLineDash([5, 4]); g.strokeStyle = '#9fb7ff'; g.lineWidth = 2; g.strokeRect(sl.x - 9, sl.y - 9, 18, 18);
+    g.fillStyle = '#9fb7ff'; g.font = '600 13px JetBrains Mono, monospace'; g.fillText(sl.name, sl.x + 12, sl.y + 4); g.restore(); }
+  sounds(t);
+  $('hud').textContent = `${S.place?.label || 'empty floor'} · ${t.toFixed(1)}s${running ? '' : ' · paused'} · ${S.layers.filter(isClip).length} actors`;
+  lastT = t;
+  requestAnimationFrame(draw);
+}
+/* sounds: clip events crossed since the last frame, and sound layers (beds) while they are on */
+const BEDS = new Map();
+function sounds(t) {
+  if (running && t > lastT && t - lastT < 0.5) S.layers.forEach((L, i) => {
+    if (L.hide) return;
+    const fire = (C, fa, fb) => { if (fa == null || fa === fb) return; for (const e of E.eventsCrossed(C, fa, fb, fb < fa)) if (e.sfx) E.sfx.play(e.sfx, {vol: e.vol ?? 0.9}); };
+    if (isClip(L)) { const C = clipOf(L); if (C?.events.length) fire(C, lastF[i]?.src === L.src ? lastF[i].f : null, LAY.F[i]); }
+    else if (kindOf(L) === 'ensemble') for (const l of ENS[L.ensemble]?.layers || []) { const C = l.src && CL[l.src]; if (!C?.events.length) continue;
+      const p = {t: L.t0 || 0, mode: (C.j.loop ?? true) ? 'loop' : 'once'}; fire(C, E.frameAt(C, lastT, p), E.frameAt(C, t, p)); }
+  });
+  lastF = S.layers.map((L, i) => ({src: L.src, f: LAY.F[i]}));
+  const want = new Set();
+  S.layers.forEach(L => { if (kindOf(L) === 'sfx' && !L.hide && running) { want.add(L.uid); if (!BEDS.has(L.uid)) BEDS.set(L.uid, E.sfx.play(L.sfx, {vol: L.vol ?? .7, loop: L.loop ?? true})); } });
+  for (const [k, h] of BEDS) if (!want.has(k)) { h.stop(); BEDS.delete(k); }
+}
+function anchorTargets(exceptI) {
+  const out = [];
+  S.layers.forEach((L, i) => { if (i === exceptI || !isClip(L) || L.hide) return; const C = clipOf(L); if (!C) return;
+    for (const n of E.anchorNames(C)) { const a = E.anchorAt(C, n, LAY.F[i] ?? 0); if (a) { const [x, y] = E.toStage(C, LAY.G[i], a); out.push({i, name: n, x, y}); } } });
+  return out;
+}
+
+/* ── adding pieces ── */
+let UID = 1; const uid = () => 'u' + (Date.now() % 1e7).toString(36) + (UID++);
+function add(L, under) { L.uid = L.uid || uid(); if (under) S.layers.splice(S.layers.filter(M => M.base).length, 0, L); else S.layers.push(L); sel = S.layers.indexOf(L); changed(); return L; }
+async function addClip(src, extra = {}) {
+  const C = await loadClip(src); if (!C) return toast('Could not load ' + src);
+  const bw = C.box[2] - C.box[0], w = Math.round(C.cm_px ? bw / C.cm_px * S.ppc : Math.min(560, bw)), h = w * E.ar(C);
+  const [, fy] = E.toStage(C, {cx: 0, cy: 0, w, h}, E.mountPoint(C, 0, '__feet'));
+  const n = S.layers.filter(isClip).length;
+  const L = add({kind: 'clip', src, x: extra.x ?? Math.round(300 + (n * 190) % 1000), y: Math.round((extra.foot ?? S.foot) - fy), w, t0: now(), label: C.j.title || src.split('/').pop(), ...extra});
+  if (C.j.loop === false) L.mode = 'once';
+  E.sfx.preload(C.events.map(e => e.sfx).filter(Boolean));
+  return L;
+}
+async function addEnsemble(id, asPlace) {
+  const J = await loadEns(id); if (!J) return toast('Could not load ensemble ' + id);
+  const L = {kind: 'ensemble', ensemble: J.id || id, x: 800, y: S.foot, scale_px_per_cm: S.ppc, t0: now(), label: J.name || id};
+  if (asPlace) { L.base = true; add(L, true); } else add(L);
+  E.sfx.preload((J.sfx || []).filter(x => E.sfx.resolve(x)));
+  return L;
+}
+function addPortal(plate, label) {
+  const L = add({kind: 'portal', plate, x: 800, y: S.foot - 230, w: 380, h: 460, open: 0, label: 'portal · ' + label, rim: '#9fe3ff'});
+  togglePortal(L, true);
+}
+function togglePortal(L, open) { const o = open ?? !(L.open > 0.5); L.opening = {t0: now(), dur: 0.9, dir: o ? 1 : -1}; E.sfx.play(o ? 'sfx.portal.open' : 'sfx.portal.hum', {vol: .8}); }
+function changed() { autosave(); castBar(); }
+function autosave() { try { store?.setItem('wygwyl.play.scene', JSON.stringify(serial())); } catch (_) {} }
+function serial() { return {kind: 'wygwyl.playground', version: 1, place: S.place, ppc: S.ppc, foot: S.foot, pads: S.pads,
+  layers: S.layers.map(L => { const {opening, walk, ...M} = L; return M; })}; }
+
+/* ── acting ── */
+const actsOf = L => { const c = LIB.charClips.find(x => x.src === L.src); if (c) return LIB.charClips.filter(x => x.character === c.character);
+  const m = LIB.mech.find(x => x.src === L.src) || LIB.seq.find(x => x.src === L.src); if (!m) return [];
+  const fam = (m.id || m.src).split('.').slice(0, 2).join('.'); return [...LIB.mech, ...LIB.seq].filter(x => (x.id || x.src).startsWith(fam)); };
+function trigger(L) { L.t0 = now(); if (L.hide) L.hide = false; const C = clipOf(L); if (C?.events[0]?.f === 0 && C.events[0].sfx) E.sfx.play(C.events[0].sfx); }
+async function setAct(L, src) {
+  const C0 = clipOf(L), C = await loadClip(src); if (!C) return;
+  const g0 = LAY.G[S.layers.indexOf(L)];
+  // keep the feet where they were and the true scale
+  const ppc = C0?.cm_px ? E.stagePpc(C0, g0) : S.ppc, w = C.cm_px ? (C.box[2] - C.box[0]) / C.cm_px * ppc : L.w, h = w * E.ar(C);
+  if (!L.attach && g0 && C0) { const [, f0] = E.toStage(C0, g0, E.mountPoint(C0, LAY.F[S.layers.indexOf(L)] || 0, '__feet')); const [, fy] = E.toStage(C, {cx: 0, cy: 0, w, h}, E.mountPoint(C, 0, '__feet')); L.y = Math.round(f0 - fy); }
+  L.src = src; L.w = Math.round(w); L.label = C.j.title; L.mode = C.j.loop === false ? 'once' : 'loop'; trigger(L); changed();
+}
+async function walkTo(L, x) {
+  const c = LIB.charClips.find(q => q.src === L.src); if (!c) { L.x = Math.round(x); return; }
+  const walk = LIB.charClips.find(q => q.character === c.character && q.act === 'ACT-001'), back = L.src;
+  if (walk && walk.src !== L.src) await setAct(L, walk.src);
+  const C = clipOf(L), ppc = C?.cm_px ? E.stagePpc(C, LAY.G[S.layers.indexOf(L)]) : S.ppc, speed = 110 * ppc;   // 110 cm/s
+  L.flip = (x < L.x) !== !!(C?.j.facing === 'left');
+  L.walk = {x0: L.x, x1: Math.round(x), t0: now(), dur: Math.max(0.4, Math.abs(x - L.x) / speed), after: walk && back !== walk.src ? back : null};
+}
+function attachNearest(i) {
+  const L = S.layers[i], C = L && clipOf(L), G = LAY.G[i]; if (!C || !G) return;
+  const [mx, my] = E.toStage(C, G, E.mountPoint(C, LAY.F[i] || 0)); let best = null, br = 1e9;
+  for (const d of anchorTargets(i)) { const r = Math.hypot(d.x - mx, d.y - my); if (r < br) { br = r; best = d; } }
+  if (best) attach(i, best.i, best.name); else toast('No anchor on stage: add a mechanism (car, booth, motorcycle…)');
+}
+function attach(i, j, anchor) {
+  const L = S.layers[i], M = S.layers[j], C = clipOf(L), PC = clipOf(M);
+  if (C?.cm_px && PC?.cm_px) { const ppc = E.stagePpc(PC, LAY.G[j]); L.w = Math.round((C.box[2] - C.box[0]) / C.cm_px * ppc); }
+  L.attach = {to: M.uid, anchor, dx: 0, dy: 0}; delete L.walk;
+  if (/seat|saddle|bench|chair/i.test(anchor) && C && !E.anchorAt(C, 'seat', 0) && !E.anchorAt(C, 'hips', 0)) L.attach.mount = 'hips';
+  if (j > i) { S.layers.splice(i, 1); S.layers.splice(j, 0, L); sel = j; }
+  changed(); toast(`On ${anchor}: rides with ${M.label || 'it'}`);
+}
+function detach(L) { const i = S.layers.indexOf(L), G = LAY.G[i]; if (G) { L.x = Math.round(G.cx); L.y = Math.round(G.cy); } delete L.attach; changed(); }
+
+/* ── the cast bar: every actor, its key, its acts ── */
+function castBar() {
+  const box = $('cast'); let n = 0;
+  box.innerHTML = S.layers.map((L, i) => { if (L.base && kindOf(L) !== 'ensemble') return ''; const k = kindOf(L), key = isClip(L) && n < 9 ? ++n : '';
+    const acts = isClip(L) ? actsOf(L) : [];
+    const ens = k === 'ensemble' ? ENS[L.ensemble] : null;
+    return `<div class="actor${i === sel ? ' sel' : ''}" data-i="${i}"><div class="top">${key ? `<kbd>${key}</kbd>` : ''}<span class="k ${k}">${k}</span><b title="${esc(L.label)}">${esc(L.label || L.src || L.sfx || '')}</b><button data-a="del" title="remove">✕</button></div>
+      ${acts.length > 1 ? `<select data-a="act" aria-label="act">${acts.map(a => `<option value="${esc(a.src)}"${a.src === L.src ? ' selected' : ''}>${esc((a.act ? a.act + ' ' : '') + (a.title || a.id))}</option>`).join('')}</select>` : ''}
+      <div class="row">${isClip(L) ? `<button data-a="go">▶ act</button><button data-a="mode">${L.mode === 'once' ? 'once' : 'loop'}</button><button data-a="flip">flip</button>${L.attach ? `<button data-a="detach">⚓ ${esc(L.attach.anchor)} ✕</button>` : '<button data-a="attach">⚓ attach</button>'}` : ''}
+        ${k === 'portal' ? `<button data-a="portal">${L.open > .5 ? 'close' : 'open'}</button>` : ''}
+        ${k === 'sfx' ? `<button data-a="mute">${L.hide ? 'unmute' : 'mute'}</button>` : ''}
+        ${ens ? (ens.mechs || []).map((m, q) => `<button data-a="mech" data-q="${q}">${esc(m.trigger || 'go')}${m.slot ? ' · ' + esc(m.slot) : ''}</button>`).join('') + (ens.sfx || []).map(s => `<button data-a="ensfx" data-s="${esc(s)}">♪ ${esc(s.replace(/^sfx\./, ''))}</button>`).join('') + '<button data-a="go">▶ restart</button>' : ''}
+        <button data-a="hide">${L.hide ? 'show' : 'hide'}</button></div></div>`; }).join('') || '<p class="hint">Nobody yet. Pick a place, then add characters, mechanisms and sounds from the right.</p>';
+  box.querySelectorAll('.actor').forEach(el => {
+    const i = +el.dataset.i, L = S.layers[i];
+    el.onclick = e => { const a = e.target.dataset.a; sel = i;
+      if (a === 'del') { S.layers.splice(i, 1); sel = -1; }
+      else if (a === 'go') trigger(L);
+      else if (a === 'mode') { L.mode = L.mode === 'once' ? 'loop' : 'once'; trigger(L); }
+      else if (a === 'flip') L.flip = !L.flip;
+      else if (a === 'attach') return attachNearest(i);
+      else if (a === 'detach') return detach(L);
+      else if (a === 'portal') togglePortal(L);
+      else if (a === 'mute' || a === 'hide') L.hide = !L.hide;
+      else if (a === 'mech') return runMech(L, ENS[L.ensemble].mechs[+e.target.dataset.q]);
+      else if (a === 'ensfx') return E.sfx.play(e.target.dataset.s);
+      else if (e.target.tagName === 'SELECT') return;
+      changed(); };
+    const s = el.querySelector('select[data-a="act"]'); if (s) s.onchange = () => setAct(L, s.value);
+  });
+}
+/* an ensemble's mechanism: its clip plays at its slot (a caller lifts the handset …); if that clip is one of the
+   ensemble's own layers the whole piece restarts instead */
+async function runMech(L, m) {
+  const J = ENS[L.ensemble]; if (!m?.clip) return;
+  if ((J.layers || []).some(l => l.src === m.clip)) { L.t0 = now(); return; }
+  const sl = E.ensSlots(J, L).find(s => s.name === m.slot);
+  const M = await addClip(m.clip, {x: sl ? Math.round(sl.x) : L.x, foot: sl ? sl.y : L.y, label: (m.trigger || 'mechanism') + ' · ' + (J.name || '')});
+  if (M) { M.mode = 'once'; const C = clipOf(M); if (C?.cm_px) M.w = Math.round((C.box[2] - C.box[0]) / C.cm_px * (L.scale_px_per_cm || S.ppc)); }
+}
+
+/* ── sound pads ── */
+function padsBar() {
+  $('pads').innerHTML = S.pads.map((id, k) => `<span class="pad" data-k="${k}" title="${esc(id)}"><kbd>${PADKEYS[k].toUpperCase()}</kbd>${esc(id.replace(/^sfx\./, ''))}</span>`).join('') || '<span class="hint">Sound pads: in Sounds, press "pad" to put a sound on Q…P.</span>';
+  $('pads').querySelectorAll('.pad').forEach(el => el.onclick = () => pad(+el.dataset.k));
+}
+function pad(k) { const id = S.pads[k]; if (!id) return; E.sfx.play(id); const el = $('pads').querySelector(`[data-k="${k}"]`); el?.classList.add('hit'); setTimeout(() => el?.classList.remove('hit'), 180); }
+
+/* ── places: an ensemble, a poem's scene (its plan layers), or a world plate ── */
+async function setPlace(v) {
+  S.layers = S.layers.filter(L => !L.base); sel = -1;
+  if (!v) { S.place = null; S.ppc = 2.2; S.foot = 780; return changed(); }
+  const [kind, id] = [v.slice(0, v.indexOf(':')), v.slice(v.indexOf(':') + 1)];
+  if (kind === 'ens') { const J = await loadEns(id); S.ppc = 2.2; S.foot = 800; S.place = {kind, id, label: J?.name || id}; await addEnsemble(id, true); sel = -1; }
+  else if (kind === 'scene') {
+    const [P, key] = id.split('|'); const plan = await planOf(P), sc = plan?.scenes.find(s => s.key === key); if (!sc) return;
+    S.ppc = sc.camera?.ppc || 2.0; S.foot = sc.camera?.foot_y || 780; S.place = {kind, id, label: `${key} ${sc.name}`};
+    for (const l of sc.layers) { if (l.hide) continue; const M = {...structuredClone(l), base: true, uid: uid()};
+      if (kindOf(M) === 'ensemble') await loadEns(M.ensemble); if (isClip(M) && M.src) await loadClip(M.src);
+      if (kindOf(M) === 'action') continue;   // the scene's own Arena actors stay home; cast your own
+      S.layers.splice(S.layers.filter(x => x.base).length, 0, M); }
+  } else if (kind === 'plane') {
+    const pl = ASSETS.planes[id]; if (!pl) return; S.ppc = 2.2; S.foot = 800; S.place = {kind, id, label: 'world ' + pl.short};
+    S.layers.unshift({kind: 'plane', src: pl.backdrop, x: 800, y: 450, w: 1600, h: 900, base: true, uid: uid()}, ...pl.sheets.map(s => ({kind: 'plane', src: s.file, x: 800, y: 450, w: 1600, h: 900, base: true, uid: uid()})));
+  }
+  changed();
+}
+async function planOf(P) { if (!PLANS[P]) PLANS[P] = await E.json(`plans/${P}.json`); return PLANS[P]; }
+async function placeOptions() {
+  const plans = await Promise.all(POEMS.map(planOf));
+  $('place').innerHTML = '<option value="">empty floor</option>'
+    + (LIB.ens.length ? `<optgroup label="Ensembles">${LIB.ens.map(e => `<option value="ens:${esc(e.id)}">${esc(e.name || e.id)}</option>`).join('')}</optgroup>` : '')
+    + plans.map((pl, k) => pl ? `<optgroup label="Poem ${POEMS[k]} ${esc(pl.title)}">${pl.scenes.map(s => `<option value="scene:${POEMS[k]}|${esc(s.key)}">${esc(s.key)} ${esc(s.name)}</option>`).join('')}</optgroup>` : '').join('')
+    + `<optgroup label="Worlds (AI plates as sets)">${Object.values(ASSETS.planes).slice(0, 81).map(p => `<option value="plane:${esc(p.id)}">${esc(p.short)} ${esc((p.sheets[0]?.contents || []).slice(0, 2).join(', '))}</option>`).join('')}</optgroup>`;
+  $('sPoem').innerHTML = POEMS.map((n, k) => `<option value="${n}">${n} ${esc(plans[k]?.title || '')}</option>`).join('');
+  sceneOptions();
+}
+function sceneOptions() { const pl = PLANS[$('sPoem').value]; $('sScene').innerHTML = (pl?.scenes || []).map(s => `<option value="${esc(s.key)}">${esc(s.key)} ${esc(s.name)}</option>`).join(''); }
+
+/* ── tray ── */
+const TABS = [['chars', 'Characters'], ['mech', 'Mechanisms'], ['seq', 'Sequences'], ['ens', 'Ensembles'], ['portals', 'Portals'], ['sounds', 'Sounds'], ['parts', 'Kit parts']];
+function tabs() { $('tabs').innerHTML = TABS.map(([k, t]) => `<button class="btn${k === TAB ? ' on' : ''}" data-t="${k}">${t}</button>`).join('');
+  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { TAB = b.dataset.t; tabs(); tray(); }); }
+function bind(fn) { $('tray').querySelectorAll('[data-add]').forEach(el => el.onclick = el.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; if (e.target.dataset.pad || e.target.dataset.play || e.target.dataset.bed) return; fn(el.dataset, el); }); }
+function thumbs() { $('tray').querySelectorAll('canvas[data-th]').forEach(c => loadClip(c.dataset.th).then(C => { if (!C) return;
+  const ar = E.ar(C), w = Math.min(c.width, c.height / ar), t = document.createElement('canvas'); t.width = Math.max(2, Math.round(w)); t.height = Math.max(2, Math.round(w * ar)); E.drawClip(t, C, 0);
+  const q = c.getContext('2d'); q.clearRect(0, 0, c.width, c.height); q.drawImage(t, (c.width - t.width) / 2, (c.height - t.height) / 2); })); }
+function tray() {
+  const q = $('q').value.toLowerCase(), hit = s => !q || String(s).toLowerCase().includes(q); let h = '';
+  if (TAB === 'chars') {
+    const chars = LIB.chars || {}, by = {};
+    for (const c of LIB.charClips) if (hit(c.title + ' ' + c.character + ' ' + c.act)) (by[c.character] = by[c.character] || []).push(c);
+    h = `<div class="lineup" id="lineup">${Object.keys(chars).map(k => `<canvas data-lc="${esc(k)}" width="60" height="140" title="${esc(chars[k].title)}" style="cursor:copy"></canvas>`).join('')}</div>`
+      + Object.entries(by).map(([k, cs]) => `<div class="grp">${esc(chars[k]?.title || k)} · ${chars[k]?.height_cm || '?'} cm</div>` + cs.map(c => `<div class="it" tabindex="0" data-add="clip" data-src="${esc(c.src)}"><b>${esc(c.act)} ${esc(c.title)}</b><span>${c.frames}f · ${esc(c.result || '')}</span></div>`).join('')).join('');
+    $('tray').innerHTML = '<p class="hint" style="margin:4px">Every character, every act, all at one cm scale. Click the line-up or an act to cast them.</p>' + h;
+    lineup(); bind(d => addClip(d.src)); return;
+  }
+  if (TAB === 'mech' || TAB === 'seq') {
+    const L = (TAB === 'mech' ? LIB.mech : LIB.seq).filter(m => hit(m.title + ' ' + m.id + ' ' + (m.anchors || []).join(' ')));
+    h = L.map(m => `<div class="it" tabindex="0" data-add="clip" data-src="${esc(m.src)}"><b>${esc(m.title)}</b><span>${m.frames || ''}f${m.loop === false ? ' once' : ''}</span><canvas data-th="${esc(m.src)}" width="300" height="76"></canvas><em>${(m.anchors || []).length ? '⚓ ' + esc(m.anchors.join(', ')) : ''}${(m.sfx || []).length ? ' · ♪ ' + esc(m.sfx.join(', ')) : ''}</em></div>`).join('');
+    $('tray').innerHTML = `<p class="hint" style="margin:4px">${TAB === 'mech' ? 'Mechanisms: drop a character onto a ⚓ anchor (drag it there, or select it and press A) and they move together.' : 'Sequences: several actors in one clip.'}</p>` + (h || '<p class="hint">Nothing here yet.</p>');
+    thumbs(); bind(d => addClip(d.src)); return;
+  }
+  if (TAB === 'ens') {
+    h = LIB.ens.filter(e => hit(e.name + ' ' + e.id)).map(e => `<div class="it" tabindex="0" data-add="ens" data-id="${esc(e.id)}"><b>${esc(e.name || e.id)}</b><span>poems ${esc((e.poems || []).join(' '))}</span><em>${e.size_cm ? e.size_cm.w + '×' + e.size_cm.h + ' cm · ' : ''}${e.layers} layers${e.slots?.length ? ' · slots ' + esc(e.slots.join(', ')) : ''}${e.mechs ? ' · ' + e.mechs + ' mechanisms' : ''}</em></div>`).join('');
+    $('tray').innerHTML = '<p class="hint" style="margin:4px">Set pieces with slots for actors. Click to add one as a prop (or choose it as the place, top left).</p>' + (h || '<p class="hint">No ensembles yet.</p>');
+    bind(d => addEnsemble(d.id)); return;
+  }
+  if (TAB === 'portals') {
+    const films = Object.entries(ASSETS.poems).filter(([, v]) => v.film).map(([n, v]) => ({src: v.film, l: 'poem ' + n + ' film'}));
+    const mechP = LIB.mech.filter(m => /portal|door|window|screen|mirror/i.test(m.id + ' ' + m.title));
+    h = (mechP.length ? '<div class="grp">portal mechanisms</div>' + mechP.map(m => `<div class="it" tabindex="0" data-add="clip" data-src="${esc(m.src)}"><b>${esc(m.title)}</b><span>${m.frames}f</span></div>`).join('') : '')
+      + '<div class="grp">films (a moving world through the hole)</div><div class="cells">' + films.filter(f => hit(f.l)).map(f => `<div class="cell" tabindex="0" data-add="portal" data-src="${esc(f.src)}" data-l="${esc(f.l)}"><img loading="lazy" src="${esc(E.url(ASSETS.planes[ASSETS.poems[f.l.slice(5, 7)]?.planes?.[0]]?.thumb || ''))}" alt=""><span>${esc(f.l)}</span></div>`).join('') + '</div>'
+      + '<div class="grp">worlds (backdrops)</div><div class="cells">' + Object.values(ASSETS.planes).filter(p => hit(p.short + ' ' + (p.sheets[0]?.contents || []).join(' '))).map(p => `<div class="cell" tabindex="0" data-add="portal" data-src="${esc(p.backdrop)}" data-l="${esc(p.short)}"><img loading="lazy" src="${esc(E.url(p.thumb))}" alt=""><span>${esc(p.short)}</span></div>`).join('') + '</div>';
+    $('tray').innerHTML = '<p class="hint" style="margin:4px">A portal is a hole cut in a card with another world behind it (clip mask + plate). It opens with a riser; O opens or closes the selected one.</p>' + h;
+    $('tray').querySelectorAll('.cell img[src=""]').forEach(i => i.remove());
+    bind(d => d.add === 'portal' ? addPortal(d.src, d.l) : addClip(d.src)); return;
+  }
+  if (TAB === 'sounds') {
+    h = (LIB.sfx || []).filter(x => hit(x.id + ' ' + (x.tags || []).join(' ') + ' ' + (x.note || ''))).map(x => `<div class="snd" data-add="sfx" data-id="${esc(x.id)}" title="${esc(x.source + ' · ' + (x.note || ''))}"><button class="mini" data-play="${esc(x.id)}">▶</button><b>${esc(x.id.replace(/^sfx\./, ''))}</b>${x.unsourced ? '<span class="syn">synth</span>' : x.kind === 'voice' ? '<span class="syn" style="color:var(--arch)">her voice</span>' : ''}<em>${x.dur}s ${esc((x.tags || []).slice(0, 3).join(' '))}</em><button class="mini" data-pad="${esc(x.id)}">pad</button><button class="mini" data-bed="${esc(x.id)}">${x.loop ? 'bed' : 'layer'}</button></div>`).join('');
+    $('tray').innerHTML = '<p class="hint" style="margin:4px">▶ listen · pad: put it on a key (Q…P) · bed: a sound layer that plays while it is on stage. <span class="syn">synth</span> = no recording on disk, made from a recipe.</p>' + h;
+    $('tray').querySelectorAll('[data-play]').forEach(b => b.onclick = () => E.sfx.play(b.dataset.play));
+    $('tray').querySelectorAll('[data-pad]').forEach(b => b.onclick = () => { if (!S.pads.includes(b.dataset.pad)) { S.pads = [...S.pads, b.dataset.pad].slice(-PADKEYS.length); padsBar(); autosave(); } toast(`${b.dataset.pad} on ${PADKEYS[S.pads.indexOf(b.dataset.pad)].toUpperCase()}`); });
+    $('tray').querySelectorAll('[data-bed]').forEach(b => b.onclick = () => { const x = E.sfx.resolve(b.dataset.bed); add({kind: 'sfx', sfx: b.dataset.bed, vol: .7, loop: !!x?.loop, label: '♪ ' + b.dataset.bed}); });
+    return;
+  }
+  if (TAB === 'parts') {
+    const L = Object.values(parts).filter(p => hit(p.label + ' ' + p.id)).slice(0, 240);
+    h = '<div class="cells">' + L.map(p => `<div class="cell" tabindex="0" data-add="part" data-id="${esc(p.id)}"><img loading="lazy" src="${esc(E.url(E.CUT + p.file))}" alt=""><span>${esc(p.label || p.id)}</span></div>`).join('') + '</div>';
+    $('tray').innerHTML = `<p class="hint" style="margin:4px">Every cut card in the kit (${Object.keys(parts).length}); filter to find one (first 240 shown).</p>` + h;
+    bind(d => { const p = parts[d.id]; add({kind: 'part', part: p.id, x: 800, y: 450, w: Math.min(420, p.bbox[2]), label: p.label || p.id}); });
+  }
+}
+async function lineup() {
+  const box = $('lineup'); if (!box) return; const k = 0.62;
+  for (const c of box.querySelectorAll('canvas[data-lc]')) {
+    const a = LIB.charClips.find(x => x.character === c.dataset.lc && x.act === 'ACT-024') || LIB.charClips.find(x => x.character === c.dataset.lc); if (!a) continue;
+    c.onclick = () => addClip(a.src);
+    const C = await loadClip(a.src); if (!C?.cm_px) continue;
+    const w = (C.box[2] - C.box[0]) / C.cm_px * k; c.width = Math.round(w); c.height = Math.round(w * E.ar(C)); E.drawClip(c, C, 0);
+  }
+}
+
+/* ── direct manipulation ── */
+let drag = null, hotAnchor = null;
+const pt = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; };
+function hitTest(x, y) {
+  for (let i = S.layers.length - 1; i >= 0; i--) { const L = S.layers[i], G = LAY.G[i]; if (!G || L.hide || L.base || kindOf(L) === 'sfx') continue;
+    if (Math.abs(x - G.cx) <= G.w / 2 && Math.abs(y - G.cy) <= G.h / 2) return i; }
+  return -1;
+}
+cv.addEventListener('pointerdown', e => { const [x, y] = pt(e); sel = hitTest(x, y); castBar(); if (sel < 0) return;
+  const L = S.layers[sel]; drag = {x, y, L, x0: L.attach ? L.attach.dx || 0 : L.x, y0: L.attach ? L.attach.dy || 0 : L.y, anchors: isClip(L) && !L.attach}; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e => { if (!drag) return; const [x, y] = pt(e), L = drag.L;
+  if (L.attach) { L.attach.dx = Math.round(drag.x0 + x - drag.x); L.attach.dy = Math.round(drag.y0 + y - drag.y); } else { L.x = Math.round(drag.x0 + x - drag.x); L.y = Math.round(drag.y0 + y - drag.y); delete L.walk; }
+  hotAnchor = null;
+  if (drag.anchors) { const i = S.layers.indexOf(L), C = clipOf(L); LAY = layout(now());
+    if (C && LAY.G[i]) { const [mx, my] = E.toStage(C, LAY.G[i], E.mountPoint(C, LAY.F[i] || 0)); let best = 60;
+      for (const d of anchorTargets(i)) { const r = Math.hypot(d.x - mx, d.y - my); if (r < best) { best = r; hotAnchor = d; } } }
+    if (!hotAnchor && kindOf(L) === 'clip') snapSlot(L, mx => mx); } });
+cv.addEventListener('pointerup', () => { if (!drag) return; const h = hotAnchor, i = S.layers.indexOf(drag.L); drag = null; hotAnchor = null; if (h) return attach(i, h.i, h.name); changed(); });
+cv.addEventListener('dblclick', e => { const [x] = pt(e), L = S.layers[sel]; if (L && isClip(L) && !L.attach) walkTo(L, x); });
+cv.addEventListener('wheel', e => { const L = S.layers[sel]; if (!L) return; e.preventDefault(); grow(L, e.deltaY < 0 ? 1.05 : .95); }, {passive: false});
+function grow(L, f) { if (kindOf(L) === 'ensemble') L.scale_px_per_cm = +((L.scale_px_per_cm || 2) * f).toFixed(4); else { L.w = Math.max(10, Math.round(L.w * f)); if (L.h) L.h = Math.round(L.h * f); } changed(); }
+/* an actor dropped near an ensemble's slot stands in it, facing the way the slot says */
+function snapSlot(L) {
+  const i = S.layers.indexOf(L), C = clipOf(L), G = LAY.G[i]; if (!C || !G) return;
+  const [fx, fy] = E.toStage(C, G, E.mountPoint(C, LAY.F[i] || 0, '__feet'));
+  for (const M of S.layers) if (kindOf(M) === 'ensemble') for (const sl of E.ensSlots(ENS[M.ensemble], M)) if (Math.hypot(sl.x - fx, sl.y - fy) < 40) {
+    L.x += Math.round(sl.x - fx); L.y += Math.round(sl.y - fy); if (sl.facing) L.flip = sl.facing === 'left'; return; }
+}
+function act(a) {
+  const L = S.layers[sel]; if (!L) return;
+  if (a === 'flip') L.flip = !L.flip;
+  if (a === 'del') { S.layers.splice(sel, 1); sel = -1; }
+  if (a === 'back' && sel > 0 && !S.layers[sel - 1].base) { [S.layers[sel - 1], S.layers[sel]] = [S.layers[sel], S.layers[sel - 1]]; sel--; }
+  if (a === 'fwd' && sel < S.layers.length - 1) { [S.layers[sel + 1], S.layers[sel]] = [S.layers[sel], S.layers[sel + 1]]; sel++; }
+  changed();
+}
+$('bFlip').onclick = () => act('flip'); $('bDel').onclick = () => act('del'); $('bBack').onclick = () => act('back'); $('bFwd').onclick = () => act('fwd');
+$('bAttach').onclick = () => attachNearest(sel); $('bDetach').onclick = () => { const L = S.layers[sel]; if (L?.attach) detach(L); };
+function setRunning(on) { if (on === running) return; if (on) { tPaused += (performance.now() - tWall0) / 1000 - tPaused - pauseAt; running = true; } else { pauseAt = now(); running = false; E.sfx.stopAll(); BEDS.clear(); }
+  E.setPlaying(running); $('bRun').textContent = running ? '❚❚ Pause world' : '▶ Run world'; }
+$('bRun').onclick = () => setRunning(!running);
+$('bMute').onclick = () => { E.sfx.muted = !E.sfx.muted; if (E.sfx.muted) { E.sfx.stopAll(); BEDS.clear(); } $('bMute').textContent = E.sfx.muted ? 'Sound off' : 'Sound on'; };
+$('bPlayAll').onclick = () => S.layers.forEach(L => isClip(L) && trigger(L));
+addEventListener('pointerdown', () => E.sfx.audio(), {once: true});
+addEventListener('keydown', e => {
+  if (e.target.matches('input,select,textarea')) return;
+  E.sfx.audio();
+  const k = e.key.toLowerCase();
+  if (e.code === 'Space') { e.preventDefault(); return setRunning(!running); }
+  if (e.key === 'Enter') return $('bPlayAll').click();
+  if (/^[1-9]$/.test(e.key)) { const actors = S.layers.filter(L => isClip(L) && !L.base), L = actors[+e.key - 1]; if (L) { sel = S.layers.indexOf(L); trigger(L); castBar(); } return; }
+  if (PADKEYS.includes(k) && !e.ctrlKey && !e.metaKey) { const i = PADKEYS.indexOf(k); if (S.pads[i]) { e.preventDefault(); return pad(i); } }
+  const L = S.layers[sel]; if (!L) return;
+  const n = e.shiftKey ? 20 : 6, m = {ArrowLeft: [-n, 0], ArrowRight: [n, 0], ArrowUp: [0, -n], ArrowDown: [0, n]}[e.key];
+  if (m) { e.preventDefault(); if (L.attach) { L.attach.dx += m[0]; L.attach.dy += m[1]; } else { L.x += m[0]; L.y += m[1]; } return autosave(); }
+  if (k === 'f') act('flip'); else if (k === 'a') attachNearest(sel); else if (k === 'd') { if (L.attach) detach(L); }
+  else if (k === 'o' && kindOf(L) === 'portal') togglePortal(L);
+  else if (e.key === '+' || e.key === '=') grow(L, 1.05); else if (e.key === '-') grow(L, .95);
+  else if (e.key === '[') act('back'); else if (e.key === ']') act('fwd');
+  else if (e.key === 'Delete' || e.key === 'Backspace') act('del');
+});
+
+/* ── save / load / send ── */
+$('bSave').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(serial(), null, 1)], {type: 'application/json'})); a.download = 'playground.json'; a.click(); toast('Saved playground.json'); };
+$('fLoad').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { await restore(JSON.parse(await f.text())); toast('Loaded ' + f.name); } catch (err) { toast('Not a playground file'); } e.target.value = ''; };
+$('bClear').onclick = () => { S.layers = S.layers.filter(L => L.base); sel = -1; E.sfx.stopAll(); BEDS.clear(); changed(); };
+async function restore(j) {
+  if (!j || !Array.isArray(j.layers)) throw new Error('bad');
+  for (const L of j.layers) { if (kindOf(L) === 'ensemble') await loadEns(L.ensemble); if (isClip(L) && L.src) await loadClip(L.src); }
+  S = {place: j.place || null, layers: j.layers.map(L => ({...L, uid: L.uid || uid(), t0: now()})), pads: j.pads || [], ppc: j.ppc || 2.2, foot: j.foot || 780};
+  $('place').value = S.place ? `${S.place.kind}:${S.place.id}` : ''; sel = -1; padsBar(); changed();
+}
+/* send: the pieces become ordinary stage layers (clip, ensemble, sfx, part …) appended to that scene's saved layers in this
+   browser, the same key the stage reads (wygwyl.stage.NN.KEY); riders keep their anchor by the stage's layer ref */
+$('sPoem').onchange = sceneOptions;
+$('bSend').onclick = async () => {
+  const P = $('sPoem').value, key = $('sScene').value, plan = await planOf(P), sc = plan?.scenes.find(s => s.key === key); if (!sc) return;
+  const sk = `wygwyl.stage.${P}.${key}`, saved = store?.getItem(sk), base = saved ? JSON.parse(saved) : structuredClone(sc.layers);
+  const pick = S.layers.filter(L => $('sPlace').checked || !L.base);
+  const ref = (M, ls) => { const b = X => X.id || X.part || (X.action ? 'action:' + X.action : X.ensemble ? 'ens:' + X.ensemble : X.sfx ? 'sfx:' + X.sfx : X.src || ''); const n = ls.slice(0, ls.indexOf(M)).filter(X => b(X) === b(M)).length; return b(M) + (n ? '#' + n : ''); };
+  const out = [], byUid = {};
+  for (const L of pick) {
+    const i = S.layers.indexOf(L), G = LAY.G[i], {uid: u, base: _b, t0, mode, opening, walk, open, rim, plate, ...M} = L;
+    if (kindOf(L) === 'portal') { Object.assign(M, {kind: 'portal', plate, rim, open: 1}); }
+    if (isClip(L)) { M.x = Math.round(G.cx); M.y = Math.round(G.cy); M.w = Math.round(G.w); if (mode === 'once') M.loop = false; }
+    byUid[u] = M; out.push(M);
+  }
+  const all = [...base, ...out];
+  for (const M of out) if (M.attach) { const parent = byUid[M.attach.to]; if (parent) M.attach = {...M.attach, to: ref(parent, all)}; else delete M.attach; }
+  try { store?.setItem(sk, JSON.stringify(all)); } catch (_) { return toast('Could not save in this browser'); }
+  const frag = {poem: P, scene: key, from: 'shots/stage/play', place: S.place, layers: out};
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(frag, null, 1)], {type: 'application/json'})); a.download = `play_${P}_${key}.json`; a.click();
+  const idx = plan.scenes.indexOf(sc);
+  $('sNote').innerHTML = `Appended ${out.length} pieces to ${esc(key)}. <a href="../index.html?p=${P}&s=${idx}" style="color:var(--acc)">Open it on the stage →</a>`;
+  toast(`Sent ${out.length} pieces to ${key}`);
+};
+
+/* ── start ── */
+async function init() {
+  [CAT, ASSETS] = await Promise.all([E.json(E.CUT + 'catalog.json'), E.json('assets.json')]);
+  for (const [sid, s] of Object.entries(CAT.sheets)) for (const p of s.parts) parts[p.id] = {...p, sheet: sid, poems: s.poems};
+  LIB = await E.library(ASSETS);
+  tabs(); tray(); padsBar(); await placeOptions();
+  const qs = new URLSearchParams(location.search);
+  let j = null; try { j = JSON.parse(store?.getItem('wygwyl.play.scene') || 'null'); } catch (_) {}
+  if (qs.get('fresh') !== '1' && j?.layers?.length) await restore(j);
+  else await demo(qs.get('place'));
+  castBar(); requestAnimationFrame(draw);
+}
+/* the first visit: a place, a couple of actors and a machine, so there is something to poke */
+async function demo(place) {
+  const e = LIB.ens[0];
+  await setPlace(place || (e ? 'ens:' + e.id : 'scene:09|' + (PLANS['09']?.scenes[0]?.key || '09.0')));
+  const pick = (ch, act) => LIB.charClips.find(c => c.character === ch && c.act === act) || LIB.charClips.find(c => c.character === ch);
+  const a = pick('poet_tracksuit', 'ACT-017'), b = pick('woman', 'ACT-024');
+  if (a) await addClip(a.src, {x: 520}); if (b) await addClip(b.src, {x: 1100, flip: true});
+  const m = LIB.mech.find(x => x.anchors?.length) ; if (m) { const L = await addClip(m.src, {x: 1250}); if (L) L.w = Math.round(L.w * 0.8); }
+  S.pads = (LIB.sfx || []).filter(x => ['sfx.tambourine', 'sfx.phone.ring', 'sfx.heartbeat', 'sfx.glass.shatter', 'sfx.portal.open', 'sfx.vinyl.scratch', 'sfx.wings', 'sfx.door'].includes(x.id)).map(x => x.id);
+  padsBar(); sel = -1; changed();
+}
+$('q').oninput = tray;
+$('place').onchange = e => setPlace(e.target.value);
+window.__play = {S: () => S, LAY: () => LAY, add, addClip, addEnsemble, addPortal, attach, attachNearest, setPlace, trigger, walkTo, setAct, restore, serial, LIB: () => LIB, E, now, sel: i => { sel = i; castBar(); }};
+init();
+</script>
+</body>
+</html>

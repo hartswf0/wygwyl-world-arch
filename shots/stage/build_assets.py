@@ -60,6 +60,46 @@ def actions():
     return out
 
 
+def library():
+    """What the tray's library tabs may read: only files that exist, so the stage never asks for an absent one.
+    mech/index.json, seq/index.json, anim/index.json, sfx/index.json when present; otherwise the clip files themselves;
+    ensembles/*.json summarised here (the ensembles manifest)."""
+    ex = lambda p: rel(p) if os.path.exists(p) else None
+    lib = {'mech': ex(os.path.join(HERE, 'mech', 'index.json')), 'seq': ex(os.path.join(HERE, 'seq', 'index.json')),
+           'anim': ex(os.path.join(HERE, 'anim', 'index.json')), 'sfx': ex(os.path.join(HERE, 'sfx', 'index.json'))}
+
+    def clips(d, kind):
+        out = []
+        for f in sorted(glob.glob(os.path.join(HERE, d, '**', '*.json'), recursive=True)):
+            if os.path.basename(f) == 'index.json':
+                continue
+            try:
+                j = json.load(open(f))
+            except Exception:
+                continue
+            if not isinstance(j, dict) or not isinstance(j.get('frames'), list):
+                continue
+            out.append({'id': j.get('id') or os.path.basename(f)[:-5], 'title': j.get('title') or j.get('id'), 'src': rel(f), 'kind': kind,
+                        'frames': len(j['frames']), 'anchors': sorted((j.get('anchors') or {}).keys()), 'events': len(j.get('events') or []),
+                        'size_cm': j.get('size_cm'), 'loop': j.get('loop'), 'poems': j.get('poems')})
+        return out
+    lib['mech_clips'] = clips('mech', 'mech')
+    lib['seq_clips'] = clips('seq', 'sequence')
+    ens = []
+    for f in sorted(glob.glob(os.path.join(HERE, 'ensembles', '*.json'))):
+        try:
+            j = json.load(open(f))
+        except Exception:
+            continue
+        if not isinstance(j, dict) or 'layers' not in j:
+            continue
+        ens.append({'id': j.get('id') or os.path.basename(f)[:-5], 'name': j.get('name'), 'file': rel(f), 'poems': j.get('poems') or [],
+                    'size_cm': j.get('size_cm'), 'slots': [s.get('name') for s in j.get('slots') or []], 'mechs': len(j.get('mechs') or []),
+                    'sfx': j.get('sfx') or [], 'layers': len(j.get('layers') or [])})
+    lib['ensembles'] = ens
+    return lib
+
+
 def main():
     P = planes()
     films = {p['num']: p for p in json.load(open(os.path.join(SHOTS, 'film', 'poems.json')))}
@@ -90,8 +130,10 @@ def main():
         per[n] = {'planes': [s for s in stills if s in P], 'images': images,
                   'film': rel(os.path.join(SHOTS, 'film', f'poem_{n}.mp4')) if os.path.exists(os.path.join(SHOTS, 'film', f'poem_{n}.mp4')) else None}
     arch = [{'file': rel(f), 'label': 'archive frame ' + os.path.basename(f)[:-4], 'source': 'archive'} for f in sorted(glob.glob(os.path.join(SHOTS, 'weave', 'archive', '*_frames', '*.jpg')))[::12]]
-    out = {'about': __doc__.strip().split('\n')[0], 'planes': P, 'poems': per, 'actions': actions(), 'archive': arch}
+    out = {'about': __doc__.strip().split('\n')[0], 'planes': P, 'poems': per, 'actions': actions(), 'archive': arch, 'library': library()}
     json.dump(out, open(os.path.join(HERE, 'assets.json'), 'w'), indent=1)
+    L = out['library']
+    print(len(L['mech_clips']), 'mech clips,', len(L['seq_clips']), 'sequence clips,', len(L['ensembles']), 'ensembles;', 'indexes:', {k: L[k] for k in ('mech', 'seq', 'anim', 'sfx')})
     print(len(P), 'plane sets,', sum(len(v['images']) for v in per.values()), 'poem images,', len(out['actions']), 'actions,', len(arch), 'archive frames')
 
 

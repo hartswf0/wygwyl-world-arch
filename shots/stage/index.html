@@ -50,7 +50,14 @@ aside h3{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase
 .li i{font:9px var(--mono);color:var(--act);display:grid;place-items:center;font-style:normal}
 .li .n{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .li .k{font-size:9px;padding:0 4px;border-radius:3px;border:1px solid var(--line)}
-.k.part{color:var(--card)}.k.plane{color:var(--plane)}.k.image{color:var(--arch)}.k.video{color:var(--arch)}.k.action{color:var(--act)}
+.k.part{color:var(--card)}.k.plane{color:var(--plane)}.k.image{color:var(--arch)}.k.video{color:var(--arch)}.k.action{color:var(--act)}.k.clip{color:#e9d36b}.k.ensemble{color:#9fb7ff}.k.sfx{color:#ff9f7a}
+.anc{position:absolute;z-index:6;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#ffde59;border:2px solid #1a120a;box-shadow:0 0 0 2px #ffde5966;pointer-events:none}
+.anc.hot{background:#5fd0ff;transform:scale(1.5)}.anc b{position:absolute;left:14px;top:-4px;font:600 11px var(--mono);color:#1a120a;background:#ffde59;padding:0 4px;border-radius:3px;white-space:nowrap}
+.slot{position:absolute;z-index:6;margin:-6px 0 0 -6px;width:12px;height:12px;border:2px dashed #9fb7ff;border-radius:2px;pointer-events:none}
+.ens{position:absolute;cursor:grab}.ens>*{position:absolute;pointer-events:none}
+.sfxp{display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;margin:0 0 4px;font:11px var(--mono);cursor:copy}.sfxp:hover{border-color:#ff9f7a}.sfxp b{color:var(--ink);font-weight:600}.sfxp em{color:var(--dim);font-style:normal;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.sfxp button{font:11px var(--mono);background:none;border:1px solid var(--line);border-radius:999px;color:#ff9f7a;cursor:pointer}
+.syn{color:#ff9f7a;font-size:9px;border:1px solid #ff9f7a55;border-radius:3px;padding:0 3px}
+.lineup{display:flex;align-items:flex-end;gap:6px;padding:6px;border:1px solid var(--line);border-radius:6px;background:linear-gradient(#0f0c0a 92%,#3a2e24 92%);overflow-x:auto;margin-bottom:6px}.lineup canvas{flex:0 0 auto}
 .li button{font:11px var(--mono);background:none;border:0;color:var(--dim);cursor:pointer;padding:0 2px}
 #q{width:calc(100% - 24px);margin:0 12px 6px;font:12px var(--mono);background:#0f0c0a;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
 .grp{font:600 11px var(--mono);color:var(--acc);margin:8px 4px 4px;display:flex;gap:6px;align-items:center}
@@ -82,7 +89,7 @@ button:focus-visible,a:focus-visible,.cell:focus-visible,.act:focus-visible{outl
 .wd:hover{background:#2a2119;color:var(--acc)}.wd.on{color:var(--acc)}
 .wd.cued{border-left:2px solid var(--act)}
 .cm{position:absolute;top:2px;font:600 9.5px/13px var(--mono);padding:0 4px;border-radius:3px;white-space:nowrap;cursor:pointer;color:#120c08}
-.cm.show{background:var(--plane)}.cm.hide{background:#8d7f70}.cm.play{background:var(--act)}.cm.move{background:var(--card)}.cm.pose-swap{background:var(--arch)}.cm.miss{opacity:.35;text-decoration:line-through}
+.cm.sfx{background:#ff9f7a}.cm.show{background:var(--plane)}.cm.hide{background:#8d7f70}.cm.play{background:var(--act)}.cm.move{background:var(--card)}.cm.pose-swap{background:var(--arch)}.cm.miss{opacity:.35;text-decoration:line-through}
 #cueList{display:flex;gap:4px;flex-wrap:wrap;max-height:96px;overflow:auto}
 .cc{font:10.5px var(--mono);border:1px solid var(--line);border-radius:999px;padding:1px 4px 1px 8px;color:var(--dim);cursor:pointer;white-space:nowrap}
 .cc b{font-weight:600;color:var(--ink)}.cc.miss{opacity:.45}.cc.auto{border-style:dashed}
@@ -111,8 +118,9 @@ button:focus-visible,a:focus-visible,.cell:focus-visible,.act:focus-visible{outl
       <div id="tlBar" title="Her reading: scenes and words. Click or drag to scrub."><canvas id="tlTicks"></canvas></div>
       <div id="tlLane" title="This scene's words. Click a word to go there; with a layer selected, it also adds a cue for that layer."><div id="tlLaneIn"></div></div>
       <div class="tools"><span class="hint" id="tClock">00:00.0</span>
-        <label class="hint">cue on word <select class="btn" id="cueType" aria-label="Cue to add when a word is clicked"><option value="show">show</option><option value="show-wipe">show · wipe in</option><option value="hide">hide</option><option value="hide-wipe">hide · wipe out</option><option value="play-once">play once</option><option value="play-loop">play loop</option><option value="move">move →</option><option value="move-l">move ←</option><option value="pose-swap">pose-swap</option></select></label>
+        <label class="hint">cue on word <select class="btn" id="cueType" aria-label="Cue to add when a word is clicked"><option value="show">show</option><option value="show-wipe">show · wipe in</option><option value="hide">hide</option><option value="hide-wipe">hide · wipe out</option><option value="play-once">play once</option><option value="play-loop">play loop</option><option value="move">move →</option><option value="move-l">move ←</option><option value="pose-swap">pose-swap</option><option value="sfx">sfx (sound)</option></select></label>
         <select class="btn" id="cuePart" aria-label="Pose to swap in" hidden></select>
+        <select class="btn" id="cueSfx" aria-label="Sound to fire" hidden></select>
         <span class="sp"></span><button class="btn" id="bCueReset">Reset cues</button></div>
       <div id="cueList"></div>
       <div id="log" aria-label="Cue log"></div>
@@ -147,6 +155,7 @@ button:focus-visible,a:focus-visible,.cell:focus-visible,.act:focus-visible{outl
   </aside>
 </main>
 <div id="toast" role="status" aria-live="polite"></div>
+<script src="engine.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const CUT = '../kits/cut/', W = 1600, H = 900;
@@ -161,34 +170,22 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&
 const kindOf = L => L.kind || (L.part ? 'part' : L.action ? 'action' : 'image');
 const isArchive = L => L.tag || /archive|markov|halfworld/.test(L.src || '');
 
-/* ── actions: solved clips, a display list per frame, drawn live ── */
-const CLIPS = {};
-async function clip(id) {
-  if (CLIPS[id]) return CLIPS[id];
+/* ── clips: display lists per frame, drawn live (engine.js: every FORMATS §1 op, image_root, anchors, events) ──
+   CLIPS is keyed by the layer's clip key: 'action:<id>' for an Arena action, the clip's src for a clip layer. */
+const E = window.STAGE_ENGINE, CLIPS = {}, LIB = {mech: [], chars: {}, charClips: [], seq: [], ens: [], sfx: []};
+const clipKeyOf = L => L.action ? 'action:' + L.action : L.src;
+async function clip(id) {   // an Arena action by id (its image paths are relative to shots/arena/)
+  if (CLIPS['action:' + id]) return CLIPS['action:' + id];
   const a = ASSETS.actions.find(x => x.id === id); if (!a) return null;
-  const j = await fetch(a.file).then(r => r.json());
-  const base = a.file.replace(/clips\/[^/]+$/, ''), IMG = {};   // clip image paths are relative to shots/arena/
-  await Promise.all(Object.entries(j.images).map(([k, f]) => new Promise(res => { const im = new Image(); im.onload = im.onerror = res; im.src = base + f; IMG[k] = im; })));
-  // bounds of the actor over the whole clip: transform each part's corners
-  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-  for (let f = 0; f < j.frames.length; f += 5) for (const o of j.frames[f].draw) {
-    if (o.t !== 'img' || !IMG[o.id]?.naturalWidth) continue;
-    const [a1, b, c, d, e, g] = o.m, w = IMG[o.id].naturalWidth, h = IMG[o.id].naturalHeight;
-    for (const [u, v] of [[0, 0], [w, 0], [0, h], [w, h]]) { const X = a1 * u + c * v + e, Y = b * u + d * v + g; x0 = Math.min(x0, X); y0 = Math.min(y0, Y); x1 = Math.max(x1, X); y1 = Math.max(y1, Y); }
-  }
-  return CLIPS[id] = {j, IMG, box: [x0 - 20, y0 - 20, x1 + 20, y1 + 20], fps: j.clock?.fps || 24};
+  const C = await E.loadClip(a.file, {imgBase: a.file.replace(/clips\/[^/]+$/, '')});
+  return C ? (CLIPS['action:' + id] = C) : null;
 }
-function drawClip(cv, C, f) {
-  const g = cv.getContext('2d'), [x0, y0, x1, y1] = C.box, k = cv.width / (x1 - x0);
-  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
-  g.setTransform(k, 0, 0, k, -x0 * k, -y0 * k);
-  for (const o of C.j.frames[f % C.j.frames.length].draw) {
-    if (o.t === 'img') { const im = C.IMG[o.id]; if (!im?.naturalWidth) continue; g.save(); g.transform(...o.m); g.drawImage(im, 0, 0); g.restore(); }
-    else if (o.t === 'shadow') { g.save(); g.globalAlpha = (o.a ?? .6) * .6; g.fillStyle = '#000'; g.beginPath(); g.ellipse(o.x, o.y, o.rx, (o.rx) * .18, 0, 0, 7); g.fill(); g.restore(); }
-    else if (o.t === 'poly') { g.beginPath(); o.pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); if (o.fill) { g.fillStyle = o.fill; g.fill(); } if (o.stroke) { g.lineWidth = o.w || 2; g.strokeStyle = o.stroke; g.stroke(); } }
-    else if (o.t === 'line') { g.beginPath(); (o.pts || [[o.x1, o.y1], [o.x2, o.y2]]).forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.lineWidth = o.w || 2; g.strokeStyle = o.stroke || o.color || '#1a120b'; g.stroke(); }
-  }
-}
+async function clipSrc(src) { if (CLIPS[src]) return CLIPS[src]; const C = await E.loadClip(src); return C ? (CLIPS[src] = C) : null; }
+const clipFor = L => L.action ? clip(L.action) : clipSrc(L.src);
+const drawClip = E.drawClip;
+const ENS = {};   // ensemble id → its json
+async function ens(id) { if (ENS[id]) return ENS[id]; const j = await E.loadEnsemble(id, LIB.ens); if (j) { ENS[id] = j; await Promise.all((j.layers || []).filter(l => l.src && /\.json$/.test(l.src)).map(l => clipSrc(l.src))); } return j; }
+const isClipKind = L => ['action', 'clip'].includes(kindOf(L));
 /* ── the clock: her reading is the master; everything is evaluated at a 24 fps frame of it ──
    As in the weave, picture time is read from the audio element while it plays and from the wall
    clock only when there is no audio (blocked or missing). As in the suite, the audio is never
@@ -212,23 +209,25 @@ function play() {
   if (AUD) { try { AUD.currentTime = clock.t; } catch (_) {}
     AUD.play().then(() => { if (clock.playing) { clock.wall = false; } }).catch(() => { clock.wall = true; toast('Audio blocked: playing on the wall clock'); }); }
   document.querySelectorAll('#stage video').forEach(v => v.play().catch(() => {}));
+  E.sfx.audio(); E.setPlaying(true); preloadSounds();
   $('bPlay').textContent = '❚❚ Pause';
 }
 function pause() {
   if (!clock.playing) return;
   clock.t = tNow(); clock.playing = false; playing = false; AUD?.pause();
   document.querySelectorAll('#stage video').forEach(v => v.pause());
+  E.setPlaying(false); sfxStopLayers(); E.sfx.stopAll();
   $('bPlay').textContent = '▶ Play'; lastF = -1;
 }
 function seek(t) {
-  t = Math.max(0, Math.min(DUR() - 1 / FPS, t)); clock.t = t; prevT = t; lastF = -1;
+  t = Math.max(0, Math.min(DUR() - 1 / FPS, t)); clock.t = t; prevT = t; lastF = -1; sfxStopLayers();
   if (clock.playing) { clock.w0 = performance.now() - t * 1000; if (AUD) try { AUD.currentTime = t; } catch (_) {} }
 }
-function tlSceneAt(t) { if (!TL) return null; return TL.scenes.find(s => t >= s.t0 && t < s.t1) || (t < TL.scenes[0].t0 ? TL.scenes[0] : TL.scenes.reduce((a, b) => b.t1 > a.t1 ? b : a)); }
+function tlSceneAt(t) { if (!TL) return null; const e = 0.5 / FPS; return TL.scenes.find(s => t >= s.t0 - e && t < s.t1 - e) || (t < TL.scenes[0].t0 ? TL.scenes[0] : TL.scenes.reduce((a, b) => b.t1 > a.t1 ? b : a)); }
 const tlScene = key => TL?.scenes.find(s => s.key === key);
 const wordT = c => (c.w != null && TL?.words[c.w]) ? TL.words[c.w].s + (c.dt || 0) : c.t;
 function refOf(L, ls) {
-  const b = M => M.id || M.part || (M.action ? 'action:' + M.action : M.src || '');
+  const b = M => M.id || M.part || (M.action ? 'action:' + M.action : M.ensemble ? 'ens:' + M.ensemble : M.sfx ? 'sfx:' + M.sfx : M.src || '');
   const base = b(L), n = ls.slice(0, ls.indexOf(L)).filter(M => b(M) === base).length;
   return base + (n ? '#' + n : '');
 }
@@ -241,13 +240,17 @@ function resolve(s, ref) {
   let j = -1;
   if (base.startsWith('poet.')) j = ls.findIndex(L => L.part?.startsWith('poet.') && L.part.includes('main-poses'));
   else if (base.startsWith('action:')) j = ls.findIndex(L => kindOf(L) === 'action');
+  else if (base.startsWith('ens:')) j = ls.findIndex(L => kindOf(L) === 'ensemble');
+  else if (base.startsWith('sfx:')) j = ls.findIndex(L => kindOf(L) === 'sfx');
+  else if (/\.json$/.test(base)) j = ls.findIndex(L => kindOf(L) === 'clip' && L.src.split('/').slice(-2, -1)[0] === base.split('/').slice(-2, -1)[0]);
   else if (/\.(jpe?g|png|webp)$/i.test(base)) {   // the k-th archive still the cues name -> the k-th tagged layer
     const arch = ls.map((L, k) => L.tag ? k : -1).filter(k => k >= 0);
     const named = [...new Set((CUES[s.key] || []).map(c => c.layer).filter(r => /\.(jpe?g|png|webp)(#\d+)?$/i.test(r)))];
     j = arch[Math.max(0, named.indexOf(ref))] ?? -1; }
   return [j, j >= 0];
 }
-function cuesOf(s) { return (CUES[s.key] || []).map(c => { const [i, loose] = resolve(s, c.layer); return {...c, t: wordT(c), i, loose}; }).sort((a, b) => a.t - b.t); }
+/* an sfx cue needs no layer: i = -2 means "the scene itself" (never missing) */
+function cuesOf(s) { return (CUES[s.key] || []).map(c => { const [i, loose] = c.action === 'sfx' && !c.layer ? [-2, false] : resolve(s, c.layer || ''); return {...c, t: wordT(c), i, loose}; }).sort((a, b) => a.t - b.t); }
 function saveCues(s) { store?.setItem(cueKey(s.key), JSON.stringify(CUES[s.key] || [])); s.cuesEdited = true; }
 
 /* the state of every layer of the current scene at time T: base layer, then every cue up to T */
@@ -264,41 +267,98 @@ function stateAt(s, T) {
   }
   return st;
 }
+/* the frame a clip-kind layer shows at T. An Arena action with no cue runs on T itself (looped), as before;
+   a clip layer with no cue starts with its scene (a once-clip such as a door plays once and holds). */
+function frameOf(L, x, T, C, t0) {
+  if (x.play) return E.frameAt(C, T, x.play, L.f0 || 0, L.f1 || 0);
+  if (kindOf(L) === 'action') return E.frameAt(C, T, null, L.f0 || 0, L.f1 || 0);
+  const loop = L.loop ?? C.j.loop ?? true;
+  return E.frameAt(C, T, {t: t0, mode: loop ? 'loop' : 'once'}, L.f0 || 0, L.f1 || 0);
+}
+/* where every layer is at T: its own place plus moves, a pose-swap's new card, and riders carried by the anchor
+   they are attached to (the parent's anchor track at the parent's frame). Returns geo[i] {cx, cy, w, h, ...} and frames. */
+function layout(s, st, T) {
+  const G = [], F = [], busy = new Set(), t0 = tlScene(s.key)?.t0 ?? 0;
+  const one = i => {
+    if (G[i]) return G[i];
+    const L = s.layers[i], x = st[i]; busy.add(i);
+    let [w, h] = size(L), cx = L.x + x.dx, cy = L.y + x.dy, swap = '';
+    const want = x.part && L.part && poseSwappable(L.part, x.part) ? x.part : '';
+    if (want) {   // poses are cut from sheets drawn at one scale: keep that scale, and keep the feet where they were
+      const b0 = parts[L.part].bbox, b = parts[want].bbox, k = w / b0[2], foot = L.y + h / 2;
+      w = b[2] * k; h = b[3] * k; cy = foot - h / 2 + x.dy; swap = want;
+    }
+    if (kindOf(L) === 'ensemble') { const [l, t, ew, eh] = E.ensBox(ENS[L.ensemble], {...L, x: L.x + x.dx, y: L.y + x.dy}); w = ew; h = eh; cx = l + ew / 2; cy = t + eh / 2; }
+    const C = isClipKind(L) ? CLIPS[clipKeyOf(L)] : null;
+    if (C) F[i] = frameOf(L, x, T, C, t0);
+    if (L.attach) {
+      const j = s.layers.findIndex(M => refOf(M, s.layers) === L.attach.to), P = j >= 0 ? CLIPS[clipKeyOf(s.layers[j])] : null;
+      if (P && j !== i && !busy.has(j)) {
+        const pg = one(j), a = E.anchorAt(P, L.attach.anchor, F[j] ?? 0);
+        if (a) { const [ax, ay] = E.toStage(P, pg, a);
+          let mx = 0, my = h / 2;
+          if (C) [mx, my] = E.toStage(C, {cx: 0, cy: 0, w, h, flip: !!L.flip}, E.mountPoint(C, F[i] || 0, L.attach.mount));
+          cx = ax - mx + (L.attach.dx || 0) + x.dx; cy = ay - my + (L.attach.dy || 0) + x.dy; }
+      }
+    }
+    busy.delete(i);
+    return G[i] = {cx, cy, w, h, rot: L.rot || 0, flip: !!L.flip, swap};
+  };
+  s.layers.forEach((L, i) => one(i));
+  return {G, F};
+}
+let LAY = null;   // the last layout (anchor dots, events)
 function applyState(T) {
   const s = scenes[cur]; if (!s) return;
-  const st = stateAt(s, T), stage = $('stage');
+  const st = stateAt(s, T), stage = $('stage'), {G, F} = LAY = layout(s, st, T);
+  LAY.st = st; LAY.T = T;
   stage.querySelectorAll('.layer').forEach(el => {
-    const i = +el.dataset.i, L = s.layers[i], x = st[i]; if (!L || !x) return;
+    const i = +el.dataset.i, L = s.layers[i], x = st[i], g = G[i]; if (!L || !x || !g) return;
     let f = 1;
     if (x.fx) { const d = x.fx.fx === 'pop' ? POP : WIPE, p = ease((T - x.fx.t) / d); f = x.fx.dir > 0 ? p : 1 - p; }
     el.classList.toggle('hid', !x.vis);
     const clip = x.fx && x.fx.fx === 'wipe' && f < 1 ? `inset(0 0 ${((1 - f) * 100).toFixed(1)}% 0)` : '';
     if (el.style.clipPath !== clip) el.style.clipPath = clip;
     el.style.opacity = (L.op ?? 1) * (x.fx && x.fx.fx === 'pop' ? f : 1);
-    // pose-swap: another drawn pose in the same place, same height
-    let [w, h] = size(L), y = L.y;
-    const want = x.part && parts[x.part] && L.part && parts[L.part] ? x.part : '';
-    if (el.tagName === 'IMG' && (el.dataset.swap || '') !== want) { el.dataset.swap = want; el.src = want ? CUT + parts[want].file : srcOf(L); }
-    if (want) {   // poses are cut from sheets drawn at one scale: keep that scale, and keep the feet where they were
-      const b0 = parts[L.part].bbox, b = parts[want].bbox, k = w / b0[2], foot = L.y + h / 2;
-      w = b[2] * k; h = b[3] * k; y = foot - h / 2;
+    if (el.tagName === 'IMG' && (el.dataset.swap || '') !== g.swap) { el.dataset.swap = g.swap; el.src = g.swap ? CUT + parts[g.swap].file : srcOf(L); }
+    if (el.tagName === 'IMG' || el.classList.contains('ens')) { el.style.width = g.w + 'px'; el.style.height = g.h + 'px'; }
+    el.style.left = (g.cx - g.w / 2) + 'px'; el.style.top = (g.cy - g.h / 2) + 'px';
+    // clip-kind layers: the frame is a function of the one clock
+    if (el.tagName === 'CANVAS' && el.dataset.ck) {
+      const C = CLIPS[el.dataset.ck]; if (!C || F[i] == null) return;
+      if (+el.dataset.fr !== F[i] || el.dataset.drawn !== '1' || E.hasVideo(C)) { el.dataset.fr = F[i]; el.dataset.drawn = '1'; drawClip(el, C, F[i]); }
     }
-    if (el.tagName === 'IMG') { el.style.width = w + 'px'; el.style.height = h + 'px'; }
-    el.style.left = (L.x + x.dx - w / 2) + 'px'; el.style.top = (y + x.dy - h / 2) + 'px';
-    // action layers: the frame is a function of the one clock
-    if (el.tagName === 'CANVAS' && el.dataset.act) {
-      const C = CLIPS[el.dataset.act]; if (!C) return;
-      const f0 = +el.dataset.f0 || 0, n = Math.max(1, (+el.dataset.f1 || C.j.frames.length) - f0);
-      const k = x.play ? Math.floor((T - x.play.t) * FPS + 1e-6) : Math.floor(T * FPS + 1e-6);
-      const fr = f0 + (x.play && x.play.mode === 'once' ? Math.min(Math.max(0, k), n - 1) : ((k % n) + n) % n);
-      if (+el.dataset.fr !== fr || el.dataset.drawn !== '1') { el.dataset.fr = fr; el.dataset.drawn = '1'; drawClip(el, C, fr); }
-    }
+    if (el.classList.contains('ens')) ensFrame(el, L, x, T, g);
   });
   const seen = [];   // tags of archive that overlap are stacked, never printed over each other
-  stage.querySelectorAll('.tag').forEach(t => { const x = st[+t.dataset.for]; if (!x) return; t.style.display = x.vis ? '' : 'none';
-    const L = s.layers[+t.dataset.for]; const [w, h] = size(L), lx = Math.max(4, L.x + x.dx - w / 2 + 6); let ty = Math.max(4, L.y + x.dy - h / 2 + 6);
+  stage.querySelectorAll('.tag').forEach(t => { const k = +t.dataset.for, x = st[k], g = G[k]; if (!x || !g) return; t.style.display = x.vis ? '' : 'none';
+    const lx = Math.max(4, g.cx - g.w / 2 + 6); let ty = Math.max(4, g.cy - g.h / 2 + 6);
     if (x.vis) { while (seen.some(([a, b]) => Math.abs(a - lx) < 40 && Math.abs(b - ty) < 20)) ty += 22; seen.push([lx, ty]); }
     t.style.left = lx + 'px'; t.style.top = ty + 'px'; });
+  anchorDots();
+}
+/* an ensemble's own clip layers run on the same clock: from its play cue, else from the scene start */
+function ensFrame(el, L, x, T, g) {
+  const t0 = tlScene(scenes[cur].key)?.t0 ?? 0;
+  el.querySelectorAll('canvas[data-ck]').forEach(cv => { const C = CLIPS[cv.dataset.ck]; if (!C) return;
+    const fr = E.frameAt(C, T, x.play || {t: t0, mode: (C.j.loop ?? true) ? 'loop' : 'once'});
+    if (+cv.dataset.fr !== fr || cv.dataset.drawn !== '1' || E.hasVideo(C)) { cv.dataset.fr = fr; cv.dataset.drawn = '1'; drawClip(cv, C, fr); } });
+}
+/* anchors: dots on the selected layer's sockets (and, while dragging, on every other layer's) */
+let dragAnchors = false, hotAnchor = null;
+function anchorTargets(exceptI) {
+  const s = scenes[cur], out = []; if (!LAY || !s) return out;
+  s.layers.forEach((L, i) => { if (i === exceptI || !isClipKind(L) || LAY.st?.[i]?.vis === false) return; const C = CLIPS[clipKeyOf(L)]; if (!C) return;
+    for (const n of E.anchorNames(C)) { const a = E.anchorAt(C, n, LAY.F[i] ?? 0); if (a) { const [x, y] = E.toStage(C, LAY.G[i], a); out.push({i, name: n, x, y}); } } });
+  return out;
+}
+function anchorDots() {
+  const stage = $('stage'); stage.querySelectorAll('.anc,.slot').forEach(e => e.remove());
+  const s = scenes[cur]; if (!s || !LAY) return;
+  const dots = dragAnchors ? anchorTargets(sel) : anchorTargets(-1).filter(d => d.i === sel);
+  for (const d of dots) { const e = document.createElement('div'); e.className = 'anc' + (hotAnchor && hotAnchor.i === d.i && hotAnchor.name === d.name ? ' hot' : ''); e.style.left = d.x + 'px'; e.style.top = d.y + 'px'; e.innerHTML = `<b>${esc(d.name)}</b>`; stage.appendChild(e); }
+  const L = s.layers[sel];
+  if (L && kindOf(L) === 'ensemble' && ENS[L.ensemble]) for (const sl of E.ensSlots(ENS[L.ensemble], L)) { const e = document.createElement('div'); e.className = 'slot'; e.title = sl.name; e.style.left = sl.x + 'px'; e.style.top = sl.y + 'px'; stage.appendChild(e); }
 }
 
 /* caption: the line she is reading, words lit as she reaches them */
@@ -328,9 +388,9 @@ function drawTicks() {
   const g = cv.getContext('2d'), X = t => t / DUR() * cv.width;
   g.fillStyle = 'rgba(239,230,218,.45)';
   for (const w of TL.words) g.fillRect(Math.round(X(w.s)), cv.height * .58, Math.max(1, k), cv.height * .3);
-  const col = {show: '#7fd3c4', hide: '#8d7f70', play: '#b9c46a', move: '#c79a62', 'pose-swap': '#d98bb0'};
+  const col = {show: '#7fd3c4', hide: '#8d7f70', play: '#b9c46a', move: '#c79a62', 'pose-swap': '#d98bb0', sfx: '#ff9f7a'};
   for (const s of scenes) { const ts = tlScene(s.key); if (!ts) continue;
-    for (const c of cuesOf(s)) { if (c.i < 0) continue; g.fillStyle = col[c.action] || '#fff'; g.beginPath(); g.arc(X(c.t), cv.height * .42, 2.6 * k, 0, 7); g.fill(); } }
+    for (const c of cuesOf(s)) { if (c.i === -1) continue; g.fillStyle = col[c.action] || '#fff'; g.beginPath(); g.arc(X(c.t), cv.height * .42, 2.6 * k, 0, 7); g.fill(); } }
 }
 function lane() {
   const inn = $('tlLaneIn'), s = scenes[cur], ts = TL && s && tlScene(s.key);
@@ -340,63 +400,71 @@ function lane() {
   let h = '', row = 0;
   TL.words.forEach((w, k) => { if (w.s < ts.t0 || w.s >= ts.t1) return; row ^= 1;
     h += `<span class="wd${cuedW.has(k) ? ' cued' : ''}" data-k="${k}" style="left:${((w.s - ts.t0) * PX).toFixed(1)}px;top:${row ? 46 : 64}px" title="${fmt(w.s)}">${esc(w.w)}</span>`; });
-  const G = {show: '◐', hide: '○', play: '▶', move: '→', 'pose-swap': '⇄'};
+  const G = {show: '◐', hide: '○', play: '▶', move: '→', 'pose-swap': '⇄', sfx: '♪'};
   const rowEnd = [-1e9, -1e9, -1e9];   // three rows of cue marks, each mark takes the first row free at its x
   cl.forEach((c, n) => { const x = (c.t - ts.t0) * PX, txt = `${G[c.action] || '•'} ${shortRef(s, c)}`;
     let r = rowEnd.findIndex(e => e < x); if (r < 0) r = rowEnd.indexOf(Math.min(...rowEnd)); rowEnd[r] = x + txt.length * 6.2 + 10;
-    h += `<span class="cm ${c.action}${c.i < 0 ? ' miss' : ''}" data-n="${n}" style="left:${x.toFixed(1)}px;top:${2 + r * 14}px" title="${esc(cueText(s, c))}">${esc(txt)}</span>`; });
+    h += `<span class="cm ${c.action}${c.i === -1 ? ' miss' : ''}" data-n="${n}" style="left:${x.toFixed(1)}px;top:${2 + r * 14}px" title="${esc(cueText(s, c))}">${esc(txt)}</span>`; });
   inn.innerHTML = h + '<div class="head" id="laneHead"></div>';
   inn.querySelectorAll('.wd').forEach(el => el.onclick = e => { e.stopPropagation(); wordClick(+el.dataset.k); });
   inn.querySelectorAll('.cm').forEach(el => el.onclick = e => { e.stopPropagation(); seek(cl[+el.dataset.n].t); });
   cueList();
 }
-function shortRef(s, c) { const L = s.layers[c.i]; return L ? label(L).split(' · ')[0].split('/').pop().slice(0, 18) : c.layer.split('/').pop().slice(0, 18); }
+function shortRef(s, c) { if (c.action === 'sfx' && !s.layers[c.i]) return (c.sfx || '').replace(/^sfx\./, ''); const L = s.layers[c.i]; return L ? label(L).split(' · ')[0].split('/').pop().slice(0, 18) : c.layer.split('/').pop().slice(0, 18); }
 function cueText(s, c) {
   const L = s.layers[c.i];
+  if (c.action === 'sfx') return `${fmt(c.t)} “${c.word || '·'}” sfx ${c.sfx}${E.sfx.resolve(c.sfx) ? (E.sfx.resolve(c.sfx).id !== c.sfx ? ' → ' + E.sfx.resolve(c.sfx).id : '') : ' (no such sound)'}${L ? ' · ' + label(L) : ''}`;
   const extra = c.action === 'play' ? ' ' + (c.mode || 'once') : c.action === 'move' ? ` ${c.dx > 0 ? '+' : ''}${c.dx || 0}px/${c.dur || 2}s` : c.action === 'pose-swap' ? ' → ' + (parts[c.part]?.label || c.part || '') : c.fx ? ' · ' + c.fx : '';
   return `${fmt(c.t)} “${c.word || '·'}” ${c.action}${extra} · ${L ? label(L) + (c.loose ? ' (stand-in for ' + c.layer + ', which this plan no longer has)' : '') : c.layer + ' (missing in this plan)'}${c.why ? ' · ' + c.why : ''}`;
 }
 function cueList() {
   const s = scenes[cur], box = $('cueList'); if (!TL || !s) { box.innerHTML = ''; return; }
   const raw = CUES[s.key] || [], cl = cuesOf(s);
-  box.innerHTML = cl.map((c, n) => `<span class="cc${c.i < 0 ? ' miss' : ''}${c.auto ? ' auto' : ''}" data-n="${n}" title="${esc(cueText(s, c))}"><b>${fmt(c.t)}</b> ${esc(c.word || '·')} · ${c.action}${c.mode ? ' ' + c.mode : ''} · ${esc(shortRef(s, c))}<button data-x="${n}" aria-label="remove cue">✕</button></span>`).join('')
+  box.innerHTML = cl.map((c, n) => `<span class="cc${c.i === -1 ? ' miss' : ''}${c.auto ? ' auto' : ''}" data-n="${n}" title="${esc(cueText(s, c))}"><b>${fmt(c.t)}</b> ${esc(c.word || '·')} · ${c.action}${c.mode ? ' ' + c.mode : ''} · ${esc(shortRef(s, c))}<button data-x="${n}" aria-label="remove cue">✕</button></span>`).join('')
     || '<span class="hint">No cues in this scene: select a layer, pick a cue type, click a word.</span>';
   box.querySelectorAll('.cc').forEach(el => el.onclick = e => { const c = cl[+el.dataset.n];
-    if (e.target.dataset.x != null) { const j = raw.findIndex(r => r.layer === c.layer && r.action === c.action && Math.abs(wordT(r) - c.t) < 1e-6); if (j >= 0) raw.splice(j, 1); CUES[s.key] = raw; saveCues(s); lane(); drawTicks(); lastF = -1; return; }
+    if (e.target.dataset.x != null) { const j = raw.findIndex(r => r.layer === c.layer && r.action === c.action && r.sfx === c.sfx && Math.abs(wordT(r) - c.t) < 1e-6); if (j >= 0) raw.splice(j, 1); CUES[s.key] = raw; saveCues(s); lane(); drawTicks(); lastF = -1; return; }
     seek(c.t); });
 }
 function wordClick(k) {
   const w = TL.words[k], s = scenes[cur], L = s.layers[sel];
   seek(w.s);
+  const ty = $('cueType').value;
+  if (ty === 'sfx') {   // a sound on this word: needs no layer (with a layer selected, it is filed under that layer)
+    const id = $('cueSfx').value; if (!id) return toast('No sounds loaded');
+    const c = {t: w.s, w: k, word: w.w, action: 'sfx', sfx: id}; if (L) c.layer = refOf(L, s.layers);
+    (CUES[s.key] = CUES[s.key] || []).push(c); saveCues(s); lane(); drawTicks(); lastF = -1; E.sfx.play(id);
+    return toast(`Cue: ${id} on “${w.w}”`);
+  }
   if (!L) return;
-  const ty = $('cueType').value, c = {t: w.s, w: k, word: w.w, layer: refOf(L, s.layers)};
+  const c = {t: w.s, w: k, word: w.w, layer: refOf(L, s.layers)};
   if (ty === 'show' || ty === 'hide') c.action = ty;
   else if (ty === 'show-wipe' || ty === 'hide-wipe') { c.action = ty.split('-')[0]; c.fx = 'wipe'; }
-  else if (ty.startsWith('play')) { if (kindOf(L) !== 'action') return toast('play cues are for action layers'); c.action = 'play'; c.mode = ty.split('-')[1]; }
+  else if (ty.startsWith('play')) { if (!['action', 'clip', 'ensemble', 'sfx'].includes(kindOf(L))) return toast('play cues are for action, clip, ensemble and sound layers'); c.action = 'play'; c.mode = ty.split('-')[1]; }
   else if (ty.startsWith('move')) { c.action = 'move'; c.dx = ty === 'move-l' ? -200 : 200; c.dy = 0; c.dur = 2; }
-  else if (ty === 'pose-swap') { if (kindOf(L) !== 'part') return toast('pose-swap is for drawn parts'); c.action = 'pose-swap'; c.part = $('cuePart').value; }
+  else if (ty === 'pose-swap') { if (kindOf(L) !== 'part' || !poseSheet(L.part)) return toast('pose-swap is for a whole drawn figure (a main-poses card)'); if (!poseSwappable(L.part, $('cuePart').value)) return toast('pick a pose of the same character'); c.action = 'pose-swap'; c.part = $('cuePart').value; }
   (CUES[s.key] = CUES[s.key] || []).push(c); saveCues(s); lane(); drawTicks(); lastF = -1;
   toast(`Cue: ${c.action} on “${w.w}”`);
 }
 function poseOptions() {
-  const ps = Object.values(parts).filter(p => p.poems.includes(P) && p.sheet.startsWith('poet.'));
+  const ps = Object.values(parts).filter(p => p.poems.includes(P) && p.sheet.startsWith('poet.') && /\.main-poses$/.test(p.sheet));
   $('cuePart').innerHTML = ps.map(p => `<option value="${esc(p.id)}">${esc((p.label || p.id.split('/')[1]).slice(0, 40))}</option>`).join('');
 }
-$('cueType').onchange = e => { $('cuePart').hidden = e.target.value !== 'pose-swap'; };
+$('cueType').onchange = e => { $('cuePart').hidden = e.target.value !== 'pose-swap'; $('cueSfx').hidden = e.target.value !== 'sfx'; };
 
 /* per frame: cut to the scene her voice is in, apply its cues, caption, heads, log crossings */
 function frame(force) {
   const t = tNow();
   if (clock.playing && t >= DUR()) { pause(); clock.t = DUR() - 1 / FPS; }
-  const f = Math.floor(Math.min(t, DUR()) * FPS + 1e-6), T = f / FPS;
+  const f = Math.floor(Math.min(t, DUR()) * FPS + 0.01), T = f / FPS;   // times are stored to 3 decimals: a hair of tolerance keeps t0 on its own frame
   if (f === lastF && !force) return;
-  lastF = f;
+  lastF = f; const Tprev = prevT;
   if (TL) {
     const ts = tlSceneAt(T), i = ts ? scenes.findIndex(s => s.key === ts.key) : -1;
     if (i >= 0 && i !== cur) { cur = i; if (clock.playing) sel = -1; markStrip(); show(true); }
     if (clock.playing && T > prevT) {   // log what was crossed, like the weave's contact log
       const s = scenes[cur];
-      for (const c of cuesOf(s)) if (c.t > prevT && c.t <= T && c.i >= 0) { fired.push({t: +c.t.toFixed(3), scene: s.key, word: c.word, action: c.action, layer: c.layer}); $('log').textContent = fired.slice(-4).map(x => `▸ ${fmt(x.t)} ${x.scene} “${x.word || '·'}” ${x.action} ${x.layer.split('/').pop()}`).join('\n'); }
+      for (const c of cuesOf(s)) if (c.t > prevT && c.t <= T && c.i >= 0 && c.action !== 'sfx') { fired.push({t: +c.t.toFixed(3), scene: s.key, word: c.word, action: c.action, layer: c.layer}); $('log').textContent = fired.slice(-4).map(x => `▸ ${fmt(x.t)} ${x.scene} “${x.word || '·'}” ${x.action} ${x.layer.split('/').pop()}`).join('\n'); }
     }
     prevT = T;
     const bh = $('barHead'); if (bh) bh.style.left = (T / DUR() * 100) + '%';
@@ -407,9 +475,11 @@ function frame(force) {
     $('tClock').textContent = `${fmt(T)} / ${fmt(DUR())} · frame ${f}`;
     $('stamp').textContent = `${scenes[cur]?.key || ''} · ${fmt(T)}`;
   }
+  else prevT = T;
   applyState(T);
+  soundFrame(scenes[cur], T, Tprev);
 }
-function tick() { frame(false); requestAnimationFrame(tick); }
+function tick() { if (mediaDirty) { mediaDirty = false; $('stage').querySelectorAll('canvas[data-ck]').forEach(c => c.dataset.drawn = '0'); frame(true); } else frame(false); requestAnimationFrame(tick); }
 function markStrip() { document.querySelectorAll('#scenes .sc').forEach((d, i) => d.classList.toggle('on', i === cur)); document.querySelectorAll('#tlBar .tb').forEach(d => d.classList.toggle('on', d.dataset.key === scenes[cur]?.key)); }
 let scrub = false;
 const barT = e => { const r = $('tlBar').getBoundingClientRect(); return (e.clientX - r.left) / r.width * DUR(); };
@@ -418,27 +488,59 @@ $('tlBar').addEventListener('pointermove', e => { if (scrub) seek(barT(e)); });
 $('tlBar').addEventListener('pointerup', () => { scrub = false; });
 $('tlLane').addEventListener('click', e => { const ts = tlScene(scenes[cur]?.key); if (!ts || e.target.closest('.wd,.cm')) return; const r = $('tlLaneIn').getBoundingClientRect(); seek(ts.t0 + (e.clientX - r.left) / PX); });
 $('bCueReset').onclick = () => { const s = scenes[cur], ts = tlScene(s?.key); if (!ts) return; store?.removeItem(cueKey(s.key)); CUES[s.key] = structuredClone(ts.cues || []); s.cuesEdited = false; lane(); drawTicks(); lastF = -1; toast('Cues reset to the timeline'); };
-window.__stage = {seek, play, pause, t: () => tNow(), scene: () => scenes[cur]?.key, fired, frame: () => lastF,
+E.onMedia = () => { mediaDirty = true; };
+let mediaDirty = false;
+window.__stage = {seek, play, pause, t: () => tNow(), scene: () => scenes[cur]?.key, fired, frame: () => lastF, E, LIB, CLIPS, ENS,
+  layers: () => scenes[cur]?.layers, add: L => add(L), addClip, addEnsemble, attach, select: i => { sel = i; show(); }, anchors: () => anchorTargets(-1),
+  layout: () => LAY && LAY.G.map((g, i) => ({i, ...g, f: LAY.F[i]})), cue: (k, type, extra = {}) => { $('cueType').value = type; if (extra.sfx) $('cueSfx').value = extra.sfx; wordClick(k); },
   state: () => { const s = scenes[cur]; return stateAt(s, lastF / FPS).map((x, i) => ({i, ref: refOf(s.layers[i], s.layers), vis: x.vis, dx: x.dx, part: x.part, play: x.play})); },
   audio: () => AUD && {paused: AUD.paused, t: AUD.currentTime, wall: clock.wall, dur: AUD.duration}};
 
 /* ── layers ── */
+/* a pose-swap only ever trades one whole drawn figure for another of the same character: both cards from a
+   '<character>.main-poses' sheet with the same character prefix. Body-part cards (heads, feet, hands) never swap. */
+const poseSheet = id => { const p = parts[id]; return p && /\.main-poses$/.test(p.sheet) ? p.sheet.replace(/\.main-poses$/, '').replace(/\.\d\d$/, '') : null; };
+function poseSwappable(a, b) { const A = poseSheet(a), B = poseSheet(b); return !!A && A === B; }
 function size(L) {
-  const p = L.part && parts[L.part];
-  const ar = p ? p.bbox[3] / p.bbox[2] : L.ar || (kindOf(L) === 'action' && CLIPS[L.action] ? (CLIPS[L.action].box[3] - CLIPS[L.action].box[1]) / (CLIPS[L.action].box[2] - CLIPS[L.action].box[0]) : 9 / 16);
+  const k = kindOf(L);
+  if (k === 'sfx') return [0, 0];
+  if (k === 'ensemble') { const [, , w, h] = E.ensBox(ENS[L.ensemble], L); return [w, h]; }
+  const p = L.part && parts[L.part], C = isClipKind(L) ? CLIPS[clipKeyOf(L)] : null;
+  const ar = p ? p.bbox[3] / p.bbox[2] : C ? E.ar(C) : L.ar || 9 / 16;
   return [L.w, L.h || L.w * ar];
 }
 function srcOf(L) { const p = L.part && parts[L.part]; return p ? CUT + p.file : L.src; }
+/* a clip-kind layer is a canvas the clip is drawn into; it is sized once the clip has loaded */
+function clipCanvas(L, mini, w0) {
+  const el = document.createElement('canvas'); el.dataset.ck = clipKeyOf(L);
+  clipFor(L).then(C => { if (!C) return; const w = w0 || L.w, h = (L.h || w * E.ar(C));
+    el.width = Math.max(2, Math.round(w * (mini ? .2 : 1))); el.height = Math.max(2, Math.round(h * (mini ? .2 : 1)));
+    el.style.width = w + 'px'; el.style.height = h + 'px'; if (!w0) el.style.top = (L.y - h / 2) + 'px';
+    drawClip(el, C, L.f0 || 0); if (!mini) { el.dataset.drawn = '0'; lastF = -1; } });
+  return el;
+}
 function layerEl(L, i, mini) {
   const k = kindOf(L); let el;
+  if (k === 'sfx') return null;   // no picture: it plays on the timeline (the layer list shows it)
   if (k === 'video') { el = document.createElement('video'); Object.assign(el, {src: L.src, muted: true, loop: true, autoplay: !mini, playsInline: true}); if (mini) el.preload = 'metadata'; }
-  else if (k === 'action') {
-    el = document.createElement('canvas'); el.dataset.act = L.action; if (L.f0) el.dataset.f0 = L.f0; if (L.f1) el.dataset.f1 = L.f1;
-    clip(L.action).then(C => { if (!C) return; const [w, h] = size(L); el.width = Math.round(w * (mini ? .2 : 1)); el.height = Math.round(h * (mini ? .2 : 1)); el.style.height = h + 'px'; el.style.top = (L.y - h / 2) + 'px'; drawClip(el, C, L.f0 || 0); if (!mini) { el.dataset.drawn = '0'; lastF = -1; } });
-  } else { el = new Image(); el.src = srcOf(L) || ''; el.alt = ''; el.draggable = false; }
-  el.className = 'layer' + (!mini && i === sel ? ' sel' : '') + (L.hide ? ' hid' : '');
-  const [w, h] = size(L);
-  Object.assign(el.style, {left: (L.x - w / 2) + 'px', top: (L.y - h / 2) + 'px', width: w + 'px', height: h + 'px',
+  else if (k === 'action' || k === 'clip') el = clipCanvas(L, mini);
+  else if (k === 'ensemble') {
+    el = document.createElement('div'); el.classList.add('ens');
+    const J = ENS[L.ensemble], [bl, bt] = E.ensBox(J, L);
+    for (const M of E.ensLayers(J, {...L, flip: false}, parts)) {   // the container flips as a whole
+      const mk = M.kind, w = M.w, h = M._h; let c;
+      if (mk === 'clip' || mk === 'action') { c = clipCanvas(M, mini, w); c.style.height = h + 'px'; }
+      else if (mk === 'video') { c = document.createElement('video'); Object.assign(c, {src: M.src, muted: true, loop: true, autoplay: !mini, playsInline: true}); }
+      else { c = new Image(); c.src = srcOf(M) || ''; c.alt = ''; c.draggable = false; }
+      Object.assign(c.style, {left: (M.x - w / 2 - bl) + 'px', top: (M.y - h / 2 - bt) + 'px', width: w + 'px', height: h + 'px',
+        transform: `rotate(${M.rot || 0}deg) scaleX(${M.flip ? -1 : 1})`, opacity: M.op ?? 1, mixBlendMode: M.blend || 'normal'});
+      el.appendChild(c);
+    }
+  }
+  else { el = new Image(); el.src = srcOf(L) || ''; el.alt = ''; el.draggable = false; }
+  el.classList.add('layer'); if (!mini && i === sel) el.classList.add('sel'); if (L.hide) el.classList.add('hid');
+  const [w, h] = size(L), [l, t] = k === 'ensemble' ? E.ensBox(ENS[L.ensemble], L) : [L.x - w / 2, L.y - h / 2];
+  Object.assign(el.style, {left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px',
     transform: `rotate(${L.rot || 0}deg) scaleX(${L.flip ? -1 : 1})`, opacity: L.op ?? 1, mixBlendMode: L.blend || 'normal'});
   el.dataset.i = i;
   return el;
@@ -446,7 +548,7 @@ function layerEl(L, i, mini) {
 function render(host, layers, mini) {
   host.innerHTML = '';
   layers.forEach((L, i) => {
-    host.appendChild(layerEl(L, i, mini));
+    const el = layerEl(L, i, mini); if (el) host.appendChild(el);
     if (!mini && isArchive(L)) {   // the weave's rule: archive is labelled for as long as it shows (visibility follows the layer, cues included)
       const [w, h] = size(L), t = document.createElement('span'); t.className = 'tag'; t.dataset.for = i;
       t.textContent = L.tag || ('ARCHIVE · ' + (L.src || '').split('/').slice(-2).join('/'));
@@ -460,6 +562,7 @@ async function load() {
   $('poem').innerHTML = POEMS.map(n => `<option value="${n}"${n === P ? ' selected' : ''}>Poem ${n}</option>`).join('');
   $('toPoem').href = `../poems/${P}.html`; $('toParts').href = `../poems/p${P}.html`;
   [CAT, ASSETS] = await Promise.all([CAT || fetch(CUT + 'catalog.json').then(r => r.json()), ASSETS || fetch('assets.json').then(r => r.json())]);
+  if (!LIB.loaded) { Object.assign(LIB, await E.library(ASSETS), {loaded: true}); sfxOptions(); }
   ATLAS = await fetch(`../poems/atlas/${P}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
   PLAN = await fetch(`plans/${P}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
   parts = {};
@@ -468,7 +571,9 @@ async function load() {
   document.title = `Stage ${P} ${PLAN.title}`;
   scenes = PLAN.scenes.map(s => { const saved = store?.getItem(key(s.key)); return saved ? {...s, layers: JSON.parse(saved), edited: true} : structuredClone(s); });
   cur = Math.min(Math.max(0, +(qs.get('s') || 0)), scenes.length - 1); sel = -1;
-  await Promise.all(scenes.flatMap(s => s.layers.filter(L => L.action).map(L => clip(L.action))));
+  await Promise.all(scenes.flatMap(s => s.layers.filter(L => kindOf(L) === 'ensemble').map(L => ens(L.ensemble))));
+  await Promise.all(scenes.flatMap(s => s.layers.filter(L => isClipKind(L)).map(L => clipFor(L))));
+  scenes.forEach(s => { if (!s.edited) s.layers.forEach(L => standOnFloor(s, L)); });
   // her reading: the timeline (scene windows, lines, word times, cues) and the audio, fetched whole so seeking never waits on range requests
   pause(); TL = await fetch(`timeline/${P}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
   if (AUD) { AUD.pause(); if (AUD.src.startsWith('blob:')) URL.revokeObjectURL(AUD.src); } AUD = null; CUES = {}; fired.length = 0; $('log').textContent = '';
@@ -481,7 +586,7 @@ async function load() {
   } else clock.t = 0;
   prevT = clock.t; lastF = -1; capLine = null;
   // preload every picture the poem's scenes and pose-swaps can show, so a cut never waits on the network
-  const pre = new Set(); for (const s of scenes) { for (const L of s.layers) { const u = srcOf(L); if (u && kindOf(L) !== 'video' && kindOf(L) !== 'action') pre.add(u); } for (const c of CUES[s.key] || []) if (c.part && parts[c.part]) pre.add(CUT + parts[c.part].file); }
+  const pre = new Set(); for (const s of scenes) { for (const L of s.layers) { const u = srcOf(L); if (u && ['part', 'image', 'plane'].includes(kindOf(L))) pre.add(u); } for (const c of CUES[s.key] || []) if (c.part && parts[c.part]) pre.add(CUT + parts[c.part].file); }
   pre.forEach(u => { const im = new Image(); im.src = u; });
   poseOptions(); strip(); tabs(); tray(); show(); buildBar(); markStrip(); frame(true);
 }
@@ -511,22 +616,28 @@ function label(L) {
   const k = kindOf(L);
   if (k === 'part') return parts[L.part]?.label || L.part;
   if (k === 'action') { const a = ASSETS.actions.find(x => x.id === L.action); return (a?.title || L.action) + ' · ' + (a?.cast || ''); }
+  if (k === 'ensemble') return L.label || ENS[L.ensemble]?.name || L.ensemble;
+  if (k === 'sfx') return (L.label || L.sfx) + (E.sfx.resolve(L.sfx)?.unsourced ? ' (synth)' : '');
+  if (k === 'clip') return (L.label || CLIPS[L.src]?.j.title || L.src.split('/').pop()) + (L.attach ? ` ⚓ ${L.attach.anchor}` : '');
   return L.label || (L.src || '').split('/').slice(-2).join('/');
 }
 function layersList() {
   const s = scenes[cur];
   $('layers').innerHTML = s.layers.map((L, i) => { const k = kindOf(L);
-    return `<div class="li${i === sel ? ' sel' : ''}" data-i="${i}">${k === 'action' ? '<i>ACT</i>' : k === 'video' ? '<i style="color:var(--arch)">FILM</i>' : `<img src="${esc(srcOf(L))}" alt="">`}
+    return `<div class="li${i === sel ? ' sel' : ''}" data-i="${i}">${k === 'action' ? '<i>ACT</i>' : k === 'clip' ? '<i style="color:#e9d36b">CLIP</i>' : k === 'ensemble' ? '<i style="color:#9fb7ff">ENS</i>' : k === 'sfx' ? '<i style="color:#ff9f7a">♪</i>' : k === 'video' ? '<i style="color:var(--arch)">FILM</i>' : `<img src="${esc(srcOf(L))}" alt="">`}
       <span class="k ${k}">${k}</span><span class="n" title="${esc(label(L))}">${esc(label(L).slice(0, 44))}</span>
-      <button data-a="hide" title="show / hide">${L.hide ? '○' : '●'}</button></div>`; }).join('') || '<p class="hint" style="padding:0 6px">Empty stage: add from the tray below.</p>';
+      ${L.attach ? '<button data-a="detach" title="detach from the anchor">⚓✕</button>' : ''}${k === 'sfx' ? '<button data-a="audition" title="listen">▶</button>' : ''}<button data-a="hide" title="show / hide">${L.hide ? '○' : '●'}</button></div>`; }).join('') || '<p class="hint" style="padding:0 6px">Empty stage: add from the tray below.</p>';
   $('layers').querySelectorAll('.li').forEach(el => el.onclick = e => {
     const i = +el.dataset.i;
     if (e.target.dataset.a === 'hide') { s.layers[i].hide = !s.layers[i].hide; save(); show(); return; }
+    if (e.target.dataset.a === 'detach') { detach(s.layers[i], i); return; }
+    if (e.target.dataset.a === 'audition') { E.sfx.play(s.layers[i].sfx, {vol: s.layers[i].vol ?? 1}); return; }
     sel = i; show(); });
 }
 
 /* ── tray: kit parts, depth planes, images, archive, actions, films ── */
-const TABS = [['parts', 'Kit parts'], ['planes', 'Depth planes'], ['images', 'Stills + atlas'], ['archive', 'Archive'], ['actions', 'Actions'], ['films', 'Films']];
+const TABS = [['parts', 'Kit parts'], ['planes', 'Depth planes'], ['images', 'Stills + atlas'], ['archive', 'Archive'], ['actions', 'Actions'], ['films', 'Films'],
+  ['mech', 'Mechanisms'], ['chars', 'Characters'], ['seq', 'Sequences'], ['ens', 'Ensembles'], ['sounds', 'Sounds']];
 function tabs() {
   $('tabs').innerHTML = TABS.map(([k, t]) => `<button class="btn${k === TAB ? ' on' : ''}" data-t="${k}" role="tab">${t}</button>`).join('');
   $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { TAB = b.dataset.t; tabs(); tray(); });
@@ -584,6 +695,46 @@ function tray() {
     bindCells(async d => { const C = await clip(d.id); const L = {kind: 'action', action: d.id, x: 800, y: 520, w: 360}; L.ar = (C.box[3] - C.box[1]) / (C.box[2] - C.box[0]); add(L); });
     return;
   }
+  if (TAB === 'mech' || TAB === 'seq') {
+    const L = (TAB === 'mech' ? LIB.mech : LIB.seq).filter(m => hit(m.title + ' ' + m.id + ' ' + (m.anchors || []).join(' ')));
+    const mine = m => (m.poems || []).includes(P);
+    L.sort((a, b) => mine(b) - mine(a));
+    h = L.map(m => `<div class="act" tabindex="0" data-add="${TAB}" data-src="${esc(m.src)}"><b>${mine(m) ? '★ ' : ''}${esc(m.title)}</b><span>${m.frames || ''}f${m.loop ? ' loop' : ''}</span>
+      <canvas class="th" data-th="${esc(m.src)}" width="240" height="80" style="grid-column:1/-1;width:100%;height:80px;background:#0f0c0a;border-radius:4px"></canvas>
+      <em>${(m.anchors || []).length ? '⚓ ' + esc(m.anchors.join(', ')) : ''}${(m.sfx || []).length ? ' · ♪ ' + esc(m.sfx.join(', ')) : ''}${m.poems ? ' · poems ' + esc(m.poems.join(' ')) : ''}</em></div>`).join('');
+    $('tray').innerHTML = `<p class="hint" style="margin:4px">${TAB === 'mech' ? 'Mechanisms (shots/stage/mech): rigid cards on brads with anchors (⚓) for riders and callers, and events that sound on the clock. ★ = this poem.' : 'Sequences (shots/stage/seq): several actors in one clip.'} Added at true size (this scene\'s px per cm).</p>`
+      + (h || `<p class="hint">None yet: the ${TAB === 'mech' ? 'mechanisms' : 'sequences'} folder is still empty (re-run build_assets.py when it fills).</p>`);
+    thumbs(); bindCells(d => addClip(d.src));
+    return;
+  }
+  if (TAB === 'chars') {
+    const chars = LIB.chars || {}, byC = {};
+    for (const c of LIB.charClips) if (hit(c.title + ' ' + c.character + ' ' + c.act)) (byC[c.character] = byC[c.character] || []).push(c);
+    h = `<div class="lineup" id="lineup" title="every character at true relative scale (frame 0 of its first act)">${Object.keys(chars).map(k => `<canvas data-lc="${esc(k)}" width="60" height="140" title="${esc(chars[k].title)} · ${chars[k].height_cm} cm"></canvas>`).join('')}</div>`
+      + Object.entries(byC).map(([k, cs]) => `<div class="grp">${esc(chars[k]?.title || k)} · ${chars[k]?.height_cm || '?'} cm</div>` + cs.map(c =>
+        `<div class="act" tabindex="0" data-add="char" data-src="${esc(c.src)}"><b>${esc(c.act)} ${esc(c.title)}</b><span>${c.frames}f · ${c.result === 'pass' ? 'pass' : '<span style="color:#ff9f7a">' + esc(c.result || '') + '</span>'}</span><em>${esc((c.views || []).join(', '))}${c.problems?.length ? ' · ' + esc(c.problems.join('; ')) : ''}</em></div>`).join('')).join('');
+    $('tray').innerHTML = '<p class="hint" style="margin:4px">Every character\'s retargeted acts (shots/stage/anim): one cm scale for all, so they drop in at true relative size. Drag one onto a mechanism\'s ⚓ anchor to ride with it.</p>' + h;
+    lineup(); bindCells(d => addClip(d.src));
+    return;
+  }
+  if (TAB === 'ens') {
+    const L = LIB.ens.filter(e => hit(e.name + ' ' + e.id)), mine = e => (e.poems || []).includes(P);
+    L.sort((a, b) => mine(b) - mine(a));
+    h = L.map(e => `<div class="act" tabindex="0" data-add="ens" data-id="${esc(e.id)}"><b>${mine(e) ? '★ ' : ''}${esc(e.name || e.id)}</b><span>${e.size_cm ? e.size_cm.w + '×' + e.size_cm.h + ' cm' : ''}</span>
+      <em>${e.layers} layers${e.slots?.length ? ' · slots: ' + esc(e.slots.join(', ')) : ''}${e.mechs ? ' · ' + e.mechs + ' mechanisms' : ''}${e.sfx?.length ? ' · ♪ ' + esc(e.sfx.join(', ')) : ''} · poems ${esc((e.poems || []).join(' '))}</em></div>`).join('');
+    $('tray').innerHTML = '<p class="hint" style="margin:4px">Ensembles (shots/stage/ensembles): assembled set pieces with real sizes and named slots for actors, placed on this scene\'s floor at its px per cm. ★ = this poem.</p>'
+      + (h || '<p class="hint">None yet: the ensembles folder is still empty (re-run build_assets.py when it fills).</p>');
+    bindCells(d => addEnsemble(d.id));
+    return;
+  }
+  if (TAB === 'sounds') {
+    const L = (LIB.sfx || []).filter(x => hit(x.id + ' ' + (x.tags || []).join(' ') + ' ' + (x.note || '')));
+    h = L.map(x => `<div class="sfxp" tabindex="0" data-add="sfx" data-id="${esc(x.id)}" title="${esc(x.source + ' · ' + (x.note || ''))}"><button data-play="${esc(x.id)}" aria-label="listen">▶</button><b>${esc(x.id.replace(/^sfx\./, ''))}</b>${x.unsourced ? '<span class="syn" title="no recording on disk: built from a recipe">synth</span>' : x.kind === 'voice' ? '<span class="syn" style="color:var(--arch)">her voice</span>' : ''}<em>${x.dur}s${x.loop ? ' loop' : ''} · ${esc((x.tags || []).slice(0, 4).join(' '))}</em></div>`).join('');
+    $('tray').innerHTML = '<p class="hint" style="margin:4px">Sound effects (shots/stage/sfx), from the project\'s own libraries. ▶ listens; clicking a row adds it as a sound layer (plays on the timeline while it shows); or pick "sfx" as the cue type to fire one on a word. <span class="syn">synth</span> = no recording on disk.</p>' + (h || '<p class="hint">No sfx/index.json.</p>');
+    $('tray').querySelectorAll('[data-play]').forEach(b => b.onclick = e => { e.stopPropagation(); E.sfx.play(b.dataset.play); });
+    bindCells(d => { const x = E.sfx.resolve(d.id); add({kind: 'sfx', sfx: d.id, vol: 0.8, loop: !!x?.loop, label: d.id}); $('cueSfx').value = d.id; });
+    return;
+  }
   if (TAB === 'films') {
     const fs = [];
     if (A.film) fs.push({src: A.film, l: `poem ${P} film`});
@@ -593,21 +744,133 @@ function tray() {
     bindCells(d => add({kind: 'video', src: d.src, x: 800, y: 450, w: 1600, h: 900, label: d.l}, true));
   }
 }
+/* A plan's solved action stands on the scene's floor at its real height: the scale model's px per cm times the clip's
+   cm (its own cm_px, or its cast's), the frame-0 feet on the camera's foot line at the layer's x. The plan's own guess
+   (y = foot - h/2 with a fixed aspect) mis-sizes a walk, whose box spans the whole path, and floats it off the floor. */
+function standOnFloor(s, L) {
+  if (kindOf(L) !== 'action' || L.fit === 'free' || !s.camera?.ppc) return;
+  const C = CLIPS[clipKeyOf(L)], cm = C?.cm_px || C?.j.cast?.[0]?.cm_px; if (!C || !cm) return;
+  const fb = E.frameBox(C, L.f0 || 0) || C.box, fl = C.j.floor ?? fb[3], foot = s.camera.foot_y || 780;
+  let k = s.camera.ppc / cm;
+  // a close shot cannot hold a whole figure at real height: then it is scaled down until the head is in frame (marked)
+  const fig = (Math.min(fl, fb[3] + 5) - fb[1]) * k; if (fig > foot * 0.92) { k *= foot * 0.92 / fig; L.cheat = 'scaled to fit the shot'; }
+  const w = (C.box[2] - C.box[0]) * k, h = w * E.ar(C);
+  const fx = ((fb[0] + fb[2]) / 2 - C.box[0]) * k - w / 2, fy = (Math.min(fl, fb[3] + 5) - C.box[1]) * k - h / 2;
+  L.w = Math.round(w); delete L.h; L.x = Math.round(L.x - fx); L.y = Math.round(foot - fy);
+}
+/* true size: a clip with cm_px drops in at this scene's px per cm (the scale model's camera), feet on its floor line */
+const scenePpc = () => scenes[cur]?.camera?.ppc || 2.0;
+const sceneFoot = () => scenes[cur]?.camera?.foot_y || 780;
+async function addClip(src, extra = {}) {
+  const C = await clipSrc(src); if (!C) return toast('Could not load ' + src);
+  const bw = C.box[2] - C.box[0], w = Math.round(C.cm_px ? bw / C.cm_px * scenePpc() : Math.min(600, bw)), h = w * E.ar(C);
+  const [, fy] = E.toStage(C, {cx: 0, cy: 0, w, h}, E.mountPoint(C, 0, '__feet'));
+  const L = {kind: 'clip', src, x: 800, y: Math.round(sceneFoot() - fy), w, label: C.j.title || src.split('/').pop(), ...extra};
+  if (C.j.loop === false) L.loop = false;
+  add(L);
+}
+async function addEnsemble(id) {
+  const J = await ens(id); if (!J) return toast('Could not load ensemble ' + id);
+  add({kind: 'ensemble', ensemble: J.id || id, x: 800, y: sceneFoot(), scale_px_per_cm: scenePpc(), label: J.name});
+  for (const sid of J.sfx || []) if (E.sfx.resolve(sid)) E.sfx.preload([sid]);
+}
+/* thumbnails of clips in the tray: frame 0, fitted */
+function thumbs() {
+  $('tray').querySelectorAll('canvas[data-th]').forEach(cv => clipSrc(cv.dataset.th).then(C => { if (!C) return;
+    const ar = E.ar(C), h = cv.height, w = Math.min(cv.width, h / ar); const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height);
+    const tmp = document.createElement('canvas'); tmp.width = Math.max(2, Math.round(w)); tmp.height = Math.max(2, Math.round(w * ar)); drawClip(tmp, C, 0);
+    g.drawImage(tmp, (cv.width - tmp.width) / 2, (cv.height - tmp.height) / 2); }));
+}
+/* the line-up: frame 0 of each character's first act, every one at the same px per cm */
+async function lineup() {
+  const box = $('lineup'); if (!box) return; const k = 0.62;   // canvas px per cm
+  for (const cv of box.querySelectorAll('canvas[data-lc]')) {
+    const c = LIB.charClips.find(x => x.character === cv.dataset.lc); if (!c) continue;
+    const C = await clipSrc(c.src); if (!C || !C.cm_px) continue;
+    const w = (C.box[2] - C.box[0]) / C.cm_px * k, h = w * E.ar(C);
+    cv.width = Math.round(w); cv.height = Math.round(h); cv.style.width = cv.width + 'px'; cv.style.height = cv.height + 'px'; drawClip(cv, C, 0);
+  }
+}
+/* attachments: a rider follows a socket of another clip layer (seat, handlebar, handset …) */
+function attach(i, j, anchor) {
+  const s = scenes[cur], L = s.layers[i], M = s.layers[j], C = CLIPS[clipKeyOf(L)], PC = CLIPS[clipKeyOf(M)];
+  L.attach = {to: refOf(M, s.layers), anchor, dx: 0, dy: 0};
+  if (/seat|saddle|bench|chair/i.test(anchor) && C && !E.anchorAt(C, 'seat', 0) && !E.anchorAt(C, 'hips', 0)) L.attach.mount = 'hips';   // a rider sits by the hips
+  // true relative scale: the rider takes the parent's px per cm
+  if (C?.cm_px && PC?.cm_px && LAY?.G[j]) { const ppc = E.stagePpc(PC, LAY.G[j]); L.w = Math.round((C.box[2] - C.box[0]) / C.cm_px * ppc); delete L.h; }
+  if (j > i) { s.layers.splice(i, 1); s.layers.splice(j, 0, L); sel = j; }   // keep a rider above what carries it
+  save(); show(); toast(`Attached to ${anchor}: it now moves with ${label(M).slice(0, 30)}`);
+}
+function detach(L, i) { const g = LAY?.G[i]; if (g) { L.x = Math.round(g.cx); L.y = Math.round(g.cy); } delete L.attach; save(); show(); toast('Detached'); }
+function sfxOptions() { $('cueSfx').innerHTML = (LIB.sfx || []).map(x => `<option value="${esc(x.id)}">${esc(x.id.replace(/^sfx\./, ''))}${x.unsourced ? ' (synth)' : ''}</option>`).join(''); }
+
+/* ── sound on the audio clock ──
+   Three sources, all evaluated from the same t: sfx cues (fire on crossing their word), clip events (fire when the
+   clip's frame crosses the event's frame while playing) and sfx layers (a bed that sounds while the layer shows, joined
+   at the right offset after a seek). Nothing fires on a seek or a scrub: like the cue log, only crossings sound. */
+const SND = {layers: new Map()};
+/* every sound the poem can make, decoded before it is needed */
+function preloadSounds() {
+  const ids = new Set();
+  for (const s of scenes) { for (const c of CUES[s.key] || []) if (c.sfx) ids.add(c.sfx);
+    for (const L of s.layers) { if (L.sfx) ids.add(L.sfx); const C = isClipKind(L) && CLIPS[clipKeyOf(L)]; if (C) C.events.forEach(e => e.sfx && ids.add(e.sfx));
+      if (kindOf(L) === 'ensemble') for (const l of ENS[L.ensemble]?.layers || []) CLIPS[l.src]?.events.forEach(e => e.sfx && ids.add(e.sfx)); } }
+  E.sfx.preload([...ids]);
+}
+function sfxStopLayers() { SND.layers.forEach(h => h.stop()); SND.layers.clear(); }
+function soundFrame(s, T, Tprev) {
+  if (!clock.playing || !LAY || !s) { if (SND.layers.size) sfxStopLayers(); return; }
+  const st = LAY.st, t0 = tlScene(s.key)?.t0 ?? 0;
+  if (T > Tprev && T - Tprev < 0.5) {
+    for (const c of cuesOf(s)) if (c.action === 'sfx' && c.t > Tprev && c.t <= T && c.sfx) { E.sfx.play(c.sfx, {vol: c.vol ?? 1}); logFire({t: c.t, scene: s.key, word: c.word, action: 'sfx', layer: c.sfx}); }
+    s.layers.forEach((L, i) => {   // clip events: frames crossed between the two clock reads
+      if (!st[i]?.vis) return;
+      const fire = (C, fa, fb, who) => { if (fb === fa) return; for (const e of E.eventsCrossed(C, fa, fb, fb < fa)) if (e.sfx) { E.sfx.play(e.sfx, {vol: e.vol ?? 1}); logFire({t: T, scene: s.key, word: e.label || '', action: 'sfx', layer: e.sfx + ' ← ' + who}); } };
+      if (isClipKind(L)) { const C = CLIPS[clipKeyOf(L)]; if (C?.events.length) fire(C, frameOf(L, st[i], Tprev, C, t0), LAY.F[i], (C.j.id || L.src || '').split('/').pop()); }
+      else if (kindOf(L) === 'ensemble') for (const l of ENS[L.ensemble]?.layers || []) { const C = l.src && CLIPS[l.src]; if (!C?.events.length) continue;
+        const mode = (C.j.loop ?? true) ? 'loop' : 'once', p = st[i].play || {t: t0, mode}; fire(C, E.frameAt(C, Tprev, p), E.frameAt(C, T, p), C.j.id || l.src); }
+    });
+  }
+  s.layers.forEach((L, i) => {   // sfx layers: sound while shown (from the play cue, else the scene start)
+    if (kindOf(L) !== 'sfx') return;
+    const k = s.key + '#' + i, x = st[i], start = x?.play?.t ?? t0, S = E.sfx.resolve(L.sfx);
+    const loop = L.loop ?? S?.loop ?? false, on = x?.vis && !L.hide && S && T >= start && (loop || T - start < (S.dur || 0));
+    const h = SND.layers.get(k);
+    if (on && !h) SND.layers.set(k, E.sfx.play(L.sfx, {vol: L.vol ?? 0.8, loop, offset: T - start}));
+    else if (!on && h) { h.stop(); SND.layers.delete(k); }
+  });
+  for (const k of SND.layers.keys()) if (!k.startsWith(s.key + '#')) { SND.layers.get(k).stop(); SND.layers.delete(k); }
+}
+function logFire(x) { fired.push({...x, t: +(+x.t).toFixed(3)}); $('log').textContent = fired.slice(-4).map(y => `▸ ${fmt(y.t)} ${y.scene} “${y.word || '·'}” ${y.action} ${String(y.layer).split('/').pop()}`).join('\n'); }
+
 function save() { const s = scenes[cur]; s.edited = true; store?.setItem(key(s.key), JSON.stringify(s.layers)); strip(); }
 
 /* ── direct manipulation ── */
 let drag = null;
+const nowT = () => (lastF >= 0 ? lastF / FPS : clock.t);
 $('stage').addEventListener('pointerdown', e => {
   const t = e.target.closest('.layer'); if (!t) { sel = -1; show(); return; }
   sel = +t.dataset.i; const L = scenes[cur].layers[sel];
-  drag = {x: e.clientX, y: e.clientY, L, x0: L.x, y0: L.y, k: W / $('stageWrap').clientWidth}; $('stage').setPointerCapture(e.pointerId); show();
+  drag = {x: e.clientX, y: e.clientY, L, x0: L.attach ? L.attach.dx || 0 : L.x, y0: L.attach ? L.attach.dy || 0 : L.y, k: W / $('stageWrap').clientWidth, moved: false};
+  dragAnchors = isClipKind(L) && !L.attach; $('stage').setPointerCapture(e.pointerId); show();
 });
 $('stage').addEventListener('pointermove', e => { if (!drag) return;
-  drag.L.x = Math.round(drag.x0 + (e.clientX - drag.x) * drag.k); drag.L.y = Math.round(drag.y0 + (e.clientY - drag.y) * drag.k);
-  const el = $('stage').querySelector(`.layer[data-i="${sel}"]`); if (el) { const [w, h] = size(drag.L); el.style.left = (drag.L.x - w / 2) + 'px'; el.style.top = (drag.L.y - h / 2) + 'px'; } });
-$('stage').addEventListener('pointerup', () => { if (drag) { drag = null; save(); show(); } });
-$('stageWrap').addEventListener('wheel', e => { if (sel < 0) return; e.preventDefault(); const L = scenes[cur].layers[sel];
-  const f = e.deltaY < 0 ? 1.05 : 0.95; L.w = Math.max(10, Math.round(L.w * f)); if (L.h) L.h = Math.round(L.h * f); save(); show(); }, {passive: false});
+  const nx = Math.round(drag.x0 + (e.clientX - drag.x) * drag.k), ny = Math.round(drag.y0 + (e.clientY - drag.y) * drag.k);
+  if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 3) drag.moved = true;
+  if (drag.L.attach) { drag.L.attach.dx = nx; drag.L.attach.dy = ny; } else { drag.L.x = nx; drag.L.y = ny; }
+  hotAnchor = null;
+  if (dragAnchors && LAY) {   // a rider dropped onto a socket attaches there: find the nearest anchor to its mount point
+    applyState(nowT()); const C = CLIPS[clipKeyOf(drag.L)], g = LAY.G[sel];
+    if (C && g) { const [mx, my] = E.toStage(C, g, E.mountPoint(C, LAY.F[sel] || 0));
+      let best = 60; for (const d of anchorTargets(sel)) { const r = Math.hypot(d.x - mx, d.y - my); if (r < best) { best = r; hotAnchor = d; } } }
+  }
+  applyState(nowT()); });
+$('stage').addEventListener('pointerup', () => { if (!drag) return;
+  const h = hotAnchor; drag = null; dragAnchors = false; hotAnchor = null;
+  if (h) return attach(sel, h.i, h.name);
+  save(); show(); });
+$('stageWrap').addEventListener('wheel', e => { if (sel < 0) return; e.preventDefault(); grow(scenes[cur].layers[sel], e.deltaY < 0 ? 1.05 : 0.95); save(); show(); }, {passive: false});
+function grow(L, f) { if (kindOf(L) === 'ensemble') L.scale_px_per_cm = +((L.scale_px_per_cm || 2) * f).toFixed(4); else { L.w = Math.max(10, Math.round(L.w * f)); if (L.h) L.h = Math.round(L.h * f); } }
 function act(a) {
   const ls = scenes[cur].layers, L = ls[sel]; if (!L) return;
   if (a === 'flip') L.flip = !L.flip;
@@ -627,12 +890,13 @@ addEventListener('keydown', e => {
   if ((e.key === ',' || e.key === '.') && !clock.playing) { e.preventDefault(); return seek((lastF + (e.key === '.' ? 1 : -1)) / FPS + 1e-4); }
   const L = scenes[cur]?.layers[sel]; if (!L) return;
   const n = e.shiftKey ? 20 : 4, m = {ArrowLeft: [-n, 0], ArrowRight: [n, 0], ArrowUp: [0, -n], ArrowDown: [0, n]}[e.key];
-  if (m) { L.x += m[0]; L.y += m[1]; }
+  if (m && L.attach) { L.attach.dx = (L.attach.dx || 0) + m[0]; L.attach.dy = (L.attach.dy || 0) + m[1]; }
+  else if (m) { L.x += m[0]; L.y += m[1]; }
   else if (e.key === 'f' || e.key === 'F') L.flip = !L.flip;
   else if (e.key === 'q' || e.key === 'Q') L.rot = (L.rot || 0) - 3;
   else if (e.key === 'e' || e.key === 'E') L.rot = (L.rot || 0) + 3;
-  else if (e.key === '+' || e.key === '=') { L.w = Math.round(L.w * 1.05); if (L.h) L.h = Math.round(L.h * 1.05); }
-  else if (e.key === '-') { L.w = Math.round(L.w * .95); if (L.h) L.h = Math.round(L.h * .95); }
+  else if (e.key === '+' || e.key === '=') grow(L, 1.05);
+  else if (e.key === '-') grow(L, .95);
   else if (e.key === '[') return act('back');
   else if (e.key === ']') return act('fwd');
   else if (e.key === 'Delete' || e.key === 'Backspace') return act('del');
@@ -644,14 +908,17 @@ $('bJson').onclick = () => { const out = {...PLAN, ...(TL ? {timeline: `timeline
     scenes: scenes.map(({edited, cuesEdited, ...s}) => { const ts = tlScene(s.key); return ts ? {...s, t0: ts.t0, t1: ts.t1, cues: CUES[s.key] || []} : s; })};
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], {type: 'application/json'})); a.download = `${P}.json`; a.click(); toast('Saved ' + P + '.json'); };
 const COMP = {multiply: 'multiply', screen: 'screen', overlay: 'overlay', 'soft-light': 'soft-light', luminosity: 'luminosity', lighten: 'lighten', darken: 'darken'};
-$('bPng').onclick = async () => {
+$('bPng').onclick = async () => {   // drawn by the engine's canvas renderer from the same layout the stage shows
   const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
-  const els = [...$('stage').querySelectorAll('.layer')];
-  for (const L of scenes[cur].layers) { const i = scenes[cur].layers.indexOf(L), el = els.find(e => +e.dataset.i === i); if (L.hide || !el) continue;
-    if (el.tagName === 'IMG') await el.decode().catch(() => {});
-    const [w, h] = size(L); g.save(); g.globalAlpha = L.op ?? 1; g.globalCompositeOperation = COMP[L.blend] || 'source-over';
-    g.translate(L.x, L.y); g.rotate((L.rot || 0) * Math.PI / 180); g.scale(L.flip ? -1 : 1, 1); try { g.drawImage(el, -w / 2, -h / 2, w, h); } catch (_) {} g.restore(); }
-  c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `${scenes[cur].key}.png`; a.click(); });
+  const s = scenes[cur], T = nowT(); applyState(T); const {G, F, st} = LAY, t0 = tlScene(s.key)?.t0 ?? 0;
+  await Promise.all(s.layers.filter(L => ['part', 'image', 'plane'].includes(kindOf(L))).map(L => E.img(srcOf(L)).ready));
+  const env = {parts, CUT, ens: L => ENS[L.ensemble], clipOf: L => CLIPS[clipKeyOf(L)],
+    frameOf: (L, C) => { const i = s.layers.indexOf(L); return i >= 0 ? F[i] : E.frameAt(C, T, {t: t0, mode: (C.j.loop ?? true) ? 'loop' : 'once'}); }};
+  s.layers.forEach((L, i) => { if (!st[i].vis || L.hide) return; const k = kindOf(L), q = G[i];
+    if (k === 'video') { const el = $('stage').querySelector(`.layer[data-i="${i}"]`); g.save(); g.globalAlpha = L.op ?? 1; try { g.drawImage(el, q.cx - q.w / 2, q.cy - q.h / 2, q.w, q.h); } catch (_) {} g.restore(); return; }
+    const M = k === 'ensemble' ? {...L, x: L.x + st[i].dx, y: L.y + st[i].dy} : {...L, part: q.swap || L.part, _geo: q};
+    if (k === 'ensemble') E.drawLayer(g, M, env); else { const j = s.layers.indexOf(L); E.drawLayer(g, M, {...env, frameOf: () => F[j]}); } });
+  c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `${s.key}.png`; a.click(); });
 };
 $('q').oninput = tray;
 $('poem').onchange = e => { P = e.target.value; history.replaceState(null, '', '?p=' + P); cur = 0; load(); };
