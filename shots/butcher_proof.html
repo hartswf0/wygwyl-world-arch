@@ -39,24 +39,25 @@
   .nav-btn {
     color: var(--dim); font: 12px var(--mono); text-decoration: none;
     border: 1px solid var(--line); padding: 5px 12px; border-radius: 999px;
-    transition: all .15s; font-weight: 600;
+    transition: all .15s; font-weight: 600; cursor: pointer; background: transparent;
   }
   .nav-btn:hover { color: var(--ink); border-color: var(--card); }
   .nav-btn.gold { color: var(--gold); border-color: var(--gold); }
   .nav-btn.gold:hover { background: var(--gold); color: #16120f; }
+  .nav-btn.active { background: var(--card); color: #16120f; border-color: var(--card); font-weight: 800; }
   
   main {
-    max-width: 1400px; margin: 0 auto; padding: 28px 24px 100px;
+    max-width: 1440px; margin: 0 auto; padding: 28px 24px 100px;
     display: flex; flex-direction: column; gap: 40px;
   }
   
   .banner {
     background: radial-gradient(ellipse at top left, #281d14 0%, #120e0b 70%);
     border: 1px solid var(--card); border-radius: 12px; padding: 28px;
-    display: flex; flex-direction: column; gap: 10px;
+    display: flex; flex-direction: column; gap: 12px;
   }
   .banner h2 { font: 400 32px var(--marker); color: var(--gold); }
-  .banner p { color: var(--dim); font-size: 16px; max-width: 80ch; }
+  .banner p { color: var(--dim); font-size: 15px; max-width: 88ch; }
   
   .badge {
     font: 11px var(--mono); padding: 3px 9px; border-radius: 999px;
@@ -67,8 +68,8 @@
   .badge.gold { border-color: var(--gold); color: var(--gold); }
   
   /* Verification Grid */
-  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 24px; }
-  @media(max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(560px, 1fr)); gap: 24px; }
+  @media(max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
   
   .card-box {
     background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
@@ -85,14 +86,14 @@
                       linear-gradient(-45deg, transparent 75%, #16120f 75%);
     background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0;
     border: 1px solid var(--line); border-radius: 8px; display: flex;
-    align-items: center; justify-content: center; padding: 14px; min-height: 260px;
+    align-items: center; justify-content: center; padding: 14px; min-height: 380px;
     position: relative; overflow: hidden;
   }
   .checker img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.8)); }
   
   /* Interactive Workbench */
   .workbench {
-    display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px;
+    display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px;
     background: var(--panel); border: 1px solid var(--card); border-radius: 12px; padding: 24px;
   }
   @media(max-width: 960px) { .workbench { grid-template-columns: 1fr; } }
@@ -100,7 +101,7 @@
   .stage-view {
     background: #090706; border: 1px solid var(--line); border-radius: 8px;
     position: relative; display: flex; align-items: center; justify-content: center;
-    min-height: 540px; overflow: hidden;
+    min-height: 580px; overflow: hidden;
   }
   .stage-view canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
   
@@ -114,7 +115,7 @@
     letter-spacing: .1em; display: flex; justify-content: space-between;
   }
   .slider-row { display: flex; align-items: center; gap: 12px; font: 12px var(--mono); color: var(--dim); }
-  .slider-row label { flex: 0 0 120px; }
+  .slider-row label { flex: 0 0 130px; }
   .slider-row input[type="range"] { flex: 1; accent-color: var(--card); }
   .slider-row span { flex: 0 0 45px; text-align: right; color: var(--ink); font-weight: 600; }
   
@@ -147,64 +148,55 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
   }
   .part-card .meta { font: 9px var(--mono); color: var(--dim); }
-  
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Butchering &amp; Assembly Proof <small>WYGWYL · MODULAR CARDBOARD RIG PIPELINE</small></h1>
-  <span class="sp"></span>
-  <a class="nav-btn gold" href="cards.html">📊 Periodic Atlas &amp; Stage</a>
-  <a class="nav-btn" href="kits.html">🧩 Character Kits</a>
-  <a class="nav-btn" href="production.html">🎬 Production Bible</a>
-  <a class="nav-btn" href="../index.html">← Index</a>
+  <h1>WYGWYL <small>PUPPET BUTCHERING &amp; ASSEMBLY WORKBENCH</small></h1>
+  <div class="sp"></div>
+  <a class="nav-btn" href="cards.html">◫ Periodic Atlas (80 Scenes)</a>
+  <a class="nav-btn" href="kits.html">▦ Poem Kits Spec</a>
+  <a class="nav-btn gold" href="https://github.com/hartswf0/wygwyl-world-arch/releases/tag/v2.0-poem-kits" target="_blank">⬇ GitHub Release v2.0</a>
 </header>
 
 <main>
-  <!-- Hero Banner -->
+  <!-- Calibration Banner -->
   <section class="banner">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
-      <div>
-        <span class="badge gold" style="margin-bottom:6px">END-TO-END VERIFICATION AUDIT</span>
-        <h2>The Complete Butchering &amp; Assembly Pipeline</h2>
-        <p>Proving that 2D raster parts sheets are cleanly dissected into isolated alpha components, tracked via authentic brass split-pin brad fasteners, and mathematically articulated into forward-kinematic cardboard puppets.</p>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <span class="badge ok">14 Sliced Cards (Poem 01)</span>
-        <span class="badge ok">31 Modular Tracksuit Parts</span>
-        <span class="badge gold">2 High-Res Assembled Proofs</span>
-      </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="badge ok">✓ 31 Poet Parts Isolated</span>
+      <span class="badge gold">✓ Master Pose Calibrated</span>
+      <span class="badge ok">✓ Z-Hierarchy: Hands Over Legs</span>
+      <span class="badge gold">✓ 1,718 Cards Library</span>
     </div>
+    <h2>Precision Cutting &amp; Assembly Rig</h2>
+    <p>
+      This workbench proves the complete pipeline for butchering multi-card production sheets into individual, transparent-background cardboard puppet components with detected brass brads, forward-kinematics pivot alignment, and anatomical proportion matching against the master ground truth reference (<code style="color:var(--gold);font-family:var(--mono)">poet.red_black_sunglasses.master.png</code>).
+    </p>
   </section>
 
-  <!-- Interactive Rigging Workbench -->
+  <!-- Interactive Rigging Stage -->
   <section class="workbench">
     <div class="stage-view">
       <canvas id="stageCanvas" width="900" height="1100"></canvas>
-      <div style="position:absolute;top:12px;left:14px;font:600 11px var(--mono);color:var(--gold);background:rgba(13,11,10,.85);padding:4px 10px;border-radius:4px;border:1px solid var(--line)">
-        LIVE FORWARD-KINEMATIC CARD RIG
+      <div style="position:absolute;top:14px;left:14px;display:flex;gap:6px">
+        <button class="nav-btn active" id="btnModeAssembled" onclick="setStageMode('assembled')">Assembled FK Rig</button>
+        <button class="nav-btn" id="btnModeExploded" onclick="setStageMode('exploded')">Exploded Parts View</button>
       </div>
-      <div style="position:absolute;bottom:12px;left:14px;right:14px;display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim);background:rgba(13,11,10,.85);padding:6px 12px;border-radius:4px;border:1px solid var(--line)">
-        <span>Pivots: 11 Brass Brads</span>
-        <span>Hierarchy: Hip → Torso → Limbs</span>
-        <span id="angleReadout">Waist: 0° | Arm: 0°</span>
+      <div style="position:absolute;bottom:14px;left:14px;font:11px var(--mono);color:var(--dim);background:#16120fee;padding:5px 10px;border-radius:4px;border:1px solid var(--line)" id="angleReadout">
+        Calibrated: Snug Sunglasses (104px) · Prominent Nose (42px) · Hands Over Thighs
       </div>
     </div>
 
+    <!-- Controls Panel -->
     <div class="controls-panel">
-      <div>
-        <h3 style="font:400 24px var(--marker);color:var(--gold);margin-bottom:4px">Puppet Joint Controller</h3>
-        <p style="font-size:13px;color:var(--dim)">Rotate limbs around their real brass brad pivots in real-time. Notice how the forearm, hand, and head inherit transforms from the parent card.</p>
-      </div>
-
       <!-- Presets -->
       <div class="control-group">
         <h4>Motion Presets</h4>
         <div class="preset-row">
-          <button class="preset-btn active" onclick="applyPreset('neutral')">1. Standing Neutral</button>
+          <button class="preset-btn active" onclick="applyPreset('neutral')">1. Standing Neutral (Master Ref)</button>
           <button class="preset-btn" onclick="applyPreset('gesture')">2. Dramatic Gesture</button>
-          <button class="preset-btn" onclick="applyPreset('fall')">3. Falling / Crouch</button>
+          <button class="preset-btn" onclick="applyPreset('chest_fold')">3. Arms Folded Over Chest</button>
           <button class="preset-btn" onclick="applyPreset('reach')">4. Reading Poem</button>
         </div>
       </div>
@@ -224,23 +216,23 @@
         </div>
         <div class="slider-row">
           <label>L Shoulder (Brad):</label>
-          <input type="range" id="sl-shL" min="-180" max="90" value="12" oninput="updateRig()">
-          <span id="val-shL">12°</span>
+          <input type="range" id="sl-shL" min="-180" max="90" value="-4" oninput="updateRig()">
+          <span id="val-shL">-4°</span>
         </div>
         <div class="slider-row">
           <label>L Elbow (Eyelet):</label>
-          <input type="range" id="sl-elL" min="-140" max="20" value="10" oninput="updateRig()">
-          <span id="val-elL">10°</span>
+          <input type="range" id="sl-elL" min="-140" max="40" value="2" oninput="updateRig()">
+          <span id="val-elL">2°</span>
         </div>
         <div class="slider-row">
           <label>R Shoulder (Brad):</label>
-          <input type="range" id="sl-shR" min="-90" max="180" value="-12" oninput="updateRig()">
-          <span id="val-shR">-12°</span>
+          <input type="range" id="sl-shR" min="-90" max="180" value="4" oninput="updateRig()">
+          <span id="val-shR">4°</span>
         </div>
         <div class="slider-row">
           <label>R Elbow (Eyelet):</label>
-          <input type="range" id="sl-elR" min="-20" max="140" value="-10" oninput="updateRig()">
-          <span id="val-elR">-10°</span>
+          <input type="range" id="sl-elR" min="-40" max="140" value="-2" oninput="updateRig()">
+          <span id="val-elR">-2°</span>
         </div>
       </div>
 
@@ -249,8 +241,8 @@
         <h4>Pelvis &amp; Legs</h4>
         <div class="slider-row">
           <label>L Hip Pivot:</label>
-          <input type="range" id="sl-hipL" min="-45" max="45" value="4" oninput="updateRig()">
-          <span id="val-hipL">4°</span>
+          <input type="range" id="sl-hipL" min="-45" max="45" value="2" oninput="updateRig()">
+          <span id="val-hipL">2°</span>
         </div>
         <div class="slider-row">
           <label>L Knee (Brad):</label>
@@ -259,8 +251,8 @@
         </div>
         <div class="slider-row">
           <label>R Hip Pivot:</label>
-          <input type="range" id="sl-hipR" min="-45" max="45" value="-4" oninput="updateRig()">
-          <span id="val-hipR">-4°</span>
+          <input type="range" id="sl-hipR" min="-45" max="45" value="-2" oninput="updateRig()">
+          <span id="val-hipR">-2°</span>
         </div>
         <div class="slider-row">
           <label>R Knee (Brad):</label>
@@ -275,21 +267,23 @@
     </div>
   </section>
 
-  <!-- Side-by-Side Proof Renders -->
+  <!-- 4 High-Resolution Proof Renders -->
   <section class="grid-2">
     <!-- Proof 1: Neutral Standing Pose -->
     <div class="card-box">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <h3>Proof 01: Neutral Standing Pose</h3>
-        <span class="badge ok">11 Aligned Pivots</span>
+        <span class="badge ok">Master Calibrated</span>
       </div>
-      <p class="dim" style="font-size:13px">All limb cards centered and fastened. Proves true scale alignment: torso (310px), thighs (270px), shins (270px), boots (105px), head (190px).</p>
-      <div class="checker" style="height:440px">
-        <img src="proof_01_standing_neutral.png" alt="Standing neutral pose proof">
+      <p class="dim" style="font-size:13px">
+        Nose enlarged to 42×38px, sunglasses trimmed to snug 104px (1.02× cranium width), arms hang naturally at flanks, and hands sit <strong>on top</strong> of the thighs/pelvis (Z-Order: Legs → Pelvis → Torso → Arms).
+      </p>
+      <div class="checker" style="height:480px">
+        <img src="arena/proof_01_standing_neutral.png" alt="Standing neutral pose proof">
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span class="dim" style="font:11px var(--mono)">1200 × 1400px RGBA (Alpha channel)</span>
-        <a class="nav-btn" href="proof_01_standing_neutral.png" download>Download High-Res PNG</a>
+        <a class="nav-btn" href="arena/proof_01_standing_neutral.png" download>Download PNG</a>
       </div>
     </div>
 
@@ -299,13 +293,51 @@
         <h3>Proof 02: Dynamic Gesture Performance</h3>
         <span class="badge gold">FK Rotation Solved</span>
       </div>
-      <p class="dim" style="font-size:13px">Left arm raised (-85° shoulder, -45° elbow), right arm pulled back, knees flexed, head cocked. Proves parts stay pinned without stretching or gap artifacts.</p>
-      <div class="checker" style="height:440px">
-        <img src="proof_02_dynamic_performance.png" alt="Dynamic gesture pose proof">
+      <p class="dim" style="font-size:13px">
+        Left arm raised high in gesture, right arm crossing chest on top of torso, knees flexed, head angled. Proves limb segments pin accurately around brass brads without gap or separation artifacts.
+      </p>
+      <div class="checker" style="height:480px">
+        <img src="arena/proof_02_dynamic_performance.png" alt="Dynamic gesture pose proof">
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span class="dim" style="font:11px var(--mono)">1200 × 1400px RGBA (Alpha channel)</span>
-        <a class="nav-btn" href="proof_02_dynamic_performance.png" download>Download High-Res PNG</a>
+        <a class="nav-btn" href="arena/proof_02_dynamic_performance.png" download>Download PNG</a>
+      </div>
+    </div>
+
+    <!-- Proof 3: Exploded Cardboard Parts Diagram -->
+    <div class="card-box">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3>Proof 03: Exploded Cardboard Diagram</h3>
+        <span class="badge ok">31 Modular Parts</span>
+      </div>
+      <p class="dim" style="font-size:13px">
+        Complete exploded knolling layout revealing every isolated component: blank head, floating facial stack (brows, eyes, nose, mouths, glasses), torso front &amp; back, arm chains with swappable hands, hip bridge, pelvis covers, and leg chains.
+      </p>
+      <div class="checker" style="height:480px">
+        <img src="arena/proof_03_exploded_cards.png" alt="Exploded parts knolling diagram">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="dim" style="font:11px var(--mono)">1800 × 1800px RGBA (Leader Lines &amp; Brads)</span>
+        <a class="nav-btn" href="arena/proof_03_exploded_cards.png" download>Download PNG</a>
+      </div>
+    </div>
+
+    <!-- Proof 4: Facial Calibration Ground Truth Comparison -->
+    <div class="card-box">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3>Proof 04: Face Calibration Side-by-Side</h3>
+        <span class="badge gold">1:1 Scale Guide</span>
+      </div>
+      <p class="dim" style="font-size:13px">
+        Direct alignment verification against ground truth reference (<code style="color:var(--gold);font-family:var(--mono)">poet.red_black_sunglasses.master.png</code>). Red guide lines verify exact horizontal level matching for eye center, nose nostrils, and mouth line.
+      </p>
+      <div class="checker" style="height:480px">
+        <img src="arena/proof_04_face_calibration.png" alt="Facial calibration ground truth comparison">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="dim" style="font:11px var(--mono)">560 × 280px RGBA (Alignment Guidelines)</span>
+        <a class="nav-btn" href="arena/proof_04_face_calibration.png" download>Download PNG</a>
       </div>
     </div>
   </section>
@@ -343,26 +375,35 @@
 const canvas = document.getElementById("stageCanvas");
 const ctx = canvas.getContext("2d");
 
+let stageMode = "assembled"; // "assembled" or "exploded"
+
 const IMAGES = {};
 const COMPONENT_URLS = {
-  hip: "packs/poet_tracksuit_v1/01_COMPONENTS/04_hip_bridge.png",
-  pelvis: "packs/poet_tracksuit_v1/01_COMPONENTS/06_pelvis_front_cover.png",
-  torso: "packs/poet_tracksuit_v1/01_COMPONENTS/01_torso_front.png",
-  head: "packs/poet_tracksuit_v1/01_COMPONENTS/21_head_front_blank.png",
-  eyes: "packs/poet_tracksuit_v1/01_COMPONENTS/22_eyes_open.png",
-  sunglasses: "packs/poet_tracksuit_v1/01_COMPONENTS/31_sunglasses_front.png",
-  uarm_L: "packs/poet_tracksuit_v1/01_COMPONENTS/07_upper_arm_L.png",
-  farm_L: "packs/poet_tracksuit_v1/01_COMPONENTS/08_forearm_L.png",
-  hand_L: "packs/poet_tracksuit_v1/01_COMPONENTS/15_hand_relaxed_L.png",
-  uarm_R: "packs/poet_tracksuit_v1/01_COMPONENTS/09_upper_arm_R.png",
-  farm_R: "packs/poet_tracksuit_v1/01_COMPONENTS/10_forearm_R.png",
-  hand_R: "packs/poet_tracksuit_v1/01_COMPONENTS/16_hand_relaxed_R.png",
-  thigh_L: "packs/poet_tracksuit_v1/01_COMPONENTS/11_thigh_L.png",
-  shin_L: "packs/poet_tracksuit_v1/01_COMPONENTS/12_shin_L.png",
-  boot_L: "packs/poet_tracksuit_v1/01_COMPONENTS/19_boot_front_L.png",
-  thigh_R: "packs/poet_tracksuit_v1/01_COMPONENTS/13_thigh_R.png",
-  shin_R: "packs/poet_tracksuit_v1/01_COMPONENTS/14_shin_R.png",
-  boot_R: "packs/poet_tracksuit_v1/01_COMPONENTS/20_boot_front_R.png"
+  hip: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/04_hip_bridge.png",
+  pelvis: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/06_pelvis_front_cover.png",
+  torso: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/01_torso_front.png",
+  torso_back: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/02_torso_back.png",
+  waist_link: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/03_waist_link.png",
+  head: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/21_head_front_blank.png",
+  brows: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/24_brows_rest.png",
+  eyes: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/22_eyes_open.png",
+  nose: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/26_nose_front.png",
+  mouth: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/27_mouth_rest.png",
+  sunglasses: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/31_sunglasses_front.png",
+  uarm_L: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/07_upper_arm_L.png",
+  farm_L: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/08_forearm_L.png",
+  hand_L: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/15_hand_relaxed_L.png",
+  hand_open_L: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/17_hand_open_L.png",
+  uarm_R: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/09_upper_arm_R.png",
+  farm_R: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/10_forearm_R.png",
+  hand_R: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/16_hand_relaxed_R.png",
+  hand_open_R: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/18_hand_open_R.png",
+  thigh_L: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/11_thigh_L.png",
+  shin_L: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/12_shin_L.png",
+  boot_L: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/19_boot_front_L.png",
+  thigh_R: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/13_thigh_R.png",
+  shin_R: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/14_shin_R.png",
+  boot_R: "kits/packs/poet_tracksuit_v1/01_COMPONENTS/20_boot_front_R.png"
 };
 
 let loadedCount = 0;
@@ -380,6 +421,13 @@ for (const [key, url] of Object.entries(COMPONENT_URLS)) {
   IMAGES[key] = img;
 }
 
+function setStageMode(mode) {
+  stageMode = mode;
+  document.getElementById("btnModeAssembled").classList.toggle("active", mode === "assembled");
+  document.getElementById("btnModeExploded").classList.toggle("active", mode === "exploded");
+  updateRig();
+}
+
 function drawRotatedPart(ctx, img, targetH, pivotSrc, pivotDst, angleDeg) {
   if (!img || !img.complete) return (u, v) => pivotDst;
   const scale = targetH / img.height;
@@ -394,7 +442,7 @@ function drawRotatedPart(ctx, img, targetH, pivotSrc, pivotDst, angleDeg) {
   
   // Draw Brass Brad Marker at pivot
   ctx.beginPath();
-  ctx.arc(0, 0, 5, 0, Math.PI * 2);
+  ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
   ctx.fillStyle = "#f5b942";
   ctx.fill();
   ctx.strokeStyle = "#382812";
@@ -415,6 +463,21 @@ function drawRotatedPart(ctx, img, targetH, pivotSrc, pivotDst, angleDeg) {
 }
 
 function updateRig() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Grid stage
+  ctx.fillStyle = "#120e0c";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = "#1f1814";
+  ctx.lineWidth = 1;
+  for (let x = 0; x < canvas.width; x += 30) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+  for (let y = 0; y < canvas.height; y += 30) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+
+  if (stageMode === "exploded") {
+    renderExplodedView();
+    return;
+  }
+
   const waist = parseFloat(document.getElementById("sl-waist").value);
   const head = parseFloat(document.getElementById("sl-head").value);
   const shL = parseFloat(document.getElementById("sl-shL").value);
@@ -436,27 +499,16 @@ function updateRig() {
   document.getElementById("val-kneL").textContent = kneL + "°";
   document.getElementById("val-hipR").textContent = hipR + "°";
   document.getElementById("val-kneR").textContent = kneR + "°";
-  document.getElementById("angleReadout").textContent = `Waist: ${waist}° | L Arm: ${shL}° / ${elL}° | R Arm: ${shR}° / ${elR}°`;
+  document.getElementById("angleReadout").textContent = `Waist: ${waist}° | L Arm: ${shL}° / ${elL}° | R Arm: ${shR}° / ${elR}° | Z-Order: Hands Over Thighs`;
   
-  // Render
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const rootX = canvas.width / 2, rootY = 460;
   
-  // Grid stage
-  ctx.fillStyle = "#120e0c";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = "#1f1814";
-  ctx.lineWidth = 1;
-  for (let x = 0; x < canvas.width; x += 30) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
-  for (let y = 0; y < canvas.height; y += 30) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
-  
-  const rootX = canvas.width / 2, rootY = 480;
-  
-  // 1. Hip Bridge
+  // 1. Hip Bridge (Base Skeleton)
   const hipFk = drawRotatedPart(ctx, IMAGES.hip, 130, [0.50, 0.12], [rootX, rootY], 0);
   const p_hipL = hipFk(0.76, 0.78);
   const p_hipR = hipFk(0.24, 0.78);
   
-  // 2. Legs
+  // 2. Legs (Rendered behind pelvis and hands)
   const thighL_fk = drawRotatedPart(ctx, IMAGES.thigh_L, 240, [0.51, 0.10], p_hipL, hipL);
   const kneeL = thighL_fk(0.49, 0.90);
   const shinL_fk = drawRotatedPart(ctx, IMAGES.shin_L, 240, [0.50, 0.11], kneeL, hipL + kneL);
@@ -469,33 +521,107 @@ function updateRig() {
   const ankleR = shinR_fk(0.50, 0.89);
   drawRotatedPart(ctx, IMAGES.boot_R, 95, [0.50, 0.18], ankleR, hipR + kneR);
   
-  // 3. Pelvis Cover
+  // 3. Pelvis Cover (Over hip bridge and upper leg tabs)
   drawRotatedPart(ctx, IMAGES.pelvis, 150, [0.50, 0.15], [rootX, rootY], 0);
   
-  // 4. Torso
+  // 4. Torso Front
   const torsoFk = drawRotatedPart(ctx, IMAGES.torso, 280, [0.50, 0.94], [rootX, rootY], waist);
   const p_neck = torsoFk(0.50, 0.07);
   const p_shL = torsoFk(0.78, 0.24);
   const p_shR = torsoFk(0.22, 0.24);
   
-  // 5. Head & Calibrated Sunglasses
+  // 5. Head with Expressions Calibrated to Master Reference
   const headFk = drawRotatedPart(ctx, IMAGES.head, 175, [0.50, 0.91], p_neck, waist + head);
-  // Head width is ~148px at target height 175. Sunglasses height 47px gives width ~141px (snug on face temples).
-  drawRotatedPart(ctx, IMAGES.sunglasses, 47, [0.50, 0.50], headFk(0.50, 0.36), waist + head);
   
-  // 6. Left Arm (Viewer's Right)
+  // Expression parts placed on head coordinate space
+  // Head width is ~148px at target height 175px
+  if (IMAGES.brows && IMAGES.brows.complete) {
+    drawRotatedPart(ctx, IMAGES.brows, 24, [0.50, 0.50], headFk(0.50, 0.27), waist + head);
+  }
+  if (IMAGES.eyes && IMAGES.eyes.complete) {
+    drawRotatedPart(ctx, IMAGES.eyes, 25, [0.50, 0.50], headFk(0.50, 0.34), waist + head);
+  }
+  // Nose: 42x38px prominent nostril bridge nestled right below glasses
+  if (IMAGES.nose && IMAGES.nose.complete) {
+    drawRotatedPart(ctx, IMAGES.nose, 36, [0.50, 0.50], headFk(0.50, 0.44), waist + head);
+  }
+  if (IMAGES.mouth && IMAGES.mouth.complete) {
+    drawRotatedPart(ctx, IMAGES.mouth, 25, [0.50, 0.50], headFk(0.50, 0.62), waist + head);
+  }
+  // Sunglasses: Snug 104px (height ~26px) matching 1.02x cranium width
+  if (IMAGES.sunglasses && IMAGES.sunglasses.complete) {
+    drawRotatedPart(ctx, IMAGES.sunglasses, 26, [0.50, 0.50], headFk(0.50, 0.33), waist + head);
+  }
+  
+  // 6. Left Arm & Hand (Viewer's Right) - Rendered ON TOP of torso and thighs
   const uarmL_fk = drawRotatedPart(ctx, IMAGES.uarm_L, 175, [0.51, 0.10], p_shL, waist + shL);
   const elbL = uarmL_fk(0.47, 0.90);
   const farmL_fk = drawRotatedPart(ctx, IMAGES.farm_L, 155, [0.50, 0.12], elbL, waist + shL + elL);
   const wriL = farmL_fk(0.47, 0.90);
   drawRotatedPart(ctx, IMAGES.hand_L, 95, [0.50, 0.12], wriL, waist + shL + elL);
   
-  // 7. Right Arm (Viewer's Left)
-  const uarmR_fk = drawRotatedPart(ctx, IMAGES.uarm_R, 175, [0.49, 0.10], p_shR, waist + shR);
+  // 7. Right Arm & Hand (Viewer's Left) - Rendered ON TOP of torso and thighs
+  const uarmR_fk = drawRotatedPart(ctx, IMAGES.uarmR_fk || IMAGES.uarm_R, 175, [0.49, 0.10], p_shR, waist + shR);
   const elbR = uarmR_fk(0.53, 0.90);
   const farmR_fk = drawRotatedPart(ctx, IMAGES.farm_R, 155, [0.50, 0.12], elbR, waist + shR + elR);
   const wriR = farmR_fk(0.53, 0.90);
   drawRotatedPart(ctx, IMAGES.hand_R, 95, [0.50, 0.12], wriR, waist + shR + elR);
+}
+
+function renderExplodedView() {
+  document.getElementById("angleReadout").textContent = "Exploded Modular View · 31 Isolated Pieces with Brass Brads & Connections";
+  const cx = canvas.width / 2;
+  
+  // Head stack
+  if (IMAGES.head && IMAGES.head.complete) {
+    ctx.drawImage(IMAGES.head, cx - 60, 40, 120, 140);
+  }
+  // Floating face pieces
+  if (IMAGES.sunglasses && IMAGES.sunglasses.complete) ctx.drawImage(IMAGES.sunglasses, cx + 90, 50, 80, 20);
+  if (IMAGES.nose && IMAGES.nose.complete) ctx.drawImage(IMAGES.nose, cx + 90, 85, 34, 30);
+  if (IMAGES.mouth && IMAGES.mouth.complete) ctx.drawImage(IMAGES.mouth, cx + 90, 130, 44, 22);
+  
+  // Torso
+  if (IMAGES.torso && IMAGES.torso.complete) ctx.drawImage(IMAGES.torso, cx - 80, 240, 160, 200);
+  if (IMAGES.waist_link && IMAGES.waist_link.complete) ctx.drawImage(IMAGES.waist_link, cx - 35, 460, 70, 45);
+  
+  // Left arm
+  if (IMAGES.uarm_L && IMAGES.uarm_L.complete) ctx.drawImage(IMAGES.uarm_L, cx + 130, 260, 70, 140);
+  if (IMAGES.farm_L && IMAGES.farm_L.complete) ctx.drawImage(IMAGES.farm_L, cx + 220, 360, 65, 130);
+  if (IMAGES.hand_L && IMAGES.hand_L.complete) ctx.drawImage(IMAGES.hand_L, cx + 290, 460, 60, 80);
+  
+  // Right arm
+  if (IMAGES.uarm_R && IMAGES.uarm_R.complete) ctx.drawImage(IMAGES.uarm_R, cx - 200, 260, 70, 140);
+  if (IMAGES.farm_R && IMAGES.farm_R.complete) ctx.drawImage(IMAGES.farm_R, cx - 290, 360, 65, 130);
+  if (IMAGES.hand_R && IMAGES.hand_R.complete) ctx.drawImage(IMAGES.hand_R, cx - 360, 460, 60, 80);
+  
+  // Hip & Pelvis
+  if (IMAGES.hip && IMAGES.hip.complete) ctx.drawImage(IMAGES.hip, cx - 55, 520, 110, 80);
+  if (IMAGES.pelvis && IMAGES.pelvis.complete) ctx.drawImage(IMAGES.pelvis, cx + 70, 520, 80, 90);
+  
+  // Legs
+  if (IMAGES.thigh_L && IMAGES.thigh_L.complete) ctx.drawImage(IMAGES.thigh_L, cx + 40, 630, 75, 170);
+  if (IMAGES.shin_L && IMAGES.shin_L.complete) ctx.drawImage(IMAGES.shin_L, cx + 130, 730, 70, 170);
+  if (IMAGES.boot_L && IMAGES.boot_L.complete) ctx.drawImage(IMAGES.boot_L, cx + 210, 860, 65, 80);
+  
+  if (IMAGES.thigh_R && IMAGES.thigh_R.complete) ctx.drawImage(IMAGES.thigh_R, cx - 120, 630, 75, 170);
+  if (IMAGES.shin_R && IMAGES.shin_R.complete) ctx.drawImage(IMAGES.shin_R, cx - 205, 730, 70, 170);
+  if (IMAGES.boot_R && IMAGES.boot_R.complete) ctx.drawImage(IMAGES.boot_R, cx - 280, 860, 65, 80);
+  
+  // Leader lines
+  ctx.strokeStyle = "#f5b942";
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  // Head to glasses
+  ctx.beginPath(); ctx.moveTo(cx + 40, 70); ctx.lineTo(cx + 90, 60); ctx.stroke();
+  // Torso to shoulder L
+  ctx.beginPath(); ctx.moveTo(cx + 60, 280); ctx.lineTo(cx + 130, 280); ctx.stroke();
+  // Torso to shoulder R
+  ctx.beginPath(); ctx.moveTo(cx - 60, 280); ctx.lineTo(cx - 130, 280); ctx.stroke();
+  // Hip to thighs
+  ctx.beginPath(); ctx.moveTo(cx + 30, 580); ctx.lineTo(cx + 70, 630); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx - 30, 580); ctx.lineTo(cx - 70, 630); ctx.stroke();
+  ctx.setLineDash([]);
 }
 
 function applyPreset(name) {
@@ -505,23 +631,25 @@ function applyPreset(name) {
   const setVal = (id, val) => document.getElementById(id).value = val;
   
   if (name === "neutral") {
+    // Natural standing pose matching master reference: arms hang along flanks
     setVal("sl-waist", 0); setVal("sl-head", 0);
-    setVal("sl-shL", 12); setVal("sl-elL", 10);
-    setVal("sl-shR", -12); setVal("sl-elR", -10);
-    setVal("sl-hipL", 4); setVal("sl-kneL", 0);
-    setVal("sl-hipR", -4); setVal("sl-kneR", 0);
+    setVal("sl-shL", -4); setVal("sl-elL", 2);
+    setVal("sl-shR", 4); setVal("sl-elR", -2);
+    setVal("sl-hipL", 2); setVal("sl-kneL", 0);
+    setVal("sl-hipR", -2); setVal("sl-kneR", 0);
   } else if (name === "gesture") {
-    setVal("sl-waist", -6); setVal("sl-head", 14);
-    setVal("sl-shL", -85); setVal("sl-elL", -45);
-    setVal("sl-shR", 35); setVal("sl-elR", 70);
-    setVal("sl-hipL", 12); setVal("sl-kneL", 15);
-    setVal("sl-hipR", -10); setVal("sl-kneR", 5);
-  } else if (name === "fall") {
-    setVal("sl-waist", 20); setVal("sl-head", -25);
-    setVal("sl-shL", -130); setVal("sl-elL", -20);
-    setVal("sl-shR", -110); setVal("sl-elR", 30);
-    setVal("sl-hipL", -35); setVal("sl-kneL", 65);
-    setVal("sl-hipR", -20); setVal("sl-kneR", 45);
+    setVal("sl-waist", -6); setVal("sl-head", 10);
+    setVal("sl-shL", -80); setVal("sl-elL", -45);
+    setVal("sl-shR", 32); setVal("sl-elR", 72);
+    setVal("sl-hipL", 12); setVal("sl-kneL", 10);
+    setVal("sl-hipR", -10); setVal("sl-kneR", 8);
+  } else if (name === "chest_fold") {
+    // Arms folded across chest: forearm sits ON TOP of torso
+    setVal("sl-waist", 2); setVal("sl-head", -4);
+    setVal("sl-shL", -35); setVal("sl-elL", -80);
+    setVal("sl-shR", 35); setVal("sl-elR", 80);
+    setVal("sl-hipL", 3); setVal("sl-kneL", 0);
+    setVal("sl-hipR", -3); setVal("sl-kneR", 0);
   } else if (name === "reach") {
     setVal("sl-waist", -10); setVal("sl-head", -15);
     setVal("sl-shL", -45); setVal("sl-elL", -60);
