@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WYGWYL TABLE — Periodic Cut-Out Atlas &amp; Card Viewer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f4f4f0'/%3E%3Ccircle cx='16' cy='16' r='9' fill='%23141414'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --paper:#f2f1ec;
+    --card:#f7f6f2;
+    --ink:#141414;
+    --dim:#8a8a86;
+    --faint:#d8d6cf;
+    --red:#e01b1b;
+    --blue:#0033cc;
+    --gold:#b8860b;
+    --mono:ui-monospace,'SF Mono','IBM Plex Mono',Menlo,Consolas,monospace;
+    --sans:'Helvetica Neue',Helvetica,Arial,sans-serif;
+
+    /* Category accents — one quiet stripe per cell */
+    --c-hero:#141414;
+    --c-location:#3d5a6c;
+    --c-character:#e01b1b;
+    --c-tracksuit:#9b1b1b;
+    --c-pose:#b85d19;
+    --c-prop:#8a6d3b;
+    --c-fx:#0033cc;
+    --c-scene:#2b6a4c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{min-height:100%;background:var(--paper);color:var(--ink);font-family:var(--mono)}
+  button,input{font-family:var(--mono);color:var(--ink)}
+
+  /* ── Top Bar ── */
+  #top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:12px 22px;background:var(--paper);border-bottom:1px solid var(--ink)}
+  .glyph{display:grid;grid-template-columns:repeat(3,5px);gap:3px}
+  .glyph i{width:5px;height:5px;border-radius:50%;background:var(--ink)}
+  .glyph i.r{background:var(--red)}
+  #brand{font-size:11px;font-weight:700;letter-spacing:.34em;text-transform:uppercase}
+  #brand em{font-style:normal;color:var(--dim);font-weight:400;letter-spacing:.18em}
+  .chip{border:1px solid var(--faint);background:var(--card);cursor:pointer;font-size:9px;
+    letter-spacing:.2em;text-transform:uppercase;padding:6px 10px;color:var(--dim);user-select:none;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+  .chip:hover{border-color:var(--ink);color:var(--ink)}
+  .chip.on{border-color:var(--ink);color:var(--ink);background:var(--paper);box-shadow:inset 0 -2px 0 var(--red)}
+  .chip.stage-link{border-color:var(--red);color:var(--red);font-weight:700}
+  .chip.stage-link:hover{background:var(--red);color:var(--paper)}
+  #q{border:1px solid var(--faint);background:var(--card);padding:6px 10px;font-size:10px;
+    letter-spacing:.12em;min-width:210px;outline:none}
+  #q:focus{border-color:var(--ink)}
+  #count{margin-left:auto;font-size:9px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
+
+  /* ── Filter Bar ── */
+  #filters{display:flex;flex-direction:column;gap:6px;padding:10px 22px;border-bottom:1px solid var(--faint);
+    background:var(--paper)}
+  .frow{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+  .flabel{font-size:8px;letter-spacing:.28em;color:var(--dim);text-transform:uppercase;min-width:68px}
+  .fchip{border:1px solid var(--faint);background:var(--card);cursor:pointer;font-size:8.5px;
+    letter-spacing:.14em;text-transform:uppercase;padding:4px 7px;color:var(--dim);user-select:none}
+  .fchip:hover{border-color:var(--ink);color:var(--ink)}
+  .fchip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .fchip .sw{display:inline-block;width:6px;height:6px;margin-right:5px;vertical-align:1px}
+
+  /* ═══════════════════════════════════════════════════════════
+     VIEW 1 — PERIODIC TABLE
+     ═══════════════════════════════════════════════════════════ */
+  #ptable{padding:18px 22px 60px}
+  .pblock{margin-bottom:22px}
+  .phead{display:flex;align-items:baseline;gap:12px;padding:6px 2px 8px;
+    border-bottom:1px solid var(--ink);margin-bottom:8px}
+  .phead .sw{width:9px;height:9px;flex:none;transform:translateY(1px)}
+  .phead .pt{font-size:10px;font-weight:700;letter-spacing:.32em;text-transform:uppercase}
+  .phead .ps{font-size:9px;color:var(--dim);letter-spacing:.16em}
+  .phead .pc{margin-left:auto;font-size:9px;color:var(--dim);letter-spacing:.22em}
+
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:4px}
+  .pcell{position:relative;height:80px;background:var(--card);border:1px solid var(--faint);
+    border-top:3px solid var(--c,var(--ink));padding:5px 6px 4px;cursor:pointer;
+    display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;
+    transition:transform .06s,border-color .06s,background .06s}
+  .pcell:hover{border-color:var(--ink);border-top-color:var(--c,var(--ink));background:#fff;
+    transform:translateY(-1px);z-index:2;box-shadow:0 3px 10px rgba(0,0,0,.08)}
+  .pcell .top{display:flex;justify-content:space-between;align-items:baseline;gap:4px;
+    font-size:7.5px;letter-spacing:.12em;color:var(--dim)}
+  .pcell .num{font-weight:700;color:var(--ink)}
+  .pcell .uses{color:var(--blue);font-weight:700}
+  .pcell .piv{color:var(--gold);font-weight:700}
+  .pcell .sym{font-family:var(--sans);font-weight:900;font-size:19px;letter-spacing:.03em;
+    line-height:1;color:var(--ink);align-self:flex-start;margin:1px 0}
+  .pcell .nm{font-size:7.5px;letter-spacing:.06em;text-transform:uppercase;line-height:1.15;
+    color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .pcell .bks{font-size:6.5px;letter-spacing:.1em;color:var(--dim);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+  .pcell.scene{background:#f3f5f1}
+  .pcell.scene .sym{font-size:14px;letter-spacing:.05em}
+
+  /* ── Hover Peek Card ── */
+  #peek{position:fixed;z-index:25;pointer-events:none;display:none;
+    width:220px;background:var(--paper);border:2px solid var(--ink);
+    box-shadow:8px 8px 0 rgba(20,20,20,.16);padding:7px}
+  #peek.wide{width:290px}
+  #peek canvas{width:100%;height:auto;display:block;background:#fdfdfa}
+  #peek .pm{padding:6px 2px 2px;font-size:8px;letter-spacing:.14em;color:var(--dim);
+    text-transform:uppercase;display:flex;justify-content:space-between;gap:6px}
+  #peek .pm b{color:var(--ink)}
+
+  /* ═══════════════════════════════════════════════════════════
+     VIEW 2 — SPECIMEN CARDS & PIECES GRID
+     ═══════════════════════════════════════════════════════════ */
+  #grid{display:none;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;
+    padding:22px;max-width:1760px;margin:0 auto}
+  #grid.on{display:grid}
+  #ptable.off{display:none}
+  .tile{background:var(--card);border:1px solid var(--faint);cursor:pointer;display:flex;
+    flex-direction:column;transition:border-color .12s,transform .12s}
+  .tile:hover{border-color:var(--ink);transform:translateY(-2px)}
+  .tile.scene-tile{grid-column:span 2}
+  @media(max-width:640px){.tile.scene-tile{grid-column:span 1}}
+  .tile canvas{width:100%;aspect-ratio:3/4;display:block;background:#fdfdfa}
+  .tile.scene-tile canvas{aspect-ratio:1120/760}
+  .meta{padding:9px 11px 11px;border-top:1px solid var(--faint);display:flex;
+    flex-direction:column;gap:3px}
+  .meta .t{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .meta .s{font-size:8.5px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;
+    display:flex;justify-content:space-between;gap:6px}
+  .meta .s b{color:var(--blue);font-weight:700}
+
+  /* ═══════════════════════════════════════════════════════════
+     DETAIL SHEET MODAL
+     ═══════════════════════════════════════════════════════════ */
+  #sheet{position:fixed;inset:0;z-index:30;background:rgba(20,20,20,.62);display:none;
+    place-items:center;padding:20px;overflow-y:auto}
+  #sheet.on{display:grid}
+  #sheetBox{background:var(--paper);border:2px solid var(--ink);max-width:1280px;width:100%;
+    display:grid;grid-template-columns:minmax(340px,520px) 1fr;gap:0;max-height:92vh;overflow:hidden;
+    box-shadow:12px 12px 0 rgba(20,20,20,.25)}
+  #sheetBox.scene-mode{grid-template-columns:minmax(420px,640px) 1fr}
+  @media(max-width:920px){#sheetBox,#sheetBox.scene-mode{grid-template-columns:1fr;max-height:none}}
+  #sheetLeft{background:#fdfdfa;border-right:1px solid var(--ink);display:flex;flex-direction:column;
+    align-items:center;justify-content:space-between;padding:16px;gap:12px;overflow-y:auto}
+  #sheetCanvas{width:100%;height:auto;display:block;border:1px solid var(--faint);background:#fdfdfa}
+  #canvasTools{display:flex;gap:5px;flex-wrap:wrap;width:100%;justify-content:center}
+  #sheetMeta{padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;max-height:90vh}
+  #sheetMeta h2{font-size:15px;letter-spacing:.22em;text-transform:uppercase;line-height:1.25}
+  #sheetMeta .k{font-size:8.5px;letter-spacing:.28em;color:var(--dim);text-transform:uppercase;margin-bottom:4px;font-weight:700}
+  #sheetMeta .p{font-size:11px;line-height:1.6;color:var(--ink);white-space:pre-wrap;
+    background:var(--card);border:1px solid var(--faint);padding:11px 13px;max-height:220px;overflow-y:auto}
+  #sheetMeta .tags{display:flex;gap:5px;flex-wrap:wrap}
+  #sheetMeta .tag{font-size:8.5px;letter-spacing:.15em;padding:4px 8px;border:1px solid var(--faint);
+    background:var(--card);text-transform:uppercase;cursor:pointer}
+  #sheetMeta .tag:hover{border-color:var(--ink)}
+  #sheetMeta .bar{display:flex;gap:7px;flex-wrap:wrap}
+
+  /* Cut-Out Pieces Gallery inside Sheet Modal */
+  .parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;
+    max-height:320px;overflow-y:auto;padding:8px;background:var(--card);border:1px solid var(--faint)}
+  .part-card{border:1px solid var(--faint);background:#fff;cursor:pointer;display:flex;flex-direction:column;
+    transition:border-color .1s,transform .1s}
+  .part-card:hover,.part-card.active{border-color:var(--red);transform:translateY(-1px);box-shadow:0 2px 6px rgba(224,27,27,.15)}
+  .part-art{height:92px;display:flex;align-items:center;justify-content:center;padding:6px;
+    background-color:#fafafa;
+    background-image:linear-gradient(45deg,#ececec 25%,transparent 25%),linear-gradient(-45deg,#ececec 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ececec 75%),linear-gradient(-45deg,transparent 75%,#ececec 75%);
+    background-size:14px 14px;background-position:0 0,0 7px,7px -7px,-7px 0}
+  .part-art img{max-width:100%;max-height:100%;object-fit:contain}
+  .part-info{padding:4px 6px;border-top:1px solid var(--faint);font-size:7.5px;line-height:1.25}
+  .part-info .pn{font-weight:700;color:var(--ink);display:flex;justify-content:space-between}
+  .part-info .pl{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* Multiplane Layer Rows */
+  .layer-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid var(--faint);
+    background:var(--card);font-size:9px;cursor:pointer}
+  .layer-row:hover{border-color:var(--ink);background:#fff}
+  .plane-badge{font-weight:700;padding:2px 5px;background:var(--ink);color:var(--paper);font-size:8px;letter-spacing:.1em}
+
+  /* ── Print Sheet Mode ── */
+  @media print{
+    @page{size:letter;margin:10mm}
+    body{background:#fff}
+    #top,#filters,#sheet,#peek{display:none!important}
+    #ptable{display:none!important}
+    #grid{display:grid!important;grid-template-columns:repeat(3,1fr);gap:6mm;padding:0}
+    .tile{break-inside:avoid;page-break-inside:avoid;border:1px solid #000}
+  }
+</style>
+</head>
+<body>
+
+<div id="top">
+  <div class="glyph"><i></i><i></i><i></i><i></i><i class="r"></i><i></i><i></i><i></i><i></i></div>
+  <div id="brand">WYGWYL TABLE <em>&middot; v2.0 poem kits &middot; cut-out atlas</em></div>
+  <div class="chip on" id="vTable">TABLE</div>
+  <div class="chip" id="vCards">CARDS</div>
+  <div class="chip" id="vPieces" title="Browse all 6,265 cut-out RGBA pieces directly">ALL 6,265 PIECES</div>
+  <a class="chip stage-link" href="./stage.html" id="stageNav">STAGE ↗</a>
+  <div class="chip" id="lookBtn" title="Switch card rendering mode">LOOK: CUTOUTS</div>
+  <div class="chip" id="pivToggle" title="Show detected brass pivot sockets on cards">⊕ PIVOTS: ON</div>
+  <div class="chip" id="printBtn">⎙ PRINT</div>
+  <input id="q" type="search" placeholder="filter by id, poem, part, role, prompt…">
+  <div id="count">—</div>
+</div>
+
+<div id="filters">
+  <div class="frow" id="bookRow"><span class="flabel">POEM</span></div>
+  <div class="frow" id="sortRow"><span class="flabel">SORT</span></div>
+  <div class="frow" id="typeRow"><span class="flabel">TYPE</span></div>
+</div>
+
+<div id="ptable"></div>
+<div id="grid"></div>
+<div id="peek"><canvas id="peekCv" width="220" height="293"></canvas><div class="pm"><span id="peekL"></span><b id="peekR"></b></div></div>
+
+<div id="sheet">
+  <div id="sheetBox">
+    <div id="sheetLeft">
+      <canvas id="sheetCanvas" width="660" height="880"></canvas>
+      <div id="canvasTools"></div>
+    </div>
+    <div id="sheetMeta"></div>
+  </div>
+</div>
+
+<script type="module">
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV"];
+
+const GROUPS = [
+  { key:"hero",      label:"HERO ARCHITECTURE & MULTIPLANE SETS", sub:"multi-card buildings, facades, doors, windows & stage decks", color:"var(--c-hero)" },
+  { key:"location",  label:"LOCATIONS & ENVIRONMENTS",            sub:"scenic plates, streets, shores, rooms & sky backings",         color:"var(--c-location)" },
+  { key:"character", label:"CHARACTER CORE KITS",                 sub:"articulated bodies, heads, faces, expressions & hands",        color:"var(--c-character)" },
+  { key:"tracksuit", label:"POET BLACK/RED TRACKSUIT RIG (31 PARTS)", sub:"pre-cut individual transparent RGBA components + brass pivots", color:"var(--c-tracksuit)" },
+  { key:"pose",      label:"ACTIONS, MAIN POSES & REPLACEMENTS",  sub:"poem-specific performance poses, action limbs & choreography", color:"var(--c-pose)" },
+  { key:"prop",      label:"PROPS & STAGE FURNISHINGS",           sub:"handheld objects, furniture, vehicles, screens & instruments", color:"var(--c-prop)" },
+  { key:"fx",        label:"PAINTED EFFECTS & LIGHT LEAKS",       sub:"vape haze strips, falling word cards, amber/plum gels & storm",color:"var(--c-fx)" },
+  { key:"scene",     label:"STAGED MULTIPLANE SCENES (POEMS I–XIV)", sub:"80 assembled multiplane scenes across 252 storyboard shots", color:"var(--c-scene)" },
+];
+const GROUP_BY_KEY = Object.fromEntries(GROUPS.map(g=>[g.key,g]));
+
+let MAN = null;
+let ALL_ITEMS = [];
+let ALL_CUT_PIECES = [];
+let itemById = new Map();
+
+let viewMode = "table";     // "table" | "cards" | "pieces"
+let lookMode = "cutouts";   // "cutouts" | "mesh" | "sheet"
+let showPivots = true;
+let showChecker = false;
+let fBook = 0;              // 0 = ALL, 1..14
+let fType = "all";
+let fSort = "poem";         // "poem" | "type" | "uses" | "parts" | "alpha"
+let qText = "";
+
+const imgCache = new Map();
+const partMetaByFile = new Map();
+
+function cropAndKeyPartFromSheet(sheetImg, bbox) {
+  const [bx, by, bw, bh] = bbox;
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, bw);
+  c.height = Math.max(1, bh);
+  const cx = c.getContext("2d");
+  cx.drawImage(sheetImg, bx, by, bw, bh, 0, 0, bw, bh);
+  try {
+    const id = cx.getImageData(0, 0, bw, bh);
+    const d = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i], g = d[i + 1], b = d[i + 2];
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+      if (mx >= 236 && (mx - mn) <= 18) {
+        d[i + 3] = mx >= 244 ? 0 : Math.round(((244 - mx) / 8) * 255);
+      }
+    }
+    cx.putImageData(id, 0, 0);
+  } catch (_) {}
+  return c;
+}
+
+function loadImg(src, retries = 1) {
+  if (!src) return Promise.resolve(null);
+  const cleanSrc = src.replace(/^\.\//, "");
+  const full = src.startsWith("http") || src.startsWith("/") || src.startsWith("../") ? src : "./" + cleanSrc;
+  if (imgCache.has(full)) return imgCache.get(full);
+  const p = new Promise(resolve => {
+    const attempt = (left) => {
+      const im = new Image();
+      im.crossOrigin = "anonymous";
+      im.onload = () => resolve(im);
+      im.onerror = async () => {
+        if (left > 0) {
+          setTimeout(() => attempt(left - 1), 80);
+          return;
+        }
+        const meta = partMetaByFile.get(cleanSrc) || partMetaByFile.get(src);
+        if (meta && meta.sheet && meta.bbox) {
+          const shIm = await loadImg(meta.sheet, 2);
+          if (shIm) {
+            resolve(cropAndKeyPartFromSheet(shIm, meta.bbox));
+            return;
+          }
+        }
+        imgCache.delete(full);
+        resolve(null);
+      };
+      im.src = full;
+    };
+    attempt(retries);
+  });
+  imgCache.set(full, p);
+  return p;
+}
+
+window.addEventListener("error", async e => {
+  const t = e.target;
+  if (!t || t.tagName !== "IMG" || t.dataset.fallbackTried) return;
+  const rel = (t.getAttribute("src") || "").replace(/^(\.\/|\.\.\/)/, "");
+  const meta = partMetaByFile.get(rel);
+  if (meta && meta.sheet && meta.bbox) {
+    t.dataset.fallbackTried = "1";
+    const shIm = await loadImg(meta.sheet, 2);
+    if (shIm) {
+      const c = cropAndKeyPartFromSheet(shIm, meta.bbox);
+      t.src = c.toDataURL("image/png");
+    }
+  }
+}, true);
+
+const $ = id => document.getElementById(id);
+
+function makeSymbol(it) {
+  if (it.type === "scene") {
+    return (it.scene_num || it.id.replace("P","")).slice(0, 5);
+  }
+  const clean = (it.name || it.id)
+    .replace(/^TRACKSUIT\s*·\s*/i, "")
+    .replace(/^\d+\s*/, "")
+    .replace(/[^A-Za-z0-9 ]+/g, " ")
+    .trim();
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (!words.length) return "KT";
+  if (words.length === 1) return words[0].slice(0, 1).toUpperCase() + words[0].slice(1, 2).toLowerCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+/* ── Card Frame & Halftone Helpers (Halfworld-compatible) ── */
+function drawTracked(g, text, track) {
+  let x = 0;
+  for (const ch of String(text)) {
+    g.fillText(ch, x, 0);
+    x += g.measureText(ch).width + track;
+  }
+}
+
+function drawReferenceCardFrame(g, CW, CH, { label="", status="", progress=0.25, accent="#0033cc", DPR=1 }={}) {
+  g.save();
+  g.setTransform(1,0,0,1,0,0);
+  const pad = Math.round(10 * DPR), fw = Math.max(2, Math.round(2 * DPR));
+  g.strokeStyle = "#141414";
+  g.lineWidth = fw;
+  g.strokeRect(pad, pad, CW - pad*2, CH - pad*2);
+
+  if (label) {
+    g.fillStyle = "#141414";
+    g.textBaseline = "alphabetic";
+    g.font = `800 ${Math.round(12 * DPR)}px Helvetica,Arial,sans-serif`;
+    g.save();
+    g.translate(pad + 11*DPR, pad + 21*DPR);
+    drawTracked(g, String(label).slice(0, 34).toUpperCase(), 1.8*DPR);
+    g.restore();
+  }
+
+  g.fillStyle = accent;
+  g.fillRect(CW - pad - 16*DPR, pad + 8*DPR, 9*DPR, 9*DPR);
+
+  if (status) {
+    g.fillStyle = accent;
+    g.font = `800 ${Math.round(10 * DPR)}px Helvetica,Arial,sans-serif`;
+    g.save();
+    g.translate(pad + 11*DPR, CH - pad - 15*DPR);
+    drawTracked(g, String(status).slice(0, 38).toUpperCase(), 1.6*DPR);
+    g.restore();
+    const mx = pad + 11*DPR, my = CH - pad - 8*DPR, mw = CW - pad*2 - 22*DPR;
+    g.fillStyle = "#d9d9d4";
+    g.fillRect(mx, my, mw, 3*DPR);
+    g.fillStyle = accent;
+    g.fillRect(mx, my, mw * Math.max(0.06, Math.min(1, progress)), 3*DPR);
+  }
+  g.restore();
+}
+
+function drawPaperField(g, CW, CH, checker=false) {
+  g.save();
+  g.setTransform(1,0,0,1,0,0);
+  if (checker) {
+    const sz = 16;
+    g.fillStyle = "#f8f8f5";
+    g.fillRect(0, 0, CW, CH);
+    g.fillStyle = "#e6e5de";
+    for (let y = 0; y < CH; y += sz) {
+      for (let x = ((y / sz) % 2) * sz; x < CW; x += sz * 2) {
+        g.fillRect(x, y, sz, sz);
+      }
+    }
+  } else {
+    g.fillStyle = "#fdfdfa";
+    g.fillRect(0, 0, CW, CH);
+    g.strokeStyle = "rgba(0,0,0,0.055)";
+    g.lineWidth = 1;
+    g.beginPath();
+    for (let y = 6; y < CH; y += 6) {
+      g.moveTo(0, y);
+      g.lineTo(CW, y);
+    }
+    g.stroke();
+  }
+  g.restore();
+}
+
+function drawPivotMarkers(g, pivots, dx, dy, scaleX, scaleY, DPR=1) {
+  if (!showPivots || !pivots || !pivots.length) return;
+  g.save();
+  for (const p of pivots) {
+    const px = dx + p.x * scaleX;
+    const py = dy + p.y * scaleY;
+    const r = Math.max(4 * DPR, (p.r || 6) * Math.min(scaleX, scaleY));
+    g.strokeStyle = "#e01b1b";
+    g.lineWidth = Math.max(1.5, 1.5 * DPR);
+    g.beginPath();
+    g.arc(px, py, r, 0, Math.PI * 2);
+    g.stroke();
+    g.beginPath();
+    g.moveTo(px - r * 1.4, py);
+    g.lineTo(px + r * 1.4, py);
+    g.moveTo(px, py - r * 1.4);
+    g.lineTo(px, py + r * 1.4);
+    g.stroke();
+  }
+  g.restore();
+}
+
+function applyMeshPostPass(g, CW, CH) {
+  const id = g.getImageData(0, 0, CW, CH);
+  const src = id.data;
+  const cell = Math.max(4, Math.round(CW / 95));
+  g.save();
+  g.fillStyle = "#fdfdfa";
+  g.fillRect(0, 0, CW, CH);
+  g.strokeStyle = "rgba(0,0,0,0.07)";
+  g.lineWidth = 1;
+  g.beginPath();
+  for (let y = 3; y < CH; y += 4) {
+    g.moveTo(0, y);
+    g.lineTo(CW, y);
+  }
+  g.stroke();
+  for (let y = Math.floor(cell/2); y < CH; y += cell) {
+    for (let x = Math.floor(cell/2); x < CW; x += cell) {
+      const i = (y * CW + x) * 4;
+      const r = src[i], gr = src[i+1], b = src[i+2];
+      const lum = (r*0.299 + gr*0.587 + b*0.114) / 255;
+      const d = 1 - lum;
+      if (d < 0.14) continue;
+      const rad = Math.pow(d, 0.85) * cell * 0.62;
+      g.fillStyle = `rgb(${Math.round(r*0.35)},${Math.round(gr*0.35)},${Math.round(b*0.35)})`;
+      g.beginPath();
+      g.arc(x, y, rad, 0, Math.PI * 2);
+      g.fill();
+    }
+  }
+  g.restore();
+}
+
+/* ── Render an Asset / Kit or Single Cut-Out Piece onto a Canvas ── */
+async function renderAssetCanvas(cv, item, opts = {}) {
+  const g = cv.getContext("2d");
+  const CW = cv.width, CH = cv.height;
+  const DPR = CW >= 500 ? 1.5 : 1;
+  const mode = opts.mode || lookMode;
+  const focusPartIdx = opts.partIndex ?? null;
+
+  drawPaperField(g, CW, CH, opts.checker ?? showChecker);
+
+  const padX = Math.round(CW * 0.08);
+  const padTop = Math.round(CH * 0.11);
+  const padBot = Math.round(CH * 0.12);
+  const availW = CW - padX * 2;
+  const availH = CH - padTop - padBot;
+
+  const parts = item.parts || [];
+
+  if (mode === "sheet" && item.sheet_file) {
+    const im = await loadImg(item.sheet_file);
+    if (im) {
+      const s = Math.min(availW / im.width, availH / im.height);
+      const dw = im.width * s, dh = im.height * s;
+      const dx = padX + (availW - dw) / 2, dy = padTop + (availH - dh) / 2;
+      g.save();
+      g.shadowColor = "rgba(0,0,0,0.14)";
+      g.shadowBlur = 8 * DPR;
+      g.drawImage(im, dx, dy, dw, dh);
+      g.restore();
+      if (showPivots) {
+        g.save();
+        g.strokeStyle = "rgba(224,27,27,0.75)";
+        g.lineWidth = 1.2 * DPR;
+        for (const p of parts) {
+          if (p.bbox_sheet) {
+            const [bx, by, bw, bh] = p.bbox_sheet;
+            g.strokeRect(dx + bx * s, dy + by * s, bw * s, bh * s);
+          }
+        }
+        g.restore();
+      }
+    }
+  } else if (focusPartIdx !== null && parts[focusPartIdx]) {
+    // Draw a single focused cut-out RGBA piece at full resolution
+    const p = parts[focusPartIdx];
+    const im = await loadImg(p.file);
+    if (im) {
+      let sx = 0, sy = 0, sw = im.width, sh = im.height;
+      if (item.type === "tracksuit" && item.visible_bbox) {
+        [sx, sy, sw, sh] = item.visible_bbox;
+      }
+      const s = Math.min(availW / sw, availH / sh) * 0.92;
+      const dw = sw * s, dh = sh * s;
+      const dx = padX + (availW - dw) / 2, dy = padTop + (availH - dh) / 2;
+      g.save();
+      g.shadowColor = "rgba(20,16,12,0.22)";
+      g.shadowBlur = 10 * DPR;
+      g.shadowOffsetY = 3 * DPR;
+      g.drawImage(im, sx, sy, sw, sh, dx, dy, dw, dh);
+      g.restore();
+      drawPivotMarkers(g, p.pivots, dx - sx * s, dy - sy * s, s, s, DPR);
+    }
+  } else if (parts.length === 1) {
+    const p = parts[0];
+    const im = await loadImg(p.file);
+    if (im) {
+      let sx = 0, sy = 0, sw = im.width, sh = im.height;
+      if (item.type === "tracksuit" && item.visible_bbox) {
+        [sx, sy, sw, sh] = item.visible_bbox;
+      }
+      const s = Math.min(availW / sw, availH / sh) * 0.92;
+      const dw = sw * s, dh = sh * s;
+      const dx = padX + (availW - dw) / 2, dy = padTop + (availH - dh) / 2;
+      g.save();
+      g.shadowColor = "rgba(20,16,12,0.22)";
+      g.shadowBlur = 8 * DPR;
+      g.shadowOffsetY = 2 * DPR;
+      g.drawImage(im, sx, sy, sw, sh, dx, dy, dw, dh);
+      g.restore();
+      drawPivotMarkers(g, p.pivots, dx - sx * s, dy - sy * s, s, s, DPR);
+    }
+  } else if (parts.length > 1) {
+    // Arrange up to 12 working cut-out RGBA pieces into a clean specimen mosaic
+    const working = parts.filter(p => p.role === "working_part");
+    const chosen = (working.length ? working : parts).slice(0, CW >= 400 ? 12 : 6);
+    const n = chosen.length;
+    const cols = n <= 2 ? n : (n <= 4 ? 2 : (n <= 9 ? 3 : 4));
+    const rows = Math.ceil(n / cols);
+    const cellW = availW / cols;
+    const cellH = availH / rows;
+
+    const imgs = await Promise.all(chosen.map(p => loadImg(p.file)));
+    for (let i = 0; i < n; i++) {
+      const im = imgs[i];
+      if (!im) continue;
+      const p = chosen[i];
+      const c = i % cols, r = Math.floor(i / cols);
+      const cx = padX + c * cellW, cy = padTop + r * cellH;
+      const s = Math.min((cellW * 0.86) / im.width, (cellH * 0.84) / im.height);
+      const dw = im.width * s, dh = im.height * s;
+      const dx = cx + (cellW - dw) / 2, dy = cy + (cellH - dh) / 2;
+      g.save();
+      g.shadowColor = "rgba(20,16,12,0.20)";
+      g.shadowBlur = 5 * DPR;
+      g.shadowOffsetY = 2 * DPR;
+      g.drawImage(im, dx, dy, dw, dh);
+      g.restore();
+      drawPivotMarkers(g, p.pivots, dx, dy, s, s, DPR * 0.75);
+    }
+  }
+
+  if (mode === "mesh") {
+    applyMeshPostPass(g, CW, CH);
+  }
+
+  const accentMap = {
+    hero: "#141414", location: "#3d5a6c", character: "#e01b1b",
+    tracksuit: "#9b1b1b", pose: "#b85d19", prop: "#8a6d3b", fx: "#0033cc"
+  };
+  const statusTxt = focusPartIdx !== null && parts[focusPartIdx]
+    ? `PART #${focusPartIdx+1} · ${parts[focusPartIdx].width}×${parts[focusPartIdx].height}PX · ${(parts[focusPartIdx].pivots||[]).length} PIVOTS`
+    : `${item.part_count || 1} CUT PIECES · ${item.pivot_count || 0} PIVOTS`;
+
+  drawReferenceCardFrame(g, CW, CH, {
+    label: item.name || item.id,
+    status: statusTxt,
+    progress: Math.min(1, (item.part_count || 1) / 20),
+    accent: accentMap[item.type] || "#0033cc",
+    DPR
+  });
+}
+
+/* ── Render an Assembled Multiplane Scene onto a Canvas ── */
+async function renderSceneCanvas(cv, scene, opts = {}) {
+  const g = cv.getContext("2d");
+  const CW = cv.width, CH = cv.height;
+  const DPR = CW >= 700 ? 1.5 : 1;
+  const t = opts.t || 0;
+
+  drawPaperField(g, CW, CH, false);
+
+  const pad = Math.round(14 * DPR);
+  const stX = pad, stY = Math.round(36 * DPR);
+  const stW = CW - pad * 2, stH = CH - stY - Math.round(32 * DPR);
+
+  g.save();
+  g.beginPath();
+  g.rect(stX, stY, stW, stH);
+  g.clip();
+
+  // Warm stage backing + subtle horizon floor rule
+  const grad = g.createLinearGradient(0, stY, 0, stY + stH);
+  grad.addColorStop(0, "#1c222b");
+  grad.addColorStop(0.68, "#292e36");
+  grad.addColorStop(0.69, "#221e1a");
+  grad.addColorStop(1, "#151210");
+  g.fillStyle = grad;
+  g.fillRect(stX, stY, stW, stH);
+
+  // Sort layers back-to-front (highest Z first)
+  const layers = (scene.stage_layers || []).slice().sort((a, b) => (b.z || 1) - (a.z || 1));
+  const imgs = await Promise.all(layers.map(l => loadImg(l.file)));
+
+  const camPan = Math.sin(t * 0.7) * 18 * DPR;
+
+  for (let i = 0; i < layers.length; i++) {
+    const l = layers[i];
+    const im = imgs[i];
+    if (!im) continue;
+
+    const z = l.z || 1.0;
+    const parallax = camPan / Math.max(0.35, z);
+    const bob = l.role && l.role.startsWith("character")
+      ? Math.sin(t * 2.2 + i) * 3.5 * DPR
+      : (l.role === "fx_overlay" ? Math.cos(t * 1.3 + i) * 6 * DPR : 0);
+
+    const targetH = stH * (l.scale || 0.5);
+    const ar = im.width / Math.max(1, im.height);
+    let dh = targetH, dw = dh * ar;
+    if (l.role === "set_backdrop") {
+      const s = Math.max((stW * 0.94) / im.width, (stH * 0.82) / im.height);
+      dw = im.width * s;
+      dh = im.height * s;
+    } else if (dw > stW * 0.92) {
+      dw = stW * 0.92;
+      dh = dw / ar;
+    }
+
+    const cx = stX + (l.x ?? 0.5) * stW + parallax;
+    const by = stY + (l.y ?? 0.85) * stH + bob;
+    const dx = cx - dw / 2;
+    const dy = by - dh;
+
+    // Ground contact shadow for characters & props
+    if (l.role && (l.role.startsWith("character") || l.role === "prop")) {
+      g.fillStyle = "rgba(0,0,0,0.32)";
+      g.beginPath();
+      g.ellipse(cx, by - 2 * DPR, dw * 0.32, Math.max(4, dw * 0.05), 0, 0, Math.PI * 2);
+      g.fill();
+    }
+
+    g.save();
+    g.globalAlpha = l.alpha ?? 1.0;
+    g.globalCompositeOperation = l.blend || "source-over";
+    g.shadowColor = "rgba(0,0,0,0.38)";
+    g.shadowBlur = 8 * DPR;
+    g.shadowOffsetY = 3 * DPR;
+    g.drawImage(im, dx, dy, dw, dh);
+    g.restore();
+
+    if (showPivots && l.pivots && l.pivots.length) {
+      const sx = dw / im.width, sy = dh / im.height;
+      drawPivotMarkers(g, l.pivots, dx, dy, sx, sy, DPR * 0.8);
+    }
+  }
+
+  g.restore();
+
+  if (lookMode === "mesh") {
+    applyMeshPostPass(g, CW, CH);
+  }
+
+  drawReferenceCardFrame(g, CW, CH, {
+    label: `${scene.id} · ${scene.movement || scene.title}`,
+    status: `POEM ${ROMAN[scene.book]} · ${scene.shot_count} SHOTS · ${(scene.stage_layers||[]).length} MULTIPLANE LAYERS`,
+    progress: t > 0 ? ((t % (scene.seconds || 12)) / (scene.seconds || 12)) : 0.35,
+    accent: "#2b6a4c",
+    DPR
+  });
+}
+
+/* ── Filtering & Sorting ── */
+function filteredList() {
+  const source = viewMode === "pieces" ? ALL_CUT_PIECES : ALL_ITEMS;
+  const q = qText.trim().toLowerCase();
+  const list = source.filter(it => {
+    if (fBook && !(it.books || []).includes(fBook)) return false;
+    if (fType !== "all" && it.type !== fType) return false;
+    if (q) {
+      const hay = (it.id + " " + it.name + " " + it.type + " " + (it.prompt || "") + " " + (it.lines || "") + " " + (it.treatment || "")).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const cmp = {
+    poem:  (a,b) => ((a.books?.[0] ?? 99) - (b.books?.[0] ?? 99)) || a.id.localeCompare(b.id),
+    type:  (a,b) => a.type.localeCompare(b.type) || ((a.books?.[0] ?? 99) - (b.books?.[0] ?? 99)) || a.id.localeCompare(b.id),
+    uses:  (a,b) => (b.uses - a.uses) || (b.part_count - a.part_count) || a.id.localeCompare(b.id),
+    parts: (a,b) => ((b.part_count || 1) - (a.part_count || 1)) || ((b.pivot_count || 0) - (a.pivot_count || 0)) || a.id.localeCompare(b.id),
+    alpha: (a,b) => (a.name || a.id).localeCompare(b.name || b.id),
+  }[fSort] || ((a,b) => a.id.localeCompare(b.id));
+
+  return list.slice().sort(cmp);
+}
+
+/* ── Hover Peek Preview ── */
+const peek = $("peek"), peekCv = $("peekCv"), peekL = $("peekL"), peekR = $("peekR");
+let peekId = null;
+
+function showPeek(it, ev) {
+  const wide = it.type === "scene";
+  peek.classList.toggle("wide", wide);
+  peek.style.display = "block";
+  movePeek(ev);
+  if (peekId === it.id) return;
+  peekId = it.id;
+  peekCv.width = wide ? 290 : 220;
+  peekCv.height = wide ? 197 : 293;
+  peekL.textContent = (it.books || []).map(b => ROMAN[b]).join("·") || "—";
+  peekR.textContent = it.type === "scene"
+    ? `${it.shot_count} SHOTS · ${(it.stage_layers||[]).length} LAYERS`
+    : `${it.part_count || 1} PCS · ${it.pivot_count || 0} ⊕`;
+
+  if (it.type === "scene") {
+    renderSceneCanvas(peekCv, it);
+  } else {
+    renderAssetCanvas(peekCv, it);
+  }
+}
+
+function movePeek(ev) {
+  const pad = 16, pw = peek.offsetWidth || 220, ph = peek.offsetHeight || 310;
+  let x = ev.clientX + pad, y = ev.clientY + pad;
+  if (x + pw > innerWidth - 8) x = ev.clientX - pw - pad;
+  if (y + ph > innerHeight - 8) y = Math.max(8, innerHeight - ph - 8);
+  peek.style.left = x + "px";
+  peek.style.top = y + "px";
+}
+
+function hidePeek() {
+  peek.style.display = "none";
+  peekId = null;
+}
+
+/* ── Periodic Table View ── */
+function makeCell(it, idx) {
+  const g = GROUP_BY_KEY[it.type] || { color: "var(--ink)" };
+  const c = document.createElement("div");
+  c.className = "pcell" + (it.type === "scene" ? " scene" : "");
+  c.style.setProperty("--c", g.color);
+  const sym = makeSymbol(it);
+  const bks = (it.books || []).slice(0, 5).map(b => ROMAN[b]).join("·") + ((it.books || []).length > 5 ? "…" : "");
+  const badgeRight = it.type === "scene"
+    ? `<span class="uses">${it.shot_count}sh</span>`
+    : `<span class="uses">${it.part_count||1}p</span>${it.pivot_count ? `<span class="piv">${it.pivot_count}⊕</span>` : ""}`;
+
+  c.innerHTML = `
+    <div class="top"><span class="num">${String(idx).padStart(3,"0")}</span>${badgeRight}</div>
+    <div class="sym">${sym}</div>
+    <div class="nm">${it.name || it.id}</div>
+    <div class="bks">${bks || it.type}</div>`;
+  c.onmouseenter = ev => showPeek(it, ev);
+  c.onmousemove = movePeek;
+  c.onmouseleave = hidePeek;
+  c.onclick = () => { hidePeek(); openSheet(it); };
+  return c;
+}
+
+function rebuildTable(list) {
+  const root = $("ptable");
+  root.innerHTML = "";
+  let running = 1;
+
+  if (fSort === "type" || fSort === "poem") {
+    for (const grp of GROUPS) {
+      const items = list.filter(i => i.type === grp.key);
+      if (!items.length) continue;
+      const sec = document.createElement("section");
+      sec.className = "pblock";
+      sec.innerHTML = `<div class="phead">
+        <span class="sw" style="background:${grp.color}"></span>
+        <span class="pt">${grp.label}</span>
+        <span class="ps">${grp.sub}</span>
+        <span class="pc">${items.length}</span>
+      </div>`;
+      const g = document.createElement("div");
+      g.className = "pgrid";
+      for (const it of items) g.appendChild(makeCell(it, running++));
+      sec.appendChild(g);
+      root.appendChild(sec);
+    }
+  } else {
+    const sec = document.createElement("section");
+    sec.className = "pblock";
+    const g = document.createElement("div");
+    g.className = "pgrid";
+    for (const it of list) g.appendChild(makeCell(it, running++));
+    sec.appendChild(g);
+    root.appendChild(sec);
+  }
+}
+
+/* ── Specimen Cards Grid View (Lazy IntersectionObserver) ── */
+const io = new IntersectionObserver(entries => {
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    const tile = e.target;
+    io.unobserve(tile);
+    drawTile(tile);
+  }
+}, { rootMargin: "280px" });
+
+async function drawTile(tile) {
+  const it = tile._item;
+  const cv = tile.querySelector("canvas");
+  if (!it || !cv) return;
+  if (it.type === "scene") {
+    await renderSceneCanvas(cv, it);
+  } else {
+    await renderAssetCanvas(cv, it);
+  }
+}
+
+function rebuildCards(list) {
+  const grid = $("grid");
+  grid.innerHTML = "";
+  // Cap live DOM cards at 260 when browsing 6,265 pieces without filter so browser stays instant
+  const displayList = list.slice(0, 300);
+  for (const it of displayList) {
+    const t = document.createElement("div");
+    const isScene = it.type === "scene";
+    t.className = "tile" + (isScene ? " scene-tile" : "");
+    t._item = it;
+    const cw = isScene ? 560 : 300, ch = isScene ? 380 : 400;
+    const bks = (it.books || []).map(b => ROMAN[b]).join("·");
+    const rightStat = isScene
+      ? `${it.shot_count} SHOTS · ${(it.stage_layers||[]).length} LAYERS`
+      : `${it.part_count || 1} PCS · ${it.pivot_count || 0} ⊕`;
+    t.innerHTML = `<canvas width="${cw}" height="${ch}"></canvas>
+      <div class="meta">
+        <div class="t">${it.name || it.id}</div>
+        <div class="s"><span>${it.type.replace(/_/g," ")} · ${bks || "—"}</span><b>${rightStat}</b></div>
+      </div>`;
+    t.onclick = () => openSheet(it);
+    grid.appendChild(t);
+    io.observe(t);
+  }
+}
+
+function rebuild() {
+  hidePeek();
+  const list = filteredList();
+  $("count").textContent = viewMode === "pieces"
+    ? `${list.length} / ${ALL_CUT_PIECES.length} CUT PIECES`
+    : `${list.length} / ${ALL_ITEMS.length} (${MAN.assetCount} KITS · ${MAN.sceneCount} SCENES)`;
+
+  if (viewMode === "table") {
+    $("ptable").classList.remove("off");
+    $("grid").classList.remove("on");
+    rebuildTable(list);
+  } else {
+    $("ptable").classList.add("off");
+    $("grid").classList.add("on");
+    rebuildCards(list);
+  }
+}
+
+/* ── Filter Chips Setup ── */
+function buildFilters() {
+  const br = $("bookRow");
+  const mkBook = (b, label) => {
+    const c = document.createElement("div");
+    c.className = "fchip" + (b === fBook ? " on" : "");
+    c.textContent = label;
+    c.onclick = () => {
+      fBook = b;
+      [...br.querySelectorAll(".fchip")].forEach(x => x.classList.remove("on"));
+      c.classList.add("on");
+      rebuild();
+    };
+    br.appendChild(c);
+  };
+  mkBook(0, "ALL (14)");
+  for (const pm of MAN.poems) {
+    mkBook(pm.book, `${pm.roman} · ${pm.num}`);
+  }
+
+  const sr = $("sortRow");
+  for (const [k, lbl] of [
+    ["poem", "BY POEM"],
+    ["type", "BY TYPE"],
+    ["parts", "BY CUT PARTS"],
+    ["uses", "BY USES"],
+    ["alpha", "A–Ω"]
+  ]) {
+    const c = document.createElement("div");
+    c.className = "fchip" + (k === fSort ? " on" : "");
+    c.textContent = lbl;
+    c.onclick = () => {
+      fSort = k;
+      [...sr.querySelectorAll(".fchip")].forEach(x => x.classList.remove("on"));
+      c.classList.add("on");
+      rebuild();
+    };
+    sr.appendChild(c);
+  }
+
+  const tr = $("typeRow");
+  const mkType = (t, label, col) => {
+    const c = document.createElement("div");
+    c.className = "fchip" + (t === fType ? " on" : "");
+    c.innerHTML = (col ? `<span class="sw" style="background:${col}"></span>` : "") + label;
+    c.onclick = () => {
+      fType = t;
+      [...tr.querySelectorAll(".fchip")].forEach(x => x.classList.remove("on"));
+      c.classList.add("on");
+      rebuild();
+    };
+    tr.appendChild(c);
+  };
+  mkType("all", "ALL", null);
+  for (const g of GROUPS) {
+    mkType(g.key, g.key.toUpperCase(), g.color);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DETAIL SHEET MODAL (History-Backed)
+   ═══════════════════════════════════════════════════════════ */
+let previsRAF = 0;
+let activeModalItem = null;
+let selectedPartIndex = null;
+let modalCanvasMode = "cutouts"; // "cutouts" | "piece" | "sheet" | "mesh"
+
+function stopPrevis() {
+  if (previsRAF) {
+    cancelAnimationFrame(previsRAF);
+    previsRAF = 0;
+  }
+}
+
+async function openSheet(it, { fromPop = false, initialPartIndex = null } = {}) {
+  stopPrevis();
+  activeModalItem = it;
+  selectedPartIndex = initialPartIndex;
+  modalCanvasMode = initialPartIndex !== null ? "piece" : lookMode;
+
+  if (!fromPop) {
+    const h = "#" + encodeURIComponent(it.id);
+    if (location.hash !== h) history.pushState({ id: it.id }, "", h);
+  }
+
+  $("sheet").classList.add("on");
+  const box = $("sheetBox");
+  const cv = $("sheetCanvas");
+  const tools = $("canvasTools");
+  const m = $("sheetMeta");
+
+  if (it.type === "scene") {
+    box.classList.add("scene-mode");
+    cv.width = 1120;
+    cv.height = 760;
+    tools.innerHTML = "";
+    await renderSceneCanvas(cv, it, { t: 0 });
+
+    const reqAssets = (it.assets || []).map(id => itemById.get(id) || { id, name: id, type: "character", books: [it.book] });
+    const reqGrid = document.createElement("div");
+    reqGrid.className = "pgrid";
+    reqGrid.style.gridTemplateColumns = "repeat(auto-fill,minmax(92px,1fr))";
+    reqAssets.forEach((a, i) => reqGrid.appendChild(makeCell(a, i + 1)));
+
+    m.innerHTML = `
+      <div>
+        <div class="k">SCENE &middot; POEM ${ROMAN[it.book]} (${it.bookTitle || ""}) &middot; ${it.seconds || 12}s &middot; ${it.shot_count} SHOTS</div>
+        <h2>${it.id} &mdash; ${it.title}</h2>
+      </div>
+      <div class="bar">
+        <button class="chip" id="previsBtn">&#9654; PREVIS THE CUT</button>
+        <a class="chip stage-link" href="./stage.html#${encodeURIComponent(it.id)}">OPEN IN STAGE ↗</a>
+        <button class="chip" id="dlScenePng">&#11015; SCENE PNG</button>
+        <button class="chip" id="dlSceneJson">&#11015; SCENE JSON</button>
+        <button class="chip" id="copyScenePrompt">COPY BUILD PROMPT</button>
+        <button class="chip" id="closeSheet">CLOSE &#10005;</button>
+      </div>
+      <div>
+        <div class="k">POEM VERSE &amp; DRAMATIC TREATMENT</div>
+        <div class="p">${escapeHtml((it.lines ? `“${it.lines}”\n\n` : "") + (it.treatment || ""))}</div>
+      </div>
+      <div>
+        <div class="k">MULTIPLANE LAYER STACK (${(it.stage_layers || []).length} CUT-OUT PIECES STAGED P5 &rarr; P0)</div>
+        <div id="layerStack" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto"></div>
+      </div>
+      <div id="reqSlot"><div class="k">REQUIRED KIT ASSETS &mdash; the shot manifest (${reqAssets.length})</div></div>
+      <div>
+        <div class="k">SHOT X-SHEET &amp; BEATS (${(it.beats || []).length})</div>
+        <div class="p">${(it.beats || []).map((b, i) => `${i + 1}. ${escapeHtml(b)}`).join("\n\n")}</div>
+      </div>
+      <div>
+        <div class="k">ASSEMBLY PROMPT</div>
+        <div class="p" id="scenePromptBox">${escapeHtml(it.composePrompt || "")}</div>
+      </div>
+    `;
+
+    m.querySelector("#reqSlot").appendChild(reqGrid);
+
+    const lStack = m.querySelector("#layerStack");
+    for (const l of (it.stage_layers || [])) {
+      const row = document.createElement("div");
+      row.className = "layer-row";
+      row.innerHTML = `
+        <span class="plane-badge">${l.plane} (Z=${l.z})</span>
+        <strong style="min-width:110px">${escapeHtml(l.instance)}</strong>
+        <span style="color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(l.label || l.part_id)}</span>
+        <span style="color:var(--blue)">${l.width}×${l.height}px</span>
+      `;
+      row.onclick = () => {
+        const parentKit = itemById.get(l.sheet_id);
+        if (parentKit) {
+          const pIdx = (parentKit.parts || []).findIndex(p => p.id === l.part_id);
+          openSheet(parentKit, { initialPartIndex: pIdx >= 0 ? pIdx : null });
+        }
+      };
+      lStack.appendChild(row);
+    }
+
+    const pvBtn = m.querySelector("#previsBtn");
+    let t0 = 0;
+    pvBtn.onclick = () => {
+      if (previsRAF) {
+        stopPrevis();
+        pvBtn.textContent = "▶ PREVIS THE CUT";
+        pvBtn.classList.remove("on");
+        return;
+      }
+      pvBtn.textContent = "■ STOP PREVIS";
+      pvBtn.classList.add("on");
+      t0 = performance.now();
+      const dur = it.seconds || 14;
+      const tick = now => {
+        const t = ((now - t0) / 1000) % dur;
+        renderSceneCanvas(cv, it, { t });
+        previsRAF = requestAnimationFrame(tick);
+      };
+      previsRAF = requestAnimationFrame(tick);
+    };
+
+    m.querySelector("#dlScenePng").onclick = () => {
+      const a = document.createElement("a");
+      a.download = it.id + ".png";
+      a.href = cv.toDataURL("image/png");
+      a.click();
+    };
+    m.querySelector("#dlSceneJson").onclick = () => {
+      const blob = new Blob([JSON.stringify(it, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.download = it.id + ".json";
+      a.href = URL.createObjectURL(blob);
+      a.click();
+    };
+    m.querySelector("#copyScenePrompt").onclick = ev => {
+      navigator.clipboard?.writeText(it.composePrompt || "");
+      ev.target.textContent = "COPIED ✓";
+      setTimeout(() => (ev.target.textContent = "COPY BUILD PROMPT"), 1200);
+    };
+    m.querySelector("#closeSheet").onclick = closeSheet;
+    return;
+  }
+
+  /* ── Asset / Kit / Cut-Out Piece Modal ── */
+  box.classList.remove("scene-mode");
+  cv.width = 660;
+  cv.height = 880;
+
+  async function redrawModalCanvas() {
+    await renderAssetCanvas(cv, it, {
+      mode: modalCanvasMode === "piece" ? "cutouts" : modalCanvasMode,
+      partIndex: modalCanvasMode === "piece" ? selectedPartIndex : null,
+      checker: showChecker
+    });
+    // Update active state on toolbar chips
+    [...tools.querySelectorAll(".chip")].forEach(ch => {
+      if (ch.dataset.mode) {
+        ch.classList.toggle("on", ch.dataset.mode === modalCanvasMode);
+      }
+    });
+  }
+
+  tools.innerHTML = `
+    <button class="chip" data-mode="cutouts">MOSAIC</button>
+    <button class="chip" data-mode="piece">SINGLE PIECE</button>
+    <button class="chip" data-mode="sheet">FULL SHEET</button>
+    <button class="chip" data-mode="mesh">HALFWORLD MESH</button>
+    <button class="chip ${showPivots ? "on" : ""}" id="modalPivBtn">⊕ PIVOTS</button>
+    <button class="chip ${showChecker ? "on" : ""}" id="modalChkBtn">▦ ALPHA</button>
+  `;
+  tools.querySelectorAll("[data-mode]").forEach(btn => {
+    btn.onclick = () => {
+      modalCanvasMode = btn.dataset.mode;
+      if (modalCanvasMode === "piece" && selectedPartIndex === null) selectedPartIndex = 0;
+      redrawModalCanvas();
+    };
+  });
+  tools.querySelector("#modalPivBtn").onclick = ev => {
+    showPivots = !showPivots;
+    ev.currentTarget.classList.toggle("on", showPivots);
+    $("pivToggle").textContent = showPivots ? "⊕ PIVOTS: ON" : "⊕ PIVOTS: OFF";
+    redrawModalCanvas();
+  };
+  tools.querySelector("#modalChkBtn").onclick = ev => {
+    showChecker = !showChecker;
+    ev.currentTarget.classList.toggle("on", showChecker);
+    redrawModalCanvas();
+  };
+
+  await redrawModalCanvas();
+
+  const bks = (it.books || []).map(b => `POEM ${ROMAN[b]}`).join(" · ");
+  const parts = it.parts || [];
+  const stageHref = (it.scenes && it.scenes[0])
+    ? `./stage.html#${encodeURIComponent(it.scenes[0])}`
+    : `./stage.html`;
+
+  m.innerHTML = `
+    <div>
+      <div class="k">${it.type.replace(/_/g, " ")} &middot; ${bks || "ALL POEMS"} &middot; ${parts.length} CUT PIECES &middot; ${it.pivot_count || 0} BRASS PIVOTS</div>
+      <h2>${escapeHtml(it.name || it.id)}</h2>
+      <div class="k" style="margin-top:3px">${escapeHtml(it.id)} &middot; ${it.width || 1536}&times;${it.height || 1024} px</div>
+    </div>
+    <div class="bar">
+      <a class="chip stage-link" href="${stageHref}">OPEN IN STAGE ↗</a>
+      <button class="chip" id="dlCardPng">&#11015; CARD PNG</button>
+      <button class="chip" id="dlCutPng">&#11015; SELECTED CUT PNG</button>
+      <a class="chip" href="./${it.sheet_file}" download>&#11015; SOURCE SHEET</a>
+      <button class="chip" id="dlAssetJson">&#11015; KIT JSON</button>
+      <button class="chip" id="closeSheet">CLOSE &#10005;</button>
+    </div>
+    <div>
+      <div class="k">CUT-OUT RGBA PIECES IN THIS KIT (${parts.length} PIECES &mdash; click any piece to inspect &amp; verify pivots)</div>
+      <div class="parts-grid" id="partsGrid"></div>
+    </div>
+    <div>
+      <div class="k">APPEARS IN SCENES (${(it.scenes || []).length})</div>
+      <div class="tags" id="sceneTags"></div>
+    </div>
+    ${(it.qa_notes && it.qa_notes.length) ? `
+    <div>
+      <div class="k">QA &amp; SEPARATION NOTES</div>
+      <div class="p">${escapeHtml(it.qa_notes.join("\n"))}</div>
+    </div>` : ""}
+    <div>
+      <div class="k">FULL ATLAS GENERATION PROMPT</div>
+      <div class="p">${escapeHtml(it.prompt || "(no prompt text)")}</div>
+    </div>
+  `;
+
+  const pGrid = m.querySelector("#partsGrid");
+  parts.forEach((p, idx) => {
+    const pc = document.createElement("div");
+    pc.className = "part-card" + (idx === selectedPartIndex ? " active" : "");
+    const pivCnt = (p.pivots || []).length;
+    pc.innerHTML = `
+      <div class="part-art"><img src="./${p.file}" alt="${escapeHtml(p.label)}" loading="lazy"></div>
+      <div class="part-info">
+        <div class="pn"><span>#${String(p.part_index || idx+1).padStart(2,"0")}</span><span>${p.width}&times;${p.height}${pivCnt ? ` · ${pivCnt}⊕` : ""}</span></div>
+        <div class="pl" title="${escapeHtml(p.label)}">${escapeHtml(p.label)}</div>
+      </div>
+    `;
+    pc.onclick = () => {
+      selectedPartIndex = idx;
+      modalCanvasMode = "piece";
+      [...pGrid.querySelectorAll(".part-card")].forEach(c => c.classList.remove("active"));
+      pc.classList.add("active");
+      redrawModalCanvas();
+    };
+    pGrid.appendChild(pc);
+  });
+
+  const st = m.querySelector("#sceneTags");
+  for (const sid of (it.scenes || [])) {
+    const sc = itemById.get(sid);
+    const t = document.createElement("span");
+    t.className = "tag";
+    t.textContent = sc ? `${sid} · ${sc.title}` : sid;
+    if (sc) t.onclick = () => openSheet(sc);
+    st.appendChild(t);
+  }
+
+  m.querySelector("#dlCardPng").onclick = () => {
+    const a = document.createElement("a");
+    a.download = `${it.id}_card.png`;
+    a.href = cv.toDataURL("image/png");
+    a.click();
+  };
+  m.querySelector("#dlCutPng").onclick = () => {
+    const p = parts[selectedPartIndex ?? 0];
+    if (!p) return;
+    const a = document.createElement("a");
+    a.download = `${p.id}.png`;
+    a.href = "./" + p.file;
+    a.click();
+  };
+  m.querySelector("#dlAssetJson").onclick = () => {
+    const blob = new Blob([JSON.stringify(it, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.download = `${it.id}.json`;
+    a.href = URL.createObjectURL(blob);
+    a.click();
+  };
+  m.querySelector("#closeSheet").onclick = closeSheet;
+}
+
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+
+function closeSheet({ fromPop = false } = {}) {
+  stopPrevis();
+  $("sheet").classList.remove("on");
+  if (!fromPop && location.hash) {
+    history.pushState(null, "", location.pathname + location.search);
+  }
+}
+
+$("sheet").onclick = e => {
+  if (e.target.id === "sheet") closeSheet();
+};
+addEventListener("keydown", e => {
+  if (e.key === "Escape") closeSheet();
+});
+addEventListener("popstate", () => {
+  const id = decodeURIComponent(location.hash.slice(1));
+  const it = itemById.get(id);
+  if (it) openSheet(it, { fromPop: true });
+  else closeSheet({ fromPop: true });
+});
+
+/* ── Top Bar Controls ── */
+function setViewMode(m) {
+  viewMode = m;
+  $("vTable").classList.toggle("on", m === "table");
+  $("vCards").classList.toggle("on", m === "cards");
+  $("vPieces").classList.toggle("on", m === "pieces");
+  rebuild();
+}
+$("vTable").onclick = () => setViewMode("table");
+$("vCards").onclick = () => setViewMode("cards");
+$("vPieces").onclick = () => setViewMode("pieces");
+
+$("lookBtn").onclick = () => {
+  const order = ["cutouts", "mesh", "sheet"];
+  const labels = { cutouts: "LOOK: CUTOUTS", mesh: "LOOK: MESH", sheet: "LOOK: SHEETS" };
+  lookMode = order[(order.indexOf(lookMode) + 1) % order.length];
+  $("lookBtn").textContent = labels[lookMode];
+  peekId = null;
+  if (viewMode !== "table") rebuild();
+};
+
+$("pivToggle").onclick = () => {
+  showPivots = !showPivots;
+  $("pivToggle").textContent = showPivots ? "⊕ PIVOTS: ON" : "⊕ PIVOTS: OFF";
+  $("pivToggle").classList.toggle("on", showPivots);
+  peekId = null;
+  if (viewMode !== "table") rebuild();
+};
+
+$("printBtn").onclick = () => {
+  if (viewMode === "table") setViewMode("cards");
+  setTimeout(() => window.print(), 200);
+};
+$("q").oninput = e => {
+  qText = e.target.value;
+  rebuild();
+};
+
+/* ── Boot & Load Manifest ── */
+async function boot() {
+  let manifestUrl = "./arena/parts/kit3/release_v2/wygwyl_atlas_manifest.json";
+  let res = await fetch(manifestUrl);
+  if (!res.ok) {
+    manifestUrl = "../arena/parts/kit3/release_v2/wygwyl_atlas_manifest.json";
+    res = await fetch(manifestUrl);
+  }
+  MAN = await res.json();
+
+  const sceneItems = (MAN.scenes || []).map(s => ({
+    ...s,
+    name: s.title,
+    type: "scene",
+    books: [s.book],
+    uses: (s.assets || []).length,
+    part_count: (s.stage_layers || []).length,
+    pivot_count: 0
+  }));
+
+  ALL_ITEMS = [...MAN.assets, ...sceneItems];
+  for (const it of ALL_ITEMS) itemById.set(it.id, it);
+
+  // Also flatten all 6,265 individual cut-out pieces so "ALL 6,265 PIECES" mode can browse them directly
+  ALL_CUT_PIECES = [];
+  for (const a of MAN.assets) {
+    for (let idx = 0; idx < (a.parts || []).length; idx++) {
+      const p = a.parts[idx];
+      if (p.file && (p.sheet_file || a.sheet_file) && p.bbox_sheet) {
+        partMetaByFile.set(p.file.replace(/^\.\//, ""), { sheet: p.sheet_file || a.sheet_file, bbox: p.bbox_sheet });
+      }
+      const pieceItem = {
+        id: p.id,
+        name: `${p.label}`,
+        type: a.type,
+        books: a.books,
+        uses: a.uses,
+        scenes: a.scenes,
+        sheet_file: a.sheet_file,
+        width: p.width,
+        height: p.height,
+        part_count: 1,
+        pivot_count: (p.pivots || []).length,
+        prompt: a.prompt,
+        qa_notes: a.qa_notes,
+        parts: [p],
+        _parentKit: a,
+        _partIndex: idx
+      };
+      ALL_CUT_PIECES.push(pieceItem);
+      if (!itemById.has(pieceItem.id)) itemById.set(pieceItem.id, pieceItem);
+    }
+  }
+
+  buildFilters();
+  rebuild();
+
+  const initId = decodeURIComponent(location.hash.slice(1));
+  if (initId && itemById.has(initId)) {
+    openSheet(itemById.get(initId), { fromPop: true });
+  }
+}
+
+boot();
+</script>
+</body>
+</html>

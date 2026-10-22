@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>WYGWYL STAGE — Multiplane Cut-Out Staging Environment</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f4f4f0'/%3E%3Ccircle cx='16' cy='16' r='9' fill='%23141414'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --paper:#f2f1ec; --card:#f7f6f2; --ink:#141414; --dim:#8a8a86;
+    --faint:#d8d6cf; --red:#e01b1b; --blue:#0033cc; --gold:#b8860b;
+    --mono:ui-monospace,'SF Mono','IBM Plex Mono',Menlo,Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:var(--paper);font-family:var(--mono);color:var(--ink)}
+  button,input,select{font-family:var(--mono);color:var(--ink)}
+
+  /* ── Top Bar ── */
+  #top{position:fixed;inset:0 0 auto 0;height:50px;z-index:20;display:flex;align-items:center;gap:10px;
+    padding:0 16px;background:var(--paper);border-bottom:1px solid var(--ink);overflow-x:auto}
+  .glyph{display:grid;grid-template-columns:repeat(3,5px);gap:3px;flex:none}
+  .glyph i{width:5px;height:5px;border-radius:50%;background:var(--ink)}
+  .glyph i.r{background:var(--red)}
+  #brand{font-size:11px;font-weight:700;letter-spacing:.36em;text-transform:uppercase;white-space:nowrap}
+  #brand em{font-style:normal;color:var(--dim);font-weight:400;letter-spacing:.16em}
+  #topRight{margin-left:auto;display:flex;gap:5px;align-items:center;flex:none}
+  .chip{border:1px solid var(--faint);background:var(--card);cursor:pointer;font-size:8.5px;
+    letter-spacing:.18em;text-transform:uppercase;padding:6px 10px;color:var(--dim);user-select:none;white-space:nowrap;text-decoration:none}
+  .chip:hover{border-color:var(--ink);color:var(--ink)}
+  .chip.on{border-color:var(--ink);color:var(--ink);background:var(--paper);box-shadow:inset 0 -2px 0 var(--red)}
+  .chip.red{border-color:var(--red);color:var(--red);font-weight:700}
+  .chip.red:hover,.chip.red.on{background:var(--red);color:var(--paper);box-shadow:none}
+
+  /* ── 14-Poem Spine ── */
+  #spine{position:fixed;top:50px;left:0;right:0;z-index:19;display:flex;gap:0;
+    background:var(--paper);border-bottom:1px solid var(--faint);overflow-x:auto;scrollbar-width:none}
+  #spine::-webkit-scrollbar{display:none}
+  .bookCell{flex:1 0 auto;min-width:68px;border-right:1px solid var(--faint);padding:6px 8px 5px;
+    cursor:pointer;text-align:center;position:relative}
+  .bookCell .rn{font-size:10.5px;font-weight:700;letter-spacing:.1em}
+  .bookCell .ct{font-size:7.5px;color:var(--dim);letter-spacing:.1em;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:96px;margin-inline:auto}
+  .bookCell:hover{background:var(--card)}
+  .bookCell.on{background:var(--ink);color:var(--paper)}
+  .bookCell.on .ct{color:#bbb}
+  .bookCell.on::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--red)}
+
+  /* ── Scene Strip for Chosen Poem ── */
+  #scenes{position:fixed;top:92px;left:0;right:0;z-index:18;display:flex;gap:6px;padding:7px 14px;
+    background:var(--paper);border-bottom:1px solid var(--ink);overflow-x:auto;scrollbar-width:none;align-items:center}
+  #scenes::-webkit-scrollbar{display:none}
+  .sceneChip{flex:none;border:1px solid var(--faint);background:var(--card);cursor:pointer;
+    padding:5px 10px;max-width:250px}
+  .sceneChip .sid{font-size:7.5px;letter-spacing:.18em;color:var(--dim)}
+  .sceneChip .st{font-size:9px;letter-spacing:.06em;font-weight:700;text-transform:uppercase;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sceneChip:hover{border-color:var(--ink)}
+  .sceneChip.on{border-color:var(--red);background:var(--paper)}
+  .sceneChip.on .sid{color:var(--red)}
+
+  /* ── Fullscreen Stage Canvas ── */
+  #stage{position:fixed;inset:0;cursor:grab;background:var(--paper)}
+  #stage:active{cursor:grabbing}
+
+  /* ── Embody & Rig HUD ── */
+  #hud{position:fixed;left:14px;bottom:76px;z-index:21;display:none;flex-direction:column;gap:6px;
+    max-width:min(520px,92vw);background:rgba(247,246,242,.95);border:2px solid var(--ink);padding:10px 12px;
+    box-shadow:6px 6px 0 rgba(20,20,20,.15)}
+  #hud.on{display:flex}
+  .hudRow{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+  .hudLabel{font-size:8px;letter-spacing:.22em;color:var(--red);text-transform:uppercase;font-weight:700;min-width:68px}
+  .pchip{border:1px solid var(--faint);background:#fff;cursor:pointer;font-size:8px;
+    letter-spacing:.14em;text-transform:uppercase;padding:4px 8px;color:var(--dim)}
+  .pchip:hover{border-color:var(--ink);color:var(--ink)}
+  .pchip.on{border-color:var(--red);color:var(--red);font-weight:700}
+
+  /* ── Arrange Inspector Bar ── */
+  #arrbar{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:22;display:none;
+    gap:7px;align-items:center;background:rgba(247,246,242,.97);border:2px solid var(--ink);
+    padding:7px 12px;box-shadow:5px 5px 0 rgba(20,20,20,.18);flex-wrap:wrap}
+  #arrbar.on{display:flex}
+  #arrbar #arrName{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #arrbar .abtn{border:1.5px solid var(--ink);background:var(--card);cursor:pointer;font-size:8px;
+    letter-spacing:.1em;text-transform:uppercase;padding:5px 8px;user-select:none}
+  #arrbar .abtn:hover{background:var(--ink);color:var(--paper)}
+  #arrbar .abtn.red{border-color:var(--red);color:var(--red)}
+  #arrbar .abtn.red:hover{background:var(--red);color:var(--paper)}
+  #arrbar .arrSlider{display:flex;flex-direction:column;align-items:center;gap:1px}
+  #arrbar .arrSlider i{font-style:normal;font-size:7px;letter-spacing:.14em;color:var(--dim);font-weight:700}
+  #arrbar input[type=range]{width:82px;height:20px;accent-color:#141414}
+
+  /* ── Add Cut-Out Piece Drawer ── */
+  #drawer{position:fixed;top:144px;right:14px;bottom:76px;width:360px;z-index:25;
+    background:var(--paper);border:2px solid var(--ink);box-shadow:8px 8px 0 rgba(20,20,20,.2);
+    display:none;flex-direction:column}
+  #drawer.on{display:flex}
+  #drawerHead{padding:10px 12px;border-bottom:1px solid var(--ink);display:flex;flex-direction:column;gap:6px}
+  #drawerQ{border:1px solid var(--faint);background:#fff;padding:6px 8px;font-size:9.5px;width:100%;outline:none}
+  #drawerList{flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .dpart{border:1px solid var(--faint);background:#fff;cursor:pointer;padding:4px;display:flex;flex-direction:column;align-items:center}
+  .dpart:hover{border-color:var(--red)}
+  .dpart img{width:100%;height:70px;object-fit:contain;background:#f7f6f2}
+  .dpart span{font-size:7px;color:var(--ink);margin-top:3px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
+
+  /* ── Bottom Transport ── */
+  #bottom{position:fixed;inset:auto 0 0 0;height:62px;z-index:20;background:var(--paper);
+    border-top:1px solid var(--ink);display:flex;align-items:center;gap:10px;padding:0 14px}
+  #playBtn{width:64px;text-align:center}
+  #tc{font-size:10px;letter-spacing:.12em;min-width:92px;text-align:center}
+  #scrub{flex:1;height:30px;cursor:pointer}
+  #hint{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+
+  #toast{position:fixed;left:50%;top:152px;transform:translateX(-50%);z-index:30;background:var(--ink);
+    color:var(--paper);font-size:9px;letter-spacing:.2em;text-transform:uppercase;padding:8px 14px;
+    opacity:0;transition:opacity .22s;pointer-events:none}
+  #toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="top">
+  <div class="glyph"><i></i><i></i><i></i><i></i><i class="r"></i><i></i><i></i><i></i><i></i></div>
+  <div id="brand">WYGWYL STAGE <em>&middot; multiplane cut-out theatre</em></div>
+  <div id="topRight">
+    <div class="chip on" id="modePlay">PLAY</div>
+    <div class="chip red" id="modeEmbody" title="Possess the Poet &amp; articulate his cut-out rig">EMBODY / RIG</div>
+    <div class="chip on" id="rigModeBtn" title="Switch Poet between Replacement Pose Cutout and 31-Part Brass-Pivot Articulated Rig">POET: POSE CUTOUT</div>
+    <div class="chip" id="arrangeBtn" title="Click any cut-out piece on stage to move, resize, flip, or change depth plane">ARRANGE</div>
+    <div class="chip" id="drawerBtn" title="Open the v2.0-poem-kits Cut-Out Piece Drawer">＋ ADD PIECE</div>
+    <div class="chip on" id="pivBtn" title="Show detected brass pivot sockets &amp; multiplane anchors">⊕ PIVOTS</div>
+    <div class="chip" id="snapChip" title="Export current multiplane frame as PNG">SNAP PNG</div>
+    <a class="chip" id="cardsLink" href="./cards.html">CARDS ↗</a>
+  </div>
+</div>
+
+<div id="spine"></div>
+<div id="scenes"></div>
+<canvas id="stage"></canvas>
+
+<!-- Embody & Live Brass-Pivot Articulated Rig HUD -->
+<div id="hud">
+  <div class="hudRow">
+    <span class="hudLabel">RIG MODE</span>
+    <span class="pchip on" id="hudCutout">REPLACEMENT POSE CUTOUT</span>
+    <span class="pchip" id="hudArtic">ARTICULATED 31-PART RIG (BRASS PIVOTS)</span>
+  </div>
+  <div class="hudRow">
+    <span class="hudLabel">POSE PRESET</span>
+    <span id="poseChips" class="hudRow"></span>
+  </div>
+  <div class="hudRow">
+    <span class="hudLabel">FACE / GEAR</span>
+    <span class="pchip on" id="faceGlasses">🕶 SUNGLASSES</span>
+    <span class="pchip" id="faceEyes">EYES: OPEN</span>
+    <span class="pchip" id="faceBrows">BROWS: REST</span>
+    <span class="pchip" id="faceMouth">MOUTH: REST</span>
+  </div>
+  <div class="hudRow">
+    <span class="hudLabel">JOINTS (°)</span>
+    <span id="jointSliders" style="display:flex;gap:8px;flex-wrap:wrap;font-size:7.5px"></span>
+  </div>
+</div>
+
+<!-- Arrange Bar for Selected Cut-Out Layer -->
+<div id="arrbar">
+  <span id="arrName">—</span>
+  <span class="arrSlider"><i>PLANE</i>
+    <select id="arrPlane" style="font-size:8.5px;padding:2px 4px;border:1px solid var(--ink);background:#fff">
+      <option value="P5:4.0">P5 BACKDROP (Z=4.0)</option>
+      <option value="P4:2.5">P4 SET / WALL (Z=2.5)</option>
+      <option value="P3:1.4">P3 MID / PROP (Z=1.4)</option>
+      <option value="P2:1.0">P2 HERO RIG (Z=1.0)</option>
+      <option value="P1:0.5">P1 FOREGROUND (Z=0.5)</option>
+      <option value="P0:0.25">P0 LENS FX (Z=0.25)</option>
+    </select>
+  </span>
+  <span class="arrSlider"><i>SIZE</i><input type="range" id="arrSize" min="15" max="220" value="100"></span>
+  <span class="arrSlider"><i>OPACITY</i><input type="range" id="arrAlpha" min="10" max="100" value="100"></span>
+  <div class="abtn" id="arrFlip">⇋ FLIP</div>
+  <div class="abtn" id="arrDup">＋ DUP</div>
+  <div class="abtn red" id="arrDel">✕ DEL</div>
+  <div class="abtn red" id="arrReset">RESET SCENE</div>
+</div>
+
+<!-- Cut-Out Piece Drawer -->
+<div id="drawer">
+  <div id="drawerHead">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <strong style="font-size:9.5px;letter-spacing:.16em">ADD CUT-OUT PIECE TO STAGE</strong>
+      <span class="chip" id="closeDrawer">✕</span>
+    </div>
+    <input id="drawerQ" type="search" placeholder="search poem, character, prop, set…">
+  </div>
+  <div id="drawerList"></div>
+</div>
+
+<div id="bottom">
+  <div class="chip" id="playBtn">PLAY</div>
+  <div class="chip" id="rwBtn">◀◀</div>
+  <div id="tc">00.0 / 12.0</div>
+  <canvas id="scrub"></canvas>
+  <div id="hint">CLICK PIECE TO DRAG · WHEEL TO SCALE · SPACE PLAY · R TOGGLE RIG</div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV"];
+const $ = id => document.getElementById(id);
+
+let MAN = null;
+let sceneById = new Map();
+let assetById = new Map();
+let tracksuitMap = new Map();
+
+let currentBook = 1;
+let currentScene = null;
+let liveLayers = [];        // Working copy of currentScene.stage_layers
+let selectedIdx = -1;       // Selected layer index in liveLayers
+let dragging = false;
+let dragOffset = { x: 0, y: 0 };
+
+let playing = false;
+let T = 0;
+let lastFrameTime = performance.now();
+let showPivots = true;
+let arrangeMode = false;
+let embodyMode = false;
+let articulatedRigOn = false; // When true, draws Poet using the 31-part brass-pivot articulated tracksuit/tshirt rig
+
+/* ── Articulated Poet Rig State (31-Part Brass-Pivot Skeleton) ── */
+const RIG_POSES = {
+  stand:  { torso: 0,  head: 0,  uarmL: -8,  farmL: 6,   handL: 0, uarmR: 8,   farmR: -6,  handR: 0, thighL: -2,  shinL: 0, thighR: 2,   shinR: 0 },
+  read:   { torso: -3, head: 10, uarmL: 28,  farmL: 52,  handL: 0, uarmR: -28, farmR: -52, handR: 0, thighL: -3,  shinL: 0, thighR: 3,   shinR: 0 },
+  reach:  { torso: 12, head: -6, uarmL: -68, farmL: -22, handL: 0, uarmR: 42,  farmR: 18,  handR: 0, thighL: -22, shinL: 16,thighR: 24,  shinR: 12 },
+  walk:   { torso: 4,  head: 0,  uarmL: -24, farmL: 18,  handL: 0, uarmR: 24,  farmR: -18, handR: 0, thighL: 20,  shinL: -10,thighR: -20, shinR: 12 },
+  fall:   { torso: 36, head: -16,uarmL: -82, farmL: -20, handL: 0, uarmR: 78,  farmR: 22,  handR: 0, thighL: -32, shinL: 24,thighR: 28,  shinR: -28 },
+  crouch: { torso: 18, head: -10,uarmL: -38, farmL: 34,  handL: 0, uarmR: 38,  farmR: -34, handR: 0, thighL: -46, shinL: 58,thighR: 46,  shinR: -58 },
+};
+let rigPoseName = "stand";
+let rigAngles = { ...RIG_POSES.stand };
+let rigFace = { sunglasses: true, eyes: "22_eyes_open", brows: "24_brows_rest", mouth: "27_mouth_rest" };
+
+const imgCache = new Map();
+const partMetaByFile = new Map();
+
+function cropAndKeyPartFromSheet(sheetImg, bbox) {
+  const [bx, by, bw, bh] = bbox;
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, bw);
+  c.height = Math.max(1, bh);
+  const cx = c.getContext("2d");
+  cx.drawImage(sheetImg, bx, by, bw, bh, 0, 0, bw, bh);
+  try {
+    const id = cx.getImageData(0, 0, bw, bh);
+    const d = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i], g = d[i + 1], b = d[i + 2];
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+      if (mx >= 236 && (mx - mn) <= 18) {
+        d[i + 3] = mx >= 244 ? 0 : Math.round(((244 - mx) / 8) * 255);
+      }
+    }
+    cx.putImageData(id, 0, 0);
+  } catch (_) {}
+  return c;
+}
+
+function loadImg(src, retries = 1) {
+  if (!src) return Promise.resolve(null);
+  const cleanSrc = src.replace(/^\.\//, "");
+  const full = src.startsWith("http") || src.startsWith("/") || src.startsWith("../") ? src : "./" + cleanSrc;
+  if (imgCache.has(full)) return imgCache.get(full);
+  const p = new Promise(resolve => {
+    const attempt = (left) => {
+      const im = new Image();
+      im.crossOrigin = "anonymous";
+      im.onload = () => resolve(im);
+      im.onerror = async () => {
+        if (left > 0) {
+          setTimeout(() => attempt(left - 1), 80);
+          return;
+        }
+        const meta = partMetaByFile.get(cleanSrc) || partMetaByFile.get(src);
+        if (meta && meta.sheet && meta.bbox) {
+          const shIm = await loadImg(meta.sheet, 2);
+          if (shIm) {
+            resolve(cropAndKeyPartFromSheet(shIm, meta.bbox));
+            return;
+          }
+        }
+        imgCache.delete(full);
+        resolve(null);
+      };
+      im.src = full;
+    };
+    attempt(retries);
+  });
+  imgCache.set(full, p);
+  return p;
+}
+
+window.addEventListener("error", async e => {
+  const t = e.target;
+  if (!t || t.tagName !== "IMG" || t.dataset.fallbackTried) return;
+  const rel = (t.getAttribute("src") || "").replace(/^(\.\/|\.\.\/)/, "");
+  const meta = partMetaByFile.get(rel);
+  if (meta && meta.sheet && meta.bbox) {
+    t.dataset.fallbackTried = "1";
+    const shIm = await loadImg(meta.sheet, 2);
+    if (shIm) {
+      const c = cropAndKeyPartFromSheet(shIm, meta.bbox);
+      t.src = c.toDataURL("image/png");
+    }
+  }
+}, true);
+
+let toastT = 0;
+function toast(msg) {
+  const el = $("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove("show"), 2000);
+}
+
+/* ── Canvas Sizing ── */
+const cv = $("stage"), g = cv.getContext("2d");
+const sc = $("scrub"), sg = sc.getContext("2d");
+let W = 0, H = 0, DPR = 1;
+let stageRect = { x: 0, y: 0, w: 1120, h: 760 };
+
+function fit() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = innerWidth;
+  H = innerHeight;
+  cv.width = W * DPR;
+  cv.height = H * DPR;
+  cv.style.width = W + "px";
+  cv.style.height = H + "px";
+  const r = sc.getBoundingClientRect();
+  sc.width = Math.max(120, r.width) * DPR;
+  sc.height = 30 * DPR;
+}
+addEventListener("resize", fit);
+
+/* ── 31-Part Brass-Pivot Articulated Poet Renderer ── */
+async function drawArticulatedPoetRig(ctx, cx, footY, targetHeight, t, DPR) {
+  const compIds = [
+    "01_torso_front", "04_hip_bridge", "06_pelvis_front_cover",
+    "07_upper_arm_L", "08_forearm_L", "15_hand_relaxed_L",
+    "09_upper_arm_R", "10_forearm_R", "16_hand_relaxed_R",
+    "11_thigh_L", "12_shin_L", "19_boot_front_L",
+    "13_thigh_R", "14_shin_R", "20_boot_front_R",
+    "21_head_front_blank", rigFace.eyes, rigFace.brows, "26_nose_front", rigFace.mouth,
+    ...(rigFace.sunglasses ? ["31_sunglasses_front"] : [])
+  ];
+  const comps = compIds.map(id => tracksuitMap.get(id)).filter(Boolean);
+  const imgs = await Promise.all(comps.map(c => loadImg(c.file)));
+  const imById = {};
+  comps.forEach((c, i) => { imById[c.comp_id] = { comp: c, im: imgs[i] }; });
+
+  const torsoEntry = imById["01_torso_front"];
+  if (!torsoEntry || !torsoEntry.im) return;
+
+  // Master scale: full standing figure is ~3.35x the torso height (940px between neck and waist)
+  const S = targetHeight / 3350;
+  const breath = playing ? Math.sin(t * 2.4) * 3 * DPR : 0;
+  const walkSwing = (playing && rigPoseName === "walk") ? Math.sin(t * 4.5) * 18 : 0;
+  const deg = d => (d * Math.PI) / 180;
+
+  // Calibrated scale factors relative to 01_torso_front (since each of the 31 PNGs was exported zoomed-to-frame)
+  const REL_SCALE = {
+    "01_torso_front": 1.00,
+    "04_hip_bridge": 0.62,
+    "06_pelvis_front_cover": 0.66,
+    "07_upper_arm_L": 0.48,
+    "08_forearm_L": 0.44,
+    "15_hand_relaxed_L": 0.30,
+    "09_upper_arm_R": 0.48,
+    "10_forearm_R": 0.44,
+    "16_hand_relaxed_R": 0.30,
+    "11_thigh_L": 0.62,
+    "12_shin_L": 0.58,
+    "19_boot_front_L": 0.42,
+    "13_thigh_R": 0.62,
+    "14_shin_R": 0.58,
+    "20_boot_front_R": 0.42,
+    "21_head_front_blank": 0.66,
+    "22_eyes_open": 0.20,
+    "23_eyes_closed": 0.20,
+    "24_brows_rest": 0.21,
+    "25_brows_raised": 0.21,
+    "26_nose_front": 0.14,
+    "27_mouth_rest": 0.23,
+    "28_mouth_smile": 0.23,
+    "29_mouth_open_O": 0.23,
+    "30_mouth_open_A": 0.23,
+    "31_sunglasses_front": 0.26,
+  };
+
+  // Transform a local pixel (lx, ly) on a component (anchored at anchorPx, anchorPy and rotated by angleDeg) into stage coordinates
+  function toWorld(originX, originY, anchorPx, anchorPy, lx, ly, sc, angleDeg) {
+    const dx = (lx - anchorPx) * sc;
+    const dy = (ly - anchorPy) * sc;
+    const r = deg(angleDeg);
+    return {
+      x: originX + dx * Math.cos(r) - dy * Math.sin(r),
+      y: originY + dx * Math.sin(r) + dy * Math.cos(r)
+    };
+  }
+
+  // Draw a component pinned at world (wx, wy) by its local pixel (px, py) at angleDeg
+  function drawPinned(compId, wx, wy, px, py, angleDeg) {
+    const entry = imById[compId];
+    if (!entry || !entry.im) return;
+    const { comp, im } = entry;
+    const sc = S * (REL_SCALE[compId] || 0.5);
+    ctx.save();
+    ctx.translate(wx, wy);
+    ctx.rotate(deg(angleDeg));
+    ctx.shadowColor = "rgba(0,0,0,0.34)";
+    ctx.shadowBlur = 5 * DPR;
+    ctx.drawImage(im, -px * sc, -py * sc, im.width * sc, im.height * sc);
+    if (showPivots) {
+      ctx.strokeStyle = "#e01b1b";
+      ctx.lineWidth = 1.6 * DPR;
+      for (const pv of (comp.pivots || [])) {
+        ctx.beginPath();
+        ctx.arc((pv.x - px) * sc, (pv.y - py) * sc, Math.max(3.5 * DPR, (pv.r || 24) * sc), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  // Torso pivots in 01_torso_front native pixels:
+  // neck=(639,108), shoulder_R=(300.4,212.4), shoulder_L=(979.8,212.1), waist=(639.4,1048.4)
+  const torsoA = rigAngles.torso;
+  const waistWorldX = cx;
+  const waistWorldY = footY - targetHeight * 0.50 + breath;
+  const scTorso = S * REL_SCALE["01_torso_front"];
+
+  const neckW = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 639.0, 108.0, scTorso, torsoA);
+  const shRW  = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 300.4, 212.4, scTorso, torsoA);
+  const shLW  = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 979.8, 212.1, scTorso, torsoA);
+
+  // Hip bridge pivots: waist=(759.6,192.2), hip_R=(357.3,791.2), hip_L=(1172.8,791.3)
+  const hipA = torsoA * 0.4;
+  const scHip = S * REL_SCALE["04_hip_bridge"];
+  const hipRW = toWorld(waistWorldX, waistWorldY, 759.6, 192.2, 357.3, 791.2, scHip, hipA);
+  const hipLW = toWorld(waistWorldX, waistWorldY, 759.6, 192.2, 1172.8, 791.3, scHip, hipA);
+
+  // 1. Hip Bridge (behind pelvis cover & legs)
+  drawPinned("04_hip_bridge", waistWorldX, waistWorldY, 759.6, 192.2, hipA);
+
+  // 2. Right Leg (viewer left): thigh_R (511.8,192.2)->(514.4,1342.4), shin_R (507.4,176.0)->(519.9,1392.9), boot_R (635,315)
+  const thRA = rigAngles.thighR - walkSwing;
+  const scThigh = S * REL_SCALE["13_thigh_R"];
+  const kneeRW = toWorld(hipRW.x, hipRW.y, 511.8, 192.2, 514.4, 1342.4, scThigh, thRA);
+  const shRA = thRA * 0.5 + rigAngles.shinR - walkSwing * 0.5;
+  const scShin = S * REL_SCALE["14_shin_R"];
+  const ankRW = toWorld(kneeRW.x, kneeRW.y, 507.4, 176.0, 519.9, 1392.9, scShin, shRA);
+  drawPinned("13_thigh_R", hipRW.x, hipRW.y, 511.8, 192.2, thRA);
+  drawPinned("14_shin_R", kneeRW.x, kneeRW.y, 507.4, 176.0, shRA);
+  drawPinned("20_boot_front_R", ankRW.x, ankRW.y, 635.0, 315.0, 0);
+
+  // 3. Left Leg (viewer right): thigh_L (511.0,180.1)->(509.8,1344.4), shin_L (511.1,198.3)->(512.3,1387.6), boot_L (625,315)
+  const thLA = rigAngles.thighL + walkSwing;
+  const kneeLW = toWorld(hipLW.x, hipLW.y, 511.0, 180.1, 509.8, 1344.4, scThigh, thLA);
+  const shLA = thLA * 0.5 + rigAngles.shinL + walkSwing * 0.5;
+  const ankLW = toWorld(kneeLW.x, kneeLW.y, 511.1, 198.3, 512.3, 1387.6, scShin, shLA);
+  drawPinned("11_thigh_L", hipLW.x, hipLW.y, 511.0, 180.1, thLA);
+  drawPinned("12_shin_L", kneeLW.x, kneeLW.y, 511.1, 198.3, shLA);
+  drawPinned("19_boot_front_L", ankLW.x, ankLW.y, 625.0, 315.0, 0);
+
+  // 4. Clothed Pelvis Front Cover over hip bridge & upper thigh tabs: waist=(727.3, 180.5)
+  drawPinned("06_pelvis_front_cover", waistWorldX, waistWorldY, 727.3, 180.5, hipA);
+
+  // 5. Torso Front (drawn before arms so both shoulder caps lock over the brass shoulder sockets)
+  drawPinned("01_torso_front", waistWorldX, waistWorldY, 639.4, 1048.4, torsoA);
+
+  // 6. Right Arm (viewer left): uarm_R (504,138.5)->(534,1387.1), farm_R (513.8,176.3)->(510.7,1375.5), hand_R (646,255.5)
+  const uaRA = torsoA + rigAngles.uarmR + walkSwing * 0.8;
+  const scUarm = S * REL_SCALE["09_upper_arm_R"];
+  const elbRW = toWorld(shRW.x, shRW.y, 504.0, 138.5, 534.0, 1387.1, scUarm, uaRA);
+  const faRA = uaRA + rigAngles.farmR;
+  const scFarm = S * REL_SCALE["10_forearm_R"];
+  const wriRW = toWorld(elbRW.x, elbRW.y, 513.8, 176.3, 510.7, 1375.5, scFarm, faRA);
+  drawPinned("09_upper_arm_R", shRW.x, shRW.y, 504.0, 138.5, uaRA);
+  drawPinned("10_forearm_R", elbRW.x, elbRW.y, 513.8, 176.3, faRA);
+  drawPinned("16_hand_relaxed_R", wriRW.x, wriRW.y, 646.0, 255.5, faRA + rigAngles.handR);
+
+  // 7. Blank Head + Layered Expressions + Removable Sunglasses: neck=(558.0, 1159.0)
+  const headA = torsoA * 0.6 + rigAngles.head;
+  const scHead = S * REL_SCALE["21_head_front_blank"];
+  drawPinned("21_head_front_blank", neckW.x, neckW.y, 558.0, 1159.0, headA);
+
+  const browsW = toWorld(neckW.x, neckW.y, 558.0, 1159.0, 577.0, 505.0, scHead, headA);
+  const eyesW  = toWorld(neckW.x, neckW.y, 558.0, 1159.0, 577.0, 585.0, scHead, headA);
+  const noseW  = toWorld(neckW.x, neckW.y, 558.0, 1159.0, 577.0, 690.0, scHead, headA);
+  const mouthW = toWorld(neckW.x, neckW.y, 558.0, 1159.0, 577.0, 865.0, scHead, headA);
+
+  drawPinned(rigFace.eyes, eyesW.x, eyesW.y, 1086, 362, headA);
+  drawPinned(rigFace.brows, browsW.x, browsW.y, 1085, 362, headA);
+  drawPinned("26_nose_front", noseW.x, noseW.y, 768, 512, headA);
+  drawPinned(rigFace.mouth, mouthW.x, mouthW.y, 887, 443, headA);
+  if (rigFace.sunglasses) {
+    drawPinned("31_sunglasses_front", eyesW.x, eyesW.y, 1086, 362, headA);
+  }
+
+  // 8. Left Arm (viewer right): uarm_L (507.7,166.4)->(493.6,1362.5), farm_L (512,180)->(510.5,1320.6), hand_L (660.8,190.1)
+  const uaLA = torsoA + rigAngles.uarmL - walkSwing * 0.8;
+  const elbLW = toWorld(shLW.x, shLW.y, 507.7, 166.4, 493.6, 1362.5, scUarm, uaLA);
+  const faLA = uaLA + rigAngles.farmL;
+  const wriLW = toWorld(elbLW.x, elbLW.y, 512.0, 180.0, 510.5, 1320.6, scFarm, faLA);
+  drawPinned("07_upper_arm_L", shLW.x, shLW.y, 507.7, 166.4, uaLA);
+  drawPinned("08_forearm_L", elbLW.x, elbLW.y, 512.0, 180.0, faLA);
+  drawPinned("15_hand_relaxed_L", wriLW.x, wriLW.y, 660.8, 190.1, faLA + rigAngles.handL);
+}
+
+/* ── Main Stage Render Loop ── */
+async function renderStageFrame() {
+  if (!currentScene) return;
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = "#f2f1ec";
+  g.fillRect(0, 0, cv.width, cv.height);
+
+  const topInset = 142 * DPR;
+  const botInset = 68 * DPR;
+  const availW = cv.width - 36 * DPR;
+  const availH = cv.height - topInset - botInset;
+  const aspect = 1120 / 760;
+  let sw = availW, sh = sw / aspect;
+  if (sh > availH) {
+    sh = availH;
+    sw = sh * aspect;
+  }
+  const sx = (cv.width - sw) / 2;
+  const sy = topInset + (availH - sh) / 2;
+  stageRect = { x: sx, y: sy, w: sw, h: sh };
+
+  // Stage outer paper card shadow & border
+  g.fillStyle = "#181c24";
+  g.fillRect(sx, sy, sw, sh);
+
+  g.save();
+  g.beginPath();
+  g.rect(sx, sy, sw, sh);
+  g.clip();
+
+  // Multiplane stage atmospheric gradient + floor horizon
+  const grad = g.createLinearGradient(0, sy, 0, sy + sh);
+  grad.addColorStop(0, "#18202c");
+  grad.addColorStop(0.68, "#262b34");
+  grad.addColorStop(0.69, "#211d18");
+  grad.addColorStop(1, "#14110e");
+  g.fillStyle = grad;
+  g.fillRect(sx, sy, sw, sh);
+
+  // Subtle multiplane depth grid lines on stage floor
+  g.strokeStyle = "rgba(255,255,255,0.06)";
+  g.lineWidth = 1 * DPR;
+  for (let p = 0.70; p <= 0.96; p += 0.065) {
+    const gy = sy + sh * p;
+    g.beginPath();
+    g.moveTo(sx, gy);
+    g.lineTo(sx + sw, gy);
+    g.stroke();
+  }
+
+  // Sort layers back-to-front by Z
+  const indexed = liveLayers.map((l, idx) => ({ l, idx })).sort((a, b) => (b.l.z || 1) - (a.l.z || 1));
+  const imgs = await Promise.all(indexed.map(item => loadImg(item.l.file)));
+
+  const camPan = playing ? Math.sin(T * 0.65) * 24 * DPR : 0;
+
+  for (let k = 0; k < indexed.length; k++) {
+    const { l, idx } = indexed[k];
+    if (l.hidden) continue;
+
+    const z = l.z || 1.0;
+    const parallax = camPan / Math.max(0.35, z);
+    const bob = playing
+      ? (l.role && l.role.startsWith("character") ? Math.sin(T * 2.3 + idx) * 4 * DPR : (l.role === "fx_overlay" ? Math.cos(T * 1.2 + idx) * 8 * DPR : 0))
+      : 0;
+
+    const cx = sx + (l.x ?? 0.5) * sw + parallax;
+    const by = sy + (l.y ?? 0.86) * sh + bob;
+    const targetH = sh * (l.scale || 0.5);
+
+    // If this is the Hero Poet and articulatedRigOn is enabled, render the 31-part brass-pivot rig!
+    if (l.instance === "actor_poet" && articulatedRigOn) {
+      g.fillStyle = "rgba(0,0,0,0.38)";
+      g.beginPath();
+      g.ellipse(cx, by - 4 * DPR, targetH * 0.22, targetH * 0.04, 0, 0, Math.PI * 2);
+      g.fill();
+      await drawArticulatedPoetRig(g, cx, by, targetH, T, DPR);
+      l._bbox = { x: cx - targetH * 0.28, y: by - targetH, w: targetH * 0.56, h: targetH };
+      continue;
+    }
+
+    const im = imgs[k];
+    if (!im) continue;
+
+    const ar = im.width / Math.max(1, im.height);
+    let dh = targetH, dw = dh * ar;
+    if (l.role === "set_backdrop") {
+      const s = Math.max((sw * 0.95) / im.width, (sh * 0.82) / im.height) * ((l.scale || 0.82) / 0.82);
+      dw = im.width * s;
+      dh = im.height * s;
+    } else if (dw > sw * 0.95) {
+      dw = sw * 0.95;
+      dh = dw / ar;
+    }
+
+    const dx = cx - dw / 2;
+    const dy = by - dh;
+    l._bbox = { x: dx, y: dy, w: dw, h: dh };
+
+    if (l.role && (l.role.startsWith("character") || l.role === "prop")) {
+      g.fillStyle = "rgba(0,0,0,0.35)";
+      g.beginPath();
+      g.ellipse(cx, by - 2 * DPR, dw * 0.32, Math.max(4 * DPR, dw * 0.045), 0, 0, Math.PI * 2);
+      g.fill();
+    }
+
+    g.save();
+    g.globalAlpha = l.alpha ?? 1.0;
+    g.globalCompositeOperation = l.blend || "source-over";
+    g.shadowColor = "rgba(0,0,0,0.42)";
+    g.shadowBlur = 10 * DPR;
+    g.shadowOffsetY = 3 * DPR;
+    if (l.flip) {
+      g.translate(cx * 2, 0);
+      g.scale(-1, 1);
+    }
+    g.drawImage(im, dx, dy, dw, dh);
+    g.restore();
+
+    // Draw brass pivot sockets if enabled
+    if (showPivots && l.pivots && l.pivots.length) {
+      const psx = dw / im.width, psy = dh / im.height;
+      g.save();
+      for (const p of l.pivots) {
+        const px = dx + p.x * psx;
+        const py = dy + p.y * psy;
+        const r = Math.max(4 * DPR, (p.r || 6) * Math.min(psx, psy));
+        g.strokeStyle = "#e01b1b";
+        g.lineWidth = 1.6 * DPR;
+        g.beginPath();
+        g.arc(px, py, r, 0, Math.PI * 2);
+        g.stroke();
+      }
+      g.restore();
+    }
+
+    // Highlight selected piece in ARRANGE mode
+    if (idx === selectedIdx) {
+      g.save();
+      g.strokeStyle = "#e01b1b";
+      g.lineWidth = 2.5 * DPR;
+      g.setLineDash([6 * DPR, 4 * DPR]);
+      g.strokeRect(dx - 3 * DPR, dy - 3 * DPR, dw + 6 * DPR, dh + 6 * DPR);
+      g.fillStyle = "#e01b1b";
+      g.font = `700 ${Math.round(10 * DPR)}px ui-monospace,monospace`;
+      g.fillText(`${l.plane} · ${l.instance} (${l.label || l.part_id})`, dx, Math.max(sy + 16 * DPR, dy - 8 * DPR));
+      g.restore();
+    }
+  }
+
+  // Verse Subtitle Banner inside stage bottom
+  if (currentScene.lines) {
+    g.save();
+    g.fillStyle = "rgba(16,16,16,0.78)";
+    const bh = 32 * DPR;
+    g.fillRect(sx + 18 * DPR, sy + sh - bh - 12 * DPR, sw - 36 * DPR, bh);
+    g.strokeStyle = "rgba(224,27,27,0.85)";
+    g.lineWidth = 1.5 * DPR;
+    g.strokeRect(sx + 18 * DPR, sy + sh - bh - 12 * DPR, sw - 36 * DPR, bh);
+    g.fillStyle = "#f4f4f0";
+    g.font = `600 ${Math.round(11 * DPR)}px ui-monospace,monospace`;
+    g.textBaseline = "middle";
+    g.fillText(`“${currentScene.lines.slice(0, 118)}”`, sx + 30 * DPR, sy + sh - bh / 2 - 12 * DPR);
+    g.restore();
+  }
+
+  g.restore();
+
+  // Crisp Stage Frame Header
+  g.strokeStyle = "#141414";
+  g.lineWidth = 2.5 * DPR;
+  g.strokeRect(sx, sy, sw, sh);
+  g.fillStyle = "#f2f1ec";
+  g.fillRect(sx + 12 * DPR, sy - 10 * DPR, 460 * DPR, 20 * DPR);
+  g.fillStyle = "#141414";
+  g.font = `700 ${Math.round(11 * DPR)}px ui-monospace,monospace`;
+  g.fillText(`${currentScene.id} · ${currentScene.title.toUpperCase()} (${liveLayers.length} CUT PIECES STAGED)`, sx + 18 * DPR, sy + 4 * DPR);
+
+  g.restore();
+  drawScrubber();
+}
+
+function drawScrubber() {
+  if (!currentScene) return;
+  const dur = currentScene.seconds || 12;
+  const sw = sc.width, sh = sc.height;
+  sg.clearRect(0, 0, sw, sh);
+  sg.fillStyle = "#e6e4dd";
+  sg.fillRect(0, sh * 0.35, sw, sh * 0.3);
+  const prog = Math.min(1, Math.max(0, T / dur));
+  sg.fillStyle = "#e01b1b";
+  sg.fillRect(0, sh * 0.35, sw * prog, sh * 0.3);
+
+  const shots = currentScene.shots || [];
+  for (let i = 1; i < shots.length; i++) {
+    const tx = (i / shots.length) * sw;
+    sg.fillStyle = "#141414";
+    sg.fillRect(tx - 1, sh * 0.2, 2, sh * 0.6);
+  }
+  $("tc").textContent = `${T.toFixed(1).padStart(4, "0")} / ${dur.toFixed(1)}`;
+}
+
+/* ── Spine & Scene Strip Builders ── */
+function buildSpine() {
+  const sp = $("spine");
+  sp.innerHTML = "";
+  for (const pm of MAN.poems) {
+    const c = document.createElement("div");
+    c.className = "bookCell" + (pm.book === currentBook ? " on" : "");
+    c.innerHTML = `<div class="rn">${pm.roman} &middot; ${pm.num}</div><div class="ct">${pm.title}</div>`;
+    c.onclick = () => selectBook(pm.book);
+    sp.appendChild(c);
+  }
+}
+
+function selectBook(b, targetSceneId = null) {
+  currentBook = b;
+  buildSpine();
+  const scStrip = $("scenes");
+  scStrip.innerHTML = "";
+  const bookScenes = MAN.scenes.filter(s => s.book === b);
+  for (const sc of bookScenes) {
+    const ch = document.createElement("div");
+    ch.className = "sceneChip";
+    ch.dataset.id = sc.id;
+    ch.innerHTML = `<div class="sid">${sc.id} &middot; ${sc.shot_count} SHOTS</div><div class="st">${sc.title}</div>`;
+    ch.onclick = () => selectScene(sc);
+    scStrip.appendChild(ch);
+  }
+  const chosen = (targetSceneId && sceneById.get(targetSceneId)) || bookScenes[0];
+  if (chosen) selectScene(chosen);
+}
+
+function selectScene(sc) {
+  currentScene = sc;
+  liveLayers = JSON.parse(JSON.stringify(sc.stage_layers || []));
+  selectedIdx = -1;
+  T = 0;
+  updateArrangeBar();
+  [...$("scenes").querySelectorAll(".sceneChip")].forEach(el => {
+    el.classList.toggle("on", el.dataset.id === sc.id);
+  });
+  $("cardsLink").href = `./cards.html#${encodeURIComponent(sc.id)}`;
+  history.replaceState(null, "", `#${encodeURIComponent(sc.id)}`);
+  renderStageFrame();
+}
+
+/* ── Arrange Interaction (Click, Drag, Wheel Resize, Inspector) ── */
+function updateArrangeBar() {
+  const bar = $("arrbar");
+  if (selectedIdx < 0 || !liveLayers[selectedIdx]) {
+    bar.classList.remove("on");
+    return;
+  }
+  bar.classList.add("on");
+  const l = liveLayers[selectedIdx];
+  $("arrName").textContent = `${l.plane} · ${l.instance}`;
+  $("arrSize").value = Math.round((l.scale || 0.5) * 100);
+  $("arrAlpha").value = Math.round((l.alpha ?? 1) * 100);
+  const pVal = `${l.plane}:${l.z}`;
+  const sel = $("arrPlane");
+  for (const opt of sel.options) {
+    if (opt.value.startsWith(l.plane + ":")) {
+      sel.value = opt.value;
+      break;
+    }
+  }
+}
+
+cv.addEventListener("pointerdown", e => {
+  const rect = cv.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * DPR;
+  const py = (e.clientY - rect.top) * DPR;
+
+  // Hit-test front-to-back (lowest Z first)
+  const order = liveLayers.map((l, idx) => ({ l, idx })).sort((a, b) => (a.l.z || 1) - (b.l.z || 1));
+  let hit = -1;
+  for (const { l, idx } of order) {
+    if (l.hidden || !l._bbox) continue;
+    const b = l._bbox;
+    if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) {
+      hit = idx;
+      break;
+    }
+  }
+  selectedIdx = hit;
+  updateArrangeBar();
+  if (hit >= 0) {
+    dragging = true;
+    const l = liveLayers[hit];
+    const lx = stageRect.x + (l.x ?? 0.5) * stageRect.w;
+    const ly = stageRect.y + (l.y ?? 0.86) * stageRect.h;
+    dragOffset = { x: px - lx, y: py - ly };
+    cv.setPointerCapture(e.pointerId);
+  }
+  renderStageFrame();
+});
+
+cv.addEventListener("pointermove", e => {
+  if (!dragging || selectedIdx < 0 || !liveLayers[selectedIdx]) return;
+  const rect = cv.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * DPR;
+  const py = (e.clientY - rect.top) * DPR;
+  const l = liveLayers[selectedIdx];
+  l.x = Math.max(0.02, Math.min(0.98, (px - dragOffset.x - stageRect.x) / stageRect.w));
+  l.y = Math.max(0.08, Math.min(1.05, (py - dragOffset.y - stageRect.y) / stageRect.h));
+  renderStageFrame();
+});
+
+cv.addEventListener("pointerup", () => { dragging = false; });
+
+cv.addEventListener("wheel", e => {
+  if (selectedIdx < 0 || !liveLayers[selectedIdx]) return;
+  e.preventDefault();
+  const l = liveLayers[selectedIdx];
+  const factor = e.deltaY < 0 ? 1.06 : 0.94;
+  l.scale = Math.max(0.10, Math.min(2.2, (l.scale || 0.5) * factor));
+  $("arrSize").value = Math.round(l.scale * 100);
+  renderStageFrame();
+}, { passive: false });
+
+$("arrPlane").onchange = e => {
+  if (selectedIdx < 0) return;
+  const [pl, zStr] = e.target.value.split(":");
+  liveLayers[selectedIdx].plane = pl;
+  liveLayers[selectedIdx].z = parseFloat(zStr);
+  updateArrangeBar();
+  renderStageFrame();
+};
+$("arrSize").oninput = e => {
+  if (selectedIdx < 0) return;
+  liveLayers[selectedIdx].scale = parseInt(e.target.value, 10) / 100;
+  renderStageFrame();
+};
+$("arrAlpha").oninput = e => {
+  if (selectedIdx < 0) return;
+  liveLayers[selectedIdx].alpha = parseInt(e.target.value, 10) / 100;
+  renderStageFrame();
+};
+$("arrFlip").onclick = () => {
+  if (selectedIdx < 0) return;
+  liveLayers[selectedIdx].flip = !liveLayers[selectedIdx].flip;
+  renderStageFrame();
+};
+$("arrDup").onclick = () => {
+  if (selectedIdx < 0) return;
+  const src = liveLayers[selectedIdx];
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.instance = src.instance + "_dup";
+  copy.x = Math.min(0.92, (src.x || 0.5) + 0.08);
+  liveLayers.push(copy);
+  selectedIdx = liveLayers.length - 1;
+  updateArrangeBar();
+  renderStageFrame();
+  toast("DUPLICATED CUT-OUT PIECE");
+};
+$("arrDel").onclick = () => {
+  if (selectedIdx < 0) return;
+  liveLayers.splice(selectedIdx, 1);
+  selectedIdx = -1;
+  updateArrangeBar();
+  renderStageFrame();
+  toast("REMOVED PIECE FROM STAGE");
+};
+$("arrReset").onclick = () => {
+  if (!currentScene) return;
+  liveLayers = JSON.parse(JSON.stringify(currentScene.stage_layers || []));
+  selectedIdx = -1;
+  updateArrangeBar();
+  renderStageFrame();
+  toast("RESET SCENE TO CANONICAL LAYOUT");
+};
+
+/* ── Embody & Rig Controls ── */
+function buildHudControls() {
+  const pc = $("poseChips");
+  pc.innerHTML = "";
+  for (const pName of Object.keys(RIG_POSES)) {
+    const ch = document.createElement("span");
+    ch.className = "pchip" + (pName === rigPoseName ? " on" : "");
+    ch.textContent = pName.toUpperCase();
+    ch.onclick = () => {
+      rigPoseName = pName;
+      rigAngles = { ...RIG_POSES[pName] };
+      articulatedRigOn = true;
+      updateRigModeUI();
+      syncJointSliders();
+      [...pc.querySelectorAll(".pchip")].forEach(x => x.classList.remove("on"));
+      ch.classList.add("on");
+      renderStageFrame();
+    };
+    pc.appendChild(ch);
+  }
+
+  const js = $("jointSliders");
+  js.innerHTML = "";
+  for (const [jKey, jLbl] of [
+    ["torso", "TORSO"], ["head", "HEAD"], ["uarmL", "ARM L"], ["farmL", "FOREARM L"],
+    ["uarmR", "ARM R"], ["farmR", "FOREARM R"], ["thighL", "THIGH L"], ["thighR", "THIGH R"]
+  ]) {
+    const wrap = document.createElement("label");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.alignItems = "center";
+    wrap.innerHTML = `<span>${jLbl}</span><input type="range" data-joint="${jKey}" min="-95" max="95" value="${rigAngles[jKey] || 0}" style="width:68px">`;
+    wrap.querySelector("input").oninput = ev => {
+      articulatedRigOn = true;
+      updateRigModeUI();
+      rigAngles[jKey] = parseInt(ev.target.value, 10);
+      renderStageFrame();
+    };
+    js.appendChild(wrap);
+  }
+}
+
+function syncJointSliders() {
+  document.querySelectorAll("[data-joint]").forEach(inp => {
+    const k = inp.dataset.joint;
+    inp.value = rigAngles[k] || 0;
+  });
+}
+
+function updateRigModeUI() {
+  $("rigModeBtn").textContent = articulatedRigOn ? "POET: 31-PART RIG" : "POET: POSE CUTOUT";
+  $("rigModeBtn").classList.toggle("on", articulatedRigOn);
+  $("hudCutout").classList.toggle("on", !articulatedRigOn);
+  $("hudArtic").classList.toggle("on", articulatedRigOn);
+}
+
+$("rigModeBtn").onclick = () => {
+  articulatedRigOn = !articulatedRigOn;
+  updateRigModeUI();
+  renderStageFrame();
+  toast(articulatedRigOn ? "POET: 31-PART BRASS-PIVOT ARTICULATED RIG" : "POET: POEM REPLACEMENT POSE CUTOUT");
+};
+$("hudCutout").onclick = () => { articulatedRigOn = false; updateRigModeUI(); renderStageFrame(); };
+$("hudArtic").onclick = () => { articulatedRigOn = true; updateRigModeUI(); renderStageFrame(); };
+
+$("faceGlasses").onclick = e => {
+  rigFace.sunglasses = !rigFace.sunglasses;
+  e.currentTarget.classList.toggle("on", rigFace.sunglasses);
+  articulatedRigOn = true; updateRigModeUI(); renderStageFrame();
+};
+$("faceEyes").onclick = e => {
+  rigFace.eyes = rigFace.eyes === "22_eyes_open" ? "23_eyes_closed" : "22_eyes_open";
+  e.currentTarget.textContent = rigFace.eyes.includes("open") ? "EYES: OPEN" : "EYES: CLOSED";
+  articulatedRigOn = true; updateRigModeUI(); renderStageFrame();
+};
+$("faceBrows").onclick = e => {
+  rigFace.brows = rigFace.brows === "24_brows_rest" ? "25_brows_raised" : "24_brows_rest";
+  e.currentTarget.textContent = rigFace.brows.includes("rest") ? "BROWS: REST" : "BROWS: RAISED";
+  articulatedRigOn = true; updateRigModeUI(); renderStageFrame();
+};
+$("faceMouth").onclick = e => {
+  const mouths = ["27_mouth_rest", "28_mouth_smile", "29_mouth_open_O", "30_mouth_open_A"];
+  rigFace.mouth = mouths[(mouths.indexOf(rigFace.mouth) + 1) % mouths.length];
+  e.currentTarget.textContent = "MOUTH: " + rigFace.mouth.replace(/^\d+_mouth_/, "").toUpperCase();
+  articulatedRigOn = true; updateRigModeUI(); renderStageFrame();
+};
+
+/* ── Cut-Out Piece Drawer ── */
+function populateDrawer(q = "") {
+  const listEl = $("drawerList");
+  listEl.innerHTML = "";
+  const ql = q.trim().toLowerCase();
+  // Prioritize assets from currentBook first, then others
+  const sortedAssets = MAN.assets.slice().sort((a, b) => {
+    const aIn = (a.books || []).includes(currentBook) ? 0 : 1;
+    const bIn = (b.books || []).includes(currentBook) ? 0 : 1;
+    return aIn - bIn;
+  });
+
+  let count = 0;
+  for (const a of sortedAssets) {
+    for (const p of (a.parts || [])) {
+      if (ql && !(a.id + " " + a.name + " " + p.label).toLowerCase().includes(ql)) continue;
+      const card = document.createElement("div");
+      card.className = "dpart";
+      card.innerHTML = `<img src="./${p.file}" loading="lazy"><span>${p.label}</span>`;
+      card.onclick = () => {
+        const newLayer = {
+          instance: `added_${p.part_index}`,
+          plane: a.type === "fx" ? "P1" : (a.type === "hero" || a.type === "location" ? "P4" : "P2"),
+          z: a.type === "fx" ? 0.5 : (a.type === "hero" || a.type === "location" ? 2.5 : 1.0),
+          sheet_id: a.id,
+          part_id: p.id,
+          label: p.label,
+          file: p.file,
+          width: p.width,
+          height: p.height,
+          pivots: p.pivots || [],
+          x: 0.5,
+          y: 0.85,
+          scale: 0.45,
+          alpha: 1.0,
+          blend: "source-over",
+          role: "custom_cutout"
+        };
+        liveLayers.push(newLayer);
+        selectedIdx = liveLayers.length - 1;
+        updateArrangeBar();
+        renderStageFrame();
+        toast(`ADDED ${p.label} TO STAGE`);
+      };
+      listEl.appendChild(card);
+      if (++count >= 90) return;
+    }
+  }
+}
+
+$("drawerBtn").onclick = () => {
+  const on = !$("drawer").classList.contains("on");
+  $("drawer").classList.toggle("on", on);
+  $("drawerBtn").classList.toggle("on", on);
+  if (on) populateDrawer($("drawerQ").value);
+};
+$("closeDrawer").onclick = () => {
+  $("drawer").classList.remove("on");
+  $("drawerBtn").classList.remove("on");
+};
+$("drawerQ").oninput = e => populateDrawer(e.target.value);
+
+/* ── Top Bar & Playback Controls ── */
+$("modeEmbody").onclick = () => {
+  embodyMode = !embodyMode;
+  $("hud").classList.toggle("on", embodyMode);
+  $("modeEmbody").classList.toggle("on", embodyMode);
+  if (embodyMode && !articulatedRigOn) {
+    articulatedRigOn = true;
+    updateRigModeUI();
+  }
+  renderStageFrame();
+};
+$("arrangeBtn").onclick = () => {
+  arrangeMode = !arrangeMode;
+  $("arrangeBtn").classList.toggle("on", arrangeMode);
+  if (arrangeMode && selectedIdx < 0 && liveLayers.length) {
+    selectedIdx = liveLayers.findIndex(l => l.instance === "actor_poet");
+    if (selectedIdx < 0) selectedIdx = 0;
+    updateArrangeBar();
+    renderStageFrame();
+  }
+};
+$("pivBtn").onclick = () => {
+  showPivots = !showPivots;
+  $("pivBtn").classList.toggle("on", showPivots);
+  renderStageFrame();
+};
+$("snapChip").onclick = () => {
+  const a = document.createElement("a");
+  a.download = `${currentScene ? currentScene.id : "wygwyl-stage"}.png`;
+  a.href = cv.toDataURL("image/png");
+  a.click();
+  toast("SAVED STAGE PNG");
+};
+
+function togglePlay() {
+  playing = !playing;
+  $("playBtn").textContent = playing ? "PAUSE" : "PLAY";
+  $("playBtn").classList.toggle("on", playing);
+  lastFrameTime = performance.now();
+}
+$("playBtn").onclick = togglePlay;
+$("rwBtn").onclick = () => { T = 0; renderStageFrame(); };
+
+sc.addEventListener("pointerdown", e => {
+  if (!currentScene) return;
+  const r = sc.getBoundingClientRect();
+  const f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  T = f * (currentScene.seconds || 12);
+  renderStageFrame();
+});
+
+addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.code === "Space") { e.preventDefault(); togglePlay(); }
+  else if (e.key === "r" || e.key === "R") { $("rigModeBtn").click(); }
+  else if (e.key === "e" || e.key === "E") { $("modeEmbody").click(); }
+});
+
+function loop(now) {
+  if (playing && currentScene) {
+    const dt = (now - lastFrameTime) / 1000;
+    lastFrameTime = now;
+    const dur = currentScene.seconds || 12;
+    T = (T + dt) % dur;
+    renderStageFrame();
+  } else {
+    lastFrameTime = now;
+  }
+  requestAnimationFrame(loop);
+}
+
+async function boot() {
+  fit();
+  let manifestUrl = "./arena/parts/kit3/release_v2/wygwyl_atlas_manifest.json";
+  let res = await fetch(manifestUrl);
+  if (!res.ok) {
+    manifestUrl = "../arena/parts/kit3/release_v2/wygwyl_atlas_manifest.json";
+    res = await fetch(manifestUrl);
+  }
+  MAN = await res.json();
+
+  for (const s of MAN.scenes) sceneById.set(s.id, s);
+  for (const a of MAN.assets) {
+    assetById.set(a.id, a);
+    for (const p of (a.parts || [])) {
+      if (p.file && (p.sheet_file || a.sheet_file) && p.bbox_sheet) {
+        partMetaByFile.set(p.file.replace(/^\.\//, ""), { sheet: p.sheet_file || a.sheet_file, bbox: p.bbox_sheet });
+      }
+    }
+  }
+  for (const tc of (MAN.tracksuitRig || [])) tracksuitMap.set(tc.comp_id, tc);
+
+  buildHudControls();
+
+  const initHash = decodeURIComponent(location.hash.slice(1));
+  if (initHash && sceneById.has(initHash)) {
+    const sc = sceneById.get(initHash);
+    selectBook(sc.book, sc.id);
+  } else {
+    selectBook(1);
+  }
+  requestAnimationFrame(loop);
+}
+
+boot();
+</script>
+</body>
+</html>
