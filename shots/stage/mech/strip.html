@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Mechanism strip</title>
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#0d0b0a}</style></head><body><canvas id="cv"></canvas>
+<script src="player.js"></script>
+<script>
+(async () => {
+  const q = new URLSearchParams(location.search), H = +(q.get('h') || 260);
+  const C = await MechPlayer.load(q.get('clip'), {noVideo: true});
+  try { await document.fonts.load("40px 'Permanent Marker'"); } catch (_) {}
+  const fs = (q.get('frames') || '').split(',').filter(Boolean).map(Number);
+  const [x0, y0, x1, y1] = C.box, W = Math.round(H * (x1 - x0) / (y1 - y0));
+  const cols = +(q.get('cols') || fs.length), rows = Math.ceil(fs.length / cols);
+  const cv = document.getElementById('cv'); cv.width = W * cols; cv.height = (H + 18) * rows;
+  const g = cv.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, cv.width, cv.height);
+  fs.forEach((f, i) => { const cx = (i % cols) * W, cy = Math.floor(i / cols) * (H + 18);
+    MechPlayer.draw(g, C, f, {dx: cx, dy: cy, dw: W - 2, dh: H, anchors: q.has('anchors')});
+    g.fillStyle = '#e7a35a'; g.font = '12px monospace'; g.fillText(C.j.id + ' f' + f, cx + 4, cy + H + 13); });
+  window.DONE = cv.toDataURL('image/png');
+})().catch(e => { window.DONE = 'ERR ' + e.message; });
+</script></body></html>

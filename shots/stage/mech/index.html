@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stage Mechanisms</title>
+<link rel="icon" href="../../../favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--acc:#e7a35a;--sel:#5fd0ff;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
+header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
+h1{font:400 26px 'Permanent Marker',cursive;margin:0 8px 0 0}h1 span{color:var(--acc)}
+.btn{font:12px var(--mono);color:var(--dim);background:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;text-decoration:none}
+.btn:hover{color:var(--card);border-color:var(--card)}.btn.on{color:#1a120a;background:var(--card);border-color:var(--card)}
+.sp{flex:1}.hint{font:11px var(--mono);color:var(--dim)}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px;padding:14px 16px}
+@media (max-width:420px){#grid{grid-template-columns:1fr}}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px;min-width:0}
+.tile canvas{width:100%;aspect-ratio:16/10;display:block;border-radius:4px;background:#050403}
+.tile b{font:600 12px var(--mono);color:var(--acc);display:block;margin-top:6px}
+.tile .t{font-size:13px}
+.tile .meta{font:11px var(--mono);color:var(--dim);margin-top:4px;word-break:break-word}
+.tile .ev{font:11px var(--mono);color:var(--sel);min-height:15px}
+.tile input{width:100%}
+.tile details{font-size:12px;color:var(--dim)}
+</style>
+</head>
+<body>
+<header>
+ <h1>Stage <span>Mechanisms</span></h1>
+ <span class="hint">moving props and set pieces from the cut kit · clips in FORMATS.md format</span>
+ <span class="sp"></span>
+ <select class="btn" id="poem"><option value="">all poems</option></select>
+ <button class="btn" id="bAnch">anchors</button>
+ <button class="btn on" id="bPlay">❚❚ pause</button>
+ <a class="btn" href="SFX_NEEDS.md">sfx needs</a>
+ <a class="btn" href="../index.html">stage</a>
+</header>
+<div id="grid"></div>
+<script src="player.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+let ENTRIES = [], TILES = [], playing = true, anchors = false;
+(async () => {
+  ENTRIES = await (await fetch('index.json', {cache: 'no-cache'})).json();
+  const poems = [...new Set(ENTRIES.flatMap(e => e.poems))].sort();
+  for (const p of poems) $('poem').insertAdjacentHTML('beforeend', `<option value="${p}">poem ${p}</option>`);
+  for (const e of ENTRIES) {
+    const d = document.createElement('div'); d.className = 'tile'; d.dataset.poems = e.poems.join(',');
+    d.innerHTML = `<canvas width="720" height="450"></canvas><input type="range" min="0" max="${e.frames - 1}" value="0">
+      <div class="ev"></div><b>${e.id}</b><div class="t">${e.title}</div>
+      <div class="meta">poems ${e.poems.join(' ')} · ${e.frames} f · ${e.loop ? 'loop' : 'one-shot'}${e.anchors.length ? ' · anchors: ' + e.anchors.join(', ') : ''}</div>
+      <details><summary>notes · sfx</summary><p>${e.notes}</p><p class="meta">${e.sfx.join(' · ')}</p></details>`;
+    $('grid').appendChild(d);
+    const T = {e, el: d, cv: d.querySelector('canvas'), sl: d.querySelector('input'), ev: d.querySelector('.ev'), f: 0, C: null, hold: 0};
+    T.sl.oninput = () => { T.f = +T.sl.value; draw(T); };
+    TILES.push(T);
+    MechPlayer.load(e.file).then(C => { T.C = C; draw(T); });
+  }
+})();
+function draw(T) {
+  if (!T.C) return;
+  const g = T.cv.getContext('2d');
+  MechPlayer.draw(g, T.C, T.f, {anchors});
+  const evs = (T.C.j.events || []).filter(v => v.f <= T.f && v.f > T.f - 12);
+  T.ev.textContent = evs.map(v => '♪ ' + v.sfx).join('  ');
+  T.sl.value = T.f;
+}
+let last = 0;
+function tick(t) {
+  requestAnimationFrame(tick);
+  if (!playing || t - last < 1000 / 24) return; last = t;
+  for (const T of TILES) {
+    if (!T.C || T.el.style.display === 'none') continue;
+    const r = T.cv.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) continue;
+    if (T.hold > 0) { T.hold--; continue; }
+    T.f++;
+    if (T.f >= T.C.n) { T.f = 0; if (!T.C.j.loop) T.hold = 18; }
+    draw(T);
+  }
+}
+requestAnimationFrame(tick);
+$('bPlay').onclick = () => { playing = !playing; $('bPlay').textContent = playing ? '❚❚ pause' : '▶ play'; $('bPlay').classList.toggle('on', playing); };
+$('bAnch').onclick = () => { anchors = !anchors; $('bAnch').classList.toggle('on', anchors); TILES.forEach(draw); };
+$('poem').onchange = () => { const p = $('poem').value; TILES.forEach(T => T.el.style.display = !p || T.e.poems.includes(p) ? '' : 'none'); };
+</script>
+</body>
+</html>
