@@ -38,7 +38,8 @@
     { id: 'bodylab',    name: 'Body Lab', does: 'Every hand, shoe, head and eye across the cast, at true scale', path: 'shots/bodylab/index.html' },
     { id: 'anim',       name: 'Animation Library', does: 'Solved acts retargeted onto each character', path: 'shots/stage/anim/index.html' },
     { id: 'rig',        name: 'Rig Builder', does: 'Assemble, fix and pose characters from the cut parts', path: 'shots/rig/index.html' },
-    { id: 'skinlab',    name: 'Skin Lab', does: 'Dress a Crash Lab trial limb by limb from the card library', path: 'shots/skinlab/index.html' }
+    { id: 'skinlab',    name: 'Skin Lab', does: 'Dress a Crash Lab trial limb by limb from the card library', path: 'shots/skinlab/index.html' },
+    { id: 'creatures',  name: 'Creature Lab', does: 'Evolve cut-out bodies under gravity: hinges, muscles, tendons', path: 'shots/skinlab/creatures.html' }
   ];
   window.WYGWYL_ROUTES = ROUTES;
 

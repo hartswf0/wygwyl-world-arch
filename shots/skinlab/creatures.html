@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Creature Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--acc:#e7a35a;--sel:#5fd0ff;--ok:#8fd16a;--warn:#e7c35a;--bad:#ef6a5a;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:13px/1.45 Inter,system-ui,sans-serif}
+header{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 14px;border-bottom:1px solid var(--line)}
+h1{font:400 24px 'Permanent Marker',cursive;margin:0 8px 0 0}
+h1 span{color:var(--acc)}
+.btn,select{font:12px var(--mono);color:var(--dim);background:none;border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+select option{background:var(--panel)}
+.btn:hover{color:var(--card);border-color:var(--card)}
+.btn.on{color:#1a120a;background:var(--card);border-color:var(--card)}
+.sub{color:var(--dim);font:11px var(--mono)}
+main{display:grid;grid-template-columns:1fr 300px;height:calc(100% - 50px)}
+#stage{display:flex;flex-direction:column;min-width:0}
+#big{width:100%;flex:0 0 46%;min-height:0;display:block;border-bottom:1px solid var(--line)}
+#grid{width:100%;flex:1 1 0;min-height:0;display:block;cursor:pointer}
+#stage{overflow:hidden}
+aside{border-left:1px solid var(--line);padding:10px;overflow:auto}
+h2{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:12px 0 6px}
+#chart{width:100%;height:110px;display:block}
+#genes{width:100%;height:420px;display:block}
+.stat{display:flex;gap:10px;font:12px var(--mono);flex-wrap:wrap}
+.stat b{color:var(--ink)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Creature <span>Lab</span></h1>
+  <select id="mode" title="what the creatures are bred for">
+    <option value="walk">walk: distance before falling</option>
+    <option value="stand">stand: stay upright</option>
+    <option value="track">track: do the trial under gravity</option>
+  </select>
+  <select id="trial" title="the Crash Lab trial to track"></select>
+  <select id="from" title="which kits the bodies come from"><option value="">any kit</option></select>
+  <select id="pop" title="population"><option>12</option><option selected>24</option><option>48</option></select>
+  <button class="btn" id="strict" title="only pieces that go together: twins from one sheet, matching cloth">⛓ strict</button>
+  <button class="btn on" id="run">▶ evolve</button>
+  <button class="btn" id="reset" title="a fresh random population">⟳</button>
+  <span class="sub" id="status"></span>
+</header>
+<main>
+  <section id="stage">
+    <canvas id="big" title="the best of the last generation"></canvas>
+    <canvas id="grid" title="the whole generation, replayed together: click to ♥ (♥ ones are kept and bred from)"></canvas>
+  </section>
+  <aside>
+    <h2>fitness</h2>
+    <canvas id="chart" title="best (bright) and mean (dim) per generation"></canvas>
+    <div class="stat" id="stat"></div>
+    <h2>the best one's genome</h2>
+    <canvas id="genes" title="its cards (body) and, per joint, its muscle: the dial is the oscillation (arc = amplitude, tick = phase), the bar its strength"></canvas>
+  </aside>
+</main>
+<script src="../../nav.js" defer></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const LS = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} } };
+const FIX = LS.get('skinlab.fix', {});   // the Skin Lab's corrections (misfiled, re-filed, view)
+const pickOf = a => a[Math.floor(Math.random() * a.length)];
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+
+// ---------- the body plan: cards hinged at brads, side view, facing +x ----------
+const SIDES = ['L', 'R'];
+const PLAN = {   // parent, joint limits (deg, from the rest pose), muscle torque (N·m for 70 kg)
+  pelvis: { par: null },
+  torso: { par: 'pelvis', lim: [-25, 35], torque: 200 },
+  head: { par: 'torso', lim: [-35, 35], torque: 25 },
+  upper_arm: { par: 'torso', lim: [-60, 170], torque: 60 },
+  forearm: { par: 'upper_arm', lim: [0, 150], torque: 40 },
+  hand: { par: 'forearm', lim: [-60, 60], torque: 8 },
+  thigh: { par: 'pelvis', lim: [-30, 120], torque: 220 },
+  shin: { par: 'thigh', lim: [-150, 0], torque: 180 },
+  foot: { par: 'shin', lim: [-40, 30], torque: 120 },
+};
+const SEGS = ['pelvis', 'torso', 'head', ...['upper_arm', 'forearm', 'hand', 'thigh', 'shin', 'foot'].flatMap(b => SIDES.map(s => b + '_' + s))];
+const base = k => k.replace(/_[LR]$/, '');
+const parOf = k => { const p = PLAN[base(k)].par; return p && PLAN[p].par !== undefined && /upper_arm|forearm|thigh|shin/.test(p) ? p + k.slice(-2) : p; };
+const REAL = { pelvis: .2, torso: .52, head: .3, upper_arm: .3, forearm: .27, hand: .19, thigh: .46, shin: .43, foot: .26 };   // m, if a card has no scale
+// draw order, back to front: the far (R) side darker, behind the body
+const ORDER = ['upper_arm_R', 'forearm_R', 'hand_R', 'thigh_R', 'shin_R', 'foot_R', 'pelvis', 'thigh_L', 'shin_L', 'foot_L', 'torso', 'head', 'upper_arm_L', 'forearm_L', 'hand_L'];
+const TENDONS = [   // springs across joints: [name, body a, point on a, body b, point on b] (points: fractions of length, metres sideways; +y = front for limbs)
+  ['hamstring', 'pelvis', [.2, -.06], 'shin', [-.3, -.04]], ['quad', 'pelvis', [0, .06], 'shin', [-.35, .04]],
+  ['calf', 'thigh', [.4, -.04], 'foot', [-.5, 0]], ['biceps', 'torso', [.3, -.08], 'forearm', [-.3, .03]],
+];
+
+// ---------- the cards ----------
+const NAME = { upper_arm: /upper|uarm|bicep|arm-a\b|^arm/, forearm: /fore|farm/, hand: /hand|palm|fist|grip|point|pinch|relax|open|thumb|wave|cup|claw/,
+  thigh: /thigh/, shin: /shin|calf|leg-lower|lower-leg/, foot: /foot|shoe|boot|sneak|heel|toe/, head: /head|profile|face/, torso: /torso|chest|body|jacket|shirt|vest|bodice/, pelvis: /hip|pelvis|waist/ };
+const VG = v => ({ profile: 'side', side: 'side', front: 'front', threequarter: 'front', back: 'back', threequarter_back: 'back' })[v];
+let LIB = [], BY = {}, POOL = {};
+function usable(c) {
+  const f = FIX[c.id] || {}, bad = f.bad ?? c.human?.bad; if (bad != null) return !bad;
+  if (f.slot || c.human?.slot) return true;
+  if (c.clip?.flags?.some(x => x.startsWith('looks like'))) return false;
+  if (c.slot === 'head' && (c.skin < .1 || c.h / c.w > 1.9)) return false;
+  return !NAME[c.slot] || NAME[c.slot].test(c.id.split('/').pop().toLowerCase());
+}
+const viewOf = c => VG(FIX[c.id]?.view || c.human?.view || c.view || (c.clip?.view_l_p > .8 && c.clip.view_l) || c.est_view) || 'side';
+const lab = c => Math.hypot(c.B[0] - c.A[0], c.B[1] - c.A[1]) || 1;
+const faceLeft = c => FIX[c.id]?.left ?? c.human?.left ?? (c.slot === 'foot' ? c.B[0] < c.A[0] : c.faces === 'L');
+function pools() {
+  const from = $('from').value;
+  for (const b of Object.keys(PLAN)) {
+    let p = LIB.filter(c => (FIX[c.id]?.slot || c.human?.slot || c.slot) === b && c.px_per_cm && c.q !== 'C' && usable(c) && (!from || c.character === from));
+    const side = p.filter(c => viewOf(c) === 'side');
+    POOL[b] = (side.length >= 3 ? side : p).map(c => c.id);
+  }
+}
+const dE = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+function pickCard(g, k) {   // strict: the twin's sheet, else near the parent's cloth (skin tone for heads and hands)
+  const p = POOL[base(k)]; if (!p.length) return null;
+  if (!S.strict) return pickOf(p);
+  const tw = k.endsWith('_L') ? g.cards[k.slice(0, -1) + 'R'] : k.endsWith('_R') ? g.cards[k.slice(0, -1) + 'L'] : null;
+  if (tw) { const same = p.filter(id => id.split('/')[0] === tw.split('/')[0]); if (same.length) return pickOf(same); }
+  const skin = /hand|head/.test(k), f = skin ? 'tone' : 'pal';
+  const ref = skin ? Object.values(g.cards).map(id => BY[id]).find(c => c && c.tone && /hand|head/.test(c.slot)) : BY[g.cards[parOf(k)]];
+  if (!ref?.[f]) return pickOf(p);
+  return pickOf(p.map(id => BY[id]).filter(c => c[f]).sort((a, b) => dE(a[f], ref[f]) - dE(b[f], ref[f])).slice(0, 6)).id;
+}
+
+// ---------- the genome ----------
+function randomGenome() {
+  const g = { cards: {}, scale: {}, f: rnd(.6, 1.8), joints: {}, tendons: {} };
+  for (const k of SEGS) { g.cards[k] = pickCard(g, k); g.scale[k] = rnd(.9, 1.1); }
+  for (const k of SEGS) if (PLAN[base(k)].par) {
+    const b = base(k), legs = /thigh|shin|foot/.test(b);
+    g.joints[k] = { amp: rnd(0, legs ? .5 : .3), ph: rnd(0, 2 * Math.PI), off: rnd(-.15, .15), str: rnd(.6, 1.4), kb: /thigh|foot|torso/.test(b) ? rnd(-1, 1) : 0 };
+  }
+  for (const k of SEGS) if (k.endsWith('_R') && g.joints[k]) { const l = g.joints[k.slice(0, -1) + 'L']; g.joints[k] = { ...l, ph: l.ph + Math.PI }; }   // start in anti-phase
+  for (const [n] of TENDONS) for (const s of SIDES) g.tendons[n + '_' + s] = { hz: Math.random() < .5 ? rnd(.3, 2.5) : 0, len: rnd(.9, 1.05) };
+  return g;
+}
+const copy = g => JSON.parse(JSON.stringify(g));
+function mutate(g0, rate = 1) {
+  const g = copy(g0);
+  for (const k of SEGS) {
+    if (Math.random() < .06 * rate) { g.cards[k] = pickCard(g, k); const t = k.endsWith('_L') ? k.slice(0, -1) + 'R' : null; if (t && Math.random() < .7) g.cards[t] = pickCard(g, t); }
+    if (Math.random() < .15 * rate) g.scale[k] = clamp(g.scale[k] + gauss() * .05, .8, 1.25);
+  }
+  for (const [k, j] of Object.entries(g.joints)) {
+    if (Math.random() < .25 * rate) j.amp = clamp(j.amp + gauss() * .08, 0, .9);
+    if (Math.random() < .25 * rate) j.ph += gauss() * .4;
+    if (Math.random() < .25 * rate) j.off = clamp(j.off + gauss() * .06, -.5, .5);
+    if (Math.random() < .2 * rate) j.str = clamp(j.str + gauss() * .15, .3, 2.2);
+    if (Math.random() < .2 * rate && /thigh|foot|torso/.test(k)) j.kb = clamp(j.kb + gauss() * .25, -2, 2);
+  }
+  if (Math.random() < .3 * rate) g.f = clamp(g.f + gauss() * .1, .4, 2.4);
+  for (const t of Object.values(g.tendons)) { if (Math.random() < .15 * rate) t.hz = clamp(t.hz + gauss() * .4, 0, 3); if (Math.random() < .15 * rate) t.len = clamp(t.len + gauss() * .03, .8, 1.15); }
+  return g;
+}
+function cross(a, b) {   // limb pairs and their muscles travel together
+  const g = copy(a);
+  for (const bk of Object.keys(PLAN)) if (Math.random() < .5) for (const k of SEGS.filter(k => base(k) === bk)) { g.cards[k] = b.cards[k]; g.scale[k] = b.scale[k]; if (b.joints[k]) g.joints[k] = { ...b.joints[k] }; }
+  if (Math.random() < .5) g.f = b.f;
+  for (const t of Object.keys(g.tendons)) if (Math.random() < .5) g.tendons[t] = { ...b.tendons[t] };
+  return g;
+}
+
+// ---------- genome -> a body the physics can build ----------
+function bodyOf(g) {
+  const L = {}, W = {}, M = {};
+  for (const k of SEGS) {
+    const c = BY[g.cards[k]], s = g.scale[k];
+    const l = c ? lab(c) / c.px_per_cm / 100 * s : REAL[base(k)] * s;
+    L[k] = clamp(l, .04, 1.2);
+    const w = c && c.area ? c.area / lab(c) / c.px_per_cm / 100 * s : L[k] * .3;
+    W[k] = clamp(w, .03, .6); M[k] = 200 * L[k] * W[k];   // a card 2 dm thick, 1 g/cm³
+  }
+  const v = k => L[k + '_L'] ?? L[k];
+  const hipY = .08 + v('shin') + v('thigh'), waist = hipY + .35 * L.pelvis, neck = waist + L.torso, sh = neck - .04;
+  const rest = { pelvis: [0, waist, 0, waist - L.pelvis], torso: [0, waist, 0, neck], head: [0, neck, 0, neck + L.head] };
+  for (const s of SIDES) {
+    const ua = L['upper_arm_' + s], fa = L['forearm_' + s], th = L['thigh_' + s], shn = L['shin_' + s], ft = L['foot_' + s];
+    rest['upper_arm_' + s] = [0, sh, 0, sh - ua]; rest['forearm_' + s] = [0, sh - ua, 0, sh - ua - fa]; rest['hand_' + s] = [0, sh - ua - fa, 0, sh - ua - fa - L['hand_' + s]];
+    rest['thigh_' + s] = [0, hipY, 0, hipY - th]; rest['shin_' + s] = [0, hipY - th, 0, hipY - th - shn];
+    const ay = hipY - th - shn, dx = Math.sqrt(Math.max(.0001, ft * ft - (ay - .01) ** 2));
+    rest['foot_' + s] = [0, ay, dx, .01];
+  }
+  const segs = SEGS.map(k => ({ k, L: L[k], W: W[k], m: M[k], rest: rest[k], par: parOf(k), lim: PLAN[base(k)].lim, torque: PLAN[base(k)].torque }));
+  const tendons = [];
+  for (const [n, a, pa, b, pb] of TENDONS) for (const s of SIDES) {
+    const ka = PLAN[a].par === undefined || a === 'pelvis' || a === 'torso' ? a : a + '_' + s, kb = b + '_' + s, t = g.tendons[n + '_' + s];
+    tendons.push({ a: ka, b: kb, pa: [pa[0] * L[ka], pa[1]], pb: [pb[0] * L[kb], pb[1]], hz: t.hz, len: t.len });
+  }
+  return { segs, tendons, brain: { f: g.f, joints: g.joints } };
+}
+
+// ---------- the trial to track: joint angles in side view, relative to the rest pose ----------
+function decode(d) {
+  const frames = Array.from({ length: d.n }, () => ({})), P = d.per_frame, id = Object.keys(d.a)[0], flat = d.a[id], cur = new Array(P).fill(0);
+  for (let f = 0; f < d.n; f++) { for (let i = 0; i < P; i++) cur[i] += flat[f * P + i]; const j = []; for (let i = 0; i < 26; i++) j.push([cur[i * 3] / 200, cur[i * 3 + 1] / 200, cur[i * 3 + 2] / 200]); frames[f] = { j, fwd: [cur[78] / 100, cur[79] / 100, cur[80] / 100] }; }
+  return frames;
+}
+const JI = Object.fromEntries('pelvis hipL hipR kneeL kneeR ankleL ankleR heelL heelR ballL ballR toeL toeR spineMid neckBase chest shoulderL shoulderR elbowL elbowR wristL wristR headBase head headTop nose'.split(' ').map((n, i) => [n, i]));
+const SEGJ = { torso: ['pelvis', 'neckBase'], head: ['neckBase', 'headTop'], upper_arm: ['shoulder', 'elbow'], forearm: ['elbow', 'wrist'], thigh: ['hip', 'knee'], shin: ['knee', 'ankle'], foot: ['ankle', 'toe'] };
+let TRACK = null, TRIALF = null;
+function trackOf(frames) {   // rest angles: torso up (90°), limbs down (−90°), foot about −5°; pelvis fixed as the root
+  const fw0 = frames[0].fwd, h = Math.hypot(fw0[0], fw0[2]) || 1, ax = [fw0[0] / h, fw0[2] / h];
+  const P = (j, n) => [(j[n][0] - j[0][0]) * ax[0] + (j[n][2] - j[0][2]) * ax[1], j[n][1]];
+  const angOf = (j, b, s) => { const [a, c] = SEGJ[b], na = JI[a + (/torso|head/.test(b) ? '' : s)] ?? JI[a], nc = JI[c + (/torso|head/.test(b) ? '' : s)] ?? JI[c]; const p = P(j, na), q = P(j, nc); return Math.atan2(q[1] - p[1], q[0] - p[0]); };
+  const REST = { torso: Math.PI / 2, head: Math.PI / 2, upper_arm: -Math.PI / 2, forearm: -Math.PI / 2, thigh: -Math.PI / 2, shin: -Math.PI / 2, foot: -.08, pelvis: -Math.PI / 2 };
+  const a = {};
+  const wrap = x => Math.atan2(Math.sin(x), Math.cos(x));
+  for (const k of SEGS) {
+    const b = base(k), s = k.slice(-1), p = parOf(k); if (!p || !SEGJ[b]) continue;
+    const pb = base(p);
+    a[k] = frames.map(fr => { const ca = angOf(fr.j, b, s), pa = pb === 'pelvis' ? -Math.PI / 2 : angOf(fr.j, pb, s); return wrap((ca - pa) - (REST[b] - REST[pb])); });
+  }
+  const d0 = P(frames[0].j, 0), d1 = frames[frames.length - 1].j;
+  const dist = ((d1[0][0] - frames[0].j[0][0]) * ax[0] + (d1[0][2] - frames[0].j[0][2]) * ax[1]) * (8 / (frames.length / 30));
+  return { a, fps: 30, n: frames.length, dist: Math.max(.1, dist) };
+}
+
+// ---------- workers ----------
+const NW = Math.min(8, Math.max(2, (navigator.hardwareConcurrency || 4) - 1));
+const W = Array.from({ length: NW }, () => new Worker('creature-sim.js'));
+let jobId = 0;
+function setupWorkers() { const setup = { T: 8, mode: S.mode, track: S.mode === 'track' ? TRACK : null }; for (const w of W) w.postMessage({ setup }); }
+function evaluate(pop) {
+  return new Promise(res => {
+    let next = 0, done = 0;
+    const give = w => { if (next >= pop.length) return; const i = next++, id = ++jobId; w.onmessage = e => { Object.assign(pop[i], { res: e.data }); pop[i].fit = e.data.fit + (pop[i].like ? Math.abs(e.data.fit) * .25 + .5 : 0); done++; if (done === pop.length) res(); else give(w); }; w.postMessage({ id, job: bodyOf(pop[i].g) }); };
+    W.forEach(give);
+  });
+}
+
+// ---------- evolution ----------
+const S = { mode: 'walk', strict: true, pop: [], gen: 0, hist: [], running: true, best: null };
+async function generation() {
+  const t0 = performance.now();
+  await evaluate(S.pop);
+  S.pop.sort((a, b) => b.fit - a.fit);
+  S.best = S.pop[0]; S.gen++;
+  const fits = S.pop.map(p => p.fit); S.hist.push({ best: fits[0], mean: fits.reduce((a, b) => a + b) / fits.length });
+  S.shown = S.pop.map(p => ({ ...p }));   // what the grid replays: this generation as it was judged
+  S.clock = 0;
+  $('status').textContent = `gen ${S.gen} · ${((performance.now() - t0) / 1000).toFixed(1)} s on ${NW} workers`;
+  renderSide();
+  // next generation: keep the best four and every ♥, breed the rest by tournament, a few newcomers
+  const n = S.pop.length, keep = S.pop.filter((p, i) => i < 4 || p.like).map(p => ({ g: p.g, like: p.like }));
+  const tour = () => { const a = pickOf(S.pop), b = pickOf(S.pop); return a.fit > b.fit ? a : b; };
+  const next = keep.slice(0, n);
+  while (next.length < n) next.push({ g: Math.random() < .08 ? randomGenome() : mutate(Math.random() < .6 ? cross(tour().g, tour().g) : tour().g) });
+  S.pop = next;
+}
+async function loop() { while (S.running) { await generation(); await new Promise(r => setTimeout(r, 30)); } }
+function reset() { pools(); S.pop = Array.from({ length: +$('pop').value }, () => ({ g: randomGenome() })); S.gen = 0; S.hist = []; }
+
+// ---------- drawing ----------
+const IMG = {};
+const img = c => IMG[c.id] || (IMG[c.id] = Object.assign(new Image(), { src: c.img }));
+function fit(cv) { const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1; cv.width = r.width * d; cv.height = r.height * d; const g = cv.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0); return [g, r.width, r.height]; }
+// one creature at one recorded frame: each card mapped onto its body (A at the joint end, B at the far end)
+function drawCreature(g, p, f, ox, oy, k, dim) {
+  const r = p.res; if (!r || !r.frames) return;
+  const fi = Math.min(r.frames - 1, f), nb = SEGS.length, segs = p.body || (p.body = bodyOf(p.g).segs);
+  for (const key of ORDER) {
+    const i = SEGS.indexOf(key), s = segs[i], c = BY[p.g.cards[key]], o = (fi * nb + i) * 3;
+    const x = r.rec[o], y = r.rec[o + 1], a = r.rec[o + 2], far = key.endsWith('_R');
+    g.save(); g.translate(ox + x * k, oy - y * k); g.rotate(-a);
+    if (far) g.filter = 'brightness(0.62)';
+    if (c && img(c).complete && img(c).naturalWidth) {
+      const ax = Math.atan2(c.B[1] - c.A[1], c.B[0] - c.A[0]), sc = s.L * k / lab(c);
+      g.translate(-s.L / 2 * k, 0); g.scale(sc, faceLeft(c) ? -sc : sc); g.rotate(-ax); g.globalAlpha = dim ? .35 : 1; g.drawImage(img(c), -c.A[0], -c.A[1]);
+    } else { g.fillStyle = '#c79a62'; g.fillRect(-s.L / 2 * k, -s.W / 2 * k, s.L * k, s.W * k); }
+    g.restore();
+  }
+}
+function drawGround(g, w, h, oy, k, camx) {
+  g.strokeStyle = '#3a3027'; g.lineWidth = 1; g.beginPath(); g.moveTo(0, oy); g.lineTo(w, oy); g.stroke();
+  g.fillStyle = '#5a4e44'; g.font = '9px JetBrains Mono';
+  for (let m = Math.floor((camx - w / 2 / k)); m < camx + w / 2 / k; m++) { const x = w / 2 + (m - camx) * k; g.fillRect(x, oy, 1, 5); if (k > 60) g.fillText(m + ' m', x + 2, oy + 12); }
+}
+function camOf(p, f) { const r = p.res; if (!r?.frames) return 0; const fi = Math.min(r.frames - 1, f); return r.rec[(fi * SEGS.length) * 3]; }
+let lastT = 0;
+function frame(t) {
+  const dt = Math.min(.1, (t - lastT) / 1000); lastT = t; S.clock = (S.clock || 0) + dt;
+  const F = Math.floor(S.clock * 20);
+  // the best, large
+  const [g, w, h] = fit($('big'));
+  g.clearRect(0, 0, w, h);
+  if (S.shown?.length) {
+    const p = S.shown[0], fr = F % Math.max(1, p.res?.frames || 1), cx = camOf(p, fr), k = h / 2.3, oy = h - 18;
+    drawGround(g, w, h, oy, k, cx);
+    drawCreature(g, p, fr, w / 2 - cx * k, oy, k);
+    if (S.mode === 'track' && TRIALF) {   // the trial's own skeleton, ghosted, at the creature's pelvis
+      const tf = TRIALF[Math.floor(fr / 20 * 30) % TRIALF.length], fw = TRIALF[0].fwd, hh = Math.hypot(fw[0], fw[2]) || 1, P = n => [w / 2 + ((tf.j[n][0] - tf.j[0][0]) * fw[0] / hh + (tf.j[n][2] - tf.j[0][2]) * fw[2] / hh) * k, oy - tf.j[n][1] * k];
+      g.strokeStyle = '#5fd0ffaa'; g.lineWidth = 3; g.lineCap = 'round';
+      for (const [a, b] of [[0, 13], [13, 14], [14, 24], [16, 18], [18, 20], [1, 3], [3, 5], [5, 11], [17, 19], [19, 21], [2, 4], [4, 6], [6, 12]]) { const q = P(a), z = P(b); g.beginPath(); g.moveTo(...q); g.lineTo(...z); g.stroke(); }
+    }
+    const r = p.res; g.fillStyle = '#9a8d7e'; g.font = '11px JetBrains Mono';
+    g.fillText(`gen ${S.gen} best · ${r.dist.toFixed(2)} m · upright ${r.up.toFixed(1)} s${r.fell >= 0 ? ' · fell at ' + r.fell.toFixed(1) + ' s' : ''}${r.err != null ? ' · angle error ' + (r.err * 57.3).toFixed(0) + '°' : ''}`, 10, 16);
+  }
+  // the whole generation
+  const [q, gw, gh] = fit($('grid'));
+  q.clearRect(0, 0, gw, gh);
+  const N = S.shown?.length || 0, cols = N <= 12 ? 6 : N <= 24 ? 8 : 12, rows = Math.ceil(N / cols), cw = gw / cols, ch = gh / Math.max(1, rows);
+  S.cell = { cols, cw, ch };
+  for (let i = 0; i < N; i++) {
+    const p = S.shown[i], x = (i % cols) * cw, y = Math.floor(i / cols) * ch, fr = F % Math.max(1, p.res?.frames || 1), cx = camOf(p, fr), k = ch / 2.4, oy = y + ch - 10;
+    q.save(); q.beginPath(); q.rect(x + 1, y + 1, cw - 2, ch - 2); q.clip();
+    q.fillStyle = i === 0 ? '#1d1712' : '#141009'; q.fillRect(x, y, cw, ch);
+    q.strokeStyle = '#3a3027'; q.beginPath(); q.moveTo(x, oy); q.lineTo(x + cw, oy); q.stroke();
+    drawCreature(q, p, fr, x + cw / 2 - cx * k, oy, k);
+    q.fillStyle = p.res?.fell >= 0 ? '#ef6a5a' : '#8fd16a'; q.font = '10px JetBrains Mono'; q.fillText(p.fit.toFixed(2), x + 4, y + 12);
+    if (S.pop.find(n => n.g === p.g)?.like || p.like) { q.fillStyle = '#ef6a8a'; q.fillText('♥', x + cw - 14, y + 13); }
+    q.restore();
+  }
+  requestAnimationFrame(frame);
+}
+$('grid').addEventListener('click', e => {
+  if (!S.cell || !S.shown) return; const r = $('grid').getBoundingClientRect(), i = Math.floor((e.clientY - r.top) / S.cell.ch) * S.cell.cols + Math.floor((e.clientX - r.left) / S.cell.cw);
+  const p = S.shown[i]; if (!p) return; p.like = !p.like;
+  const n = S.pop.find(x => x.g === p.g); if (n) n.like = p.like; else if (p.like) S.pop[S.pop.length - 1] = { g: p.g, like: true };   // a ♥ joins the next generation
+});
+function renderSide() {
+  const [g, w, h] = fit($('chart')); g.clearRect(0, 0, w, h);
+  const H = S.hist, all = H.flatMap(x => [x.best, x.mean]), lo = Math.min(...all), hi = Math.max(...all);
+  for (const [key, col] of [['mean', '#9a8d7e88'], ['best', '#8fd16a']]) {
+    g.strokeStyle = col; g.lineWidth = 1.5; g.beginPath();
+    H.forEach((x, i) => { const px = 4 + i / Math.max(1, H.length - 1) * (w - 8), py = 4 + (1 - (x[key] - lo) / ((hi - lo) || 1)) * (h - 8); i ? g.lineTo(px, py) : g.moveTo(px, py); }); g.stroke();
+  }
+  const b = S.best, r = b.res, mass = bodyOf(b.g).segs.reduce((t, s) => t + s.m, 0);
+  $('stat').innerHTML = `<span title="fitness">★ <b>${b.fit.toFixed(2)}</b></span><span title="distance">→ <b>${r.dist.toFixed(2)} m</b></span><span title="seconds upright">⏱ <b>${r.up.toFixed(1)} s</b></span><span title="mass from the cards' painted area">⚖ <b>${mass.toFixed(0)} kg</b></span><span title="oscillator frequency">∿ <b>${b.g.f.toFixed(2)} Hz</b></span>`;
+  // genome: card thumbs + per-joint dials
+  const [q, gw] = fit($('genes')); q.clearRect(0, 0, gw, 420);
+  SEGS.forEach((k, i) => {
+    const c = BY[b.g.cards[k]], x = (i % 3) * (gw / 3), y = Math.floor(i / 3) * 82;
+    if (c && img(c).complete) { const s = Math.min(48 / c.w, 60 / c.h); q.drawImage(img(c), x + 4, y + 4, c.w * s, c.h * s); }
+    q.fillStyle = '#9a8d7e'; q.font = '9px JetBrains Mono'; q.fillText(k.replace('_', ' '), x + 4, y + 76);
+    const j = b.g.joints[k]; if (!j) return;
+    const cx = x + 72, cy = y + 30;
+    q.strokeStyle = '#2a221c'; q.lineWidth = 2; q.beginPath(); q.arc(cx, cy, 14, 0, 7); q.stroke();
+    q.strokeStyle = '#e7a35a'; q.lineWidth = 3; q.beginPath(); q.arc(cx, cy, 14, -Math.PI / 2 + j.off - j.amp, -Math.PI / 2 + j.off + j.amp); q.stroke();
+    q.strokeStyle = '#5fd0ff'; q.lineWidth = 1.5; q.beginPath(); q.moveTo(cx, cy); q.lineTo(cx + Math.cos(j.ph) * 12, cy + Math.sin(j.ph) * 12); q.stroke();
+    q.fillStyle = '#2a221c'; q.fillRect(x + 56, y + 50, 32, 4); q.fillStyle = '#8fd16a'; q.fillRect(x + 56, y + 50, 32 * j.str / 2.2, 4);
+  });
+}
+
+// ---------- boot ----------
+(async () => {
+  [LIB] = await Promise.all([fetch('library.json').then(r => r.json())]);
+  for (const c of LIB) { const s = FIX[c.id]?.slot || c.human?.slot; if (s) c.slot = s; }
+  BY = Object.fromEntries(LIB.map(c => [c.id, c]));
+  const chars = [...new Set(LIB.map(c => c.character).filter(Boolean))].sort();
+  for (const ch of chars) $('from').insertAdjacentHTML('beforeend', `<option>${ch}</option>`);
+  const trials = await fetch('trials.json').then(r => r.json());
+  $('trial').innerHTML = trials.filter(t => t.actors.length === 1).map(t => `<option value="${t.file}">${t.id} ${t.title}</option>`).join('');
+  const loadTrial = async () => { TRIALF = decode(await fetch($('trial').value).then(r => r.json())); TRACK = trackOf(TRIALF); };
+  await loadTrial();
+  $('strict').classList.toggle('on', S.strict);
+  $('mode').onchange = async e => { S.mode = e.target.value; setupWorkers(); };
+  $('trial').onchange = async () => { await loadTrial(); setupWorkers(); };
+  $('from').onchange = () => { reset(); };
+  $('pop').onchange = () => reset();
+  $('strict').onclick = () => { S.strict = !S.strict; $('strict').classList.toggle('on', S.strict); reset(); };
+  $('reset').onclick = () => reset();
+  $('run').onclick = () => { S.running = !S.running; $('run').classList.toggle('on', S.running); $('run').textContent = S.running ? '❚❚ pause' : '▶ evolve'; if (S.running) loop(); };
+  $('run').textContent = '❚❚ pause';
+  setupWorkers(); reset(); requestAnimationFrame(frame); loop();
+})();
+</script>
+</body>
+</html>

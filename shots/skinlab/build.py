@@ -146,7 +146,8 @@ def analyse(path, slot):
     skin = a & (r > g) & (g > b) & (r - b > 30) & (r > 80)
     cloth = a & ~skin
     px = im[..., :3][cloth] if cloth.sum() > 50 else im[..., :3][a]
-    out = {'pal': [round(float(v), 1) for v in np.median(rgb2lab(px[::max(1, len(px) // 4000)]), 0)], 'skin': round(float(skin.sum() / max(1, a.sum())), 2)}
+    out = {'pal': [round(float(v), 1) for v in np.median(rgb2lab(px[::max(1, len(px) // 4000)]), 0)], 'skin': round(float(skin.sum() / max(1, a.sum())), 2),
+           'area': int(a.sum())}   # painted pixels: with px_per_cm, the card's true area, hence its mass
     if skin.sum() > 50:   # skin tone, so a borrowed hand or head matches the body it goes on
         sp = im[..., :3][skin]; out['tone'] = [round(float(v), 1) for v in np.median(rgb2lab(sp[::max(1, len(sp) // 3000)]), 0)]
     if slot != 'head':
