@@ -156,7 +156,7 @@ def apply_labels(part, answers):
     pts = defaultdict(list)
     for a in answers:
         t = a.get('t')
-        if t in ('pivot', 'edit-point') and a.get('point') and a.get('xy'):
+        if t in ('pivot', 'edit-point', 'site') and a.get('point') and a.get('xy'):
             pts[a['point']].append(a['xy'])
     for k, L in pts.items():
         xy = np.median(np.array(L, float), 0).round(1).tolist()
@@ -207,10 +207,19 @@ def main():
     cat = rigs.catalog()
     labels, lsum = load_labels(lab_dir)
     choices = defaultdict(list)
+    rests = defaultdict(dict)        # char -> view -> latest Rest-rig answer (cards, draw order, near/far)
     for L in labels.values():
         for a in L:
             if a.get('t') == 'choice' and a.get('char'):
                 choices[a['char']].append(a)
+    for f in sorted(glob.glob(os.path.join(lab_dir, '*.json'))):
+        try: A = json.load(open(f)).get('answers', [])
+        except Exception: continue
+        for a in A:
+            if a.get('t') == 'rest' and a.get('char') and a.get('view') and isinstance(a.get('v'), dict):
+                old = rests[a['char']].get(a['view'])
+                if not old or a.get('ts', '') >= old.get('ts', ''):
+                    rests[a['char']][a['view']] = dict(a['v'], ts=a.get('ts', ''))
     try:
         import cards
         known_shape = {}
@@ -274,7 +283,11 @@ def main():
         for a in sorted(choices.get(key, []), key=lambda a: a.get('ts', '')):
             if a['part'] in have and a.get('slot'):
                 defaults.setdefault(a.get('view') or 'front', {})[a['slot']] = a['part']
-        doc = {'key': key, 'character': ch['character'], 'costume': ch['costume'], 'name': ch['name'],
+        rest = {v: r for v, r in rests.get(key, {}).items()}
+        for v, r in rest.items():          # the Rest rig's card picks are that view's defaults too
+            for slot, pid in (r.get('cards') or {}).items():
+                if pid in {p['id'] for p in out_parts}: defaults.setdefault(v, {})[slot] = pid
+        doc = {'key': key, 'rest': rest, 'character': ch['character'], 'costume': ch['costume'], 'name': ch['name'],
                'body': ch['body'], 'stature_cm': ch['stature_cm'], 'ref_sheet': ch.get('ref_sheet'),
                'spec': SPEC_OF.get(key), 'defaults': defaults, 'parts': out_parts}
         fn = key.replace('/', '__') + '.json'
@@ -308,6 +321,7 @@ def spec_defaults(key, have):
             base, _, side = k.partition('_')
             slot = SLOT_OF_SPEC.get(base)
             if not slot or pid not in have: continue
+            if side and side not in ('L', 'R'): continue     # foot_heelup / foot_toeup are replacement cards
             if side in ('L', 'R'):
                 d[slot + '_' + side] = pid
             elif slot in ('torso', 'hip'):

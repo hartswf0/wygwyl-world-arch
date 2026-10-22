@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pose Markers Batch</title>
+<link rel="icon" href="../../favicon.svg">
+<style>:root{--bg:#0d0b0a;--ink:#efe6da;--dim:#9a8d7e;--acc:#e7a35a}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 ui-monospace,monospace;padding:16px}h1{font:600 16px ui-monospace,monospace;color:var(--acc)}#log{white-space:pre-wrap;color:var(--dim)}</style>
+</head><body>
+<h1>Pose markers — MoveNet over every pose target</h1>
+<p>Runs MoveNet (shots/rig/movenet.js, in this browser) on each target in poses/targets.json, then turns the keypoints into labelled markers (snapped to the painted brads). Driven headless by <b>shots/rig/markers.mjs</b>, which writes poses/markers.json; or press Run and copy the result.</p>
+<button id="run">Run</button> <span id="st"></span>
+<pre id="log"></pre>
+<script src="pose-core.js"></script>
+<script src="movenet-run.js"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const load = src => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+async function runAll(only) {
+  const T = (await (await fetch('poses/targets.json')).json()).targets.filter(t => !only || t.id.includes(only));
+  await RigMoveNet.ensure();
+  const out = {}; const t0 = performance.now();
+  for (let i = 0; i < T.length; i++) {
+    const t = T[i], im = await load('../' + t.img); if (!im) { out[t.id] = { fail: 'image' }; continue; }
+    const mk = RigMoveNet.maskOf(im), bb = t.bbox, pad = 6;
+    const crop = [Math.max(0, bb[0] - pad), Math.max(0, bb[1] - pad), Math.min(mk.W, bb[2] + pad) - Math.max(0, bb[0] - pad), Math.min(mk.H, bb[3] + pad) - Math.max(0, bb[1] - pad)];
+    // two backgrounds: the drawings are dark suits on transparency; keep the more confident read
+    const a = await RigMoveNet.detect(im, '#8a8a8a', crop), b = await RigMoveNet.detect(im, '#e8e2d8', crop);
+    const conf = k => k.reduce((s, p) => s + p[2], 0) / k.length, kps = conf(a) >= conf(b) ? a : b;
+    out[t.id] = { kps: kps.map(p => p.map(v => +v.toFixed(3))), mean_conf: +conf(kps).toFixed(3), markers: PoseCore.prefillMarkers(kps, t.brads, mk.m, mk.W, mk.H, t.bbox) };
+    $('st').textContent = `${i + 1}/${T.length} · ${((performance.now() - t0) / 1000).toFixed(0)} s`;
+    $('log').textContent += `${t.id}  conf ${out[t.id].mean_conf}\n`;
+  }
+  return { about: 'MoveNet keypoints and labelled markers per pose target (shots/rig/markers.html via markers.mjs). markers: {name: [x, y, weight, source, confidence]} in target px.', backend: tf.getBackend(), built: new Date().toISOString(), targets: out };
+}
+$('run').onclick = async () => { const r = await runAll(); window.__result = r; $('log').textContent += '\ndone: ' + Object.keys(r.targets).length + ' targets'; };
+window.runAll = runAll;
+</script>
+</body></html>

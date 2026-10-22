@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pose Lab</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--acc:#e7a35a;--sel:#5fd0ff;--arch:#d98bb0;--plane:#7fd3c4;--act:#b9c46a;--bad:#ff6b5a;--warn:#f3c04f;--ok:#7fd38a;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
+header{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
+header a,select.btn,.btn{font:12px var(--mono);color:var(--dim);background:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;text-decoration:none;cursor:pointer}
+select.btn{max-width:260px}
+header a:hover,.btn:hover{color:var(--card);border-color:var(--card)}
+.btn.on{color:#1a120a;background:var(--card);border-color:var(--card)}
+.btn.go{color:#120c08;background:var(--acc);border-color:var(--acc)}
+.btn:disabled{opacity:.35;cursor:default}
+h1{font:400 26px 'Permanent Marker',cursive;margin:0 8px 0 0}
+h1 span{color:var(--acc)}
+h2{font:400 20px 'Permanent Marker',cursive;margin:0;color:var(--card)}
+h3{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:8px 0 6px}
+.sp{flex:1}
+.crumbs{display:flex;gap:4px;align-items:center;font:12px var(--mono);color:var(--dim)}
+.crumbs b{color:var(--acc);font-weight:600;cursor:pointer}
+.crumbs i{font-style:normal;opacity:.5}
+.hint{font:11px var(--mono);color:var(--dim)}
+.tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tools label{font:11px var(--mono);color:var(--dim);display:flex;gap:4px;align-items:center}
+section.lv{padding:12px 16px}
+/* atlas */
+#atlasHead{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+#hist{display:flex;align-items:flex-end;gap:2px;height:44px}
+#hist div{width:16px;background:var(--card);border-radius:2px 2px 0 0;position:relative}
+#hist div span{position:absolute;bottom:-14px;left:0;font:8px var(--mono);color:var(--dim)}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.at{border:2px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;overflow:hidden;position:relative}
+.at .im{height:170px;display:grid;place-items:center;background:#000;position:relative}
+.at img{max-width:100%;max-height:170px;object-fit:contain}
+.at .tint{position:absolute;inset:0;mix-blend-mode:color;opacity:.55;pointer-events:none}
+.at .sc{position:absolute;right:4px;top:4px;font:600 11px var(--mono);color:#120c08;padding:0 5px;border-radius:3px}
+.at .lb{font:10.5px var(--mono);color:var(--ink);padding:4px 6px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.at .wy{font:9.5px var(--mono);color:var(--dim);padding:0 6px 5px;height:28px;overflow:hidden}
+/* pose */
+#poseGrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.25fr);gap:12px}
+@media (max-width:1100px){#poseGrid{grid-template-columns:1fr}}
+.pane{position:relative;background:#050403;border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:none}
+.pane canvas{position:absolute;inset:0;width:100%;height:100%}
+.pane .lbl{position:absolute;left:8px;top:6px;font:600 11px var(--mono);color:var(--dim);pointer-events:none;text-transform:uppercase;letter-spacing:.1em}
+.pane .rd{position:absolute;left:8px;bottom:6px;font:10.5px var(--mono);color:var(--dim);pointer-events:none;white-space:pre}
+#tPane{height:620px}
+#views{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#views .pane{height:306px}
+#score{display:flex;gap:10px;flex-wrap:wrap;font:12px var(--mono);margin:8px 0}
+#score span{padding:2px 8px;border:1px solid var(--line);border-radius:999px}
+#alts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.alt{border:1px solid var(--line);border-radius:6px;background:#050403;cursor:pointer;position:relative;height:190px}
+.alt.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.alt canvas{width:100%;height:150px;display:block}
+.alt div{font:9.5px/1.25 var(--mono);color:var(--dim);padding:2px 4px}
+#history{display:flex;gap:4px;overflow-x:auto;padding:4px 0}
+#history canvas{flex:0 0 auto;width:64px;height:84px;border:1px solid var(--line);border-radius:4px;cursor:pointer;background:#050403}
+#history canvas.on{border-color:var(--acc)}
+#flags{font:11px var(--mono);color:var(--dim);margin-top:4px;min-height:16px}
+#flags b{color:var(--bad);font-weight:600}
+.legend{font:10.5px var(--mono);color:var(--dim)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin:0 3px 0 8px}
+/* loop */
+#loopBox{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--panel);margin-top:12px}
+#loopKeys{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.lk{font:11px var(--mono);border:1px solid var(--line);border-radius:6px;padding:3px 6px;color:var(--ink);background:#0f0c0a}
+.lk button{font:10px var(--mono);background:none;border:0;color:var(--dim);cursor:pointer}
+#chrono{width:100%;height:150px;background:#050403;border:1px solid var(--line);border-radius:8px;display:block}
+#loopRep{font:11px var(--mono);color:var(--dim);white-space:pre-wrap;margin-top:6px}
+/* joint */
+#jointGrid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px}
+@media (max-width:1000px){#jointGrid{grid-template-columns:1fr}}
+#jPane{height:560px}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:3px 10px;font:12px var(--mono)}
+.kv i{color:var(--dim);font-style:normal}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--card);color:#1a120a;font:600 13px Inter;padding:6px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:10}
+#busy{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;place-items:center;z-index:9;font:600 14px var(--mono);color:var(--acc)}
+</style>
+</head>
+<body>
+<header>
+  <a href="index.html">← Rig Builder</a>
+  <h1>Pose <span>Lab</span></h1>
+  <select class="btn" id="char" aria-label="Character"></select>
+  <div class="crumbs" id="crumbs"></div>
+  <span class="sp"></span>
+  <label class="hint"><input type="checkbox" id="sandbox"> sandbox (no joint limits)</label>
+  <label class="hint" title="Use the parts, scales and flips you chose in the Rig Builder (this browser) instead of the defaults the batch used"><input type="checkbox" id="useBuilder"> my Builder rig</label>
+  <a id="contact" href="#" target="_blank">Contact sheet →</a>
+</header>
+
+<section class="lv" id="atlas">
+  <div id="atlasHead">
+    <h2>Pose atlas</h2>
+    <div id="hist" title="score distribution"></div>
+    <span class="hint" id="atlasStat"></span>
+    <span class="sp"></span>
+    <label class="hint">sort <select class="btn" id="sort"><option value="sheet">by sheet</option><option value="asc">worst first</option><option value="desc">best first</option></select></label>
+  </div>
+  <p class="hint">Every drawn pose figure for this character, tinted by how well the rig snapped onto it (red = poor, green = good). Click one to open it in four views.</p>
+  <div id="grid"></div>
+</section>
+
+<section class="lv" id="posev" hidden>
+  <div id="poseGrid">
+    <div>
+      <div class="tools"><h2 id="tTitle"></h2><span class="sp"></span>
+        <label>ghost <input type="range" id="ghost" min="0" max="1" step=".05" value=".55"></label>
+        <label><input type="checkbox" id="showRig" checked> rig</label>
+      </div>
+      <div class="pane" id="tPane"><canvas id="tc"></canvas><div class="lbl" id="tLbl">target</div><div class="rd" id="tRd"></div></div>
+      <div id="score"></div>
+      <div class="tools">
+        <button class="btn go" id="bSolve" title="Re-solve from here with the current brad assignments">Re-solve</button>
+        <button class="btn" id="bAuto" title="Search all views and seed poses again (slow, ~10 s)">Auto-solve</button>
+        <button class="btn" id="bRematch" title="Re-assign brads to the nearest joints, then re-solve">Re-match</button>
+        <button class="btn" id="bReset">Batch result</button>
+        <button class="btn" id="bKey" title="Use this pose as a loop key">+ loop key</button>
+        <button class="btn" id="bExport">Export keyframe</button>
+        <span class="sp"></span><span class="legend"><i style="background:#5fd0ff"></i>target brad<i style="background:#ff6b5a"></i>rig joint<i style="background:#7fd38a"></i>&lt;4 cm</span>
+      </div>
+      <p class="hint">Drag a cyan brad to move it (the rig re-solves live); drop it on a different rig joint to re-assign it. Shift-click a brad to drop it; double-click the figure to add one. Click a rig joint to zoom in.</p>
+      <h3>Alternative solves — click to pick</h3>
+      <div id="alts"></div>
+      <h3>History</h3>
+      <div id="history"></div>
+    </div>
+    <div>
+      <div id="views">
+        <div class="pane"><canvas id="v0"></canvas><div class="lbl">front</div><div class="rd" id="r0"></div></div>
+        <div class="pane"><canvas id="v1"></canvas><div class="lbl">profile</div><div class="rd" id="r1"></div></div>
+        <div class="pane"><canvas id="v2"></canvas><div class="lbl">three-quarter</div><div class="rd" id="r2"></div></div>
+        <div class="pane"><canvas id="v3"></canvas><div class="lbl">back</div><div class="rd" id="r3"></div></div>
+      </div>
+      <div class="tools" style="margin-top:6px">
+        <label><input type="checkbox" id="wOn" checked> weight</label>
+        <label><input type="checkbox" id="arcOn" checked> joint limits</label>
+        <span class="legend">plumb line = centre of mass · polygon = support · bars = load per foot</span>
+      </div>
+      <div id="flags"></div>
+      <div id="loopBox">
+        <div class="tools"><h3 style="margin:0">Loop</h3><span class="sp"></span>
+          <button class="btn" id="lWalk" title="Contact / passing / contact / passing from the Bolas bank walk (T001), fitted to this rig">keys from the anim walk</button>
+          <button class="btn" id="lTargets" title="Use the drawn walk poses of this character as keys">keys from walk targets</button>
+          <button class="btn" id="lClear">clear</button>
+        </div>
+        <div id="loopKeys"></div>
+        <div class="tools">
+          <label>frames / key <input class="btn" type="number" id="lN" value="8" min="3" max="48" style="width:58px"></label>
+          <label><input type="checkbox" id="lMirror" checked> 2 keys → mirror into a full cycle</label>
+          <button class="btn go" id="lBuild">Build loop</button>
+          <button class="btn" id="lPlay" disabled>▶ Play</button>
+          <input type="range" id="lF" min="0" max="0" value="0" style="flex:1;min-width:120px" disabled>
+          <label><input type="checkbox" id="lOnion" checked> onion</label>
+        </div>
+        <canvas id="chrono" height="150"></canvas>
+        <div id="loopRep"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="lv" id="jointv" hidden>
+  <div id="jointGrid">
+    <div><div class="tools"><h2 id="jTitle"></h2><span class="sp"></span><button class="btn" id="jPrev">← joint</button><button class="btn" id="jNext">joint →</button><button class="btn" id="jBack">back to pose</button></div>
+      <div class="pane" id="jPane"><canvas id="jc"></canvas><div class="rd" id="jRd"></div></div></div>
+    <div><h3>This joint</h3><div class="kv" id="jInfo"></div>
+      <h3>Re-assign the target brad</h3><div class="tools" id="jAssign"></div>
+      <p class="hint">The target brad is what the drawing shows; the rig brad is where the solved rig puts this joint. The gap is measured at the rig's true scale. The pivot is the card brad the child part turns on.</p></div>
+  </div>
+</section>
+
+<div id="busy">solving…</div>
+<div id="toast"></div>
+<script src="pose-core.js"></script>
+<script>
+'use strict';
+const C = PoseCore, $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+function toast(t) { const e = $('toast'); e.textContent = t; e.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => e.style.opacity = 0, 1800); }
+const VIEWS = [0, 90, 45, 180];
+const SCOL = s => s == null ? '#555' : `hsl(${clamp((s - .3) / .45, 0, 1) * 120},70%,52%)`;
+
+// ───────────────────────── state ─────────────────────────
+let PIDX, DOC, POS, S, key, level = 'atlas';
+let T = null, tgt = null, pr = null, z = null, psi = 0, alts = [], altOn = 0, hist = [], histOn = -1, jointSel = null;
+let loop = { keys: [], frames: null, f: 0, playing: false };
+const imgs = {};
+function img(src) { if (!imgs[src]) { const im = new Image(); im.src = src; im.onload = () => redraw(); im.onerror = () => console.warn('missing', src); imgs[src] = im; } return imgs[src]; }
+const partImg = p => img('../' + p.img);
+
+// ───────────────────────── loading ─────────────────────────
+async function init() {
+  PIDX = await (await fetch('poses/index.json')).json();
+  const RIDX = await (await fetch('data/index.json')).json();
+  const name = Object.fromEntries(RIDX.characters.map(c => [c.key, c.name + ' · ' + c.costume]));
+  const chars = PIDX.characters.filter(c => c.n).sort((a, b) => (a.character !== 'poet/red_black_sunglasses') - (b.character !== 'poet/red_black_sunglasses') || b.n - a.n);
+  $('char').innerHTML = chars.map(c => `<option value="${esc(c.character)}">${esc(name[c.character] || c.character)} (${c.n} poses)</option>`).join('');
+  const q = new URLSearchParams(location.search);
+  const k = q.get('char') || store.get('posel.char', chars[0].character);
+  $('char').value = chars.some(c => c.character === k) ? k : chars[0].character;
+  await loadChar($('char').value);
+  if (q.get('target')) { const r = POS.targets.find(t => t.id.includes(q.get('target'))); if (r) await openTarget(r); }
+  window.addEventListener('resize', () => redraw());
+}
+async function loadChar(k) {
+  key = k; store.set('posel.char', k);
+  const file = k.replace('/', '__');
+  [DOC, POS] = await Promise.all([fetch('data/' + file + '.json').then(r => r.json()), fetch('poses/' + file + '.json').then(r => r.json())]);
+  C.prep(DOC);
+  rebuildSkeleton();
+  $('contact').href = 'poses/' + file + '.contact.webp';
+  loop = { keys: [], frames: null, f: 0, playing: false }; renderLoopKeys();
+  renderAtlas(); setLevel('atlas');
+}
+function builderRig() {
+  if (!$('useBuilder').checked) return null;
+  const out = {};
+  for (const v of ['front', 'profile', 'back']) { const r = store.get('rigb.rig.' + key + '.' + v, null); if (r && r.slots) out[v] = r.slots; }
+  return Object.keys(out).length ? out : null;
+}
+function rebuildSkeleton() { const br = builderRig(); S = C.skeleton(DOC, br && br.front ? br.front : null); }
+const cardsFor = vk => C.cardsFor(DOC, vk, builderRig());
+
+// ───────────────────────── levels ─────────────────────────
+function setLevel(l) {
+  level = l;
+  $('atlas').hidden = l !== 'atlas'; $('posev').hidden = l !== 'pose'; $('jointv').hidden = l !== 'joint';
+  const c = ['<b data-l="atlas">atlas</b>'];
+  if (T) c.push('<i>›</i>', `<b data-l="pose">${esc(shortName(T))}</b>`);
+  if (l === 'joint' && jointSel) c.push('<i>›</i>', `<b data-l="joint">${esc(C.JOINT_WORD[jointSel])}</b>`);
+  $('crumbs').innerHTML = c.join('');
+  redraw();
+}
+$('crumbs').addEventListener('click', e => { const b = e.target.closest('[data-l]'); if (b && (b.dataset.l !== 'pose' || T)) setLevel(b.dataset.l); });
+const shortName = t => (t.label || t.id.split('/').pop()).replace(/\s+/g, ' ').slice(0, 42);
+
+// ───────────────────────── atlas ─────────────────────────
+function renderAtlas() {
+  const L = POS.targets.slice();
+  const so = $('sort').value;
+  if (so === 'asc') L.sort((a, b) => (a.score ?? -1) - (b.score ?? -1)); else if (so === 'desc') L.sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
+  $('grid').innerHTML = L.map(t => `<div class="at" data-id="${esc(t.id)}" style="border-color:${SCOL(t.score)}">
+    <div class="im"><img loading="lazy" src="../${esc(t.img)}" alt=""><div class="tint" style="background:${SCOL(t.score)}"></div><span class="sc" style="background:${SCOL(t.score)}">${t.score == null ? '—' : t.score.toFixed(2)}</span></div>
+    <div class="lb">${esc(shortName(t))}</div><div class="wy">${esc(t.score == null ? (t.fail || 'unsolved') : (t.solves[0].view + ' · IoU ' + t.solves[0].iou.toFixed(2) + ' · ' + (t.solves[0].mean_err_cm ?? '–') + ' cm · ' + (t.why || '')))}</div></div>`).join('');
+  const sc = L.map(t => t.score).filter(v => v != null), bins = [0, .2, .3, .4, .5, .6, .7, .8, 1.01], h = bins.slice(0, -1).map((b, i) => sc.filter(v => v >= b && v < bins[i + 1]).length), mx = Math.max(1, ...h);
+  $('hist').innerHTML = h.map((n, i) => `<div style="height:${4 + 40 * n / mx}px;background:${SCOL((bins[i] + bins[i + 1]) / 2)}" title="${bins[i]}–${bins[i + 1]}: ${n}"><span>${bins[i]}</span></div>`).join('');
+  const med = sc.slice().sort((a, b) => a - b)[sc.length >> 1];
+  $('atlasStat').textContent = `${L.length} poses · ${sc.length} solved · median score ${med != null ? med.toFixed(2) : '—'} · ${L.length - sc.length} unsolved`;
+}
+$('sort').onchange = renderAtlas;
+$('grid').addEventListener('click', e => { const d = e.target.closest('.at'); if (d) openTarget(POS.targets.find(t => t.id === d.dataset.id)); });
+$('char').onchange = () => loadChar($('char').value);
+
+// ───────────────────────── target ─────────────────────────
+function maskOf(im) {
+  const W = im.naturalWidth, H = im.naturalHeight, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0);
+  const d = g.getImageData(0, 0, W, H).data, m = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) m[i] = d[i * 4 + 3] > 100 ? 1 : 0;
+  // keep the largest island (labels and fx fragments drop out), as solve.py
+  const lab = new Int32Array(W * H); let best = 0, bestN = 0, id = 0; const st = new Int32Array(W * H);
+  for (let i = 0; i < W * H; i++) if (m[i] && !lab[i]) { id++; let sp = 0, n = 0; st[sp++] = i; lab[i] = id;
+    while (sp) { const j = st[--sp]; n++; const x = j % W, y = (j / W) | 0;
+      if (x > 0 && m[j - 1] && !lab[j - 1]) { lab[j - 1] = id; st[sp++] = j - 1; } if (x < W - 1 && m[j + 1] && !lab[j + 1]) { lab[j + 1] = id; st[sp++] = j + 1; }
+      if (y > 0 && m[j - W] && !lab[j - W]) { lab[j - W] = id; st[sp++] = j - W; } if (y < H - 1 && m[j + W] && !lab[j + W]) { lab[j + W] = id; st[sp++] = j + W; } }
+    if (n > bestN) { bestN = n; best = id; } }
+  for (let i = 0; i < W * H; i++) m[i] = lab[i] === best ? 1 : 0;
+  return { m, W, H };
+}
+async function openTarget(rec) {
+  T = rec; jointSel = null;
+  const im = img('../' + rec.img);
+  if (!im.complete || !im.naturalWidth) await new Promise(r => { im.addEventListener('load', r, { once: true }); im.addEventListener('error', r, { once: true }); });
+  const mk = maskOf(im);
+  tgt = { id: rec.id, img: im, brads: rec.brads.map(b => b.slice()), cx: rec.cx, floor: rec.floor, mask: mk.m, W: mk.W, H: mk.H, label: rec.label };
+  alts = (rec.solves || []).map(s => fromSolve(s));
+  hist = []; histOn = -1;
+  if (alts.length) pick(0, 'batch solve'); else { psi = 0; pr = C.problem(S, tgt, 0, rec.scale_prior.px_per_cm, rec.scale_prior.sigma_log, { sandbox: $('sandbox').checked }); z = seedZ(); push('no batch solve'); }
+  $('tTitle').textContent = shortName(rec);
+  setLevel('pose');
+}
+function fromSolve(s) {
+  const zz = C.fromParams(s.params, s.scale_px_per_cm, T.scale_prior.px_per_cm);
+  return { z: zz, psi: s.psi, match: s.match.map(([j, bi]) => [bi, C.JOINTS.indexOf(j)]), view: s.view, labels: s.labels, score: s.score, iou: s.iou, err: s.err_cm };
+}
+function seedZ() { const zz = new Float64Array(C.NP + 1); zz[1] = -(S.thighL + S.shinL + S.heel[1] + 1); return zz; }
+function pick(i, note) {
+  const a = alts[i]; if (!a) return;
+  altOn = i; psi = a.psi; z = Float64Array.from(a.z);
+  pr = C.problem(S, tgt, psi, T.scale_prior.px_per_cm, T.scale_prior.sigma_log, { sandbox: $('sandbox').checked });
+  pr.match = a.match.map(m => m.slice());
+  measure(); push(note || ('alternative ' + (i + 1)));
+  renderAlts();
+}
+
+// IoU: the rig cards rendered in target px against the target's silhouette
+const offc = document.createElement('canvas'), offg = offc.getContext('2d', { willReadFrequently: true });
+function rigAlpha(zz, ps) {
+  offc.width = tgt.W; offc.height = tgt.H; offg.setTransform(1, 0, 0, 1, 0, 0); offg.clearRect(0, 0, tgt.W, tgt.H);
+  const s = T.scale_prior.px_per_cm * Math.exp(zz[C.NP]), J = C.fk(S, zz);
+  for (const c of C.placeCards(DOC, J, ps, zz[0], zz[1], cardsFor(C.viewKey(ps)))) {
+    const im = partImg(c.p); if (!im.complete || !im.naturalWidth) continue; const M = c.M;
+    offg.setTransform(s * M[0], s * M[1], s * M[2], s * M[3], s * M[4] + tgt.cx, s * M[5] + tgt.floor); offg.drawImage(im, 0, 0);
+  }
+  const d = offg.getImageData(0, 0, tgt.W, tgt.H).data; let I = 0, U = 0;
+  for (let i = 0, n = tgt.W * tgt.H; i < n; i++) { const a = d[i * 4 + 3] > 100, b = tgt.mask[i]; if (a && b) I++; if (a || b) U++; }
+  return U ? I / U : 0;
+}
+let SC = null;
+function measure() {
+  const e = C.errors(pr, z), iou = rigAlpha(z, psi);
+  SC = Object.assign(C.scoreOf(iou, e), { iou, e });
+  $('score').innerHTML = `<span style="color:${SCOL(SC.score)}">score ${SC.score.toFixed(2)}</span><span>IoU ${iou.toFixed(2)}</span><span>mean ${SC.mean.toFixed(1)} cm</span>
+    <span style="color:${SC.flagged.length ? 'var(--bad)' : 'var(--ok)'}">${SC.flagged.length ? '> 4 cm: ' + SC.flagged.map(j => C.JOINT_WORD[j]).join(', ') : 'no joint over 4 cm'}</span>
+    <span class="hint">no brad: ${SC.unmatched.map(j => C.JOINT_WORD[j]).join(', ') || '—'}</span><span class="hint">${C.viewKey(psi)}${psi && Math.abs(psi) !== 180 ? (psi > 0 ? ' facing right' : ' facing left') : ''} · ${(T.scale_prior.px_per_cm * Math.exp(z[C.NP])).toFixed(2)} px/cm</span>`;
+}
+
+// ───────────────────────── solving ─────────────────────────
+function reSolve(iters = 40, note) {
+  pr.sandbox = $('sandbox').checked; pr.setStretch(false);
+  for (const n of C.KN) z[C.PI[n]] = 0;
+  z = C.solve(pr, z, 'B', iters).z;
+  if (note !== false) { measure(); push(note || 're-solve'); }
+}
+const SEEDS = { stand: {}, step: { hpLf: 25, hpRf: -15, knR: 15, shLf: -15, shRf: 15 }, crouch: { hpLf: 105, hpRf: 105, knL: 125, knR: 125, tf: 35, anL: 20, anR: 20, oy: 40, shLf: 40, shRf: 40 },
+  kneel: { hpLf: 90, knL: 90, hpRf: 0, knR: 95, tf: 15, oy: 30 }, sit: { hpLf: 90, hpRf: 90, knL: 90, knR: 90, oy: 40 }, arms_up: { shLf: 165, shRf: 165 }, arms_out: { shLb: 85, shRb: 85, elL: 20, elR: 20 }, lie: { pitch: 85, oy: 75 } };
+function viewsFor(t) {
+  const lab = ((t.label || '') + ' ' + t.id.split('/').pop()).toLowerCase().replace(/-/g, ' ');
+  if (/threequarter back|three quarter back|rear three/.test(lab)) return [135, -135, 180];
+  if (/threequarter|three quarter|3\/4/.test(lab)) return [45, -45];
+  if (/profile|side view/.test(lab)) return [90, -90];
+  if (/back view|rear view|from behind/.test(lab)) return [180, 135, -135];
+  if (/front/.test(lab)) return [0, 45, -45];
+  return [0, 90, -90, 45, -45, 180];
+}
+async function autoSolve() {
+  $('busy').style.display = 'grid';
+  await new Promise(r => setTimeout(r, 30));
+  const s0 = T.scale_prior.px_per_cm, sig = T.scale_prior.sigma_log, bb = T.bbox, lying = (bb[2] - bb[0]) > 1.6 * (bb[3] - bb[1]);
+  const seeds = lying ? ['lie'] : ['stand', 'step', 'crouch', 'kneel', 'sit', 'arms_up', 'arms_out'];
+  const cands = [];
+  for (const ps of viewsFor(T)) {
+    const p = C.problem(S, tgt, ps, s0, sig, { sandbox: $('sandbox').checked }); p.setStretch(true);
+    for (const sd of seeds) {
+      const zz = seedZ(); for (const k in SEEDS[sd]) zz[C.PI[k]] = SEEDS[sd][k] + (k === 'oy' ? zz[1] : 0);
+      if (sd === 'lie') { if (C.viewKey(ps) === 'front' || C.viewKey(ps) === 'back') { zz[C.PI.pitch] = 0; zz[C.PI.roll] = 85; } zz[1] = -12; }
+      const r = C.solve(p, zz, 'A', 30); cands.push({ cost: r.cost, ps, sd, z: r.z, p });
+      $('busy').textContent = `solving… ${C.viewKey(ps)} ${ps} · ${sd}`; await new Promise(r_ => setTimeout(r_, 0));
+    }
+  }
+  cands.sort((a, b) => a.cost - b.cost);
+  const fin = [];
+  for (const c of cands.slice(0, 6)) {
+    let zz = c.z; const p = c.p;
+    for (let it = 0; it < 2; it++) { C.doMatch(p, zz, it ? 8 : 12); zz = C.solve(p, zz, 'B', 40).z; }
+    const match = p.match.map(m => m.slice());
+    p.setStretch(false); for (const n of C.KN) zz[C.PI[n]] = 0; zz = C.solve(p, zz, 'B', 30).z; p.setStretch(true);
+    pr = p; psi = c.ps; const e = C.errors(p, zz), iou = rigAlpha(zz, c.ps), sc = C.scoreOf(iou, e);
+    fin.push({ z: zz, psi: c.ps, match, view: C.viewKey(c.ps), score: sc.score, iou, err: e, labels: { seed: c.sd } });
+    $('busy').textContent = `matching… ${fin.length}/6`; await new Promise(r_ => setTimeout(r_, 0));
+  }
+  fin.sort((a, b) => b.score - a.score);
+  alts = fin.slice(0, 4);
+  $('busy').style.display = 'none';
+  pick(0, 'auto-solve');
+}
+$('bSolve').onclick = () => { reSolve(50); redraw(); };
+$('bAuto').onclick = () => autoSolve();
+$('bRematch').onclick = () => { C.doMatch(pr, z, 9); reSolve(50, 're-match'); redraw(); };
+$('bReset').onclick = () => { if (!T) return; tgt.brads = T.brads.map(b => b.slice()); alts = (T.solves || []).map(fromSolve); pick(0, 'batch solve'); redraw(); };
+$('sandbox').onchange = () => { if (pr) { pr.sandbox = $('sandbox').checked; pr.setStretch(false); reSolve(40, $('sandbox').checked ? 'sandbox on' : 'limits back'); redraw(); } };
+$('useBuilder').onchange = () => { rebuildSkeleton(); if (pr) { pr.S = S; reSolve(40, 'builder rig'); } redraw(); };
+$('bExport').onclick = () => {
+  const o = { character: key, target: T.id, view: C.viewKey(psi), psi, params: C.toParams(z), scale_px_per_cm: +(T.scale_prior.px_per_cm * Math.exp(z[C.NP])).toFixed(4),
+    match: pr.match.map(([b, j]) => [C.JOINTS[j], tgt.brads[b]]), score: SC && { score: +SC.score.toFixed(3), iou: +SC.iou.toFixed(3), err_cm: Object.fromEntries(Object.entries(SC.e).map(([k, v]) => [k, +v.toFixed(2)])) },
+    skeleton: 'shots/rig/pose-core.js (body frame X = actor left, Y down, Z forward; degrees)' };
+  const b = new Blob([JSON.stringify(o, null, 1)], { type: 'application/json' }), a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = 'pose.' + T.id.replace(/[\/]/g, '__') + '.json'; a.click(); toast('keyframe downloaded');
+};
+
+// ───────────────────────── history ─────────────────────────
+function push(note) {
+  hist = hist.slice(0, histOn + 1);
+  hist.push({ z: Float64Array.from(z), psi, match: pr.match.map(m => m.slice()), brads: tgt.brads.map(b => b.slice()), note, score: SC ? SC.score : null });
+  if (hist.length > 40) hist.shift();
+  histOn = hist.length - 1; renderHist();
+}
+function restore(i) {
+  const h = hist[i]; if (!h) return; histOn = i;
+  z = Float64Array.from(h.z); psi = h.psi; tgt.brads = h.brads.map(b => b.slice());
+  pr = C.problem(S, tgt, psi, T.scale_prior.px_per_cm, T.scale_prior.sigma_log, { sandbox: $('sandbox').checked }); pr.match = h.match.map(m => m.slice());
+  measure(); renderHist(); redraw();
+}
+function renderHist() {
+  $('history').innerHTML = hist.map((h, i) => `<canvas data-i="${i}" width="64" height="84" class="${i === histOn ? 'on' : ''}" title="${esc(h.note)}${h.score != null ? ' · ' + h.score.toFixed(2) : ''}"></canvas>`).join('');
+  hist.forEach((h, i) => { const c = $('history').children[i], g = c.getContext('2d'); sticksThumb(g, h.z, h.psi, 64, 84, h.score); });
+}
+$('history').addEventListener('click', e => { const c = e.target.closest('canvas'); if (c) restore(+c.dataset.i); });
+window.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && level !== 'atlas') { e.preventDefault(); restore(Math.max(0, histOn - 1)); }
+  if (e.key === 'Escape') setLevel(level === 'joint' ? 'pose' : 'atlas');
+});
+
+// ───────────────────────── drawing helpers ─────────────────────────
+function fitCanvas(c) { const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); return [g, r.width, r.height, dpr]; }
+// draw the rig's cards: V = {k: screen px per cm, x0, y0: screen of world (0,0)}
+function drawCards(g, dpr, V, J, ps, ox, oy, Tw, alpha = 1, cards) {
+  const L = C.placeCards(DOC, J, ps, ox, oy, cards || cardsFor(C.viewKey(ps)), Tw);
+  g.save(); g.globalAlpha = alpha;
+  for (const c of L) {
+    const im = partImg(c.p); if (!im.complete || !im.naturalWidth) continue; const M = c.M, k = V.k;
+    g.setTransform(dpr * k * M[0], dpr * k * M[1], dpr * k * M[2], dpr * k * M[3], dpr * (V.x0 + k * M[4]), dpr * (V.y0 + k * M[5]));
+    if (c.far) g.filter = 'brightness(0.6)';
+    g.drawImage(im, 0, 0);
+    g.filter = 'none';
+  }
+  g.restore(); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return L;
+}
+const BONES = [['pelvis', 'waist'], ['waist', 'neck'], ['neck', 'top'], ['neck', 'shL'], ['neck', 'shR'], ['shL', 'elL'], ['elL', 'wrL'], ['wrL', 'tipL'], ['shR', 'elR'], ['elR', 'wrR'], ['wrR', 'tipR'],
+  ['pelvis', 'hipL'], ['pelvis', 'hipR'], ['hipL', 'knL'], ['knL', 'anL'], ['anL', 'heelL'], ['heelL', 'toeL'], ['hipR', 'knR'], ['knR', 'anR'], ['anR', 'heelR'], ['heelR', 'toeR']];
+function sticks(g, V, J, ps, ox, oy, Tw, col, w = 1.5) {
+  const P = n => { const q = C.project(J[n], ps, ox, oy, Tw); return [V.x0 + V.k * q[0], V.y0 + V.k * q[1]]; };
+  g.strokeStyle = col; g.lineWidth = w; g.beginPath();
+  for (const [a, b] of BONES) { const p = P(a), q = P(b); g.moveTo(p[0], p[1]); g.lineTo(q[0], q[1]); }
+  g.stroke();
+}
+function sticksThumb(g, zz, ps, W, H, sc) {
+  g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
+  const J = C.fk(S, zz), k = H / 230, V = { k, x0: W / 2, y0: H - 8 };
+  const low = Math.max(...['heelL', 'heelR', 'toeL', 'toeR', 'knL', 'knR', 'pelvis'].map(n => J[n][1]));
+  sticks(g, V, J, ps, 0, -low, null, '#c79a62', 1.2);
+  if (sc != null) { g.fillStyle = SCOL(sc); g.fillRect(0, H - 4, W * clamp(sc, 0, 1), 4); }
+}
+function groundT(J) {   // drop the figure onto the floor: the lowest body point touches Y = 0
+  let m = -1e9; for (const n in J) if (n !== '_F') m = Math.max(m, J[n][1]);
+  return [0, -m, 0];
+}
+
+// ───────────────────────── target pane ─────────────────────────
+let TV = null, tdrag = null;
+function drawTarget() {
+  const c = $('tc'), [g, W, H, dpr] = fitCanvas(c);
+  g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
+  if (!tgt) return;
+  const s = T.scale_prior.px_per_cm * Math.exp(z[C.NP]);
+  // world cm -> screen: image px * q, world = (px - cx)/s
+  const q = Math.min(W / tgt.W, H / tgt.H) * .9, ox = (W - tgt.W * q) / 2, oy = (H - tgt.H * q) / 2;
+  TV = { q, ox, oy, s, k: q * s, x0: ox + q * tgt.cx, y0: oy + q * tgt.floor };
+  // floor
+  g.strokeStyle = '#3a2e24'; g.beginPath(); g.moveTo(0, TV.y0 + .5); g.lineTo(W, TV.y0 + .5); g.stroke();
+  g.globalAlpha = +$('ghost').value; g.drawImage(tgt.img, ox, oy, tgt.W * q, tgt.H * q); g.globalAlpha = 1;
+  const J = C.fk(S, z);
+  if ($('showRig').checked) drawCards(g, dpr, TV, J, psi, z[0], z[1], null, .78);
+  // matches
+  const jp = C.jointsPx(pr, z).map(p => [ox + p[0] * q, oy + p[1] * q]);
+  const e = C.errors(pr, z), matched = new Map(pr.match.map(([b, j]) => [b, j]));
+  for (const [b, j] of pr.match) { const B = tgt.brads[b], P = jp[j]; g.strokeStyle = e[C.JOINTS[j]] > 4 ? '#ff6b5a' : '#7fd38a'; g.lineWidth = 2; g.beginPath(); g.moveTo(ox + B[0] * q, oy + B[1] * q); g.lineTo(P[0], P[1]); g.stroke(); }
+  tgt.brads.forEach((B, i) => { g.strokeStyle = matched.has(i) ? '#5fd0ff' : 'rgba(95,208,255,.45)'; g.lineWidth = 2; g.beginPath(); g.arc(ox + B[0] * q, oy + B[1] * q, Math.max(5, B[2] * q), 0, 7); g.stroke(); });
+  g.font = '600 10px JetBrains Mono, monospace';
+  jp.forEach((P, j) => { const n = C.JOINTS[j]; g.fillStyle = n in e ? (e[n] > 4 ? '#ff6b5a' : '#7fd38a') : '#ff6b5a'; g.beginPath(); g.arc(P[0], P[1], n === jointSel ? 6 : 4, 0, 7); g.fill();
+    if (n in e && e[n] > 4 || n === jointSel) { g.fillStyle = '#fff'; g.fillText(C.JOINT_WORD[n] + (n in e ? ' ' + e[n].toFixed(1) + ' cm' : ''), P[0] + 7, P[1] - 5); } });
+  $('tLbl').textContent = `target · ${C.viewKey(psi)}${psi && Math.abs(psi) !== 180 ? (psi > 0 ? ' →' : ' ←') : ''}`;
+  $('tRd').textContent = `${tgt.brads.length} brads (${tgt.brads.filter(b => /brass/.test(b[3])).length} brass) · scale prior ${T.scale_prior.px_per_cm.toFixed(2)} px/cm (${T.scale_prior.why})`;
+}
+function tHit(x, y) {
+  const q = TV.q; let bi = -1, bd = 12;
+  tgt.brads.forEach((B, i) => { const d = Math.hypot(TV.ox + B[0] * q - x, TV.oy + B[1] * q - y); if (d < Math.max(bd, B[2] * q + 3) && d < bd + 6) { bd = d; bi = i; } });
+  const jp = C.jointsPx(pr, z); let ji = -1, jd = 10;
+  jp.forEach((P, j) => { const d = Math.hypot(TV.ox + P[0] * q - x, TV.oy + P[1] * q - y); if (d < jd) { jd = d; ji = j; } });
+  return { bi, ji };
+}
+const tc = $('tc');
+tc.addEventListener('pointerdown', e => {
+  if (!tgt) return; const r = tc.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, h = tHit(x, y);
+  if (h.bi >= 0 && e.shiftKey) { dropBrad(h.bi); return; }
+  if (h.bi >= 0) { tdrag = { bi: h.bi, moved: false, t0: performance.now() }; tc.setPointerCapture(e.pointerId); return; }
+  if (h.ji >= 0) { openJoint(C.JOINTS[h.ji]); return; }
+});
+tc.addEventListener('pointermove', e => {
+  if (!tdrag) return; const r = tc.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  const B = tgt.brads[tdrag.bi]; B[0] = (x - TV.ox) / TV.q; B[1] = (y - TV.oy) / TV.q; B[3] = 'hand'; tdrag.moved = true;
+  if (performance.now() - (tdrag.last || 0) > 40) { tdrag.last = performance.now(); reSolve(6, false); }
+  drawTarget(); drawViews();
+});
+tc.addEventListener('pointerup', e => {
+  if (!tdrag) return; const d = tdrag; tdrag = null;
+  if (!d.moved) return;
+  // dropped on a rig joint: re-assign the brad to that joint
+  const r = tc.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, jp = C.jointsPx(pr, z);
+  let ji = -1, jd = 14; jp.forEach((P, j) => { const dd = Math.hypot(TV.ox + P[0] * TV.q - x, TV.oy + P[1] * TV.q - y); if (dd < jd) { jd = dd; ji = j; } });
+  const cur = pr.match.find(m => m[0] === d.bi);
+  if (ji >= 0 && (!cur || cur[1] !== ji)) { assign(d.bi, ji); reSolve(50, `brad → ${C.JOINT_WORD[C.JOINTS[ji]]}`); toast('re-assigned to ' + C.JOINT_WORD[C.JOINTS[ji]]); }
+  else reSolve(50, 'moved a brad');
+  redraw();
+});
+tc.addEventListener('dblclick', e => {
+  if (!tgt) return; const r = tc.getBoundingClientRect(), x = (e.clientX - r.left - TV.ox) / TV.q, y = (e.clientY - r.top - TV.oy) / TV.q;
+  tgt.brads.push([+x.toFixed(1), +y.toFixed(1), 5, 'hand']); C.doMatch(pr, z, 9); reSolve(40, 'added a brad'); redraw();
+});
+function assign(bi, ji) { pr.match = pr.match.filter(([b, j]) => b !== bi && j !== ji); pr.match.push([bi, ji]); }
+function dropBrad(bi) { tgt.brads.splice(bi, 1); pr.match = pr.match.filter(([b]) => b !== bi).map(([b, j]) => [b > bi ? b - 1 : b, j]); reSolve(40, 'dropped a brad'); redraw(); }
+
+// ───────────────────────── alternatives ─────────────────────────
+function renderAlts() {
+  $('alts').innerHTML = alts.map((a, i) => `<div class="alt${i === altOn ? ' on' : ''}" data-i="${i}"><canvas width="200" height="150"></canvas><div><b style="color:${SCOL(a.score)}">${a.score != null ? a.score.toFixed(2) : '—'}</b> · ${esc(a.view || C.viewKey(a.psi))}<br>${a.labels ? esc(['elbowL', 'elbowR'].map(k => a.labels[k] ? k.slice(-1) + ' elbow ' + a.labels[k] : '').filter(Boolean).join(' · ') + (a.labels.near_leg ? ' · near leg ' + a.labels.near_leg : '') + (a.labels.seed ? ' · ' + a.labels.seed : '')) : ''}</div></div>`).join('') || '<p class="hint">No alternatives.</p>';
+  [...$('alts').children].forEach((d, i) => { const c = d.querySelector('canvas'); if (!c) return; const [g, W, H, dpr] = fitCanvas(c); const a = alts[i];
+    const s = T.scale_prior.px_per_cm * Math.exp(a.z[C.NP]), q = Math.min(W / tgt.W, H / tgt.H) * .92, ox = (W - tgt.W * q) / 2, oy = (H - tgt.H * q) / 2;
+    g.fillStyle = '#050403'; g.fillRect(0, 0, W, H); g.globalAlpha = .35; g.drawImage(tgt.img, ox, oy, tgt.W * q, tgt.H * q); g.globalAlpha = 1;
+    drawCards(g, dpr, { k: q * s, x0: ox + q * tgt.cx, y0: oy + q * tgt.floor }, C.fk(S, a.z), a.psi, a.z[0], a.z[1], null, .8); });
+}
+$('alts').addEventListener('click', e => { const d = e.target.closest('.alt'); if (d) { pick(+d.dataset.i); redraw(); } });
+
+// ───────────────────────── four views + weight ─────────────────────────
+function arcCol(v, lo, hi) { const c = 1 - Math.min(v - lo, hi - v) / ((hi - lo) / 2); return c > .85 ? '#ff6b5a' : c > .6 ? '#f3c04f' : '#7fd38a'; }
+function drawPane(i, frame) {
+  const ps = VIEWS[i], c = $('v' + i), [g, W, H, dpr] = fitCanvas(c);
+  g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
+  const zz = frame ? frame.z : z; if (!zz) return;
+  const J = frame ? frame.J : C.fk(S, zz), Tw = frame ? frame.T : groundT(J);
+  const cam = frame ? frame.cam : [0, 0, 0];
+  const k = H / 225, V = { k, x0: W / 2 - k * C.project(cam, ps)[0], y0: H - 34 };
+  // floor
+  g.strokeStyle = '#3a2e24'; g.beginPath(); g.moveTo(0, V.y0 + .5); g.lineTo(W, V.y0 + .5); g.stroke();
+  const FP = p => { const q = C.project([p[0], 0, p[1]], ps); return [V.x0 + k * q[0], V.y0 - k * .22 * q[2]]; };   // floor plane, oblique
+  const w = C.weight(J, Tw, frame && frame.win);
+  if ($('wOn').checked && w.support.length) { g.fillStyle = w.balanced ? 'rgba(127,211,196,.22)' : 'rgba(255,107,90,.28)'; g.strokeStyle = w.balanced ? '#7fd3c4' : '#ff6b5a'; g.beginPath(); w.support.forEach((p, j) => { const q = FP(p); j ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); g.fill(); g.stroke(); }
+  // onion skin
+  if (frame && $('lOnion').checked && loop.frames) for (const d of [12, 8, 4]) { const fr = loop.frames[(loop.f - d + loop.frames.length) % loop.frames.length]; sticks(g, V, fr.J, ps, 0, 0, fr.T, `rgba(199,154,98,${.5 - d / 30})`, 1.2); }
+  // pins + slide streaks
+  if (frame && frame.pins) for (const pn of frame.pins) { const q = FP([pn.x, pn.z]); g.fillStyle = pn.slide > .6 ? '#ff6b5a' : '#e7a35a'; g.beginPath(); g.arc(q[0], q[1], 3.5, 0, 7); g.fill();
+    if (pn.prev && pn.slide > .05) { const p0 = FP([pn.prev.x, pn.prev.z]); g.strokeStyle = pn.slide > .6 ? '#ff6b5a' : 'rgba(231,163,90,.6)'; g.lineWidth = 2; g.beginPath(); g.moveTo(p0[0], p0[1]); g.lineTo(q[0], q[1]); g.stroke(); } }
+  drawCards(g, dpr, V, J, ps, 0, 0, Tw, 1);
+  if ($('wOn').checked) {
+    const cq = C.project(w.com, ps), cs = [V.x0 + k * cq[0], V.y0 + k * cq[1]], fq = FP([w.com[0], w.com[2]]);
+    g.strokeStyle = w.balanced ? '#7fd3c4' : '#ff6b5a'; g.setLineDash([4, 3]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(cs[0], cs[1]); g.lineTo(fq[0], fq[1]); g.stroke(); g.setLineDash([]);
+    g.fillStyle = g.strokeStyle; g.beginPath(); g.arc(cs[0], cs[1], 5, 0, 7); g.fill(); g.fillStyle = '#050403'; g.beginPath(); g.arc(cs[0], cs[1], 2, 0, 7); g.fill();
+    g.fillStyle = g.strokeStyle; g.beginPath(); g.moveTo(fq[0] - 5, fq[1]); g.lineTo(fq[0] + 5, fq[1]); g.lineTo(fq[0], fq[1] - 6); g.fill();
+    // force plates
+    const bw = 10, bh = 40;
+    [['L', W - 34], ['R', W - 18]].forEach(([sd, x]) => { g.strokeStyle = '#3a2e24'; g.strokeRect(x, 8, bw, bh); g.fillStyle = '#e7a35a'; const f = w.load[sd]; g.fillRect(x, 8 + bh * (1 - f), bw, bh * f); g.fillStyle = '#9a8d7e'; g.font = '9px JetBrains Mono, monospace'; g.fillText(sd, x + 2, 58); });
+  }
+  if ($('arcOn').checked) for (const jn of C.JOINTS) {
+    const dof = C.JOINT_DOF[jn], v = zz[C.PI[dof]], lim = $('sandbox').checked ? [-180, 180] : C.LIM[dof]; if (!lim) continue;
+    const q = C.project(J[jn], ps, 0, 0, Tw), x = V.x0 + k * q[0], y = V.y0 + k * q[1];
+    const a0 = -Math.PI / 2 - Math.PI * .75, span = Math.PI * 1.5, f = clamp((v - lim[0]) / (lim[1] - lim[0]), 0, 1);
+    g.lineWidth = 2; g.strokeStyle = 'rgba(255,255,255,.15)'; g.beginPath(); g.arc(x, y, 6, a0, a0 + span); g.stroke();
+    g.strokeStyle = arcCol(v, lim[0], lim[1]); g.beginPath(); g.arc(x, y, 6, a0, a0 + span * f); g.stroke();
+  }
+  $('r' + i).textContent = `${w.air ? 'airborne' : w.balanced ? 'balanced' : 'OFF BALANCE'} · L ${(w.load.L * 100).toFixed(0)}% R ${(w.load.R * 100).toFixed(0)}%${w.restOn.length ? ' · rests on ' + w.restOn.join(', ') : ''}`;
+  return w;
+}
+function drawViews(frame) {
+  let w; for (let i = 0; i < 4; i++) { const r = drawPane(i, frame); if (i === 0) w = r; }
+  if (!w) return;
+  const lim = [];
+  const zz = frame ? frame.z : z;
+  if (zz && !$('sandbox').checked) for (const n in C.LIM) { if (C.KN.includes(n)) continue; const v = zz[C.PI[n]], L = C.LIM[n]; if (1 - Math.min(v - L[0], L[1] - v) / ((L[1] - L[0]) / 2) > .9) lim.push(n); }
+  const fl = (frame && frame.flags ? frame.flags : []).concat(w.flags);
+  $('flags').innerHTML = `${w.air ? 'airborne' : w.balanced ? '<span style="color:var(--plane)">centre of mass over the support</span>' : '<b>centre of mass outside the support polygon</b>'}${fl.filter(f => !/centre of mass/.test(f)).map(f => ' · <b>' + esc(f) + '</b>').join('')}${lim.length ? ' · at a joint limit: ' + lim.join(', ') : ''}`;
+}
+
+// ───────────────────────── joint zoom ─────────────────────────
+function openJoint(j) { jointSel = j; setLevel('joint'); renderJoint(); }
+function renderJoint() {
+  const j = jointSel, ji = C.JOINTS.indexOf(j); if (ji < 0) return;
+  $('jTitle').textContent = C.JOINT_WORD[j] + ' · ' + shortName(T);
+  const c = $('jc'), [g, W, H, dpr] = fitCanvas(c);
+  g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
+  const s = T.scale_prior.px_per_cm * Math.exp(z[C.NP]), jp = C.jointsPx(pr, z)[ji], m = pr.match.find(([b, jj]) => jj === ji), B = m ? tgt.brads[m[0]] : null;
+  const cx_ = B ? (B[0] + jp[0]) / 2 : jp[0], cy_ = B ? (B[1] + jp[1]) / 2 : jp[1];
+  const R = 22 * s, q = Math.min(W, H) / (2 * R);           // 44 cm window
+  const ox = W / 2 - cx_ * q, oy = H / 2 - cy_ * q;
+  g.globalAlpha = .8; g.drawImage(tgt.img, ox, oy, tgt.W * q, tgt.H * q); g.globalAlpha = 1;
+  const J = C.fk(S, z), V = { k: q * s, x0: ox + q * tgt.cx, y0: oy + q * tgt.floor };
+  const L = drawCards(g, dpr, V, J, psi, z[0], z[1], null, .45);
+  // card pivots at this joint
+  const P = [ox + jp[0] * q, oy + jp[1] * q];
+  if (B) { const Bp = [ox + B[0] * q, oy + B[1] * q]; g.strokeStyle = '#5fd0ff'; g.lineWidth = 3; g.beginPath(); g.arc(Bp[0], Bp[1], Math.max(8, B[2] * q), 0, 7); g.stroke();
+    g.strokeStyle = '#fff'; g.setLineDash([5, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(Bp[0], Bp[1]); g.lineTo(P[0], P[1]); g.stroke(); g.setLineDash([]);
+    const gap = Math.hypot(B[0] - jp[0], B[1] - jp[1]) / s; g.fillStyle = gap > 4 ? '#ff6b5a' : '#7fd38a'; g.font = '600 16px JetBrains Mono, monospace'; g.fillText(gap.toFixed(1) + ' cm', (Bp[0] + P[0]) / 2 + 10, (Bp[1] + P[1]) / 2 - 8); }
+  g.fillStyle = '#ff6b5a'; g.beginPath(); g.arc(P[0], P[1], 7, 0, 7); g.fill();
+  // 1 cm grid ticks
+  g.strokeStyle = 'rgba(255,255,255,.18)'; for (let i = -20; i <= 20; i += 5) { const x = W / 2 + i * s * q; g.beginPath(); g.moveTo(x, H - 10); g.lineTo(x, H - (i % 10 ? 14 : 20)); g.stroke(); }
+  g.fillStyle = '#9a8d7e'; g.font = '10px JetBrains Mono, monospace'; g.fillText('5 cm ticks', 8, H - 22);
+  const dof = C.JOINT_DOF[j], v = z[C.PI[dof]], lim = C.LIM[dof];
+  const owner = { neck: 'head', waist: 'torso', shL: 'upper_arm_L', shR: 'upper_arm_R', elL: 'forearm_L', elR: 'forearm_R', wrL: 'hand_L', wrR: 'hand_R', hipL: 'thigh_L', hipR: 'thigh_R', knL: 'shin_L', knR: 'shin_R', anL: 'shoe_L', anR: 'shoe_R' }[j];
+  const card = L.find(c => c.slot === owner);
+  const e = C.errors(pr, z);
+  $('jInfo').innerHTML = `<i>target brad</i><span>${B ? `${B[0].toFixed(0)}, ${B[1].toFixed(0)} px · ${esc(B[3])}` : 'none assigned'}</span>
+    <i>rig brad</i><span>${jp[0].toFixed(0)}, ${jp[1].toFixed(0)} px</span>
+    <i>gap</i><span style="color:${(e[j] || 0) > 4 ? 'var(--bad)' : 'var(--ok)'}">${j in e ? e[j].toFixed(2) + ' cm' : '—'}</span>
+    <i>pivot card</i><span>${card ? esc(card.p.id) : '—'}</span>
+    <i>pivot point</i><span>${card ? esc(JSON.stringify(C.pt(card.p, { upper_arm: 'pivot', forearm: 'pivot', thigh: 'pivot', shin: 'pivot', hand: 'wrist', shoe: 'ankle', head: 'neck', torso: 'waist' }[card.cls] || 'pivot').map(Math.round))) + ' · ' + esc((card.p.src || {})[{ hand: 'wrist', shoe: 'ankle', head: 'neck', torso: 'waist' }[card.cls] || 'pivot'] || 'default') : ''}</span>
+    <i>${esc(dof)}</i><span>${v.toFixed(1)}° (limit ${lim[0]}…${lim[1]}${$('sandbox').checked ? ', lifted' : ''})</span>`;
+  $('jAssign').innerHTML = tgt.brads.map((b, i) => { const mm = pr.match.find(x => x[0] === i); return `<button class="btn${m && m[0] === i ? ' on' : ''}" data-b="${i}">brad ${i}${mm ? ' (' + C.JOINT_WORD[C.JOINTS[mm[1]]] + ')' : ''}</button>`; }).join('') + `<button class="btn" data-b="-1">no brad</button>`;
+  $('jRd').textContent = `rig brad (red) · target brad (cyan) · ${C.viewKey(psi)} view`;
+}
+$('jAssign').addEventListener('click', e => { const b = e.target.closest('[data-b]'); if (!b) return; const bi = +b.dataset.b, ji = C.JOINTS.indexOf(jointSel);
+  if (bi < 0) pr.match = pr.match.filter(([_, j]) => j !== ji); else assign(bi, ji); reSolve(50, `${C.JOINT_WORD[jointSel]} → brad ${bi}`); renderJoint(); });
+$('jPrev').onclick = () => { jointSel = C.JOINTS[(C.JOINTS.indexOf(jointSel) + C.JOINTS.length - 1) % C.JOINTS.length]; setLevel('joint'); renderJoint(); };
+$('jNext').onclick = () => { jointSel = C.JOINTS[(C.JOINTS.indexOf(jointSel) + 1) % C.JOINTS.length]; setLevel('joint'); renderJoint(); };
+$('jBack').onclick = () => setLevel('pose');
+
+// ───────────────────────── loops ─────────────────────────
+function renderLoopKeys() {
+  $('loopKeys').innerHTML = loop.keys.map((k, i) => `<span class="lk">${i + 1}. ${esc(k.label)} <button data-del="${i}">✕</button></span>`).join('') || '<span class="hint">Add 2–4 key poses: “+ loop key” on a solved pose, or take them from the anim walk / walk targets.</span>';
+}
+$('loopKeys').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (b) { loop.keys.splice(+b.dataset.del, 1); renderLoopKeys(); } });
+function keyZ(zz) { const o = Float64Array.from(zz); o[0] = 0; o[1] = 0; o[C.NP] = 0; for (const n of C.KN) o[C.PI[n]] = 0; return o; }
+$('bKey').onclick = () => { if (loop.keys.length >= 4) loop.keys.shift(); loop.keys.push({ z: keyZ(z), label: shortName(T) }); renderLoopKeys(); toast('loop key added'); };
+$('lClear').onclick = () => { loop.keys = []; loop.frames = null; renderLoopKeys(); $('lPlay').disabled = $('lF').disabled = true; drawChrono(); };
+$('lWalk').onclick = () => {
+  const w = POS.walk; if (!w) { toast('no anim walk in this pose file (run solve.py)'); return; }
+  loop.keys = w.keys.map(k => ({ z: keyZ(C.fromParams(k.params)), label: `${k.label} (F${k.f})`, f: k.f })); $('lMirror').checked = false;
+  $('lN').value = Math.max(3, Math.round((w.keys[1].f - w.keys[0].f))); renderLoopKeys(); buildLoop();
+};
+$('lTargets').onclick = () => {
+  const W_ = POS.targets.filter(t => /walk|step|stride/i.test(t.label + ' ' + t.id) && t.solves && t.solves.length).sort((a, b) => b.score - a.score).slice(0, 2);
+  if (!W_.length) { toast('no solved walk targets for this character'); return; }
+  loop.keys = W_.map(t => ({ z: keyZ(C.fromParams(t.solves[0].params)), label: shortName(t) })); $('lMirror').checked = true; renderLoopKeys(); buildLoop();
+};
+$('lBuild').onclick = () => buildLoop();
+const FEET = ['heel', 'ball', 'toe'];
+function plantedFeet(J, Tw) { const out = new Set(); for (const sd of ['L', 'R']) if (FEET.some(k => J[k + sd][1] + Tw[1] > -2.5)) out.add(sd); return out; }
+function buildLoop() {
+  if (loop.keys.length < 2) { toast('needs at least two keys'); return; }
+  let K = loop.keys.map(k => Float64Array.from(k.z));
+  if (K.length === 2 && $('lMirror').checked) K = [K[0], K[1], C.mirror(K[0]), C.mirror(K[1])];
+  const per = Math.max(3, +$('lN').value || 8), N = K.length * per;
+  // each key grounded: lowest foot point on the floor; which feet are planted at the key
+  const KJ = K.map(zz => C.fk(S, zz)), KT = KJ.map(J => { let m = -1e9; for (const sd of ['L', 'R']) for (const k of FEET) m = Math.max(m, J[k + sd][1]); return -m; });
+  const KP = KJ.map((J, i) => plantedFeet(J, [0, KT[i], 0]));
+  const legP = sd => ['hp' + sd + 'f', 'hp' + sd + 'b', 'kn' + sd, 'an' + sd].map(n => C.PI[n]);
+  const frames = []; let Tw = [0, KT[0], 0]; const pins = {}; let vel = [0, 0, 0];
+  for (let pass = 0; pass < 2; pass++) for (let f = 0; f < N; f++) {
+    const ki = Math.floor(f / per), t = (f % per) / per, a = K[ki], b = K[(ki + 1) % K.length];
+    const zi = Float64Array.from(a, (v, i) => v + (b[i] - v) * t), tyi = KT[ki] + (KT[(ki + 1) % K.length] - KT[ki]) * t;
+    const both = new Set([...KP[ki]].filter(s => KP[(ki + 1) % K.length].has(s)));
+    if (t === 0) for (const s of KP[ki]) both.add(s);
+    // a foot that just touched down is pinned where it is now; a lifted foot is released
+    for (const sd of ['L', 'R']) if (!both.has(sd)) delete pins[sd];
+    let zf = zi, Tf = [Tw[0] + vel[0], tyi, Tw[2] + vel[2]];
+    const planted = [...both];
+    if (planted.length) {
+      const J0 = C.fk(S, zi);
+      for (const sd of planted) if (!pins[sd]) pins[sd] = C.add(J0['an' + sd], Tf);
+      const idx = planted.flatMap(legP), x0 = [Tf[0], Tf[1], Tf[2]].concat(idx.map(i => zi[i]));
+      const lo = [-1e4, tyi - 8, -1e4].concat(idx.map(i => C.LIM[C.PN[i]][0])), hi = [1e4, tyi + 8, 1e4].concat(idx.map(i => C.LIM[C.PN[i]][1]));
+      const fun = x => { const zz = Float64Array.from(zi); idx.forEach((i, j) => zz[i] = x[3 + j]); const J = C.fk(S, zz), r = [];
+        for (const sd of planted) { const a_ = C.add(J['an' + sd], [x[0], x[1], x[2]]), p = pins[sd]; r.push(3 * (a_[0] - p[0]), 3 * (a_[1] - p[1]), 3 * (a_[2] - p[2])); }
+        idx.forEach((i, j) => r.push((x[3 + j] - zi[i]) / 12)); r.push((x[1] - tyi) / 4); return r; };
+      const res = C.lm(fun, x0, lo, hi, x0.map((_, i) => i < 3 ? .05 : .1), 25);
+      zf = Float64Array.from(zi); idx.forEach((i, j) => zf[i] = res.x[3 + j]); Tf = [res.x[0], res.x[1], res.x[2]];
+    }
+    vel = [Tf[0] - Tw[0], 0, Tf[2] - Tw[2]]; Tw = Tf;
+    if (pass === 1) frames.push({ f, z: zf, T: Tf.slice(), J: C.fk(S, zf), planted, keyI: t === 0 ? ki : null });
+  }
+  // checks per frame (crash-lab rules): planted heel/ball slide <= 0.6 cm/frame, COM over the support (walking: a +-8 frame window)
+  const contact = fr => C.groundPts(fr.J, fr.T);
+  frames.forEach((fr, i) => {
+    const win = []; for (let d = -8; d <= 8; d++) win.push(...contact(frames[(i + d + N) % N]));
+    fr.win = win; fr.flags = [];
+    const prev = frames[(i - 1 + N) % N];
+    fr.pins = [];
+    for (const sd of ['L', 'R']) for (const kk of ['heel', 'ball']) {
+      const q = C.add(fr.J[kk + sd], fr.T), q0 = C.add(prev.J[kk + sd], prev.T);
+      if (q[1] > -1 && q0[1] > -1) { const sl = i === 0 ? 0 : Math.hypot(q[0] - q0[0], q[2] - q0[2]); fr.pins.push({ x: q[0], z: q[2], slide: sl, prev: { x: q0[0], z: q0[2] } }); if (sl > .6) fr.flags.push(`${kk} ${sd} slides ${sl.toFixed(2)} cm`); }
+    }
+    for (const sd of fr.planted) { const p = C.add(fr.J['an' + sd], fr.T); /* leg short of its pin */ }
+    const w = C.weight(fr.J, fr.T, win); if (!w.air && !w.balanced) fr.flags.push('COM outside support');
+  });
+  const D = C.sub(frames[N - 1].T, frames[0].T);
+  frames.forEach((fr, i) => fr.cam = C.add(C.add(frames[0].T, C.mul(D, i / N)), [0, 0, 0]));
+  loop.frames = frames; loop.f = 0; loop.travel = D;
+  $('lF').max = N - 1; $('lF').disabled = false; $('lPlay').disabled = false;
+  const bad = frames.filter(fr => fr.flags.length);
+  const slides = frames.reduce((s, fr) => s + fr.flags.filter(x => /slides/.test(x)).length, 0), off = frames.filter(fr => fr.flags.includes('COM outside support')).length;
+  $('loopRep').textContent = `${N} frames · ${K.length} keys · travels ${Math.hypot(D[0], D[2]).toFixed(1)} cm per cycle\nplanted-foot slides > 0.6 cm/frame: ${slides} · frames with the COM outside the support: ${off} of ${N}${bad.length ? '\nflagged frames: ' + bad.slice(0, 12).map(fr => fr.f + ' (' + fr.flags.join(', ') + ')').join('; ') : '\nall weight checks pass'}`;
+  drawChrono(); showFrame();
+}
+function showFrame() { if (!loop.frames) return; const fr = loop.frames[loop.f]; $('lF').value = loop.f; drawViews(fr); drawChronoHead(); }
+$('lF').oninput = () => { loop.f = +$('lF').value; showFrame(); };
+let lastT = 0;
+function tick(t) { if (!loop.playing) return; if (t - lastT > 1000 / 24) { lastT = t; loop.f = (loop.f + 1) % loop.frames.length; showFrame(); } requestAnimationFrame(tick); }
+$('lPlay').onclick = () => { loop.playing = !loop.playing; $('lPlay').textContent = loop.playing ? '❚❚ Pause' : '▶ Play'; if (loop.playing) requestAnimationFrame(tick); else drawViews(); };
+// chronophotograph (Marey): every 4th frame in profile at its own place on the floor
+let CH = null;
+function drawChrono() {
+  const c = $('chrono'), [g, W, H, dpr] = fitCanvas(c);
+  g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
+  if (!loop.frames) { g.fillStyle = '#9a8d7e'; g.font = '11px JetBrains Mono, monospace'; g.fillText('chronophotograph: build a loop', 10, 20); CH = null; return; }
+  const F = loop.frames, xs = F.map(fr => C.project(fr.T, 90)[0]), x0 = Math.min(...xs) - 40, x1 = Math.max(...xs) + 60, k = Math.min((H - 16) / 200, (W - 20) / (x1 - x0));
+  const V = { k, x0: 10 - k * x0, y0: H - 8 };
+  g.strokeStyle = '#3a2e24'; g.beginPath(); g.moveTo(0, V.y0 + .5); g.lineTo(W, V.y0 + .5); g.stroke();
+  F.forEach((fr, i) => { if (i % 4) return; drawCards(g, dpr, V, fr.J, 90, 0, 0, fr.T, .38); });
+  CH = { V, g, dpr, W, H, img: g.getImageData(0, 0, c.width, c.height) };
+}
+function drawChronoHead() {
+  if (!CH || !loop.frames) return; const { g, V, dpr } = CH; g.setTransform(1, 0, 0, 1, 0, 0); g.putImageData(CH.img, 0, 0); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const fr = loop.frames[loop.f]; sticks(g, V, fr.J, 90, 0, 0, fr.T, '#5fd0ff', 1.6);
+}
+
+// ───────────────────────── redraw ─────────────────────────
+function redraw() {
+  if (level === 'pose' && tgt) { drawTarget(); if (loop.frames && (loop.playing || +$('lF').value)) showFrame(); else drawViews(); }
+  else if (level === 'joint' && tgt) renderJoint();
+}
+['ghost', 'showRig'].forEach(id => $(id).addEventListener('input', () => drawTarget()));
+['wOn', 'arcOn', 'lOnion'].forEach(id => $(id).addEventListener('change', () => loop.frames && loop.f ? showFrame() : drawViews()));
+init().then(() => {
+  window.__pose = { C, get S() { return S; }, get z() { return z; }, set z(v) { z = v; }, get pr() { return pr; }, get tgt() { return tgt; }, get T() { return T; }, get POS() { return POS; }, get loop() { return loop; },
+    openTarget, openJoint, setLevel, pick, reSolve, autoSolve, buildLoop, showFrame, measure, get SC() { return SC; }, get alts() { return alts; }, redraw, drawViews };
+});
+</script>
+</body>
+</html>

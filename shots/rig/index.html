@@ -238,7 +238,7 @@ function mask(p) {               // alpha for hit tests
 function applyLocalLabels(p) {          // this browser's answers win over the built data until exported + rebuilt
   for (const a of session.answers) {
     if (a.part !== p.id) continue;
-    if ((a.t === 'pivot' || a.t === 'edit-point') && a.xy) { p.pts[a.point] = a.xy.slice(); p.src[a.point] = 'label'; }
+    if ((a.t === 'pivot' || a.t === 'edit-point' || a.t === 'site') && a.xy) { p.pts[a.point] = a.xy.slice(); p.src[a.point] = 'label'; }
     if (a.t === 'side' && (a.v === 'L' || a.v === 'R')) p.side = a.v;
     if (a.t === 'shape' && a.v && a.v !== 'unsure') p.shape = a.v;
     if (a.t === 'cut' && a.v === 'no') { p.q = 'C'; p.why = (p.why || []).concat(['labelled unclean: ' + ((a.why || []).join(', ') || 'marked')]); }
