@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOME ASSEMBLY REQUIRED — Interactive Cut-Out Toybox, Prop Rigs, Portals & Action Studio</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #12151e;
+    --panel-hi: #181c28;
+    --border: #252b3d;
+    --border-hi: #38415c;
+    --text: #e8ecf4;
+    --muted: #8c95ab;
+    --dim: #5a6278;
+    --accent: #f0b429;
+    --accent-soft: rgba(240, 180, 41, 0.14);
+    --teal: #38bdf8;
+    --teal-soft: rgba(56, 189, 248, 0.14);
+    --green: #34d399;
+    --green-soft: rgba(52, 211, 153, 0.14);
+    --rose: #fb7185;
+    --rose-soft: rgba(251, 113, 133, 0.14);
+    --purple: #c084fc;
+    --purple-soft: rgba(192, 132, 252, 0.14);
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Suite Top Navigation */
+  .suite-nav {
+    height: 44px;
+    background: #08090d;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    flex-shrink: 0;
+    gap: 10px;
+  }
+  .suite-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-size: 12px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .suite-brand span.sub {
+    color: var(--muted);
+    font-weight: 500;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .suite-links {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .suite-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 11px;
+    font-family: var(--mono);
+    padding: 5px 9px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .suite-links a:hover {
+    color: var(--text);
+    background: var(--panel);
+    border-color: var(--border);
+  }
+  .suite-links a.active {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: rgba(240, 180, 41, 0.4);
+    font-weight: 600;
+  }
+
+  /* Subheader / Sound FX & Mode Bar */
+  .top-toolbar {
+    height: 46px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    flex-shrink: 0;
+    gap: 12px;
+  }
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mode-pill {
+    background: #0c0f17;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 6px 11px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .mode-pill:hover {
+    color: var(--text);
+    border-color: var(--border-hi);
+  }
+  .mode-pill.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .mode-pill.teal.active {
+    background: var(--teal-soft);
+    color: var(--teal);
+    border-color: var(--teal);
+  }
+  .mode-pill.green.active {
+    background: var(--green-soft);
+    color: var(--green);
+    border-color: var(--green);
+  }
+  .sound-btn {
+    background: var(--green-soft);
+    color: var(--green);
+    border: 1px solid rgba(52, 211, 153, 0.5);
+    padding: 6px 13px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.15s;
+  }
+  .sound-btn.muted {
+    background: rgba(251, 113, 133, 0.12);
+    color: var(--rose);
+    border-color: rgba(251, 113, 133, 0.4);
+  }
+
+  /* Main 3-Column Layout */
+  .workspace {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 325px 1fr 355px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Left Sidebar: 14 Assemblies Catalog */
+  .left-sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .sidebar-header {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sidebar-title {
+    font-size: 11px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .cat-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .cat-chip {
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 3px 7px;
+    border-radius: 4px;
+    background: #0c0e15;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .cat-chip.active {
+    background: var(--teal-soft);
+    color: var(--teal);
+    border-color: var(--teal);
+  }
+  .assembly-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .assembly-card {
+    background: #0d1018;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 10px;
+    cursor: pointer;
+    transition: all 0.14s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .assembly-card:hover {
+    border-color: var(--border-hi);
+    background: var(--panel-hi);
+  }
+  .assembly-card.active {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(240, 180, 41, 0.13), rgba(18, 21, 30, 0.95));
+    box-shadow: 0 0 0 1px rgba(240, 180, 41, 0.25);
+  }
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .card-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .card-poem {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--teal);
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+  }
+  .card-sub {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 3px;
+  }
+  .badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.05);
+    color: var(--muted);
+  }
+  .badge.sfx {
+    color: var(--green);
+    background: var(--green-soft);
+  }
+
+  /* Center Stage Column */
+  .center-stage {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: #07090e;
+    position: relative;
+    overflow-y: auto;
+  }
+  .stage-banner {
+    padding: 10px 14px;
+    background: rgba(18, 21, 30, 0.9);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .stage-title-wrap {
+    flex: 1;
+    min-width: 260px;
+  }
+  .stage-title-wrap h1 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .stage-title-wrap p {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    line-height: 1.35;
+  }
+  .canvas-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: radial-gradient(circle at 50% 42%, #171c2b 0%, #07090e 78%);
+    min-height: 430px;
+  }
+  canvas#assemblyCanvas {
+    width: 100%;
+    max-width: 960px;
+    aspect-ratio: 16 / 9;
+    background: #0b0e17;
+    border: 1px solid var(--border-hi);
+    border-radius: 8px;
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.65);
+    cursor: grab;
+  }
+  canvas#assemblyCanvas:active {
+    cursor: grabbing;
+  }
+
+  /* Dynamic Stage Context Bar (Aspects, Beats, Portals, Room Presets) */
+  .context-bar {
+    padding: 9px 14px;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .context-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .context-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-right: 4px;
+  }
+  .ctx-btn {
+    background: #0d1018;
+    color: var(--text);
+    border: 1px solid var(--border-hi);
+    padding: 5px 9px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-family: var(--mono);
+    cursor: pointer;
+    transition: all 0.14s;
+  }
+  .ctx-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .ctx-btn.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .ctx-btn.action-cta {
+    background: var(--rose-soft);
+    color: var(--rose);
+    border-color: var(--rose);
+    font-weight: 700;
+  }
+
+  /* Bottom 12-Action Trust Matrix Drawer */
+  .matrix-section {
+    padding: 12px 14px 20px;
+    background: #0a0c12;
+  }
+  .matrix-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .matrix-header h2 {
+    font-size: 12px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+  }
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 8px;
+  }
+  .matrix-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.14s;
+  }
+  .matrix-card:hover, .matrix-card.active {
+    border-color: var(--accent);
+    background: var(--panel-hi);
+  }
+  .matrix-thumb {
+    width: 54px;
+    height: 54px;
+    background: #080a10;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    gap: 2px;
+  }
+  .matrix-thumb img {
+    max-width: 25px;
+    max-height: 48px;
+    object-fit: contain;
+  }
+  .matrix-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .matrix-info .m-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .matrix-info .m-actor {
+    font-size: 10px;
+    color: var(--teal);
+    font-family: var(--mono);
+  }
+  .matrix-info .m-note {
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.25;
+    margin-top: 2px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Right Sidebar: Inspector, Layers, Foley Soundboard & Source Gallery */
+  .right-sidebar {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .inspector-block {
+    padding: 11px 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .inspector-block h3 {
+    font-size: 10px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+  .slider-row label {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    min-width: 95px;
+  }
+  .slider-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+  }
+  .slider-row span.val {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* Layer List */
+  .layer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  .layer-item {
+    background: #0c0f17;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 11px;
+  }
+  .layer-item:hover {
+    border-color: var(--border-hi);
+  }
+  .layer-item.selected {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .layer-thumb {
+    width: 28px;
+    height: 28px;
+    background: #07090e;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+  .layer-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .layer-meta .l-name {
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .layer-meta .l-role {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--teal);
+  }
+
+  /* Soundboard Grid */
+  .sfx-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+  .sfx-pad {
+    background: #0c0f17;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 6px 7px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.12s;
+  }
+  .sfx-pad:hover {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-soft);
+  }
+  .sfx-pad.playing {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  /* Source Cuts Gallery */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .gal-cell {
+    background: #090b11;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .gal-cell:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .gal-cell img {
+    width: 100%;
+    height: 42px;
+    object-fit: contain;
+  }
+  .gal-cell span {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--muted);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Top Suite Navigation -->
+  <nav class="suite-nav">
+    <div class="suite-brand">
+      <span>WYGWYL CUT-OUT WORLD ARCHIVE</span>
+      <span class="sub">// SOME ASSEMBLY REQUIRED (14 LIVE RIGS &amp; FOLEY TOYBOX)</span>
+    </div>
+    <div class="suite-links" id="suiteLinks">
+      <a href="cards.html" data-nav="cards.html">Periodic Table</a>
+      <a href="stage.html" data-nav="stage.html">Multiplane Stage</a>
+      <a href="suite.html" data-nav="suite.html">14-Poem Suite</a>
+      <a href="arena_actors.html" data-nav="arena_actors.html">Acting Arena</a>
+      <a href="body_lab.html" data-nav="body_lab.html">Body Lab</a>
+      <a href="assembly.html" data-nav="assembly.html" class="active">Assembly Toybox</a>
+      <a href="weave.html" data-nav="weave.html">The Weave</a>
+      <a href="world.html" data-nav="world.html">Atlantis World</a>
+      <a href="kits.html" data-nav="kits.html">Poem Kits</a>
+    </div>
+  </nav>
+
+  <!-- Subheader Mode & Foley Controls -->
+  <div class="top-toolbar">
+    <div class="toolbar-group">
+      <button class="mode-pill" id="modeExplodedBtn" onclick="setStageMode('exploded')">
+        <span>🧩</span> 1. Exploded Parts Sheet (Unassembled)
+      </button>
+      <button class="mode-pill teal" id="modeSnapBtn" onclick="triggerSnapTogether()">
+        <span>📌</span> 2. Snap Together (Brad-Snap)
+      </button>
+      <button class="mode-pill active" id="modeActionBtn" onclick="setStageMode('action')">
+        <span>🎬</span> 3. Animated Action / Live Sequence
+      </button>
+      <button class="mode-pill" id="toggleBradsBtn" onclick="toggleBradPins()">
+        <span>⭕</span> Brad Pins: ON
+      </button>
+      <button class="mode-pill" onclick="resetLayerOffsets()">
+        <span>↺</span> Reset Dragged Parts
+      </button>
+    </div>
+
+    <div class="toolbar-group">
+      <button class="sound-btn" id="soundToggleBtn" onclick="toggleSoundEngine()">
+        <span id="soundIcon">🔊</span>
+        <span id="soundLabel">SOUND FX: ON</span>
+      </button>
+      <button class="mode-pill green" onclick="playCurrentAssemblyFoley()">
+        <span>🎵</span> Trigger Scene Foley
+      </button>
+    </div>
+  </div>
+
+  <!-- Main 3-Column Workspace -->
+  <div class="workspace">
+
+    <!-- LEFT SIDEBAR: 14 Playable Assemblies -->
+    <aside class="left-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <span>14 Interactive Assemblies</span>
+          <span id="assemblyCountBadge">14 / 14</span>
+        </div>
+        <div class="cat-filter-row" id="categoryFilterRow">
+          <button class="cat-chip active" data-cat="all" onclick="filterCategory('all')">ALL (14)</button>
+          <button class="cat-chip" data-cat="vehicles_and_mechanisms" onclick="filterCategory('vehicles_and_mechanisms')">RIDES &amp; MECHS</button>
+          <button class="cat-chip" data-cat="multi_beat_sequences" onclick="filterCategory('multi_beat_sequences')">SEQUENCES</button>
+          <button class="cat-chip" data-cat="portals_waters_and_sets" onclick="filterCategory('portals_waters_and_sets')">PORTALS &amp; SETS</button>
+          <button class="cat-chip" data-cat="trust_matrix" onclick="filterCategory('trust_matrix')">TRUST MATRIX</button>
+        </div>
+      </div>
+      <div class="assembly-list" id="assemblyList"></div>
+    </aside>
+
+    <!-- CENTER STAGE: 60FPS Interactive Canvas + Context Bar + 12-Action Trust Matrix -->
+    <main class="center-stage">
+      <div class="stage-banner">
+        <div class="stage-title-wrap">
+          <h1 id="stageTitle">Loading Assemblies Library...</h1>
+          <p id="stageSubtitle">Interactive Cut-Out Toybox, Prop Rigs, Portals, Water Worlds &amp; Action Studio</p>
+        </div>
+        <div class="toolbar-group">
+          <span class="badge sfx" id="stageSoundBadge">FOLEY: brad_snap</span>
+          <span class="badge" id="stagePoemBadge">POEM</span>
+        </div>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="assemblyCanvas" width="1280" height="720"></canvas>
+      </div>
+
+      <!-- Dynamic Context Controls (Aspects, Beats, Portals, Room Presets, Extra Spawner) -->
+      <div class="context-bar" id="contextBar"></div>
+
+      <!-- 12-Action "Right Foot & Right Hand for the Job" Trust Matrix -->
+      <section class="matrix-section">
+        <div class="matrix-header">
+          <h2>✋🦶 Right Foot &amp; Right Hand for the Job — 12-Action Verified Cut-Out Trust Matrix</h2>
+          <span class="badge">Click any action card to inspect its Forearm→Wrist &amp; Shin→Ankle Cuff-Tuck + Horizontal v2 Hand alignment</span>
+        </div>
+        <div class="matrix-grid" id="trustMatrixGrid"></div>
+      </section>
+    </main>
+
+    <!-- RIGHT SIDEBAR: Inspector, Layer Stack, Foley Soundboard, Source Gallery -->
+    <aside class="right-sidebar">
+      <div class="inspector-block">
+        <h3>
+          <span>Stage &amp; Choreography Controls</span>
+          <span id="fpsCounter" style="color:var(--green)">60 FPS</span>
+        </h3>
+        <div class="slider-row">
+          <label>Anim Speed</label>
+          <input type="range" id="speedSlider" min="0" max="2.5" step="0.05" value="1.0" oninput="updateStageParams()">
+          <span class="val" id="speedVal">1.00x</span>
+        </div>
+        <div class="slider-row">
+          <label>Action Scrub</label>
+          <input type="range" id="scrubSlider" min="0" max="1" step="0.01" value="0.5" oninput="updateScrubParam(this.value)">
+          <span class="val" id="scrubVal">AUTO</span>
+        </div>
+        <div class="slider-row">
+          <label>Glow / Light FX</label>
+          <input type="range" id="glowSlider" min="0" max="2" step="0.05" value="1.15" oninput="updateStageParams()">
+          <span class="val" id="glowVal">1.15</span>
+        </div>
+        <div class="slider-row">
+          <label>Explode Spread</label>
+          <input type="range" id="spreadSlider" min="0" max="1" step="0.02" value="0.0" oninput="setManualExplode(this.value)">
+          <span class="val" id="spreadVal">0%</span>
+        </div>
+      </div>
+
+      <div class="inspector-block">
+        <h3>
+          <span>Assembled Parts &amp; Brad Sockets</span>
+          <span id="layerCountLabel">0 layers</span>
+        </h3>
+        <div class="layer-list" id="layerList"></div>
+      </div>
+
+      <div class="inspector-block">
+        <h3>
+          <span>WebAudio Procedural Foley Pad</span>
+          <span>10 Synth Engines</span>
+        </h3>
+        <div class="sfx-grid" id="sfxGrid"></div>
+      </div>
+
+      <div class="inspector-block">
+        <h3>
+          <span>Assembly Cut-Out Parts Tray</span>
+          <span id="galleryCountLabel">Click to highlight or swap</span>
+        </h3>
+        <div class="gallery-grid" id="galleryGrid"></div>
+      </div>
+    </aside>
+
+  </div>
+
+<script>
+/* ==========================================================================
+   PATH RESOLUTION FOR BOTH /shots/assembly.html AND /shots/viewer/assembly.html
+   ========================================================================== */
+const IS_VIEWER_SUBDIR = window.location.pathname.includes('/viewer/');
+const BASE_PREFIX = IS_VIEWER_SUBDIR ? '../' : '';
+
+function resolveAssetPath(relPath) {
+  if (!relPath) return '';
+  if (relPath.startsWith('http://') || relPath.startsWith('https://') || relPath.startsWith('data:')) {
+    return relPath;
+  }
+  return BASE_PREFIX + relPath.replace(/^\.\//, '');
+}
+
+document.querySelectorAll('#suiteLinks a').forEach(a => {
+  const target = a.getAttribute('data-nav');
+  if (target) {
+    a.setAttribute('href', IS_VIEWER_SUBDIR ? ('../' + target) : target);
+  }
+});
+
+/* ==========================================================================
+   10 WEBAUDIO PROCEDURAL FOLEY & SOUND FX PRESETS
+   ========================================================================== */
+const SOUND_FX_PRESETS = [
+  { id: 'brad_snap', label: 'Brad-Snap Click', description: 'Crisp metallic brass paper-fastener click + cardstock thump' },
+  { id: 'car_engine_roll', label: 'Sedan Engine Roll', description: 'Warm 1990s family sedan engine chug + tire road hiss' },
+  { id: 'motorcycle_rev', label: 'Motorcycle Throttle', description: 'Dual-oscillator motorcycle throttle rev + night highway wind' },
+  { id: 'heartbeat_lubdub', label: 'Systole Lub-Dub', description: 'Deep twin sub-bass cardiac pulse synchronized with heart expansion' },
+  { id: 'hourglass_sand', label: 'Hourglass Sand', description: 'Granular high-bandpass falling sand whisper + glass chime' },
+  { id: 'tambourine_jingle_shatter', label: 'Tambourine Shatter', description: 'Metallic brass jingle burst + stained-glass rose window shatter' },
+  { id: 'phone_ring_and_voice', label: 'Phone Ring & Voice', description: 'Twin-bell vintage telephone ring + warm formant lip-sync cadence' },
+  { id: 'dj_beat_and_scratch', label: '118 BPM Club Scratch', description: 'Punchy club subwoofer kick + vinyl turntable scratch chirp' },
+  { id: 'wing_whoosh', label: 'Angel/Raven Wing', description: 'Aerodynamic feather downstroke whoosh' },
+  { id: 'ocean_waves', label: 'Nevermore Surf', description: 'Slow LFO pink-noise ocean wave wash' }
+];
+
+class ProceduralFoleyEngine {
+  constructor() {
+    this.ctx = null;
+    this.enabled = true;
+    this.lastAutoTrigger = 0;
+  }
+
+  ensureContext() {
+    if (!this.enabled) return null;
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
+      }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+    return this.ctx;
+  }
+
+  createNoiseBuffer(durationSec = 1.0) {
+    const ctx = this.ensureContext();
+    if (!ctx) return null;
+    const bufferSize = Math.floor(ctx.sampleRate * durationSec);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    return buffer;
+  }
+
+  play(presetId) {
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    switch (presetId) {
+      case 'brad_snap': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1650, now);
+        osc.frequency.exponentialRampToValueAtTime(220, now + 0.055);
+        gain.gain.setValueAtTime(0.26, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.07);
+
+        const thud = ctx.createOscillator();
+        const thudGain = ctx.createGain();
+        thud.type = 'sine';
+        thud.frequency.setValueAtTime(130, now + 0.015);
+        thud.frequency.exponentialRampToValueAtTime(48, now + 0.09);
+        thudGain.gain.setValueAtTime(0.2, now + 0.015);
+        thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
+        thud.connect(thudGain).connect(ctx.destination);
+        thud.start(now + 0.015);
+        thud.stop(now + 0.1);
+        break;
+      }
+
+      case 'car_engine_roll': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(58, now);
+        osc.frequency.linearRampToValueAtTime(74, now + 0.25);
+        osc.frequency.linearRampToValueAtTime(62, now + 0.55);
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(210, now);
+
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        osc.connect(filter).connect(gain).connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.62);
+        break;
+      }
+
+      case 'motorcycle_rev': {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const filter = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+
+        osc1.type = 'sawtooth';
+        osc2.type = 'triangle';
+        osc1.frequency.setValueAtTime(85, now);
+        osc1.frequency.exponentialRampToValueAtTime(260, now + 0.28);
+        osc1.frequency.exponentialRampToValueAtTime(115, now + 0.65);
+
+        osc2.frequency.setValueAtTime(170, now);
+        osc2.frequency.exponentialRampToValueAtTime(520, now + 0.28);
+        osc2.frequency.exponentialRampToValueAtTime(230, now + 0.65);
+
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(380, now);
+        filter.Q.setValueAtTime(2.2, now);
+
+        gain.gain.setValueAtTime(0.24, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.68);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain).connect(ctx.destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.7);
+        osc2.stop(now + 0.7);
+        break;
+      }
+
+      case 'heartbeat_lubdub': {
+        [0, 0.19].forEach((offset, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          const baseFreq = idx === 0 ? 64 : 52;
+          osc.frequency.setValueAtTime(baseFreq * 1.4, now + offset);
+          osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.65, now + offset + 0.14);
+          gain.gain.setValueAtTime(idx === 0 ? 0.34 : 0.26, now + offset);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.15);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start(now + offset);
+          osc.stop(now + offset + 0.16);
+        });
+        break;
+      }
+
+      case 'hourglass_sand': {
+        const noise = ctx.createBufferSource();
+        noise.buffer = this.createNoiseBuffer(0.55);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(3200, now);
+        filter.Q.setValueAtTime(4.5, now);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.01, now);
+        gain.gain.linearRampToValueAtTime(0.16, now + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.52);
+
+        noise.connect(filter).connect(gain).connect(ctx.destination);
+        noise.start(now);
+
+        const ping = ctx.createOscillator();
+        const pGain = ctx.createGain();
+        ping.type = 'sine';
+        ping.frequency.setValueAtTime(1480, now);
+        pGain.gain.setValueAtTime(0.09, now);
+        pGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        ping.connect(pGain).connect(ctx.destination);
+        ping.start(now);
+        ping.stop(now + 0.36);
+        break;
+      }
+
+      case 'tambourine_jingle_shatter': {
+        const freqs = [2450, 3120, 3890, 4680, 5420, 6100];
+        freqs.forEach((f, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = i % 2 === 0 ? 'square' : 'triangle';
+          const t0 = now + i * 0.035;
+          osc.frequency.setValueAtTime(f, t0);
+          osc.frequency.exponentialRampToValueAtTime(f * 0.72, t0 + 0.24);
+          gain.gain.setValueAtTime(0.08, t0);
+          gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.26);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start(t0);
+          osc.stop(t0 + 0.27);
+        });
+        break;
+      }
+
+      case 'phone_ring_and_voice': {
+        for (let b = 0; b < 4; b++) {
+          const t0 = now + b * 0.055;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(b % 2 === 0 ? 1180 : 1490, t0);
+          gain.gain.setValueAtTime(0.14, t0);
+          gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.05);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start(t0);
+          osc.stop(t0 + 0.052);
+        }
+        const vOsc = ctx.createOscillator();
+        const vFilter = ctx.createBiquadFilter();
+        const vGain = ctx.createGain();
+        vOsc.type = 'sawtooth';
+        vOsc.frequency.setValueAtTime(165, now + 0.28);
+        vOsc.frequency.linearRampToValueAtTime(210, now + 0.42);
+        vOsc.frequency.linearRampToValueAtTime(145, now + 0.6);
+        vFilter.type = 'bandpass';
+        vFilter.frequency.setValueAtTime(650, now + 0.28);
+        vFilter.Q.setValueAtTime(3.0, now + 0.28);
+        vGain.gain.setValueAtTime(0.14, now + 0.28);
+        vGain.gain.exponentialRampToValueAtTime(0.001, now + 0.62);
+        vOsc.connect(vFilter).connect(vGain).connect(ctx.destination);
+        vOsc.start(now + 0.28);
+        vOsc.stop(now + 0.64);
+        break;
+      }
+
+      case 'dj_beat_and_scratch': {
+        const kick = ctx.createOscillator();
+        const kGain = ctx.createGain();
+        kick.type = 'sine';
+        kick.frequency.setValueAtTime(140, now);
+        kick.frequency.exponentialRampToValueAtTime(42, now + 0.14);
+        kGain.gain.setValueAtTime(0.35, now);
+        kGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        kick.connect(kGain).connect(ctx.destination);
+        kick.start(now);
+        kick.stop(now + 0.19);
+
+        const scratch = ctx.createOscillator();
+        const sGain = ctx.createGain();
+        scratch.type = 'sawtooth';
+        scratch.frequency.setValueAtTime(320, now + 0.12);
+        scratch.frequency.exponentialRampToValueAtTime(980, now + 0.22);
+        scratch.frequency.exponentialRampToValueAtTime(260, now + 0.34);
+        sGain.gain.setValueAtTime(0.12, now + 0.12);
+        sGain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+        scratch.connect(sGain).connect(ctx.destination);
+        scratch.start(now + 0.12);
+        scratch.stop(now + 0.37);
+        break;
+      }
+
+      case 'wing_whoosh': {
+        const noise = ctx.createBufferSource();
+        noise.buffer = this.createNoiseBuffer(0.42);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(240, now);
+        filter.frequency.exponentialRampToValueAtTime(760, now + 0.16);
+        filter.frequency.exponentialRampToValueAtTime(190, now + 0.38);
+        filter.Q.setValueAtTime(1.8, now);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.01, now);
+        gain.gain.linearRampToValueAtTime(0.24, now + 0.14);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        noise.connect(filter).connect(gain).connect(ctx.destination);
+        noise.start(now);
+        break;
+      }
+
+      case 'ocean_waves': {
+        const noise = ctx.createBufferSource();
+        noise.buffer = this.createNoiseBuffer(0.8);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(320, now);
+        filter.frequency.linearRampToValueAtTime(880, now + 0.35);
+        filter.frequency.linearRampToValueAtTime(260, now + 0.78);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.01, now);
+        gain.gain.linearRampToValueAtTime(0.18, now + 0.3);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.78);
+        noise.connect(filter).connect(gain).connect(ctx.destination);
+        noise.start(now);
+        break;
+      }
+    }
+  }
+}
+
+const foley = new ProceduralFoleyEngine();
+
+/* ==========================================================================
+   STATE & CATALOG LOADING
+   ========================================================================== */
+let catalog = null;
+let trustMatrixRows = [];
+let currentAssembly = null;
+let currentCategoryFilter = 'all';
+let stageMode = 'action'; // 'exploded' | 'snap' | 'action'
+let showBradPins = true;
+let selectedLayerId = null;
+
+// Sub-states per assembly
+let currentAspectIndex = 0;
+let currentBeatIndex = -1; // -1 = auto cycle
+let currentWingStateIndex = 0;
+let currentPortalIndex = 0;
+let currentRoomPresetIndex = 0;
+let hourglassFlipped = false;
+let hourglassFlipAnim = 0;
+let spotlitMatrixRow = null;
+
+// Sliders
+let animSpeed = 1.0;
+let manualScrub = null;
+let glowIntensity = 1.15;
+let explodeProgress = 0.0;
+let targetExplodeProgress = 0.0;
+
+// Dragging state & spawned extras
+const layerUserOffsets = {};
+const spawnedExtras = [];
+let draggingItem = null;
+
+// Asset caches
+const imageCache = new Map();
+const videoCache = new Map();
+
+function getImage(relPath) {
+  if (!relPath) return null;
+  const url = resolveAssetPath(relPath);
+  if (imageCache.has(url)) return imageCache.get(url);
+  const img = new Image();
+  img.loaded = false;
+  img.onload = () => { img.loaded = true; };
+  img.src = url;
+  imageCache.set(url, img);
+  return img;
+}
+
+function getVideo(relPath) {
+  if (!relPath) return null;
+  const url = resolveAssetPath(relPath);
+  if (videoCache.has(url)) return videoCache.get(url);
+  const vid = document.createElement('video');
+  vid.src = url;
+  vid.muted = true;
+  vid.loop = true;
+  vid.playsInline = true;
+  vid.autoplay = true;
+  vid.play().catch(() => {});
+  videoCache.set(url, vid);
+  return vid;
+}
+
+function matchesCategoryGroup(assemblyCat, filterKey) {
+  if (filterKey === 'all') return true;
+  if (filterKey === 'vehicles_and_mechanisms') {
+    return ['vehicle_rig', 'symbolic_mechanism', 'wing_articulation'].includes(assemblyCat);
+  }
+  if (filterKey === 'multi_beat_sequences') {
+    return ['character_assembly_sequence', 'action_prop_sequence', 'acting_sequence', 'ensemble_stage', 'botanical_transformation'].includes(assemblyCat);
+  }
+  if (filterKey === 'portals_waters_and_sets') {
+    return ['portal_worlds', 'water_diorama', 'interior_decorator', 'atmospheric_fx'].includes(assemblyCat);
+  }
+  if (filterKey === 'trust_matrix') {
+    return assemblyCat === 'trust_matrix';
+  }
+  return true;
+}
+
+async function initCatalog() {
+  const jsonUrl = resolveAssetPath('arena/parts/kit3/release_v2/assemblies_library.json');
+  const res = await fetch(jsonUrl);
+  catalog = await res.json();
+
+  const a14 = (catalog.assemblies || []).find(a => a.id === 'right_foot_right_hand_matrix');
+  trustMatrixRows = (a14 && a14.trust_matrix_rows) ? a14.trust_matrix_rows : [];
+  spotlitMatrixRow = trustMatrixRows[0] || null;
+
+  renderSfxPadGrid();
+  renderTrustMatrix();
+  renderAssemblyList();
+
+  if (catalog.assemblies && catalog.assemblies.length > 0) {
+    selectAssembly(catalog.assemblies[0].id);
+  }
+
+  requestAnimationFrame(renderLoop);
+}
+
+/* ==========================================================================
+   UI RENDERING & INTERACTION HANDLERS
+   ========================================================================== */
+function filterCategory(cat) {
+  currentCategoryFilter = cat;
+  document.querySelectorAll('#categoryFilterRow .cat-chip').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-cat') === cat);
+  });
+  renderAssemblyList();
+}
+
+function renderAssemblyList() {
+  const listEl = document.getElementById('assemblyList');
+  listEl.innerHTML = '';
+  const filtered = (catalog.assemblies || []).filter(a =>
+    matchesCategoryGroup(a.category, currentCategoryFilter)
+  );
+  document.getElementById('assemblyCountBadge').textContent = `${filtered.length} / ${catalog.assemblies.length}`;
+
+  filtered.forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'assembly-card' + (currentAssembly && currentAssembly.id === a.id ? ' active' : '');
+    card.onclick = () => selectAssembly(a.id);
+
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="card-num">#${String(a.number).padStart(2, '0')}</span>
+        <span class="card-poem">POEM ${a.poem}</span>
+      </div>
+      <div class="card-title">${a.title}</div>
+      <div class="card-sub">${a.summary || ''}</div>
+      <div class="card-badges">
+        <span class="badge">${(a.layers || []).length} layers</span>
+        <span class="badge sfx">🔊 ${a.sound_fx_preset}</span>
+      </div>
+    `;
+    listEl.appendChild(card);
+  });
+}
+
+function selectAssembly(assemblyId) {
+  const found = (catalog.assemblies || []).find(a => a.id === assemblyId);
+  if (!found) return;
+  currentAssembly = found;
+  selectedLayerId = found.layers && found.layers[0] ? found.layers[0].id : null;
+  currentAspectIndex = 0;
+  currentBeatIndex = -1;
+  currentWingStateIndex = 0;
+  currentPortalIndex = 0;
+  currentRoomPresetIndex = 0;
+  spawnedExtras.length = 0;
+
+  // Preload all layer images
+  (found.layers || []).forEach(l => getImage(l.file));
+  if (found.id === 'right_foot_right_hand_matrix') {
+    trustMatrixRows.forEach(r => {
+      getImage(r.foot_card);
+      getImage(r.shin_card);
+      getImage(r.hand_card);
+      getImage(r.forearm_card);
+    });
+  }
+
+  document.getElementById('stageTitle').textContent = `#${String(found.number).padStart(2, '0')} — ${found.title}`;
+  document.getElementById('stageSubtitle').textContent = found.summary || '';
+  document.getElementById('stageSoundBadge').textContent = `FOLEY: ${found.sound_fx_preset}`;
+  document.getElementById('stagePoemBadge').textContent = `POEM ${found.poem}`;
+
+  renderAssemblyList();
+  renderContextBar();
+  renderLayerList();
+  renderGalleryTray();
+
+  foley.play('brad_snap');
+}
+
+function renderContextBar() {
+  const bar = document.getElementById('contextBar');
+  bar.innerHTML = '';
+  if (!currentAssembly) return;
+
+  // 1. Aspect Dimensions (Motorcycle 5 aspects)
+  if (currentAssembly.aspect_dimensions && currentAssembly.aspect_dimensions.length > 0) {
+    const grp = document.createElement('div');
+    grp.className = 'context-group';
+    grp.innerHTML = `<span class="context-label">ASPECT DIMENSION:</span>`;
+    currentAssembly.aspect_dimensions.forEach((asp, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'ctx-btn' + (currentAspectIndex === idx ? ' active' : '');
+      btn.textContent = asp.label;
+      btn.onclick = () => {
+        currentAspectIndex = idx;
+        foley.play('motorcycle_rev');
+        renderContextBar();
+      };
+      grp.appendChild(btn);
+    });
+    bar.appendChild(grp);
+  }
+
+  // 2. Multi-Beat Sequence Selector
+  if (currentAssembly.beats && currentAssembly.beats.length > 0) {
+    const grp = document.createElement('div');
+    grp.className = 'context-group';
+    grp.innerHTML = `<span class="context-label">SEQUENCE BEATS:</span>`;
+
+    const autoBtn = document.createElement('button');
+    autoBtn.className = 'ctx-btn' + (currentBeatIndex === -1 ? ' active' : '');
+    autoBtn.textContent = '▶ AUTO-PLAY ALL BEATS';
+    autoBtn.onclick = () => {
+      currentBeatIndex = -1;
+      manualScrub = null;
+      document.getElementById('scrubVal').textContent = 'AUTO';
+      foley.play('brad_snap');
+      renderContextBar();
+    };
+    grp.appendChild(autoBtn);
+
+    currentAssembly.beats.forEach((b, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'ctx-btn' + (currentBeatIndex === idx ? ' active' : '');
+      btn.textContent = b.label;
+      btn.onclick = () => {
+        currentBeatIndex = idx;
+        foley.play(currentAssembly.sound_fx_preset || 'brad_snap');
+        renderContextBar();
+      };
+      grp.appendChild(btn);
+    });
+    bar.appendChild(grp);
+  }
+
+  // 3. Wing Articulation States
+  if (currentAssembly.wing_states && currentAssembly.wing_states.length > 0) {
+    const grp = document.createElement('div');
+    grp.className = 'context-group';
+    grp.innerHTML = `<span class="context-label">WING ARTICULATION STATE:</span>`;
+    currentAssembly.wing_states.forEach((ws, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'ctx-btn' + (currentWingStateIndex === idx ? ' active' : '');
+      btn.textContent = ws.label;
+      btn.onclick = () => {
+        currentWingStateIndex = idx;
+        foley.play('wing_whoosh');
+        renderContextBar();
+      };
+      grp.appendChild(btn);
+    });
+    bar.appendChild(grp);
+  }
+
+  // 4. Portal Worlds Selector
+  if (currentAssembly.portal_presets && currentAssembly.portal_presets.length > 0) {
+    const grp = document.createElement('div');
+    grp.className = 'context-group';
+    grp.innerHTML = `<span class="context-label">PORTAL APERTURE PRESET:</span>`;
+    currentAssembly.portal_presets.forEach((pw, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'ctx-btn' + (currentPortalIndex === idx ? ' active' : '');
+      btn.textContent = pw.label;
+      btn.onclick = () => {
+        currentPortalIndex = idx;
+        foley.play('brad_snap');
+        renderContextBar();
+      };
+      grp.appendChild(btn);
+    });
+    bar.appendChild(grp);
+  }
+
+  // 5. Interior Decorator Room Presets
+  if (currentAssembly.room_presets && currentAssembly.room_presets.length > 0) {
+    const grp = document.createElement('div');
+    grp.className = 'context-group';
+    grp.innerHTML = `<span class="context-label">ROOM PRESET:</span>`;
+    currentAssembly.room_presets.forEach((rp, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'ctx-btn' + (currentRoomPresetIndex === idx ? ' active' : '');
+      btn.textContent = rp.label;
+      btn.onclick = () => {
+        currentRoomPresetIndex = idx;
+        foley.play('brad_snap');
+        renderContextBar();
+      };
+      grp.appendChild(btn);
+    });
+    bar.appendChild(grp);
+  }
+
+  // 6. Special Action CTAs per Assembly
+  const ctaGrp = document.createElement('div');
+  ctaGrp.className = 'context-group';
+
+  if (currentAssembly.id === 'beating_heart_and_hourglass') {
+    const flipBtn = document.createElement('button');
+    flipBtn.className = 'ctx-btn action-cta';
+    flipBtn.textContent = '⏳ FLIP HOURGLASS 180°';
+    flipBtn.onclick = () => {
+      hourglassFlipped = !hourglassFlipped;
+      foley.play('hourglass_sand');
+    };
+    ctaGrp.appendChild(flipBtn);
+  }
+
+  if (currentAssembly.id === 'throwing_tambourine_rose_window') {
+    const throwBtn = document.createElement('button');
+    throwBtn.className = 'ctx-btn action-cta';
+    throwBtn.textContent = '💥 THROW TAMBOURINE & SHATTER!';
+    throwBtn.onclick = () => {
+      manualScrub = null;
+      document.getElementById('scrubVal').textContent = 'AUTO';
+      foley.play('tambourine_jingle_shatter');
+    };
+    ctaGrp.appendChild(throwBtn);
+  }
+
+  if (
+    currentAssembly.id === 'dj_booth_speakers_and_club_extras' ||
+    currentAssembly.id === 'interior_decorator_reusable_sets' ||
+    currentAssembly.id === 'phone_booth_walk_and_call'
+  ) {
+    const addExtraBtn = document.createElement('button');
+    addExtraBtn.className = 'ctx-btn action-cta';
+    addExtraBtn.textContent = '🕺 + ADD DANCING / SCENE EXTRA';
+    addExtraBtn.onclick = () => spawnSceneExtra();
+    ctaGrp.appendChild(addExtraBtn);
+  }
+
+  if (ctaGrp.children.length > 0) {
+    bar.appendChild(ctaGrp);
+  }
+
+  if (bar.children.length === 0) {
+    bar.innerHTML = `<div class="context-group"><span class="context-label">INTERACTIVE STAGE:</span><span class="badge">Drag any cut-out part directly on the canvas or click a Brad Socket to inspect</span></div>`;
+  }
+}
+
+function spawnSceneExtra() {
+  const extraPool = [
+    'arena/parts/kit3/release_v2/cuts/08.cast.club_dress.body/08.cast.club_dress.body__p01.png',
+    'arena/parts/kit3/release_v2/cuts/08.cast.club_jacket.body/08.cast.club_jacket.body__p01.png',
+    'arena/parts/kit3/release_v2/cuts/08.cast.club_shirt.body/08.cast.club_shirt.body__p01.png'
+  ];
+  // Use verified layer files from DJ assembly if available
+  const djAsm = (catalog.assemblies || []).find(a => a.id === 'dj_booth_speakers_and_club_extras');
+  const pool = (djAsm && djAsm.layers && djAsm.layers.length > 0)
+    ? djAsm.layers.map(l => l.file)
+    : extraPool;
+  const asset = pool[spawnedExtras.length % pool.length];
+  getImage(asset);
+  spawnedExtras.push({
+    id: `extra_${Date.now()}_${spawnedExtras.length}`,
+    asset,
+    x: 240 + ((spawnedExtras.length * 155) % 820),
+    y: 470 + ((spawnedExtras.length % 2) * 35),
+    scale: 0.55,
+    phase: spawnedExtras.length * 1.3
+  });
+  foley.play('dj_beat_and_scratch');
+}
+
+function renderLayerList() {
+  const listEl = document.getElementById('layerList');
+  listEl.innerHTML = '';
+  if (!currentAssembly) return;
+  const layers = currentAssembly.layers || [];
+  document.getElementById('layerCountLabel').textContent = `${layers.length} layers`;
+
+  layers.forEach(layer => {
+    const item = document.createElement('div');
+    item.className = 'layer-item' + (selectedLayerId === layer.id ? ' selected' : '');
+    item.onclick = () => {
+      selectedLayerId = layer.id;
+      foley.play('brad_snap');
+      renderLayerList();
+    };
+    const imgUrl = resolveAssetPath(layer.file);
+    item.innerHTML = `
+      <img class="layer-thumb" src="${imgUrl}" alt="${layer.label}">
+      <div class="layer-meta">
+        <div class="l-name">${layer.label}</div>
+        <div class="l-role">${layer.role} // ${layer.anim_behavior || 'static'}</div>
+      </div>
+    `;
+    listEl.appendChild(item);
+  });
+}
+
+function renderGalleryTray() {
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML = '';
+  if (!currentAssembly) return;
+  const layers = currentAssembly.layers || [];
+  document.getElementById('galleryCountLabel').textContent = `${layers.length} verified parts`;
+
+  layers.forEach(l => {
+    const cell = document.createElement('div');
+    cell.className = 'gal-cell';
+    const shortName = l.file.split('/').pop();
+    cell.title = `${l.label} (${l.file}) — Click to select or swap`;
+    cell.onclick = () => {
+      selectedLayerId = l.id;
+      foley.play('brad_snap');
+      renderLayerList();
+    };
+    cell.innerHTML = `
+      <img src="${resolveAssetPath(l.file)}" loading="lazy" alt="${l.label}">
+      <span>${shortName}</span>
+    `;
+    grid.appendChild(cell);
+  });
+}
+
+function renderSfxPadGrid() {
+  const grid = document.getElementById('sfxGrid');
+  grid.innerHTML = '';
+
+  SOUND_FX_PRESETS.forEach(preset => {
+    const btn = document.createElement('button');
+    btn.className = 'sfx-pad';
+    btn.innerHTML = `<span>🔊</span> <span>${preset.label}</span>`;
+    btn.title = preset.description;
+    btn.onclick = () => {
+      foley.play(preset.id);
+      btn.classList.add('playing');
+      setTimeout(() => btn.classList.remove('playing'), 320);
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function renderTrustMatrix() {
+  const grid = document.getElementById('trustMatrixGrid');
+  grid.innerHTML = '';
+
+  trustMatrixRows.forEach(row => {
+    const card = document.createElement('div');
+    card.className = 'matrix-card' + (spotlitMatrixRow && spotlitMatrixRow.action_id === row.action_id ? ' active' : '');
+    card.onclick = () => {
+      spotlitMatrixRow = row;
+      getImage(row.hand_card);
+      getImage(row.forearm_card);
+      getImage(row.foot_card);
+      getImage(row.shin_card);
+      selectAssembly('right_foot_right_hand_matrix');
+      renderTrustMatrix();
+    };
+    card.innerHTML = `
+      <div class="matrix-thumb">
+        <img src="${resolveAssetPath(row.hand_card)}" alt="${row.hand_label}">
+        <img src="${resolveAssetPath(row.foot_card)}" alt="${row.foot_label}">
+      </div>
+      <div class="matrix-info">
+        <div class="m-title">${row.title}</div>
+        <div class="m-actor">${row.poem_context}</div>
+        <div class="m-note">${row.cuff_tuck_rule}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* ==========================================================================
+   STAGE MODE & SLIDER CONTROLS
+   ========================================================================== */
+function setStageMode(mode) {
+  stageMode = mode;
+  document.getElementById('modeExplodedBtn').classList.toggle('active', mode === 'exploded');
+  document.getElementById('modeSnapBtn').classList.toggle('active', mode === 'snap');
+  document.getElementById('modeActionBtn').classList.toggle('active', mode === 'action');
+
+  if (mode === 'exploded') {
+    targetExplodeProgress = 1.0;
+    document.getElementById('spreadSlider').value = '1';
+    document.getElementById('spreadVal').textContent = '100%';
+    foley.play('brad_snap');
+  } else if (mode === 'action') {
+    targetExplodeProgress = 0.0;
+    document.getElementById('spreadSlider').value = '0';
+    document.getElementById('spreadVal').textContent = '0%';
+  }
+}
+
+function triggerSnapTogether() {
+  stageMode = 'snap';
+  document.getElementById('modeExplodedBtn').classList.remove('active');
+  document.getElementById('modeSnapBtn').classList.add('active');
+  document.getElementById('modeActionBtn').classList.remove('active');
+
+  explodeProgress = 1.0;
+  targetExplodeProgress = 0.0;
+  document.getElementById('spreadSlider').value = '0';
+  document.getElementById('spreadVal').textContent = '0%';
+
+  const layers = (currentAssembly && currentAssembly.layers) || [];
+  layers.forEach((_, idx) => {
+    setTimeout(() => foley.play('brad_snap'), idx * 80);
+  });
+  setTimeout(() => {
+    setStageMode('action');
+    playCurrentAssemblyFoley();
+  }, Math.max(500, layers.length * 80 + 150));
+}
+
+function toggleBradPins() {
+  showBradPins = !showBradPins;
+  const btn = document.getElementById('toggleBradsBtn');
+  btn.innerHTML = `<span>⭕</span> Brad Pins: ${showBradPins ? 'ON' : 'OFF'}`;
+  foley.play('brad_snap');
+}
+
+function resetLayerOffsets() {
+  Object.keys(layerUserOffsets).forEach(k => delete layerUserOffsets[k]);
+  spawnedExtras.length = 0;
+  foley.play('brad_snap');
+}
+
+function toggleSoundEngine() {
+  foley.enabled = !foley.enabled;
+  const btn = document.getElementById('soundToggleBtn');
+  document.getElementById('soundIcon').textContent = foley.enabled ? '🔊' : '🔇';
+  document.getElementById('soundLabel').textContent = foley.enabled ? 'SOUND FX: ON' : 'SOUND FX: MUTED';
+  btn.classList.toggle('muted', !foley.enabled);
+  if (foley.enabled) foley.play('brad_snap');
+}
+
+function playCurrentAssemblyFoley() {
+  if (!currentAssembly) return;
+  foley.play(currentAssembly.sound_fx_preset || 'brad_snap');
+}
+
+function updateStageParams() {
+  animSpeed = parseFloat(document.getElementById('speedSlider').value);
+  glowIntensity = parseFloat(document.getElementById('glowSlider').value);
+  document.getElementById('speedVal').textContent = animSpeed.toFixed(2) + 'x';
+  document.getElementById('glowVal').textContent = glowIntensity.toFixed(2);
+}
+
+function updateScrubParam(val) {
+  manualScrub = parseFloat(val);
+  document.getElementById('scrubVal').textContent = Math.round(manualScrub * 100) + '%';
+}
+
+function setManualExplode(val) {
+  const num = parseFloat(val);
+  explodeProgress = num;
+  targetExplodeProgress = num;
+  document.getElementById('spreadVal').textContent = Math.round(num * 100) + '%';
+}
+
+/* ==========================================================================
+   CANVAS MOUSE DRAGGING & INTERACTION
+   ========================================================================== */
+const canvas = document.getElementById('assemblyCanvas');
+const ctx = canvas.getContext('2d');
+
+function getCanvasCoords(evt) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (evt.clientX - rect.left) * (canvas.width / rect.width),
+    y: (evt.clientY - rect.top) * (canvas.height / rect.height)
+  };
+}
+
+function getLayerBaseCoords(layer) {
+  const asm = layer.assembled || { x: 0.5, y: 0.5, scale: 0.5, rot_deg: 0 };
+  const exp = layer.exploded || { x: 0.5, y: 0.5, scale: 0.5, rot_deg: 0 };
+  const x = (asm.x * (1 - explodeProgress) + exp.x * explodeProgress) * 1280;
+  const y = (asm.y * (1 - explodeProgress) + exp.y * explodeProgress) * 720;
+  const scale = asm.scale * (1 - explodeProgress) + exp.scale * explodeProgress;
+  const rotDeg = (asm.rot_deg || 0) * (1 - explodeProgress) + (exp.rot_deg || 0) * explodeProgress;
+  return { x, y, scale, rotDeg, asmX: asm.x * 1280, asmY: asm.y * 720 };
+}
+
+canvas.addEventListener('mousedown', evt => {
+  const pt = getCanvasCoords(evt);
+  if (!currentAssembly) return;
+
+  for (let i = spawnedExtras.length - 1; i >= 0; i--) {
+    const ex = spawnedExtras[i];
+    if (Math.hypot(pt.x - ex.x, pt.y - ex.y) < 95) {
+      draggingItem = { type: 'extra', extra: ex, startX: pt.x, startY: pt.y, origX: ex.x, origY: ex.y };
+      foley.play('brad_snap');
+      return;
+    }
+  }
+
+  const layers = currentAssembly.layers || [];
+  for (let i = layers.length - 1; i >= 0; i--) {
+    const l = layers[i];
+    const base = getLayerBaseCoords(l);
+    const key = `${currentAssembly.id}:${l.id}`;
+    const off = layerUserOffsets[key] || { dx: 0, dy: 0 };
+    const cx = base.x + off.dx;
+    const cy = base.y + off.dy;
+    if (Math.hypot(pt.x - cx, pt.y - cy) < 105) {
+      selectedLayerId = l.id;
+      draggingItem = {
+        type: 'layer',
+        key,
+        layer: l,
+        startX: pt.x,
+        startY: pt.y,
+        origDx: off.dx,
+        origDy: off.dy
+      };
+      if (l.anim_behavior === 'spin_vinyl_scratch') {
+        foley.play('dj_beat_and_scratch');
+      } else {
+        foley.play('brad_snap');
+      }
+      renderLayerList();
+      return;
+    }
+  }
+});
+
+window.addEventListener('mousemove', evt => {
+  if (!draggingItem) return;
+  const pt = getCanvasCoords(evt);
+  const dx = pt.x - draggingItem.startX;
+  const dy = pt.y - draggingItem.startY;
+  if (draggingItem.type === 'extra') {
+    draggingItem.extra.x = draggingItem.origX + dx;
+    draggingItem.extra.y = draggingItem.origY + dy;
+  } else if (draggingItem.type === 'layer') {
+    layerUserOffsets[draggingItem.key] = {
+      dx: draggingItem.origDx + dx,
+      dy: draggingItem.origDy + dy
+    };
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  if (draggingItem) {
+    foley.play('brad_snap');
+    draggingItem = null;
+  }
+});
+
+/* ==========================================================================
+   60FPS PROCEDURAL STAGE & CHOREOGRAPHY RENDERER
+   ========================================================================== */
+let lastFrameTime = performance.now();
+let simTime = 0;
+let fpsSmooth = 60;
+
+function renderLoop(nowMs) {
+  const dt = Math.min(0.05, (nowMs - lastFrameTime) * 0.001);
+  lastFrameTime = nowMs;
+  fpsSmooth = fpsSmooth * 0.9 + (1 / Math.max(0.001, dt)) * 0.1;
+  if (Math.random() < 0.1) {
+    document.getElementById('fpsCounter').textContent = `${Math.round(fpsSmooth)} FPS`;
+  }
+
+  simTime += dt * animSpeed;
+  explodeProgress += (targetExplodeProgress - explodeProgress) * Math.min(1, dt * 8.5);
+  hourglassFlipAnim += ((hourglassFlipped ? Math.PI : 0) - hourglassFlipAnim) * Math.min(1, dt * 6.0);
+
+  drawStage(simTime);
+  requestAnimationFrame(renderLoop);
+}
+
+function drawStage(t) {
+  ctx.clearRect(0, 0, 1280, 720);
+
+  // Archival Stage Backdrop & Subtle Drafting Grid
+  const bgGrad = ctx.createRadialGradient(640, 320, 80, 640, 360, 760);
+  bgGrad.addColorStop(0, '#182034');
+  bgGrad.addColorStop(0.65, '#0d111c');
+  bgGrad.addColorStop(1, '#07090f');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, 1280, 720);
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+  ctx.lineWidth = 1;
+  for (let gx = 0; gx <= 1280; gx += 64) {
+    ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, 720); ctx.stroke();
+  }
+  for (let gy = 0; gy <= 720; gy += 64) {
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(1280, gy); ctx.stroke();
+  }
+
+  if (!currentAssembly) return;
+
+  // Special full-canvas matrix spotlight mode for #14
+  if (currentAssembly.id === 'right_foot_right_hand_matrix' && explodeProgress < 0.25) {
+    drawTrustMatrixStage(t);
+    return;
+  }
+
+  // Pre-Layer Environmental Choreography (Portals, Roads, Waves)
+  drawAssemblyEnvironmentUnderlay(currentAssembly, t);
+
+  // Sort layers by z_order and render
+  const layers = [...(currentAssembly.layers || [])].sort((a, b) => (a.z_order || 0) - (b.z_order || 0));
+  layers.forEach((layer, idx) => {
+    drawAnimatedLayer(layer, idx, layers.length, t);
+  });
+
+  // Render Spawned Extras
+  spawnedExtras.forEach(ex => {
+    const img = getImage(ex.asset);
+    if (img && img.loaded) {
+      ctx.save();
+      const bounceY = Math.abs(Math.sin(t * 6.2 + ex.phase)) * -18;
+      const swayRot = Math.sin(t * 3.1 + ex.phase) * 0.09;
+      ctx.translate(ex.x, ex.y + bounceY);
+      ctx.rotate(swayRot);
+      const w = img.naturalWidth * ex.scale;
+      const h = img.naturalHeight * ex.scale;
+      ctx.drawImage(img, -w * 0.5, -h * 0.5, w, h);
+      if (showBradPins) {
+        drawBradFastener(0, 0, 'EXTRA', false);
+      }
+      ctx.restore();
+    }
+  });
+
+  // Post-Layer Volumetric Overlays
+  drawAssemblyForegroundOverlay(currentAssembly, t);
+}
+
+function drawAssemblyEnvironmentUnderlay(assembly, t) {
+  const id = assembly.id;
+
+  if (id === 'car_wheels_headlights_passengers' || id === 'poet_motorcycle_multi_aspect') {
+    ctx.save();
+    ctx.fillStyle = '#0a0d14';
+    ctx.fillRect(0, 485, 1280, 235);
+    ctx.strokeStyle = 'rgba(240, 180, 41, 0.45)';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([48, 36]);
+    ctx.lineDashOffset = -(t * 420);
+    ctx.beginPath();
+    ctx.moveTo(0, 565);
+    ctx.lineTo(1280, 565);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  if (id === 'tv_window_door_portals' && assembly.portal_presets) {
+    const preset = assembly.portal_presets[currentPortalIndex] || assembly.portal_presets[0];
+    const rect = preset.aperture_rect || [0.3, 0.2, 0.3, 0.35];
+    const px = rect[0] * 1280;
+    const py = rect[1] * 720;
+    const pw = rect[2] * 1280;
+    const ph = rect[3] * 720;
+
+    const vidPath = (assembly.archive_videos && assembly.archive_videos[currentPortalIndex % assembly.archive_videos.length]) || 'weave/p04_hands/passage.mp4';
+    const vid = getVideo(vidPath);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(px, py, pw, ph, 10);
+    ctx.clip();
+
+    const grad = ctx.createLinearGradient(px, py, px + pw, py + ph);
+    grad.addColorStop(0, '#1e3a8a');
+    grad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = grad;
+    ctx.fillRect(px, py, pw, ph);
+
+    if (vid && vid.readyState >= 2) {
+      ctx.drawImage(vid, px - 20 + Math.sin(t * 0.7) * 15, py - 20, pw + 40, ph + 40);
+    }
+
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(px, py, pw, ph);
+    ctx.restore();
+  }
+
+  if (id === 'water_worlds_and_boats_ensemble') {
+    for (let plane = 0; plane < 3; plane++) {
+      ctx.save();
+      const baseY = 395 + plane * 72;
+      ctx.fillStyle = plane === 0 ? 'rgba(14, 38, 68, 0.65)' : plane === 1 ? 'rgba(20, 62, 102, 0.72)' : 'rgba(28, 88, 138, 0.78)';
+      ctx.beginPath();
+      ctx.moveTo(0, 720);
+      for (let x = 0; x <= 1280; x += 24) {
+        const wy = baseY + Math.sin(x * 0.012 + t * (1.6 + plane * 0.6) + plane) * (12 + plane * 5);
+        ctx.lineTo(x, wy);
+      }
+      ctx.lineTo(1280, 720);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  if (id === 'interior_decorator_reusable_sets') {
+    const wallColors = ['#1b1926', '#231a24', '#162229'];
+    const floorColors = ['#29211c', '#2e1f1d', '#1f2421'];
+    const rpIdx = currentRoomPresetIndex % 3;
+    ctx.fillStyle = wallColors[rpIdx];
+    ctx.fillRect(60, 50, 1160, 440);
+    ctx.fillStyle = floorColors[rpIdx];
+    ctx.fillRect(60, 490, 1160, 180);
+    ctx.strokeStyle = 'rgba(240, 180, 41, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(60, 490); ctx.lineTo(1220, 490); ctx.stroke();
+  }
+}
+
+function drawAnimatedLayer(layer, idx, total, t) {
+  const img = getImage(layer.file);
+  const base = getLayerBaseCoords(layer);
+  const key = `${currentAssembly.id}:${layer.id}`;
+  const userOff = layerUserOffsets[key] || { dx: 0, dy: 0 };
+
+  let x = base.x + userOff.dx;
+  let y = base.y + userOff.dy;
+  let scale = base.scale;
+  let rot = (base.rotDeg * Math.PI) / 180;
+  const baseAlpha = (layer.assembled && typeof layer.assembled.alpha === 'number') ? layer.assembled.alpha : 1.0;
+  let alpha = baseAlpha * (1 - explodeProgress) + 1.0 * explodeProgress;
+  const flipX = Boolean(layer.assembled && layer.assembled.flipX);
+
+  const anim = layer.anim_behavior || 'static';
+  const liveFactor = 1 - explodeProgress;
+
+  // Aspect transformation for Motorcycle (#2)
+  if (currentAssembly.id === 'poet_motorcycle_multi_aspect' && currentAspectIndex > 0) {
+    if (currentAspectIndex === 1) rot -= 0.22 * liveFactor; // banking lean
+    if (currentAspectIndex === 2) scale *= 1.12;            // front approach
+    if (currentAspectIndex === 3) scale *= 0.86;            // rear departure
+  }
+
+  // Wing state transformation (#9)
+  if (currentAssembly.id === 'angel_and_raven_wings_flight' && currentWingStateIndex > 0) {
+    const wingAdd = (currentWingStateIndex - 1) * 0.18 * liveFactor;
+    if (anim === 'flap_wing_L') rot -= wingAdd;
+    if (anim === 'flap_wing_R') rot += wingAdd;
+  }
+
+  if (stageMode !== 'exploded') {
+    switch (anim) {
+      case 'spin_wheel_cw':
+        rot += t * 7.5 * liveFactor;
+        break;
+      case 'chassis_suspension_bounce':
+        y += Math.sin(t * 9.0) * 4.5 * liveFactor;
+        break;
+      case 'headlight_glow':
+      case 'beam_pulse':
+      case 'hazard_flash':
+        alpha = baseAlpha * (0.65 + 0.35 * Math.sin(t * 5.0 + idx));
+        scale *= 1.0 + 0.06 * Math.sin(t * 5.0);
+        break;
+      case 'talk_bob_driver':
+      case 'talk_bob_passenger':
+      case 'gesture_wave':
+      case 'steer_rock':
+        y += Math.sin(t * 6.5 + idx) * 5.0 * liveFactor;
+        rot += Math.sin(t * 4.2 + idx) * 0.05 * liveFactor;
+        break;
+      case 'systole_contract':
+      case 'systole_ring_expand':
+      case 'diastole_recoil': {
+        const cycle = (t * 1.15) % 1.0;
+        const lub = Math.exp(-Math.pow((cycle - 0.15) / 0.06, 2)) * 0.16;
+        const dub = Math.exp(-Math.pow((cycle - 0.34) / 0.07, 2)) * 0.11;
+        scale *= 1.0 + (lub + dub) * liveFactor;
+        break;
+      }
+      case 'hourglass_flip_180':
+        rot += hourglassFlipAnim * liveFactor;
+        break;
+      case 'hand_flip_gesture':
+        rot += Math.sin(t * 2.0) * 0.12 * liveFactor + hourglassFlipAnim * 0.25;
+        break;
+      case 'sand_drain_top':
+      case 'sand_stream_mid':
+      case 'sand_fill_bottom':
+      case 'sand_shimmer':
+        y += Math.sin(t * 5.0 + idx) * 6.0 * liveFactor;
+        alpha = 0.75 + 0.25 * Math.sin(t * 8.0);
+        break;
+      case 'stump_L_press_and_carry':
+      case 'stump_R_await_snap':
+      case 'hand_A_snap_into_cuff':
+      case 'hand_B_pickup_and_snap':
+      case 'citizen_rise_beat4': {
+        const beatIdx = currentBeatIndex >= 0 ? currentBeatIndex : (Math.floor(t * 0.5) % 4);
+        if (anim === 'hand_A_snap_into_cuff' && beatIdx === 0) {
+          x += 95 * liveFactor;
+          y += 55 * liveFactor;
+        } else if (anim === 'hand_B_pickup_and_snap' && beatIdx < 2) {
+          x -= 85 * liveFactor;
+          y += 50 * liveFactor;
+        } else if (anim === 'citizen_rise_beat4') {
+          y += (beatIdx === 3 ? -20 : 40) * liveFactor;
+          alpha = beatIdx === 3 ? 1.0 : 0.35;
+        }
+        rot += Math.sin(t * 2.8 + idx) * 0.06 * liveFactor;
+        break;
+      }
+      case 'thrower_torso_whip':
+        rot += Math.sin(t * 3.5) * 0.25 * liveFactor;
+        break;
+      case 'tambourine_parabolic_flight':
+      case 'tambourine_arc_trail':
+      case 'jingle_orbit': {
+        const prog = manualScrub !== null ? manualScrub : ((t * 0.55) % 1.0);
+        x = (280 + prog * 620) * liveFactor + base.x * explodeProgress;
+        y = (430 - Math.sin(prog * Math.PI) * 230 - prog * 80) * liveFactor + base.y * explodeProgress;
+        rot += prog * Math.PI * 6;
+        break;
+      }
+      case 'shatter_on_impact':
+      case 'shatter_burst_petal': {
+        const prog = manualScrub !== null ? manualScrub : ((t * 0.55) % 1.0);
+        if (prog > 0.62) {
+          const burst = (prog - 0.62) / 0.38;
+          const angle = idx * 1.9;
+          x += Math.cos(angle) * burst * 145 * liveFactor;
+          y += (Math.sin(angle) * burst * 120 + burst * burst * 95) * liveFactor;
+          rot += burst * 2.8;
+        } else if (anim === 'shatter_burst_petal') {
+          alpha = 0.22;
+        }
+        break;
+      }
+      case 'walk_into_booth': {
+        const walkProg = ((t * 0.35) % 1.0);
+        x += Math.sin(walkProg * Math.PI) * -65 * liveFactor;
+        y += Math.abs(Math.sin(t * 7.5)) * -10 * liveFactor;
+        break;
+      }
+      case 'lip_sync_head':
+      case 'phoneme_swap':
+      case 'receiver_lift_to_ear':
+      case 'cord_stretch':
+        y += Math.sin(t * 9.5 + idx) * 4.0 * liveFactor;
+        scale *= 1.0 + Math.abs(Math.sin(t * 11.0)) * 0.04 * liveFactor;
+        break;
+      case 'door_fold_open':
+      case 'ring_wave_pulse':
+        scale *= 1.0 + Math.sin(t * 12.0) * 0.07 * liveFactor;
+        break;
+      case 'club_dancer_bounce':
+      case 'club_dancer_sway':
+      case 'dj_head_bob':
+        y += Math.abs(Math.sin(t * 6.17 + idx * 1.1)) * -16 * liveFactor;
+        rot += Math.sin(t * 3.08 + idx) * 0.07 * liveFactor;
+        break;
+      case 'woofer_bass_thump': {
+        const beatPulse = Math.pow(Math.max(0, Math.sin(t * 6.17)), 4);
+        scale *= 1.0 + beatPulse * 0.12 * liveFactor;
+        break;
+      }
+      case 'vu_needle_swing':
+      case 'fader_slide':
+      case 'hand_scratch_osc':
+        x += Math.sin(t * 8.5 + idx) * 9 * liveFactor;
+        break;
+      case 'spin_vinyl_scratch':
+        rot += t * 3.8 * liveFactor;
+        break;
+      case 'stem_rise_grow':
+      case 'flower_bloom_open':
+      case 'hand_reach_pluck':
+        y += Math.sin(t * 2.2 + idx) * 10 * liveFactor;
+        scale *= 1.0 + Math.sin(t * 2.2) * 0.08 * liveFactor;
+        break;
+      case 'flap_wing_L':
+        rot += Math.sin(t * 4.2) * 0.32 * liveFactor;
+        break;
+      case 'flap_wing_R':
+      case 'flap_wing_swap':
+        rot -= Math.sin(t * 4.2) * 0.32 * liveFactor;
+        break;
+      case 'angel_hover':
+        y += Math.sin(t * 4.2 - 0.5) * 14 * liveFactor;
+        break;
+      case 'parallax_inner_world':
+      case 'window_sash_slide':
+      case 'curtain_part_open':
+        x += Math.sin(t * 1.1 + idx) * 16 * liveFactor;
+        break;
+      case 'wave_drift_1':
+      case 'wave_drift_2':
+      case 'wave_drift_3':
+        x += Math.sin(t * 1.8 + idx) * 26 * liveFactor;
+        y += Math.cos(t * 2.4 + idx) * 6 * liveFactor;
+        break;
+      case 'boat_pitch_roll':
+      case 'moon_orbit_drift':
+        y += Math.sin(t * 2.4 + idx * 1.5) * 12 * liveFactor;
+        rot += Math.cos(t * 2.1 + idx) * 0.065 * liveFactor;
+        break;
+      case 'ray_slow_sweep':
+      case 'cloud_part_left':
+      case 'cloud_part_right':
+        x += Math.sin(t * 0.65 + idx * 2.0) * 42 * liveFactor;
+        break;
+    }
+  }
+
+  // Dashed guide line from exploded position to assembled socket
+  if (explodeProgress > 0.02) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(240, 180, 41, 0.32)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(base.asmX, base.asmY);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rot);
+  if (flipX) ctx.scale(-1, 1);
+  ctx.globalAlpha = alpha;
+
+  if (img && img.loaded) {
+    const resNorm = (layer.file && layer.file.includes('poet_tracksuit_v1/01_COMPONENTS/')) ? 0.25 : 1.0;
+    const w = img.naturalWidth * scale * resNorm;
+    const h = img.naturalHeight * scale * resNorm;
+    const pnx = (layer.pivot && typeof layer.pivot.nx === 'number') ? layer.pivot.nx : 0.5;
+    const pny = (layer.pivot && typeof layer.pivot.ny === 'number') ? layer.pivot.ny : 0.5;
+    const px = pnx * w;
+    const py = pny * h;
+
+    if (selectedLayerId === layer.id) {
+      ctx.shadowColor = 'rgba(240, 180, 41, 0.78)';
+      ctx.shadowBlur = 18 * glowIntensity;
+    }
+
+    ctx.drawImage(img, -px, -py, w, h);
+  }
+  ctx.restore();
+
+  if (showBradPins) {
+    drawBradFastener(x, y, layer.label, selectedLayerId === layer.id);
+  }
+}
+
+function drawBradFastener(x, y, label, isSelected) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, isSelected ? 7.5 : 5.5, 0, Math.PI * 2);
+  ctx.fillStyle = isSelected ? '#f0b429' : '#c68a1c';
+  ctx.fill();
+  ctx.lineWidth = 1.8;
+  ctx.strokeStyle = '#090b10';
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x - 3, y);
+  ctx.lineTo(x + 3, y);
+  ctx.strokeStyle = '#2d1c04';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  if (isSelected || explodeProgress > 0.35) {
+    ctx.font = '600 10px "JetBrains Mono", monospace';
+    const textW = ctx.measureText(label).width;
+    ctx.fillStyle = 'rgba(9, 11, 17, 0.86)';
+    ctx.fillRect(x - textW * 0.5 - 5, y + 10, textW + 10, 16);
+    ctx.fillStyle = isSelected ? '#f0b429' : '#cbd5e1';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x, y + 21);
+  }
+  ctx.restore();
+}
+
+function drawAssemblyForegroundOverlay(assembly, t) {
+  const id = assembly.id;
+
+  if ((id === 'car_wheels_headlights_passengers' || id === 'poet_motorcycle_multi_aspect') && glowIntensity > 0.1) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    const grad = ctx.createRadialGradient(840, 440, 15, 1080, 460, 360);
+    grad.addColorStop(0, `rgba(255, 230, 138, ${0.38 * glowIntensity})`);
+    grad.addColorStop(0.5, `rgba(56, 189, 248, ${0.14 * glowIntensity})`);
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(780, 420);
+    ctx.lineTo(1280, 250);
+    ctx.lineTo(1280, 650);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  if (id === 'beating_heart_and_hourglass' && explodeProgress < 0.3) {
+    ctx.save();
+    ctx.fillStyle = '#f0b429';
+    for (let p = 0; p < 22; p++) {
+      const py = 330 + ((t * 90 + p * 7) % 105);
+      const px = 860 + Math.sin(p * 3.7 + t * 5) * (py > 415 ? 24 : 2.5);
+      ctx.beginPath();
+      ctx.arc(px, py, 2.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+/* ==========================================================================
+   #14 RIGHT FOOT & RIGHT HAND FOR THE JOB — 12-ACTION SPOTLIGHT CANVAS
+   ========================================================================== */
+function drawTrustMatrixStage(t) {
+  if (!spotlitMatrixRow && trustMatrixRows.length > 0) {
+    spotlitMatrixRow = trustMatrixRows[0];
+  }
+  const active = spotlitMatrixRow;
+  if (!active) return;
+
+  ctx.save();
+  ctx.fillStyle = '#f0b429';
+  ctx.font = '700 17px "JetBrains Mono", monospace';
+  ctx.fillText(`SPOTLIGHT VERIFICATION: ${active.title.toUpperCase()} (${active.poem_context})`, 48, 52);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '500 12px "Inter", sans-serif';
+  ctx.fillText(active.cuff_tuck_rule, 48, 76);
+
+  const panels = [
+    {
+      title: '1. FOREARM CUFF + HORIZONTAL V2 HAND (+90°)',
+      upperAsset: active.forearm_card,
+      lowerAsset: active.hand_card,
+      subLabel: active.hand_label,
+      x: 340,
+      y: 385,
+      rotLowerDeg: active.hand_card.includes('/v2/parts/') ? 90 : 0,
+      badge: 'WRIST CUFF-TUCK OVER HAND'
+    },
+    {
+      title: '2. SHIN CUFF + RIGHT FOOT FOR THE JOB (ANKLE SOCKET)',
+      upperAsset: active.shin_card,
+      lowerAsset: active.foot_card,
+      subLabel: active.foot_label,
+      x: 940,
+      y: 385,
+      rotLowerDeg: 0,
+      badge: 'HEM CUFF-TUCK OVER BOOT SHAFT'
+    }
+  ];
+
+  panels.forEach((p, idx) => {
+    ctx.save();
+    ctx.fillStyle = 'rgba(18, 21, 30, 0.94)';
+    ctx.strokeStyle = idx === 0 ? '#f0b429' : '#38bdf8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(p.x - 265, p.y - 250, 530, 500, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '700 12px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(p.title, p.x, p.y - 218);
+
+    const upperImg = getImage(p.upperAsset);
+    const lowerImg = getImage(p.lowerAsset);
+
+    // Draw lower extremity (Hand or Foot) first so Cuff-Tuck overlaps it cleanly!
+    if (lowerImg && lowerImg.loaded) {
+      ctx.save();
+      ctx.translate(p.x + 25, p.y + 85);
+      ctx.rotate((p.rotLowerDeg * Math.PI) / 180 + Math.sin(t * 2.4 + idx) * 0.08);
+      const scale = Math.min(185 / Math.max(1, lowerImg.naturalWidth), 185 / Math.max(1, lowerImg.naturalHeight));
+      const w = lowerImg.naturalWidth * scale;
+      const h = lowerImg.naturalHeight * scale;
+      ctx.drawImage(lowerImg, -w * 0.5, -h * 0.35, w, h);
+      ctx.restore();
+    }
+
+    // Draw upper limb (Forearm or Shin) clipped at cuff-tuck line OVER the wrist/ankle!
+    if (upperImg && upperImg.loaded) {
+      ctx.save();
+      ctx.translate(p.x, p.y - 55);
+      const scale = 0.22;
+      const w = upperImg.naturalWidth * scale;
+      const h = upperImg.naturalHeight * scale;
+      const clipRatio = idx === 0 ? 0.806 : 0.843;
+      ctx.beginPath();
+      ctx.rect(-w * 0.5, -h * 0.5, w, h * clipRatio);
+      ctx.clip();
+      ctx.drawImage(upperImg, -w * 0.5, -h * 0.5, w, h);
+      ctx.restore();
+    }
+
+    drawBradFastener(p.x + 10, p.y + 55, p.badge, true);
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = '600 11px "JetBrains Mono", monospace';
+    ctx.fillText(p.subLabel, p.x, p.y + 215);
+    ctx.restore();
+  });
+
+  ctx.restore();
+}
+
+initCatalog();
+</script>
+</body>
+</html>

@@ -376,10 +376,10 @@
 
 <header>
   <div class="brand">
-    <span class="brand-badge">ARENA SOLVER v2.0</span>
+    <span class="brand-badge">ARENA SOLVER v2.5D</span>
     <div>
-      <h1>Character Kinematics, Proportion Normalization & Piece-Scaling Arena</h1>
-      <p>8 Canonical Cast Rigs · 1,602 Solved Cutout Parts · 7.5H vs 5.2H Child Lock · Aspect-Compensated Crouch/Fall · Foot-Contact Pins</p>
+      <h1>Character Kinematics, Wrist/Ankle Cuff-Tuck & 2.5D Fake-3D Rig Solver</h1>
+      <p>8 Canonical Cast Rigs · Cuff-Tuck & Tab-Clip Solver · +90° v2 Hand Orientation · Cylindrical 2.5D Parallax & Limb Foreshortening</p>
     </div>
   </div>
   <div class="top-links">
@@ -387,6 +387,7 @@
     <a href="stage.html">Multiplane Stage</a>
     <a href="cards.html">Cutout Cards</a>
     <a href="body_lab.html">Body Lab</a>
+    <a href="assembly.html">Assembly Toybox</a>
     <a href="arena/parts/kit3/release_v2/character_rigs_library.json" target="_blank">character_rigs_library.json ↗</a>
   </div>
 </header>
@@ -401,6 +402,7 @@
       </div>
       <div style="display:flex; flex-wrap:wrap; gap:5px;">
         <button class="btn active" onclick="applyPreset('all8', this)">All 8 Canonical Rigs</button>
+        <button class="btn" onclick="applyPreset('wrist_ankle_audit', this)">Wrist/Ankle Cuff-Tuck + v2 Hand Fix</button>
         <button class="btn" onclick="applyPreset('adult_vs_child', this)">7.5H Adult vs 5.2H Child</button>
         <button class="btn" onclick="applyPreset('crouch_fall_test', this)">Crouch / Fall / Recover BBox Fix</button>
         <button class="btn" onclick="applyPreset('waltz_club', this)">Vintage Waltz + DJ Club</button>
@@ -440,11 +442,30 @@
   <main class="center-col">
     <div class="stage-toolbar">
       <div class="toolbar-group">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">SEAM MODE:</span>
+        <button class="btn success active" id="seamSolvedBtn" onclick="setSeamMode('solved')">✓ Cuff-Tuck & Tab-Clip (Solved)</button>
+        <button class="btn danger" id="seamBrokenBtn" onclick="setSeamMode('broken')">✕ Raw Butt-Joint Tabs (Broken Wrist/Ankle)</button>
+      </div>
+      <div class="toolbar-group">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">2.5D FAKE-3D:</span>
+        <label style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;color:var(--text);background:var(--panel-hi);border:1px solid var(--border);padding:4px 8px;border-radius:5px;">
+          <span>3D Turn/Yaw:</span>
+          <input type="range" id="fake3dYawSlider" min="-45" max="45" step="1" value="14" style="width:76px;" oninput="setFake3dYaw(this.value)" />
+          <span id="fake3dYawVal" style="color:var(--accent-hi);min-width:30px;">+14°</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;color:var(--text);background:var(--panel-hi);border:1px solid var(--border);padding:4px 8px;border-radius:5px;">
+          <span>3D Limb Z-Foreshorten:</span>
+          <input type="range" id="fake3dForeshortenSlider" min="0" max="0.55" step="0.01" value="0.22" style="width:70px;" oninput="setFake3dForeshorten(this.value)" />
+          <span id="fake3dForeshortenVal" style="color:var(--cyan);min-width:34px;">0.22</span>
+        </label>
+        <button class="btn active" id="toggleExtrusionBtn" onclick="toggleOverlay('extrusion')">2.5D Edge Rim</button>
+      </div>
+      <div class="toolbar-group">
         <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">SCALE MODE:</span>
-        <button class="btn success active" id="modeSolvedBtn" onclick="setComparisonMode('solved')">Solved Anatomical + Aspect-Compensated (Fixed)</button>
-        <button class="btn" id="modeSplitBtn" onclick="setComparisonMode('split')">Side-by-Side Split: Naive BBox vs Solved</button>
-        <button class="btn danger" id="modeGhostBtn" onclick="setComparisonMode('ghost')">Overlay Broken Naive BBox Ghost</button>
-        <button class="btn danger" id="modeNaiveBtn" onclick="setComparisonMode('naive')">Naive BBox Scaling Only (Broken)</button>
+        <button class="btn success active" id="modeSolvedBtn" onclick="setComparisonMode('solved')">Solved Anatomical</button>
+        <button class="btn" id="modeSplitBtn" onclick="setComparisonMode('split')">Split: Broken vs Solved</button>
+        <button class="btn danger" id="modeGhostBtn" onclick="setComparisonMode('ghost')">Broken Ghost Overlay</button>
+        <button class="btn danger" id="modeNaiveBtn" onclick="setComparisonMode('naive')">Naive BBox (Broken)</button>
       </div>
       <div class="toolbar-group">
         <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">RIG RENDER:</span>
@@ -461,7 +482,7 @@
       <canvas id="arenaCanvas" width="1600" height="620"></canvas>
       <div class="stage-hud">
         <div class="hud-pill" id="hudLeft">
-          SOLVER: <span class="good">ANATOMICAL + ASPECT COMPENSATED</span> · Z=1.0 Focal Plane (`0.54` Adult / `0.37` Child / `0.36` Crouch / `0.22` Prone)
+          SOLVER: <span class="good">CUFF-TUCK + +90° V2 HAND + 2.5D PARALLAX</span> · Z=1.0 (`0.54` Adult / `0.37` Child / `0.36` Crouch / `0.22` Prone)
         </div>
         <div class="hud-pill" id="hudRight">
           LIBRARY: <span class="hi" id="hudLibStatus">Loading character_rigs_library.json...</span>
@@ -469,63 +490,64 @@
       </div>
     </div>
 
-    <!-- LOWER DECK: PIECE-SCALING COMPARISON & LIVE TELEMETRY -->
+    <!-- LOWER DECK: WRIST/ANKLE CUFF-TUCK + 2.5D FAKE-3D VISUAL PROOF & TELEMETRY -->
     <div class="lower-deck">
       <div class="panel-box">
         <div class="sec-title">
-          <span>Why Naive BBox Scaling Broke & How This Solver Fixes It</span>
-          <span class="badge-good">4 Root Causes Solved</span>
+          <span>Why Wrist/Ankle Seams & BBox Scaling Broke — And How This Solver Fixes Them</span>
+          <span class="badge-good">6 Root Causes Solved</span>
         </div>
         <div class="formula-box">
-          1. Posture Stage Height Ratio (Z=1.0): H_stage = 0.54 (Adult 7.5H) | 0.37 (Child Age 7, 5.2H = 0.68x) | 0.36 (Crouched/Seated) | 0.22 (Prone/Falling)<br/>
-          2. Aspect Compensation (w/h &gt; 0.75): mult = clamp(1 / sqrt(1 + 1.35 * (w/h - 0.50)^2), 0.36, 0.82)<br/>
-          3. Zoomed-Card Normalization: scale(part) = (H_stage * torso_frac * part_scale_table[slot]) / max_axis_visible_px(part)
+          1. Tracksuit Wrist Cuff-Tuck: Clip 08_forearm_L at y=1238 (0.806h), socket y=1195, hand scale=0.23 anchored at wrist crease y=315, drawn BEHIND (z &lt; forearm)<br/>
+          2. Tracksuit Ankle Cuff-Tuck: Clip 12_shin_L at y=1295 (0.843h), socket y=1250, boot scale=0.29 anchored at y=360, drawn BEHIND (z &lt; shin) pant cuff<br/>
+          3. kit3/v2 Horizontal Hand Fix (74×43): Rotate +90° around (0.24w, 0.48h), mirror hand_R scale(1,-1), clip farm at 0.86h, draw hand BEHIND (z &lt; forearm)<br/>
+          4. 2.5D Fake-3D Rig: Face Δx = sin(yaw)·R_head, Torso W = cos(yaw), Limb scaleY = cos(θ_z), Hand/Boot boost = 1 + 0.22·sin(θ_z)
         </div>
         <table class="data-table">
           <thead>
             <tr>
-              <th>Cutout / Part Case</th>
-              <th>Raw Vis BBox (px)</th>
-              <th>Aspect (w/h)</th>
-              <th>Naive BBox Scale (Broken)</th>
-              <th>Solved Scale (Fixed)</th>
+              <th>Joint / Cutout Case</th>
+              <th>Raw Dimensions</th>
+              <th>Broken Butt-Joint / Naive Bug</th>
+              <th>Solved Cuff-Tuck + 2.5D Fix</th>
             </tr>
           </thead>
           <tbody id="comparisonTableBody">
             <tr>
-              <td>Poet Tracksuit `15_hand_relaxed_L.png`</td>
-              <td>641 × 1087 px</td>
-              <td>0.59</td>
-              <td><span class="badge-bad">100% Torso Height (Giant Hand!)</span></td>
-              <td><span class="badge-good">0.28 × Torso (52px @ 1080p)</span></td>
+              <td>Tracksuit Wrist (`08_forearm_L` + `15_hand_relaxed_L`)</td>
+              <td>1024×1536 + 1271×1237</td>
+              <td><span class="badge-bad">2 Grommet Tabs Collide Outside Cuff @ 0.28x</span></td>
+              <td><span class="badge-good">Clip Forearm y=1238 · Hand 0.23x Tucked Behind Cuff</span></td>
             </tr>
             <tr>
-              <td>Poet `pose.lying_back.png` (Prone)</td>
-              <td>496 × 206 px</td>
-              <td>2.41</td>
-              <td><span class="badge-bad">0.54 Stage H → 1,404px Wide Giant!</span></td>
-              <td><span class="badge-good">0.22 Stage H (Aspect 0.41x = 572px)</span></td>
+              <td>Tracksuit Ankle (`12_shin_L` + `19_boot_front_L`)</td>
+              <td>1024×1536 + 1278×1230</td>
+              <td><span class="badge-bad">Kraft Boot Pull-Tab Sticks Over Pant Cuff @ 0.40x</span></td>
+              <td><span class="badge-good">Clip Shin y=1295 · Boot 0.29x Tucked Under Cuff</span></td>
             </tr>
             <tr>
-              <td>Poet / Muse `poet_crouch_f72_clean.png`</td>
-              <td>575 × 738 px</td>
-              <td>0.78</td>
-              <td><span class="badge-bad">0.54 Stage H (1.50x Too Tall!)</span></td>
-              <td><span class="badge-good">0.36 Stage H (Aspect 0.67x)</span></td>
+              <td>`kit3/v2` Hands (`body.front.hand.L/R.png`)</td>
+              <td>74 × 43 px (Horizontal!)</td>
+              <td><span class="badge-bad">Drawn @ 0° → Sticks Out 90° Sideways w/ Brown Tab!</span></td>
+              <td><span class="badge-good">Rotated +90° @ (0.24w,0.48h) + R-Mirrored Under Cuff</span></td>
+            </tr>
+            <tr>
+              <td>Tracksuit Neck (`01_torso_front` + `21_head_front_blank`)</td>
+              <td>1278×1230 + 1155×1362</td>
+              <td><span class="badge-bad">Bottom Neck Edge Overlaps Jacket Collar</span></td>
+              <td><span class="badge-good">Clip Neck y=1135 + 2.5D Collar Lip Overlay</span></td>
+            </tr>
+            <tr>
+              <td>Poet `pose.lying_back.png` & `poet_crouch_f72`</td>
+              <td>496×206 (ar 2.41)</td>
+              <td><span class="badge-bad">0.54 Stage H → 1,404px Wide Prone Giant!</span></td>
+              <td><span class="badge-good">0.22 Prone / 0.36 Crouch + Aspect Comp</span></td>
             </tr>
             <tr>
               <td>Child Traveler / Ghost Child Age 7</td>
-              <td>155 × 387 px (crouch: 491px)</td>
-              <td>0.40 / 0.44</td>
+              <td>155 × 387 px</td>
               <td><span class="badge-bad">0.54 Adult Height (Giant Child!)</span></td>
-              <td><span class="badge-good">0.37 Stage H (5.2H = 0.68x Adult)</span></td>
-            </tr>
-            <tr>
-              <td>EX Bomber Jacket (`ex_jacket_back`)</td>
-              <td>280 × 391 px</td>
-              <td>0.72</td>
-              <td><span class="badge-bad">Accidental Front Flip Allowed</span></td>
-              <td><span class="badge-good">0.555 Stage H · Strict Back/3Q-Back</span></td>
+              <td><span class="badge-good">0.37 Stage H (5.2H = 0.68x Adult Lock)</span></td>
             </tr>
           </tbody>
         </table>
@@ -533,10 +555,11 @@
 
       <div class="panel-box">
         <div class="sec-title">
-          <span>Zoomed-Card vs Solved Anatomical Piece Visual Proof</span>
+          <span>Wrist & Ankle Seam + 2.5D Fake-3D Close-Up Proof (`#proofCanvas`)</span>
           <span id="selectedRigTitle" style="color:var(--accent-hi)">poet_tracksuit_31</span>
         </div>
-        <canvas id="pieceCompareCanvas" width="680" height="235" style="width:100%;height:235px;background:#090c12;border:1px solid var(--border);border-radius:5px;"></canvas>
+        <canvas id="proofCanvas" width="760" height="300" style="width:100%;height:300px;background:#090c12;border:1px solid var(--border);border-radius:5px;margin-bottom:8px;"></canvas>
+        <canvas id="pieceCompareCanvas" width="680" height="175" style="width:100%;height:175px;background:#090c12;border:1px solid var(--border);border-radius:5px;"></canvas>
       </div>
     </div>
   </main>
@@ -549,6 +572,10 @@
         <span id="inspectorRigBadge" class="cast-tag">7.5H · 0.54</span>
       </div>
       <div id="inspectorSummary" style="font-size:11.5px;color:var(--muted);margin-bottom:8px;"></div>
+      <div class="sec-title" style="margin-top:8px;">
+        <span>Cuff-Tuck & 2.5D Fake-3D Solver Rules</span>
+      </div>
+      <div id="cuffRulesBox" style="font-family:var(--mono);font-size:10.5px;color:var(--text);background:rgba(0,0,0,0.25);padding:7px;border-radius:4px;border:1px solid rgba(255,255,255,0.06);margin-bottom:8px;"></div>
       <div class="sec-title" style="margin-top:10px;">
         <span>Posture Stage Height Ratios (Z = 1.0)</span>
       </div>
@@ -558,7 +585,7 @@
     <div class="panel-box">
       <div class="sec-title">
         <span>Per-Part Scale Table (`torso = 1.0`)</span>
-        <span>Zoomed-Card Fix</span>
+        <span>Cuff-Tuck Normalized</span>
       </div>
       <div id="partScaleGrid" class="part-bars"></div>
     </div>
@@ -750,10 +777,10 @@ const PART_SCALE_TABLE = {
   hip_bridge: 0.52,
   upper_arm: 0.48,
   forearm: 0.44,
-  hand: 0.28,
+  hand: 0.23,
   thigh: 0.62,
   shin: 0.58,
-  foot: 0.40,
+  foot: 0.29,
   head: 0.64,
   eyes: 0.20,
   brows: 0.18,
@@ -767,8 +794,11 @@ let libraryData = null;
 let actors = [];
 let selectedRigId = "poet_tracksuit_31";
 let comparisonMode = "solved"; // 'solved', 'split', 'ghost', 'naive'
+let seamMode = "solved"; // 'solved' = Cuff-Tuck & Tab-Clip + +90deg v2 Hand, 'broken' = Raw Butt-Joint Tabs
+let fake3dYawDeg = 14; // -45 to +45 deg cylindrical 2.5D turn
+let fake3dForeshorten = 0.22; // 0 to 0.55 Z-axis limb foreshortening + extremity perspective boost
 let rigRenderStyle = "jointed"; // 'jointed', 'hybrid'
-let overlays = { pivots: true, pins: true, rulers: true };
+let overlays = { pivots: true, pins: true, rulers: true, extrusion: true };
 let isPlaying = true;
 let lastTime = performance.now();
 let simTime = 0;
@@ -791,7 +821,7 @@ function getKitImages(kitDir, isBackOnly, useTracksuit31) {
   const basePoses = `arena/parts/kit3/v2/poses/${kitDir}`;
 
   if (useTracksuit31 && !isBackOnly) {
-    const ts = "kits/packs/poet_tracksuit_v1";
+    const ts = "kits/packs/poet_tracksuit_v1/01_COMPONENTS";
     return {
       torso: getImg(`${ts}/01_torso_front.png`),
       pelvis: getImg(`${ts}/06_pelvis_front_cover.png`),
@@ -810,6 +840,7 @@ function getKitImages(kitDir, isBackOnly, useTracksuit31) {
       head: getImg(`${ts}/21_head_front_blank.png`),
       eyes: getImg(`${ts}/22_eyes_open.png`),
       brows: getImg(`${ts}/24_brows_rest.png`),
+      nose: getImg(`${ts}/26_nose_front.png`),
       mouth: getImg(`${ts}/27_mouth_rest.png`),
       sunglasses: getImg(`${ts}/31_sunglasses_front.png`),
       pose_stand: getImg(`${basePoses}/stand_front.png`),
@@ -823,31 +854,33 @@ function getKitImages(kitDir, isBackOnly, useTracksuit31) {
     };
   }
 
+  const hasSkirtPelvis = /^(woman\.|ancestors\.|parents\.mother)/.test(kitDir) && !/work_shirt|stage_black/.test(kitDir);
+  const hasReplacementSet = /^(poet\.|woman\.|young_poet\.)/.test(kitDir);
   return {
     torso: getImg(`${baseP}/body.${view}.torso.png`),
-    pelvis: getImg(`${baseP}/body.${view}.pelvis.png`),
+    pelvis: hasSkirtPelvis ? getImg(`${baseP}/body.${view}.pelvis.png`) : null,
     uarm_L: getImg(`${baseP}/body.${view}.uarm.L.png`),
     farm_L: getImg(`${baseP}/body.${view}.farm.L.png`),
     hand_L: getImg(`${baseP}/body.${view}.hand.L.png`),
     uarm_R: getImg(`${baseP}/body.${view}.uarm.R.png`),
     farm_R: getImg(`${baseP}/body.${view}.farm.R.png`),
     hand_R: getImg(`${baseP}/body.${view}.hand.R.png`),
-    thigh_L: getImg(`${baseP}/body.${view}.thigh.L.png`),
+    thigh_L: hasSkirtPelvis ? null : getImg(`${baseP}/body.${view}.thigh.L.png`),
     shin_L: getImg(`${baseP}/body.${view}.shin.L.png`),
     foot_L: getImg(`${baseP}/body.${view}.foot.L.png`),
-    thigh_R: getImg(`${baseP}/body.${view}.thigh.R.png`),
+    thigh_R: hasSkirtPelvis ? null : getImg(`${baseP}/body.${view}.thigh.R.png`),
     shin_R: getImg(`${baseP}/body.${view}.shin.R.png`),
     foot_R: getImg(`${baseP}/body.${view}.foot.R.png`),
     head: getImg(`${baseP}/head.${view}.png`),
     closeup_hand: getImg(`${baseP}/hand.R.open.palm.png`),
-    closeup_foot: getImg(`${baseP}/foot.R.flat.png`),
+    closeup_foot: getImg(hasReplacementSet ? `${baseP}/foot.R.flat.png` : `${baseP}/body.${view}.foot.R.png`),
     pose_stand: getImg(`${basePoses}/stand_${view}.png`),
     pose_walk: getImg(`${basePoses}/walk.png`),
     pose_reach: getImg(`${basePoses}/reach.png`),
     pose_crouch: getImg(kitDir === "poet.black_tshirt" ? `arena/bodies/man_crouch_f72_clean.png` : `${basePoses}/crouch.png`),
     pose_kneel: getImg(`${basePoses}/kneel.png`),
     pose_fall: getImg(`${basePoses}/fall.png`),
-    pose_prone: getImg(`${baseP}/replacement.lie_back.png`),
+    pose_prone: getImg(hasReplacementSet ? `${baseP}/replacement.lie_back.png` : `${basePoses}/fall.png`),
     pose_recover: getImg(`arena/bodies/poet_floor_recovery_clean.png`)
   };
 }
@@ -987,10 +1020,9 @@ function evaluateCycleKinematics(actor, cycleName, tNorm) {
     angles.thigh_L = 6 * lift;
     angles.thigh_R = -12 * lift;
   } else if (cycleName === "crouch") {
-    // Smooth cycle into deep crouch & hold so user clearly sees crouched height (0.36 vs 0.54)
     const depth = t < 0.2 ? (t / 0.2) : (t < 0.8 ? 1.0 : (1.0 - (t - 0.8) / 0.2));
     posture = depth > 0.55 ? "deep_crouch" : (depth > 0.25 ? "kneeling" : "standing");
-    hRatio = baseH * (1.0 - 0.333 * depth); // 0.54 -> 0.36 for adult, 0.37 -> 0.25 for child!
+    hRatio = baseH * (1.0 - 0.333 * depth);
     aspectMult = 1.0 - 0.33 * depth;
     rootDy = -0.175 * depth * (baseH / 0.54);
     leftPin = true;
@@ -1012,7 +1044,7 @@ function evaluateCycleKinematics(actor, cycleName, tNorm) {
   } else if (cycleName === "fall") {
     const f = t < 0.30 ? (t / 0.30) : (t < 0.82 ? 1.0 : (1.0 - (t - 0.82) / 0.18));
     posture = f > 0.65 ? "prone" : (f > 0.25 ? "falling" : "standing");
-    hRatio = baseH * (1.0 - 0.592 * f); // 0.54 -> 0.22 for adult, 0.37 -> 0.15 for child!
+    hRatio = baseH * (1.0 - 0.592 * f);
     aspectMult = 1.0 - 0.59 * f;
     rootDy = -0.31 * f * (baseH / 0.54);
     leftPin = f < 0.35;
@@ -1030,9 +1062,9 @@ function evaluateCycleKinematics(actor, cycleName, tNorm) {
     angles.thigh_R = 66 * f;
     angles.shin_R = -32 * f;
   } else if (cycleName === "floor_recovery") {
-    const rec = 0.5 - 0.5 * Math.cos(rad); // 0 = prone -> 1 = pushup/crouch -> 0
+    const rec = 0.5 - 0.5 * Math.cos(rad);
     posture = "floor_recovery";
-    hRatio = baseH * (0.41 + 0.26 * rec); // 0.22 .. 0.36
+    hRatio = baseH * (0.41 + 0.26 * rec);
     aspectMult = 0.41 + 0.26 * rec;
     rootDy = -(0.30 - 0.14 * rec) * (baseH / 0.54);
     leftPin = true;
@@ -1078,7 +1110,6 @@ function evaluateCycleKinematics(actor, cycleName, tNorm) {
     angles.thigh_R = -10 * (1 - bounce);
     angles.shin_R = -18 * (1 - bounce);
   } else {
-    // idle_breathe
     const b = Math.sin(rad);
     rootDy = b * 0.003;
     angles.torso = -b * 1.2;
@@ -1101,22 +1132,24 @@ function evaluateCycleKinematics(actor, cycleName, tNorm) {
 }
 
 // Draw a single articulated or replacement character at (cx, floorY)
+// Incorporates:
+// 1. Cuff-Tuck & Ragged-Tab Clipping Solver (forearm/shin grommet tabs clipped at cuff; hand/boot drawn BEHIND cuff)
+// 2. Horizontal v2 Hand Orientation Solver (+90 deg rotation around (0.24w, 0.48h) + right-hand mirroring across limb axis)
+// 3. 2.5D Fake-3D Cylindrical Head Parallax, Torso cos(yaw) Width, Limb Z-Foreshortening & Cardboard Edge Rim
 function drawActorOnStage(ctx, actor, kin, stageW, stageH, floorY, isNaiveBroken, isGhostOverlay) {
   const zScale = 1.0 / Math.max(0.5, actor.z);
+  const isTracksuit31 = !!(actor.use_tracksuit31 && !actor.back_only && actor.costume_idx === 0);
   const activeCostume = actor.costume_variants[actor.costume_idx] || actor.costume_variants[0];
-  const imgs = getKitImages(activeCostume.kit_dir, actor.back_only, actor.use_tracksuit31 && actor.costume_idx === 0);
+  const imgs = getKitImages(activeCostume.kit_dir, actor.back_only, isTracksuit31);
 
-  // Determine standing pixel height on stage
-  // In NAIVE BROKEN mode:
-  // - Child rigs get scaled to 0.54 adult standing height!
-  // - Crouched/falling/prone replacement poses get scaled to 0.54 standing height!
-  // - Zoomed-card parts (head, hands, boots) ignore part_scale_table!
+  const brokenSeams = (seamMode === "broken") || isNaiveBroken;
+
   const solvedStandH = stageH * actor.canonical_height_stage_ratio * zScale;
   const naiveStandH = stageH * 0.54 * zScale;
 
   const currentStandH = isNaiveBroken ? naiveStandH : solvedStandH;
   const currentPostureH = isNaiveBroken
-    ? naiveStandH // Broken: scales crouched/falling bbox to full 0.54 adult height!
+    ? naiveStandH
     : stageH * kin.hRatio * zScale;
 
   ctx.save();
@@ -1134,7 +1167,6 @@ function drawActorOnStage(ctx, actor, kin, stageW, stageH, floorY, isNaiveBroken
   if (useReplacementCard && repImg && repImg.complete && repImg.naturalHeight > 0) {
     const drawH = currentPostureH;
     const ar = repImg.naturalWidth / Math.max(1, repImg.naturalHeight);
-    // In Naive mode, wide prone cards (ar=2.24) scaled to 0.54*stageH become gigantic!
     const drawW = drawH * ar;
     const x0 = actor.x * stageW - drawW * 0.5;
     const y0 = floorY - drawH;
@@ -1156,19 +1188,38 @@ function drawActorOnStage(ctx, actor, kin, stageW, stageH, floorY, isNaiveBroken
     return { x: actor.x * stageW, topY: y0, heightPx: drawH, footLPinX: actor.x * stageW - 18, footRPinX: actor.x * stageW + 18 };
   }
 
+  // 2.5D Fake-3D Yaw & Z-Foreshortening math
+  const deg2rad = Math.PI / 180;
+  const yawRad = (brokenSeams ? 0 : fake3dYawDeg) * deg2rad;
+  const cosYaw = Math.max(0.72, Math.cos(yawRad));
+  const sinYaw = Math.sin(yawRad);
+  const zForeshortenAmt = brokenSeams ? 0 : fake3dForeshorten;
+  const swingPhase = Math.sin(kin.t * Math.PI * 2);
+
+  // Near limbs (L) reach toward camera (foreshortened bone length + slightly magnified hand/boot in perspective)
+  const nearLimbForeshorten = Math.max(0.66, 1.0 - zForeshortenAmt * (0.55 + 0.25 * Math.max(0, swingPhase)));
+  const nearExtremityBoost = 1.0 + zForeshortenAmt * 0.36;
+  // Far limbs (R) recede slightly in Z
+  const farLimbForeshorten = Math.max(0.72, 1.0 - zForeshortenAmt * (0.35 + 0.20 * Math.max(0, -swingPhase)));
+  const farExtremityBoost = Math.max(0.84, 1.0 - zForeshortenAmt * 0.20);
+
+  // Cardboard 2.5D edge rim offset
+  const extrudeDx = (!isGhostOverlay && overlays.extrusion && !brokenSeams)
+    ? (-Math.sign(sinYaw || 1) * Math.max(1.8, Math.abs(sinYaw) * 4.5) * zScale)
+    : 0;
+
   // ARTICULATED MODULAR CUTOUT RIG
-  // Compute anatomical segment lengths from `currentStandH` and `PART_SCALE_TABLE`
   const torsoFrac = actor.is_child ? 0.34 : 0.32;
   const torsoH = currentStandH * torsoFrac;
   const headScale = isNaiveBroken
-    ? (actor.use_tracksuit31 ? 1.05 : 1.18) // Broken raw card ratio: head card (480px) is taller than torso (373px)!
+    ? (isTracksuit31 ? 1.05 : 1.18)
     : (actor.is_child ? 0.78 : PART_SCALE_TABLE.head);
   const handScale = isNaiveBroken
-    ? (actor.use_tracksuit31 ? 0.85 : 0.65) // Broken raw zoomed-card hand!
-    : PART_SCALE_TABLE.hand;
+    ? (isTracksuit31 ? 0.85 : 0.65)
+    : (brokenSeams ? 0.28 : PART_SCALE_TABLE.hand); // 0.23 solved vs 0.28 butt-joint vs 0.85 naive
   const footScale = isNaiveBroken
-    ? (actor.use_tracksuit31 ? 0.82 : 0.62) // Broken raw zoomed-card boot!
-    : PART_SCALE_TABLE.foot;
+    ? (isTracksuit31 ? 0.82 : 0.62)
+    : (brokenSeams ? 0.40 : PART_SCALE_TABLE.foot); // 0.29 solved vs 0.40 butt-joint vs 0.82 naive
 
   const seg = {
     torso: torsoH,
@@ -1186,31 +1237,163 @@ function drawActorOnStage(ctx, actor, kin, stageW, stageH, floorY, isNaiveBroken
   const hipBaseElevation = seg.thigh * 0.84 + seg.shin * 0.84 + seg.foot * 0.32;
   const hipX = actor.x * stageW;
   const hipY = floorY - hipBaseElevation - kin.rootDy * stageH * zScale;
-
-  const deg2rad = Math.PI / 180;
   const a = kin.angles;
 
-  // Helper to draw a textured cutout limb along a bone vector
-  function drawSegmentImg(img, pivX, pivY, len, angleDeg, anchorNY = 0.14, widFactor = 0.42) {
+  // Helper: compute child socket endpoint without drawing yet (needed when drawing Hand/Boot BEHIND Forearm/Shin cuff!)
+  function computeLimbEndpoint(pivX, pivY, len, angleDeg, anchorNY, socketNY) {
+    const reachSpan = len * ((socketNY - anchorNY) / Math.max(0.55, 1.0 - anchorNY));
+    return {
+      x: pivX - Math.sin(angleDeg * deg2rad) * reachSpan,
+      y: pivY + Math.cos(angleDeg * deg2rad) * reachSpan
+    };
+  }
+
+  // Helper: draw a limb segment with optional bottom grommet-tab clipping (clipBottomRatio < 1.0) & 2.5D cardboard rim
+  function drawClippedSegment(img, pivX, pivY, len, angleDeg, anchorNY = 0.14, clipBottomRatio = 1.0, socketNY = 0.86, widFactor = 0.42) {
     ctx.save();
     ctx.translate(pivX, pivY);
     ctx.rotate(angleDeg * deg2rad);
     if (img && img.complete && img.naturalHeight > 0) {
-      const ar = Math.min(1.35, Math.max(0.28, img.naturalWidth / img.naturalHeight));
-      const h = len / Math.max(0.55, 1.0 - anchorNY);
-      const w = h * ar;
-      ctx.drawImage(img, -w * 0.5, -h * anchorNY, w, h);
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      const ar = Math.min(1.35, Math.max(0.28, iw / ih));
+      const fullH = len / Math.max(0.55, 1.0 - anchorNY);
+      const w = fullH * ar;
+      const srcH = Math.max(1, Math.round(ih * clipBottomRatio));
+      const dstH = fullH * clipBottomRatio;
+
+      // 2.5D Cardboard Edge Extrusion Rim
+      if (Math.abs(extrudeDx) > 0.2) {
+        ctx.save();
+        ctx.globalAlpha *= 0.45;
+        ctx.drawImage(img, 0, 0, iw, srcH, -w * 0.5 + extrudeDx, -fullH * anchorNY + 1.2, w, dstH);
+        ctx.restore();
+      }
+
+      ctx.drawImage(img, 0, 0, iw, srcH, -w * 0.5, -fullH * anchorNY, w, dstH);
+
+      // Highlight exposed broken grommet tab in red when in Broken Seam mode
+      if (brokenSeams && !isGhostOverlay && clipBottomRatio >= 0.99) {
+        ctx.strokeStyle = "rgba(224, 82, 68, 0.9)";
+        ctx.lineWidth = 1.4;
+        ctx.strokeRect(-w * 0.26, -fullH * anchorNY + fullH * 0.82, w * 0.52, fullH * 0.17);
+      }
     } else {
       const w = len * widFactor;
       ctx.fillStyle = actor.accent;
       ctx.beginPath();
-      ctx.roundRect(-w * 0.5, -len * anchorNY, w, len, 6);
+      ctx.roundRect(-w * 0.5, -len * anchorNY, w, len * clipBottomRatio, 6);
       ctx.fill();
     }
     ctx.restore();
-    const endX = pivX - Math.sin(angleDeg * deg2rad) * len * (1.0 - anchorNY);
-    const endY = pivY + Math.cos(angleDeg * deg2rad) * len * (1.0 - anchorNY);
-    return { x: endX, y: endY };
+    return computeLimbEndpoint(pivX, pivY, len, angleDeg, anchorNY, socketNY);
+  }
+
+  // Helper: draw Hand with Horizontal v2 Hand Solver (+90 deg around (0.24w, 0.48h) + R-mirroring) & Tracksuit Cuff-Tuck
+  function drawSolvedHand(img, wristX, wristY, handSize, angleDeg, isRightHand) {
+    ctx.save();
+    ctx.translate(wristX, wristY);
+    ctx.rotate(angleDeg * deg2rad);
+
+    if (img && img.complete && img.naturalHeight > 0) {
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      const isHorizontalV2Hand = iw > ih * 1.15; // All kit3/v2 body.*.hand.L/R.png are 74x43 horizontal!
+
+      if (isHorizontalV2Hand) {
+        if (!brokenSeams) {
+          // SOLVED v2 HORIZONTAL HAND:
+          // Rotate +90 deg so fingers point downward along forearm axis; mirror R hand across limb axis so thumb faces inward!
+          ctx.rotate(Math.PI / 2);
+          if (isRightHand) {
+            ctx.scale(1, -1);
+          }
+          const spanW = handSize * 1.32;
+          const spanH = spanW * (ih / iw);
+          const anchorNX = 0.24;
+          const anchorNY = 0.48;
+          const clipLeftRatio = 0.16; // Clip protruding brown mounting tab on the left
+          const sx = Math.round(iw * clipLeftRatio);
+          const sw = iw - sx;
+          const dx = -spanW * (anchorNX - clipLeftRatio);
+          const dy = -spanH * anchorNY;
+          ctx.drawImage(img, sx, 0, sw, ih, dx, dy, spanW * (1.0 - clipLeftRatio), spanH);
+        } else {
+          // BROKEN v2 HAND: drawn at 0 deg rotation so the 74x43 horizontal hand sticks out 90 deg sideways with brown tab exposed!
+          const spanW = handSize * 1.55;
+          const spanH = spanW * (ih / iw);
+          ctx.drawImage(img, -spanW * 0.50, -spanH * 0.14, spanW, spanH);
+          if (!isGhostOverlay) {
+            ctx.strokeStyle = "#e05244";
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(-spanW * 0.50, -spanH * 0.14, spanW, spanH);
+          }
+        }
+      } else {
+        // Tracksuit 31 Vertical Hand (1271x1237):
+        // Wrist crease at y = 315/1237 (0.255); top cardboard grommet tongue is y = 80..315
+        const ar = Math.min(1.15, Math.max(0.55, iw / ih));
+        const h = handSize * 1.25;
+        const w = h * ar;
+        if (!brokenSeams) {
+          const clipTopRatio = 0.21; // Clip rectangular brown grommet tongue above wrist crease
+          const anchorNY = 0.255;    // Anchor at wrist crease y = 315
+          const sy = Math.round(ih * clipTopRatio);
+          const sh = ih - sy;
+          ctx.drawImage(
+            img,
+            0, sy, iw, sh,
+            -w * 0.5, -h * (anchorNY - clipTopRatio),
+            w, h * (1.0 - clipTopRatio)
+          );
+        } else {
+          // Broken: pin grommet tongue y=190 (0.154) ON TOP of forearm cuff with full grommet tab exposed
+          ctx.drawImage(img, -w * 0.5, -h * 0.154, w, h);
+          if (!isGhostOverlay) {
+            ctx.strokeStyle = "#e05244";
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(-w * 0.28, -h * 0.154, w * 0.56, h * 0.22);
+          }
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  // Helper: draw Boot / Foot with Cuff-Tuck & Pull-Tab Clipping
+  function drawSolvedFoot(img, ankleX, ankleY, footSize, angleDeg) {
+    ctx.save();
+    ctx.translate(ankleX, ankleY);
+    ctx.rotate(angleDeg * deg2rad);
+    if (img && img.complete && img.naturalHeight > 0) {
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      const ar = Math.min(1.25, Math.max(0.48, iw / ih));
+      const h = footSize * 1.22;
+      const w = h * ar;
+      if (!brokenSeams) {
+        // SOLVED CUFF-TUCK BOOT: clip top rectangular pull-tab (y < 0.185) and anchor at boot shaft (y = 360/1230 = 0.293)
+        const clipTopRatio = isTracksuit31 ? 0.185 : 0.12;
+        const anchorNY = isTracksuit31 ? 0.293 : 0.28;
+        const sy = Math.round(ih * clipTopRatio);
+        const sh = ih - sy;
+        ctx.drawImage(
+          img,
+          0, sy, iw, sh,
+          -w * 0.48, -h * (anchorNY - clipTopRatio),
+          w, h * (1.0 - clipTopRatio)
+        );
+      } else {
+        // BROKEN BOOT: drawn ON TOP of shin cuff at 0.40x scale with tall rectangular kraft pull-tab sticking over pant cuff!
+        ctx.drawImage(img, -w * 0.5, -h * 0.16, w, h);
+        if (!isGhostOverlay) {
+          ctx.strokeStyle = "#e05244";
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(-w * 0.34, -h * 0.16, w * 0.68, h * 0.24);
+        }
+      }
+    }
+    ctx.restore();
   }
 
   // Paired couple secondary partner (drawn slightly behind for vintage_party_couple)
@@ -1227,87 +1410,181 @@ function drawActorOnStage(ctx, actor, kin, stageW, stageH, floorY, isNaiveBroken
     }
   }
 
-  // Compute torso & shoulder/neck sockets
+  // Compute torso & shoulder/neck sockets (with 2.5D yaw perspective shift!)
   const torsoRad = a.torso * deg2rad;
   const waistX = hipX;
   const waistY = hipY - seg.pelvis * 0.12;
-  const neckX = waistX + Math.sin(torsoRad) * (seg.torso * 0.82);
+  const neckX = waistX + Math.sin(torsoRad) * (seg.torso * 0.82) + sinYaw * seg.torso * 0.06;
   const neckY = waistY - Math.cos(torsoRad) * (seg.torso * 0.82);
 
-  const shSpread = seg.torso * 0.30;
-  const shLX = waistX + Math.sin(torsoRad) * (seg.torso * 0.72) + Math.cos(torsoRad) * shSpread;
+  const shSpread = seg.torso * 0.30 * cosYaw;
+  const shShiftX = sinYaw * seg.torso * 0.08;
+  const shLX = waistX + Math.sin(torsoRad) * (seg.torso * 0.72) + Math.cos(torsoRad) * shSpread + shShiftX;
   const shLY = waistY - Math.cos(torsoRad) * (seg.torso * 0.72) + Math.sin(torsoRad) * shSpread;
-  const shRX = waistX + Math.sin(torsoRad) * (seg.torso * 0.72) - Math.cos(torsoRad) * shSpread;
+  const shRX = waistX + Math.sin(torsoRad) * (seg.torso * 0.72) - Math.cos(torsoRad) * shSpread + shShiftX;
   const shRY = waistY - Math.cos(torsoRad) * (seg.torso * 0.72) - Math.sin(torsoRad) * shSpread;
 
-  const hipSpread = seg.torso * 0.17;
-  const hipLX = hipX + hipSpread;
+  const hipSpread = seg.torso * 0.17 * cosYaw;
+  const hipLX = hipX + hipSpread + shShiftX * 0.5;
   const hipLY = hipY;
-  const hipRX = hipX - hipSpread;
+  const hipRX = hipX - hipSpread + shShiftX * 0.5;
   const hipRY = hipY;
 
-  // 1. Far Leg (R)
-  const kneeR = drawSegmentImg(imgs.thigh_R, hipRX, hipRY, seg.thigh, a.thigh_R, 0.14);
-  const ankleR = drawSegmentImg(imgs.shin_R, kneeR.x, kneeR.y, seg.shin, a.thigh_R + a.shin_R, 0.14);
-  const footR = drawSegmentImg(imgs.foot_R, ankleR.x, ankleR.y, seg.foot, a.foot_R, 0.25, 0.65);
+  // Cuff clip & socket ratios
+  const farmClipRatio = brokenSeams ? 1.0 : (isTracksuit31 ? 0.806 : 0.86);   // y = 1238/1536 (0.806) or 0.86
+  const wristSocketNY = brokenSeams ? 0.92 : (isTracksuit31 ? 0.778 : 0.83);  // y = 1195/1536 (0.778) or 0.83
+  const shinClipRatio = brokenSeams ? 1.0 : (isTracksuit31 ? 0.843 : 0.88);   // y = 1295/1536 (0.843) or 0.88
+  const ankleSocketNY = brokenSeams ? 0.92 : (isTracksuit31 ? 0.814 : 0.84);  // y = 1250/1536 (0.814) or 0.84
+  const upperClipRatio = brokenSeams ? 1.0 : 0.87;
 
-  // 2. Far Arm (R)
-  const elbowR = drawSegmentImg(imgs.uarm_R, shRX, shRY, seg.uarm, a.torso + a.uarm_R, 0.14);
-  const wristR = drawSegmentImg(imgs.farm_R, elbowR.x, elbowR.y, seg.farm, a.torso + a.uarm_R + a.farm_R, 0.14);
-  drawSegmentImg(imgs.hand_R, wristR.x, wristR.y, seg.hand, a.torso + a.uarm_R + a.farm_R + a.hand_R, 0.20, 0.55);
-
-  // 3. Pelvis
-  if (imgs.pelvis && imgs.pelvis.complete && imgs.pelvis.naturalHeight > 0) {
-    drawSegmentImg(imgs.pelvis, hipX, hipY - seg.pelvis * 0.25, seg.pelvis, a.pelvis, 0.20, 0.8);
+  // 1. Far Leg (R) — with Z-foreshortening & Cuff-Tuck (Boot BEHIND Shin when Solved!)
+  const thighRLen = seg.thigh * farLimbForeshorten;
+  const shinRLen = seg.shin * farLimbForeshorten;
+  const footRSize = seg.foot * farExtremityBoost;
+  const kneeR = drawClippedSegment(imgs.thigh_R, hipRX, hipRY, thighRLen, a.thigh_R, 0.14, upperClipRatio, 0.85);
+  const ankleR = computeLimbEndpoint(kneeR.x, kneeR.y, shinRLen, a.thigh_R + a.shin_R, 0.14, ankleSocketNY);
+  if (!brokenSeams) {
+    // CUFF-TUCK SOLVED: Draw Boot BEHIND (z < shin) Shin Cuff, then draw Clipped Shin Cuff OVER Boot shaft!
+    drawSolvedFoot(imgs.foot_R, ankleR.x, ankleR.y, footRSize, a.foot_R);
+    drawClippedSegment(imgs.shin_R, kneeR.x, kneeR.y, shinRLen, a.thigh_R + a.shin_R, 0.14, shinClipRatio, ankleSocketNY);
+  } else {
+    // BROKEN: Draw unclipped Shin first, then draw oversized Boot ON TOP with exposed pull-tab!
+    drawClippedSegment(imgs.shin_R, kneeR.x, kneeR.y, shinRLen, a.thigh_R + a.shin_R, 0.14, 1.0, ankleSocketNY);
+    drawSolvedFoot(imgs.foot_R, ankleR.x, ankleR.y, footRSize, a.foot_R);
   }
 
-  // 4. Torso (pivot at bottom waist)
+  // 2. Far Arm (R) — with Z-foreshortening, +90° v2 Hand Fix & Cuff-Tuck (Hand BEHIND Forearm when Solved!)
+  const uarmRLen = seg.uarm * farLimbForeshorten;
+  const farmRLen = seg.farm * farLimbForeshorten;
+  const handRSize = seg.hand * farExtremityBoost;
+  const elbowR = drawClippedSegment(imgs.uarm_R, shRX, shRY, uarmRLen, a.torso + a.uarm_R, 0.14, upperClipRatio, 0.85);
+  const wristR = computeLimbEndpoint(elbowR.x, elbowR.y, farmRLen, a.torso + a.uarm_R + a.farm_R, 0.14, wristSocketNY);
+  if (!brokenSeams) {
+    // CUFF-TUCK SOLVED: Draw Hand BEHIND (z < forearm) Forearm Cuff, then draw Clipped Forearm Cuff OVER Hand wrist!
+    drawSolvedHand(imgs.hand_R, wristR.x, wristR.y, handRSize, a.torso + a.uarm_R + a.farm_R + a.hand_R, true);
+    drawClippedSegment(imgs.farm_R, elbowR.x, elbowR.y, farmRLen, a.torso + a.uarm_R + a.farm_R, 0.14, farmClipRatio, wristSocketNY);
+  } else {
+    drawClippedSegment(imgs.farm_R, elbowR.x, elbowR.y, farmRLen, a.torso + a.uarm_R + a.farm_R, 0.14, 1.0, wristSocketNY);
+    drawSolvedHand(imgs.hand_R, wristR.x, wristR.y, handRSize, a.torso + a.uarm_R + a.farm_R + a.hand_R, true);
+  }
+
+  // 3. Pelvis (scaled by cosYaw for 2.5D turn)
+  if (imgs.pelvis && imgs.pelvis.complete && imgs.pelvis.naturalHeight > 0) {
+    ctx.save();
+    ctx.scale(1, 1);
+    drawClippedSegment(imgs.pelvis, hipX, hipY - seg.pelvis * 0.25, seg.pelvis, a.pelvis, 0.20, brokenSeams ? 1.0 : 0.90, 0.82, 0.8 * cosYaw);
+    ctx.restore();
+  }
+
+  // 4. Torso (pivot at bottom waist, width scaled by cosYaw + 2.5D cardboard rim)
+  let torsoDrawW = seg.torso * 0.7;
   ctx.save();
   ctx.translate(waistX, waistY);
   ctx.rotate(torsoRad);
   if (imgs.torso && imgs.torso.complete && imgs.torso.naturalHeight > 0) {
     const ar = Math.min(1.1, Math.max(0.55, imgs.torso.naturalWidth / imgs.torso.naturalHeight));
-    const tw = seg.torso * ar;
-    ctx.drawImage(imgs.torso, -tw * 0.5, -seg.torso * 0.90, tw, seg.torso);
+    torsoDrawW = seg.torso * ar * cosYaw;
+    if (Math.abs(extrudeDx) > 0.2) {
+      ctx.save();
+      ctx.globalAlpha *= 0.45;
+      ctx.drawImage(imgs.torso, -torsoDrawW * 0.5 + extrudeDx, -seg.torso * 0.90 + 1.5, torsoDrawW, seg.torso);
+      ctx.restore();
+    }
+    ctx.drawImage(imgs.torso, -torsoDrawW * 0.5, -seg.torso * 0.90, torsoDrawW, seg.torso);
   } else {
     ctx.fillStyle = actor.accent;
-    ctx.fillRect(-seg.torso * 0.35, -seg.torso * 0.9, seg.torso * 0.7, seg.torso);
+    ctx.fillRect(-seg.torso * 0.35 * cosYaw, -seg.torso * 0.9, seg.torso * 0.7 * cosYaw, seg.torso);
   }
   ctx.restore();
 
-  // 5. Near Leg (L)
-  const kneeL = drawSegmentImg(imgs.thigh_L, hipLX, hipLY, seg.thigh, a.thigh_L, 0.14);
-  const ankleL = drawSegmentImg(imgs.shin_L, kneeL.x, kneeL.y, seg.shin, a.thigh_L + a.shin_L, 0.14);
-  const footL = drawSegmentImg(imgs.foot_L, ankleL.x, ankleL.y, seg.foot, a.foot_L, 0.25, 0.65);
+  // 5. Near Leg (L) — with Z-foreshortening & Cuff-Tuck (Boot BEHIND Shin when Solved!)
+  const thighLLen = seg.thigh * nearLimbForeshorten;
+  const shinLLen = seg.shin * nearLimbForeshorten;
+  const footLSize = seg.foot * nearExtremityBoost;
+  const kneeL = drawClippedSegment(imgs.thigh_L, hipLX, hipLY, thighLLen, a.thigh_L, 0.14, upperClipRatio, 0.85);
+  const ankleL = computeLimbEndpoint(kneeL.x, kneeL.y, shinLLen, a.thigh_L + a.shin_L, 0.14, ankleSocketNY);
+  if (!brokenSeams) {
+    drawSolvedFoot(imgs.foot_L, ankleL.x, ankleL.y, footLSize, a.foot_L);
+    drawClippedSegment(imgs.shin_L, kneeL.x, kneeL.y, shinLLen, a.thigh_L + a.shin_L, 0.14, shinClipRatio, ankleSocketNY);
+  } else {
+    drawClippedSegment(imgs.shin_L, kneeL.x, kneeL.y, shinLLen, a.thigh_L + a.shin_L, 0.14, 1.0, ankleSocketNY);
+    drawSolvedFoot(imgs.foot_L, ankleL.x, ankleL.y, footLSize, a.foot_L);
+  }
 
-  // 6. Head (pivot at neck bottom)
+  // 6. Head (pivot at neck bottom, bottom neck tab clipped at y=1135/1362=0.833, with 2.5D cylindrical facial parallax!)
   ctx.save();
   ctx.translate(neckX, neckY);
   ctx.rotate((a.torso + a.head) * deg2rad);
   if (imgs.head && imgs.head.complete && imgs.head.naturalHeight > 0) {
-    const ar = Math.min(0.95, Math.max(0.55, imgs.head.naturalWidth / imgs.head.naturalHeight));
-    const hw = seg.head * ar;
-    ctx.drawImage(imgs.head, -hw * 0.5, -seg.head * 0.88, hw, seg.head);
-    // If 31-part tracksuit blank head, draw facial overlays & plug-in sunglasses at solved part_scale_table ratios!
-    if (actor.use_tracksuit31 && !actor.back_only && actor.costume_idx === 0) {
-      const eyeW = isNaiveBroken ? hw * 1.65 : seg.torso * PART_SCALE_TABLE.eyes * 1.45;
+    const iw = imgs.head.naturalWidth;
+    const ih = imgs.head.naturalHeight;
+    const ar = Math.min(0.95, Math.max(0.55, iw / ih));
+    const hw = seg.head * ar * Math.max(0.84, cosYaw);
+    const neckClipRatio = brokenSeams ? 1.0 : (isTracksuit31 ? 0.833 : 0.88); // Clip bottom neck edge y > 1135
+    const srcH = Math.round(ih * neckClipRatio);
+    const dstH = seg.head * neckClipRatio;
+
+    if (Math.abs(extrudeDx) > 0.2) {
+      ctx.save();
+      ctx.globalAlpha *= 0.45;
+      ctx.drawImage(imgs.head, 0, 0, iw, srcH, -hw * 0.5 + extrudeDx, -seg.head * 0.88 + 1.2, hw, dstH);
+      ctx.restore();
+    }
+    ctx.drawImage(imgs.head, 0, 0, iw, srcH, -hw * 0.5, -seg.head * 0.88, hw, dstH);
+
+    // 31-part tracksuit facial overlays & plug-in sunglasses with 2.5D Cylindrical Head Parallax!
+    if (isTracksuit31) {
+      const faceParallaxX = sinYaw * hw * 0.24;
+      const faceCos = Math.max(0.76, cosYaw);
+      const eyeW = (isNaiveBroken ? hw * 1.65 : seg.torso * PART_SCALE_TABLE.eyes * 1.45) * faceCos;
       const eyeH = eyeW * 0.34;
-      if (imgs.eyes && imgs.eyes.complete) ctx.drawImage(imgs.eyes, -eyeW * 0.5, -seg.head * 0.55, eyeW, eyeH);
-      if (imgs.brows && imgs.brows.complete) ctx.drawImage(imgs.brows, -eyeW * 0.52, -seg.head * 0.65, eyeW * 1.04, eyeH * 0.9);
-      const mouthW = isNaiveBroken ? hw * 1.35 : seg.torso * PART_SCALE_TABLE.mouth * 1.25;
+      if (imgs.eyes && imgs.eyes.complete) ctx.drawImage(imgs.eyes, -eyeW * 0.5 + faceParallaxX, -seg.head * 0.55, eyeW, eyeH);
+      if (imgs.brows && imgs.brows.complete) ctx.drawImage(imgs.brows, -eyeW * 0.52 + faceParallaxX * 1.05, -seg.head * 0.65, eyeW * 1.04, eyeH * 0.9);
+      if (imgs.nose && imgs.nose.complete) {
+        const noseW = seg.torso * PART_SCALE_TABLE.nose * 0.95 * faceCos;
+        const noseH = noseW * 1.15;
+        ctx.drawImage(imgs.nose, -noseW * 0.5 + faceParallaxX * 1.18, -seg.head * 0.48, noseW, noseH);
+      }
+      const mouthW = (isNaiveBroken ? hw * 1.35 : seg.torso * PART_SCALE_TABLE.mouth * 1.25) * faceCos;
       const mouthH = mouthW * 0.45;
-      if (imgs.mouth && imgs.mouth.complete) ctx.drawImage(imgs.mouth, -mouthW * 0.5, -seg.head * 0.32, mouthW, mouthH);
-      const sgW = isNaiveBroken ? hw * 1.75 : seg.torso * PART_SCALE_TABLE.sunglasses * 1.42;
+      if (imgs.mouth && imgs.mouth.complete) ctx.drawImage(imgs.mouth, -mouthW * 0.5 + faceParallaxX * 0.95, -seg.head * 0.32, mouthW, mouthH);
+      const sgW = (isNaiveBroken ? hw * 1.75 : seg.torso * PART_SCALE_TABLE.sunglasses * 1.42) * faceCos;
       const sgH = sgW * 0.36;
-      if (imgs.sunglasses && imgs.sunglasses.complete) ctx.drawImage(imgs.sunglasses, -sgW * 0.5, -seg.head * 0.57, sgW, sgH);
+      if (imgs.sunglasses && imgs.sunglasses.complete) ctx.drawImage(imgs.sunglasses, -sgW * 0.5 + faceParallaxX * 1.12, -seg.head * 0.57, sgW, sgH);
     }
   }
   ctx.restore();
 
-  // 7. Near Arm (L)
-  const elbowL = drawSegmentImg(imgs.uarm_L, shLX, shLY, seg.uarm, a.torso + a.uarm_L, 0.14);
-  const wristL = drawSegmentImg(imgs.farm_L, elbowL.x, elbowL.y, seg.farm, a.torso + a.uarm_L + a.farm_L, 0.14);
-  drawSegmentImg(imgs.hand_L, wristL.x, wristL.y, seg.hand, a.torso + a.uarm_L + a.farm_L + a.hand_L, 0.20, 0.55);
+  // 6b. 2.5D Torso Collar Lip Pass (tucks bottom neck edge behind jacket collar y=108/1230!)
+  if (!brokenSeams && imgs.torso && imgs.torso.complete && imgs.torso.naturalHeight > 0) {
+    ctx.save();
+    ctx.translate(waistX, waistY);
+    ctx.rotate(torsoRad);
+    const tiw = imgs.torso.naturalWidth;
+    const tih = imgs.torso.naturalHeight;
+    const collarRatio = isTracksuit31 ? 0.135 : 0.11;
+    ctx.drawImage(
+      imgs.torso,
+      0, 0, tiw, Math.round(tih * collarRatio),
+      -torsoDrawW * 0.5, -seg.torso * 0.90,
+      torsoDrawW, seg.torso * collarRatio
+    );
+    ctx.restore();
+  }
+
+  // 7. Near Arm (L) — with Z-foreshortening, +90° v2 Hand Fix & Cuff-Tuck (Hand BEHIND Forearm when Solved!)
+  const uarmLLen = seg.uarm * nearLimbForeshorten;
+  const farmLLen = seg.farm * nearLimbForeshorten;
+  const handLSize = seg.hand * nearExtremityBoost;
+  const elbowL = drawClippedSegment(imgs.uarm_L, shLX, shLY, uarmLLen, a.torso + a.uarm_L, 0.14, upperClipRatio, 0.85);
+  const wristL = computeLimbEndpoint(elbowL.x, elbowL.y, farmLLen, a.torso + a.uarm_L + a.farm_L, 0.14, wristSocketNY);
+  if (!brokenSeams) {
+    drawSolvedHand(imgs.hand_L, wristL.x, wristL.y, handLSize, a.torso + a.uarm_L + a.farm_L + a.hand_L, false);
+    drawClippedSegment(imgs.farm_L, elbowL.x, elbowL.y, farmLLen, a.torso + a.uarm_L + a.farm_L, 0.14, farmClipRatio, wristSocketNY);
+  } else {
+    drawClippedSegment(imgs.farm_L, elbowL.x, elbowL.y, farmLLen, a.torso + a.uarm_L + a.farm_L, 0.14, 1.0, wristSocketNY);
+    drawSolvedHand(imgs.hand_L, wristL.x, wristL.y, handLSize, a.torso + a.uarm_L + a.farm_L + a.hand_L, false);
+  }
 
   // 8. Brass Pivots Overlay
   if (overlays.pivots && !isGhostOverlay) {
@@ -1341,7 +1618,7 @@ function drawActorOnStage(ctx, actor, kin, stageW, stageH, floorY, isNaiveBroken
   const topY = neckY - seg.head * 0.90;
   const totalRenderedH = floorY - topY;
 
-  if (isNaiveBroken) {
+  if (brokenSeams && !isGhostOverlay) {
     ctx.strokeStyle = "rgba(224, 82, 68, 0.85)";
     ctx.lineWidth = 1.8;
     ctx.setLineDash([5, 4]);
@@ -1388,14 +1665,14 @@ function renderArenaViewport(ctx, vpX, vpW, vpH, isNaiveViewport, labelBanner) {
   }
 
   // Main Z = 1.0 Focal Floor Baseline
-  ctx.strokeStyle = isNaiveViewport ? "rgba(224, 82, 68, 0.6)" : "rgba(224, 168, 56, 0.65)";
+  ctx.strokeStyle = (isNaiveViewport || seamMode === "broken") ? "rgba(224, 82, 68, 0.6)" : "rgba(224, 168, 56, 0.65)";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(0, floorY);
   ctx.lineTo(vpW, floorY);
   ctx.stroke();
 
-  // Anatomical Reference Rulers on Stage Left (7.5H Adult = 0.54, 5.2H Child = 0.37, Crouched = 0.36, Prone = 0.22)
+  // Anatomical Reference Rulers on Stage Left
   if (overlays.rulers) {
     const marks = [
       { ratio: 0.54, label: "0.54 Adult Stand (7.5H)", color: "rgba(224, 168, 56, 0.45)" },
@@ -1424,7 +1701,6 @@ function renderArenaViewport(ctx, vpX, vpW, vpH, isNaiveViewport, labelBanner) {
   for (const actor of activeActors) {
     const kin = evaluateCycleKinematics(actor, actor.cycle, (simTime / 1.6) % 1.0);
 
-    // If Ghost Comparison mode is active, draw Naive Broken silhouette behind Solved character
     if (comparisonMode === "ghost" && !isNaiveViewport) {
       drawActorOnStage(ctx, actor, kin, vpW, vpH, floorY, true, true);
     }
@@ -1481,9 +1757,9 @@ function renderArenaViewport(ctx, vpX, vpW, vpH, isNaiveViewport, labelBanner) {
   }
 
   if (labelBanner) {
-    ctx.fillStyle = isNaiveViewport ? "rgba(224, 82, 68, 0.9)" : "rgba(54, 201, 134, 0.9)";
+    ctx.fillStyle = (isNaiveViewport || seamMode === "broken") ? "rgba(224, 82, 68, 0.9)" : "rgba(54, 201, 134, 0.9)";
     ctx.beginPath();
-    ctx.roundRect(14, 48, 330, 22, 4);
+    ctx.roundRect(14, 48, 360, 22, 4);
     ctx.fill();
     ctx.fillStyle = "#080a0e";
     ctx.font = "800 11px 'SF Mono', monospace";
@@ -1491,6 +1767,166 @@ function renderArenaViewport(ctx, vpX, vpW, vpH, isNaiveViewport, labelBanner) {
   }
 
   ctx.restore();
+}
+
+// Dedicated Wrist & Ankle Seam + 2.5D Fake-3D Close-Up Proof Canvas (#proofCanvas)
+function renderProofCanvas() {
+  const c = document.getElementById("proofCanvas");
+  if (!c) return;
+  const ctx = c.getContext("2d");
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Split divider
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(W * 0.5, 8);
+  ctx.lineTo(W * 0.5, H - 8);
+  ctx.stroke();
+
+  // Headers
+  ctx.font = "800 11px 'SF Mono', monospace";
+  ctx.fillStyle = "#ff8e84";
+  ctx.fillText("✕ BROKEN WRIST & ANKLE (RAW BUTT-JOINT TABS & 0° V2 HAND)", 12, 19);
+  ctx.fillStyle = "#6df0b2";
+  ctx.fillText("✓ SOLVED CUFF-TUCK + +90° V2 HAND + 2.5D TURN (" + (fake3dYawDeg >= 0 ? "+" : "") + fake3dYawDeg + "°)", W * 0.5 + 12, 19);
+
+  const ts = "kits/packs/poet_tracksuit_v1/01_COMPONENTS";
+  const farmImg = getImg(`${ts}/08_forearm_L.png`);
+  const handImg = getImg(`${ts}/15_hand_relaxed_L.png`);
+  const shinImg = getImg(`${ts}/12_shin_L.png`);
+  const bootImg = getImg(`${ts}/19_boot_front_L.png`);
+  const v2FarmImg = getImg(`arena/parts/kit3/v2/parts/poet.black_tshirt/body.front.farm.L.png`);
+  const v2HandImg = getImg(`arena/parts/kit3/v2/parts/poet.black_tshirt/body.front.hand.L.png`);
+
+  // --- 1. Tracksuit Wrist Close-Up (Left Broken vs Right Solved) ---
+  const wristBrokenX = 72, wristSolvedX = W * 0.5 + 72, topY = 36;
+  if (farmImg && farmImg.complete && farmImg.naturalHeight > 0 && handImg && handImg.complete && handImg.naturalHeight > 0) {
+    const fw = 68, fh = 102;
+    // Left (Broken): Unclipped forearm + Hand drawn ON TOP at 0.28x with colliding grommet tabs!
+    ctx.drawImage(farmImg, wristBrokenX - fw * 0.5, topY, fw, fh);
+    const bhw = 54, bhh = 52;
+    ctx.drawImage(handImg, wristBrokenX - bhw * 0.5, topY + fh * 0.78, bhw, bhh);
+    ctx.strokeStyle = "#e05244";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(wristBrokenX - 18, topY + fh * 0.76, 36, 24);
+
+    // Right (Solved): Hand drawn BEHIND forearm cuff at 0.23x (top tab clipped at y=0.21), Forearm clipped at y=1238/1536 (0.806) drawn OVER hand!
+    const shw = 42, shh = 41;
+    const hSy = Math.round(handImg.naturalHeight * 0.21);
+    ctx.drawImage(
+      handImg,
+      0, hSy, handImg.naturalWidth, handImg.naturalHeight - hSy,
+      wristSolvedX - shw * 0.5, topY + fh * 0.75,
+      shw, shh * 0.79
+    );
+    const fSrcH = Math.round(farmImg.naturalHeight * 0.806);
+    ctx.drawImage(
+      farmImg,
+      0, 0, farmImg.naturalWidth, fSrcH,
+      wristSolvedX - fw * 0.5, topY,
+      fw, fh * 0.806
+    );
+    ctx.strokeStyle = "#36c986";
+    ctx.lineWidth = 1.3;
+    ctx.strokeRect(wristSolvedX - 20, topY + fh * 0.68, 40, 16);
+  }
+
+  // --- 2. Tracksuit Ankle Close-Up (Left Broken vs Right Solved) ---
+  const ankleBrokenX = 190, ankleSolvedX = W * 0.5 + 190;
+  if (shinImg && shinImg.complete && shinImg.naturalHeight > 0 && bootImg && bootImg.complete && bootImg.naturalHeight > 0) {
+    const sw = 70, sh = 105;
+    // Left (Broken): Unclipped shin + Boot drawn ON TOP at 0.40x with rectangular kraft pull-tab over cuff!
+    ctx.drawImage(shinImg, ankleBrokenX - sw * 0.5, topY, sw, sh);
+    const bbw = 66, bbh = 64;
+    ctx.drawImage(bootImg, ankleBrokenX - bbw * 0.5, topY + sh * 0.74, bbw, bbh);
+    ctx.strokeStyle = "#e05244";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(ankleBrokenX - 22, topY + sh * 0.73, 44, 24);
+
+    // Right (Solved): Boot drawn BEHIND shin at 0.29x (pull-tab clipped at y=0.185), Shin clipped at y=1295/1536 (0.843) drawn OVER boot shaft!
+    const sbw = 48, sbh = 46;
+    const bSy = Math.round(bootImg.naturalHeight * 0.185);
+    ctx.drawImage(
+      bootImg,
+      0, bSy, bootImg.naturalWidth, bootImg.naturalHeight - bSy,
+      ankleSolvedX - sbw * 0.48, topY + sh * 0.76,
+      sbw, sbh * 0.815
+    );
+    const sSrcH = Math.round(shinImg.naturalHeight * 0.843);
+    ctx.drawImage(
+      shinImg,
+      0, 0, shinImg.naturalWidth, sSrcH,
+      ankleSolvedX - sw * 0.5, topY,
+      sw, sh * 0.843
+    );
+    ctx.strokeStyle = "#36c986";
+    ctx.lineWidth = 1.3;
+    ctx.strokeRect(ankleSolvedX - 22, topY + sh * 0.72, 44, 16);
+  }
+
+  // --- 3. kit3/v2 Horizontal Hand (74x43) Close-Up (Left 0° Sideways vs Right +90° Tucked) ---
+  const v2BrokenX = 308, v2SolvedX = W * 0.5 + 308;
+  if (v2FarmImg && v2FarmImg.complete && v2FarmImg.naturalHeight > 0 && v2HandImg && v2HandImg.complete && v2HandImg.naturalHeight > 0) {
+    const vfw = 38, vfh = 96;
+    // Left (Broken): v2 hand (74x43) drawn at 0 deg sticking out 90 deg sideways with brown tab exposed!
+    ctx.drawImage(v2FarmImg, v2BrokenX - vfw * 0.5, topY + 4, vfw, vfh);
+    ctx.drawImage(v2HandImg, v2BrokenX - 10, topY + vfh * 0.82, 52, 30);
+    ctx.strokeStyle = "#e05244";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(v2BrokenX - 12, topY + vfh * 0.80, 56, 34);
+
+    // Right (Solved): v2 hand rotated +90 deg around (0.24w, 0.48h) & drawn BEHIND forearm clipped at 0.86h!
+    ctx.save();
+    ctx.translate(v2SolvedX, topY + 4 + vfh * 0.83);
+    ctx.rotate(Math.PI / 2);
+    const sx = Math.round(v2HandImg.naturalWidth * 0.16);
+    ctx.drawImage(
+      v2HandImg,
+      sx, 0, v2HandImg.naturalWidth - sx, v2HandImg.naturalHeight,
+      -42 * 0.08, -24 * 0.48,
+      42 * 0.84, 24
+    );
+    ctx.restore();
+    ctx.drawImage(
+      v2FarmImg,
+      0, 0, v2FarmImg.naturalWidth, Math.round(v2FarmImg.naturalHeight * 0.86),
+      v2SolvedX - vfw * 0.5, topY + 4,
+      vfw, vfh * 0.86
+    );
+    ctx.strokeStyle = "#36c986";
+    ctx.lineWidth = 1.3;
+    ctx.strokeRect(v2SolvedX - 16, topY + vfh * 0.76, 32, 42);
+  }
+
+  // Labels under each column
+  ctx.font = "600 9.5px 'SF Mono', monospace";
+  ctx.fillStyle = "#ff948a";
+  ctx.fillText("Wrist: 2 Tabs Collide", 22, H - 110);
+  ctx.fillText("Ankle: Pull-Tab Over Cuff", 132, H - 110);
+  ctx.fillText("v2 Hand: 90° Sideways!", 252, H - 110);
+
+  ctx.fillStyle = "#6df0b2";
+  ctx.fillText("Wrist: Clipped & Tucked", W * 0.5 + 18, H - 110);
+  ctx.fillText("Ankle: Cuff Over Boot", W * 0.5 + 136, H - 110);
+  ctx.fillText("v2 Hand: +90° Aligned!", W * 0.5 + 252, H - 110);
+
+  // Bottom strip: Live 2.5D Fake-3D Telemetry & Seam Solver Summary
+  ctx.fillStyle = "rgba(18, 22, 32, 0.92)";
+  ctx.strokeStyle = "rgba(56, 216, 240, 0.25)";
+  ctx.lineWidth = 1;
+  ctx.fillRect(10, H - 94, W - 20, 84);
+  ctx.strokeRect(10, H - 94, W - 20, 84);
+
+  ctx.font = "700 10.5px 'SF Mono', monospace";
+  ctx.fillStyle = "#e0a838";
+  ctx.fillText("LIVE 2.5D FAKE-3D & CUFF-TUCK SOLVER TELEMETRY:", 20, H - 76);
+  ctx.font = "600 10px 'SF Mono', monospace";
+  ctx.fillStyle = "#d0daf0";
+  ctx.fillText(`• Tracksuit 31 Path: kits/packs/poet_tracksuit_v1/01_COMPONENTS/01..31.png (08_forearm_L clip y=1238, 12_shin_L clip y=1295)`, 20, H - 58);
+  ctx.fillText(`• v2 Horizontal Hand Solver: 74×43px rotated +90° around (0.24w, 0.48h), R-hand scale(1,-1) mirrored, tucked behind 0.86h cuff`, 20, H - 41);
+  ctx.fillText(`• 2.5D Yaw = ${fake3dYawDeg}° (Torso cos = ${Math.cos(fake3dYawDeg * Math.PI / 180).toFixed(2)}x) · Z-Foreshorten = ${fake3dForeshorten.toFixed(2)} · Seam Mode = ${seamMode.toUpperCase()}`, 20, H - 24);
 }
 
 // Piece-Scaling Comparison Canvas (Zoomed-Card Export vs Solved Part Scale Table)
@@ -1507,31 +1943,29 @@ function renderPieceCompareCanvas() {
   ctx.lineTo(W * 0.5, H - 10);
   ctx.stroke();
 
-  ctx.font = "700 11px 'SF Mono', monospace";
+  ctx.font = "700 10.5px 'SF Mono', monospace";
   ctx.fillStyle = "#ff8e84";
-  ctx.fillText("NAIVE RAW CARD EXPORT (1:1 BBox = Broken)", 14, 20);
+  ctx.fillText("NAIVE RAW CARD EXPORT (1:1 BBox = Broken)", 14, 18);
   ctx.fillStyle = "#6df0b2";
-  ctx.fillText("SOLVED PART_SCALE_TABLE + ASPECT COMP (Fixed)", W * 0.5 + 14, 20);
+  ctx.fillText("SOLVED PART_SCALE_TABLE + CUFF-TUCK (Fixed)", W * 0.5 + 14, 18);
 
-  const ts = "kits/packs/poet_tracksuit_v1";
+  const ts = "kits/packs/poet_tracksuit_v1/01_COMPONENTS";
   const torsoImg = getImg(`${ts}/01_torso_front.png`);
   const headImg = getImg(`${ts}/21_head_front_blank.png`);
   const handImg = getImg(`${ts}/15_hand_relaxed_L.png`);
   const bootImg = getImg(`${ts}/19_boot_front_L.png`);
   const crouchImg = getImg(`arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.lying_back.png`);
 
-  const baseTorsoH = 95;
   const slots = [
-    { label: "torso (1.0)", img: torsoImg, naiveH: 95, solvedH: 95, xOff: 42 },
-    { label: "head (0.64)", img: headImg, naiveH: 106, solvedH: 95 * 0.64, xOff: 118 },
-    { label: "hand (0.28)", img: handImg, naiveH: 94, solvedH: 95 * 0.28, xOff: 185 },
-    { label: "boot (0.40)", img: bootImg, naiveH: 98, solvedH: 95 * 0.40, xOff: 245 },
-    { label: "prone (0.22)", img: crouchImg, naiveH: 82, solvedH: 36, xOff: 305 }
+    { label: "torso (1.0)", img: torsoImg, naiveH: 72, solvedH: 72, xOff: 42 },
+    { label: "head (0.64)", img: headImg, naiveH: 80, solvedH: 72 * 0.64, xOff: 118 },
+    { label: "hand (0.23)", img: handImg, naiveH: 72, solvedH: 72 * 0.23, xOff: 185 },
+    { label: "boot (0.29)", img: bootImg, naiveH: 75, solvedH: 72 * 0.29, xOff: 245 },
+    { label: "prone (0.22)", img: crouchImg, naiveH: 64, solvedH: 28, xOff: 305 }
   ];
 
-  const baselineY = H - 34;
+  const baselineY = H - 26;
   for (const s of slots) {
-    // Left: Naive Broken
     if (s.img && s.img.complete && s.img.naturalHeight > 0) {
       const ar = Math.min(1.6, s.img.naturalWidth / s.img.naturalHeight);
       const nw = s.naiveH * ar;
@@ -1540,9 +1974,9 @@ function renderPieceCompareCanvas() {
       ctx.drawImage(s.img, W * 0.5 + s.xOff - sw * 0.5, baselineY - s.solvedH, sw, s.solvedH);
     }
     ctx.fillStyle = "#8c98b4";
-    ctx.font = "600 9.5px 'SF Mono', monospace";
-    ctx.fillText(s.label, s.xOff - 26, H - 12);
-    ctx.fillText(s.label, W * 0.5 + s.xOff - 26, H - 12);
+    ctx.font = "600 9px 'SF Mono', monospace";
+    ctx.fillText(s.label, s.xOff - 26, H - 9);
+    ctx.fillText(s.label, W * 0.5 + s.xOff - 26, H - 9);
   }
 }
 
@@ -1552,7 +1986,6 @@ function tick(now) {
 
   if (isPlaying) {
     simTime += dt;
-    // Update actor horizontal movement across the acting arena when in locomotion cycles
     for (const actor of actors) {
       if (!actor.active) continue;
       const kin = evaluateCycleKinematics(actor, actor.cycle, (simTime / 1.6) % 1.0);
@@ -1570,8 +2003,8 @@ function tick(now) {
   ctx.clearRect(0, 0, W, H);
 
   if (comparisonMode === "split") {
-    renderArenaViewport(ctx, 0, W * 0.5, H, true, "LEFT: NAIVE BBOX SCALING (BROKEN)");
-    renderArenaViewport(ctx, W * 0.5, W * 0.5, H, false, "RIGHT: SOLVED ANATOMICAL + ASPECT (FIXED)");
+    renderArenaViewport(ctx, 0, W * 0.5, H, true, "LEFT: BROKEN BUTT-JOINT TABS & NAIVE BBOX");
+    renderArenaViewport(ctx, W * 0.5, W * 0.5, H, false, "RIGHT: SOLVED CUFF-TUCK + +90° HAND + 2.5D");
     ctx.strokeStyle = "#e0a838";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -1579,18 +2012,15 @@ function tick(now) {
     ctx.lineTo(W * 0.5, H);
     ctx.stroke();
   } else if (comparisonMode === "naive") {
-    renderArenaViewport(ctx, 0, W, H, true, "NAIVE BBOX SCALING ONLY (BROKEN)");
+    renderArenaViewport(ctx, 0, W, H, true, "NAIVE BBOX + RAW BUTT-JOINT TABS (BROKEN)");
   } else {
-    renderArenaViewport(
-      ctx,
-      0,
-      W,
-      H,
-      false,
-      comparisonMode === "ghost" ? "SOLVED + RED NAIVE BROKEN GHOST OVERLAY" : null
-    );
+    const banner = seamMode === "broken"
+      ? "WARNING: RAW BUTT-JOINT TABS & 0° V2 HANDS (BROKEN WRIST/ANKLE)"
+      : (comparisonMode === "ghost" ? "SOLVED CUFF-TUCK + RED BROKEN GHOST OVERLAY" : null);
+    renderArenaViewport(ctx, 0, W, H, false, banner);
   }
 
+  renderProofCanvas();
   renderPieceCompareCanvas();
   updateLiveTelemetry();
   requestAnimationFrame(tick);
@@ -1668,6 +2098,28 @@ function setGlobalCycle(cycle) {
   selectRigForInspector(selectedRigId);
 }
 
+function setSeamMode(mode) {
+  seamMode = mode;
+  document.getElementById("seamSolvedBtn").classList.toggle("active", mode === "solved");
+  document.getElementById("seamBrokenBtn").classList.toggle("active", mode === "broken");
+  const hudLeft = document.getElementById("hudLeft");
+  if (mode === "broken") {
+    hudLeft.innerHTML = `SEAM MODE: <span class="bad">✕ RAW BUTT-JOINT TABS (BROKEN WRIST/ANKLE)</span> · Exposed Grommet Tabs & 90° Sideways v2 Hands!`;
+  } else {
+    hudLeft.innerHTML = `SOLVER: <span class="good">✓ CUFF-TUCK & TAB-CLIP + +90° V2 HAND + 2.5D PARALLAX</span> · Z=1.0 Focal Plane`;
+  }
+}
+
+function setFake3dYaw(val) {
+  fake3dYawDeg = parseFloat(val) || 0;
+  document.getElementById("fake3dYawVal").textContent = (fake3dYawDeg >= 0 ? "+" : "") + fake3dYawDeg + "°";
+}
+
+function setFake3dForeshorten(val) {
+  fake3dForeshorten = parseFloat(val) || 0;
+  document.getElementById("fake3dForeshortenVal").textContent = fake3dForeshorten.toFixed(2);
+}
+
 function applyPreset(presetName, btnEl) {
   if (btnEl) {
     btnEl.parentElement.querySelectorAll(".btn").forEach(b => b.classList.remove("active"));
@@ -1680,6 +2132,17 @@ function applyPreset(presetName, btnEl) {
       a.x = 0.11 + i * 0.11;
       a.cycle = defCycles[i];
     });
+    setComparisonMode("solved");
+  } else if (presetName === "wrist_ankle_audit") {
+    actors.forEach(a => {
+      a.active = ["poet_tracksuit_31", "poet_black_tshirt", "woman_muse_costumes", "dj_club_citizens"].includes(a.id);
+      if (a.id === "poet_tracksuit_31") { a.x = 0.22; a.cycle = "read"; }
+      if (a.id === "poet_black_tshirt") { a.x = 0.42; a.cycle = "walk"; }
+      if (a.id === "woman_muse_costumes") { a.x = 0.62; a.cycle = "reach"; }
+      if (a.id === "dj_club_citizens") { a.x = 0.80; a.cycle = "dj_spin"; }
+    });
+    setRigRenderStyle("jointed");
+    setComparisonMode("split");
   } else if (presetName === "adult_vs_child") {
     actors.forEach(a => {
       a.active = ["poet_tracksuit_31", "woman_muse_costumes", "child_traveler_ghost"].includes(a.id);
@@ -1723,13 +2186,13 @@ function setComparisonMode(mode) {
 
   const hudLeft = document.getElementById("hudLeft");
   if (mode === "solved") {
-    hudLeft.innerHTML = `SOLVER: <span class="good">ANATOMICAL + ASPECT COMPENSATED (FIXED)</span> · 0.54 Adult / 0.37 Child / 0.36 Crouch / 0.22 Prone`;
+    hudLeft.innerHTML = `SOLVER: <span class="good">CUFF-TUCK + +90° V2 HAND + 2.5D PARALLAX (FIXED)</span> · 0.54 Adult / 0.37 Child / 0.36 Crouch / 0.22 Prone`;
   } else if (mode === "split") {
-    hudLeft.innerHTML = `COMPARISON: <span class="bad">LEFT = NAIVE BBOX (BROKEN)</span> vs <span class="good">RIGHT = SOLVED ANATOMICAL (FIXED)</span>`;
+    hudLeft.innerHTML = `COMPARISON: <span class="bad">LEFT = BROKEN TABS & NAIVE BBOX</span> vs <span class="good">RIGHT = SOLVED CUFF-TUCK & 2.5D</span>`;
   } else if (mode === "ghost") {
     hudLeft.innerHTML = `GHOST OVERLAY: <span class="bad">RED = NAIVE BBOX DISTORTION</span> behind <span class="good">SOLVED ACTOR</span>`;
   } else {
-    hudLeft.innerHTML = `WARNING: <span class="bad">NAIVE BBOX SCALING (BROKEN)</span> · Crouches/Falls & Child Rigs Blow Up to 0.54 Adult Height!`;
+    hudLeft.innerHTML = `WARNING: <span class="bad">NAIVE BBOX + RAW TABS (BROKEN)</span> · Exposed Grommet Tabs, Sideways Hands & Giant Crouches!`;
   }
 }
 
@@ -1741,8 +2204,15 @@ function setRigRenderStyle(style) {
 
 function toggleOverlay(key) {
   overlays[key] = !overlays[key];
-  const btnMap = { pivots: "togglePivotsBtn", pins: "togglePinsBtn", rulers: "toggleRulersBtn" };
-  document.getElementById(btnMap[key]).classList.toggle("active", overlays[key]);
+  const btnMap = {
+    pivots: "togglePivotsBtn",
+    pins: "togglePinsBtn",
+    rulers: "toggleRulersBtn",
+    extrusion: "toggleExtrusionBtn"
+  };
+  if (btnMap[key] && document.getElementById(btnMap[key])) {
+    document.getElementById(btnMap[key]).classList.toggle("active", overlays[key]);
+  }
 }
 
 function togglePlay() {
@@ -1761,6 +2231,36 @@ function selectRigForInspector(rigId) {
 
   const roleDesc = libRig ? libRig.character_role : `${actor.name} (${actor.height_cm}cm, Poems ${actor.poems.join(", ")})`;
   document.getElementById("inspectorSummary").textContent = roleDesc;
+
+  // Populate Cuff-Tuck & 2.5D Rules Box
+  const cuffRules = (libRig && libRig.cuff_tuck_and_seam_rules) || (actor.use_tracksuit31 ? {
+    wrist_cuff_clip_y_ratio: 0.806,
+    hand_wrist_crease_anchor: { nx: 0.50, ny: 0.255 },
+    hand_orientation_offset_deg: 0.0,
+    ankle_cuff_clip_y_ratio: 0.843,
+    boot_shaft_anchor: { nx: 0.50, ny: 0.293 },
+    z_order_cuff_over_extremity: true
+  } : {
+    wrist_cuff_clip_y_ratio: 0.86,
+    hand_wrist_crease_anchor: { nx: 0.24, ny: 0.48 },
+    hand_orientation_offset_deg: 90.0,
+    ankle_cuff_clip_y_ratio: 0.88,
+    boot_shaft_anchor: { nx: 0.45, ny: 0.28 },
+    z_order_cuff_over_extremity: true
+  });
+  const fake3d = (libRig && libRig.fake_3d_rig_params) || {
+    head_parallax_radius_px: +(14 * (actor.adult_scale_ratio || 1)).toFixed(1),
+    limb_foreshortening_range: [0.65, 1.0],
+    cardboard_extrusion_px: 3.5
+  };
+  const cuffBox = document.getElementById("cuffRulesBox");
+  if (cuffBox) {
+    cuffBox.innerHTML = `
+      <div>• Wrist Clip: <strong style="color:var(--green)">y=${cuffRules.wrist_cuff_clip_y_ratio}</strong> · Hand Rot: <strong style="color:var(--accent-hi)">+${cuffRules.hand_orientation_offset_deg}°</strong></div>
+      <div>• Ankle Clip: <strong style="color:var(--green)">y=${cuffRules.ankle_cuff_clip_y_ratio}</strong> · Z-Cuff Over Hand/Boot: <strong style="color:var(--cyan)">${cuffRules.z_order_cuff_over_extremity}</strong></div>
+      <div>• 2.5D Head Parallax: <strong>${fake3d.head_parallax_radius_px}px</strong> · Extrusion: <strong>${fake3d.cardboard_extrusion_px}px</strong></div>
+    `;
+  }
 
   // Populate Posture Stage Ratios
   const pRatios = libRig ? libRig.posture_stage_ratios : {
@@ -1800,7 +2300,7 @@ function selectRigForInspector(rigId) {
     document.getElementById("resolvedPartCount").textContent = `${entries.length} parts · ${libRig.available_sheets.length} sheets`;
     rList.innerHTML = entries.slice(0, 40).map(([pk, pv]) => `
       <div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;gap:6px;">
-        <span style="color:#d0daf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${pk}</span>
+        <span style="color:#d0daf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${pv.file}">${pk}</span>
         <span style="color:var(--green);white-space:nowrap;">${pv.visible_w}×${pv.visible_h}px (×${pv.solved_pixel_scale_1080p.toFixed(2)})</span>
       </div>
     `).join("");
@@ -1821,8 +2321,8 @@ function updateLiveTelemetry() {
       <span>Stage Ratio: <strong style="color:var(--green)">${kin.hRatio.toFixed(3)}</strong></span>
     </div>
     <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-      <span>Aspect Comp Mult: <strong>${kin.aspectMult.toFixed(2)}x</strong></span>
-      <span>Root Velocity vx: <strong>${kin.vx.toFixed(3)}/s</strong></span>
+      <span>2.5D Yaw / Z-Foreshorten: <strong style="color:var(--cyan)">${fake3dYawDeg}° / ${fake3dForeshorten.toFixed(2)}</strong></span>
+      <span>Seam Solver: <strong style="color:${seamMode === 'solved' ? 'var(--green)' : 'var(--red)'}">${seamMode.toUpperCase()}</strong></span>
     </div>
     <div style="display:flex;gap:8px;margin-top:6px;">
       <span class="${kin.leftPin ? "badge-good" : "badge-bad"}">left_foot_pin: ${kin.leftPin ? "LOCKED" : "SWING"}</span>

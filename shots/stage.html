@@ -114,6 +114,15 @@
     color:var(--paper);font-size:9px;letter-spacing:.2em;text-transform:uppercase;padding:8px 14px;
     opacity:0;transition:opacity .22s;pointer-events:none}
   #toast.show{opacity:1}
+
+  /* ── Compound Ensemble Quick-Spawner Bar ── */
+  #ensBar{position:fixed;top:142px;left:14px;right:14px;z-index:26;background:rgba(242,241,236,.97);
+    border:2px solid var(--ink);box-shadow:6px 6px 0 rgba(20,20,20,.22);padding:8px 12px;
+    display:none;align-items:center;gap:6px;flex-wrap:wrap}
+  #ensBar.on{display:flex}
+  .ensChip{font-size:8px;letter-spacing:.1em;text-transform:uppercase;padding:5px 8px;
+    border:1px solid var(--ink);background:#fff;cursor:pointer;white-space:nowrap;font-weight:700}
+  .ensChip:hover{background:var(--red);color:#fff;border-color:var(--red)}
 </style>
 </head>
 <body>
@@ -126,9 +135,11 @@
     <div class="chip red" id="modeEmbody" title="Possess the Poet &amp; articulate his cut-out rig">EMBODY / RIG</div>
     <div class="chip on" id="rigModeBtn" title="Switch Poet between Replacement Pose Cutout and 31-Part Brass-Pivot Articulated Rig">POET: POSE CUTOUT</div>
     <div class="chip" id="arrangeBtn" title="Click any cut-out piece on stage to move, resize, flip, or change depth plane">ARRANGE</div>
+    <div class="chip red" id="ensBtn" title="Drop a complete multi-part animated Ensemble (Car+Wheels, Motorcycle, Heart, Hourglass, Phone Booth, DJ Booth, Water Shore, Portal, Cafe) onto the stage">🧩 ＋ ENSEMBLE</div>
     <div class="chip" id="drawerBtn" title="Open the v2.0-poem-kits Cut-Out Piece Drawer">＋ ADD PIECE</div>
     <div class="chip on" id="pivBtn" title="Show detected brass pivot sockets &amp; multiplane anchors">⊕ PIVOTS</div>
     <div class="chip" id="snapChip" title="Export current multiplane frame as PNG">SNAP PNG</div>
+    <a class="chip red" href="./assembly.html" title="Open 'Some Assembly Required' Interactive Prop Rigs, Portals, Water Worlds &amp; Action Toybox">ASSEMBLY ↗</a>
     <a class="chip red" href="./suite.html" title="Play the 24-minute 14-Poem Cut-Out Suite from one clock">SUITE ↗</a>
     <a class="chip" id="cardsLink" href="./cards.html">CARDS ↗</a>
     <a class="chip" href="./body_lab.html">BODY LAB ↗</a>
@@ -140,6 +151,12 @@
 
 <div id="spine"></div>
 <div id="scenes"></div>
+<div id="ensBar">
+  <strong style="font-size:8.5px;letter-spacing:.14em;margin-right:4px">SPAWN ANIMATED ENSEMBLE:</strong>
+  <span id="ensList" style="display:flex;gap:5px;flex-wrap:wrap;flex:1"></span>
+  <span class="chip" id="ensClear" title="Clear stage to empty floor so you can build from scratch">CLEAR FLOOR</span>
+  <span class="chip" id="ensClose">✕</span>
+</div>
 <canvas id="stage"></canvas>
 
 <!-- Embody & Live Brass-Pivot Articulated Rig HUD -->
@@ -233,14 +250,14 @@ let arrangeMode = false;
 let embodyMode = false;
 let articulatedRigOn = false; // When true, draws Poet using the 31-part brass-pivot articulated tracksuit/tshirt rig
 
-/* ── Articulated Poet Rig State (31-Part Brass-Pivot Skeleton) ── */
+/* ── Articulated Poet Rig State (31-Part Brass-Pivot Skeleton + Cuff-Tuck & 2.5D Fake-3D) ── */
 const RIG_POSES = {
-  stand:  { torso: 0,  head: 0,  uarmL: -8,  farmL: 6,   handL: 0, uarmR: 8,   farmR: -6,  handR: 0, thighL: -2,  shinL: 0, thighR: 2,   shinR: 0 },
-  read:   { torso: -3, head: 10, uarmL: 28,  farmL: 52,  handL: 0, uarmR: -28, farmR: -52, handR: 0, thighL: -3,  shinL: 0, thighR: 3,   shinR: 0 },
-  reach:  { torso: 12, head: -6, uarmL: -68, farmL: -22, handL: 0, uarmR: 42,  farmR: 18,  handR: 0, thighL: -22, shinL: 16,thighR: 24,  shinR: 12 },
-  walk:   { torso: 4,  head: 0,  uarmL: -24, farmL: 18,  handL: 0, uarmR: 24,  farmR: -18, handR: 0, thighL: 20,  shinL: -10,thighR: -20, shinR: 12 },
-  fall:   { torso: 36, head: -16,uarmL: -82, farmL: -20, handL: 0, uarmR: 78,  farmR: 22,  handR: 0, thighL: -32, shinL: 24,thighR: 28,  shinR: -28 },
-  crouch: { torso: 18, head: -10,uarmL: -38, farmL: 34,  handL: 0, uarmR: 38,  farmR: -34, handR: 0, thighL: -46, shinL: 58,thighR: 46,  shinR: -58 },
+  stand:  { torso: 0,  head: 0,  yaw3d: 0,   reach3d: 0,  uarmL: -8,  farmL: 6,   handL: 0, uarmR: 8,   farmR: -6,  handR: 0, thighL: -2,  shinL: 0, thighR: 2,   shinR: 0 },
+  read:   { torso: -3, head: 10, yaw3d: -14, reach3d: 26, uarmL: 28,  farmL: 52,  handL: 0, uarmR: -28, farmR: -52, handR: 0, thighL: -3,  shinL: 0, thighR: 3,   shinR: 0 },
+  reach:  { torso: 12, head: -6, yaw3d: 18,  reach3d: 34, uarmL: -68, farmL: -22, handL: 0, uarmR: 42,  farmR: 18,  handR: 0, thighL: -22, shinL: 16,thighR: 24,  shinR: 12 },
+  walk:   { torso: 4,  head: 0,  yaw3d: 12,  reach3d: 14, uarmL: -24, farmL: 18,  handL: 0, uarmR: 24,  farmR: -18, handR: 0, thighL: 20,  shinL: -10,thighR: -20, shinR: 12 },
+  fall:   { torso: 36, head: -16,yaw3d: -20, reach3d: 28, uarmL: -82, farmL: -20, handL: 0, uarmR: 78,  farmR: 22,  handR: 0, thighL: -32, shinL: 24,thighR: 28,  shinR: -28 },
+  crouch: { torso: 18, head: -10,yaw3d: 8,   reach3d: 20, uarmL: -38, farmL: 34,  handL: 0, uarmR: 38,  farmR: -34, handR: 0, thighL: -46, shinL: 58,thighR: 46,  shinR: -58 },
 };
 let rigPoseName = "stand";
 let rigAngles = { ...RIG_POSES.stand };
@@ -349,7 +366,7 @@ function fit() {
 }
 addEventListener("resize", fit);
 
-/* ── 31-Part Brass-Pivot Articulated Poet Renderer ── */
+/* ── 31-Part Brass-Pivot Articulated Poet Renderer (with Wrist/Ankle Cuff-Tuck & 2.5D Fake-3D) ── */
 async function drawArticulatedPoetRig(ctx, cx, footY, targetHeight, t, DPR) {
   const compIds = [
     "01_torso_front", "04_hip_bridge", "06_pelvis_front_cover",
@@ -368,29 +385,30 @@ async function drawArticulatedPoetRig(ctx, cx, footY, targetHeight, t, DPR) {
   const torsoEntry = imById["01_torso_front"];
   if (!torsoEntry || !torsoEntry.im) return;
 
-  // Master scale: full standing figure is ~3.35x the torso height (940px between neck and waist)
   const S = targetHeight / 3350;
   const breath = playing ? Math.sin(t * 2.4) * 3 * DPR : 0;
   const walkSwing = (playing && rigPoseName === "walk") ? Math.sin(t * 4.5) * 18 : 0;
   const deg = d => (d * Math.PI) / 180;
 
-  // Calibrated scale factors relative to 01_torso_front (since each of the 31 PNGs was exported zoomed-to-frame)
+  // Calibrated anatomical scales:
+  // - Hands (0.23) fit inside the ribbed forearm sleeve cuff (width 104px)
+  // - Boots (0.29) fit inside the ribbed jogger pant cuff (width 144px)
   const REL_SCALE = {
     "01_torso_front": 1.00,
     "04_hip_bridge": 0.62,
     "06_pelvis_front_cover": 0.66,
     "07_upper_arm_L": 0.48,
     "08_forearm_L": 0.44,
-    "15_hand_relaxed_L": 0.30,
+    "15_hand_relaxed_L": 0.23,
     "09_upper_arm_R": 0.48,
     "10_forearm_R": 0.44,
-    "16_hand_relaxed_R": 0.30,
+    "16_hand_relaxed_R": 0.23,
     "11_thigh_L": 0.62,
     "12_shin_L": 0.58,
-    "19_boot_front_L": 0.42,
+    "19_boot_front_L": 0.29,
     "13_thigh_R": 0.62,
     "14_shin_R": 0.58,
-    "20_boot_front_R": 0.42,
+    "20_boot_front_R": 0.29,
     "21_head_front_blank": 0.66,
     "22_eyes_open": 0.20,
     "23_eyes_closed": 0.20,
@@ -404,10 +422,17 @@ async function drawArticulatedPoetRig(ctx, cx, footY, targetHeight, t, DPR) {
     "31_sunglasses_front": 0.26,
   };
 
-  // Transform a local pixel (lx, ly) on a component (anchored at anchorPx, anchorPy and rotated by angleDeg) into stage coordinates
-  function toWorld(originX, originY, anchorPx, anchorPy, lx, ly, sc, angleDeg) {
-    const dx = (lx - anchorPx) * sc;
-    const dy = (ly - anchorPy) * sc;
+  // 2.5D Fake-3D yaw & foreshortening parameters
+  const yawDeg = (rigAngles.yaw3d || 0) + (playing ? Math.sin(t * 1.1) * 8 : 0);
+  const yawRad = deg(yawDeg);
+  const bodyScaleX = Math.max(0.84, Math.cos(yawRad * 0.55));
+  const reachRad = deg(rigAngles.reach3d || 0);
+  const limbForeshortenY = Math.max(0.62, Math.cos(reachRad));
+  const handPerspectiveBoost = 1.0 + 0.16 * Math.sin(Math.max(0, reachRad));
+
+  function toWorld(originX, originY, anchorPx, anchorPy, lx, ly, sc, angleDeg, syMult = 1.0, sxMult = 1.0) {
+    const dx = (lx - anchorPx) * sc * sxMult;
+    const dy = (ly - anchorPy) * sc * syMult;
     const r = deg(angleDeg);
     return {
       x: originX + dx * Math.cos(r) - dy * Math.sin(r),
@@ -415,113 +440,130 @@ async function drawArticulatedPoetRig(ctx, cx, footY, targetHeight, t, DPR) {
     };
   }
 
-  // Draw a component pinned at world (wx, wy) by its local pixel (px, py) at angleDeg
-  function drawPinned(compId, wx, wy, px, py, angleDeg) {
+  function drawPinned(compId, wx, wy, px, py, angleDeg, opts = {}) {
     const entry = imById[compId];
     if (!entry || !entry.im) return;
     const { comp, im } = entry;
-    const sc = S * (REL_SCALE[compId] || 0.5);
+    const sc = S * (REL_SCALE[compId] || 0.5) * (opts.scaleMult || 1.0);
+    const sxM = opts.sxMult || 1.0;
+    const syM = opts.syMult || 1.0;
+    const clipY0 = opts.clipY0 || 0;
+    const clipY1 = opts.clipY1 || im.height;
+
     ctx.save();
     ctx.translate(wx, wy);
     ctx.rotate(deg(angleDeg));
+    ctx.scale(sxM, syM);
+    if (clipY0 > 0 || clipY1 < im.height) {
+      ctx.beginPath();
+      ctx.rect(-px * sc - 20, (clipY0 - py) * sc, im.width * sc + 40, (clipY1 - clipY0) * sc);
+      ctx.clip();
+    }
     ctx.shadowColor = "rgba(0,0,0,0.34)";
     ctx.shadowBlur = 5 * DPR;
+    ctx.shadowOffsetX = Math.sin(yawRad) * 3.5 * DPR;
     ctx.drawImage(im, -px * sc, -py * sc, im.width * sc, im.height * sc);
     if (showPivots) {
       ctx.strokeStyle = "#e01b1b";
       ctx.lineWidth = 1.6 * DPR;
       for (const pv of (comp.pivots || [])) {
-        ctx.beginPath();
-        ctx.arc((pv.x - px) * sc, (pv.y - py) * sc, Math.max(3.5 * DPR, (pv.r || 24) * sc), 0, Math.PI * 2);
-        ctx.stroke();
+        if (pv.y >= clipY0 && pv.y <= clipY1) {
+          ctx.beginPath();
+          ctx.arc((pv.x - px) * sc, (pv.y - py) * sc, Math.max(3.5 * DPR, (pv.r || 24) * sc), 0, Math.PI * 2);
+          ctx.stroke();
+        }
       }
     }
     ctx.restore();
   }
 
-  // Torso pivots in 01_torso_front native pixels:
-  // neck=(639,108), shoulder_R=(300.4,212.4), shoulder_L=(979.8,212.1), waist=(639.4,1048.4)
   const torsoA = rigAngles.torso;
   const waistWorldX = cx;
   const waistWorldY = footY - targetHeight * 0.50 + breath;
   const scTorso = S * REL_SCALE["01_torso_front"];
 
-  const neckW = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 639.0, 108.0, scTorso, torsoA);
-  const shRW  = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 300.4, 212.4, scTorso, torsoA);
-  const shLW  = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 979.8, 212.1, scTorso, torsoA);
+  const neckW = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 639.0, 118.0, scTorso, torsoA, 1.0, bodyScaleX);
+  const shRW  = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 300.4, 212.4, scTorso, torsoA, 1.0, bodyScaleX);
+  const shLW  = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 979.8, 212.1, scTorso, torsoA, 1.0, bodyScaleX);
 
-  // Hip bridge pivots: waist=(759.6,192.2), hip_R=(357.3,791.2), hip_L=(1172.8,791.3)
   const hipA = torsoA * 0.4;
   const scHip = S * REL_SCALE["04_hip_bridge"];
-  const hipRW = toWorld(waistWorldX, waistWorldY, 759.6, 192.2, 357.3, 791.2, scHip, hipA);
-  const hipLW = toWorld(waistWorldX, waistWorldY, 759.6, 192.2, 1172.8, 791.3, scHip, hipA);
+  const hipRW = toWorld(waistWorldX, waistWorldY, 759.6, 192.2, 357.3, 791.2, scHip, hipA, 1.0, bodyScaleX);
+  const hipLW = toWorld(waistWorldX, waistWorldY, 759.6, 192.2, 1172.8, 791.3, scHip, hipA, 1.0, bodyScaleX);
 
-  // 1. Hip Bridge (behind pelvis cover & legs)
-  drawPinned("04_hip_bridge", waistWorldX, waistWorldY, 759.6, 192.2, hipA);
+  // 1. Hip Bridge
+  drawPinned("04_hip_bridge", waistWorldX, waistWorldY, 759.6, 192.2, hipA, { sxMult: bodyScaleX });
 
-  // 2. Right Leg (viewer left): thigh_R (511.8,192.2)->(514.4,1342.4), shin_R (507.4,176.0)->(519.9,1392.9), boot_R (635,315)
+  // 2. Right Leg (viewer left) — ANKLE CUFF-TUCK: Boot drawn BEHIND shin cuff; shin bottom grommet tab clipped at y=1298!
   const thRA = rigAngles.thighR - walkSwing;
   const scThigh = S * REL_SCALE["13_thigh_R"];
   const kneeRW = toWorld(hipRW.x, hipRW.y, 511.8, 192.2, 514.4, 1342.4, scThigh, thRA);
   const shRA = thRA * 0.5 + rigAngles.shinR - walkSwing * 0.5;
   const scShin = S * REL_SCALE["14_shin_R"];
-  const ankRW = toWorld(kneeRW.x, kneeRW.y, 507.4, 176.0, 519.9, 1392.9, scShin, shRA);
-  drawPinned("13_thigh_R", hipRW.x, hipRW.y, 511.8, 192.2, thRA);
-  drawPinned("14_shin_R", kneeRW.x, kneeRW.y, 507.4, 176.0, shRA);
-  drawPinned("20_boot_front_R", ankRW.x, ankRW.y, 635.0, 315.0, 0);
+  const ankRW = toWorld(kneeRW.x, kneeRW.y, 507.4, 176.0, 519.9, 1255.0, scShin, shRA);
+  drawPinned("13_thigh_R", hipRW.x, hipRW.y, 511.8, 192.2, thRA, { clipY1: 1380 });
+  drawPinned("20_boot_front_R", ankRW.x, ankRW.y, 635.0, 360.0, shRA * 0.25, { clipY0: 210 });
+  drawPinned("14_shin_R", kneeRW.x, kneeRW.y, 507.4, 176.0, shRA, { clipY1: 1298 });
 
-  // 3. Left Leg (viewer right): thigh_L (511.0,180.1)->(509.8,1344.4), shin_L (511.1,198.3)->(512.3,1387.6), boot_L (625,315)
+  // 3. Left Leg (viewer right) — ANKLE CUFF-TUCK: Boot drawn BEHIND shin cuff; shin bottom grommet tab clipped at y=1295!
   const thLA = rigAngles.thighL + walkSwing;
   const kneeLW = toWorld(hipLW.x, hipLW.y, 511.0, 180.1, 509.8, 1344.4, scThigh, thLA);
   const shLA = thLA * 0.5 + rigAngles.shinL + walkSwing * 0.5;
-  const ankLW = toWorld(kneeLW.x, kneeLW.y, 511.1, 198.3, 512.3, 1387.6, scShin, shLA);
-  drawPinned("11_thigh_L", hipLW.x, hipLW.y, 511.0, 180.1, thLA);
-  drawPinned("12_shin_L", kneeLW.x, kneeLW.y, 511.1, 198.3, shLA);
-  drawPinned("19_boot_front_L", ankLW.x, ankLW.y, 625.0, 315.0, 0);
+  const ankLW = toWorld(kneeLW.x, kneeLW.y, 511.1, 198.3, 512.3, 1250.0, scShin, shLA);
+  drawPinned("11_thigh_L", hipLW.x, hipLW.y, 511.0, 180.1, thLA, { clipY1: 1380 });
+  drawPinned("19_boot_front_L", ankLW.x, ankLW.y, 625.0, 360.0, shLA * 0.25, { clipY0: 210 });
+  drawPinned("12_shin_L", kneeLW.x, kneeLW.y, 511.1, 198.3, shLA, { clipY1: 1295 });
 
-  // 4. Clothed Pelvis Front Cover over hip bridge & upper thigh tabs: waist=(727.3, 180.5)
-  drawPinned("06_pelvis_front_cover", waistWorldX, waistWorldY, 727.3, 180.5, hipA);
+  // 4. Pelvis Cover
+  drawPinned("06_pelvis_front_cover", waistWorldX, waistWorldY, 727.3, 180.5, hipA, { sxMult: bodyScaleX });
 
-  // 5. Torso Front (drawn before arms so both shoulder caps lock over the brass shoulder sockets)
-  drawPinned("01_torso_front", waistWorldX, waistWorldY, 639.4, 1048.4, torsoA);
-
-  // 6. Right Arm (viewer left): uarm_R (504,138.5)->(534,1387.1), farm_R (513.8,176.3)->(510.7,1375.5), hand_R (646,255.5)
+  // 5. Right Arm (viewer left) — WRIST CUFF-TUCK: Hand drawn BEHIND forearm cuff; forearm bottom grommet tab clipped at y=1278!
   const uaRA = torsoA + rigAngles.uarmR + walkSwing * 0.8;
   const scUarm = S * REL_SCALE["09_upper_arm_R"];
-  const elbRW = toWorld(shRW.x, shRW.y, 504.0, 138.5, 534.0, 1387.1, scUarm, uaRA);
+  const elbRW = toWorld(shRW.x, shRW.y, 504.0, 138.5, 534.0, 1350.0, scUarm, uaRA);
   const faRA = uaRA + rigAngles.farmR;
   const scFarm = S * REL_SCALE["10_forearm_R"];
-  const wriRW = toWorld(elbRW.x, elbRW.y, 513.8, 176.3, 510.7, 1375.5, scFarm, faRA);
-  drawPinned("09_upper_arm_R", shRW.x, shRW.y, 504.0, 138.5, uaRA);
-  drawPinned("10_forearm_R", elbRW.x, elbRW.y, 513.8, 176.3, faRA);
-  drawPinned("16_hand_relaxed_R", wriRW.x, wriRW.y, 646.0, 255.5, faRA + rigAngles.handR);
+  const wriRW = toWorld(elbRW.x, elbRW.y, 513.8, 176.3, 510.7, 1225.0, scFarm, faRA, limbForeshortenY);
+  drawPinned("09_upper_arm_R", shRW.x, shRW.y, 504.0, 138.5, uaRA, { clipY1: 1410 });
+  drawPinned("16_hand_relaxed_R", wriRW.x, wriRW.y, 646.0, 325.0, faRA + rigAngles.handR, { clipY0: 220, scaleMult: handPerspectiveBoost });
+  drawPinned("10_forearm_R", elbRW.x, elbRW.y, 513.8, 176.3, faRA, { clipY1: 1278, syMult: limbForeshortenY });
 
-  // 7. Blank Head + Layered Expressions + Removable Sunglasses: neck=(558.0, 1159.0)
+  // 6. Torso Front + Head (NECK COLLAR-TUCK: Head neck base clipped at y=1185 and tucked under Torso front collar lip!)
+  drawPinned("01_torso_front", waistWorldX, waistWorldY, 639.4, 1048.4, torsoA, { sxMult: bodyScaleX });
+
   const headA = torsoA * 0.6 + rigAngles.head;
   const scHead = S * REL_SCALE["21_head_front_blank"];
-  drawPinned("21_head_front_blank", neckW.x, neckW.y, 558.0, 1159.0, headA);
+  drawPinned("21_head_front_blank", neckW.x, neckW.y, 558.0, 1145.0, headA, { clipY1: 1185, sxMult: Math.max(0.88, Math.cos(yawRad * 0.45)) });
+  drawPinned("01_torso_front", waistWorldX, waistWorldY, 639.4, 1048.4, torsoA, { clipY0: 30, clipY1: 188, sxMult: bodyScaleX });
 
-  const browsW = toWorld(neckW.x, neckW.y, 558.0, 1159.0, 577.0, 505.0, scHead, headA);
-  const eyesW  = toWorld(neckW.x, neckW.y, 558.0, 1159.0, 577.0, 585.0, scHead, headA);
-  const noseW  = toWorld(neckW.x, neckW.y, 558.0, 1159.0, 577.0, 690.0, scHead, headA);
-  const mouthW = toWorld(neckW.x, neckW.y, 558.0, 1159.0, 577.0, 865.0, scHead, headA);
+  // 7. 2.5D Cylindrical Parallax Facial Features
+  const faceShiftX = Math.sin(yawRad) * 74;
+  const noseShiftX = Math.sin(yawRad) * 98;
+  const glassShiftX = Math.sin(yawRad) * 108;
+  const faceScaleX = Math.max(0.82, Math.cos(yawRad * 0.55));
 
-  drawPinned(rigFace.eyes, eyesW.x, eyesW.y, 1086, 362, headA);
-  drawPinned(rigFace.brows, browsW.x, browsW.y, 1085, 362, headA);
-  drawPinned("26_nose_front", noseW.x, noseW.y, 768, 512, headA);
-  drawPinned(rigFace.mouth, mouthW.x, mouthW.y, 887, 443, headA);
+  const browsW = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + faceShiftX, 505.0, scHead, headA);
+  const eyesW  = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + faceShiftX, 585.0, scHead, headA);
+  const noseW  = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + noseShiftX, 690.0, scHead, headA);
+  const mouthW = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + faceShiftX * 0.9, 865.0, scHead, headA);
+  const glassW = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + glassShiftX, 585.0, scHead, headA);
+
+  drawPinned(rigFace.eyes, eyesW.x, eyesW.y, 1086, 362, headA, { sxMult: faceScaleX });
+  drawPinned(rigFace.brows, browsW.x, browsW.y, 1085, 362, headA, { sxMult: faceScaleX });
+  drawPinned("26_nose_front", noseW.x, noseW.y, 768, 512, headA, { sxMult: faceScaleX });
+  drawPinned(rigFace.mouth, mouthW.x, mouthW.y, 887, 443, headA, { sxMult: faceScaleX });
   if (rigFace.sunglasses) {
-    drawPinned("31_sunglasses_front", eyesW.x, eyesW.y, 1086, 362, headA);
+    drawPinned("31_sunglasses_front", glassW.x, glassW.y, 1086, 362, headA, { sxMult: faceScaleX });
   }
 
-  // 8. Left Arm (viewer right): uarm_L (507.7,166.4)->(493.6,1362.5), farm_L (512,180)->(510.5,1320.6), hand_L (660.8,190.1)
+  // 8. Left Arm (viewer right) — WRIST CUFF-TUCK: Hand drawn BEHIND forearm cuff; forearm bottom grommet tab clipped at y=1238!
   const uaLA = torsoA + rigAngles.uarmL - walkSwing * 0.8;
-  const elbLW = toWorld(shLW.x, shLW.y, 507.7, 166.4, 493.6, 1362.5, scUarm, uaLA);
+  const elbLW = toWorld(shLW.x, shLW.y, 507.7, 166.4, 493.6, 1335.0, scUarm, uaLA);
   const faLA = uaLA + rigAngles.farmL;
-  const wriLW = toWorld(elbLW.x, elbLW.y, 512.0, 180.0, 510.5, 1320.6, scFarm, faLA);
-  drawPinned("07_upper_arm_L", shLW.x, shLW.y, 507.7, 166.4, uaLA);
-  drawPinned("08_forearm_L", elbLW.x, elbLW.y, 512.0, 180.0, faLA);
-  drawPinned("15_hand_relaxed_L", wriLW.x, wriLW.y, 660.8, 190.1, faLA + rigAngles.handL);
+  const wriLW = toWorld(elbLW.x, elbLW.y, 512.0, 180.0, 510.5, 1195.0, scFarm, faLA, limbForeshortenY);
+  drawPinned("07_upper_arm_L", shLW.x, shLW.y, 507.7, 166.4, uaLA, { clipY1: 1390 });
+  drawPinned("15_hand_relaxed_L", wriLW.x, wriLW.y, 660.8, 315.0, faLA + rigAngles.handL, { clipY0: 215, scaleMult: handPerspectiveBoost });
+  drawPinned("08_forearm_L", elbLW.x, elbLW.y, 512.0, 180.0, faLA, { clipY1: 1238, syMult: limbForeshortenY });
 }
 
 /* ── Main Stage Render Loop ── */
@@ -587,16 +629,82 @@ async function renderStageFrame() {
 
     const z = l.z || 1.0;
     const parallax = camPan / Math.max(0.35, z);
-    const bob = playing
-      ? (l.role && l.role.startsWith("character") ? Math.sin(T * 2.3 + idx) * 4 * DPR : (l.role === "fx_overlay" ? Math.cos(T * 1.2 + idx) * 8 * DPR : 0))
-      : 0;
+    const idBlob = `${l.part_id || ""} ${l.sheet_id || ""} ${l.label || ""} ${l.file || ""}`.toLowerCase();
+    const animRole = l.anim_role || (
+      /(car__p05|car__p06|bike-skeleton__p07|bike-skeleton__p08|bike-skeleton__p09|bike-skeleton__p10|wheel)/.test(idBlob) ? "wheel_spin" :
+      /04\.props\.heart/.test(idBlob) ? "heart_beat" :
+      /hourglass/.test(idBlob) ? "hourglass_sand" :
+      /(wave\.1|shore_night__p01)/.test(idBlob) ? "wave_far" :
+      /(wave\.2|shore_night__p02)/.test(idBlob) ? "wave_mid" :
+      /(wave\.3|shore_night__p03|wave|water)/.test(idBlob) ? "wave_near" :
+      /planet-boats/.test(idBlob) ? "boat_rock" :
+      /(angel\.wings|ravens-stumps__p01|ravens-stumps__p02|wing)/.test(idBlob) ? "wing_flap" :
+      /tambourine/.test(idBlob) ? "tambourine_arc" :
+      /(dj-decks__p04|dj-decks__p05|dj-decks__p06)/.test(idBlob) ? "turntable_spin" :
+      /speakers-vu/.test(idBlob) ? "speaker_pulse" :
+      /(lights-iris|ride-light|drowned-light|headlight)/.test(idBlob) ? "headlight_beam" :
+      /mirror-phone-rings/.test(idBlob) ? "phone_ring" :
+      /faith-blooms/.test(idBlob) ? "flower_bloom" : ""
+    );
 
-    const cx = sx + (l.x ?? 0.5) * sw + parallax;
-    const by = sy + (l.y ?? 0.86) * sh + bob;
-    const targetH = sh * (l.scale || 0.5);
+    let animDx = 0, animDy = 0, animRot = l.rot || 0, animScale = 1.0, animAlpha = 1.0;
+    if (playing || T > 0) {
+      if (animRole === "wheel_spin") {
+        animRot += T * 4.5;
+      } else if (animRole === "heart_beat") {
+        const beat = Math.pow(Math.max(0, Math.sin(T * 5.2)), 4) * 0.13 + Math.pow(Math.max(0, Math.sin(T * 5.2 - 0.85)), 6) * 0.07;
+        animScale = 1.0 + beat;
+      } else if (animRole === "hourglass_sand") {
+        animRot += Math.sin(T * 1.4) * 0.07;
+        animDy += Math.cos(T * 2.8) * 3 * DPR;
+      } else if (animRole === "wave_far") {
+        animDx += Math.sin(T * 1.1 + 0.5) * 16 * DPR;
+        animDy += Math.cos(T * 1.5) * 3.5 * DPR;
+      } else if (animRole === "wave_mid") {
+        animDx += -Math.sin(T * 1.45 + 1.4) * 24 * DPR;
+        animDy += Math.sin(T * 1.9 + 1.0) * 5 * DPR;
+      } else if (animRole === "wave_near") {
+        animDx += Math.sin(T * 1.85 + 2.2) * 30 * DPR;
+        animDy += Math.cos(T * 2.3 + 0.4) * 6.5 * DPR;
+      } else if (animRole === "boat_rock") {
+        animRot += Math.sin(T * 1.6 + idx) * 0.085;
+        animDy += Math.cos(T * 1.6 + idx) * 6 * DPR;
+        animDx += Math.sin(T * 0.8) * 10 * DPR;
+      } else if (animRole === "wing_flap" || animRole === "wing_flap_L" || animRole === "wing_flap_R") {
+        const side = (animRole === "wing_flap_R" || (l.x ?? 0.5) > 0.5) ? -1 : 1;
+        animRot += side * Math.sin(T * 3.8 + idx * 0.3) * 0.26;
+        animDy += Math.cos(T * 3.8) * 4 * DPR;
+      } else if (animRole === "tambourine_arc") {
+        const cyc = (T * 0.55) % 1.0;
+        animDx += (cyc - 0.5) * 110 * DPR;
+        animDy += -Math.sin(cyc * Math.PI) * 65 * DPR;
+        animRot += T * 6.5;
+      } else if (animRole === "turntable_spin") {
+        animRot += T * 5.2;
+      } else if (animRole === "speaker_pulse") {
+        animScale = 1.0 + Math.pow(Math.abs(Math.sin(T * 6.28)), 3) * 0.085;
+      } else if (animRole === "headlight_beam" || animRole === "lamp_glow" || animRole === "portal_aperture") {
+        animAlpha = 0.78 + 0.22 * Math.sin(T * 3.4 + idx);
+        animScale = 1.0 + 0.03 * Math.sin(T * 2.2);
+      } else if (animRole === "phone_ring") {
+        animScale = 1.0 + 0.12 * Math.abs(Math.sin(T * 9.0));
+        animRot += Math.sin(T * 22.0) * 0.06;
+      } else if (animRole === "flower_bloom") {
+        animScale = 0.92 + 0.12 * (0.5 + 0.5 * Math.sin(T * 1.8 + idx));
+        animRot += Math.sin(T * 1.3 + idx) * 0.05;
+      } else if (l.role && l.role.startsWith("character")) {
+        animDy += Math.sin(T * 2.3 + idx) * 4 * DPR;
+      } else if (l.role === "fx_overlay") {
+        animDy += Math.cos(T * 1.2 + idx) * 8 * DPR;
+      }
+    }
+
+    const cx = sx + (l.x ?? 0.5) * sw + parallax + animDx;
+    const by = sy + (l.y ?? 0.86) * sh + animDy;
+    const targetH = sh * (l.scale || 0.5) * animScale;
 
     // If this is the Hero Poet and articulatedRigOn is enabled, render the 31-part brass-pivot rig!
-    if (l.instance === "actor_poet" && articulatedRigOn) {
+    if ((l.instance === "actor_poet" || l.role === "hero_poet") && articulatedRigOn) {
       g.fillStyle = "rgba(0,0,0,0.38)";
       g.beginPath();
       g.ellipse(cx, by - 4 * DPR, targetH * 0.22, targetH * 0.04, 0, 0, Math.PI * 2);
@@ -632,16 +740,16 @@ async function renderStageFrame() {
     }
 
     g.save();
-    g.globalAlpha = l.alpha ?? 1.0;
+    g.globalAlpha = Math.max(0.05, Math.min(1.0, (l.alpha ?? 1.0) * animAlpha));
     g.globalCompositeOperation = l.blend || "source-over";
     g.shadowColor = "rgba(0,0,0,0.42)";
     g.shadowBlur = 10 * DPR;
     g.shadowOffsetY = 3 * DPR;
-    if (l.flip) {
-      g.translate(cx * 2, 0);
-      g.scale(-1, 1);
-    }
-    g.drawImage(im, dx, dy, dw, dh);
+    const midX = dx + dw / 2, midY = dy + dh / 2;
+    g.translate(midX, midY);
+    if (l.flip) g.scale(-1, 1);
+    if (animRot) g.rotate(animRot);
+    g.drawImage(im, -dw / 2, -dh / 2, dw, dh);
     g.restore();
 
     // Draw brass pivot sockets if enabled
@@ -698,7 +806,7 @@ async function renderStageFrame() {
   g.lineWidth = 2.5 * DPR;
   g.strokeRect(sx, sy, sw, sh);
   g.fillStyle = "#f2f1ec";
-  g.fillRect(sx + 12 * DPR, sy - 10 * DPR, 460 * DPR, 20 * DPR);
+  g.fillRect(sx + 12 * DPR, sy - 10 * DPR, 490 * DPR, 20 * DPR);
   g.fillStyle = "#141414";
   g.font = `700 ${Math.round(11 * DPR)}px ui-monospace,monospace`;
   g.fillText(`${currentScene.id} · ${currentScene.title.toUpperCase()} (${liveLayers.length} CUT PIECES STAGED)`, sx + 18 * DPR, sy + 4 * DPR);
@@ -758,9 +866,23 @@ function selectBook(b, targetSceneId = null) {
   if (chosen) selectScene(chosen);
 }
 
+function getCanonicalSceneLayers(sc) {
+  const plan = MAN.scene_collage_plans && MAN.scene_collage_plans[sc.id];
+  const raw = (plan && plan.staged_placements && plan.staged_placements.length)
+    ? plan.staged_placements
+    : ((sc.staged_placements && sc.staged_placements.length) ? sc.staged_placements : (sc.stage_layers || []));
+  const cloned = JSON.parse(JSON.stringify(raw));
+  // Ensure actor_poet slot exists so 31-Part Brass-Pivot Poet Rig can always be toggled on stage
+  if (!cloned.some(l => l.instance === "actor_poet")) {
+    const poetOrig = (sc.stage_layers || []).find(l => l.instance === "actor_poet");
+    if (poetOrig) cloned.push(JSON.parse(JSON.stringify(poetOrig)));
+  }
+  return cloned;
+}
+
 function selectScene(sc) {
   currentScene = sc;
-  liveLayers = JSON.parse(JSON.stringify(sc.stage_layers || []));
+  liveLayers = getCanonicalSceneLayers(sc);
   selectedIdx = -1;
   T = 0;
   updateArrangeBar();
@@ -891,11 +1013,178 @@ $("arrDel").onclick = () => {
 };
 $("arrReset").onclick = () => {
   if (!currentScene) return;
-  liveLayers = JSON.parse(JSON.stringify(currentScene.stage_layers || []));
+  liveLayers = getCanonicalSceneLayers(currentScene);
   selectedIdx = -1;
   updateArrangeBar();
   renderStageFrame();
-  toast("RESET SCENE TO CANONICAL LAYOUT");
+  toast("RESET SCENE TO CANONICAL ENSEMBLE LAYOUT");
+};
+
+/* ── 12 Playable Multi-Part Compound Ensemble Presets ── */
+const STAGE_ENSEMBLE_PRESETS = [
+  {
+    id: "car_sedan",
+    label: "🚗 Sedan + Wheels + Passengers",
+    layers: [
+      { instance: "ens_car_seat_f", plane: "P3", z: 1.52, sheet_id: "02.props.car", part_id: "02.props.car__p13", label: "CAR FRONT SEAT", file: "arena/parts/kit3/release_v2/cuts/02.props.car/02.props.car__p13.png", x: 0.45, y: 0.84, scale: 0.13, role: "prop" },
+      { instance: "ens_car_pass_1", plane: "P3", z: 1.48, sheet_id: "parents.02.car-argument", part_id: "parents.02.car-argument__p01", label: "FATHER IN CAR", file: "arena/parts/kit3/release_v2/cuts/parents.02.car-argument/parents.02.car-argument__p01.png", x: 0.44, y: 0.82, scale: 0.17, role: "character" },
+      { instance: "ens_car_pass_2", plane: "P3", z: 1.46, sheet_id: "parents.02.car-argument", part_id: "parents.02.car-argument__p02", label: "MOTHER IN CAR", file: "arena/parts/kit3/release_v2/cuts/parents.02.car-argument/parents.02.car-argument__p02.png", x: 0.53, y: 0.82, scale: 0.17, role: "character" },
+      { instance: "ens_car_body", plane: "P3", z: 1.38, sheet_id: "02.props.car", part_id: "02.props.car__p01", label: "FAMILY SEDAN BODY", file: "arena/parts/kit3/release_v2/cuts/02.props.car/02.props.car__p01.png", x: 0.49, y: 0.89, scale: 0.27, role: "prop" },
+      { instance: "ens_car_glass", plane: "P3", z: 1.36, sheet_id: "02.props.car", part_id: "02.props.car__p03", label: "SIDE WINDOW GLASS", file: "arena/parts/kit3/release_v2/cuts/02.props.car/02.props.car__p03.png", x: 0.48, y: 0.78, scale: 0.085, alpha: 0.48, role: "prop" },
+      { instance: "ens_car_wheel_l", plane: "P3", z: 1.34, sheet_id: "02.props.car", part_id: "02.props.car__p05", label: "FRONT WHEEL (SPIN)", file: "arena/parts/kit3/release_v2/cuts/02.props.car/02.props.car__p05.png", x: 0.365, y: 0.90, scale: 0.115, anim_role: "wheel_spin", role: "prop" },
+      { instance: "ens_car_wheel_r", plane: "P3", z: 1.34, sheet_id: "02.props.car", part_id: "02.props.car__p06", label: "REAR WHEEL (SPIN)", file: "arena/parts/kit3/release_v2/cuts/02.props.car/02.props.car__p06.png", x: 0.608, y: 0.90, scale: 0.115, anim_role: "wheel_spin", role: "prop" },
+      { instance: "ens_car_beam", plane: "P1", z: 0.55, sheet_id: "02.fx.lights-iris", part_id: "02.fx.lights-iris__p01", label: "HEADLIGHT VOLUMETRIC BEAM", file: "arena/parts/kit3/release_v2/cuts/02.fx.lights-iris/02.fx.lights-iris__p01.png", x: 0.19, y: 0.86, scale: 0.12, alpha: 0.85, anim_role: "headlight_beam", role: "fx_overlay" }
+    ]
+  },
+  {
+    id: "poet_motorcycle",
+    label: "🏍️ Poet on Motorcycle",
+    layers: [
+      { instance: "ens_bike_w_rear", plane: "P2", z: 1.12, sheet_id: "10.props.bike-skeleton", part_id: "10.props.bike-skeleton__p07", label: "BIKE REAR WHEEL", file: "arena/parts/kit3/release_v2/cuts/10.props.bike-skeleton/10.props.bike-skeleton__p07.png", x: 0.42, y: 0.90, scale: 0.15, anim_role: "wheel_spin", role: "prop" },
+      { instance: "ens_bike_w_front", plane: "P2", z: 1.12, sheet_id: "10.props.bike-skeleton", part_id: "10.props.bike-skeleton__p09", label: "BIKE FRONT WHEEL", file: "arena/parts/kit3/release_v2/cuts/10.props.bike-skeleton/10.props.bike-skeleton__p09.png", x: 0.59, y: 0.90, scale: 0.15, anim_role: "wheel_spin", role: "prop" },
+      { instance: "ens_bike_frame", plane: "P2", z: 1.08, sheet_id: "10.props.bike-skeleton", part_id: "10.props.bike-skeleton__p01", label: "MOTORCYCLE CHASSIS", file: "arena/parts/kit3/release_v2/cuts/10.props.bike-skeleton/10.props.bike-skeleton__p01.png", x: 0.50, y: 0.88, scale: 0.26, role: "prop" },
+      { instance: "ens_bike_rider", plane: "P2", z: 1.04, sheet_id: "10.props.bike-ride-views", part_id: "10.props.bike-ride-views__p29", label: "POET RIDING BIKE", file: "arena/parts/kit3/release_v2/cuts/10.props.bike-ride-views/10.props.bike-ride-views__p29.png", x: 0.49, y: 0.84, scale: 0.34, role: "character" },
+      { instance: "ens_bike_light", plane: "P1", z: 0.52, sheet_id: "10.props.bike-skeleton", part_id: "10.props.bike-skeleton__p12", label: "BIKE HEADLIGHT CONE", file: "arena/parts/kit3/release_v2/cuts/10.props.bike-skeleton/10.props.bike-skeleton__p12.png", x: 0.67, y: 0.83, scale: 0.16, anim_role: "headlight_beam", role: "fx_overlay" }
+    ]
+  },
+  {
+    id: "beating_heart",
+    label: "🫀 Beating Heart",
+    layers: [
+      { instance: "ens_heart_ring", plane: "P3", z: 1.35, sheet_id: "04.props.heart", part_id: "04.props.heart__p12", label: "CARDIAC PULSE HALO", file: "arena/parts/kit3/release_v2/cuts/04.props.heart/04.props.heart__p12.png", x: 0.50, y: 0.54, scale: 0.22, alpha: 0.82, anim_role: "headlight_beam", role: "fx_overlay" },
+      { instance: "ens_heart_vessel", plane: "P3", z: 1.30, sheet_id: "04.props.heart", part_id: "04.props.heart__p06", label: "SUPERIOR AORTA", file: "arena/parts/kit3/release_v2/cuts/04.props.heart/04.props.heart__p06.png", x: 0.50, y: 0.38, scale: 0.13, anim_role: "heart_beat", role: "prop" },
+      { instance: "ens_heart_core", plane: "P3", z: 1.25, sheet_id: "04.props.heart", part_id: "04.props.heart__p01", label: "BEATING HEART CHAMBERS", file: "arena/parts/kit3/release_v2/cuts/04.props.heart/04.props.heart__p01.png", x: 0.50, y: 0.54, scale: 0.25, anim_role: "heart_beat", role: "prop" }
+    ]
+  },
+  {
+    id: "hourglass_sand",
+    label: "⏳ Turning Hourglass",
+    layers: [
+      { instance: "ens_hg_sand", plane: "P3", z: 1.32, sheet_id: "12.props.last-hourglass", part_id: "12.props.last-hourglass__p05", label: "FALLING SAND BULBS", file: "arena/parts/kit3/release_v2/cuts/12.props.last-hourglass/12.props.last-hourglass__p05.png", x: 0.68, y: 0.76, scale: 0.20, anim_role: "hourglass_sand", role: "prop" },
+      { instance: "ens_hg_frame", plane: "P3", z: 1.28, sheet_id: "12.props.last-hourglass", part_id: "12.props.last-hourglass__p02", label: "HOURGLASS FRAME", file: "arena/parts/kit3/release_v2/cuts/12.props.last-hourglass/12.props.last-hourglass__p02.png", x: 0.68, y: 0.82, scale: 0.30, anim_role: "hourglass_sand", role: "prop" },
+      { instance: "ens_hg_hand", plane: "P2", z: 1.18, sheet_id: "12.props.hand-hourglass", part_id: "12.props.hand-hourglass__p01", label: "HAND TURNING HOURGLASS", file: "arena/parts/kit3/release_v2/cuts/12.props.hand-hourglass/12.props.hand-hourglass__p01.png", x: 0.68, y: 0.66, scale: 0.18, anim_role: "hourglass_sand", role: "prop" }
+    ]
+  },
+  {
+    id: "tambourine_rose",
+    label: "🪘 Tambourine + Rose Window",
+    layers: [
+      { instance: "ens_rose_win", plane: "P4", z: 2.30, sheet_id: "03.props.rose-window", part_id: "03.props.rose-window__p01", label: "GOTHIC ROSE WINDOW PORTAL", file: "arena/parts/kit3/release_v2/cuts/03.props.rose-window/03.props.rose-window__p01.png", x: 0.50, y: 0.54, scale: 0.42, anim_role: "portal_aperture", role: "set_element" },
+      { instance: "ens_tamb_trail", plane: "P3", z: 1.35, sheet_id: "02.props.tambourine", part_id: "02.props.tambourine__p11", label: "TAMBOURINE THROW ARC", file: "arena/parts/kit3/release_v2/cuts/02.props.tambourine/02.props.tambourine__p11.png", x: 0.44, y: 0.52, scale: 0.16, alpha: 0.78, role: "fx_overlay" },
+      { instance: "ens_tamb_whole", plane: "P2", z: 1.10, sheet_id: "02.props.tambourine", part_id: "02.props.tambourine__p01", label: "FLYING TAMBOURINE", file: "arena/parts/kit3/release_v2/cuts/02.props.tambourine/02.props.tambourine__p01.png", x: 0.50, y: 0.46, scale: 0.15, anim_role: "tambourine_arc", role: "prop" },
+      { instance: "ens_tamb_shatter", plane: "P1", z: 0.60, sheet_id: "03.props.tambourine-broken", part_id: "03.props.tambourine-broken__p01", label: "SHATTERED TAMBOURINE RIM", file: "arena/parts/kit3/release_v2/cuts/03.props.tambourine-broken/03.props.tambourine-broken__p01.png", x: 0.62, y: 0.52, scale: 0.16, anim_role: "tambourine_arc", role: "prop" }
+    ]
+  },
+  {
+    id: "phone_booth_call",
+    label: "☎️ Phone Booth + Ringing Call",
+    layers: [
+      { instance: "ens_pb_booth", plane: "P3", z: 1.45, sheet_id: "09.props.phonebooth", part_id: "09.props.phonebooth__p01", label: "GLASS PHONE BOOTH", file: "arena/parts/kit3/release_v2/cuts/09.props.phonebooth/09.props.phonebooth__p01.png", x: 0.68, y: 0.89, scale: 0.46, role: "set_element" },
+      { instance: "ens_pb_door", plane: "P3", z: 1.38, sheet_id: "09.props.phonebooth", part_id: "09.props.phonebooth__p04", label: "BOOTH FOLDING DOOR", file: "arena/parts/kit3/release_v2/cuts/09.props.phonebooth/09.props.phonebooth__p04.png", x: 0.63, y: 0.89, scale: 0.44, role: "prop" },
+      { instance: "ens_pb_rings", plane: "P1", z: 0.55, sheet_id: "02.props.mirror-phone-rings", part_id: "02.props.mirror-phone-rings__p01", label: "PHONE RING ACOUSTIC WAVES", file: "arena/parts/kit3/release_v2/cuts/02.props.mirror-phone-rings/02.props.mirror-phone-rings__p01.png", x: 0.68, y: 0.56, scale: 0.18, anim_role: "phone_ring", role: "fx_overlay" }
+    ]
+  },
+  {
+    id: "dj_booth_club",
+    label: "🎧 DJ Booth + Pulsing Speakers",
+    layers: [
+      { instance: "ens_dj_spk_l", plane: "P4", z: 2.10, sheet_id: "07.props.speakers-vu", part_id: "07.props.speakers-vu__p01", label: "LEFT CLUB SPEAKER STACK", file: "arena/parts/kit3/release_v2/cuts/07.props.speakers-vu/07.props.speakers-vu__p01.png", x: 0.22, y: 0.88, scale: 0.38, anim_role: "speaker_pulse", role: "prop" },
+      { instance: "ens_dj_spk_r", plane: "P4", z: 2.10, sheet_id: "07.props.speakers-vu", part_id: "07.props.speakers-vu__p02", label: "RIGHT CLUB SPEAKER STACK", file: "arena/parts/kit3/release_v2/cuts/07.props.speakers-vu/07.props.speakers-vu__p02.png", x: 0.78, y: 0.88, scale: 0.38, anim_role: "speaker_pulse", role: "prop" },
+      { instance: "ens_dj_table", plane: "P3", z: 1.40, sheet_id: "07.props.dj-decks", part_id: "07.props.dj-decks__p01", label: "DJ BOOTH & MIXER CONSOLE", file: "arena/parts/kit3/release_v2/cuts/07.props.dj-decks/07.props.dj-decks__p01.png", x: 0.50, y: 0.88, scale: 0.26, role: "prop" },
+      { instance: "ens_dj_disc_l", plane: "P3", z: 1.32, sheet_id: "07.props.dj-decks", part_id: "07.props.dj-decks__p04", label: "LEFT SPINNING VINYL", file: "arena/parts/kit3/release_v2/cuts/07.props.dj-decks/07.props.dj-decks__p04.png", x: 0.43, y: 0.74, scale: 0.11, anim_role: "turntable_spin", role: "prop" },
+      { instance: "ens_dj_disc_r", plane: "P3", z: 1.32, sheet_id: "07.props.dj-decks", part_id: "07.props.dj-decks__p05", label: "RIGHT SPINNING VINYL", file: "arena/parts/kit3/release_v2/cuts/07.props.dj-decks/07.props.dj-decks__p05.png", x: 0.57, y: 0.74, scale: 0.11, anim_role: "turntable_spin", role: "prop" }
+    ]
+  },
+  {
+    id: "water_shore_boats",
+    label: "🌊 3-Wave Water Shore + Boat",
+    layers: [
+      { instance: "ens_wat_jup", plane: "P5", z: 3.80, sheet_id: "13.props.planet-boats", part_id: "13.props.planet-boats__p01", label: "JUPITER HORIZON", file: "arena/parts/kit3/release_v2/cuts/13.props.planet-boats/13.props.planet-boats__p01.png", x: 0.74, y: 0.34, scale: 0.22, role: "set_element" },
+      { instance: "ens_wat_w1", plane: "P4", z: 2.60, sheet_id: "04.set.shore_night", part_id: "04.set.shore_night__p01", label: "WAVE.1 FAR SWELL", file: "arena/parts/kit3/release_v2/cuts/04.set.shore_night/04.set.shore_night__p01.png", x: 0.50, y: 0.78, scale: 0.14, anim_role: "wave_far", role: "set_element" },
+      { instance: "ens_wat_boat", plane: "P3", z: 1.85, sheet_id: "13.props.planet-boats", part_id: "13.props.planet-boats__p06", label: "SAILING WOODEN BOAT", file: "arena/parts/kit3/release_v2/cuts/13.props.planet-boats/13.props.planet-boats__p06.png", x: 0.32, y: 0.83, scale: 0.22, anim_role: "boat_rock", role: "prop" },
+      { instance: "ens_wat_w2", plane: "P3", z: 1.50, sheet_id: "04.set.shore_night", part_id: "04.set.shore_night__p02", label: "WAVE.2 MID WHITECAP", file: "arena/parts/kit3/release_v2/cuts/04.set.shore_night/04.set.shore_night__p02.png", x: 0.50, y: 0.85, scale: 0.15, anim_role: "wave_mid", role: "set_element" },
+      { instance: "ens_wat_w3", plane: "P1", z: 0.65, sheet_id: "04.set.shore_night", part_id: "04.set.shore_night__p03", label: "WAVE.3 SHORE FOAM", file: "arena/parts/kit3/release_v2/cuts/04.set.shore_night/04.set.shore_night__p03.png", x: 0.50, y: 0.93, scale: 0.16, anim_role: "wave_near", role: "set_element" }
+    ]
+  },
+  {
+    id: "angel_wings",
+    label: "🪽 Flapping Angel & Raven Wings",
+    layers: [
+      { instance: "ens_wing_l", plane: "P2", z: 1.08, sheet_id: "08.cast.angel.wings", part_id: "08.cast.angel.wings__p07", label: "LEFT ANGEL WING (FLAP)", file: "arena/parts/kit3/release_v2/cuts/08.cast.angel.wings/08.cast.angel.wings__p07.png", x: 0.39, y: 0.62, scale: 0.24, anim_role: "wing_flap_L", role: "prop" },
+      { instance: "ens_wing_r", plane: "P2", z: 1.08, sheet_id: "08.cast.angel.wings", part_id: "08.cast.angel.wings__p08", label: "RIGHT ANGEL WING (FLAP)", file: "arena/parts/kit3/release_v2/cuts/08.cast.angel.wings/08.cast.angel.wings__p08.png", x: 0.61, y: 0.62, scale: 0.24, anim_role: "wing_flap_R", role: "prop" },
+      { instance: "ens_raven_body", plane: "P3", z: 1.35, sheet_id: "04.props.ravens-stumps", part_id: "04.props.ravens-stumps__p03", label: "RAVEN BODY", file: "arena/parts/kit3/release_v2/cuts/04.props.ravens-stumps/04.props.ravens-stumps__p03.png", x: 0.76, y: 0.52, scale: 0.16, role: "prop" },
+      { instance: "ens_raven_wing", plane: "P3", z: 1.32, sheet_id: "04.props.ravens-stumps", part_id: "04.props.ravens-stumps__p01", label: "RAVEN FLAPPING WING", file: "arena/parts/kit3/release_v2/cuts/04.props.ravens-stumps/04.props.ravens-stumps__p01.png", x: 0.78, y: 0.44, scale: 0.14, anim_role: "wing_flap_R", role: "prop" }
+    ]
+  },
+  {
+    id: "atlantis_portal",
+    label: "🚪 Atlantis Portal + Window",
+    layers: [
+      { instance: "ens_port_view", plane: "P5", z: 3.60, sheet_id: "02.set.living_room_1990s", part_id: "02.set.living_room_1990s__p07", label: "PORTAL OTHER-WORLD VIEW", file: "arena/parts/kit3/release_v2/cuts/02.set.living_room_1990s/02.set.living_room_1990s__p07.png", x: 0.50, y: 0.78, scale: 0.42, anim_role: "portal_aperture", role: "set_element" },
+      { instance: "ens_port_gate", plane: "P4", z: 2.30, sheet_id: "06.set.atlantis_gate", part_id: "06.set.atlantis_gate__p04", label: "ATLANTIS MARBLE PORTAL FRAME", file: "arena/parts/kit3/release_v2/cuts/06.set.atlantis_gate/06.set.atlantis_gate__p04.png", x: 0.50, y: 0.86, scale: 0.56, role: "set_element" },
+      { instance: "ens_port_pool", plane: "P3", z: 1.45, sheet_id: "06.set.atlantis_gate", part_id: "06.set.atlantis_gate__p01", label: "REFLECTING POOL WATER", file: "arena/parts/kit3/release_v2/cuts/06.set.atlantis_gate/06.set.atlantis_gate__p01.png", x: 0.50, y: 0.94, scale: 0.20, anim_role: "wave_near", role: "set_element" }
+    ]
+  },
+  {
+    id: "flower_bloom",
+    label: "🌻 Mustard Seed & Flower Bloom",
+    layers: [
+      { instance: "ens_flw_stem", plane: "P3", z: 1.32, sheet_id: "04.props.faith-blooms", part_id: "04.props.faith-blooms__p01", label: "SPROUTING GREEN STEM", file: "arena/parts/kit3/release_v2/cuts/04.props.faith-blooms/04.props.faith-blooms__p01.png", x: 0.36, y: 0.89, scale: 0.22, role: "prop" },
+      { instance: "ens_flw_head", plane: "P3", z: 1.28, sheet_id: "04.props.faith-blooms", part_id: "04.props.faith-blooms__p08", label: "GOLDEN BLOOM HEAD", file: "arena/parts/kit3/release_v2/cuts/04.props.faith-blooms/04.props.faith-blooms__p08.png", x: 0.36, y: 0.70, scale: 0.15, anim_role: "flower_bloom", role: "prop" },
+      { instance: "ens_flw_poppy", plane: "P3", z: 1.26, sheet_id: "13.props.harvest", part_id: "13.props.harvest__p01", label: "SCARLET HARVEST POPPY", file: "arena/parts/kit3/release_v2/cuts/13.props.harvest/13.props.harvest__p01.png", x: 0.42, y: 0.89, scale: 0.22, anim_role: "flower_bloom", role: "prop" }
+    ]
+  },
+  {
+    id: "cafe_interior",
+    label: "☕ Bistro Cafe & Living Room",
+    layers: [
+      { instance: "ens_int_lamp_b", plane: "P4", z: 2.20, sheet_id: "02.set.living_room_1990s", part_id: "02.set.living_room_1990s__p05", label: "FLOOR LAMP BASE", file: "arena/parts/kit3/release_v2/cuts/02.set.living_room_1990s/02.set.living_room_1990s__p05.png", x: 0.22, y: 0.88, scale: 0.34, role: "prop" },
+      { instance: "ens_int_lamp_s", plane: "P4", z: 2.15, sheet_id: "02.set.living_room_1990s", part_id: "02.set.living_room_1990s__p06", label: "FLOOR LAMP SHADE (GLOW)", file: "arena/parts/kit3/release_v2/cuts/02.set.living_room_1990s/02.set.living_room_1990s__p06.png", x: 0.22, y: 0.58, scale: 0.14, anim_role: "lamp_glow", role: "prop" },
+      { instance: "ens_int_chair", plane: "P3", z: 1.42, sheet_id: "13.props.cafe", part_id: "13.props.cafe__p04", label: "BISTRO CAFE CHAIR", file: "arena/parts/kit3/release_v2/cuts/13.props.cafe/13.props.cafe__p04.png", x: 0.64, y: 0.89, scale: 0.28, role: "prop" },
+      { instance: "ens_int_table", plane: "P3", z: 1.36, sheet_id: "13.props.cafe", part_id: "13.props.cafe__p01", label: "BISTRO CAFE TABLE", file: "arena/parts/kit3/release_v2/cuts/13.props.cafe/13.props.cafe__p01.png", x: 0.76, y: 0.89, scale: 0.26, role: "prop" }
+    ]
+  }
+];
+
+function buildEnsembleBar() {
+  const list = $("ensList");
+  if (!list) return;
+  list.innerHTML = "";
+  for (const ens of STAGE_ENSEMBLE_PRESETS) {
+    const ch = document.createElement("span");
+    ch.className = "ensChip";
+    ch.textContent = ens.label;
+    ch.onclick = () => {
+      for (const l of ens.layers) {
+        liveLayers.push(JSON.parse(JSON.stringify(l)));
+      }
+      selectedIdx = liveLayers.length - 1;
+      if (!playing) togglePlay();
+      updateArrangeBar();
+      renderStageFrame();
+      toast(`SPAWNED ENSEMBLE: ${ens.label.toUpperCase()}`);
+    };
+    list.appendChild(ch);
+  }
+}
+buildEnsembleBar();
+
+$("ensBtn").onclick = () => {
+  const on = !$("ensBar").classList.contains("on");
+  $("ensBar").classList.toggle("on", on);
+  $("ensBtn").classList.toggle("on", on);
+};
+$("ensClose").onclick = () => {
+  $("ensBar").classList.remove("on");
+  $("ensBtn").classList.remove("on");
+};
+$("ensClear").onclick = () => {
+  const poet = liveLayers.find(l => l.instance === "actor_poet");
+  liveLayers = poet ? [poet] : [];
+  selectedIdx = -1;
+  updateArrangeBar();
+  renderStageFrame();
+  toast("CLEARED STAGE FLOOR — CLICK ANY ENSEMBLE TO BUILD!");
 };
 
 /* ── Embody & Rig Controls ── */
@@ -922,7 +1211,7 @@ function buildHudControls() {
   const js = $("jointSliders");
   js.innerHTML = "";
   for (const [jKey, jLbl] of [
-    ["torso", "TORSO"], ["head", "HEAD"], ["uarmL", "ARM L"], ["farmL", "FOREARM L"],
+    ["yaw3d", "3D YAW"], ["reach3d", "3D REACH"], ["torso", "TORSO"], ["head", "HEAD"], ["uarmL", "ARM L"], ["farmL", "FOREARM L"],
     ["uarmR", "ARM R"], ["farmR", "FOREARM R"], ["thighL", "THIGH L"], ["thighR", "THIGH R"]
   ]) {
     const wrap = document.createElement("label");

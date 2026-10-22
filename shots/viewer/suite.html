@@ -345,6 +345,7 @@
   <span class="tagline">fourteen halfworlds · 80 cut-out scenes · 165 archive shots · one clock</span>
   <span class="sp"></span>
   <div class="time"><span id="clock">00:00.0</span> / <span id="dur">24:00.1</span></div>
+  <a class="btn red" href="assembly.html" title="Open 'Some Assembly Required' Prop Rigs, Portals, Water Worlds &amp; Action Toybox">ASSEMBLY ↗</a>
   <a class="btn blue" id="openStageTop" href="stage.html">STAGE ↗</a>
   <a class="btn" id="openCardsTop" href="cards.html">CARDS (6,265) ↗</a>
   <a class="btn" href="body_lab.html">BODY LAB ↗</a>
@@ -618,16 +619,16 @@ const REL_SCALE = {
   "06_pelvis_front_cover": 0.66,
   "07_upper_arm_L": 0.48,
   "08_forearm_L": 0.44,
-  "15_hand_relaxed_L": 0.30,
+  "15_hand_relaxed_L": 0.23,
   "09_upper_arm_R": 0.48,
   "10_forearm_R": 0.44,
-  "16_hand_relaxed_R": 0.30,
+  "16_hand_relaxed_R": 0.23,
   "11_thigh_L": 0.62,
   "12_shin_L": 0.58,
-  "19_boot_front_L": 0.42,
+  "19_boot_front_L": 0.29,
   "13_thigh_R": 0.62,
   "14_shin_R": 0.58,
-  "20_boot_front_R": 0.42,
+  "20_boot_front_R": 0.29,
   "21_head_front_blank": 0.66,
   "22_eyes_open": 0.20,
   "23_eyes_closed": 0.20,
@@ -641,9 +642,9 @@ const REL_SCALE = {
   "31_sunglasses_front": 0.26,
 };
 
-function toWorld(originX, originY, anchorPx, anchorPy, lx, ly, sc, angleDeg) {
-  const dx = (lx - anchorPx) * sc;
-  const dy = (ly - anchorPy) * sc;
+function toWorld(originX, originY, anchorPx, anchorPy, lx, ly, sc, angleDeg, syMult = 1.0, sxMult = 1.0) {
+  const dx = (lx - anchorPx) * sc * sxMult;
+  const dy = (ly - anchorPy) * sc * syMult;
   const r = (angleDeg * Math.PI) / 180;
   return {
     x: originX + dx * Math.cos(r) - dy * Math.sin(r),
@@ -684,6 +685,13 @@ function drawTracksuitPoetSync(c, cx, footY, targetHeight, sec, book, actionText
   const thighRA = -swing;
   const shinRA = Math.max(0, swing * 0.6);
 
+  // 2.5D Fake-3D yaw & foreshortening parameters
+  const yawDeg = isWalk ? 16 : (isReach ? 18 : Math.sin(sec * 0.9) * 14);
+  const yawRad = (yawDeg * Math.PI) / 180;
+  const bodyScaleX = Math.max(0.85, Math.cos(yawRad * 0.55));
+  const limbForeshortenY = isReach ? 0.82 : (isRead ? 0.86 : 1.0);
+  const handPerspectiveBoost = isReach ? 1.14 : 1.0;
+
   // Mouth phoneme animation when speaking verse
   const mouths = ["27_mouth_rest", "29_mouth_open_O", "30_mouth_open_A", "28_mouth_smile"];
   const mouthId = mouths[Math.floor(sec * 6.5) % mouths.length];
@@ -691,28 +699,39 @@ function drawTracksuitPoetSync(c, cx, footY, targetHeight, sec, book, actionText
   const browsId = isReach || isFall ? "25_brows_raised" : "24_brows_rest";
   const wearGlasses = book >= 4;
 
-  function drawPinnedSync(compId, wx, wy, px, py, angleDeg) {
+  function drawPinnedSync(compId, wx, wy, px, py, angleDeg, opts = {}) {
     const comp = tracksuitMap.get(compId);
     if (!comp) return;
-    const cleanSrc = comp.file.replace(/^\.\//, "");
-    const p = imgCache.get("./" + cleanSrc) || imgCache.get("../" + cleanSrc);
-    // Note: preloadTracksuitRig resolves these into imgCache; we also store resolved image on comp._im
     const im = comp._im;
     if (!im) return;
-    const sc = S * (REL_SCALE[compId] || 0.5);
+    const sc = S * (REL_SCALE[compId] || 0.5) * (opts.scaleMult || 1.0);
+    const sxM = opts.sxMult || 1.0;
+    const syM = opts.syMult || 1.0;
+    const clipY0 = opts.clipY0 || 0;
+    const clipY1 = opts.clipY1 || im.height;
+
     c.save();
     c.translate(wx, wy);
     c.rotate((angleDeg * Math.PI) / 180);
+    c.scale(sxM, syM);
+    if (clipY0 > 0 || clipY1 < im.height) {
+      c.beginPath();
+      c.rect(-px * sc - 20, (clipY0 - py) * sc, im.width * sc + 40, (clipY1 - clipY0) * sc);
+      c.clip();
+    }
     c.shadowColor = "rgba(0,0,0,0.38)";
     c.shadowBlur = 6;
+    c.shadowOffsetX = Math.sin(yawRad) * 3.5;
     c.drawImage(im, -px * sc, -py * sc, im.width * sc, im.height * sc);
     if (showPivots) {
       c.strokeStyle = "#d91b1b";
       c.lineWidth = 1.6;
       for (const pv of (comp.pivots || [])) {
-        c.beginPath();
-        c.arc((pv.x - px) * sc, (pv.y - py) * sc, Math.max(3.5, (pv.r || 24) * sc), 0, Math.PI * 2);
-        c.stroke();
+        if (pv.y >= clipY0 && pv.y <= clipY1) {
+          c.beginPath();
+          c.arc((pv.x - px) * sc, (pv.y - py) * sc, Math.max(3.5, (pv.r || 24) * sc), 0, Math.PI * 2);
+          c.stroke();
+        }
       }
     }
     c.restore();
@@ -722,61 +741,77 @@ function drawTracksuitPoetSync(c, cx, footY, targetHeight, sec, book, actionText
   const waistWorldY = footY - targetHeight * 0.50 + breath;
   const scTorso = S * REL_SCALE["01_torso_front"];
 
-  const neckW = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 639.0, 108.0, scTorso, torsoA);
-  const shRW  = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 300.4, 212.4, scTorso, torsoA);
-  const shLW  = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 979.8, 212.1, scTorso, torsoA);
+  const neckW = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 639.0, 118.0, scTorso, torsoA, 1.0, bodyScaleX);
+  const shRW  = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 300.4, 212.4, scTorso, torsoA, 1.0, bodyScaleX);
+  const shLW  = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 979.8, 212.1, scTorso, torsoA, 1.0, bodyScaleX);
 
   const hipA = torsoA * 0.4;
   const scHip = S * REL_SCALE["04_hip_bridge"];
-  const hipRW = toWorld(waistWorldX, waistWorldY, 759.6, 192.2, 357.3, 791.2, scHip, hipA);
-  const hipLW = toWorld(waistWorldX, waistWorldY, 759.6, 192.2, 1172.8, 791.3, scHip, hipA);
+  const hipRW = toWorld(waistWorldX, waistWorldY, 759.6, 192.2, 357.3, 791.2, scHip, hipA, 1.0, bodyScaleX);
+  const hipLW = toWorld(waistWorldX, waistWorldY, 759.6, 192.2, 1172.8, 791.3, scHip, hipA, 1.0, bodyScaleX);
 
-  drawPinnedSync("04_hip_bridge", waistWorldX, waistWorldY, 759.6, 192.2, hipA);
+  drawPinnedSync("04_hip_bridge", waistWorldX, waistWorldY, 759.6, 192.2, hipA, { sxMult: bodyScaleX });
 
+  // Right Leg — ANKLE CUFF-TUCK: Boot drawn BEHIND shin cuff; shin bottom grommet tab clipped at y=1298!
   const scThigh = S * REL_SCALE["13_thigh_R"];
   const scShin  = S * REL_SCALE["14_shin_R"];
   const kneeRW = toWorld(hipRW.x, hipRW.y, 511.8, 192.2, 514.4, 1342.4, scThigh, thighRA);
-  const ankRW  = toWorld(kneeRW.x, kneeRW.y, 507.4, 176.0, 519.9, 1392.9, scShin, shinRA);
-  drawPinnedSync("13_thigh_R", hipRW.x, hipRW.y, 511.8, 192.2, thighRA);
-  drawPinnedSync("14_shin_R", kneeRW.x, kneeRW.y, 507.4, 176.0, shinRA);
-  drawPinnedSync("20_boot_front_R", ankRW.x, ankRW.y, 635.0, 315.0, 0);
+  const ankRW  = toWorld(kneeRW.x, kneeRW.y, 507.4, 176.0, 519.9, 1255.0, scShin, shinRA);
+  drawPinnedSync("13_thigh_R", hipRW.x, hipRW.y, 511.8, 192.2, thighRA, { clipY1: 1380 });
+  drawPinnedSync("20_boot_front_R", ankRW.x, ankRW.y, 635.0, 360.0, shinRA * 0.25, { clipY0: 210 });
+  drawPinnedSync("14_shin_R", kneeRW.x, kneeRW.y, 507.4, 176.0, shinRA, { clipY1: 1298 });
 
+  // Left Leg — ANKLE CUFF-TUCK: Boot drawn BEHIND shin cuff; shin bottom grommet tab clipped at y=1295!
   const kneeLW = toWorld(hipLW.x, hipLW.y, 511.0, 180.1, 509.8, 1344.4, scThigh, thighLA);
-  const ankLW  = toWorld(kneeLW.x, kneeLW.y, 511.1, 198.3, 512.3, 1387.6, scShin, shinLA);
-  drawPinnedSync("11_thigh_L", hipLW.x, hipLW.y, 511.0, 180.1, thighLA);
-  drawPinnedSync("12_shin_L", kneeLW.x, kneeLW.y, 511.1, 198.3, shinLA);
-  drawPinnedSync("19_boot_front_L", ankLW.x, ankLW.y, 625.0, 315.0, 0);
+  const ankLW  = toWorld(kneeLW.x, kneeLW.y, 511.1, 198.3, 512.3, 1250.0, scShin, shinLA);
+  drawPinnedSync("11_thigh_L", hipLW.x, hipLW.y, 511.0, 180.1, thighLA, { clipY1: 1380 });
+  drawPinnedSync("19_boot_front_L", ankLW.x, ankLW.y, 625.0, 360.0, shinLA * 0.25, { clipY0: 210 });
+  drawPinnedSync("12_shin_L", kneeLW.x, kneeLW.y, 511.1, 198.3, shinLA, { clipY1: 1295 });
 
-  drawPinnedSync("06_pelvis_front_cover", waistWorldX, waistWorldY, 727.3, 180.5, hipA);
-  drawPinnedSync("01_torso_front", waistWorldX, waistWorldY, 639.4, 1048.4, torsoA);
+  drawPinnedSync("06_pelvis_front_cover", waistWorldX, waistWorldY, 727.3, 180.5, hipA, { sxMult: bodyScaleX });
 
+  // Right Arm — WRIST CUFF-TUCK: Hand drawn BEHIND forearm cuff; forearm bottom grommet tab clipped at y=1278!
   const scUarm = S * REL_SCALE["09_upper_arm_R"];
   const scFarm = S * REL_SCALE["10_forearm_R"];
-  const elbRW = toWorld(shRW.x, shRW.y, 504.0, 138.5, 534.0, 1387.1, scUarm, uarmRA);
-  const wriRW = toWorld(elbRW.x, elbRW.y, 513.8, 176.3, 510.7, 1375.5, scFarm, uarmRA + farmRA);
-  drawPinnedSync("09_upper_arm_R", shRW.x, shRW.y, 504.0, 138.5, uarmRA);
-  drawPinnedSync("10_forearm_R", elbRW.x, elbRW.y, 513.8, 176.3, uarmRA + farmRA);
-  drawPinnedSync("16_hand_relaxed_R", wriRW.x, wriRW.y, 646.0, 255.5, uarmRA + farmRA);
+  const elbRW = toWorld(shRW.x, shRW.y, 504.0, 138.5, 534.0, 1350.0, scUarm, uarmRA);
+  const wriRW = toWorld(elbRW.x, elbRW.y, 513.8, 176.3, 510.7, 1225.0, scFarm, uarmRA + farmRA, limbForeshortenY);
+  drawPinnedSync("09_upper_arm_R", shRW.x, shRW.y, 504.0, 138.5, uarmRA, { clipY1: 1410 });
+  drawPinnedSync("16_hand_relaxed_R", wriRW.x, wriRW.y, 646.0, 325.0, uarmRA + farmRA, { clipY0: 220, scaleMult: handPerspectiveBoost });
+  drawPinnedSync("10_forearm_R", elbRW.x, elbRW.y, 513.8, 176.3, uarmRA + farmRA, { clipY1: 1278, syMult: limbForeshortenY });
+
+  // Torso Front + Head (NECK COLLAR-TUCK: Head neck base clipped at y=1185 and tucked under Torso front collar lip!)
+  drawPinnedSync("01_torso_front", waistWorldX, waistWorldY, 639.4, 1048.4, torsoA, { sxMult: bodyScaleX });
 
   const scHead = S * REL_SCALE["21_head_front_blank"];
-  drawPinnedSync("21_head_front_blank", neckW.x, neckW.y, 558.0, 1159.0, headA);
-  const browsW = toWorld(neckW.x, neckW.y, 558.0, 1159.0, 577.0, 505.0, scHead, headA);
-  const eyesW  = toWorld(neckW.x, neckW.y, 558.0, 1159.0, 577.0, 585.0, scHead, headA);
-  const noseW  = toWorld(neckW.x, neckW.y, 558.0, 1159.0, 577.0, 690.0, scHead, headA);
-  const mouthW = toWorld(neckW.x, neckW.y, 558.0, 1159.0, 577.0, 865.0, scHead, headA);
-  drawPinnedSync(eyesId, eyesW.x, eyesW.y, 1086, 362, headA);
-  drawPinnedSync(browsId, browsW.x, browsW.y, 1085, 362, headA);
-  drawPinnedSync("26_nose_front", noseW.x, noseW.y, 768, 512, headA);
-  drawPinnedSync(mouthId, mouthW.x, mouthW.y, 887, 443, headA);
+  drawPinnedSync("21_head_front_blank", neckW.x, neckW.y, 558.0, 1145.0, headA, { clipY1: 1185, sxMult: Math.max(0.88, Math.cos(yawRad * 0.45)) });
+  drawPinnedSync("01_torso_front", waistWorldX, waistWorldY, 639.4, 1048.4, torsoA, { clipY0: 30, clipY1: 188, sxMult: bodyScaleX });
+
+  // 2.5D Cylindrical Parallax Facial Features
+  const faceShiftX = Math.sin(yawRad) * 74;
+  const noseShiftX = Math.sin(yawRad) * 98;
+  const glassShiftX = Math.sin(yawRad) * 108;
+  const faceScaleX = Math.max(0.82, Math.cos(yawRad * 0.55));
+
+  const browsW = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + faceShiftX, 505.0, scHead, headA);
+  const eyesW  = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + faceShiftX, 585.0, scHead, headA);
+  const noseW  = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + noseShiftX, 690.0, scHead, headA);
+  const mouthW = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + faceShiftX * 0.9, 865.0, scHead, headA);
+  const glassW = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + glassShiftX, 585.0, scHead, headA);
+
+  drawPinnedSync(eyesId, eyesW.x, eyesW.y, 1086, 362, headA, { sxMult: faceScaleX });
+  drawPinnedSync(browsId, browsW.x, browsW.y, 1085, 362, headA, { sxMult: faceScaleX });
+  drawPinnedSync("26_nose_front", noseW.x, noseW.y, 768, 512, headA, { sxMult: faceScaleX });
+  drawPinnedSync(mouthId, mouthW.x, mouthW.y, 887, 443, headA, { sxMult: faceScaleX });
   if (wearGlasses) {
-    drawPinnedSync("31_sunglasses_front", eyesW.x, eyesW.y, 1086, 362, headA);
+    drawPinnedSync("31_sunglasses_front", glassW.x, glassW.y, 1086, 362, headA, { sxMult: faceScaleX });
   }
 
-  const elbLW = toWorld(shLW.x, shLW.y, 507.7, 166.4, 493.6, 1362.5, scUarm, uarmLA);
-  const wriLW = toWorld(elbLW.x, elbLW.y, 512.0, 180.0, 510.5, 1320.6, scFarm, uarmLA + farmLA);
-  drawPinnedSync("07_upper_arm_L", shLW.x, shLW.y, 507.7, 166.4, uarmLA);
-  drawPinnedSync("08_forearm_L", elbLW.x, elbLW.y, 512.0, 180.0, uarmLA + farmLA);
-  drawPinnedSync("15_hand_relaxed_L", wriLW.x, wriLW.y, 660.8, 190.1, uarmLA + farmLA);
+  // Left Arm — WRIST CUFF-TUCK: Hand drawn BEHIND forearm cuff; forearm bottom grommet tab clipped at y=1238!
+  const elbLW = toWorld(shLW.x, shLW.y, 507.7, 166.4, 493.6, 1335.0, scUarm, uarmLA);
+  const wriLW = toWorld(elbLW.x, elbLW.y, 512.0, 180.0, 510.5, 1195.0, scFarm, uarmLA + farmLA, limbForeshortenY);
+  drawPinnedSync("07_upper_arm_L", shLW.x, shLW.y, 507.7, 166.4, uarmLA, { clipY1: 1390 });
+  drawPinnedSync("15_hand_relaxed_L", wriLW.x, wriLW.y, 660.8, 315.0, uarmLA + farmLA, { clipY0: 215, scaleMult: handPerspectiveBoost });
+  drawPinnedSync("08_forearm_L", elbLW.x, elbLW.y, 512.0, 180.0, uarmLA + farmLA, { clipY1: 1238, syMult: limbForeshortenY });
 }
 
 /* ── Torn-Paper Sky / Window Wipe Helper (from Weave) ── */
@@ -987,19 +1022,91 @@ async function renderSuiteFrame(forceUi = false) {
       dh = dw / ar;
     }
 
-    const bob = role.startsWith("character") ? Math.sin(t * 2.8 + i) * 3 : 0;
-    const dx = cx - dw / 2;
-    const dy = by - dh + bob;
+    const idBlob = `${l.part_id || ""} ${l.sheet_id || ""} ${l.label || ""} ${l.file || ""}`.toLowerCase();
+    const animRole = l.anim_role || (
+      /(car__p05|car__p06|bike-skeleton__p07|bike-skeleton__p08|bike-skeleton__p09|bike-skeleton__p10|wheel)/.test(idBlob) ? "wheel_spin" :
+      /04\.props\.heart/.test(idBlob) ? "heart_beat" :
+      /hourglass/.test(idBlob) ? "hourglass_sand" :
+      /(wave\.1|shore_night__p01)/.test(idBlob) ? "wave_far" :
+      /(wave\.2|shore_night__p02)/.test(idBlob) ? "wave_mid" :
+      /(wave\.3|shore_night__p03|wave|water)/.test(idBlob) ? "wave_near" :
+      /planet-boats/.test(idBlob) ? "boat_rock" :
+      /(angel\.wings|ravens-stumps__p01|ravens-stumps__p02|wing)/.test(idBlob) ? "wing_flap" :
+      /tambourine/.test(idBlob) ? "tambourine_arc" :
+      /(dj-decks__p04|dj-decks__p05|dj-decks__p06)/.test(idBlob) ? "turntable_spin" :
+      /speakers-vu/.test(idBlob) ? "speaker_pulse" :
+      /(lights-iris|ride-light|drowned-light|headlight)/.test(idBlob) ? "headlight_beam" :
+      /mirror-phone-rings/.test(idBlob) ? "phone_ring" :
+      /faith-blooms/.test(idBlob) ? "flower_bloom" : ""
+    );
+
+    let animDx = 0, animDy = 0, animRot = l.rot || 0, animScale = 1.0, animAlpha = 1.0;
+    if (animRole === "wheel_spin") {
+      animRot += t * 4.5;
+    } else if (animRole === "heart_beat") {
+      animScale = 1.0 + Math.pow(Math.max(0, Math.sin(t * 5.2)), 4) * 0.13 + Math.pow(Math.max(0, Math.sin(t * 5.2 - 0.85)), 6) * 0.07;
+    } else if (animRole === "hourglass_sand") {
+      animRot += Math.sin(t * 1.4) * 0.07;
+      animDy += Math.cos(t * 2.8) * 3;
+    } else if (animRole === "wave_far") {
+      animDx += Math.sin(t * 1.1 + 0.5) * 16;
+      animDy += Math.cos(t * 1.5) * 3.5;
+    } else if (animRole === "wave_mid") {
+      animDx += -Math.sin(t * 1.45 + 1.4) * 24;
+      animDy += Math.sin(t * 1.9 + 1.0) * 5;
+    } else if (animRole === "wave_near") {
+      animDx += Math.sin(t * 1.85 + 2.2) * 30;
+      animDy += Math.cos(t * 2.3 + 0.4) * 6.5;
+    } else if (animRole === "boat_rock") {
+      animRot += Math.sin(t * 1.6 + i) * 0.085;
+      animDy += Math.cos(t * 1.6 + i) * 6;
+      animDx += Math.sin(t * 0.8) * 10;
+    } else if (animRole === "wing_flap" || animRole === "wing_flap_L" || animRole === "wing_flap_R") {
+      const side = (animRole === "wing_flap_R" || (l.x ?? 0.5) > 0.5) ? -1 : 1;
+      animRot += side * Math.sin(t * 3.8 + i * 0.3) * 0.26;
+      animDy += Math.cos(t * 3.8) * 4;
+    } else if (animRole === "tambourine_arc") {
+      const cyc = (t * 0.55) % 1.0;
+      animDx += (cyc - 0.5) * 110;
+      animDy += -Math.sin(cyc * Math.PI) * 65;
+      animRot += t * 6.5;
+    } else if (animRole === "turntable_spin") {
+      animRot += t * 5.2;
+    } else if (animRole === "speaker_pulse") {
+      animScale = 1.0 + Math.pow(Math.abs(Math.sin(t * 6.28)), 3) * 0.085;
+    } else if (animRole === "headlight_beam" || animRole === "lamp_glow" || animRole === "portal_aperture") {
+      animAlpha = 0.78 + 0.22 * Math.sin(t * 3.4 + i);
+      animScale = 1.0 + 0.03 * Math.sin(t * 2.2);
+    } else if (animRole === "phone_ring") {
+      animScale = 1.0 + 0.12 * Math.abs(Math.sin(t * 9.0));
+      animRot += Math.sin(t * 22.0) * 0.06;
+    } else if (animRole === "flower_bloom") {
+      animScale = 0.92 + 0.12 * (0.5 + 0.5 * Math.sin(t * 1.8 + i));
+      animRot += Math.sin(t * 1.3 + i) * 0.05;
+    } else if (role.startsWith("character")) {
+      animDy += Math.sin(t * 2.8 + i) * 3;
+    }
+
+    dw *= animScale;
+    dh *= animScale;
+    const dx = cx + animDx - dw / 2;
+    const dy = by + animDy - dh;
 
     ctx.save();
-    ctx.globalAlpha = l.alpha ?? 1.0;
+    ctx.globalAlpha = Math.max(0.05, Math.min(1.0, (l.alpha ?? 1.0) * animAlpha));
     ctx.shadowColor = "rgba(0,0,0,0.45)";
     ctx.shadowBlur = 10;
     ctx.shadowOffsetX = 4;
     ctx.shadowOffsetY = 5;
-    ctx.drawImage(im, dx, dy, dw, dh);
+    const midX = dx + dw / 2, midY = dy + dh / 2;
+    ctx.translate(midX, midY);
+    if (l.flip) ctx.scale(-1, 1);
+    if (animRot) ctx.rotate(animRot);
+    ctx.drawImage(im, -dw / 2, -dh / 2, dw, dh);
+    ctx.restore();
 
     if (showPivots && l.pivots && l.pivots.length) {
+      ctx.save();
       const psx = dw / im.width, psy = dh / im.height;
       ctx.strokeStyle = "#d91b1b";
       ctx.lineWidth = 1.6;
@@ -1008,9 +1115,9 @@ async function renderSuiteFrame(forceUi = false) {
         ctx.arc(dx + pv.x * psx, dy + pv.y * psy, Math.max(4, (pv.r || 6) * Math.min(psx, psy)), 0, Math.PI * 2);
         ctx.stroke();
       }
+      ctx.restore();
     }
-    ctx.restore();
-    displayOps.push(`op.cutout("${l.part_id}", plane="${l.plane}", z=${z}, box=[${Math.round(dx)},${Math.round(dy)},${Math.round(dw)},${Math.round(dh)}])`);
+    displayOps.push(`op.cutout("${l.part_id}", plane="${l.plane}", z=${z}, anim="${animRole || 'static'}", box=[${Math.round(dx)},${Math.round(dy)},${Math.round(dw)},${Math.round(dh)}])`);
   }
 
   // ── SCION KEYFRAME CEL OVERLAY ──

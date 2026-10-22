@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WYGWYL · Body Lab · Unified Cross-Kit Anatomy &amp; Replacement Workbench</title>
+<title>WYGWYL · Body Lab · CLIP Visual Search, Contact Wall &amp; 2.5D Joint Solver</title>
 <link rel="icon" href="../favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -23,6 +23,7 @@
     --ok: #9fe08a;
     --bad: #ff7b6b;
     --red: #e03b2b;
+    --purple: #b88cff;
     --mono: 'JetBrains Mono', ui-monospace, monospace;
     --sans: 'Inter', system-ui, sans-serif;
     --marker: 'Permanent Marker', cursive;
@@ -34,7 +35,7 @@
   header {
     background: rgba(22, 18, 15, 0.96); backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--line);
-    padding: 12px 22px; display: flex; align-items: center; gap: 10px;
+    padding: 11px 22px; display: flex; align-items: center; gap: 10px;
     flex-wrap: wrap; position: sticky; top: 0; z-index: 200;
   }
   header h1 { font: 400 22px var(--marker); color: var(--gold); letter-spacing: .02em; white-space: nowrap; }
@@ -52,22 +53,26 @@
   .nav-btn.gold:hover { background: var(--gold); color: #16120f; }
   .nav-btn.blue { color: var(--blue); border-color: var(--blue); }
   .nav-btn.blue:hover { background: var(--blue); color: #091216; }
+  .nav-btn.ok { color: var(--ok); border-color: rgba(159,224,138,.55); }
+  .nav-btn.ok:hover, .nav-btn.ok.active { background: var(--ok); color: #0e170b; border-color: var(--ok); font-weight: 800; }
+  .nav-btn.bad { color: var(--bad); border-color: rgba(255,123,107,.55); }
+  .nav-btn.bad.active { background: var(--bad); color: #1b0907; border-color: var(--bad); font-weight: 800; }
   .nav-btn.active { background: var(--card); color: #16120f; border-color: var(--card); font-weight: 800; }
 
   main {
-    max-width: 1640px; margin: 0 auto; padding: 22px 22px 140px;
-    display: flex; flex-direction: column; gap: 22px;
+    max-width: 1700px; margin: 0 auto; padding: 20px 22px 140px;
+    display: flex; flex-direction: column; gap: 20px;
   }
 
   /* ── Hero Banner ── */
   .banner {
     background: radial-gradient(ellipse at top left, #2a1e14 0%, #120e0b 72%);
-    border: 1px solid var(--card); border-radius: 12px; padding: 22px 26px;
-    display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;
+    border: 1px solid var(--card); border-radius: 12px; padding: 20px 24px;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap;
   }
-  .banner-left { display: flex; flex-direction: column; gap: 10px; max-width: 980px; }
-  .banner h2 { font: 400 28px var(--marker); color: var(--gold); }
-  .banner p { color: var(--dim); font-size: 14px; line-height: 1.6; }
+  .banner-left { display: flex; flex-direction: column; gap: 9px; max-width: 1040px; }
+  .banner h2 { font: 400 27px var(--marker); color: var(--gold); }
+  .banner p { color: var(--dim); font-size: 13.5px; line-height: 1.58; }
   .badge-row { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
   .badge {
     font: 600 11px var(--mono); padding: 3px 9px; border-radius: 999px;
@@ -76,6 +81,21 @@
   .badge.ok { border-color: rgba(159,224,138,.5); color: var(--ok); }
   .badge.gold { border-color: rgba(245,185,66,.5); color: var(--gold); }
   .badge.blue { border-color: rgba(1,172,212,.5); color: var(--blue); }
+  .badge.purple { border-color: rgba(184,140,255,.5); color: var(--purple); }
+
+  /* ── Quick One-Click Wall Presets Strip ── */
+  .quick-wall-strip {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    padding-top: 4px;
+  }
+  .qwall-btn {
+    background: #17120e; border: 1px solid var(--line-lit); color: var(--ink);
+    font: 700 11.5px var(--mono); padding: 6px 13px; border-radius: 8px; cursor: pointer;
+    transition: all .14s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .qwall-btn:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-1px); }
+  .qwall-btn.hi { border-color: var(--gold); background: rgba(245,185,66,0.12); color: var(--gold); }
+  .qwall-btn.blue { border-color: var(--blue); background: rgba(1,172,212,0.12); color: var(--blue); }
 
   /* ── Mix-and-Match Body & Face Assembler Workbench ── */
   .workbench-section {
@@ -92,15 +112,15 @@
   .workbench-header h3 { font: 400 20px var(--marker); color: var(--gold); display: flex; align-items: center; gap: 10px; }
   .workbench-header h3 small { font: 600 11px var(--mono); color: var(--dim); }
   .workbench-body {
-    display: grid; grid-template-columns: minmax(420px, 1.15fr) minmax(380px, 1fr);
-    gap: 20px; padding: 20px;
+    display: grid; grid-template-columns: minmax(480px, 1.25fr) minmax(400px, 1fr);
+    gap: 18px; padding: 18px;
   }
-  @media (max-width: 1080px) {
+  @media (max-width: 1140px) {
     .workbench-body { grid-template-columns: 1fr; }
   }
 
   .mannequin-stage-wrap {
-    display: flex; flex-direction: column; gap: 10px;
+    display: flex; flex-direction: column; gap: 12px;
   }
   .mannequin-canvas-box {
     background-color: #0b0908;
@@ -110,7 +130,7 @@
                       linear-gradient(-45deg, transparent 75%, #14100d 75%);
     background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0;
     border: 1px solid var(--line-lit); border-radius: 10px;
-    position: relative; height: 580px; display: flex; align-items: center; justify-content: center;
+    position: relative; height: 540px; display: flex; align-items: center; justify-content: center;
     overflow: hidden; cursor: grab;
   }
   .mannequin-canvas-box:active { cursor: grabbing; }
@@ -118,27 +138,60 @@
     width: 100%; height: 100%; object-fit: contain; display: block;
   }
   .mannequin-hud-top {
-    position: absolute; top: 12px; left: 12px; right: 12px;
+    position: absolute; top: 10px; left: 10px; right: 10px;
     display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; pointer-events: none;
   }
   .mannequin-hud-top > * { pointer-events: auto; }
   .mannequin-hud-bottom {
-    position: absolute; bottom: 12px; left: 12px; right: 12px;
+    position: absolute; bottom: 10px; left: 10px; right: 10px;
     display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
-    background: rgba(16, 12, 10, 0.88); border: 1px solid var(--line); border-radius: 6px;
+    background: rgba(16, 12, 10, 0.90); border: 1px solid var(--line); border-radius: 6px;
     padding: 6px 12px; font: 11px var(--mono); color: var(--dim);
   }
 
+  /* ── Live 2.5x Seam Loupe Inspector Strip (Neck / Wrist / Ankle) ── */
+  .seam-loupe-strip {
+    background: #120e0b; border: 1px solid var(--line-lit); border-radius: 10px;
+    padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .seam-loupe-header {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
+    font: 700 11px var(--mono); color: var(--gold);
+  }
+  .seam-loupes-grid {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+  }
+  .loupe-card {
+    background: #090706; border: 1px solid var(--line); border-radius: 7px;
+    padding: 6px; display: flex; flex-direction: column; gap: 4px; align-items: center;
+    position: relative;
+  }
+  .loupe-card.ok-seam { border-color: rgba(159,224,138,0.45); }
+  .loupe-card.bad-seam { border-color: rgba(255,123,107,0.65); }
+  .loupe-card canvas {
+    width: 100%; height: 118px; object-fit: contain; border-radius: 4px;
+    background: #0d0a08; border: 1px solid #1e1813;
+  }
+  .loupe-lbl {
+    font: 700 10px var(--mono); color: var(--ink); width: 100%;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .loupe-sub {
+    font: 500 9.5px var(--mono); color: var(--dim); width: 100%;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
   .workbench-controls {
-    display: flex; flex-direction: column; gap: 14px; max-height: 580px; overflow-y: auto; padding-right: 4px;
+    display: flex; flex-direction: column; gap: 12px; max-height: 720px; overflow-y: auto; padding-right: 4px;
   }
   .wb-panel {
     background: var(--panel-card); border: 1px solid var(--line); border-radius: 8px;
-    padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+    padding: 11px 13px; display: flex; flex-direction: column; gap: 9px;
   }
   .wb-panel h4 {
     font: 700 11px var(--mono); color: var(--gold); text-transform: uppercase;
-    letter-spacing: .08em; display: flex; justify-content: space-between; align-items: center;
+    letter-spacing: .07em; display: flex; justify-content: space-between; align-items: center;
+    gap: 6px; flex-wrap: wrap;
   }
   .preset-row { display: flex; gap: 6px; flex-wrap: wrap; }
   .preset-btn {
@@ -151,45 +204,45 @@
   .preset-btn.accent:hover { background: var(--blue); color: #091216; }
 
   .slots-grid {
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;
   }
   .slot-pill {
     background: #120e0b; border: 1px solid var(--line); border-radius: 6px;
-    padding: 7px 9px; display: flex; align-items: center; gap: 8px; cursor: pointer;
+    padding: 5px 8px; display: flex; align-items: center; gap: 7px; cursor: pointer;
     transition: all .12s; position: relative;
   }
   .slot-pill:hover { border-color: var(--card); }
   .slot-pill.selected { border-color: var(--gold); background: #261c13; box-shadow: inset 0 0 0 1px var(--gold); }
   .slot-pill img {
-    width: 34px; height: 34px; object-fit: contain; background: #090706;
+    width: 30px; height: 30px; object-fit: contain; background: #090706;
     border-radius: 4px; border: 1px solid var(--line); flex-shrink: 0;
   }
-  .slot-pill .slot-info { flex: 1; min-width: 0; font: 10px var(--mono); }
-  .slot-pill .slot-lbl { color: var(--gold); font-weight: 700; text-transform: uppercase; font-size: 9.5px; }
+  .slot-pill .slot-info { flex: 1; min-width: 0; font: 9.5px var(--mono); }
+  .slot-pill .slot-lbl { color: var(--gold); font-weight: 700; text-transform: uppercase; font-size: 9px; display: flex; justify-content: space-between; }
   .slot-pill .slot-val { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .slot-pill .slot-clr {
     background: transparent; border: 0; color: var(--dim); font-size: 13px; cursor: pointer; padding: 0 3px;
   }
   .slot-pill .slot-clr:hover { color: var(--bad); }
 
-  .slider-row { display: flex; align-items: center; gap: 10px; font: 11px var(--mono); color: var(--dim); }
-  .slider-row label { flex: 0 0 110px; }
-  .slider-row input[type="range"] { flex: 1; accent-color: var(--gold); }
-  .slider-row span { flex: 0 0 48px; text-align: right; color: var(--ink); font-weight: 600; }
+  .slider-row { display: flex; align-items: center; gap: 8px; font: 10.5px var(--mono); color: var(--dim); }
+  .slider-row label { flex: 0 0 132px; color: var(--ink); }
+  .slider-row input[type="range"] { flex: 1; accent-color: var(--gold); cursor: pointer; }
+  .slider-row span { flex: 0 0 54px; text-align: right; color: var(--gold); font-weight: 700; }
 
-  /* ── Multi-Dimensional Filter & Scale Toolbar ── */
+  /* ── Multi-Dimensional Filter, View Mode & CLIP Toolbar ── */
   .toolbar {
     background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-    padding: 16px 18px; display: flex; flex-direction: column; gap: 14px;
-    position: sticky; top: 57px; z-index: 150; box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+    padding: 15px 18px; display: flex; flex-direction: column; gap: 12px;
+    position: sticky; top: 53px; z-index: 150; box-shadow: 0 8px 22px rgba(0,0,0,0.55);
   }
 
   /* 8 Anatomical Category Tabs */
-  .cat-tabs { display: flex; gap: 7px; flex-wrap: wrap; }
+  .cat-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .cat-tab {
     background: var(--panel-card); border: 1px solid var(--line); color: var(--ink);
-    font: 700 12px var(--mono); padding: 8px 13px; border-radius: 8px; cursor: pointer;
-    transition: all .14s; display: flex; align-items: center; gap: 7px;
+    font: 700 11.5px var(--mono); padding: 7px 12px; border-radius: 8px; cursor: pointer;
+    transition: all .14s; display: flex; align-items: center; gap: 6px;
   }
   .cat-tab:hover { border-color: var(--gold); color: var(--gold); }
   .cat-tab.active { background: var(--card); color: #16120f; border-color: var(--card); font-weight: 800; }
@@ -197,13 +250,16 @@
     font-size: 10px; padding: 1px 6px; border-radius: 999px; background: rgba(0,0,0,0.35); color: inherit;
   }
 
-  /* Scale Toggle + Search Row */
+  /* View Mode Switcher + Search + Scale Row */
   .controls-bar {
-    display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  }
+  .search-wrap {
+    flex: 1; min-width: 280px; display: flex; gap: 6px; align-items: center;
   }
   .search-box {
-    flex: 1; min-width: 260px; background: #0b0907; border: 1px solid var(--line);
-    color: var(--ink); font: 12.5px var(--mono); padding: 8px 15px; border-radius: 999px; outline: none;
+    flex: 1; background: #0b0907; border: 1px solid var(--line);
+    color: var(--ink); font: 12px var(--mono); padding: 8px 14px; border-radius: 999px; outline: none;
   }
   .search-box:focus { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
 
@@ -213,10 +269,28 @@
   }
   .scale-btn {
     background: transparent; border: 0; color: var(--dim); font: 700 11px var(--mono);
-    padding: 5px 13px; border-radius: 999px; cursor: pointer; transition: all .14s;
+    padding: 5px 12px; border-radius: 999px; cursor: pointer; transition: all .14s; white-space: nowrap;
   }
   .scale-btn:hover { color: var(--ink); }
   .scale-btn.active { background: var(--gold); color: #16120f; }
+  .scale-btn.blue-mode.active { background: var(--blue); color: #071216; }
+  .scale-btn.purple-mode.active { background: var(--purple); color: #140b24; }
+
+  /* CLIP Sub-Type Pills Row */
+  .clip-subtag-strip {
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    padding: 7px 11px; background: #120e0b; border: 1px solid var(--line); border-radius: 8px;
+  }
+  .subtag-pill {
+    background: #1b1510; border: 1px solid var(--line-lit); color: var(--ink);
+    font: 600 11px var(--mono); padding: 4px 10px; border-radius: 999px; cursor: pointer;
+    transition: all .12s; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .subtag-pill:hover { border-color: var(--purple); color: var(--purple); }
+  .subtag-pill.active { background: var(--purple); color: #130a21; border-color: var(--purple); font-weight: 800; }
+  .subtag-pill .scnt {
+    font-size: 9.5px; opacity: 0.8; padding: 0 5px; border-radius: 99px; background: rgba(0,0,0,0.28);
+  }
 
   /* Filter Chips Rows (Character, View Angle, Poem) */
   .filter-strip {
@@ -227,13 +301,28 @@
   .chip-label { font: 800 10px var(--mono); color: var(--gold); letter-spacing: .08em; margin-right: 3px; }
   .f-chip {
     background: #120e0b; border: 1px solid var(--line); color: var(--dim);
-    font: 600 11px var(--mono); padding: 3px 9px; border-radius: 999px; cursor: pointer; transition: all .12s;
+    font: 600 10.5px var(--mono); padding: 3px 9px; border-radius: 999px; cursor: pointer; transition: all .12s;
   }
   .f-chip:hover { border-color: var(--card); color: var(--ink); }
   .f-chip.active { background: var(--gold); color: #16120f; border-color: var(--gold); font-weight: 800; }
   .f-chip.blue.active { background: var(--blue); color: #091216; border-color: var(--blue); }
 
-  /* ── Gallery Header & Parts Grid ── */
+  /* ── CLIP Similarity Banner (when Find Similar is active) ── */
+  .sim-anchor-banner {
+    background: linear-gradient(90deg, #21152b 0%, #151118 100%);
+    border: 1.5px solid var(--purple); border-radius: 10px; padding: 12px 16px;
+    display: none; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  }
+  .sim-anchor-banner.active { display: flex; }
+  .sim-anchor-left { display: flex; align-items: center; gap: 12px; }
+  .sim-anchor-left img {
+    width: 58px; height: 58px; object-fit: contain; background: #090706;
+    border-radius: 6px; border: 1px solid var(--purple); padding: 4px;
+  }
+  .sim-anchor-meta { font: 12px var(--mono); display: flex; flex-direction: column; gap: 2px; }
+  .sim-anchor-meta b { color: var(--purple); font-size: 13px; }
+
+  /* ── Gallery Header & Parts Grid (Detailed Cards Mode) ── */
   .grid-header {
     display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
     font: 12px var(--mono); color: var(--dim);
@@ -246,14 +335,14 @@
 
   .part-card {
     background: var(--panel); border: 1px solid var(--line); border-radius: 9px;
-    padding: 10px; display: flex; flex-direction: column; gap: 8px; position: relative;
+    padding: 10px; display: flex; flex-direction: column; gap: 7px; position: relative;
     transition: all .14s;
   }
   .part-card:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.45); }
   .part-card.in-rig { border-color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); }
 
   .part-thumb {
-    width: 100%; height: 190px;
+    width: 100%; height: 185px;
     background-color: #0b0908;
     background-image: linear-gradient(45deg, #15110e 25%, transparent 25%),
                       linear-gradient(-45deg, #15110e 25%, transparent 25%),
@@ -264,8 +353,6 @@
     padding: 8px; overflow: hidden; cursor: pointer; position: relative;
     border: 1px solid #221b16;
   }
-
-  /* Scale ruler lines in TRUE ANATOMICAL SCALE mode */
   .part-thumb.anatomical-mode::before {
     content: "240px TORSO REF";
     position: absolute; top: 4px; left: 6px;
@@ -279,7 +366,6 @@
     border-bottom: 1px dashed rgba(245, 185, 66, 0.28);
     pointer-events: none;
   }
-
   .part-thumb img {
     max-width: 100%; max-height: 100%; object-fit: contain;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.75)); transition: transform .18s, width .18s, height .18s;
@@ -287,32 +373,128 @@
   .part-card:hover .part-thumb.raw-mode img { transform: scale(1.06); }
 
   .part-badges-overlay {
-    position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; pointer-events: none; z-index: 3;
+    position: absolute; top: 5px; right: 5px; display: flex; gap: 4px; pointer-events: none; z-index: 3; flex-wrap: wrap; justify-content: flex-end;
+  }
+  .part-clip-overlay {
+    position: absolute; bottom: 5px; left: 5px; right: 5px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 3;
   }
   .mini-tag {
     font: 700 9px var(--mono); padding: 1px 5px; border-radius: 4px;
-    background: rgba(13, 11, 10, 0.85); border: 1px solid var(--line-lit); color: var(--dim);
+    background: rgba(13, 11, 10, 0.88); border: 1px solid var(--line-lit); color: var(--dim);
     text-transform: uppercase;
   }
   .mini-tag.piv { color: var(--gold); border-color: rgba(245,185,66,.5); }
   .mini-tag.ang { color: var(--blue); border-color: rgba(1,172,212,.45); }
+  .mini-tag.clip { color: var(--purple); border-color: rgba(184,140,255,.5); text-transform: none; }
+  .mini-tag.sim { color: var(--ok); border-color: rgba(159,224,138,.6); }
 
   .part-meta { display: flex; flex-direction: column; gap: 3px; font: 11px var(--mono); }
-  .part-title { font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11.5px; }
+  .part-title { font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
   .part-sub { display: flex; justify-content: space-between; color: var(--dim); font-size: 10px; gap: 6px; }
   .part-char { color: var(--card); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .part-poems { color: var(--dim); font-size: 9.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   .part-actions { display: flex; gap: 4px; margin-top: 2px; }
   .btn-sm {
-    flex: 1; text-align: center; font: 700 10px var(--mono); background: var(--panel-card);
-    border: 1px solid var(--line); color: var(--dim); padding: 5px 6px; border-radius: 4px;
+    flex: 1; text-align: center; font: 700 9.5px var(--mono); background: var(--panel-card);
+    border: 1px solid var(--line); color: var(--dim); padding: 5px 4px; border-radius: 4px;
     cursor: pointer; text-decoration: none; transition: all .12s; white-space: nowrap;
   }
   .btn-sm:hover { border-color: var(--gold); color: var(--ink); }
   .btn-sm.snap { border-color: rgba(159,224,138,.4); color: var(--ok); }
   .btn-sm.snap:hover, .btn-sm.snap.active { background: var(--ok); color: #10180d; border-color: var(--ok); }
+  .btn-sm.sim-btn { border-color: rgba(184,140,255,.4); color: var(--purple); }
+  .btn-sm.sim-btn:hover { background: var(--purple); color: #130920; border-color: var(--purple); }
   .btn-sm.pin.pinned { background: var(--gold); color: #16120f; border-color: var(--gold); }
+
+  /* ── Contact Sheet Wall Mode (See ALL Shoes / Hands / Heads at once!) ── */
+  .wall-controls-bar {
+    background: #130f0c; border: 1px solid var(--line-lit); border-radius: 8px;
+    padding: 8px 14px; display: none; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    font: 11px var(--mono); color: var(--dim);
+  }
+  .wall-controls-bar.active { display: flex; }
+  .contact-wall-section {
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .wall-group-block {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .wall-group-title {
+    font: 700 13px var(--mono); color: var(--gold); border-bottom: 1px solid var(--line);
+    padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .contact-wall-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--wall-tile-px, 122px), 1fr));
+    gap: 8px;
+  }
+  .wall-tile {
+    background: #0d0a08; border: 1px solid #231c16; border-radius: 6px;
+    padding: 5px; display: flex; flex-direction: column; gap: 4px; position: relative;
+    cursor: pointer; transition: all .12s;
+  }
+  .wall-tile:hover {
+    border-color: var(--gold); transform: translateY(-2px); z-index: 5;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.65);
+  }
+  .wall-tile.in-rig { border-color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); }
+  .wall-thumb {
+    width: 100%; height: calc(var(--wall-tile-px, 122px) - 24px);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    background-color: #090706;
+    background-image: linear-gradient(45deg, #120e0b 25%, transparent 25%),
+                      linear-gradient(-45deg, #120e0b 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #120e0b 75%),
+                      linear-gradient(-45deg, transparent 75%, #120e0b 75%);
+    background-size: 12px 12px; border-radius: 4px; position: relative;
+  }
+  .wall-thumb img {
+    max-width: 94%; max-height: 94%; object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+  }
+  .wall-caption {
+    font: 600 9px var(--mono); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .wall-sub {
+    font: 600 8.5px var(--mono); color: var(--purple); display: flex; justify-content: space-between;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .wall-hover-bar {
+    position: absolute; top: 4px; right: 4px; display: none; gap: 3px; z-index: 4;
+  }
+  .wall-tile:hover .wall-hover-bar { display: flex; }
+  .w-act {
+    background: rgba(14,11,9,0.92); border: 1px solid var(--gold); color: var(--gold);
+    font: 700 9px var(--mono); padding: 2px 5px; border-radius: 4px; cursor: pointer;
+  }
+  .w-act:hover { background: var(--gold); color: #16120f; }
+
+  /* ── 2D CLIP Embedding Scatter Map View ── */
+  .umap-section {
+    background: var(--panel); border: 2px solid var(--purple); border-radius: 12px;
+    padding: 16px; display: none; grid-template-columns: minmax(520px, 1.55fr) minmax(320px, 0.85fr);
+    gap: 16px;
+  }
+  .umap-section.active { display: grid; }
+  @media (max-width: 1040px) { .umap-section.active { grid-template-columns: 1fr; } }
+  .umap-canvas-wrap {
+    background: #090706; border: 1px solid var(--line-lit); border-radius: 10px;
+    position: relative; height: 620px; overflow: hidden; cursor: crosshair;
+  }
+  .umap-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+  .umap-legend {
+    position: absolute; top: 10px; left: 10px; background: rgba(15,12,10,0.92);
+    border: 1px solid var(--line-lit); border-radius: 8px; padding: 8px 11px;
+    display: flex; gap: 8px; flex-wrap: wrap; font: 600 10px var(--mono);
+  }
+  .umap-leg-item { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+  .umap-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .umap-sidebar {
+    background: var(--panel-card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px; display: flex; flex-direction: column; gap: 12px; max-height: 620px; overflow-y: auto;
+  }
 
   .load-more-wrap {
     display: flex; justify-content: center; gap: 12px; padding: 22px 0;
@@ -349,8 +531,8 @@
   }
   .modal.active { display: flex; }
   .modal-box {
-    max-width: 960px; width: 100%; background: var(--panel); border: 2px solid var(--gold);
-    border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;
+    max-width: 1040px; width: 100%; background: var(--panel); border: 2px solid var(--gold);
+    border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; max-height: 92vh;
   }
   .modal-bar {
     padding: 14px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center;
@@ -359,9 +541,9 @@
   .modal-bar button { background: none; border: 0; color: var(--dim); font-size: 24px; cursor: pointer; }
   .modal-bar button:hover { color: #fff; }
   .modal-body {
-    padding: 24px; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; overflow: auto;
+    padding: 20px; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; overflow: auto;
   }
-  @media(max-width: 720px) { .modal-body { grid-template-columns: 1fr; } }
+  @media(max-width: 760px) { .modal-body { grid-template-columns: 1fr; } }
   .modal-preview {
     background-color: #0c0a09;
     background-image: linear-gradient(45deg, #16120f 25%, transparent 25%),
@@ -372,18 +554,28 @@
     padding: 16px; min-height: 360px; border: 1px solid var(--line); position: relative;
   }
   .modal-preview canvas { max-width: 100%; max-height: 400px; object-fit: contain; }
-  .modal-info { display: flex; flex-direction: column; gap: 12px; font: 12px var(--mono); }
-  .modal-info dl { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; }
+  .modal-info { display: flex; flex-direction: column; gap: 11px; font: 11.5px var(--mono); }
+  .modal-info dl { display: grid; grid-template-columns: 135px 1fr; gap: 6px 12px; }
   .modal-info dt { color: var(--dim); }
   .modal-info dd { color: var(--ink); font-weight: 600; word-break: break-word; }
+  .modal-sim-strip {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 4px;
+  }
+  .modal-sim-card {
+    background: #0d0a08; border: 1px solid var(--line); border-radius: 5px; padding: 4px;
+    cursor: pointer; text-align: center; font: 9px var(--mono); color: var(--dim);
+  }
+  .modal-sim-card:hover { border-color: var(--purple); color: var(--ink); }
+  .modal-sim-card img { width: 100%; height: 52px; object-fit: contain; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>BODY LAB <small>UNIFIED CROSS-KIT ANATOMY &amp; MANNEQUIN WORKBENCH</small></h1>
+  <h1>BODY LAB <small>OPENCLIP VISUAL SEARCH · CONTACT SHEET WALL · 2.5D CUFF-TUCK RIG SOLVER</small></h1>
   <div class="sp"></div>
   <nav class="nav-links">
+    <a class="nav-btn gold" href="assembly.html">🧩 Assembly Toybox</a>
     <a class="nav-btn" href="cards.html">◫ Periodic Table &amp; Card Atlas</a>
     <a class="nav-btn" href="stage.html">🎬 Multiplane Stage</a>
     <a class="nav-btn" href="suite.html">▶ 14-Poem Suite Player</a>
@@ -393,6 +585,7 @@
     <a class="nav-btn" href="kits.html">▦ Character Kits</a>
     <a class="nav-btn" href="faces.html">🎭 Faces &amp; Profiles</a>
     <a class="nav-btn gold" href="arena/parts/body_lab/body_lab_unified.json" download>⬇ body_lab_unified.json</a>
+    <a class="nav-btn blue" href="arena/parts/body_lab/clip_part_index.json" download>⬇ clip_part_index.json</a>
   </nav>
 </header>
 
@@ -401,16 +594,24 @@
   <section class="banner">
     <div class="banner-left">
       <div class="badge-row">
-        <span class="badge ok" id="bdgTotal">✓ 3,978 Unified Anatomical Parts</span>
-        <span class="badge gold">✓ 8 Anatomical Categories</span>
-        <span class="badge gold">✓ 31 Calibrated Tracksuit Parts (Brass Pivots)</span>
-        <span class="badge blue">✓ 240px True Anatomical Scale Solver</span>
-        <span class="badge ok">✓ All 14 Poems (P01–P14)</span>
+        <span class="badge ok" id="bdgTotal">✓ 3,997 CLIP-Purified Anatomical Parts</span>
+        <span class="badge purple" id="bdgClipStatus">🧬 OpenCLIP ViT-B-32 Embeddings Loaded</span>
+        <span class="badge gold">✓ Cuff-Tuck &amp; Grommet-Clip Wrist/Ankle/Neck Solver</span>
+        <span class="badge blue">✓ 2.5D Fake-3D Parallax &amp; Seam Loupe (2.5×)</span>
       </div>
-      <h2>Cross-Kit Comparative Body Lab &amp; Mannequin Assembler</h2>
+      <h2>Cross-Kit Comparative Body Lab · CLIP Visual Search &amp; 2.5D Joint Solver</h2>
       <p>
-        Inspect, filter, and compare <strong>all hands, all shoes &amp; feet, all heads &amp; profiles, all eyes &amp; brows, all mouths &amp; noses, all sunglasses &amp; headgear, all torsos &amp; pelvises, and all limbs</strong> across every character kit and poem in <i>WYGWYL</i>. Switch between <strong>Raw Card Zoom</strong> (to inspect gouache brushwork and kraft edges) and <strong>True Anatomical Scale</strong> (normalized to a standard <code>240px</code> torso), or snap any part directly onto the calibrated <strong>Mix-and-Match Mannequin Workbench</strong> below.
+        Every cut part across all 14 poems is now embedded with <strong>OpenCLIP (<code>ViT-B-32</code>)</strong> to purify categories, tag fine-grained sub-types (<i>Chelsea Boots, Sneakers, Heels, Bare Feet, Open Palms, Fists, Blank Heads</i>), and power instant visual similarity search. In the <strong>Mannequin Workbench</strong> below, wrist, ankle, and neck seams use <strong>Cuff-Over-Extremity Z-Ordering &amp; Grommet-Tab Clipping</strong> so hands tuck inside ribbed sleeve cuffs, boots tuck inside jogger pant cuffs, and necks tuck inside jacket collars.
       </p>
+      <div class="quick-wall-strip">
+        <span style="font:800 10.5px var(--mono);color:var(--gold);letter-spacing:.06em">INSTANT CONTACT WALLS:</span>
+        <button class="qwall-btn hi" onclick="jumpToCategoryWall('shoes_feet')">👞 See All 338 Shoes &amp; Feet at Once</button>
+        <button class="qwall-btn hi" onclick="jumpToCategoryWall('hands')">🙌 See All 639 Hands at Once</button>
+        <button class="qwall-btn" onclick="jumpToCategoryWall('heads')">👤 See All 384 Heads at Once</button>
+        <button class="qwall-btn" onclick="jumpToCategoryWall('eyes_brows')">👁️ See All 617 Eyes &amp; Brows</button>
+        <button class="qwall-btn" onclick="jumpToCategoryWall('sunglasses_acc')">🕶️ See All 104 Sunglasses &amp; Gear</button>
+        <button class="qwall-btn blue" onclick="setViewMode('umap')">🧬 Open 2D CLIP Embedding Map</button>
+      </div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="nav-btn gold" onclick="toggleWorkbenchSection()" id="btnToggleWB">🦿 Hide Assembler Workbench</button>
@@ -422,11 +623,14 @@
   <section class="workbench-section" id="workbenchSection">
     <div class="workbench-header">
       <h3>
-        🦿 Mix-and-Match Body &amp; Face Assembler Workbench
-        <small>Click "+ Snap to Rig" on any card below to attach it to the calibrated mannequin</small>
+        🦿 2.5D Cuff-Tuck Body &amp; Face Assembler Workbench
+        <small>True Socket-to-Socket Chaining + Ribbed Cuff Over-Layering &amp; Grommet Tab Clipping</small>
       </h3>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="nav-btn active" id="btnShowPivotsWB" onclick="toggleWBPivots()">◎ Brass Pivots: ON</button>
+        <button class="nav-btn ok active" id="btnCuffTuckWB" onclick="toggleWBCuffTuck()" title="Toggle between Fixed Cuff-Tuck & Tab-Clip vs Broken Raw Butt-Joint Tabs">
+          ✓ Cuff-Tuck &amp; Tab-Clip: ON (Fixed)
+        </button>
+        <button class="nav-btn active" id="btnShowPivotsWB" onclick="toggleWBPivots()">◎ Brass Sockets: ON</button>
         <button class="nav-btn active" id="btnShowGridWB" onclick="toggleWBGrid()">📏 240px Scale Ruler: ON</button>
         <button class="nav-btn" onclick="exportAssemblyJSON()">⬇ Export Assembly JSON</button>
         <button class="nav-btn gold" onclick="downloadMannequinPNG()">📸 Save PNG</button>
@@ -434,33 +638,72 @@
     </div>
 
     <div class="workbench-body">
-      <!-- Left: Live Calibrated Mannequin Canvas -->
+      <!-- Left: Live Calibrated Mannequin Canvas + 2.5x Wrist/Ankle/Neck Seam Loupes -->
       <div class="mannequin-stage-wrap">
         <div class="mannequin-canvas-box" id="mannequinBox">
-          <canvas id="mannequinCanvas" width="960" height="900"></canvas>
+          <canvas id="mannequinCanvas" width="960" height="920"></canvas>
           <div class="mannequin-hud-top">
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <span class="badge gold" id="wbActivePresetLabel">Preset: Poet Tracksuit (Calibrated Rig)</span>
+              <span class="badge gold" id="wbActivePresetLabel">Preset: Poet Tracksuit (Calibrated 18-Part Chained Rig)</span>
               <span class="badge blue" id="wbActiveSlotBadge">Selected Slot: TORSO</span>
+              <span class="badge ok" id="wbJointModeBadge">Joints: Cuff-Over-Extremity Tuck</span>
             </div>
             <div style="display:flex;gap:6px">
-              <button class="nav-btn" onclick="resetSlotOffsets()">↺ Reset Offsets</button>
+              <button class="nav-btn" onclick="resetSlotOffsets()">↺ Reset Pose &amp; 3D</button>
               <button class="nav-btn" onclick="clearAllSlots()">✕ Clear Rig</button>
             </div>
           </div>
           <div class="mannequin-hud-bottom">
-            <span id="wbReadout">Drag any part on the canvas to fine-tune placement · Brass grommets shown in gold</span>
+            <span id="wbReadout">Drag any part on canvas to fine-tune · Click Wrist/Ankle Loupes below to inspect cuff tuck</span>
             <span>Ref Torso = <b style="color:var(--gold)">240px</b></span>
+          </div>
+        </div>
+
+        <!-- Live 2.5× Zoomed Wrist, Ankle & Neck Seam Loupe Inspector -->
+        <div class="seam-loupe-strip">
+          <div class="seam-loupe-header">
+            <span>🔍 LIVE 2.5× SEAM LOUPE INSPECTOR (NECK · WRIST CUFF · ANKLE CUFF)</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span style="color:var(--dim);font-weight:400">Compare Joint Layering:</span>
+              <button class="nav-btn ok active" id="btnLoupeFixed" onclick="setWBCuffTuck(true)" style="padding:2px 9px;font-size:10px">✓ Fixed: Cuff-Tuck &amp; Tab-Clip</button>
+              <button class="nav-btn bad" id="btnLoupeBroken" onclick="setWBCuffTuck(false)" style="padding:2px 9px;font-size:10px">✕ Broken: Raw Grommet Tabs</button>
+            </div>
+          </div>
+          <div class="seam-loupes-grid">
+            <div class="loupe-card ok-seam" id="loupeCardNeck" onclick="selectWBSlot('head', false)" style="cursor:pointer">
+              <div class="loupe-lbl">
+                <span>1. NECK ↔ COLLAR</span>
+                <span id="loupeStatusNeck" style="color:var(--ok)">✓ TUCKED IN COLLAR</span>
+              </div>
+              <canvas id="loupeNeckCanvas" width="220" height="140"></canvas>
+              <div class="loupe-sub" id="loupeNoteNeck">Neck kraft edge tucked behind jacket collar lip (y=108)</div>
+            </div>
+            <div class="loupe-card ok-seam" id="loupeCardWrist" onclick="selectWBSlot('hand_L', false)" style="cursor:pointer">
+              <div class="loupe-lbl">
+                <span>2. WRIST (SLEEVE ↔ HAND)</span>
+                <span id="loupeStatusWrist" style="color:var(--ok)">✓ CUFF OVER WRIST</span>
+              </div>
+              <canvas id="loupeWristCanvas" width="220" height="140"></canvas>
+              <div class="loupe-sub" id="loupeNoteWrist">Forearm tab clipped at y=1238; hand tab tucked inside cuff</div>
+            </div>
+            <div class="loupe-card ok-seam" id="loupeCardAnkle" onclick="selectWBSlot('shoe_L', false)" style="cursor:pointer">
+              <div class="loupe-lbl">
+                <span>3. ANKLE (SHIN ↔ BOOT)</span>
+                <span id="loupeStatusAnkle" style="color:var(--ok)">✓ PANT OVER BOOT</span>
+              </div>
+              <canvas id="loupeAnkleCanvas" width="220" height="140"></canvas>
+              <div class="loupe-sub" id="loupeNoteAnkle">Shin tab clipped at y=1295; boot pull-tab tucked inside cuff</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Right: Presets, 14 Anatomical Slots & Transform Controls -->
+      <!-- Right: Presets, 2.5D Fake-3D Sliders, 18 Chained Slots & Slot Transform Controls -->
       <div class="workbench-controls">
         <div class="wb-panel">
           <h4>1. Character &amp; Cross-Kit Presets</h4>
           <div class="preset-row">
-            <button class="preset-btn" onclick="loadPreset('poet_tracksuit')">Poet Tracksuit (Front)</button>
+            <button class="preset-btn" onclick="loadPreset('poet_tracksuit')">Poet Tracksuit (Full 18-Slot)</button>
             <button class="preset-btn" onclick="loadPreset('poet_profile')">Poet Profile Rig</button>
             <button class="preset-btn" onclick="loadPreset('young_poet')">Young Poet (Age 6)</button>
             <button class="preset-btn" onclick="loadPreset('mother')">The Mother (P09)</button>
@@ -470,12 +713,32 @@
           </div>
         </div>
 
-        <div class="wb-panel">
+        <!-- 2.5D Fake-3D Parallax & Cardboard Layer Thickness Controls -->
+        <div class="wb-panel" style="border-color:rgba(1,172,212,0.45)">
           <h4>
-            <span>2. Active Mannequin Slots (Click to Select / Filter Grid)</span>
-            <span style="color:var(--dim);font-weight:400">14 Sockets</span>
+            <span style="color:var(--blue)">2. Fake-3D (2.5D Cylindrical Parallax &amp; Foreshortening)</span>
+            <button class="preset-btn" style="padding:2px 8px;font-size:10px" onclick="reset25DControls()">↺ Center 3D</button>
           </h4>
-          <div class="slots-grid" id="wbSlotsGrid"></div>
+          <div class="slider-row">
+            <label title="Cylindrical horizontal parallax across head, eyes, brows, nose, mouth, and sunglasses">Head 3D Yaw (L/R):</label>
+            <input type="range" id="slYaw3D" min="-45" max="45" value="0" oninput="update25DControls()">
+            <span id="valYaw3D">0°</span>
+          </div>
+          <div class="slider-row">
+            <label title="Spherical vertical tilt of facial features and neck socket">Head 3D Pitch (U/D):</label>
+            <input type="range" id="slPitch3D" min="-25" max="25" value="0" oninput="update25DControls()">
+            <span id="valPitch3D">0°</span>
+          </div>
+          <div class="slider-row">
+            <label title="Fakes 3D limb reach toward/away from camera by foreshortening forearm/shin & scaling hand/boot">Limb Z-Reach 3D:</label>
+            <input type="range" id="slZReach3D" min="-60" max="60" value="0" oninput="update25DControls()">
+            <span id="valZReach3D">0%</span>
+          </div>
+          <div class="slider-row">
+            <label title="Corrugated cardboard edge bevel thickness & multiplane drop shadow depth">2.5D Kraft Rim (px):</label>
+            <input type="range" id="slKraft3D" min="0" max="8" value="3" oninput="update25DControls()">
+            <span id="valKraft3D">3.0px</span>
+          </div>
         </div>
 
         <div class="wb-panel">
@@ -489,33 +752,41 @@
             <span id="valSlotScale">1.00×</span>
           </div>
           <div class="slider-row">
-            <label>Rotation (°):</label>
+            <label>Joint Rotation (°):</label>
             <input type="range" id="slSlotRot" min="-180" max="180" value="0" oninput="updateSelectedSlotTransform()">
             <span id="valSlotRot">0°</span>
           </div>
           <div class="slider-row">
-            <label>Offset X / Y:</label>
-            <input type="range" id="slSlotX" min="-260" max="260" value="0" oninput="updateSelectedSlotTransform()">
-            <input type="range" id="slSlotY" min="-260" max="260" value="0" oninput="updateSelectedSlotTransform()">
+            <label>Socket Offset X/Y:</label>
+            <input type="range" id="slSlotX" min="-220" max="220" value="0" oninput="updateSelectedSlotTransform()">
+            <input type="range" id="slSlotY" min="-220" max="220" value="0" oninput="updateSelectedSlotTransform()">
             <span id="valSlotXY">0, 0</span>
           </div>
+        </div>
+
+        <div class="wb-panel">
+          <h4>
+            <span>4. Chained Mannequin Sockets (Click to Select / Filter Grid)</span>
+            <span style="color:var(--dim);font-weight:400">18 Layered Slots</span>
+          </h4>
+          <div class="slots-grid" id="wbSlotsGrid"></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Sticky Multi-Filter & Scale Normalization Toolbar -->
+  <!-- Sticky Multi-Filter, View Mode & CLIP Sub-Type Toolbar -->
   <section class="toolbar">
     <!-- 8 Comprehensive Anatomical Categories -->
     <div class="cat-tabs" id="catTabs">
       <button class="cat-tab active" data-cat="all" onclick="setCategory('all', this)">
         🌐 ALL <span class="cnt" id="cnt-all">0</span>
       </button>
-      <button class="cat-tab" data-cat="hands" onclick="setCategory('hands', this)">
-        🙌 HANDS <span class="cnt" id="cnt-hands">0</span>
-      </button>
       <button class="cat-tab" data-cat="shoes_feet" onclick="setCategory('shoes_feet', this)">
         👞 SHOES &amp; FEET <span class="cnt" id="cnt-shoes_feet">0</span>
+      </button>
+      <button class="cat-tab" data-cat="hands" onclick="setCategory('hands', this)">
+        🙌 HANDS <span class="cnt" id="cnt-hands">0</span>
       </button>
       <button class="cat-tab" data-cat="heads" onclick="setCategory('heads', this)">
         👤 HEADS &amp; PROFILES <span class="cnt" id="cnt-heads">0</span>
@@ -537,17 +808,32 @@
       </button>
     </div>
 
-    <!-- Search + Scale Normalization Mode Toggle -->
+    <!-- Dynamic CLIP Visual Sub-Type Filter Pills -->
+    <div class="clip-subtag-strip" id="clipSubtagStrip"></div>
+
+    <!-- Search + View Mode Switcher + Scale Normalization Mode Toggle -->
     <div class="controls-bar">
-      <input type="text" id="bodySearch" class="search-box" placeholder="Search 3,978 parts (e.g. relaxed, fist, chelsea, sneaker, blank head, raised brow, smile, sunglasses, bomber, mother, P04)..." oninput="resetPageAndRender()">
+      <div class="search-wrap">
+        <input type="text" id="bodySearch" class="search-box" placeholder="CLIP Semantic &amp; Keyword Search (try: 'chelsea boot', 'bare foot toes', 'gold heel', 'open palm', 'pointing finger', 'bearded profile')..." oninput="resetPageAndRender()">
+        <button class="nav-btn active" id="btnClipSemantic" onclick="toggleClipSemanticSearch()" title="Rank search queries using 32-D OpenCLIP ViT-B-32 text-to-image cosine similarity">
+          🧬 CLIP Semantic: ON
+        </button>
+      </div>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <span style="font:800 10px var(--mono);color:var(--gold);letter-spacing:.08em">SCALE MODE:</span>
+        <span style="font:800 10px var(--mono);color:var(--blue);letter-spacing:.06em">VIEW MODE:</span>
         <div class="scale-toggle-group">
-          <button class="scale-btn active" id="btnScaleRaw" onclick="setScaleMode('raw')">🔍 RAW CARD ZOOM</button>
-          <button class="scale-btn" id="btnScaleAnatomical" onclick="setScaleMode('anatomical')">📏 TRUE ANATOMICAL SCALE (240px Torso)</button>
+          <button class="scale-btn active" id="btnViewCards" onclick="setViewMode('cards')">▦ DETAILED CARDS</button>
+          <button class="scale-btn blue-mode" id="btnViewWall" onclick="setViewMode('wall')">👟 CONTACT SHEET WALL (SEE ALL)</button>
+          <button class="scale-btn purple-mode" id="btnViewUmap" onclick="setViewMode('umap')">🧬 2D CLIP MAP</button>
         </div>
-        <button class="nav-btn active" id="btnCardPivots" onclick="toggleCardPivots()">◎ Card Pivots</button>
+
+        <span style="font:800 10px var(--mono);color:var(--gold);letter-spacing:.06em;margin-left:4px">SCALE:</span>
+        <div class="scale-toggle-group">
+          <button class="scale-btn active" id="btnScaleRaw" onclick="setScaleMode('raw')">🔍 RAW ZOOM</button>
+          <button class="scale-btn" id="btnScaleAnatomical" onclick="setScaleMode('anatomical')">📏 240px TRUE SCALE</button>
+        </div>
+        <button class="nav-btn active" id="btnCardPivots" onclick="toggleCardPivots()">◎ Pivots</button>
       </div>
     </div>
 
@@ -595,20 +881,70 @@
     </div>
   </section>
 
+  <!-- Active CLIP Visual Similarity Anchor Banner -->
+  <div class="sim-anchor-banner" id="simAnchorBanner">
+    <div class="sim-anchor-left">
+      <img id="simAnchorImg" src="" alt="">
+      <div class="sim-anchor-meta">
+        <span>🧬 SORTING BY 512-D / 32-D OPENCLIP VISUAL COSINE SIMILARITY TO:</span>
+        <b id="simAnchorTitle">—</b>
+        <span id="simAnchorSub" style="color:var(--dim);font-size:11px">—</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="nav-btn" onclick="snapPartToRig(simAnchorPartId)">⚡ Snap Query Part to Rig</button>
+      <button class="nav-btn gold" onclick="clearSimilarSort()">✕ Clear Visual Similarity Sort</button>
+    </div>
+  </div>
+
+  <!-- Contact Sheet Wall Controls Bar (Shown in Wall Mode) -->
+  <div class="wall-controls-bar" id="wallControlsBar">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span style="color:var(--gold);font-weight:700">👟 CONTACT SHEET WALL:</span>
+      <span>Showing all matching parts on one screen without pagination</span>
+      <span style="margin-left:8px;color:var(--ink)">Group Wall By:</span>
+      <button class="f-chip active" id="btnWallGroupSubtag" onclick="setWallGroupBy('subtag')">CLIP Sub-Type (e.g. Chelsea vs Sneaker vs Bare Foot)</button>
+      <button class="f-chip" id="btnWallGroupChar" onclick="setWallGroupBy('char')">Character Cast</button>
+      <button class="f-chip" id="btnWallGroupNone" onclick="setWallGroupBy('none')">Flat Wall</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span>Tile Size:</span>
+      <input type="range" id="slWallSize" min="78" max="180" value="122" oninput="updateWallTileSize(this.value)" style="accent-color:var(--gold);width:110px">
+      <span id="valWallSize" style="color:var(--gold);font-weight:700">122px</span>
+    </div>
+  </div>
+
+  <!-- 2D CLIP Embedding Scatter Map Section (Shown in UMAP Mode) -->
+  <section class="umap-section" id="umapSection">
+    <div class="umap-canvas-wrap" id="umapCanvasWrap">
+      <canvas id="umapCanvas" width="1020" height="620"></canvas>
+      <div class="umap-legend" id="umapLegend"></div>
+    </div>
+    <div class="umap-sidebar" id="umapSidebar">
+      <h4 style="font:700 12px var(--mono);color:var(--purple);text-transform:uppercase">🧬 2D OpenCLIP Embedding Inspector</h4>
+      <p style="font:11.5px var(--mono);color:var(--dim)">
+        Every dot is one of the <b>3,997</b> cut parts positioned by its <b>OpenCLIP (<code>ViT-B-32</code>)</b> visual embedding. Click or hover any point to inspect the part and its 8 nearest visual neighbors in 512-D embedding space.
+      </p>
+      <div id="umapInspectorBody"></div>
+    </div>
+  </section>
+
   <!-- Gallery Header & Readout -->
-  <div class="grid-header">
+  <div class="grid-header" id="gridHeaderBar">
     <div>
       Showing <b id="visibleCount">0</b> matching parts in <b id="activeCategoryLabel">ALL</b>
       <span id="activeFiltersSummary" style="margin-left:8px;color:var(--blue)"></span>
     </div>
-    <div style="display:flex;gap:12px;align-items:center">
-      <span>Click <b>⚡ Snap to Rig</b> to test on Mannequin · Click <b>+ Pin</b> for side-by-side comparison</span>
-      <button class="nav-btn" onclick="resetAllFilters()">↺ Reset Filters</button>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span>Click <b>🧬 Sim</b> on any card to find visually similar shoes/hands/heads · Click <b>⚡ Snap</b> to test on Mannequin</span>
+      <button class="nav-btn" onclick="resetAllFilters()">↺ Reset All Filters</button>
     </div>
   </div>
 
-  <!-- Parts Grid -->
-  <div class="parts-grid" id="partsGrid"></div>
+  <!-- Parts Grid / Contact Sheet Wall Container -->
+  <div id="galleryContainer">
+    <div class="parts-grid" id="partsGrid"></div>
+  </div>
 
   <!-- Load More Pagination -->
   <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
@@ -645,6 +981,7 @@
         <dl>
           <dt>Part ID:</dt><dd id="modalId">—</dd>
           <dt>Category:</dt><dd id="modalCat">—</dd>
+          <dt>CLIP Visual Sub-Type:</dt><dd id="modalClipTag" style="color:var(--purple)">—</dd>
           <dt>Character Group:</dt><dd id="modalChar">—</dd>
           <dt>View Angle:</dt><dd id="modalAngle">—</dd>
           <dt>Poems:</dt><dd id="modalPoems">—</dd>
@@ -652,10 +989,15 @@
           <dt>Normalized Scale:</dt><dd id="modalScale">—</dd>
           <dt>Brass Pivots:</dt><dd id="modalPivots">—</dd>
           <dt>Source Sheet:</dt><dd id="modalSource">—</dd>
-          <dt>File Path:</dt><dd id="modalPath" style="font-size:11px">—</dd>
+          <dt>File Path:</dt><dd id="modalPath" style="font-size:10.5px">—</dd>
         </dl>
-        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <div>
+          <div style="font:700 10.5px var(--mono);color:var(--purple);margin-bottom:4px">🧬 TOP 8 OPENCLIP NEAREST VISUAL NEIGHBORS:</div>
+          <div class="modal-sim-strip" id="modalSimStrip"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
           <button class="nav-btn gold" onclick="snapFromModal()">⚡ Snap to Mannequin Rig</button>
+          <button class="nav-btn blue" onclick="findSimilarFromModal()">🧬 Sort Grid by Visual Similarity</button>
           <button class="nav-btn" id="modalPinBtn" onclick="togglePinFromModal()">+ Pin to Compare</button>
           <a class="nav-btn" id="modalDownload" href="" download>⬇ Download PNG</a>
         </div>
@@ -666,46 +1008,99 @@
 
 <script>
 let UNIFIED = null;
+let CLIP_INDEX = null;
 let ALL_PARTS = [];
 let PART_BY_ID = {};
+const PART_BY_FILE = {};
+const SHEET_IMG_CACHE = new Map();
 
 let activeCat = "all";
+let activeSubtag = "all";
 let activeChar = "all";
 let activeAngle = "all";
 let activePoem = "all";
+let viewMode = "cards"; // 'cards' | 'wall' | 'umap'
+let wallGroupBy = "subtag"; // 'subtag' | 'char' | 'none'
+let wallTilePx = 122;
 let scaleMode = "raw"; // 'raw' | 'anatomical'
 let showCardPivots = true;
+let clipSemanticEnabled = true;
+let simAnchorPartId = null;
 let pageLimit = 240;
 
 let pinnedParts = [];
 let currentModalPart = null;
 
+// Category Sub-Type Definitions for CLIP Pills
+const CATEGORY_SUBTAGS = {
+  shoes_feet:     ["Boot / Chelsea", "Sneaker", "Dress Shoe / Heel", "Bare Foot"],
+  hands:          ["Open Palm", "Fist / Grip", "Pointing Hand", "Holding Prop"],
+  heads:          ["Head Front", "Head Profile", "Head 3/4", "Back of Head", "Blank Head Base"],
+  eyes_brows:     ["Eyes Open", "Eyes Closed", "Eyebrows"],
+  mouths_noses:   ["Mouth / Lips", "Nose"],
+  sunglasses_acc: ["Sunglasses", "Headgear"],
+  torsos_pelvis:  ["Torso / Jacket", "Dress / Robe Panel", "Pelvis / Hip Bridge"],
+  limbs:          ["Arm / Leg Segment", "Bent Action Limb"],
+};
+
+const CAT_COLORS = {
+  shoes_feet:     "#f5b942",
+  hands:          "#9fe08a",
+  heads:          "#01acd4",
+  eyes_brows:     "#b88cff",
+  mouths_noses:   "#ff7b6b",
+  sunglasses_acc: "#ffdf6b",
+  torsos_pelvis:  "#c79a62",
+  limbs:          "#6bc5ff",
+};
+
 // ============================================================================
-// MIX-AND-MATCH MANNEQUIN ASSEMBLER STATE
+// 18-SLOT CHAINED 2.5D MANNEQUIN ASSEMBLER STATE
 // ============================================================================
+// Notice the Cuff-Over-Extremity Z-ordering when wbCuffTuck = true:
+//   - head (z=38) is behind torso collar lip (z=54), while torso body is z=40
+//   - hand_L (z=43) is BEHIND arm_L forearm cuff (z=46)
+//   - hand_R (z=29) is BEHIND arm_R forearm cuff (z=32)
+//   - shoe_L (z=23) is BEHIND leg_L shin pant cuff (z=26)
+//   - shoe_R (z=18) is BEHIND leg_R shin pant cuff (z=21)
 const WB_SLOT_DEFS = [
-  { key: "head",       label: "Head / Profile",     cat: "heads",          z: 50, defaultPos: { x: 480, y: 210 } },
-  { key: "eyes",       label: "Eyes",               cat: "eyes_brows",     z: 60, defaultPos: { x: 480, y: 205 } },
-  { key: "brows",      label: "Eyebrows",           cat: "eyes_brows",     z: 65, defaultPos: { x: 480, y: 182 } },
-  { key: "nose",       label: "Nose",               cat: "mouths_noses",   z: 68, defaultPos: { x: 480, y: 218 } },
-  { key: "mouth",      label: "Mouth / Beard",      cat: "mouths_noses",   z: 62, defaultPos: { x: 480, y: 248 } },
-  { key: "sunglasses", label: "Sunglasses / Gear",  cat: "sunglasses_acc", z: 75, defaultPos: { x: 480, y: 198 } },
-  { key: "torso",      label: "Torso / Dress",      cat: "torsos_pelvis",  z: 40, defaultPos: { x: 480, y: 400 } },
-  { key: "pelvis",     label: "Pelvis / Hip Bridge",cat: "torsos_pelvis",  z: 35, defaultPos: { x: 480, y: 525 } },
-  { key: "arm_L",      label: "Arm — L",            cat: "limbs",          z: 45, defaultPos: { x: 585, y: 425 } },
-  { key: "arm_R",      label: "Arm — R",            cat: "limbs",          z: 30, defaultPos: { x: 375, y: 425 } },
-  { key: "hand_L",     label: "Hand — L",           cat: "hands",          z: 48, defaultPos: { x: 615, y: 535 } },
-  { key: "hand_R",     label: "Hand — R",           cat: "hands",          z: 32, defaultPos: { x: 345, y: 535 } },
-  { key: "leg_L",      label: "Leg — L",            cat: "limbs",          z: 25, defaultPos: { x: 530, y: 655 } },
-  { key: "leg_R",      label: "Leg — R",            cat: "limbs",          z: 20, defaultPos: { x: 430, y: 655 } },
-  { key: "shoe_L",     label: "Shoe / Foot — L",    cat: "shoes_feet",     z: 28, defaultPos: { x: 545, y: 790 } },
-  { key: "shoe_R",     label: "Shoe / Foot — R",    cat: "shoes_feet",     z: 22, defaultPos: { x: 415, y: 790 } },
+  { key: "torso",      label: "Torso / Jacket",      cat: "torsos_pelvis",  zTuck: 40, zRaw: 40, defaultPos: { x: 480, y: 395 } },
+  { key: "pelvis",     label: "Pelvis / Hip Cover",  cat: "torsos_pelvis",  zTuck: 36, zRaw: 36, defaultPos: { x: 480, y: 522 } },
+  { key: "head",       label: "Head / Neck Base",    cat: "heads",          zTuck: 39, zRaw: 52, defaultPos: { x: 480, y: 206 } },
+  { key: "eyes",       label: "Eyes",                cat: "eyes_brows",     zTuck: 60, zRaw: 60, defaultPos: { x: 480, y: 196 } },
+  { key: "brows",      label: "Eyebrows",            cat: "eyes_brows",     zTuck: 65, zRaw: 65, defaultPos: { x: 480, y: 173 } },
+  { key: "nose",       label: "Nose (2.5D Front)",   cat: "mouths_noses",   zTuck: 68, zRaw: 68, defaultPos: { x: 480, y: 210 } },
+  { key: "mouth",      label: "Mouth / Lips",        cat: "mouths_noses",   zTuck: 62, zRaw: 62, defaultPos: { x: 480, y: 239 } },
+  { key: "sunglasses", label: "Sunglasses / Gear",   cat: "sunglasses_acc", zTuck: 75, zRaw: 75, defaultPos: { x: 480, y: 190 } },
+  { key: "uarm_L",     label: "Upper Arm — L",       cat: "limbs",          zTuck: 44, zRaw: 44, defaultPos: { x: 576, y: 368 } },
+  { key: "arm_L",      label: "Forearm & Cuff — L",  cat: "limbs",          zTuck: 47, zRaw: 45, defaultPos: { x: 584, y: 475 } },
+  { key: "hand_L",     label: "Hand — L (Tucked)",   cat: "hands",          zTuck: 43, zRaw: 49, defaultPos: { x: 585, y: 545 } },
+  { key: "uarm_R",     label: "Upper Arm — R",       cat: "limbs",          zTuck: 30, zRaw: 30, defaultPos: { x: 384, y: 368 } },
+  { key: "arm_R",      label: "Forearm & Cuff — R",  cat: "limbs",          zTuck: 33, zRaw: 31, defaultPos: { x: 376, y: 475 } },
+  { key: "hand_R",     label: "Hand — R (Tucked)",   cat: "hands",          zTuck: 29, zRaw: 35, defaultPos: { x: 375, y: 545 } },
+  { key: "thigh_L",    label: "Thigh — L",           cat: "limbs",          zTuck: 25, zRaw: 25, defaultPos: { x: 530, y: 615 } },
+  { key: "leg_L",      label: "Shin & Pant Cuff — L",cat: "limbs",          zTuck: 27, zRaw: 26, defaultPos: { x: 530, y: 742 } },
+  { key: "shoe_L",     label: "Boot / Shoe — L",     cat: "shoes_feet",     zTuck: 23, zRaw: 28, defaultPos: { x: 530, y: 822 } },
+  { key: "thigh_R",    label: "Thigh — R",           cat: "limbs",          zTuck: 20, zRaw: 20, defaultPos: { x: 430, y: 615 } },
+  { key: "leg_R",      label: "Shin & Pant Cuff — R",cat: "limbs",          zTuck: 22, zRaw: 21, defaultPos: { x: 430, y: 742 } },
+  { key: "shoe_R",     label: "Boot / Shoe — R",     cat: "shoes_feet",     zTuck: 18, zRaw: 24, defaultPos: { x: 430, y: 822 } },
 ];
 
 let wbSlots = {}; // key -> { part, dx, dy, scaleMult, rotDeg, flipH }
+let wbRenderedBoxes = {}; // key -> { cx, cy, drawW, drawH } from last drawMannequin
+let wbJointWorldPts = {
+  neck:   { x: 480, y: 286 },
+  wristL: { x: 584, y: 532 },
+  ankleL: { x: 530, y: 802 },
+};
 let wbSelectedSlot = "torso";
+let wbCuffTuck = true;
 let wbShowPivots = true;
 let wbShowGrid = true;
+let wbYawDeg = 0;
+let wbPitchDeg = 0;
+let wbZReach = 0;
+let wbKraftThickness = 3.0;
 let wbImageCache = {};
 let wbDragging = null;
 
@@ -733,16 +1128,25 @@ async function init() {
     }
   }
 
-  document.getElementById("bdgTotal").textContent = `✓ ${ALL_PARTS.length.toLocaleString()} Unified Anatomical Parts`;
+  document.getElementById("bdgTotal").textContent = `✓ ${ALL_PARTS.length.toLocaleString()} CLIP-Purified Anatomical Parts`;
   updateCategoryBadges();
+  renderClipSubtagPills();
   renderWBSlotsUI();
   setupMannequinCanvasEvents();
+  setupUmapCanvasEvents();
   loadPreset("poet_tracksuit");
   renderParts();
-}
 
-const PART_BY_FILE = {};
-const SHEET_IMG_CACHE = new Map();
+  // Load 32-D OpenCLIP index asynchronously
+  try {
+    const cRes = await fetch("arena/parts/body_lab/clip_part_index.json");
+    CLIP_INDEX = await cRes.json();
+    document.getElementById("bdgClipStatus").textContent =
+      `🧬 OpenCLIP ViT-B-32 (${Object.keys(CLIP_INDEX.keyword_vectors || {}).length} Keywords · 32-D Vectors Ready)`;
+  } catch (e) {
+    console.warn("Could not load clip_part_index.json:", e);
+  }
+}
 
 function loadSheetImg(src) {
   if (!src) return Promise.resolve(null);
@@ -805,16 +1209,184 @@ function updateCategoryBadges() {
 }
 
 // ============================================================================
-// FILTER & SCALE CONTROLS
+// CLIP SUB-TYPE PILLS, VIEW MODES & SEMANTIC SEARCH
 // ============================================================================
+function renderClipSubtagPills() {
+  const strip = document.getElementById("clipSubtagStrip");
+  if (!strip) return;
+
+  const pool = activeCat === "all"
+    ? ALL_PARTS
+    : ALL_PARTS.filter(p => p.category === activeCat);
+
+  const tagCounts = {};
+  for (const p of pool) {
+    const t = p.clip_tag || "Other";
+    tagCounts[t] = (tagCounts[t] || 0) + 1;
+  }
+
+  let orderedTags = [];
+  if (activeCat !== "all" && CATEGORY_SUBTAGS[activeCat]) {
+    orderedTags = CATEGORY_SUBTAGS[activeCat].filter(t => tagCounts[t] > 0);
+    for (const t of Object.keys(tagCounts)) {
+      if (!orderedTags.includes(t)) orderedTags.push(t);
+    }
+  } else {
+    orderedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]).slice(0, 12);
+  }
+
+  const catLabel = activeCat === "all" ? "All Categories" : activeCat.replace("_", " / ").toUpperCase();
+  let html = `<span class="chip-label" style="color:var(--purple)">🧬 CLIP VISUAL SUB-TYPE (${catLabel}):</span>`;
+  html += `<button class="subtag-pill ${activeSubtag === 'all' ? 'active' : ''}" onclick="setClipSubtag('all')">All (${pool.length})</button>`;
+  for (const t of orderedTags) {
+    const isAct = activeSubtag === t;
+    html += `<button class="subtag-pill ${isAct ? 'active' : ''}" onclick="setClipSubtag('${t.replace(/'/g, "\\'")}')">${t} <span class="scnt">${tagCounts[t]}</span></button>`;
+  }
+  strip.innerHTML = html;
+}
+
+function setClipSubtag(tag) {
+  activeSubtag = tag;
+  renderClipSubtagPills();
+  resetPageAndRender();
+}
+
 function setCategory(cat, btn) {
   activeCat = cat;
+  activeSubtag = "all";
   document.querySelectorAll(".cat-tab").forEach(t => t.classList.remove("active"));
   if (btn) {
     btn.classList.add("active");
     document.getElementById("activeCategoryLabel").textContent = btn.childNodes[0].textContent.trim();
+  } else {
+    const matchBtn = document.querySelector(`.cat-tab[data-cat="${cat}"]`);
+    if (matchBtn) {
+      matchBtn.classList.add("active");
+      document.getElementById("activeCategoryLabel").textContent = matchBtn.childNodes[0].textContent.trim();
+    }
   }
+  renderClipSubtagPills();
   resetPageAndRender();
+}
+
+function jumpToCategoryWall(cat) {
+  setCategory(cat, null);
+  setViewMode("wall");
+  document.getElementById("clipSubtagStrip").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function setViewMode(mode) {
+  viewMode = mode;
+  document.getElementById("btnViewCards").classList.toggle("active", mode === "cards");
+  document.getElementById("btnViewWall").classList.toggle("active", mode === "wall");
+  document.getElementById("btnViewUmap").classList.toggle("active", mode === "umap");
+
+  document.getElementById("wallControlsBar").classList.toggle("active", mode === "wall");
+  document.getElementById("umapSection").classList.toggle("active", mode === "umap");
+  document.getElementById("galleryContainer").style.display = mode === "umap" ? "none" : "block";
+
+  if (mode === "umap") {
+    drawUmapScatter();
+  } else {
+    renderParts();
+  }
+}
+
+function setWallGroupBy(g) {
+  wallGroupBy = g;
+  document.getElementById("btnWallGroupSubtag").classList.toggle("active", g === "subtag");
+  document.getElementById("btnWallGroupChar").classList.toggle("active", g === "char");
+  document.getElementById("btnWallGroupNone").classList.toggle("active", g === "none");
+  renderParts();
+}
+
+function updateWallTileSize(val) {
+  wallTilePx = Number(val);
+  document.getElementById("valWallSize").textContent = `${wallTilePx}px`;
+  document.documentElement.style.setProperty("--wall-tile-px", `${wallTilePx}px`);
+}
+
+function toggleClipSemanticSearch() {
+  clipSemanticEnabled = !clipSemanticEnabled;
+  const btn = document.getElementById("btnClipSemantic");
+  btn.classList.toggle("active", clipSemanticEnabled);
+  btn.textContent = `🧬 CLIP Semantic: ${clipSemanticEnabled ? "ON" : "OFF"}`;
+  resetPageAndRender();
+}
+
+function findSimilarToPart(partId) {
+  const part = PART_BY_ID[partId];
+  if (!part) return;
+  simAnchorPartId = partId;
+  document.getElementById("simAnchorImg").src = part.file;
+  document.getElementById("simAnchorTitle").textContent = `${part.name} (${part.id})`;
+  document.getElementById("simAnchorSub").textContent =
+    `Category: ${part.category.toUpperCase()} · CLIP Tag: ${part.clip_tag || '—'} · Character: ${part.character_group}`;
+  document.getElementById("simAnchorBanner").classList.add("active");
+  if (viewMode === "umap") {
+    setViewMode("cards");
+  } else {
+    resetPageAndRender();
+  }
+  document.getElementById("simAnchorBanner").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function clearSimilarSort() {
+  simAnchorPartId = null;
+  document.getElementById("simAnchorBanner").classList.remove("active");
+  resetPageAndRender();
+}
+
+function computeClipQueryVector32(queryText) {
+  if (!CLIP_INDEX || !CLIP_INDEX.keyword_vectors) return null;
+  const words = queryText.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+  if (!words.length) return null;
+
+  const accum = new Float32Array(32);
+  let matched = 0;
+
+  // 1. Direct or prefix keyword matches in CLIP_INDEX.keyword_vectors
+  const kwMap = CLIP_INDEX.keyword_vectors;
+  for (const w of words) {
+    let vec = kwMap[w];
+    if (!vec && w.endsWith("s") && kwMap[w.slice(0, -1)]) {
+      vec = kwMap[w.slice(0, -1)];
+    }
+    if (!vec) {
+      const prefixKey = Object.keys(kwMap).find(k => k.startsWith(w) || w.startsWith(k));
+      if (prefixKey) vec = kwMap[prefixKey];
+    }
+    if (vec && vec.length === 32) {
+      for (let i = 0; i < 32; i++) accum[i] += vec[i];
+      matched++;
+    }
+  }
+
+  // 2. Also check concept_queries labels/prompts
+  if (CLIP_INDEX.concept_queries) {
+    for (const cq of Object.values(CLIP_INDEX.concept_queries)) {
+      const hay = `${cq.label} ${cq.prompt}`.toLowerCase();
+      if (words.some(w => w.length >= 3 && hay.includes(w))) {
+        for (let i = 0; i < 32; i++) accum[i] += cq.vec32[i] * 0.65;
+        matched++;
+      }
+    }
+  }
+
+  if (!matched) return null;
+  let norm = 0;
+  for (let i = 0; i < 32; i++) norm += accum[i] * accum[i];
+  norm = Math.sqrt(norm);
+  if (norm < 1e-6) return null;
+  for (let i = 0; i < 32; i++) accum[i] /= norm;
+  return accum;
+}
+
+function dot32(a, b) {
+  if (!a || !b || a.length < 32 || b.length < 32) return 0;
+  let s = 0;
+  for (let i = 0; i < 32; i++) s += a[i] * b[i];
+  return s;
 }
 
 function setCharacter(char, btn) {
@@ -856,6 +1428,9 @@ function toggleCardPivots() {
 
 function resetAllFilters() {
   document.getElementById("bodySearch").value = "";
+  simAnchorPartId = null;
+  document.getElementById("simAnchorBanner").classList.remove("active");
+  activeSubtag = "all";
   setCategory("all", document.querySelector('.cat-tab[data-cat="all"]'));
   setCharacter("all", document.querySelector('#charChips .f-chip[data-char="all"]'));
   setViewAngle("all", document.querySelector('#angleChips .f-chip[data-angle="all"]'));
@@ -864,7 +1439,11 @@ function resetAllFilters() {
 
 function resetPageAndRender() {
   pageLimit = 240;
-  renderParts();
+  if (viewMode === "umap") {
+    drawUmapScatter();
+  } else {
+    renderParts();
+  }
 }
 
 function loadMoreParts() {
@@ -879,17 +1458,58 @@ function showAllParts() {
 
 function getFilteredParts() {
   const q = document.getElementById("bodySearch").value.toLowerCase().trim();
-  return ALL_PARTS.filter(item => {
+  const qWords = q ? q.split(/\s+/).filter(Boolean) : [];
+  const qVec32 = (q && clipSemanticEnabled) ? computeClipQueryVector32(q) : null;
+
+  let base = ALL_PARTS.filter(item => {
     if (activeCat !== "all" && item.category !== activeCat) return false;
+    if (activeSubtag !== "all" && item.clip_tag !== activeSubtag) return false;
     if (activeChar !== "all" && item.character_group !== activeChar) return false;
     if (activeAngle !== "all" && item.view_angle !== activeAngle) return false;
     if (activePoem !== "all" && !(item.poems || []).includes(activePoem)) return false;
+
     if (q) {
-      const hay = `${item.name} ${item.id} ${item.character_group} ${item.category} ${item.view_angle} ${item.sheet_file}`.toLowerCase();
-      if (!hay.includes(q)) return false;
+      const hay = `${item.name} ${item.id} ${item.clip_tag || ''} ${item.character_group} ${item.category} ${item.view_angle} ${item.sheet_file}`.toLowerCase();
+      const lexHit = qWords.every(w => hay.includes(w));
+      if (!clipSemanticEnabled || !qVec32) {
+        return lexHit;
+      }
+      // When CLIP Semantic Search is enabled, include either lexical matches OR high-CLIP-similarity matches
+      const pEntry = CLIP_INDEX && CLIP_INDEX.parts ? CLIP_INDEX.parts[item.id] : null;
+      const clipSim = pEntry && pEntry.v ? dot32(qVec32, pEntry.v) : 0;
+      item._searchScore = (lexHit ? 0.45 : 0.0) + clipSim;
+      return lexHit || clipSim >= 0.34;
     }
+    item._searchScore = 0;
     return true;
   });
+
+  // Sort by Visual Similarity to anchor part if active
+  if (simAnchorPartId && PART_BY_ID[simAnchorPartId]) {
+    const anchor = PART_BY_ID[simAnchorPartId];
+    const anchorSimSet = new Map();
+    (anchor.similar_ids || []).forEach((id, idx) => anchorSimSet.set(id, 1.0 - idx * 0.015));
+    const anchorVec = (CLIP_INDEX && CLIP_INDEX.parts && CLIP_INDEX.parts[simAnchorPartId])
+      ? CLIP_INDEX.parts[simAnchorPartId].v
+      : null;
+
+    base.forEach(item => {
+      if (item.id === simAnchorPartId) {
+        item._simScore = 1.0;
+      } else if (anchorSimSet.has(item.id)) {
+        item._simScore = anchorSimSet.get(item.id);
+      } else if (anchorVec && CLIP_INDEX && CLIP_INDEX.parts && CLIP_INDEX.parts[item.id]) {
+        item._simScore = 0.5 + 0.45 * dot32(anchorVec, CLIP_INDEX.parts[item.id].v);
+      } else {
+        item._simScore = item.clip_tag === anchor.clip_tag ? 0.55 : 0.2;
+      }
+    });
+    base.sort((a, b) => (b._simScore || 0) - (a._simScore || 0));
+  } else if (q && clipSemanticEnabled && qVec32) {
+    base.sort((a, b) => (b._searchScore || 0) - (a._searchScore || 0));
+  }
+
+  return base;
 }
 
 function isPartInRig(id) {
@@ -901,21 +1521,30 @@ function renderParts() {
   document.getElementById("visibleCount").textContent = filtered.length.toLocaleString();
 
   const summaryBits = [];
+  if (activeSubtag !== "all") summaryBits.push(`Sub-Type: ${activeSubtag}`);
   if (activeChar !== "all") summaryBits.push(activeChar);
   if (activeAngle !== "all") summaryBits.push(activeAngle.toUpperCase());
   if (activePoem !== "all") summaryBits.push(`P${String(activePoem).padStart(2, "0")}`);
   document.getElementById("activeFiltersSummary").textContent =
     summaryBits.length ? `· Filtered by: ${summaryBits.join(" · ")}` : "";
 
-  const grid = document.getElementById("partsGrid");
+  const container = document.getElementById("galleryContainer");
   const loadWrap = document.getElementById("loadMoreWrap");
 
   if (filtered.length === 0) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--dim);font:14px var(--mono)">No anatomical parts match your active filters. Click "Reset Filters" to view all ${ALL_PARTS.length.toLocaleString()} parts.</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:60px;color:var(--dim);font:14px var(--mono)">No anatomical parts match your active filters. Click "Reset All Filters" to view all ${ALL_PARTS.length.toLocaleString()} parts.</div>`;
     loadWrap.style.display = "none";
     return;
   }
 
+  // ── MODE 2: CONTACT SHEET WALL (See ALL matching shoes/hands/heads on one screen!) ──
+  if (viewMode === "wall") {
+    loadWrap.style.display = "none";
+    renderContactSheetWall(container, filtered);
+    return;
+  }
+
+  // ── MODE 1: DETAILED CARDS ──
   const slice = filtered.slice(0, pageLimit);
   if (filtered.length > pageLimit) {
     loadWrap.style.display = "flex";
@@ -925,30 +1554,36 @@ function renderParts() {
     loadWrap.style.display = "none";
   }
 
-  grid.innerHTML = slice.map(item => {
+  const boxRatio = 164.0 / 240.0;
+  const cardsHtml = slice.map(item => {
     const isPinned = pinnedParts.some(p => p.id === item.id);
     const inRig = isPartInRig(item.id);
     const pivCount = (item.pivots || []).length;
     const poemsStr = (item.poems || []).slice(0, 5).map(n => `P${String(n).padStart(2, "0")}`).join(",") +
       ((item.poems || []).length > 5 ? "…" : "");
 
-    // Compute True Anatomical Scale CSS dimensions inside the 190px card box
-    // In 190px box (with 24px vertical margin = 166px = 240px reference scaled by 0.68)
-    const boxRatio = 164.0 / 240.0;
     const anatW = Math.max(14, Math.min(188, Math.round(item.width * item.normalized_scale * boxRatio)));
     const anatH = Math.max(14, Math.min(170, Math.round(item.height * item.normalized_scale * boxRatio)));
     const imgStyle = scaleMode === "anatomical"
       ? `width:${anatW}px;height:${anatH}px;max-width:none;max-height:none;`
       : "";
 
+    const simBadge = (simAnchorPartId && item._simScore)
+      ? `<span class="mini-tag sim">${Math.round(item._simScore * 100)}% Match</span>`
+      : "";
+
     return `
       <div class="part-card ${inRig ? 'in-rig' : ''}" data-id="${item.id}">
         <div class="part-thumb ${scaleMode === 'anatomical' ? 'anatomical-mode' : 'raw-mode'}" onclick="openModal('${item.id}')">
           <div class="part-badges-overlay">
+            ${simBadge}
             <span class="mini-tag ang">${item.view_angle === 'threequarter' ? '3/4' : item.view_angle}</span>
             ${showCardPivots && pivCount > 0 ? `<span class="mini-tag piv">◎ ${pivCount}</span>` : ''}
           </div>
           <img src="${item.file}" alt="${item.name}" loading="lazy" style="${imgStyle}">
+          <div class="part-clip-overlay">
+            <span class="mini-tag clip">${item.clip_tag || item.category}</span>
+          </div>
         </div>
         <div class="part-meta">
           <div class="part-title" title="${item.name}">${item.name}</div>
@@ -962,17 +1597,257 @@ function renderParts() {
           </div>
         </div>
         <div class="part-actions">
-          <button class="btn-sm snap ${inRig ? 'active' : ''}" onclick="snapPartToRig('${item.id}')">${inRig ? '✓ In Rig' : '⚡ Snap'}</button>
+          <button class="btn-sm snap ${inRig ? 'active' : ''}" onclick="snapPartToRig('${item.id}')">${inRig ? '✓ Rig' : '⚡ Snap'}</button>
+          <button class="btn-sm sim-btn" onclick="findSimilarToPart('${item.id}')" title="Find Visually Similar Parts via OpenCLIP">🧬 Sim</button>
           <button class="btn-sm pin ${isPinned ? 'pinned' : ''}" onclick="togglePin('${item.id}')">${isPinned ? '✓ Pin' : '+ Pin'}</button>
           <button class="btn-sm" onclick="openModal('${item.id}')" title="Inspect & Pivots">🔍</button>
         </div>
       </div>
     `;
   }).join("");
+
+  container.innerHTML = `<div class="parts-grid" id="partsGrid">${cardsHtml}</div>`;
+}
+
+function renderContactSheetWall(container, filtered) {
+  const groups = new Map();
+  if (wallGroupBy === "subtag") {
+    for (const p of filtered) {
+      const k = p.clip_tag || p.category;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(p);
+    }
+  } else if (wallGroupBy === "char") {
+    for (const p of filtered) {
+      const k = p.character_group || "Poet";
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(p);
+    }
+  } else {
+    groups.set(`All Matching Parts (${filtered.length})`, filtered);
+  }
+
+  const wallRatio = (wallTilePx - 28) / 240.0;
+  const renderTile = (item) => {
+    const inRig = isPartInRig(item.id);
+    const anatW = Math.max(12, Math.min(wallTilePx - 14, Math.round(item.width * item.normalized_scale * wallRatio)));
+    const anatH = Math.max(12, Math.min(wallTilePx - 26, Math.round(item.height * item.normalized_scale * wallRatio)));
+    const imgStyle = scaleMode === "anatomical"
+      ? `width:${anatW}px;height:${anatH}px;max-width:none;max-height:none;`
+      : "";
+    return `
+      <div class="wall-tile ${inRig ? 'in-rig' : ''}" onclick="openModal('${item.id}')" title="${item.name} · ${item.character_group} (${item.width}×${item.height}px)">
+        <div class="wall-hover-bar" onclick="event.stopPropagation()">
+          <button class="w-act" onclick="snapPartToRig('${item.id}')" title="Snap to Mannequin Rig">⚡</button>
+          <button class="w-act" onclick="findSimilarToPart('${item.id}')" title="Find Similar (CLIP)">🧬</button>
+        </div>
+        <div class="wall-thumb">
+          <img src="${item.file}" alt="${item.name}" loading="lazy" style="${imgStyle}">
+        </div>
+        <div class="wall-caption">${item.name.replace(/^.*?·\s*/, "")}</div>
+        <div class="wall-sub">
+          <span>${item.clip_tag || item.view_angle}</span>
+          <span style="color:var(--card)">${item.character_group.split("/")[0].trim()}</span>
+        </div>
+      </div>
+    `;
+  };
+
+  let html = `<div class="contact-wall-section">`;
+  for (const [gTitle, items] of groups.entries()) {
+    html += `
+      <div class="wall-group-block">
+        <div class="wall-group-title">
+          <span>${gTitle}</span>
+          <span class="badge gold">${items.length} parts</span>
+        </div>
+        <div class="contact-wall-grid">
+          ${items.map(renderTile).join("")}
+        </div>
+      </div>
+    `;
+  }
+  html += `</div>`;
+  container.innerHTML = html;
 }
 
 // ============================================================================
-// MIX-AND-MATCH BODY & FACE ASSEMBLER WORKBENCH LOGIC
+// 2D OPENCLIP EMBEDDING MAP (INTERACTIVE SCATTER PLOT)
+// ============================================================================
+let umapSelectedPart = null;
+let umapHoveredPart = null;
+
+function drawUmapScatter() {
+  const canvas = document.getElementById("umapCanvas");
+  if (!canvas || !ALL_PARTS.length) return;
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width;
+  const H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Subtle radial grid
+  ctx.strokeStyle = "rgba(184, 140, 255, 0.10)";
+  ctx.lineWidth = 1;
+  for (let x = 80; x < W; x += 80) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 80; y < H; y += 80) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  const filteredSet = new Set(getFilteredParts().map(p => p.id));
+  const focusPart = umapHoveredPart || umapSelectedPart || (simAnchorPartId ? PART_BY_ID[simAnchorPartId] : null);
+  const neighborIds = focusPart ? new Set(focusPart.similar_ids || []) : new Set();
+
+  // Draw neural neighbor connection lines first if a part is focused
+  if (focusPart && focusPart.umap_xy) {
+    const fx = focusPart.umap_xy[0] * (W - 60) + 30;
+    const fy = focusPart.umap_xy[1] * (H - 60) + 30;
+    ctx.save();
+    ctx.strokeStyle = "rgba(245, 185, 66, 0.78)";
+    ctx.lineWidth = 1.75;
+    for (const nid of neighborIds) {
+      const np = PART_BY_ID[nid];
+      if (!np || !np.umap_xy) continue;
+      const nx = np.umap_xy[0] * (W - 60) + 30;
+      const ny = np.umap_xy[1] * (H - 60) + 30;
+      ctx.beginPath();
+      ctx.moveTo(fx, fy);
+      ctx.lineTo(nx, ny);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Draw all part dots
+  for (const p of ALL_PARTS) {
+    if (!p.umap_xy) continue;
+    const px = p.umap_xy[0] * (W - 60) + 30;
+    const py = p.umap_xy[1] * (H - 60) + 30;
+    const isMatched = filteredSet.has(p.id);
+    const isNeighbor = neighborIds.has(p.id);
+    const isFocus = focusPart && focusPart.id === p.id;
+
+    ctx.beginPath();
+    const r = isFocus ? 7.5 : (isNeighbor ? 5.5 : (isMatched ? 3.2 : 1.6));
+    ctx.arc(px, py, r, 0, Math.PI * 2);
+    ctx.fillStyle = CAT_COLORS[p.category] || "#c79a62";
+    ctx.globalAlpha = isFocus || isNeighbor ? 1.0 : (isMatched ? 0.82 : 0.14);
+    ctx.fill();
+
+    if (isFocus || isNeighbor) {
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = isFocus ? "#fff" : "#f5b942";
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1.0;
+
+  // Draw cluster text labels
+  const clusterLabels = [
+    { cat: "shoes_feet",     text: "👞 SHOES & FEET",     x: 0.18, y: 0.82 },
+    { cat: "hands",          text: "🙌 HANDS",            x: 0.82, y: 0.82 },
+    { cat: "heads",          text: "👤 HEADS",            x: 0.18, y: 0.18 },
+    { cat: "eyes_brows",     text: "👁️ EYES & BROWS",     x: 0.50, y: 0.14 },
+    { cat: "mouths_noses",   text: "👄 MOUTHS & NOSES",   x: 0.82, y: 0.18 },
+    { cat: "sunglasses_acc", text: "🕶️ SUNGLASSES & GEAR",x: 0.84, y: 0.50 },
+    { cat: "torsos_pelvis",  text: "🥋 TORSOS & PELVIS",  x: 0.16, y: 0.50 },
+    { cat: "limbs",          text: "💪 ARMS & LEGS",      x: 0.50, y: 0.84 },
+  ];
+  ctx.font = "800 11px 'JetBrains Mono', monospace";
+  for (const cl of clusterLabels) {
+    ctx.fillStyle = "rgba(13, 11, 10, 0.82)";
+    const tw = ctx.measureText(cl.text).width;
+    const lx = cl.x * W - tw / 2;
+    const ly = cl.y * H;
+    ctx.fillRect(lx - 6, ly - 12, tw + 12, 18);
+    ctx.fillStyle = CAT_COLORS[cl.cat];
+    ctx.fillText(cl.text, lx, ly + 1);
+  }
+
+  // Render legend
+  const leg = document.getElementById("umapLegend");
+  if (leg && !leg.innerHTML) {
+    leg.innerHTML = Object.entries(CAT_COLORS).map(([cat, col]) =>
+      `<span class="umap-leg-item" onclick="setCategory('${cat}', null)"><span class="umap-dot" style="background:${col}"></span>${cat.replace('_', '/')}</span>`
+    ).join("");
+  }
+
+  renderUmapSidebar(focusPart || ALL_PARTS[0]);
+}
+
+function renderUmapSidebar(part) {
+  const box = document.getElementById("umapInspectorBody");
+  if (!box || !part) return;
+  const neighbors = (part.similar_ids || []).map(id => PART_BY_ID[id]).filter(Boolean);
+  box.innerHTML = `
+    <div style="background:#120e0b;border:1px solid var(--purple);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:center">
+      <img src="${part.file}" style="width:74px;height:74px;object-fit:contain;background:#090706;border-radius:6px;padding:4px">
+      <div style="font:11px var(--mono);display:flex;flex-direction:column;gap:3px;min-width:0">
+        <b style="color:var(--gold);font-size:12px">${part.name}</b>
+        <span style="color:var(--purple)">CLIP Tag: ${part.clip_tag || part.category}</span>
+        <span style="color:var(--dim)">${part.character_group} · ${part.width}×${part.height}px</span>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <button class="btn-sm snap" onclick="snapPartToRig('${part.id}')">⚡ Snap to Rig</button>
+          <button class="btn-sm sim-btn" onclick="findSimilarToPart('${part.id}')">▦ Open in Grid</button>
+        </div>
+      </div>
+    </div>
+    <div style="font:700 10.5px var(--mono);color:var(--gold);margin-top:4px">TOP 8 NEAREST CLIP NEIGHBORS:</div>
+    <div class="modal-sim-strip">
+      ${neighbors.map(np => `
+        <div class="modal-sim-card" onclick="umapSelectedPart=PART_BY_ID['${np.id}'];drawUmapScatter()" title="${np.name}">
+          <img src="${np.file}" loading="lazy">
+          <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)">${np.clip_tag || np.category}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function setupUmapCanvasEvents() {
+  const canvas = document.getElementById("umapCanvas");
+  if (!canvas) return;
+
+  const findNearestPartAt = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const mx = (e.clientX - r.left) * (canvas.width / r.width);
+    const my = (e.clientY - r.top) * (canvas.height / r.height);
+    const W = canvas.width, H = canvas.height;
+    let best = null, bestD2 = 18 * 18;
+    const filteredSet = new Set(getFilteredParts().map(p => p.id));
+    for (const p of ALL_PARTS) {
+      if (!p.umap_xy || !filteredSet.has(p.id)) continue;
+      const px = p.umap_xy[0] * (W - 60) + 30;
+      const py = p.umap_xy[1] * (H - 60) + 30;
+      const d2 = (px - mx) * (px - mx) + (py - my) * (py - my);
+      if (d2 < bestD2) {
+        bestD2 = d2;
+        best = p;
+      }
+    }
+    return best;
+  };
+
+  canvas.addEventListener("mousemove", e => {
+    const hit = findNearestPartAt(e);
+    if (hit !== umapHoveredPart) {
+      umapHoveredPart = hit;
+      drawUmapScatter();
+    }
+  });
+
+  canvas.addEventListener("click", e => {
+    const hit = findNearestPartAt(e);
+    if (hit) {
+      umapSelectedPart = hit;
+      drawUmapScatter();
+    }
+  });
+}
+
+// ============================================================================
+// 2.5D CUFF-TUCK & SOCKET-CHAINED MANNEQUIN ASSEMBLER LOGIC
 // ============================================================================
 function toggleWorkbenchSection() {
   const sec = document.getElementById("workbenchSection");
@@ -983,11 +1858,55 @@ function toggleWorkbenchSection() {
     : "🦿 Hide Assembler Workbench";
 }
 
+function toggleWBCuffTuck() {
+  setWBCuffTuck(!wbCuffTuck);
+}
+
+function setWBCuffTuck(enabled) {
+  wbCuffTuck = Boolean(enabled);
+  const btnMain = document.getElementById("btnCuffTuckWB");
+  btnMain.classList.toggle("ok", wbCuffTuck);
+  btnMain.classList.toggle("bad", !wbCuffTuck);
+  btnMain.classList.toggle("active", true);
+  btnMain.textContent = wbCuffTuck
+    ? "✓ Cuff-Tuck & Tab-Clip: ON (Fixed)"
+    : "✕ Raw Butt-Joint Tabs: ON (Broken)";
+
+  document.getElementById("btnLoupeFixed").classList.toggle("active", wbCuffTuck);
+  document.getElementById("btnLoupeBroken").classList.toggle("active", !wbCuffTuck);
+  document.getElementById("wbJointModeBadge").textContent = wbCuffTuck
+    ? "Joints: Cuff-Over-Extremity Tuck"
+    : "Joints: Raw Unclipped Tabs (Broken)";
+  document.getElementById("wbJointModeBadge").className = wbCuffTuck ? "badge ok" : "badge bad";
+
+  // Update Loupe card status headers
+  for (const [idSfx, okTxt, badTxt, okNote, badNote] of [
+    ["Neck",  "✓ TUCKED IN COLLAR", "✕ KRAFT ON ZIPPER",  "Neck kraft edge tucked behind jacket collar lip (y=108)", "Broken: Neck tan kraft border sits on top of zipper"],
+    ["Wrist", "✓ CUFF OVER WRIST",  "✕ DOUBLE TAB CLASH", "Forearm tab clipped at y=1238; hand tab tucked inside cuff", "Broken: Forearm tab & hand brown tab collide over cuff"],
+    ["Ankle", "✓ PANT OVER BOOT",   "✕ PULL-TAB EXPOSED", "Shin tab clipped at y=1295; boot pull-tab tucked inside cuff", "Broken: Boot tan pull-tab sticks out over jogger cuff"],
+  ]) {
+    const card = document.getElementById("loupeCard" + idSfx);
+    const st = document.getElementById("loupeStatus" + idSfx);
+    const nt = document.getElementById("loupeNote" + idSfx);
+    if (card) {
+      card.classList.toggle("ok-seam", wbCuffTuck);
+      card.classList.toggle("bad-seam", !wbCuffTuck);
+    }
+    if (st) {
+      st.textContent = wbCuffTuck ? okTxt : badTxt;
+      st.style.color = wbCuffTuck ? "var(--ok)" : "var(--bad)";
+    }
+    if (nt) nt.textContent = wbCuffTuck ? okNote : badNote;
+  }
+
+  drawMannequin();
+}
+
 function toggleWBPivots() {
   wbShowPivots = !wbShowPivots;
   const btn = document.getElementById("btnShowPivotsWB");
   btn.classList.toggle("active", wbShowPivots);
-  btn.textContent = `◎ Brass Pivots: ${wbShowPivots ? "ON" : "OFF"}`;
+  btn.textContent = `◎ Brass Sockets: ${wbShowPivots ? "ON" : "OFF"}`;
   drawMannequin();
 }
 
@@ -997,6 +1916,27 @@ function toggleWBGrid() {
   btn.classList.toggle("active", wbShowGrid);
   btn.textContent = `📏 240px Scale Ruler: ${wbShowGrid ? "ON" : "OFF"}`;
   drawMannequin();
+}
+
+function update25DControls() {
+  wbYawDeg = Number(document.getElementById("slYaw3D").value);
+  wbPitchDeg = Number(document.getElementById("slPitch3D").value);
+  wbZReach = Number(document.getElementById("slZReach3D").value);
+  wbKraftThickness = Number(document.getElementById("slKraft3D").value);
+
+  document.getElementById("valYaw3D").textContent = `${wbYawDeg > 0 ? '+' : ''}${wbYawDeg}°`;
+  document.getElementById("valPitch3D").textContent = `${wbPitchDeg > 0 ? '+' : ''}${wbPitchDeg}°`;
+  document.getElementById("valZReach3D").textContent = `${wbZReach > 0 ? '+' : ''}${wbZReach}%`;
+  document.getElementById("valKraft3D").textContent = `${wbKraftThickness.toFixed(1)}px`;
+  drawMannequin();
+}
+
+function reset25DControls() {
+  document.getElementById("slYaw3D").value = 0;
+  document.getElementById("slPitch3D").value = 0;
+  document.getElementById("slZReach3D").value = 0;
+  document.getElementById("slKraft3D").value = 3;
+  update25DControls();
 }
 
 function getOrLoadImage(src) {
@@ -1029,7 +1969,7 @@ function chooseTargetSlotForPart(part) {
   const cat = part.category;
   const nl = `${part.name} ${part.id}`.toLowerCase();
 
-  // If currently selected slot matches this part's category, use it directly!
+  // If currently selected slot matches this part's category, use it directly
   const selDef = WB_SLOT_DEFS.find(d => d.key === wbSelectedSlot);
   if (selDef && selDef.cat === cat) {
     return selDef.key;
@@ -1037,22 +1977,23 @@ function chooseTargetSlotForPart(part) {
 
   if (cat === "heads") return "head";
   if (cat === "sunglasses_acc") return "sunglasses";
-  if (cat === "eyes_brows") {
-    return nl.includes("brow") ? "brows" : "eyes";
-  }
-  if (cat === "mouths_noses") {
-    return nl.includes("nose") ? "nose" : "mouth";
-  }
+  if (cat === "eyes_brows") return nl.includes("brow") ? "brows" : "eyes";
+  if (cat === "mouths_noses") return nl.includes("nose") ? "nose" : "mouth";
   if (cat === "torsos_pelvis") {
-    if (nl.includes("hip") || nl.includes("pelvis") || nl.includes("seat") || nl.includes("waist")) {
+    if (nl.includes("hip") || nl.includes("pelvis") || nl.includes("seat") || nl.includes("waist") || nl.includes("shorts")) {
       return "pelvis";
     }
     return "torso";
   }
   if (cat === "limbs") {
     const isLeg = nl.includes("thigh") || nl.includes("shin") || nl.includes("leg") || nl.includes("calf");
+    const isUpper = nl.includes("upper") || nl.includes("uarm") || nl.includes("thigh");
     const isRight = nl.includes("_r") || nl.includes(" r") || nl.includes("right");
-    if (isLeg) return isRight ? "leg_R" : "leg_L";
+    if (isLeg) {
+      if (isUpper) return isRight ? "thigh_R" : "thigh_L";
+      return isRight ? "leg_R" : "leg_L";
+    }
+    if (isUpper) return isRight ? "uarm_R" : "uarm_L";
     return isRight ? "arm_R" : "arm_L";
   }
   if (cat === "hands") {
@@ -1072,18 +2013,24 @@ function snapPartToRig(partId, explicitSlotKey = null) {
   const part = PART_BY_ID[partId];
   if (!part) return;
   const slotKey = explicitSlotKey || chooseTargetSlotForPart(part);
+
+  // Auto-orient horizontal cut hands (e.g. 74x43 kit3 hands with wrist tab on the left) downward (+90°)
+  let autoRot = 0;
+  if ((slotKey === "hand_L" || slotKey === "hand_R") && part.width > part.height * 1.22) {
+    autoRot = 90;
+  }
+
   wbSlots[slotKey] = {
     part,
     dx: 0,
     dy: 0,
     scaleMult: 1.0,
-    rotDeg: 0,
+    rotDeg: autoRot,
     flipH: false,
   };
   wbSelectedSlot = slotKey;
   getOrLoadImage(part.file);
 
-  // Ensure workbench is visible
   const sec = document.getElementById("workbenchSection");
   if (sec.classList.contains("collapsed")) {
     toggleWorkbenchSection();
@@ -1134,6 +2081,7 @@ function resetSlotOffsets() {
     wbSlots[k].rotDeg = 0;
     wbSlots[k].flipH = false;
   }
+  reset25DControls();
   syncSlidersToSelectedSlot();
   drawMannequin();
 }
@@ -1174,11 +2122,12 @@ function renderWBSlotsUI() {
     const st = wbSlots[def.key];
     const p = st ? st.part : null;
     const isSel = wbSelectedSlot === def.key;
+    const zVal = wbCuffTuck ? def.zTuck : def.zRaw;
     return `
-      <div class="slot-pill ${isSel ? 'selected' : ''}" onclick="selectWBSlot('${def.key}', true)" title="Click to select slot and filter grid to ${def.label}">
-        ${p ? `<img src="${p.file}" alt="${p.name}">` : `<div style="width:34px;height:34px;border-radius:4px;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:12px">+</div>`}
+      <div class="slot-pill ${isSel ? 'selected' : ''}" onclick="selectWBSlot('${def.key}', true)" title="Click to select slot and filter gallery to ${def.label}">
+        ${p ? `<img src="${p.file}" alt="${p.name}">` : `<div style="width:30px;height:30px;border-radius:4px;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px">+</div>`}
         <div class="slot-info">
-          <div class="slot-lbl">${def.label}</div>
+          <div class="slot-lbl"><span>${def.label}</span><span style="color:var(--dim)">z:${zVal}</span></div>
           <div class="slot-val">${p ? p.name : 'Empty (Click to pick)'}</div>
         </div>
         ${p ? `<button class="slot-clr" onclick="clearWBSlot('${def.key}', event)" title="Remove part">&times;</button>` : ''}
@@ -1188,7 +2137,7 @@ function renderWBSlotsUI() {
 }
 
 function findPartByMatch(cat, substringList) {
-  const pool = (UNIFIED && UNIFIED.categories && UNIFIED.categories[cat]) ? UNIFIED.categories[cat] : [];
+  const pool = (UNIFIED && UNIFIED.categories && UNIFIED.categories[cat]) ? UNIFIED.categories[cat] : ALL_PARTS.filter(p => p.category === cat);
   for (const sub of substringList) {
     const sl = sub.toLowerCase();
     const found = pool.find(p => p.id.toLowerCase().includes(sl) || p.name.toLowerCase().includes(sl));
@@ -1199,16 +2148,16 @@ function findPartByMatch(cat, substringList) {
 
 function loadPreset(presetName) {
   initSlotsState();
-  const assign = (slotKey, cat, matches, dx = 0, dy = 0, scaleMult = 1.0) => {
+  const assign = (slotKey, cat, matches, dx = 0, dy = 0, scaleMult = 1.0, rotDeg = 0) => {
     const p = findPartByMatch(cat, matches);
     if (p) {
-      wbSlots[slotKey] = { part: p, dx, dy, scaleMult, rotDeg: 0, flipH: false };
+      wbSlots[slotKey] = { part: p, dx, dy, scaleMult, rotDeg, flipH: false };
       getOrLoadImage(p.file);
     }
   };
 
   if (presetName === "poet_tracksuit") {
-    document.getElementById("wbActivePresetLabel").textContent = "Preset: Poet Tracksuit (Calibrated 31-Part Rig)";
+    document.getElementById("wbActivePresetLabel").textContent = "Preset: Poet Tracksuit (Calibrated 18-Slot Cuff-Tuck Rig)";
     assign("torso",      "torsos_pelvis",  ["poet.tracksuit.01_torso_front"]);
     assign("pelvis",     "torsos_pelvis",  ["poet.tracksuit.06_pelvis_front_cover"]);
     assign("head",       "heads",          ["poet.tracksuit.21_head_front_blank"]);
@@ -1217,13 +2166,17 @@ function loadPreset(presetName) {
     assign("nose",       "mouths_noses",   ["poet.tracksuit.26_nose_front"]);
     assign("mouth",      "mouths_noses",   ["poet.tracksuit.27_mouth_rest"]);
     assign("sunglasses", "sunglasses_acc", ["poet.tracksuit.31_sunglasses_front"]);
-    assign("arm_L",      "limbs",          ["poet.tracksuit.07_upper_arm_L"]);
-    assign("arm_R",      "limbs",          ["poet.tracksuit.09_upper_arm_R"]);
+    assign("uarm_L",     "limbs",          ["poet.tracksuit.07_upper_arm_L"]);
+    assign("arm_L",      "limbs",          ["poet.tracksuit.08_forearm_L"]);
     assign("hand_L",     "hands",          ["poet.tracksuit.15_hand_relaxed_L"]);
+    assign("uarm_R",     "limbs",          ["poet.tracksuit.09_upper_arm_R"]);
+    assign("arm_R",      "limbs",          ["poet.tracksuit.10_forearm_R"]);
     assign("hand_R",     "hands",          ["poet.tracksuit.16_hand_relaxed_R"]);
-    assign("leg_L",      "limbs",          ["poet.tracksuit.11_thigh_L"]);
-    assign("leg_R",      "limbs",          ["poet.tracksuit.13_thigh_R"]);
+    assign("thigh_L",    "limbs",          ["poet.tracksuit.11_thigh_L"]);
+    assign("leg_L",      "limbs",          ["poet.tracksuit.12_shin_L"]);
     assign("shoe_L",     "shoes_feet",     ["poet.tracksuit.19_boot_front_L"]);
+    assign("thigh_R",    "limbs",          ["poet.tracksuit.13_thigh_R"]);
+    assign("leg_R",      "limbs",          ["poet.tracksuit.14_shin_R"]);
     assign("shoe_R",     "shoes_feet",     ["poet.tracksuit.20_boot_front_R"]);
   } else if (presetName === "poet_profile") {
     document.getElementById("wbActivePresetLabel").textContent = "Preset: Poet Profile Modular Rig";
@@ -1234,9 +2187,11 @@ function loadPreset(presetName) {
     assign("nose",       "mouths_noses",   ["poet_profile_nose_15"]);
     assign("mouth",      "mouths_noses",   ["poet_profile_mouth_21"]);
     assign("sunglasses", "sunglasses_acc", ["poet_profile_sunglasses_09"]);
-    assign("arm_L",      "limbs",          ["weave_rig_uarm.profile"]);
+    assign("uarm_L",     "limbs",          ["weave_rig_uarm.profile"]);
+    assign("arm_L",      "limbs",          ["weave_rig_farm.profile.down", "weave_rig_uarm.profile"]);
     assign("hand_L",     "hands",          ["weave_rig_hand.profile.open"]);
-    assign("leg_L",      "limbs",          ["weave_rig_thigh.profile"]);
+    assign("thigh_L",    "limbs",          ["weave_rig_thigh.profile"]);
+    assign("leg_L",      "limbs",          ["weave_rig_shin.profile", "weave_rig_thigh.profile"]);
     assign("shoe_L",     "shoes_feet",     ["weave_boot_boot.chelsea.flat"]);
   } else if (presetName === "young_poet") {
     document.getElementById("wbActivePresetLabel").textContent = "Preset: Young Poet (Age 6)";
@@ -1247,28 +2202,36 @@ function loadPreset(presetName) {
     assign("nose",       "mouths_noses",   ["yp_young_poet_nose_01"]);
     assign("mouth",      "mouths_noses",   ["yp_young_poet_mouth_01"]);
     assign("sunglasses", "sunglasses_acc", ["yp_young_poet_acc_01"]);
-    assign("arm_L",      "limbs",          ["young_poet.child_clothes.body.front__p02"]);
-    assign("arm_R",      "limbs",          ["young_poet.child_clothes.body.front__p04"]);
+    assign("uarm_L",     "limbs",          ["young_poet.child_clothes.body.front__p04"]);
+    assign("arm_L",      "limbs",          ["young_poet.child_clothes.body.front__p05"]);
+    assign("uarm_R",     "limbs",          ["young_poet.child_clothes.body.front__p02"]);
+    assign("arm_R",      "limbs",          ["young_poet.child_clothes.body.front__p03"]);
     assign("hand_L",     "hands",          ["young_poet_age_6_yp_hand_01"]);
     assign("hand_R",     "hands",          ["young_poet_age_6_yp_hand_02"]);
-    assign("leg_L",      "limbs",          ["young_poet.child_clothes.body.front__p08"]);
-    assign("leg_R",      "limbs",          ["young_poet.child_clothes.body.front__p10"]);
-    assign("shoe_L",     "shoes_feet",     ["young_poet.child_clothes.feet__p01"]);
-    assign("shoe_R",     "shoes_feet",     ["young_poet.child_clothes.feet__p02"]);
+    assign("thigh_L",    "limbs",          ["young_poet.child_clothes.body.front__p10"]);
+    assign("leg_L",      "limbs",          ["young_poet.child_clothes.body.front__p11"]);
+    assign("thigh_R",    "limbs",          ["young_poet.child_clothes.body.front__p08"]);
+    assign("leg_R",      "limbs",          ["young_poet.child_clothes.body.front__p09"]);
+    assign("shoe_L",     "shoes_feet",     ["young_poet.child_clothes.feet__p04", "young_poet.child_clothes.feet__p01"]);
+    assign("shoe_R",     "shoes_feet",     ["young_poet.child_clothes.feet__p05", "young_poet.child_clothes.feet__p02"]);
   } else if (presetName === "mother") {
     document.getElementById("wbActivePresetLabel").textContent = "Preset: The Mother (Teal Dress · P09)";
     assign("torso",      "torsos_pelvis",  ["woman.09.mother.body__p01"]);
     assign("pelvis",     "torsos_pelvis",  ["woman.09.mother.body__p14"]);
     assign("head",       "heads",          ["woman.09.mother.heads-hands__p01", "the_mother_teal_dress_mother_head_01"]);
-    assign("eyes",       "eyes_brows",     ["woman.09.mother.heads-hands__p06", "the_mother_teal_dress_mother_hand_07"]);
-    assign("brows",      "eyes_brows",     ["the_mother_teal_dress_mother_hand_02"]);
-    assign("mouth",      "mouths_noses",   ["woman.09.mother.heads-hands__p22", "the_mother_teal_dress_mother_hand_20"]);
-    assign("arm_L",      "limbs",          ["woman.09.mother.body__p04"]);
-    assign("arm_R",      "limbs",          ["woman.09.mother.body__p05"]);
+    assign("eyes",       "eyes_brows",     ["woman.09.mother.heads-hands__p06"]);
+    assign("brows",      "eyes_brows",     ["woman.09.mother.heads-hands__p11", "the_mother_teal_dress_mother_hand_02"]);
+    assign("mouth",      "mouths_noses",   ["woman.09.mother.heads-hands__p22"]);
+    assign("uarm_L",     "limbs",          ["woman.09.mother.body__p06"]);
+    assign("arm_L",      "limbs",          ["woman.09.mother.body__p08"]);
+    assign("uarm_R",     "limbs",          ["woman.09.mother.body__p07"]);
+    assign("arm_R",      "limbs",          ["woman.09.mother.body__p09"]);
     assign("hand_L",     "hands",          ["the_mother_teal_dress_mother_hand_24"]);
     assign("hand_R",     "hands",          ["the_mother_teal_dress_mother_hand_25"]);
-    assign("leg_L",      "limbs",          ["woman.09.mother.body__p10"]);
-    assign("leg_R",      "limbs",          ["woman.09.mother.body__p11"]);
+    assign("thigh_L",    "limbs",          ["woman.09.mother.body__p10"]);
+    assign("leg_L",      "limbs",          ["woman.09.mother.body__p12"]);
+    assign("thigh_R",    "limbs",          ["woman.09.mother.body__p11"]);
+    assign("leg_R",      "limbs",          ["woman.09.mother.body__p13"]);
     assign("shoe_L",     "shoes_feet",     ["woman.09.mother.body__p16"]);
     assign("shoe_R",     "shoes_feet",     ["woman.09.mother.body__p17"]);
   } else if (presetName === "ex_back") {
@@ -1276,13 +2239,16 @@ function loadPreset(presetName) {
     assign("torso",      "torsos_pelvis",  ["ex.ex_jacket.body.back__p01"]);
     assign("pelvis",     "torsos_pelvis",  ["ex.ex_jacket.hipcore__p03"]);
     assign("head",       "heads",          ["the_ex_bomber_jacket_ex_head_01"]);
-    assign("sunglasses", "sunglasses_acc", ["ex.ex_jacket.body.back__p12"]);
-    assign("arm_L",      "limbs",          ["ex.ex_jacket.body.back__p02"]);
-    assign("arm_R",      "limbs",          ["ex.ex_jacket.body.back__p04"]);
+    assign("uarm_L",     "limbs",          ["ex.ex_jacket.body.back__p04"]);
+    assign("arm_L",      "limbs",          ["ex.ex_jacket.body.back__p05"]);
+    assign("uarm_R",     "limbs",          ["ex.ex_jacket.body.back__p02"]);
+    assign("arm_R",      "limbs",          ["ex.ex_jacket.body.back__p03"]);
     assign("hand_L",     "hands",          ["the_ex_bomber_jacket_ex_hand_01"]);
     assign("hand_R",     "hands",          ["the_ex_bomber_jacket_ex_hand_02"]);
-    assign("leg_L",      "limbs",          ["ex.ex_jacket.body.back__p08"]);
-    assign("leg_R",      "limbs",          ["ex.ex_jacket.body.back__p10"]);
+    assign("thigh_L",    "limbs",          ["ex.ex_jacket.body.back__p10"]);
+    assign("leg_L",      "limbs",          ["ex.ex_jacket.body.back__p11"]);
+    assign("thigh_R",    "limbs",          ["ex.ex_jacket.body.back__p08"]);
+    assign("leg_R",      "limbs",          ["ex.ex_jacket.body.back__p09"]);
     assign("shoe_L",     "shoes_feet",     ["the_ex_bomber_jacket_ex_boot_01"]);
     assign("shoe_R",     "shoes_feet",     ["the_ex_bomber_jacket_ex_boot_02"]);
   } else if (presetName === "dj_cyber") {
@@ -1294,12 +2260,16 @@ function loadPreset(presetName) {
     assign("brows",      "eyes_brows",     ["party.dj_cyber.face-feet__p09"]);
     assign("mouth",      "mouths_noses",   ["party.dj_cyber.face-feet__p15"]);
     assign("sunglasses", "sunglasses_acc", ["party.07.dj-guest.cap-noses-headphones__p12"]);
-    assign("arm_L",      "limbs",          ["party.dj_cyber.compact-core__p05"]);
-    assign("arm_R",      "limbs",          ["party.dj_cyber.compact-core__p06"]);
+    assign("uarm_L",     "limbs",          ["party.dj_cyber.compact-core__p05"]);
+    assign("arm_L",      "limbs",          ["party.dj_cyber.compact-core__p07"]);
+    assign("uarm_R",     "limbs",          ["party.dj_cyber.compact-core__p06"]);
+    assign("arm_R",      "limbs",          ["party.dj_cyber.compact-core__p08"]);
     assign("hand_L",     "hands",          ["party.07.dj-guest.action-hands__p01"]);
     assign("hand_R",     "hands",          ["party.07.dj-guest.action-hands__p02"]);
-    assign("leg_L",      "limbs",          ["party.dj_cyber.compact-core__p09"]);
-    assign("leg_R",      "limbs",          ["party.dj_cyber.compact-core__p11"]);
+    assign("thigh_L",    "limbs",          ["party.dj_cyber.compact-core__p09"]);
+    assign("leg_L",      "limbs",          ["party.dj_cyber.compact-core__p11"]);
+    assign("thigh_R",    "limbs",          ["party.dj_cyber.compact-core__p10"]);
+    assign("leg_R",      "limbs",          ["party.dj_cyber.compact-core__p12"]);
     assign("shoe_L",     "shoes_feet",     ["party.dj_cyber.compact-core__p13"]);
     assign("shoe_R",     "shoes_feet",     ["party.dj_cyber.compact-core__p14"]);
   }
@@ -1326,24 +2296,30 @@ function randomizeHybridRig() {
 
   const setRand = (key, part) => {
     if (!part) return;
-    wbSlots[key] = { part, dx: 0, dy: 0, scaleMult: 1.0, rotDeg: 0, flipH: false };
+    let autoRot = 0;
+    if ((key === "hand_L" || key === "hand_R") && part.width > part.height * 1.22) autoRot = 90;
+    wbSlots[key] = { part, dx: 0, dy: 0, scaleMult: 1.0, rotDeg: autoRot, flipH: false };
     getOrLoadImage(part.file);
   };
 
-  setRand("torso",      pick("torsos_pelvis", p => p.name.toLowerCase().includes("torso")));
-  setRand("pelvis",     pick("torsos_pelvis", p => p.name.toLowerCase().includes("hip") || p.name.toLowerCase().includes("pelvis")));
-  setRand("head",       pick("heads"));
-  setRand("eyes",       pick("eyes_brows", p => !p.name.toLowerCase().includes("brow")));
-  setRand("brows",      pick("eyes_brows", p => p.name.toLowerCase().includes("brow")));
-  setRand("nose",       pick("mouths_noses", p => p.name.toLowerCase().includes("nose")));
-  setRand("mouth",      pick("mouths_noses", p => !p.name.toLowerCase().includes("nose")));
-  setRand("sunglasses", pick("sunglasses_acc"));
-  setRand("arm_L",      pick("limbs", p => p.name.toLowerCase().includes("arm")));
-  setRand("arm_R",      pick("limbs", p => p.name.toLowerCase().includes("arm")));
+  setRand("torso",      pick("torsos_pelvis", p => p.clip_tag === "Torso / Jacket"));
+  setRand("pelvis",     pick("torsos_pelvis", p => p.clip_tag === "Pelvis / Hip Bridge"));
+  setRand("head",       pick("heads", p => p.view_angle === "front"));
+  setRand("eyes",       pick("eyes_brows", p => p.clip_tag === "Eyes Open"));
+  setRand("brows",      pick("eyes_brows", p => p.clip_tag === "Eyebrows"));
+  setRand("nose",       pick("mouths_noses", p => p.clip_tag === "Nose"));
+  setRand("mouth",      pick("mouths_noses", p => p.clip_tag === "Mouth / Lips"));
+  setRand("sunglasses", pick("sunglasses_acc", p => p.clip_tag === "Sunglasses"));
+  setRand("uarm_L",     pick("limbs", p => p.name.toLowerCase().includes("upper arm")));
+  setRand("arm_L",      pick("limbs", p => p.name.toLowerCase().includes("forearm") || p.name.toLowerCase().includes("arm")));
+  setRand("uarm_R",     pick("limbs", p => p.name.toLowerCase().includes("upper arm")));
+  setRand("arm_R",      pick("limbs", p => p.name.toLowerCase().includes("forearm") || p.name.toLowerCase().includes("arm")));
   setRand("hand_L",     pick("hands"));
   setRand("hand_R",     pick("hands"));
-  setRand("leg_L",      pick("limbs", p => p.name.toLowerCase().includes("thigh") || p.name.toLowerCase().includes("leg")));
-  setRand("leg_R",      pick("limbs", p => p.name.toLowerCase().includes("thigh") || p.name.toLowerCase().includes("leg")));
+  setRand("thigh_L",    pick("limbs", p => p.name.toLowerCase().includes("thigh")));
+  setRand("leg_L",      pick("limbs", p => p.name.toLowerCase().includes("shin") || p.name.toLowerCase().includes("leg")));
+  setRand("thigh_R",    pick("limbs", p => p.name.toLowerCase().includes("thigh")));
+  setRand("leg_R",      pick("limbs", p => p.name.toLowerCase().includes("shin") || p.name.toLowerCase().includes("leg")));
   setRand("shoe_L",     pick("shoes_feet"));
   setRand("shoe_R",     pick("shoes_feet"));
 
@@ -1351,6 +2327,277 @@ function randomizeHybridRig() {
   syncSlidersToSelectedSlot();
   drawMannequin();
   renderParts();
+}
+
+/**
+ * Compute Socket-to-Socket Chained World Transforms + 2.5D Fake-3D Parallax + Cuff-Tuck Clipping
+ */
+function solveChainedSlotPlacements() {
+  const placements = {};
+  const zReachFrac = wbZReach / 100.0; // -0.6 .. +0.6
+  const limbForeshorten = 1.0 - Math.abs(zReachFrac) * 0.25;
+  const extremityScaleBoost = 1.0 + zReachFrac * 0.22;
+
+  // Helper to compute base scale for a slot part
+  const getPartScale = (slotKey, p, st) => {
+    let sc = p.normalized_scale * st.scaleMult;
+    // Calibrate Tracksuit v1 hands, boots, and head so wrist/ankle/neck widths match cuffs seamlessly
+    if (p.source_origin === "poet_tracksuit_v1") {
+      if (slotKey === "hand_L" || slotKey === "hand_R") {
+        sc = (wbCuffTuck ? 0.045 : 0.056) * st.scaleMult;
+      } else if (slotKey === "shoe_L" || slotKey === "shoe_R") {
+        sc = (wbCuffTuck ? 0.068 : 0.082) * st.scaleMult;
+      } else if (slotKey === "head") {
+        sc = 0.132 * st.scaleMult;
+      } else if (slotKey === "pelvis") {
+        sc = 0.125 * st.scaleMult;
+      } else if (slotKey.startsWith("uarm") || slotKey.startsWith("arm")) {
+        sc = 0.088 * st.scaleMult;
+      } else if (slotKey.startsWith("thigh") || slotKey.startsWith("leg")) {
+        sc = 0.104 * st.scaleMult;
+      }
+    }
+    if (slotKey === "hand_L" || slotKey === "hand_R" || slotKey === "shoe_L" || slotKey === "shoe_R") {
+      sc *= extremityScaleBoost;
+    }
+    return sc;
+  };
+
+  const findPivot = (p, idSub, fallbackRx, fallbackRy) => {
+    if (p && p.pivots && p.pivots.length) {
+      const m = p.pivots.find(pv => (pv.id || "").toLowerCase().includes(idSub));
+      if (m) return { x: m.x, y: m.y };
+    }
+    return { x: p.width * fallbackRx, y: p.height * fallbackRy };
+  };
+
+  // 1. TORSO (Root Anchor at 480, 395)
+  const torsoDef = WB_SLOT_DEFS.find(d => d.key === "torso");
+  const torsoSt = wbSlots.torso;
+  let neckSocket = { x: 480, y: 292 };
+  let waistSocket = { x: 480, y: 505 };
+  let shoulderLSocket = { x: 556, y: 315 };
+  let shoulderRSocket = { x: 404, y: 315 };
+
+  if (torsoSt && torsoSt.part) {
+    const tp = torsoSt.part;
+    const sc = getPartScale("torso", tp, torsoSt);
+    const cx = torsoDef.defaultPos.x + torsoSt.dx;
+    const cy = torsoDef.defaultPos.y + torsoSt.dy;
+    const dw = tp.width * sc;
+    const dh = tp.height * sc;
+    placements.torso = { cx, cy, scX: sc, scY: sc, drawW: dw, drawH: dh, clipTop: 0, clipBottom: 1 };
+
+    const pNeck = findPivot(tp, "neck", 0.5, 0.09);
+    const pWaist = findPivot(tp, "waist", 0.5, 0.85);
+    const pShL = findPivot(tp, "shoulder_l", 0.77, 0.18);
+    const pShR = findPivot(tp, "shoulder_r", 0.23, 0.18);
+
+    neckSocket = { x: cx - dw / 2 + pNeck.x * sc, y: cy - dh / 2 + pNeck.y * sc };
+    waistSocket = { x: cx - dw / 2 + pWaist.x * sc, y: cy - dh / 2 + pWaist.y * sc };
+    shoulderLSocket = { x: cx - dw / 2 + pShL.x * sc, y: cy - dh / 2 + pShL.y * sc };
+    shoulderRSocket = { x: cx - dw / 2 + pShR.x * sc, y: cy - dh / 2 + pShR.y * sc };
+  }
+  wbJointWorldPts.neck = neckSocket;
+
+  // 2. PELVIS (Anchored to Torso waistSocket)
+  const pelvSt = wbSlots.pelvis;
+  let hipLSocket = { x: waistSocket.x + 44, y: waistSocket.y + 42 };
+  let hipRSocket = { x: waistSocket.x - 44, y: waistSocket.y + 42 };
+  if (pelvSt && pelvSt.part) {
+    const pp = pelvSt.part;
+    const sc = getPartScale("pelvis", pp, pelvSt);
+    const dw = pp.width * sc;
+    const dh = pp.height * sc;
+    const pWaist = findPivot(pp, "waist", 0.5, 0.18);
+    const cx = waistSocket.x - (-dw / 2 + pWaist.x * sc) + pelvSt.dx;
+    const cy = waistSocket.y - (-dh / 2 + pWaist.y * sc) + pelvSt.dy;
+    placements.pelvis = { cx, cy, scX: sc, scY: sc, drawW: dw, drawH: dh, clipTop: 0, clipBottom: 1 };
+    hipLSocket = { x: cx + dw * 0.22, y: cy + dh * 0.18 };
+    hipRSocket = { x: cx - dw * 0.22, y: cy + dh * 0.18 };
+  }
+
+  // 3. HEAD & 2.5D FACIAL PARALLAX (Anchored to Torso neckSocket)
+  const headSt = wbSlots.head;
+  let headCenter = { x: neckSocket.x, y: neckSocket.y - 78 };
+  if (headSt && headSt.part) {
+    const hp = headSt.part;
+    const sc = getPartScale("head", hp, headSt);
+    const yawCos = Math.cos((wbYawDeg * Math.PI) / 180.0 * 0.48);
+    const scX = sc * yawCos;
+    const scY = sc;
+    const dw = hp.width * scX;
+    const dh = hp.height * scY;
+    const pNeck = findPivot(hp, "neck", 0.48, 0.85);
+    // When wbCuffTuck is ON, tuck neck 6px deeper into collar and clip the bottom tan kraft edge (y > 0.87)
+    const tuckDy = wbCuffTuck ? 6 : -10;
+    const cx = neckSocket.x - (-dw / 2 + pNeck.x * scX) + headSt.dx + wbYawDeg * 0.18;
+    const cy = neckSocket.y - (-dh / 2 + pNeck.y * scY) + headSt.dy + tuckDy + wbPitchDeg * 0.25;
+    const clipBottom = (wbCuffTuck && hp.source_origin === "poet_tracksuit_v1") ? 0.865 : 1.0;
+    placements.head = { cx, cy, scX, scY, drawW: dw, drawH: dh, clipTop: 0, clipBottom };
+    headCenter = { x: cx, y: cy - dh * 0.04 };
+  }
+
+  // 2.5D Cylindrical Parallax offsets for facial features relative to headCenter
+  const faceLayers = [
+    { key: "eyes",       baseDy: -6,  yawMult: 0.52, pitchMult: 0.55 },
+    { key: "brows",      baseDy: -25, yawMult: 0.56, pitchMult: 0.62 },
+    { key: "nose",       baseDy:  8,  yawMult: 0.82, pitchMult: 0.72 },
+    { key: "mouth",      baseDy:  32, yawMult: 0.48, pitchMult: 0.50 },
+    { key: "sunglasses", baseDy: -9,  yawMult: 0.92, pitchMult: 0.68 },
+  ];
+  for (const fl of faceLayers) {
+    const st = wbSlots[fl.key];
+    if (!st || !st.part) continue;
+    const fp = st.part;
+    const sc = getPartScale(fl.key, fp, st);
+    const yawCos = Math.cos((wbYawDeg * Math.PI) / 180.0 * 0.35);
+    const scX = sc * yawCos;
+    const scY = sc;
+    const dw = fp.width * scX;
+    const dh = fp.height * scY;
+    const cx = headCenter.x + wbYawDeg * fl.yawMult + st.dx;
+    const cy = headCenter.y + fl.baseDy + wbPitchDeg * fl.pitchMult + st.dy;
+    placements[fl.key] = { cx, cy, scX, scY, drawW: dw, drawH: dh, clipTop: 0, clipBottom: 1 };
+  }
+
+  // 4. LEFT & RIGHT ARM CHAINS (Shoulder -> Upper Arm -> Elbow -> Forearm Cuff -> Wrist -> Hand)
+  for (const side of ["L", "R"]) {
+    const shSocket = side === "L" ? shoulderLSocket : shoulderRSocket;
+    const uKey = `uarm_${side}`;
+    const fKey = `arm_${side}`;
+    const hKey = `hand_${side}`;
+
+    let elbowSocket = { x: shSocket.x + (side === "L" ? 8 : -8), y: shSocket.y + 92 };
+    const uSt = wbSlots[uKey];
+    if (uSt && uSt.part) {
+      const up = uSt.part;
+      const sc = getPartScale(uKey, up, uSt);
+      const scY = sc * limbForeshorten;
+      const dw = up.width * sc;
+      const dh = up.height * scY;
+      const pSh = findPivot(up, "shoulder", 0.5, 0.12);
+      const pEl = findPivot(up, "elbow", 0.5, 0.88);
+      const cx = shSocket.x - (-dw / 2 + pSh.x * sc) + uSt.dx;
+      const cy = shSocket.y - (-dh / 2 + pSh.y * scY) + uSt.dy;
+      const clipB = (wbCuffTuck && up.source_origin === "poet_tracksuit_v1" && wbSlots[fKey] && wbSlots[fKey].part) ? 0.885 : 1.0;
+      placements[uKey] = { cx, cy, scX: sc, scY, drawW: dw, drawH: dh, clipTop: 0, clipBottom: clipB };
+      elbowSocket = { x: cx - dw / 2 + pEl.x * sc, y: cy - dh / 2 + pEl.y * scY };
+    } else {
+      elbowSocket = { x: shSocket.x, y: shSocket.y };
+    }
+
+    let wristCuffLip = { x: elbowSocket.x, y: elbowSocket.y + 88 };
+    let wristRawTab = { x: elbowSocket.x, y: elbowSocket.y + 98 };
+    const fSt = wbSlots[fKey];
+    if (fSt && fSt.part) {
+      const fp = fSt.part;
+      const sc = getPartScale(fKey, fp, fSt);
+      const scY = sc * limbForeshorten;
+      const dw = fp.width * sc;
+      const dh = fp.height * scY;
+      const pEl = findPivot(fp, "elbow", 0.5, 0.12);
+      const pWr = findPivot(fp, "wrist", 0.5, 0.86);
+      const cx = elbowSocket.x - (-dw / 2 + pEl.x * sc) + fSt.dx;
+      const cy = elbowSocket.y - (-dh / 2 + pEl.y * scY) + fSt.dy;
+
+      // On Tracksuit forearm, ribbed cuff lip is at y=1238 (80.6% of 1536px) while grommet tab sticks down to y=1408!
+      const hasHand = Boolean(wbSlots[hKey] && wbSlots[hKey].part);
+      const cuffLipRatio = fp.id.includes("08_forearm_L") ? (1238 / 1536) : (fp.id.includes("10_forearm_R") ? (1260 / 1536) : 0.88);
+      const clipBottom = (wbCuffTuck && hasHand) ? cuffLipRatio : 1.0;
+      placements[fKey] = { cx, cy, scX: sc, scY, drawW: dw, drawH: dh, clipTop: 0, clipBottom, hasCuffLip: wbCuffTuck && hasHand };
+
+      wristCuffLip = { x: cx - dw / 2 + pWr.x * sc, y: cy - dh / 2 + (fp.height * cuffLipRatio) * scY };
+      wristRawTab = { x: cx - dw / 2 + pWr.x * sc, y: cy - dh / 2 + pWr.y * scY + 12 };
+    }
+    if (side === "L") wbJointWorldPts.wristL = wristCuffLip;
+
+    const hSt = wbSlots[hKey];
+    if (hSt && hSt.part) {
+      const hp = hSt.part;
+      const sc = getPartScale(hKey, hp, hSt);
+      const dw = hp.width * sc;
+      const dh = hp.height * sc;
+      // In Cuff-Tuck mode, anchor the hand's wrist crease (y=315 on 15_hand_relaxed_L, or 26% from top)
+      // directly at wristCuffLip so the rectangular brown grommet tab (y=81..315) tucks INSIDE the sleeve cuff!
+      const wristCreaseY = hp.id.includes("15_hand") ? 315 : (hp.id.includes("16_hand") ? 365 : hp.height * 0.26);
+      const anchorPt = wbCuffTuck ? wristCuffLip : wristRawTab;
+      const anchorLocalY = wbCuffTuck ? wristCreaseY : (hp.height * 0.12);
+      const cx = anchorPt.x + hSt.dx;
+      const cy = anchorPt.y - (-dh / 2 + anchorLocalY * sc) + hSt.dy;
+      placements[hKey] = { cx, cy, scX: sc, scY: sc, drawW: dw, drawH: dh, clipTop: 0, clipBottom: 1 };
+    }
+  }
+
+  // 5. LEFT & RIGHT LEG CHAINS (Hip -> Thigh -> Knee -> Shin Pant Cuff -> Ankle -> Boot/Shoe)
+  for (const side of ["L", "R"]) {
+    const hipSocket = side === "L" ? hipLSocket : hipRSocket;
+    const tKey = `thigh_${side}`;
+    const sKey = `leg_${side}`;
+    const bKey = `shoe_${side}`;
+
+    let kneeSocket = { x: hipSocket.x, y: hipSocket.y + 115 };
+    const tSt = wbSlots[tKey];
+    if (tSt && tSt.part) {
+      const tp = tSt.part;
+      const sc = getPartScale(tKey, tp, tSt);
+      const scY = sc * limbForeshorten;
+      const dw = tp.width * sc;
+      const dh = tp.height * scY;
+      const pHip = findPivot(tp, "hip", 0.5, 0.12);
+      const pKnee = findPivot(tp, "knee", 0.5, 0.87);
+      const cx = hipSocket.x - (-dw / 2 + pHip.x * sc) + tSt.dx;
+      const cy = hipSocket.y - (-dh / 2 + pHip.y * scY) + tSt.dy;
+      const clipB = (wbCuffTuck && tp.source_origin === "poet_tracksuit_v1" && wbSlots[sKey] && wbSlots[sKey].part) ? 0.885 : 1.0;
+      placements[tKey] = { cx, cy, scX: sc, scY, drawW: dw, drawH: dh, clipTop: 0, clipBottom: clipB };
+      kneeSocket = { x: cx - dw / 2 + pKnee.x * sc, y: cy - dh / 2 + pKnee.y * scY };
+    } else {
+      kneeSocket = { x: hipSocket.x, y: hipSocket.y };
+    }
+
+    let ankleCuffLip = { x: kneeSocket.x, y: kneeSocket.y + 115 };
+    let ankleRawTab = { x: kneeSocket.x, y: kneeSocket.y + 128 };
+    const sSt = wbSlots[sKey];
+    if (sSt && sSt.part) {
+      const sp = sSt.part;
+      const sc = getPartScale(sKey, sp, sSt);
+      const scY = sc * limbForeshorten;
+      const dw = sp.width * sc;
+      const dh = sp.height * scY;
+      const pKnee = findPivot(sp, "knee", 0.5, 0.12);
+      const pAnk = findPivot(sp, "ankle", 0.5, 0.90);
+      const cx = kneeSocket.x - (-dw / 2 + pKnee.x * sc) + sSt.dx;
+      const cy = kneeSocket.y - (-dh / 2 + pKnee.y * scY) + sSt.dy;
+
+      // On Tracksuit shin (12_shin_L, 14_shin_R), ribbed jogger cuff lip is at y=1295 (84.3% of 1536px)
+      const hasShoe = Boolean(wbSlots[bKey] && wbSlots[bKey].part);
+      const cuffLipRatio = (sp.id.includes("12_shin") || sp.id.includes("14_shin")) ? (1295 / 1536) : 0.885;
+      const clipBottom = (wbCuffTuck && hasShoe) ? cuffLipRatio : 1.0;
+      placements[sKey] = { cx, cy, scX: sc, scY, drawW: dw, drawH: dh, clipTop: 0, clipBottom, hasCuffLip: wbCuffTuck && hasShoe };
+
+      ankleCuffLip = { x: cx - dw / 2 + pAnk.x * sc, y: cy - dh / 2 + (sp.height * cuffLipRatio) * scY };
+      ankleRawTab = { x: cx - dw / 2 + pAnk.x * sc, y: cy - dh / 2 + pAnk.y * scY + 14 };
+    }
+    if (side === "L") wbJointWorldPts.ankleL = ankleCuffLip;
+
+    const bSt = wbSlots[bKey];
+    if (bSt && bSt.part) {
+      const bp = bSt.part;
+      const sc = getPartScale(bKey, bp, bSt);
+      const dw = bp.width * sc;
+      const dh = bp.height * sc;
+      // In Cuff-Tuck mode, anchor the boot shaft (y=360 on 19_boot_front_L, or 28% from top)
+      // directly at ankleCuffLip so the rectangular tan-bordered pull-tab (y=40..215) tucks INSIDE the pant cuff!
+      const bootShaftY = (bp.id.includes("19_boot") || bp.id.includes("20_boot")) ? 360 : bp.height * 0.28;
+      const anchorPt = wbCuffTuck ? ankleCuffLip : ankleRawTab;
+      const anchorLocalY = wbCuffTuck ? bootShaftY : (bp.height * 0.12);
+      const cx = anchorPt.x + bSt.dx;
+      const cy = anchorPt.y - (-dh / 2 + anchorLocalY * sc) + bSt.dy;
+      placements[bKey] = { cx, cy, scX: sc, scY: sc, drawW: dw, drawH: dh, clipTop: 0, clipBottom: 1 };
+    }
+  }
+
+  return placements;
 }
 
 function drawMannequin() {
@@ -1364,7 +2611,7 @@ function drawMannequin() {
   // 1. Optional 240px Torso Reference Scale Grid
   if (wbShowGrid) {
     ctx.save();
-    ctx.strokeStyle = "rgba(245, 185, 66, 0.16)";
+    ctx.strokeStyle = "rgba(245, 185, 66, 0.13)";
     ctx.lineWidth = 1;
     for (let x = 60; x < W; x += 60) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
@@ -1372,53 +2619,81 @@ function drawMannequin() {
     for (let y = 60; y < H; y += 60) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     }
-    // 240px Torso Reference Bracket at y=280..520
-    ctx.strokeStyle = "rgba(245, 185, 66, 0.55)";
+    ctx.strokeStyle = "rgba(245, 185, 66, 0.50)";
     ctx.setLineDash([6, 4]);
     ctx.beginPath();
     ctx.moveTo(140, 280); ctx.lineTo(820, 280);
     ctx.moveTo(140, 520); ctx.lineTo(820, 520);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = "rgba(245, 185, 66, 0.75)";
+    ctx.fillStyle = "rgba(245, 185, 66, 0.72)";
     ctx.font = "700 11px 'JetBrains Mono', monospace";
     ctx.fillText("▲ TORSO TOP (0px)", 148, 273);
     ctx.fillText("▼ TORSO WAIST (+240px ANATOMICAL REFERENCE)", 148, 536);
     ctx.restore();
   }
 
-  // 2. Sort active slots by z-order and draw each part at its normalized anatomical scale
-  const sortedDefs = [...WB_SLOT_DEFS].sort((a, b) => a.z - b.z);
+  const placements = solveChainedSlotPlacements();
+  wbRenderedBoxes = placements;
+
+  // 2. Sort active slots by z-order (Cuff-Over-Extremity when wbCuffTuck is ON, Raw when OFF)
+  const sortedDefs = [...WB_SLOT_DEFS].sort((a, b) =>
+    (wbCuffTuck ? a.zTuck : a.zRaw) - (wbCuffTuck ? b.zTuck : b.zRaw)
+  );
+
   for (const def of sortedDefs) {
     const st = wbSlots[def.key];
-    if (!st || !st.part) continue;
+    const pl = placements[def.key];
+    if (!st || !st.part || !pl) continue;
     const p = st.part;
     const entry = getOrLoadImage(p.file);
     if (!entry || !entry.loaded) continue;
 
-    const cx = def.defaultPos.x + st.dx;
-    const cy = def.defaultPos.y + st.dy;
-    const sc = p.normalized_scale * st.scaleMult;
-    const drawW = p.width * sc;
-    const drawH = p.height * sc;
+    const { cx, cy, scX, scY, drawW, drawH, clipTop, clipBottom, hasCuffLip } = pl;
 
     ctx.save();
     ctx.translate(cx, cy);
     if (st.rotDeg) ctx.rotate((st.rotDeg * Math.PI) / 180.0);
     if (st.flipH) ctx.scale(-1, 1);
 
-    ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetY = 4;
+    // Apply Grommet-Tab Clipping when Cuff-Tuck is active
+    if (clipTop > 0 || clipBottom < 1.0) {
+      ctx.beginPath();
+      const topY = -drawH / 2 + drawH * clipTop;
+      const botY = -drawH / 2 + drawH * clipBottom;
+      ctx.rect(-drawW * 0.65, topY - 4, drawW * 1.3, Math.max(4, botY - topY + 4));
+      ctx.clip();
+    }
+
+    // 2.5D Cardboard Rim & Multiplane Drop Shadow
+    if (wbKraftThickness > 0) {
+      ctx.shadowColor = "rgba(0, 0, 0, 0.72)";
+      ctx.shadowBlur = 4 + wbKraftThickness * 1.8;
+      ctx.shadowOffsetX = -wbYawDeg * 0.08;
+      ctx.shadowOffsetY = 2 + wbKraftThickness * 0.75;
+    }
+
     ctx.drawImage(entry.img, -drawW / 2, -drawH / 2, drawW, drawH);
+
+    // Draw subtle 2.5D cuff opening shadow lip when sleeve/pant cuff overlaps hand/boot
+    if (hasCuffLip && clipBottom < 1.0) {
+      const lipY = -drawH / 2 + drawH * clipBottom;
+      ctx.shadowColor = "transparent";
+      ctx.strokeStyle = "rgba(10, 8, 7, 0.85)";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(-drawW * 0.14, lipY - 1);
+      ctx.lineTo(drawW * 0.14, lipY - 1);
+      ctx.stroke();
+    }
 
     // Highlight selected slot frame
     if (wbSelectedSlot === def.key) {
       ctx.shadowColor = "transparent";
-      ctx.strokeStyle = "rgba(245, 185, 66, 0.75)";
+      ctx.strokeStyle = "rgba(245, 185, 66, 0.78)";
       ctx.lineWidth = 1.5;
       ctx.setLineDash([4, 4]);
-      ctx.strokeRect(-drawW / 2, -drawH / 2, drawW, drawH);
+      ctx.strokeRect(-drawW / 2, -drawH / 2, drawW, drawH * clipBottom);
       ctx.setLineDash([]);
     }
 
@@ -1426,24 +2701,68 @@ function drawMannequin() {
     if (wbShowPivots && p.pivots && p.pivots.length) {
       ctx.shadowColor = "transparent";
       for (const piv of p.pivots) {
-        const px = -drawW / 2 + piv.x * sc;
-        const py = -drawH / 2 + piv.y * sc;
-        const pr = Math.max(4, Math.min(10, (piv.r || 8) * sc));
+        const pyRatio = piv.y / Math.max(1, p.height);
+        if (wbCuffTuck && pyRatio > clipBottom) continue; // Clipped grommet tab is hidden inside cuff!
+        const px = -drawW / 2 + piv.x * scX;
+        const py = -drawH / 2 + piv.y * scY;
+        const pr = Math.max(3.5, Math.min(8, (piv.r || 8) * scX));
         ctx.beginPath();
         ctx.arc(px, py, pr, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(245, 185, 66, 0.35)";
         ctx.fill();
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.75;
         ctx.strokeStyle = "#f5b942";
         ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(px, py, 2, 0, Math.PI * 2);
-        ctx.fillStyle = "#fff";
-        ctx.fill();
       }
     }
     ctx.restore();
+  }
+
+  // If Broken Raw Mode is active, draw red warning rings around the exposed butt-joint tabs
+  if (!wbCuffTuck) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 123, 107, 0.9)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    for (const pt of [wbJointWorldPts.neck, wbJointWorldPts.wristL, wbJointWorldPts.ankleL]) {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 26, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 3. Render Live 2.5× Zoomed Seam Loupes (Neck, Wrist, Ankle)
+  renderSeamLoupes(canvas);
+}
+
+function renderSeamLoupes(mainCanvas) {
+  const specs = [
+    { canvasId: "loupeNeckCanvas",  pt: wbJointWorldPts.neck,   zoom: 2.3 },
+    { canvasId: "loupeWristCanvas", pt: wbJointWorldPts.wristL, zoom: 2.6 },
+    { canvasId: "loupeAnkleCanvas", pt: wbJointWorldPts.ankleL, zoom: 2.5 },
+  ];
+  for (const sp of specs) {
+    const lc = document.getElementById(sp.canvasId);
+    if (!lc) continue;
+    const lctx = lc.getContext("2d");
+    const lw = lc.width, lh = lc.height;
+    lctx.clearRect(0, 0, lw, lh);
+
+    const srcW = lw / sp.zoom;
+    const srcH = lh / sp.zoom;
+    const sx = Math.max(0, Math.min(mainCanvas.width - srcW, sp.pt.x - srcW / 2));
+    const sy = Math.max(0, Math.min(mainCanvas.height - srcH, sp.pt.y - srcH / 2));
+
+    lctx.drawImage(mainCanvas, sx, sy, srcW, srcH, 0, 0, lw, lh);
+
+    // Subtle crosshair Reticle
+    lctx.strokeStyle = wbCuffTuck ? "rgba(159, 224, 138, 0.35)" : "rgba(255, 123, 107, 0.55)";
+    lctx.lineWidth = 1;
+    lctx.beginPath();
+    lctx.moveTo(0, lh / 2); lctx.lineTo(lw, lh / 2);
+    lctx.moveTo(lw / 2, 0); lctx.lineTo(lw / 2, lh);
+    lctx.stroke();
   }
 }
 
@@ -1462,18 +2781,16 @@ function setupMannequinCanvasEvents() {
 
   canvas.addEventListener("mousedown", (e) => {
     const pt = getCanvasPt(e);
-    // Hit-test from top-most z down
-    const revDefs = [...WB_SLOT_DEFS].sort((a, b) => b.z - a.z);
+    const revDefs = [...WB_SLOT_DEFS].sort((a, b) =>
+      (wbCuffTuck ? b.zTuck : b.zRaw) - (wbCuffTuck ? a.zTuck : a.zRaw)
+    );
     for (const def of revDefs) {
       const st = wbSlots[def.key];
-      if (!st || !st.part) continue;
-      const p = st.part;
-      const sc = p.normalized_scale * st.scaleMult;
-      const hw = Math.max(28, (p.width * sc) / 2);
-      const hh = Math.max(28, (p.height * sc) / 2);
-      const cx = def.defaultPos.x + st.dx;
-      const cy = def.defaultPos.y + st.dy;
-      if (Math.abs(pt.x - cx) <= hw && Math.abs(pt.y - cy) <= hh) {
+      const pl = wbRenderedBoxes[def.key];
+      if (!st || !st.part || !pl) continue;
+      const hw = Math.max(24, pl.drawW / 2);
+      const hh = Math.max(24, pl.drawH / 2);
+      if (Math.abs(pt.x - pl.cx) <= hw && Math.abs(pt.y - pl.cy) <= hh) {
         selectWBSlot(def.key, false);
         wbDragging = { key: def.key, startX: pt.x, startY: pt.y, origDx: st.dx, origDy: st.dy };
         return;
@@ -1501,15 +2818,19 @@ function exportAssemblyJSON() {
   const payload = {
     exported_at: new Date().toISOString(),
     reference_torso_height_px: 240,
+    cuff_tuck_and_tab_clip: wbCuffTuck,
+    fake_3d: { yaw_deg: wbYawDeg, pitch_deg: wbPitchDeg, z_reach_pct: wbZReach, kraft_rim_px: wbKraftThickness },
     slots: {}
   };
   for (const def of WB_SLOT_DEFS) {
     const st = wbSlots[def.key];
+    const pl = wbRenderedBoxes[def.key];
     if (st && st.part) {
       payload.slots[def.key] = {
         id: st.part.id,
         name: st.part.name,
         category: st.part.category,
+        clip_tag: st.part.clip_tag,
         character_group: st.part.character_group,
         view_angle: st.part.view_angle,
         file: st.part.file,
@@ -1517,8 +2838,8 @@ function exportAssemblyJSON() {
         scale_multiplier: st.scaleMult,
         rotation_deg: st.rotDeg,
         flip_h: st.flipH,
-        canvas_x: def.defaultPos.x + st.dx,
-        canvas_y: def.defaultPos.y + st.dy,
+        canvas_x: pl ? Math.round(pl.cx) : def.defaultPos.x + st.dx,
+        canvas_y: pl ? Math.round(pl.cy) : def.defaultPos.y + st.dy,
         pivots: st.part.pivots,
       };
     }
@@ -1550,6 +2871,7 @@ function openModal(id) {
   document.getElementById("modalTitle").textContent = item.name;
   document.getElementById("modalId").textContent = item.id;
   document.getElementById("modalCat").textContent = item.category.toUpperCase();
+  document.getElementById("modalClipTag").textContent = `${item.clip_tag || '—'} (CLIP score: ${(item.clip_confidence || 0).toFixed(3)})`;
   document.getElementById("modalChar").textContent = item.character_group;
   document.getElementById("modalAngle").textContent = item.view_angle.toUpperCase();
   document.getElementById("modalPoems").textContent = (item.poems || []).map(p => `P${String(p).padStart(2, "0")}`).join(", ");
@@ -1564,6 +2886,16 @@ function openModal(id) {
 
   const isPinned = pinnedParts.some(p => p.id === item.id);
   document.getElementById("modalPinBtn").textContent = isPinned ? "✓ Unpin from Compare" : "+ Pin to Compare";
+
+  // Populate Top 8 Nearest CLIP Neighbors in Modal
+  const simStrip = document.getElementById("modalSimStrip");
+  const neighbors = (item.similar_ids || []).map(nid => PART_BY_ID[nid]).filter(Boolean);
+  simStrip.innerHTML = neighbors.map(np => `
+    <div class="modal-sim-card" onclick="openModal('${np.id}')" title="${np.name} (${np.character_group})">
+      <img src="${np.file}" loading="lazy">
+      <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)">${np.clip_tag || np.category}</div>
+    </div>
+  `).join("");
 
   document.getElementById("partModal").classList.add("active");
   drawModalCanvas(item);
@@ -1619,6 +2951,14 @@ function snapFromModal() {
   }
 }
 
+function findSimilarFromModal() {
+  if (currentModalPart) {
+    const id = currentModalPart.id;
+    closeModal();
+    findSimilarToPart(id);
+  }
+}
+
 function togglePin(id) {
   const item = PART_BY_ID[id];
   if (!item) return;
@@ -1665,7 +3005,7 @@ function updateDrawer() {
         </div>
         <div class="t" title="${p.name}">${p.name}</div>
         <div style="font:9px var(--mono);color:var(--dim);display:flex;justify-content:space-between">
-          <span>${p.character_group}</span>
+          <span>${p.clip_tag || p.character_group}</span>
           <span style="color:var(--gold)">×${p.normalized_scale.toFixed(2)}</span>
         </div>
       </div>

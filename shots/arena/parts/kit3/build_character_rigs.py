@@ -49,10 +49,10 @@ BASE_PART_SCALE_TABLE = {
     "pelvis_front_cover": 0.62,
     "upper_arm": 0.48,
     "forearm": 0.44,
-    "hand": 0.28,
+    "hand": 0.23,
     "thigh": 0.62,
     "shin": 0.58,
-    "foot": 0.40,
+    "foot": 0.29,
     "head": 0.64,
     "eyes": 0.20,
     "brows": 0.18,
@@ -1127,6 +1127,62 @@ def build_locomotion_cycles(
     return cycles
 
 
+def build_cuff_tuck_and_seam_rules(use_tracksuit31: bool = False) -> dict:
+    """
+    Return explicit wrist/ankle/neck cuff-tuck, ragged-tab clipping, and horizontal-hand
+    orientation rules so extremities tuck cleanly inside sleeve/pant cuffs.
+    """
+    if use_tracksuit31:
+        return {
+            "rig_part_family": "poet_tracksuit_v1_31_part_highres",
+            "wrist_cuff_clip_y_ratio": 0.806,        # y = 1238 / 1536 (bottom of ribbed sleeve cuff, clipping grommet tongue 1238..1408)
+            "wrist_socket_y_ratio": 0.778,           # y = 1195 / 1536 (inside ribbed sleeve cuff)
+            "hand_wrist_crease_anchor": {"nx": 0.50, "ny": 0.255, "y_px": 315, "card_h_px": 1237},
+            "hand_scale_to_torso": 0.23,
+            "hand_orientation_offset_deg": 0.0,
+            "mirror_right_hand_across_limb_axis": False,
+            "ankle_cuff_clip_y_ratio": 0.843,        # y = 1295 / 1536 (bottom of ribbed jogger cuff, clipping grommet tongue 1295..1476)
+            "ankle_socket_y_ratio": 0.814,           # y = 1250 / 1536 (inside ribbed jogger cuff)
+            "boot_shaft_anchor": {"nx": 0.50, "ny": 0.293, "y_px": 360, "card_h_px": 1230},
+            "boot_scale_to_torso": 0.29,
+            "neck_collar_tuck": {
+                "head_neck_clip_y_ratio": 0.833,     # y = 1135 / 1362
+                "torso_collar_lip_y_ratio": 0.088,   # y = 108 / 1230
+            },
+            "z_order_cuff_over_extremity": True,
+        }
+    return {
+        "rig_part_family": "kit3_v2_modular_parts",
+        "wrist_cuff_clip_y_ratio": 0.86,             # Clip protruding forearm bottom grommet tab (y = 0.86..1.00 of 86x220 farm)
+        "wrist_socket_y_ratio": 0.83,                # Attach wrist inside sleeve cuff at y = 0.83 * h
+        "hand_wrist_crease_anchor": {"nx": 0.24, "ny": 0.48, "raw_size_px": [74, 43]},
+        "hand_scale_to_torso": 0.23,
+        "hand_orientation_offset_deg": 90.0,         # Rotate 74x43 horizontal hand by +90 deg so fingers align with forearm axis
+        "mirror_right_hand_across_limb_axis": True,  # scale(1, -1) after +90 deg rotation so right thumb faces inward
+        "ankle_cuff_clip_y_ratio": 0.88,             # Clip protruding shin bottom grommet tab at y = 0.88 * h
+        "ankle_socket_y_ratio": 0.84,                # Attach ankle inside pant cuff at y = 0.84 * h
+        "boot_shaft_anchor": {"nx": 0.45, "ny": 0.28, "raw_size_px": [42, 74]},
+        "boot_scale_to_torso": 0.29,
+        "neck_collar_tuck": {
+            "head_neck_clip_y_ratio": 0.85,
+            "torso_collar_lip_y_ratio": 0.10,
+        },
+        "z_order_cuff_over_extremity": True,
+    }
+
+
+def build_fake_3d_rig_params(adult_scale: float = 1.0) -> dict:
+    """Return 2.5D cylindrical fake-3D parallax, foreshortening, and cardboard extrusion parameters."""
+    return {
+        "head_parallax_radius_px": round(14.0 * adult_scale, 2),
+        "limb_foreshortening_range": [0.65, 1.0],
+        "cardboard_extrusion_px": round(3.5 * max(0.8, adult_scale), 2),
+        "yaw_turn_range_deg": [-45.0, 45.0],
+        "torso_yaw_cos_min": 0.72,
+        "extremity_perspective_boost_max": 1.22,
+    }
+
+
 def build_joint_hierarchy(head_scale: float = 0.64, back_only: bool = False) -> dict:
     """Return the canonical brass-pivot hierarchy and socket offsets relative to torso height."""
     return {
@@ -1134,6 +1190,7 @@ def build_joint_hierarchy(head_scale: float = 0.64, back_only: bool = False) -> 
         "hip_elevation_of_standing_height": 0.53,
         "torso_height_of_standing_height": 0.32,
         "back_only_enforced": back_only,
+        "z_order_cuff_over_extremity": True,
         "bones": {
             "pelvis": {
                 "parent": None,
@@ -1181,14 +1238,15 @@ def build_joint_hierarchy(head_scale: float = 0.64, back_only: bool = False) -> 
                 "parent": "uarm_L",
                 "attach_socket": "elbow",
                 "slot": "forearm",
-                "z_order": 8,
+                "z_order": 9,
                 "sockets": {"wrist": {"dx": 0.0, "dy": 0.38}},
             },
             "hand_L": {
                 "parent": "farm_L",
                 "attach_socket": "wrist",
                 "slot": "hand",
-                "z_order": 9,
+                "z_order": 8,
+                "cuff_tucked_under": "farm_L",
                 "sockets": {},
             },
             "uarm_R": {
@@ -1202,14 +1260,15 @@ def build_joint_hierarchy(head_scale: float = 0.64, back_only: bool = False) -> 
                 "parent": "uarm_R",
                 "attach_socket": "elbow",
                 "slot": "forearm",
-                "z_order": 2,
+                "z_order": 3,
                 "sockets": {"wrist": {"dx": 0.0, "dy": 0.38}},
             },
             "hand_R": {
                 "parent": "farm_R",
                 "attach_socket": "wrist",
                 "slot": "hand",
-                "z_order": 3,
+                "z_order": 2,
+                "cuff_tucked_under": "farm_R",
                 "sockets": {},
             },
             "thigh_L": {
@@ -1223,14 +1282,15 @@ def build_joint_hierarchy(head_scale: float = 0.64, back_only: bool = False) -> 
                 "parent": "thigh_L",
                 "attach_socket": "knee",
                 "slot": "shin",
-                "z_order": 6,
+                "z_order": 7,
                 "sockets": {"ankle": {"dx": 0.0, "dy": 0.50}},
             },
             "foot_L": {
                 "parent": "shin_L",
                 "attach_socket": "ankle",
                 "slot": "foot",
-                "z_order": 7,
+                "z_order": 6,
+                "cuff_tucked_under": "shin_L",
                 "sockets": {"sole_pin": {"dx": 0.08, "dy": 0.14}},
             },
             "thigh_R": {
@@ -1244,14 +1304,15 @@ def build_joint_hierarchy(head_scale: float = 0.64, back_only: bool = False) -> 
                 "parent": "thigh_R",
                 "attach_socket": "knee",
                 "slot": "shin",
-                "z_order": 1,
+                "z_order": 2,
                 "sockets": {"ankle": {"dx": 0.0, "dy": 0.50}},
             },
             "foot_R": {
                 "parent": "shin_R",
                 "attach_socket": "ankle",
                 "slot": "foot",
-                "z_order": 2,
+                "z_order": 1,
+                "cuff_tucked_under": "shin_R",
                 "sockets": {"sole_pin": {"dx": 0.08, "dy": 0.14}},
             },
         },
@@ -1446,7 +1507,7 @@ def main():
 
     for comp_id, (slot_type, view_name) in ts_slot_mapping.items():
         t_item = tracksuit_manifest_items.get(comp_id, {})
-        rel_file = t_item.get("file", f"arena/parts/kit3/release_v2/tracksuit/{comp_id}.png")
+        rel_file = f"kits/packs/poet_tracksuit_v1/01_COMPONENTS/{comp_id}.png"
         pivots = t_item.get("pivots", [])
         ts_parts[f"tracksuit31.{comp_id}"] = resolve_part_entry(
             slot_type,
@@ -1536,13 +1597,15 @@ def main():
             },
         },
         "part_scale_table": ts_scale_table,
+        "cuff_tuck_and_seam_rules": build_cuff_tuck_and_seam_rules(use_tracksuit31=True),
+        "fake_3d_rig_params": build_fake_3d_rig_params(adult_scale=1.0),
         "joint_hierarchy": build_joint_hierarchy(head_scale=0.64, back_only=False),
         "costume_variants": [
             {
                 "id": "red_black_sunglasses",
                 "label": "Black Tracksuit w/ Red Piping & Plug-In Sunglasses (Poems 04-14)",
                 "poems": ["04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14"],
-                "primary_torso": "arena/parts/kit3/release_v2/tracksuit/01_torso_front.png",
+                "primary_torso": "kits/packs/poet_tracksuit_v1/01_COMPONENTS/01_torso_front.png",
                 "primary_pose": "arena/parts/kit3/v2/poses/poet.red_black_sunglasses/stand_front.png",
             },
             {
@@ -2481,6 +2544,15 @@ def main():
         "available_sheets": dj_sheets,
         "resolved_parts": dj_parts,
     }
+
+    # Ensure every rig includes explicit cuff_tuck_and_seam_rules and fake_3d_rig_params
+    for rid, r in rigs.items():
+        is_ts31 = (rid == "poet_tracksuit_31")
+        adult_s = r.get("anatomy", {}).get("adult_scale_ratio", 1.0)
+        if "cuff_tuck_and_seam_rules" not in r:
+            r["cuff_tuck_and_seam_rules"] = build_cuff_tuck_and_seam_rules(use_tracksuit31=is_ts31)
+        if "fake_3d_rig_params" not in r:
+            r["fake_3d_rig_params"] = build_fake_3d_rig_params(adult_scale=adult_s)
 
     # Summary statistics
     total_resolved_parts = sum(len(r["resolved_parts"]) for r in rigs.values())
