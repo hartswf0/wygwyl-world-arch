@@ -36,7 +36,8 @@
     { id: 'poems',      name: 'Poem Production Design', does: 'One page per poem: footage, cast, props, places, kits', path: 'shots/poems/index.html' },
     { id: 'stage',      name: 'Cut-Out Stage', does: 'Kit sheets cut apart and assembled scene by scene', path: 'shots/stage/index.html' },
     { id: 'bodylab',    name: 'Body Lab', does: 'Every hand, shoe, head and eye across the cast, at true scale', path: 'shots/bodylab/index.html' },
-    { id: 'anim',       name: 'Animation Library', does: 'Solved acts retargeted onto each character', path: 'shots/stage/anim/index.html' }
+    { id: 'anim',       name: 'Animation Library', does: 'Solved acts retargeted onto each character', path: 'shots/stage/anim/index.html' },
+    { id: 'rig',        name: 'Rig Builder', does: 'Assemble, fix and pose characters from the cut parts', path: 'shots/rig/index.html' }
   ];
   window.WYGWYL_ROUTES = ROUTES;
 

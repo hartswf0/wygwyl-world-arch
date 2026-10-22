@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rig Builder</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--acc:#e7a35a;--sel:#5fd0ff;--arch:#d98bb0;--plane:#7fd3c4;--act:#b9c46a;--bad:#ff6b5a;--warn:#f3c04f;--ok:#7fd38a;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
+header{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
+header a,select.btn,.btn{font:12px var(--mono);color:var(--dim);background:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;text-decoration:none;cursor:pointer}
+select.btn{max-width:260px}
+header a:hover,.btn:hover{color:var(--card);border-color:var(--card)}
+.btn.on{color:#1a120a;background:var(--card);border-color:var(--card)}
+.btn.go{color:#120c08;background:var(--acc);border-color:var(--acc)}
+.btn:disabled{opacity:.35;cursor:default}
+h1{font:400 26px 'Permanent Marker',cursive;margin:0 8px 0 0}
+h1 span{color:var(--acc)}
+.sp{flex:1}
+main{display:grid;grid-template-columns:minmax(0,1fr) 400px;min-height:calc(100vh - 60px)}
+@media (max-width:1100px){main{grid-template-columns:1fr}}
+#left{padding:12px 16px;display:grid;gap:8px;align-content:start;min-width:0}
+#wrap{position:relative;width:100%;aspect-ratio:16/10;background:#050403;border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+#hud{position:absolute;left:10px;top:8px;font:11px var(--mono);color:var(--dim);pointer-events:none;white-space:pre}
+#modeTip{position:absolute;right:10px;top:8px;font:11px var(--mono);color:var(--dim);pointer-events:none;text-align:right;max-width:46%}
+.tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.hint{font:11px var(--mono);color:var(--dim)}
+.tools label{font:11px var(--mono);color:var(--dim);display:flex;gap:4px;align-items:center}
+#tl{position:relative;height:38px;background:#0f0c0a;border:1px solid var(--line);border-radius:6px;cursor:pointer;touch-action:none}
+#tl canvas{position:absolute;inset:0;width:100%;height:100%}
+aside{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;max-height:calc(100vh - 60px);position:sticky;top:0}
+@media (max-width:1100px){aside{border-left:0;border-top:1px solid var(--line);max-height:none;position:static}}
+.tabs{display:flex;gap:4px;padding:10px 12px 6px;border-bottom:1px solid var(--line)}
+.pane{overflow:auto;padding:10px 12px;flex:1;min-height:0}
+h3{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:6px 0}
+h2{font:400 20px 'Permanent Marker',cursive;margin:0 0 4px;color:var(--card)}
+.f{border:1px solid var(--line);border-left:3px solid var(--dim);border-radius:6px;padding:7px 9px;margin:0 0 7px;background:var(--panel);cursor:pointer}
+.f.bad{border-left-color:var(--bad)}.f.warn{border-left-color:var(--warn)}.f.info{border-left-color:var(--plane)}
+.f b{font-weight:600}.f .s{font:10px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.1em}
+.f p{margin:2px 0 4px;font-size:12.5px;color:#d8cdbf}
+.f .btn{font-size:11px;padding:2px 9px}
+.sum{display:flex;gap:10px;font:12px var(--mono);margin-bottom:8px;flex-wrap:wrap}
+.sum span{padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+.kv{display:grid;grid-template-columns:96px 1fr;gap:2px 8px;font:11.5px var(--mono);margin:6px 0}
+.kv i{color:var(--dim);font-style:normal}
+.kv span{word-break:break-all}
+@media (max-width:700px){#modeTip{display:none}#hud{font-size:9.5px}}
+.kv .src-brad{color:var(--ok)}.kv .src-hint{color:var(--warn)}.kv .src-label{color:var(--sel)}.kv .src-alpha{color:var(--dim)}
+#pThumb{width:100%;height:150px;object-fit:contain;background:#000;border-radius:6px}
+#slots{display:grid;gap:6px;grid-template-columns:minmax(0,1fr)}
+.row{min-width:0;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:4px 6px}
+.row.sel{border-color:var(--sel)}
+.row .hd{display:flex;gap:8px;align-items:center;font:11px var(--mono);color:var(--dim);cursor:pointer}
+.row .hd b{color:var(--ink);font-weight:600;min-width:94px}
+.row .hd .bad{color:var(--bad)}
+.strip{display:flex;gap:4px;overflow-x:auto;padding:4px 0 2px}
+.th{flex:0 0 auto;width:70px;cursor:pointer;border:1px solid var(--line);border-radius:5px;background:#000;position:relative;padding:2px}
+.th img{width:64px;height:64px;object-fit:contain;display:block}
+.th.cur{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.th.C img{filter:grayscale(1);opacity:.35}
+.th .g{position:absolute;left:2px;top:1px;font:600 9px var(--mono);padding:0 3px;border-radius:2px;color:#120c08;background:var(--ok)}
+.th .g.B{background:var(--warn)}.th .g.C{background:#6b5f55;color:#ddd}
+.th .sd{position:absolute;right:2px;top:1px;font:600 9px var(--mono);color:var(--sel)}
+.th .sd.wrong{color:var(--bad)}
+.th em{display:block;font:9px/1.15 var(--mono);color:var(--dim);font-style:normal;height:21px;overflow:hidden;margin-top:1px}
+.th.C em{color:#b9877c}
+/* captcha */
+#cap{display:grid;gap:8px}
+#capQ{font:600 16px Inter}
+#capQ small{display:block;font:11px var(--mono);color:var(--dim);font-weight:400}
+#capBox{position:relative;background:#000;border:1px solid var(--line);border-radius:8px;height:300px;display:grid;place-items:center;overflow:hidden;touch-action:none}
+#capBox canvas{max-width:100%;max-height:100%}
+#capBtns{display:flex;gap:6px;flex-wrap:wrap}
+#capMeta{font:10.5px var(--mono);color:var(--dim)}
+.body{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font:10.5px var(--mono)}
+.body div{border:1px dashed #4a3d31;border-radius:5px;padding:6px 2px;text-align:center;color:var(--dim);cursor:pointer;min-height:30px}
+.body div.hot{border-color:var(--acc);color:var(--acc);background:#2a2119}
+.body div.x{visibility:hidden}
+#drag{position:fixed;pointer-events:none;width:64px;height:64px;object-fit:contain;z-index:9;opacity:.85;display:none}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--card);color:#1a120a;font:600 13px Inter;padding:6px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:10}
+.lim{height:6px;background:#2a221c;border-radius:3px;position:relative;margin:2px 0 6px}
+.lim i{position:absolute;top:-2px;width:3px;height:10px;background:var(--sel)}
+kbd{font:10px var(--mono);border:1px solid var(--line);border-radius:3px;padding:0 3px;color:var(--dim)}
+</style>
+</head>
+<body>
+<header>
+  <a href="../stage/index.html">← Stage</a>
+  <h1>Rig <span>Builder</span></h1>
+  <select class="btn" id="char" aria-label="Character and costume"></select>
+  <select class="btn" id="view" aria-label="Body view"><option value="front">front</option><option value="back">back</option><option value="profile">profile</option></select>
+  <span class="sp"></span>
+  <button class="btn on" data-mode="pose" title="P: drag a limb to rotate it about its joint, drag a hand or foot to place it (IK), drag the hips to move">Pose</button>
+  <button class="btn" data-mode="edit" title="E: move / rotate / scale a part, offsets saved per part">Edit part</button>
+  <button class="btn" data-mode="points" title="K: drag the pivot and socket dots onto the real brads">Points</button>
+  <a href="../bodylab/index.html">Body Lab →</a>
+</header>
+<main>
+  <div id="left">
+    <div id="wrap"><canvas id="cv"></canvas><div id="hud"></div><div id="modeTip"></div></div>
+    <div class="tools">
+      <button class="btn" id="bStand" title="Reset the pose and stand the figure on the floor">Reset pose</button>
+      <label>elbows <select class="btn" id="elbow"><option value="out">out</option><option value="in">in</option></select></label>
+      <label>knees <select class="btn" id="knee"><option value="out">out</option><option value="in">in</option></select></label>
+      <label><input type="checkbox" id="showPts" checked> joints</label>
+      <label><input type="checkbox" id="showBrads"> all brads</label>
+      <span class="sp"></span>
+      <button class="btn" id="bResetRig" title="Back to the default parts with no edits">Reset rig</button>
+    </div>
+    <div id="tl" title="Timeline: click or drag to scrub. Keys are diamonds."><canvas id="tlc"></canvas></div>
+    <div class="tools">
+      <button class="btn" id="bKey" title="Set a key at this frame (K is Points mode; use Enter)">◆ Key</button>
+      <button class="btn" id="bDelKey">✕ Key</button>
+      <button class="btn" id="bPlay">▶ Play</button>
+      <span class="hint" id="fr">F 000</span>
+      <label>frames <input class="btn" id="nFrames" type="number" min="2" max="600" value="48" style="width:70px"></label>
+      <label>fps <input class="btn" id="fps" type="number" min="6" max="60" value="24" style="width:56px"></label>
+      <label>ease <select class="btn" id="ease"><option value="io">in-out</option><option value="lin">linear</option></select></label>
+      <span class="sp"></span>
+      <button class="btn" id="bClip" title="Download the keyframed motion as a stage clip (shots/stage/FORMATS.md §1); save it in shots/rig/clips/">Export clip</button>
+    </div>
+    <h3>Parts — every candidate per slot <span class="hint" style="text-transform:none;letter-spacing:0">(click to swap · grade C greyed with reasons · L/R badge red = other side)</span></h3>
+    <div id="slots"></div>
+  </div>
+  <aside>
+    <div class="tabs">
+      <button class="btn on" data-tab="critic">What's wrong</button>
+      <button class="btn" data-tab="part">Part</button>
+      <button class="btn" data-tab="cap">Captchas</button>
+    </div>
+    <div class="pane" id="tab-critic">
+      <div class="sum" id="critSum"></div>
+      <div class="tools" style="margin-bottom:8px"><button class="btn go" id="bFixAll">Fix everything fixable</button><span class="hint" id="height"></span></div>
+      <div id="crit"></div>
+    </div>
+    <div class="pane" id="tab-part" hidden>
+      <div id="part"><p class="hint">Click a part on the figure.</p></div>
+    </div>
+    <div class="pane" id="tab-cap" hidden>
+      <div id="cap">
+        <div class="tools"><span class="hint" id="capCount"></span><span class="sp"></span>
+          <select class="btn" id="capKind" aria-label="Task kind"><option value="mix">mixed tasks</option><option value="pivot">click the brad</option><option value="side">left or right</option><option value="costume">belongs to costume</option><option value="cut">clean cut</option><option value="shape">hand shape</option><option value="slot">drag into slot</option></select></div>
+        <div id="capQ"></div>
+        <div id="capBox"></div>
+        <div id="capBtns"></div>
+        <div id="capMeta"></div>
+        <div class="tools"><button class="btn" id="capSkip">Skip</button><button class="btn" id="capUndo">Undo last</button><span class="sp"></span>
+          <input class="btn" id="who" placeholder="your name (optional)" style="width:150px"><button class="btn go" id="capExport" title="Download this session's answers; commit it as shots/rig/labels/<file>.json and run build.py">Export labels</button></div>
+        <p class="hint">Answers are kept in this browser and applied here at once. Export → put the file in <b>shots/rig/labels/</b> → <b>python3 shots/rig/build.py</b> applies them for everyone (pivots, sides, grades, shapes). See shots/rig/TRAINING.md.</p>
+      </div>
+    </div>
+  </aside>
+</main>
+<img id="drag" alt="">
+<div id="toast"></div>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const DEG = Math.PI / 180;
+const CLIP_CM_PX = 4.0383, CLIP_FLOOR = 925, CLIP_X0 = 800;   // same scale and floor as shots/stage/anim clips
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+function toast(t) { const e = $('toast'); e.textContent = t; e.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => e.style.opacity = 0, 1600); }
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const angOf = v => Math.atan2(v[0], v[1]) / DEG;        // 0 = straight down, + toward screen-right (y down)
+const wrap = a => ((a + 540) % 360) - 180;
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+
+// ───────────────────────── skeleton template ─────────────────────────
+// at: the parent's point this slot hangs on; pv: this card's pivot; tip: the far end of its bone;
+// rest: bone direction at rest (deg, 0 = down, 180 = up). Points named VL/VR are mapped per view.
+const SLOTS = [
+  { n: 'hip', cls: 'hip', label: 'hip bridge', parent: null, pv: 'waist', tip: 'hips', rest: 0, joint: 'pelvis' },
+  { n: 'torso', cls: 'torso', label: 'torso', parent: 'hip', at: 'waist', pv: 'waist', tip: 'neck', rest: 180, joint: 'waist' },
+  { n: 'head', cls: 'head', label: 'head', parent: 'torso', at: 'neck', pv: 'neck', tip: 'top', rest: 180, joint: 'neck' },
+  { n: 'upper_arm_L', cls: 'upper_arm', side: 'L', label: 'upper arm', parent: 'torso', at: 'shL', pv: 'pivot', tip: 'socket', rest: 0, joint: 'shoulder' },
+  { n: 'forearm_L', cls: 'forearm', side: 'L', label: 'forearm', parent: 'upper_arm_L', at: 'socket', pv: 'pivot', tip: 'socket', rest: 0, joint: 'elbow' },
+  { n: 'hand_L', cls: 'hand', side: 'L', label: 'hand', parent: 'forearm_L', at: 'socket', pv: 'wrist', tip: 'tip', rest: 0, joint: 'wrist' },
+  { n: 'upper_arm_R', cls: 'upper_arm', side: 'R', label: 'upper arm', parent: 'torso', at: 'shR', pv: 'pivot', tip: 'socket', rest: 0, joint: 'shoulder' },
+  { n: 'forearm_R', cls: 'forearm', side: 'R', label: 'forearm', parent: 'upper_arm_R', at: 'socket', pv: 'pivot', tip: 'socket', rest: 0, joint: 'elbow' },
+  { n: 'hand_R', cls: 'hand', side: 'R', label: 'hand', parent: 'forearm_R', at: 'socket', pv: 'wrist', tip: 'tip', rest: 0, joint: 'wrist' },
+  { n: 'thigh_L', cls: 'thigh', side: 'L', label: 'thigh', parent: 'hip', at: 'hipL', pv: 'pivot', tip: 'socket', rest: 0, joint: 'hip' },
+  { n: 'shin_L', cls: 'shin', side: 'L', label: 'shin', parent: 'thigh_L', at: 'socket', pv: 'pivot', tip: 'socket', rest: 0, joint: 'knee' },
+  { n: 'shoe_L', cls: 'shoe', side: 'L', label: 'foot', parent: 'shin_L', at: 'socket', pv: 'ankle', tip: null, rest: 0, joint: 'ankle' },
+  { n: 'thigh_R', cls: 'thigh', side: 'R', label: 'thigh', parent: 'hip', at: 'hipR', pv: 'pivot', tip: 'socket', rest: 0, joint: 'hip' },
+  { n: 'shin_R', cls: 'shin', side: 'R', label: 'shin', parent: 'thigh_R', at: 'socket', pv: 'pivot', tip: 'socket', rest: 0, joint: 'knee' },
+  { n: 'shoe_R', cls: 'shoe', side: 'R', label: 'foot', parent: 'shin_R', at: 'socket', pv: 'ankle', tip: null, rest: 0, joint: 'ankle' },
+];
+const S = Object.fromEntries(SLOTS.map(s => [s.n, s]));
+const CHILD = {}; SLOTS.forEach(s => { if (s.parent) (CHILD[s.parent] = CHILD[s.parent] || []).push(s.n); });
+// canonical stack, back to front (cut-out convention: thigh pinned over the bridge, torso over the thighs' tops,
+// forearm over upper arm, hand over forearm). Profile: far (R) limbs behind the torso.
+const ORDER = {
+  front: ['hip', 'shoe_L', 'shin_L', 'thigh_L', 'shoe_R', 'shin_R', 'thigh_R', 'torso', 'head', 'upper_arm_L', 'forearm_L', 'hand_L', 'upper_arm_R', 'forearm_R', 'hand_R'],
+  profile: ['upper_arm_R', 'forearm_R', 'hand_R', 'shoe_R', 'shin_R', 'thigh_R', 'hip', 'shoe_L', 'shin_L', 'thigh_L', 'torso', 'head', 'upper_arm_L', 'forearm_L', 'hand_L'],
+};
+ORDER.back = ORDER.front;
+const PTS_OF = { limb: ['pivot', 'socket'], torso: ['neck', 'waist', 'shVL', 'shVR'], hip: ['waist', 'hipVL', 'hipVR'], head: ['neck', 'top'], hand: ['wrist', 'tip'], shoe: ['ankle', 'heel', 'toe'] };
+const kindOf = cls => ({ torso: 'torso', hip: 'hip', head: 'head', hand: 'hand', shoe: 'shoe' }[cls] || 'limb');
+const PT_WORD = {
+  upper_arm: { pivot: 'SHOULDER', socket: 'ELBOW' }, forearm: { pivot: 'ELBOW', socket: 'WRIST' },
+  thigh: { pivot: 'HIP', socket: 'KNEE' }, shin: { pivot: 'KNEE', socket: 'ANKLE' },
+  hand: { wrist: 'WRIST', tip: 'FINGERTIP' }, shoe: { ankle: 'ANKLE', heel: 'HEEL', toe: 'TOE' },
+  head: { neck: 'NECK', top: 'CROWN' }, torso: { neck: 'NECK', waist: 'WAIST', shVL: 'SHOULDER (screen-left)', shVR: 'SHOULDER (screen-right)' },
+  hip: { waist: 'WAIST', hipVL: 'HIP (screen-left)', hipVR: 'HIP (screen-right)' },
+};
+const SHAPES = ['relaxed', 'open', 'fist', 'grip', 'point', 'flat_push', 'pinch', 'cup', 'wave', 'thumb', 'peace', 'claw'];
+
+// ───────────────────────── state ─────────────────────────
+let IDX, D, P = {};           // index, character doc, parts by id
+let rig, pose, keys = [], frame = 0, playing = false;
+let mode = 'pose', sel = null, findings = [];
+let session = store.get('rigb.session', null);
+if (!session) { const d = new Date(); session = { id: 'rig-' + d.toISOString().slice(0, 16).replace(/[-:T]/g, '') + '-' + Math.random().toString(36).slice(2, 6), started: d.toISOString(), answers: [] }; store.set('rigb.session', session); }
+const imgs = {}, masks = {};
+function img(p) {
+  if (!imgs[p.id]) { const im = new Image(); im.src = '../' + p.img; im.onload = () => { draw(); }; im.onerror = () => console.warn('missing image', p.img); imgs[p.id] = im; }
+  return imgs[p.id];
+}
+function mask(p) {               // alpha for hit tests
+  if (masks[p.id]) return masks[p.id];
+  const im = img(p); if (!im.complete || !im.naturalWidth) return null;
+  const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0);
+  try { masks[p.id] = { w: c.width, h: c.height, d: x.getImageData(0, 0, c.width, c.height).data }; } catch (e) { masks[p.id] = { w: 0 }; }
+  return masks[p.id];
+}
+
+// ───────────────────────── parts, points, labels ─────────────────────────
+function applyLocalLabels(p) {          // this browser's answers win over the built data until exported + rebuilt
+  for (const a of session.answers) {
+    if (a.part !== p.id) continue;
+    if ((a.t === 'pivot' || a.t === 'edit-point') && a.xy) { p.pts[a.point] = a.xy.slice(); p.src[a.point] = 'label'; }
+    if (a.t === 'side' && (a.v === 'L' || a.v === 'R')) p.side = a.v;
+    if (a.t === 'shape' && a.v && a.v !== 'unsure') p.shape = a.v;
+    if (a.t === 'cut' && a.v === 'no') { p.q = 'C'; p.why = (p.why || []).concat(['labelled unclean: ' + ((a.why || []).join(', ') || 'marked')]); }
+    if (a.t === 'costume' && a.v === 'no') { p.not_costume = true; }
+    if (a.t === 'slot' && a.v) { if (a.v === 'not_body') p.cls = 'other'; else { const m = a.v.match(/^(.*)_(L|R)$/); if (m) { p.cls = m[1]; p.side = m[2]; } else p.cls = a.v; } }
+  }
+}
+function pt(p, name) {          // a card point in card px, with sensible fallbacks
+  if (!p) return [0, 0];
+  const q = p.pts || {};
+  if (q[name]) return q[name];
+  const w = p.w, h = p.h;
+  const F = { pivot: [w / 2, .07 * h], socket: [w / 2, .93 * h], neck: kindOf(p.cls) === 'head' ? [w / 2, .92 * h] : [w / 2, .05 * h], waist: kindOf(p.cls) === 'hip' ? [w / 2, .15 * h] : [w / 2, .95 * h],
+    shVL: [.12 * w, .17 * h], shVR: [.88 * w, .17 * h], hipVL: [.2 * w, .8 * h], hipVR: [.8 * w, .8 * h], top: [w / 2, 0], wrist: [w / 2, .08 * h], tip: [w / 2, h],
+    ankle: [w / 2, .15 * h], heel: [0, h], toe: [w, h] };
+  return F[name] || [w / 2, h / 2];
+}
+// actor L/R -> viewer points: in front view the actor's left is screen-right
+function namedPt(p, name, view) {
+  const lr = { shL: ['shVR', 'shVL'], shR: ['shVL', 'shVR'], hipL: ['hipVR', 'hipVL'], hipR: ['hipVL', 'hipVR'] }[name];
+  if (lr) return pt(p, view === 'back' ? lr[1] : lr[0]);
+  if (name === 'hips') { const a = pt(p, 'hipVL'), b = pt(p, 'hipVR'); return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; }
+  return pt(p, name);
+}
+function ppcOf(p) { return p && p.ppc ? p.ppc : D.ppcMedian; }
+
+// ───────────────────────── rig + pose ─────────────────────────
+function score(p, slot, view) {
+  let s = 0;
+  if (slot.side) s += p.side === slot.side ? 4 : (p.side ? -3 : 1);
+  if (p.view) s += p.view === view ? 3 : -2;
+  s += { A: 3, B: 1, C: -6 }[p.q] || 0;
+  if (p.nb >= 2) s += 1;
+  const k = PTS_OF[kindOf(p.cls)] || [];
+  s += k.filter(n => p.src && p.src[n] === 'brad').length * .5;
+  if (p.ppc_src === 'sheet') s += 1;
+  if (p.not_costume) s -= 10;
+  if (p.state && /uncut|pair/.test(p.state)) s -= 4;
+  if (p.cls === 'hand' && p.shape && p.shape !== 'relaxed') s -= 1;
+  return s;
+}
+function candidates(slot) {
+  const L = D.parts.filter(p => p.cls === slot.cls);
+  const v = rig ? rig.view : 'front';
+  return L.sort((a, b) => score(b, slot, v) - score(a, slot, v));
+}
+function bestFor(slot, view, filt) {
+  const L = D.parts.filter(p => p.cls === slot.cls && (!filt || filt(p)));
+  L.sort((a, b) => score(b, slot, view) - score(a, slot, view));
+  return L[0] ? L[0].id : null;
+}
+function defaultRig(view) {
+  const d = (D.defaults && (D.defaults[view] || (view === 'back' ? null : D.defaults.front))) || {};
+  const slots = {};
+  for (const s of SLOTS) {
+    let pid = d[s.n];
+    if (!pid || !P[pid]) pid = bestFor(s, view);
+    slots[s.n] = { pid, dx: 0, dy: 0, rot: 0, s: (P[pid] && P[pid].user_scale) || 1, flip: false };
+    // a profile card used on both sides, or an unsided card in a sided slot: nothing to flip
+    // a card drawn for the other side is mirrored so it reads as this side
+    const p = P[pid];
+    if (p && s.side && p.side && p.side !== s.side && view !== 'profile') slots[s.n].flip = true;
+  }
+  return { key: D.key, view, slots, order: ORDER[view].slice() };
+}
+const zeroPose = () => ({ x: 0, y: -100, rot: 0, a: Object.fromEntries(SLOTS.map(s => [s.n, 0])) });
+function sideSign(slot, view) {
+  if (view === 'profile') return 1;
+  if (!slot.side) return 1;
+  return (slot.side === 'L') === (view !== 'back') ? 1 : -1;
+}
+function limitOf(slot) { return (IDX.limits && IDX.limits[slot.cls]) || [-180, 180]; }
+
+// layout: every slot's card -> world matrix (cm per card px), pivot, bone angle
+function layout(ps) {
+  const L = {}, view = rig.view;
+  for (const s of SLOTS) {
+    const c = rig.slots[s.n], p = c && c.pid ? P[c.pid] : null;
+    const par = s.parent ? L[s.parent] : null;
+    let at;
+    if (!par) at = [ps.x, ps.y];
+    else at = par.p ? apply(par.M, namedPt(par.p, s.at, view)) : par.end;
+    const sg = sideSign(s, view);
+    const thetaPar = par ? par.theta - S[s.parent].rest : 0;
+    const theta = thetaPar + s.rest + sg * (s.parent ? ps.a[s.n] : (ps.a[s.n] + ps.rot));
+    const o = { s, p, c, at, theta, sg };
+    if (p) {
+      const k = c.s / ppcOf(p), fx = c.flip ? -1 : 1;
+      const pv = pt(p, s.pv);
+      let a0 = s.rest;
+      const tipPt = s.tip ? namedPt(p, s.tip, view) : null;
+      if (tipPt) { const v = [fx * (tipPt[0] - pv[0]), tipPt[1] - pv[1]]; if (Math.hypot(v[0], v[1]) > 2) a0 = angOf(v); }
+      const r = (a0 - theta + c.rot) * DEG;
+      const P0 = [at[0] + c.dx, at[1] + c.dy];
+      const cs = Math.cos(r), sn = Math.sin(r);
+      // M = T(P0) R(r) S(fx k, k) T(-pv)
+      const a = cs * fx * k, b = sn * fx * k, cc = -sn * k, d = cs * k;
+      o.M = [a, b, cc, d, P0[0] - (a * pv[0] + cc * pv[1]), P0[1] - (b * pv[0] + d * pv[1])];
+      o.P0 = P0; o.k = k; o.fx = fx;
+      o.end = tipPt ? apply(o.M, tipPt) : P0;
+    } else { o.end = at; o.P0 = at; }
+    L[s.n] = o;
+  }
+  return L;
+}
+const apply = (M, q) => [M[0] * q[0] + M[2] * q[1] + M[4], M[1] * q[0] + M[3] * q[1] + M[5]];
+function inv(M) { const [a, b, c, d, e, f] = M, det = a * d - b * c; return [d / det, -b / det, -c / det, a / det, (c * f - d * e) / det, (b * e - a * f) / det]; }
+
+function lowestY(L) {
+  let y = -1e9;
+  for (const n of ['shoe_L', 'shoe_R']) { const o = L[n]; if (o.p) for (const k of ['heel', 'toe', 'sole']) { if (o.p.pts && o.p.pts[k] || k !== 'sole') y = Math.max(y, apply(o.M, pt(o.p, k))[1]); } else y = Math.max(y, o.at[1]); }
+  if (y < -1e8) y = Math.max(L.shin_L.end[1], L.shin_R.end[1]);
+  return y;
+}
+function standPose() {
+  const ps = zeroPose(); ps.y = 0;
+  const L = layout(ps); ps.y -= lowestY(L);
+  return ps;
+}
+function topY(L) {
+  const o = L.head;
+  if (o.p) return apply(o.M, pt(o.p, 'top'))[1];
+  return L.torso.end[1];
+}
+
+// ───────────────────────── persistence ─────────────────────────
+function saveRig() { store.set('rigb.rig.' + D.key + '.' + rig.view, rig); store.set('rigb.anim.' + D.key + '.' + rig.view, { keys, pose, n: +$('nFrames').value, fps: +$('fps').value }); }
+function loadRig(view) {
+  const r = store.get('rigb.rig.' + D.key + '.' + view, null);
+  if (r && r.slots && SLOTS.every(s => r.slots[s.n])) { rig = r; for (const s of SLOTS) { const c = rig.slots[s.n]; if (c.pid && !P[c.pid]) c.pid = bestFor(s, view); } }
+  else rig = defaultRig(view);
+  if (!rig.order || rig.order.length !== SLOTS.length) rig.order = ORDER[view].slice();
+  const an = store.get('rigb.anim.' + D.key + '.' + view, null);
+  keys = an && an.keys ? an.keys : [];
+  pose = an && an.pose ? an.pose : standPose();
+  if (an && an.n) $('nFrames').value = an.n;
+  if (an && an.fps) $('fps').value = an.fps;
+}
+function record(a) {
+  a.ts = new Date().toISOString(); a.char = D.key; a.view = rig ? rig.view : null;
+  session.answers.push(a); store.set('rigb.session', session); capCount();
+}
+
+// ───────────────────────── canvas view ─────────────────────────
+const cv = $('cv'), cx = cv.getContext('2d');
+let V = { z: 3, ox: 0, oy: 0 };
+function resize() {
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+  V.dpr = dpr; V.W = r.width; V.H = r.height;
+  V.z = Math.min(V.H / 215, V.W / 240);           // 215 cm of height fits
+  V.ox = V.W * .5; V.oy = V.H - 16 - 4 * V.z;
+  draw(); drawTL();
+}
+const toScr = q => [V.ox + q[0] * V.z, V.oy + q[1] * V.z];
+const toWorld = (x, y) => [(x - V.ox) / V.z, (y - V.oy) / V.z];
+
+let LAY = null;
+function draw() {
+  if (!rig) return;
+  const L = LAY = layout(pose);
+  const W = V.W, H = V.H;
+  cx.setTransform(V.dpr, 0, 0, V.dpr, 0, 0);
+  cx.fillStyle = '#050403'; cx.fillRect(0, 0, W, H);
+  // floor + ruler
+  cx.strokeStyle = '#3a2e24'; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(0, V.oy + .5); cx.lineTo(W, V.oy + .5); cx.stroke();
+  const st = D.stature_cm, rx = V.ox - 75 * V.z;
+  cx.strokeStyle = '#6b5a49'; cx.fillStyle = '#9a8d7e'; cx.font = '10px JetBrains Mono, monospace';
+  cx.beginPath(); cx.moveTo(rx, V.oy); cx.lineTo(rx, V.oy - 200 * V.z); cx.stroke();
+  for (let c = 0; c <= 200; c += 5) {
+    const y = V.oy - c * V.z, w = c % 50 === 0 ? 12 : c % 10 === 0 ? 8 : 4;
+    cx.beginPath(); cx.moveTo(rx, y); cx.lineTo(rx + w, y); cx.stroke();
+    if (c % 20 === 0) cx.fillText(c + '', rx - 26, y + 3);
+  }
+  cx.setLineDash([5, 5]); cx.strokeStyle = 'rgba(231,163,90,.55)';
+  const sy = V.oy - st * V.z; cx.beginPath(); cx.moveTo(rx, sy); cx.lineTo(V.ox + 75 * V.z, sy); cx.stroke(); cx.setLineDash([]);
+  cx.fillStyle = '#e7a35a'; cx.fillText(st + ' cm  (' + D.name + ')', rx + 14, sy - 4);
+  // measured height
+  const hTop = topY(L), hBot = lowestY(L), hcm = hBot - hTop;
+  cx.strokeStyle = 'rgba(95,208,255,.6)'; cx.beginPath();
+  const mx = V.ox + 62 * V.z; cx.moveTo(mx, toScr([0, hTop])[1]); cx.lineTo(mx, toScr([0, hBot])[1]); cx.stroke();
+  cx.fillStyle = '#5fd0ff'; cx.fillText(hcm.toFixed(0) + ' cm drawn', mx + 4, toScr([0, hTop])[1] + 10);
+  // shadow
+  cx.fillStyle = 'rgba(0,0,0,.6)'; cx.beginPath(); cx.ellipse(toScr([pose.x, 0])[0], V.oy, 24 * V.z, 3 * V.z, 0, 0, 7); cx.fill();
+  // cards
+  const bad = new Set(findings.filter(f => f.sev === 'bad').map(f => f.slot));
+  for (const n of rig.order) {
+    const o = L[n]; if (!o.p) continue;
+    const im = img(o.p); if (!im.complete || !im.naturalWidth) continue;
+    const sx = o.p.w / im.naturalWidth, sy2 = o.p.h / im.naturalHeight;   // card px may differ from file px
+    const M = o.M;
+    cx.setTransform(V.dpr * V.z * M[0], V.dpr * V.z * M[1], V.dpr * V.z * M[2], V.dpr * V.z * M[3], V.dpr * (V.ox + V.z * M[4]), V.dpr * (V.oy + V.z * M[5]));
+    cx.drawImage(im, 0, 0, im.naturalWidth * sx, im.naturalHeight * sy2);
+    if (n === sel) { cx.strokeStyle = '#5fd0ff'; cx.lineWidth = 2 / (V.z * o.k); cx.setLineDash([6 / (V.z * o.k), 4 / (V.z * o.k)]); cx.strokeRect(0, 0, o.p.w, o.p.h); cx.setLineDash([]); }
+  }
+  cx.setTransform(V.dpr, 0, 0, V.dpr, 0, 0);
+  // brads / joints / points
+  if ($('showBrads').checked) for (const n of rig.order) { const o = L[n]; if (!o.p) continue; cx.strokeStyle = 'rgba(231,163,90,.7)'; for (const b of o.p.brads || []) { const q = toScr(apply(o.M, b)); cx.beginPath(); cx.arc(q[0], q[1], 3, 0, 7); cx.stroke(); } }
+  if ($('showPts').checked || mode === 'points') {
+    for (const s of SLOTS) {
+      const o = L[s.n]; const q = toScr(o.P0);
+      cx.fillStyle = bad.has(s.n) ? '#ff6b5a' : '#5fd0ff'; cx.beginPath(); cx.arc(q[0], q[1], 3.2, 0, 7); cx.fill();
+      if (s.parent && o.p && L[s.parent].p) {             // brad gap: parent socket vs this pivot
+        const a = toScr(o.at); if (dist(a, q) > 1.5) { cx.strokeStyle = '#ff6b5a'; cx.beginPath(); cx.moveTo(a[0], a[1]); cx.lineTo(q[0], q[1]); cx.stroke(); }
+      }
+    }
+  }
+  if (mode === 'points' && sel && L[sel].p) {
+    const o = L[sel], p = o.p;
+    for (const b of p.brads || []) { const q = toScr(apply(o.M, b)); cx.strokeStyle = 'rgba(231,163,90,.9)'; cx.beginPath(); cx.arc(q[0], q[1], 5, 0, 7); cx.stroke(); }
+    for (const nm of PTS_OF[kindOf(p.cls)]) {
+      const q = toScr(apply(o.M, pt(p, nm))), src = (p.src || {})[nm];
+      cx.fillStyle = { brad: '#7fd38a', label: '#5fd0ff', hint: '#f3c04f', alpha: '#9a8d7e' }[src] || '#f3c04f';
+      cx.beginPath(); cx.arc(q[0], q[1], 7, 0, 7); cx.fill(); cx.strokeStyle = '#000'; cx.stroke();
+      cx.fillStyle = '#fff'; cx.font = '600 11px JetBrains Mono, monospace'; cx.fillText(nm + (src ? ' · ' + src : ''), q[0] + 10, q[1] + 4);
+    }
+  }
+  if (mode === 'edit' && sel && L[sel].p) { const h = handles(L[sel]); for (const [k, q] of Object.entries(h)) { cx.fillStyle = k === 'rot' ? '#d98bb0' : '#7fd3c4'; cx.beginPath(); cx.arc(q[0], q[1], 7, 0, 7); cx.fill(); cx.fillStyle = '#120c08'; cx.font = '600 10px Inter'; cx.fillText(k === 'rot' ? '↻' : '⤡', q[0] - 4, q[1] + 4); } }
+  // numbered critic badges
+  const byslot = {}; findings.forEach((f, i) => { if (f.slot && f.sev !== 'info' && byslot[f.slot] == null) byslot[f.slot] = i + 1; });
+  for (const [n, i] of Object.entries(byslot)) {
+    const o = L[n]; if (!o.p) continue; const c = toScr(apply(o.M, [o.p.w / 2, o.p.h / 2]));
+    cx.fillStyle = findings[i - 1].sev === 'bad' ? '#ff6b5a' : '#f3c04f'; cx.beginPath(); cx.arc(c[0], c[1], 8, 0, 7); cx.fill();
+    cx.fillStyle = '#120c08'; cx.font = '600 10px JetBrains Mono, monospace'; cx.fillText(String(i), c[0] - (i > 9 ? 6 : 3), c[1] + 3.5);
+  }
+  $('hud').textContent = `${D.name} · ${D.costume} · ${rig.view}\nscale ${V.z.toFixed(2)} px/cm on screen · one px/cm for every part\nF ${String(frame).padStart(3, '0')}${keys.find(k => k.f === frame) ? ' ◆' : ''}${sel ? '  ·  ' + sel : ''}`;
+  $('height').textContent = `drawn ${hcm.toFixed(1)} cm / ${st} cm (${(hcm / st * 100).toFixed(0)}%)`;
+}
+function handles(o) {
+  const c = apply(o.M, [o.p.w, 0]), r = apply(o.M, [o.p.w / 2, -Math.min(o.p.h, o.p.w) * .15]);
+  return { rot: toScr(r), scale: toScr(c) };
+}
+
+// ───────────────────────── hit testing ─────────────────────────
+function hit(x, y) {
+  const w = toWorld(x, y);
+  for (let i = rig.order.length - 1; i >= 0; i--) {
+    const n = rig.order[i], o = LAY[n]; if (!o.p) continue;
+    const q = apply(inv(o.M), w);
+    if (q[0] < 0 || q[1] < 0 || q[0] >= o.p.w || q[1] >= o.p.h) continue;
+    const m = mask(o.p);
+    if (!m || !m.w) return n;
+    const mx = Math.floor(q[0] * m.w / o.p.w), my = Math.floor(q[1] * m.h / o.p.h);
+    if (m.d[(my * m.w + mx) * 4 + 3] > 40) return n;
+  }
+  return null;
+}
+
+// ───────────────────────── posing: FK + 2-bone IK ─────────────────────────
+function setLocalFromWorld(n, thetaWorld, ps, L) {
+  const s = S[n], par = L[s.parent], sg = sideSign(s, rig.view);
+  const base = par.theta - S[s.parent].rest + s.rest;
+  const lim = limitOf(s);
+  ps.a[n] = clamp(wrap((thetaWorld - base) / 1) * sg, lim[0], lim[1]);
+}
+function twoBone(A, B, l1, l2) {
+  const d = [B[0] - A[0], B[1] - A[1]]; let Ln = Math.hypot(d[0], d[1]);
+  const u = Ln > 1e-6 ? [d[0] / Ln, d[1] / Ln] : [0, 1];
+  if (Ln >= l1 + l2 - 1e-6) { const j = [A[0] + u[0] * l1, A[1] + u[1] * l1]; return [j, j]; }
+  Ln = Math.max(Ln, Math.abs(l1 - l2) + 1e-3);
+  const a = (l1 * l1 - l2 * l2 + Ln * Ln) / (2 * Ln), h = Math.sqrt(Math.max(0, l1 * l1 - a * a)), n = [-u[1], u[0]];
+  return [[A[0] + u[0] * a + n[0] * h, A[1] + u[1] * a + n[1] * h], [A[0] + u[0] * a - n[0] * h, A[1] + u[1] * a - n[1] * h]];
+}
+function ik(endSlot, target) {
+  const lower = S[endSlot].parent, upper = S[lower].parent;
+  let L = layout(pose);
+  const A = L[upper].P0, El = L[lower].P0, Bn = L[endSlot].P0;
+  const l1 = dist(A, El), l2 = dist(El, Bn);
+  const [e1, e2] = twoBone(A, target, l1, l2);
+  const dir = (S[endSlot].cls === 'hand' ? $('elbow').value : $('knee').value);
+  // "out": the joint sits on the limb's outer side (front/back view) or toward the face (profile)
+  const sg = rig.view === 'profile' ? 1 : sideSign(S[endSlot], rig.view);
+  const lat = e => (e[0] - (A[0] + target[0]) / 2) * sg;
+  let E = lat(e1) >= lat(e2) ? e1 : e2;
+  if (rig.view === 'profile' && S[endSlot].cls === 'hand') E = lat(e1) <= lat(e2) ? e1 : e2;   // elbows point back in profile
+  if (dir === 'in') E = E === e1 ? e2 : e1;
+  setLocalFromWorld(upper, angOf([E[0] - A[0], E[1] - A[1]]), pose, L);
+  L = layout(pose);
+  const E2 = L[lower].P0;
+  setLocalFromWorld(lower, angOf([target[0] - E2[0], target[1] - E2[1]]), pose, L);
+}
+
+// ───────────────────────── pointer interaction ─────────────────────────
+let drag = null;
+cv.addEventListener('pointerdown', e => {
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, w = toWorld(x, y);
+  cv.setPointerCapture(e.pointerId);
+  if (mode === 'edit' && sel && LAY[sel].p) {
+    const h = handles(LAY[sel]);
+    for (const k of ['rot', 'scale']) if (dist(h[k], [x, y]) < 10) { drag = { kind: k, n: sel, w0: w, c0: { ...rig.slots[sel] }, P0: LAY[sel].P0 }; return; }
+  }
+  if (mode === 'points' && sel && LAY[sel].p) {
+    const o = LAY[sel];
+    for (const nm of PTS_OF[kindOf(o.p.cls)]) { const q = toScr(apply(o.M, pt(o.p, nm))); if (dist(q, [x, y]) < 10) { drag = { kind: 'pt', n: sel, nm, M: o.M }; return; } }
+  }
+  const n = hit(x, y);
+  select(n);
+  if (!n) return;
+  const o = LAY[n];
+  if (mode === 'edit') drag = { kind: 'move', n, w0: w, c0: { ...rig.slots[n] } };
+  else if (mode === 'pose') {
+    if (n === 'hip') drag = e.shiftKey ? { kind: 'body', w0: w, rot0: pose.rot, P0: o.P0 } : { kind: 'translate', w0: w, x0: pose.x, y0: pose.y };
+    else if (S[n].cls === 'hand' || S[n].cls === 'shoe') drag = e.shiftKey ? { kind: 'fk', n, P: o.P0, g: angOf([w[0] - o.P0[0], w[1] - o.P0[1]]) - o.theta } : { kind: 'ik', n, off: [o.P0[0] - w[0], o.P0[1] - w[1]] };
+    else drag = { kind: 'fk', n, P: o.P0, g: angOf([w[0] - o.P0[0], w[1] - o.P0[1]]) - o.theta };
+  }
+  draw();
+});
+cv.addEventListener('pointermove', e => {
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, w = toWorld(x, y);
+  if (!drag) { const n = hit(x, y); cv.style.cursor = n ? (mode === 'pose' ? 'grab' : 'move') : 'crosshair'; return; }
+  const c = drag.n ? rig.slots[drag.n] : null;
+  if (drag.kind === 'translate') { pose.x = drag.x0 + w[0] - drag.w0[0]; pose.y = drag.y0 + w[1] - drag.w0[1]; }
+  else if (drag.kind === 'body') { pose.rot = clamp(drag.rot0 + (w[0] - drag.w0[0]) * 1.5, -180, 180); }
+  else if (drag.kind === 'fk') { const th = angOf([w[0] - drag.P[0], w[1] - drag.P[1]]) - drag.g; setLocalFromWorld(drag.n, th, pose, layout(pose)); }
+  else if (drag.kind === 'ik') ik(drag.n, [w[0] + drag.off[0], w[1] + drag.off[1]]);
+  else if (drag.kind === 'move') { c.dx = drag.c0.dx + w[0] - drag.w0[0]; c.dy = drag.c0.dy + w[1] - drag.w0[1]; }
+  else if (drag.kind === 'rot') { const a0 = angOf([drag.w0[0] - drag.P0[0], drag.w0[1] - drag.P0[1]]), a1 = angOf([w[0] - drag.P0[0], w[1] - drag.P0[1]]); c.rot = drag.c0.rot + wrap(a0 - a1); }
+  else if (drag.kind === 'scale') { const d0 = dist(drag.w0, drag.P0), d1 = dist(w, drag.P0); c.s = clamp(drag.c0.s * d1 / Math.max(d0, 1e-3), .2, 5); }
+  else if (drag.kind === 'pt') {
+    let q = apply(inv(drag.M), w); const p = P[rig.slots[drag.n].pid];
+    if (!e.altKey) for (const b of p.brads || []) { if (dist(toScr(apply(drag.M, b)), [x, y]) < 9) { q = b.slice(); break; } }
+    p.pts[drag.nm] = [Math.round(q[0] * 10) / 10, Math.round(q[1] * 10) / 10]; p.src[drag.nm] = 'label'; drag.moved = true;
+  }
+  if (drag.kind !== 'pt') syncKey();
+  refresh(false);
+});
+cv.addEventListener('pointerup', () => {
+  if (drag && drag.kind === 'pt' && drag.moved) { const p = P[rig.slots[drag.n].pid]; record({ t: 'edit-point', part: p.id, point: drag.nm, xy: p.pts[drag.nm], slot: drag.n }); toast(`${drag.nm} saved for ${p.label || p.id}`); }
+  if (drag && drag.kind === 'scale') record({ t: 'scale', part: rig.slots[drag.n].pid, v: +rig.slots[drag.n].s.toFixed(4), slot: drag.n });
+  drag = null; saveRig(); refresh(true);
+});
+
+// ───────────────────────── selection, inspector ─────────────────────────
+function select(n) { sel = n; renderPart(); if (LAY) draw(); document.querySelectorAll('.row').forEach(r => r.classList.toggle('sel', r.dataset.slot === n)); const r = document.querySelector(`.row[data-slot="${n}"]`); if (r && n) { const st = r.querySelector('.strip'), cur = r.querySelector('.th.cur'); if (st && cur) st.scrollLeft = cur.offsetLeft - st.offsetLeft - 8; } }
+function segCm(o) {
+  if (!o || !o.p) return null;
+  const s = o.s, p = o.p, k = o.k;
+  if (s.cls === 'shoe') { if (rig.view !== 'profile') return null; return dist(pt(p, 'heel'), pt(p, 'toe')) * k; }
+  const a = pt(p, s.pv), b = namedPt(p, s.cls === 'hip' ? 'hips' : s.tip, rig.view);
+  return dist(a, b) * k;
+}
+function renderPart() {
+  const el = $('part');
+  if (!sel || !LAY) { el.innerHTML = '<p class="hint">Click a part on the figure.</p>'; return; }
+  const s = S[sel], c = rig.slots[sel], p = c.pid ? P[c.pid] : null, o = LAY[sel];
+  if (!p) { el.innerHTML = `<h2>${esc(s.label)} ${s.side || ''}</h2><p class="hint">Slot is empty.</p><button class="btn" data-act="fill">Fill with best part</button>`; return; }
+  const seg = segCm(o), nrm = IDX.norms[s.cls] ? IDX.norms[s.cls] * D.stature_cm : null;
+  const lim = limitOf(s), ang = s.parent ? pose.a[sel] : pose.rot;
+  const pts = PTS_OF[kindOf(p.cls)].map(nm => { const q = pt(p, nm), sr = (p.src || {})[nm] || 'default'; return `<i>${nm}</i><span class="src-${sr}">${q.map(v => Math.round(v)).join(', ')} · ${sr}</span>`; }).join('');
+  el.innerHTML = `<h2>${esc(s.label)} ${s.side || ''}</h2>
+    <img id="pThumb" src="../${esc(p.img)}" alt="">
+    <div class="kv"><i>part</i><span>${esc(p.id)}</span><i>label</i><span>${esc(p.label)}</span>
+    <i>class</i><span>${esc(p.cls)} · side ${p.side || '?'} · view ${p.view || '?'}${p.state ? ' · ' + esc(p.state) : ''}${p.shape ? ' · shape ' + esc(p.shape) : ''}</span>
+    <i>grade</i><span style="color:${p.q === 'C' ? 'var(--bad)' : p.q === 'B' ? 'var(--warn)' : 'var(--ok)'}">${p.q}${p.why && p.why.length ? ' — ' + esc(p.why.join('; ')) : ''}</span>
+    <i>scale</i><span>${p.ppc ? p.ppc.toFixed(2) : '—'} px/cm (${esc(p.ppc_src || 'none')}) × ${c.s.toFixed(3)} you</span>
+    <i>true size</i><span>${(p.w / ppcOf(p) * c.s).toFixed(1)} × ${(p.h / ppcOf(p) * c.s).toFixed(1)} cm</span>
+    ${seg ? `<i>segment</i><span>${seg.toFixed(1)} cm${nrm ? ` · norm ${nrm.toFixed(1)} cm (${(seg / nrm).toFixed(2)}×)` : ''}</span>` : ''}
+    <i>offset</i><span>${c.dx.toFixed(1)}, ${c.dy.toFixed(1)} cm · rot ${c.rot.toFixed(1)}° · ${c.flip ? 'mirrored' : 'as cut'}</span>
+    <i>${esc(s.joint)}</i><span>${ang.toFixed(0)}° (limit ${lim[0]}…${lim[1]})</span>
+    ${pts}
+    ${p.problems && p.problems.length ? `<i>body lab</i><span>${esc(p.problems.join('; '))}</span>` : ''}</div>
+    <div class="lim"><i style="left:${clamp((ang - lim[0]) / (lim[1] - lim[0]) * 100, 0, 100)}%"></i></div>
+    <div class="tools">
+      <button class="btn" data-act="flip">Flip L/R</button><button class="btn" data-act="s-">Scale −</button><button class="btn" data-act="s+">Scale +</button>
+      <button class="btn" data-act="r-">Rot −</button><button class="btn" data-act="r+">Rot +</button>
+      <button class="btn" data-act="z-">Back</button><button class="btn" data-act="z+">Forward</button>
+      <button class="btn" data-act="reset">Reset part</button><button class="btn" data-act="del">Delete</button>
+      <button class="btn" data-act="pts">Fix points</button><button class="btn" data-act="cap">Ask about this part</button>
+    </div>`;
+}
+$('part').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || !sel) return;
+  const c = rig.slots[sel], a = b.dataset.act;
+  if (a === 'flip') c.flip = !c.flip;
+  if (a === 's-') c.s = +(c.s / 1.05).toFixed(4); if (a === 's+') c.s = +(c.s * 1.05).toFixed(4);
+  if (a === 'r-') c.rot -= 3; if (a === 'r+') c.rot += 3;
+  if (a === 'z-' || a === 'z+') { const i = rig.order.indexOf(sel), j = clamp(i + (a === 'z+' ? 1 : -1), 0, rig.order.length - 1); rig.order.splice(i, 1); rig.order.splice(j, 0, sel); }
+  if (a === 'reset') Object.assign(c, { dx: 0, dy: 0, rot: 0, s: (P[c.pid] && P[c.pid].user_scale) || 1, flip: false });
+  if (a === 'del') c.pid = null;
+  if (a === 'fill') c.pid = bestFor(S[sel], rig.view);
+  if (a === 'pts') setMode('points');
+  if (a === 'cap') { tab('cap'); nextTask(c.pid); return; }
+  if (a === 's-' || a === 's+') record({ t: 'scale', part: c.pid, v: c.s, slot: sel });
+  saveRig(); refresh(true);
+});
+
+// ───────────────────────── slot strips ─────────────────────────
+function renderSlots() {
+  const v = rig.view;
+  $('slots').innerHTML = SLOTS.map(s => {
+    const cur = rig.slots[s.n].pid, L = candidates(s);
+    const nC = L.filter(p => p.q === 'C').length;
+    return `<div class="row${sel === s.n ? ' sel' : ''}" data-slot="${s.n}"><div class="hd"><b>${esc(s.label)}${s.side ? ' ' + s.side : ''}</b><span>${L.length} candidates${nC ? ` · <span class="bad">${nC} graded C</span>` : ''}</span><span class="sp"></span><span>${cur ? esc((P[cur].label || cur).slice(0, 40)) : '<span class="bad">empty</span>'}</span></div>
+      <div class="strip">${L.map(p => {
+        const wrong = s.side && p.side && p.side !== s.side;
+        const why = p.q === 'C' ? (p.why || []).join('; ') : (p.view && p.view !== v ? p.view + ' view' : (p.problems || [])[0] || p.label);
+        return `<div class="th ${p.q}${p.id === cur ? ' cur' : ''}" data-pid="${esc(p.id)}" title="${esc(p.id + '\n' + p.label + '\ngrade ' + p.q + (p.why && p.why.length ? ': ' + p.why.join('; ') : '') + '\nview ' + (p.view || '?') + ' · side ' + (p.side || '?') + (p.shape ? ' · ' + p.shape : '') + '\n' + (p.problems || []).join('\n'))}">
+          <img loading="lazy" src="../${esc(p.img)}" alt=""><span class="g ${p.q}">${p.q}</span><span class="sd${wrong ? ' wrong' : ''}">${p.side || ''}${p.view && p.view !== v ? '·' + p.view.slice(0, 2) : ''}</span><em>${esc(why || '')}</em></div>`;
+      }).join('')}</div></div>`;
+  }).join('');
+}
+$('slots').addEventListener('click', e => {
+  const t = e.target.closest('.th'), row = e.target.closest('.row'); if (!row) return;
+  const n = row.dataset.slot;
+  if (t) { swap(n, t.dataset.pid, true); }
+  select(n); draw();
+});
+function swap(n, pid, rec) {
+  const c = rig.slots[n], s = S[n], p = P[pid];
+  c.pid = pid; c.dx = c.dy = c.rot = 0; c.s = (p && p.user_scale) || 1;
+  c.flip = !!(p && s.side && p.side && p.side !== s.side && rig.view !== 'profile');
+  if (rec) record({ t: 'choice', part: pid, slot: n });
+  saveRig(); refresh(true);
+  document.querySelectorAll(`.row[data-slot="${n}"] .th`).forEach(x => x.classList.toggle('cur', x.dataset.pid === pid));
+}
+
+// ───────────────────────── critic ─────────────────────────
+function critic() {
+  const F = [], L = layout(pose), v = rig.view, H = D.stature_cm;
+  const add = (sev, slot, title, text, fix, fixLabel) => F.push({ sev, slot, title, text, fix, fixLabel });
+  for (const s of SLOTS) {
+    const c = rig.slots[s.n], p = c.pid ? P[c.pid] : null, o = L[s.n], nm = s.label + (s.side ? ' ' + s.side : '');
+    if (!p) { const b = bestFor(s, v); add('bad', s.n, `${nm}: slot is empty`, `Nothing is pinned here, so everything below it hangs from a bare joint.`, b ? () => swap(s.n, b) : null, 'Fill with best part'); continue; }
+    if (p.q === 'C') { const b = bestFor(s, v, x => x.q !== 'C'); add('bad', s.n, `${nm}: part is graded C`, `The cutter flagged it: ${(p.why || []).join('; ') || 'no reason given'}. It will look broken on stage.`, b ? () => swap(s.n, b) : null, 'Swap to the best clean part'); }
+    if (p.not_costume) { const b = bestFor(s, v, x => !x.not_costume); add('bad', s.n, `${nm}: not this costume`, `Someone answered that this card does not belong to ${D.costume}.`, b ? () => swap(s.n, b) : null, 'Swap'); }
+    if (p.state && /uncut|pair/.test(p.state) || (p.problems || []).some(x => /ONE card/.test(x))) add('warn', s.n, `${nm}: two parts cut as one card`, `This card holds a left and a right piece together; it cannot move as one limb.`, () => swap(s.n, bestFor(s, v, x => !(x.state && /uncut|pair/.test(x.state)))), 'Swap');
+    if (s.side && p.side && v !== 'profile') {
+      const reads = c.flip ? (p.side === 'L' ? 'R' : 'L') : p.side;
+      if (reads !== s.side) add('bad', s.n, `${nm}: wrong side`, `This is a ${p.side} card${c.flip ? ' mirrored' : ''} in the ${s.side} slot — thumbs, seams and piping will point the wrong way.`, () => { const b = bestFor(s, v, x => x.side === s.side); if (b) swap(s.n, b); else { c.flip = !c.flip; saveRig(); } }, 'Use a ' + s.side + ' card (or mirror)');
+      else if (c.flip) add('info', s.n, `${nm}: mirrored ${p.side} card`, `No ${s.side} card chosen, so the ${p.side} card is mirrored. Fine for symmetric cuts; check the piping.`);
+    }
+    if (p.view && p.view !== v && !(v === 'back' && s.cls === 'shoe' && p.view === 'front')) {
+      const b = bestFor(s, v, x => x.view === v);
+      add('warn', s.n, `${nm}: ${p.view} view on a ${v} body`, `The card was drawn for a ${p.view} view; the figure is in ${v} view.`, b ? () => swap(s.n, b) : null, b ? 'Swap to a ' + v + ' card' : '');
+    }
+    const seg = segCm(o), nr = IDX.norms[s.cls];
+    if (seg && nr && s.cls !== 'torso') {
+      const want = nr * H, r = seg / want, tol = s.cls === 'head' ? [.8, 1.35] : [.85, 1.18];
+      if (r < tol[0] || r > tol[1]) {
+        const what = { hand: 'wrist → fingertip', shoe: 'heel → toe', head: 'neck brad → crown' }[s.cls] || 'brad → brad';
+        add(r < tol[0] * .85 || r > tol[1] * 1.15 ? 'bad' : 'warn', s.n, `${nm}: ${r > 1 ? (r).toFixed(2) + '× too long' : (1 / r).toFixed(2) + '× too short'}`,
+          `${what} is ${seg.toFixed(1)} cm = ${(seg / H * 100).toFixed(1)}% of ${H} cm; people measure ≈${(nr * 100).toFixed(1)}% (${want.toFixed(1)} cm). Its sheet was drawn at ${p.ppc ? p.ppc.toFixed(2) : '?'} px/cm (${p.ppc_src}).`,
+          () => { c.s = +(c.s / r).toFixed(4); record({ t: 'scale', part: p.id, v: c.s, slot: s.n }); saveRig(); }, `Rescale ×${(1 / r).toFixed(2)}`);
+      }
+    }
+    if (p.ppc_src && p.ppc_src !== 'sheet' && p.ppc_src !== 'bodylab') add('info', s.n, `${nm}: scale not measured`, `px/cm is the ${p.ppc_src} (no scale found on its own sheet), so its size is a guess.`);
+    if (s.parent && L[s.parent].p) {
+      const g = dist(o.at, o.P0);
+      if (g > 1) add(g > 3 ? 'bad' : 'warn', s.n, `${nm}: ${g.toFixed(1)} cm brad gap at the ${s.joint}`, `Its pivot is not on the ${S[s.parent].label}'s ${s.at} brad, so the joint will tear open when it moves.`, () => { c.dx = c.dy = 0; saveRig(); }, 'Snap onto the brad');
+    }
+    const pk = PTS_OF[kindOf(p.cls)].filter(k => ['pivot', 'socket', 'wrist', 'ankle', 'neck', 'waist', 'shVL', 'shVR', 'hipVL', 'hipVR'].includes(k));
+    const guessed = pk.filter(k => !p.src || !p.src[k] || p.src[k] === 'hint');
+    if (guessed.length) add('warn', s.n, `${nm}: ${guessed.join(', ')} guessed`, `No brad was detected there (${p.nb} brads on the card), so the joint position is a guess from the card's outline.`, () => { select(s.n); setMode('points'); }, 'Place it by hand');
+  }
+  // draw order: a child card must sit over its parent at the joint
+  const ord = rig.order, canon = ORDER[v];
+  for (const s of SLOTS) if (s.parent && s.parent !== 'hip' && s.n !== 'torso') {
+    const want = canon.indexOf(s.n) > canon.indexOf(s.parent), got = ord.indexOf(s.n) > ord.indexOf(s.parent);
+    if (want !== got) add('warn', s.n, `${s.label} ${s.side || ''}: draw order`, `${s.label} is drawn ${got ? 'over' : 'under'} the ${S[s.parent].label}; the cut-out stack has it ${want ? 'over' : 'under'}, so the ${s.joint} brad ${want ? 'is hidden' : 'shows'}.`, () => { rig.order = canon.slice(); saveRig(); }, 'Restore the stack');
+  }
+  // overall height
+  const hcm = lowestY(L) - topY(L), r = hcm / H;
+  if (r < .93 || r > 1.07) F.unshift({ sev: r < .85 || r > 1.15 ? 'bad' : 'warn', slot: null, title: `figure is ${hcm.toFixed(0)} cm, should be ${H} cm`, text: `Floor to crown at true scale with zero pose. Fix the segment scales below (each one is measured against human proportions).` });
+  const rank = { bad: 0, warn: 1, info: 2 };
+  F.sort((a, b) => rank[a.sev] - rank[b.sev]);
+  return F;
+}
+function renderCritic() {
+  findings = critic();
+  const n = s => findings.filter(f => f.sev === s).length;
+  $('critSum').innerHTML = `<span style="color:var(--bad)">${n('bad')} broken</span><span style="color:var(--warn)">${n('warn')} suspect</span><span style="color:var(--plane)">${n('info')} notes</span>`;
+  $('crit').innerHTML = findings.length ? findings.map((f, i) => `<div class="f ${f.sev}" data-i="${i}"><span class="s">${i + 1} · ${f.sev === 'bad' ? 'broken' : f.sev === 'warn' ? 'suspect' : 'note'}${f.slot ? ' · ' + f.slot : ''}</span><br><b>${esc(f.title)}</b><p>${esc(f.text)}</p>${f.fix && f.fixLabel ? `<button class="btn" data-fix="${i}">${esc(f.fixLabel)}</button>` : ''}</div>`).join('') : '<p class="hint">Nothing wrong found.</p>';
+}
+$('crit').addEventListener('click', e => {
+  const b = e.target.closest('[data-fix]');
+  if (b) { const f = findings[+b.dataset.fix]; f.fix(); record({ t: 'fix', part: f.slot ? rig.slots[f.slot].pid : null, slot: f.slot, v: f.title }); refresh(true); toast('fixed: ' + f.title); return; }
+  const d = e.target.closest('.f'); if (d) { const f = findings[+d.dataset.i]; if (f.slot) { select(f.slot); draw(); } }
+});
+$('bFixAll').onclick = () => {
+  for (let it = 0; it < 4; it++) {
+    const F = critic().filter(f => f.fix && f.sev !== 'info' && !/guessed/.test(f.title));
+    if (!F.length) break;
+    const done = new Set();
+    for (const f of F) { const k = f.slot + '|' + f.title.split(':')[1]; if (done.has(k)) continue; done.add(k); f.fix(); }
+  }
+  pose = standPose(); syncKey(); saveRig(); refresh(true); toast('applied every automatic fix');
+};
+
+// ───────────────────────── timeline ─────────────────────────
+const tlc = $('tlc'), tx = tlc.getContext('2d');
+function nF() { return Math.max(2, +$('nFrames').value || 48); }
+function drawTL() {
+  const r = tlc.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  tlc.width = r.width * dpr; tlc.height = r.height * dpr; tx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const W = r.width, Hh = r.height, n = nF(), X = f => 8 + (W - 16) * f / (n - 1);
+  tx.fillStyle = '#0f0c0a'; tx.fillRect(0, 0, W, Hh);
+  tx.strokeStyle = '#3a2e24'; tx.fillStyle = '#9a8d7e'; tx.font = '9px JetBrains Mono, monospace';
+  for (let f = 0; f < n; f++) { const x = X(f), big = f % 12 === 0; tx.beginPath(); tx.moveTo(x, Hh); tx.lineTo(x, Hh - (big ? 12 : 5)); tx.stroke(); if (big) tx.fillText(f, x + 2, Hh - 3); }
+  tx.fillStyle = '#e7a35a';
+  for (const k of keys) { const x = X(k.f); tx.beginPath(); tx.moveTo(x, 6); tx.lineTo(x + 6, 13); tx.lineTo(x, 20); tx.lineTo(x - 6, 13); tx.fill(); }
+  tx.fillStyle = '#5fd0ff'; tx.fillRect(X(frame) - 1, 0, 2, Hh);
+  $('fr').textContent = 'F ' + String(frame).padStart(3, '0') + ' / ' + (n - 1);
+}
+function clonePose(p) { return JSON.parse(JSON.stringify(p)); }
+function poseAt(f) {
+  if (!keys.length) return clonePose(pose);
+  const K = keys.slice().sort((a, b) => a.f - b.f);
+  if (f <= K[0].f) return clonePose(K[0].pose);
+  if (f >= K[K.length - 1].f) return clonePose(K[K.length - 1].pose);
+  let i = 0; while (K[i + 1].f < f) i++;
+  const a = K[i], b = K[i + 1]; let t = (f - a.f) / (b.f - a.f);
+  if ($('ease').value === 'io') t = t * t * (3 - 2 * t);
+  const o = clonePose(a.pose), lerp = (x, y) => x + (y - x) * t;
+  o.x = lerp(a.pose.x, b.pose.x); o.y = lerp(a.pose.y, b.pose.y); o.rot = lerp(a.pose.rot, b.pose.rot);
+  for (const n in o.a) o.a[n] = lerp(a.pose.a[n] || 0, b.pose.a[n] || 0);   // local angles, so limbs swing about their joints
+  return o;
+}
+function setFrame(f) { frame = clamp(Math.round(f), 0, nF() - 1); if (keys.length) pose = poseAt(frame); refresh(false); drawTL(); }
+function syncKey() { const k = keys.find(k => k.f === frame); if (k) k.pose = clonePose(pose); }
+$('bKey').onclick = () => { const k = keys.find(k => k.f === frame); if (k) k.pose = clonePose(pose); else keys.push({ f: frame, pose: clonePose(pose) }); keys.sort((a, b) => a.f - b.f); saveRig(); drawTL(); draw(); toast('key at F' + frame); };
+$('bDelKey').onclick = () => { keys = keys.filter(k => k.f !== frame); saveRig(); drawTL(); draw(); };
+let tlDrag = false;
+const tlTo = e => { const r = tlc.getBoundingClientRect(); setFrame((e.clientX - r.left - 8) / (r.width - 16) * (nF() - 1)); };
+$('tl').addEventListener('pointerdown', e => { tlDrag = true; $('tl').setPointerCapture(e.pointerId); playing = false; $('bPlay').textContent = '▶ Play'; tlTo(e); });
+$('tl').addEventListener('pointermove', e => { if (tlDrag) tlTo(e); });
+$('tl').addEventListener('pointerup', () => tlDrag = false);
+$('nFrames').onchange = () => { keys = keys.filter(k => k.f < nF()); setFrame(Math.min(frame, nF() - 1)); saveRig(); };
+let lastT = 0;
+function tick(t) {
+  if (!playing) return;
+  if (t - lastT >= 1000 / (+$('fps').value || 24)) { lastT = t; setFrame((frame + 1) % nF()); }
+  requestAnimationFrame(tick);
+}
+$('bPlay').onclick = () => { playing = !playing; $('bPlay').textContent = playing ? '❚❚ Pause' : '▶ Play'; if (playing) requestAnimationFrame(tick); };
+
+// ───────────────────────── clip export (FORMATS.md §1) ─────────────────────────
+function buildClip() {
+  const n = nF(), fps = +$('fps').value || 24, images = {}, frames = [];
+  const id = `rig.${D.character}.${D.costume}.${rig.view}.${session.id.slice(4)}`;
+  for (let f = 0; f < n; f++) {
+    const ps = keys.length ? poseAt(f) : pose, L = layout(ps), draw = [{ t: 'bg' }, { t: 'floor', y: CLIP_FLOOR }, { t: 'shadow', x: +(CLIP_X0 + ps.x * CLIP_CM_PX).toFixed(1), y: CLIP_FLOOR + 6, rx: +(24 * CLIP_CM_PX).toFixed(1), a: .6 }];
+    for (const nm of rig.order) {
+      const o = L[nm]; if (!o.p) continue;
+      images[o.p.id] = '../../' + o.p.img;          // relative to shots/rig/clips/
+      const M = o.M, k = CLIP_CM_PX, r5 = v => +v.toFixed(5);
+      draw.push({ t: 'img', id: o.p.id, m: [r5(M[0] * k), r5(M[1] * k), r5(M[2] * k), r5(M[3] * k), +(CLIP_X0 + M[4] * k).toFixed(2), +(CLIP_FLOOR + M[5] * k).toFixed(2)], tag: { r: S[nm].cls, side: S[nm].side || null, slot: nm } });
+    }
+    frames.push({ f, draw });
+  }
+  return {
+    id, title: `${D.name} (${D.costume}) — built in the Rig Builder`, kind: 'action', variant: 'rig_builder',
+    character: D.key, clock: { fps, frames: n }, loop: true, cm_px: CLIP_CM_PX, floor_y: CLIP_FLOOR, floor: CLIP_FLOOR,
+    size_cm: { w: 1600 / CLIP_CM_PX, h: 1000 / CLIP_CM_PX }, image_paths: 'relative to this clip file (save it in shots/rig/clips/; ../../ == shots/)',
+    images, cast: [{ name: D.name, height_cm: D.stature_cm, cm_px: CLIP_CM_PX }],
+    rig: { view: rig.view, order: rig.order, slots: rig.slots }, keys,
+    ledger: [['source', 'shots/rig/index.html (keyframes, local joint angles, ' + $('ease').value + ' ease)'], ['parts', 'shots/rig/data/' + D.key.replace('/', '__') + '.json']],
+    frames,
+  };
+}
+function download(name, obj) {
+  const b = new Blob([JSON.stringify(obj, null, 1)], { type: 'application/json' }), a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+$('bClip').onclick = () => { const c = buildClip(); download(c.id + '.json', c); toast('clip downloaded — save it in shots/rig/clips/'); };
+
+// ───────────────────────── captchas ─────────────────────────
+let task = null, taskT0 = 0, capDrag = null;
+function capCount() { const n = session.answers.length, q = session.answers.filter(a => !['choice', 'fix', 'scale'].includes(a.t)).length; $('capCount').textContent = `${q} answers · ${n - q} builder edits · session ${session.id}`; }
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+function answered(pid, t, point) { return session.answers.some(a => a.part === pid && a.t === t && (!point || a.point === point)); }
+function makeTask(kind, pid) {
+  const parts = D.parts;
+  const kinds = kind === 'mix' ? ['pivot', 'pivot', 'side', 'costume', 'cut', 'shape', 'slot'] : [kind];
+  for (let tries = 0; tries < 60; tries++) {
+    const k = rnd(kinds);
+    let pool;
+    if (k === 'pivot') {
+      pool = [];
+      for (const p of parts) for (const nm of PTS_OF[kindOf(p.cls)] || []) {
+        if (['tip', 'heel', 'toe', 'top'].includes(nm)) continue;
+        if (pid && p.id !== pid) continue;
+        if (answered(p.id, 'pivot', nm)) continue;
+        const pri = (p.src && p.src[nm] === 'hint' ? 3 : 0) + (p.nb === 0 || p.nb > 4 ? 1 : 0) + (inRig(p.id) ? 3 : 0);
+        pool.push({ p, nm, pri });
+      }
+      if (!pool.length) continue;
+      pool.sort((a, b) => b.pri - a.pri); const top = pool.filter(x => x.pri >= pool[0].pri - 1);
+      const c = rnd(top.slice(0, 40));
+      return { kind: k, p: c.p, point: c.nm };
+    }
+    const filt = {
+      side: p => ['upper_arm', 'forearm', 'hand', 'thigh', 'shin', 'shoe'].includes(p.cls) && !answered(p.id, 'side'),
+      costume: p => ['shoe', 'hand', 'upper_arm', 'forearm', 'thigh', 'shin', 'head'].includes(p.cls) && !answered(p.id, 'costume'),
+      cut: p => !answered(p.id, 'cut'),
+      shape: p => p.cls === 'hand' && !answered(p.id, 'shape'),
+      slot: p => !answered(p.id, 'slot'),
+    }[k];
+    pool = parts.filter(p => (!pid || p.id === pid) && filt(p));
+    if (!pool.length) continue;
+    // ask first where the data is unsure
+    const pri = {
+      side: p => (p.side ? 0 : 3) + (inRig(p.id) ? 2 : 0), costume: p => (p.cls === 'shoe' ? 3 : 0) + (p.gen !== 'cut' ? 1 : 0),
+      cut: p => ({ C: 2, B: 3, A: 0 }[p.q] || 0) + (inRig(p.id) ? 2 : 0), shape: p => (p.shape ? 0 : 3),
+      slot: p => (/(thigh|shin|arm|hand|foot|head|torso)/i.test(p.label) && !labelAgrees(p) ? 4 : 0),
+    }[k];
+    const best = Math.max(...pool.map(pri)); const top = pool.filter(p => pri(p) >= best - 1);
+    return { kind: k, p: rnd(top.slice(0, 60)) };
+  }
+  return null;
+}
+function inRig(pid) { return SLOTS.some(s => rig.slots[s.n].pid === pid); }
+function labelAgrees(p) { const w = { upper_arm: /arm|uarm/i, forearm: /fore|arm/i, thigh: /thigh/i, shin: /shin|calf/i, hand: /hand/i, shoe: /foot|shoe|boot/i, head: /head/i, torso: /torso|body|chest/i, hip: /hip|pelvis|bridge|waist/i }[p.cls]; return !w || w.test(p.label || ''); }
+function capCanvas(p, onclick, extra) {
+  const box = $('capBox'); box.innerHTML = '';
+  const c = document.createElement('canvas'), im = img(p), bw = box.clientWidth - 16, bh = 284;
+  const sc = Math.min(bw / p.w, bh / p.h, 3);
+  c.width = Math.round(p.w * sc); c.height = Math.round(p.h * sc); box.appendChild(c);
+  const g = c.getContext('2d');
+  const paint = (marks) => {
+    g.clearRect(0, 0, c.width, c.height);
+    g.fillStyle = '#1b1612'; for (let y = 0; y < c.height; y += 16) for (let x = (y / 16 % 2) * 16; x < c.width; x += 32) g.fillRect(x, y, 16, 16);
+    if (im.complete && im.naturalWidth) g.drawImage(im, 0, 0, c.width, c.height);
+    if (extra) extra(g, sc);
+    for (const m of marks || []) { g.strokeStyle = '#5fd0ff'; g.lineWidth = 3; g.beginPath(); g.arc(m[0] * sc, m[1] * sc, 9, 0, 7); g.stroke(); }
+  };
+  if (!im.complete) im.addEventListener('load', () => paint(c._marks), { once: true });
+  c._marks = []; paint();
+  if (onclick) c.addEventListener('click', e => { const r = c.getBoundingClientRect(); const q = [(e.clientX - r.left) * c.width / r.width / sc, (e.clientY - r.top) * c.height / r.height / sc]; onclick(q, c, paint); });
+  return c;
+}
+function btns(list) { $('capBtns').innerHTML = list.map(([v, l, cls]) => `<button class="btn ${cls || ''}" data-v="${esc(v)}">${esc(l)}</button>`).join(''); }
+function nextTask(pid) {
+  const kind = $('capKind').value;
+  task = makeTask(kind, pid) || (pid ? makeTask(kind) : null);
+  taskT0 = performance.now();
+  if (!task) { $('capQ').textContent = 'Nothing left to ask for this kind of task. Try another kind or character.'; $('capBox').innerHTML = ''; $('capBtns').innerHTML = ''; return; }
+  const p = task.p, word = (PT_WORD[p.cls] || {})[task.point] || task.point;
+  $('capMeta').textContent = `${p.id} · ${p.cls}${p.side ? ' ' + p.side : ''}${p.view ? ' · ' + p.view : ''} · grade ${p.q} · ${p.nb} brads detected`;
+  if (task.kind === 'pivot') {
+    $('capQ').innerHTML = `Click the <span style="color:var(--acc)">${esc(word)}</span> brad on this ${esc(p.cls.replace('_', ' '))}.<small>The brass pin (or the round eyelet) where it joins the next part. Orange rings = what the detector found; they can be wrong.</small>`;
+    capCanvas(p, (q, c, paint) => {
+      let snap = null; for (const b of p.brads || []) if (dist(b, q) < 10 / (c.width / p.w)) snap = b;
+      answer({ point: task.point, xy: q.map(v => Math.round(v * 10) / 10), snapped: snap });
+    }, (g, sc) => { g.strokeStyle = 'rgba(231,163,90,.9)'; g.lineWidth = 2; for (const b of p.brads || []) { g.beginPath(); g.arc(b[0] * sc, b[1] * sc, 7, 0, 7); g.stroke(); } });
+    btns([['none', 'There is no brad here'], ['unsure', "Can't tell"]]);
+  } else if (task.kind === 'side') {
+    $('capQ').innerHTML = `Is this the LEFT or the RIGHT ${esc(p.cls.replace('_', ' '))}?<small>The character's own left/right (in a front view, the character's left is on your right). Thumb, toe, seams and piping tell.</small>`;
+    capCanvas(p); btns([['L', 'Left'], ['R', 'Right'], ['pair', 'Both — two in one card'], ['unsure', "Can't tell"]]);
+  } else if (task.kind === 'costume') {
+    $('capQ').innerHTML = `Does this ${esc(p.cls.replace('_', ' '))} belong to this costume?<small>${esc(D.name)} · ${esc(D.costume)} — the torso on the left is the costume.</small>`;
+    const ref = P[rig.slots.torso.pid];
+    const box = $('capBox'); box.innerHTML = '<div style="display:flex;gap:12px;align-items:center;justify-content:center;width:100%;height:100%"></div>';
+    const row = box.firstChild;
+    if (ref) row.insertAdjacentHTML('beforeend', `<img src="../${esc(ref.img)}" style="max-height:260px;max-width:45%;object-fit:contain;opacity:.85">`);
+    row.insertAdjacentHTML('beforeend', `<img src="../${esc(p.img)}" style="max-height:260px;max-width:45%;object-fit:contain">`);
+    btns([['yes', 'Yes, same costume'], ['no', 'No'], ['unsure', 'Not sure']]);
+  } else if (task.kind === 'cut') {
+    $('capQ').innerHTML = `Is this cut clean?<small>Clean = one whole piece, no paper chunks, holes, pale fringe, clipped edges or printed labels. If not, click where the problem is, pick the reason(s), then "Not clean".</small>`;
+    task.marks = []; task.why = new Set();
+    capCanvas(p, (q, c, paint) => { task.marks.push(q.map(Math.round)); c._marks = task.marks; paint(task.marks); });
+    btns([['yes', 'Clean', 'go'], ['no', 'Not clean'], ['unsure', "Can't tell"]]);
+    $('capBtns').insertAdjacentHTML('beforeend', '<span style="flex-basis:100%"></span>' + ['clipped edge', 'holes', 'pale fringe', 'paper chunk', 'fragments', 'printed label', 'two parts in one', 'wrong outline'].map(w => `<button class="btn" data-why="${w}">${w}</button>`).join(''));
+  } else if (task.kind === 'shape') {
+    $('capQ').innerHTML = `Which hand shape is this?<small>Pick the closest.</small>`;
+    capCanvas(p); btns(SHAPES.map(s => [s, s.replace('_', ' ')]).concat([['not_hand', 'not a hand'], ['unsure', "can't tell"]]));
+  } else if (task.kind === 'slot') {
+    $('capQ').innerHTML = `Drag this part into its slot.<small>Drop it on the body below (or click a slot). The cutter's label says “${esc(p.label)}”.</small>`;
+    const box = $('capBox'); box.innerHTML = `<div style="display:grid;grid-template-columns:110px 1fr;gap:10px;width:100%;padding:8px;align-items:center"><img id="capPart" src="../${esc(p.img)}" style="width:110px;height:200px;object-fit:contain;cursor:grab;touch-action:none" alt="">
+      <div class="body" id="capBody">
+        <div class="x"></div><div class="x"></div><div data-v="head">head</div><div class="x"></div><div class="x"></div>
+        <div data-v="hand_R">hand R</div><div data-v="upper_arm_R">upper arm R</div><div data-v="torso">torso</div><div data-v="upper_arm_L">upper arm L</div><div data-v="hand_L">hand L</div>
+        <div class="x"></div><div data-v="forearm_R">forearm R</div><div data-v="hip">hip bridge</div><div data-v="forearm_L">forearm L</div><div class="x"></div>
+        <div class="x"></div><div data-v="thigh_R">thigh R</div><div class="x"></div><div data-v="thigh_L">thigh L</div><div class="x"></div>
+        <div class="x"></div><div data-v="shin_R">shin R</div><div class="x"></div><div data-v="shin_L">shin L</div><div class="x"></div>
+        <div class="x"></div><div data-v="shoe_R">foot R</div><div data-v="not_body">not a body part</div><div data-v="shoe_L">foot L</div><div class="x"></div>
+      </div></div>`;
+    $('capBody').addEventListener('click', e => { const d = e.target.closest('[data-v]'); if (d) answer({ v: d.dataset.v }); });
+    $('capPart').addEventListener('pointerdown', e => { e.preventDefault(); capDrag = true; const dg = $('drag'); dg.src = '../' + p.img; dg.style.display = 'block'; moveDrag(e); });
+    btns([['unsure', "Can't tell"]]);
+  }
+}
+function moveDrag(e) { const dg = $('drag'); dg.style.left = (e.clientX - 32) + 'px'; dg.style.top = (e.clientY - 32) + 'px'; document.querySelectorAll('#capBody [data-v]').forEach(d => { const r = d.getBoundingClientRect(); d.classList.toggle('hot', e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom); }); }
+window.addEventListener('pointermove', e => { if (capDrag) moveDrag(e); });
+window.addEventListener('pointerup', e => {
+  if (!capDrag) return; capDrag = false; $('drag').style.display = 'none';
+  const hot = document.querySelector('#capBody .hot'); if (hot) { hot.classList.remove('hot'); answer({ v: hot.dataset.v, dragged: true }); }
+});
+$('capBtns').addEventListener('click', e => {
+  const w = e.target.closest('[data-why]');
+  if (w) { w.classList.toggle('on'); task.why.has(w.dataset.why) ? task.why.delete(w.dataset.why) : task.why.add(w.dataset.why); return; }
+  const b = e.target.closest('[data-v]'); if (!b || !task) return;
+  const v = b.dataset.v;
+  if (task.kind === 'pivot') answer({ point: task.point, v });
+  else if (task.kind === 'cut') answer({ v, why: [...task.why], marks: task.marks, xy: task.marks[0] || null });
+  else answer({ v });
+});
+function answer(o) {
+  const p = task.p;
+  const a = Object.assign({ t: task.kind, part: p.id, ms: Math.round(performance.now() - taskT0), asked: { cls: p.cls, side: p.side || null, view: p.view || null, q: p.q, src: task.point ? (p.src || {})[task.point] || null : undefined, guess: task.point ? pt(p, task.point) : undefined } }, o);
+  if (a.t === 'shape' && a.v === 'not_hand') { a.t = 'slot'; a.v = 'not_body'; }
+  record(a);
+  applyLocalLabels(p);
+  renderSlots(); refresh(true);
+  toast('saved');
+  nextTask();
+}
+$('capSkip').onclick = () => { if (task) record({ t: 'skip', part: task.p.id, kind: task.kind, point: task.point || null }); nextTask(); };
+$('capUndo').onclick = () => { const a = session.answers.pop(); store.set('rigb.session', session); capCount(); if (a) { toast('removed: ' + a.t + ' ' + (a.part || '')); load(D.key, rig.view); } };
+$('capKind').onchange = () => nextTask();
+$('capExport').onclick = () => {
+  const out = { session: session.id, who: $('who').value || null, started: session.started, exported: new Date().toISOString(), tool: 'shots/rig/index.html',
+    about: 'Human answers from the Rig Builder (captchas + builder edits). Commit as shots/rig/labels/' + session.id + '.json; shots/rig/build.py applies them. See shots/rig/TRAINING.md.',
+    counts: session.answers.reduce((m, a) => (m[a.t] = (m[a.t] || 0) + 1, m), {}), answers: session.answers };
+  download(session.id + '.json', out); toast(session.answers.length + ' answers exported');
+};
+
+// ───────────────────────── modes, tabs, keys ─────────────────────────
+const TIPS = { pose: 'drag a limb: rotate about its joint · drag a hand/foot: IK · drag hips: move (shift: tilt body)', edit: 'drag: move part · ↻ rotate · ⤡ scale · F flip · Del delete · [ ] order', points: 'select a part, drag its dots onto the brads (snaps to rings; Alt = no snap) · green brad · yellow guessed · blue yours' };
+function setMode(m) { mode = m; document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === m)); $('modeTip').textContent = TIPS[m]; draw(); }
+document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => setMode(b.dataset.mode));
+function tab(t) { document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); ['critic', 'part', 'cap'].forEach(k => $('tab-' + k).hidden = k !== t); if (t === 'cap' && !task) nextTask(); if (t === 'part') renderPart(); }
+document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => tab(b.dataset.tab));
+window.addEventListener('keydown', e => {
+  if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  const c = sel ? rig.slots[sel] : null;
+  if (e.key === 'p') setMode('pose'); else if (e.key === 'e') setMode('edit'); else if (e.key === 'k') setMode('points');
+  else if (e.key === 'Enter') $('bKey').click(); else if (e.key === ' ') { e.preventDefault(); $('bPlay').click(); }
+  else if (c && e.key === 'f') { c.flip = !c.flip; } else if (c && (e.key === 'Delete' || e.key === 'Backspace')) { c.pid = null; }
+  else if (c && e.key.startsWith('Arrow')) { const d = e.shiftKey ? 2 : .5; if (e.key === 'ArrowLeft') c.dx -= d; if (e.key === 'ArrowRight') c.dx += d; if (e.key === 'ArrowUp') c.dy -= d; if (e.key === 'ArrowDown') c.dy += d; e.preventDefault(); }
+  else if (c && (e.key === '[' || e.key === ']')) { const i = rig.order.indexOf(sel), j = clamp(i + (e.key === ']' ? 1 : -1), 0, rig.order.length - 1); rig.order.splice(i, 1); rig.order.splice(j, 0, sel); }
+  else if (c && (e.key === '+' || e.key === '=' || e.key === '-')) c.s *= e.key === '-' ? 1 / 1.03 : 1.03;
+  else return;
+  saveRig(); refresh(true);
+});
+['showPts', 'showBrads'].forEach(id => $(id).onchange = draw);
+$('bStand').onclick = () => { pose = standPose(); syncKey(); saveRig(); refresh(true); };
+$('bResetRig').onclick = () => { if (!confirm('Reset this rig to the default parts (edits and keys kept in your labels)?')) return; rig = defaultRig(rig.view); keys = []; pose = standPose(); saveRig(); renderSlots(); refresh(true); };
+
+function refresh(full) { if (full) renderCritic(); draw(); if (full && !$('tab-part').hidden) renderPart(); }
+
+// ───────────────────────── load ─────────────────────────
+async function load(key, view) {
+  const meta = IDX.characters.find(c => c.key === key) || IDX.characters[0];
+  D = await (await fetch(meta.file)).json();
+  P = {}; for (const p of D.parts) { p.pts = p.pts || {}; p.src = p.src || {}; applyLocalLabels(p); P[p.id] = p; }
+  const pp = D.parts.map(p => p.ppc).filter(Boolean).sort((a, b) => a - b); D.ppcMedian = pp[pp.length >> 1] || 8;
+  const views = ['front', 'back', 'profile'].filter(v => D.parts.some(p => p.view === v) || v === 'front');
+  view = view && views.includes(view) ? view : (D.defaults && D.defaults.front ? 'front' : views[0]);
+  $('view').value = view;
+  sel = null; task = null;
+  loadRig(view);
+  store.set('rigb.last', { key: D.key, view });
+  renderSlots(); setFrame(0); refresh(true); drawTL(); capCount();
+  if (!$('tab-cap').hidden) nextTask();
+}
+$('char').onchange = () => load($('char').value);
+$('view').onchange = () => load(D.key, $('view').value);
+window.addEventListener('resize', resize);
+(async function init() {
+  IDX = await (await fetch('data/index.json')).json();
+  $('char').innerHTML = IDX.characters.map(c => `<option value="${esc(c.key)}">${esc(c.name)} · ${esc(c.costume)} (${c.n})</option>`).join('');
+  const last = store.get('rigb.last', null), q = new URLSearchParams(location.search);
+  const key = q.get('char') || (last && last.key) || IDX.characters[0].key;
+  $('char').value = key;
+  setMode('pose'); resize();
+  await load(key, q.get('view') || (last && last.view));
+  resize();
+  window.__rig = { get rig() { return rig; }, get pose() { return pose; }, set pose(p) { pose = p; }, get keys() { return keys; }, layout, ik, swap, select, setMode, tab, nextTask, answer, buildClip, critic, get findings() { return findings; }, get task() { return task; }, setFrame, refresh, toScr, get LAY() { return LAY; }, session, standPose };
+})();
+</script>
+</body>
+</html>
