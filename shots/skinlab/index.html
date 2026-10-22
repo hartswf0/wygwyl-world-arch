@@ -254,8 +254,8 @@ const STACK0 = ['far_upper_arm', 'far_arm', 'far_forearm', 'far_mitt', 'far_hand
   'near_shin', 'near_foot', 'torso', 'head', 'near_upper_arm', 'near_arm', 'near_forearm', 'near_mitt', 'near_hand'];
 const ARMS = /^(upper_arm|forearm|mitt|arm|hand)$/;
 const VIEWS = ['side', 'front', 'back'];
-const VIEWOF = v => v === 'profile' ? 'side' : v === 'front' || v === 'threequarter' ? 'front' : v === 'back' || v === 'threequarter_back' ? 'back' : null;
-const viewOf = c => VIEWOF(c.view || c.est_view) || 'side';   // the label, else the angle read from the pixels
+const VIEWOF = v => v === 'profile' || v === 'side' ? 'side' : v === 'front' || v === 'threequarter' ? 'front' : v === 'back' || v === 'threequarter_back' ? 'back' : null;
+const viewOf = c => VIEWOF(S.fix[c.id]?.view || c.human?.view || c.view || (c.clip?.view_l_p > .8 && c.clip.view_l) || c.est_view) || 'side';   // a person, the label, CLIP (learnt), the pixels
 const OTHER = k => k.endsWith('_L') ? k.slice(0, -1) + 'R' : k.endsWith('_R') ? k.slice(0, -1) + 'L' : null;
 const STICK = [['pelvis','spineMid'],['spineMid','chest'],['chest','neckBase'],['neckBase','headBase'],['headBase','headTop'],['head','nose'],
   ['neckBase','shoulderL'],['neckBase','shoulderR'],['shoulderL','elbowL'],['elbowL','wristL'],['shoulderR','elbowR'],['elbowR','wristR'],
@@ -266,7 +266,7 @@ const NAME = { upper_arm: /upper|uarm|bicep|arm-a\b|^arm/, forearm: /fore|farm/,
   thigh: /thigh/, shin: /shin|calf|leg-lower|lower-leg/, foot: /foot|shoe|boot|sneak|heel|toe/, head: /head|profile|face|front|threequarter|back/,
   torso: /torso|chest|body|jacket|shirt|vest|bodice/, pelvis: /hip|pelvis|waist/ };
 const NOT = { hand: /face|head|eye|mouth/, head: /hand|arm|leg|foot/, thigh: /pelvis|connect|waist/ };
-const nameOK = c => { if (c.odd || S.fix[c.id]?.bad) return false; if (!NAME[c.slot]) return true; const n = c.id.split('/').pop().toLowerCase(), sh = c.id.split('/')[0].toLowerCase(); return NAME[c.slot].test(n) && !(NOT[c.slot] && NOT[c.slot].test(sh + ' ' + n)); };
+const nameOK = c => { const hb = S.fix[c.id]?.bad ?? c.human?.bad; if (hb != null) return !hb; if (S.fix[c.id]?.slot ?? c.human?.slot) return true; if (c.odd || c.clip?.flags?.some(f => f.startsWith('looks like'))) return false; if (!NAME[c.slot]) return true; const n = c.id.split('/').pop().toLowerCase(), sh = c.id.split('/')[0].toLowerCase(); return NAME[c.slot].test(n) && !(NOT[c.slot] && NOT[c.slot].test(sh + ' ' + n)); };
 
 const $ = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d'), pe = $('pe'), pctx = pe.getContext('2d');
@@ -279,7 +279,7 @@ const LS = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d }
 S.fix = LS.get('skinlab.fix', {});   // per card id: hand-placed A/B, and whether a profile card is drawn facing left
 const AB = c => ({ A: S.fix[c.id]?.A || c.A, B: S.fix[c.id]?.B || c.B });
 const pts = (c, sk) => { const p = AB(c); return sk.swap ? { A: p.B, B: p.A } : p; };
-const cardLeft = c => S.fix[c.id]?.left ?? (c.slot === 'foot' ? AB(c).B[0] < AB(c).A[0] : c.faces === 'L');   // heads: which way the face points, read from the pixels
+const cardLeft = c => S.fix[c.id]?.left ?? c.human?.left ?? (c.slot === 'foot' ? AB(c).B[0] < AB(c).A[0] : c.faces === 'L');   // heads: which way the face points, read from the pixels
 const ALPHA = {};
 function alphaOf(c) {   // the card's own alpha, read once, for hit tests and centring
   if (ALPHA[c.id]) return ALPHA[c.id];
@@ -791,9 +791,22 @@ function randomGenome(styles) {
   for (const k of STYLES[st].segs) mutateLimb(g, k, true);
   return g;
 }
+// constrained picks: a limb takes its twin's sheet when the twin is already dressed (left and right drawn together),
+// else one of the six cards nearest its parent's cloth colour (skin tone, for heads and hands)
+function compatPick(g, k, v, p) {
+  const twin = OTHER(k) && g.limbs[OTHER(k)]?.cards?.[v];
+  if (twin) { const same = p.filter(id => id.split('/')[0] === twin.split('/')[0]); if (same.length) return pickOf(same); }
+  const slot = SEG[k].slots[0], skinPart = slot === 'hand' || slot === 'head', f = skinPart ? 'tone' : 'pal';
+  let ref = null;
+  if (skinPart) ref = Object.values(g.limbs).map(l => S.byId[l.cards[v]]).find(c => c && c.tone && (c.slot === 'hand' || c.slot === 'head'));
+  else for (const q of SEG[k].par) { const id = g.limbs[q]?.cards?.[v]; if (id) { ref = S.byId[id]; break; } }
+  if (!ref?.[f]) return pickOf(p);
+  const near = p.map(id => S.byId[id]).filter(c => c[f]).sort((a, b) => dE(a[f], ref[f]) - dE(b[f], ref[f])).slice(0, 6);
+  return near.length ? pickOf(near).id : pickOf(p);
+}
 function mutateLimb(g, k, fresh) {
   const l = g.limbs[k] ||= { cards: {}, scale: 1 };
-  for (const v of B.seen[k] || ['side']) { const p = B.pools[k + '|' + v]; if (p?.length && (fresh || Math.random() < .5)) l.cards[v] = pickOf(p); }
+  for (const v of B.seen[k] || ['side']) { const p = B.pools[k + '|' + v]; if (p?.length && (fresh || Math.random() < .5)) l.cards[v] = B.strict !== false ? compatPick(g, k, v, p) : pickOf(p); }
   if (!fresh) l.scale = Math.max(.75, Math.min(1.35, l.scale * Math.exp((Math.random() - .5) * .25)));
 }
 function mutate(g) {
@@ -820,7 +833,10 @@ function fitness(g) {
   for (const [k, sk] of Object.entries(S.skin)) for (const id of Object.values(sk.cards)) { const c = S.byId[id], { A, B: Bp } = AB(c), sg = SEG[k];
     lr += Math.abs(Math.log(Math.hypot(Bp[0] - A[0], Bp[1] - A[1]) / c.px_per_cm * sk.scale / (len3(v3(j[ji[sg.from]], j[ji[sg.to]])) || 1))); n++; if (!c.view) unknown++; }
   S.skin = keepSkin; S.sock = keepSock;
-  return r.miss + (STYLES[g.style].segs.length - r.cards) * 4 + r.wrongView * 6 + (sheets - 1) * .6 + (n ? 4 * lr / n + 2 * unknown / n : 0);
+  let jar = 0, jn = 0;   // cloth that jumps colour between a piece and its parent
+  for (const k of Object.keys(g.limbs)) for (const [v, id] of Object.entries(g.limbs[k].cards)) { const c = S.byId[id], q = SEG[k].par.find(p => g.limbs[p]?.cards?.[v]);
+    if (q && c.pal && !/hand|head/.test(c.slot)) { const pc = S.byId[g.limbs[q].cards[v]]; if (pc.pal) { jar += dE(c.pal, pc.pal); jn++; } } }
+  return r.miss + (STYLES[g.style].segs.length - r.cards) * 4 + r.wrongView * 6 + (sheets - 1) * .6 + (n ? 4 * lr / n + 2 * unknown / n : 0) + (jn ? jar / jn / 15 : 0);
 }
 function breedStep() {
   if (!B || !B.on) return;
@@ -870,31 +886,33 @@ S.rate = LS.get('skinlab.rate', {});
 const rateOf = ids => ids.length ? ids.reduce((t, id) => t + (S.rate[id] || 0), 0) / ids.length : 0;
 function initB() {
   const frames = frameSet('trial');
-  B = { on: false, frames, styles: Object.keys(STYLES), seen: Object.fromEntries(Object.entries(wantedViews(frames)).map(([k, v]) => [k, [...v]])), pools: pools($('bFrom').value), coin: {}, gen: 0, gens: 15, hist: [], i: 0 };
+  B = { strict: S.grid?.strict !== false, on: false, frames, styles: Object.keys(STYLES), seen: Object.fromEntries(Object.entries(wantedViews(frames)).map(([k, v]) => [k, [...v]])), pools: pools($('bFrom').value), coin: {}, gen: 0, gens: 15, hist: [], i: 0 };
 }
 // faces: the kit heads are blank (features are their own cards, as in cut-out animation), so a face is a front head plus
 // an eye, a brow, a mouth and maybe a nose card, placed Photo-FIT style in bands; the genome also carries where they sit
 let FACES = [], FEAT = {};
 function facePool() {
   const ok = c => !S.fix[c.id]?.bad;
-  FACES = S.lib.filter(c => c.slot === 'head' && !c.odd && ok(c) && (c.view === 'front' || (!c.view && c.est_view === 'front')) && c.est_view !== 'back').map(c => c.id);
+  FACES = S.lib.filter(c => c.slot === 'head' && nameOK(c) && viewOf(c) === 'front' && c.est_view !== 'back').map(c => c.id);
   for (const f of ['eye', 'brow', 'mouth', 'nose']) FEAT[f] = S.lib.filter(c => c.slot === f && ok(c) && !/profile|threequarter/.test(c.view || '')).map(c => c.id);   // front-facing features only
 }
 const jit = (v, a, lo, hi) => Math.max(lo, Math.min(hi, v + (Math.random() - .5) * a));
-const randFace = () => ({ base: pickOf(FACES), eye: pickOf(FEAT.eye), brow: pickOf(FEAT.brow), mouth: pickOf(FEAT.mouth), nose: Math.random() < .3 && FEAT.nose.length ? pickOf(FEAT.nose) : null,
+const toneNear = (pool, base) => { const b = S.byId[base]; if (S.grid?.strict === false || !b?.tone) return pickOf(pool); const r = pool.map(id => S.byId[id]).sort((x, y) => (x.tone ? dE(x.tone, b.tone) : 50) - (y.tone ? dE(y.tone, b.tone) : 50)).slice(0, 8); return pickOf(r).id; };
+const randFace = (base = pickOf(FACES)) => ({ base, eye: toneNear(FEAT.eye, base), brow: pickOf(FEAT.brow), mouth: toneNear(FEAT.mouth, base), nose: Math.random() < .3 && FEAT.nose.length ? pickOf(FEAT.nose) : null,
   eyeY: (Math.random() - .5) * .06, gap: .24 + Math.random() * .06, mouthY: (Math.random() - .5) * .06, size: .85 + Math.random() * .3 });
 const FKEYS = ['base', 'eye', 'brow', 'mouth', 'nose', 'eyeY', 'gap', 'mouthY', 'size'];
 const faceCross = (a, b) => Object.fromEntries(FKEYS.map(p => [p, (Math.random() < .5 ? a : b)[p]]));
 function faceMutate(g) {
   const c = { ...g }, k = pickOf(FKEYS);
   if (k === 'base') c.base = pickOf(FACES); else if (k === 'nose') c.nose = c.nose && Math.random() < .4 ? null : pickOf(FEAT.nose);
-  else if (FEAT[k]) c[k] = pickOf(FEAT[k]);
+  else if (FEAT[k]) c[k] = k === 'brow' ? pickOf(FEAT[k]) : toneNear(FEAT[k], c.base);
   else c[k] = k === 'gap' ? jit(c.gap, .04, .18, .34) : k === 'size' ? jit(c.size, .2, .6, 1.5) : jit(c[k], .03, -.06, .06);
   return c;
 }
 const faceIds = g => ['base', 'eye', 'brow', 'mouth', 'nose'].map(k => g[k]).filter(Boolean);
 function faceFit(g) {   // geometry: features in skin that matches the head, at a believable size against the head's true scale
   const b = S.byId[g.base]; let s = 0;
+  if (painted(b)) return .5 - .3 * rateOf([g.base]);   // a painted face stands as it is
   for (const k of ['eye', 'brow', 'mouth', 'nose']) {
     const c = g[k] && S.byId[g[k]]; if (!c) continue;
     if (b.tone && c.tone) s += dE(b.tone, c.tone) / 20;
@@ -913,11 +931,12 @@ function drawFace(cell, x, y, w, h) {
   const g = cell.g, b = S.byId[g.base], bi = img(b), bb = boxOf(b); if (!bb || !bi.complete) return;
   const s = Math.min(w * .82 / bb.w, (h - 18) * .9 / bb.h), ox = x + (w - bb.w * s) / 2 - bb.x * s, oy = y + 6 + ((h - 18) - bb.h * s) / 2 - bb.y * s;
   ctx.drawImage(bi, ox, oy, b.w * s, b.h * s);
+  if (painted(b)) return;
   const fw = bb.w * s * .62, cx = ox + (bb.x + bb.w / 2) * s, Y = t => oy + (bb.y + bb.h * t) * s;
   const put = (c, px, py, wd, flip) => { const ci = img(c); if (!ci.complete || !ci.naturalWidth) return; const bx = boxOf(c) || { x: 0, y: 0, w: c.w, h: c.h }, k = wd / bx.w;
     ctx.save(); ctx.translate(px, py); if (flip) ctx.scale(-1, 1); ctx.drawImage(ci, bx.x, bx.y, bx.w, bx.h, -wd / 2, -bx.h * k / 2, wd, bx.h * k); ctx.restore(); };
   const pairOr = (id, yy, single, pair) => { const c = id && S.byId[id]; if (!c) return;
-    if (c.pair) put(c, cx, yy, fw * pair * g.size); else { const dx = fw * g.gap * 1.6; put(c, cx - dx, yy, fw * single * g.size, c.side === 'L'); put(c, cx + dx, yy, fw * single * g.size, c.side !== 'L'); } };
+    if (c.pair) put(c, cx, yy, fw * pair * g.size); else if (c.slot === 'eye' && c.skin > .45) { const dx = fw * g.gap * 1.6; put(c, cx - dx, yy, fw * .36 * g.size, c.side === 'L'); put(c, cx + dx, yy, fw * .36 * g.size, c.side !== 'L'); } else { const dx = fw * g.gap * 1.6; put(c, cx - dx, yy, fw * single * g.size, c.side === 'L'); put(c, cx + dx, yy, fw * single * g.size, c.side !== 'L'); } };
   pairOr(g.brow, Y(.41 + g.eyeY), .3, .85);
   pairOr(g.eye, Y(.48 + g.eyeY), .26, .8);
   if (g.nose && S.byId[g.nose]) put(S.byId[g.nose], cx, Y(.6), fw * .24 * g.size);
@@ -928,9 +947,61 @@ function drawFace(cell, x, y, w, h) {
     ctx.fillStyle = '#ffffff66'; ctx.font = '9px JetBrains Mono'; ctx.fillText(String(S.lib.indexOf(S.byId[id]) % 100), cx + fw * .62, Y(t0) + 10);
   });
 }
+// ---------- the label sweep: settle what the cards are, a page at a time, the least certain first ----------
+// click a card to cycle its answer (a person's answer, green); right-click marks it misfiled; ✓ page accepts every guess
+// left on the page as a person's answer. Answers go straight into the page and out through File › export labels
+// (→ skinlab/labels.json, which build.py and clip_label.py read back).
+const human = (c, f) => S.fix[c.id]?.[f] ?? c.human?.[f];
+const painted = c => human(c, 'painted') ?? (c.clip?.face === 'painted' && c.clip.face_p > .75);
+const QS = {
+  'view:torso': { t: 'torsos + hips: view', slots: ['torso', 'pelvis'], ans: ['front', 'side', 'back'], f: 'view' },
+  'view:limb': { t: 'arm + leg pieces: view', slots: ['upper_arm', 'forearm', 'thigh', 'shin'], ans: ['front', 'side', 'back'], f: 'view' },
+  'view:head': { t: 'heads: view', slots: ['head'], ans: ['front', 'side', 'back'], f: 'view' },
+  'view:foot': { t: 'shoes: view', slots: ['foot'], ans: ['front', 'side', 'back'], f: 'view' },
+  'painted': { t: 'front heads: face painted?', slots: ['head'], only: c => viewOf(c) === 'front', ans: ['painted', 'blank'], f: 'painted' },
+  'facing': { t: 'profile heads + shoes: facing', slots: ['head', 'foot'], only: c => viewOf(c) === 'side', ans: ['L', 'R'], f: 'left' },
+  'part': { t: 'is it what it is filed as?', slots: null, ans: ['ok', 'junk'], f: 'bad' },
+};
+function guessOf(c, q) {   // [answer, confidence, settled by a person]
+  const Q = QS[q], h = human(c, Q.f);
+  if (Q.f === 'view') { if (h) return [h, 1, true]; if (c.view) return [viewOf(c), .9]; if (c.clip?.view_l) return [c.clip.view_l, c.clip.view_l_p]; return [viewOf(c), .4]; }
+  if (Q.f === 'painted') return h != null ? [h ? 'painted' : 'blank', 1, true] : [c.clip?.face || 'blank', (c.clip?.face_p || .5) * .7];
+  if (Q.f === 'left') return h != null ? [h ? 'L' : 'R', 1, true] : [cardLeft(c) ? 'L' : 'R', .6];
+  const re = S.fix[c.id]?.slot ?? c.human?.slot;
+  if (re) return ['→ ' + re, 1, true];
+  if (h != null) return [h ? 'junk' : 'ok', 1, true];
+  const other = c.clip?.part && c.clip.part !== c.slot;   // CLIP (learnt) reads it as another part
+  return other ? ['→ ' + c.clip.part, 1 - c.clip.part_p] : [c.odd || !nameOK(c) ? 'junk' : 'ok', c.clip?.part === c.slot ? c.clip.part_p : .5];
+}
+function setAnswer(c, q, a) {
+  const Q = QS[q], f = S.fix[c.id] ||= {};
+  if (Q.f === 'view') f.view = a; else if (Q.f === 'painted') f.painted = a === 'painted'; else if (Q.f === 'left') f.left = a === 'L';
+  else if (a.startsWith('→ ')) { f.slot = a.slice(2); f.bad = false; c.slot = f.slot; }   // re-filed under the part it is
+  else { f.bad = a === 'junk'; if (f.slot) { c.slot = c.slot0 || c.slot; delete f.slot; } }
+  LS.set('skinlab.fix', S.fix);
+}
+function sweepPage() {
+  const G = S.grid, Q = QS[G.q], n = G.cols * G.rows;
+  const all = S.lib.filter(c => !c.gen && (!Q.slots || Q.slots.includes(c.slot)) && (!Q.only || Q.only(c)));
+  G.done = all.filter(c => guessOf(c, G.q)[2]).length; G.total = all.length;
+  const open = all.filter(c => !guessOf(c, G.q)[2] && !G.seen.has(c.id)).sort((a, b) => guessOf(a, G.q)[1] - guessOf(b, G.q)[1]);
+  G.cells = open.slice(0, n).map(c => ({ c })); for (const x of G.cells) G.seen.add(x.c.id);
+  draw(); renderGridBar();
+}
+function drawSweepCell(cell, x, y, w, h) {
+  const c = cell.c, im = img(c); if (!im.complete || !im.naturalWidth) return;
+  const s = Math.min((w - 20) / c.w, (h - 34) / c.h); ctx.drawImage(im, x + (w - c.w * s) / 2, y + 8 + (h - 34 - c.h * s) / 2, c.w * s, c.h * s);
+  const [a, p, set] = guessOf(c, S.grid.q), bad = human(c, 'bad');
+  ctx.font = '12px JetBrains Mono'; const t = `${a}${set ? '' : ' ' + Math.round((a.startsWith('→') ? 1 - p : p) * 100) + '%'}`, tw = ctx.measureText(t).width;
+  ctx.fillStyle = set ? '#8fd16a' : '#e7c35a'; ctx.beginPath(); ctx.roundRect(x + w / 2 - tw / 2 - 6, y + h - 24, tw + 12, 18, 9); ctx.fill();
+  ctx.fillStyle = '#0d0b0a'; ctx.fillText(t, x + w / 2 - tw / 2, y + h - 11);
+  if (bad) { ctx.strokeStyle = '#ef6a5a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + 10, y + 10); ctx.lineTo(x + w - 10, y + h - 30); ctx.moveTo(x + w - 10, y + 10); ctx.lineTo(x + 10, y + h - 30); ctx.stroke(); }
+  ctx.fillStyle = '#9a8d7e'; ctx.font = '9px JetBrains Mono'; ctx.fillText(`${c.slot} · ${c.character || ''}`, x + 6, y + 12);
+}
 function cellOf(g) { return S.grid.mode === 'face' ? { g, fit: faceFit(g) } : { g, skin: skinOf(g), fit: fitness(g) - .3 * rateOf(Object.values(g.limbs).flatMap(l => Object.values(l.cards))) }; }
 function newBatch() {
   const G = S.grid, n = G.cols * G.rows;
+  if (G.mode === 'label') { G.seen = new Set(); G.q ||= 'view:torso'; return sweepPage(); }
   if (G.mode === 'face') { facePool(); G.cells = Array.from({ length: n }, () => cellOf(randFace())); }
   else { initB(); G.cells = Array.from({ length: n }, () => cellOf(randomGenome(B.styles))); }
   G.gen = 0; S.sock = {}; draw(); renderGridBar();
@@ -963,13 +1034,14 @@ function gridGeom() { const r = cv.getBoundingClientRect(), G = S.grid; return {
 function drawGrid() {
   const r = cv.getBoundingClientRect(); ctx.clearRect(0, 0, r.width, r.height);
   const G = S.grid, { cw, ch } = gridGeom(), fr = S.data?.frames[S.f], keep = S.skin;
-  const fits = G.cells.map(c => c.fit), lo = Math.min(...fits), hi = Math.max(...fits);
+  const fits = G.cells.map(c => c.fit ?? 0), lo = Math.min(...fits), hi = Math.max(...fits);
   G.cells.forEach((cell, i) => {
     const x = (i % G.cols) * cw, y = Math.floor(i / G.cols) * ch;
     ctx.save(); ctx.beginPath(); ctx.rect(x + 2, y + 2, cw - 4, ch - 4); ctx.clip();
     ctx.fillStyle = '#15110e'; ctx.fillRect(x, y, cw, ch);
     ctx.globalAlpha = cell.nope ? .3 : 1;
-    if (G.mode === 'face') drawFace(cell, x, y, cw, ch);
+    if (G.mode === 'label') drawSweepCell(cell, x, y, cw, ch);
+    else if (G.mode === 'face') drawFace(cell, x, y, cw, ch);
     else if (fr) {
       const port = cell.port = makePort(x, y - 6, cw, ch, S.yaw, S.elev, 'grid');
       centre(port, fr); S.skin = cell.skin;
@@ -977,6 +1049,7 @@ function drawGrid() {
       if (sol) for (const xx of sol.order) drawCard(ctx, xx, cell.nope ? .3 : 1);
     }
     ctx.globalAlpha = 1;
+    if (G.mode === 'label') { ctx.restore(); ctx.strokeStyle = '#2a221c'; ctx.lineWidth = 1; ctx.strokeRect(x + 2, y + 2, cw - 4, ch - 4); return; }
     // geometry: a bar (short and green is good) and the rig's cut
     const q = (cell.fit - lo) / ((hi - lo) || 1);
     ctx.fillStyle = '#2a221c'; ctx.fillRect(x + 8, y + ch - 10, cw - 16, 4);
@@ -991,10 +1064,20 @@ function drawGrid() {
 }
 function renderGridBar() {
   const G = S.grid, likes = G.cells.filter(c => c.like).length, b = (on, t, a, tip) => `<button class="btn${on ? ' on' : ''}" data-g="${a}" title="${tip}">${t}</button>`;
+  if (G.mode === 'label') {
+    $('score').innerHTML = b(false, '🧍', 'm:body', 'back to bodies') + b(false, '☺', 'm:face', 'back to faces') + b(true, '🏷 label', 'm:label', 'settle what the cards are')
+      + `<select id="gq">${Object.entries(QS).map(([k, q]) => `<option value="${k}"${k === G.q ? ' selected' : ''}>${q.t}</option>`).join('')}</select>`
+      + b(false, '✓ page', 'accept', 'accept every guess on this page') + b(false, '→', 'next', 'next page, least certain first')
+      + `<span class="sub" title="settled by a person / cards in this question">${G.done}/${G.total}</span>`;
+    $('gq').onchange = e => { G.q = e.target.value; G.seen = new Set(); sweepPage(); };
+    return;
+  }
   $('score').innerHTML = b(G.mode === 'body', '🧍 bodies', 'm:body', 'whole figures on this trial') + b(G.mode === 'face', '☺ faces', 'm:face', 'heads built from the kits\' eye, brow, nose and mouth cards, Photo-FIT style')
     + b(G.cols === 3, '3×2', 's:3', '6 at a time') + b(G.cols === 4, '4×3', 's:4', '12 at a time') + b(G.cols === 6, '6×4', 's:6', '24 at a time')
     + b(false, '⟳', 'new', 'a fresh random batch') + b(likes > 0, `♥ ${likes} → evolve`, 'evolve', 'breed the next batch from the ♥ (or the best geometry)')
     + (G.mode === 'body' ? b(false, '⚙ polish', 'polish', 'let the geometry search run from the ♥ and show its best') : '')
+    + b(G.strict !== false, '⛓ strict', 'strict', 'only pieces that go together: twins from one sheet, cloth and skin that match')
+    + b(false, '🏷 label', 'm:label', 'settle what the cards are: view, painted face, facing, misfiled')
     + `<span class="sub" title="generation">gen ${G.gen}</span>`;
 }
 $('score').addEventListener('click', e => {
@@ -1005,11 +1088,21 @@ $('score').addEventListener('click', e => {
   else if (a === 'new') newBatch();
   else if (a === 'evolve') evolve(false);
   else if (a === 'polish') evolve(true);
+  else if (a === 'strict') { G.strict = G.strict === false; newBatch(); }
+  else if (a === 'accept') { for (const x of G.cells) { const [ans, , set] = guessOf(x.c, G.q); if (!set) setAnswer(x.c, G.q, ans); } sweepPage(); }
+  else if (a === 'next') sweepPage();
 });
 function gridCell(m) { const { cw, ch } = gridGeom(), G = S.grid, i = Math.floor(m[1] / ch) * G.cols + Math.floor(m[0] / cw); return G.cells[i] ? { i, cell: G.cells[i] } : null; }
 function gridClick(e) {
   const m = mpos(e), hit = gridCell(m); if (!hit) return;
   const { cell } = hit, G = S.grid;
+  if (G.mode === 'label') {
+    if (e.button === 2) { const f = S.fix[cell.c.id] ||= {}; f.bad = !human(cell.c, 'bad'); LS.set('skinlab.fix', S.fix); }
+    else { const Q = QS[G.q], [a] = guessOf(cell.c, G.q), c = cell.c;
+      const ans = G.q === 'part' && c.clip?.part && c.clip.part !== (c.slot0 || c.slot) ? ['ok', '→ ' + c.clip.part, 'junk'] : Q.ans;
+      setAnswer(c, G.q, ans[(ans.indexOf(a) + 1) % ans.length]); }
+    G.done = (G.done || 0); draw(); renderGridBar(); return;
+  }
   if ((e.shiftKey || e.altKey) && G.mode === 'body' && cell.sol) {   // a piece inside the cell: misfiled, or facing the wrong way
     const port = cell.port; let found = null;
     for (const x of cell.sol.order.slice().reverse()) { const q = inv(x, m), c = x.c; if (q[0] < 0 || q[1] < 0 || q[0] >= c.w || q[1] >= c.h) continue; const a = alphaOf(c); if (!a || a[(q[1] | 0) * c.w + (q[0] | 0)] > 40) { found = x; break; } }
@@ -1191,7 +1284,7 @@ $('file').onchange = e => {
   if (v === 'save') { const n = prompt('name this skin', 'skin ' + new Date().toISOString().slice(5, 16)); if (!n) return; const s = LS.get('skinlab.saved', {}); s[n] = { skin: S.skin, style: S.style, stack: S.stack, K: S.K, preset: S.preset }; LS.set('skinlab.saved', s); refreshFile(); }
   else if (v === 'clear') setSkin({});
   else if (v === 'labels') {   // the corrections and ratings made here, as training labels for the kits
-    const out = { about: 'Skin Lab labels: per card id — bad (misfiled), left (profile drawn facing left), A/B (attach points, card px), rating (♥ +1 / ✕ −1 per grid vote)', cards: {} };
+    const out = { about: 'Skin Lab labels: per card id — slot (re-filed as), bad (junk), view (front/side/back), painted (face painted on), left (profile drawn facing left), A/B (attach points, card px), rating (♥ +1 / ✕ −1 per grid vote). Save as shots/skinlab/labels.json and rerun build.py (and clip_label.py to learn from them).', cards: {} };
     for (const [id, f] of Object.entries(S.fix)) out.cards[id] = { ...f };
     for (const [id, r] of Object.entries(S.rate)) (out.cards[id] ||= {}).rating = r;
     const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' })), download: 'skinlab-labels.json' }); a.click();
@@ -1387,7 +1480,7 @@ addEventListener('keydown', e => {
 // ---------- boot ----------
 (async () => {
   [S.trials, S.lib] = await Promise.all([fetch('trials.json').then(r => r.json()), fetch('library.json').then(r => r.json())]);
-  for (const c of S.lib) c.odd = c.slot === 'head' && (c.skin < .1 || c.h / c.w > 1.9);   // a "head" with no skin, or a whole figure
+  for (const c of S.lib) { c.odd = c.slot === 'head' && (c.skin < .1 || c.h / c.w > 1.9); c.slot0 = c.slot; const re = S.fix[c.id]?.slot ?? c.human?.slot; if (re) c.slot = re; }   // re-filed cards   // a "head" with no skin, or a whole figure
   S.byId = Object.fromEntries(S.lib.map(c => [c.id, c]));
   const chars = [...new Set(S.lib.map(c => c.character).filter(Boolean))].sort();
   fill($('fChar'), chars); fill($('dress'), chars); fill($('bFrom'), chars);

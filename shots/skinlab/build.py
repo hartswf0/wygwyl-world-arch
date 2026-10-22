@@ -220,6 +220,16 @@ def library():
     out += pelvis_cards(cat, N, R) + feature_cards(cat, N, R)
     for c in out:
         c.update(analyse(os.path.join(SHOTS, 'kits', 'cut', c['img'][len('../kits/cut/'):]), c['slot']))
+    # what CLIP learnt from the labelled cards (clip_label.py), and what people settled in the Skin Lab (labels.json,
+    # exported from the page: view, painted face, facing, misfiled); a person's answer wins over everything else
+    CL = json.load(open(os.path.join(HERE, 'clip.json'))) if os.path.exists(os.path.join(HERE, 'clip.json')) else {}
+    HL = json.load(open(os.path.join(HERE, 'labels.json'))).get('cards', {}) if os.path.exists(os.path.join(HERE, 'labels.json')) else {}
+    for c in out:
+        r = CL.get(c['id'], {})
+        c['clip'] = {k: r[k] for k in ('view_l', 'view_l_p', 'part', 'part_p', 'flags', 'kind', 'kind_p', 'pose', 'face', 'face_p') if k in r}
+        h = HL.get(c['id'])
+        if h:
+            c['human'] = {k: h[k] for k in ('view', 'painted', 'left', 'bad', 'slot') if k in h}
     return out
 
 
