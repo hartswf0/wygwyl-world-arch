@@ -32,7 +32,7 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 380px;min-height:calc(100v
 .layer{position:absolute;user-select:none;-webkit-user-drag:none;cursor:grab;object-fit:fill}
 .layer.sel{outline:3px dashed var(--sel);outline-offset:2px}
 .layer.hid{display:none}
-.tag{position:absolute;font:600 13px var(--mono);color:#120c08;background:var(--arch);padding:1px 7px;border-radius:3px;pointer-events:none;white-space:nowrap}
+.tag{position:absolute;z-index:4;font:600 13px var(--mono);color:#120c08;background:var(--arch);padding:1px 7px;border-radius:3px;pointer-events:none;white-space:nowrap}
 #info h2{font:400 22px 'Permanent Marker',cursive;margin:0;color:var(--card)}
 #info .lines{font-style:italic;color:var(--dim)}
 .tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -66,6 +66,29 @@ aside h3{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase
 .act b{font:600 12px Inter;color:var(--ink)}.act span{font:10px var(--mono);color:var(--dim)}
 .act em{grid-column:1/-1;font:11px Inter;color:var(--dim);font-style:normal}
 button:focus-visible,a:focus-visible,.cell:focus-visible,.act:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#cap{position:absolute;left:50%;bottom:4.5%;transform:translateX(-50%);max-width:86%;text-align:center;font:600 clamp(13px,2.1vw,24px)/1.3 Inter,system-ui,sans-serif;color:#fff7ea;background:rgba(10,7,5,.62);padding:.25em .7em;border-radius:6px;pointer-events:none;text-shadow:0 1px 2px #000;z-index:5}
+#cap:empty{display:none}
+#cap .w{opacity:.42;transition:opacity .08s}#cap .w.on{opacity:1}#cap .w.now{color:var(--acc)}
+#stamp{position:absolute;left:10px;top:8px;font:600 11px var(--mono);color:#fff7ea;background:rgba(10,7,5,.55);padding:1px 7px;border-radius:3px;pointer-events:none;z-index:5}
+#tl{display:grid;gap:6px}
+#tlBar{position:relative;height:40px;background:#0f0c0a;border:1px solid var(--line);border-radius:6px;cursor:pointer;touch-action:none;overflow:hidden}
+#tlBar canvas{position:absolute;inset:0;width:100%;height:100%}
+.tb{position:absolute;top:0;bottom:0;border-right:1px solid #3a2e24;font:600 10px var(--mono);color:var(--dim);padding:2px 4px;overflow:hidden;white-space:nowrap;pointer-events:none}
+.tb.on{background:rgba(231,163,90,.13);color:var(--acc)}
+.head{position:absolute;top:0;bottom:0;width:2px;background:var(--sel);pointer-events:none;z-index:3}
+#tlLane{position:relative;height:84px;overflow-x:auto;overflow-y:hidden;background:#0f0c0a;border:1px solid var(--line);border-radius:6px}
+#tlLaneIn{position:relative;height:100%}
+.wd{position:absolute;font:11px Inter;color:var(--ink);border-left:1px solid #6b5a49;padding:0 3px;white-space:nowrap;cursor:pointer;line-height:16px;border-radius:0 3px 3px 0}
+.wd:hover{background:#2a2119;color:var(--acc)}.wd.on{color:var(--acc)}
+.wd.cued{border-left:2px solid var(--act)}
+.cm{position:absolute;top:2px;font:600 9.5px/13px var(--mono);padding:0 4px;border-radius:3px;white-space:nowrap;cursor:pointer;color:#120c08}
+.cm.show{background:var(--plane)}.cm.hide{background:#8d7f70}.cm.play{background:var(--act)}.cm.move{background:var(--card)}.cm.pose-swap{background:var(--arch)}.cm.miss{opacity:.35;text-decoration:line-through}
+#cueList{display:flex;gap:4px;flex-wrap:wrap;max-height:96px;overflow:auto}
+.cc{font:10.5px var(--mono);border:1px solid var(--line);border-radius:999px;padding:1px 4px 1px 8px;color:var(--dim);cursor:pointer;white-space:nowrap}
+.cc b{font-weight:600;color:var(--ink)}.cc.miss{opacity:.45}.cc.auto{border-style:dashed}
+.cc button{font:10px var(--mono);background:none;border:0;color:var(--dim);cursor:pointer}
+#log{font:10.5px var(--mono);color:var(--dim);max-height:64px;overflow:auto;white-space:pre-wrap}
+.sc em{display:block;font:10px var(--mono);color:var(--dim);font-style:normal}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--card);color:#1a120a;font:600 13px Inter;padding:6px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none}
 </style>
 </head>
@@ -83,9 +106,19 @@ button:focus-visible,a:focus-visible,.cell:focus-visible,.act:focus-visible{outl
 <div id="scenes" role="tablist" aria-label="Scenes"></div>
 <main>
   <div id="left">
-    <div id="stageWrap"><div class="stage" id="stage"></div></div>
+    <div id="stageWrap"><div class="stage" id="stage"></div><div id="cap" aria-live="off"></div><div id="stamp"></div></div>
+    <div id="tl" aria-label="Timeline: her reading">
+      <div id="tlBar" title="Her reading: scenes and words. Click or drag to scrub."><canvas id="tlTicks"></canvas></div>
+      <div id="tlLane" title="This scene's words. Click a word to go there; with a layer selected, it also adds a cue for that layer."><div id="tlLaneIn"></div></div>
+      <div class="tools"><span class="hint" id="tClock">00:00.0</span>
+        <label class="hint">cue on word <select class="btn" id="cueType" aria-label="Cue to add when a word is clicked"><option value="show">show</option><option value="show-wipe">show · wipe in</option><option value="hide">hide</option><option value="hide-wipe">hide · wipe out</option><option value="play-once">play once</option><option value="play-loop">play loop</option><option value="move">move →</option><option value="move-l">move ←</option><option value="pose-swap">pose-swap</option></select></label>
+        <select class="btn" id="cuePart" aria-label="Pose to swap in" hidden></select>
+        <span class="sp"></span><button class="btn" id="bCueReset">Reset cues</button></div>
+      <div id="cueList"></div>
+      <div id="log" aria-label="Cue log"></div>
+    </div>
     <div class="tools">
-      <button class="btn" id="bPlay">❚❚ Pause</button>
+      <button class="btn" id="bPlay" title="Space">▶ Play</button>
       <button class="btn" id="bFlip">Flip (F)</button>
       <button class="btn" id="bBack">Back ([)</button>
       <button class="btn" id="bFwd">Forward (])</button>
@@ -99,7 +132,7 @@ button:focus-visible,a:focus-visible,.cell:focus-visible,.act:focus-visible{outl
       <button class="btn" id="bPng">Scene PNG</button>
       <button class="btn" id="bJson">Export poem JSON</button>
     </div>
-    <div class="hint">Drag to move · wheel or +/− to scale · Q/E rotate · arrows nudge · edits save in this browser. Archive material carries its tag on screen while it shows.</div>
+    <div class="hint">Space play/pause on her voice · , . step a frame · drag to move · wheel or +/− to scale · Q/E rotate · arrows nudge · select a layer, then click a word to cue it · edits and cues save in this browser. Archive material carries its tag on screen while it shows.</div>
     <div id="info"></div>
   </div>
   <aside>
@@ -120,7 +153,7 @@ const CUT = '../kits/cut/', W = 1600, H = 900;
 const POEMS = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14'];
 const qs = new URLSearchParams(location.search);
 let P = qs.get('p') || '04';
-let PLAN, CAT, ASSETS, ATLAS, cur = 0, sel = -1, parts = {}, scenes = [], TAB = 'parts', playing = true;
+let PLAN, CAT, ASSETS, ATLAS, cur = 0, sel = -1, parts = {}, scenes = [], TAB = 'parts', playing = false;
 const store = (() => { try { const k = '__t'; localStorage.setItem(k, k); localStorage.removeItem(k); return localStorage; } catch (e) { return null; } })();
 const key = s => `wygwyl.stage.${P}.${s}`;
 function toast(t) { const el = $('toast'); el.textContent = t; el.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.opacity = 0, 1600); }
@@ -156,15 +189,238 @@ function drawClip(cv, C, f) {
     else if (o.t === 'line') { g.beginPath(); (o.pts || [[o.x1, o.y1], [o.x2, o.y2]]).forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.lineWidth = o.w || 2; g.strokeStyle = o.stroke || o.color || '#1a120b'; g.stroke(); }
   }
 }
-let T0 = performance.now();
-function tick(now) {
-  if (playing) document.querySelectorAll('canvas.layer[data-act]').forEach(cv => {
-    const C = CLIPS[cv.dataset.act]; if (!C) return;
-    const f0 = +cv.dataset.f0 || 0, f1 = +cv.dataset.f1 || C.j.frames.length;
-    drawClip(cv, C, f0 + Math.floor((now - T0) / 1000 * C.fps) % Math.max(1, f1 - f0));
-  });
-  requestAnimationFrame(tick);
+/* ── the clock: her reading is the master; everything is evaluated at a 24 fps frame of it ──
+   As in the weave, picture time is read from the audio element while it plays and from the wall
+   clock only when there is no audio (blocked or missing). As in the suite, the audio is never
+   seeked per frame: it runs free and is only moved when the user seeks. Cue state is a pure
+   function of t (scrub anywhere, backwards too); the log only records cues *crossed* while playing. */
+const FPS = 24, WIPE = 0.5, POP = 0.25;
+let TL = null, AUD = null, CUES = {}, clock = {playing: false, t: 0, w0: 0, wall: true}, lastF = -1, prevT = 0, fired = [];
+const cueKey = k => `wygwyl.stage.${P}.${k}.cues`;
+const fmt = t => { t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = t - m * 60; return String(m).padStart(2, '0') + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
+const ease = p => p < 0 ? 0 : p > 1 ? 1 : p * p * (3 - 2 * p);
+function tNow() {
+  if (!clock.playing) return clock.t;
+  if (AUD && !clock.wall && !AUD.paused) return AUD.currentTime;
+  return (performance.now() - clock.w0) / 1000;
 }
+const DUR = () => TL?.duration || 60;
+function play() {
+  if (clock.playing) return;
+  if (clock.t >= DUR() - 0.05) clock.t = 0;
+  clock.playing = true; playing = true; clock.w0 = performance.now() - clock.t * 1000; clock.wall = true; prevT = clock.t;
+  if (AUD) { try { AUD.currentTime = clock.t; } catch (_) {}
+    AUD.play().then(() => { if (clock.playing) { clock.wall = false; } }).catch(() => { clock.wall = true; toast('Audio blocked: playing on the wall clock'); }); }
+  document.querySelectorAll('#stage video').forEach(v => v.play().catch(() => {}));
+  $('bPlay').textContent = '❚❚ Pause';
+}
+function pause() {
+  if (!clock.playing) return;
+  clock.t = tNow(); clock.playing = false; playing = false; AUD?.pause();
+  document.querySelectorAll('#stage video').forEach(v => v.pause());
+  $('bPlay').textContent = '▶ Play'; lastF = -1;
+}
+function seek(t) {
+  t = Math.max(0, Math.min(DUR() - 1 / FPS, t)); clock.t = t; prevT = t; lastF = -1;
+  if (clock.playing) { clock.w0 = performance.now() - t * 1000; if (AUD) try { AUD.currentTime = t; } catch (_) {} }
+}
+function tlSceneAt(t) { if (!TL) return null; return TL.scenes.find(s => t >= s.t0 && t < s.t1) || (t < TL.scenes[0].t0 ? TL.scenes[0] : TL.scenes.reduce((a, b) => b.t1 > a.t1 ? b : a)); }
+const tlScene = key => TL?.scenes.find(s => s.key === key);
+const wordT = c => (c.w != null && TL?.words[c.w]) ? TL.words[c.w].s + (c.dt || 0) : c.t;
+function refOf(L, ls) {
+  const b = M => M.id || M.part || (M.action ? 'action:' + M.action : M.src || '');
+  const base = b(L), n = ls.slice(0, ls.indexOf(L)).filter(M => b(M) === base).length;
+  return base + (n ? '#' + n : '');
+}
+/* a cue names its layer by ref (part id, action:id or src). Plans get regenerated, so when that exact
+   layer is gone the cue falls back to the layer playing the same role: the poet's drawn pose, the scene's
+   action, the n-th tagged archive still. Such a cue is marked loose; one with no stand-in is missing. */
+function resolve(s, ref) {
+  const ls = s.layers, i = ls.findIndex(L => refOf(L, ls) === ref); if (i >= 0) return [i, false];
+  const base = ref.replace(/#\d+$/, '');
+  let j = -1;
+  if (base.startsWith('poet.')) j = ls.findIndex(L => L.part?.startsWith('poet.') && L.part.includes('main-poses'));
+  else if (base.startsWith('action:')) j = ls.findIndex(L => kindOf(L) === 'action');
+  else if (/\.(jpe?g|png|webp)$/i.test(base)) {   // the k-th archive still the cues name -> the k-th tagged layer
+    const arch = ls.map((L, k) => L.tag ? k : -1).filter(k => k >= 0);
+    const named = [...new Set((CUES[s.key] || []).map(c => c.layer).filter(r => /\.(jpe?g|png|webp)(#\d+)?$/i.test(r)))];
+    j = arch[Math.max(0, named.indexOf(ref))] ?? -1; }
+  return [j, j >= 0];
+}
+function cuesOf(s) { return (CUES[s.key] || []).map(c => { const [i, loose] = resolve(s, c.layer); return {...c, t: wordT(c), i, loose}; }).sort((a, b) => a.t - b.t); }
+function saveCues(s) { store?.setItem(cueKey(s.key), JSON.stringify(CUES[s.key] || [])); s.cuesEdited = true; }
+
+/* the state of every layer of the current scene at time T: base layer, then every cue up to T */
+function stateAt(s, T) {
+  const st = s.layers.map(L => ({vis: !L.hide, dx: 0, dy: 0, part: null, play: null, fx: null}));
+  for (const c of cuesOf(s)) {
+    if (c.t > T + 1e-6 || c.i < 0) continue;
+    const x = st[c.i];
+    if (c.action === 'show') { x.vis = true; x.fx = c.fx ? {fx: c.fx, t: c.t, dir: 1} : null; }
+    else if (c.action === 'hide') { if (c.fx && T < c.t + WIPE) { x.vis = true; x.fx = {fx: c.fx, t: c.t, dir: -1}; } else { x.vis = false; x.fx = null; } }
+    else if (c.action === 'move') { const p = ease((T - c.t) / (c.dur || 2)); x.dx += (c.dx || 0) * p; x.dy += (c.dy || 0) * p; }
+    else if (c.action === 'play') { x.vis = true; x.play = {t: c.t, mode: c.mode || 'once'}; }
+    else if (c.action === 'pose-swap') { x.part = c.part || null; x.vis = true; }
+  }
+  return st;
+}
+function applyState(T) {
+  const s = scenes[cur]; if (!s) return;
+  const st = stateAt(s, T), stage = $('stage');
+  stage.querySelectorAll('.layer').forEach(el => {
+    const i = +el.dataset.i, L = s.layers[i], x = st[i]; if (!L || !x) return;
+    let f = 1;
+    if (x.fx) { const d = x.fx.fx === 'pop' ? POP : WIPE, p = ease((T - x.fx.t) / d); f = x.fx.dir > 0 ? p : 1 - p; }
+    el.classList.toggle('hid', !x.vis);
+    const clip = x.fx && x.fx.fx === 'wipe' && f < 1 ? `inset(0 0 ${((1 - f) * 100).toFixed(1)}% 0)` : '';
+    if (el.style.clipPath !== clip) el.style.clipPath = clip;
+    el.style.opacity = (L.op ?? 1) * (x.fx && x.fx.fx === 'pop' ? f : 1);
+    // pose-swap: another drawn pose in the same place, same height
+    let [w, h] = size(L), y = L.y;
+    const want = x.part && parts[x.part] && L.part && parts[L.part] ? x.part : '';
+    if (el.tagName === 'IMG' && (el.dataset.swap || '') !== want) { el.dataset.swap = want; el.src = want ? CUT + parts[want].file : srcOf(L); }
+    if (want) {   // poses are cut from sheets drawn at one scale: keep that scale, and keep the feet where they were
+      const b0 = parts[L.part].bbox, b = parts[want].bbox, k = w / b0[2], foot = L.y + h / 2;
+      w = b[2] * k; h = b[3] * k; y = foot - h / 2;
+    }
+    if (el.tagName === 'IMG') { el.style.width = w + 'px'; el.style.height = h + 'px'; }
+    el.style.left = (L.x + x.dx - w / 2) + 'px'; el.style.top = (y + x.dy - h / 2) + 'px';
+    // action layers: the frame is a function of the one clock
+    if (el.tagName === 'CANVAS' && el.dataset.act) {
+      const C = CLIPS[el.dataset.act]; if (!C) return;
+      const f0 = +el.dataset.f0 || 0, n = Math.max(1, (+el.dataset.f1 || C.j.frames.length) - f0);
+      const k = x.play ? Math.floor((T - x.play.t) * FPS + 1e-6) : Math.floor(T * FPS + 1e-6);
+      const fr = f0 + (x.play && x.play.mode === 'once' ? Math.min(Math.max(0, k), n - 1) : ((k % n) + n) % n);
+      if (+el.dataset.fr !== fr || el.dataset.drawn !== '1') { el.dataset.fr = fr; el.dataset.drawn = '1'; drawClip(el, C, fr); }
+    }
+  });
+  const seen = [];   // tags of archive that overlap are stacked, never printed over each other
+  stage.querySelectorAll('.tag').forEach(t => { const x = st[+t.dataset.for]; if (!x) return; t.style.display = x.vis ? '' : 'none';
+    const L = s.layers[+t.dataset.for]; const [w, h] = size(L), lx = Math.max(4, L.x + x.dx - w / 2 + 6); let ty = Math.max(4, L.y + x.dy - h / 2 + 6);
+    if (x.vis) { while (seen.some(([a, b]) => Math.abs(a - lx) < 40 && Math.abs(b - ty) < 20)) ty += 22; seen.push([lx, ty]); }
+    t.style.left = lx + 'px'; t.style.top = ty + 'px'; });
+}
+
+/* caption: the line she is reading, words lit as she reaches them */
+let capLine = null;
+function caption(T) {
+  const ts = TL && tlScene(scenes[cur]?.key); const cap = $('cap');
+  if (!ts) { cap.textContent = ''; return; }
+  let ln = null; for (const l of ts.lines) if (T >= l.t - 0.15 && T <= l.e + 0.9) ln = l;
+  if (ln !== capLine) { capLine = ln; cap.innerHTML = ln ? TL.words.slice(ln.w[0], ln.w[1] + 1).map((w, k) => `<span class="w" data-k="${ln.w[0] + k}">${esc(w.w)}</span>`).join(' ') : ''; }
+  if (ln) cap.querySelectorAll('.w').forEach(el => { const w = TL.words[+el.dataset.k]; el.classList.toggle('on', T >= w.s); el.classList.toggle('now', T >= w.s && T < w.e); });
+}
+
+/* the bar: whole reading, scene blocks, word ticks, cue marks; the lane: this scene's words, zoomed */
+const PX = 96;
+function buildBar() {
+  const bar = $('tlBar'); bar.querySelectorAll('.tb,.head').forEach(e => e.remove());
+  if (!TL) { $('tl').hidden = true; return; } $('tl').hidden = false;
+  for (const ts of TL.scenes) { const d = document.createElement('div'); d.className = 'tb'; d.dataset.key = ts.key;
+    d.style.left = (ts.t0 / DUR() * 100) + '%'; d.style.width = ((ts.t1 - ts.t0) / DUR() * 100) + '%';
+    d.textContent = ts.key + ' ' + (scenes.find(s => s.key === ts.key)?.name || ts.name || ''); bar.appendChild(d); }
+  const h = document.createElement('div'); h.className = 'head'; h.id = 'barHead'; bar.appendChild(h);
+  drawTicks();
+}
+function drawTicks() {
+  const cv = $('tlTicks'), r = cv.getBoundingClientRect(), k = devicePixelRatio || 1; if (!TL || !r.width) return;
+  cv.width = Math.round(r.width * k); cv.height = Math.round(r.height * k);
+  const g = cv.getContext('2d'), X = t => t / DUR() * cv.width;
+  g.fillStyle = 'rgba(239,230,218,.45)';
+  for (const w of TL.words) g.fillRect(Math.round(X(w.s)), cv.height * .58, Math.max(1, k), cv.height * .3);
+  const col = {show: '#7fd3c4', hide: '#8d7f70', play: '#b9c46a', move: '#c79a62', 'pose-swap': '#d98bb0'};
+  for (const s of scenes) { const ts = tlScene(s.key); if (!ts) continue;
+    for (const c of cuesOf(s)) { if (c.i < 0) continue; g.fillStyle = col[c.action] || '#fff'; g.beginPath(); g.arc(X(c.t), cv.height * .42, 2.6 * k, 0, 7); g.fill(); } }
+}
+function lane() {
+  const inn = $('tlLaneIn'), s = scenes[cur], ts = TL && s && tlScene(s.key);
+  if (!ts) { inn.innerHTML = ''; return; }
+  const cl = cuesOf(s), cuedW = new Set(cl.map(c => c.w));
+  inn.style.width = Math.max($('tlLane').clientWidth - 2, (ts.t1 - ts.t0) * PX + 40) + 'px';
+  let h = '', row = 0;
+  TL.words.forEach((w, k) => { if (w.s < ts.t0 || w.s >= ts.t1) return; row ^= 1;
+    h += `<span class="wd${cuedW.has(k) ? ' cued' : ''}" data-k="${k}" style="left:${((w.s - ts.t0) * PX).toFixed(1)}px;top:${row ? 46 : 64}px" title="${fmt(w.s)}">${esc(w.w)}</span>`; });
+  const G = {show: '◐', hide: '○', play: '▶', move: '→', 'pose-swap': '⇄'};
+  const rowEnd = [-1e9, -1e9, -1e9];   // three rows of cue marks, each mark takes the first row free at its x
+  cl.forEach((c, n) => { const x = (c.t - ts.t0) * PX, txt = `${G[c.action] || '•'} ${shortRef(s, c)}`;
+    let r = rowEnd.findIndex(e => e < x); if (r < 0) r = rowEnd.indexOf(Math.min(...rowEnd)); rowEnd[r] = x + txt.length * 6.2 + 10;
+    h += `<span class="cm ${c.action}${c.i < 0 ? ' miss' : ''}" data-n="${n}" style="left:${x.toFixed(1)}px;top:${2 + r * 14}px" title="${esc(cueText(s, c))}">${esc(txt)}</span>`; });
+  inn.innerHTML = h + '<div class="head" id="laneHead"></div>';
+  inn.querySelectorAll('.wd').forEach(el => el.onclick = e => { e.stopPropagation(); wordClick(+el.dataset.k); });
+  inn.querySelectorAll('.cm').forEach(el => el.onclick = e => { e.stopPropagation(); seek(cl[+el.dataset.n].t); });
+  cueList();
+}
+function shortRef(s, c) { const L = s.layers[c.i]; return L ? label(L).split(' · ')[0].split('/').pop().slice(0, 18) : c.layer.split('/').pop().slice(0, 18); }
+function cueText(s, c) {
+  const L = s.layers[c.i];
+  const extra = c.action === 'play' ? ' ' + (c.mode || 'once') : c.action === 'move' ? ` ${c.dx > 0 ? '+' : ''}${c.dx || 0}px/${c.dur || 2}s` : c.action === 'pose-swap' ? ' → ' + (parts[c.part]?.label || c.part || '') : c.fx ? ' · ' + c.fx : '';
+  return `${fmt(c.t)} “${c.word || '·'}” ${c.action}${extra} · ${L ? label(L) + (c.loose ? ' (stand-in for ' + c.layer + ', which this plan no longer has)' : '') : c.layer + ' (missing in this plan)'}${c.why ? ' · ' + c.why : ''}`;
+}
+function cueList() {
+  const s = scenes[cur], box = $('cueList'); if (!TL || !s) { box.innerHTML = ''; return; }
+  const raw = CUES[s.key] || [], cl = cuesOf(s);
+  box.innerHTML = cl.map((c, n) => `<span class="cc${c.i < 0 ? ' miss' : ''}${c.auto ? ' auto' : ''}" data-n="${n}" title="${esc(cueText(s, c))}"><b>${fmt(c.t)}</b> ${esc(c.word || '·')} · ${c.action}${c.mode ? ' ' + c.mode : ''} · ${esc(shortRef(s, c))}<button data-x="${n}" aria-label="remove cue">✕</button></span>`).join('')
+    || '<span class="hint">No cues in this scene: select a layer, pick a cue type, click a word.</span>';
+  box.querySelectorAll('.cc').forEach(el => el.onclick = e => { const c = cl[+el.dataset.n];
+    if (e.target.dataset.x != null) { const j = raw.findIndex(r => r.layer === c.layer && r.action === c.action && Math.abs(wordT(r) - c.t) < 1e-6); if (j >= 0) raw.splice(j, 1); CUES[s.key] = raw; saveCues(s); lane(); drawTicks(); lastF = -1; return; }
+    seek(c.t); });
+}
+function wordClick(k) {
+  const w = TL.words[k], s = scenes[cur], L = s.layers[sel];
+  seek(w.s);
+  if (!L) return;
+  const ty = $('cueType').value, c = {t: w.s, w: k, word: w.w, layer: refOf(L, s.layers)};
+  if (ty === 'show' || ty === 'hide') c.action = ty;
+  else if (ty === 'show-wipe' || ty === 'hide-wipe') { c.action = ty.split('-')[0]; c.fx = 'wipe'; }
+  else if (ty.startsWith('play')) { if (kindOf(L) !== 'action') return toast('play cues are for action layers'); c.action = 'play'; c.mode = ty.split('-')[1]; }
+  else if (ty.startsWith('move')) { c.action = 'move'; c.dx = ty === 'move-l' ? -200 : 200; c.dy = 0; c.dur = 2; }
+  else if (ty === 'pose-swap') { if (kindOf(L) !== 'part') return toast('pose-swap is for drawn parts'); c.action = 'pose-swap'; c.part = $('cuePart').value; }
+  (CUES[s.key] = CUES[s.key] || []).push(c); saveCues(s); lane(); drawTicks(); lastF = -1;
+  toast(`Cue: ${c.action} on “${w.w}”`);
+}
+function poseOptions() {
+  const ps = Object.values(parts).filter(p => p.poems.includes(P) && p.sheet.startsWith('poet.'));
+  $('cuePart').innerHTML = ps.map(p => `<option value="${esc(p.id)}">${esc((p.label || p.id.split('/')[1]).slice(0, 40))}</option>`).join('');
+}
+$('cueType').onchange = e => { $('cuePart').hidden = e.target.value !== 'pose-swap'; };
+
+/* per frame: cut to the scene her voice is in, apply its cues, caption, heads, log crossings */
+function frame(force) {
+  const t = tNow();
+  if (clock.playing && t >= DUR()) { pause(); clock.t = DUR() - 1 / FPS; }
+  const f = Math.floor(Math.min(t, DUR()) * FPS + 1e-6), T = f / FPS;
+  if (f === lastF && !force) return;
+  lastF = f;
+  if (TL) {
+    const ts = tlSceneAt(T), i = ts ? scenes.findIndex(s => s.key === ts.key) : -1;
+    if (i >= 0 && i !== cur) { cur = i; if (clock.playing) sel = -1; markStrip(); show(true); }
+    if (clock.playing && T > prevT) {   // log what was crossed, like the weave's contact log
+      const s = scenes[cur];
+      for (const c of cuesOf(s)) if (c.t > prevT && c.t <= T && c.i >= 0) { fired.push({t: +c.t.toFixed(3), scene: s.key, word: c.word, action: c.action, layer: c.layer}); $('log').textContent = fired.slice(-4).map(x => `▸ ${fmt(x.t)} ${x.scene} “${x.word || '·'}” ${x.action} ${x.layer.split('/').pop()}`).join('\n'); }
+    }
+    prevT = T;
+    const bh = $('barHead'); if (bh) bh.style.left = (T / DUR() * 100) + '%';
+    const ts2 = tlScene(scenes[cur]?.key), lh = $('laneHead');
+    if (lh && ts2) { const x = (T - ts2.t0) * PX; lh.style.left = x + 'px'; const ln = $('tlLane'); if (clock.playing && (x < ln.scrollLeft + 40 || x > ln.scrollLeft + ln.clientWidth - 80)) ln.scrollLeft = x - 60; }
+    $('tlLaneIn').querySelectorAll('.wd').forEach(el => { const w = TL.words[+el.dataset.k]; el.classList.toggle('on', T >= w.s && T < w.e); });
+    caption(T);
+    $('tClock').textContent = `${fmt(T)} / ${fmt(DUR())} · frame ${f}`;
+    $('stamp').textContent = `${scenes[cur]?.key || ''} · ${fmt(T)}`;
+  }
+  applyState(T);
+}
+function tick() { frame(false); requestAnimationFrame(tick); }
+function markStrip() { document.querySelectorAll('#scenes .sc').forEach((d, i) => d.classList.toggle('on', i === cur)); document.querySelectorAll('#tlBar .tb').forEach(d => d.classList.toggle('on', d.dataset.key === scenes[cur]?.key)); }
+let scrub = false;
+const barT = e => { const r = $('tlBar').getBoundingClientRect(); return (e.clientX - r.left) / r.width * DUR(); };
+$('tlBar').addEventListener('pointerdown', e => { scrub = true; $('tlBar').setPointerCapture(e.pointerId); seek(barT(e)); });
+$('tlBar').addEventListener('pointermove', e => { if (scrub) seek(barT(e)); });
+$('tlBar').addEventListener('pointerup', () => { scrub = false; });
+$('tlLane').addEventListener('click', e => { const ts = tlScene(scenes[cur]?.key); if (!ts || e.target.closest('.wd,.cm')) return; const r = $('tlLaneIn').getBoundingClientRect(); seek(ts.t0 + (e.clientX - r.left) / PX); });
+$('bCueReset').onclick = () => { const s = scenes[cur], ts = tlScene(s?.key); if (!ts) return; store?.removeItem(cueKey(s.key)); CUES[s.key] = structuredClone(ts.cues || []); s.cuesEdited = false; lane(); drawTicks(); lastF = -1; toast('Cues reset to the timeline'); };
+window.__stage = {seek, play, pause, t: () => tNow(), scene: () => scenes[cur]?.key, fired, frame: () => lastF,
+  state: () => { const s = scenes[cur]; return stateAt(s, lastF / FPS).map((x, i) => ({i, ref: refOf(s.layers[i], s.layers), vis: x.vis, dx: x.dx, part: x.part, play: x.play})); },
+  audio: () => AUD && {paused: AUD.paused, t: AUD.currentTime, wall: clock.wall, dur: AUD.duration}};
 
 /* ── layers ── */
 function size(L) {
@@ -178,7 +434,7 @@ function layerEl(L, i, mini) {
   if (k === 'video') { el = document.createElement('video'); Object.assign(el, {src: L.src, muted: true, loop: true, autoplay: !mini, playsInline: true}); if (mini) el.preload = 'metadata'; }
   else if (k === 'action') {
     el = document.createElement('canvas'); el.dataset.act = L.action; if (L.f0) el.dataset.f0 = L.f0; if (L.f1) el.dataset.f1 = L.f1;
-    clip(L.action).then(C => { if (!C) return; const [w, h] = size(L); el.width = Math.round(w * (mini ? .2 : 1)); el.height = Math.round(h * (mini ? .2 : 1)); el.style.height = h + 'px'; el.style.top = (L.y - h / 2) + 'px'; drawClip(el, C, L.f0 || 0); });
+    clip(L.action).then(C => { if (!C) return; const [w, h] = size(L); el.width = Math.round(w * (mini ? .2 : 1)); el.height = Math.round(h * (mini ? .2 : 1)); el.style.height = h + 'px'; el.style.top = (L.y - h / 2) + 'px'; drawClip(el, C, L.f0 || 0); if (!mini) { el.dataset.drawn = '0'; lastF = -1; } });
   } else { el = new Image(); el.src = srcOf(L) || ''; el.alt = ''; el.draggable = false; }
   el.className = 'layer' + (!mini && i === sel ? ' sel' : '') + (L.hide ? ' hid' : '');
   const [w, h] = size(L);
@@ -191,8 +447,8 @@ function render(host, layers, mini) {
   host.innerHTML = '';
   layers.forEach((L, i) => {
     host.appendChild(layerEl(L, i, mini));
-    if (!mini && !L.hide && isArchive(L)) {   // the weave's rule: archive is labelled for as long as it shows
-      const [w, h] = size(L), t = document.createElement('span'); t.className = 'tag';
+    if (!mini && isArchive(L)) {   // the weave's rule: archive is labelled for as long as it shows (visibility follows the layer, cues included)
+      const [w, h] = size(L), t = document.createElement('span'); t.className = 'tag'; t.dataset.for = i;
       t.textContent = L.tag || ('ARCHIVE · ' + (L.src || '').split('/').slice(-2).join('/'));
       t.style.left = Math.max(4, L.x - w / 2 + 6) + 'px'; t.style.top = Math.max(4, L.y - h / 2 + 6) + 'px'; host.appendChild(t);
     }
@@ -213,26 +469,41 @@ async function load() {
   scenes = PLAN.scenes.map(s => { const saved = store?.getItem(key(s.key)); return saved ? {...s, layers: JSON.parse(saved), edited: true} : structuredClone(s); });
   cur = Math.min(Math.max(0, +(qs.get('s') || 0)), scenes.length - 1); sel = -1;
   await Promise.all(scenes.flatMap(s => s.layers.filter(L => L.action).map(L => clip(L.action))));
-  strip(); tabs(); tray(); show();
+  // her reading: the timeline (scene windows, lines, word times, cues) and the audio, fetched whole so seeking never waits on range requests
+  pause(); TL = await fetch(`timeline/${P}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
+  if (AUD) { AUD.pause(); if (AUD.src.startsWith('blob:')) URL.revokeObjectURL(AUD.src); } AUD = null; CUES = {}; fired.length = 0; $('log').textContent = '';
+  if (TL) {
+    AUD = new Audio(); AUD.preload = 'auto';
+    fetch(TL.audio).then(r => r.ok ? r.blob() : Promise.reject(r.status)).then(b => { AUD.src = URL.createObjectURL(b); }).catch(e => toast('No audio for this poem (' + e + ')'));
+    AUD.onended = () => { pause(); };
+    for (const s of scenes) { const ts = tlScene(s.key), saved = store?.getItem(cueKey(s.key)); CUES[s.key] = saved ? JSON.parse(saved) : structuredClone(ts?.cues || []); s.cuesEdited = !!saved; }
+    const ts = tlScene(scenes[cur]?.key); clock.t = qs.has('t') ? +qs.get('t') : (ts ? ts.t0 : 0);
+  } else clock.t = 0;
+  prevT = clock.t; lastF = -1; capLine = null;
+  // preload every picture the poem's scenes and pose-swaps can show, so a cut never waits on the network
+  const pre = new Set(); for (const s of scenes) { for (const L of s.layers) { const u = srcOf(L); if (u && kindOf(L) !== 'video' && kindOf(L) !== 'action') pre.add(u); } for (const c of CUES[s.key] || []) if (c.part && parts[c.part]) pre.add(CUT + parts[c.part].file); }
+  pre.forEach(u => { const im = new Image(); im.src = u; });
+  poseOptions(); strip(); tabs(); tray(); show(); buildBar(); markStrip(); frame(true);
 }
 function strip() {
   $('scenes').innerHTML = '';
   scenes.forEach((s, i) => {
     const d = document.createElement('div');
     d.className = 'sc' + (i === cur ? ' on' : ''); d.setAttribute('role', 'tab'); d.tabIndex = 0;
-    d.innerHTML = `<div class="mini"><div class="stage"></div></div><b>${esc(s.key)}${s.edited ? ' · edited' : ''}</b><span>${esc(s.name)}</span>`;
-    d.onclick = d.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; cur = i; sel = -1; strip(); show(); };
+    const ts = tlScene(s.key);
+    d.innerHTML = `<div class="mini"><div class="stage"></div></div><b>${esc(s.key)}${s.edited ? ' · edited' : ''}${s.cuesEdited ? ' · cued' : ''}</b><span>${esc(s.name)}</span>${ts ? `<em>${fmt(ts.t0)}–${fmt(ts.t1)}${ts.match?.how === 'interpolated' ? ' · ~' : ''}</em>` : ''}`;
+    d.onclick = d.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; cur = i; sel = -1; if (ts) seek(ts.t0); markStrip(); show(); };
     $('scenes').appendChild(d);
     const st = d.querySelector('.stage'); render(st, s.layers, true); st.style.transform = 'scale(' + (166 / W) + ')';
   });
 }
-function show() {
+function show(cut) {
   const s = scenes[cur]; if (!s) return;
-  render($('stage'), s.layers); fit();
+  render($('stage'), s.layers); fit(); capLine = null; applyState(lastF >= 0 ? lastF / FPS : clock.t); lane(); if (!cut) markStrip();
   const sb = (ATLAS?.scenes || []).find(x => x.key === s.key) || {};
   $('info').innerHTML = `<h2>${esc(s.key)} · ${esc(s.name)}</h2>${sb.lines ? `<p class="lines">${esc(sb.lines.join(' '))}</p>` : ''}
     <p><b>Shot:</b> ${esc(s.shot || sb.block || '')}</p>${sb.what ? `<p style="color:var(--dim)">${esc(sb.what)}</p>` : ''}
-    <p class="hint">${s.set ? 'set: ' + esc(s.set) + ' · ' : ''}${s.layers.length} layers${s.note ? ' · ' + esc(s.note) : ''}</p>`;
+    <p class="hint">${s.set ? 'set: ' + esc(s.set) + ' · ' : ''}${s.layers.length} layers${s.note ? ' · ' + esc(s.note) : ''}${tlScene(s.key) ? ` · on her reading ${fmt(tlScene(s.key).t0)}–${fmt(tlScene(s.key).t1)} (${tlScene(s.key).match.how}, ${Math.round(tlScene(s.key).match.coverage * 100)}% of the scene book's words found) · ${(CUES[s.key] || []).length} cues` : ''}</p>`;
   layersList();
   const L = s.layers[sel]; $('bBlend').value = L?.blend || ''; $('bOp').value = L?.op ?? 1;
 }
@@ -349,9 +620,11 @@ $('bFlip').onclick = () => act('flip'); $('bDel').onclick = () => act('del'); $(
 $('bBlend').onchange = e => { const L = scenes[cur].layers[sel]; if (!L) return; L.blend = e.target.value || undefined; save(); show(); };
 $('bOp').oninput = e => { const L = scenes[cur].layers[sel]; if (!L) return; L.op = +e.target.value; const el = $('stage').querySelector(`.layer[data-i="${sel}"]`); if (el) el.style.opacity = L.op; };
 $('bOp').onchange = () => save();
-$('bPlay').onclick = () => { playing = !playing; $('bPlay').textContent = playing ? '❚❚ Pause' : '▶ Play'; document.querySelectorAll('#stage video').forEach(v => playing ? v.play() : v.pause()); };
+$('bPlay').onclick = () => clock.playing ? pause() : play();
 addEventListener('keydown', e => {
   if (e.target.matches('input,select')) return;
+  if (e.code === 'Space') { e.preventDefault(); return clock.playing ? pause() : play(); }
+  if ((e.key === ',' || e.key === '.') && !clock.playing) { e.preventDefault(); return seek((lastF + (e.key === '.' ? 1 : -1)) / FPS + 1e-4); }
   const L = scenes[cur]?.layers[sel]; if (!L) return;
   const n = e.shiftKey ? 20 : 4, m = {ArrowLeft: [-n, 0], ArrowRight: [n, 0], ArrowUp: [0, -n], ArrowDown: [0, n]}[e.key];
   if (m) { L.x += m[0]; L.y += m[1]; }
@@ -366,8 +639,9 @@ addEventListener('keydown', e => {
   else return;
   e.preventDefault(); save(); show();
 });
-$('bReset').onclick = () => { const s = scenes[cur]; store?.removeItem(key(s.key)); scenes[cur] = structuredClone(PLAN.scenes[cur]); sel = -1; strip(); show(); toast('Scene reset to plan'); };
-$('bJson').onclick = () => { const out = {...PLAN, scenes: scenes.map(({edited, ...s}) => s)};
+$('bReset').onclick = () => { const s = scenes[cur]; store?.removeItem(key(s.key)); scenes[cur] = structuredClone(PLAN.scenes[cur]); sel = -1; strip(); show(); lastF = -1; toast('Scene reset to plan'); };
+$('bJson').onclick = () => { const out = {...PLAN, ...(TL ? {timeline: `timeline/${P}.json`, audio: TL.audio, fps: FPS} : {}),
+    scenes: scenes.map(({edited, cuesEdited, ...s}) => { const ts = tlScene(s.key); return ts ? {...s, t0: ts.t0, t1: ts.t1, cues: CUES[s.key] || []} : s; })};
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], {type: 'application/json'})); a.download = `${P}.json`; a.click(); toast('Saved ' + P + '.json'); };
 const COMP = {multiply: 'multiply', screen: 'screen', overlay: 'overlay', 'soft-light': 'soft-light', luminosity: 'luminosity', lighten: 'lighten', darken: 'darken'};
 $('bPng').onclick = async () => {
@@ -381,8 +655,8 @@ $('bPng').onclick = async () => {
 };
 $('q').oninput = tray;
 $('poem').onchange = e => { P = e.target.value; history.replaceState(null, '', '?p=' + P); cur = 0; load(); };
-addEventListener('resize', fit);
-load().then(() => requestAnimationFrame(tick));
+addEventListener('resize', () => { fit(); drawTicks(); if (TL) lane(); });
+load().then(() => { requestAnimationFrame(tick); if (qs.get('play') === '1') play(); });
 </script>
 <script src="../../nav.js" defer></script>
 </body>
