@@ -34,7 +34,9 @@
     { id: 'kit3',       name: 'Puppet Kit 3', does: 'One image + one prompt per parts sheet', path: 'shots/kit3.html' },
     { id: 'kits2',      name: 'Character Kits v2', does: 'Every character, every poem: sheets to generate', path: 'shots/kits.html' },
     { id: 'poems',      name: 'Poem Production Design', does: 'One page per poem: footage, cast, props, places, kits', path: 'shots/poems/index.html' },
-    { id: 'stage',      name: 'Cut-Out Stage', does: 'Kit sheets cut apart and assembled scene by scene', path: 'shots/stage/index.html' }
+    { id: 'stage',      name: 'Cut-Out Stage', does: 'Kit sheets cut apart and assembled scene by scene', path: 'shots/stage/index.html' },
+    { id: 'bodylab',    name: 'Body Lab', does: 'Every hand, shoe, head and eye across the cast, at true scale', path: 'shots/bodylab/index.html' },
+    { id: 'anim',       name: 'Animation Library', does: 'Solved acts retargeted onto each character', path: 'shots/stage/anim/index.html' }
   ];
   window.WYGWYL_ROUTES = ROUTES;
 

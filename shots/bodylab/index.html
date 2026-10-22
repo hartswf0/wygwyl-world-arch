@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Body Lab</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--acc:#e7a35a;--sel:#5fd0ff;--arch:#d98bb0;--plane:#7fd3c4;--act:#b9c46a;--bad:#ff6b5a;--mid:#e7c35a;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
+header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:20}
+header a,.btn{font:12px var(--mono);color:var(--dim);background:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;text-decoration:none;cursor:pointer}
+header a:hover,.btn:hover{color:var(--card);border-color:var(--card)}
+.btn.on{color:#1a120a;background:var(--card);border-color:var(--card)}
+h1{font:400 26px 'Permanent Marker',cursive;margin:0 8px 0 0;color:var(--ink)}
+h1 span{color:var(--acc)}
+.sp{flex:1}
+.hint{font:11px var(--mono);color:var(--dim)}
+.seg{display:inline-flex;gap:0}.seg .btn{border-radius:0}.seg .btn:first-child{border-radius:999px 0 0 999px}.seg .btn:last-child{border-radius:0 999px 999px 0}
+#filters{padding:8px 16px;border-bottom:1px solid var(--line);display:grid;gap:5px}
+.frow{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.frow>b{font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);width:74px;flex:0 0 74px}
+.chip{font:11px var(--mono);color:var(--dim);background:none;border:1px solid var(--line);border-radius:999px;padding:1px 8px;cursor:pointer;white-space:nowrap}
+.chip:hover{border-color:var(--card);color:var(--card)}
+.chip.on{background:#2b2016;color:var(--acc);border-color:var(--acc)}
+.chip i{font-style:normal;opacity:.6;margin-left:4px}
+.chips{display:flex;gap:4px;flex-wrap:wrap;flex:1;min-width:0}
+#q,select.btn{font:12px var(--mono);background:#0f0c0a;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+main{padding:10px 16px 60px}
+.view{display:none}.view.on{display:block}
+.cls{margin:0 0 18px}
+.cls>h2{font:400 22px 'Permanent Marker',cursive;color:var(--card);margin:6px 0 6px;display:flex;gap:10px;align-items:baseline}
+.cls>h2 small{font:11px var(--mono);color:var(--dim)}
+.groups{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.grp{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 8px 4px;min-width:120px;max-width:100%}
+.grp h3{font:600 11px var(--mono);color:var(--acc);margin:0 0 4px;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.grp h3 em{font-style:normal;color:var(--dim);font-weight:400}
+.gen{font:9.5px var(--mono);padding:0 5px;border-radius:3px;border:1px solid var(--line);color:var(--plane)}
+.parts{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:flex-end}
+.pt{position:relative;display:flex;flex-direction:column;align-items:center;cursor:pointer;border-radius:4px;padding:2px}
+.pt:hover{background:#221a14}.pt.sel{outline:2px solid var(--sel)}
+.pt img{display:block;object-fit:contain;background:repeating-conic-gradient(#1d1814 0 25%,#191410 0 50%) 0 0/10px 10px}
+.pt span{font:9px var(--mono);color:var(--dim);max-width:96px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.pt .dot{position:absolute;top:0;right:0;width:7px;height:7px;border-radius:50%;background:var(--mid)}
+.pt .dot.hi{background:var(--bad)}
+.pt.noscale img{outline:1px dashed #6b5a49}
+.ruler{display:flex;align-items:flex-end;gap:10px;margin:2px 0 10px}
+.ruler .bar{height:6px;background:linear-gradient(90deg,var(--card) 0 50%,#5a4632 50% 100%);background-size:20% 100%;border:1px solid var(--card)}
+aside#det{position:fixed;right:0;top:0;bottom:0;width:min(440px,100vw);background:var(--panel);border-left:1px solid var(--line);z-index:30;overflow:auto;padding:12px 14px 30px;transform:translateX(100%);transition:transform .18s}
+aside#det.on{transform:none}
+#det h2{font:400 21px 'Permanent Marker',cursive;color:var(--card);margin:0 30px 4px 0;word-break:break-word}
+#det .x{position:absolute;right:10px;top:10px}
+.big{position:relative;background:repeating-conic-gradient(#221c17 0 25%,#1a1511 0 50%) 0 0/14px 14px;border:1px solid var(--line);border-radius:6px;display:flex;justify-content:center;padding:8px}
+.big .w{position:relative}
+.big img{display:block}
+.big svg{position:absolute;inset:0;overflow:visible}
+.sheetbox{position:relative;margin-top:8px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.sheetbox img{display:block;width:100%}
+.sheetbox svg{position:absolute;inset:0;width:100%;height:100%}
+dl{display:grid;grid-template-columns:96px 1fr;gap:2px 8px;font:12px var(--mono);margin:10px 0}
+dt{color:var(--dim)}dd{margin:0;word-break:break-word}
+.plist{margin:6px 0;padding:0;list-style:none;display:grid;gap:4px}
+.plist li{font:12px Inter;border-left:3px solid var(--mid);padding:2px 8px;background:#1b1511}
+.plist li.hi{border-color:var(--bad)}.plist li.low{border-color:#6b5a49}
+.links{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
+.links a{font:11px var(--mono);color:var(--plane);border:1px solid var(--line);border-radius:999px;padding:2px 8px;text-decoration:none}
+.links a:hover{border-color:var(--plane)}
+/* problems */
+.ptabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}
+table{border-collapse:collapse;width:100%;font:12px var(--mono)}
+th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:middle}
+th{color:var(--dim);font-weight:600;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;position:sticky;top:52px;background:var(--bg)}
+td .sev{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--mid);margin-right:4px}
+td .sev.high{background:var(--bad)}td .sev.low{background:#6b5a49}
+.pair{display:flex;gap:6px;align-items:flex-end}
+.pair figure{margin:0;display:flex;flex-direction:column;align-items:center}
+.pair figcaption{font:9px var(--mono);color:var(--dim)}
+.pair img{display:block;background:#1a1511;cursor:pointer}
+.miss{display:flex;flex-wrap:wrap;gap:4px}
+.miss span{font:11px var(--mono);border:1px solid #5a2a22;color:#ffb3a7;border-radius:999px;padding:0 7px}
+.kpis{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:120px}
+.kpi b{display:block;font:600 22px Inter;color:var(--ink)}.kpi span{font:11px var(--mono);color:var(--dim)}
+/* swap */
+#swap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px}
+@media (max-width:980px){#swap{grid-template-columns:1fr}}
+#stageBox{background:#0a0807;border:1px solid var(--line);border-radius:8px;position:relative;overflow:auto;min-height:420px}
+#stageBox svg{display:block;margin:0 auto}
+.slot{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:0 0 8px;background:var(--panel)}
+.slot h4{margin:0 0 4px;font:600 11px var(--mono);color:var(--acc);display:flex;gap:6px;align-items:center}
+.slot h4 .sp{flex:1}
+.strip{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px}
+.strip img{height:46px;width:auto;max-width:90px;object-fit:contain;border:1px solid var(--line);border-radius:4px;background:#1a1511;cursor:pointer;flex:0 0 auto}
+.strip img.on{border-color:var(--sel);outline:1px solid var(--sel)}
+.empty{font:11px var(--mono);color:var(--dim);padding:20px}
+@media (max-width:640px){.frow>b{width:100%;flex-basis:100%}}
+</style>
+</head>
+<body>
+<header>
+  <a href="../../index.html">← Index</a>
+  <h1>Body <span>Lab</span></h1>
+  <span class="seg" role="tablist" aria-label="View">
+    <button class="btn on" data-v="board">Board</button><button class="btn" data-v="probs">Problems</button><button class="btn" data-v="swap">Swap test</button>
+  </span>
+  <span class="seg" aria-label="Scale">
+    <button class="btn" id="sDrawn" title="each card at its sheet pixels">As drawn</button><button class="btn on" id="sTrue" title="every card at real centimetres, from each sheet's solved px/cm">True scale</button>
+  </span>
+  <label class="hint">zoom <input id="zoom" type="range" min="0.5" max="10" step="0.25" value="3" aria-label="Zoom"></label>
+  <span class="hint" id="zoomLbl"></span>
+  <span class="sp"></span>
+  <span class="hint" id="stats"></span>
+  <a href="../stage/index.html">Stage →</a>
+</header>
+<div id="filters">
+  <div class="frow"><b>Class</b><div class="chips" id="fClass"></div></div>
+  <div class="frow"><b>Character</b><div class="chips" id="fChar"></div></div>
+  <div class="frow"><b>Poem</b><div class="chips" id="fPoem"></div><b style="width:auto;flex:0 0 auto;margin-left:8px">View</b><div class="chips" id="fView" style="flex:0 1 auto"></div></div>
+  <div class="frow"><b>Generation</b><div class="chips" id="fGen" style="flex:0 1 auto"></div>
+    <select class="btn" id="fState" aria-label="State"></select>
+    <input id="q" placeholder="search label / id / sheet" aria-label="Search">
+    <button class="chip" id="fProb" title="only parts carrying a problem">⚑ problems only</button>
+    <button class="chip" id="fOther" title="show reference poses, lettering, props and uncut blocks">show “other”</button>
+    <button class="chip" id="fReset">reset</button></div>
+</div>
+<main>
+  <section class="view on" id="v-board"><div class="ruler" id="ruler"></div><div id="board"></div></section>
+  <section class="view" id="v-probs"></section>
+  <section class="view" id="v-swap">
+    <div class="frow" style="margin-bottom:8px"><b>Character</b><select class="btn" id="swChar" aria-label="Character for swap test"></select>
+      <span class="hint" id="swInfo"></span></div>
+    <div id="swap"><div id="stageBox"></div><div id="slots"></div></div>
+  </section>
+</main>
+<aside id="det" aria-label="Part detail"><button class="btn x" id="detX">✕</button><div id="detIn"></div></aside>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const ROOT = '../';                       // body.json paths are relative to shots/
+const GROUPS = [
+  ['Hands', ['hand']], ['Feet / Shoes', ['shoe', 'foot']], ['Heads', ['head', 'face']], ['Eyes', ['eyes']], ['Mouths', ['mouth']],
+  ['Brows', ['brows']], ['Noses · ears · hair · glasses', ['nose', 'ear', 'hair', 'glasses', 'neck']], ['Torsos', ['torso']],
+  ['Arms', ['upper_arm', 'forearm']], ['Legs', ['thigh', 'shin']], ['Hips · seats', ['hip', 'seat']], ['Other (poses, lettering, props, uncut blocks)', ['other']]];
+const VIEWS = ['front', 'threequarter', 'profile', 'threequarter_back', 'back'];
+const store = (() => { try { const k = '__t'; localStorage.setItem(k, k); localStorage.removeItem(k); return localStorage; } catch (e) { return null; } })();
+const save = (k, v) => { try { store && store.setItem('wygwyl.bodylab.' + k, JSON.stringify(v)); } catch (e) {} };
+const load = (k, d) => { try { const v = store && store.getItem('wygwyl.bodylab.' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
+
+let D, P = [], BYID = {}, CHARS = {};
+const F = Object.assign({cls: [], ch: [], poem: [], view: [], gen: [], state: '', q: '', prob: false, other: false}, load('f', {}));
+let TRUE = load('true', true), Z = load('zoom', 3), VIEW = load('view', 'board'), SEL = null;
+
+fetch('body.json').then(r => r.json()).then(d => { D = d; init(); });
+
+function ckey(p) { return p.character + '/' + p.costume; }
+function cname(k) { const c = D.characters[k]; return c ? `${c.name} · ${c.costume.replace(/_/g, ' ')}` : k; }
+function sevOf(p) { const t = (p.problems || []).join(' '); return /ONE card|ONE block|uncut|×0\.[0-5]|×[2-9]|scale ×(1\.[6-9]|[2-9])/.test(t) ? 'hi' : 'mid'; }
+
+function init() {
+  P = D.parts; P.forEach(p => { BYID[p.id] = p; });
+  for (const p of P) (CHARS[ckey(p)] ||= []).push(p);
+  $('stats').textContent = `${P.length} pieces · ${Object.keys(D.sheets).length} sheets · ${Object.keys(CHARS).length} character/costumes · ${D.problems.length} problems`;
+  chips(); bind(); setView(VIEW); render();
+}
+
+function count(fn) { const c = {}; for (const p of P) { const k = fn(p); if (Array.isArray(k)) k.forEach(x => c[x] = (c[x] || 0) + 1); else if (k) c[k] = (c[k] || 0) + 1; } return c; }
+function chipRow(el, items, key, label = x => x) {
+  el.innerHTML = items.map(([k, n]) => `<button class="chip ${F[key].includes(k) ? 'on' : ''}" data-k="${esc(k)}">${esc(label(k))}<i>${n}</i></button>`).join('');
+  el.onclick = e => { const b = e.target.closest('.chip'); if (!b) return; const k = b.dataset.k, a = F[key];
+    a.includes(k) ? a.splice(a.indexOf(k), 1) : a.push(k); b.classList.toggle('on'); save('f', F); render(); };
+}
+function chips() {
+  const cc = count(p => p.class);
+  chipRow($('fClass'), GROUPS.map(([n, cs]) => [n, cs.reduce((s, c) => s + (cc[c] || 0), 0)]).filter(x => x[1]), 'cls', n => n.split(' (')[0]);
+  const ch = count(ckey);
+  const order = Object.keys(ch).sort((a, b) => (a.startsWith('poet/') ? 0 : 1) - (b.startsWith('poet/') ? 0 : 1) || cname(a).localeCompare(cname(b)));
+  chipRow($('fChar'), order.map(k => [k, ch[k]]), 'ch', cname);
+  const pc = count(p => p.poems || []);
+  chipRow($('fPoem'), Object.keys(pc).sort().map(k => [k, pc[k]]), 'poem');
+  const vc = count(p => p.view);
+  chipRow($('fView'), VIEWS.filter(v => vc[v]).map(v => [v, vc[v]]), 'view', v => v.replace('threequarter', '¾').replace('_', ' '));
+  const gc = count(p => p.gen);
+  chipRow($('fGen'), ['cut', 'tracksuit', 'arena', 'weave'].filter(g => gc[g]).map(g => [g, gc[g]]), 'gen',
+    g => ({cut: 'cut kits (now)', tracksuit: 'tracksuit pack', arena: 'arena kit', weave: 'photo-man'})[g]);
+  const sc = count(p => p.state && p.class !== 'other' ? p.state : null);
+  $('fState').innerHTML = '<option value="">any state</option>' + Object.entries(sc).sort((a, b) => b[1] - a[1]).map(([k, n]) =>
+    `<option value="${esc(k)}" ${F.state === k ? 'selected' : ''}>${esc(k.replace(/_/g, ' '))} (${n})</option>`).join('');
+  $('q').value = F.q; $('fProb').classList.toggle('on', F.prob); $('fOther').classList.toggle('on', F.other);
+}
+function bind() {
+  document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => setView(b.dataset.v));
+  $('sDrawn').onclick = () => { TRUE = false; save('true', TRUE); scaleBtns(); render(); };
+  $('sTrue').onclick = () => { TRUE = true; save('true', TRUE); scaleBtns(); render(); };
+  $('zoom').value = Z; $('zoom').oninput = () => { Z = +$('zoom').value; save('zoom', Z); render(); };
+  $('fState').onchange = () => { F.state = $('fState').value; save('f', F); render(); };
+  let t; $('q').oninput = () => { clearTimeout(t); t = setTimeout(() => { F.q = $('q').value.trim().toLowerCase(); save('f', F); render(); }, 160); };
+  $('fProb').onclick = () => { F.prob = !F.prob; save('f', F); chips(); render(); };
+  $('fOther').onclick = () => { F.other = !F.other; save('f', F); chips(); render(); };
+  $('fReset').onclick = () => { Object.assign(F, {cls: [], ch: [], poem: [], view: [], gen: [], state: '', q: '', prob: false, other: false}); save('f', F); chips(); render(); };
+  $('detX').onclick = () => { $('det').classList.remove('on'); SEL = null; document.querySelectorAll('.pt.sel').forEach(e => e.classList.remove('sel')); };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') $('detX').onclick(); });
+  document.addEventListener('click', e => { const el = e.target.closest('[data-id]'); if (el && !e.target.closest('#slots')) open(el.dataset.id); });
+  scaleBtns();
+}
+function scaleBtns() { $('sDrawn').classList.toggle('on', !TRUE); $('sTrue').classList.toggle('on', TRUE); }
+function setView(v) { VIEW = v; save('view', v); document.querySelectorAll('[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.id === 'v-' + v));
+  $('filters').style.display = v === 'board' ? '' : 'none'; render(); }
+
+function pass(p) {
+  const grp = GROUPS.find(g => g[1].includes(p.class));
+  if (p.class === 'other' && !F.other && !F.cls.includes(grp[0])) return false;
+  if (F.cls.length && !F.cls.includes(grp[0])) return false;
+  if (F.ch.length && !F.ch.includes(ckey(p))) return false;
+  if (F.poem.length && !(p.poems || []).some(x => F.poem.includes(x))) return false;
+  if (F.view.length && !F.view.includes(p.view)) return false;
+  if (F.gen.length && !F.gen.includes(p.gen)) return false;
+  if (F.state && p.state !== F.state) return false;
+  if (F.prob && !(p.problems || []).length) return false;
+  if (F.q && !(`${p.label} ${p.id} ${p.sheet} ${p.state || ''}`.toLowerCase().includes(F.q))) return false;
+  return true;
+}
+// display size: true scale = cm × Z ; as drawn = sheet px × Z/10
+function dims(p) {
+  if (TRUE && p.scale_px_per_cm) return [p.w / p.scale_px_per_cm * Z, p.h / p.scale_px_per_cm * Z, true];
+  const k = TRUE ? Z / 8 : Z / 10;          // unscaled parts in true mode: shown at a typical 8 px/cm, dashed
+  const sw = p.src_w ? p.src_w / p.w : 1;
+  return [p.w * k * sw, p.h * k * sw, !TRUE];
+}
+function ptHTML(p, label = true) {
+  let [w, h, ok] = dims(p);
+  const cap = Math.max(w, h) > 900 ? 900 / Math.max(w, h) : 1; w *= cap; h *= cap;
+  const pr = (p.problems || []).length;
+  return `<div class="pt ${ok ? '' : 'noscale'} ${SEL === p.id ? 'sel' : ''}" data-id="${esc(p.id)}" tabindex="0" title="${esc((p.label || p.id) + ' · ' + p.sheet + (pr ? '\n⚑ ' + p.problems.join('\n⚑ ') : ''))}">
+    ${pr ? `<i class="dot ${sevOf(p) === 'hi' ? 'hi' : ''}"></i>` : ''}<img loading="lazy" decoding="async" src="${ROOT + p.img}" width="${Math.max(2, Math.round(w))}" height="${Math.max(2, Math.round(h))}" alt="${esc(p.class + ' ' + (p.label || ''))}">
+    ${label ? `<span>${esc([p.side, p.state || p.label].filter(Boolean).join(' · ') || p.view || '')}</span>` : ''}</div>`;
+}
+function render() {
+  $('zoomLbl').textContent = TRUE ? `${Z} px = 1 cm` : `${(Z / 10).toFixed(2)} × sheet px`;
+  if (VIEW === 'board') board(); else if (VIEW === 'probs') probs(); else swap();
+}
+function board() {
+  $('ruler').innerHTML = TRUE ? `<div class="bar" style="width:${50 * Z}px"></div><span class="hint">50 cm · grey dashed = no measurable scale, shown at a guessed 8 px/cm</span>`
+    : `<span class="hint">as drawn: every card at its own sheet's pixels (sheets were drawn at different scales)</span>`;
+  const sel = P.filter(pass);
+  let h = '';
+  for (const [name, cs] of GROUPS) {
+    const ps = sel.filter(p => cs.includes(p.class)); if (!ps.length) continue;
+    const by = {}; ps.forEach(p => (by[ckey(p)] ||= []).push(p));
+    const keys = Object.keys(by).sort((a, b) => (a.startsWith('poet/') ? 0 : 1) - (b.startsWith('poet/') ? 0 : 1) || cname(a).localeCompare(cname(b)));
+    h += `<section class="cls"><h2>${esc(name)} <small>${ps.length} pieces · ${keys.length} character/costumes</small></h2><div class="groups">`;
+    for (const k of keys) {
+      const arr = by[k].sort((a, b) => (a.class > b.class ? 1 : a.class < b.class ? -1 : 0) || VIEWS.indexOf(a.view) - VIEWS.indexOf(b.view) || (a.side || '').localeCompare(b.side || '') || a.sheet.localeCompare(b.sheet));
+      const c = D.characters[k];
+      h += `<div class="grp"><h3>${esc(cname(k))} <span class="gen">${esc(c.gen)}</span><em>${arr.length} · ${c.stature_cm} cm</em></h3><div class="parts">${arr.slice(0, 400).map(p => ptHTML(p)).join('')}</div>${arr.length > 400 ? `<p class="hint">+${arr.length - 400} more — narrow the filters</p>` : ''}</div>`;
+    }
+    h += '</div></section>';
+  }
+  $('board').innerHTML = h || '<p class="empty">Nothing matches these filters.</p>';
+}
+
+/* ── detail ── */
+function open(id) {
+  const p = BYID[id]; if (!p) return; SEL = id;
+  document.querySelectorAll('.pt.sel').forEach(e => e.classList.remove('sel'));
+  document.querySelectorAll(`.pt[data-id="${CSS.escape(id)}"]`).forEach(e => e.classList.add('sel'));
+  const S = D.sheets[p.sheet] || {};
+  const fit = Math.min(1, 400 / p.w, 360 / p.h), W = Math.round(p.w * fit), H = Math.round(p.h * fit);
+  const br = (p.brads || []).map(([x, y]) => `<circle cx="${x * fit}" cy="${y * fit}" r="5" fill="none" stroke="#5fd0ff" stroke-width="2"/>`).join('');
+  const pv = p.pivot ? `<g stroke="#ff6b5a" stroke-width="2"><line x1="${p.pivot[0] * fit - 9}" y1="${p.pivot[1] * fit}" x2="${p.pivot[0] * fit + 9}" y2="${p.pivot[1] * fit}"/><line x1="${p.pivot[0] * fit}" y1="${p.pivot[1] * fit - 9}" x2="${p.pivot[0] * fit}" y2="${p.pivot[1] * fit + 9}"/></g>` : '';
+  const sheetImg = p.bbox && S.size ? `<div class="sheetbox"><img src="${ROOT + S.path}" alt="source sheet ${esc(p.sheet)}" loading="lazy"><svg viewBox="0 0 ${S.size[0]} ${S.size[1]}" preserveAspectRatio="none"><rect x="${p.bbox[0]}" y="${p.bbox[1]}" width="${p.bbox[2]}" height="${p.bbox[3]}" fill="rgba(95,208,255,.15)" stroke="#5fd0ff" stroke-width="5"/></svg></div>` : '';
+  const ref = S.ref && S.ref !== p.sheet ? `${esc(S.ref)} (this sheet ×${S.rel} its scale)` : (S.ref ? 'this is the reference body sheet' : '—');
+  const sc = p.scale_px_per_cm ? `${p.scale_px_per_cm} px/cm (${esc(p.scale_source)})${p.own_ppc ? ` · this card alone ${p.own_ppc}` : ''}` : 'none (not measurable)';
+  const cm = p.scale_px_per_cm ? `${(p.w / p.scale_px_per_cm).toFixed(1)} × ${(p.h / p.scale_px_per_cm).toFixed(1)} cm` : '—';
+  const poems = (p.poems || []);
+  $('detIn').innerHTML = `<h2>${esc(p.label || p.id.split('/').pop())}</h2>
+    <div class="hint">${esc(p.id)}</div>
+    <div class="big"><div class="w" style="width:${W}px;height:${H}px"><img src="${ROOT + p.img}" width="${W}" height="${H}" alt=""><svg width="${W}" height="${H}">${br}${pv}</svg></div></div>
+    <div class="hint">${(p.brads || []).length ? `<span style="color:#5fd0ff">○ ${p.nbrads} brads</span>` : 'no brads read'} ${p.pivot ? ' · <span style="color:#ff6b5a">+ pivot</span>' : ''}</div>
+    <dl><dt>class</dt><dd>${esc(p.class)}${p.pair ? ' (pair)' : ''}</dd><dt>side</dt><dd>${esc(p.side || '—')}</dd><dt>view</dt><dd>${esc(p.view || '—')}</dd>
+    <dt>state</dt><dd>${esc(p.state || '—')}${p.shows ? ' · shows ' + esc(p.shows) : ''}</dd><dt>character</dt><dd>${esc(cname(ckey(p)))}</dd><dt>generation</dt><dd>${esc(p.gen)}</dd>
+    <dt>sheet</dt><dd>${esc(p.sheet)}</dd><dt>poems</dt><dd>${poems.join(' ') || '—'}</dd><dt>size</dt><dd>${p.w} × ${p.h} px · ${cm}</dd>
+    <dt>scale</dt><dd>${sc}</dd><dt>body ref</dt><dd>${ref}</dd>${p.override ? '<dt>checked</dt><dd>class set by eye on the review sheets</dd>' : ''}${p.prop_from ? `<dt>inferred</dt><dd>from look-alike ${esc(p.prop_from)}</dd>` : ''}</dl>
+    ${(p.problems || []).length ? `<b class="hint">PROBLEMS</b><ul class="plist">${p.problems.map(x => `<li class="${/ONE|uncut|×0\.[0-5]/.test(x) ? 'hi' : /duplicate|no label/.test(x) ? 'low' : ''}">${esc(x)}</li>`).join('')}</ul>` : '<p class="hint">no problems flagged</p>'}
+    <div class="links">${poems.slice(0, 14).map(x => `<a href="../stage/index.html?p=${x}" title="open the stage for poem ${x}; find this part in its Parts tray">stage · ${x}</a>`).join('')}
+      <a href="${ROOT + p.img}" target="_blank" rel="noopener">image</a>${S.path ? `<a href="${ROOT + S.path}" target="_blank" rel="noopener">sheet</a>` : ''}
+      <a href="#" id="detSame">same sheet only</a></div>
+    ${sheetImg}`;
+  $('detSame').onclick = e => { e.preventDefault(); F.q = p.sheet.toLowerCase(); $('q').value = F.q; F.other = true; save('f', F); chips(); setView('board'); };
+  $('det').classList.add('on');
+}
+
+/* ── problems ── */
+let PT = load('ptab', 'scale');
+function probs() {
+  const pr = D.problems, by = k => pr.filter(p => p.kind === k);
+  const notes = P.filter(p => (p.problems || []).some(x => /ONE card|ONE block|re-cut|split|never cut/.test(x)));
+  const tabs = [['scale', 'Scale mismatches', by('scale').length], ['proportion', 'Proportions', by('proportion').length],
+    ['missing', 'Missing parts', by('missing').length], ['uncut', 'Uncut blocks', notes.length], ['duplicate', 'Duplicates', by('duplicate').length], ['sheets', 'Sheet scales', Object.values(D.sheets).filter(s => s.scale).length]];
+  let h = `<div class="kpis">${tabs.map(t => `<div class="kpi"><b>${t[2]}</b><span>${t[1]}</span></div>`).join('')}</div>
+    <div class="ptabs">${tabs.map(t => `<button class="btn ${PT === t[0] ? 'on' : ''}" data-pt="${t[0]}">${t[1]} · ${t[2]}</button>`).join('')}</div>`;
+  const pairImg = (p, scale, cap) => p ? `<figure><img src="${ROOT + p.img}" data-id="${esc(p.id)}" width="${Math.round(p.w * scale)}" height="${Math.round(p.h * scale)}" alt=""><figcaption>${esc(cap)}</figcaption></figure>` : '';
+  const sample = (sheet, cls, ch) => P.find(p => p.sheet === sheet && p.class === cls && p.character === ch && !(p.state || '').match(/fist|cup|claw|grip/)) || P.find(p => p.sheet === sheet && p.class === cls);
+  if (PT === 'scale') {
+    const rows = by('scale').sort((a, b) => Math.abs(Math.log(b.rel)) - Math.abs(Math.log(a.rel)));
+    h += `<p class="hint">Each sheet's px/cm is solved from the parts on it (limbs brad-to-brad, hand and shoe length, head height, eye/brow/mouth width) against the character's stature. Pasted as drawn onto the body sheet, a part comes out at "drawn at" × its true size. The pair shows the same body part from both sheets at the same pixel scale, as a rig would paste them.</p>
+    <table><tr><th></th><th>sheet</th><th>character</th><th>drawn at</th><th>rescale</th><th>as drawn, side by side</th></tr>${rows.map(r => {
+      const cls = Object.keys(r.direct || {})[0];
+      const a = cls ? sample(r.sheet, cls, r.character) : ['hand', 'shoe', 'head', 'mouth', 'eyes', 'brows'].map(c => P.find(q => q.sheet === r.sheet && q.class === c && q.own_ppc)).find(Boolean);
+      const b = cls ? sample(r.ref, cls, r.character) : null;
+      const k = a ? 110 / Math.max(a.w, a.h, b ? b.w : 0, b ? b.h : 0) : 1;
+      const fixed = a ? `<figure><img src="${ROOT + a.img}" data-id="${esc(a.id)}" width="${Math.max(2, Math.round(a.w * k / r.rel))}" height="${Math.max(2, Math.round(a.h * k / r.rel))}" alt=""><figcaption>rescaled ×${(1 / r.rel).toFixed(2)}</figcaption></figure>` : '';
+      return `<tr><td><i class="sev ${r.sev}"></i></td><td>${esc(r.sheet)}</td><td>${esc(cname(r.character + '/' + r.costume))}</td><td>${r.rel.toFixed(2)}×</td><td>×${(1 / r.rel).toFixed(2)}</td>
+        <td><div class="pair">${pairImg(b, k, 'body sheet')}${pairImg(a, k, 'this sheet, as drawn')}${fixed}</div></td></tr>`; }).join('')}</table>`;
+  } else if (PT === 'proportion') {
+    h += `<p class="hint">Inside a character's reference body sheet: one segment against its neighbour, relative to adult/child norms (hand ≈ 0.80× forearm, shoe ≈ 0.68× shin, forearm ≈ 0.78× upper arm, shin ≈ thigh).</p>
+      <table><tr><th></th><th>finding</th><th>sheet</th></tr>${by('proportion').sort((a, b) => Math.abs(Math.log(b.rel)) - Math.abs(Math.log(a.rel))).map(r => `<tr><td><i class="sev ${r.sev}"></i></td><td>${esc(r.msg.split(': ').slice(1).join(': '))}</td><td>${esc(r.sheet)}</td></tr>`).join('')}</table>`;
+  } else if (PT === 'missing') {
+    h += `<p class="hint">For each character/costume with a body sheet: views, sides and features the kit does not supply (any sheet, any poem). "unlabeled sides only" means cards exist but are not marked L/R.</p><table><tr><th>character</th><th>body</th><th>missing</th></tr>${by('missing').map(r => `<tr><td>${esc(cname(r.character + '/' + r.costume))}</td><td>${(D.characters[r.character + '/' + r.costume] || {}).stature_cm || ''} cm</td><td><div class="miss">${r.items.map(x => `<span>${esc(x)}</span>`).join('')}</div></td></tr>`).join('')}</table>`;
+  } else if (PT === 'uncut') {
+    h += `<p class="hint">Cards where the cutter took a whole block or sheet as one piece (checked by eye). These parts exist on the drawing but not as separate cards.</p><table><tr><th>card</th><th>note</th><th>sheet</th></tr>${notes.map(p => `<tr><td><div class="pair">${pairImg(p, 90 / Math.max(p.w, p.h), '')}</div></td><td>${esc(p.problems.find(x => /ONE|re-cut|split|never/.test(x)))}</td><td>${esc(p.sheet)}</td></tr>`).join('')}</table>`;
+  } else if (PT === 'duplicate') {
+    h += `<p class="hint">Near-identical cards (perceptual hash, same class and character, similar size).</p><table><tr><th>cards</th><th>note</th></tr>${by('duplicate').map(r => `<tr><td><div class="pair">${r.parts.slice(0, 6).map(id => BYID[id] && pairImg(BYID[id], 60 / Math.max(BYID[id].w, BYID[id].h), BYID[id].sheet.split('.').slice(-2).join('.'))).join('')}</div></td><td>${esc(r.msg)}</td></tr>`).join('')}</table>`;
+  } else {
+    const ss = Object.values(D.sheets).filter(s => s.scale).sort((a, b) => (a.character || '').localeCompare(b.character || '') || a.id.localeCompare(b.id));
+    h += `<p class="hint">Solved scale per sheet. spread = 80th/20th percentile of the per-card estimates (1.0 = all cards agree).</p><table><tr><th>sheet</th><th>character</th><th>px/cm</th><th>from</th><th>spread</th><th>vs body sheet</th></tr>${ss.map(s => `<tr><td>${esc(s.id)}</td><td>${esc(s.character ? cname(s.character + '/' + s.costume) : '')}</td><td>${s.scale.ppc}</td><td>${esc(Object.entries(s.scale.by || {}).map(([k, v]) => k + '×' + v).join(' ') || (s.scale.known ? 'known' : ''))}</td><td>${s.scale.spread}</td><td>${s.rel ? s.rel + '×' : ''}</td></tr>`).join('')}</table>`;
+  }
+  $('v-probs').innerHTML = h;
+  $('v-probs').querySelectorAll('[data-pt]').forEach(b => b.onclick = () => { PT = b.dataset.pt; save('ptab', PT); probs(); });
+}
+
+/* ── swap test: one character's heads / hands / shoes on a neutral body ── */
+let SW = load('sw', 'poet/red_black_sunglasses'), PICK = {};
+const SLOTS = [['head', 'Head', p => p.class === 'head' && (p.view === 'front' || p.view === '')],
+  ['handR', 'Right hand', p => p.class === 'hand' && p.side !== 'L'], ['handL', 'Left hand', p => p.class === 'hand' && p.side !== 'R'],
+  ['shoeR', 'Right foot', p => (p.class === 'shoe' || p.class === 'foot') && p.side !== 'L' && p.view !== 'back'],
+  ['shoeL', 'Left foot', p => (p.class === 'shoe' || p.class === 'foot') && p.side !== 'R' && p.view !== 'back']];
+function swap() {
+  const opts = Object.keys(D.characters).filter(k => D.characters[k].ref_sheet || ['tracksuit', 'arena', 'weave'].includes(D.characters[k].gen))
+    .sort((a, b) => (a.startsWith('poet/') ? 0 : 1) - (b.startsWith('poet/') ? 0 : 1) || cname(a).localeCompare(cname(b)));
+  if (!opts.includes(SW)) SW = opts[0];
+  $('swChar').innerHTML = opts.map(k => `<option value="${esc(k)}" ${k === SW ? 'selected' : ''}>${esc(cname(k))}</option>`).join('');
+  $('swChar').onchange = () => { SW = $('swChar').value; save('sw', SW); PICK = {}; swap(); };
+  const C = D.characters[SW], ch = C.character;
+  // variants: this costume first, then the same character's other costumes / generations
+  const pool = P.filter(p => p.character === ch && p.class !== 'other').sort((a, b) => (ckey(b) === SW) - (ckey(a) === SW));
+  const refS = D.sheets[C.ref_sheet], refPpc = refS && refS.scale ? refS.scale.ppc : null;
+  $('swInfo').textContent = `${C.stature_cm} cm figure · body sheet ${C.ref_sheet || '—'}${refPpc ? ' @ ' + refPpc + ' px/cm' : ''} · ` +
+    (TRUE ? 'true scale: every card at its own solved cm' : 'as drawn: every card pasted at its native pixels onto the body sheet scale');
+  let sl = '';
+  for (const [k, name, fn] of SLOTS) {
+    const vs = pool.filter(fn).slice(0, 80);
+    if (!(k in PICK) || !vs.find(v => v.id === PICK[k])) PICK[k] = (vs.find(v => ckey(v) === SW && v.state !== 'fist') || vs[0] || {}).id;
+    sl += `<div class="slot"><h4>${name}<span class="sp"></span><span class="hint">${vs.length}</span><button class="btn" data-cy="${k}" data-d="-1">‹</button><button class="btn" data-cy="${k}" data-d="1">›</button></h4>
+      <div class="strip">${vs.map(v => `<img src="${ROOT + v.img}" data-slot="${k}" data-pid="${esc(v.id)}" class="${v.id === PICK[k] ? 'on' : ''}" title="${esc((v.label || '') + ' · ' + v.sheet)}" alt="" loading="lazy">`).join('') || '<span class="hint">none</span>'}</div></div>`;
+  }
+  sl += `<p class="hint">Click a thumbnail to swap it onto the body; ‹ › step through. Toggle <b>As drawn</b> in the header to see the cards pasted at their native pixels — that is where the scale mismatches show.</p>`;
+  $('slots').innerHTML = sl;
+  $('slots').querySelectorAll('[data-slot]').forEach(im => im.onclick = () => { PICK[im.dataset.slot] = im.dataset.pid; swap(); });
+  $('slots').querySelectorAll('[data-cy]').forEach(b => b.onclick = () => { const k = b.dataset.cy, vs = pool.filter(SLOTS.find(s => s[0] === k)[2]).slice(0, 80);
+    const i = vs.findIndex(v => v.id === PICK[k]); PICK[k] = vs[(i + +b.dataset.d + vs.length) % vs.length].id; swap(); });
+  drawBody(C, refPpc);
+}
+function drawBody(C, refPpc) {
+  const Hcm = C.stature_cm, s = Math.max(1.2, Math.min(4, Z)), H = Hcm * s, W = Math.max(520, Hcm * s * 0.9), cx = W / 2, floor = H + 30;
+  const y = cm => floor - cm * s;                       // height above floor (cm) -> svg y
+  // neutral mannequin (front): proportions from stature
+  const sh = 0.129 * Hcm * s, hip = 0.095 * Hcm * s;
+  let g = `<rect x="0" y="0" width="${W}" height="${floor + 20}" fill="#0a0807"/>`;
+  for (let c = 0; c <= Hcm; c += 10) g += `<line x1="8" x2="${c % 50 ? 16 : 26}" y1="${y(c)}" y2="${y(c)}" stroke="#3a2e24"/>${c % 50 ? '' : `<text x="30" y="${y(c) + 4}" fill="#6b5a49" font-family="JetBrains Mono" font-size="10">${c}</text>`}`;
+  g += `<line x1="0" x2="${W}" y1="${floor}" y2="${floor}" stroke="#3a2e24"/>`;
+  const body = '#2a2420', edge = '#4a3e34';
+  g += `<g fill="${body}" stroke="${edge}">
+    <rect x="${cx - sh}" y="${y(0.82 * Hcm)}" width="${sh * 2}" height="${(0.82 - 0.53) * Hcm * s}" rx="${10 * s / 3}"/>
+    <rect x="${cx - 0.03 * Hcm * s}" y="${y(0.87 * Hcm)}" width="${0.06 * Hcm * s}" height="${0.06 * Hcm * s}"/>
+    <rect x="${cx - hip}" y="${y(0.56 * Hcm)}" width="${hip * 2}" height="${0.08 * Hcm * s}" rx="6"/>
+    <rect x="${cx - hip}" y="${y(0.5 * Hcm)}" width="${hip * 0.9}" height="${0.46 * Hcm * s}" rx="8"/>
+    <rect x="${cx + hip * 0.1}" y="${y(0.5 * Hcm)}" width="${hip * 0.9}" height="${0.46 * Hcm * s}" rx="8"/>
+    <rect x="${cx - sh - 0.055 * Hcm * s}" y="${y(0.81 * Hcm)}" width="${0.05 * Hcm * s}" height="${0.33 * Hcm * s}" rx="8"/>
+    <rect x="${cx + sh + 0.005 * Hcm * s}" y="${y(0.81 * Hcm)}" width="${0.05 * Hcm * s}" height="${0.33 * Hcm * s}" rx="8"/></g>`;
+  const place = (id, ax, ay, mode) => {
+    const p = BYID[id]; if (!p) return '';
+    const ppc = TRUE ? p.scale_px_per_cm : (refPpc || p.scale_px_per_cm);
+    if (!ppc) return '';
+    const k0 = (!TRUE && p.src_w) ? p.src_w / p.w : 1;
+    let w = p.w * k0 / ppc * s, h = p.h * k0 / ppc * s, rot = 0;
+    if (mode === 'hand' && p.w > p.h * 1.15) { rot = 90; }          // hands-sheet cards lie flat, fingers right: stand them up
+    const bw = rot ? h : w, bh = rot ? w : h;
+    let x = ax - bw / 2, yy = mode === 'head' ? ay - bh : mode === 'foot' ? ay - bh : ay;
+    const tr = rot ? `transform="rotate(90 ${x + bw / 2} ${yy + bh / 2})"` : '';
+    const ix = rot ? x + bw / 2 - w / 2 : x, iy = rot ? yy + bh / 2 - h / 2 : yy;
+    return `<image href="${ROOT + p.img}" x="${ix}" y="${iy}" width="${w}" height="${h}" ${tr} data-id="${esc(p.id)}" style="cursor:pointer"/>`;
+  };
+  g += place(PICK.head, cx, y(0.835 * Hcm), 'head');
+  g += place(PICK.handR, cx - sh - 0.03 * Hcm * s, y(0.48 * Hcm), 'hand');
+  g += place(PICK.handL, cx + sh + 0.03 * Hcm * s, y(0.48 * Hcm), 'hand');
+  g += place(PICK.shoeR, cx - hip * 0.55, floor, 'foot');
+  g += place(PICK.shoeL, cx + hip * 0.55, floor, 'foot');
+  $('stageBox').innerHTML = `<svg width="${W}" height="${floor + 20}" viewBox="0 0 ${W} ${floor + 20}" role="img" aria-label="Neutral body with swapped parts">${g}</svg>`;
+}
+</script>
+</body>
+</html>
