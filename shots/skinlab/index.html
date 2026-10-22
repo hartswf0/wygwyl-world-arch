@@ -27,7 +27,7 @@ aside{border-right:1px solid var(--line);overflow:auto;padding:10px}
 .trial.on{border-color:var(--card);background:#211a14}
 .trial b{font:600 11px var(--mono);color:var(--acc);margin-right:6px}
 .trial small{display:block;color:var(--dim);font-size:11px}
-#mid{display:flex;flex-direction:column;min-width:0}
+#mid{display:flex;flex-direction:column;min-width:0;position:relative}
 #cv{flex:1;width:100%;min-height:0;display:block;cursor:crosshair;background:radial-gradient(ellipse at 50% 30%,#1c1712,#0d0b0a 70%)}
 .bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 10px;border-top:1px solid var(--line)}
 .bar input[type=range]{flex:1;min-width:120px;accent-color:var(--card)}
@@ -60,22 +60,37 @@ kbd{font:10px var(--mono);border:1px solid var(--line);border-radius:3px;padding
 .vt.now b{color:var(--ok)}
 #score{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font:11px var(--mono);color:var(--dim)}
 #score .btn small{opacity:.75}
+#menu{position:absolute;inset:0;pointer-events:none;display:none}
+#menu.on{display:block}
+#menu button{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;font:11px var(--mono);color:var(--ink);background:#16120fee;border:1px solid var(--card);border-radius:999px;padding:4px 9px;cursor:pointer;white-space:nowrap}
+#menu button:hover{background:var(--card);color:#1a120a}
+#menu i{position:absolute;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:var(--sel)}
+details{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:0 0 8px}
+summary{cursor:pointer;font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+#vit{width:100%;height:250px;display:block;cursor:grab;margin-top:6px}
+#bChart{width:100%;height:46px;display:block}
+.lay{display:flex;align-items:center;gap:6px;padding:2px 4px;border:1px solid transparent;border-radius:6px;font:11px var(--mono);color:var(--dim);cursor:grab;user-select:none}
+.lay span{width:26px;height:26px;background:#efe6da10 center/contain no-repeat;border-radius:4px;flex:none}
+.lay.on{border-color:var(--sel);color:var(--sel)}
+.lay.over{border-top:2px solid var(--acc)}
+.top{display:flex;gap:6px;align-items:center;font:11px var(--mono);padding:2px 0;cursor:pointer}
+.top:hover{color:var(--card)}
+.top .strip{display:flex;gap:1px}
+.top .strip span{width:16px;height:16px;background:center/contain no-repeat}
+.tips{font:10.5px var(--mono);color:var(--dim);margin:4px 0}
 </style>
 </head>
 <body>
 <header>
   <h1>Skin <span>Lab</span></h1>
-  <span class="sub">Pick a Crash Lab trial, click a limb, dress it from the kits, watch the puppet move.</span>
+  <span class="sub">Pick a Crash Lab trial, click a limb, dress it from the kits, push the cards around on the stage.</span>
   <span style="flex:1"></span>
   <select id="style" title="rig style: which cards the figure is cut into"></select>
   <button class="btn on" id="solveB" title="puppet: rigid cards pinned at their brads, solved to reach the pose (IK). pinned: every card stretched onto its own bone">puppet · IK</button>
   <button class="btn" id="bind" title="read where each child joint sits on its parent card at this frame">bind here</button>
   <select id="actor" title="actor"></select>
   <select id="dress" title="dress every limb, every view, from one character"><option value="">auto-dress…</option></select>
-  <button class="btn" id="clear">clear</button>
-  <button class="btn" id="save">save</button>
-  <select id="load"><option value="">load…</option></select>
-  <button class="btn" id="export">export</button>
+  <select id="file" title="save, load, export"><option value="">file…</option><option value="save">save skin…</option><option value="export">export JSON</option><option value="clear">clear skin</option></select>
 </header>
 <main>
   <aside id="left">
@@ -84,6 +99,7 @@ kbd{font:10px var(--mono);border:1px solid var(--line);border-radius:3px;padding
   </aside>
   <section id="mid">
     <canvas id="cv"></canvas>
+    <div id="menu"></div>
     <div class="bar">
       <button class="btn" id="play">▶</button>
       <input type="range" id="scrub" min="0" max="0" value="0">
@@ -104,20 +120,36 @@ kbd{font:10px var(--mono);border:1px solid var(--line);border-radius:3px;padding
     <div id="note"></div>
   </section>
   <aside id="right">
-    <h2>Limb <span class="sub" style="text-transform:none;letter-spacing:0">— click one on the stage</span></h2>
+    <details id="propD"><summary>Proportions · Vitruvian</summary>
+      <div class="row"><select id="preset" title="the skeleton's proportions">
+        <option value="bolas">as recorded (Bolas)</option><option value="vitruvian">Vitruvian canon</option><option value="cards">to the dressed cards</option><option value="custom">custom</option></select>
+        <span class="sub" id="propInfo"></span></div>
+      <canvas id="vit"></canvas>
+      <div class="tips">drag a joint to lengthen that bone; both sides move together</div>
+      <div class="checks" id="bars"></div>
+    </details>
+    <details id="breedD"><summary>Breed · best-fit pieces for this pose</summary>
+      <div class="filters" style="margin-top:6px">
+        <select id="bTarget"><option value="trial">whole trial</option><option value="frame">this pose (±6 frames)</option></select>
+        <select id="bFrom"><option value="">from any character</option></select>
+        <label class="sub" style="grid-column:1/3"><input type="checkbox" id="bStyle" checked> breed the skeleton style too</label>
+      </div>
+      <div class="row"><button class="btn" id="bRun">breed</button><span class="sub" id="bInfo"></span></div>
+      <canvas id="bChart"></canvas>
+      <div id="bTop"></div>
+    </details>
+    <h2>Limb <span class="sub" style="text-transform:none;letter-spacing:0">— click a card or a bone on the stage</span></h2>
     <div class="bones" id="bones"></div>
     <div id="sel" style="display:none">
       <h2>Cards by view <span class="sub" style="text-transform:none;letter-spacing:0">— swapped as the body turns</span></h2>
       <div class="views" id="views"></div>
-      <h2>Fit</h2>
-      <div class="row"><button class="btn" id="mFit">fit to bone</button><button class="btn" id="mTrue">true scale</button><button class="btn" id="mirror">mirror</button><button class="btn" id="faceL" title="this profile card is drawn facing left">drawn facing left</button></div>
-      <div class="row"><label>scale</label><input type="range" id="kS" min="40" max="250" value="100"><output id="oS"></output></div>
-      <div class="row"><label>rotate</label><input type="range" id="kR" min="-180" max="180" value="0"><output id="oR"></output></div>
-      <div class="row"><label>slide</label><input type="range" id="kX" min="-50" max="50" value="0"><output id="oX"></output></div>
-      <div class="row"><label>push</label><input type="range" id="kY" min="-50" max="50" value="0"><output id="oY"></output></div>
-      <div class="row"><label>layer</label><input type="range" id="kZ" min="-3" max="3" value="0"><output id="oZ"></output></div>
-      <div class="row"><button class="btn" id="swapAB">swap A/B</button><button class="btn" id="mirrorSide">copy to other side</button><button class="btn" id="unskin">remove card</button></div>
-      <h2>Attach points <span class="sub" style="text-transform:none;letter-spacing:0">— drag <b style="color:var(--ok)">A</b> (parent joint) and <b style="color:var(--bad)">B</b> (child joint); rings are the card's brads</span></h2>
+      <div class="tips" id="readout"></div>
+      <div class="tips">drag the card: move · drag ◯: turn + size (shift: turn only) · drag the red joint: bone length · right-click or long-press: menu · wheel: size · [ ]: layer</div>
+    </div>
+    <h2>Layers <span class="sub" style="text-transform:none;letter-spacing:0">— top is in front; drag to restack (this view)</span></h2>
+    <div id="layers"></div>
+    <div id="sel2" style="display:none">
+      <h2>Attach points <span class="sub" style="text-transform:none;letter-spacing:0">— drag <b style="color:var(--ok)">A</b> (parent joint) and <b style="color:var(--bad)">B</b> (child joint); rings are brads</span></h2>
       <canvas id="pe"></canvas>
       <div id="cardinfo"></div>
       <div class="checks" id="checks"></div>
@@ -143,36 +175,63 @@ const J = 'pelvis hipL hipR kneeL kneeR ankleL ankleR heelL heelR ballL ballR to
 const ji = Object.fromEntries(J.map((n, i) => [n, i]));
 Object.assign(ji, { tipL: 26, tipR: 27, waist: 28, crotch: 29 });
 const HAND_CM = 18.5;
+
+// ---------- proportions: the skeleton is retargeted bone by bone (FK from the pelvis), then put back on the floor ----------
+const TOPO = ['hipL','hipR','kneeL','kneeR','ankleL','ankleR','heelL','heelR','ballL','ballR','toeL','toeR','spineMid','chest','neckBase','shoulderL','shoulderR','elbowL','elbowR','wristL','wristR','headBase','head','headTop','nose'];
+const PAR = { hipL:'pelvis', hipR:'pelvis', kneeL:'hipL', kneeR:'hipR', ankleL:'kneeL', ankleR:'kneeR', heelL:'ankleL', heelR:'ankleR', ballL:'ankleL', ballR:'ankleR', toeL:'ballL', toeR:'ballR',
+  spineMid:'pelvis', chest:'spineMid', neckBase:'chest', shoulderL:'neckBase', shoulderR:'neckBase', elbowL:'shoulderL', elbowR:'shoulderR', wristL:'elbowL', wristR:'elbowR', headBase:'neckBase', head:'headBase', headTop:'head', nose:'head' };
+const GRP = { hipL:'hips', hipR:'hips', kneeL:'thigh', kneeR:'thigh', ankleL:'shin', ankleR:'shin', heelL:'foot', heelR:'foot', ballL:'foot', ballR:'foot', toeL:'foot', toeR:'foot',
+  spineMid:'torso', chest:'torso', neckBase:'torso', shoulderL:'shoulders', shoulderR:'shoulders', elbowL:'upper_arm', elbowR:'upper_arm', wristL:'forearm', wristR:'forearm', headBase:'head', head:'head', headTop:'head', nose:'head' };
+const GROUPS = ['head', 'torso', 'shoulders', 'hips', 'upper_arm', 'forearm', 'hand', 'thigh', 'shin', 'foot'];
+// Leonardo's Vitruvian man, as fractions of the height: top of the chest to the crown 1/6; elbow to fingertip (cubit) 1/4,
+// of which the hand 1/10; elbow to armpit 1/8 (+ the shoulder head); groin to below the knee 1/4; below the knee to the sole 1/4;
+// the foot 1/7; the widest shoulders 1/4 (joint to joint about 4/5 of that)
+const VIT = { head: 1 / 6, torso: .31, shoulders: .2, hips: .11, upper_arm: .165, forearm: .15, hand: .1, thigh: .25, shin: .23, foot: 1 / 7 };
+const FEET = ['ankleL','ankleR','heelL','heelR','ballL','ballR','toeL','toeR'].map(n => ji[n]);
+function measure(j) {
+  const d = (a, b) => len3(v3(j[ji[a]], j[ji[b]])), av = (a, b) => (d(a + 'L', b + 'L') + d(a + 'R', b + 'R')) / 2;
+  return { head: d('neckBase', 'headTop'), torso: d('pelvis', 'spineMid') + d('spineMid', 'chest') + d('chest', 'neckBase'), shoulders: d('shoulderL', 'shoulderR'),
+    hips: d('hipL', 'hipR'), upper_arm: av('shoulder', 'elbow'), forearm: av('elbow', 'wrist'), hand: HAND_CM, thigh: av('hip', 'knee'), shin: av('knee', 'ankle'), foot: av('heel', 'toe') };
+}
+function retarget(raw, K) {
+  const out = []; out[0] = raw[0].slice();
+  for (const n of TOPO) { const i = ji[n], p = ji[PAR[n]], k = K[GRP[n]] ?? 1; out[i] = [0, 1, 2].map(a => out[p][a] + (raw[i][a] - raw[p][a]) * k); }
+  const lo = Math.min(...FEET.map(i => raw[i][1])), ln = Math.min(...FEET.map(i => out[i][1]));
+  for (const q of out) q[1] += lo - ln;
+  return out;
+}
+const JC = new WeakMap();
 function joints(fr, id) {
+  let c = JC.get(fr); if (!c || c.v !== S.pv) { c = { v: S.pv }; JC.set(fr, c); }
+  if (c[id]) return c[id];
   const a = fr.a[id]; if (!a) return null;
-  const j = a.j.slice();
+  const K = id === S.actor ? S.K : {};
+  const j = Object.keys(K).length ? retarget(a.j, K) : a.j.map(q => q.slice());
   for (const s of ['L', 'R']) {              // fingertip: the forearm carried on by a hand length
-    const e = j[ji['elbow' + s]], w = j[ji['wrist' + s]], d = v3(e, w), l = len3(d) || 1;
-    j.push([w[0] + d[0] / l * HAND_CM, w[1] + d[1] / l * HAND_CM, w[2] + d[2] / l * HAND_CM]);
+    const e = j[ji['elbow' + s]], w = j[ji['wrist' + s]], d = v3(e, w), l = len3(d) || 1, h = HAND_CM * (K.hand ?? 1);
+    j.push([w[0] + d[0] / l * h, w[1] + d[1] / l * h, w[2] + d[2] / l * h]);
   }
   const p = j[0], u = v3(p, j[ji.spineMid]), l = len3(u) || 1;   // waist above the pelvis joint, crotch below: the hip bridge's span
   j.push([p[0] + u[0] / l * 7, p[1] + u[1] / l * 7, p[2] + u[2] / l * 7], [p[0] - u[0] / l * 13, p[1] - u[1] / l * 13, p[2] - u[2] / l * 13]);
-  return j;
+  return c[id] = j;
 }
 
 // ---------- segments and rig styles ----------
-// a segment: the card slots it takes, the joints its A and B go to, its possible parents, which facing vector turns it,
-// and (ik) the upper segment it solves with as a two-card limb
 const SEG = {
-  pelvis: { slots: ['pelvis'], from: 'waist', to: 'crotch', par: [], face: 'pfwd' },
-  torso: { slots: ['torso'], from: 'waist', to: 'neckBase', par: ['pelvis'], face: 'fwd' },
-  head: { slots: ['head'], from: 'neckBase', to: 'headTop', par: ['torso'], face: 'hfwd' },
+  pelvis: { slots: ['pelvis'], from: 'waist', to: 'crotch', par: [], face: 'pfwd', g: 'hips' },
+  torso: { slots: ['torso'], from: 'waist', to: 'neckBase', par: ['pelvis'], face: 'fwd', g: 'torso' },
+  head: { slots: ['head'], from: 'neckBase', to: 'headTop', par: ['torso'], face: 'hfwd', g: 'head' },
 };
 for (const s of ['L', 'R']) Object.assign(SEG, {
-  ['upper_arm_' + s]: { slots: ['upper_arm'], from: 'shoulder' + s, to: 'elbow' + s, par: ['torso'], face: 'fwd' },
-  ['forearm_' + s]: { slots: ['forearm'], from: 'elbow' + s, to: 'wrist' + s, par: ['upper_arm_' + s], face: 'fwd', ik: 'upper_arm_' + s },
-  ['mitt_' + s]: { slots: ['forearm', 'hand'], from: 'elbow' + s, to: 'tip' + s, par: ['upper_arm_' + s], face: 'fwd', ik: 'upper_arm_' + s },
-  ['arm_' + s]: { slots: ['upper_arm', 'forearm'], from: 'shoulder' + s, to: 'wrist' + s, par: ['torso'], face: 'fwd' },
-  ['hand_' + s]: { slots: ['hand'], from: 'wrist' + s, to: 'tip' + s, par: ['forearm_' + s, 'arm_' + s], face: 'fwd' },
-  ['thigh_' + s]: { slots: ['thigh'], from: 'hip' + s, to: 'knee' + s, par: ['pelvis', 'torso'], face: 'pfwd' },
-  ['shin_' + s]: { slots: ['shin'], from: 'knee' + s, to: 'ankle' + s, par: ['thigh_' + s], face: 'pfwd', ik: 'thigh_' + s },
-  ['leg_' + s]: { slots: ['thigh', 'shin'], from: 'hip' + s, to: 'ankle' + s, par: ['pelvis', 'torso'], face: 'pfwd' },
-  ['foot_' + s]: { slots: ['foot'], from: 'ankle' + s, to: 'toe' + s, par: ['shin_' + s, 'leg_' + s], face: 'pfwd' },
+  ['upper_arm_' + s]: { slots: ['upper_arm'], from: 'shoulder' + s, to: 'elbow' + s, par: ['torso'], face: 'fwd', g: 'upper_arm' },
+  ['forearm_' + s]: { slots: ['forearm'], from: 'elbow' + s, to: 'wrist' + s, par: ['upper_arm_' + s], face: 'fwd', ik: 'upper_arm_' + s, g: 'forearm' },
+  ['mitt_' + s]: { slots: ['forearm', 'hand'], from: 'elbow' + s, to: 'tip' + s, par: ['upper_arm_' + s], face: 'fwd', ik: 'upper_arm_' + s, g: 'forearm' },
+  ['arm_' + s]: { slots: ['upper_arm', 'forearm'], from: 'shoulder' + s, to: 'wrist' + s, par: ['torso'], face: 'fwd', g: 'upper_arm' },
+  ['hand_' + s]: { slots: ['hand'], from: 'wrist' + s, to: 'tip' + s, par: ['forearm_' + s, 'arm_' + s], face: 'fwd', g: 'hand' },
+  ['thigh_' + s]: { slots: ['thigh'], from: 'hip' + s, to: 'knee' + s, par: ['pelvis', 'torso'], face: 'pfwd', g: 'thigh' },
+  ['shin_' + s]: { slots: ['shin'], from: 'knee' + s, to: 'ankle' + s, par: ['thigh_' + s], face: 'pfwd', ik: 'thigh_' + s, g: 'shin' },
+  ['leg_' + s]: { slots: ['thigh', 'shin'], from: 'hip' + s, to: 'ankle' + s, par: ['pelvis', 'torso'], face: 'pfwd', g: 'thigh' },
+  ['foot_' + s]: { slots: ['foot'], from: 'ankle' + s, to: 'toe' + s, par: ['shin_' + s, 'leg_' + s], face: 'pfwd', g: 'foot' },
 });
 const LR = (...n) => n.flatMap(x => [x + '_L', x + '_R']);
 const STYLES = {
@@ -181,6 +240,10 @@ const STYLES = {
   mitt: { label: '13 · hip bridge + mitts', segs: ['pelvis', 'torso', 'head', ...LR('upper_arm', 'mitt', 'thigh', 'shin', 'foot')] },
   long: { label: '10 · long limbs', segs: ['torso', 'head', ...LR('arm', 'hand', 'leg', 'foot')] },
 };
+// draw order, back to front, by role: the limb nearer the camera is "near"; a child sits on its parent (shoe over calf)
+const STACK0 = ['far_upper_arm', 'far_arm', 'far_forearm', 'far_mitt', 'far_hand', 'far_thigh', 'far_leg', 'far_shin', 'far_foot', 'near_thigh', 'near_leg', 'pelvis',
+  'near_shin', 'near_foot', 'torso', 'head', 'near_upper_arm', 'near_arm', 'near_forearm', 'near_mitt', 'near_hand'];
+const ARMS = /^(upper_arm|forearm|mitt|arm|hand)$/;
 const VIEWS = ['side', 'front', 'back'];
 const VIEWOF = v => v === 'profile' ? 'side' : v === 'front' || v === 'threequarter' ? 'front' : v === 'back' || v === 'threequarter_back' ? 'back' : null;
 const OTHER = k => k.endsWith('_L') ? k.slice(0, -1) + 'R' : k.endsWith('_R') ? k.slice(0, -1) + 'L' : null;
@@ -198,7 +261,8 @@ const nameOK = c => { const n = c.id.split('/').pop().toLowerCase(), sh = c.id.s
 const $ = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d'), pe = $('pe'), pctx = pe.getContext('2d');
 const S = { trials: [], lib: [], trial: null, data: null, f: 0, playing: false, speed: 1, actor: null, view: 'cam', yaw: -22, elev: 7,
-  sel: null, ev: 'side', skin: {}, style: 'hips', puppet: true, bindF: 0, sock: {}, isolate: true, skel: true, follow: true, ports: [], fix: {}, last: null };
+  sel: null, ev: 'side', skin: {}, style: 'hips', puppet: true, bindF: 0, sock: {}, isolate: true, skel: true, follow: true, ports: [], fix: {},
+  K: {}, preset: 'bolas', pv: 0, rec: null, H: 180, stack: { side: STACK0.slice(), front: STACK0.slice(), back: STACK0.slice() } };
 const IMG = {};
 const img = c => IMG[c.id] || (IMG[c.id] = Object.assign(new Image(), { src: c.img }));
 const LS = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} } };
@@ -206,6 +270,13 @@ S.fix = LS.get('skinlab.fix', {});   // per card id: hand-placed A/B, and whethe
 const AB = c => ({ A: S.fix[c.id]?.A || c.A, B: S.fix[c.id]?.B || c.B });
 const pts = (c, sk) => { const p = AB(c); return sk.swap ? { A: p.B, B: p.A } : p; };
 const cardLeft = c => S.fix[c.id]?.left ?? (c.slot === 'foot' ? AB(c).B[0] < AB(c).A[0] : false);
+const ALPHA = {};
+function alphaOf(c) {   // the card's own alpha, read once, for hit tests and centring
+  if (ALPHA[c.id]) return ALPHA[c.id];
+  const im = img(c); if (!im.complete || !im.naturalWidth) return null;
+  const o = document.createElement('canvas'); o.width = c.w; o.height = c.h; const g = o.getContext('2d'); g.drawImage(im, 0, 0);
+  try { const d = g.getImageData(0, 0, c.w, c.h).data, a = new Uint8Array(c.w * c.h); for (let i = 0; i < a.length; i++) a[i] = d[i * 4 + 3]; return ALPHA[c.id] = a; } catch { return null; }
+}
 
 // ---------- 3D -> 2D ----------
 function v3(a, b) { return [b[0] - a[0], b[1] - a[1], b[2] - a[2]]; }
@@ -267,7 +338,7 @@ function socket(k, px, port, puppet) {
   const sg = SEG[k], ps = SEG[px.k];
   if (ps.to === sg.from) return { p: fwd(px, px.B), how: 'chain' };
   if (ps.from === sg.from) return { p: fwd(px, px.A), how: 'root' };
-  const key = [port.label, Math.round(port.yaw), px.c.id, px.sk.mode, px.sk.scale, px.sk.swap, px.mir, k, S.bindF, puppet, S.actor].join('|');
+  const key = [port.label, Math.round(port.yaw), px.c.id, px.sk.mode, px.sk.scale, px.sk.swap, px.mir, k, S.bindF, puppet, S.actor, S.pv].join('|');
   let q = S.sock[key];
   if (!q) {
     const fr = S.data.frames[S.bindF], cx = port.cx, cz = port.cz; centre(port, fr);
@@ -288,10 +359,15 @@ function ik2(S0, T, E, l1, l2) {
   const a = Math.acos(Math.max(-1, Math.min(1, (l1 * l1 + d * d - l2 * l2) / (2 * l1 * d))));
   return base + (dx * (E[1] - S0[1]) - dy * (E[0] - S0[0]) >= 0 ? 1 : -1) * a;
 }
+function roleOf(k, near) {
+  const m = k.match(/^(.*)_([LR])$/); if (!m) return k;
+  return (m[2] === (ARMS.test(m[1]) ? near.arm : near.leg) ? 'near_' : 'far_') + m[1];
+}
 // the whole figure for one frame in one view: a placed card per segment, with its gap to its parent and its miss to its target
 function solve(fr, port, style = S.style, puppet = S.puppet) {
   const j = joints(fr, S.actor); if (!j) return null;
   const a = fr.a[S.actor], pj = j.map(q => port.p(q)), segs = STYLES[style].segs, X = {};
+  const near = { arm: pj[ji.shoulderL][2] > pj[ji.shoulderR][2] ? 'L' : 'R', leg: pj[ji.hipL][2] > pj[ji.hipR][2] ? 'L' : 'R' };
   for (const k of segs) {
     const sg = SEG[k], sk = S.skin[k]; if (!sk) continue;
     const ac = active(k, sk, a, port); if (!ac) continue;
@@ -306,14 +382,16 @@ function solve(fr, port, style = S.style, puppet = S.puppet) {
         const { A: a1, B: b1 } = pts(ac.c, sk); ang = ik2(start, pj[ji[SEG[low].to]], Q, Math.hypot(b1[0] - a1[0], b1[1] - a1[1]) * s, l2); }
     }
     const x = mk(k, ac.c, sk, start, ang + sk.rot * Math.PI / 180, s, ac.mir);
-    x.view = ac.view; x.want = ac.want; x.parent = parent; x.sockHow = sock?.how;
+    x.view = ac.view; x.want = ac.want; x.parent = parent; x.sockHow = sock?.how; x.sockP = sock?.p;
     x.gap = sock ? hyp(fwd(x, x.A), sock.p) / port.k : 0;
     x.miss = hyp(fwd(x, x.B), Q) / port.k;
-    x.d = (P[2] + Q[2]) / 2 + (sk.z || 0) * 6;
-    x.sockP = sock?.p;
+    x.d = (P[2] + Q[2]) / 2; x.role = roleOf(k, near);
     X[k] = x;
   }
-  return { X, pj, j };
+  const view = (X.torso || X.pelvis)?.want || 'side', st = S.stack[view];
+  const rank = x => { const i = st.indexOf(x.role); return i < 0 ? 99 : i; };
+  const order = Object.values(X).sort((a, b) => rank(a) - rank(b) || a.d - b.d);
+  return { X, pj, j, near, view, order };
 }
 
 // ---------- drawing ----------
@@ -337,25 +415,20 @@ function draw() {
       ctx.fillStyle = '#00000066'; ctx.beginPath(); ctx.ellipse(pc[0], pc[1], 28 * port.k, 6 * port.k, 0, 0, 7); ctx.fill();
       if (id !== S.actor) stick(pj, '#6b5d50', 2);
     }
-    const sol = solve(fr, port);
+    const sol = port.sol = solve(fr, port);
     if (sol) {
-      const { X, pj } = sol;
+      const { X, pj } = sol, solo = S.isolate && S.sel;
       if (S.skel) stick(pj, '#efe6da55', 2);
-      for (const x of Object.values(X).sort((a, b) => a.d - b.d)) drawCard(ctx, x, S.isolate && S.sel && S.sel !== x.k ? .22 : 1);
-      // brads where the puppet is pinned; red where a card misses its joint
-      for (const x of Object.values(X)) {
+      for (const x of sol.order) drawCard(ctx, x, solo && S.sel !== x.k ? .22 : 1);
+      for (const x of sol.order) {
         if (S.puppet && x.sockP) { ctx.strokeStyle = x.sockHow === 'brad' ? '#e7c35a' : '#c79a62'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x.sockP[0], x.sockP[1], 3.5, 0, 7); ctx.stroke(); }
+        if (solo && S.sel !== x.k) continue;
         const end = fwd(x, x.B), T = pj[ji[SEG[x.k].to]];
-        if (x.miss > 4 && (!S.isolate || !S.sel || S.sel === x.k)) { ctx.strokeStyle = '#ef6a5a'; ctx.setLineDash([3, 3]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(end[0], end[1]); ctx.lineTo(T[0], T[1]); ctx.stroke(); ctx.setLineDash([]); }
-        if (!S.puppet && x.gap > 3 && (!S.isolate || !S.sel || S.sel === x.k)) { const a = fwd(x, x.A); ctx.strokeStyle = '#e7c35a'; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(x.sockP[0], x.sockP[1]); ctx.stroke(); ctx.setLineDash([]); }
-      }
-      if (S.sel && STYLES[S.style].segs.includes(S.sel)) {
-        const sg = SEG[S.sel], p = pj[ji[sg.from]], q = pj[ji[sg.to]];
-        ctx.strokeStyle = '#5fd0ff'; ctx.lineWidth = 4; ctx.globalAlpha = .9; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
-        dot(p, '#8fd16a', 5); dot(q, '#ef6a5a', 5); ctx.globalAlpha = 1;
+        if (x.miss > 4) { ctx.strokeStyle = '#ef6a5a'; ctx.setLineDash([3, 3]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(end[0], end[1]); ctx.lineTo(T[0], T[1]); ctx.stroke(); ctx.setLineDash([]); }
+        if (!S.puppet && x.gap > 3) { const a = fwd(x, x.A); ctx.strokeStyle = '#e7c35a'; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(x.sockP[0], x.sockP[1]); ctx.stroke(); ctx.setLineDash([]); }
       }
       if (S.skel) for (let n = 0; n < 26; n++) dot(pj[n], '#efe6da88', 2);
-      if (port === S.ports[0]) S.last = sol;
+      if (S.sel && STYLES[S.style].segs.includes(S.sel)) gizmo(port, sol);
     }
     ctx.fillStyle = '#9a8d7e'; ctx.font = '11px JetBrains Mono, monospace'; ctx.fillText(port.label + '  yaw ' + Math.round(port.yaw) + '°', port.x + 10, port.y + 16);
     if (port.x > 0) { ctx.strokeStyle = '#2a221c'; ctx.beginPath(); ctx.moveTo(port.x, 0); ctx.lineTo(port.x, port.h); ctx.stroke(); }
@@ -363,7 +436,20 @@ function draw() {
   }
   $('fr').textContent = S.f + '/' + (S.data.frames.length - 1);
   $('scrub').value = S.f;
-  checks(); markViews();
+  checks(); markViews(); readout(); renderLayersIfChanged();
+}
+// the selected limb: its bone (drag the red end to lengthen it), the card's outline, the pin, and the turn/size ring
+function handlePos(x) { const a = fwd(x, x.A), b = fwd(x, x.B), l = hyp(a, b) || 1; return [b[0] + (b[0] - a[0]) / l * 20, b[1] + (b[1] - a[1]) / l * 20]; }
+function gizmo(port, sol) {
+  const sg = SEG[S.sel], p = sol.pj[ji[sg.from]], q = sol.pj[ji[sg.to]], x = sol.X[S.sel];
+  ctx.strokeStyle = '#5fd0ff'; ctx.lineWidth = 3; ctx.globalAlpha = .9; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+  dot(p, '#8fd16a', 5); dot(q, '#ef6a5a', 6); ctx.globalAlpha = 1;
+  if (!x) return;
+  const c = x.c, cs = [[0, 0], [c.w, 0], [c.w, c.h], [0, c.h]].map(v => fwd(x, v));
+  ctx.strokeStyle = '#5fd0ffaa'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]); ctx.beginPath(); cs.forEach((v, i) => i ? ctx.lineTo(v[0], v[1]) : ctx.moveTo(v[0], v[1])); ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+  const h = handlePos(x), b = fwd(x, x.B);
+  ctx.strokeStyle = '#5fd0ff'; ctx.beginPath(); ctx.moveTo(b[0], b[1]); ctx.lineTo(h[0], h[1]); ctx.stroke();
+  ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(h[0], h[1], 7, 0, 7); ctx.stroke();
 }
 function drawCard(g, x, alpha) {
   const im = img(x.c); if (!im.complete || !im.naturalWidth) return;
@@ -380,23 +466,27 @@ function stick(pj, col, w) {
 function dot(p, col, r) { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, 7); ctx.fill(); }
 
 // ---------- how well a rig style holds the trial: gaps at the brads, misses at the joints ----------
-function score(style, puppet) {
-  const port = S.ports[0], cx = port.cx, cz = port.cz; let n = 0, miss = 0, gap = 0, worst = 0, wf = 0, cards = 0;
-  const step = Math.max(1, Math.floor(S.data.frames.length / 60));
-  for (let f = 0; f < S.data.frames.length; f += step) {
+function frameSet(target) {
+  const n = S.data.frames.length;
+  if (target === 'frame') { const out = []; for (let f = Math.max(0, S.f - 6); f <= Math.min(n - 1, S.f + 6); f += 3) out.push(f); return out; }
+  const step = Math.max(1, Math.floor(n / 40)), out = []; for (let f = 0; f < n; f += step) out.push(f); return out;
+}
+function score(style, puppet, frames = frameSet('trial')) {
+  const port = S.ports[0], cx = port.cx, cz = port.cz; let n = 0, miss = 0, gap = 0, worst = 0, wf = 0, cards = 0, wrongView = 0;
+  for (const f of frames) {
     const fr = S.data.frames[f]; centre(port, fr);
     const sol = solve(fr, port, style, puppet); if (!sol) continue;
-    const xs = Object.values(sol.X); cards = Math.max(cards, xs.length);
-    for (const x of xs) { n++; miss += x.miss; gap += x.gap; if (x.miss + x.gap > worst) { worst = x.miss + x.gap; wf = f; } }
+    const xs = sol.order; cards = Math.max(cards, xs.length);
+    for (const x of xs) { n++; miss += x.miss; gap += x.gap; if (x.view !== x.want) wrongView++; if (x.miss + x.gap > worst) { worst = x.miss + x.gap; wf = f; } }
   }
   port.cx = cx; port.cz = cz;
-  return { miss: n ? miss / n : 0, gap: n ? gap / n : 0, worst, wf, cards, of: STYLES[style].segs.length };
+  return { miss: n ? miss / n : 0, gap: n ? gap / n : 0, worst, wf, cards, of: STYLES[style].segs.length, wrongView: n ? wrongView / n : 0 };
 }
 function renderScore() {
   if (!S.data) return;
-  const out = Object.keys(STYLES).map(st => { const r = score(st, S.puppet); return { st, ...r }; });
-  $('score').innerHTML = `<span>${S.puppet ? 'puppet: cards rigid, pinned at brads — <b>miss</b> = how far a card end lands from its joint' : 'pinned: every card on its own bone — <b>gap</b> = how far a card comes off its parent\'s brad'} (cm, mean over the trial):</span>` +
-    out.map(r => `<button class="btn${r.st === S.style ? ' on' : ''}" data-style="${r.st}" title="worst ${r.worst.toFixed(1)} cm at frame ${r.wf}">${STYLES[r.st].label} · <b>${(S.puppet ? r.miss : r.gap).toFixed(1)}</b> <small>${r.cards}/${r.of} cards</small></button>`).join('') +
+  const out = Object.keys(STYLES).map(st => ({ st, ...score(st, S.puppet) }));
+  $('score').innerHTML = `<span>${S.puppet ? '<b>miss</b>: how far a rigid card end lands from its joint' : '<b>gap</b>: how far a stretched card comes off its parent\'s brad'} (cm, mean over the trial):</span>` +
+    out.map(r => `<button class="btn${r.st === S.style ? ' on' : ''}" data-style="${r.st}" title="worst ${r.worst.toFixed(1)} cm at frame ${r.wf}">${STYLES[r.st].label} · <b>${(S.puppet ? r.miss : r.gap).toFixed(1)}</b> <small>${r.cards}/${r.of}</small></button>`).join('') +
     `<button class="btn" id="worst" title="jump to the worst frame for this style">worst frame</button>`;
 }
 $('score').addEventListener('click', e => {
@@ -404,57 +494,373 @@ $('score').addEventListener('click', e => {
   if (e.target.id === 'worst') { const r = score(S.style, S.puppet); S.f = r.wf; draw(); }
 });
 
-// ---------- checks for the chosen limb ----------
+// ---------- the limb readout and checks ----------
+function readout() {
+  const sk = S.skin[S.sel]; if (!sk) { $('readout').textContent = S.sel ? 'no card on this limb yet — pick one in the library below' : ''; return; }
+  $('readout').textContent = `${sk.mode === 'true' ? 'true scale' : 'fit to bone'} · size ${sk.scale.toFixed(2)}× · turn ${Math.round(sk.rot)}° · slide ${Math.round(sk.dx)}% · push ${Math.round(sk.dy)}%${sk.mirror ? ' · mirrored' : ''}${sk.swap ? ' · A/B swapped' : ''}`;
+}
 function checks() {
   const el = $('checks'); if (!S.sel || !S.data) { el.innerHTML = ''; return; }
-  const sk = S.skin[S.sel], x = S.last?.X?.[S.sel], sg = SEG[S.sel];
-  const j = S.last?.j; const bl = j ? len3(v3(j[ji[sg.from]], j[ji[sg.to]])) : 0;
-  let h = `<div>${S.sel.replace(/_/g, ' ')}: ${sg.from} → ${sg.to}, ${bl.toFixed(1)} cm in 3D</div>`;
+  const sol = S.ports[0]?.sol, sk = S.skin[S.sel], x = sol?.X?.[S.sel], sg = SEG[S.sel];
+  const j = sol?.j; const bl = j ? len3(v3(j[ji[sg.from]], j[ji[sg.to]])) : 0;
+  let h = `<div>${S.sel.replace(/_/g, ' ')}: ${sg.from} → ${sg.to}, ${bl.toFixed(1)} cm in 3D · layer role <b>${x?.role || '—'}</b></div>`;
   if (!STYLES[S.style].segs.includes(S.sel)) h += `<div class="r-warn">not part of the ${STYLES[S.style].label} rig</div>`;
   if (x) {
     const cm = x.lab / x.c.px_per_cm, ratio = cm * sk.scale / (bl || 1), lr = Math.abs(Math.log(ratio));
     h += `<div class="${lr < .12 ? 'r-ok' : lr < .3 ? 'r-warn' : 'r-bad'}">card A→B ${cm.toFixed(1)} cm × ${sk.scale.toFixed(2)} = ${(ratio * 100).toFixed(0)}% of the bone</div>`;
     h += `<div>showing the <b>${x.view}</b> card${x.view !== x.want ? ` <span class="r-warn">(wants a ${x.want} card — none yet)</span>` : ''}${x.mir ? ' · mirrored' : ''}</div>`;
-    if (x.parent) h += `<div>hangs from ${x.parent.replace(/_/g, ' ')} at ${x.sockHow === 'brad' ? 'a brad on it' : x.sockHow === 'chain' ? "its B end" : x.sockHow === 'root' ? 'its A end' : 'a bound point (no brad near)'}${S.puppet ? '' : ` · <span class="${x.gap < 2 ? 'r-ok' : x.gap < 6 ? 'r-warn' : 'r-bad'}">gap ${x.gap.toFixed(1)} cm</span>`}</div>`;
+    if (x.parent) h += `<div>hangs from ${x.parent.replace(/_/g, ' ')} at ${x.sockHow === 'brad' ? 'a brad on it' : x.sockHow === 'chain' ? 'its B end' : x.sockHow === 'root' ? 'its A end' : 'a bound point (no brad near)'}${S.puppet ? '' : ` · <span class="${x.gap < 2 ? 'r-ok' : x.gap < 6 ? 'r-warn' : 'r-bad'}">gap ${x.gap.toFixed(1)} cm</span>`}</div>`;
     if (S.puppet) h += `<div class="${x.miss < 3 ? 'r-ok' : x.miss < 8 ? 'r-warn' : 'r-bad'}">card end misses ${sg.to} by ${x.miss.toFixed(1)} cm</div>`;
   }
   el.innerHTML = h;
 }
 
-// ---------- picking ----------
-function pick(mx, my) {
-  if (!S.data) return null;
-  const fr = S.data.frames[S.f]; let best = null, bd = 16;
-  for (const port of S.ports) {
-    if (mx < port.x || mx > port.x + port.w) continue;
-    centre(port, fr);
-    const j = joints(fr, S.actor); if (!j) continue;
-    const pj = j.map(q => port.p(q));
-    for (const k of STYLES[S.style].segs) {
-      const p = pj[ji[SEG[k].from]], q = pj[ji[SEG[k].to]];
-      const dx = q[0] - p[0], dy = q[1] - p[1], L = dx * dx + dy * dy || 1;
-      const t = Math.max(0, Math.min(1, ((mx - p[0]) * dx + (my - p[1]) * dy) / L));
-      const d = Math.hypot(mx - p[0] - t * dx, my - p[1] - t * dy);
-      if (d < bd) { bd = d; best = k; }
-    }
+// ---------- direct manipulation on the stage ----------
+const mpos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+const portAt = m => S.ports.find(p => m[0] >= p.x && m[0] <= p.x + p.w);
+function boneAt(port, m) {
+  const sol = port.sol; if (!sol) return null; let best = null, bd = 14;
+  for (const k of STYLES[S.style].segs) {
+    const p = sol.pj[ji[SEG[k].from]], q = sol.pj[ji[SEG[k].to]];
+    const dx = q[0] - p[0], dy = q[1] - p[1], L = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((m[0] - p[0]) * dx + (m[1] - p[1]) * dy) / L));
+    const d = Math.hypot(m[0] - p[0] - t * dx, m[1] - p[1] - t * dy); if (d < bd) { bd = d; best = k; }
   }
   return best;
 }
-cv.addEventListener('click', e => { const r = cv.getBoundingClientRect(); select(pick(e.clientX - r.left, e.clientY - r.top)); });
-cv.addEventListener('mousemove', e => { const r = cv.getBoundingClientRect(); cv.style.cursor = pick(e.clientX - r.left, e.clientY - r.top) ? 'pointer' : 'crosshair'; });
+function cardAt(port, m) {   // the topmost card whose painted pixels are under the pointer
+  const sol = port.sol; if (!sol) return null;
+  for (const x of sol.order.slice().reverse()) {
+    if (S.isolate && S.sel && x.k !== S.sel) continue;
+    const q = inv(x, m), c = x.c; if (q[0] < 0 || q[1] < 0 || q[0] >= c.w || q[1] >= c.h) continue;
+    const a = alphaOf(c); if (!a || a[(q[1] | 0) * c.w + (q[0] | 0)] > 40) return x.k;
+  }
+  if (S.isolate && S.sel) { S.isolate = false; const k = cardAt(port, m); S.isolate = true; return k; }
+  return null;
+}
+function hitTest(port, m) {
+  const sol = port.sol; if (!sol) return null;
+  if (S.sel && STYLES[S.style].segs.includes(S.sel)) {
+    const x = sol.X[S.sel];
+    if (x && hyp(handlePos(x), m) < 11) return { k: S.sel, what: 'turn' };
+    if (hyp(sol.pj[ji[SEG[S.sel].to]], m) < 9) return { k: S.sel, what: 'bone' };
+  }
+  const k = cardAt(port, m); if (k) return { k, what: 'card' };
+  const b = boneAt(port, m); return b ? { k: b, what: 'limb' } : null;
+}
+let G = null;
+cv.addEventListener('contextmenu', e => e.preventDefault());
+cv.addEventListener('pointerdown', e => {
+  const m = mpos(e), port = portAt(m); if (!port || !port.sol) return;
+  closeMenu();
+  const hit = hitTest(port, m);
+  if (hit && hit.k !== S.sel) select(hit.k);
+  const x = hit && port.sol.X[hit.k], sk = hit && S.skin[hit.k];
+  G = { port, m0: m, hit, moved: false, x0: x && { P: x.P, ang: x.ang, lab: x.lab, s: x.s }, sk0: sk && { ...sk }, K0: { ...S.K },
+    mode: !hit ? 'none' : e.button === 2 ? (sk ? 'size' : 'none') : hit.what === 'turn' ? 'turn' : hit.what === 'bone' ? 'bone' : hit.what === 'card' && sk ? 'move' : 'none', right: e.button === 2 };
+  if (hit && sk) G.lp = setTimeout(() => { if (G && !G.moved) { G.mode = 'size'; G.menued = true; openMenu(m, hit.k); } }, 480);
+  cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove', e => {
+  const m = mpos(e);
+  if (!G) { const port = portAt(m); const h = port && hitTest(port, m); cv.style.cursor = !h ? 'crosshair' : h.what === 'turn' ? 'alias' : h.what === 'bone' ? 'ns-resize' : h.what === 'card' ? 'move' : 'pointer'; return; }
+  if (!G.moved && hyp(G.m0, m) > 4) { G.moved = true; clearTimeout(G.lp); if (G.menued) closeMenu(); }
+  if (!G.moved) return;
+  const k = G.hit?.k, sk = S.skin[k], x0 = G.x0;
+  if (G.mode === 'move' && sk) {
+    const u = rot([m[0] - G.m0[0], m[1] - G.m0[1]], -x0.ang), unit = x0.lab * x0.s / 100;
+    sk.dx = G.sk0.dx + u[0] / unit; sk.dy = G.sk0.dy + u[1] / unit;
+  } else if (G.mode === 'turn' && sk) {
+    const a0 = Math.atan2(G.m0[1] - x0.P[1], G.m0[0] - x0.P[0]), a1 = Math.atan2(m[1] - x0.P[1], m[0] - x0.P[0]);
+    sk.rot = G.sk0.rot + (a1 - a0) * 180 / Math.PI; sk.rot = ((sk.rot + 540) % 360) - 180;
+    if (!e.shiftKey) sk.scale = Math.max(.2, Math.min(4, G.sk0.scale * hyp(x0.P, m) / (hyp(x0.P, G.m0) || 1)));
+  } else if (G.mode === 'size' && sk) {
+    sk.scale = Math.max(.2, Math.min(4, G.sk0.scale * Math.exp(-(m[1] - G.m0[1]) / 140)));
+  } else if (G.mode === 'bone') {
+    const P = G.port.sol.pj[ji[SEG[k].from]], g = SEG[k].g;
+    S.K[g] = Math.max(.4, Math.min(2.5, (G.K0[g] ?? 1) * hyp(P, m) / (hyp(P, G.m0) || 1)));
+    setPreset('custom', true);
+  } else return;
+  changed(); draw();
+});
+cv.addEventListener('pointerup', e => {
+  if (!G) return; clearTimeout(G.lp);
+  const g = G; G = null;
+  if (!g.moved) {
+    if (g.right && g.hit) openMenu(g.m0, g.hit.k);
+    else if (!g.hit && !g.menued) select(null);
+    return;
+  }
+  renderSel(); renderScore(); if (g.mode === 'bone') renderProps();
+});
+cv.addEventListener('wheel', e => {
+  const m = mpos(e), port = portAt(m); if (!port || !S.sel) return;
+  const sk = S.skin[S.sel]; if (!sk || cardAt(port, m) !== S.sel) return;
+  e.preventDefault(); sk.scale = Math.max(.2, Math.min(4, sk.scale * (e.deltaY < 0 ? 1.04 : 1 / 1.04))); changed(); draw(); readout();
+}, { passive: false });
+
+// ---------- the radial menu (right-click / long-press) ----------
+const MENU = [
+  ['centre', 'centre the bone in the card', k => centreCard(k)],
+  ['fit ⇄ true', 'stretch to the bone or keep the card\'s real size', k => { const s = S.skin[k]; s.mode = s.mode === 'true' ? 'fit' : 'true'; }],
+  ['in front', 'one layer forward', k => restack(k, 1)],
+  ['behind', 'one layer back', k => restack(k, -1)],
+  ['mirror', 'flip across the bone', k => { S.skin[k].mirror = !S.skin[k].mirror; }],
+  ['swap A/B', 'hang it the other way up', k => { S.skin[k].swap = !S.skin[k].swap; }],
+  ['faces left', 'this profile card is drawn facing left', k => { const c = curCard(k); if (c) { (S.fix[c.id] ||= {}).left = !cardLeft(c); LS.set('skinlab.fix', S.fix); } }],
+  ['→ other side', 'copy this limb to its pair', k => { const o = OTHER(k); if (o) S.skin[o] = JSON.parse(JSON.stringify(S.skin[k])); }],
+  ['reset', 'size 1, no turn, no offset', k => Object.assign(S.skin[k], { scale: 1, rot: 0, dx: 0, dy: 0, mirror: false, swap: false })],
+  ['remove', 'take this view\'s card off', k => { const sk = S.skin[k], v = curView(k); delete sk.cards[v]; if (!Object.keys(sk.cards).length) delete S.skin[k]; }],
+];
+function openMenu(m, k) {
+  if (!S.skin[k]) return;
+  const el = $('menu'), R = 74, r = cv.getBoundingClientRect();
+  m = [Math.max(R + 50, Math.min(r.width - R - 50, m[0])), Math.max(R + 16, Math.min(r.height - R - 16, m[1]))];
+  el.innerHTML = `<i style="left:${m[0]}px;top:${m[1]}px"></i>` + MENU.map(([t, tip], i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / MENU.length;
+    return `<button data-i="${i}" title="${tip}" style="left:${m[0] + Math.cos(a) * R}px;top:${m[1] + Math.sin(a) * R}px">${t}</button>`; }).join('');
+  el.dataset.k = k; el.classList.add('on');
+}
+function closeMenu() { $('menu').classList.remove('on'); }
+$('menu').addEventListener('click', e => { const i = e.target.dataset.i; if (i == null) return; const k = $('menu').dataset.k; MENU[i][2](k); closeMenu(); changed(); renderBones(); renderSel(); draw(); renderScore(); renderLayers(); });
+const curView = k => S.ports[0]?.sol?.X?.[k]?.view || S.ev;
+const curCard = k => S.byId[S.skin[k]?.cards?.[curView(k)]];
+// centre: move A and B sideways so the bone runs down the middle of the painted card
+function centreCard(k) {
+  const c = curCard(k); if (!c) return; const a = alphaOf(c); if (!a) return;
+  const { A, B } = AB(c), L = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1, u = [(B[0] - A[0]) / L, (B[1] - A[1]) / L], n = [-u[1], u[0]];
+  let sum = 0, cnt = 0;
+  for (let y = 0; y < c.h; y += 2) for (let x = 0; x < c.w; x += 2) {
+    if (a[y * c.w + x] < 128) continue; const dx = x - A[0], dy = y - A[1], t = dx * u[0] + dy * u[1];
+    if (t < 0 || t > L) continue; sum += dx * n[0] + dy * n[1]; cnt++;
+  }
+  if (!cnt) return; const m = sum / cnt;
+  S.fix[c.id] = { ...(S.fix[c.id] || {}), A: [A[0] + n[0] * m, A[1] + n[1] * m], B: [B[0] + n[0] * m, B[1] + n[1] * m] };
+  LS.set('skinlab.fix', S.fix);
+}
+
+// ---------- layers ----------
+function restack(k, dir) {
+  const sol = S.ports[0]?.sol; if (!sol?.X[k]) return;
+  const st = S.stack[sol.view], drawn = sol.order.map(x => x.role), role = sol.X[k].role;
+  const i = drawn.indexOf(role), j2 = i + dir; if (j2 < 0 || j2 >= drawn.length) return;
+  const other = drawn[j2], a = st.indexOf(role), b = st.indexOf(other);
+  if (a < 0 || b < 0) return;
+  st.splice(a, 1); st.splice(st.indexOf(other) + (dir > 0 ? 1 : 0), 0, role);
+  keep(); draw(); renderLayers();
+}
+let layerSig = '';
+function renderLayersIfChanged() { const sol = S.ports[0]?.sol; const sig = sol ? sol.view + sol.order.map(x => x.k + x.role + x.c.id).join() + S.sel : ''; if (sig !== layerSig) renderLayers(); }
+function renderLayers() {
+  const sol = S.ports[0]?.sol; if (!sol) return;
+  layerSig = sol.view + sol.order.map(x => x.k + x.role + x.c.id).join() + S.sel;
+  $('layers').innerHTML = sol.order.slice().reverse().map(x => `<div class="lay${x.k === S.sel ? ' on' : ''}" draggable="true" data-k="${x.k}" data-role="${x.role}"><span style="background-image:url('${x.c.img}')"></span>${x.role.replace(/_/g, ' ')} <small>(${x.k.replace(/_/g, ' ')})</small></div>`).join('')
+    + `<div class="sub" style="margin-top:2px">${sol.view} view stack</div>`;
+}
+let dragRole = null;
+$('layers').addEventListener('click', e => { const k = e.target.closest('.lay')?.dataset.k; if (k) select(k); });
+$('layers').addEventListener('dragstart', e => { dragRole = e.target.closest('.lay')?.dataset.role; });
+$('layers').addEventListener('dragover', e => { e.preventDefault(); document.querySelectorAll('.lay').forEach(l => l.classList.remove('over')); e.target.closest('.lay')?.classList.add('over'); });
+$('layers').addEventListener('drop', e => {
+  e.preventDefault(); const to = e.target.closest('.lay')?.dataset.role; const sol = S.ports[0]?.sol;
+  if (!dragRole || !to || dragRole === to || !sol) return;
+  const st = S.stack[sol.view]; st.splice(st.indexOf(dragRole), 1); st.splice(st.indexOf(to) + 1, 0, dragRole);   // dropped on a row: just in front of it
+  dragRole = null; keep(); draw(); renderLayers();
+});
+
+// ---------- proportions: presets and the Vitruvian figure ----------
+function presetK(name) {
+  if (name === 'bolas' || !S.rec) return {};
+  if (name === 'vitruvian') return Object.fromEntries(GROUPS.map(g => [g, VIT[g] * S.H / S.rec[g]]));
+  if (name === 'cards') {   // make the skeleton fit the dressed cards (true lengths)
+    const SEGS = { head: ['head'], torso: ['torso'], upper_arm: LR('upper_arm'), forearm: LR('forearm'), hand: LR('hand'), thigh: LR('thigh'), shin: LR('shin'), foot: LR('foot') };
+    const K = {};
+    for (const [g, ks] of Object.entries(SEGS)) {
+      const cms = ks.map(k => { const sk = S.skin[k]; const c = sk && S.byId[sk.cards.side || sk.cards.front || sk.cards.back]; if (!c) return null; const { A, B } = AB(c); return Math.hypot(B[0] - A[0], B[1] - A[1]) / c.px_per_cm * sk.scale; }).filter(Boolean);
+      if (cms.length) K[g] = (cms.reduce((a, b) => a + b) / cms.length + (g === 'torso' ? 7 : 0)) / S.rec[g];
+    }
+    return K;
+  }
+  return S.K;
+}
+function setPreset(name, keepK) {
+  S.preset = name; $('preset').value = name;
+  if (!keepK) S.K = presetK(name);
+  S.pv++; S.sock = {}; keep();
+  if (!keepK) { draw(); renderProps(); renderScore(); }
+}
+$('preset').onchange = e => setPreset(e.target.value);
+const cur = g => S.rec ? S.rec[g] * (S.K[g] ?? 1) : 0;
+let vitH = null;
+function vitFigure() {   // a rest figure in front view from the current lengths: arms out (the square) and raised with legs apart (the circle)
+  const L = Object.fromEntries(GROUPS.map(g => [g, cur(g)]));
+  const ank = 8, knee = ank + L.shin, hip = knee + L.thigh, neck = hip + L.torso, top = neck + L.head, sh = neck - 3, hx = L.hips / 2, sx = L.shoulders / 2;
+  const P = { headTop: [0, top], neckBase: [0, neck], shoulderL: [sx, sh], shoulderR: [-sx, sh], elbowL: [sx + L.upper_arm, sh], elbowR: [-sx - L.upper_arm, sh],
+    wristL: [sx + L.upper_arm + L.forearm, sh], wristR: [-sx - L.upper_arm - L.forearm, sh], tipL: [sx + L.upper_arm + L.forearm + L.hand, sh], tipR: [-sx - L.upper_arm - L.forearm - L.hand, sh],
+    hipL: [hx, hip], hipR: [-hx, hip], kneeL: [hx, knee], kneeR: [-hx, knee], ankleL: [hx, ank], ankleR: [-hx, ank], toeL: [hx + L.foot * .45, 0], toeR: [-hx - L.foot * .45, 0], pelvis: [0, hip] };
+  return { P, L, top, span: P.tipL[0] - P.tipR[0] };
+}
+const VITG = { headTop: 'head', neckBase: 'torso', shoulderL: 'shoulders', shoulderR: 'shoulders', elbowL: 'upper_arm', elbowR: 'upper_arm', wristL: 'forearm', wristR: 'forearm',
+  tipL: 'hand', tipR: 'hand', hipL: 'hips', hipR: 'hips', kneeL: 'thigh', kneeR: 'thigh', ankleL: 'shin', ankleR: 'shin', toeL: 'foot', toeR: 'foot' };
+const VITP = { headTop: 'neckBase', neckBase: 'pelvis', elbowL: 'shoulderL', elbowR: 'shoulderR', wristL: 'elbowL', wristR: 'elbowR', tipL: 'wristL', tipR: 'wristR',
+  kneeL: 'hipL', kneeR: 'hipR', ankleL: 'kneeL', ankleR: 'kneeR', toeL: 'ankleL', toeR: 'ankleR' };
+function renderProps() {
+  const cvv = $('vit'), r = cvv.getBoundingClientRect(); if (!r.width || !S.rec) return;
+  const dpr = devicePixelRatio || 1; cvv.width = r.width * dpr; cvv.height = r.height * dpr;
+  const g = cvv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, r.width, r.height);
+  const F = vitFigure(), k = (r.height - 20) / Math.max(F.top, F.span) * .92, ox = r.width / 2, oy = r.height - 10;
+  const T = p => [ox + p[0] * k, oy - p[1] * k]; vitH = { T, k, ox, oy, F };
+  // Leonardo's square (side = height) and circle (centred at the navel, through the feet)
+  const H = F.top, navel = F.P.pelvis[1] + .35 * F.L.torso;
+  g.strokeStyle = '#9a8d7e66'; g.lineWidth = 1; g.strokeRect(ox - H / 2 * k, oy - H * k, H * k, H * k);
+  g.beginPath(); g.arc(ox, oy - navel * k, navel * k, 0, 7); g.stroke();
+  // the second pose, faint: arms raised to the circle, legs apart
+  const P = F.P, up = (a, b, ang) => { const l = Math.hypot(b[0] - a[0], b[1] - a[1]); return [a[0] + Math.sign(b[0] - a[0] || 1) * l * Math.cos(ang), a[1] + l * Math.sin(ang)]; };
+  g.strokeStyle = '#c79a6244'; g.lineWidth = 2;
+  for (const s of ['L', 'R']) { const sh = P['shoulder' + s], ang = .42; const tip = up(sh, P['tip' + s], ang); g.beginPath(); g.moveTo(...T(sh)); g.lineTo(...T(tip)); g.stroke();
+    const hp = P['hip' + s], legL = F.L.thigh + F.L.shin + 8, sg = s === 'L' ? 1 : -1; g.beginPath(); g.moveTo(...T(hp)); g.lineTo(...T([hp[0] + sg * legL * Math.sin(.32), hp[1] - legL * Math.cos(.32)])); g.stroke(); }
+  // the figure
+  const bones = [['headTop', 'neckBase'], ['neckBase', 'pelvis'], ['neckBase', 'shoulderL'], ['neckBase', 'shoulderR'], ['shoulderL', 'elbowL'], ['elbowL', 'wristL'], ['wristL', 'tipL'],
+    ['shoulderR', 'elbowR'], ['elbowR', 'wristR'], ['wristR', 'tipR'], ['pelvis', 'hipL'], ['pelvis', 'hipR'], ['hipL', 'kneeL'], ['kneeL', 'ankleL'], ['ankleL', 'toeL'], ['hipR', 'kneeR'], ['kneeR', 'ankleR'], ['ankleR', 'toeR']];
+  g.strokeStyle = '#efe6da'; g.lineWidth = 2.5; g.lineCap = 'round';
+  for (const [a, b] of bones) { g.beginPath(); g.moveTo(...T(P[a])); g.lineTo(...T(P[b])); g.stroke(); }
+  const selG = S.sel && SEG[S.sel]?.g;
+  for (const [n, p] of Object.entries(P)) if (VITG[n]) { const q = T(p); g.fillStyle = VITG[n] === selG ? '#5fd0ff' : '#e7a35a'; g.beginPath(); g.arc(q[0], q[1], 4, 0, 7); g.fill(); }
+  // head-heights ruler
+  const head8 = H / 8; g.fillStyle = '#9a8d7e'; g.font = '9px JetBrains Mono';
+  for (let i = 0; i <= 8; i++) { const y = oy - i * head8 * k; g.fillRect(ox - H / 2 * k - 6, y, 4, 1); }
+  $('propInfo').textContent = `height ${H.toFixed(0)} cm · span ÷ height ${(F.span / H).toFixed(2)} (Vitruvius 1.00)`;
+  $('bars').innerHTML = GROUPS.map(gp => { const now = cur(gp), canon = VIT[gp] * S.H, d = now / canon, cls = Math.abs(Math.log(d)) < .08 ? 'r-ok' : Math.abs(Math.log(d)) < .2 ? 'r-warn' : 'r-bad';
+    return `<div>${gp.replace('_', ' ').padEnd(10, ' ')} ${S.rec[gp].toFixed(1)} → <b>${now.toFixed(1)}</b> cm <span class="${cls}">${(d * 100).toFixed(0)}% of canon</span></div>`; }).join('');
+}
+let vitDrag = null;
+$('vit').addEventListener('pointerdown', e => {
+  if (!vitH) return; const r = $('vit').getBoundingClientRect(), m = [e.clientX - r.left, e.clientY - r.top];
+  let best = null, bd = 12; for (const [n, p] of Object.entries(vitH.F.P)) if (VITG[n]) { const d = hyp(vitH.T(p), m); if (d < bd) { bd = d; best = n; } }
+  if (best) { vitDrag = best; $('vit').setPointerCapture(e.pointerId); }
+});
+$('vit').addEventListener('pointermove', e => {
+  if (!vitDrag) return; const r = $('vit').getBoundingClientRect(), m = [e.clientX - r.left, e.clientY - r.top];
+  const { k, ox, oy, F } = vitH, w = [(m[0] - ox) / k, (oy - m[1]) / k], n = vitDrag, gp = VITG[n];
+  let len;
+  if (gp === 'shoulders' || gp === 'hips') len = Math.abs(w[0]) * 2;
+  else if (gp === 'head' || gp === 'torso') len = w[1] - F.P[VITP[n]][1];
+  else if (/elbow|wrist|tip/.test(n)) len = Math.abs(w[0] - F.P[VITP[n]][0]);
+  else if (/toe/.test(n)) len = Math.abs(w[0] - F.P[VITP[n]][0]) / .45;
+  else len = F.P[VITP[n]][1] - w[1];
+  if (!(len > 2)) return;
+  S.K[gp] = Math.max(.4, Math.min(2.5, len / S.rec[gp])); setPreset('custom', true); renderProps(); draw();
+});
+$('vit').addEventListener('pointerup', () => { if (vitDrag) { vitDrag = null; renderScore(); } });
+$('propD').addEventListener('toggle', renderProps);
+
+// ---------- breeding: a genetic search for the cards (and skeleton style) that best hold the pose ----------
+// genome: style + per limb a card for each view the trial shows it in + a size; fitness: the puppet's miss at true scale,
+// plus a cost for empty limbs, cards shown for the wrong view, and for mixing sheets
+let B = null;
+function wantedViews(frames) {   // which views each limb is seen in during the target frames
+  const port = S.ports[0], cx = port.cx, cz = port.cz, seen = {};
+  for (const f of frames) { const fr = S.data.frames[f], a = fr.a[S.actor]; centre(port, fr);
+    for (const k of Object.keys(SEG)) { const fv = a[SEG[k].face] || a.fwd, d = fv[0] * port.toward[0] + fv[2] * port.toward[2]; (seen[k] ||= new Set()).add(d > .55 ? 'front' : d < -.55 ? 'back' : 'side'); } }
+  port.cx = cx; port.cz = cz; return seen;
+}
+function pools(from) {
+  const P = {};
+  for (const k of Object.keys(SEG)) for (const v of VIEWS) {
+    const sg = SEG[k], side = k.endsWith('_L') ? 'L' : k.endsWith('_R') ? 'R' : null;
+    let L = S.lib.filter(c => sg.slots.includes(c.slot) && c.q !== 'C' && nameOK(c) && (!from || c.character === from) && (VIEWOF(c.view) || 'side') === v && !(side && c.side && c.side !== side) && (k !== 'head' || c.view));   // a head must say which way it looks
+    if (L.length > 60) L = L.filter(c => /brads|eyelet|ankle|neck|waist/.test(c.pts)).concat(L).slice(0, 60);
+    P[k + '|' + v] = L.map(c => c.id);
+  }
+  return P;
+}
+const pickOf = a => a[Math.floor(Math.random() * a.length)];
+function randomGenome(styles) {
+  const st = pickOf(styles), g = { style: st, limbs: {} };
+  for (const k of STYLES[st].segs) mutateLimb(g, k, true);
+  return g;
+}
+function mutateLimb(g, k, fresh) {
+  const l = g.limbs[k] ||= { cards: {}, scale: 1 };
+  for (const v of B.seen[k] || ['side']) { const p = B.pools[k + '|' + v]; if (p?.length && (fresh || Math.random() < .5)) l.cards[v] = pickOf(p); }
+  if (!fresh) l.scale = Math.max(.75, Math.min(1.35, l.scale * Math.exp((Math.random() - .5) * .25)));
+}
+function mutate(g) {
+  const c = JSON.parse(JSON.stringify(g));
+  if (B.styles.length > 1 && Math.random() < .08) { c.style = pickOf(B.styles); for (const k of STYLES[c.style].segs) if (!c.limbs[k]) mutateLimb(c, k, true); }
+  const segs = STYLES[c.style].segs, n = 1 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < n; i++) { const k = pickOf(segs); mutateLimb(c, k, false); if (Math.random() < .5 && OTHER(k) && c.limbs[OTHER(k)]) c.limbs[OTHER(k)].scale = c.limbs[k].scale; }
+  return c;
+}
+function cross(a, b) {
+  const c = { style: Math.random() < .5 ? a.style : b.style, limbs: {} };
+  for (const k of STYLES[c.style].segs) { const base = k.replace(/_[LR]$/, ''), src = (B.coin[base] ??= Math.random()) < .5 ? a : b; const l = (src.limbs[k] || a.limbs[k] || b.limbs[k]); if (l) c.limbs[k] = JSON.parse(JSON.stringify(l)); }
+  B.coin = {};
+  for (const k of STYLES[c.style].segs) if (!c.limbs[k]) mutateLimb(c, k, true);
+  return c;
+}
+function skinOf(g) { const sk = {}; for (const k of STYLES[g.style].segs) { const l = g.limbs[k]; if (l && Object.keys(l.cards).length) sk[k] = { ...newSkin(), mode: 'true', scale: l.scale, cards: { ...l.cards } }; } return sk; }
+function fitness(g) {
+  const keepSkin = S.skin, keepSock = S.sock; S.skin = skinOf(g); S.sock = {};
+  const r = score(g.style, true, B.frames);
+  const ids = Object.values(S.skin).flatMap(s => Object.values(s.cards)), sheets = new Set(ids.map(id => id.split('/')[0])).size;
+  const fr = S.data.frames[B.frames[0]], j = joints(fr, S.actor);
+  let lr = 0, n = 0, unknown = 0;   // each card's true length against its bone, and cards whose view nobody labelled
+  for (const [k, sk] of Object.entries(S.skin)) for (const id of Object.values(sk.cards)) { const c = S.byId[id], { A, B: Bp } = AB(c), sg = SEG[k];
+    lr += Math.abs(Math.log(Math.hypot(Bp[0] - A[0], Bp[1] - A[1]) / c.px_per_cm * sk.scale / (len3(v3(j[ji[sg.from]], j[ji[sg.to]])) || 1))); n++; if (!c.view) unknown++; }
+  S.skin = keepSkin; S.sock = keepSock;
+  return r.miss + (STYLES[g.style].segs.length - r.cards) * 4 + r.wrongView * 6 + (sheets - 1) * .6 + (n ? 4 * lr / n + 2 * unknown / n : 0);
+}
+function breedStep() {
+  if (!B || !B.on) return;
+  const t0 = performance.now();
+  while (performance.now() - t0 < 30 && B.i < B.pop.length) { const g = B.pop[B.i++]; if (g.fit == null) g.fit = fitness(g); }
+  if (B.i < B.pop.length) { setTimeout(breedStep, 0); return; }
+  B.pop.sort((a, b) => a.fit - b.fit); B.hist.push(B.pop[0].fit); B.gen++;
+  $('bInfo').textContent = `generation ${B.gen} · best ${B.pop[0].fit.toFixed(2)}${B.seed != null ? ` (the figure as dressed: ${B.seed.toFixed(2)})` : ''} · ${STYLES[B.pop[0].style].label}`;
+  drawChart(); renderTop();
+  if (B.gen >= B.gens) { stopBreed(); return; }
+  const elite = B.pop.slice(0, 4), next = elite.map(g => g);
+  const tour = () => { const a = pickOf(B.pop), b = pickOf(B.pop); return a.fit < b.fit ? a : b; };
+  while (next.length < B.pop.length) next.push(Math.random() < .25 ? randomGenome(B.styles) : mutate(Math.random() < .6 ? cross(tour(), tour()) : tour()));
+  B.pop = next; B.i = 0; setTimeout(breedStep, 0);
+}
+function startBreed() {
+  const frames = frameSet($('bTarget').value), styles = $('bStyle').checked ? Object.keys(STYLES) : [S.style];
+  B = { on: true, frames, styles, seen: Object.fromEntries(Object.entries(wantedViews(frames)).map(([k, v]) => [k, [...v]])), pools: pools($('bFrom').value), coin: {}, gen: 0, gens: 80, hist: [], i: 0 };
+  B.pop = Array.from({ length: 40 }, () => randomGenome(styles));
+  if (Object.keys(S.skin).length) {   // seed with what is on the figure now
+    const g = { style: S.style, limbs: {} }; for (const [k, sk] of Object.entries(S.skin)) g.limbs[k] = { cards: { ...sk.cards }, scale: sk.scale }; B.pop[0] = g; B.seed = g.fit = fitness(g);
+  }
+  $('bRun').textContent = 'stop'; $('bRun').classList.add('on'); breedStep();
+}
+function stopBreed() { if (B) B.on = false; $('bRun').textContent = 'breed'; $('bRun').classList.remove('on'); }
+$('bRun').onclick = () => B?.on ? stopBreed() : startBreed();
+function drawChart() {
+  const c = $('bChart'), r = c.getBoundingClientRect(), dpr = devicePixelRatio || 1; c.width = r.width * dpr; c.height = r.height * dpr;
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, r.width, r.height);
+  const h = B.hist, mx = Math.max(...h), mn = Math.min(...h);
+  g.strokeStyle = '#8fd16a'; g.lineWidth = 1.5; g.beginPath();
+  h.forEach((v, i) => { const x = 4 + i / Math.max(1, B.gens - 1) * (r.width - 8), y = 4 + (1 - (v - mn) / ((mx - mn) || 1)) * (r.height - 8); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
+}
+function renderTop() {
+  const seen = new Set(), top = B.pop.filter(g => { const s = JSON.stringify(g.limbs) + g.style; if (seen.has(s)) return false; seen.add(s); return true; }).slice(0, 5);
+  B.top = top;
+  $('bTop').innerHTML = top.map((g, i) => `<div class="top" data-i="${i}"><b>${g.fit.toFixed(2)}</b> ${STYLES[g.style].label}<span class="strip">${Object.values(g.limbs).slice(0, 10).map(l => { const c = S.byId[l.cards.side || l.cards.front || l.cards.back]; return c ? `<span style="background-image:url('${c.img}')"></span>` : ''; }).join('')}</span></div>`).join('')
+    + '<div class="sub">click one to put it on the figure</div>';
+}
+$('bTop').addEventListener('click', e => { const i = e.target.closest('.top')?.dataset.i; if (i == null) return; const g = B.top[i]; S.style = g.style; setSkin(skinOf(g), g.style); });
 
 // ---------- the panel ----------
 function select(k) {
   S.sel = k;
-  if (k) { const x = S.last?.X?.[k]; S.ev = x ? x.want : S.ev; }
-  $('sel').style.display = k ? '' : 'none';
-  renderBones(); renderSel(); renderCands(); draw();
+  if (k) { const x = S.ports[0]?.sol?.X?.[k]; S.ev = x ? x.view : S.ev; }
+  $('sel').style.display = $('sel2').style.display = k ? '' : 'none';
+  renderBones(); renderSel(); renderCands(); draw(); if ($('propD').open) renderProps();
 }
 function renderBones() {
   $('bones').innerHTML = STYLES[S.style].segs.map(k => `<button class="btn${S.skin[k] ? ' skinned' : ''}${S.sel === k ? ' on' : ''}" data-b="${k}">${k.replace(/_/g, ' ')}</button>`).join('');
 }
 $('bones').addEventListener('click', e => { const b = e.target.dataset.b; if (b) select(b === S.sel ? null : b); });
-function newSkin() { return { cards: {}, mode: 'fit', scale: 1, rot: 0, dx: 0, dy: 0, z: 0, mirror: false, swap: false }; }
+function newSkin() { return { cards: {}, mode: 'fit', scale: 1, rot: 0, dx: 0, dy: 0, mirror: false, swap: false }; }
 const editCard = () => { const sk = S.skin[S.sel]; return sk && S.byId[sk.cards[S.ev]]; };
 function renderViews() {
   const sk = S.skin[S.sel];
@@ -463,37 +869,23 @@ function renderViews() {
   markViews();
 }
 function markViews() {
-  const x = S.last?.X?.[S.sel];
+  const x = S.ports[0]?.sol?.X?.[S.sel];
   document.querySelectorAll('.vt').forEach(t => { const now = x && x.view === t.dataset.v; t.classList.toggle('now', !!now); t.querySelector('b').textContent = now ? '● now ' : ''; });
 }
 $('views').addEventListener('click', e => { const v = e.target.closest('.vt')?.dataset.v; if (v) { S.ev = v; renderSel(); renderCands(); } });
-const KN = [['kS', 'scale', v => v / 100, v => Math.round(v * 100), v => v.toFixed(2) + '×'], ['kR', 'rot', v => +v, v => v, v => v + '°'],
-  ['kX', 'dx', v => +v, v => v, v => v + '%'], ['kY', 'dy', v => +v, v => v, v => v + '%'], ['kZ', 'z', v => +v, v => v, v => (v > 0 ? '+' : '') + v]];
 function renderSel() {
   if (!S.sel) return;
-  const sk = S.skin[S.sel];
-  for (const [id, f, , to, fmt] of KN) { $(id).value = sk ? to(sk[f]) : (f === 'scale' ? 100 : 0); $('o' + id.slice(1)).textContent = sk ? fmt(sk[f]) : ''; $(id).disabled = !sk; }
-  $('mFit').classList.toggle('on', sk?.mode === 'fit'); $('mTrue').classList.toggle('on', sk?.mode === 'true');
-  $('mirror').classList.toggle('on', !!sk?.mirror);
   const c = editCard();
-  $('faceL').classList.toggle('on', !!(c && cardLeft(c)));
   $('cardinfo').textContent = c ? `${S.ev}: ${c.label || '(no label)'} · ${c.character || '?'}/${c.costume || '?'} · ${c.id} · grade ${c.q} · ${c.px_per_cm} px/cm · ${(c.brads || []).length} brads` : `no ${S.ev} card yet — pick one below`;
-  renderViews(); drawPE();
+  renderViews(); drawPE(); readout();
 }
 const changed = () => { S.sock = {}; keep(); };
-for (const [id, f, from, , fmt] of KN) $(id).addEventListener('input', e => { const sk = S.skin[S.sel]; if (!sk) return; sk[f] = from(e.target.value); $('o' + id.slice(1)).textContent = fmt(sk[f]); changed(); draw(); });
-$(KN[0][0]).addEventListener('change', renderScore);
-const tog = (id, fn) => $(id).addEventListener('click', () => { const sk = S.skin[S.sel]; if (!sk) return; fn(sk); changed(); renderSel(); draw(); renderScore(); });
-tog('mFit', sk => sk.mode = 'fit'); tog('mTrue', sk => sk.mode = 'true'); tog('mirror', sk => sk.mirror = !sk.mirror); tog('swapAB', sk => sk.swap = !sk.swap);
-$('faceL').onclick = () => { const c = editCard(); if (!c) return; (S.fix[c.id] ||= {}).left = !cardLeft(c); LS.set('skinlab.fix', S.fix); changed(); renderSel(); draw(); };
-$('unskin').onclick = () => { const sk = S.skin[S.sel]; if (!sk) return; delete sk.cards[S.ev]; if (!Object.keys(sk.cards).length) delete S.skin[S.sel]; changed(); renderBones(); renderSel(); renderCands(); draw(); renderScore(); };
-$('mirrorSide').onclick = () => { const o = OTHER(S.sel), sk = S.skin[S.sel]; if (!o || !sk) return; S.skin[o] = JSON.parse(JSON.stringify(sk)); changed(); renderBones(); draw(); renderScore(); };
 
 // candidates
 function fill(sel, vals) { for (const v of vals) sel.insertAdjacentHTML('beforeend', `<option>${v}</option>`); }
 function cands() {
   const sg = SEG[S.sel], fc = $('fChar').value, fv = $('fView').value, fs = $('fSide').value, q = $('fq').value.toLowerCase();
-  const j = S.last?.j, bl = j ? len3(v3(j[ji[sg.from]], j[ji[sg.to]])) : 1;
+  const j = S.ports[0]?.sol?.j, bl = j ? len3(v3(j[ji[sg.from]], j[ji[sg.to]])) : 1;
   const all = S.lib.filter(c => sg.slots.includes(c.slot)), bad = all.filter(c => !nameOK(c)).length;
   $('nbad').textContent = bad + ' of ' + all.length;
   const L = all.filter(c => (!$('fName').checked || nameOK(c)) && (!fc || c.character === fc) && (!fv || (fv === '@' ? (VIEWOF(c.view) || 'side') === S.ev : c.view === fv))
@@ -557,20 +949,27 @@ pe.addEventListener('pointermove', move);
 pe.addEventListener('pointerup', () => { if (peDrag) { peDrag = null; LS.set('skinlab.fix', S.fix); renderCands(); renderScore(); } });
 
 // ---------- skins: keep, save, load, export, auto-dress ----------
-function keep() { LS.set('skinlab.current', { skin: S.skin, style: S.style }); }
+function keep() { LS.set('skinlab.current', { skin: S.skin, style: S.style, stack: S.stack, K: S.K, preset: S.preset }); }
 function migrate(sk) {   // older skins held one card per limb
   for (const k in sk) { const s = sk[k]; if (s.card) { s.cards = { [VIEWOF(S.byId[s.card]?.view) || 'side']: s.card }; delete s.card; delete s.upright; } if (!s.cards) delete sk[k]; }
   return sk;
 }
-function refreshLoad() { $('load').innerHTML = '<option value="">load…</option>' + Object.keys(LS.get('skinlab.saved', {})).map(n => `<option>${n}</option>`).join(''); }
-function setSkin(sk, style) { S.skin = migrate(JSON.parse(JSON.stringify(sk || {}))); if (style) S.style = style; $('style').value = S.style; changed(); renderBones(); renderSel(); renderCands(); draw(); renderScore(); }
-$('save').onclick = () => { const n = prompt('name this skin', 'skin ' + new Date().toISOString().slice(5, 16)); if (!n) return; const s = LS.get('skinlab.saved', {}); s[n] = { skin: S.skin, style: S.style }; LS.set('skinlab.saved', s); refreshLoad(); };
-$('load').onchange = e => { const s = LS.get('skinlab.saved', {})[e.target.value]; if (s) setSkin(s.skin || s, s.style); e.target.value = ''; };
-$('clear').onclick = () => setSkin({});
-$('export').onclick = () => {
-  const out = { about: 'Skin Lab skin: per limb a card for each view (side/front/back); A at the parent joint, B at the child joint (card px)', style: S.style, trial: S.trial?.id, bind_frame: S.bindF, limbs: {} };
-  for (const [k, sk] of Object.entries(S.skin)) out.limbs[k] = { ...sk, joints: [SEG[k].from, SEG[k].to], cards: Object.fromEntries(Object.entries(sk.cards).map(([v, id]) => { const c = S.byId[id]; return [v, { id, img: c.img, ...AB(c), px_per_cm: c.px_per_cm, facing_left: cardLeft(c) }]; })) };
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' })), download: 'skin.json' }); a.click();
+function refreshFile() {
+  const saved = Object.keys(LS.get('skinlab.saved', {}));
+  $('file').innerHTML = '<option value="">file…</option><option value="save">save skin…</option><option value="export">export JSON</option><option value="clear">clear skin</option>'
+    + (saved.length ? `<optgroup label="load">${saved.map(n => `<option value="load:${n}">${n}</option>`).join('')}</optgroup>` : '');
+}
+function setSkin(sk, style) { S.skin = migrate(JSON.parse(JSON.stringify(sk || {}))); if (style) S.style = style; $('style').value = S.style; changed(); renderBones(); renderSel(); renderCands(); draw(); renderScore(); renderLayers(); }
+$('file').onchange = e => {
+  const v = e.target.value; e.target.value = '';
+  if (v === 'save') { const n = prompt('name this skin', 'skin ' + new Date().toISOString().slice(5, 16)); if (!n) return; const s = LS.get('skinlab.saved', {}); s[n] = { skin: S.skin, style: S.style, stack: S.stack, K: S.K, preset: S.preset }; LS.set('skinlab.saved', s); refreshFile(); }
+  else if (v === 'clear') setSkin({});
+  else if (v === 'export') {
+    const out = { about: 'Skin Lab skin: per limb a card for each view (side/front/back); A at the parent joint, B at the child joint (card px)', style: S.style, trial: S.trial?.id, bind_frame: S.bindF,
+      proportions: { preset: S.preset, scale_by_bone: S.K, recorded_cm: S.rec }, stack: S.stack, limbs: {} };
+    for (const [k, sk] of Object.entries(S.skin)) out.limbs[k] = { ...sk, joints: [SEG[k].from, SEG[k].to], cards: Object.fromEntries(Object.entries(sk.cards).map(([v, id]) => { const c = S.byId[id]; return [v, { id, img: c.img, ...AB(c), px_per_cm: c.px_per_cm, facing_left: cardLeft(c) }]; })) };
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' })), download: 'skin.json' }); a.click();
+  } else if (v.startsWith('load:')) { const s = LS.get('skinlab.saved', {})[v.slice(5)]; if (s) { if (s.stack) S.stack = s.stack; if (s.K) { S.K = s.K; S.preset = s.preset || 'custom'; $('preset').value = S.preset; S.pv++; } setSkin(s.skin || s, s.style); renderProps(); } }
 };
 function dress(ch) {
   const fr = S.data.frames[S.f], j = joints(fr, S.actor);
@@ -610,19 +1009,27 @@ function renderTrials() {
 }
 $('tq').addEventListener('input', renderTrials);
 $('trials').addEventListener('click', e => { const id = e.target.closest('.trial')?.dataset.id; if (id) loadTrial(id); });
+function measureActor() {
+  const a = S.data.frames[0].a[S.actor]; if (!a) return;
+  S.rec = measure(a.j); S.H = 8 + S.rec.shin + S.rec.thigh + S.rec.torso + S.rec.head;
+  if (S.preset !== 'custom') S.K = presetK(S.preset);
+  S.pv++;
+}
 async function loadTrial(id) {
+  stopBreed();
   const t = S.trials.find(x => x.id === id); S.trial = t; renderTrials();
   S.data = await (await fetch(t.file)).json();
   S.f = 0; S.bindF = 0; $('bind').textContent = 'bind here'; $('scrub').max = S.data.frames.length - 1;
   const ids = (S.data.actors || []).map(a => a.id);
   $('actor').innerHTML = (S.data.actors || []).map(a => `<option value="${a.id}">${a.id} · ${a.name}</option>`).join('');
   S.actor = ids.includes(S.actor) ? S.actor : ids[0]; $('actor').value = S.actor;
+  measureActor();
   if (S.data.view?.yaw != null) { S.elev = S.data.view.elev ?? 7; if (S.view === 'cam') { S.yaw = S.data.view.yaw; $('yaw').value = S.yaw; } }
   $('note').textContent = (t.note || '') + (S.data.after ? '  — after ' + S.data.after : '');
   history.replaceState(null, '', '#' + id);
-  layout(); draw(); renderCands(); renderScore();
+  layout(); draw(); renderCands(); renderScore(); renderProps(); renderLayers();
 }
-$('actor').onchange = e => { S.actor = e.target.value; layout(); draw(); renderCands(); renderScore(); };
+$('actor').onchange = e => { S.actor = e.target.value; measureActor(); layout(); draw(); renderCands(); renderScore(); renderProps(); };
 
 // ---------- playback & view ----------
 let last = 0, acc = 0;
@@ -647,13 +1054,18 @@ document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => {
 });
 function markView() { document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === S.view)); }
 for (const [id, f] of [['isolate', 'isolate'], ['bonesT', 'skel'], ['follow', 'follow']]) $(id).onclick = () => { S[f] = !S[f]; $(id).classList.toggle('on', S[f]); S.sock = {}; draw(); };
-addEventListener('resize', () => { layout(); draw(); drawPE(); });
+addEventListener('resize', () => { layout(); draw(); drawPE(); renderProps(); });
 addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
+  if (e.target.tagName === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox') return;
   if (e.key === ' ') { e.preventDefault(); $('play').click(); }
   if (e.key === 'ArrowRight' && S.data) { S.f = (S.f + 1) % S.data.frames.length; draw(); }
   if (e.key === 'ArrowLeft' && S.data) { S.f = (S.f - 1 + S.data.frames.length) % S.data.frames.length; draw(); }
-  if (e.key === 'Escape') select(null);
+  if (e.key === 'Escape') { closeMenu(); select(null); }
+  if (S.sel && S.skin[S.sel]) {
+    if (e.key === ']') restack(S.sel, 1);
+    if (e.key === '[') restack(S.sel, -1);
+    if (e.key === 'c') { centreCard(S.sel); changed(); draw(); drawPE(); }
+  }
 });
 
 // ---------- boot ----------
@@ -661,17 +1073,19 @@ addEventListener('keydown', e => {
   [S.trials, S.lib] = await Promise.all([fetch('trials.json').then(r => r.json()), fetch('library.json').then(r => r.json())]);
   S.byId = Object.fromEntries(S.lib.map(c => [c.id, c]));
   const chars = [...new Set(S.lib.map(c => c.character).filter(Boolean))].sort();
-  fill($('fChar'), chars); fill($('dress'), chars);
+  fill($('fChar'), chars); fill($('dress'), chars); fill($('bFrom'), chars);
   fill($('fView'), [...new Set(S.lib.map(c => c.view).filter(Boolean))].sort());
   $('style').innerHTML = Object.entries(STYLES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
   const cur = LS.get('skinlab.current', {});
-  S.skin = migrate(cur.skin || (cur.cards || cur.torso ? cur : {})); S.style = STYLES[cur.style] ? cur.style : S.style; $('style').value = S.style;
+  S.skin = migrate(cur.skin || {}); S.style = STYLES[cur.style] ? cur.style : S.style; $('style').value = S.style;
+  if (cur.stack) S.stack = cur.stack;
+  if (cur.preset) { S.preset = cur.preset; S.K = cur.K || {}; $('preset').value = S.preset; }
   for (const k in S.skin) for (const v in S.skin[k].cards) if (!S.byId[S.skin[k].cards[v]]) delete S.skin[k].cards[v];
-  refreshLoad(); renderTrials(); renderBones(); markView();
+  refreshFile(); renderTrials(); renderBones(); markView();
   const want = location.hash.slice(1);
   await loadTrial(S.trials.some(t => t.id === want) ? want : S.trials[0].id);
   if (!Object.keys(S.skin).length) dress('poet');
-  setInterval(() => { if (!S.playing) draw(); }, 500);   // images arrive lazily
+  setInterval(() => { if (!S.playing && !G) draw(); }, 500);   // images arrive lazily
 })();
 </script>
 </body>
