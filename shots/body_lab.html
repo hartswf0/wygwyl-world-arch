@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WYGWYL · Body Lab · Master Anatomy &amp; Replacements Library</title>
+<link rel="icon" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0b0a;
+    --panel: #16120f;
+    --panel-card: #1d1713;
+    --line: #2a221c;
+    --line-lit: #4a3b30;
+    --ink: #efe6da;
+    --dim: #9a8d7e;
+    --card: #c79a62;
+    --gold: #f5b942;
+    --blue: #01acd4;
+    --ok: #9fe08a;
+    --bad: #ff7b6b;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --marker: 'Permanent Marker', cursive;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--sans); }
+
+  header {
+    background: var(--panel); border-bottom: 1px solid var(--line);
+    padding: 14px 24px; display: flex; align-items: center; gap: 14px;
+    flex-wrap: wrap; position: sticky; top: 0; z-index: 100;
+  }
+  header h1 { font: 400 24px var(--marker); color: var(--gold); }
+  header h1 small { font: 12px var(--mono); color: var(--dim); margin-left: 10px; letter-spacing: .08em; }
+  .sp { flex: 1; }
+  .nav-btn {
+    color: var(--dim); font: 12px var(--mono); text-decoration: none;
+    border: 1px solid var(--line); padding: 5px 12px; border-radius: 999px;
+    transition: all .15s; font-weight: 600; cursor: pointer; background: transparent;
+  }
+  .nav-btn:hover { color: var(--ink); border-color: var(--card); }
+  .nav-btn.gold { color: var(--gold); border-color: var(--gold); }
+  .nav-btn.gold:hover { background: var(--gold); color: #16120f; }
+  .nav-btn.active { background: var(--card); color: #16120f; border-color: var(--card); font-weight: 800; }
+
+  main {
+    max-width: 1480px; margin: 0 auto; padding: 28px 24px 120px;
+    display: flex; flex-direction: column; gap: 32px;
+  }
+
+  .banner {
+    background: radial-gradient(ellipse at top left, #281d14 0%, #120e0b 70%);
+    border: 1px solid var(--card); border-radius: 12px; padding: 28px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .banner h2 { font: 400 32px var(--marker); color: var(--gold); }
+  .banner p { color: var(--dim); font-size: 15px; max-width: 90ch; }
+  
+  .badge {
+    font: 11px var(--mono); padding: 3px 9px; border-radius: 999px;
+    background: #241c14; border: 1px solid var(--line); color: var(--card);
+    display: inline-block; font-weight: 600;
+  }
+  .badge.ok { border-color: var(--ok); color: var(--ok); }
+  .badge.gold { border-color: var(--gold); color: var(--gold); }
+
+  /* Toolbar: Category Switcher, Search, and Character Filters */
+  .toolbar {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px; display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .cat-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cat-tab {
+    background: var(--panel-card); border: 1px solid var(--line); color: var(--ink);
+    font: 600 13px var(--mono); padding: 8px 16px; border-radius: 8px; cursor: pointer;
+    transition: all .15s; display: flex; align-items: center; gap: 8px;
+  }
+  .cat-tab:hover { border-color: var(--gold); color: var(--gold); }
+  .cat-tab.active { background: var(--card); color: #16120f; border-color: var(--card); font-weight: 800; }
+  .cat-tab .cnt {
+    font-size: 10px; padding: 2px 6px; border-radius: 999px; background: rgba(0,0,0,0.3); color: inherit;
+  }
+
+  .filter-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .search-box {
+    flex: 1; min-width: 240px; background: #0c0907; border: 1px solid var(--line);
+    color: var(--ink); font: 13px var(--mono); padding: 8px 16px; border-radius: 999px; outline: none;
+  }
+  .search-box:focus { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+  
+  .char-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .char-chip {
+    background: #140f0c; border: 1px solid var(--line); color: var(--dim);
+    font: 11px var(--mono); padding: 4px 10px; border-radius: 999px; cursor: pointer; transition: all .15s;
+  }
+  .char-chip:hover { border-color: var(--card); color: var(--ink); }
+  .char-chip.active { background: var(--gold); color: #16120f; border-color: var(--gold); font-weight: 700; }
+
+  /* Gallery Grid */
+  .grid-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font: 12px var(--mono); color: var(--dim);
+  }
+  .grid-header b { color: var(--gold); }
+
+  .parts-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px;
+  }
+
+  .part-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px; display: flex; flex-direction: column; gap: 8px; position: relative;
+    transition: all .15s;
+  }
+  .part-card:hover { border-color: var(--gold); transform: translateY(-3px); }
+
+  .part-thumb {
+    width: 100%; height: 160px;
+    background-color: #0c0a09;
+    background-image: linear-gradient(45deg, #16120f 25%, transparent 25%),
+                      linear-gradient(-45deg, #16120f 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #16120f 75%),
+                      linear-gradient(-45deg, transparent 75%, #16120f 75%);
+    background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    padding: 8px; overflow: hidden; cursor: pointer; position: relative;
+  }
+  .part-thumb img {
+    max-width: 100%; max-height: 100%; object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.7)); transition: transform .2s;
+  }
+  .part-card:hover .part-thumb img { transform: scale(1.08); }
+
+  .part-meta { display: flex; flex-direction: column; gap: 3px; font: 11px var(--mono); }
+  .part-title { font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+  .part-sub { display: flex; justify-content: space-between; color: var(--dim); font-size: 10px; }
+  .part-char { color: var(--card); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 110px; }
+
+  .part-actions { display: flex; gap: 4px; margin-top: 4px; }
+  .btn-sm {
+    flex: 1; text-align: center; font: 600 10px var(--mono); background: var(--panel-card);
+    border: 1px solid var(--line); color: var(--dim); padding: 4px 6px; border-radius: 4px;
+    cursor: pointer; text-decoration: none; transition: all .12s;
+  }
+  .btn-sm:hover { border-color: var(--gold); color: var(--ink); }
+  .btn-sm.pin.pinned { background: var(--gold); color: #16120f; border-color: var(--gold); }
+
+  /* Drawer for Side-by-Side Comparison */
+  #compareDrawer {
+    position: fixed; bottom: 0; left: 0; right: 0; background: rgba(18, 14, 11, 0.96);
+    backdrop-filter: blur(10px); border-top: 2px solid var(--gold); padding: 14px 24px;
+    z-index: 500; display: none; flex-direction: column; gap: 10px; box-shadow: 0 -8px 24px rgba(0,0,0,0.8);
+  }
+  #compareDrawer.open { display: flex; }
+  .drawer-bar { display: flex; justify-content: space-between; align-items: center; }
+  .drawer-bar h3 { font: 400 18px var(--marker); color: var(--gold); }
+  .drawer-slots { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+  .drawer-item {
+    background: #0d0a08; border: 1px solid var(--line); border-radius: 6px;
+    padding: 8px; width: 140px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; position: relative;
+  }
+  .drawer-item img { width: 100%; height: 90px; object-fit: contain; }
+  .drawer-item .t { font: 10px var(--mono); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .drawer-item .rm {
+    position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); color: #ff7b6b;
+    border: 0; font-size: 14px; cursor: pointer; padding: 0 4px; border-radius: 3px;
+  }
+
+  /* Modal Lightbox */
+  .modal {
+    position: fixed; inset: 0; background: rgba(8, 6, 5, 0.9); backdrop-filter: blur(8px);
+    z-index: 9999; display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal.active { display: flex; }
+  .modal-box {
+    max-width: 900px; width: 100%; background: var(--panel); border: 2px solid var(--gold);
+    border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;
+  }
+  .modal-bar {
+    padding: 14px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-bar h3 { font: 600 16px var(--mono); color: var(--gold); }
+  .modal-bar button { background: none; border: 0; color: var(--dim); font-size: 24px; cursor: pointer; }
+  .modal-bar button:hover { color: #fff; }
+  .modal-body {
+    padding: 24px; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; overflow: auto;
+  }
+  @media(max-width: 720px) { .modal-body { grid-template-columns: 1fr; } }
+  .modal-preview {
+    background-color: #0c0a09;
+    background-image: linear-gradient(45deg, #16120f 25%, transparent 25%),
+                      linear-gradient(-45deg, #16120f 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #16120f 75%),
+                      linear-gradient(-45deg, transparent 75%, #16120f 75%);
+    background-size: 18px 18px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    padding: 16px; min-height: 320px; border: 1px solid var(--line);
+  }
+  .modal-preview img { max-width: 100%; max-height: 380px; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.8)); }
+  .modal-info { display: flex; flex-direction: column; gap: 12px; font: 12px var(--mono); }
+  .modal-info dl { display: grid; grid-template-columns: 100px 1fr; gap: 8px 12px; }
+  .modal-info dt { color: var(--dim); }
+  .modal-info dd { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>BODY LAB <small>ALL HANDS · ALL SHOES · ALL HEADS · ALL EYES · ALL CAST</small></h1>
+  <div class="sp"></div>
+  <a class="nav-btn" href="kits.html">▦ Character Kits Spec</a>
+  <a class="nav-btn" href="cards.html">◫ Periodic Atlas (80 Scenes)</a>
+  <a class="nav-btn" href="faces.html">🎭 Profile Faces &amp; Overlap</a>
+  <a class="nav-btn" href="butcher_proof.html">✂ Butcher Workbench</a>
+  <a class="nav-btn gold" href="arena/parts/body_lab/body_lab_catalog.json" download>⬇ body_lab_catalog.json</a>
+</header>
+
+<main>
+  <!-- Hero Banner -->
+  <section class="banner">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="badge ok">✓ 573 Isolated Anatomical Cards</span>
+      <span class="badge gold">✓ 191 Hands</span>
+      <span class="badge gold">✓ 89 Shoes &amp; Boots</span>
+      <span class="badge gold">✓ 137 Heads &amp; Faces</span>
+      <span class="badge ok">✓ 93 Modular Eyes/Noses/Mouths</span>
+      <span class="badge ok">✓ Zero Rectangular Borders</span>
+    </div>
+    <h2>Anatomical Body Lab &amp; Replacement Library</h2>
+    <p>
+      In theatrical cut-out puppetry (referencing <i>TROUTTOWN</i> and our Weave master library), acting is driven by <strong>libraries of replacement parts</strong>. A character maintains volume across scenes by selecting from comprehensive banks of replacement hands, boots, heads, and facial features. Browse, filter, search, compare, and inspect every isolated body card across all 14 poems and character kits.
+    </p>
+  </section>
+
+  <!-- Interactive Toolbar -->
+  <section class="toolbar">
+    <!-- Category Tabs -->
+    <div class="cat-tabs" id="catTabs">
+      <button class="cat-tab active" data-cat="all" onclick="setCategory('all', this)">
+        🌐 All Parts <span class="cnt" id="cnt-all">573</span>
+      </button>
+      <button class="cat-tab" data-cat="hands" onclick="setCategory('hands', this)">
+        🙌 Hands <span class="cnt" id="cnt-hands">191</span>
+      </button>
+      <button class="cat-tab" data-cat="shoes" onclick="setCategory('shoes', this)">
+        👞 Shoes &amp; Boots <span class="cnt" id="cnt-shoes">89</span>
+      </button>
+      <button class="cat-tab" data-cat="heads" onclick="setCategory('heads', this)">
+        👤 Heads &amp; Turns <span class="cnt" id="cnt-heads">137</span>
+      </button>
+      <button class="cat-tab" data-cat="eyes" onclick="setCategory('eyes', this)">
+        👁️ Eyes <span class="cnt" id="cnt-eyes">16</span>
+      </button>
+      <button class="cat-tab" data-cat="noses" onclick="setCategory('noses', this)">
+        👃 Noses <span class="cnt" id="cnt-noses">34</span>
+      </button>
+      <button class="cat-tab" data-cat="mouths" onclick="setCategory('mouths', this)">
+        👄 Mouths <span class="cnt" id="cnt-mouths">14</span>
+      </button>
+      <button class="cat-tab" data-cat="accessories" onclick="setCategory('accessories', this)">
+        🕶️ Accessories &amp; Caps <span class="cnt" id="cnt-accessories">29</span>
+      </button>
+      <button class="cat-tab" data-cat="torsos" onclick="setCategory('torsos', this)">
+        🥋 Torsos &amp; Bodies <span class="cnt" id="cnt-torsos">63</span>
+      </button>
+    </div>
+
+    <!-- Filter & Search Row -->
+    <div class="filter-row">
+      <input type="text" id="bodySearch" class="search-box" placeholder="Search anatomy (e.g. fist, open, chelsea, walk, profile, smile, sunglasses, child, elder, dj)..." oninput="renderParts()">
+      
+      <div class="char-chips">
+        <span style="font:700 11px var(--mono);color:var(--gold);margin-right:2px">CHARACTER:</span>
+        <button class="char-chip active" data-char="all" onclick="setCharacter('all', this)">All Cast</button>
+        <button class="char-chip" data-char="poet" onclick="setCharacter('poet', this)">Poet (Adult)</button>
+        <button class="char-chip" data-char="young" onclick="setCharacter('young', this)">Young Poet (6)</button>
+        <button class="char-chip" data-char="mother" onclick="setCharacter('mother', this)">The Mother</button>
+        <button class="char-chip" data-char="father" onclick="setCharacter('father', this)">Father &amp; Elders</button>
+        <button class="char-chip" data-char="dj" onclick="setCharacter('dj', this)">DJ Cyber &amp; Club</button>
+        <button class="char-chip" data-char="atlantis" onclick="setCharacter('atlantis', this)">Atlantis Ancestors</button>
+        <button class="char-chip" data-char="ghost" onclick="setCharacter('ghost', this)">Ghost Child (7)</button>
+        <button class="char-chip" data-char="ex" onclick="setCharacter('ex', this)">The Ex</button>
+        <button class="char-chip" data-char="shared" onclick="setCharacter('shared', this)">Shared Cast Parts</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery Header & Count Readout -->
+  <div class="grid-header">
+    <div>Showing <b id="visibleCount">573</b> parts in <b id="activeCategoryLabel">All Parts</b></div>
+    <div>Tip: Click <b>Pin to Compare</b> on any card to view items side-by-side below.</div>
+  </div>
+
+  <!-- Parts Grid -->
+  <div class="parts-grid" id="partsGrid"></div>
+</main>
+
+<!-- Side-by-Side Pinned Drawer -->
+<div id="compareDrawer">
+  <div class="drawer-bar">
+    <h3>Comparative Anatomy Workbench (<span id="pinnedCount">0</span> Pinned)</h3>
+    <div style="display:flex;gap:8px">
+      <button class="nav-btn" onclick="clearPinned()">Clear Pinned</button>
+      <button class="nav-btn gold" onclick="closeDrawer()">Minimize</button>
+    </div>
+  </div>
+  <div class="drawer-slots" id="drawerSlots"></div>
+</div>
+
+<!-- Lightbox Modal -->
+<div class="modal" id="partModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-bar">
+      <h3 id="modalTitle">Part Title</h3>
+      <button onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-preview">
+        <img id="modalImg" src="" alt="Part Inspection">
+      </div>
+      <div class="modal-info">
+        <dl>
+          <dt>Character:</dt><dd id="modalChar">—</dd>
+          <dt>Category:</dt><dd id="modalCat">—</dd>
+          <dt>Dimensions:</dt><dd id="modalDim">—</dd>
+          <dt>Source Sheet:</dt><dd id="modalSource">—</dd>
+          <dt>File Path:</dt><dd id="modalPath" style="word-break:break-all;font-size:11px">—</dd>
+        </dl>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <a class="nav-btn gold" id="modalDownload" href="" download>Download Transparent PNG</a>
+          <button class="nav-btn" id="modalPinBtn" onclick="togglePinFromModal()">Pin to Compare</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let CATALOG = null;
+let activeCat = "all";
+let activeChar = "all";
+let pinnedParts = [];
+let currentModalPart = null;
+
+async function init() {
+  try {
+    const res = await fetch("arena/parts/body_lab/body_lab_catalog.json");
+    CATALOG = await res.json();
+  } catch (e) {
+    console.error("Failed to load catalog, trying fallback", e);
+  }
+  if (!CATALOG) return;
+
+  // update category badge counts
+  document.getElementById("cnt-all").textContent = Object.values(CATALOG).reduce((a, b) => a + b.length, 0);
+  for (const [k, v] of Object.entries(CATALOG)) {
+    const el = document.getElementById("cnt-" + k);
+    if (el) el.textContent = v.length;
+  }
+
+  renderParts();
+}
+
+function setCategory(cat, btn) {
+  activeCat = cat;
+  document.querySelectorAll(".cat-tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("activeCategoryLabel").textContent = btn.childNodes[0].textContent.trim();
+  renderParts();
+}
+
+function setCharacter(char, btn) {
+  activeChar = char;
+  document.querySelectorAll(".char-chip").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  renderParts();
+}
+
+function getAllParts() {
+  if (activeCat === "all") {
+    let all = [];
+    for (const list of Object.values(CATALOG)) { all = all.concat(list); }
+    return all;
+  }
+  return CATALOG[activeCat] || [];
+}
+
+function renderParts() {
+  const q = document.getElementById("bodySearch").value.toLowerCase().trim();
+  const list = getAllParts();
+  
+  const filtered = list.filter(item => {
+    // Character filter
+    if (activeChar !== "all") {
+      const c = (item.character || "").toLowerCase();
+      if (!c.includes(activeChar)) return false;
+    }
+    // Search query
+    if (q) {
+      const hay = `${item.name} ${item.character} ${item.source} ${item.category}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById("visibleCount").textContent = filtered.length;
+  const grid = document.getElementById("partsGrid");
+  
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--dim);font:14px var(--mono)">No body parts match your active filters. Try clearing search or character chips.</div>`;
+    return;
+  }
+
+  // Render cards
+  grid.innerHTML = filtered.map(item => {
+    const isPinned = pinnedParts.some(p => p.id === item.id);
+    return `
+      <div class="part-card" data-id="${item.id}">
+        <div class="part-thumb" onclick="openModal('${item.id}')">
+          <img src="${item.path}" alt="${item.name}" loading="lazy">
+        </div>
+        <div class="part-meta">
+          <div class="part-title" title="${item.name}">${item.name}</div>
+          <div class="part-sub">
+            <span class="part-char" title="${item.character}">${item.character}</span>
+            <span>${item.width}×${item.height}</span>
+          </div>
+        </div>
+        <div class="part-actions">
+          <button class="btn-sm" onclick="openModal('${item.id}')">Inspect</button>
+          <button class="btn-sm pin ${isPinned ? 'pinned' : ''}" onclick="togglePin('${item.id}')">${isPinned ? '✓ Pinned' : '+ Pin'}</button>
+          <a class="btn-sm" href="${item.path}" download title="Download PNG">⬇</a>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function getPartById(id) {
+  for (const list of Object.values(CATALOG)) {
+    const f = list.find(x => x.id === id);
+    if (f) return f;
+  }
+  return null;
+}
+
+function openModal(id) {
+  const item = getPartById(id);
+  if (!item) return;
+  currentModalPart = item;
+  
+  document.getElementById("modalTitle").textContent = item.name;
+  document.getElementById("modalImg").src = item.path;
+  document.getElementById("modalChar").textContent = item.character;
+  document.getElementById("modalCat").textContent = item.category.toUpperCase();
+  document.getElementById("modalDim").textContent = `${item.width} × ${item.height} px`;
+  document.getElementById("modalSource").textContent = item.source;
+  document.getElementById("modalPath").textContent = item.path;
+  document.getElementById("modalDownload").href = item.path;
+  
+  const isPinned = pinnedParts.some(p => p.id === item.id);
+  const pinBtn = document.getElementById("modalPinBtn");
+  pinBtn.textContent = isPinned ? "Unpin from Compare" : "Pin to Compare";
+  
+  document.getElementById("partModal").classList.add("active");
+}
+
+function closeModal() {
+  document.getElementById("partModal").classList.remove("active");
+  currentModalPart = null;
+}
+
+function togglePin(id) {
+  const item = getPartById(id);
+  if (!item) return;
+  const idx = pinnedParts.findIndex(p => p.id === id);
+  if (idx >= 0) {
+    pinnedParts.splice(idx, 1);
+  } else {
+    pinnedParts.push(item);
+  }
+  updateDrawer();
+  renderParts();
+}
+
+function togglePinFromModal() {
+  if (currentModalPart) {
+    togglePin(currentModalPart.id);
+    const isPinned = pinnedParts.some(p => p.id === currentModalPart.id);
+    document.getElementById("modalPinBtn").textContent = isPinned ? "Unpin from Compare" : "Pin to Compare";
+  }
+}
+
+function updateDrawer() {
+  const drawer = document.getElementById("compareDrawer");
+  document.getElementById("pinnedCount").textContent = pinnedParts.length;
+  
+  if (pinnedParts.length === 0) {
+    drawer.classList.remove("open");
+    return;
+  }
+  
+  drawer.classList.add("open");
+  const slots = document.getElementById("drawerSlots");
+  slots.innerHTML = pinnedParts.map(p => `
+    <div class="drawer-item">
+      <button class="rm" onclick="togglePin('${p.id}')">&times;</button>
+      <img src="${p.path}" alt="${p.name}">
+      <div class="t" title="${p.name}">${p.name}</div>
+      <div style="font:9px var(--mono);color:var(--dim)">${p.width}×${p.height}</div>
+    </div>
+  `).join("");
+}
+
+function clearPinned() {
+  pinnedParts = [];
+  updateDrawer();
+  renderParts();
+}
+
+function closeDrawer() {
+  document.getElementById("compareDrawer").classList.remove("open");
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
