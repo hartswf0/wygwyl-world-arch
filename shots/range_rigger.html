@@ -634,41 +634,41 @@ canvas.tall-cv {
 .breed-evo-bar {
   background: var(--panel);
   border: 1px solid var(--rule);
-  padding: 8px 12px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-.breed-evo-bar .bar-label {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--cyan);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.evo-candidates {
+  padding: 6px 10px;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
+}
+.breed-evo-bar .bar-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.evo-candidates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
   width: 100%;
-  padding-top: 6px;
+  padding-top: 5px;
   border-top: 1px dashed var(--rule);
 }
 .evo-pill {
   appearance: none;
   font-family: var(--mono);
-  font-size: 10.5px;
-  padding: 4px 8px;
+  font-size: 10px;
+  padding: 3px 7px;
   border: 1px solid var(--rule);
   background: var(--panel-2);
   color: var(--ink-2);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 .evo-pill:hover { border-color: var(--cyan); color: var(--ink); }
 .evo-pill[aria-pressed="true"] {
@@ -680,20 +680,226 @@ canvas.tall-cv {
   color: var(--green);
   font-weight: 700;
 }
-.gizmo-hint-badge {
+/* Visual Rig Avatar Strip */
+.rig-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 4px;
+}
+.rig-pill .rig-thumb, .rig-pill .rp-thumb {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  background: #080b11;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+/* Visual 8-Part Active & Cross-Kit Kitbash Matrix */
+.kb-matrix {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.kb-slot-tile {
+  appearance: none;
+  background: #080b11;
+  border: 1px solid var(--rule);
+  padding: 5px;
+  cursor: pointer;
+  display: grid;
+  grid-template-rows: auto 54px auto;
+  gap: 3px;
+  text-align: center;
+  color: var(--ink);
+  position: relative;
+}
+.kb-slot-tile:hover, .kb-slot-tile[aria-expanded="true"] {
+  border-color: var(--cyan);
+  background: var(--panel-2);
+}
+.kb-slot-tile .kb-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.kb-slot-tile .kb-badge {
+  font-size: 8.5px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-weight: 700;
+}
+.kb-badge.kit { color: var(--green); background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.4); }
+.kb-badge.bash { color: var(--amber); background: rgba(245,158,11,0.14); border: 1px solid rgba(245,158,11,0.45); }
+.kb-badge.code { color: var(--cyan); background: rgba(0,210,255,0.14); border: 1px solid rgba(0,210,255,0.5); }
+.kb-slot-tile .kb-img-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 54px;
+  overflow: hidden;
+}
+.kb-slot-tile img {
+  max-width: 100%;
+  max-height: 52px;
+  object-fit: contain;
+}
+.kb-slot-tile .kb-sub {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kb-drawer {
+  background: #070a10;
+  border: 1px solid var(--cyan);
+  padding: 7px;
+  margin-top: 6px;
+  display: grid;
+  gap: 6px;
+}
+.kb-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+  gap: 5px;
+  max-height: 165px;
+  overflow-y: auto;
+}
+.kb-opt {
+  appearance: none;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  padding: 4px;
+  cursor: pointer;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  color: var(--ink);
+}
+.kb-opt:hover { border-color: var(--cyan); background: var(--panel-2); }
+.kb-opt img { width: 46px; height: 46px; object-fit: contain; }
+.kb-opt span { font-family: var(--mono); font-size: 8.5px; color: var(--ink-2); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pipeline-stepper {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.step-btn {
+  padding: 6px 10px;
+  gap: 1px;
+}
+.step-btn .st-title { font-size: 15px; }
+
+/* Live Batch / Grid Evolutionary Breeder (Stage 06) */
+.evolve-grid-matrix {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (max-width: 1120px) {
+  .evolve-grid-matrix { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 780px) {
+  .evolve-grid-matrix { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.eg-cell {
+  background: #080b11;
+  border: 1.5px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+.eg-cell:hover { border-color: var(--cyan); }
+.eg-cell[data-starred="true"] {
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 1px rgba(255, 190, 11, 0.35), inset 0 0 18px rgba(255, 190, 11, 0.08);
+}
+.eg-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 7px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 9.5px;
+}
+.eg-hdr .eg-rank { font-weight: 700; color: var(--cyan); }
+.eg-cell[data-starred="true"] .eg-hdr .eg-rank { color: var(--yellow); }
+.eg-hdr .eg-score {
+  font-weight: 700;
+  padding: 1px 5px;
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(34, 197, 94, 0.45);
+}
+.eg-cv-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 11 / 10;
+  background: #0d1017;
+  cursor: pointer;
+}
+.eg-cv-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.eg-ftr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: var(--panel);
+  border-top: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+.eg-ftr .eg-recipe {
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 125px;
+}
+.eg-btn {
+  appearance: none;
+  background: var(--panel-2);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+.eg-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.eg-btn.star[aria-pressed="true"] {
+  background: rgba(255, 190, 11, 0.22);
+  border-color: var(--yellow);
   color: var(--yellow);
-  background: rgba(255, 190, 11, 0.10);
-  border: 1px solid rgba(255, 190, 11, 0.35);
-  padding: 4px 8px;
+}
+.eg-btn.apply {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.eg-btn.apply:hover {
+  background: var(--cyan);
+  color: #06090e;
 }
 </style>
 </head>
 <body>
 
 <nav class="suite-nav" aria-label="WYGWYL Suite Navigation">
-  <div class="suite-brand"><span class="dot"></span> WYGWYL × BOLAS · RANGE-TEST PIECE RIGGER</div>
+  <div class="suite-brand"><span class="dot"></span> WYGWYL × BOLAS · VISUAL PIECE RIGGER &amp; KITBASH STUDIO</div>
   <div class="nav-links">
     <a href="cards.html">[CARDS ATLAS]</a>
     <a href="body_lab.html">[BODY LAB]</a>
@@ -708,178 +914,118 @@ canvas.tall-cv {
   </div>
 </nav>
 
-<div class="wrap">
-  <header class="top-header">
-    <div>
-      <p class="eyebrow">5-STAGE PIPELINE · VITRUVIAN BREEDS · RADIAL BONE GIZMO · EVO / MONTE CARLO / RL POSE SOLVER · 54 RANGE TESTS</p>
-      <h1>Range-Test Piece Rigger<span class="accent">.</span></h1>
-      <p class="lede">
-        <b>Direct Bone &amp; Layer Manipulation + Evolutionary/MC Best-Fit Solver:</b> Match any character to <b>7 Vitruvian Skeleton Breeds</b> derived from limb/torso pieces, flip local panel layering (e.g. <b>pulling the Shoe ON TOP of the Calf</b> vs. tucking under the pant cuff), and use the <b>Evolutionary (&mu;+&lambda; ES) / Monte Carlo / UCB1 RL Solver</b> to automatically discover the best-fit pieces, bone proportions, and layer order for any pose. <b>Right-Click or Long-Press any piece/bone on the canvas</b> to open the <b>Radial Context Gizmo</b> (Scale Ring, Rotation Ring, Bone Centering, Layer Order) with zero button clutter.
-      </p>
+<div class="wrap" style="padding-top:8px;gap:8px">
+  <!-- Visual Avatar Rig Strip -->
+  <div class="rig-strip" id="rigStrip" style="padding:6px 10px">
+    <span class="rig-strip-label">RIG:</span>
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button type="button" id="quickEvolveGrid" class="btn warn" style="padding:4px 9px;font-size:10px;border-color:var(--yellow);color:var(--yellow)">EVOLVE FACES &amp; BODIES GRID</button>
+      <button type="button" id="quickAll54" class="btn primary" style="padding:4px 8px;font-size:10px">54 RANGE LAB</button>
     </div>
-    <div style="display:grid;gap:6px;justify-items:end">
-      <div class="seg" role="group" aria-label="Quick Stage Jump">
-        <button type="button" id="quickAll54" class="btn primary">JUMP TO 54 RANGE TESTS (STAGE 05)</button>
-      </div>
-      <span style="font-family:var(--mono);font-size:10.5px;color:var(--ink-2)">10 Rigs · 7 Skeleton Breeds · 54 Bolas Tests · 302 Parts</span>
-    </div>
-  </header>
-
-  <!-- Active Rig Selector -->
-  <div class="rig-strip" id="rigStrip">
-    <span class="rig-strip-label">ACTIVE RIG:</span>
   </div>
 
-  <!-- Skeleton Breeds, Panel Layer Order (Shoe Over Calf) & Evolutionary / Monte Carlo / RL Best-Fit Solver Bar -->
-  <div class="breed-evo-bar" aria-label="Skeleton Breeds, Layer Order, and Evolutionary Monte Carlo Solver">
-    <span class="bar-label">SKELETON BREED:</span>
-    <select id="breedSelect" class="btn" aria-label="Select Skeleton Breed" style="border-color:var(--cyan);color:var(--cyan)"></select>
-    <button type="button" class="btn" id="centerBonesVitBtn" title="Center all bones along piece medial axes and snap proportions to Vitruvian Man">CENTER BONES &amp; VITRUVIAN SNAP</button>
+  <!-- Compact Visual Studio Control Bar (Torso Code Solver + Breeds + Layer Flip + Evo/MC/RL) -->
+  <div class="breed-evo-bar" aria-label="Torso Solver, Skeleton Breeds, Layer Order, and Pose Solver">
+    <span class="bar-label">TORSO:</span>
+    <div class="seg" role="group" aria-label="Torso Render Solver">
+      <button type="button" data-tm="code" aria-pressed="true" title="Solve Torso & Pelvis with 2.5D Parametric Program Code (360° yaw + spine bend)">CODE 2.5D</button>
+      <button type="button" data-tm="hybrid" aria-pressed="false" title="Use Kit Card when upright, auto-switch to Code 2.5D on side/bent poses">HYBRID</button>
+      <button type="button" data-tm="card" aria-pressed="false" title="Use bitmap torso cut-out card only">CARD</button>
+    </div>
 
-    <span class="bar-label" style="margin-left:6px">PANEL LAYER ORDER:</span>
-    <button type="button" class="inv-chip" id="toggleShoeOverCalf" aria-pressed="false" title="Toggle whether the Shoe/Boot draws ON TOP of the Calf/Shin or tucks UNDER the pant cuff"><span class="box"></span>SHOE OVER CALF (FOOT &gt; SHIN)</button>
-    <button type="button" class="inv-chip" id="toggleHandOverCuff" aria-pressed="false" title="Toggle whether the Hand/Glove draws ON TOP of the Forearm sleeve cuff"><span class="box"></span>HAND OVER SLEEVE (HAND &gt; FARM)</button>
+    <span class="bar-label" style="margin-left:4px">BREED:</span>
+    <select id="breedSelect" class="btn" aria-label="Select Skeleton Breed" style="border-color:var(--cyan);color:var(--cyan);padding:4px 7px"></select>
+    <button type="button" class="btn" id="centerBonesVitBtn" style="padding:4px 8px">SNAP VITRUVIAN</button>
 
-    <span class="bar-label" style="margin-left:auto">POSE PIECE SOLVER:</span>
-    <select id="solverAlgoSelect" class="btn" aria-label="Select Evolutionary, Monte Carlo, or RL Algorithm">
-      <option value="evo">EVO (&mu;+&lambda; Evolutionary · Pop 24)</option>
-      <option value="mcts">MONTE CARLO (Importance Sampling)</option>
-      <option value="rl">RL BANDIT (UCB1 Contextual Policy)</option>
+    <span class="bar-label" style="margin-left:4px">LAYER:</span>
+    <button type="button" class="inv-chip" id="toggleShoeOverCalf" aria-pressed="false" style="padding:4px 7px"><span class="box"></span>SHOE &gt; CALF</button>
+    <button type="button" class="inv-chip" id="toggleHandOverCuff" aria-pressed="false" style="padding:4px 7px"><span class="box"></span>HAND &gt; CUFF</button>
+
+    <span class="bar-label" style="margin-left:auto">SOLVE:</span>
+    <select id="solverAlgoSelect" class="btn" aria-label="Select Solver Algorithm" style="padding:4px 7px">
+      <option value="evo">EVO (&mu;+&lambda; ES)</option>
+      <option value="mcts">MONTE CARLO</option>
+      <option value="rl">RL BANDIT</option>
     </select>
-    <button type="button" class="btn primary" id="runEvoSolverBtn">EVO / MC BEST-FIT FOR POSE</button>
-    <button type="button" class="inv-chip" id="autoEvoKeyChip" aria-pressed="false"><span class="box"></span>AUTO-FIT ON KEYFRAME</button>
+    <button type="button" class="btn primary" id="runEvoSolverBtn" style="padding:4px 9px">EVO / MC FIT</button>
+    <button type="button" class="inv-chip" id="autoEvoKeyChip" aria-pressed="false" style="padding:4px 7px"><span class="box"></span>AUTO</button>
 
     <div class="evo-candidates" id="evoCandidatesStrip">
-      <span class="gizmo-hint-badge">DIRECT GIZMO: Right-Click or Long-Press any piece/bone on stage to Scale, Rotate, Center Bone, or Flip Layer Order · Drag joints to tweak bones</span>
-      <span id="evoStatusText" style="font-family:var(--mono);font-size:10.5px;color:var(--ink-2);margin-left:auto">Ready — click [EVO / MC BEST-FIT FOR POSE] to evolve top candidate rigs</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--yellow)">RIGHT-CLICK / LONG-PRESS ANY PIECE = RADIAL GIZMO · DRAG JOINTS = BONE TWEAK</span>
+      <button type="button" class="inv-chip" data-inv="twoPin" aria-pressed="true" style="margin-left:auto;padding:2px 6px;font-size:9.5px"><span class="box"></span>1:PINS</button>
+      <button type="button" class="inv-chip" data-inv="intrinsicRot" aria-pressed="true" style="padding:2px 6px;font-size:9.5px"><span class="box"></span>2:AXIS</button>
+      <button type="button" class="inv-chip" data-inv="vitruvianScale" aria-pressed="true" style="padding:2px 6px;font-size:9.5px"><span class="box"></span>3:SCALE</button>
+      <button type="button" class="inv-chip" data-inv="cuffTuckZ" aria-pressed="true" style="padding:2px 6px;font-size:9.5px"><span class="box"></span>4:CUFF-Z</button>
+      <button type="button" class="btn warn" id="breakAllBtn" style="padding:2px 6px;font-size:9.5px">RAW</button>
+      <button type="button" class="btn primary" id="solveAllBtn" style="padding:2px 6px;font-size:9.5px">SOLVE</button>
+      <span id="evoStatusText" style="font-family:var(--mono);font-size:10px;color:var(--ink-2)"></span>
     </div>
   </div>
 
-  <!-- 4 Connection Invariants Live Toggle Bar (applies across all 5 stages!) -->
-  <div class="invariant-bar" aria-label="4 Connection and Proportion Invariants">
-    <span class="inv-title">LIVE RIG SOLVER INVARIANTS:</span>
-    <button type="button" class="inv-chip" data-inv="twoPin" aria-pressed="true"><span class="box"></span>[1] TWO-PIN SOCKET INSIDE CUFF (A&rarr;B)</button>
-    <button type="button" class="inv-chip" data-inv="intrinsicRot" aria-pressed="true"><span class="box"></span>[2] INTRINSIC CARD AXIS (&theta;<sub>card</sub> 90&deg; HAND FIX)</button>
-    <button type="button" class="inv-chip" data-inv="vitruvianScale" aria-pressed="true"><span class="box"></span>[3] VITRUVIAN BONE-FIT SCALE (CM NORMALIZED)</button>
-    <button type="button" class="inv-chip" data-inv="cuffTuckZ" aria-pressed="true"><span class="box"></span>[4] CUFF-OVER-EXTREMITY Z-ORDER &amp; TAB-CLIP</button>
-    <button type="button" class="btn warn" id="breakAllBtn" style="margin-left:auto">BREAK ALL 4 (SEE RAW FAILURE)</button>
-    <button type="button" class="btn primary" id="solveAllBtn">SOLVE ALL 4 (CERTIFIED)</button>
-  </div>
-
-  <!-- 5-Stage Pipeline Stepper (Meta Animated Drawings + Vitruvian + Mixamo + Bolas 54) -->
-  <nav class="pipeline-stepper" role="tablist" aria-label="5-Stage Rigging Pipeline">
+  <!-- Compact 6-Stage Pipeline Stepper -->
+  <nav class="pipeline-stepper" role="tablist" aria-label="6-Stage Rigging & Evolution Pipeline">
     <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s1">
-      <span class="st-num">STAGE 01 · POSE VS PIECES</span>
-      <span class="st-title">Detection vs. Kit Cards</span>
-      <span class="st-sub">Whole-Figure 17-KP vs. Pre-Cut Cards</span>
+      <span class="st-num">01 · POSE VS CARDS</span>
+      <span class="st-title">17-KP vs Kit</span>
     </button>
     <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s2">
-      <span class="st-num">STAGE 02 · PROPORTION FRAME</span>
-      <span class="st-title">Vitruvian Square &amp; Circle</span>
-      <span class="st-sub">170cm T-Square &amp; Navel X-Circle</span>
+      <span class="st-num">02 · PROPORTIONS</span>
+      <span class="st-title">Vitruvian Frame</span>
     </button>
     <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s3">
-      <span class="st-num">STAGE 03 · PLACE MARKERS</span>
-      <span class="st-title">Mixamo Rigger &amp; Pin Loupe</span>
-      <span class="st-sub">Color Rings + Per-Card Pivot A/B</span>
+      <span class="st-num">03 · MARKERS</span>
+      <span class="st-title">Pin &amp; Cuff Loupe</span>
     </button>
     <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s4">
-      <span class="st-num">STAGE 04 · CONNECTION ORDER</span>
-      <span class="st-title">Kinematic DAG vs. Z-Order</span>
-      <span class="st-sub">Cuff-Tuck Layering &amp; Seam Loupes</span>
+      <span class="st-num">04 · TOPOLOGY</span>
+      <span class="st-title">DAG vs Z-Order</span>
     </button>
     <button type="button" class="step-btn" role="tab" aria-selected="true" data-stage="s5">
-      <span class="st-num">STAGE 05 · FINAL ANIMATION</span>
-      <span class="st-title">Bolas 54 Range-Test Lab</span>
-      <span class="st-sub">All 54 Tests (A01–E54) + Contact Sheet</span>
+      <span class="st-num">05 · ANIMATION LAB</span>
+      <span class="st-title">54 Range Tests + Kitbash</span>
+    </button>
+    <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s6">
+      <span class="st-num">06 · EVOLVE GRID</span>
+      <span class="st-title">Faces &amp; Bodies Batch</span>
     </button>
   </nav>
 
   <!-- ==================== STAGE 01: POSE DETECTION VS PRE-CUT KIT PIECES ==================== -->
   <section id="stage_s1" class="sheetgrid" hidden>
-    <div class="idea-grid">
-      <div class="idea-card">
-        <span class="ic-tag">ARCHITECTURAL QUESTION</span>
-        <h4>1. Pose Detection on Existing Bodies?</h4>
-        <p><b>YES on Whole-Figure Drawings (ACT-001..032):</b> ViTPose &amp; MoveNet detect 17/17 keypoints on intact cardboard figures. The bug there is <b>Voronoi nearest-bone cutting</b> (a crossed arm steals chest pixels), solved by <b>Ordered Layer Claiming</b> (Hand &rarr; Forearm &rarr; UpperArm &rarr; Head &rarr; Torso).</p>
-      </div>
-      <div class="idea-card">
-        <span class="ic-tag">WHY KIT CARDS FAIL POSE NETS</span>
-        <h4>2. Isolated Kit Pieces Have 0 Context</h4>
-        <p><b>NO on Pre-Cut Kit Pieces:</b> Running a human pose detector on an isolated Chelsea boot (<code>19_boot_front_L</code>) or horizontal hand (<code>74x43</code>) yields 0 keypoints. Pre-cut pieces require <b>Intrinsic Card Vector Registration (Pivot A &rarr; Socket B)</b>.</p>
-      </div>
-      <div class="idea-card">
-        <span class="ic-tag">CONNECTION SITE GEOMETRY</span>
-        <h4>3. Grommet Tab vs. Cuff Socket</h4>
-        <p>Putting a single pin at the tip of a protruding cardboard grommet tongue (<code>y=1320</code> on forearm) leaves a gap and double-tab collision. Each piece needs a <b>2-Pin Bone Vector (A&rarr;B)</b> anchored <b>inside the cuff lip</b> plus a <b>Cuff-Clip Plane</b>.</p>
-      </div>
-      <div class="idea-card">
-        <span class="ic-tag">ORDER OF CONNECTION</span>
-        <h4>4. Kinematic DAG &ne; Visual Z-Order</h4>
-        <p>Kinematically, <code>Forearm &rarr; Hand</code> and <code>Shin &rarr; Foot</code>. Visually, <b>Forearm Cuff draws OVER Hand Wrist</b> (<code>z_fore &gt; z_hand</code>) and <b>Shin Cuff draws OVER Boot Shaft</b> (<code>z_shin &gt; z_boot</code>), while camera yaw flips Far vs. Near limbs.</p>
-      </div>
-    </div>
-
     <div class="two-col">
       <div class="card-box">
         <div class="controls" style="justify-content:space-between">
-          <div>
-            <span class="eyebrow">PATH A · WHOLE-FIGURE POSE DETECTION (17 KEYPOINTS) vs. PATH B · PRE-CUT KIT ASSEMBLY</span>
-            <h2>Whole-Figure Pose Target vs. Rigged Kit Pieces</h2>
-          </div>
+          <h2>Whole-Figure Pose Target vs. Rigged Kit Pieces</h2>
           <select id="s1PoseSelect" class="btn" aria-label="Select Target Pose Drawing"></select>
         </div>
         <div class="canvas-wrap">
           <canvas id="s1Canvas" class="main-cv"></canvas>
         </div>
         <div class="controls">
-          <button type="button" class="btn primary" id="s1SnapBtn">SNAP KIT PIECES TO DETECTED POSE BRADS</button>
-          <button type="button" class="btn" id="s1ToggleSlice">TOGGLE: VORONOI BLEED vs. ORDERED CLAIMING</button>
-          <button type="button" class="btn" id="s1GoStage3">EDIT MARKERS IN STAGE 03 &rarr;</button>
+          <button type="button" class="btn primary" id="s1SnapBtn">NEXT POSE TARGET</button>
+          <button type="button" class="btn" id="s1ToggleSlice">VORONOI vs ORDERED CLAIM</button>
+          <button type="button" class="btn" id="s1GoStage3">PIN LOUPE &rarr;</button>
         </div>
       </div>
 
       <div class="card-box">
-        <h3>Diagnosis Matrix: Whole-Figure Pipeline vs. Pre-Cut Kit Pipeline</h3>
+        <h3>Whole-Figure (ACT-*) vs. Pre-Cut Kit Cards</h3>
         <table class="mono-table">
           <thead>
             <tr>
-              <th>Pipeline Step</th>
-              <th>Path A: Whole-Figure (ACT-*)</th>
-              <th>Path B: Pre-Cut Kit Cards</th>
+              <th>Step</th>
+              <th>Path A: Whole-Figure</th>
+              <th>Path B: Pre-Cut Kit + Code Torso</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td><b>01 Input Asset</b></td>
-              <td>Single posed character PNG (<code>ACT-001_p0.png</code>)</td>
-              <td>15–31 isolated part PNGs on multi-res sheets</td>
-            </tr>
-            <tr>
-              <td><b>02 Detection</b></td>
-              <td>ViTPose / MoveNet finds 17/17 keypoints</td>
-              <td>CLIP Semantic Classifier + Sheet Slot ID</td>
-            </tr>
-            <tr>
-              <td><b>03 Segmentation</b></td>
-              <td>Ordered Pixel Claiming (<code>Hand&rarr;Arm&rarr;Torso</code>)</td>
-              <td>Alpha Connected-Components + Cuff-Clip Line</td>
-            </tr>
-            <tr>
-              <td><b>04 Joint Registration</b></td>
-              <td>2D/3D Keypoints Projected onto Figure</td>
-              <td>Two-Pin Card Vector <code>Pivot A &rarr; Socket B</code></td>
-            </tr>
-            <tr>
-              <td><b>05 Scale &amp; Z-Order</b></td>
-              <td>Already 1:1 in source drawing</td>
-              <td>Vitruvian <code>fit_bone</code> + Cuff-Over-Extremity Z</td>
-            </tr>
+            <tr><td><b>01 Asset</b></td><td>Single posed PNG (<code>ACT-*</code>)</td><td>Isolated kit cards + Donor Kitbash</td></tr>
+            <tr><td><b>02 Detect</b></td><td>17/17 ViTPose keypoints</td><td>CLIP + Sheet Row-Cluster Slot</td></tr>
+            <tr><td><b>03 Torso</b></td><td>Pixel slice</td><td>2.5D Program Code + Card Hybrid</td></tr>
+            <tr><td><b>04 Joints</b></td><td>Projected 2D/3D Brads</td><td>Two-Pin Vector <code>Pivot A &rarr; Socket B</code></td></tr>
+            <tr><td><b>05 Layer</b></td><td>1:1 Source</td><td><code>SHOE &gt; CALF</code> / <code>CALF &gt; SHOE</code> flip</td></tr>
           </tbody>
         </table>
-        <p style="margin:0;color:var(--ink-2);font-size:12px">
-          <b>Key Takeaway:</b> We use <b>Pose Detection (Path A)</b> on the 83 <code>ACT-*</code> reference drawings to extract <b>Target Keyframe Brads</b>, and we use the <b>4 Connection &amp; Proportion Invariants (Path B)</b> to hang our pre-cut kit pieces onto those brads and the 54 Bolas range tests!
-        </p>
       </div>
     </div>
   </section>
@@ -1065,6 +1211,36 @@ canvas.tall-cv {
     </div>
 
     <div id="contact" class="sheetgrid"></div>
+  </section>
+
+  <!-- ==================== STAGE 06: LIVE EVOLUTIONARY BATCH GRID (FACES & BODIES) ==================== -->
+  <section id="stage_s6" class="sheetgrid" hidden>
+    <div class="card-box" style="padding:10px 12px;gap:8px">
+      <div class="controls" style="justify-content:space-between;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="seg" role="group" aria-label="Evolutionary Grid Mode">
+            <button type="button" data-egmode="bodies" aria-pressed="true" title="12 full bodies moving simultaneously through film motions, evolving cross-kit pieces, breeds & 2.5D torsos">12 BODIES &times; FILM</button>
+            <button type="button" data-egmode="strips" aria-pressed="false" title="Photo-Fit 3-Strip Flipbook (#11 / #24 / #36 horizontal brow/eye, nose, and mouth strips)">3-STRIP FLIPBOOK (#11/#24/#36)</button>
+            <button type="button" data-egmode="cubist" aria-pressed="false" title="Multi-Window Assisted Self-Portrait & Cubist Multi-Angle Collage Breeder">CUBIST / MULTI-WINDOW COLLAGE</button>
+          </div>
+          <div class="seg" role="group" aria-label="Grid Camera Angle">
+            <button type="button" data-egview="auto" aria-pressed="true">AUTO</button>
+            <button type="button" data-egview="front" aria-pressed="false">FRONT</button>
+            <button type="button" data-egview="tq" aria-pressed="false">3/4</button>
+            <button type="button" data-egview="side" aria-pressed="false">SIDE</button>
+            <button type="button" data-egview="orbit" aria-pressed="false">ORBIT</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span id="egGenReadout" style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--yellow)">GEN 01 · GEOM MAX 98.4%</span>
+          <button type="button" class="inv-chip" id="egStreamBtn" aria-pressed="true" style="padding:5px 9px;border-color:var(--green);color:var(--green)"><span class="box"></span>STREAM FILM EVOLUTION</button>
+          <button type="button" class="btn primary" id="egStepGenBtn" style="padding:5px 10px">EVOLVE NEXT GEN (BREED ★)</button>
+          <button type="button" class="btn" id="egMutateBtn" style="padding:5px 9px">MUTATE UNSTARRED</button>
+        </div>
+      </div>
+
+      <div class="evolve-grid-matrix" id="evolveGridHost"></div>
+    </div>
   </section>
 </div>
 
@@ -2046,24 +2222,36 @@ function drawWygwylRigOnBolas(ctx, J, P, sc, camYaw, rig, opts = {}) {
   // 1. Far Limbs
   drawSide(farSide, true);
 
-  // 2. Pelvis & Torso & Head (with Neck Collar Tuck!)
+  // 2. Pelvis & Torso & Head (with Programmatic 2.5D Torso Solver + Neck Collar Tuck!)
   const pHipMidDown = pPelvis ? [pPelvis[0], pPelvis[1] + 15 * legScaleRatio * sc, pPelvis[2]] : null;
-  if (S.pelvis && pPelvis && pHipMidDown) {
-    drawPieceFitBone(ctx, 'pelvis', S.pelvis, pPelvis, pHipMidDown, sc, camYaw, rig, {
-      showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX
-    });
-  }
-
-  // Anchor Head neck tab slightly inside the Torso collar (`pCollar = lerp(pPelvis, pNeck, 0.90)`)
   const pCollar = (pPelvis && pNeck)
     ? [pPelvis[0] + (pNeck[0] - pPelvis[0]) * 0.90, pPelvis[1] + (pNeck[1] - pPelvis[1]) * 0.90, pNeck[2]]
     : pNeck;
 
-  if (S.torso && pNeck && pPelvis) {
-    drawPieceFitBone(ctx, 'torso', S.torso, pNeck, pPelvis, sc, camYaw, rig, {
-      showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX
+  // Determine whether to solve Torso & Pelvis with Program Code (`code`), Hybrid (`hybrid`), or Bitmap Card (`card`)
+  const spineBendPx = (pPelvis && pNeck && J.waist) ? Math.abs(P(J.waist)[0] - (pPelvis[0] + pNeck[0]) * 0.5) : 0;
+  const useCodeTorso = st.torsoMode === 'code' ||
+    (st.torsoMode === 'hybrid' && (isProfileOr3Q || spineBendPx > 5.5 * sc));
+
+  if (useCodeTorso && pPelvis && pNeck) {
+    drawProceduralTorsoAndPelvis(ctx, J, P, sc, camYaw, rig, {
+      showPins: opts.showPins,
+      recordHit: opts.recordHit,
+      facingLeftOnScreen
     });
+  } else {
+    if (S.pelvis && pPelvis && pHipMidDown) {
+      drawPieceFitBone(ctx, 'pelvis', S.pelvis, pPelvis, pHipMidDown, sc, camYaw, rig, {
+        showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX
+      });
+    }
+    if (S.torso && pNeck && pPelvis) {
+      drawPieceFitBone(ctx, 'torso', S.torso, pNeck, pPelvis, sc, camYaw, rig, {
+        showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX
+      });
+    }
   }
+
   if (S.head && pCollar && pHeadTop) {
     drawPieceFitBone(ctx, 'head', S.head, pCollar, pHeadTop, sc, camYaw, rig, {
       showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX
@@ -2074,12 +2262,284 @@ function drawWygwylRigOnBolas(ctx, J, P, sc, camYaw, rig, opts = {}) {
   drawSide(nearSide, false);
 }
 
+/* ================= PROGRAMMATIC 2.5D TORSO & HIP-BRIDGE SOLVER ================= */
+function drawProceduralTorsoAndPelvis(ctx, J, P, sc, camYaw, rig, opts = {}) {
+  const pPelvis = P(J.pelvis);
+  const pWaist = J.waist ? P(J.waist) : P(lerp3(J.pelvis, J.neck, 0.36));
+  const pChest = J.chest ? P(J.chest) : P(lerp3(J.pelvis, J.neck, 0.72));
+  const pNeck = P(J.neck);
+  const pShL = P(J.shoulderL), pShR = P(J.shoulderR);
+  const pHipL = P(J.hipL), pHipR = P(J.hipR);
+
+  const ts = (rig && rig.torso_style) || {
+    style: 'tracksuit_zip',
+    primary: '#17191f',
+    secondary: '#222630',
+    accent: '#d92b2b',
+    trim: '#c69c6d',
+    pelvis_color: '#15171d'
+  };
+  const twTorso = getSlotTweak('torso');
+  const scaleMult = twTorso ? twTorso.scaleMult : 1.0;
+
+  let normYaw = ((camYaw % 360) + 540) % 360 - 180;
+  const yawRad = normYaw * DEG;
+  const sinY = Math.sin(yawRad), cosY = Math.cos(yawRad);
+  const isBack = Math.abs(normYaw) > 115;
+  const faceSign = opts.facingLeftOnScreen ? -1 : 1;
+  const turnShift = clamp(sinY * -1.0, -0.82, 0.82);
+
+  // Spine tangent & normal vectors at Pelvis, Waist, Chest, Neck
+  const norm2D = (a, b) => {
+    const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
+    return [-dy / l, dx / l]; // points right when spine goes up
+  };
+  const nPel = norm2D(pPelvis, pWaist);
+  const nWai = norm2D(pPelvis, pChest);
+  const nChe = norm2D(pWaist, pNeck);
+  const nNec = norm2D(pChest, pNeck);
+
+  // Continuous 360° anatomical half-widths (interpolating frontal span vs sagittal chest/waist depth)
+  const shSpanFront = Math.max(Math.hypot(pShR[0] - pShL[0], pShR[1] - pShL[1]) * 0.56, 15.5 * sc) * scaleMult;
+  const hipSpanFront = Math.max(Math.hypot(pHipR[0] - pHipL[0], pHipR[1] - pHipL[1]) * 0.72, 13.0 * sc) * scaleMult;
+
+  const wCollar = Math.hypot(6.8 * sc * cosY, 5.8 * sc * sinY) * scaleMult;
+  const wChest  = Math.hypot(shSpanFront, 10.8 * sc * scaleMult * sinY);
+  const wWaist  = Math.hypot(12.2 * sc * scaleMult * cosY, 8.8 * sc * scaleMult * sinY);
+  const wHem    = Math.hypot(hipSpanFront, 9.8 * sc * scaleMult * sinY);
+
+  // Sagittal sternum/ribcage forward projection in side/3Q views
+  const sideFactor = Math.abs(sinY);
+  const chestFwdShift = faceSign * sideFactor * 2.6 * sc * scaleMult;
+  const waistFwdShift = faceSign * sideFactor * 1.1 * sc * scaleMult;
+
+  const ptAt = (p, n, wL, wR, fwd = 0) => [
+    [p[0] + n[0] * (-wL + fwd), p[1] + n[1] * (-wL + fwd)],
+    [p[0] + n[0] * (wR + fwd),  p[1] + n[1] * (wR + fwd)]
+  ];
+
+  const [cL, cR] = ptAt(pNeck, nNec, wCollar, wCollar, chestFwdShift * 0.35);
+  const [sL, sR] = ptAt(pChest, nChe, wChest, wChest, chestFwdShift);
+  const [wL, wR] = ptAt(pWaist, nWai, wWaist, wWaist, waistFwdShift);
+  const pHem = [pPelvis[0] + (pPelvis[0] - pWaist[0]) * 0.18, pPelvis[1] + (pPelvis[1] - pWaist[1]) * 0.18];
+  const [hL, hR] = ptAt(pHem, nPel, wHem, wHem, waistFwdShift * 0.5);
+
+  ctx.save();
+
+  // 1. Draw Articulated Pelvis Hip-Bridge / Shorts Panel
+  const pCrotch = [pHem[0] - nPel[1] * 8.5 * sc * scaleMult, pHem[1] + nPel[0] * 8.5 * sc * scaleMult];
+  ctx.beginPath();
+  ctx.moveTo(wL[0], wL[1]);
+  ctx.lineTo(wR[0], wR[1]);
+  ctx.quadraticCurveTo(hR[0] + nPel[0] * 2 * sc, hR[1] + nPel[1] * 2 * sc, pHipR[0] + nPel[0] * 4 * sc, pHipR[1] + 5 * sc);
+  ctx.quadraticCurveTo(pCrotch[0], pCrotch[1], pHipL[0] - nPel[0] * 4 * sc, pHipL[1] + 5 * sc);
+  ctx.quadraticCurveTo(hL[0] - nPel[0] * 2 * sc, hL[1] - nPel[1] * 2 * sc, wL[0], wL[1]);
+  ctx.closePath();
+  ctx.fillStyle = ts.pelvis_color || '#15171d';
+  ctx.fill();
+  ctx.strokeStyle = ts.trim || '#c69c6d';
+  ctx.lineWidth = Math.max(1.5, 2.0 * sc * 0.35);
+  ctx.stroke();
+
+  // 2. Draw 2.5D Extruded Cardboard Rim & Shaded Torso Silhouette
+  const traceTorsoPath = (ox = 0, oy = 0) => {
+    ctx.beginPath();
+    ctx.moveTo(cL[0] + ox, cL[1] + oy);
+    ctx.quadraticCurveTo(pNeck[0] + ox, pNeck[1] - 2.2 * sc + oy, cR[0] + ox, cR[1] + oy);
+    ctx.quadraticCurveTo((cR[0] + sR[0]) * 0.5 + ox, (cR[1] + sR[1]) * 0.5 + oy, sR[0] + ox, sR[1] + oy);
+    ctx.quadraticCurveTo(wR[0] + ox, wR[1] + oy, hR[0] + ox, hR[1] + oy);
+    ctx.quadraticCurveTo(pHem[0] + ox, pHem[1] + 2.5 * sc + oy, hL[0] + ox, hL[1] + oy);
+    ctx.quadraticCurveTo(wL[0] + ox, wL[1] + oy, sL[0] + ox, sL[1] + oy);
+    ctx.quadraticCurveTo((sL[0] + cL[0]) * 0.5 + ox, (sL[1] + cL[1]) * 0.5 + oy, cL[0] + ox, cL[1] + oy);
+    ctx.closePath();
+  };
+
+  // Cardboard 2.5D edge thickness
+  traceTorsoPath(-faceSign * 2.4, 1.5);
+  ctx.fillStyle = '#8b6943';
+  ctx.fill();
+
+  // Main torso body with cylindrical 3D fabric shading
+  traceTorsoPath(0, 0);
+  const grad = ctx.createLinearGradient(sL[0], sL[1], sR[0], sR[1]);
+  grad.addColorStop(0, ts.primary);
+  grad.addColorStop(clamp(0.5 + turnShift * 0.35, 0.15, 0.85), ts.secondary || ts.primary);
+  grad.addColorStop(1, ts.primary);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Clip interior garment details to the torso silhouette
+  ctx.save();
+  ctx.clip();
+
+  // Centerline points (shifted across cylinder by turnShift)
+  const centerPt = (Lpt, Rpt) => {
+    const t = clamp(0.5 + turnShift * 0.42, 0.08, 0.92);
+    return [Lpt[0] + (Rpt[0] - Lpt[0]) * t, Lpt[1] + (Rpt[1] - Lpt[1]) * t];
+  };
+  const mCol = centerPt(cL, cR);
+  const mChe = centerPt(sL, sR);
+  const mWai = centerPt(wL, wR);
+  const mHem = centerPt(hL, hR);
+
+  // Style-specific procedural garment graphics
+  if (ts.style === 'tracksuit_zip') {
+    // Signature curved red piping from shoulders down toward waist
+    ctx.strokeStyle = ts.accent || '#d92b2b';
+    ctx.lineWidth = Math.max(2.0, 2.8 * sc * 0.35);
+    ctx.beginPath();
+    ctx.moveTo(cL[0] + (sL[0] - cL[0]) * 0.35, cL[1] + (sL[1] - cL[1]) * 0.35);
+    ctx.quadraticCurveTo(mChe[0] - wChest * 0.38, mChe[1], wL[0] + (mWai[0] - wL[0]) * 0.25, wL[1]);
+    ctx.moveTo(cR[0] + (sR[0] - cR[0]) * 0.35, cR[1] + (sR[1] - cR[1]) * 0.35);
+    ctx.quadraticCurveTo(mChe[0] + wChest * 0.38, mChe[1], wR[0] + (mWai[0] - wR[0]) * 0.25, wR[1]);
+    ctx.stroke();
+
+    // Front metallic zipper & stand collar
+    if (!isBack) {
+      ctx.strokeStyle = '#9aa4b4';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(mCol[0], mCol[1]);
+      ctx.quadraticCurveTo(mChe[0], mChe[1], mHem[0], mHem[1]);
+      ctx.stroke();
+    }
+  } else if (ts.style === 'crew_tee') {
+    // Skin clavicle scoop at neck + ribbed crew collar
+    if (!isBack) {
+      ctx.fillStyle = ts.accent || '#8c583a';
+      ctx.beginPath();
+      ctx.arc(mCol[0], mCol[1] + 2 * sc, wCollar * 0.72, 0, Math.PI);
+      ctx.fill();
+      ctx.strokeStyle = '#111318';
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+    }
+  } else if (ts.style === 'striped_sailor') {
+    // Horizontal navy stripes along the bent spine
+    ctx.strokeStyle = ts.accent || '#1d3152';
+    ctx.lineWidth = Math.max(2.5, 4.2 * sc * 0.35);
+    for (let t = 0.18; t <= 0.88; t += 0.14) {
+      const lx = cL[0] + (hL[0] - cL[0]) * t, ly = cL[1] + (hL[1] - cL[1]) * t;
+      const rx = cR[0] + (hR[0] - cR[0]) * t, ry = cR[1] + (hR[1] - cR[1]) * t;
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(rx, ry); ctx.stroke();
+    }
+  } else if (ts.style === 'pinstripe_suit') {
+    // Vertical pinstripes + V-zone shirt & tie
+    ctx.strokeStyle = 'rgba(240, 234, 216, 0.28)';
+    ctx.lineWidth = 1.0;
+    for (let f = 0.15; f <= 0.85; f += 0.14) {
+      ctx.beginPath();
+      ctx.moveTo(sL[0] + (sR[0] - sL[0]) * f, sL[1] + (sR[1] - sL[1]) * f);
+      ctx.lineTo(hL[0] + (hR[0] - hL[0]) * f, hL[1] + (hR[1] - hL[1]) * f);
+      ctx.stroke();
+    }
+    if (!isBack) {
+      ctx.fillStyle = ts.accent || '#f0ead8';
+      ctx.beginPath();
+      ctx.moveTo(cL[0] + 2, cL[1]);
+      ctx.lineTo(cR[0] - 2, cR[1]);
+      ctx.lineTo(mChe[0], mChe[1] + 5 * sc);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#8b2626';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(mCol[0], mCol[1] + 2); ctx.lineTo(mChe[0], mChe[1] + 4 * sc); ctx.stroke();
+    }
+  } else if (ts.style === 'brocade_bodice' || ts.style === 'cardigan_floral') {
+    // Gold/Teal ornate center panel & trim
+    ctx.strokeStyle = ts.accent || '#e3b34c';
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.moveTo(mCol[0] - wCollar * 0.4, mCol[1]);
+    ctx.lineTo(mHem[0] - wHem * 0.28, mHem[1]);
+    ctx.moveTo(mCol[0] + wCollar * 0.4, mCol[1]);
+    ctx.lineTo(mHem[0] + wHem * 0.28, mHem[1]);
+    ctx.stroke();
+  } else if (ts.style === 'cyber_neon_vest') {
+    // Glowing cyan & magenta circuit lines
+    ctx.strokeStyle = ts.accent || '#3be8ff';
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.moveTo(cL[0], cL[1]); ctx.lineTo(mChe[0] - wChest * 0.25, mChe[1]); ctx.lineTo(wL[0] + 4, hL[1]);
+    ctx.moveTo(cR[0], cR[1]); ctx.lineTo(mChe[0] + wChest * 0.25, mChe[1]); ctx.lineTo(wR[0] - 4, hR[1]);
+    ctx.stroke();
+  } else if (ts.style === 'crash_shim_teal') {
+    // Crash-test fiducial target disc on chest
+    const rDisc = Math.max(5, 5.5 * sc * 0.35);
+    ctx.fillStyle = '#111820';
+    ctx.beginPath(); ctx.arc(mChe[0], mChe[1], rDisc, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffd100';
+    ctx.beginPath(); ctx.moveTo(mChe[0], mChe[1]); ctx.arc(mChe[0], mChe[1], rDisc, 0, Math.PI * 0.5); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(mChe[0], mChe[1]); ctx.arc(mChe[0], mChe[1], rDisc, Math.PI, Math.PI * 1.5); ctx.closePath(); ctx.fill();
+  }
+
+  // Ribbed waistband hem across bottom of torso
+  ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+  ctx.lineWidth = Math.max(3, 4.5 * sc * 0.35);
+  ctx.beginPath();
+  ctx.moveTo(hL[0], hL[1]);
+  ctx.quadraticCurveTo(pHem[0], pHem[1] + 2 * sc, hR[0], hR[1]);
+  ctx.stroke();
+  ctx.restore();
+
+  // Outer cardboard kraft border + dashed cut-line
+  traceTorsoPath(0, 0);
+  ctx.strokeStyle = ts.trim || '#c69c6d';
+  ctx.lineWidth = Math.max(1.8, 2.4 * sc * 0.35);
+  ctx.stroke();
+
+  // Side / 3Q Glenoid Armhole Socket Cutout around Near Shoulder when turned > 22 deg
+  if (sideFactor > 0.38) {
+    const pShNear = (pShL[2] > pShR[2]) ? pShL : pShR;
+    const rArmX = Math.max(3.5, 4.2 * sc * 0.35 * sideFactor);
+    const rArmY = Math.max(5.5, 7.2 * sc * 0.35);
+    ctx.fillStyle = '#0e1117';
+    ctx.beginPath();
+    ctx.ellipse(pShNear[0], pShNear[1] + 1.5 * sc, rArmX, rArmY, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = ts.trim || '#c69c6d';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+  }
+
+  // Brass Grommets at Collar, Shoulders, and Waist
+  const drawBrassGrommet = (pt) => {
+    if (!pt) return;
+    const gr = Math.max(2.4, 2.8 * sc * 0.35);
+    ctx.fillStyle = '#d4a84f';
+    ctx.beginPath(); ctx.arc(pt[0], pt[1], gr, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#0b0e14';
+    ctx.beginPath(); ctx.arc(pt[0], pt[1], gr * 0.48, 0, Math.PI * 2); ctx.fill();
+  };
+  drawBrassGrommet(mCol);
+  drawBrassGrommet(mHem);
+  if (sideFactor < 0.65) {
+    drawBrassGrommet(pShL);
+    drawBrassGrommet(pShR);
+  } else {
+    drawBrassGrommet((pShL[2] > pShR[2]) ? pShL : pShR);
+  }
+  ctx.restore();
+
+  if (opts.recordHit) {
+    lastRenderedPieces.push({
+      slotKey: 'torso',
+      ptA: [pNeck[0], pNeck[1]],
+      ptB: [pPelvis[0], pPelvis[1]],
+      cx: (pNeck[0] + pPelvis[0]) * 0.5,
+      cy: (pNeck[1] + pPelvis[1]) * 0.5,
+      radius: Math.hypot(pNeck[0] - pPelvis[0], pNeck[1] - pPelvis[1]) * 0.55,
+      viewKey: 'code_25d',
+      file: 'CODE_25D_TORSO'
+    });
+  }
+}
+
 // Draw On-Canvas Radial Context Gizmo (triggered by Right-Click or Long-Press on any piece/bone)
 function drawRadialGizmo(ctx) {
   if (!radialGizmo.open || !radialGizmo.slotKey) return;
   const { x, y, slotKey, hoverSector } = radialGizmo;
   const tw = getSlotTweak(slotKey);
-  const rig = currentRig();
   const isFootOrShin = slotKey.startsWith('foot_') || slotKey.startsWith('shin_');
   const isHandOrFarm = slotKey.startsWith('hand_') || slotKey.startsWith('farm_');
   const layerLabel = isFootOrShin
@@ -2089,13 +2549,11 @@ function drawRadialGizmo(ctx) {
       : `Z-BIAS ${tw.zBias >= 0 ? '+' + tw.zBias : tw.zBias}`;
 
   ctx.save();
-  // Backdrop shadow ring
   ctx.fillStyle = 'rgba(6, 9, 15, 0.84)';
   ctx.beginPath();
   ctx.arc(x, y, 96, 0, Math.PI * 2);
   ctx.fill();
 
-  // 4 Quadrant Sectors (R = 54..92)
   const sectors = [
     { id: 'layer', a0: -Math.PI * 0.75, a1: -Math.PI * 0.25, label: 'LAYER FLIP', sub: layerLabel, col: '#22c55e' },
     { id: 'center', a0: -Math.PI * 0.25, a1: Math.PI * 0.25, label: 'VITRUVIAN', sub: 'CENTER BONE', col: '#00d2ff' },
@@ -2127,7 +2585,6 @@ function drawRadialGizmo(ctx) {
     ctx.fillText(s.sub, tx, ty + 8);
   }
 
-  // Middle Ring (R = 30..53): Continuous Scale & Rotation Scrub Ring
   ctx.beginPath();
   ctx.arc(x, y, 53, 0, Math.PI * 2);
   ctx.arc(x, y, 28, 0, Math.PI * 2, true);
@@ -2137,13 +2594,11 @@ function drawRadialGizmo(ctx) {
   ctx.lineWidth = 1.6;
   ctx.stroke();
 
-  // Scale & Rotation handle dot on the middle ring
   const rotRad = (tw.rotDeg - 90) * DEG;
   const hx = x + Math.cos(rotRad) * 40, hy = y + Math.sin(rotRad) * 40;
   ctx.fillStyle = C.yellow;
   ctx.beginPath(); ctx.arc(hx, hy, 5.5, 0, Math.PI * 2); ctx.fill();
 
-  // Inner Bullseye (R = 0..27): Bone Centering & Slot Readout
   ctx.beginPath();
   ctx.arc(x, y, 27, 0, Math.PI * 2);
   ctx.fillStyle = '#080b11';
@@ -2171,6 +2626,8 @@ const st = {
   playing: !matchMedia('(prefers-reduced-motion: reduce)').matches,
   view: 'auto',
   renderMode: 'both',
+  torsoMode: 'code',
+  kbOpenSlot: null,
   t: { arcs: true, onion: false, pins: true, vit: false, sil: false, battery: false },
   orbit: 0
 };
@@ -2298,10 +2755,8 @@ function drawStage() {
     drawViewport(ctx, 0, 0, SW, SH, m, f, yaw, el, null, true);
   }
 
-  // Draw active On-Canvas Radial Gizmo if open
   drawRadialGizmo(ctx);
 
-  // Slate HUD
   const k = keyAt(m, f);
   const rig = currentRig();
   ctx.font = `600 ${Math.max(9, Math.min(11.5, SW / 72))}px ${C.mono}`;
@@ -2309,7 +2764,7 @@ function drawStage() {
   ctx.textAlign = 'left';
   if (SW >= 460 && st.renderMode !== 'split' && st.renderMode !== 'quad') {
     const layerTag = layerOrder.shoe_over_calf ? 'SHOE>CALF' : 'CALF>SHOE';
-    ctx.fillText(`${m.id} · ${m.name.toUpperCase()}  [${rig ? rig.short_name.toUpperCase() : 'RIG'} · ${activeBreedId.toUpperCase()} · ${layerTag}]`, 12, 18);
+    ctx.fillText(`${m.id} · ${m.name.toUpperCase()}  [${rig ? rig.short_name.toUpperCase() : 'RIG'} · TORSO:${st.torsoMode.toUpperCase()} · ${layerTag}]`, 12, 18);
   }
   ctx.textAlign = 'right';
   ctx.fillStyle = C.cyan;
@@ -2327,38 +2782,181 @@ function romRows(metrics, keysList, curF) {
   }).join('');
 }
 
+/* ================= VISUAL 8-PART ACTIVE & CROSS-KIT KITBASH MATRIX (SHOW, DON'T TELL) ================= */
+const KB_SLOTS = [
+  { id: 'head',   label: 'HEAD',  pair: ['head'] },
+  { id: 'torso',  label: 'TORSO', pair: ['torso'] },
+  { id: 'uarm_L', label: 'U.ARM', pair: ['uarm_L', 'uarm_R'] },
+  { id: 'farm_L', label: 'F.ARM', pair: ['farm_L', 'farm_R'] },
+  { id: 'hand_L', label: 'HAND',  pair: ['hand_L', 'hand_R'] },
+  { id: 'thigh_L',label: 'THIGH', pair: ['thigh_L', 'thigh_R'] },
+  { id: 'shin_L', label: 'SHIN',  pair: ['shin_L', 'shin_R'] },
+  { id: 'foot_L', label: 'FOOT',  pair: ['foot_L', 'foot_R'] }
+];
+
+function buildVisualKitbashHTML(m) {
+  const rig = currentRig();
+  if (!rig || !rig.slots) return '';
+  const [yaw] = viewFor(m);
+  const f = clamp(st.f, 0, m.len - 1);
+  const totalYaw = ((m.F[f] && m.F[f].yaw) || 0) + yaw;
+
+  const tilesHTML = KB_SLOTS.map(slot => {
+    const sObj = rig.slots[slot.id];
+    const info = selectViewVariantInfo(sObj, totalYaw, rig, slot.id);
+    const isCodeTorso = slot.id === 'torso' && (st.torsoMode === 'code' || (st.torsoMode === 'hybrid' && info.viewKey !== 'front' && info.viewKey !== 'back'));
+    const kitSrc = (info.meta && info.meta.kit_source) || rig.primary_kit || 'kit';
+    const isBash = String(kitSrc).startsWith('KITBASH:') || info.viewKey === 'custom';
+    const badgeClass = isCodeTorso ? 'code' : (isBash ? 'bash' : 'kit');
+    const badgeText = isCodeTorso ? 'CODE 2.5D' : (isBash ? 'KITBASH' : info.viewKey.toUpperCase().slice(0, 4));
+    const subLabel = isCodeTorso
+      ? ((rig.torso_style && rig.torso_style.style) || '2.5D Mesh')
+      : (info.file ? info.file.split('/').slice(-2).join('/') : 'none');
+    const expanded = st.kbOpenSlot === slot.id;
+    return `<button type="button" class="kb-slot-tile" data-kbslot="${slot.id}" aria-expanded="${expanded}" title="Click to kitbash ${slot.label} from any kit">
+      <div class="kb-hdr"><span>${slot.label}</span><span class="kb-badge ${badgeClass}">${badgeText}</span></div>
+      <div class="kb-img-wrap">
+        ${info.file ? `<img src="${info.file}" alt="${slot.label}">` : ''}
+      </div>
+      <div class="kb-sub">${subLabel}</div>
+    </button>`;
+  }).join('');
+
+  let drawerHTML = '';
+  if (st.kbOpenSlot && CATALOG && CATALOG.rigs) {
+    const activeSlot = KB_SLOTS.find(x => x.id === st.kbOpenSlot) || KB_SLOTS[0];
+    const seenFiles = new Set();
+    const opts = [];
+    for (const r of CATALOG.rigs) {
+      const sObj = r.slots && r.slots[activeSlot.id];
+      if (!sObj) continue;
+      const vv = sObj.view_variants || { front: sObj.file };
+      for (const [vk, vf] of Object.entries(vv)) {
+        if (!vf || seenFiles.has(vf)) continue;
+        seenFiles.add(vf);
+        opts.push({
+          rigName: r.short_name || r.id,
+          viewKey: vk,
+          file: vf,
+          meta: (sObj.variant_meta && sObj.variant_meta[vk]) || sObj
+        });
+      }
+    }
+    drawerHTML = `<div class="kb-drawer">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px">
+        <b style="color:var(--cyan)">KITBASH ${activeSlot.label} ACROSS ALL KITS (${opts.length} PIECES)</b>
+        <div style="display:flex;gap:5px">
+          ${activeSlot.id === 'torso' ? `<button type="button" class="btn primary" id="kbUseCodeTorso" style="padding:2px 6px;font-size:9.5px">USE CODE 2.5D TORSO</button>` : ''}
+          <button type="button" class="btn" id="kbResetSlot" style="padding:2px 6px;font-size:9.5px">AUTO VIEW</button>
+          <button type="button" class="btn" id="kbCloseDrawer" style="padding:2px 6px;font-size:9.5px">CLOSE</button>
+        </div>
+      </div>
+      <div class="kb-drawer-grid">
+        ${opts.map((o, idx) => `<button type="button" class="kb-opt" data-kbidx="${idx}">
+          <img src="${o.file}" alt="${o.rigName} ${o.viewKey}">
+          <span>${o.rigName} · ${o.viewKey.slice(0, 4)}</span>
+        </button>`).join('')}
+      </div>
+    </div>`;
+    window.__kbCurrentOpts = { activeSlot, opts };
+  }
+
+  return `<section>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+      <h3 style="margin:0">ACTIVE PIECES &amp; KITBASH MATRIX (CLICK ANY PART TO SWAP)</h3>
+      <span style="font-family:var(--mono);font-size:9.5px;color:var(--ink-2)">VIEW: ${(st.view === 'auto' ? m.view : st.view).toUpperCase()}</span>
+    </div>
+    <div class="kb-matrix" id="kbMatrixGrid">${tilesHTML}</div>
+    ${drawerHTML}
+  </section>`;
+}
+
+function bindVisualKitbashEvents() {
+  const host = $('card');
+  if (!host) return;
+  host.querySelectorAll('.kb-slot-tile').forEach(btn => {
+    btn.onclick = () => {
+      const sk = btn.dataset.kbslot;
+      st.kbOpenSlot = (st.kbOpenSlot === sk) ? null : sk;
+      renderCard();
+    };
+  });
+  const closeBtn = $('kbCloseDrawer');
+  if (closeBtn) closeBtn.onclick = () => { st.kbOpenSlot = null; renderCard(); };
+  const resetBtn = $('kbResetSlot');
+  if (resetBtn && window.__kbCurrentOpts) {
+    resetBtn.onclick = () => {
+      for (const sk of window.__kbCurrentOpts.activeSlot.pair) {
+        const tw = getSlotTweak(sk);
+        tw.overrideFile = null;
+        tw.overrideMeta = null;
+      }
+      if (window.__kbCurrentOpts.activeSlot.id === 'torso') syncTorsoModeButtons('card');
+      drawStage();
+      renderCard();
+    };
+  }
+  const codeBtn = $('kbUseCodeTorso');
+  if (codeBtn) {
+    codeBtn.onclick = () => {
+      syncTorsoModeButtons('code');
+      drawStage();
+      renderCard();
+    };
+  }
+  host.querySelectorAll('.kb-opt').forEach(btn => {
+    btn.onclick = () => {
+      const cur = window.__kbCurrentOpts;
+      if (!cur) return;
+      const chosen = cur.opts[+btn.dataset.kbidx];
+      if (!chosen) return;
+      for (const sk of cur.activeSlot.pair) {
+        const tw = getSlotTweak(sk);
+        tw.overrideFile = chosen.file;
+        tw.overrideMeta = chosen.meta;
+        getImg(chosen.file);
+      }
+      if (cur.activeSlot.id === 'torso') syncTorsoModeButtons('card');
+      drawStage();
+      renderCard();
+    };
+  });
+}
+
+function syncTorsoModeButtons(mode) {
+  st.torsoMode = mode;
+  document.querySelectorAll('[data-tm]').forEach(b => {
+    b.setAttribute('aria-pressed', String(b.dataset.tm === mode));
+  });
+}
+
 function renderCard() {
   const m = bake(LIB[st.i]); labelKeys(m);
   const g = m.gate, grp = GROUPS.find(x => x[0] === m.group);
   const allInvSolved = inv.twoPin && inv.intrinsicRot && inv.vitruvianScale && inv.cuffTuckZ;
-  const row = (crit, val, ok) => `<li><div><div style="font-size:12.5px;color:var(--ink)">${crit}</div><div style="font-family:var(--mono);font-size:10.5px;color:var(--ink-2)">${val}</div></div><span class="pill ${ok === null ? 'na' : ok ? 'ok' : 'no'}">${ok === null ? 'INFO' : ok ? 'PASS' : 'FIX'}</span></li>`;
   $('card').innerHTML = `
-    <div>
-      <p class="eyebrow">${m.id} · ${grp[1]}</p>
-      <h2>${m.name}</h2>
-      <p style="margin:4px 0 0;color:var(--ink-2);font-size:12.5px">${m.cue}</p>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+      <div>
+        <p class="eyebrow">${m.id} · ${grp[1]}</p>
+        <h2 style="font-size:22px">${m.name}</h2>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        <span class="pill ${g.pass.reach ? 'ok' : 'no'}">REACH ${g.pass.reach ? 'PASS' : 'CLAMP'}</span>
+        <span class="pill ${allInvSolved ? 'ok' : 'no'}">4-INV ${allInvSolved ? 'PASS' : 'RAW'}</span>
+        <span class="pill ${g.pass.arcs ? 'ok' : 'no'}">ARCS ${g.pass.arcs ? 'PASS' : 'ZIG'}</span>
+      </div>
     </div>
+    ${buildVisualKitbashHTML(m)}
     <section>
-      <h3>Range Reached (Clinical Norm vs. Peak)</h3>
+      <h3>ROM METER &amp; X-SHEET KEYS</h3>
       <ul class="rom-list" id="rom">${romRows(m.metrics, m.rom, st.f)}</ul>
-    </section>
-    <section>
-      <h3>Skeletal &amp; Cut-Out Registration Gate</h3>
-      <ul class="gate-list">
-        ${row('Every target reachable without stretching a bone', `max leg clamp ${g.leg.toFixed(2)} cm · max arm clamp ${g.arm.toFixed(2)} cm`, g.pass.reach)}
-        ${row('Cut-Out 4 Connection Invariants (Pins, 90° Axis, Scale, Cuff-Tuck)', allInvSolved ? 'Pivot A->B inside cuff · Vitruvian cm scale · Cuff-Over-Extremity Z' : 'INVARIANT DISABLED — inspect wrist/ankle/scale distortion on stage', allInvSolved)}
-        ${row('Nose arc free of accidental reversals', `${g.zig} sharp reversals while moving`, g.pass.arcs)}
-        ${row('Contacts and holds', `${g.pinned} frames planted foot · ${g.holds} pelvis holds · peak ${g.peak.toFixed(1)} cm/f`, null)}
-      </ul>
-    </section>
-    <section>
-      <h3>X-Sheet Keys &amp; Breakdowns</h3>
-      <div class="keys" id="keys">${m.keys.map(k => `<button type="button" class="${k.type === 'brk' ? 'brk' : ''}" data-f="${k.f}"><b>${k.id}</b> ${String(k.f).padStart(3, '0')} ${k.note || ''}</button>`).join('')}</div>
+      <div class="keys" id="keys" style="margin-top:6px">${m.keys.map(k => `<button type="button" class="${k.type === 'brk' ? 'brk' : ''}" data-f="${k.f}"><b>${k.id}</b> ${String(k.f).padStart(3, '0')} ${k.note || ''}</button>`).join('')}</div>
     </section>`;
   $('keys').querySelectorAll('button').forEach(b => b.onclick = () => { st.playing = false; syncPlay(); setF(+b.dataset.f); });
   $('ticks').innerHTML = m.keys.map(k => `<i class="${k.type === 'brk' ? 'b' : 'k'}" style="left:${(k.f / (m.len - 1) * 100).toFixed(2)}%"></i>`).join('');
   $('scrub').max = m.len - 1;
   document.querySelectorAll('.tile').forEach(t => t.setAttribute('aria-current', String(+t.dataset.i === st.i)));
+  bindVisualKitbashEvents();
 }
 
 let lastKeyBtn = null;
@@ -2387,12 +2985,17 @@ $('scrub').oninput = () => { st.playing = false; syncPlay(); setF(+$('scrub').va
 document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => {
   st.view = b.dataset.v;
   document.querySelectorAll('[data-v]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-  camC = null; drawStage();
+  camC = null; drawStage(); renderCard();
 });
 document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {
   st.renderMode = b.dataset.rm;
   document.querySelectorAll('[data-rm]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
   drawStage();
+});
+document.querySelectorAll('[data-tm]').forEach(b => b.onclick = () => {
+  syncTorsoModeButtons(b.dataset.tm);
+  drawStage();
+  renderCard();
 });
 document.querySelectorAll('[data-t]').forEach(b => {
   const k = b.dataset.t;
@@ -2954,7 +3557,7 @@ $('s4FlipYawBtn').onclick = () => {
 function switchStage(s) {
   activeStage = s;
   document.querySelectorAll('.step-btn').forEach(b => b.setAttribute('aria-selected', String(b.dataset.stage === s)));
-  ['s1', 's2', 's3', 's4', 's5'].forEach(k => {
+  ['s1', 's2', 's3', 's4', 's5', 's6'].forEach(k => {
     const el = $('stage_' + k);
     if (el) el.hidden = k !== s;
   });
@@ -2962,6 +3565,7 @@ function switchStage(s) {
 }
 document.querySelectorAll('.step-btn').forEach(b => b.onclick = () => switchStage(b.dataset.stage));
 $('quickAll54').onclick = () => switchStage('s5');
+if ($('quickEvolveGrid')) $('quickEvolveGrid').onclick = () => switchStage('s6');
 
 function syncInvButtons() {
   document.querySelectorAll('.inv-chip[data-inv]').forEach(b => {
@@ -2989,6 +3593,7 @@ function requestRedrawAll() {
   else if (activeStage === 's2') drawStage2();
   else if (activeStage === 's3') drawStage3();
   else if (activeStage === 's4') drawStage4();
+  else if (activeStage === 's6') drawEvolveGridAll();
   else { sizeStage(); drawStage(); }
 }
 
@@ -3520,6 +4125,661 @@ function renderEvolvedCandidatesStrip(algo, motionId, frameIdx) {
   });
 }
 
+/* ================= STAGE 06: LIVE EVOLUTIONARY BATCH GRID (FACES & BODIES) ================= */
+const egState = {
+  mode: 'bodies', // 'bodies' | 'strips' | 'cubist'
+  view: 'auto',
+  streaming: true,
+  gen: 1,
+  orbit: 0,
+  tick: 0,
+  cells: []
+};
+const egCanvases = [];
+
+function getGenePool() {
+  if (!CATALOG) return null;
+  return CATALOG.face_and_body_gene_pool || null;
+}
+
+function scoreEvolveCellGeometry(cell) {
+  const gp = getGenePool();
+  if (!gp || !CATALOG) return { total: 92.0, align: 92, prop: 92, seam: 92, contrast: 92 };
+  const rig = CATALOG.rigs[cell.rigIdx] || CATALOG.rigs[0];
+  const br = (CATALOG.skeleton_breeds || []).find(b => b.id === cell.breedId) || (CATALOG.skeleton_breeds || [])[0];
+  const hd = gp.expressive_heads[cell.headIdx % gp.expressive_heads.length] || gp.expressive_heads[0];
+
+  // 1. Orientation & View Registration Harmony (28%)
+  const viewMatch = (egState.view === 'auto' || hd.view === egState.view || (egState.view === 'tq' && hd.view === 'threequarter') || (egState.view === 'side' && hd.view === 'profile')) ? 0.97 : 0.86;
+  const align = clamp(viewMatch + (cell.torsoMode === 'code' ? 0.03 : 0), 0.72, 0.995);
+
+  // 2. Vitruvian Golden-Ratio Proportion Score (28%)
+  let prop = 0.92;
+  if (br && br.bones) {
+    const leg = br.bones.thigh + br.bones.shin;
+    const tot = leg + br.bones.spine + br.bones.headR * 2.4;
+    const grErr = Math.abs(leg / tot - 0.50);
+    prop = clamp(1.0 - grErr * 1.9 - Math.abs(cell.limbScale - 1.0) * 0.4, 0.76, 0.995);
+  }
+
+  // 3. Seam & Cuff-Tuck Continuity (22%)
+  const seam = clamp((cell.torsoMode === 'code' ? 0.96 : 0.90) + (inv.cuffTuckZ ? 0.035 : -0.12), 0.70, 0.995);
+
+  // 4. Visual Contrast & Cubist/Strip Interest (22%)
+  const eyeTension = Math.abs(cell.eyeLScale - cell.eyeRScale);
+  const contrastBase = egState.mode === 'cubist'
+    ? (0.88 + clamp(eyeTension * 0.35, 0, 0.11))
+    : (egState.mode === 'strips' ? 0.94 : 0.93);
+  const contrast = clamp(contrastBase + ((cell.strip1Idx * 7 + cell.strip3Idx * 3) % 11) * 0.005, 0.78, 0.995);
+
+  const starBoost = cell.starred ? 2.2 : 0;
+  const total = clamp((align * 0.28 + prop * 0.28 + seam * 0.22 + contrast * 0.22) * 100 + starBoost, 74.0, 99.8);
+  return {
+    total,
+    align: Math.round(align * 100),
+    prop: Math.round(prop * 100),
+    seam: Math.round(seam * 100),
+    contrast: Math.round(contrast * 100)
+  };
+}
+
+function makeRandomEvolveCell(idx, seedIdx = null) {
+  const gp = getGenePool();
+  const rigs = (CATALOG && CATALOG.rigs) || [];
+  const breeds = (CATALOG && CATALOG.skeleton_breeds) || [];
+  const s = seedIdx !== null ? seedIdx : idx;
+  const motionPool = [37, 0, 1, 7, 13, 19, 25, 38, 41, 44, 48, 52]; // Walk, Neck, Turn, Squat, Lunge, Balance, Run, Stairs, Box, Kick, Jump
+  const rigIdx = s % Math.max(1, rigs.length);
+  const rig = rigs[rigIdx] || {};
+  const brIdx = s % Math.max(1, breeds.length);
+  const br = breeds[brIdx] || { id: 'poet_tracksuit_75h', short_name: 'Tracksuit 7.5H' };
+
+  const hLen = gp && gp.expressive_heads.length ? gp.expressive_heads.length : 12;
+  const s1Len = gp && gp.strip_1_brows_eyes.length ? gp.strip_1_brows_eyes.length : 12;
+  const s2Len = gp && gp.strip_2_noses_cheeks.length ? gp.strip_2_noses_cheeks.length : 12;
+  const s3Len = gp && gp.strip_3_mouths_jaws.length ? gp.strip_3_mouths_jaws.length : 12;
+  const hndLen = gp && gp.collage_hands.length ? gp.collage_hands.length : 8;
+  const grLen = gp && gp.headgear.length ? gp.headgear.length : 6;
+
+  // Pick curated high-impact combinations for the initial 12 cells (matching Refs 2 & 3 `#11/#24/#36` and `#04/#19/#39`!)
+  const presetStrips = [
+    [10, 5, 11], [3, 18, 8], [12, 0, 1], [4, 2, 10],
+    [0, 1, 2],   [6, 4, 5],  [14, 3, 9], [8, 6, 3],
+    [2, 7, 12],  [11, 8, 4], [5, 9, 7],  [15, 2, 6]
+  ];
+  const ps = presetStrips[idx % presetStrips.length];
+
+  const cell = {
+    id: `C${String(idx + 1).padStart(2, '0')}`,
+    starred: idx === 0 || idx === 1,
+    rigIdx,
+    breedId: rig.default_breed_id || br.id,
+    breedName: br.short_name || br.name || '7.5H',
+    torsoMode: (idx % 4 === 3) ? 'card' : 'code',
+    shoeOverCalf: (idx % 2 === 1),
+    limbScale: Math.round((0.96 + ((idx * 3) % 5) * 0.02) * 100) / 100,
+    headIdx: (s * 5 + idx * 3) % hLen,
+    strip1Idx: (ps[0] + (s > 11 ? s : 0)) % s1Len,
+    strip2Idx: (ps[1] + (s > 11 ? s * 2 : 0)) % s2Len,
+    strip3Idx: (ps[2] + (s > 11 ? s * 3 : 0)) % s3Len,
+    handIdx: (s * 2 + idx) % hndLen,
+    gearIdx: (s + idx * 2) % grLen,
+    motionIdx: motionPool[idx % motionPool.length] % LIB.length,
+    eyeLScale: Math.round((0.92 + ((idx * 7) % 6) * 0.06) * 100) / 100,
+    eyeRScale: Math.round((1.08 - ((idx * 5) % 6) * 0.05) * 100) / 100,
+    noseAngle: ((idx % 3) - 1) * 6
+  };
+  cell.geomScore = scoreEvolveCellGeometry(cell);
+  return cell;
+}
+
+function initEvolveGrid() {
+  if (!CATALOG) return;
+  egState.cells = [];
+  for (let i = 0; i < 12; i++) {
+    egState.cells.push(makeRandomEvolveCell(i, i));
+  }
+  egState.cells.sort((a, b) => b.geomScore.total - a.geomScore.total);
+  preloadEvolveGridAssets();
+  renderEvolveGridDOM();
+}
+
+function preloadEvolveGridAssets() {
+  const gp = getGenePool();
+  if (!gp) return;
+  for (const c of egState.cells) {
+    const h = gp.expressive_heads[c.headIdx % gp.expressive_heads.length];
+    const pl = gp.photofit_plates && gp.photofit_plates[c.headIdx % gp.photofit_plates.length];
+    const s1 = gp.strip_1_brows_eyes[c.strip1Idx % gp.strip_1_brows_eyes.length];
+    const s2 = gp.strip_2_noses_cheeks[c.strip2Idx % gp.strip_2_noses_cheeks.length];
+    const s3 = gp.strip_3_mouths_jaws[c.strip3Idx % gp.strip_3_mouths_jaws.length];
+    const cn = gp.cubist_noses && gp.cubist_noses[c.strip2Idx % gp.cubist_noses.length];
+    const hnd = gp.collage_hands[c.handIdx % gp.collage_hands.length];
+    const gr = gp.headgear[c.gearIdx % gp.headgear.length];
+    if (h) getImg(h.file);
+    if (pl) getImg(pl.file);
+    if (s1) getImg(s1.file);
+    if (s2) getImg(s2.file);
+    if (s3) getImg(s3.file);
+    if (cn) getImg(cn.file);
+    if (hnd) getImg(hnd.file);
+    if (gr) getImg(gr.file);
+    const rig = CATALOG.rigs[c.rigIdx];
+    if (rig && rig.slots) {
+      Object.values(rig.slots).forEach(s => {
+        getImg(s.file);
+        if (s.view_variants) Object.values(s.view_variants).forEach(vf => getImg(vf));
+      });
+    }
+  }
+}
+
+function renderEvolveGridDOM() {
+  const host = $('evolveGridHost');
+  if (!host || !CATALOG) return;
+  const gp = getGenePool();
+  egCanvases.length = 0;
+
+  host.innerHTML = egState.cells.map((c, idx) => {
+    const rig = CATALOG.rigs[c.rigIdx] || CATALOG.rigs[0];
+    const s1Num = String((c.strip1Idx % 18) + 2).padStart(2, '0');
+    const s2Num = String((c.strip2Idx % 22) + 16).padStart(2, '0');
+    const s3Num = String((c.strip3Idx % 24) + 31).padStart(2, '0');
+    const hd = gp && gp.expressive_heads[c.headIdx % gp.expressive_heads.length];
+    const pl = gp && gp.photofit_plates && gp.photofit_plates[c.headIdx % gp.photofit_plates.length];
+    const titleLbl = egState.mode === 'strips' && pl ? pl.label : (hd ? hd.label.slice(0, 16) : rig.short_name);
+    const recipeText = egState.mode === 'strips'
+      ? `STRIPS #${s1Num} / #${s2Num} / #${s3Num}`
+      : (egState.mode === 'cubist'
+        ? `COLLAGE #${String(c.headIdx + 1).padStart(2, '0')} · EYE ${c.eyeLScale}/${c.eyeRScale}`
+        : `${rig.short_name} · ${c.torsoMode.toUpperCase()} · ${c.breedName}`);
+    return `<div class="eg-cell" data-cidx="${idx}" data-starred="${c.starred}">
+      <div class="eg-hdr">
+        <span class="eg-rank">#${String(idx + 1).padStart(2, '0')} · ${titleLbl}</span>
+        <span class="eg-score" title="ALIGN ${c.geomScore.align}% · PROP ${c.geomScore.prop}% · SEAM ${c.geomScore.seam}% · CONTRAST ${c.geomScore.contrast}%">GEOM ${c.geomScore.total.toFixed(1)}%</span>
+      </div>
+      <div class="eg-cv-wrap" data-cvidx="${idx}" title="Click top/mid/bottom strip to cycle piece, or click buttons below to Star/Mutate/Apply">
+        <canvas width="280" height="254"></canvas>
+      </div>
+      <div class="eg-ftr">
+        <span class="eg-recipe">${recipeText}</span>
+        <div style="display:flex;gap:3px">
+          <button type="button" class="eg-btn star" data-act="star" data-idx="${idx}" aria-pressed="${c.starred}" title="Keep as Parent for Breeding">${c.starred ? '★ PARENT' : '☆ KEEP'}</button>
+          <button type="button" class="eg-btn" data-act="mutate" data-idx="${idx}" title="Mutate this cell">MUTATE</button>
+          <button type="button" class="eg-btn apply" data-act="apply" data-idx="${idx}" title="Apply this evolved body/face to Main Stage">STAGE &rarr;</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  host.querySelectorAll('.eg-cv-wrap').forEach((wrap, idx) => {
+    const cv = wrap.querySelector('canvas');
+    egCanvases[idx] = cv;
+    wrap.onclick = e => {
+      const r = wrap.getBoundingClientRect();
+      const relY = (e.clientY - r.top) / Math.max(1, r.height);
+      const cell = egState.cells[idx];
+      if (!cell || !gp) return;
+      if (egState.mode === 'strips') {
+        if (relY < 0.37) cell.strip1Idx = (cell.strip1Idx + 1) % gp.strip_1_brows_eyes.length;
+        else if (relY < 0.56) cell.strip2Idx = (cell.strip2Idx + 1) % gp.strip_2_noses_cheeks.length;
+        else cell.strip3Idx = (cell.strip3Idx + 1) % gp.strip_3_mouths_jaws.length;
+      } else {
+        cell.headIdx = (cell.headIdx + 1) % gp.expressive_heads.length;
+      }
+      cell.geomScore = scoreEvolveCellGeometry(cell);
+      preloadEvolveGridAssets();
+      renderEvolveGridDOM();
+      drawEvolveGridAll();
+    };
+  });
+
+  host.querySelectorAll('.eg-btn').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      const idx = +btn.dataset.idx;
+      const act = btn.dataset.act;
+      const cell = egState.cells[idx];
+      if (!cell) return;
+      if (act === 'star') {
+        cell.starred = !cell.starred;
+        cell.geomScore = scoreEvolveCellGeometry(cell);
+        renderEvolveGridDOM();
+        drawEvolveGridAll();
+      } else if (act === 'mutate') {
+        mutateSingleEvolveCell(idx);
+      } else if (act === 'apply') {
+        applyEvolveCellToStage(idx);
+      }
+    };
+  });
+
+  const maxSc = egState.cells.length ? Math.max(...egState.cells.map(x => x.geomScore.total)) : 98.0;
+  const rd = $('egGenReadout');
+  if (rd) rd.textContent = `GEN ${String(egState.gen).padStart(2, '0')} · GEOM MAX ${maxSc.toFixed(1)}%`;
+}
+
+function mutateSingleEvolveCell(idx) {
+  const gp = getGenePool();
+  if (!gp) return;
+  const old = egState.cells[idx];
+  const next = makeRandomEvolveCell(idx, Math.floor(Math.random() * 1000));
+  next.starred = old ? old.starred : false;
+  egState.cells[idx] = next;
+  preloadEvolveGridAssets();
+  renderEvolveGridDOM();
+  drawEvolveGridAll();
+}
+
+function evolveNextGenerationBatch() {
+  const gp = getGenePool();
+  if (!gp || !CATALOG) return;
+  egState.gen += 1;
+
+  // Keep starred parents + top 3 geometric elites
+  const sorted = egState.cells.slice().sort((a, b) => (b.starred - a.starred) || (b.geomScore.total - a.geomScore.total));
+  const parents = sorted.slice(0, 4);
+  const breeds = CATALOG.skeleton_breeds || [];
+
+  const nextPop = [];
+  for (let i = 0; i < 12; i++) {
+    if (i < parents.length && (parents[i].starred || i < 2)) {
+      const kept = Object.assign({}, parents[i]);
+      kept.geomScore = scoreEvolveCellGeometry(kept);
+      nextPop.push(kept);
+      continue;
+    }
+    const pA = parents[i % parents.length];
+    const pB = parents[(i + 1 + Math.floor(Math.random() * (parents.length - 1))) % parents.length] || pA;
+    const pick = (a, b) => Math.random() < 0.5 ? a : b;
+    const mut = (val, maxLen, prob = 0.38) => Math.random() < prob ? Math.floor(Math.random() * maxLen) : val;
+
+    const child = {
+      id: `G${egState.gen}_${i + 1}`,
+      starred: false,
+      rigIdx: mut(pick(pA.rigIdx, pB.rigIdx), CATALOG.rigs.length, 0.30),
+      breedId: pick(pA.breedId, pB.breedId),
+      breedName: pick(pA.breedName, pB.breedName),
+      torsoMode: Math.random() < 0.78 ? 'code' : pick(pA.torsoMode, pB.torsoMode),
+      shoeOverCalf: pick(pA.shoeOverCalf, pB.shoeOverCalf),
+      limbScale: clamp(Math.round((pick(pA.limbScale, pB.limbScale) + (Math.random() - 0.5) * 0.06) * 100) / 100, 0.90, 1.12),
+      headIdx: mut(pick(pA.headIdx, pB.headIdx), gp.expressive_heads.length, 0.45),
+      strip1Idx: mut(pick(pA.strip1Idx, pB.strip1Idx), gp.strip_1_brows_eyes.length, 0.50),
+      strip2Idx: mut(pick(pA.strip2Idx, pB.strip2Idx), gp.strip_2_noses_cheeks.length, 0.50),
+      strip3Idx: mut(pick(pA.strip3Idx, pB.strip3Idx), gp.strip_3_mouths_jaws.length, 0.50),
+      handIdx: mut(pick(pA.handIdx, pB.handIdx), gp.collage_hands.length, 0.40),
+      gearIdx: mut(pick(pA.gearIdx, pB.gearIdx), gp.headgear.length, 0.40),
+      motionIdx: pA.motionIdx,
+      eyeLScale: clamp(Math.round((pick(pA.eyeLScale, pB.eyeLScale) + (Math.random() - 0.5) * 0.14) * 100) / 100, 0.78, 1.28),
+      eyeRScale: clamp(Math.round((pick(pA.eyeRScale, pB.eyeRScale) + (Math.random() - 0.5) * 0.14) * 100) / 100, 0.78, 1.28),
+      noseAngle: Math.round((pick(pA.noseAngle, pB.noseAngle) + (Math.random() - 0.5) * 8))
+    };
+    if (Math.random() < 0.25 && breeds.length) {
+      const rb = breeds[Math.floor(Math.random() * breeds.length)];
+      child.breedId = rb.id;
+      child.breedName = rb.short_name || rb.name;
+    }
+    child.geomScore = scoreEvolveCellGeometry(child);
+    nextPop.push(child);
+  }
+
+  nextPop.sort((a, b) => (b.starred - a.starred) || (b.geomScore.total - a.geomScore.total));
+  egState.cells = nextPop;
+  preloadEvolveGridAssets();
+  renderEvolveGridDOM();
+  drawEvolveGridAll();
+}
+
+function applyEvolveCellToStage(idx) {
+  const cell = egState.cells[idx];
+  const gp = getGenePool();
+  if (!cell || !CATALOG) return;
+
+  activeRigIdx = cell.rigIdx;
+  resetSlotTweaks();
+  document.querySelectorAll('#rigStrip .rig-pill').forEach((x, j) => x.setAttribute('aria-pressed', String(j === activeRigIdx)));
+
+  if (cell.breedId) applySkeletonBreed(cell.breedId);
+  syncTorsoModeButtons(cell.torsoMode);
+  layerOrder.shoe_over_calf = cell.shoeOverCalf;
+  syncLayerButtons();
+
+  const hd = gp && gp.expressive_heads[cell.headIdx % gp.expressive_heads.length];
+  if (hd) {
+    const twH = getSlotTweak('head');
+    twH.overrideFile = hd.file;
+    twH.overrideMeta = {
+      file: hd.file,
+      width: hd.width || 220,
+      height: hd.height || 300,
+      pivot_A: [0.50, 0.88],
+      socket_B: [0.50, 0.12],
+      rot_offset_deg: 0,
+      kit_source: `EVOLVED:${hd.group}`
+    };
+    getImg(hd.file);
+  }
+
+  switchStage('s5');
+  renderCard();
+  drawStage();
+}
+
+function drawRoundedRect(ctx, x, y, w, h, r) {
+  const rad = Math.min(r, w * 0.5, h * 0.5);
+  ctx.beginPath();
+  ctx.moveTo(x + rad, y);
+  ctx.lineTo(x + w - rad, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+  ctx.lineTo(x + w, y + h - rad);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+  ctx.lineTo(x + rad, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+  ctx.lineTo(x, y + rad);
+  ctx.quadraticCurveTo(x, y, x + rad, y);
+  ctx.closePath();
+}
+
+function drawImgCentered(ctx, path, cx, cy, targetW, targetH, rotDeg = 0) {
+  const im = getImg(path);
+  if (!im || !im.complete || !im.naturalWidth) return false;
+  const nw = im.naturalWidth, nh = im.naturalHeight;
+  const scale = Math.min(targetW / nw, targetH / nh);
+  const dw = nw * scale, dh = nh * scale;
+  ctx.save();
+  ctx.translate(cx, cy);
+  if (rotDeg) ctx.rotate(rotDeg * DEG);
+  ctx.drawImage(im, -dw * 0.5, -dh * 0.5, dw, dh);
+  ctx.restore();
+  return true;
+}
+
+function drawEvolveGridCell(idx) {
+  const cv = egCanvases[idx];
+  const cell = egState.cells[idx];
+  const gp = getGenePool();
+  if (!cv || !cell || !CATALOG || !gp) return;
+
+  const d = Math.min(2, devicePixelRatio || 1);
+  const r = cv.getBoundingClientRect();
+  const W = r.width || 280, H = r.height || 254;
+  if (cv.width !== Math.round(W * d) || cv.height !== Math.round(H * d)) {
+    cv.width = Math.round(W * d);
+    cv.height = Math.round(H * d);
+  }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+
+  const rig = CATALOG.rigs[cell.rigIdx] || CATALOG.rigs[0];
+  const hd = gp.expressive_heads[cell.headIdx % gp.expressive_heads.length] || gp.expressive_heads[0];
+  const plates = gp.photofit_plates || [];
+  const pl = plates.length ? plates[cell.headIdx % plates.length] : hd;
+  // Filter strips by matching view when in 3-strip mode so front plates get front strips and 3Q/profile plates get profile strips!
+  const targetVw = (pl && pl.view === 'profile') ? 'profile' : 'front';
+  const s1Pool = gp.strip_1_brows_eyes.filter(x => x.view === targetVw);
+  const s2Pool = gp.strip_2_noses_cheeks.filter(x => x.view === targetVw);
+  const s3Pool = gp.strip_3_mouths_jaws.filter(x => x.view === targetVw);
+
+  const s1 = (s1Pool.length ? s1Pool : gp.strip_1_brows_eyes)[cell.strip1Idx % Math.max(1, s1Pool.length || gp.strip_1_brows_eyes.length)];
+  const s2 = (s2Pool.length ? s2Pool : gp.strip_2_noses_cheeks)[cell.strip2Idx % Math.max(1, s2Pool.length || gp.strip_2_noses_cheeks.length)];
+  const s3 = (s3Pool.length ? s3Pool : gp.strip_3_mouths_jaws)[cell.strip3Idx % Math.max(1, s3Pool.length || gp.strip_3_mouths_jaws.length)];
+  const cNose = gp.cubist_noses && gp.cubist_noses.length ? gp.cubist_noses[cell.strip2Idx % gp.cubist_noses.length] : s2;
+  const hnd = gp.collage_hands[cell.handIdx % gp.collage_hands.length];
+  const gr = gp.headgear[cell.gearIdx % gp.headgear.length];
+
+  if (egState.mode === 'bodies') {
+    // MODE 1: 12 FULL BODIES MOVING SIMULTANEOUSLY THROUGH FILM MOTIONS
+    ctx.fillStyle = C.paper;
+    ctx.fillRect(0, 0, W, H);
+
+    const m = bake(LIB[cell.motionIdx % LIB.length]);
+    const f = (egState.tick + idx * 4) % m.len;
+    const s = m.F[f];
+    const yr = m.ybox;
+    const hgt = Math.max(158, yr[1] - yr[0] + 32);
+    const center = [s.J.pelvis[0], (yr[0] + yr[1]) / 2, s.J.pelvis[2]];
+    let [yaw, el] = VIEWS[m.view] || VIEWS.tq;
+    if (egState.view === 'front') [yaw, el] = VIEWS.front;
+    else if (egState.view === 'side') [yaw, el] = VIEWS.side;
+    else if (egState.view === 'tq') [yaw, el] = VIEWS.tq;
+    else if (egState.view === 'orbit') [yaw, el] = [-35 + egState.orbit, 10];
+
+    const sc = (H * 0.84 / hgt) * cell.limbScale;
+    const P = camera(W, H, yaw, el, center, sc);
+    drawGrid(ctx, P, center, C.rule, 50, 150);
+
+    const prevTorsoMode = st.torsoMode;
+    const prevShoeLayer = layerOrder.shoe_over_calf;
+    const twHead = getSlotTweak('head');
+    const prevHeadFile = twHead.overrideFile;
+    const prevHeadMeta = twHead.overrideMeta;
+
+    st.torsoMode = cell.torsoMode;
+    layerOrder.shoe_over_calf = cell.shoeOverCalf;
+    if (hd && !hd.is_blank) {
+      twHead.overrideFile = hd.file;
+      twHead.overrideMeta = {
+        file: hd.file,
+        width: hd.width || 220,
+        height: hd.height || 300,
+        pivot_A: [0.50, 0.88],
+        socket_B: [0.50, 0.12],
+        rot_offset_deg: 0
+      };
+    }
+
+    drawWygwylRigOnBolas(ctx, s.J, P, sc, (s.yaw || 0) + yaw, rig, { showPins: false });
+    drawBola(ctx, s.J, P, sc, { alpha: 0.32, ends: false });
+
+    st.torsoMode = prevTorsoMode;
+    layerOrder.shoe_over_calf = prevShoeLayer;
+    twHead.overrideFile = prevHeadFile;
+    twHead.overrideMeta = prevHeadMeta;
+
+    ctx.font = `600 8.5px ${C.mono}`;
+    ctx.fillStyle = C.ink2;
+    ctx.textAlign = 'left';
+    ctx.fillText(`${m.id}@F${String(f).padStart(2, '0')} · ${cell.shoeOverCalf ? 'SHOE>CALF' : 'CALF>SHOE'}`, 6, H - 6);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = C.cyan;
+    ctx.fillText(`HEAD #${String(cell.headIdx + 1).padStart(2, '0')}`, W - 6, H - 6);
+
+  } else if (egState.mode === 'strips') {
+    // MODE 2: NATIVE 3-STRIP PHOTO-FIT FLIPBOOK (#11 / #24 / #36 — Exact match to Refs 2 & 3!)
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+    bgGrad.addColorStop(0, '#3a322d');
+    bgGrad.addColorStop(1, '#1d1815');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw collar/shoulders at bottom
+    const ts = rig.torso_style || { primary: '#181a20', accent: '#d92b2b', trim: '#c69c6d' };
+    ctx.fillStyle = ts.primary;
+    ctx.beginPath();
+    ctx.ellipse(W * 0.47, H * 1.03, W * 0.42, H * 0.22, 0, Math.PI, 0);
+    ctx.fill();
+    ctx.strokeStyle = ts.trim || '#c69c6d';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Draw Photo-Fit Portrait Plate (`face.front.plate.png` or `face.profile.plate.png`)
+    const imPlate = getImg(pl.file);
+    if (imPlate && imPlate.complete && imPlate.naturalWidth) {
+      const pw = imPlate.naturalWidth, ph = imPlate.naturalHeight;
+      const scale = Math.min((W * 0.78) / pw, (H * 0.88) / ph);
+      const dw = pw * scale, dh = ph * scale;
+      const px = W * 0.44 - dw * 0.5, py = (H - dh) * 0.46;
+      ctx.drawImage(imPlate, px, py, dw, dh);
+
+      const isProf = pl.view === 'profile';
+      const s1Num = String((cell.strip1Idx % 18) + 2).padStart(2, '0');
+      const s2Num = String((cell.strip2Idx % 22) + 16).padStart(2, '0');
+      const s3Num = String((cell.strip3Idx % 24) + 31).padStart(2, '0');
+
+      const drawPhotoFitStrip = (item, relX, relY, numStr) => {
+        if (!item) return;
+        const imS = getImg(item.file);
+        if (!imS || !imS.complete || !imS.naturalWidth) return;
+        const sw = imS.naturalWidth * scale;
+        const sh = imS.naturalHeight * scale;
+        const sx = isProf ? (px + dw * relX) : (px + (dw - sw) * 0.5);
+        const sy = py + dh * relY;
+        ctx.drawImage(imS, sx, sy, sw, sh);
+
+        // Bold right-hand Photo-Fit index number (`11 / 24 / 36` & `4 / 19 / 39` style!)
+        ctx.font = `700 18px ${C.disp}`;
+        ctx.fillStyle = '#f8f5ee';
+        ctx.textAlign = 'left';
+        ctx.fillText(numStr, Math.min(W - 26, sx + sw + 8), sy + sh * 0.68);
+      };
+
+      // Native strip coordinates on `face.front.plate` (320x527) and `face.profile.plate` (360x488)
+      drawPhotoFitStrip(s1, 0.34, 0.28, s1Num); // Strip 1: Brows
+      drawPhotoFitStrip(s2, 0.38, 0.39, s2Num); // Strip 2: Eyes
+      drawPhotoFitStrip(s3, 0.56, 0.62, s3Num); // Strip 3: Mouth
+    }
+
+    ctx.font = `600 8.5px ${C.mono}`;
+    ctx.fillStyle = C.yellow;
+    ctx.textAlign = 'left';
+    ctx.fillText(`CLICK TOP / MID / BOT STRIP TO SPIN`, 7, H - 5);
+
+  } else {
+    // MODE 3: CUBIST / MULTI-WINDOW ASSISTED SELF-PORTRAIT COLLAGE (Refs 1, 4 & 5!)
+    ctx.fillStyle = '#d8d2c5'; // Warm gallery paper ground like Refs 4 & 5
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle geometric golden-ratio construction lines
+    ctx.strokeStyle = 'rgba(20, 24, 32, 0.14)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.5, 0); ctx.lineTo(W * 0.5, H);
+    ctx.moveTo(0, H * 0.42); ctx.lineTo(W, H * 0.42);
+    ctx.moveTo(0, H * 0.68); ctx.lineTo(W, H * 0.68);
+    ctx.stroke();
+
+    // 1. Bold Cut-Out Collar & Shoulders at Bottom
+    const ts = rig.torso_style || { primary: '#1d3152', accent: '#d92b2b', trim: '#111318' };
+    ctx.fillStyle = ts.primary;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.12, H);
+    ctx.lineTo(W * 0.24, H * 0.76);
+    ctx.lineTo(W * 0.78, H * 0.78);
+    ctx.lineTo(W * 0.90, H);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#14171f';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // 2. Base Head Cut-Out (Polygonal Collage Fragment)
+    drawImgCentered(ctx, hd.file, W * 0.49, H * 0.49, W * 0.66, H * 0.76, -2);
+
+    // Helper for Multi-Window Assisted Self-Portrait Floating Window (Ref 1 + Ref 4/5)
+    const drawCollageWindow = (wx, wy, ww, wh, title, imgPath, scaleMult = 1.0, rot = 0, borderCol = '#181c24') => {
+      ctx.save();
+      ctx.translate(wx + ww * 0.5, wy + wh * 0.5);
+      ctx.rotate(rot * DEG);
+      const x0 = -ww * 0.5, y0 = -wh * 0.5;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.24)';
+      ctx.fillRect(x0 + 3, y0 + 3, ww, wh);
+      ctx.fillStyle = '#efe9dc';
+      ctx.fillRect(x0, y0, ww, wh);
+      ctx.fillStyle = borderCol;
+      ctx.fillRect(x0, y0, ww, 10);
+      ctx.fillStyle = '#f4efe6';
+      ctx.font = `700 6.5px ${C.mono}`;
+      ctx.textAlign = 'left';
+      ctx.fillText(title, x0 + 3, y0 + 7.5);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x0 + 1, y0 + 10, ww - 2, wh - 11);
+      ctx.clip();
+      drawImgCentered(ctx, imgPath, 0, 5, (ww - 4) * scaleMult, (wh - 12) * scaleMult, 0);
+      ctx.restore();
+      ctx.strokeStyle = borderCol;
+      ctx.lineWidth = 1.4;
+      ctx.strokeRect(x0, y0, ww, wh);
+      ctx.restore();
+    };
+
+    // 3. Left Eye Window & Right Eye Window (Mismatched Cubist Scale like Ref 4 & 5!)
+    const s2Alt = gp.strip_2_noses_cheeks[(cell.strip2Idx + 5) % gp.strip_2_noses_cheeks.length] || s2;
+    if (s2) {
+      drawCollageWindow(W * 0.14, H * 0.25, W * 0.34, H * 0.19, `EYE.L #${cell.strip2Idx + 1}`, s2.file, cell.eyeLScale * 1.45, -3.5, '#1b2432');
+      drawCollageWindow(W * 0.50, H * 0.23, W * 0.35, H * 0.21, `EYE.R #${cell.strip2Idx + 6}`, s2Alt.file, cell.eyeRScale * 1.45, 2.5, '#2b1e1e');
+    }
+    // 4. Sculptural Nose Cut-Out Window (Strictly Purified Noses!)
+    if (cNose) {
+      drawCollageWindow(W * 0.37, H * 0.41, W * 0.26, H * 0.22, `NOSE #${(cell.strip2Idx % 18) + 1}`, cNose.file, 1.15, cell.noseAngle, '#1f2937');
+    }
+    // 5. Mouth / Jaw Window
+    if (s3) {
+      drawCollageWindow(W * 0.28, H * 0.62, W * 0.44, H * 0.19, `MOUTH #${cell.strip3Idx + 1}`, s3.file, 1.35, -1.5, '#3b1d1d');
+    }
+    // 6. Headgear / Cap / Sunglasses Cut-Out at Crown
+    if (gr) {
+      drawImgCentered(ctx, gr.file, W * 0.50, H * 0.15, W * 0.54, H * 0.25, -4);
+    }
+    // 7. Expressive Hand Gesture near Chin/Cheek (just like Ref 4!)
+    if (hnd) {
+      drawImgCentered(ctx, hnd.file, W * 0.80, H * 0.74, W * 0.28, H * 0.30, (hnd.rot_offset_deg || 0) - 25);
+    }
+  }
+}
+
+function drawEvolveGridAll() {
+  if (activeStage !== 's6' || !CATALOG) return;
+  if (!egState.cells.length) initEvolveGrid();
+  for (let i = 0; i < egState.cells.length; i++) {
+    drawEvolveGridCell(i);
+  }
+}
+
+document.querySelectorAll('[data-egmode]').forEach(b => {
+  b.onclick = () => {
+    egState.mode = b.dataset.egmode;
+    document.querySelectorAll('[data-egmode]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    egState.cells.forEach(c => { c.geomScore = scoreEvolveCellGeometry(c); });
+    renderEvolveGridDOM();
+    drawEvolveGridAll();
+  };
+});
+
+document.querySelectorAll('[data-egview]').forEach(b => {
+  b.onclick = () => {
+    egState.view = b.dataset.egview;
+    document.querySelectorAll('[data-egview]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    egState.cells.forEach(c => { c.geomScore = scoreEvolveCellGeometry(c); });
+    renderEvolveGridDOM();
+    drawEvolveGridAll();
+  };
+});
+
+if ($('egStreamBtn')) {
+  $('egStreamBtn').onclick = e => {
+    egState.streaming = !egState.streaming;
+    e.currentTarget.setAttribute('aria-pressed', String(egState.streaming));
+  };
+}
+if ($('egStepGenBtn')) {
+  $('egStepGenBtn').onclick = () => evolveNextGenerationBatch();
+}
+if ($('egMutateBtn')) {
+  $('egMutateBtn').onclick = () => {
+    egState.gen += 1;
+    egState.cells.forEach((c, idx) => {
+      if (!c.starred) {
+        egState.cells[idx] = makeRandomEvolveCell(idx, Math.floor(Math.random() * 1000) + idx * 17);
+      }
+    });
+    egState.cells.sort((a, b) => (b.starred - a.starred) || (b.geomScore.total - a.geomScore.total));
+    preloadEvolveGridAssets();
+    renderEvolveGridDOM();
+    drawEvolveGridAll();
+  };
+}
+
 $('runEvoSolverBtn').onclick = () => runEvoPoseSolver();
 $('autoEvoKeyChip').onclick = e => {
   const b = e.currentTarget;
@@ -3550,28 +4810,30 @@ async function initCatalog() {
     bSel.onchange = () => applySkeletonBreed(bSel.value);
   }
 
-  // Populate Rig Strip
+  // Populate Visual Avatar Rig Strip (before quick action buttons)
   const host = $('rigStrip');
+  const quickWrap = $('quickEvolveGrid') ? $('quickEvolveGrid').parentElement : $('quickAll54');
   CATALOG.rigs.forEach((rig, idx) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'rig-pill';
-    b.textContent = rig.short_name || rig.name;
+    const headFile = rig.slots && rig.slots.head && rig.slots.head.file;
+    b.innerHTML = `${headFile ? `<img class="rp-thumb" src="${headFile}" alt="">` : ''}<span>${rig.short_name || rig.name}</span>`;
     b.setAttribute('aria-pressed', String(idx === activeRigIdx));
     b.onclick = () => {
       activeRigIdx = idx;
       resetSlotTweaks();
       host.querySelectorAll('.rig-pill').forEach((x, j) => x.setAttribute('aria-pressed', String(j === idx)));
-      // Preload rig slot images and view variants
       Object.values(rig.slots || {}).forEach(s => {
         getImg(s.file);
         if (s.view_variants) Object.values(s.view_variants).forEach(vf => getImg(vf));
       });
       if (rig.default_breed_id) applySkeletonBreed(rig.default_breed_id);
       populateStage3Selectors();
+      renderCard();
       requestRedrawAll();
     };
-    host.appendChild(b);
+    host.insertBefore(b, quickWrap);
   });
 
   // Preload active rig images and variants
@@ -3593,6 +4855,8 @@ async function initCatalog() {
   $('s1GoStage3').onclick = () => switchStage('s3');
 
   populateStage3Selectors();
+  initEvolveGrid();
+  renderCard();
   requestRedrawAll();
 }
 
@@ -3637,7 +4901,7 @@ function populateSwapDropdown() {
 }
 
 /* Main 24fps Loop */
-let acc = 0, prev = performance.now(), tick = 0, tileAcc = 0;
+let acc = 0, prev = performance.now(), tick = 0, tileAcc = 0, egAcc = 0;
 function loop(now) {
   const dt = Math.min(100, now - prev); prev = now;
   if (activeStage === 's5') {
@@ -3661,6 +4925,18 @@ function loop(now) {
       tileAcc = 0; tick++;
       visible.forEach(i => drawTile(i, tick));
     }
+  } else if (activeStage === 's6') {
+    egAcc += dt;
+    if (egAcc >= 1000 / 18) {
+      egAcc = 0;
+      egState.tick++;
+      if (egState.view === 'orbit') egState.orbit = (egState.orbit + 2.2) % 360;
+      if (egState.streaming && egState.tick % 48 === 0) {
+        evolveNextGenerationBatch();
+      } else {
+        drawEvolveGridAll();
+      }
+    }
   }
   requestAnimationFrame(loop);
 }
@@ -3671,7 +4947,12 @@ select(0);
 syncPlay();
 initCatalog();
 requestAnimationFrame(loop);
-window.__rangeRigger = { LIB, st, inv, layerOrder, L, switchStage, select, setF, applySkeletonBreed, runEvoPoseSolver, openRadialGizmoForPiece, getLastPieces: () => lastRenderedPieces, radialGizmo, drawStage };
+window.__rangeRigger = {
+  LIB, st, inv, layerOrder, L, switchStage, select, setF,
+  applySkeletonBreed, runEvoPoseSolver, openRadialGizmoForPiece,
+  getLastPieces: () => lastRenderedPieces, radialGizmo, drawStage,
+  egState, evolveNextGenerationBatch, applyEvolveCellToStage, drawEvolveGridAll
+};
 })();
 </script>
 </body>

@@ -1,729 +1,1048 @@
 #!/usr/bin/env python3
 """
-Fix Massive Set Labeling, Row-Clustered Sheet Order, Sideways Parts & Multi-View Rig Variants
-=============================================================================================
-1. Repairs corrupt/sideways files in `shots/arena/parts/kit3/v2/parts/` by copying the authentic
-   high-resolution cut pieces from `shots/arena/parts/kit3/release_v2/cuts/` using true 2D
-   row-clustered (`y_center` + `x_center`) printed sheet order (`1..13`, `1..7`, `1..21`, `1..14`).
-2. Normalizes sideways (`w > h * 1.25`) hand/limb pieces and upside-down (`17_hand_open_L/R`)
-   metadata across `crash_lab_catalog.json`, `character_rigs_library.json`, and `swapper_bank`.
-3. Adds per-view `variant_meta` (`front`, `threequarter`, `profile`, `back`, `open`, `grip`,
-   `fist`, `heel_up`, `toe_up`) with exact `width`, `height`, `visible_bbox`, `pivot_A`,
-   `socket_B`, `cuff_clip_ratio`, and `rot_offset_deg: 0.0` so switching views in
-   `range_rigger.html` and `crash_lab.html` never uses stale front-card coordinates or
-   draws upside-down torsos / nose-down boots / sideways hands.
-4. Adds `skeleton_breeds` (7 anatomical + Vitruvian skeleton breeds derived from limb/torso
-   proportions) for the Vitruvian Man Proportions Engine & Evolutionary/Monte Carlo Pose Solver.
+fix_massive_set_and_rigs.py (v2 — Exact Visual Template Mapping, Face Compositing & Cross-Kit Kitbashing)
+Fixes:
+1. Exact per-sheet layout templates for:
+   - 13-piece `.body.front / .threequarter / .back` sheets
+   - 7-piece `.body.profile` sheets (distinguishing Poet tracksuit `[torso, thigh, shin, uarm, farm, hand, foot]`
+     vs Street/DJ `[torso, uarm, farm, thigh, shin, hand, foot]`
+     vs Child `[torso, uarm, farm, hand, thigh, shin, foot]`)
+   - 14-piece `poet.black_tshirt.compact-core` (`[front.torso, back.torso, front.pelvis, back.pelvis, uarm.L, farm.L, uarm.R, farm.R, thigh.L, shin.L, thigh.R, shin.R, foot.L, foot.R]`)
+   - 14-piece `ex.ex_jacket.body.back` & `threequarter_back` (skipping the vape pen prop `p12`/`p08`!)
+   - 18-piece `woman.13.body` & `party.vintage_party.body.profile`
+   - 21-piece `woman.09.mother.body`, `ancestors.05.ancestor_robe_indigo_gold.body`, `parents.02.father_02.body`
+2. Exact 5-head angle order (`p01=front`, `p02=threequarter`, `p03=profile`, `p04=threequarter_back`, `p05=back`)
+   + Automatic Face Feature Compositing (eyes, brows, nose, mouth, sunglasses) onto blank head bases so no rig ever displays an eerie blank mannequin head!
+3. Cross-Kit Kitbash Matrix in `crash_lab_catalog.json`:
+   - Fills missing views (`poet.black_tshirt` hands & profile/3Q torso, `ex.ex_jacket` 3Q-back, `woman_muse` painted heads, `ancestors` turban heads) and records `kitbashed_from` + `torso_style` parameters for the Programmatic 2.5D Torso Solver.
 """
 
-import json
-import math
 import os
+import glob
+import json
 import shutil
-from PIL import Image
+from PIL import Image, ImageEnhance
+import numpy as np
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-SHOTS_DIR = os.path.normpath(os.path.join(HERE, "..", "..", ".."))
-REL_V2_DIR = os.path.join(HERE, "release_v2")
-CUTS_DIR = os.path.join(REL_V2_DIR, "cuts")
-V2_PARTS_DIR = os.path.join(HERE, "v2", "parts")
-CATALOG_PATH = os.path.join(REL_V2_DIR, "crash_lab_catalog.json")
-RELEASE_CAT_PATH = os.path.join(REL_V2_DIR, "release_catalog.json")
-CHAR_LIB_PATH = os.path.join(REL_V2_DIR, "character_rigs_library.json")
-
-_IMG_CACHE = {}
+ROOT = "/Users/gaia/WORLDBUILDING-TERMS/wygwyl-world-arch/shots"
+CUTS_DIR = os.path.join(ROOT, "arena/parts/kit3/release_v2/cuts")
+V2_PARTS_DIR = os.path.join(ROOT, "arena/parts/kit3/v2/parts")
+CATALOG_PATH = os.path.join(ROOT, "arena/parts/kit3/release_v2/crash_lab_catalog.json")
+TS_DIR = os.path.join(ROOT, "kits/packs/poet_tracksuit_v1/01_COMPONENTS")
 
 
-def inspect_img(rel_shots_path: str, force_refresh: bool = False) -> dict:
-    clean = rel_shots_path.lstrip("/")
-    if clean.startswith("shots/"):
-        clean = clean[len("shots/"):]
-    if not force_refresh and clean in _IMG_CACHE:
-        return _IMG_CACHE[clean]
-    abs_p = os.path.join(SHOTS_DIR, clean)
-    if not os.path.exists(abs_p):
-        info = {
-            "exists": False,
-            "file": clean,
-            "width": 256,
-            "height": 256,
-            "visible_bbox": [0, 0, 256, 256],
-            "visible_w": 256,
-            "visible_h": 256,
-        }
-        _IMG_CACHE[clean] = info
-        return info
-    with Image.open(abs_p) as im:
-        w, h = im.size
-        if im.mode in ("RGBA", "LA") or "transparency" in im.info:
-            alpha = im.convert("RGBA").split()[-1]
-            lut = [255 if i > 16 else 0 for i in range(256)]
-            bb = alpha.point(lut).getbbox()
-        else:
-            bb = (0, 0, w, h)
-        if not bb:
-            bb = (0, 0, w, h)
-        vw = max(1, bb[2] - bb[0])
-        vh = max(1, bb[3] - bb[1])
-        info = {
-            "exists": True,
-            "file": clean,
-            "width": w,
-            "height": h,
-            "visible_bbox": [bb[0], bb[1], bb[2], bb[3]],
-            "visible_w": vw,
-            "visible_h": vh,
-        }
-    _IMG_CACHE[clean] = info
-    return info
+def get_cut(folder, idx_1based):
+    p = os.path.join(CUTS_DIR, folder, f"{folder}__p{idx_1based:02d}.png")
+    return p if os.path.exists(p) else None
 
 
-def cut_path(sheet_id: str, p_idx: int) -> str:
-    return f"arena/parts/kit3/release_v2/cuts/{sheet_id}/{sheet_id}__p{p_idx:02d}.png"
-
-
-def copy_cut_to_v2(src_rel: str, dst_v2_dir: str, dst_filename: str, rotate_ccw_deg: int = 0):
-    src_abs = os.path.join(SHOTS_DIR, src_rel)
-    dst_abs = os.path.join(V2_PARTS_DIR, dst_v2_dir, dst_filename)
-    if not os.path.exists(src_abs):
+def copy_cut(src_folder, idx_1based, dst_dir, dst_name, crop_box_ratio=None, rotate_ccw=0, flip_x=False):
+    src = get_cut(src_folder, idx_1based)
+    if not src:
         return False
-    os.makedirs(os.path.dirname(dst_abs), exist_ok=True)
-    if rotate_ccw_deg != 0:
-        with Image.open(src_abs) as im:
-            rot = im.rotate(rotate_ccw_deg, expand=True, resample=Image.BICUBIC)
-            rot.save(dst_abs)
-    else:
-        shutil.copy2(src_abs, dst_abs)
-    inspect_img(f"arena/parts/kit3/v2/parts/{dst_v2_dir}/{dst_filename}", force_refresh=True)
+    os.makedirs(dst_dir, exist_ok=True)
+    dst = os.path.join(dst_dir, dst_name)
+    im = Image.open(src).convert("RGBA")
+    if crop_box_ratio:
+        w, h = im.size
+        x0, y0, x1, y1 = crop_box_ratio
+        im = im.crop((int(w * x0), int(h * y0), int(w * x1), int(h * y1)))
+    if rotate_ccw != 0:
+        im = im.rotate(rotate_ccw, expand=True)
+    if flip_x:
+        im = im.transpose(Image.FLIP_LEFT_RIGHT)
+    im.save(dst)
     return True
 
 
-def repair_v2_parts_from_release_cuts():
+def composite_face_onto_head(base_head_path, overlays, dst_path):
     """
-    Replaces corrupt/sideways/squished files in `shots/arena/parts/kit3/v2/parts/`
-    with authentic high-res cuts from `release_v2/cuts/` using verified row-clustered indices.
+    Composites facial feature PNGs (`(path, cx_ratio, cy_ratio, width_ratio)`) onto a blank head base
+    so the character head has painted eyes, brows, nose, mouth, or sunglasses baked in.
     """
+    if not base_head_path or not os.path.exists(base_head_path):
+        return False
+    base = Image.open(base_head_path).convert("RGBA")
+    bw, bh = base.size
+    for ov_path, cx_r, cy_r, w_r in overlays:
+        if not ov_path or not os.path.exists(ov_path):
+            continue
+        ov = Image.open(ov_path).convert("RGBA")
+        ow, oh = ov.size
+        if ow < 2 or oh < 2:
+            continue
+        target_w = max(8, int(bw * w_r))
+        target_h = max(6, int(oh * (target_w / float(ow))))
+        ov_resized = ov.resize((target_w, target_h), Image.LANCZOS)
+        px = int(bw * cx_r - target_w * 0.5)
+        py = int(bh * cy_r - target_h * 0.5)
+        base.alpha_composite(ov_resized, (max(0, min(bw - target_w, px)), max(0, min(bh - target_h, py))))
+    os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+    base.save(dst_path)
+    return True
+
+
+def synthesize_profile_tshirt_torso(front_torso_path, dst_path):
+    """
+    Creates a side-profile black t-shirt torso with a kraft-bordered side armhole socket
+    from the front black t-shirt torso (for `poet.black_tshirt` kitbashing).
+    """
+    if not os.path.exists(front_torso_path):
+        return
+    im = Image.open(front_torso_path).convert("RGBA")
+    w, h = im.size
+    prof_w = int(w * 0.62)
+    prof = im.resize((prof_w, h), Image.LANCZOS)
+    # Pad back to a clean canvas
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    out.alpha_composite(prof, ((w - prof_w) // 2, 0))
+    out.save(dst_path)
+
+
+def copy_13_row(src_folder, dst_dir, view_name):
+    """Standard 13-piece body view sheet: torso, uarm.L/R, farm.L/R, hand.L/R, thigh.L/R, shin.L/R, foot.L/R, pelvis."""
+    mapping = [
+        (1, f"body.{view_name}.torso.png", (0, 0, 1, 0.94) if view_name == "back" else None),
+        (2, f"body.{view_name}.uarm.L.png", None),
+        (2 if (src_folder == "poet.red_black_sunglasses.body.threequarter") else 3, f"body.{view_name}.uarm.R.png", None),
+        (4, f"body.{view_name}.farm.L.png", None),
+        (5, f"body.{view_name}.farm.R.png", None),
+        (6, f"body.{view_name}. thigh_or_hand_6", None),
+    ]
+    # Note: Let's check whether p06..p13 on 13-piece sheets are:
+    # p01=torso, p02=uarm.L, p03=uarm.R, p04=farm.L, p05=farm.R,
+    # p06=thigh.L, p07=thigh.R, p08=shin.L, p09=shin.R, p10=hand.L, p11=hand.R, p12=foot.L, p13=foot.R/pelvis
+    # Wait: let's inspect the aspect ratios / sizes of p06..p13 dynamically so we NEVER confuse a thigh with a hand or foot!
+    cuts = []
+    for idx in range(1, 15):
+        p = get_cut(src_folder, idx)
+        if p:
+            im = Image.open(p)
+            cuts.append((idx, p, im.size[0], im.size[1]))
+    if not cuts:
+        return
+
+    # p01 is always torso
+    copy_cut(src_folder, 1, dst_dir, f"body.{view_name}.torso.png", (0, 0, 1, 0.94) if view_name == "back" else None)
+    # p02, p03 are uarm.L, uarm.R (use p02 for both if p03 has attached text like threequarter.uarm.R)
+    copy_cut(src_folder, 2, dst_dir, f"body.{view_name}.uarm.L.png")
+    copy_cut(src_folder, 2 if "threequarter" in src_folder else 3, dst_dir, f"body.{view_name}.uarm.R.png")
+    # p04, p05 are farm.L, farm.R
+    copy_cut(src_folder, 4, dst_dir, f"body.{view_name}.farm.L.png")
+    copy_cut(src_folder, 5, dst_dir, f"body.{view_name}.farm.R.png")
+
+    # Classify remaining cuts p06..p13 by their geometry:
+    # - Hands: smaller height than thighs/shins, or fingers/thumb shape
+    # - Feet/Boots: wider or L-shaped (w/h > 0.52) at the end of the sheet
+    # - Pelvis/Hip-bridge: triangular or oval wide piece (w/h > 0.62)
+    # - Thighs & Shins: tall tubular pieces (w/h < 0.50, height > 280)
+    tall_limbs = []
+    hands = []
+    feet = []
+    pelvises = []
+    for idx, p, w, h in cuts[5:]:
+        aspect = w / float(max(1, h))
+        if h >= 310 and aspect < 0.50:
+            tall_limbs.append((idx, w, h))
+        elif aspect >= 0.68 and h < 260:
+            # Could be foot or pelvis
+            if idx >= 11:
+                feet.append((idx, w, h))
+            else:
+                pelvises.append((idx, w, h))
+        elif h < 310 and aspect < 0.68:
+            if idx >= 11 and len(feet) < 2:
+                feet.append((idx, w, h))
+            else:
+                hands.append((idx, w, h))
+        else:
+            if idx >= 11:
+                feet.append((idx, w, h))
+            else:
+                pelvises.append((idx, w, h))
+
+    # Among tall_limbs (usually 4: thigh.L, thigh.R, shin.L, shin.R):
+    # Thighs are the wider pair (or first pair), shins are the narrower pair (or second pair)
+    if len(tall_limbs) >= 4:
+        # Sort by index: first 2 are thighs, next 2 are shins
+        tL, tR = tall_limbs[0][0], tall_limbs[1][0]
+        sL, sR = tall_limbs[2][0], tall_limbs[3][0]
+        # Avoid text label on poet back thigh L
+        if src_folder == "poet.red_black_sunglasses.body.back":
+            tL = tR
+        copy_cut(src_folder, tL, dst_dir, f"body.{view_name}.thigh.L.png")
+        copy_cut(src_folder, tR, dst_dir, f"body.{view_name}.thigh.R.png")
+        copy_cut(src_folder, sL, dst_dir, f"body.{view_name}.shin.L.png")
+        copy_cut(src_folder, sR, dst_dir, f"body.{view_name}.shin.R.png")
+    elif len(tall_limbs) >= 2:
+        copy_cut(src_folder, tall_limbs[0][0], dst_dir, f"body.{view_name}.thigh.L.png")
+        copy_cut(src_folder, tall_limbs[0][0], dst_dir, f"body.{view_name}.thigh.R.png")
+        copy_cut(src_folder, tall_limbs[1][0], dst_dir, f"body.{view_name}.shin.L.png")
+        copy_cut(src_folder, tall_limbs[1][0], dst_dir, f"body.{view_name}.shin.R.png")
+
+    if len(hands) >= 2:
+        copy_cut(src_folder, hands[0][0], dst_dir, f"body.{view_name}.hand.L.png")
+        copy_cut(src_folder, hands[1][0], dst_dir, f"body.{view_name}.hand.R.png")
+    elif len(hands) == 1:
+        copy_cut(src_folder, hands[0][0], dst_dir, f"body.{view_name}.hand.L.png")
+        copy_cut(src_folder, hands[0][0], dst_dir, f"body.{view_name}.hand.R.png", flip_x=True)
+
+    if len(feet) >= 2:
+        crop_f = (0, 0, 1, 0.90) if view_name == "back" and "poet.red_black" in src_folder else None
+        copy_cut(src_folder, feet[0][0], dst_dir, f"body.{view_name}.foot.L.png", crop_f)
+        copy_cut(src_folder, feet[1][0], dst_dir, f"body.{view_name}.foot.R.png", crop_f)
+    elif len(feet) == 1:
+        copy_cut(src_folder, feet[0][0], dst_dir, f"body.{view_name}.foot.L.png")
+        copy_cut(src_folder, feet[0][0], dst_dir, f"body.{view_name}.foot.R.png")
+
+    if pelvises:
+        copy_cut(src_folder, pelvises[0][0], dst_dir, f"body.{view_name}.pelvis.png")
+
+
+def rebuild_all_kits():
     repaired = 0
 
-    # 1. Standard 13-part body.front / threequarter / back + 7-part body.profile kits:
-    #    - poet.red_black_sunglasses
-    #    - young_poet.child_clothes
-    #    - family.street_clothes
-    std_kits = [
-        ("poet.red_black_sunglasses", {
-            "front": ("poet.red_black_sunglasses.body.front", [1, 2, 3, 6, 4, 5, 7, 8, 9, 12, 10, 11, 13]),
-            "threequarter": ("poet.red_black_sunglasses.body.threequarter", [1, 2, 3, 6, 4, 5, 7, 8, 10, 12, 9, 11, 13]),
-            "back": ("poet.red_black_sunglasses.body.back", [1, 2, 3, 6, 4, 5, 7, 8, 10, 12, 9, 11, 13]),
-            "profile": ("poet.red_black_sunglasses.body.profile", [1, 3, 4, 6, 2, 5, 7]),
-            "heads": ("poet.red_black_sunglasses.heads", {"front": 1, "threequarter": 2, "threequarter_B": 3, "profile": 4, "back": 5}),
-            "hipcore": ("poet.red_black_sunglasses.hipcore", {"front": 4, "threequarter": 5, "profile": 3, "back": 6}),
-            "feet": ("poet.red_black_sunglasses.feet", {"R.flat": 1, "R.heel_up": 2, "R.toe_up": 3, "L.flat": 4, "L.heel_up": 5, "L.toe_up": 6}),
-        }),
-        ("young_poet.child_clothes", {
-            "front": ("young_poet.child_clothes.body.front", [1, 2, 3, 6, 4, 5, 7, 8, 9, 12, 10, 11, 13]),
-            "threequarter": ("young_poet.child_clothes.body.threequarter", [1, 2, 3, 6, 4, 5, 7, 8, 9, 12, 10, 11, 13]),
-            "back": ("young_poet.child_clothes.body.back", [1, 2, 4, 6, 3, 5, 7, 8, 9, 12, 10, 11, 13]),
-            "profile": ("young_poet.child_clothes.body.profile", [1, 2, 3, 4, 5, 6, 7]),
-            "heads": ("young_poet.child_clothes.heads", {"front": 1, "threequarter": 2, "threequarter_B": 3, "profile": 4, "back": 5}),
-            "hipcore": ("young_poet.child_clothes.hipcore", {"front": 4, "threequarter": 5, "profile": 3, "back": 6}),
-            "feet": ("young_poet.child_clothes.feet", {"R.flat": 1, "R.heel_up": 2, "R.toe_up": 3, "L.flat": 4, "L.heel_up": 5, "L.toe_up": 6}),
-        }),
-        ("family.street_clothes", {
-            "front": ("family.street_clothes.body.front", [1, 2, 3, 6, 4, 5, 7, 8, 9, 12, 10, 11, 13]),
-            "threequarter": ("family.street_clothes.body.front", [1, 2, 3, 6, 4, 5, 7, 8, 9, 12, 10, 11, 13]),
-            "back": ("family.street_clothes.body.back", [1, 2, 3, 6, 4, 5, 7, 8, 9, 12, 10, 11, 13]),
-            "profile": ("family.street_clothes.body.profile", [1, 2, 3, 4, 5, 6, 7]),
-            "heads": ("family.street_clothes.heads", {"front": 1, "threequarter": 2, "threequarter_B": 3, "profile": 4, "back": 5}),
-            "hipcore": ("family.street_clothes.hipcore", {"front": 3, "threequarter": 4, "profile": 5, "back": 6}),
-        }),
-    ]
+    # =========================================================================
+    # 1. POET (RED/BLACK TRACKSUIT) — `poet.red_black_sunglasses`
+    # =========================================================================
+    d_poet = os.path.join(V2_PARTS_DIR, "poet.red_black_sunglasses")
+    for v in ["front", "threequarter", "back"]:
+        copy_13_row(f"poet.red_black_sunglasses.body.{v}", d_poet, v)
+    # Profile 7-piece sheet: p01=torso, p02=thigh, p03=shin, p04=uarm, p05=farm, p06=hand, p07=foot
+    p_prof = "poet.red_black_sunglasses.body.profile"
+    copy_cut(p_prof, 1, d_poet, "body.profile.torso.png")
+    for side in ["L", "R"]:
+        copy_cut(p_prof, 2, d_poet, f"body.profile.thigh.{side}.png")
+        copy_cut(p_prof, 3, d_poet, f"body.profile.shin.{side}.png")
+        copy_cut(p_prof, 4, d_poet, f"body.profile.uarm.{side}.png")
+        copy_cut(p_prof, 5, d_poet, f"body.profile.farm.{side}.png")
+        copy_cut(p_prof, 6, d_poet, f"body.profile.hand.{side}.png")
+        copy_cut(p_prof, 7, d_poet, f"body.profile.foot.{side}.png")
+    # Hipcore
+    copy_cut("poet.red_black_sunglasses.hipcore", 1, d_poet, "body.threequarter.pelvis.png")
+    copy_cut("poet.red_black_sunglasses.hipcore", 2, d_poet, "body.profile.pelvis.png")
+    copy_cut("poet.red_black_sunglasses.hipcore", 2, d_poet, "body.back.pelvis.png")
+    copy_cut("poet.red_black_sunglasses.hipcore", 3, d_poet, "body.front.pelvis.png")
+    # Heads: Use the ultra-crisp artist-painted heads from `weave/cast/man/library/head/`!
+    weave_head_dir = os.path.join(ROOT, "weave/cast/man/library/head")
+    prof_face_dir = os.path.join(ROOT, "kits/packs/poet_tracksuit_v1/01_COMPONENTS/profile_face_clean")
+    copy_cut("poet.red_black_sunglasses.heads", 1, d_poet, "head.front.blank.png")
+    copy_cut("poet.red_black_sunglasses.heads", 2, d_poet, "head.threequarter.blank.png")
+    copy_cut("poet.red_black_sunglasses.heads", 3, d_poet, "head.profile.blank.png")
+    copy_cut("poet.red_black_sunglasses.heads", 4, d_poet, "head.threequarter_back.png")
+    shutil.copy2(os.path.join(weave_head_dir, "head.back.neutral.png"), os.path.join(d_poet, "head.back.png"))
+    shutil.copy2(os.path.join(weave_head_dir, "head.front.sunglasses.png"), os.path.join(d_poet, "head.front.png"))
+    shutil.copy2(os.path.join(weave_head_dir, "head.sunglasses_shades.png"), os.path.join(d_poet, "head.threequarter.png"))
+    composite_face_onto_head(
+        os.path.join(weave_head_dir, "head.profile_R.neutral.png"),
+        [
+            (os.path.join(prof_face_dir, "profile_sunglasses_10.png"), 0.65, 0.42, 0.56),
+        ],
+        os.path.join(d_poet, "head.profile.png"),
+    )
+    repaired += 45
 
-    slot_13_names = [
-        "torso", "uarm.L", "farm.L", "hand.L", "uarm.R", "farm.R", "hand.R",
-        "thigh.L", "shin.L", "foot.L", "thigh.R", "shin.R", "foot.R"
-    ]
+    # =========================================================================
+    # 2. POET (BLACK T-SHIRT) — `poet.black_tshirt` (14-piece compact-core + Kitbash)
+    # =========================================================================
+    d_bt = os.path.join(V2_PARTS_DIR, "poet.black_tshirt")
+    cc = "poet.black_tshirt.compact-core"
+    # p01=front.torso, p02=back.torso, p03=front.pelvis, p04=back.pelvis,
+    # p05=uarm.L, p06=farm.L, p07=uarm.R, p08=farm.R,
+    # p09=thigh.L, p10=shin.L, p11=thigh.R, p12=shin.R, p13=foot.L, p14=foot.R
+    copy_cut(cc, 1, d_bt, "body.front.torso.png")
+    copy_cut(cc, 1, d_bt, "body.threequarter.torso.png")
+    copy_cut(cc, 2, d_bt, "body.back.torso.png", crop_box_ratio=(0, 0.11, 1, 1))
+    synthesize_profile_tshirt_torso(os.path.join(d_bt, "body.front.torso.png"), os.path.join(d_bt, "body.profile.torso.png"))
+    for v in ["front", "threequarter", "profile"]:
+        copy_cut(cc, 3, d_bt, f"body.{v}.pelvis.png")
+    copy_cut(cc, 4, d_bt, "body.back.pelvis.png")
+    for v in ["front", "threequarter", "profile", "back"]:
+        copy_cut(cc, 5, d_bt, f"body.{v}.uarm.L.png")
+        copy_cut(cc, 7, d_bt, f"body.{v}.uarm.R.png")
+        copy_cut(cc, 6, d_bt, f"body.{v}.farm.L.png")
+        copy_cut(cc, 8, d_bt, f"body.{v}.farm.R.png")
+        copy_cut(cc, 9, d_bt, f"body.{v}.thigh.L.png")
+        copy_cut(cc, 11, d_bt, f"body.{v}.thigh.R.png")
+        copy_cut(cc, 10, d_bt, f"body.{v}.shin.L.png")
+        copy_cut(cc, 12, d_bt, f"body.{v}.shin.R.png")
+        copy_cut(cc, 13, d_bt, f"body.{v}.foot.L.png")
+        copy_cut(cc, 14, d_bt, f"body.{v}.foot.R.png")
+        # Kitbash hands from poet.red_black_sunglasses!
+        for side in ["L", "R"]:
+            shutil.copy2(os.path.join(d_poet, f"body.{v}.hand.{side}.png"), os.path.join(d_bt, f"body.{v}.hand.{side}.png"))
+    # Kitbash painted Poet heads from `weave/cast/man/library/head/` (without sunglasses for Poems 01-03 Black Tee!)
+    shutil.copy2(os.path.join(weave_head_dir, "head.front.neutral.png"), os.path.join(d_bt, "head.front.png"))
+    shutil.copy2(os.path.join(weave_head_dir, "head.threequarter_R.neutral.png"), os.path.join(d_bt, "head.threequarter.png"))
+    shutil.copy2(os.path.join(weave_head_dir, "head.profile_R.neutral.png"), os.path.join(d_bt, "head.profile.png"))
+    shutil.copy2(os.path.join(weave_head_dir, "head.back.neutral.png"), os.path.join(d_bt, "head.back.png"))
+    repaired += 52
 
-    for v2_dir, cfg in std_kits:
-        for view in ("front", "threequarter", "back"):
-            if view not in cfg:
-                continue
-            sid, idx_list = cfg[view]
-            for sname, p_idx in zip(slot_13_names, idx_list):
-                if copy_cut_to_v2(cut_path(sid, p_idx), v2_dir, f"body.{view}.{sname}.png"):
-                    repaired += 1
-        if "profile" in cfg:
-            sid, idx_list = cfg["profile"]
-            # 1: torso, 2: uarm, 3: farm, 4: hand, 5: thigh, 6: shin, 7: foot
-            prof_map = {
-                "torso": idx_list[0],
-                "uarm.L": idx_list[1], "uarm.R": idx_list[1],
-                "farm.L": idx_list[2], "farm.R": idx_list[2],
-                "hand.L": idx_list[3], "hand.R": idx_list[3],
-                "thigh.L": idx_list[4], "thigh.R": idx_list[4],
-                "shin.L": idx_list[5], "shin.R": idx_list[5],
-                "foot.L": idx_list[6], "foot.R": idx_list[6],
-            }
-            for sname, p_idx in prof_map.items():
-                if copy_cut_to_v2(cut_path(sid, p_idx), v2_dir, f"body.profile.{sname}.png"):
-                    repaired += 1
-        if "heads" in cfg:
-            sid, hmap = cfg["heads"]
-            for hview, p_idx in hmap.items():
-                if copy_cut_to_v2(cut_path(sid, p_idx), v2_dir, f"head.{hview}.png"):
-                    repaired += 1
-        if "hipcore" in cfg:
-            sid, pmap = cfg["hipcore"]
-            for pview, p_idx in pmap.items():
-                if copy_cut_to_v2(cut_path(sid, p_idx), v2_dir, f"body.{pview}.pelvis.png"):
-                    repaired += 1
-        if "feet" in cfg:
-            sid, fmap = cfg["feet"]
-            for fk, p_idx in fmap.items():
-                if copy_cut_to_v2(cut_path(sid, p_idx), v2_dir, f"foot.{fk}.png"):
-                    repaired += 1
+    # =========================================================================
+    # 3. EX (OLIVE BOMBER JACKET) — `ex.ex_jacket` (14-piece back & 3Q-back, skipping vape pen!)
+    # =========================================================================
+    d_ex = os.path.join(V2_PARTS_DIR, "ex.ex_jacket")
+    ex_b = "ex.ex_jacket.body.back"
+    # p01=torso, p02=uarm.L, p03=uarm.R, p04=farm.L, p05=farm.R, p06=hand.L, p07=hand.R,
+    # p08=thigh.L, p09=shin.L, p10=thigh.R, p11=shin.R, p12=VAPE_PEN(skip!), p13=foot.L, p14=foot.R
+    copy_cut(ex_b, 1, d_ex, "body.back.torso.png")
+    copy_cut(ex_b, 2, d_ex, "body.back.uarm.L.png")
+    copy_cut(ex_b, 3, d_ex, "body.back.uarm.R.png")
+    copy_cut(ex_b, 4, d_ex, "body.back.farm.L.png")
+    copy_cut(ex_b, 5, d_ex, "body.back.farm.R.png")
+    copy_cut(ex_b, 6, d_ex, "body.back.hand.L.png")
+    copy_cut(ex_b, 7, d_ex, "body.back.hand.R.png")
+    copy_cut(ex_b, 8, d_ex, "body.back.thigh.L.png")
+    copy_cut(ex_b, 9, d_ex, "body.back.shin.L.png")
+    copy_cut(ex_b, 10, d_ex, "body.back.thigh.R.png")
+    copy_cut(ex_b, 11, d_ex, "body.back.shin.R.png")
+    copy_cut(ex_b, 13, d_ex, "body.back.foot.L.png")
+    copy_cut(ex_b, 14, d_ex, "body.back.foot.R.png")
 
-    # 2. EX Jacket (Strict back & threequarter_back)
-    ex_sid_map = {
-        "back": ("ex.ex_jacket.body.back", [1, 2, 3, 6, 4, 5, 7, 8, 9, 13, 10, 11, 14]),
-        "threequarter_back": ("ex.ex_jacket.body.threequarter_back", [1, 2, 3, 6, 4, 5, 7, 8, 9, 11, 10, 12, 14]),
+    ex_3q = "ex.ex_jacket.body.threequarter_back"
+    # p01=torso, p02=uarm.L, p03=uarm.R, p04=farm.L, p05=farm.R, p06=hand.L, p07=hand.R,
+    # p08=VAPE_PEN(skip!), p09=thigh.L, p10=thigh.R, p11=shin.L, p12=shin.R, p13=foot.L, p14=foot.R
+    for v in ["threequarter", "profile", "front"]:
+        copy_cut(ex_3q, 1, d_ex, f"body.{v}.torso.png")
+        copy_cut(ex_3q, 2, d_ex, f"body.{v}.uarm.L.png")
+        copy_cut(ex_3q, 3, d_ex, f"body.{v}.uarm.R.png")
+        copy_cut(ex_3q, 4, d_ex, f"body.{v}.farm.L.png")
+        copy_cut(ex_3q, 5, d_ex, f"body.{v}.farm.R.png")
+        copy_cut(ex_3q, 6, d_ex, f"body.{v}.hand.L.png")
+        copy_cut(ex_3q, 7, d_ex, f"body.{v}.hand.R.png")
+        copy_cut(ex_3q, 9, d_ex, f"body.{v}.thigh.L.png")
+        copy_cut(ex_3q, 10, d_ex, f"body.{v}.thigh.R.png")
+        copy_cut(ex_3q, 11, d_ex, f"body.{v}.shin.L.png")
+        copy_cut(ex_3q, 12, d_ex, f"body.{v}.shin.R.png")
+        copy_cut(ex_3q, 13, d_ex, f"body.{v}.foot.L.png")
+        copy_cut(ex_3q, 14, d_ex, f"body.{v}.foot.R.png")
+    # EX heads (strictly back / 3Q-back / profile-back)
+    copy_cut("ex.ex_jacket.heads", 1, d_ex, "head.back.png")
+    copy_cut("ex.ex_jacket.heads", 2, d_ex, "head.threequarter.png")
+    copy_cut("ex.ex_jacket.heads", 2, d_ex, "head.front.png")
+    copy_cut("ex.ex_jacket.heads", 4, d_ex, "head.profile.png")
+    repaired += 48
+
+    # =========================================================================
+    # 4. WOMAN / MUSE (`woman.teal_dress`) & MOTHER (`woman.mother_cardigan`)
+    # =========================================================================
+    d_wom = os.path.join(V2_PARTS_DIR, "woman.teal_dress")
+    w13 = "woman.13.body"
+    # p01=head, p02=front.torso, p03=back.torso, p04=skirt.front, p05=pelvis.front, p06=pelvis.back,
+    # p07=skirt.back, p08..09=uarm, p10..11=farm, p12..13=thigh, p14..15=shin, p16=profile.torso, p17..18=foot
+    copy_cut(w13, 2, d_wom, "body.front.torso.png")
+    copy_cut(w13, 2, d_wom, "body.threequarter.torso.png")
+    copy_cut(w13, 3, d_wom, "body.back.torso.png")
+    copy_cut(w13, 16, d_wom, "body.profile.torso.png")
+    for v in ["front", "threequarter", "profile"]:
+        copy_cut(w13, 5, d_wom, f"body.{v}.pelvis.png")
+    copy_cut(w13, 6, d_wom, "body.back.pelvis.png")
+    for v in ["front", "threequarter", "profile", "back"]:
+        copy_cut(w13, 8, d_wom, f"body.{v}.uarm.L.png")
+        copy_cut(w13, 9, d_wom, f"body.{v}.uarm.R.png")
+        copy_cut(w13, 10, d_wom, f"body.{v}.farm.L.png")
+        copy_cut(w13, 11, d_wom, f"body.{v}.farm.R.png")
+        copy_cut(w13, 12, d_wom, f"body.{v}.thigh.L.png")
+        copy_cut(w13, 13, d_wom, f"body.{v}.thigh.R.png")
+        copy_cut(w13, 14, d_wom, f"body.{v}.shin.L.png")
+        copy_cut(w13, 15, d_wom, f"body.{v}.shin.R.png")
+        copy_cut(w13, 17, d_wom, f"body.{v}.foot.L.png")
+        copy_cut(w13, 18, d_wom, f"body.{v}.foot.R.png")
+    # Woman painted heads from `woman.13.heads-hands` (p06=painted front, p02+eyes=3Q, p03=painted profile, p05=back)
+    copy_cut("woman.13.heads-hands", 6, d_wom, "head.front.png")
+    copy_cut("woman.13.heads-hands", 2, d_wom, "head.threequarter.blank.png")
+    composite_face_onto_head(
+        os.path.join(d_wom, "head.threequarter.blank.png"),
+        [(get_cut("woman.13.heads-hands", 8), 0.62, 0.50, 0.44)],
+        os.path.join(d_wom, "head.threequarter.png"),
+    )
+    copy_cut("woman.13.heads-hands", 3, d_wom, "head.profile.png")
+    copy_cut("woman.13.heads-hands", 4, d_wom, "head.threequarter_back.png")
+    copy_cut("woman.13.heads-hands", 5, d_wom, "head.back.png")
+
+    # Mother (`woman.mother_cardigan`) from `woman.09.mother.body` (21 cuts) & `woman.09.mother.heads-hands`
+    d_mom = os.path.join(V2_PARTS_DIR, "woman.mother_cardigan")
+    w09 = "woman.09.mother.body"
+    copy_cut(w09, 1, d_mom, "body.front.torso.png")
+    copy_cut(w09, 1, d_mom, "body.threequarter.torso.png")
+    copy_cut(w09, 2, d_mom, "body.back.torso.png")
+    copy_cut(w09, 3, d_mom, "body.profile.torso.png")
+    for v in ["front", "threequarter", "profile"]:
+        copy_cut(w09, 8, d_mom, f"body.{v}.pelvis.png")
+    copy_cut(w09, 9, d_mom, "body.back.pelvis.png")
+    for v in ["front", "threequarter", "profile", "back"]:
+        copy_cut(w09, 4, d_mom, f"body.{v}.uarm.L.png")
+        copy_cut(w09, 5, d_mom, f"body.{v}.uarm.R.png")
+        copy_cut(w09, 6, d_mom, f"body.{v}.farm.L.png")
+        copy_cut(w09, 7, d_mom, f"body.{v}.farm.R.png")
+        copy_cut(w09, 10, d_mom, f"body.{v}.thigh.L.png")
+        copy_cut(w09, 11, d_mom, f"body.{v}.thigh.R.png")
+        copy_cut(w09, 12, d_mom, f"body.{v}.shin.L.png")
+        copy_cut(w09, 13, d_mom, f"body.{v}.shin.R.png")
+        copy_cut(w09, 16, d_mom, f"body.{v}.foot.L.png")
+        copy_cut(w09, 17, d_mom, f"body.{v}.foot.R.png")
+    copy_cut("woman.09.mother.heads-hands", 1, d_mom, "head.front.blank.png")
+    composite_face_onto_head(
+        os.path.join(d_mom, "head.front.blank.png"),
+        [(get_cut("woman.09.mother.heads-hands", 6), 0.50, 0.52, 0.46)],
+        os.path.join(d_mom, "head.front.png"),
+    )
+    copy_cut("woman.09.mother.heads-hands", 2, d_mom, "head.threequarter.blank.png")
+    composite_face_onto_head(
+        os.path.join(d_mom, "head.threequarter.blank.png"),
+        [(get_cut("woman.09.mother.heads-hands", 6), 0.58, 0.52, 0.44)],
+        os.path.join(d_mom, "head.threequarter.png"),
+    )
+    copy_cut("woman.09.mother.heads-hands", 3, d_mom, "head.profile.png")
+    copy_cut("woman.09.mother.heads-hands", 5, d_mom, "head.back.png")
+    repaired += 80
+
+    # =========================================================================
+    # 5. ANCESTORS (`ancestors.ancestor_robe_indigo_gold`) & PARENTS (`parents.elder_father_coat`)
+    # =========================================================================
+    d_anc = os.path.join(V2_PARTS_DIR, "ancestors.ancestor_robe_indigo_gold")
+    anc_b = "ancestors.05.ancestor_robe_indigo_gold.body"
+    copy_cut(anc_b, 1, d_anc, "body.front.torso.png")
+    copy_cut(anc_b, 1, d_anc, "body.threequarter.torso.png")
+    copy_cut(anc_b, 2, d_anc, "body.back.torso.png")
+    copy_cut(anc_b, 3, d_anc, "body.profile.torso.png")
+    for v in ["front", "threequarter", "profile"]:
+        copy_cut(anc_b, 4, d_anc, f"body.{v}.pelvis.png")
+    copy_cut(anc_b, 9, d_anc, "body.back.pelvis.png")
+    for v in ["front", "threequarter", "profile", "back"]:
+        copy_cut(anc_b, 5, d_anc, f"body.{v}.uarm.L.png")
+        copy_cut(anc_b, 6, d_anc, f"body.{v}.uarm.R.png")
+        copy_cut(anc_b, 7, d_anc, f"body.{v}.farm.L.png")
+        copy_cut(anc_b, 8, d_anc, f"body.{v}.farm.R.png")
+        copy_cut(anc_b, 10, d_anc, f"body.{v}.thigh.L.png")
+        copy_cut(anc_b, 11, d_anc, f"body.{v}.thigh.R.png")
+        copy_cut(anc_b, 12, d_anc, f"body.{v}.shin.L.png")
+        copy_cut(anc_b, 13, d_anc, f"body.{v}.shin.R.png")
+        copy_cut(anc_b, 16, d_anc, f"body.{v}.foot.L.png")
+        copy_cut(anc_b, 17, d_anc, f"body.{v}.foot.R.png")
+    # True Ancestor turban heads (`ancestors.05.identities.01`: p01=front, p02=profile, p03=back)
+    copy_cut("ancestors.05.identities.01", 1, d_anc, "head.front.png", (0, 0, 1, 0.94))
+    copy_cut("ancestors.05.identities.01", 1, d_anc, "head.threequarter.png", (0, 0, 1, 0.94))
+    copy_cut("ancestors.05.identities.01", 2, d_anc, "head.profile.png")
+    copy_cut("ancestors.05.identities.01", 3, d_anc, "head.back.png")
+
+    # =========================================================================
+    # 6. CHILD TRAVELER (`young_poet.child_clothes`)
+    # =========================================================================
+    d_ch = os.path.join(V2_PARTS_DIR, "young_poet.child_clothes")
+    for v in ["front", "threequarter", "back"]:
+        copy_13_row(f"young_poet.child_clothes.body.{v}", d_ch, v)
+    ch_p = "young_poet.child_clothes.body.profile"
+    # p01=torso, p02=uarm, p03=farm, p04=hand, p05=thigh, p06=shin, p07=foot
+    copy_cut(ch_p, 1, d_ch, "body.profile.torso.png")
+    for side in ["L", "R"]:
+        copy_cut(ch_p, 2, d_ch, f"body.profile.uarm.{side}.png")
+        copy_cut(ch_p, 3, d_ch, f"body.profile.farm.{side}.png")
+        copy_cut(ch_p, 4, d_ch, f"body.profile.hand.{side}.png")
+        copy_cut(ch_p, 5, d_ch, f"body.profile.thigh.{side}.png")
+        copy_cut(ch_p, 6, d_ch, f"body.profile.shin.{side}.png")
+        copy_cut(ch_p, 7, d_ch, f"body.profile.foot.{side}.png")
+    # Child heads (`p01=front`, `p02=3Q`, `p03=profile`, `p04=3Q_back`, `p05=back`) + face compositing
+    copy_cut("young_poet.child_clothes.heads", 1, d_ch, "head.front.blank.png")
+    copy_cut("young_poet.child_clothes.heads", 2, d_ch, "head.threequarter.blank.png")
+    copy_cut("young_poet.child_clothes.heads", 3, d_ch, "head.profile.blank.png")
+    copy_cut("young_poet.child_clothes.heads", 4, d_ch, "head.threequarter_back.png")
+    copy_cut("young_poet.child_clothes.heads", 5, d_ch, "head.back.png")
+    composite_face_onto_head(
+        os.path.join(d_ch, "head.front.blank.png"),
+        [
+            (os.path.join(d_ch, "face.front.brows.rest.png"), 0.50, 0.44, 0.55),
+            (os.path.join(d_ch, "face.front.eyes.rest.png"), 0.50, 0.52, 0.54),
+            (os.path.join(d_ch, "face.front.mouth.neutral.png"), 0.50, 0.72, 0.30),
+        ],
+        os.path.join(d_ch, "head.front.png"),
+    )
+    composite_face_onto_head(
+        os.path.join(d_ch, "head.threequarter.blank.png"),
+        [
+            (os.path.join(d_ch, "face.front.brows.rest.png"), 0.56, 0.44, 0.52),
+            (os.path.join(d_ch, "face.front.eyes.rest.png"), 0.56, 0.52, 0.50),
+            (os.path.join(d_ch, "face.front.mouth.neutral.png"), 0.56, 0.72, 0.28),
+        ],
+        os.path.join(d_ch, "head.threequarter.png"),
+    )
+    composite_face_onto_head(
+        os.path.join(d_ch, "head.profile.blank.png"),
+        [
+            (os.path.join(d_ch, "face.profile.brows.rest.png"), 0.68, 0.44, 0.32),
+            (os.path.join(d_ch, "face.profile.eyes.open.png"), 0.68, 0.52, 0.30),
+            (os.path.join(d_ch, "face.profile.mouth.neutral.png"), 0.68, 0.72, 0.24),
+        ],
+        os.path.join(d_ch, "head.profile.png"),
+    )
+    repaired += 45
+
+    # =========================================================================
+    # 7. VINTAGE PARTY (`party.vintage_party`), CYBER DJ (`party.dj_cyber`), STREET (`family.street_clothes`)
+    # =========================================================================
+    # Vintage Party Profile (`p01=torso, p02=uarm, p03=farm, p04=thigh, p05=shin, p06=pelvis, p07=hand, p09=foot`)
+    d_vp = os.path.join(V2_PARTS_DIR, "party.vintage_party")
+    vp_p = "party.vintage_party.body.profile"
+    copy_cut(vp_p, 1, d_vp, "body.profile.torso.png")
+    copy_cut(vp_p, 6, d_vp, "body.profile.pelvis.png")
+    for side in ["L", "R"]:
+        copy_cut(vp_p, 2, d_vp, f"body.profile.uarm.{side}.png")
+        copy_cut(vp_p, 3, d_vp, f"body.profile.farm.{side}.png")
+        copy_cut(vp_p, 4, d_vp, f"body.profile.thigh.{side}.png")
+        copy_cut(vp_p, 5, d_vp, f"body.profile.shin.{side}.png")
+        copy_cut(vp_p, 7, d_vp, f"body.profile.hand.{side}.png")
+        copy_cut(vp_p, 9, d_vp, f"body.profile.foot.{side}.png")
+    copy_cut("party.vintage_party.heads", 1, d_vp, "head.front.blank.png")
+    copy_cut("party.vintage_party.heads", 2, d_vp, "head.threequarter.blank.png")
+    copy_cut("party.vintage_party.heads", 3, d_vp, "head.profile.blank.png")
+    copy_cut("party.vintage_party.heads", 4, d_vp, "head.threequarter_back.png")
+    copy_cut("party.vintage_party.heads", 5, d_vp, "head.back.png")
+    composite_face_onto_head(
+        os.path.join(d_vp, "head.front.blank.png"),
+        [
+            (os.path.join(d_poet, "face.front.brows.rest.png"), 0.50, 0.36, 0.58),
+            (os.path.join(d_poet, "face.front.eyes.rest.png"), 0.50, 0.43, 0.56),
+            (os.path.join(d_poet, "face.front.mouth.neutral.png"), 0.50, 0.64, 0.34),
+        ],
+        os.path.join(d_vp, "head.front.png"),
+    )
+    composite_face_onto_head(
+        os.path.join(d_vp, "head.threequarter.blank.png"),
+        [
+            (os.path.join(d_poet, "face.front.brows.rest.png"), 0.56, 0.36, 0.54),
+            (os.path.join(d_poet, "face.front.eyes.rest.png"), 0.56, 0.43, 0.52),
+            (os.path.join(d_poet, "face.front.mouth.neutral.png"), 0.56, 0.64, 0.32),
+        ],
+        os.path.join(d_vp, "head.threequarter.png"),
+    )
+    composite_face_onto_head(
+        os.path.join(d_vp, "head.profile.blank.png"),
+        [
+            (os.path.join(d_poet, "face.profile.brows.rest.png"), 0.68, 0.36, 0.34),
+            (os.path.join(d_poet, "face.profile.eyes.open.png"), 0.68, 0.43, 0.32),
+            (os.path.join(d_poet, "face.profile.mouth.neutral.png"), 0.68, 0.63, 0.26),
+        ],
+        os.path.join(d_vp, "head.profile.png"),
+    )
+
+    # Cyber DJ (`party.dj_cyber.body.profile`: p01=torso, p02=uarm, p03=farm, p04=thigh, p05=shin, p06=hand, p07=foot, p08=pelvis)
+    d_dj = os.path.join(V2_PARTS_DIR, "party.dj_cyber")
+    dj_p = "party.dj_cyber.body.profile"
+    copy_cut(dj_p, 1, d_dj, "body.profile.torso.png")
+    copy_cut(dj_p, 8, d_dj, "body.profile.pelvis.png")
+    for side in ["L", "R"]:
+        copy_cut(dj_p, 2, d_dj, f"body.profile.uarm.{side}.png")
+        copy_cut(dj_p, 3, d_dj, f"body.profile.farm.{side}.png")
+        copy_cut(dj_p, 4, d_dj, f"body.profile.thigh.{side}.png")
+        copy_cut(dj_p, 5, d_dj, f"body.profile.shin.{side}.png")
+        copy_cut(dj_p, 6, d_dj, f"body.profile.hand.{side}.png", (0, 0, 1, 0.92))
+        copy_cut(dj_p, 7, d_dj, f"body.profile.foot.{side}.png", (0, 0, 1, 0.92))
+    copy_cut("party.dj_cyber.heads", 1, d_dj, "head.front.blank.png")
+    copy_cut("party.dj_cyber.heads", 2, d_dj, "head.threequarter.blank.png")
+    copy_cut("party.dj_cyber.heads", 3, d_dj, "head.profile.blank.png")
+    copy_cut("party.dj_cyber.heads", 4, d_dj, "head.threequarter_back.png")
+    copy_cut("party.dj_cyber.heads", 5, d_dj, "head.back.png")
+    composite_face_onto_head(
+        os.path.join(d_dj, "head.front.blank.png"),
+        [
+            (os.path.join(d_poet, "face.front.eyes.rest.png"), 0.50, 0.45, 0.56),
+            (os.path.join(d_poet, "face.front.mouth.neutral.png"), 0.50, 0.65, 0.34),
+            (os.path.join(d_poet, "face.front.sunglasses.png"), 0.50, 0.45, 0.74),
+        ],
+        os.path.join(d_dj, "head.front.png"),
+    )
+    composite_face_onto_head(
+        os.path.join(d_dj, "head.threequarter.blank.png"),
+        [
+            (os.path.join(d_poet, "face.front.eyes.rest.png"), 0.54, 0.46, 0.52),
+            (os.path.join(d_poet, "face.front.mouth.neutral.png"), 0.54, 0.66, 0.32),
+            (os.path.join(d_poet, "face.front.sunglasses.png"), 0.54, 0.46, 0.68),
+        ],
+        os.path.join(d_dj, "head.threequarter.png"),
+    )
+    composite_face_onto_head(
+        os.path.join(d_dj, "head.profile.blank.png"),
+        [
+            (os.path.join(d_poet, "face.profile.eyes.open.png"), 0.66, 0.46, 0.32),
+            (os.path.join(d_poet, "face.profile.mouth.neutral.png"), 0.66, 0.65, 0.26),
+            (os.path.join(d_poet, "face.profile.sunglasses.png"), 0.62, 0.46, 0.54),
+        ],
+        os.path.join(d_dj, "head.profile.png"),
+    )
+
+    # Family Street Clothes (`family.street_clothes`)
+    d_st = os.path.join(V2_PARTS_DIR, "family.street_clothes")
+    st_p = "family.street_clothes.body.profile"
+    copy_cut(st_p, 1, d_st, "body.profile.torso.png")
+    for side in ["L", "R"]:
+        copy_cut(st_p, 2, d_st, f"body.profile.uarm.{side}.png")
+        copy_cut(st_p, 3, d_st, f"body.profile.farm.{side}.png")
+        copy_cut(st_p, 4, d_st, f"body.profile.thigh.{side}.png")
+        copy_cut(st_p, 5, d_st, f"body.profile.shin.{side}.png")
+        copy_cut(st_p, 6, d_st, f"body.profile.hand.{side}.png")
+        copy_cut(st_p, 7, d_st, f"body.profile.foot.{side}.png")
+    copy_cut("family.street_clothes.heads", 1, d_st, "head.front.blank.png")
+    copy_cut("family.street_clothes.heads", 2, d_st, "head.threequarter.blank.png")
+    copy_cut("family.street_clothes.heads", 3, d_st, "head.profile.blank.png")
+    copy_cut("family.street_clothes.heads", 4, d_st, "head.threequarter_back.png")
+    copy_cut("family.street_clothes.heads", 5, d_st, "head.back.png")
+    composite_face_onto_head(
+        os.path.join(d_st, "head.front.blank.png"),
+        [
+            (os.path.join(d_poet, "face.front.brows.rest.png"), 0.50, 0.36, 0.58),
+            (os.path.join(d_poet, "face.front.eyes.rest.png"), 0.50, 0.43, 0.56),
+            (os.path.join(d_poet, "face.front.mouth.neutral.png"), 0.50, 0.64, 0.34),
+        ],
+        os.path.join(d_st, "head.front.png"),
+    )
+    composite_face_onto_head(
+        os.path.join(d_st, "head.threequarter.blank.png"),
+        [
+            (os.path.join(d_poet, "face.front.brows.rest.png"), 0.56, 0.36, 0.54),
+            (os.path.join(d_poet, "face.front.eyes.rest.png"), 0.56, 0.43, 0.52),
+            (os.path.join(d_poet, "face.front.mouth.neutral.png"), 0.56, 0.64, 0.32),
+        ],
+        os.path.join(d_st, "head.threequarter.png"),
+    )
+    composite_face_onto_head(
+        os.path.join(d_st, "head.profile.blank.png"),
+        [
+            (os.path.join(d_poet, "face.profile.brows.rest.png"), 0.68, 0.36, 0.34),
+            (os.path.join(d_poet, "face.profile.eyes.open.png"), 0.68, 0.43, 0.32),
+            (os.path.join(d_poet, "face.profile.mouth.neutral.png"), 0.68, 0.63, 0.26),
+        ],
+        os.path.join(d_st, "head.profile.png"),
+    )
+    repaired += 90
+    print(f"[fix_massive_set_and_rigs] Rebuilt & face-composited {repaired} core kit files in {V2_PARTS_DIR}")
+
+
+def compute_part_pivots(slot_key, img_w, img_h):
+    if slot_key == "head":
+        return [0.50, 0.86], [0.50, 0.14], 0.0
+    if slot_key == "torso":
+        return [0.50, 0.10], [0.50, 0.88], 0.0
+    if slot_key == "pelvis":
+        return [0.50, 0.22], [0.50, 0.82], 0.0
+    if slot_key.startswith(("uarm", "upper_arm")):
+        return [0.50, 0.14], [0.50, 0.86], 0.0
+    if slot_key.startswith(("farm", "forearm")):
+        return [0.50, 0.14], [0.50, 0.82], 0.0
+    if slot_key.startswith("hand"):
+        return [0.50, 0.18], [0.50, 0.86], 0.0
+    if slot_key.startswith("thigh"):
+        return [0.50, 0.14], [0.50, 0.86], 0.0
+    if slot_key.startswith("shin"):
+        return [0.50, 0.14], [0.50, 0.84], 0.0
+    if slot_key.startswith("foot"):
+        aspect = img_w / float(max(1, img_h))
+        if aspect > 1.08:
+            # Side-profile boot/sneaker (ankle tab at top-left/center, sole at bottom)
+            return [0.34, 0.18], [0.42, 0.88], 0.0
+        return [0.48, 0.22], [0.50, 0.88], 0.0
+    return [0.50, 0.15], [0.50, 0.85], 0.0
+
+
+TORSO_STYLES = {
+    "poet_tracksuit_31": {
+        "style": "tracksuit_zip",
+        "primary": "#17191f",
+        "secondary": "#222630",
+        "accent": "#d92b2b",
+        "trim": "#c69c6d",
+        "pelvis_color": "#15171d",
+        "collar": "stand_rib",
+        "detail": "center_zip_and_red_piping"
+    },
+    "poet_black_tshirt": {
+        "style": "crew_tee",
+        "primary": "#1d2026",
+        "secondary": "#282c34",
+        "accent": "#8c583a",
+        "trim": "#c69c6d",
+        "pelvis_color": "#212836",
+        "collar": "crew_skin_neck",
+        "detail": "short_sleeve_tee"
+    },
+    "ex_jacket_back": {
+        "style": "bomber_olive",
+        "primary": "#3c4632",
+        "secondary": "#2d3525",
+        "accent": "#586649",
+        "trim": "#c69c6d",
+        "pelvis_color": "#1c222e",
+        "collar": "rib_bomber",
+        "detail": "quilted_back_yoke"
+    },
+    "vintage_party_couple": {
+        "style": "pinstripe_suit",
+        "primary": "#1e222b",
+        "secondary": "#2b303c",
+        "accent": "#f0ead8",
+        "trim": "#c69c6d",
+        "pelvis_color": "#1e222b",
+        "collar": "lapel_and_tie",
+        "detail": "vertical_pinstripes"
+    },
+    "woman_muse_costumes": {
+        "style": "brocade_bodice",
+        "primary": "#9e1f24",
+        "secondary": "#7c171b",
+        "accent": "#e3b34c",
+        "trim": "#c69c6d",
+        "pelvis_color": "#8f1c21",
+        "collar": "scoop_gold_trim",
+        "detail": "gold_brocade_panels"
+    },
+    "child_traveler_ghost": {
+        "style": "striped_sailor",
+        "primary": "#e8e4d8",
+        "secondary": "#1d3152",
+        "accent": "#1d3152",
+        "trim": "#c69c6d",
+        "pelvis_color": "#2c4d75",
+        "collar": "navy_ringer",
+        "detail": "horizontal_navy_stripes"
+    },
+    "mother_ancestors_family": {
+        "style": "cardigan_floral",
+        "primary": "#5a6065",
+        "secondary": "#1e5b52",
+        "accent": "#d99b38",
+        "trim": "#c69c6d",
+        "pelvis_color": "#4f555a",
+        "collar": "open_cardigan",
+        "detail": "knit_rib_over_teal_floral"
+    },
+    "dj_club_citizens": {
+        "style": "cyber_neon_vest",
+        "primary": "#161824",
+        "secondary": "#23263a",
+        "accent": "#3be8ff",
+        "trim": "#b84dff",
+        "pelvis_color": "#191c28",
+        "collar": "high_tech_collar",
+        "detail": "neon_circuit_piping"
+    },
+    "bolas_dummy": {
+        "style": "crash_shim_teal",
+        "primary": "#00d2b8",
+        "secondary": "#009e8a",
+        "accent": "#ffd100",
+        "trim": "#111820",
+        "pelvis_color": "#00b49e",
+        "collar": "crash_neck",
+        "detail": "fiducial_target_disc"
+    },
+    "weave_man": {
+        "style": "indigo_jacket",
+        "primary": "#263248",
+        "secondary": "#1b2436",
+        "accent": "#d9a74a",
+        "trim": "#c69c6d",
+        "pelvis_color": "#1e2638",
+        "collar": "work_lapel",
+        "detail": "button_placket"
     }
-    for view, (sid, idx_list) in ex_sid_map.items():
-        for sname, p_idx in zip(slot_13_names, idx_list):
-            if copy_cut_to_v2(cut_path(sid, p_idx), "ex.ex_jacket", f"body.{view}.{sname}.png"):
-                repaired += 1
-    for pview, p_idx in [("back", 6), ("threequarter_back", 5)]:
-        if copy_cut_to_v2(cut_path("ex.ex_jacket.hipcore", p_idx), "ex.ex_jacket", f"body.{pview}.pelvis.png"):
-            repaired += 1
-    if copy_cut_to_v2(cut_path("ex.ex_jacket.heads", 1), "ex.ex_jacket", "head.back.png"):
-        repaired += 1
-    if copy_cut_to_v2(cut_path("ex.ex_jacket.heads", 2), "ex.ex_jacket", "head.threequarter_back.png"):
-        repaired += 1
-
-    # 3. Poet Black T-Shirt (`poet.black_tshirt.compact-core` + `poet.red_black_sunglasses` heads/hands)
-    #    1: torso front, 2: torso back, 4: hip bridge, 3: rear seat,
-    #    5: uarm L, 6: farm L, 7: uarm R, 8: farm R,
-    #    9: thigh L, 10: shin L, 11: thigh R, 12: shin R, 13: foot L, 14: foot R
-    bt_sid = "poet.black_tshirt.compact-core"
-    bt_hand_L = cut_path("poet.red_black_sunglasses.body.front", 6)
-    bt_hand_R = cut_path("poet.red_black_sunglasses.body.front", 7)
-    for view in ("front", "threequarter", "profile", "back"):
-        torso_p = 2 if view == "back" else 1
-        pelvis_p = 3 if view == "back" else 4
-        bt_map = {
-            "torso": cut_path(bt_sid, torso_p),
-            "pelvis": cut_path(bt_sid, pelvis_p),
-            "uarm.L": cut_path(bt_sid, 5),
-            "farm.L": cut_path(bt_sid, 6),
-            "hand.L": bt_hand_L,
-            "uarm.R": cut_path(bt_sid, 7),
-            "farm.R": cut_path(bt_sid, 8),
-            "hand.R": bt_hand_R,
-            "thigh.L": cut_path(bt_sid, 9),
-            "shin.L": cut_path(bt_sid, 10),
-            "thigh.R": cut_path(bt_sid, 11),
-            "shin.R": cut_path(bt_sid, 12),
-            "foot.L": cut_path(bt_sid, 13),
-            "foot.R": cut_path(bt_sid, 14),
-        }
-        for sname, src in bt_map.items():
-            if copy_cut_to_v2(src, "poet.black_tshirt", f"body.{view}.{sname}.png"):
-                repaired += 1
-
-    # 4. Party DJ Cyber (`party.dj_cyber.compact-core` + `party.dj_cyber.body.profile` + `party.dj_cyber.heads`)
-    dj_cc = "party.dj_cyber.compact-core"
-    dj_pr = "party.dj_cyber.body.profile"
-    for view in ("front", "threequarter", "back"):
-        torso_p = 2 if view == "back" else 1
-        pelvis_p = 4 if view == "back" else 3
-        dj_map = {
-            "torso": cut_path(dj_cc, torso_p),
-            "pelvis": cut_path(dj_cc, pelvis_p),
-            "uarm.L": cut_path(dj_cc, 5),
-            "farm.L": cut_path(dj_cc, 6),
-            "hand.L": cut_path(dj_pr, 6),
-            "uarm.R": cut_path(dj_cc, 7),
-            "farm.R": cut_path(dj_cc, 8),
-            "hand.R": cut_path(dj_pr, 6),
-            "thigh.L": cut_path(dj_cc, 9),
-            "shin.L": cut_path(dj_cc, 10),
-            "thigh.R": cut_path(dj_cc, 11),
-            "shin.R": cut_path(dj_cc, 12),
-            "foot.L": cut_path(dj_cc, 13),
-            "foot.R": cut_path(dj_cc, 14),
-        }
-        for sname, src in dj_map.items():
-            if copy_cut_to_v2(src, "party.dj_cyber", f"body.{view}.{sname}.png"):
-                repaired += 1
-    dj_prof_map = {
-        "torso": cut_path(dj_pr, 1),
-        "pelvis": cut_path(dj_pr, 8),
-        "uarm.L": cut_path(dj_pr, 2), "uarm.R": cut_path(dj_pr, 2),
-        "farm.L": cut_path(dj_pr, 3), "farm.R": cut_path(dj_pr, 3),
-        "hand.L": cut_path(dj_pr, 6), "hand.R": cut_path(dj_pr, 6),
-        "thigh.L": cut_path(dj_pr, 4), "thigh.R": cut_path(dj_pr, 4),
-        "shin.L": cut_path(dj_pr, 5), "shin.R": cut_path(dj_pr, 5),
-        "foot.L": cut_path(dj_pr, 7), "foot.R": cut_path(dj_pr, 7),
-    }
-    for sname, src in dj_prof_map.items():
-        if copy_cut_to_v2(src, "party.dj_cyber", f"body.profile.{sname}.png"):
-            repaired += 1
-    for hview, p_idx in [("front", 1), ("threequarter", 2), ("profile", 4), ("back", 5)]:
-        if copy_cut_to_v2(cut_path("party.dj_cyber.heads", p_idx), "party.dj_cyber", f"head.{hview}.png"):
-            repaired += 1
-
-    # 5. Vintage Party Couple (`party.vintage_party.body.front` / `profile` / `back` / `heads`)
-    vp_front_idx = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-    vp_back_idx = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-    for view, sid, idx_list, pel_idx in [
-        ("front", "party.vintage_party.body.front", vp_front_idx, 14),
-        ("threequarter", "party.vintage_party.body.front", vp_front_idx, 14),
-        ("back", "party.vintage_party.body.back", vp_back_idx, 15),
-    ]:
-        for sname, p_idx in zip(slot_13_names, idx_list):
-            if copy_cut_to_v2(cut_path(sid, p_idx), "party.vintage_party", f"body.{view}.{sname}.png"):
-                repaired += 1
-        if copy_cut_to_v2(cut_path(sid, pel_idx), "party.vintage_party", f"body.{view}.pelvis.png"):
-            repaired += 1
-    vp_pr = "party.vintage_party.body.profile"
-    vp_prof_map = {
-        "torso": 1, "pelvis": 8,
-        "uarm.L": 2, "uarm.R": 2,
-        "farm.L": 3, "farm.R": 3,
-        "hand.L": 7, "hand.R": 7,
-        "thigh.L": 4, "thigh.R": 4,
-        "shin.L": 5, "shin.R": 5,
-        "foot.L": 9, "foot.R": 9,
-    }
-    for sname, p_idx in vp_prof_map.items():
-        if copy_cut_to_v2(cut_path(vp_pr, p_idx), "party.vintage_party", f"body.profile.{sname}.png"):
-            repaired += 1
-    for hview, p_idx in [("front", 1), ("threequarter", 2), ("profile", 4), ("back", 5)]:
-        if copy_cut_to_v2(cut_path("party.vintage_party.heads", p_idx), "party.vintage_party", f"head.{hview}.png"):
-            repaired += 1
-
-    # 6. Woman / Muse (`woman.teal_dress` & `woman.mother_cardigan`) from `woman.13.body` and `woman.09.mother.body`
-    #    woman.09.mother.body (21 parts):
-    #    p01: 1 TORSO FRONT, p02: 2 TORSO BACK, p03: 3 TORSO PROFILE, p08: 4 HIP BRIDGE, p09: 5 REAR SEAT,
-    #    p04: 6 UARM L, p05: 7 UARM R, p06: 8 FOREARM L, p07: 9 FOREARM R,
-    #    p10: 10 THIGH L, p11: 11 THIGH R, p12: 12 SHIN L, p13: 13 SHIN R,
-    #    p14: 14 GARMENT FRONT, p15: 15 GARMENT BACK,
-    #    p16: 16 FOOT L FRONT, p17: 17 FOOT R FRONT, p20: 18 FOOT L PROFILE, p21: 19 FOOT R PROFILE
-    m_sid = "woman.09.mother.body"
-    w13_sid = "woman.13.body"
-    w_hand_L = cut_path("party.vintage_party.body.front", 20)
-    w_hand_R = cut_path("party.vintage_party.body.front", 23)
-    for v2_dir, use_w13 in [("woman.teal_dress", True), ("woman.mother_cardigan", False)]:
-        for view in ("front", "threequarter", "profile", "back"):
-            if use_w13:
-                torso_src = cut_path(w13_sid, 3 if view == "back" else (16 if view == "profile" else 2))
-                pelvis_src = cut_path(w13_sid, 4 if view == "front" else (7 if view == "back" else 5))
-                uarm_L_src, uarm_R_src = cut_path(w13_sid, 8), cut_path(w13_sid, 9)
-                farm_L_src, farm_R_src = cut_path(w13_sid, 10), cut_path(w13_sid, 11)
-                thigh_L_src, thigh_R_src = cut_path(w13_sid, 12), cut_path(w13_sid, 13)
-                shin_L_src, shin_R_src = cut_path(w13_sid, 14), cut_path(w13_sid, 15)
-                foot_L_src, foot_R_src = cut_path(w13_sid, 17), cut_path(w13_sid, 18)
-            else:
-                torso_src = cut_path(m_sid, 2 if view == "back" else (3 if view == "profile" else 1))
-                pelvis_src = cut_path(m_sid, 9 if view == "back" else 8)
-                uarm_L_src, uarm_R_src = cut_path(m_sid, 4), cut_path(m_sid, 5)
-                farm_L_src, farm_R_src = cut_path(m_sid, 6), cut_path(m_sid, 7)
-                thigh_L_src, thigh_R_src = cut_path(m_sid, 10), cut_path(m_sid, 11)
-                shin_L_src, shin_R_src = cut_path(m_sid, 12), cut_path(m_sid, 13)
-                foot_L_src = cut_path(m_sid, 20 if view == "profile" else 16)
-                foot_R_src = cut_path(m_sid, 21 if view == "profile" else 17)
-            w_map = {
-                "torso": torso_src, "pelvis": pelvis_src,
-                "uarm.L": uarm_L_src, "uarm.R": uarm_R_src,
-                "farm.L": farm_L_src, "farm.R": farm_R_src,
-                "hand.L": w_hand_L, "hand.R": w_hand_R,
-                "thigh.L": thigh_L_src, "thigh.R": thigh_R_src,
-                "shin.L": shin_L_src, "shin.R": shin_R_src,
-                "foot.L": foot_L_src, "foot.R": foot_R_src,
-            }
-            for sname, src in w_map.items():
-                if copy_cut_to_v2(src, v2_dir, f"body.{view}.{sname}.png"):
-                    repaired += 1
-
-    # 7. Ancestors (`ancestors.ancestor_robe_indigo_gold`) from `ancestors.05.ancestor_robe_indigo_gold.body`
-    anc_sid = "ancestors.05.ancestor_robe_indigo_gold.body"
-    anc_hand_L = cut_path("poet.red_black_sunglasses.body.front", 6)
-    anc_hand_R = cut_path("poet.red_black_sunglasses.body.front", 7)
-    for view in ("front", "threequarter", "profile", "back"):
-        torso_p = 2 if view == "back" else (3 if view == "profile" else 1)
-        pelvis_p = 9 if view == "back" else 4
-        foot_L_p = 20 if view == "profile" else 18
-        foot_R_p = 21 if view == "profile" else 19
-        anc_map = {
-            "torso": cut_path(anc_sid, torso_p),
-            "pelvis": cut_path(anc_sid, pelvis_p),
-            "uarm.L": cut_path(anc_sid, 5), "uarm.R": cut_path(anc_sid, 6),
-            "farm.L": cut_path(anc_sid, 7), "farm.R": cut_path(anc_sid, 8),
-            "hand.L": anc_hand_L, "hand.R": anc_hand_R,
-            "thigh.L": cut_path(anc_sid, 10), "thigh.R": cut_path(anc_sid, 11),
-            "shin.L": cut_path(anc_sid, 12), "shin.R": cut_path(anc_sid, 13),
-            "foot.L": cut_path(anc_sid, foot_L_p), "foot.R": cut_path(anc_sid, foot_R_p),
-        }
-        for sname, src in anc_map.items():
-            if copy_cut_to_v2(src, "ancestors.ancestor_robe_indigo_gold", f"body.{view}.{sname}.png"):
-                repaired += 1
-
-    print(f"[OK] Repaired {repaired} part files in shots/arena/parts/kit3/v2/parts/ from release_v2/cuts/")
-    return repaired
+}
 
 
-def compute_card_anchors_for_slot(slot_name: str, rel_file: str) -> dict:
-    """
-    Computes accurate normalized `pivot_A` (proximal joint pin) and `socket_B` (distal joint socket)
-    for any cut-out piece file, respecting:
-      - `range_rigger.html` convention:
-          * `head`:   pivot_A = neck [0.50, 0.85], socket_B = crown [0.50, 0.12]
-          * `torso`:  pivot_A = neck/collar [0.50, 0.10], socket_B = waist/pelvis [0.50, 0.88]
-          * `pelvis`: pivot_A = waist [0.50, 0.20], socket_B = hip line [0.50, 0.84]
-          * `uarm_*`: pivot_A = shoulder [0.50, 0.14], socket_B = elbow [0.50, 0.85]
-          * `farm_*`: pivot_A = elbow [0.50, 0.14], socket_B = wrist cuff [0.50, 0.81]
-          * `hand_*`: pivot_A = wrist crease, socket_B = fingertips (auto-detects vertical vs horizontal vs upside-down!)
-          * `thigh_*`: pivot_A = hip [0.50, 0.14], socket_B = knee [0.50, 0.85]
-          * `shin_*`: pivot_A = knee [0.50, 0.13], socket_B = ankle cuff [0.50, 0.83]
-          * `foot_*`: pivot_A = ankle tab at top of shaft, socket_B = sole directly below ankle shaft (vertical shaft axis!)
-      - `crash_lab.html` convention (`proximal_xy`, `distal_xy` matching `SLOT_BONE_MAP`):
-          * `torso` in `crash_lab.html` maps `['pelvis', 'neck']`, so `proximal_xy` = waist `[0.50, 0.88]`, `distal_xy` = neck `[0.50, 0.10]`.
-    """
-    meta = inspect_img(rel_file)
-    w, h = meta["width"], meta["height"]
-    bx0, by0, bx1, by1 = meta["visible_bbox"]
-    bw, bh = max(1, bx1 - bx0), max(1, by1 - by0)
-
-    def to_norm(nx_vis, ny_vis):
-        return [
-            round((bx0 + nx_vis * bw) / w, 4),
-            round((by0 + ny_vis * bh) / h, 4),
-        ]
-
-    fn_lower = os.path.basename(rel_file).lower()
-
-    # Special case: Bolas horizontal dummy parts (`arena/cast/dummy/bola.*`)
-    if "arena/cast/dummy/" in rel_file:
-        if slot_name == "head":
-            pA, sB = [round(12 / 226, 4), 0.5], [round(212 / 226, 4), 0.5]
-        elif slot_name == "torso":
-            pA, sB = [round(269 / 348, 4), 0.5], [round(69 / 348, 4), 0.5]
-        elif slot_name.startswith("foot_"):
-            pA, sB = [round(36 / 184, 4), round(35 / 92, 4)], [round(154 / 184, 4), round(58 / 92, 4)]
-        else:
-            pA, sB = [0.16, 0.50], [0.86, 0.50]
-        return {
-            "file": meta["file"],
-            "width": w,
-            "height": h,
-            "visible_bbox": meta["visible_bbox"],
-            "pivot_A": pA,
-            "socket_B": sB,
-            "proximal_xy": sB if slot_name == "torso" else pA,
-            "distal_xy": pA if slot_name == "torso" else sB,
-            "cuff_clip_ratio": 1.0,
-            "rot_offset_deg": 0.0,
-        }
-
-    cuff_clip = 1.0
-    if slot_name == "head":
-        pA = to_norm(0.50, 0.85)   # neck grommet at bottom of head
-        sB = to_norm(0.50, 0.12)   # crown at top of head
-        cuff_clip = 0.86
-    elif slot_name == "torso":
-        # In range_rigger.html, torso is drawn from pNeck (ptA) -> pPelvis (ptB)
-        pA = to_norm(0.50, 0.10)   # collar / neck at TOP
-        sB = to_norm(0.50, 0.88)   # waist / pelvis at BOTTOM
-    elif slot_name == "pelvis":
-        pA = to_norm(0.50, 0.20)
-        sB = to_norm(0.50, 0.84)
-    elif slot_name.startswith("uarm_"):
-        pA = to_norm(0.50, 0.14)
-        sB = to_norm(0.50, 0.85)
-    elif slot_name.startswith("farm_"):
-        if "01_components" in rel_file.lower():
-            pA = [0.50, 0.13]
-            sB = [0.50, 0.778]
-            cuff_clip = 0.806
-        else:
-            pA = to_norm(0.50, 0.14)
-            sB = to_norm(0.50, 0.82)
-            cuff_clip = 0.86
-    elif slot_name.startswith("hand_"):
-        # Check orientation of the hand card:
-        # 1) `17_hand_open_L.png` & `18_hand_open_R.png` have grommet at BOTTOM (ny=0.78) and fingers at TOP (ny=0.12)
-        if "17_hand_open" in fn_lower or "18_hand_open" in fn_lower:
-            pA = to_norm(0.50, 0.78)
-            sB = to_norm(0.50, 0.12)
-        # 2) Horizontal hand cards (from `.hands` sheets or `v2` hand variants where bw > bh * 1.18):
-        #    Wrist grommet tab is on the LEFT (nx=0.18, ny=0.50), fingers point RIGHT (nx=0.88, ny=0.50)
-        elif bw > bh * 1.18:
-            pA = to_norm(0.18, 0.50)
-            sB = to_norm(0.88, 0.50)
-        # 3) Standard vertical hand cards (`4 HAND L`, `7 HAND R`, `15_hand_relaxed_L`, `16_hand_relaxed_R`):
-        #    Wrist grommet tab is at the TOP (ny=0.22), fingers point DOWN (ny=0.88)
-        else:
-            pA = to_norm(0.50, 0.22)
-            sB = to_norm(0.50, 0.88)
-    elif slot_name.startswith("thigh_"):
-        pA = to_norm(0.50, 0.14)
-        sB = to_norm(0.50, 0.85)
-    elif slot_name.startswith("shin_"):
-        if "01_components" in rel_file.lower():
-            pA = [0.50, 0.12]
-            sB = [0.50, 0.814]
-            cuff_clip = 0.843
-        else:
-            pA = to_norm(0.50, 0.13)
-            sB = to_norm(0.50, 0.83)
-            cuff_clip = 0.88
-    elif slot_name.startswith("foot_"):
-        # For boots/shoes:
-        # Both front boots (`19_boot_front_L`, `16 FOOT L FRONT`) and profile boots (`feet__p01`, `body.profile.foot`)
-        # have their ankle grommet tab at the TOP of the boot shaft and the sole at the BOTTOM!
-        # In profile boots facing right, the ankle shaft is at nx ~ 0.30; in profile boots facing left (like `13 foot L` on compact-core),
-        # the ankle shaft is at nx ~ 0.66; in front boots, nx ~ 0.50.
-        if bw > bh * 1.08:
-            # Profile shoe/boot: determine whether ankle tab is on top-left or top-right by checking top-quarter alpha center of mass
-            abs_p = os.path.join(SHOTS_DIR, meta["file"])
-            shaft_nx = 0.34
-            try:
-                with Image.open(abs_p) as im:
-                    alpha = im.convert("RGBA").split()[-1]
-                    top_band = alpha.crop((bx0, by0, bx1, by0 + max(4, int(bh * 0.32))))
-                    tb_bb = top_band.point([255 if i > 20 else 0 for i in range(256)]).getbbox()
-                    if tb_bb:
-                        cx_top = (tb_bb[0] + tb_bb[2]) * 0.5
-                        shaft_nx = max(0.22, min(0.78, cx_top / bw))
-            except Exception:
-                shaft_nx = 0.34
-            pA = to_norm(shaft_nx, 0.22)
-            sB = to_norm(shaft_nx, 0.88)
-        else:
-            pA = to_norm(0.50, 0.25)
-            sB = to_norm(0.50, 0.88)
-    else:
-        pA = to_norm(0.50, 0.15)
-        sB = to_norm(0.50, 0.85)
-
-    # For crash_lab.html:
-    # - `torso` maps `['pelvis', 'neck']` (bottom -> top), so `proximal_xy` is waist (`sB`) and `distal_xy` is collar (`pA`).
-    # - `foot_L/R` in `crash_lab.html` maps `['ankle', 'toe']` (diagonal down-sideways), so keep diagonal `proximal_xy`/`distal_xy`.
-    if slot_name == "torso":
-        prox_xy, dist_xy = sB, pA
-    elif slot_name.startswith("foot_"):
-        prox_xy = to_norm(0.42, 0.28)
-        dist_xy = to_norm(0.72, 0.88)
-    else:
-        prox_xy, dist_xy = pA, sB
-
-    return {
-        "file": meta["file"],
-        "width": w,
-        "height": h,
-        "visible_bbox": meta["visible_bbox"],
-        "pivot_A": pA,
-        "socket_B": sB,
-        "proximal_xy": prox_xy,
-        "distal_xy": dist_xy,
-        "cuff_clip_ratio": round(cuff_clip, 4),
-        "rot_offset_deg": 0.0,
-    }
-
-
-def build_skeleton_breeds() -> list:
-    """
-    Defines the 7 Canonical Skeleton Breeds matched to the Vitruvian Man Proportions Engine.
-    Each breed specifies exact bone lengths in cm (`thigh`, `shin`, `upper`, `fore`, `spine`,
-    `hipW`, `shW`, `headR`), Vitruvian landmarks (`groin_ratio`, `navel_ratio`, `knee_ratio`,
-    `chin_ratio`, `wingspan_ratio`), and default layer stack rules (`shoe_over_calf`, `hand_over_cuff`).
-    """
-    return [
-        {
-            "id": "vitruvian_8h",
-            "name": "BREED 01 · Vitruvian Canon (8.0H · Square & Navel Circle)",
-            "short_name": "Vitruvian 8.0H",
-            "head_count": 8.0,
-            "ref_height_cm": 170.0,
-            "bones": {"thigh": 45.0, "shin": 45.0, "upper": 30.0, "fore": 27.0, "spine": 52.0, "hipW": 10.0, "shW": 18.0, "headR": 10.8},
-            "vitruvian_ratios": {"knee": 0.25, "groin": 0.50, "navel": 0.618, "chest": 0.75, "chin": 0.875, "wingspan": 1.00},
-            "default_layer_order": {"shoe_over_calf": False, "hand_over_cuff": False, "head_over_collar": True, "pelvis_over_thigh": True},
-        },
-        {
-            "id": "poet_tracksuit_75h",
-            "name": "BREED 02 · Poet Tracksuit Hero (7.5H · Jogger Cuff over Chelsea Boot)",
-            "short_name": "Poet Tracksuit 7.5H",
-            "head_count": 7.5,
-            "ref_height_cm": 170.0,
-            "bones": {"thigh": 44.5, "shin": 45.5, "upper": 30.0, "fore": 27.0, "spine": 52.0, "hipW": 10.2, "shW": 18.5, "headR": 11.2},
-            "vitruvian_ratios": {"knee": 0.255, "groin": 0.50, "navel": 0.615, "chest": 0.745, "chin": 0.867, "wingspan": 1.01},
-            "default_layer_order": {"shoe_over_calf": False, "hand_over_cuff": False, "head_over_collar": True, "pelvis_over_thigh": True},
-        },
-        {
-            "id": "compact_core_sneaker",
-            "name": "BREED 03 · Compact-Core / High-Top Sneaker (7.2H · Shoe Over Calf)",
-            "short_name": "Compact High-Top 7.2H",
-            "head_count": 7.2,
-            "ref_height_cm": 168.0,
-            "bones": {"thigh": 43.0, "shin": 43.0, "upper": 29.0, "fore": 26.5, "spine": 51.0, "hipW": 10.0, "shW": 18.0, "headR": 11.5},
-            "vitruvian_ratios": {"knee": 0.25, "groin": 0.495, "navel": 0.612, "chest": 0.74, "chin": 0.861, "wingspan": 1.00},
-            "default_layer_order": {"shoe_over_calf": True, "hand_over_cuff": False, "head_over_collar": True, "pelvis_over_thigh": True},
-        },
-        {
-            "id": "ex_bomber_broad",
-            "name": "BREED 04 · EX Olive Bomber (7.6H · Wide Clavicle & Long Stride)",
-            "short_name": "EX Bomber 7.6H",
-            "head_count": 7.6,
-            "ref_height_cm": 174.0,
-            "bones": {"thigh": 46.5, "shin": 46.0, "upper": 31.0, "fore": 28.0, "spine": 53.5, "hipW": 10.5, "shW": 20.5, "headR": 11.0},
-            "vitruvian_ratios": {"knee": 0.255, "groin": 0.505, "navel": 0.62, "chest": 0.755, "chin": 0.87, "wingspan": 1.03},
-            "default_layer_order": {"shoe_over_calf": True, "hand_over_cuff": False, "head_over_collar": True, "pelvis_over_thigh": True},
-        },
-        {
-            "id": "muse_gown_elongated",
-            "name": "BREED 05 · Muse / Vintage Gown (7.8H · High Waist & Heel over Calf)",
-            "short_name": "Muse / Gown 7.8H",
-            "head_count": 7.8,
-            "ref_height_cm": 166.0,
-            "bones": {"thigh": 44.0, "shin": 45.0, "upper": 28.5, "fore": 26.0, "spine": 49.5, "hipW": 10.2, "shW": 16.2, "headR": 10.6},
-            "vitruvian_ratios": {"knee": 0.26, "groin": 0.515, "navel": 0.63, "chest": 0.76, "chin": 0.872, "wingspan": 0.98},
-            "default_layer_order": {"shoe_over_calf": True, "hand_over_cuff": True, "head_over_collar": True, "pelvis_over_thigh": True},
-        },
-        {
-            "id": "child_traveler_52h",
-            "name": "BREED 06 · Child Traveler (5.2H · Age 7 · 118cm Proportion)",
-            "short_name": "Child 5.2H (118cm)",
-            "head_count": 5.2,
-            "ref_height_cm": 118.0,
-            "bones": {"thigh": 31.0, "shin": 31.0, "upper": 21.0, "fore": 19.0, "spine": 36.0, "hipW": 7.2, "shW": 12.8, "headR": 9.6},
-            "vitruvian_ratios": {"knee": 0.23, "groin": 0.46, "navel": 0.58, "chest": 0.71, "chin": 0.81, "wingspan": 0.94},
-            "default_layer_order": {"shoe_over_calf": False, "hand_over_cuff": False, "head_over_collar": True, "pelvis_over_thigh": True},
-        },
-        {
-            "id": "piece_derived_auto",
-            "name": "BREED 07 · Auto-Derived From Active Pieces (Piece-Span Breed)",
-            "short_name": "Auto Piece-Breed",
-            "head_count": 7.5,
-            "ref_height_cm": 170.0,
-            "bones": {"thigh": 45.0, "shin": 45.0, "upper": 30.0, "fore": 27.0, "spine": 52.0, "hipW": 10.0, "shW": 18.0, "headR": 11.0},
-            "vitruvian_ratios": {"knee": 0.25, "groin": 0.50, "navel": 0.618, "chest": 0.75, "chin": 0.875, "wingspan": 1.00},
-            "default_layer_order": {"shoe_over_calf": False, "hand_over_cuff": False, "head_over_collar": True, "pelvis_over_thigh": True},
-        },
-    ]
-
-
-def upgrade_crash_lab_catalog():
-    with open(CATALOG_PATH, "r", encoding="utf-8") as f:
+def upgrade_catalog():
+    with open(CATALOG_PATH, "r") as f:
         cat = json.load(f)
 
-    # Upgrade all rigs in `cat["rigs"]`:
-    # - Refresh dimensions, visible_bbox, pivot_A, socket_B, proximal_xy, distal_xy, rot_offset_deg=0
-    # - Add `variant_meta` dictionary on every slot so switching between `front`, `threequarter`,
-    #   `profile`, `back`, `open`, `grip`, `fist`, `heel_up`, `toe_up` uses that exact card's
-    #   calibrated geometry!
-    for rig in cat.get("rigs", []):
-        rig_id = rig["id"]
-        # Assign default breed_id
-        breed_map = {
-            "poet_tracksuit_31": "poet_tracksuit_75h",
-            "poet_black_tshirt": "compact_core_sneaker",
-            "ex_jacket_back": "ex_bomber_broad",
-            "vintage_party_couple": "vitruvian_8h",
-            "woman_muse_costumes": "muse_gown_elongated",
-            "child_traveler_ghost": "child_traveler_52h",
-            "mother_ancestors_family": "vitruvian_8h",
-            "dj_club_citizens": "compact_core_sneaker",
-            "bolas_dummy": "vitruvian_8h",
-            "weave_man": "poet_tracksuit_75h",
-        }
-        rig["default_breed_id"] = breed_map.get(rig_id, "vitruvian_8h")
-
-        # For poet_tracksuit_31, ensure foot_L and foot_R use authentic profile boots (`feet__p04` L.flat, `feet__p01` R.flat)
-        if rig_id == "poet_tracksuit_31":
-            v2_ts = "arena/parts/kit3/v2/parts/poet.red_black_sunglasses"
-            if "foot_L" in rig["slots"]:
-                rig["slots"]["foot_L"]["view_variants"]["profile"] = f"{v2_ts}/foot.L.flat.png"
-                rig["slots"]["foot_L"]["view_variants"]["threequarter"] = f"{v2_ts}/body.threequarter.foot.L.png"
-                rig["slots"]["foot_L"]["view_variants"]["back"] = f"{v2_ts}/body.back.foot.L.png"
-                rig["slots"]["foot_L"]["view_variants"]["heel_up"] = f"{v2_ts}/foot.L.heel_up.png"
-                rig["slots"]["foot_L"]["view_variants"]["toe_up"] = f"{v2_ts}/foot.L.toe_up.png"
-            if "foot_R" in rig["slots"]:
-                rig["slots"]["foot_R"]["view_variants"]["profile"] = f"{v2_ts}/foot.R.flat.png"
-                rig["slots"]["foot_R"]["view_variants"]["threequarter"] = f"{v2_ts}/body.threequarter.foot.R.png"
-                rig["slots"]["foot_R"]["view_variants"]["back"] = f"{v2_ts}/body.back.foot.R.png"
-                rig["slots"]["foot_R"]["view_variants"]["heel_up"] = f"{v2_ts}/foot.R.heel_up.png"
-                rig["slots"]["foot_R"]["view_variants"]["toe_up"] = f"{v2_ts}/foot.R.toe_up.png"
-            for hs, hside in [("hand_L", "L"), ("hand_R", "R")]:
-                if hs in rig["slots"]:
-                    rig["slots"][hs]["view_variants"]["profile"] = f"{v2_ts}/body.profile.hand.{hside}.png"
-                    rig["slots"][hs]["view_variants"]["threequarter"] = f"{v2_ts}/body.threequarter.hand.{hside}.png"
-                    rig["slots"][hs]["view_variants"]["back"] = f"{v2_ts}/body.back.hand.{hside}.png"
-
-        for slot_key, slot_obj in list(rig["slots"].items()):
-            # Canonical slot key (e.g. `uarm_L` vs `upper_arm_L`)
-            canon_key = slot_key.replace("upper_arm_", "uarm_").replace("forearm_", "farm_")
-            prim_file = slot_obj.get("file") or slot_obj.get("default_asset")
-            if not prim_file:
-                continue
-            c_meta = compute_card_anchors_for_slot(canon_key, prim_file)
-            slot_obj["file"] = c_meta["file"]
-            slot_obj["default_asset"] = c_meta["file"]
-            slot_obj["width"] = c_meta["width"]
-            slot_obj["height"] = c_meta["height"]
-            slot_obj["visible_bbox"] = c_meta["visible_bbox"]
-            slot_obj["pivot_A"] = c_meta["pivot_A"]
-            slot_obj["socket_B"] = c_meta["socket_B"]
-            slot_obj["pivot_A_px"] = [round(c_meta["pivot_A"][0] * c_meta["width"], 1), round(c_meta["pivot_A"][1] * c_meta["height"], 1)]
-            slot_obj["socket_B_px"] = [round(c_meta["socket_B"][0] * c_meta["width"], 1), round(c_meta["socket_B"][1] * c_meta["height"], 1)]
-            slot_obj["proximal_xy"] = c_meta["proximal_xy"]
-            slot_obj["distal_xy"] = c_meta["distal_xy"]
-            slot_obj["cuff_clip_ratio"] = c_meta["cuff_clip_ratio"]
-            slot_obj["rot_offset_deg"] = 0.0
-
-            # Compute per-variant metadata (`variant_meta`)
-            vv = slot_obj.get("view_variants") or slot_obj.get("views") or {"front": c_meta["file"]}
-            variant_meta = {}
-            for vk, vfile in vv.items():
-                vm = compute_card_anchors_for_slot(canon_key, vfile)
-                variant_meta[vk] = vm
-            slot_obj["variant_meta"] = variant_meta
-            if "views" in slot_obj:
-                if "profile" in vv:
-                    slot_obj["views"]["side"] = vv["profile"]
-                if "front" in vv:
-                    slot_obj["views"]["front"] = vv["front"]
-                if "back" in vv:
-                    slot_obj["views"]["back"] = vv["back"]
-
-    # Upgrade `swapper_bank` items so every hand/foot/head/torso/limb has accurate `pivot_A`, `socket_B`, and `rot_offset_deg = 0.0`
-    cat_to_slot = {
-        "shoes_feet": "foot_L",
-        "hands": "hand_L",
-        "heads": "head",
-        "torsos_pelvis": "torso",
-        "limbs": "uarm_L",
+    # Map each rig to its primary v2/parts folder + kitbash donor folders
+    rig_kit_map = {
+        "poet_tracksuit_31": ("poet.red_black_sunglasses", ["family.street_clothes"]),
+        "poet_black_tshirt": ("poet.black_tshirt", ["poet.red_black_sunglasses", "family.street_clothes"]),
+        "ex_jacket_back": ("ex.ex_jacket", ["poet.red_black_sunglasses"]),
+        "vintage_party_couple": ("party.vintage_party", ["poet.red_black_sunglasses"]),
+        "woman_muse_costumes": ("woman.teal_dress", ["woman.mother_cardigan"]),
+        "child_traveler_ghost": ("young_poet.child_clothes", ["poet.black_tshirt"]),
+        "mother_ancestors_family": ("woman.mother_cardigan", ["ancestors.ancestor_robe_indigo_gold", "woman.teal_dress"]),
+        "dj_club_citizens": ("party.dj_cyber", ["poet.red_black_sunglasses"]),
+        "bolas_dummy": ("shim.crash_teal", ["poet.red_black_sunglasses"]),
+        "weave_man": ("family.street_clothes", ["poet.red_black_sunglasses"]),
     }
-    for cat_name, items in cat.get("swapper_bank", {}).items():
-        s_type = cat_to_slot.get(cat_name, "uarm_L")
-        for it in items:
-            f_path = it.get("file")
-            if not f_path:
-                continue
-            cm = compute_card_anchors_for_slot(s_type, f_path)
-            it["width"] = cm["width"]
-            it["height"] = cm["height"]
-            it["pivot_A"] = cm["pivot_A"]
-            it["socket_B"] = cm["socket_B"]
-            it["proximal_xy"] = cm["proximal_xy"]
-            it["distal_xy"] = cm["distal_xy"]
-            it["rot_offset_deg"] = 0.0
 
-    cat["skeleton_breeds"] = build_skeleton_breeds()
+    for rig in cat.get("rigs", []):
+        rid = rig["id"]
+        rig["torso_style"] = TORSO_STYLES.get(rid, TORSO_STYLES["poet_tracksuit_31"])
+        primary_kit, donor_kits = rig_kit_map.get(rid, ("poet.red_black_sunglasses", []))
+        rig["primary_kit"] = primary_kit
+        rig["donor_kits"] = donor_kits
 
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
+        slots = rig.get("slots", {})
+        for slot_key, slot_obj in list(slots.items()):
+            # Map canonical slot name to v2/parts file pattern
+            base_slot = slot_key.replace("upper_arm_", "uarm_").replace("forearm_", "farm_")
+            vv = slot_obj.get("view_variants", {})
+
+            # Populate missing views from primary_kit or donor_kits (Cross-Kit Kitbash!)
+            for view_name in ["front", "threequarter", "profile", "back"]:
+                if base_slot == "head":
+                    cand_rel = f"arena/parts/kit3/v2/parts/{primary_kit}/head.{view_name}.png"
+                elif base_slot == "torso":
+                    if rid == "poet_tracksuit_31" and view_name == "front":
+                        cand_rel = "kits/packs/poet_tracksuit_v1/01_COMPONENTS/01_torso_front.png"
+                    elif rid == "poet_tracksuit_31" and view_name == "back":
+                        cand_rel = "kits/packs/poet_tracksuit_v1/01_COMPONENTS/02_torso_back.png"
+                    else:
+                        cand_rel = f"arena/parts/kit3/v2/parts/{primary_kit}/body.{view_name}.torso.png"
+                elif base_slot == "pelvis":
+                    cand_rel = f"arena/parts/kit3/v2/parts/{primary_kit}/body.{view_name}.pelvis.png"
+                else:
+                    parts_tok = base_slot.replace("_L", ".L").replace("_R", ".R")
+                    cand_rel = f"arena/parts/kit3/v2/parts/{primary_kit}/body.{view_name}.{parts_tok}.png"
+
+                if os.path.exists(os.path.join(ROOT, cand_rel)):
+                    # Keep Tracksuit 31 high-res front components for front view, use v2/parts for 3Q/profile/back
+                    if rid == "poet_tracksuit_31" and view_name == "front" and base_slot != "head":
+                        pass
+                    else:
+                        vv[view_name] = cand_rel
+                else:
+                    # Try donor kits (Cross-Kit Kitbash!)
+                    for dk in donor_kits:
+                        if base_slot == "head":
+                            d_rel = f"arena/parts/kit3/v2/parts/{dk}/head.{view_name}.png"
+                        elif base_slot == "torso":
+                            d_rel = f"arena/parts/kit3/v2/parts/{dk}/body.{view_name}.torso.png"
+                        elif base_slot == "pelvis":
+                            d_rel = f"arena/parts/kit3/v2/parts/{dk}/body.{view_name}.pelvis.png"
+                        else:
+                            parts_tok = base_slot.replace("_L", ".L").replace("_R", ".R")
+                            d_rel = f"arena/parts/kit3/v2/parts/{dk}/body.{view_name}.{parts_tok}.png"
+                        if os.path.exists(os.path.join(ROOT, d_rel)):
+                            vv[view_name] = d_rel
+                            break
+
+            slot_obj["view_variants"] = vv
+            if "front" in vv and rid != "poet_tracksuit_31":
+                slot_obj["file"] = vv["front"]
+            elif "front" in vv and base_slot == "head":
+                slot_obj["file"] = vv["front"]
+
+            # Recompute accurate variant_meta for every variant
+            vmeta = {}
+            for vkey, vrel in vv.items():
+                vabs = os.path.join(ROOT, vrel)
+                if os.path.exists(vabs):
+                    im = Image.open(vabs)
+                    vw, vh = im.size
+                    va, vb, vrot = compute_part_pivots(base_slot, vw, vh)
+                    kit_source = primary_kit
+                    for dk in donor_kits:
+                        if f"/{dk}/" in vrel:
+                            kit_source = f"KITBASH:{dk}"
+                    if rid == "poet_black_tshirt" and ("hand" in base_slot or (base_slot == "torso" and vkey == "profile")):
+                        kit_source = "KITBASH:poet.red_black"
+                    vmeta[vkey] = {
+                        "file": vrel,
+                        "width": vw,
+                        "height": vh,
+                        "pivot_A": va,
+                        "socket_B": vb,
+                        "rot_offset_deg": vrot,
+                        "kit_source": kit_source
+                    }
+            slot_obj["variant_meta"] = vmeta
+
+            # Update primary slot dimensions & pivots
+            f_abs = os.path.join(ROOT, slot_obj["file"])
+            if os.path.exists(f_abs):
+                im = Image.open(f_abs)
+                w, h = im.size
+                slot_obj["width"] = w
+                slot_obj["height"] = h
+                pa, sb, rot = compute_part_pivots(base_slot, w, h)
+                slot_obj["pivot_A"] = pa
+                slot_obj["socket_B"] = sb
+                slot_obj["rot_offset_deg"] = rot
+
+    build_face_and_body_gene_pool(cat)
+
+    with open(CATALOG_PATH, "w") as f:
         json.dump(cat, f, indent=2)
-    print(f"[OK] Upgraded {CATALOG_PATH} with per-variant metadata, purified orientations, and {len(cat['skeleton_breeds'])} skeleton breeds.")
+    print(f"[fix_massive_set_and_rigs] Upgraded {CATALOG_PATH} with Cross-Kit Kitbash Matrix, Torso Styles & Gene Pool!")
+
+
+def build_face_and_body_gene_pool(cat):
+    """Build purified, orientation-cleaned, scale-normalized gene pool for the Batch Face & Body Evolutionary Grid."""
+    expressive_heads = []
+    seen = set()
+
+    def add_head(rel_path, label, view, char_grp, is_blank=False):
+        if rel_path in seen:
+            return
+        abs_p = os.path.join(ROOT, rel_path)
+        if not os.path.exists(abs_p):
+            return
+        im = Image.open(abs_p)
+        w, h = im.size
+        # Filter out full standing figures (h/w > 1.72) or wide mouth strips (w/h > 1.6)
+        if h > w * 1.72 or w > h * 1.60:
+            return
+        seen.add(rel_path)
+        expressive_heads.append({
+            "idx": len(expressive_heads) + 1,
+            "file": rel_path,
+            "label": label,
+            "view": view,
+            "group": char_grp,
+            "width": w,
+            "height": h,
+            "is_blank": is_blank
+        })
+
+    # 1. Weave Artist-Painted Poet Expressive Heads (Front, 3Q, Profile, Back)
+    for fp in sorted(glob.glob(os.path.join(ROOT, "weave/cast/man/library/head/*.png"))):
+        rel = os.path.relpath(fp, ROOT)
+        nm = os.path.basename(fp).replace(".png", "").replace("head.", "")
+        vw = "back" if "back" in nm else ("profile" if "profile" in nm else ("threequarter" if ("3q" in nm or "threequarter" in nm or "intent" in nm or "speaking" in nm or "sunglasses." in nm or "sunglasses_shades" in nm or "look_" in nm) else "front"))
+        add_head(rel, f"Poet {nm}", vw, "Poet", is_blank=False)
+
+    # 2. All 10 Repaired Character Kit Heads
+    for r in cat.get("rigs", []):
+        hslot = r.get("slots", {}).get("head", {})
+        for vk, vf in (hslot.get("view_variants") or {}).items():
+            add_head(vf, f"{r.get('short_name','Rig')} {vk}", vk, r.get("short_name", "Rig"), is_blank=False)
+
+    # 3. Body Lab Heads (Father with flat cap, Mother with afro/earrings, Party guests, Ancestors, Ghost Child)
+    for sub, grp_lbl in [
+        ("the_father_long_coat", "Father Cap"),
+        ("the_mother_teal_dress", "Mother Afro"),
+        ("party_guests", "Party Vintage"),
+        ("atlantis_ancestors", "Ancestor"),
+        ("ghost_child_age_7", "Ghost Child"),
+        ("young_poet_age_6", "Young Poet")
+    ]:
+        for fp in sorted(glob.glob(os.path.join(ROOT, f"arena/parts/body_lab/heads/{sub}/*.png"))):
+            rel = os.path.relpath(fp, ROOT)
+            nm = os.path.basename(fp).replace(".png", "")
+            # Filter out hands accidentally placed in father_head_08..10
+            if "father_head_08" in nm or "father_head_09" in nm or "father_head_10" in nm:
+                continue
+            add_head(rel, f"{grp_lbl} {nm[-2:]}", "front", grp_lbl, is_blank=True)
+
+    # Photo-Fit Base Plates (Front & 3Q/Profile)
+    photofit_plates = []
+    for kdir, klbl in [
+        ("poet.red_black_sunglasses", "Poet Beard"),
+        ("young_poet.child_clothes", "Poet Clean"),
+        ("ghost_child.ghost_nightclothes", "Ghost Tone"),
+        ("woman.mother_cardigan", "Mother Afro"),
+        ("bola.crash_yellow", "Bola Gold"),
+        ("dot.crash_dot", "Dot Coral"),
+        ("shim.crash_teal", "Shim Cyan"),
+    ]:
+        for vw in ["front", "profile"]:
+            rel = f"arena/parts/kit3/v2/parts/{kdir}/face.{vw}.plate.png"
+            if os.path.exists(os.path.join(ROOT, rel)):
+                photofit_plates.append({"idx": len(photofit_plates) + 1, "file": rel, "label": f"{klbl} ({vw[:2].upper()})", "view": vw, "kit": kdir})
+
+    # Strip 1: Pre-Framed Rounded Photo-Fit Brow Strips (#01..#24)
+    strip_1 = []
+    brow_types = ["rest", "raised", "one_up", "knit", "angry", "sad"]
+    for kdir, klbl in [
+        ("poet.red_black_sunglasses", "Poet"),
+        ("ghost_child.ghost_nightclothes", "Ghost"),
+        ("bola.crash_yellow", "Gold"),
+        ("shim.crash_teal", "Cyan"),
+    ]:
+        for vw in ["front", "profile"]:
+            for bt in brow_types:
+                rel = f"arena/parts/kit3/v2/parts/{kdir}/face.{vw}.brows.{bt}.png"
+                if os.path.exists(os.path.join(ROOT, rel)):
+                    strip_1.append({"idx": len(strip_1) + 1, "file": rel, "label": f"{klbl} Brow {bt}", "view": vw})
+
+    # Strip 2: Pre-Framed Rounded Photo-Fit Eye Strips (#01..#32)
+    strip_2 = []
+    eye_types = ["open", "wide", "glance_side", "happy_arc", "half", "squint", "sad", "closed"]
+    for kdir, klbl in [
+        ("poet.red_black_sunglasses", "Poet"),
+        ("ghost_child.ghost_nightclothes", "Ghost"),
+        ("dot.crash_dot", "Coral"),
+        ("shim.crash_teal", "Cyan"),
+    ]:
+        for vw in ["front", "profile"]:
+            for et in eye_types:
+                rel = f"arena/parts/kit3/v2/parts/{kdir}/face.{vw}.eyes.{et}.png"
+                if os.path.exists(os.path.join(ROOT, rel)):
+                    strip_2.append({"idx": len(strip_2) + 1, "file": rel, "label": f"{klbl} Eye {et}", "view": vw})
+
+    # Strip 3: Pre-Framed Rounded Photo-Fit Mouth Strips (#01..#36)
+    strip_3 = []
+    mouth_types = ["rest", "smile", "grin_teeth", "open_A", "open_O", "E", "U", "frown", "strain_teeth", "wavy", "M_B_P", "F_V"]
+    for kdir, klbl in [
+        ("poet.red_black_sunglasses", "Poet"),
+        ("ghost_child.ghost_nightclothes", "Ghost"),
+        ("bola.crash_yellow", "Gold"),
+    ]:
+        for vw in ["front", "profile"]:
+            for mt in mouth_types:
+                rel = f"arena/parts/kit3/v2/parts/{kdir}/face.{vw}.mouth.{mt}.png"
+                if os.path.exists(os.path.join(ROOT, rel)):
+                    strip_3.append({"idx": len(strip_3) + 1, "file": rel, "label": f"{klbl} Mouth {mt}", "view": vw})
+
+    # Purified Noses for Cubist / Multi-Window Collage (strictly verified nose cutouts — zero text fragments!)
+    cubist_noses = []
+    valid_shared_noses = [4, 6, 9, 11, 12, 13, 16, 17, 18, 19, 20, 21]
+    for n_idx in valid_shared_noses:
+        rel = f"arena/parts/body_lab/noses/cast_shared_features/shared_nose_{n_idx:02d}.png"
+        if os.path.exists(os.path.join(ROOT, rel)):
+            cubist_noses.append({"idx": len(cubist_noses) + 1, "file": rel, "label": f"Nose #{n_idx:02d}"})
+    for n_idx in range(6, 12):
+        rel = f"arena/parts/body_lab/accessories/dj_cyber_&_club/dj_acc_{n_idx:02d}.png"
+        if os.path.exists(os.path.join(ROOT, rel)):
+            cubist_noses.append({"idx": len(cubist_noses) + 1, "file": rel, "label": f"Sculpt Nose #{n_idx:02d}"})
+
+    # Expressive Hands & Purified Headgear (Caps, Headphones, Shades)
+    collage_hands = []
+    for fp in sorted(glob.glob(os.path.join(ROOT, "weave/cast/man/library/hand/*.png")))[:18]:
+        rel = os.path.relpath(fp, ROOT)
+        im = Image.open(fp)
+        w, h = im.size
+        _, _, rot = compute_part_pivots("hand_L", w, h)
+        collage_hands.append({
+            "idx": len(collage_hands) + 1,
+            "file": rel,
+            "label": os.path.basename(fp).replace(".png", "").replace("hand.", ""),
+            "width": w,
+            "height": h,
+            "rot_offset_deg": rot
+        })
+
+    headgear = []
+    for g_idx in [1, 2, 3, 4, 5, 12, 13, 14]:
+        rel = f"arena/parts/body_lab/accessories/dj_cyber_&_club/dj_acc_{g_idx:02d}.png"
+        if os.path.exists(os.path.join(ROOT, rel)):
+            lbl = f"Cap #{g_idx:02d}" if g_idx <= 5 else f"DJ Headphones #{g_idx:02d}"
+            headgear.append({"idx": len(headgear) + 1, "file": rel, "label": lbl})
+    for rel, lbl in [
+        ("arena/parts/kit3/v2/parts/poet.red_black_sunglasses/face.front.glasses.png", "Poet Shades Front"),
+        ("arena/parts/kit3/v2/parts/poet.red_black_sunglasses/face.profile.glasses.png", "Poet Shades Profile"),
+        ("weave/cast/man/library/prop/prop.headphones.png", "Studio Headphones"),
+        ("weave/cast/man/library/prop/prop.sunglasses.front.png", "Dark Shades Front"),
+        ("weave/cast/man/library/prop/prop.sunglasses.folded.png", "Folded Shades"),
+        ("kits/packs/poet_tracksuit_v1/01_COMPONENTS/31_sunglasses_front.png", "Tracksuit Shades")
+    ]:
+        if os.path.exists(os.path.join(ROOT, rel)):
+            headgear.append({"idx": len(headgear) + 1, "file": rel, "label": lbl})
+
+    cat["face_and_body_gene_pool"] = {
+        "expressive_heads": expressive_heads,
+        "photofit_plates": photofit_plates,
+        "strip_1_brows_eyes": strip_1,
+        "strip_2_noses_cheeks": strip_2,
+        "strip_3_mouths_jaws": strip_3,
+        "cubist_noses": cubist_noses,
+        "collage_hands": collage_hands,
+        "headgear": headgear
+    }
+    print(f"[gene_pool] Built purified gene pool: {len(expressive_heads)} heads, {len(photofit_plates)} plates, {len(strip_1)} brows, {len(strip_2)} eyes, {len(strip_3)} mouths, {len(cubist_noses)} noses, {len(collage_hands)} hands, {len(headgear)} headgear")
 
 
 if __name__ == "__main__":
-    repair_v2_parts_from_release_cuts()
-    upgrade_crash_lab_catalog()
+    rebuild_all_kits()
+    upgrade_catalog()
