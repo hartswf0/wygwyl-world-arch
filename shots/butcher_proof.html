@@ -310,27 +310,31 @@
     </div>
   </section>
 
-  <!-- The Butchered Parts Shelf (Poem 01 Compact Core Cuts) -->
+  <!-- The Butchered Parts Shelf (1,718 Sliced Cards across all 14 poems) -->
   <section class="card-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
       <div>
-        <h3>Butchered Inventory: Poem 01 Compact Core (14 Cards)</h3>
-        <p class="dim" style="font-size:13px">Direct output of <code>shots/kits/slice_kit_sheets.py</code> on <code>poet.black_tshirt.compact-core.png</code>. Every card isolated with raw corrugated edges and detected brad pivots.</p>
+        <h3>Cut Parts Library (1,718 Cards across 14 Poems)</h3>
+        <p class="dim" style="font-size:13px">Every card isolated with transparent alpha channel, raw kraft edges, and detected brass brad coordinates from 112 production sheets.</p>
       </div>
-      <span class="badge ok">14 Isolated Alpha Cuts</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="badge ok" id="shelfCount">Loading library...</span>
+      </div>
     </div>
-    <div class="part-shelf">
-      <div class="part-card"><div class="thumb"><img src="parts/kit3/v2/cut/poet.black_tshirt.replacements/pose.sitting_chair.png" loading="lazy"></div><div class="lbl">Torso / Chair</div><div class="meta">2 Brads</div></div>
-      <div class="part-card"><div class="thumb"><img src="parts/kit3/v2/cut/poet.black_tshirt.replacements/pose.kneeling_one_knee.png" loading="lazy"></div><div class="lbl">Kneeling Card</div><div class="meta">2 Brads</div></div>
-      <div class="part-card"><div class="thumb"><img src="parts/kit3/v2/cut/poet.black_tshirt.replacements/pose.lying_back.png" loading="lazy"></div><div class="lbl">Lying Back</div><div class="meta">2 Brads</div></div>
-      <div class="part-card"><div class="thumb"><img src="parts/kit3/v2/cut/poet.black_tshirt.replacements/pose.falling_back.png" loading="lazy"></div><div class="lbl">Falling Card</div><div class="meta">2 Brads</div></div>
-      <div class="part-card"><div class="thumb"><img src="parts/kit3/v2/cut/poet.black_tshirt.replacements/pose.deep_crouch.png" loading="lazy"></div><div class="lbl">Deep Crouch</div><div class="meta">3 Brads</div></div>
-      <div class="part-card"><div class="thumb"><img src="packs/poem_01/cut/01.props.handheld/part_01.png" loading="lazy"></div><div class="lbl">Vape Front</div><div class="meta">8 Brads</div></div>
-      <div class="part-card"><div class="thumb"><img src="packs/poem_01/cut/01.props.handheld/part_02.png" loading="lazy"></div><div class="lbl">Vape Profile</div><div class="meta">Eyelet</div></div>
-      <div class="part-card"><div class="thumb"><img src="packs/poem_01/cut/01.props.handheld/part_04.png" loading="lazy"></div><div class="lbl">Poem Page Flat</div><div class="meta">Kraft Card</div></div>
-      <div class="part-card"><div class="thumb"><img src="packs/poem_01/cut/01.props.handheld/part_05.png" loading="lazy"></div><div class="lbl">Poem Folded</div><div class="meta">Kraft Card</div></div>
-      <div class="part-card"><div class="thumb"><img src="packs/poem_01/cut/01.props.handheld/part_06.png" loading="lazy"></div><div class="lbl">Poem Crumpled</div><div class="meta">Kraft Card</div></div>
+    
+    <!-- Filter bar -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="text" id="shelfSearch" placeholder="Search parts (e.g. vape, boot, waltz, arm, catwalk)..." oninput="onSearchShelf(this.value)" style="border:1px solid var(--line);background:var(--panel-card);color:var(--ink);padding:6px 12px;border-radius:4px;font:12px var(--mono);width:280px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="preset-btn shelf-cat-btn active" onclick="setShelfCat('all', this)">All Parts (1,718)</button>
+        <button class="preset-btn shelf-cat-btn" onclick="setShelfCat('character', this)">Characters</button>
+        <button class="preset-btn shelf-cat-btn" onclick="setShelfCat('pose', this)">Action Poses</button>
+        <button class="preset-btn shelf-cat-btn" onclick="setShelfCat('prop', this)">Props</button>
+        <button class="preset-btn shelf-cat-btn" onclick="setShelfCat('set', this)">Sets &amp; Buildings</button>
+      </div>
     </div>
+    
+    <div class="part-shelf" id="dynamicShelf"></div>
   </section>
 </main>
 
@@ -474,9 +478,10 @@ function updateRig() {
   const p_shL = torsoFk(0.78, 0.24);
   const p_shR = torsoFk(0.22, 0.24);
   
-  // 5. Head & Sunglasses
+  // 5. Head & Calibrated Sunglasses
   const headFk = drawRotatedPart(ctx, IMAGES.head, 175, [0.50, 0.91], p_neck, waist + head);
-  drawRotatedPart(ctx, IMAGES.sunglasses, 65, [0.50, 0.50], headFk(0.50, 0.38), waist + head);
+  // Head width is ~148px at target height 175. Sunglasses height 47px gives width ~141px (snug on face temples).
+  drawRotatedPart(ctx, IMAGES.sunglasses, 47, [0.50, 0.50], headFk(0.50, 0.36), waist + head);
   
   // 6. Left Arm (Viewer's Right)
   const uarmL_fk = drawRotatedPart(ctx, IMAGES.uarm_L, 175, [0.51, 0.10], p_shL, waist + shL);
@@ -530,6 +535,76 @@ function applyPreset(name) {
 function downloadStage(link) {
   link.href = canvas.toDataURL("image/png");
 }
+
+// Dynamic Parts Library Loader
+let LIBRARY = null;
+let activeCat = "all";
+let searchQ = "";
+
+async function loadLibrary() {
+  try {
+    const res = await fetch("kits/parts_library.json");
+    LIBRARY = await res.json();
+    renderLibrary();
+  } catch(e) {
+    console.error("Could not load parts_library.json", e);
+  }
+}
+
+function setShelfCat(cat, btn) {
+  activeCat = cat;
+  document.querySelectorAll(".shelf-cat-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderLibrary();
+}
+
+function onSearchShelf(val) {
+  searchQ = val.toLowerCase().trim();
+  renderLibrary();
+}
+
+function renderLibrary() {
+  if (!LIBRARY) return;
+  const shelf = document.getElementById("dynamicShelf");
+  const countEl = document.getElementById("shelfCount");
+  shelf.innerHTML = "";
+  
+  let allPieces = [];
+  for (const s of LIBRARY.sheets) {
+    const sheetName = s.sheet.toLowerCase();
+    for (const p of s.pieces) {
+      p.source_sheet = s.sheet;
+      let cat = "prop";
+      if (sheetName.includes("char") || sheetName.includes("body") || sheetName.includes("heads") || sheetName.includes("hands") || sheetName.includes("feet") || sheetName.includes("poet_tracksuit")) cat = "character";
+      else if (sheetName.includes("action") || sheetName.includes("poses")) cat = "pose";
+      else if (sheetName.includes("set") || sheetName.includes("building") || sheetName.includes("hero")) cat = "set";
+      p.category = cat;
+      allPieces.push(p);
+    }
+  }
+  
+  const filtered = allPieces.filter(p => {
+    if (activeCat !== "all" && p.category !== activeCat) return false;
+    if (searchQ && !p.id.toLowerCase().includes(searchQ) && !p.source_sheet.toLowerCase().includes(searchQ)) return false;
+    return true;
+  });
+  
+  countEl.textContent = `${filtered.length} of ${allPieces.length} Parts`;
+  
+  filtered.slice(0, 120).forEach(p => {
+    const card = document.createElement("div");
+    card.className = "part-card";
+    const bradInfo = p.brads && p.brads.length ? `${p.brads.length} Brads` : "Kraft Card";
+    card.innerHTML = `
+      <div class="thumb"><img src="../${p.rel_path}" loading="lazy" alt="${p.label}"></div>
+      <div class="lbl" title="${p.id}">${p.label}</div>
+      <div class="meta">${p.width}×${p.height}px · ${bradInfo}</div>
+    `;
+    shelf.appendChild(card);
+  });
+}
+
+loadLibrary();
 
 </script>
 </body>

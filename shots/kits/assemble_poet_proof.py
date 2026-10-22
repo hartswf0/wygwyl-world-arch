@@ -224,19 +224,38 @@ def build_assembled_puppet(angles=None, canvas_size=(1200, 1400)):
     # 4. Head with expressions assembled
     a_head = angles.get("head", 0) + a_waist
     im_head = load_component("21_head_front_blank.png", SCALES["head"])
-    # Layer face patches
-    im_eyes = load_component("22_eyes_open.png", SCALES["head"] * 0.28)
-    im_brows = load_component("24_brows_rest.png", SCALES["head"] * 0.22)
-    im_nose = load_component("26_nose_front.png", SCALES["head"] * 0.25)
-    im_mouth = load_component("27_mouth_rest.png", SCALES["head"] * 0.30)
-    im_glasses = load_component("31_sunglasses_front.png", SCALES["head"] * 0.40)
-    
     hw, hh = im_head.size
-    if im_eyes: im_head.alpha_composite(im_eyes, ((hw - im_eyes.width)//2, int(hh * 0.35)))
-    if im_brows: im_head.alpha_composite(im_brows, ((hw - im_brows.width)//2, int(hh * 0.28)))
-    if im_nose: im_head.alpha_composite(im_nose, ((hw - im_nose.width)//2, int(hh * 0.45)))
-    if im_mouth: im_head.alpha_composite(im_mouth, ((hw - im_mouth.width)//2, int(hh * 0.62)))
-    if im_glasses: im_head.alpha_composite(im_glasses, ((hw - im_glasses.width)//2, int(hh * 0.30)))
+    
+    # 31_sunglasses_front is 2172x724. Target canvas width 154px gives 147px glasses width (snug on 161px head).
+    scale_glasses = 154.0 / 2172.0
+    gw, gh = int(round(2172 * scale_glasses)), int(round(724 * scale_glasses))
+    im_glasses_raw = Image.open(os.path.join(COMP_DIR, "31_sunglasses_front.png")).convert("RGBA")
+    im_glasses = im_glasses_raw.resize((gw, gh), Image.Resampling.LANCZOS)
+    
+    # Eyes: width ~ 88px, height ~ 29px
+    scale_eyes = 88.0 / 2172.0
+    im_eyes_raw = Image.open(os.path.join(COMP_DIR, "22_eyes_open.png")).convert("RGBA")
+    im_eyes = im_eyes_raw.resize((88, int(round(724 * scale_eyes))), Image.Resampling.LANCZOS)
+    
+    # Brows: width ~ 96px, height ~ 32px
+    scale_brows = 96.0 / 2170.0
+    im_brows_raw = Image.open(os.path.join(COMP_DIR, "24_brows_rest.png")).convert("RGBA")
+    im_brows = im_brows_raw.resize((96, int(round(725 * scale_brows))), Image.Resampling.LANCZOS)
+    
+    # Nose: width ~ 36px, height ~ 24px
+    im_nose_raw = Image.open(os.path.join(COMP_DIR, "26_nose_front.png")).convert("RGBA")
+    im_nose = im_nose_raw.resize((36, 24), Image.Resampling.LANCZOS)
+    
+    # Mouth: width ~ 64px, height ~ 32px
+    im_mouth_raw = Image.open(os.path.join(COMP_DIR, "27_mouth_rest.png")).convert("RGBA")
+    im_mouth = im_mouth_raw.resize((64, 32), Image.Resampling.LANCZOS)
+    
+    # Composite onto blank head
+    if im_eyes: im_head.alpha_composite(im_eyes, ((hw - im_eyes.width)//2, int(hh * 0.38)))
+    if im_brows: im_head.alpha_composite(im_brows, ((hw - im_brows.width)//2, int(hh * 0.30)))
+    if im_nose: im_head.alpha_composite(im_nose, ((hw - im_nose.width)//2, int(hh * 0.46)))
+    if im_mouth: im_head.alpha_composite(im_mouth, ((hw - im_mouth.width)//2, int(hh * 0.60)))
+    if im_glasses: im_head.alpha_composite(im_glasses, ((hw - im_glasses.width)//2, int(hh * 0.33)))
     
     composite_part(cv, im_head, PIVOTS["head"]["neck"], p_neck, angle_deg=a_head)
     
