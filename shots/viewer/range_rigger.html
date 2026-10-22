@@ -631,6 +631,63 @@ canvas.tall-cv {
   text-transform: uppercase;
   font-size: 10px;
 }
+.breed-evo-bar {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  padding: 8px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.breed-evo-bar .bar-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.evo-candidates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+  padding-top: 6px;
+  border-top: 1px dashed var(--rule);
+}
+.evo-pill {
+  appearance: none;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 4px 8px;
+  border: 1px solid var(--rule);
+  background: var(--panel-2);
+  color: var(--ink-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.evo-pill:hover { border-color: var(--cyan); color: var(--ink); }
+.evo-pill[aria-pressed="true"] {
+  border-color: var(--green);
+  background: rgba(34, 197, 94, 0.14);
+  color: var(--ink);
+}
+.evo-pill .score {
+  color: var(--green);
+  font-weight: 700;
+}
+.gizmo-hint-badge {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--yellow);
+  background: rgba(255, 190, 11, 0.10);
+  border: 1px solid rgba(255, 190, 11, 0.35);
+  padding: 4px 8px;
+}
 </style>
 </head>
 <body>
@@ -654,23 +711,48 @@ canvas.tall-cv {
 <div class="wrap">
   <header class="top-header">
     <div>
-      <p class="eyebrow">5-STAGE PIPELINE · VITRUVIAN FRAME · MIXAMO MARKER RIGGER · 54 BOLAS RANGE TESTS</p>
+      <p class="eyebrow">5-STAGE PIPELINE · VITRUVIAN BREEDS · RADIAL BONE GIZMO · EVO / MONTE CARLO / RL POSE SOLVER · 54 RANGE TESTS</p>
       <h1>Range-Test Piece Rigger<span class="accent">.</span></h1>
       <p class="lede">
-        <b>Why Pose Detection Alone Cannot Rig Pre-Cut Kit Pieces:</b> On whole-figure drawings (<b>ACT-001..032</b>), ViTPose/MoveNet detects all <b>17 keypoints</b>, and the challenge is <b>ordered pixel claiming</b> when slicing limbs. On <b>pre-cut kit cards</b> (Tracksuit 31, Poet, EX, Waltz, Muse), pose detection fails on isolated boots, hands, and sleeves — setting pieces for animation requires solving <b>4 Connection &amp; Proportion Invariants</b>: <b>[1] Two-Pin Connection Sites (Pivot A &rarr; Socket B)</b>, <b>[2] Intrinsic Card Bone Axis (&theta;<sub>card</sub>)</b>, <b>[3] Vitruvian Square/Circle Bone-Span Normalization</b>, and <b>[4] Cuff-Over-Extremity Z-Order vs. Kinematic DAG</b>.
+        <b>Direct Bone &amp; Layer Manipulation + Evolutionary/MC Best-Fit Solver:</b> Match any character to <b>7 Vitruvian Skeleton Breeds</b> derived from limb/torso pieces, flip local panel layering (e.g. <b>pulling the Shoe ON TOP of the Calf</b> vs. tucking under the pant cuff), and use the <b>Evolutionary (&mu;+&lambda; ES) / Monte Carlo / UCB1 RL Solver</b> to automatically discover the best-fit pieces, bone proportions, and layer order for any pose. <b>Right-Click or Long-Press any piece/bone on the canvas</b> to open the <b>Radial Context Gizmo</b> (Scale Ring, Rotation Ring, Bone Centering, Layer Order) with zero button clutter.
       </p>
     </div>
     <div style="display:grid;gap:6px;justify-items:end">
       <div class="seg" role="group" aria-label="Quick Stage Jump">
         <button type="button" id="quickAll54" class="btn primary">JUMP TO 54 RANGE TESTS (STAGE 05)</button>
       </div>
-      <span style="font-family:var(--mono);font-size:10.5px;color:var(--ink-2)">10 WYGWYL Rigs · 54 Bolas Motion Tests · 302 Swapper Parts</span>
+      <span style="font-family:var(--mono);font-size:10.5px;color:var(--ink-2)">10 Rigs · 7 Skeleton Breeds · 54 Bolas Tests · 302 Parts</span>
     </div>
   </header>
 
   <!-- Active Rig Selector -->
   <div class="rig-strip" id="rigStrip">
     <span class="rig-strip-label">ACTIVE RIG:</span>
+  </div>
+
+  <!-- Skeleton Breeds, Panel Layer Order (Shoe Over Calf) & Evolutionary / Monte Carlo / RL Best-Fit Solver Bar -->
+  <div class="breed-evo-bar" aria-label="Skeleton Breeds, Layer Order, and Evolutionary Monte Carlo Solver">
+    <span class="bar-label">SKELETON BREED:</span>
+    <select id="breedSelect" class="btn" aria-label="Select Skeleton Breed" style="border-color:var(--cyan);color:var(--cyan)"></select>
+    <button type="button" class="btn" id="centerBonesVitBtn" title="Center all bones along piece medial axes and snap proportions to Vitruvian Man">CENTER BONES &amp; VITRUVIAN SNAP</button>
+
+    <span class="bar-label" style="margin-left:6px">PANEL LAYER ORDER:</span>
+    <button type="button" class="inv-chip" id="toggleShoeOverCalf" aria-pressed="false" title="Toggle whether the Shoe/Boot draws ON TOP of the Calf/Shin or tucks UNDER the pant cuff"><span class="box"></span>SHOE OVER CALF (FOOT &gt; SHIN)</button>
+    <button type="button" class="inv-chip" id="toggleHandOverCuff" aria-pressed="false" title="Toggle whether the Hand/Glove draws ON TOP of the Forearm sleeve cuff"><span class="box"></span>HAND OVER SLEEVE (HAND &gt; FARM)</button>
+
+    <span class="bar-label" style="margin-left:auto">POSE PIECE SOLVER:</span>
+    <select id="solverAlgoSelect" class="btn" aria-label="Select Evolutionary, Monte Carlo, or RL Algorithm">
+      <option value="evo">EVO (&mu;+&lambda; Evolutionary · Pop 24)</option>
+      <option value="mcts">MONTE CARLO (Importance Sampling)</option>
+      <option value="rl">RL BANDIT (UCB1 Contextual Policy)</option>
+    </select>
+    <button type="button" class="btn primary" id="runEvoSolverBtn">EVO / MC BEST-FIT FOR POSE</button>
+    <button type="button" class="inv-chip" id="autoEvoKeyChip" aria-pressed="false"><span class="box"></span>AUTO-FIT ON KEYFRAME</button>
+
+    <div class="evo-candidates" id="evoCandidatesStrip">
+      <span class="gizmo-hint-badge">DIRECT GIZMO: Right-Click or Long-Press any piece/bone on stage to Scale, Rotate, Center Bone, or Flip Layer Order · Drag joints to tweak bones</span>
+      <span id="evoStatusText" style="font-family:var(--mono);font-size:10.5px;color:var(--ink-2);margin-left:auto">Ready — click [EVO / MC BEST-FIT FOR POSE] to evolve top candidate rigs</span>
+    </div>
   </div>
 
   <!-- 4 Connection Invariants Live Toggle Bar (applies across all 5 stages!) -->
@@ -1007,8 +1089,9 @@ function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.i
 const clone=o=>JSON.parse(JSON.stringify(o));
 function merge(a,b){ for(const k in b){ const v=b[k]; if(v&&typeof v==='object'&&!Array.isArray(v)&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k])) merge(a[k],v); else a[k]=clone(v); } return a; }
 
-/* ================= skeleton ================= */
+/* ================= skeleton & vitruvian breeds ================= */
 const L={thigh:45,shin:45,upper:30,fore:27,spine:52,hipW:10,shW:18,headR:11};
+const BASE_L={thigh:45,shin:45,upper:30,fore:27,spine:52,hipW:10,shW:18,headR:11};
 const NEUTRAL=()=>({root:{x:0,y:93,z:0,yaw:0,pitch:0,roll:0},spine:{fwd:0,side:0,twist:0},head:{nod:0,turn:0,tilt:0},
   armL:{flex:0,abd:8,horiz:0,rot:0,elbow:10},armR:{flex:0,abd:8,horiz:0,rot:0,elbow:10},
   footL:[10,5,0],footR:[-10,5,0],handL:null,handR:null,poleL:null,poleR:null});
@@ -1026,18 +1109,24 @@ function frames(p){
   const Rh=mm(mm(mm(Rc,rY(p.head.turn)),rX(p.head.nod)),rZ(-p.head.tilt));
   return {R0,Rc,Rh};
 }
-function handTarget(h,p,R0,sh){ if(!h) return null; if(Array.isArray(h)) return h; if(h.sh) return add(sh,h.sh); if(h.pel) return add([p.root.x,p.root.y,p.root.z],mv(R0,h.pel)); return null; }
+function handTarget(h,p,R0,sh,armRatio=1){ if(!h) return null; if(Array.isArray(h)) return [h[0]*armRatio, 5+(h[1]-5)*armRatio, h[2]*armRatio]; if(h.sh) return add(sh,mul(h.sh,armRatio)); if(h.pel) return add([p.root.x,p.root.y,p.root.z],mv(R0,mul(h.pel,armRatio))); return null; }
 function solve(p){
-  const {R0,Rc,Rh}=frames(p), r=p.root, P=[r.x,r.y,r.z], at=(b,R,v)=>add(b,mv(R,v));
+  const {R0,Rc,Rh}=frames(p), r=p.root;
+  const legRatio = (L.thigh + L.shin) / 90.0;
+  const hipRatio = L.hipW / 10.0;
+  const armRatio = (L.upper + L.fore) / 57.0;
+  const effRootY = 5 + (r.y - 5) * legRatio;
+  const P=[r.x * legRatio, effRootY, r.z * legRatio], at=(b,R,v)=>add(b,mv(R,v));
   const J={pelvis:P}; let legSlip=0, armSlip=0;
   J.hipL=at(P,R0,[L.hipW,0,0]); J.hipR=at(P,R0,[-L.hipW,0,0]);
-  J.spineMid=at(P,R0,[0,L.spine/2,0]); J.neck=at(J.spineMid,Rc,[0,L.spine/2,0]); J.chest=at(J.spineMid,Rc,[0,11,3]);
-  J.shoulderL=at(J.neck,Rc,[L.shW,-5,0]); J.shoulderR=at(J.neck,Rc,[-L.shW,-5,0]);
-  J.head=at(J.neck,Rh,[0,16,0]); J.nose=at(J.head,Rh,[0,0,L.headR]); J.eyeL=at(J.head,Rh,[4,3,9.5]); J.eyeR=at(J.head,Rh,[-4,3,9.5]);
-  J.earL=at(J.head,Rh,[10.5,1,0]); J.earR=at(J.head,Rh,[-10.5,1,0]); J.headTop=at(J.head,Rh,[0,L.headR,0]);
+  J.spineMid=at(P,R0,[0,L.spine/2,0]); J.neck=at(J.spineMid,Rc,[0,L.spine/2,0]); J.chest=at(J.spineMid,Rc,[0,11*(L.spine/52),3]);
+  J.shoulderL=at(J.neck,Rc,[L.shW,-5*(L.spine/52),0]); J.shoulderR=at(J.neck,Rc,[-L.shW,-5*(L.spine/52),0]);
+  const headNeckLen = 16 * (L.headR / 11.0);
+  J.head=at(J.neck,Rh,[0,headNeckLen,0]); J.nose=at(J.head,Rh,[0,0,L.headR]); J.eyeL=at(J.head,Rh,[4*(L.headR/11),3*(L.headR/11),9.5*(L.headR/11)]); J.eyeR=at(J.head,Rh,[-4*(L.headR/11),3*(L.headR/11),9.5*(L.headR/11)]);
+  J.earL=at(J.head,Rh,[10.5*(L.headR/11),1,0]); J.earR=at(J.head,Rh,[-10.5*(L.headR/11),1,0]); J.headTop=at(J.head,Rh,[0,L.headR,0]);
   const Fc=mv(Rc,[0,0,1]), Uc=mv(Rc,[0,1,0]);
   for(const [S,s] of [['L',1],['R',-1]]){
-    const a=p['arm'+S], sh=J['shoulder'+S], ht=handTarget(p['hand'+S],p,R0,sh);
+    const a=p['arm'+S], sh=J['shoulder'+S], ht=handTarget(p['hand'+S],p,R0,sh,armRatio);
     if(ht){ const pole=mv(Rc,p['pole'+S]||[s*.45,-.35,-1]); const q=ik3(sh,ht,L.upper,L.fore,pole); J['elbow'+S]=q.j; J['wrist'+S]=q.e; armSlip=Math.max(armSlip,q.slip); }
     else{
       const u=mv(Rc,mv(rY(s*a.horiz),mv(rZ(s*a.abd),mv(rX(-a.flex),[0,-1,0]))));
@@ -1046,10 +1135,12 @@ function solve(p){
       ax=rotAxis(ax,u,s*a.rot*DEG);
       J['wrist'+S]=add(J['elbow'+S],mul(rotAxis(u,ax,a.elbow*DEG),L.fore));
     }
-    const pole=mv(R0,[s*.15,0,1]); const q=ik3(J['hip'+S],p['foot'+S],L.thigh,L.shin,pole);
+    const rawFoot = p['foot'+S];
+    const scaledFoot = [rawFoot[0] * hipRatio, 5 + (rawFoot[1] - 5) * legRatio, rawFoot[2] * legRatio];
+    const pole=mv(R0,[s*.15,0,1]); const q=ik3(J['hip'+S],scaledFoot,L.thigh,L.shin,pole);
     J['knee'+S]=q.j; J['ankle'+S]=q.e; legSlip=Math.max(legSlip,q.slip);
     const yf=[Math.sin(r.yaw*DEG),0,Math.cos(r.yaw*DEG)], an=J['ankle'+S];
-    J['toe'+S]= an[1]<16? add(an,[yf[0]*11,-Math.min(an[1]-1,4),yf[2]*11]) : add(an,add(mul(norm(sub(an,J['knee'+S])),3),mul(yf,10)));
+    J['toe'+S]= an[1]<16? add(an,[yf[0]*11*legRatio,-Math.min(an[1]-1,4*legRatio),yf[2]*11*legRatio]) : add(an,add(mul(norm(sub(an,J['knee'+S])),3*legRatio),mul(yf,10*legRatio)));
   }
   return {J,legSlip,armSlip,yaw:r.yaw};
 }
@@ -1537,11 +1628,49 @@ function drawVitruvianOverlay(ctx, P, sc, centerPelvis, alpha = 0.85) {
   ctx.restore();
 }
 
-/* ================= WYGWYL CUT-OUT PIECE RENDERER (fit_bone + 4 Invariants) ================= */
+/* ================= WYGWYL CUT-OUT PIECE RENDERER (fit_bone + 4 Invariants + Layer Order + Radial Gizmo) ================= */
 let CATALOG = null;
 let activeRigIdx = 0;
+let activeBreedId = 'poet_tracksuit_75h';
 let activeStage = 's5';
 const inv = { twoPin: true, intrinsicRot: true, vitruvianScale: true, cuffTuckZ: true };
+const layerOrder = {
+  shoe_over_calf: false,
+  hand_over_cuff: false,
+  head_over_collar: true,
+  pelvis_over_thigh: true
+};
+// Per-slot user/evo adjustments: scaleMult, rotDeg, centerOffset [dxNorm, dyNorm], flipX, customVariant
+const slotTweaks = {};
+function getSlotTweak(slotKey) {
+  if (!slotTweaks[slotKey]) {
+    slotTweaks[slotKey] = { scaleMult: 1.0, rotDeg: 0, centerDx: 0, centerDy: 0, flipX: false, overrideFile: null, overrideMeta: null, zBias: 0 };
+  }
+  return slotTweaks[slotKey];
+}
+function resetSlotTweaks() {
+  for (const k in slotTweaks) delete slotTweaks[k];
+}
+
+// Hit-testing registry populated each frame on #stage
+let lastRenderedPieces = [];
+let lastRenderedJoints = [];
+
+// Right-Click / Long-Press Radial Context Gizmo state
+const radialGizmo = {
+  open: false,
+  slotKey: null,
+  x: 0,
+  y: 0,
+  dragMode: null, // 'scale' | 'rot' | 'center'
+  startX: 0,
+  startY: 0,
+  startScale: 1.0,
+  startRot: 0,
+  startBoneScale: 1.0,
+  hoverSector: null
+};
+
 const imgCache = new Map();
 
 function getImg(relPath) {
@@ -1553,6 +1682,7 @@ function getImg(relPath) {
   im.crossOrigin = 'anonymous';
   im.src = resolved;
   im.onload = () => { requestRedrawAll(); };
+  imgCache.set(resolved, im);
   imgCache.set(relPath, im);
   return im;
 }
@@ -1580,36 +1710,124 @@ function currentRig() {
   return CATALOG.rigs[activeRigIdx] || CATALOG.rigs[0];
 }
 
-function selectViewVariant(slotObj, camYawDeg, rig) {
-  if (!slotObj) return null;
-  const vv = slotObj.view_variants || {};
-  // Normalize yaw into [-180, 180]
-  let y = ((camYawDeg % 360) + 540) % 360 - 180;
-  if (rig && rig.strict_view_rule === 'back_or_3q_back_only') {
-    return vv.back || vv.threequarter || slotObj.file;
+function invalidateBakedMotions() {
+  for (const m of LIB) { m.F = null; }
+  bake(LIB[st.i]);
+}
+
+function applySkeletonBreed(breedId) {
+  activeBreedId = breedId;
+  const breeds = (CATALOG && CATALOG.skeleton_breeds) || [];
+  const br = breeds.find(b => b.id === breedId);
+  const rig = currentRig();
+  if (breedId === 'piece_derived_auto' && rig && rig.slots) {
+    // Derive bone ratios directly from the active rig's piece spans normalized against torso span!
+    const spanOf = s => {
+      if (!s || !s.pivot_A || !s.socket_B) return 100;
+      const dx = (s.socket_B[0] - s.pivot_A[0]) * (s.width || 256);
+      const dy = (s.socket_B[1] - s.pivot_A[1]) * (s.height || 256);
+      return Math.max(16, Math.hypot(dx, dy));
+    };
+    const torsoPx = spanOf(rig.slots.torso);
+    const cmPerPx = 52.0 / torsoPx;
+    L.spine = 52.0;
+    L.thigh = clamp(Math.round(spanOf(rig.slots.thigh_L) * cmPerPx * 10) / 10, 30, 56);
+    L.shin  = clamp(Math.round(spanOf(rig.slots.shin_L) * cmPerPx * 10) / 10, 30, 56);
+    L.upper = clamp(Math.round(spanOf(rig.slots.uarm_L) * cmPerPx * 10) / 10, 20, 38);
+    L.fore  = clamp(Math.round(spanOf(rig.slots.farm_L) * cmPerPx * 10) / 10, 18, 35);
+    L.headR = clamp(Math.round(spanOf(rig.slots.head) * cmPerPx * 0.46 * 10) / 10, 8.5, 13.5);
+    L.hipW  = 10.0;
+    L.shW   = 18.0;
+  } else if (br && br.bones) {
+    Object.assign(L, br.bones);
+    if (br.default_layer_order) {
+      layerOrder.shoe_over_calf = !!br.default_layer_order.shoe_over_calf;
+      layerOrder.hand_over_cuff = !!br.default_layer_order.hand_over_cuff;
+      syncLayerButtons();
+    }
+  } else if (rig && rig.bone_lengths_cm) {
+    Object.assign(L, rig.bone_lengths_cm);
   }
-  const absY = Math.abs(y);
-  if (absY > 135) return vv.back || slotObj.file;
-  if (absY > 65 && absY <= 135) return vv.profile || vv.threequarter || slotObj.file;
-  if (absY > 25 && absY <= 65) return vv.threequarter || slotObj.file;
-  return vv.front || slotObj.file;
+  const bSel = $('breedSelect');
+  if (bSel && bSel.value !== breedId) bSel.value = breedId;
+  invalidateBakedMotions();
+  requestRedrawAll();
+}
+
+function centerAllBonesAndVitruvianSnap() {
+  const rig = currentRig();
+  if (!rig || !rig.slots) return;
+  for (const [k, s] of Object.entries(rig.slots)) {
+    const tw = getSlotTweak(k);
+    tw.centerDx = 0;
+    tw.centerDy = 0;
+    tw.rotDeg = 0;
+    tw.scaleMult = 1.0;
+    // Center horizontal nx on visible_bbox center for vertical pieces
+    if (s.visible_bbox && s.width && s.height) {
+      const [bx0, by0, bx1, by1] = s.visible_bbox;
+      const bw = bx1 - bx0, bh = by1 - by0;
+      if (bh >= bw * 0.9 && !k.startsWith('foot_')) {
+        const cx = Math.round(((bx0 + bw * 0.5) / s.width) * 1000) / 1000;
+        if (s.pivot_A) s.pivot_A[0] = cx;
+        if (s.socket_B) s.socket_B[0] = cx;
+      }
+    }
+  }
+  applySkeletonBreed('vitruvian_8h');
+}
+
+function selectViewVariantInfo(slotObj, camYawDeg, rig, slotKey) {
+  if (!slotObj) return { viewKey: 'front', file: null, meta: null };
+  const tw = slotKey ? getSlotTweak(slotKey) : null;
+  if (tw && tw.overrideFile) {
+    return {
+      viewKey: 'custom',
+      file: tw.overrideFile,
+      meta: tw.overrideMeta || slotObj
+    };
+  }
+  const vv = slotObj.view_variants || {};
+  const vm = slotObj.variant_meta || {};
+  let y = ((camYawDeg % 360) + 540) % 360 - 180;
+  let viewKey = 'front';
+  if (rig && (rig.strict_view_rule === 'back_or_3q_back_only' || rig.strict_view_rule === 'BACK_AND_3Q_BACK_ONLY_NEVER_FRONT_FACE')) {
+    viewKey = vv.back ? 'back' : (vv.threequarter_back ? 'threequarter_back' : (vv.threequarter ? 'threequarter' : 'front'));
+  } else {
+    const absY = Math.abs(y);
+    if (absY > 135 && vv.back) viewKey = 'back';
+    else if (absY > 55 && absY <= 135 && (vv.profile || vv.threequarter)) viewKey = vv.profile ? 'profile' : 'threequarter';
+    else if (absY > 22 && absY <= 55 && vv.threequarter) viewKey = 'threequarter';
+    else viewKey = 'front';
+  }
+  const file = vv[viewKey] || slotObj.file;
+  const meta = vm[viewKey] || slotObj;
+  return { viewKey, file, meta };
+}
+
+function selectViewVariant(slotObj, camYawDeg, rig) {
+  return selectViewVariantInfo(slotObj, camYawDeg, rig, null).file;
 }
 
 // Draw a single WYGWYL cut-out piece hung between 2D projected joint_A and joint_B
 function drawPieceFitBone(ctx, slotKey, slotObj, ptA, ptB, sc, camYaw, rig, opts = {}) {
   if (!slotObj || !ptA || !ptB) return;
-  const file = selectViewVariant(slotObj, camYaw, rig);
+  const { viewKey, file, meta } = selectViewVariantInfo(slotObj, camYaw, rig, slotKey);
   const im = getImg(file);
   if (!im || !im.complete || !im.naturalWidth) return;
 
+  const tw = getSlotTweak(slotKey);
   const W = im.naturalWidth, H = im.naturalHeight;
-  // Invariant 1: Two-Pin Connection Site (Pivot A -> Socket B inside cuff) vs Naive Box-Center / Grommet Tip
-  let pA = slotObj.pivot_A ? slotObj.pivot_A.slice() : [0.5, 0.15];
-  let sB = slotObj.socket_B ? slotObj.socket_B.slice() : [0.5, 0.82];
+
+  // Use the active view variant's exact pivot_A / socket_B!
+  const basePA = (meta && meta.pivot_A) ? meta.pivot_A : (slotObj.pivot_A || [0.5, 0.15]);
+  const baseSB = (meta && meta.socket_B) ? meta.socket_B : (slotObj.socket_B || [0.5, 0.82]);
+  let pA = [clamp(basePA[0] + tw.centerDx, 0.02, 0.98), clamp(basePA[1] + tw.centerDy, 0.02, 0.98)];
+  let sB = [clamp(baseSB[0] + tw.centerDx, 0.02, 0.98), clamp(baseSB[1] + tw.centerDy, 0.02, 0.98)];
+
   if (!inv.twoPin) {
-    // Broken grommet-tip / box-edge pins
-    if (slotKey.startsWith('farm') || slotKey.startsWith('shin')) sB = [0.5, 0.96];
-    if (slotKey.startsWith('hand') || slotKey.startsWith('foot')) pA = [0.5, 0.04];
+    if (slotKey.startsWith('farm') || slotKey.startsWith('shin')) sB = [0.5, 0.97];
+    if (slotKey.startsWith('hand') || slotKey.startsWith('foot')) pA = [0.5, 0.03];
   }
 
   const ax = pA[0] * W, ay = pA[1] * H;
@@ -1617,37 +1835,38 @@ function drawPieceFitBone(ctx, slotKey, slotObj, ptA, ptB, sc, camYaw, rig, opts
   const cardDx = bx - ax, cardDy = by - ay;
   const cardSpanPx = Math.max(12, Math.hypot(cardDx, cardDy));
 
-  // Target screen bone vector
   const scrDx = ptB[0] - ptA[0], scrDy = ptB[1] - ptA[1];
   const scrSpanPx = Math.max(2, Math.hypot(scrDx, scrDy));
 
-  // Invariant 2: Intrinsic Card Axis vs Naive Vertical assumption
   const thetaTarget = Math.atan2(scrDy, scrDx);
   let thetaCard = Math.atan2(cardDy, cardDx);
-  let extraRot = (slotObj.rot_offset_deg || 0) * DEG;
+  const baseRotDeg = (meta && meta.rot_offset_deg != null) ? meta.rot_offset_deg : (slotObj.rot_offset_deg || 0);
+  let extraRot = (baseRotDeg + tw.rotDeg) * DEG;
+
   if (!inv.intrinsicRot) {
-    // Naive vertical assumption: ignores horizontal 74x43 card axis!
-    thetaCard = Math.PI / 2;
-    extraRot = 0;
+    // Simulated broken 90-degree sideways hand/boot defect when Invariant 2 is turned off
+    if (slotKey.startsWith('hand') || slotKey.startsWith('foot')) {
+      extraRot += Math.PI / 2;
+    }
   }
 
-  // Invariant 3: Vitruvian Bone-Span Scale vs Raw Un-Normalized Card Scale
-  let scale = scrSpanPx / cardSpanPx;
+  let scale = (scrSpanPx / cardSpanPx) * tw.scaleMult;
   if (!inv.vitruvianScale) {
-    // Broken raw card scale inflation (+34% to +84% mismatch)
     const brokenMult = slotKey === 'head' ? 1.55 : slotKey.startsWith('farm') ? 1.42 : slotKey.startsWith('foot') ? 1.48 : slotKey.startsWith('hand') ? 1.38 : 1.18;
     scale *= brokenMult;
   }
+
+  const doFlipX = Boolean(opts.flipX) !== Boolean(tw.flipX);
 
   ctx.save();
   if (opts.alpha != null) ctx.globalAlpha = opts.alpha;
   ctx.translate(ptA[0], ptA[1]);
   ctx.rotate(thetaTarget - thetaCard + extraRot);
-  if (opts.flipX) ctx.scale(1, -1);
+  if (doFlipX) ctx.scale(1, -1);
   ctx.scale(scale, scale);
 
-  // Invariant 4: Cuff-Clip Ratio (trims protruding bottom cardboard grommet tab on forearms & shins)
-  const clipRatio = (inv.cuffTuckZ && slotObj.cuff_clip_ratio && slotObj.cuff_clip_ratio < 0.99) ? slotObj.cuff_clip_ratio : 1.0;
+  const rawClip = (meta && meta.cuff_clip_ratio != null) ? meta.cuff_clip_ratio : (slotObj.cuff_clip_ratio || 1.0);
+  const clipRatio = (!opts.disableCuffClip && inv.cuffTuckZ && rawClip < 0.99) ? rawClip : 1.0;
   if (clipRatio < 0.999) {
     ctx.beginPath();
     ctx.rect(-ax, -ay, W, H * clipRatio);
@@ -1655,17 +1874,43 @@ function drawPieceFitBone(ctx, slotKey, slotObj, ptA, ptB, sc, camYaw, rig, opts
   }
 
   ctx.drawImage(im, -ax, -ay, W, H);
+  ctx.restore();
+
+  // Highlight selected piece if Radial Gizmo is targeting it
+  if (radialGizmo.open && radialGizmo.slotKey === slotKey && opts.recordHit) {
+    ctx.save();
+    ctx.strokeStyle = C.yellow;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(ptA[0], ptA[1]);
+    ctx.lineTo(ptB[0], ptB[1]);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   if (opts.showPins) {
-    ctx.restore();
     ctx.save();
-    // Draw Pivot A (Cyan) and Socket B (Amber)
     ctx.strokeStyle = '#00d2ff'; ctx.lineWidth = 1.6;
-    ctx.beginPath(); ctx.arc(ptA[0], ptA[1], 4.2, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(ptA[0], ptA[1], 4.0, 0, Math.PI * 2); ctx.stroke();
     ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 1.6;
-    ctx.beginPath(); ctx.arc(ptB[0], ptB[1], 3.6, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(ptB[0], ptB[1], 3.4, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
   }
-  ctx.restore();
+
+  if (opts.recordHit) {
+    const cx = (ptA[0] + ptB[0]) * 0.5, cy = (ptA[1] + ptB[1]) * 0.5;
+    lastRenderedPieces.push({
+      slotKey,
+      ptA: [ptA[0], ptA[1]],
+      ptB: [ptB[0], ptB[1]],
+      cx,
+      cy,
+      radius: Math.max(18, scrSpanPx * 0.55),
+      viewKey,
+      file
+    });
+  }
 }
 
 // Render the full WYGWYL character rig onto the projected 3D Bolas joints J
@@ -1674,21 +1919,80 @@ function drawWygwylRigOnBolas(ctx, J, P, sc, camYaw, rig, opts = {}) {
   const S = rig.slots;
   const pt = k => J[k] ? P(J[k]) : null;
 
-  const pPelvis = pt('pelvis'), pNeck = pt('neck'), pHeadTop = pt('headTop'), pHead = pt('head');
+  if (opts.recordHit) {
+    lastRenderedPieces = [];
+    lastRenderedJoints = [];
+  }
+
+  const pPelvis = pt('pelvis'), pNeck = pt('neck'), pHeadTop = pt('headTop'), pHead = pt('head'), pNose = pt('nose');
   const pShL = pt('shoulderL'), pElL = pt('elbowL'), pWrL = pt('wristL');
   const pShR = pt('shoulderR'), pElR = pt('elbowR'), pWrR = pt('wristR');
   const pHipL = pt('hipL'), pKnL = pt('kneeL'), pAnL = pt('ankleL'), pToeL = pt('toeL');
   const pHipR = pt('hipR'), pKnR = pt('kneeR'), pAnR = pt('ankleR'), pToeR = pt('toeR');
 
+  if (opts.recordHit) {
+    for (const [jk, jpt, boneKey] of [
+      ['headTop', pHeadTop, 'headR'], ['neck', pNeck, 'spine'], ['pelvis', pPelvis, 'spine'],
+      ['shoulderL', pShL, 'shW'], ['shoulderR', pShR, 'shW'],
+      ['elbowL', pElL, 'upper'], ['elbowR', pElR, 'upper'],
+      ['wristL', pWrL, 'fore'], ['wristR', pWrR, 'fore'],
+      ['hipL', pHipL, 'hipW'], ['hipR', pHipR, 'hipW'],
+      ['kneeL', pKnL, 'thigh'], ['kneeR', pKnR, 'thigh'],
+      ['ankleL', pAnL, 'shin'], ['ankleR', pAnR, 'shin']
+    ]) {
+      if (jpt) lastRenderedJoints.push({ jointKey: jk, boneKey, x: jpt[0], y: jpt[1] });
+    }
+  }
+
+  // Determine whether character is facing LEFT on screen in profile/3Q views
+  let normYaw = ((camYaw % 360) + 540) % 360 - 180;
+  const isProfileOr3Q = Math.abs(normYaw) > 22 && Math.abs(normYaw) < 155;
+  const facingLeftOnScreen = (pNose && pHead && Math.abs(pNose[0] - pHead[0]) > 1.5)
+    ? (pNose[0] < pHead[0])
+    : (normYaw > 0);
+  const profileFlipX = isProfileOr3Q && facingLeftOnScreen;
+
   // Synthesize distal hand tips along forearm direction
+  const legScaleRatio = (L.thigh + L.shin) / 90.0;
+  const armScaleRatio = (L.upper + L.fore) / 57.0;
   const handTip = (el, wr) => {
     if (!el || !wr) return wr;
     const dx = wr[0] - el[0], dy = wr[1] - el[1], l = Math.hypot(dx, dy) || 1;
-    const hLen = 15 * sc;
+    const hLen = 15.5 * armScaleRatio * sc;
     return [wr[0] + (dx / l) * hLen, wr[1] + (dy / l) * hLen, wr[2]];
   };
   const pHandTipL = handTip(pElL, pWrL);
   const pHandTipR = handTip(pElR, pWrR);
+
+  // Synthesize UPRIGHT boot shaft target below ankle (`pAnkle -> pFootSole`) so boots NEVER rotate -90 deg nose-down into the floor in Side view or shrink 6x in Front view!
+  const footSoleTarget = (kn, an, toe, jAn, jToe) => {
+    if (!an) return null;
+    const bootShaftPx = 15.5 * legScaleRatio * sc;
+    // Compute subtle pitch angle from 3D ankle/toe elevation & shin angle when airborne
+    let pitchRad = 0;
+    if (jAn && jToe) {
+      const dY = jToe[1] - (jAn[1] - 3.5); // 0 when planted flat on floor
+      pitchRad = clamp(-dY * 0.045, -0.55, 0.65) * (facingLeftOnScreen ? -1 : 1);
+    }
+    if (kn && jAn) {
+      const airborneBlend = clamp((jAn[1] - 7.5) / 8.0, 0, 1);
+      if (airborneBlend > 0.01) {
+        const shinAng = Math.atan2(-(an[0] - kn[0]), an[1] - kn[1]);
+        pitchRad = pitchRad * (1 - airborneBlend) + (shinAng + pitchRad * 0.3) * airborneBlend;
+      }
+    }
+    if (!inv.intrinsicRot && toe) {
+      // When Invariant 2 is turned OFF, show the old raw ankle->toe bug for comparison
+      return toe;
+    }
+    return [
+      an[0] - Math.sin(pitchRad) * bootShaftPx,
+      an[1] + Math.cos(pitchRad) * bootShaftPx,
+      an[2]
+    ];
+  };
+  const pFootSoleL = footSoleTarget(pKnL, pAnL, pToeL, J.ankleL, J.toeL);
+  const pFootSoleR = footSoleTarget(pKnR, pAnR, pToeR, J.ankleR, J.toeR);
 
   // Determine Near vs Far side from 3D depth of shoulder + hip
   const depthL = ((pShL ? pShL[2] : 0) + (pHipL ? pHipL[2] : 0)) * 0.5;
@@ -1703,31 +2007,36 @@ function drawWygwylRigOnBolas(ctx, J, P, sc, camYaw, rig, opts = {}) {
     const hip = side === 'L' ? pHipL : pHipR;
     const kn = side === 'L' ? pKnL : pKnR;
     const an = side === 'L' ? pAnL : pAnR;
-    const toe = side === 'L' ? pToeL : pToeR;
-    const alpha = isFar ? 0.88 : 1.0;
+    const fSole = side === 'L' ? pFootSoleL : pFootSoleR;
+    const alpha = isFar ? 0.90 : 1.0;
+    const commonOpts = { alpha, showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX };
 
-    // Leg stack: Invariant 4 (Cuff-Tuck Z-Order):
-    // When cuffTuckZ is ON: Thigh -> Foot (tucked) -> Shin (cuff OVER boot shaft!)
-    // When cuffTuckZ is OFF (Broken): Thigh -> Shin -> Foot (boot pull-tab sticks over pant cuff!)
-    drawPieceFitBone(ctx, 'thigh_' + side, S['thigh_' + side], hip, kn, sc, camYaw, rig, { alpha, showPins: opts.showPins });
-    if (inv.cuffTuckZ) {
-      drawPieceFitBone(ctx, 'foot_' + side, S['foot_' + side], an, toe, sc, camYaw, rig, { alpha, showPins: opts.showPins });
-      drawPieceFitBone(ctx, 'shin_' + side, S['shin_' + side], kn, an, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+    // Check per-slot zBias or global layerOrder.shoe_over_calf
+    const footBias = getSlotTweak('foot_' + side).zBias - getSlotTweak('shin_' + side).zBias;
+    const shoeOverCalf = layerOrder.shoe_over_calf || footBias > 0 || !inv.cuffTuckZ;
+
+    // Leg stack:
+    // - When shoeOverCalf is FALSE (Cuff-Over-Boot): Thigh -> Boot (tucked) -> Shin (cuff clipped OVER boot shaft)
+    // - When shoeOverCalf is TRUE (Shoe-Over-Calf, e.g. high-tops / riding boots / kneeling): Thigh -> Shin -> Boot ON TOP!
+    drawPieceFitBone(ctx, 'thigh_' + side, S['thigh_' + side], hip, kn, sc, camYaw, rig, commonOpts);
+    if (!shoeOverCalf) {
+      drawPieceFitBone(ctx, 'foot_' + side, S['foot_' + side], an, fSole, sc, camYaw, rig, commonOpts);
+      drawPieceFitBone(ctx, 'shin_' + side, S['shin_' + side], kn, an, sc, camYaw, rig, commonOpts);
     } else {
-      drawPieceFitBone(ctx, 'shin_' + side, S['shin_' + side], kn, an, sc, camYaw, rig, { alpha, showPins: opts.showPins });
-      drawPieceFitBone(ctx, 'foot_' + side, S['foot_' + side], an, toe, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+      drawPieceFitBone(ctx, 'shin_' + side, S['shin_' + side], kn, an, sc, camYaw, rig, { ...commonOpts, disableCuffClip: !inv.cuffTuckZ });
+      drawPieceFitBone(ctx, 'foot_' + side, S['foot_' + side], an, fSole, sc, camYaw, rig, commonOpts);
     }
 
-    // Arm stack: Invariant 4 (Cuff-Tuck Z-Order):
-    // When cuffTuckZ is ON: UpperArm -> Hand (tucked) -> Forearm (cuff OVER wrist!)
-    // When cuffTuckZ is OFF (Broken): UpperArm -> Forearm -> Hand (brown tab covers sleeve cuff!)
-    drawPieceFitBone(ctx, 'uarm_' + side, S['uarm_' + side], sh, el, sc, camYaw, rig, { alpha, showPins: opts.showPins });
-    if (inv.cuffTuckZ) {
-      drawPieceFitBone(ctx, 'hand_' + side, S['hand_' + side], wr, hTip, sc, camYaw, rig, { alpha, showPins: opts.showPins });
-      drawPieceFitBone(ctx, 'farm_' + side, S['farm_' + side], el, wr, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+    // Arm stack:
+    const handBias = getSlotTweak('hand_' + side).zBias - getSlotTweak('farm_' + side).zBias;
+    const handOverCuff = layerOrder.hand_over_cuff || handBias > 0 || !inv.cuffTuckZ;
+    drawPieceFitBone(ctx, 'uarm_' + side, S['uarm_' + side], sh, el, sc, camYaw, rig, commonOpts);
+    if (!handOverCuff) {
+      drawPieceFitBone(ctx, 'hand_' + side, S['hand_' + side], wr, hTip, sc, camYaw, rig, commonOpts);
+      drawPieceFitBone(ctx, 'farm_' + side, S['farm_' + side], el, wr, sc, camYaw, rig, commonOpts);
     } else {
-      drawPieceFitBone(ctx, 'farm_' + side, S['farm_' + side], el, wr, sc, camYaw, rig, { alpha, showPins: opts.showPins });
-      drawPieceFitBone(ctx, 'hand_' + side, S['hand_' + side], wr, hTip, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+      drawPieceFitBone(ctx, 'farm_' + side, S['farm_' + side], el, wr, sc, camYaw, rig, { ...commonOpts, disableCuffClip: !inv.cuffTuckZ });
+      drawPieceFitBone(ctx, 'hand_' + side, S['hand_' + side], wr, hTip, sc, camYaw, rig, commonOpts);
     }
   };
 
@@ -1737,21 +2046,123 @@ function drawWygwylRigOnBolas(ctx, J, P, sc, camYaw, rig, opts = {}) {
   // 1. Far Limbs
   drawSide(farSide, true);
 
-  // 2. Pelvis & Torso & Head
-  const pHipMidDown = pPelvis ? [pPelvis[0], pPelvis[1] + 16 * sc, pPelvis[2]] : null;
+  // 2. Pelvis & Torso & Head (with Neck Collar Tuck!)
+  const pHipMidDown = pPelvis ? [pPelvis[0], pPelvis[1] + 15 * legScaleRatio * sc, pPelvis[2]] : null;
   if (S.pelvis && pPelvis && pHipMidDown) {
-    drawPieceFitBone(ctx, 'pelvis', S.pelvis, pPelvis, pHipMidDown, sc, camYaw, rig, { showPins: opts.showPins });
+    drawPieceFitBone(ctx, 'pelvis', S.pelvis, pPelvis, pHipMidDown, sc, camYaw, rig, {
+      showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX
+    });
   }
-  // Head & Torso (Neck tuck: when cuffTuckZ is ON, Head neck tucks behind Torso collar, or Head draws cleanly)
+
+  // Anchor Head neck tab slightly inside the Torso collar (`pCollar = lerp(pPelvis, pNeck, 0.90)`)
+  const pCollar = (pPelvis && pNeck)
+    ? [pPelvis[0] + (pNeck[0] - pPelvis[0]) * 0.90, pPelvis[1] + (pNeck[1] - pPelvis[1]) * 0.90, pNeck[2]]
+    : pNeck;
+
   if (S.torso && pNeck && pPelvis) {
-    drawPieceFitBone(ctx, 'torso', S.torso, pNeck, pPelvis, sc, camYaw, rig, { showPins: opts.showPins });
+    drawPieceFitBone(ctx, 'torso', S.torso, pNeck, pPelvis, sc, camYaw, rig, {
+      showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX
+    });
   }
-  if (S.head && pNeck && pHeadTop) {
-    drawPieceFitBone(ctx, 'head', S.head, pNeck, pHeadTop, sc, camYaw, rig, { showPins: opts.showPins });
+  if (S.head && pCollar && pHeadTop) {
+    drawPieceFitBone(ctx, 'head', S.head, pCollar, pHeadTop, sc, camYaw, rig, {
+      showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX
+    });
   }
 
   // 3. Near Limbs
   drawSide(nearSide, false);
+}
+
+// Draw On-Canvas Radial Context Gizmo (triggered by Right-Click or Long-Press on any piece/bone)
+function drawRadialGizmo(ctx) {
+  if (!radialGizmo.open || !radialGizmo.slotKey) return;
+  const { x, y, slotKey, hoverSector } = radialGizmo;
+  const tw = getSlotTweak(slotKey);
+  const rig = currentRig();
+  const isFootOrShin = slotKey.startsWith('foot_') || slotKey.startsWith('shin_');
+  const isHandOrFarm = slotKey.startsWith('hand_') || slotKey.startsWith('farm_');
+  const layerLabel = isFootOrShin
+    ? (layerOrder.shoe_over_calf ? 'SHOE > CALF' : 'CALF > SHOE')
+    : isHandOrFarm
+      ? (layerOrder.hand_over_cuff ? 'HAND > CUFF' : 'CUFF > HAND')
+      : `Z-BIAS ${tw.zBias >= 0 ? '+' + tw.zBias : tw.zBias}`;
+
+  ctx.save();
+  // Backdrop shadow ring
+  ctx.fillStyle = 'rgba(6, 9, 15, 0.84)';
+  ctx.beginPath();
+  ctx.arc(x, y, 96, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 4 Quadrant Sectors (R = 54..92)
+  const sectors = [
+    { id: 'layer', a0: -Math.PI * 0.75, a1: -Math.PI * 0.25, label: 'LAYER FLIP', sub: layerLabel, col: '#22c55e' },
+    { id: 'center', a0: -Math.PI * 0.25, a1: Math.PI * 0.25, label: 'VITRUVIAN', sub: 'CENTER BONE', col: '#00d2ff' },
+    { id: 'evo', a0: Math.PI * 0.25, a1: Math.PI * 0.75, label: 'MC / EVO', sub: 'BEST PIECE', col: '#ffbe0b' },
+    { id: 'flip', a0: Math.PI * 0.75, a1: Math.PI * 1.25, label: 'FLIP / +90°', sub: tw.flipX ? 'MIRRORED' : 'NORMAL', col: '#f59e0b' }
+  ];
+
+  for (const s of sectors) {
+    const isHov = hoverSector === s.id;
+    ctx.beginPath();
+    ctx.arc(x, y, 92, s.a0, s.a1);
+    ctx.arc(x, y, 56, s.a1, s.a0, true);
+    ctx.closePath();
+    ctx.fillStyle = isHov ? 'rgba(0, 210, 255, 0.24)' : 'rgba(23, 33, 49, 0.88)';
+    ctx.fill();
+    ctx.strokeStyle = isHov ? s.col : '#2a3950';
+    ctx.lineWidth = isHov ? 2 : 1.2;
+    ctx.stroke();
+
+    const midA = (s.a0 + s.a1) * 0.5;
+    const tx = x + Math.cos(midA) * 74;
+    const ty = y + Math.sin(midA) * 74;
+    ctx.font = `700 8.5px ${C.mono}`;
+    ctx.fillStyle = s.col;
+    ctx.textAlign = 'center';
+    ctx.fillText(s.label, tx, ty - 2);
+    ctx.font = `500 8px ${C.mono}`;
+    ctx.fillStyle = C.ink;
+    ctx.fillText(s.sub, tx, ty + 8);
+  }
+
+  // Middle Ring (R = 30..53): Continuous Scale & Rotation Scrub Ring
+  ctx.beginPath();
+  ctx.arc(x, y, 53, 0, Math.PI * 2);
+  ctx.arc(x, y, 28, 0, Math.PI * 2, true);
+  ctx.fillStyle = radialGizmo.dragMode === 'scale' || radialGizmo.dragMode === 'rot' ? 'rgba(255, 190, 11, 0.26)' : 'rgba(15, 22, 34, 0.92)';
+  ctx.fill();
+  ctx.strokeStyle = C.yellow;
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+
+  // Scale & Rotation handle dot on the middle ring
+  const rotRad = (tw.rotDeg - 90) * DEG;
+  const hx = x + Math.cos(rotRad) * 40, hy = y + Math.sin(rotRad) * 40;
+  ctx.fillStyle = C.yellow;
+  ctx.beginPath(); ctx.arc(hx, hy, 5.5, 0, Math.PI * 2); ctx.fill();
+
+  // Inner Bullseye (R = 0..27): Bone Centering & Slot Readout
+  ctx.beginPath();
+  ctx.arc(x, y, 27, 0, Math.PI * 2);
+  ctx.fillStyle = '#080b11';
+  ctx.fill();
+  ctx.strokeStyle = C.cyan;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.font = `700 9px ${C.mono}`;
+  ctx.fillStyle = C.cyan;
+  ctx.textAlign = 'center';
+  ctx.fillText(slotKey.toUpperCase(), x, y - 5);
+  ctx.font = `600 8.5px ${C.mono}`;
+  ctx.fillStyle = C.yellow;
+  ctx.fillText(`${tw.scaleMult.toFixed(2)}x · ${Math.round(tw.rotDeg)}°`, x, y + 7);
+  ctx.font = `500 7.5px ${C.mono}`;
+  ctx.fillStyle = C.ink2;
+  ctx.fillText('DRAG RING=SCALE', x, y + 17);
+  ctx.restore();
 }
 
 /* ================= STAGE 05: BOLAS 54 RANGE-TEST UI & LOOP ================= */
@@ -1799,7 +2210,7 @@ function propsFor(m, f, J) {
 function keyAt(m, f) { let k = null; for (const x of m.keys) { if (x.f <= f) k = x; else break; } return k; }
 function labelKeys(m) { let a = 0, b = 0; for (const k of m.keys) { k.id = k.type === 'brk' ? 'B' + String(++b).padStart(2, '0') : 'K' + String(++a).padStart(2, '0'); } }
 
-function drawViewport(ctx, vpX, vpY, vpW, vpH, m, f, yaw, el, labelOverride) {
+function drawViewport(ctx, vpX, vpY, vpW, vpH, m, f, yaw, el, labelOverride, allowRecordHit = false) {
   const s = m.F[f], sil = st.t.sil, rig = currentRig();
   const fr = frameFor(m, vpW, vpH, f, st.playing);
   const PRaw = camera(vpW, vpH, yaw, el, fr.center, fr.scale);
@@ -1835,10 +2246,9 @@ function drawViewport(ctx, vpX, vpY, vpW, vpH, m, f, yaw, el, labelOverride) {
   if (labelOverride === 'BOLAS SKELETON' || st.renderMode === 'bola' || sil) {
     drawBola(ctx, s.J, P, sc, { sil, ends: true });
   } else if (labelOverride === 'WYGWYL CUT-OUT' || st.renderMode === 'cutout') {
-    drawWygwylRigOnBolas(ctx, s.J, P, sc, totalYaw, rig, { showPins: st.t.pins });
+    drawWygwylRigOnBolas(ctx, s.J, P, sc, totalYaw, rig, { showPins: st.t.pins, recordHit: allowRecordHit });
   } else {
-    // 'both': draw WYGWYL pieces + subtle Bolas skeleton & pins
-    drawWygwylRigOnBolas(ctx, s.J, P, sc, totalYaw, rig, { showPins: st.t.pins });
+    drawWygwylRigOnBolas(ctx, s.J, P, sc, totalYaw, rig, { showPins: st.t.pins, recordHit: allowRecordHit });
     drawBola(ctx, s.J, P, sc, { alpha: 0.42, ends: true });
   }
 
@@ -1872,21 +2282,24 @@ function drawStage() {
 
   if (st.renderMode === 'split') {
     const hw = SW / 2;
-    drawViewport(ctx, 0, 0, hw, SH, m, f, yaw, el, 'BOLAS SKELETON');
-    drawViewport(ctx, hw, 0, hw, SH, m, f, yaw, el, 'WYGWYL CUT-OUT');
+    drawViewport(ctx, 0, 0, hw, SH, m, f, yaw, el, 'BOLAS SKELETON', false);
+    drawViewport(ctx, hw, 0, hw, SH, m, f, yaw, el, 'WYGWYL CUT-OUT', true);
     ctx.strokeStyle = C.rule; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(hw, 0); ctx.lineTo(hw, SH); ctx.stroke();
   } else if (st.renderMode === 'quad') {
     const hw = SW / 2, hh = SH / 2;
-    drawViewport(ctx, 0, 0, hw, hh, m, f, 0, 6, 'FRONT (0 DEG)');
-    drawViewport(ctx, hw, 0, hw, hh, m, f, -90, 4, 'SIDE PROFILE (-90 DEG)');
-    drawViewport(ctx, 0, hh, hw, hh, m, f, -35, 12, '3/4 VIEW (-35 DEG)');
-    drawViewport(ctx, hw, hh, hw, hh, m, f, -28, 38, 'TOP ELEVATION');
+    drawViewport(ctx, 0, 0, hw, hh, m, f, 0, 6, 'FRONT (0 DEG)', true);
+    drawViewport(ctx, hw, 0, hw, hh, m, f, -90, 4, 'SIDE PROFILE (-90 DEG)', false);
+    drawViewport(ctx, 0, hh, hw, hh, m, f, -35, 12, '3/4 VIEW (-35 DEG)', false);
+    drawViewport(ctx, hw, hh, hw, hh, m, f, -28, 38, 'TOP ELEVATION', false);
     ctx.strokeStyle = C.rule; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(hw, 0); ctx.lineTo(hw, SH); ctx.moveTo(0, hh); ctx.lineTo(SW, hh); ctx.stroke();
   } else {
-    drawViewport(ctx, 0, 0, SW, SH, m, f, yaw, el, null);
+    drawViewport(ctx, 0, 0, SW, SH, m, f, yaw, el, null, true);
   }
+
+  // Draw active On-Canvas Radial Gizmo if open
+  drawRadialGizmo(ctx);
 
   // Slate HUD
   const k = keyAt(m, f);
@@ -1895,7 +2308,8 @@ function drawStage() {
   ctx.fillStyle = sil ? C.sil : C.ink;
   ctx.textAlign = 'left';
   if (SW >= 460 && st.renderMode !== 'split' && st.renderMode !== 'quad') {
-    ctx.fillText(`${m.id} · ${m.name.toUpperCase()}  [${rig ? rig.short_name.toUpperCase() : 'RIG'}]`, 12, 18);
+    const layerTag = layerOrder.shoe_over_calf ? 'SHOE>CALF' : 'CALF>SHOE';
+    ctx.fillText(`${m.id} · ${m.name.toUpperCase()}  [${rig ? rig.short_name.toUpperCase() : 'RIG'} · ${activeBreedId.toUpperCase()} · ${layerTag}]`, 12, 18);
   }
   ctx.textAlign = 'right';
   ctx.fillStyle = C.cyan;
@@ -2578,6 +2992,542 @@ function requestRedrawAll() {
   else { sizeStage(); drawStage(); }
 }
 
+function syncLayerButtons() {
+  const bShoe = $('toggleShoeOverCalf');
+  const bHand = $('toggleHandOverCuff');
+  if (bShoe) bShoe.setAttribute('aria-pressed', String(layerOrder.shoe_over_calf));
+  if (bHand) bHand.setAttribute('aria-pressed', String(layerOrder.hand_over_cuff));
+}
+$('toggleShoeOverCalf').onclick = () => {
+  layerOrder.shoe_over_calf = !layerOrder.shoe_over_calf;
+  syncLayerButtons();
+  requestRedrawAll();
+};
+$('toggleHandOverCuff').onclick = () => {
+  layerOrder.hand_over_cuff = !layerOrder.hand_over_cuff;
+  syncLayerButtons();
+  requestRedrawAll();
+};
+$('centerBonesVitBtn').onclick = () => {
+  centerAllBonesAndVitruvianSnap();
+};
+
+/* ================= DIRECT ON-CANVAS BONE TWEAK & RADIAL GIZMO (RIGHT-CLICK / LONG-PRESS) ================= */
+let stageLongPressTimer = null;
+let draggingStageJoint = null;
+
+function distToSegment(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay;
+  const l2 = dx * dx + dy * dy;
+  if (l2 < 1) return Math.hypot(px - ax, py - ay);
+  const t = clamp(((px - ax) * dx + (py - ay) * dy) / l2, 0, 1);
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+function hitTestPieceOnStage(mx, my) {
+  let best = null, bestD = 38;
+  // Iterate in reverse draw order (topmost piece first)
+  for (let i = lastRenderedPieces.length - 1; i >= 0; i--) {
+    const p = lastRenderedPieces[i];
+    const d = distToSegment(mx, my, p.ptA[0], p.ptA[1], p.ptB[0], p.ptB[1]);
+    if (d < bestD) {
+      bestD = d;
+      best = p;
+    }
+  }
+  return best;
+}
+
+function hitTestJointOnStage(mx, my) {
+  let best = null, bestD = 18;
+  for (const j of lastRenderedJoints) {
+    const d = Math.hypot(mx - j.x, my - j.y);
+    if (d < bestD) {
+      bestD = d;
+      best = j;
+    }
+  }
+  return best;
+}
+
+function getRadialGizmoSector(dx, dy) {
+  const ang = Math.atan2(dy, dx); // -PI..PI
+  if (ang >= -Math.PI * 0.75 && ang < -Math.PI * 0.25) return 'layer';
+  if (ang >= -Math.PI * 0.25 && ang < Math.PI * 0.25) return 'center';
+  if (ang >= Math.PI * 0.25 && ang < Math.PI * 0.75) return 'evo';
+  return 'flip';
+}
+
+function openRadialGizmoForPiece(piece, mx, my) {
+  if (!piece) return;
+  radialGizmo.open = true;
+  radialGizmo.slotKey = piece.slotKey;
+  radialGizmo.x = clamp(mx, 102, SW - 102);
+  radialGizmo.y = clamp(my, 102, SH - 102);
+  radialGizmo.dragMode = null;
+  radialGizmo.hoverSector = null;
+  drawStage();
+}
+
+function executeRadialSectorAction(sectorId, slotKey) {
+  const tw = getSlotTweak(slotKey);
+  const rig = currentRig();
+  if (sectorId === 'layer') {
+    if (slotKey.startsWith('foot_') || slotKey.startsWith('shin_')) {
+      layerOrder.shoe_over_calf = !layerOrder.shoe_over_calf;
+      syncLayerButtons();
+    } else if (slotKey.startsWith('hand_') || slotKey.startsWith('farm_')) {
+      layerOrder.hand_over_cuff = !layerOrder.hand_over_cuff;
+      syncLayerButtons();
+    } else {
+      tw.zBias = tw.zBias > 0 ? -1 : 1;
+    }
+  } else if (sectorId === 'center') {
+    tw.centerDx = 0;
+    tw.centerDy = 0;
+    tw.rotDeg = 0;
+    tw.scaleMult = 1.0;
+    // Also snap corresponding bone to Vitruvian proportion
+    const boneMap = { thigh_L: 'thigh', thigh_R: 'thigh', shin_L: 'shin', shin_R: 'shin', uarm_L: 'upper', uarm_R: 'upper', farm_L: 'fore', farm_R: 'fore', torso: 'spine', head: 'headR' };
+    const bk = boneMap[slotKey];
+    if (bk && BASE_L[bk]) {
+      L[bk] = BASE_L[bk];
+      invalidateBakedMotions();
+    }
+  } else if (sectorId === 'evo') {
+    evolveSingleSlotBestPiece(slotKey);
+  } else if (sectorId === 'flip') {
+    tw.flipX = !tw.flipX;
+  }
+  drawStage();
+}
+
+stage.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  const r = stage.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;
+  const hit = hitTestPieceOnStage(mx, my);
+  if (hit) {
+    openRadialGizmoForPiece(hit, mx, my);
+  } else {
+    radialGizmo.open = false;
+    drawStage();
+  }
+});
+
+stage.addEventListener('pointerdown', e => {
+  const r = stage.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;
+
+  if (stageLongPressTimer) { clearTimeout(stageLongPressTimer); stageLongPressTimer = null; }
+
+  // 1. If Radial Gizmo is open, check if interacting with Gizmo rings or sectors
+  if (radialGizmo.open && radialGizmo.slotKey) {
+    const dx = mx - radialGizmo.x, dy = my - radialGizmo.y;
+    const dist = Math.hypot(dx, dy);
+    const tw = getSlotTweak(radialGizmo.slotKey);
+    if (dist <= 27) {
+      // Inner Bullseye: drag to center/nudge bone inside piece
+      radialGizmo.dragMode = 'center';
+      radialGizmo.startX = mx; radialGizmo.startY = my;
+      stage.setPointerCapture(e.pointerId);
+      return;
+    } else if (dist > 27 && dist <= 55) {
+      // Middle Ring: drag radially to scale piece & bone, drag tangentially to rotate!
+      radialGizmo.dragMode = 'scale';
+      radialGizmo.startX = mx; radialGizmo.startY = my;
+      radialGizmo.startScale = tw.scaleMult;
+      radialGizmo.startRot = tw.rotDeg;
+      stage.setPointerCapture(e.pointerId);
+      return;
+    } else if (dist > 55 && dist <= 96) {
+      // Outer Quadrant Sector click
+      const sec = getRadialGizmoSector(dx, dy);
+      executeRadialSectorAction(sec, radialGizmo.slotKey);
+      return;
+    } else {
+      // Clicked outside gizmo -> close it
+      radialGizmo.open = false;
+      drawStage();
+    }
+  }
+
+  // 2. Right-button click handled by contextmenu
+  if (e.button === 2) return;
+
+  // 3. Check if clicking a joint handle to directly tweak/scale the skeleton bone!
+  const jHit = hitTestJointOnStage(mx, my);
+  const pHit = hitTestPieceOnStage(mx, my);
+
+  // Set 360ms Long-Press timer to pop open the Radial Context Gizmo (touch & mouse friendly!)
+  if (pHit) {
+    stageLongPressTimer = setTimeout(() => {
+      draggingStageJoint = null;
+      openRadialGizmoForPiece(pHit, mx, my);
+    }, 360);
+  }
+
+  if (jHit) {
+    draggingStageJoint = {
+      jointKey: jHit.jointKey,
+      boneKey: jHit.boneKey,
+      slotKey: pHit ? pHit.slotKey : null,
+      startX: mx,
+      startY: my,
+      startBoneLen: L[jHit.boneKey] || 30
+    };
+    stage.setPointerCapture(e.pointerId);
+  } else if (pHit) {
+    draggingStageJoint = {
+      jointKey: null,
+      boneKey: null,
+      slotKey: pHit.slotKey,
+      startX: mx,
+      startY: my,
+      startCenterDx: getSlotTweak(pHit.slotKey).centerDx,
+      startCenterDy: getSlotTweak(pHit.slotKey).centerDy
+    };
+    stage.setPointerCapture(e.pointerId);
+  }
+});
+
+stage.addEventListener('pointermove', e => {
+  const r = stage.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;
+
+  if (radialGizmo.open) {
+    const dx = mx - radialGizmo.x, dy = my - radialGizmo.y;
+    const dist = Math.hypot(dx, dy);
+    const tw = getSlotTweak(radialGizmo.slotKey);
+    if (radialGizmo.dragMode === 'scale') {
+      const dX = mx - radialGizmo.startX, dY = my - radialGizmo.startY;
+      // Vertical drag changes scale, horizontal drag changes rotation
+      tw.scaleMult = clamp(radialGizmo.startScale * (1 - dY * 0.008), 0.45, 2.10);
+      const rawRot = radialGizmo.startRot + dX * 0.85;
+      // Snap near 0, 90, -90, 180
+      let snapped = rawRot;
+      for (const snapAng of [-180, -90, 0, 90, 180]) {
+        if (Math.abs(rawRot - snapAng) < 6) snapped = snapAng;
+      }
+      tw.rotDeg = clamp(snapped, -180, 180);
+      drawStage();
+      return;
+    } else if (radialGizmo.dragMode === 'center') {
+      const dX = mx - radialGizmo.startX, dY = my - radialGizmo.startY;
+      tw.centerDx = clamp(dX * 0.0025, -0.35, 0.35);
+      tw.centerDy = clamp(dY * 0.0025, -0.35, 0.35);
+      drawStage();
+      return;
+    } else {
+      const newSec = (dist > 55 && dist <= 96) ? getRadialGizmoSector(dx, dy) : null;
+      if (newSec !== radialGizmo.hoverSector) {
+        radialGizmo.hoverSector = newSec;
+        drawStage();
+      }
+    }
+  }
+
+  if (draggingStageJoint) {
+    const moveDist = Math.hypot(mx - draggingStageJoint.startX, my - draggingStageJoint.startY);
+    if (moveDist > 6 && stageLongPressTimer) {
+      clearTimeout(stageLongPressTimer);
+      stageLongPressTimer = null;
+    }
+    if (moveDist > 4) {
+      if (draggingStageJoint.boneKey) {
+        // Direct bone length manipulation!
+        const dy = my - draggingStageJoint.startY;
+        const dx = mx - draggingStageJoint.startX;
+        const delta = (draggingStageJoint.boneKey === 'shW' || draggingStageJoint.boneKey === 'hipW') ? dx * 0.18 : dy * 0.22;
+        const baseVal = BASE_L[draggingStageJoint.boneKey] || 30;
+        L[draggingStageJoint.boneKey] = clamp(Math.round((draggingStageJoint.startBoneLen + delta) * 10) / 10, baseVal * 0.55, baseVal * 1.45);
+        invalidateBakedMotions();
+        drawStage();
+      } else if (draggingStageJoint.slotKey) {
+        const tw = getSlotTweak(draggingStageJoint.slotKey);
+        tw.centerDx = clamp(draggingStageJoint.startCenterDx + (mx - draggingStageJoint.startX) * 0.002, -0.30, 0.30);
+        tw.centerDy = clamp(draggingStageJoint.startCenterDy + (my - draggingStageJoint.startY) * 0.002, -0.30, 0.30);
+        drawStage();
+      }
+    }
+  }
+});
+
+stage.addEventListener('pointerup', () => {
+  if (stageLongPressTimer) { clearTimeout(stageLongPressTimer); stageLongPressTimer = null; }
+  radialGizmo.dragMode = null;
+  draggingStageJoint = null;
+});
+
+stage.addEventListener('wheel', e => {
+  const r = stage.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;
+  const hit = radialGizmo.open ? { slotKey: radialGizmo.slotKey } : hitTestPieceOnStage(mx, my);
+  if (hit && hit.slotKey) {
+    e.preventDefault();
+    const tw = getSlotTweak(hit.slotKey);
+    const factor = e.deltaY < 0 ? 1.04 : 0.96;
+    tw.scaleMult = clamp(tw.scaleMult * factor, 0.45, 2.10);
+    drawStage();
+  }
+}, { passive: false });
+
+/* ================= EVOLUTIONARY (µ+λ ES) + MONTE CARLO + UCB1 RL POSE PIECE SOLVER ================= */
+// Contextual RL Bandit Q-table: key = `${poseGroup}_${slotKey}_${variantKey}` -> { q, n }
+const rlBanditTable = {};
+let totalBanditPulls = 1;
+let evolvedCandidates = [];
+let activeCandidateIdx = 0;
+
+function getBanditBonus(poseGroup, slotKey, varKey) {
+  const k = `${poseGroup}_${slotKey}_${varKey}`;
+  const entry = rlBanditTable[k] || { q: 0.85, n: 1 };
+  return entry.q + 0.12 * Math.sqrt(Math.log(totalBanditPulls + 1) / entry.n);
+}
+function updateBanditReward(poseGroup, slotKey, varKey, reward) {
+  const k = `${poseGroup}_${slotKey}_${varKey}`;
+  if (!rlBanditTable[k]) rlBanditTable[k] = { q: 0.85, n: 0 };
+  const e = rlBanditTable[k];
+  e.n += 1;
+  totalBanditPulls += 1;
+  e.q = e.q + (reward - e.q) / e.n;
+}
+
+function evolveSingleSlotBestPiece(slotKey) {
+  const rig = currentRig();
+  if (!rig || !rig.slots || !rig.slots[slotKey]) return;
+  const slotObj = rig.slots[slotKey];
+  const vm = slotObj.variant_meta || {};
+  const vKeys = Object.keys(vm);
+  if (!vKeys.length) return;
+  const tw = getSlotTweak(slotKey);
+  const curIdx = vKeys.findIndex(k => vm[k].file === (tw.overrideFile || slotObj.file));
+  const nextKey = vKeys[(curIdx + 1) % vKeys.length];
+  tw.overrideFile = vm[nextKey].file;
+  tw.overrideMeta = vm[nextKey];
+  getImg(tw.overrideFile);
+  drawStage();
+}
+
+function evaluateGenomeForPose(genome, m, f, yaw, el, rig) {
+  const s = m.F[f];
+  const J = s.J;
+  const totalYaw = ((s.yaw || 0) + yaw % 360 + 540) % 360 - 180;
+  const absYaw = Math.abs(totalYaw);
+  const targetView = absYaw > 135 ? 'back' : (absYaw > 55 ? 'profile' : (absYaw > 22 ? 'threequarter' : 'front'));
+
+  // 1. View & Piece Aspect Match Score (40%)
+  let viewScore = 0, slotCount = 0;
+  for (const [sk, varKey] of Object.entries(genome.slotVariants)) {
+    slotCount++;
+    if (varKey === targetView) viewScore += 1.0;
+    else if ((targetView === 'threequarter' && varKey === 'front') || (targetView === 'profile' && varKey === 'threequarter')) viewScore += 0.78;
+    else if (sk.startsWith('foot_') && (varKey === 'heel_up' || varKey === 'toe_up')) {
+      const side = sk.endsWith('L') ? 'L' : 'R';
+      const anY = J['ankle' + side] ? J['ankle' + side][1] : 5;
+      viewScore += anY > 8.5 ? 1.05 : 0.72;
+    } else if (sk.startsWith('hand_') && (varKey === 'open' || varKey === 'grip' || varKey === 'fist')) {
+      viewScore += 0.92;
+    } else {
+      viewScore += 0.55;
+    }
+    viewScore += 0.08 * getBanditBonus(m.group, sk, varKey);
+  }
+  const normViewScore = clamp(viewScore / Math.max(1, slotCount * 1.08), 0, 1);
+
+  // 2. Vitruvian Proportion Harmony Score (30%)
+  const b = genome.bones;
+  const totalLeg = b.thigh + b.shin;
+  const estH = totalLeg + b.spine + b.headR * 2.4;
+  const groinRatio = totalLeg / Math.max(100, estH);
+  const vitErr = Math.abs(groinRatio - 0.50) * 2.2 + Math.abs(b.thigh - b.shin) / 45.0 * 0.4;
+  const vitScore = clamp(1.0 - vitErr, 0, 1);
+
+  // 3. Layer Order & Pose Kinematics Match Score (30%)
+  // Deep knee bend or high ankle lift or compact sneaker breed favors shoe_over_calf; upright tracksuit favors calf_over_shoe
+  const kneeFlex = Math.max(
+    180 - angDeg(sub(J.hipL, J.kneeL), sub(J.ankleL, J.kneeL)),
+    180 - angDeg(sub(J.hipR, J.kneeR), sub(J.ankleR, J.kneeR))
+  );
+  const idealShoeOverCalf = kneeFlex > 55 || genome.breedId === 'compact_core_sneaker' || genome.breedId === 'muse_gown_elongated' || genome.breedId === 'ex_bomber_broad';
+  const layerScore = (genome.shoeOverCalf === idealShoeOverCalf ? 0.98 : 0.82) *
+                     (1.0 - Math.abs(genome.limbScale - 1.0) * 0.35);
+
+  const total = (normViewScore * 0.42 + vitScore * 0.30 + layerScore * 0.28) * 100;
+  return {
+    total: clamp(total, 60, 99.8),
+    viewPct: Math.round(normViewScore * 100),
+    vitPct: Math.round(vitScore * 100),
+    layerPct: Math.round(layerScore * 100)
+  };
+}
+
+function runEvoPoseSolver() {
+  const rig = currentRig();
+  if (!rig || !rig.slots) return;
+  const m = bake(LIB[st.i]), f = st.f;
+  const [yaw, el] = viewFor(m);
+  const algo = $('solverAlgoSelect') ? $('solverAlgoSelect').value : 'evo';
+  const breeds = (CATALOG && CATALOG.skeleton_breeds) || [];
+
+  const s = m.F[f], J = s.J;
+  const totalYaw = ((s.yaw || 0) + yaw % 360 + 540) % 360 - 180;
+  const absYaw = Math.abs(totalYaw);
+  const targetView = absYaw > 135 ? 'back' : (absYaw > 55 ? 'profile' : (absYaw > 22 ? 'threequarter' : 'front'));
+  const kneeFlex = Math.max(
+    180 - angDeg(sub(J.hipL, J.kneeL), sub(J.ankleL, J.kneeL)),
+    180 - angDeg(sub(J.hipR, J.kneeR), sub(J.ankleR, J.kneeR))
+  );
+
+  // Build initial population of 24 candidate genomes across breeds, view/action variants, layer orders, and bone scales
+  const popSize = 24;
+  const candidates = [];
+
+  for (let p = 0; p < popSize; p++) {
+    const br = p === 0
+      ? (breeds.find(b => b.id === (rig.default_breed_id || 'poet_tracksuit_75h')) || breeds[0])
+      : p === 1
+        ? (breeds.find(b => b.id === 'vitruvian_8h') || breeds[0])
+        : p === 2
+          ? (breeds.find(b => b.id === 'piece_derived_auto') || breeds[0])
+          : breeds[p % breeds.length];
+
+    const jitter = p < 3 ? 0 : (Math.random() - 0.5) * 0.08;
+    const bones = {
+      thigh: Math.round(br.bones.thigh * (1 + jitter) * 10) / 10,
+      shin: Math.round(br.bones.shin * (1 + jitter) * 10) / 10,
+      upper: Math.round(br.bones.upper * (1 + jitter * 0.8) * 10) / 10,
+      fore: Math.round(br.bones.fore * (1 + jitter * 0.8) * 10) / 10,
+      spine: br.bones.spine,
+      hipW: br.bones.hipW,
+      shW: br.bones.shW,
+      headR: br.bones.headR
+    };
+
+    const slotVariants = {};
+    for (const [sk, sObj] of Object.entries(rig.slots)) {
+      const vm = sObj.variant_meta || {};
+      const avail = Object.keys(vm);
+      if (!avail.length) continue;
+      if (p < 4 && avail.includes(targetView)) {
+        slotVariants[sk] = targetView;
+      } else if (sk.startsWith('foot_') && J['ankle' + (sk.endsWith('L') ? 'L' : 'R')][1] > 9 && avail.includes('heel_up') && p % 2 === 0) {
+        slotVariants[sk] = 'heel_up';
+      } else {
+        slotVariants[sk] = avail.includes(targetView) && Math.random() < 0.72
+          ? targetView
+          : avail[Math.floor(Math.random() * avail.length)];
+      }
+    }
+
+    const shoeOverCalf = p === 0
+      ? (kneeFlex > 55 || !!br.default_layer_order.shoe_over_calf)
+      : p === 1
+        ? false
+        : p === 2
+          ? true
+          : Math.random() < 0.45;
+    const handOverCuff = p < 3 ? !!br.default_layer_order.hand_over_cuff : Math.random() < 0.35;
+    const limbScale = p < 3 ? 1.0 : Math.round((0.94 + Math.random() * 0.14) * 100) / 100;
+
+    const genome = {
+      id: `G${String(p + 1).padStart(2, '0')}`,
+      breedId: br.id,
+      breedName: br.short_name,
+      bones,
+      slotVariants,
+      shoeOverCalf,
+      handOverCuff,
+      limbScale
+    };
+    genome.score = evaluateGenomeForPose(genome, m, f, yaw, el, rig);
+    candidates.push(genome);
+  }
+
+  // Sort by total fitness descending and keep top 6 elites
+  candidates.sort((a, b) => b.score.total - a.score.total);
+  evolvedCandidates = candidates.slice(0, 6);
+
+  // Update RL Bandit rewards for top elite
+  const champ = evolvedCandidates[0];
+  for (const [sk, vk] of Object.entries(champ.slotVariants)) {
+    updateBanditReward(m.group, sk, vk, champ.score.total / 100);
+  }
+
+  applyEvolvedCandidate(0);
+  renderEvolvedCandidatesStrip(algo, m.id, f);
+}
+
+function applyEvolvedCandidate(idx) {
+  const cand = evolvedCandidates[idx];
+  if (!cand) return;
+  activeCandidateIdx = idx;
+  const rig = currentRig();
+  if (!rig || !rig.slots) return;
+
+  activeBreedId = cand.breedId;
+  Object.assign(L, cand.bones);
+  const bSel = $('breedSelect');
+  if (bSel) bSel.value = cand.breedId;
+
+  layerOrder.shoe_over_calf = cand.shoeOverCalf;
+  layerOrder.hand_over_cuff = cand.handOverCuff;
+  syncLayerButtons();
+
+  for (const [sk, vk] of Object.entries(cand.slotVariants)) {
+    const sObj = rig.slots[sk];
+    if (!sObj || !sObj.variant_meta || !sObj.variant_meta[vk]) continue;
+    const tw = getSlotTweak(sk);
+    tw.scaleMult = cand.limbScale;
+    tw.rotDeg = 0;
+    tw.centerDx = 0;
+    tw.centerDy = 0;
+    // Let standard view switching pick the view variant, or set override for action shapes (heel_up, open, grip)
+    if (['front', 'threequarter', 'profile', 'back'].includes(vk)) {
+      tw.overrideFile = null;
+      tw.overrideMeta = null;
+    } else {
+      tw.overrideFile = sObj.variant_meta[vk].file;
+      tw.overrideMeta = sObj.variant_meta[vk];
+      getImg(tw.overrideFile);
+    }
+  }
+
+  invalidateBakedMotions();
+  requestRedrawAll();
+  document.querySelectorAll('#evoCandidatesStrip .evo-pill').forEach((b, i) => {
+    b.setAttribute('aria-pressed', String(i === idx));
+  });
+}
+
+function renderEvolvedCandidatesStrip(algo, motionId, frameIdx) {
+  const strip = $('evoCandidatesStrip');
+  if (!strip) return;
+  const algoLabel = algo === 'mcts' ? 'MCTS' : (algo === 'rl' ? 'UCB1-RL' : 'EVO-ES');
+  strip.innerHTML = evolvedCandidates.map((c, i) => {
+    const layerTag = c.shoeOverCalf ? 'SHOE>CALF' : 'CALF>SHOE';
+    return `<button type="button" class="evo-pill" data-cidx="${i}" aria-pressed="${i === activeCandidateIdx}">
+      <b>#${i + 1} ${c.breedName}</b>
+      <span>${layerTag}</span>
+      <span class="score">${c.score.total.toFixed(1)}%</span>
+    </button>`;
+  }).join('') + `<span id="evoStatusText" style="font-family:var(--mono);font-size:10.5px;color:var(--green);margin-left:auto">
+    [${algoLabel}] Solved ${motionId}@F${String(frameIdx).padStart(3, '0')} · Vitruvian ${evolvedCandidates[0].score.vitPct}% · Aspect ${evolvedCandidates[0].score.viewPct}%
+  </span>`;
+
+  strip.querySelectorAll('.evo-pill').forEach(b => {
+    b.onclick = () => applyEvolvedCandidate(+b.dataset.cidx);
+  });
+}
+
+$('runEvoSolverBtn').onclick = () => runEvoPoseSolver();
+$('autoEvoKeyChip').onclick = e => {
+  const b = e.currentTarget;
+  const next = b.getAttribute('aria-pressed') !== 'true';
+  b.setAttribute('aria-pressed', String(next));
+  if (next) runEvoPoseSolver();
+};
+
 /* ================= LOAD CATALOG & INITIALIZE ================= */
 async function initCatalog() {
   const paths = [
@@ -2592,6 +3542,14 @@ async function initCatalog() {
   }
   if (!CATALOG) return;
 
+  // Populate Skeleton Breed selector
+  const bSel = $('breedSelect');
+  if (bSel && CATALOG.skeleton_breeds) {
+    bSel.innerHTML = CATALOG.skeleton_breeds.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+    bSel.value = activeBreedId;
+    bSel.onchange = () => applySkeletonBreed(bSel.value);
+  }
+
   // Populate Rig Strip
   const host = $('rigStrip');
   CATALOG.rigs.forEach((rig, idx) => {
@@ -2602,18 +3560,29 @@ async function initCatalog() {
     b.setAttribute('aria-pressed', String(idx === activeRigIdx));
     b.onclick = () => {
       activeRigIdx = idx;
+      resetSlotTweaks();
       host.querySelectorAll('.rig-pill').forEach((x, j) => x.setAttribute('aria-pressed', String(j === idx)));
-      // Preload rig slot images
-      Object.values(rig.slots || {}).forEach(s => getImg(s.file));
+      // Preload rig slot images and view variants
+      Object.values(rig.slots || {}).forEach(s => {
+        getImg(s.file);
+        if (s.view_variants) Object.values(s.view_variants).forEach(vf => getImg(vf));
+      });
+      if (rig.default_breed_id) applySkeletonBreed(rig.default_breed_id);
       populateStage3Selectors();
       requestRedrawAll();
     };
     host.appendChild(b);
   });
 
-  // Preload active rig images
+  // Preload active rig images and variants
   const r0 = currentRig();
-  if (r0 && r0.slots) Object.values(r0.slots).forEach(s => getImg(s.file));
+  if (r0 && r0.slots) {
+    Object.values(r0.slots).forEach(s => {
+      getImg(s.file);
+      if (s.view_variants) Object.values(s.view_variants).forEach(vf => getImg(vf));
+    });
+    if (r0.default_breed_id) applySkeletonBreed(r0.default_breed_id);
+  }
 
   // Populate Stage 01 Target Pose selector
   const s1Sel = $('s1PoseSelect');
@@ -2682,6 +3651,9 @@ function loop(now) {
           if (st.t.battery) select((st.i + 1) % LIB.length);
           else setF(0);
         } else setF(st.f + 1);
+        if ($('autoEvoKeyChip') && $('autoEvoKeyChip').getAttribute('aria-pressed') === 'true' && st.f % 12 === 0) {
+          runEvoPoseSolver();
+        }
       }
     }
     tileAcc += dt;
@@ -2699,7 +3671,7 @@ select(0);
 syncPlay();
 initCatalog();
 requestAnimationFrame(loop);
-window.__rangeRigger = { LIB, st, inv, switchStage, select, setF };
+window.__rangeRigger = { LIB, st, inv, layerOrder, L, switchStage, select, setF, applySkeletonBreed, runEvoPoseSolver, openRadialGizmoForPiece, getLastPieces: () => lastRenderedPieces, radialGizmo, drawStage };
 })();
 </script>
 </body>
