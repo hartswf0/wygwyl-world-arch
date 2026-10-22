@@ -44,6 +44,9 @@ Points are in the card's own pixel frame (`shots/kits/cut/<file>`, or `shots/bod
 | `choice` | Builder: a part picked from a slot strip | `slot`, `part` | The latest pick becomes that slot's default for the character and view |
 | `fix` | Builder: a critic fix button | the finding's title | Logged only, as a record of which problems people accept a fix for |
 | `skip` | Captcha skipped | `kind`, `point` | Logged only, which marks ambiguous items |
+| `site` | Pose Lab **Rest rig**: a card's connection site (parent end / child end / shoulders / hips / crown / toe) dragged onto its brad, or a detected brad accepted | `part`, `point` (the pts key: pivot, socket, waist, neck, shVL…), `xy`, `view`, `slot` | Same as `pivot` (median of clicks → the card's point, `src: label`) |
+| `rest` | Pose Lab **Rest rig**: the card picked per slot, the draw stack and near/far per view | `view`, `v: {cards, order, far, facing}` | The latest per character + view becomes `rest[view]` in data/*.json; its card picks become that view's defaults |
+| `marker` | Pose Lab: a labelled marker on a drawn pose (head, chin, neck, shoulders, elbows, wrists, groin, hips, knees, ankles, toes) dragged, placed, confirmed or removed | `part` = target id, `point` = marker name, `xy` (or `v: "none"`) | solve.py uses it over MoveNet's guess (weight 2) |
 
 Captchas ask first where the data is least sure:
 
@@ -52,6 +55,19 @@ Captchas ask first where the data is least sure:
 - **Cuts:** parts graded B.
 - **Hand shapes:** hands with no shape.
 - **Slots:** parts whose cutter label disagrees with their Body Lab class.
+
+## Pose Lab data (shots/rig/pose.html, solve.py, markers.mjs)
+
+- `poses/markers.json`: MoveNet Lightning keypoints for every drawn pose figure (run in headless Chromium by
+  `markers.mjs`), turned into labelled markers and snapped onto the painted brass brads. MoveNet was trained on
+  photographs, not cut-out drawings; its confidence on these figures is reported per target (`mean_conf`).
+- `marker` answers are the human-corrected version of the same keypoints: a small, exactly matched training and test
+  set for a **cut-out pose estimator**. You can fine-tune MoveNet on it, or train a brad-to-joint classifier.
+  The original MoveNet guess is kept next to each correction (`src`, `conf`), so the before/after pairs are there.
+- `site` answers are connection-site labels on the cards: the same pivot-regressor data as `pivot`, but for every
+  site the rig uses.
+- `poses/<character>.json` holds each solve: keyframe, IoU, per-marker error, and the drawing's proportions vs the
+  rig (`pose.proportions`). That is a per-character report on where the cards and the drawings disagree.
 
 ## What this could train or check (honestly: none of it is built)
 

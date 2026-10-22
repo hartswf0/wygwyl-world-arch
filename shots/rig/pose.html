@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--acc:#e7a35a;--sel:#5fd0ff;--arch:#d98bb0;--plane:#7fd3c4;--act:#b9c46a;--bad:#ff6b5a;--warn:#f3c04f;--ok:#7fd38a;--mono:'JetBrains Mono',ui-monospace,monospace}
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--acc:#e7a35a;--sel:#5fd0ff;--arch:#d98bb0;--plane:#7fd3c4;--act:#b9c46a;--bad:#ff6b5a;--warn:#f3c04f;--ok:#7fd38a;--L:#5aa9ff;--R:#ff9a3c;--mono:'JetBrains Mono',ui-monospace,monospace}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
 header{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
@@ -30,10 +30,29 @@ h3{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color
 .tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .tools label{font:11px var(--mono);color:var(--dim);display:flex;gap:4px;align-items:center}
 section.lv{padding:12px 16px}
+.pane{position:relative;background:#050403;border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:none}
+.pane canvas{position:absolute;inset:0;width:100%;height:100%}
+.pane .lbl{position:absolute;left:8px;top:6px;font:600 11px var(--mono);color:var(--dim);pointer-events:none;text-transform:uppercase;letter-spacing:.1em}
+.pane .rd{position:absolute;left:8px;bottom:6px;font:10.5px var(--mono);color:var(--dim);pointer-events:none;white-space:pre}
+/* rest */
+#restGrid{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12px}
+@media (max-width:1100px){#restGrid{grid-template-columns:1fr}}
+#rPane{height:640px}
+#ePane{height:300px}
+#stack{display:grid;gap:3px;max-height:330px;overflow:auto}
+.sr{display:grid;grid-template-columns:34px 1fr auto;gap:6px;align-items:center;border:1px solid var(--line);border-radius:6px;padding:2px 4px;font:11px var(--mono);cursor:pointer;background:var(--panel)}
+.sr.on{border-color:var(--sel)}
+.sr img{width:34px;height:30px;object-fit:contain;background:#000;border-radius:3px}
+.sr .cf{display:flex;gap:2px}.sr .cf i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.sr button{font:10px var(--mono);background:none;border:1px solid var(--line);border-radius:4px;color:var(--dim);cursor:pointer;padding:0 4px}
+.sr button.far{color:#120c08;background:#6b5f55}
+#siteQ{font:600 14px Inter;min-height:22px}
+#siteQ small{display:block;font:11px var(--mono);color:var(--dim);font-weight:400}
+.prog{height:6px;background:#2a221c;border-radius:3px;overflow:hidden}.prog i{display:block;height:100%;background:var(--ok)}
 /* atlas */
 #atlasHead{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 #hist{display:flex;align-items:flex-end;gap:2px;height:44px}
-#hist div{width:16px;background:var(--card);border-radius:2px 2px 0 0;position:relative}
+#hist div{width:16px;border-radius:2px 2px 0 0;position:relative}
 #hist div span{position:absolute;bottom:-14px;left:0;font:8px var(--mono);color:var(--dim)}
 #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .at{border:2px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;overflow:hidden;position:relative}
@@ -46,15 +65,14 @@ section.lv{padding:12px 16px}
 /* pose */
 #poseGrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.25fr);gap:12px}
 @media (max-width:1100px){#poseGrid{grid-template-columns:1fr}}
-.pane{position:relative;background:#050403;border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:none}
-.pane canvas{position:absolute;inset:0;width:100%;height:100%}
-.pane .lbl{position:absolute;left:8px;top:6px;font:600 11px var(--mono);color:var(--dim);pointer-events:none;text-transform:uppercase;letter-spacing:.1em}
-.pane .rd{position:absolute;left:8px;bottom:6px;font:10.5px var(--mono);color:var(--dim);pointer-events:none;white-space:pre}
 #tPane{height:620px}
 #views{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #views .pane{height:306px}
-#score{display:flex;gap:10px;flex-wrap:wrap;font:12px var(--mono);margin:8px 0}
+#score{display:flex;gap:8px;flex-wrap:wrap;font:12px var(--mono);margin:8px 0}
 #score span{padding:2px 8px;border:1px solid var(--line);border-radius:999px}
+#mkList{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0}
+.mk{font:10.5px var(--mono);border:1px solid var(--line);border-radius:999px;padding:1px 7px;cursor:pointer;color:var(--dim)}
+.mk.L{border-color:var(--L)}.mk.R{border-color:var(--R)}.mk.miss{opacity:.45;border-style:dashed}.mk.user{color:var(--ink);font-weight:600}.mk.arm{background:var(--sel);color:#120c08}
 #alts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .alt{border:1px solid var(--line);border-radius:6px;background:#050403;cursor:pointer;position:relative;height:190px}
 .alt.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
@@ -66,8 +84,6 @@ section.lv{padding:12px 16px}
 #flags{font:11px var(--mono);color:var(--dim);margin-top:4px;min-height:16px}
 #flags b{color:var(--bad);font-weight:600}
 .legend{font:10.5px var(--mono);color:var(--dim)}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin:0 3px 0 8px}
-/* loop */
 #loopBox{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--panel);margin-top:12px}
 #loopKeys{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
 .lk{font:11px var(--mono);border:1px solid var(--line);border-radius:6px;padding:3px 6px;color:var(--ink);background:#0f0c0a}
@@ -80,6 +96,7 @@ section.lv{padding:12px 16px}
 #jPane{height:560px}
 .kv{display:grid;grid-template-columns:120px 1fr;gap:3px 10px;font:12px var(--mono)}
 .kv i{color:var(--dim);font-style:normal}
+.kv span{word-break:break-all}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--card);color:#1a120a;font:600 13px Inter;padding:6px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:10}
 #busy{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;place-items:center;z-index:9;font:600 14px var(--mono);color:var(--acc)}
 </style>
@@ -92,10 +109,41 @@ section.lv{padding:12px 16px}
   <div class="crumbs" id="crumbs"></div>
   <span class="sp"></span>
   <label class="hint"><input type="checkbox" id="sandbox"> sandbox (no joint limits)</label>
-  <label class="hint" title="Use the parts, scales and flips you chose in the Rig Builder (this browser) instead of the defaults the batch used"><input type="checkbox" id="useBuilder"> my Builder rig</label>
+  <label class="hint" title="Use the parts, scales and flips you chose in the Rig Builder (this browser)"><input type="checkbox" id="useBuilder"> my Builder rig</label>
+  <button class="btn" id="exportLabels" title="Download every answer and edit made in this browser (Builder + Pose Lab); commit as shots/rig/labels/<file>.json">Export labels</button>
   <a id="contact" href="#" target="_blank">Contact sheet →</a>
 </header>
 
+<!-- ───────────── 1. rest rig ───────────── -->
+<section class="lv" id="rest" hidden>
+  <div id="restGrid">
+    <div>
+      <div class="tools"><h2>Rest rig</h2>
+        <span class="hint">the character in a rest pose at true proportions; every pose is computed from this</span><span class="sp"></span>
+        <select class="btn" id="rView"><option value="front">front</option><option value="threequarter">three-quarter</option><option value="profile">profile</option><option value="back">back</option></select>
+        <label><input type="checkbox" id="rSites" checked> sites</label>
+      </div>
+      <div class="pane" id="rPane"><canvas id="rc"></canvas><div class="rd" id="rRd"></div></div>
+    </div>
+    <div>
+      <h3>Connection sites</h3>
+      <div id="siteQ"></div>
+      <div class="prog" title="sites confirmed in this view"><i id="siteProg"></i></div>
+      <div class="tools" style="margin:6px 0">
+        <button class="btn go" id="sNext">Next unconfirmed site</button>
+        <button class="btn" id="sBrads" title="Every site that sits on a detected brad is accepted as-is">Accept all brad sites</button>
+        <button class="btn" id="sReset" title="Back to the detected point for this card">Reset card</button>
+      </div>
+      <div class="pane" id="ePane"><canvas id="ec"></canvas><div class="rd" id="eRd"></div></div>
+      <p class="hint">Drag a site onto its brad (it snaps to the orange rings; Alt = no snap). Parent end = where this card pins to its parent; child end = where the next card pins to it. Green = brad found, yellow = guessed, blue = set by you.</p>
+      <h3>Card · stack (back → front)</h3>
+      <div class="tools" style="margin-bottom:4px"><select class="btn" id="rCard" aria-label="Card for this slot"></select></div>
+      <div id="stack"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── 2. atlas ───────────── -->
 <section class="lv" id="atlas">
   <div id="atlasHead">
     <h2>Pose atlas</h2>
@@ -104,29 +152,33 @@ section.lv{padding:12px 16px}
     <span class="sp"></span>
     <label class="hint">sort <select class="btn" id="sort"><option value="sheet">by sheet</option><option value="asc">worst first</option><option value="desc">best first</option></select></label>
   </div>
-  <p class="hint">Every drawn pose figure for this character, tinted by how well the rig snapped onto it (red = poor, green = good). Click one to open it in four views.</p>
+  <p class="hint">Every drawn pose figure for this character, tinted by how well the rig as built snaps onto it (red = poor, green = good). Click one to open it in four views. Start with the <b class="crumbsLink" data-l="rest" style="color:var(--acc);cursor:pointer">rest rig</b> if the cards hang off the wrong sites.</p>
   <div id="grid"></div>
 </section>
 
+<!-- ───────────── 3. pose ───────────── -->
 <section class="lv" id="posev" hidden>
   <div id="poseGrid">
     <div>
       <div class="tools"><h2 id="tTitle"></h2><span class="sp"></span>
         <label>ghost <input type="range" id="ghost" min="0" max="1" step=".05" value=".55"></label>
         <label><input type="checkbox" id="showRig" checked> rig</label>
+        <label title="Show the pose with the drawing's own proportions (what the markers say) instead of the rig as built"><input type="checkbox" id="drawProp"> drawing's proportions</label>
       </div>
       <div class="pane" id="tPane"><canvas id="tc"></canvas><div class="lbl" id="tLbl">target</div><div class="rd" id="tRd"></div></div>
       <div id="score"></div>
       <div class="tools">
-        <button class="btn go" id="bSolve" title="Re-solve from here with the current brad assignments">Re-solve</button>
-        <button class="btn" id="bAuto" title="Search all views and seed poses again (slow, ~10 s)">Auto-solve</button>
-        <button class="btn" id="bRematch" title="Re-assign brads to the nearest joints, then re-solve">Re-match</button>
+        <button class="btn go" id="bSolve" title="Re-solve from here against the markers">Re-solve</button>
+        <button class="btn" id="bAuto" title="Search all views and seed poses again (slow)">Auto-solve</button>
+        <button class="btn" id="bMove" title="Run MoveNet on this drawing and pre-fill the markers again">MoveNet markers</button>
+        <button class="btn" id="bConfirm" title="Keep every marker as it is now (saved as labels)">Confirm markers</button>
+        <label title="Dragging a left marker moves its right twin mirrored about the figure's centre line"><input type="checkbox" id="sym"> use symmetry</label>
         <button class="btn" id="bReset">Batch result</button>
-        <button class="btn" id="bKey" title="Use this pose as a loop key">+ loop key</button>
+        <button class="btn" id="bKey">+ loop key</button>
         <button class="btn" id="bExport">Export keyframe</button>
-        <span class="sp"></span><span class="legend"><i style="background:#5fd0ff"></i>target brad<i style="background:#ff6b5a"></i>rig joint<i style="background:#7fd38a"></i>&lt;4 cm</span>
       </div>
-      <p class="hint">Drag a cyan brad to move it (the rig re-solves live); drop it on a different rig joint to re-assign it. Shift-click a brad to drop it; double-click the figure to add one. Click a rig joint to zoom in.</p>
+      <div id="mkList"></div>
+      <p class="hint">Markers: <span style="color:var(--L)">● left</span> <span style="color:var(--R)">● right</span> ○ centre (the character's own L/R; hollow = low confidence). Drag one to move it — the rig re-solves live. Click a missing marker's name, then click the drawing to place it; Shift-click a marker to remove it. Click a rig joint (small red dot) to zoom in.</p>
       <h3>Alternative solves — click to pick</h3>
       <div id="alts"></div>
       <h3>History</h3>
@@ -142,7 +194,7 @@ section.lv{padding:12px 16px}
       <div class="tools" style="margin-top:6px">
         <label><input type="checkbox" id="wOn" checked> weight</label>
         <label><input type="checkbox" id="arcOn" checked> joint limits</label>
-        <span class="legend">plumb line = centre of mass · polygon = support · bars = load per foot</span>
+        <span class="legend">plumb line = centre of mass · polygon = support · bars = load per foot · arcs: green far from the limit, red at it</span>
       </div>
       <div id="flags"></div>
       <div id="loopBox">
@@ -167,19 +219,21 @@ section.lv{padding:12px 16px}
   </div>
 </section>
 
+<!-- ───────────── 4. joint ───────────── -->
 <section class="lv" id="jointv" hidden>
   <div id="jointGrid">
     <div><div class="tools"><h2 id="jTitle"></h2><span class="sp"></span><button class="btn" id="jPrev">← joint</button><button class="btn" id="jNext">joint →</button><button class="btn" id="jBack">back to pose</button></div>
       <div class="pane" id="jPane"><canvas id="jc"></canvas><div class="rd" id="jRd"></div></div></div>
     <div><h3>This joint</h3><div class="kv" id="jInfo"></div>
-      <h3>Re-assign the target brad</h3><div class="tools" id="jAssign"></div>
-      <p class="hint">The target brad is what the drawing shows; the rig brad is where the solved rig puts this joint. The gap is measured at the rig's true scale. The pivot is the card brad the child part turns on.</p></div>
+      <p class="hint">The marker is where the drawing puts this joint; the rig brad is where the solved rig (as built) puts it. The gap is in cm at the rig's true scale. The pivot is the card brad the child part turns on — fix it in the rest rig if it is off.</p>
+      <div class="tools"><button class="btn" id="jRest">Open this card in the rest rig</button></div></div>
   </div>
 </section>
 
 <div id="busy">solving…</div>
 <div id="toast"></div>
 <script src="pose-core.js"></script>
+<script src="movenet-run.js"></script>
 <script>
 'use strict';
 const C = PoseCore, $ = id => document.getElementById(id);
@@ -188,11 +242,26 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
 function toast(t) { const e = $('toast'); e.textContent = t; e.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => e.style.opacity = 0, 1800); }
 const VIEWS = [0, 90, 45, 180];
-const SCOL = s => s == null ? '#555' : `hsl(${clamp((s - .3) / .45, 0, 1) * 120},70%,52%)`;
+const VK_PSI = { front: 0, threequarter: 45, profile: 90, back: 180 };
+const SCOL = s => s == null ? '#555' : `hsl(${clamp((s - .25) / .45, 0, 1) * 120},70%,52%)`;
+const MCOL = n => /L$/.test(n) ? '#5aa9ff' : /R$/.test(n) ? '#ff9a3c' : '#ffffff';
+
+// labels: one session shared with the Rig Builder (same answers list, same export)
+let session = store.get('rigb.session', null);
+if (!session) { const d = new Date(); session = { id: 'rig-' + d.toISOString().slice(0, 16).replace(/[-:T]/g, '') + '-' + Math.random().toString(36).slice(2, 6), started: d.toISOString(), answers: [] }; store.set('rigb.session', session); }
+function record(a) { a.ts = new Date().toISOString(); a.char = key; session.answers.push(a); store.set('rigb.session', session); $('exportLabels').textContent = `Export labels (${session.answers.length})`; }
+$('exportLabels').onclick = () => {
+  const out = { session: session.id, started: session.started, exported: new Date().toISOString(), tool: 'shots/rig/index.html + shots/rig/pose.html',
+    about: 'Human answers from the Rig Builder and the Pose Lab. Commit as shots/rig/labels/' + session.id + '.json; build.py applies sites / rest rigs, solve.py applies markers. See shots/rig/TRAINING.md.',
+    counts: session.answers.reduce((m, a) => (m[a.t] = (m[a.t] || 0) + 1, m), {}), answers: session.answers };
+  const b = new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' }), a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = session.id + '.json'; a.click(); toast(session.answers.length + ' answers exported');
+};
 
 // ───────────────────────── state ─────────────────────────
 let PIDX, DOC, POS, S, key, level = 'atlas';
-let T = null, tgt = null, pr = null, z = null, psi = 0, alts = [], altOn = 0, hist = [], histOn = -1, jointSel = null;
+let T = null, tgt = null, pr = null, z = null, zP = null, psi = 0, alts = [], altOn = 0, hist = [], histOn = -1, jointSel = null;
+let REST = {}, restSel = null, siteSel = null;
 let loop = { keys: [], frames: null, f: 0, playing: false };
 const imgs = {};
 function img(src) { if (!imgs[src]) { const im = new Image(); im.src = src; im.onload = () => redraw(); im.onerror = () => console.warn('missing', src); imgs[src] = im; } return imgs[src]; }
@@ -208,19 +277,31 @@ async function init() {
   const q = new URLSearchParams(location.search);
   const k = q.get('char') || store.get('posel.char', chars[0].character);
   $('char').value = chars.some(c => c.character === k) ? k : chars[0].character;
+  $('exportLabels').textContent = `Export labels (${session.answers.length})`;
   await loadChar($('char').value);
+  if (q.get('level') === 'rest') setLevel('rest');
   if (q.get('target')) { const r = POS.targets.find(t => t.id.includes(q.get('target'))); if (r) await openTarget(r); }
   window.addEventListener('resize', () => redraw());
+}
+function applySessionToParts() {
+  for (const a of session.answers) {
+    if (a.char && a.char !== key) continue;
+    const p = DOC.P[a.part]; if (!p) continue;
+    if ((a.t === 'site' || a.t === 'edit-point' || a.t === 'pivot') && a.xy) { p.pts[a.point] = a.xy.slice(); p.src[a.point] = 'label'; }
+  }
+  REST = JSON.parse(JSON.stringify(DOC.rest || {}));
+  for (const a of session.answers) if (a.t === 'rest' && a.char === key && a.view && a.v) REST[a.view] = JSON.parse(JSON.stringify(a.v));
 }
 async function loadChar(k) {
   key = k; store.set('posel.char', k);
   const file = k.replace('/', '__');
   [DOC, POS] = await Promise.all([fetch('data/' + file + '.json').then(r => r.json()), fetch('poses/' + file + '.json').then(r => r.json())]);
-  C.prep(DOC);
+  C.prep(DOC); for (const p of DOC.parts) { p.pts = p.pts || {}; p.src = p.src || {}; }
+  applySessionToParts();
   rebuildSkeleton();
   $('contact').href = 'poses/' + file + '.contact.webp';
   loop = { keys: [], frames: null, f: 0, playing: false }; renderLoopKeys();
-  renderAtlas(); setLevel('atlas');
+  T = null; renderAtlas(); setLevel('atlas');
 }
 function builderRig() {
   if (!$('useBuilder').checked) return null;
@@ -228,87 +309,245 @@ function builderRig() {
   for (const v of ['front', 'profile', 'back']) { const r = store.get('rigb.rig.' + key + '.' + v, null); if (r && r.slots) out[v] = r.slots; }
   return Object.keys(out).length ? out : null;
 }
-function rebuildSkeleton() { const br = builderRig(); S = C.skeleton(DOC, br && br.front ? br.front : null); }
-const cardsFor = vk => C.cardsFor(DOC, vk, builderRig());
+// card override per view: rest rig picks, then (optionally) the Builder's rig
+function override() {
+  const o = {}, br = builderRig() || {};
+  for (const v of ['front', 'threequarter', 'profile', 'back']) {
+    o[v] = {};
+    if (br[v]) for (const s in br[v]) if (br[v][s] && br[v][s].pid) o[v][s] = br[v][s].pid;
+    if (REST[v] && REST[v].cards) Object.assign(o[v], REST[v].cards);
+  }
+  return o;
+}
+const cardsFor = vk => C.cardsFor(DOC, vk, override());
+const restFor = vk => REST[vk] || null;
+function rebuildSkeleton() {
+  const br = builderRig(), front = {};
+  const f = cardsFor('front'); for (const s in f) front[s] = { pid: f[s], s: br && br.front && br.front[s] && br.front[s].pid === f[s] ? br.front[s].s : undefined };
+  S = C.skeleton(DOC, front);
+  if (pr) pr.S = S;
+}
 
 // ───────────────────────── levels ─────────────────────────
 function setLevel(l) {
   level = l;
-  $('atlas').hidden = l !== 'atlas'; $('posev').hidden = l !== 'pose'; $('jointv').hidden = l !== 'joint';
-  const c = ['<b data-l="atlas">atlas</b>'];
+  $('rest').hidden = l !== 'rest'; $('atlas').hidden = l !== 'atlas'; $('posev').hidden = l !== 'pose'; $('jointv').hidden = l !== 'joint';
+  const c = [`<b data-l="rest">rest rig</b>`, '<i>·</i>', '<b data-l="atlas">atlas</b>'];
   if (T) c.push('<i>›</i>', `<b data-l="pose">${esc(shortName(T))}</b>`);
   if (l === 'joint' && jointSel) c.push('<i>›</i>', `<b data-l="joint">${esc(C.JOINT_WORD[jointSel])}</b>`);
   $('crumbs').innerHTML = c.join('');
+  if (l === 'rest') renderRest();
   redraw();
 }
-$('crumbs').addEventListener('click', e => { const b = e.target.closest('[data-l]'); if (b && (b.dataset.l !== 'pose' || T)) setLevel(b.dataset.l); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-l]'); if (b && (b.closest('#crumbs') || b.classList.contains('crumbsLink'))) { if (b.dataset.l !== 'pose' || T) setLevel(b.dataset.l); } });
 const shortName = t => (t.label || t.id.split('/').pop()).replace(/\s+/g, ' ').slice(0, 42);
 
-// ───────────────────────── atlas ─────────────────────────
+// ───────────────────────── 1. REST RIG ─────────────────────────
+const SITES = {
+  limb: [['pivot', 'parent end'], ['socket', 'child end']], torso: [['waist', 'parent end (waist)'], ['neck', 'child end: neck'], ['shVL', 'child end: shoulder'], ['shVR', 'child end: shoulder']],
+  hip: [['waist', 'child end: waist'], ['hipVL', 'child end: hip'], ['hipVR', 'child end: hip']], head: [['neck', 'parent end (neck)'], ['top', 'crown']],
+  hand: [['wrist', 'parent end (wrist)'], ['tip', 'fingertip']], shoe: [['ankle', 'parent end (ankle)'], ['toe', 'toe'], ['heel', 'heel']] };
+const WORD = { upper_arm: ['SHOULDER', 'ELBOW'], forearm: ['ELBOW', 'WRIST'], thigh: ['HIP', 'KNEE'], shin: ['KNEE', 'ANKLE'] };
+const kindOf = cls => ({ torso: 'torso', hip: 'hip', head: 'head', hand: 'hand', shoe: 'shoe' }[cls] || 'limb');
+function siteLabel(p, nm, vk) {
+  const k = kindOf(p.cls), L = (SITES[k].find(s => s[0] === nm) || [nm, nm])[1];
+  const side = /V[LR]$/.test(nm) ? (vk === 'front' || vk === 'threequarter' ? (nm.endsWith('VR') ? ' L' : ' R') : vk === 'back' ? (nm.endsWith('VL') ? ' L' : ' R') : '') : '';
+  const w = WORD[p.cls] ? ` — ${WORD[p.cls][nm === 'pivot' ? 0 : 1]}` : '';
+  return L + side + w;
+}
+const CONF = { label: 1, brad: .8, alpha: .5, hint: .3 };
+const confOf = (p, nm) => CONF[(p.src || {})[nm]] ?? (p.pts && p.pts[nm] ? .3 : .1);
+const confCol = c => c >= 1 ? '#5fd0ff' : c >= .8 ? '#7fd38a' : c >= .5 ? '#9a8d7e' : c >= .3 ? '#f3c04f' : '#ff6b5a';
+const REST_POSE = { front: { shLb: 22, shRb: 22, elL: 6, elR: 6, hpLb: 4, hpRb: 4 }, back: { shLb: 22, shRb: 22, elL: 6, elR: 6, hpLb: 4, hpRb: 4 },
+  profile: { shLf: 6, shRf: -4, elL: 10, elR: 10, hpLf: 6, hpRf: -6 }, threequarter: { shLb: 14, shRb: 14, shLf: 4, shRf: 4, elL: 8, elR: 8, hpLb: 3, hpRb: 3 } };
+function restZ(vk) { const zz = new Float64Array(C.NP + 1); for (const k in REST_POSE[vk]) zz[C.PI[k]] = REST_POSE[vk][k]; return zz; }
+function ensureRest(vk) {
+  if (!REST[vk]) REST[vk] = {};
+  const r = REST[vk];
+  if (!r.cards) r.cards = Object.assign({}, cardsFor(vk));
+  if (!r.order || r.order.length !== C.SLOTS.length) {        // default stack: the depth order of the rest pose
+    const J = C.fk(S, restZ(vk)); r.order = C.placeCards(DOC, J, VK_PSI[vk], 0, 0, r.cards).map(c => c.slot);
+    for (const [s] of C.SLOTS) if (!r.order.includes(s)) r.order.unshift(s);
+  }
+  if (!r.far) { r.far = {}; const J = C.fk(S, restZ(vk)); for (const c of C.placeCards(DOC, J, VK_PSI[vk], 0, 0, r.cards)) if (c.far) r.far[c.slot] = true; }
+  if (!r.facing) r.facing = 1;
+  return r;
+}
+let restSaveT = 0;
+function saveRest(vk) { clearTimeout(restSaveT); restSaveT = setTimeout(() => record({ t: 'rest', view: vk, v: JSON.parse(JSON.stringify(REST[vk])) }), 400); }
+let RV = null;
+function renderRest() {
+  const vk = $('rView').value, r = ensureRest(vk);
+  if (!restSel) restSel = 'upper_arm_L';
+  $('stack').innerHTML = r.order.slice().reverse().map(slot => {
+    const pid = cardsFor(vk)[slot], p = DOC.P[pid]; if (!p) return '';
+    const sites = SITES[kindOf(p.cls)];
+    return `<div class="sr${slot === restSel ? ' on' : ''}" data-slot="${slot}"><img src="../${esc(p.img)}" alt=""><span>${esc(slot.replace('_', ' '))}<br><span class="cf">${sites.map(([nm]) => `<i style="background:${confCol(confOf(p, nm))}" title="${esc(nm)}"></i>`).join('')}</span></span>
+      <span>${vk !== 'front' && vk !== 'back' && /_[LR]$/.test(slot) ? `<button data-far="${slot}" class="${r.far[slot] ? 'far' : ''}">${r.far[slot] ? 'far' : 'near'}</button>` : ''}<button data-up="${slot}" title="forward">▲</button><button data-dn="${slot}" title="back">▼</button></span></div>`;
+  }).join('');
+  const sl = C.SLOTS.find(s => s[0] === restSel), cls = sl[1], side = sl[2];
+  const L = DOC.parts.filter(p => p.cls === cls).sort((a, b) => C.score(b, side, vk) - C.score(a, side, vk)).slice(0, 14);
+  const cur = cardsFor(vk)[restSel];
+  if (cur && !L.some(p => p.id === cur)) L.unshift(DOC.P[cur]);
+  $('rCard').innerHTML = L.map(p => `<option value="${esc(p.id)}"${p.id === cur ? ' selected' : ''}>${esc(restSel)}: ${esc((p.label || p.id).slice(0, 40))} · ${p.q}${p.view ? ' · ' + p.view : ''}</option>`).join('');
+  let n = 0, ok = 0;
+  for (const s of r.order) { const p = DOC.P[cardsFor(vk)[s]]; if (!p) continue; for (const [nm] of SITES[kindOf(p.cls)]) { n++; if (confOf(p, nm) >= .8) ok++; } }
+  $('siteProg').style.width = (ok / Math.max(1, n) * 100) + '%'; $('siteProg').title = `${ok} of ${n} sites on a brad or set by hand`;
+  drawRest(); drawEditor();
+}
+function drawRest() {
+  const c = $('rc'); if (!c.getBoundingClientRect().width) return;
+  const [g, W, H, dpr] = fitCanvas(c), vk = $('rView').value, r = ensureRest(vk);
+  g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
+  const zz = restZ(vk), J = C.fk(S, zz), Tw = groundT(J), k = (H - 40) / 205;
+  RV = { k, x0: W / 2, y0: H - 24, J, Tw, psi: VK_PSI[vk] };
+  g.strokeStyle = '#3a2e24'; g.beginPath(); g.moveTo(0, RV.y0 + .5); g.lineTo(W, RV.y0 + .5); g.stroke();
+  const rx = W / 2 - 70 * k; g.strokeStyle = '#6b5a49'; g.fillStyle = '#9a8d7e'; g.font = '10px JetBrains Mono, monospace';
+  g.beginPath(); g.moveTo(rx, RV.y0); g.lineTo(rx, RV.y0 - 200 * k); g.stroke();
+  for (let cm = 0; cm <= 200; cm += 10) { const y = RV.y0 - cm * k; g.beginPath(); g.moveTo(rx, y); g.lineTo(rx + (cm % 50 ? 5 : 10), y); g.stroke(); if (cm % 20 === 0) g.fillText(cm, rx - 26, y + 3); }
+  g.setLineDash([5, 5]); g.strokeStyle = 'rgba(231,163,90,.5)'; const sy = RV.y0 - DOC.stature_cm * k; g.beginPath(); g.moveTo(rx, sy); g.lineTo(W - 20, sy); g.stroke(); g.setLineDash([]);
+  g.fillStyle = '#e7a35a'; g.fillText(DOC.stature_cm + ' cm', rx + 12, sy - 4);
+  const L = drawCards(g, dpr, RV, J, RV.psi, 0, 0, Tw, 1, cardsFor(vk), r);
+  RV.L = L;
+  if ($('rSites').checked) for (const cc of L) {
+    const p = cc.p, sel = cc.slot === restSel, M = cc.M;
+    for (const [nm] of SITES[kindOf(p.cls)]) {
+      const q = C.pt(p, nm), X = RV.x0 + k * (M[0] * q[0] + M[2] * q[1] + M[4]), Y = RV.y0 + k * (M[1] * q[0] + M[3] * q[1] + M[5]);
+      g.fillStyle = confCol(confOf(p, nm)); g.beginPath(); g.arc(X, Y, sel ? 5 : 3, 0, 7); g.fill();
+      if (sel) { g.strokeStyle = '#000'; g.stroke(); }
+    }
+    if (sel) { g.strokeStyle = '#5fd0ff'; g.lineWidth = 1.5; g.setLineDash([4, 3]); const w = p.w, h = p.h; g.beginPath();
+      [[0, 0], [w, 0], [w, h], [0, h]].forEach(([a, b], i) => { const X = RV.x0 + k * (M[0] * a + M[2] * b + M[4]), Y = RV.y0 + k * (M[1] * a + M[3] * b + M[5]); i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.closePath(); g.stroke(); g.setLineDash([]); g.lineWidth = 1; }
+  }
+  const top = Tw[1] + J.top[1];
+  $('rRd').textContent = `${vk} rest pose · ${(-top).toFixed(0)} cm drawn / ${DOC.stature_cm} cm · torso ${S.torso.toFixed(0)} · upper arm ${S.uarmL.toFixed(0)} · forearm ${S.farmL.toFixed(0)} · thigh ${S.thighL.toFixed(0)} · shin ${S.shinL.toFixed(0)} cm${S.fixes.length ? ' · rescaled to norm: ' + S.fixes.length : ''}`;
+}
+let EV = null, edrag = null;
+function drawEditor() {
+  const c = $('ec'); if (!c.getBoundingClientRect().width) return;
+  const [g, W, H] = fitCanvas(c), vk = $('rView').value, pid = cardsFor(vk)[restSel], p = DOC.P[pid];
+  g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
+  if (!p) return;
+  const im = partImg(p), q = Math.min((W - 20) / p.w, (H - 20) / p.h), ox = (W - p.w * q) / 2, oy = (H - p.h * q) / 2;
+  EV = { q, ox, oy, p };
+  g.fillStyle = '#1b1612'; for (let y = 0; y < H; y += 14) for (let x = (y / 14 % 2) * 14; x < W; x += 28) g.fillRect(x, y, 14, 14);
+  if (im.complete) g.drawImage(im, ox, oy, p.w * q, p.h * q);
+  g.strokeStyle = 'rgba(231,163,90,.95)'; g.lineWidth = 2; for (const b of p.brads || []) { g.beginPath(); g.arc(ox + b[0] * q, oy + b[1] * q, 6, 0, 7); g.stroke(); }
+  g.font = '600 11px JetBrains Mono, monospace';
+  for (const [nm] of SITES[kindOf(p.cls)]) {
+    const s = C.pt(p, nm), X = ox + s[0] * q, Y = oy + s[1] * q, cf = confOf(p, nm);
+    g.fillStyle = confCol(cf); g.beginPath(); g.arc(X, Y, nm === siteSel ? 9 : 7, 0, 7); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 1.5; g.stroke();
+    g.fillStyle = '#fff'; g.fillText(siteLabel(p, nm, vk), X + 11, Y + 4);
+  }
+  $('eRd').textContent = `${p.id} · ${p.cls}${p.side ? ' ' + p.side : ''} · ${p.nb || 0} brads${p.ppc ? ' · ' + p.ppc.toFixed(2) + ' px/cm' : ''}`;
+  const n = siteSel ? siteLabel(p, siteSel, vk) : null;
+  $('siteQ').innerHTML = n ? `Drag the <span style="color:var(--acc)">${esc(n)}</span> onto its brad<small>${esc(restSel)} · ${esc(p.label || p.id)} · now ${esc((p.src || {})[siteSel] || 'guessed')}</small>` : `Click a card on the figure or in the stack.<small>${esc(restSel || '')}</small>`;
+}
+$('rc').addEventListener('pointerdown', e => {
+  if (!RV || !RV.L) return; const r = $('rc').getBoundingClientRect(), x = (e.clientX - r.left - RV.x0) / RV.k, y = (e.clientY - r.top - RV.y0) / RV.k;
+  for (let i = RV.L.length - 1; i >= 0; i--) { const c = RV.L[i], M = c.M, det = M[0] * M[3] - M[1] * M[2], dx = x - M[4], dy = y - M[5], u = (M[3] * dx - M[2] * dy) / det, v = (-M[1] * dx + M[0] * dy) / det;
+    if (u >= 0 && v >= 0 && u < c.p.w && v < c.p.h) { restSel = c.slot; siteSel = null; renderRest(); return; } }
+});
+$('stack').addEventListener('click', e => {
+  const vk = $('rView').value, r = ensureRest(vk), b = e.target.closest('button');
+  if (b && b.dataset.far) { r.far[b.dataset.far] = !r.far[b.dataset.far]; saveRest(vk); renderRest(); return; }
+  if (b && (b.dataset.up || b.dataset.dn)) { const s = b.dataset.up || b.dataset.dn, i = r.order.indexOf(s), j = clamp(i + (b.dataset.up ? 1 : -1), 0, r.order.length - 1); r.order.splice(i, 1); r.order.splice(j, 0, s); saveRest(vk); renderRest(); return; }
+  const row = e.target.closest('.sr'); if (row) { restSel = row.dataset.slot; siteSel = null; renderRest(); }
+});
+$('rCard').onchange = () => { const vk = $('rView').value, r = ensureRest(vk); r.cards[restSel] = $('rCard').value; saveRest(vk); if (vk === 'front') rebuildSkeleton(); renderRest(); };
+$('rView').onchange = () => { siteSel = null; renderRest(); };
+$('rSites').onchange = drawRest;
+const ec = $('ec');
+ec.addEventListener('pointerdown', e => {
+  if (!EV) return; const r = ec.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, p = EV.p;
+  let best = null, bd = 14; for (const [nm] of SITES[kindOf(p.cls)]) { const s = C.pt(p, nm), d = Math.hypot(EV.ox + s[0] * EV.q - x, EV.oy + s[1] * EV.q - y); if (d < bd) { bd = d; best = nm; } }
+  if (!best && siteSel) best = siteSel;                       // captcha flow: a click anywhere places the asked site
+  if (!best) return; siteSel = best; edrag = { nm: best }; ec.setPointerCapture(e.pointerId); moveSite(e); drawEditor();
+});
+function moveSite(e) {
+  const r = ec.getBoundingClientRect(), p = EV.p; let q = [(e.clientX - r.left - EV.ox) / EV.q, (e.clientY - r.top - EV.oy) / EV.q];
+  if (!e.altKey) for (const b of p.brads || []) if (Math.hypot(b[0] - q[0], b[1] - q[1]) * EV.q < 10) { q = b.slice(); break; }
+  p.pts[edrag.nm] = [+q[0].toFixed(1), +q[1].toFixed(1)]; p.src[edrag.nm] = 'label'; edrag.moved = true;
+}
+ec.addEventListener('pointermove', e => { if (!edrag) return; moveSite(e); drawEditor(); drawRest(); });
+ec.addEventListener('pointerup', () => {
+  if (!edrag) return; const p = EV.p, nm = edrag.nm; edrag = null;
+  record({ t: 'site', part: p.id, point: nm, xy: p.pts[nm], view: $('rView').value, slot: restSel });
+  rebuildSkeleton(); renderRest(); toast('site saved: ' + nm);
+});
+$('sNext').onclick = () => {
+  const vk = $('rView').value, r = ensureRest(vk);
+  for (const s of r.order.slice().reverse()) { const p = DOC.P[cardsFor(vk)[s]]; if (!p) continue;
+    for (const [nm] of SITES[kindOf(p.cls)]) if (confOf(p, nm) < .8) { restSel = s; siteSel = nm; renderRest(); return; } }
+  toast('every site in this view is on a brad or set by hand');
+};
+$('sBrads').onclick = () => {
+  const vk = $('rView').value, r = ensureRest(vk); let n = 0;
+  for (const s of r.order) { const p = DOC.P[cardsFor(vk)[s]]; if (!p) continue;
+    for (const [nm] of SITES[kindOf(p.cls)]) if ((p.src || {})[nm] === 'brad') { p.src[nm] = 'label'; record({ t: 'site', part: p.id, point: nm, xy: C.pt(p, nm), view: vk, slot: s, accepted: 'brad' }); n++; } }
+  rebuildSkeleton(); renderRest(); toast(n + ' brad sites accepted');
+};
+$('sReset').onclick = async () => {
+  const vk = $('rView').value, pid = cardsFor(vk)[restSel], file = key.replace('/', '__');
+  const fresh = (await (await fetch('data/' + file + '.json')).json()).parts.find(p => p.id === pid);
+  if (fresh) { DOC.P[pid].pts = fresh.pts; DOC.P[pid].src = fresh.src; for (const nm in fresh.pts) record({ t: 'site', part: pid, point: nm, xy: fresh.pts[nm], view: vk, slot: restSel, reset: true }); }
+  rebuildSkeleton(); renderRest();
+};
+
+// ───────────────────────── 2. ATLAS ─────────────────────────
 function renderAtlas() {
-  const L = POS.targets.slice();
-  const so = $('sort').value;
+  const L = POS.targets.slice(), so = $('sort').value;
   if (so === 'asc') L.sort((a, b) => (a.score ?? -1) - (b.score ?? -1)); else if (so === 'desc') L.sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
-  $('grid').innerHTML = L.map(t => `<div class="at" data-id="${esc(t.id)}" style="border-color:${SCOL(t.score)}">
+  $('grid').innerHTML = L.map(t => { const s0 = (t.solves || [])[0]; return `<div class="at" data-id="${esc(t.id)}" style="border-color:${SCOL(t.score)}">
     <div class="im"><img loading="lazy" src="../${esc(t.img)}" alt=""><div class="tint" style="background:${SCOL(t.score)}"></div><span class="sc" style="background:${SCOL(t.score)}">${t.score == null ? '—' : t.score.toFixed(2)}</span></div>
-    <div class="lb">${esc(shortName(t))}</div><div class="wy">${esc(t.score == null ? (t.fail || 'unsolved') : (t.solves[0].view + ' · IoU ' + t.solves[0].iou.toFixed(2) + ' · ' + (t.solves[0].mean_err_cm ?? '–') + ' cm · ' + (t.why || '')))}</div></div>`).join('');
+    <div class="lb">${esc(shortName(t))}</div><div class="wy">${esc(t.score == null ? (t.fail || 'unsolved') : (s0.view + ' · IoU ' + s0.iou.toFixed(2) + ' · ' + (s0.mean_err_cm ?? '–') + ' cm · ' + (t.why || '')))}</div></div>`; }).join('');
   const sc = L.map(t => t.score).filter(v => v != null), bins = [0, .2, .3, .4, .5, .6, .7, .8, 1.01], h = bins.slice(0, -1).map((b, i) => sc.filter(v => v >= b && v < bins[i + 1]).length), mx = Math.max(1, ...h);
   $('hist').innerHTML = h.map((n, i) => `<div style="height:${4 + 40 * n / mx}px;background:${SCOL((bins[i] + bins[i + 1]) / 2)}" title="${bins[i]}–${bins[i + 1]}: ${n}"><span>${bins[i]}</span></div>`).join('');
   const med = sc.slice().sort((a, b) => a - b)[sc.length >> 1];
-  $('atlasStat').textContent = `${L.length} poses · ${sc.length} solved · median score ${med != null ? med.toFixed(2) : '—'} · ${L.length - sc.length} unsolved`;
+  $('atlasStat').textContent = `${L.length} poses · ${sc.length} solved · median score ${med != null ? med.toFixed(2) : '—'} · ${L.filter(t => t.markers_use).length} solved against markers`;
 }
 $('sort').onchange = renderAtlas;
 $('grid').addEventListener('click', e => { const d = e.target.closest('.at'); if (d) openTarget(POS.targets.find(t => t.id === d.dataset.id)); });
 $('char').onchange = () => loadChar($('char').value);
 
-// ───────────────────────── target ─────────────────────────
-function maskOf(im) {
-  const W = im.naturalWidth, H = im.naturalHeight, c = document.createElement('canvas'); c.width = W; c.height = H;
-  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0);
-  const d = g.getImageData(0, 0, W, H).data, m = new Uint8Array(W * H);
-  for (let i = 0; i < W * H; i++) m[i] = d[i * 4 + 3] > 100 ? 1 : 0;
-  // keep the largest island (labels and fx fragments drop out), as solve.py
-  const lab = new Int32Array(W * H); let best = 0, bestN = 0, id = 0; const st = new Int32Array(W * H);
-  for (let i = 0; i < W * H; i++) if (m[i] && !lab[i]) { id++; let sp = 0, n = 0; st[sp++] = i; lab[i] = id;
-    while (sp) { const j = st[--sp]; n++; const x = j % W, y = (j / W) | 0;
-      if (x > 0 && m[j - 1] && !lab[j - 1]) { lab[j - 1] = id; st[sp++] = j - 1; } if (x < W - 1 && m[j + 1] && !lab[j + 1]) { lab[j + 1] = id; st[sp++] = j + 1; }
-      if (y > 0 && m[j - W] && !lab[j - W]) { lab[j - W] = id; st[sp++] = j - W; } if (y < H - 1 && m[j + W] && !lab[j + W]) { lab[j + W] = id; st[sp++] = j + W; } }
-    if (n > bestN) { bestN = n; best = id; } }
-  for (let i = 0; i < W * H; i++) m[i] = lab[i] === best ? 1 : 0;
-  return { m, W, H };
-}
+// ───────────────────────── 3. POSE: target + markers ─────────────────────────
 async function openTarget(rec) {
   T = rec; jointSel = null;
   const im = img('../' + rec.img);
   if (!im.complete || !im.naturalWidth) await new Promise(r => { im.addEventListener('load', r, { once: true }); im.addEventListener('error', r, { once: true }); });
-  const mk = maskOf(im);
-  tgt = { id: rec.id, img: im, brads: rec.brads.map(b => b.slice()), cx: rec.cx, floor: rec.floor, mask: mk.m, W: mk.W, H: mk.H, label: rec.label };
+  const mk = RigMoveNet.maskOf(im);
+  const markers = JSON.parse(JSON.stringify(rec.markers || {}));
+  for (const a of session.answers) if (a.t === 'marker' && a.part === rec.id) { if (a.v === 'none') delete markers[a.point]; else markers[a.point] = [a.xy[0], a.xy[1], 2, 'user', 1]; }
+  tgt = { id: rec.id, img: im, brads: rec.brads.map(b => b.slice()), cx: rec.cx, floor: rec.floor, mask: mk.m, W: mk.W, H: mk.H, label: rec.label, markers };
   alts = (rec.solves || []).map(s => fromSolve(s));
   hist = []; histOn = -1;
-  if (alts.length) pick(0, 'batch solve'); else { psi = 0; pr = C.problem(S, tgt, 0, rec.scale_prior.px_per_cm, rec.scale_prior.sigma_log, { sandbox: $('sandbox').checked }); z = seedZ(); push('no batch solve'); }
+  if (alts.length) pick(0, 'batch solve'); else { psi = 0; pr = C.problem(S, tgt, 0, rec.scale_prior.px_per_cm, rec.scale_prior.sigma_log, { sandbox: $('sandbox').checked }); z = seedZ(); zP = z; measure(); push('no batch solve'); }
   $('tTitle').textContent = shortName(rec);
-  setLevel('pose');
+  setLevel('pose'); renderMk();
 }
+const markersUse = () => Object.values(tgt.markers || {}).filter(m => m && m[2] > .35).length >= 6;
 function fromSolve(s) {
   const zz = C.fromParams(s.params, s.scale_px_per_cm, T.scale_prior.px_per_cm);
-  return { z: zz, psi: s.psi, match: s.match.map(([j, bi]) => [bi, C.JOINTS.indexOf(j)]), view: s.view, labels: s.labels, score: s.score, iou: s.iou, err: s.err_cm };
+  let zp = Float64Array.from(zz);
+  if (s.pose && s.pose.params) { zp = C.fromParams(s.pose.params, s.scale_px_per_cm, T.scale_prior.px_per_cm); }
+  else if (s.pose && s.pose.proportions) for (const n of C.KN) zp[C.PI[n]] = Math.log(s.pose.proportions[n.slice(1)] || 1);
+  return { z: zz, zP: zp, psi: s.psi, match: (s.match || []).map(([j, bi]) => [bi, C.JOINTS.indexOf(j)]), view: s.view, labels: s.labels, score: s.score, iou: s.iou, err: s.err_cm, markers: s.markers || null, pose: s.pose, seed: s.seed };
 }
 function seedZ() { const zz = new Float64Array(C.NP + 1); zz[1] = -(S.thighL + S.shinL + S.heel[1] + 1); return zz; }
 function pick(i, note) {
   const a = alts[i]; if (!a) return;
-  altOn = i; psi = a.psi; z = Float64Array.from(a.z);
+  altOn = i; psi = a.psi; z = Float64Array.from(a.z); zP = Float64Array.from(a.zP || a.z);
+  if (a.markers) tgt.markers = JSON.parse(JSON.stringify(a.markers));      // an L/R-swapped alternative brings its markers
   pr = C.problem(S, tgt, psi, T.scale_prior.px_per_cm, T.scale_prior.sigma_log, { sandbox: $('sandbox').checked });
   pr.match = a.match.map(m => m.slice());
   measure(); push(note || ('alternative ' + (i + 1)));
-  renderAlts();
+  renderAlts(); renderMk();
 }
-
-// IoU: the rig cards rendered in target px against the target's silhouette
 const offc = document.createElement('canvas'), offg = offc.getContext('2d', { willReadFrequently: true });
 function rigAlpha(zz, ps) {
   offc.width = tgt.W; offc.height = tgt.H; offg.setTransform(1, 0, 0, 1, 0, 0); offg.clearRect(0, 0, tgt.W, tgt.H);
-  const s = T.scale_prior.px_per_cm * Math.exp(zz[C.NP]), J = C.fk(S, zz);
-  for (const c of C.placeCards(DOC, J, ps, zz[0], zz[1], cardsFor(C.viewKey(ps)))) {
+  const s = T.scale_prior.px_per_cm * Math.exp(zz[C.NP]), J = C.fk(S, zz), vk = C.viewKey(ps);
+  for (const c of C.placeCards(DOC, J, ps, zz[0], zz[1], cardsFor(vk), null, restFor(vk))) {
     const im = partImg(c.p); if (!im.complete || !im.naturalWidth) continue; const M = c.M;
     offg.setTransform(s * M[0], s * M[1], s * M[2], s * M[3], s * M[4] + tgt.cx, s * M[5] + tgt.floor); offg.drawImage(im, 0, 0);
   }
@@ -317,19 +556,31 @@ function rigAlpha(zz, ps) {
   return U ? I / U : 0;
 }
 let SC = null;
+function errs(zz) { return markersUse() ? C.markerErrors(pr, zz) : C.errors(pr, zz); }
 function measure() {
-  const e = C.errors(pr, z), iou = rigAlpha(z, psi);
-  SC = Object.assign(C.scoreOf(iou, e), { iou, e });
-  $('score').innerHTML = `<span style="color:${SCOL(SC.score)}">score ${SC.score.toFixed(2)}</span><span>IoU ${iou.toFixed(2)}</span><span>mean ${SC.mean.toFixed(1)} cm</span>
-    <span style="color:${SC.flagged.length ? 'var(--bad)' : 'var(--ok)'}">${SC.flagged.length ? '> 4 cm: ' + SC.flagged.map(j => C.JOINT_WORD[j]).join(', ') : 'no joint over 4 cm'}</span>
-    <span class="hint">no brad: ${SC.unmatched.map(j => C.JOINT_WORD[j]).join(', ') || '—'}</span><span class="hint">${C.viewKey(psi)}${psi && Math.abs(psi) !== 180 ? (psi > 0 ? ' facing right' : ' facing left') : ''} · ${(T.scale_prior.px_per_cm * Math.exp(z[C.NP])).toFixed(2)} px/cm</span>`;
+  const names = markersUse() ? C.MARKERS.map(m => m[0]) : C.JOINTS;
+  const e = errs(z), iou = rigAlpha(z, psi), eP = errs(zP);
+  const pv = Object.values(eP);
+  SC = Object.assign(C.scoreOf(iou, e, { names }), { iou, e, poseMean: pv.length ? pv.reduce((a, b) => a + b, 0) / pv.length : null });
+  const km = C.KN.reduce((a, n) => a + zP[C.PI[n]], 0) / C.KN.length;
+  const k = C.KN.map(n => [n.slice(1), Math.exp(zP[C.PI[n]] - km)]).filter(([, v]) => v < .85 || v > 1.18);
+  $('score').innerHTML = `<span style="color:${SCOL(SC.score)}">score ${SC.score.toFixed(2)}</span><span>IoU ${iou.toFixed(2)}</span><span>rig as built: mean ${SC.mean.toFixed(1)} cm</span>
+    <span>pose read: ${SC.poseMean != null ? SC.poseMean.toFixed(1) + ' cm' : '—'}</span>
+    <span style="color:${SC.flagged.length ? 'var(--bad)' : 'var(--ok)'}">${SC.flagged.length ? '> 4 cm: ' + SC.flagged.join(', ') : 'no joint over 4 cm'}</span>
+    ${k.length ? `<span class="hint" title="drawing's proportions vs the rig (the pose is read with these; the keyframe keeps the angles on the rig as built)">drawing vs rig: ${k.map(([n, v]) => n + ' ×' + v.toFixed(2)).join(' ')}</span>` : ''}
+    <span class="hint">against ${markersUse() ? 'labelled markers' : 'brads (no markers)'} · ${C.viewKey(psi)}${psi && Math.abs(psi) !== 180 ? (psi > 0 ? ' facing right' : ' facing left') : ''}</span>`;
 }
-
-// ───────────────────────── solving ─────────────────────────
 function reSolve(iters = 40, note) {
-  pr.sandbox = $('sandbox').checked; pr.setStretch(false);
-  for (const n of C.KN) z[C.PI[n]] = 0;
-  z = C.solve(pr, z, 'B', iters).z;
+  pr.sandbox = $('sandbox').checked;
+  if (markersUse()) {
+    pr.setStretch(true);
+    zP = C.solve(pr, zP || z, 'M', iters).z;
+    pr.setStretch(false);
+    z = C.rigidify(pr, zP);
+  } else {
+    pr.setStretch(false); for (const n of C.KN) z[C.PI[n]] = 0;
+    z = C.solve(pr, z, 'B', iters).z; zP = Float64Array.from(z);
+  }
   if (note !== false) { measure(); push(note || 're-solve'); }
 }
 const SEEDS = { stand: {}, step: { hpLf: 25, hpRf: -15, knR: 15, shLf: -15, shRf: 15 }, crouch: { hpLf: 105, hpRf: 105, knL: 125, knR: 125, tf: 35, anL: 20, anR: 20, oy: 40, shLf: 40, shRf: 40 },
@@ -344,17 +595,15 @@ function viewsFor(t) {
   return [0, 90, -90, 45, -45, 180];
 }
 async function autoSolve() {
-  $('busy').style.display = 'grid';
-  await new Promise(r => setTimeout(r, 30));
+  $('busy').style.display = 'grid'; await new Promise(r => setTimeout(r, 30));
   const s0 = T.scale_prior.px_per_cm, sig = T.scale_prior.sigma_log, bb = T.bbox, lying = (bb[2] - bb[0]) > 1.6 * (bb[3] - bb[1]);
-  const seeds = lying ? ['lie'] : ['stand', 'step', 'crouch', 'kneel', 'sit', 'arms_up', 'arms_out'];
-  const cands = [];
+  const seeds = lying ? ['lie'] : ['stand', 'step', 'crouch', 'kneel', 'sit', 'arms_up', 'arms_out'], useM = markersUse(), cands = [];
   for (const ps of viewsFor(T)) {
     const p = C.problem(S, tgt, ps, s0, sig, { sandbox: $('sandbox').checked }); p.setStretch(true);
     for (const sd of seeds) {
       const zz = seedZ(); for (const k in SEEDS[sd]) zz[C.PI[k]] = SEEDS[sd][k] + (k === 'oy' ? zz[1] : 0);
       if (sd === 'lie') { if (C.viewKey(ps) === 'front' || C.viewKey(ps) === 'back') { zz[C.PI.pitch] = 0; zz[C.PI.roll] = 85; } zz[1] = -12; }
-      const r = C.solve(p, zz, 'A', 30); cands.push({ cost: r.cost, ps, sd, z: r.z, p });
+      const r = C.solve(p, zz, useM ? 'M' : 'A', 30); cands.push({ cost: r.cost, ps, sd, z: r.z, p });
       $('busy').textContent = `solving… ${C.viewKey(ps)} ${ps} · ${sd}`; await new Promise(r_ => setTimeout(r_, 0));
     }
   }
@@ -362,44 +611,62 @@ async function autoSolve() {
   const fin = [];
   for (const c of cands.slice(0, 6)) {
     let zz = c.z; const p = c.p;
-    for (let it = 0; it < 2; it++) { C.doMatch(p, zz, it ? 8 : 12); zz = C.solve(p, zz, 'B', 40).z; }
-    const match = p.match.map(m => m.slice());
-    p.setStretch(false); for (const n of C.KN) zz[C.PI[n]] = 0; zz = C.solve(p, zz, 'B', 30).z; p.setStretch(true);
-    pr = p; psi = c.ps; const e = C.errors(p, zz), iou = rigAlpha(zz, c.ps), sc = C.scoreOf(iou, e);
-    fin.push({ z: zz, psi: c.ps, match, view: C.viewKey(c.ps), score: sc.score, iou, err: e, labels: { seed: c.sd } });
-    $('busy').textContent = `matching… ${fin.length}/6`; await new Promise(r_ => setTimeout(r_, 0));
+    if (useM) zz = C.solve(p, zz, 'M', 60).z;
+    else for (let it = 0; it < 2; it++) { C.doMatch(p, zz, it ? 8 : 12); zz = C.solve(p, zz, 'B', 40).z; }
+    pr = p; psi = c.ps; const zr = C.rigidify(p, zz), e = useM ? C.markerErrors(p, zr) : C.errors(p, zr), iou = rigAlpha(zr, c.ps);
+    fin.push({ z: zr, zP: zz, psi: c.ps, match: (p.match || []).map(m => m.slice()), view: C.viewKey(c.ps), score: C.scoreOf(iou, e, { names: useM ? C.MARKERS.map(m => m[0]) : C.JOINTS }).score, iou, err: e, labels: { seed: c.sd } });
+    $('busy').textContent = `refining… ${fin.length}/6`; await new Promise(r_ => setTimeout(r_, 0));
   }
-  fin.sort((a, b) => b.score - a.score);
-  alts = fin.slice(0, 4);
-  $('busy').style.display = 'none';
-  pick(0, 'auto-solve');
+  fin.sort((a, b) => b.score - a.score); alts = fin.slice(0, 4);
+  $('busy').style.display = 'none'; pick(0, 'auto-solve');
 }
 $('bSolve').onclick = () => { reSolve(50); redraw(); };
 $('bAuto').onclick = () => autoSolve();
-$('bRematch').onclick = () => { C.doMatch(pr, z, 9); reSolve(50, 're-match'); redraw(); };
-$('bReset').onclick = () => { if (!T) return; tgt.brads = T.brads.map(b => b.slice()); alts = (T.solves || []).map(fromSolve); pick(0, 'batch solve'); redraw(); };
-$('sandbox').onchange = () => { if (pr) { pr.sandbox = $('sandbox').checked; pr.setStretch(false); reSolve(40, $('sandbox').checked ? 'sandbox on' : 'limits back'); redraw(); } };
-$('useBuilder').onchange = () => { rebuildSkeleton(); if (pr) { pr.S = S; reSolve(40, 'builder rig'); } redraw(); };
+$('bReset').onclick = () => { if (T) openTarget(T); };
+$('sandbox').onchange = () => { if (pr) { reSolve(40, $('sandbox').checked ? 'sandbox on' : 'limits back'); redraw(); } };
+$('useBuilder').onchange = () => { rebuildSkeleton(); if (pr) reSolve(40, 'builder rig'); redraw(); };
+$('drawProp').onchange = () => redraw();
+$('bMove').onclick = async () => {
+  $('busy').style.display = 'grid'; $('busy').textContent = 'MoveNet…';
+  try {
+    const bb = T.bbox, pad = 6, crop = [Math.max(0, bb[0] - pad), Math.max(0, bb[1] - pad), Math.min(tgt.W, bb[2] + pad) - Math.max(0, bb[0] - pad), Math.min(tgt.H, bb[3] + pad) - Math.max(0, bb[1] - pad)];
+    const a = await RigMoveNet.detect(tgt.img, '#8a8a8a', crop), b = await RigMoveNet.detect(tgt.img, '#e8e2d8', crop);
+    const cf = k => k.reduce((s, p) => s + p[2], 0) / k.length, kps = cf(a) >= cf(b) ? a : b;
+    const user = Object.fromEntries(Object.entries(tgt.markers).filter(([, m]) => m && m[3] === 'user'));
+    tgt.markers = Object.assign(C.prefillMarkers(kps, tgt.brads, tgt.mask, tgt.W, tgt.H, T.bbox), user);
+    toast(`MoveNet: mean confidence ${cf(kps).toFixed(2)}`);
+  } catch (e) { toast('MoveNet failed: ' + e.message); console.warn(e); }
+  $('busy').style.display = 'none'; reSolve(50, 'MoveNet markers'); renderMk(); redraw();
+};
+$('bConfirm').onclick = () => { for (const n in tgt.markers) { const m = tgt.markers[n]; if (!m) continue; record({ t: 'marker', part: T.id, point: n, xy: [m[0], m[1]], src: m[3], conf: m[4] }); m[2] = 2; m[3] = 'user'; } renderMk(); measure(); toast('markers confirmed and saved'); };
 $('bExport').onclick = () => {
   const o = { character: key, target: T.id, view: C.viewKey(psi), psi, params: C.toParams(z), scale_px_per_cm: +(T.scale_prior.px_per_cm * Math.exp(z[C.NP])).toFixed(4),
-    match: pr.match.map(([b, j]) => [C.JOINTS[j], tgt.brads[b]]), score: SC && { score: +SC.score.toFixed(3), iou: +SC.iou.toFixed(3), err_cm: Object.fromEntries(Object.entries(SC.e).map(([k, v]) => [k, +v.toFixed(2)])) },
+    markers: tgt.markers, score: SC && { score: +SC.score.toFixed(3), iou: +SC.iou.toFixed(3), err_cm: Object.fromEntries(Object.entries(SC.e).map(([k, v]) => [k, +v.toFixed(2)])) },
+    drawing_vs_rig: Object.fromEntries(C.KN.map(n => [n.slice(1), +Math.exp(zP[C.PI[n]]).toFixed(3)])),
     skeleton: 'shots/rig/pose-core.js (body frame X = actor left, Y down, Z forward; degrees)' };
   const b = new Blob([JSON.stringify(o, null, 1)], { type: 'application/json' }), a = document.createElement('a');
   a.href = URL.createObjectURL(b); a.download = 'pose.' + T.id.replace(/[\/]/g, '__') + '.json'; a.click(); toast('keyframe downloaded');
 };
+let placing = null;
+function renderMk() {
+  if (!tgt) return;
+  $('mkList').innerHTML = C.MARKERS.map(([n]) => { const m = tgt.markers[n], side = /L$/.test(n) ? 'L' : /R$/.test(n) ? 'R' : '';
+    return `<span class="mk ${side} ${m ? '' : 'miss'} ${m && m[3] === 'user' ? 'user' : ''} ${placing === n ? 'arm' : ''}" data-mk="${n}" title="${m ? esc(m[3] + ' · weight ' + (+m[2]).toFixed(2) + (m[4] != null ? ' · conf ' + m[4] : '')) : 'missing: click, then click the drawing'}">${n}</span>`; }).join('');
+}
+$('mkList').addEventListener('click', e => { const s = e.target.closest('[data-mk]'); if (!s) return; placing = placing === s.dataset.mk ? null : s.dataset.mk; renderMk(); drawTarget(); });
 
 // ───────────────────────── history ─────────────────────────
 function push(note) {
   hist = hist.slice(0, histOn + 1);
-  hist.push({ z: Float64Array.from(z), psi, match: pr.match.map(m => m.slice()), brads: tgt.brads.map(b => b.slice()), note, score: SC ? SC.score : null });
+  hist.push({ z: Float64Array.from(z), zP: Float64Array.from(zP || z), psi, match: pr.match.map(m => m.slice()), markers: JSON.parse(JSON.stringify(tgt.markers)), note, score: SC ? SC.score : null });
   if (hist.length > 40) hist.shift();
   histOn = hist.length - 1; renderHist();
 }
 function restore(i) {
   const h = hist[i]; if (!h) return; histOn = i;
-  z = Float64Array.from(h.z); psi = h.psi; tgt.brads = h.brads.map(b => b.slice());
+  z = Float64Array.from(h.z); zP = Float64Array.from(h.zP); psi = h.psi; tgt.markers = JSON.parse(JSON.stringify(h.markers));
   pr = C.problem(S, tgt, psi, T.scale_prior.px_per_cm, T.scale_prior.sigma_log, { sandbox: $('sandbox').checked }); pr.match = h.match.map(m => m.slice());
-  measure(); renderHist(); redraw();
+  measure(); renderHist(); renderMk(); redraw();
 }
 function renderHist() {
   $('history').innerHTML = hist.map((h, i) => `<canvas data-i="${i}" width="64" height="84" class="${i === histOn ? 'on' : ''}" title="${esc(h.note)}${h.score != null ? ' · ' + h.score.toFixed(2) : ''}"></canvas>`).join('');
@@ -407,22 +674,21 @@ function renderHist() {
 }
 $('history').addEventListener('click', e => { const c = e.target.closest('canvas'); if (c) restore(+c.dataset.i); });
 window.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && level !== 'atlas') { e.preventDefault(); restore(Math.max(0, histOn - 1)); }
-  if (e.key === 'Escape') setLevel(level === 'joint' ? 'pose' : 'atlas');
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && level === 'pose') { e.preventDefault(); restore(Math.max(0, histOn - 1)); }
+  if (e.key === 'Escape') { if (placing) { placing = null; renderMk(); } else setLevel(level === 'joint' ? 'pose' : 'atlas'); }
 });
 
 // ───────────────────────── drawing helpers ─────────────────────────
-function fitCanvas(c) { const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); return [g, r.width, r.height, dpr]; }
-// draw the rig's cards: V = {k: screen px per cm, x0, y0: screen of world (0,0)}
-function drawCards(g, dpr, V, J, ps, ox, oy, Tw, alpha = 1, cards) {
-  const L = C.placeCards(DOC, J, ps, ox, oy, cards || cardsFor(C.viewKey(ps)), Tw);
+function fitCanvas(c) { const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1; c.width = Math.max(1, Math.round(r.width * dpr)); c.height = Math.max(1, Math.round(r.height * dpr)); const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); return [g, r.width, r.height, dpr]; }
+function drawCards(g, dpr, V, J, ps, ox, oy, Tw, alpha = 1, cards, rest) {
+  const vk = C.viewKey(ps);
+  const L = C.placeCards(DOC, J, ps, ox, oy, cards || cardsFor(vk), Tw, rest === undefined ? restFor(vk) : rest);
   g.save(); g.globalAlpha = alpha;
   for (const c of L) {
     const im = partImg(c.p); if (!im.complete || !im.naturalWidth) continue; const M = c.M, k = V.k;
     g.setTransform(dpr * k * M[0], dpr * k * M[1], dpr * k * M[2], dpr * k * M[3], dpr * (V.x0 + k * M[4]), dpr * (V.y0 + k * M[5]));
     if (c.far) g.filter = 'brightness(0.6)';
-    g.drawImage(im, 0, 0);
-    g.filter = 'none';
+    g.drawImage(im, 0, 0); g.filter = 'none';
   }
   g.restore(); g.setTransform(dpr, 0, 0, dpr, 0, 0);
   return L;
@@ -442,79 +708,75 @@ function sticksThumb(g, zz, ps, W, H, sc) {
   sticks(g, V, J, ps, 0, -low, null, '#c79a62', 1.2);
   if (sc != null) { g.fillStyle = SCOL(sc); g.fillRect(0, H - 4, W * clamp(sc, 0, 1), 4); }
 }
-function groundT(J) {   // drop the figure onto the floor: the lowest body point touches Y = 0
-  let m = -1e9; for (const n in J) if (n !== '_F') m = Math.max(m, J[n][1]);
-  return [0, -m, 0];
-}
+function groundT(J) { let m = -1e9; for (const n in J) if (n !== '_F') m = Math.max(m, J[n][1]); return [0, -m, 0]; }
 
 // ───────────────────────── target pane ─────────────────────────
 let TV = null, tdrag = null;
+const showZ = () => $('drawProp').checked ? zP : z;
 function drawTarget() {
   const c = $('tc'), [g, W, H, dpr] = fitCanvas(c);
   g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
   if (!tgt) return;
-  const s = T.scale_prior.px_per_cm * Math.exp(z[C.NP]);
-  // world cm -> screen: image px * q, world = (px - cx)/s
+  const zz = showZ(), s = T.scale_prior.px_per_cm * Math.exp(zz[C.NP]);
   const q = Math.min(W / tgt.W, H / tgt.H) * .9, ox = (W - tgt.W * q) / 2, oy = (H - tgt.H * q) / 2;
   TV = { q, ox, oy, s, k: q * s, x0: ox + q * tgt.cx, y0: oy + q * tgt.floor };
-  // floor
   g.strokeStyle = '#3a2e24'; g.beginPath(); g.moveTo(0, TV.y0 + .5); g.lineTo(W, TV.y0 + .5); g.stroke();
   g.globalAlpha = +$('ghost').value; g.drawImage(tgt.img, ox, oy, tgt.W * q, tgt.H * q); g.globalAlpha = 1;
-  const J = C.fk(S, z);
-  if ($('showRig').checked) drawCards(g, dpr, TV, J, psi, z[0], z[1], null, .78);
-  // matches
-  const jp = C.jointsPx(pr, z).map(p => [ox + p[0] * q, oy + p[1] * q]);
-  const e = C.errors(pr, z), matched = new Map(pr.match.map(([b, j]) => [b, j]));
-  for (const [b, j] of pr.match) { const B = tgt.brads[b], P = jp[j]; g.strokeStyle = e[C.JOINTS[j]] > 4 ? '#ff6b5a' : '#7fd38a'; g.lineWidth = 2; g.beginPath(); g.moveTo(ox + B[0] * q, oy + B[1] * q); g.lineTo(P[0], P[1]); g.stroke(); }
-  tgt.brads.forEach((B, i) => { g.strokeStyle = matched.has(i) ? '#5fd0ff' : 'rgba(95,208,255,.45)'; g.lineWidth = 2; g.beginPath(); g.arc(ox + B[0] * q, oy + B[1] * q, Math.max(5, B[2] * q), 0, 7); g.stroke(); });
+  const J = C.fk(S, zz);
+  if ($('showRig').checked) drawCards(g, dpr, TV, J, psi, zz[0], zz[1], null, .78);
+  g.strokeStyle = 'rgba(231,163,90,.45)'; g.lineWidth = 1.5; for (const b of tgt.brads) { g.beginPath(); g.arc(ox + b[0] * q, oy + b[1] * q, Math.max(4, b[2] * q), 0, 7); g.stroke(); }
+  const mp = C.markerPx(pr, zz), e = markersUse() ? C.markerErrors(pr, zz) : {};
   g.font = '600 10px JetBrains Mono, monospace';
-  jp.forEach((P, j) => { const n = C.JOINTS[j]; g.fillStyle = n in e ? (e[n] > 4 ? '#ff6b5a' : '#7fd38a') : '#ff6b5a'; g.beginPath(); g.arc(P[0], P[1], n === jointSel ? 6 : 4, 0, 7); g.fill();
-    if (n in e && e[n] > 4 || n === jointSel) { g.fillStyle = '#fff'; g.fillText(C.JOINT_WORD[n] + (n in e ? ' ' + e[n].toFixed(1) + ' cm' : ''), P[0] + 7, P[1] - 5); } });
-  $('tLbl').textContent = `target · ${C.viewKey(psi)}${psi && Math.abs(psi) !== 180 ? (psi > 0 ? ' →' : ' ←') : ''}`;
-  $('tRd').textContent = `${tgt.brads.length} brads (${tgt.brads.filter(b => /brass/.test(b[3])).length} brass) · scale prior ${T.scale_prior.px_per_cm.toFixed(2)} px/cm (${T.scale_prior.why})`;
+  for (const [n] of C.MARKERS) { const m = tgt.markers[n], r = mp[n], R = [ox + r[0] * q, oy + r[1] * q];
+    if (m) { const M = [ox + m[0] * q, oy + m[1] * q]; g.strokeStyle = (e[n] || 0) > 4 ? '#ff6b5a' : 'rgba(127,211,138,.85)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(M[0], M[1]); g.lineTo(R[0], R[1]); g.stroke(); }
+    g.fillStyle = '#ff6b5a'; g.beginPath(); g.arc(R[0], R[1], 3, 0, 7); g.fill(); }
+  for (const [n] of C.MARKERS) { const m = tgt.markers[n]; if (!m) continue; const X = ox + m[0] * q, Y = oy + m[1] * q, col = MCOL(n);
+    g.lineWidth = 2; g.strokeStyle = col; g.fillStyle = col;
+    g.beginPath(); g.arc(X, Y, m[3] === 'user' ? 6 : 5, 0, 7); if (m[2] > .35) g.fill(); g.stroke();
+    if (m[3] === 'user') { g.strokeStyle = '#000'; g.lineWidth = 1; g.stroke(); }
+    g.fillStyle = col; g.fillText(n + ((e[n] || 0) > 4 ? ' ' + e[n].toFixed(0) + 'cm' : ''), X + 8, Y - 5); }
+  $('tLbl').textContent = `target · ${C.viewKey(psi)}${psi && Math.abs(psi) !== 180 ? (psi > 0 ? ' →' : ' ←') : ''} · ${$('drawProp').checked ? "drawing's proportions" : 'rig as built'}`;
+  $('tRd').textContent = `${Object.keys(tgt.markers).length} markers · ${tgt.brads.length} brads · scale ${s.toFixed(2)} px/cm (${T.scale_prior.why})${placing ? ' · placing ' + placing + ': click the drawing' : ''}`;
 }
 function tHit(x, y) {
-  const q = TV.q; let bi = -1, bd = 12;
-  tgt.brads.forEach((B, i) => { const d = Math.hypot(TV.ox + B[0] * q - x, TV.oy + B[1] * q - y); if (d < Math.max(bd, B[2] * q + 3) && d < bd + 6) { bd = d; bi = i; } });
-  const jp = C.jointsPx(pr, z); let ji = -1, jd = 10;
-  jp.forEach((P, j) => { const d = Math.hypot(TV.ox + P[0] * q - x, TV.oy + P[1] * q - y); if (d < jd) { jd = d; ji = j; } });
-  return { bi, ji };
+  let mi = null, md = 11; for (const n in tgt.markers) { const m = tgt.markers[n]; if (!m) continue; const d = Math.hypot(TV.ox + m[0] * TV.q - x, TV.oy + m[1] * TV.q - y); if (d < md) { md = d; mi = n; } }
+  const mp = C.markerPx(pr, z); let ji = null, jd = 8;
+  for (const [n, j] of C.MARKERS) { const r = mp[n], d = Math.hypot(TV.ox + r[0] * TV.q - x, TV.oy + r[1] * TV.q - y); if (d < jd && C.JOINTS.includes(j)) { jd = d; ji = j; } }
+  return { mi, ji };
 }
 const tc = $('tc');
+const symAxis = () => { const a = tgt.markers.neck, b = tgt.markers.groin; return a && b ? (a[0] + b[0]) / 2 : a ? a[0] : b ? b[0] : tgt.cx; };
 tc.addEventListener('pointerdown', e => {
-  if (!tgt) return; const r = tc.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, h = tHit(x, y);
-  if (h.bi >= 0 && e.shiftKey) { dropBrad(h.bi); return; }
-  if (h.bi >= 0) { tdrag = { bi: h.bi, moved: false, t0: performance.now() }; tc.setPointerCapture(e.pointerId); return; }
-  if (h.ji >= 0) { openJoint(C.JOINTS[h.ji]); return; }
+  if (!tgt) return; const r = tc.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  if (placing) { tgt.markers[placing] = [(x - TV.ox) / TV.q, (y - TV.oy) / TV.q, 2, 'user', 1]; record({ t: 'marker', part: T.id, point: placing, xy: tgt.markers[placing].slice(0, 2), placed: true }); placing = null; reSolve(50, 'placed a marker'); renderMk(); redraw(); return; }
+  const h = tHit(x, y);
+  if (h.mi && e.shiftKey) { delete tgt.markers[h.mi]; record({ t: 'marker', part: T.id, point: h.mi, v: 'none' }); reSolve(40, 'removed ' + h.mi); renderMk(); redraw(); return; }
+  if (h.mi) { tdrag = { n: h.mi, moved: false, ax: symAxis() }; tc.setPointerCapture(e.pointerId); return; }
+  if (h.ji) { openJoint(h.ji); return; }
 });
 tc.addEventListener('pointermove', e => {
-  if (!tdrag) return; const r = tc.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-  const B = tgt.brads[tdrag.bi]; B[0] = (x - TV.ox) / TV.q; B[1] = (y - TV.oy) / TV.q; B[3] = 'hand'; tdrag.moved = true;
-  if (performance.now() - (tdrag.last || 0) > 40) { tdrag.last = performance.now(); reSolve(6, false); }
+  if (!tdrag) return; const r = tc.getBoundingClientRect(), x = (e.clientX - r.left - TV.ox) / TV.q, y = (e.clientY - r.top - TV.oy) / TV.q;
+  tgt.markers[tdrag.n] = [x, y, 2, 'user', 1]; tdrag.moved = true;
+  const tw = C.MIRROR_M(tdrag.n);
+  if ($('sym').checked && tw !== tdrag.n) { tgt.markers[tw] = [2 * tdrag.ax - x, y, 2, 'user', 1]; tdrag.twin = tw; }
+  if (performance.now() - (tdrag.last || 0) > 45) { tdrag.last = performance.now(); reSolve(6, false); }
   drawTarget(); drawViews();
 });
-tc.addEventListener('pointerup', e => {
-  if (!tdrag) return; const d = tdrag; tdrag = null;
-  if (!d.moved) return;
-  // dropped on a rig joint: re-assign the brad to that joint
-  const r = tc.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, jp = C.jointsPx(pr, z);
-  let ji = -1, jd = 14; jp.forEach((P, j) => { const dd = Math.hypot(TV.ox + P[0] * TV.q - x, TV.oy + P[1] * TV.q - y); if (dd < jd) { jd = dd; ji = j; } });
-  const cur = pr.match.find(m => m[0] === d.bi);
-  if (ji >= 0 && (!cur || cur[1] !== ji)) { assign(d.bi, ji); reSolve(50, `brad → ${C.JOINT_WORD[C.JOINTS[ji]]}`); toast('re-assigned to ' + C.JOINT_WORD[C.JOINTS[ji]]); }
-  else reSolve(50, 'moved a brad');
-  redraw();
+tc.addEventListener('pointerup', () => {
+  if (!tdrag) return; const d = tdrag; tdrag = null; if (!d.moved) return;
+  record({ t: 'marker', part: T.id, point: d.n, xy: tgt.markers[d.n].slice(0, 2) });
+  if (d.twin) record({ t: 'marker', part: T.id, point: d.twin, xy: tgt.markers[d.twin].slice(0, 2), symmetry: true });
+  reSolve(50, 'moved ' + d.n); renderMk(); redraw();
 });
-tc.addEventListener('dblclick', e => {
-  if (!tgt) return; const r = tc.getBoundingClientRect(), x = (e.clientX - r.left - TV.ox) / TV.q, y = (e.clientY - r.top - TV.oy) / TV.q;
-  tgt.brads.push([+x.toFixed(1), +y.toFixed(1), 5, 'hand']); C.doMatch(pr, z, 9); reSolve(40, 'added a brad'); redraw();
-});
-function assign(bi, ji) { pr.match = pr.match.filter(([b, j]) => b !== bi && j !== ji); pr.match.push([bi, ji]); }
-function dropBrad(bi) { tgt.brads.splice(bi, 1); pr.match = pr.match.filter(([b]) => b !== bi).map(([b, j]) => [b > bi ? b - 1 : b, j]); reSolve(40, 'dropped a brad'); redraw(); }
 
 // ───────────────────────── alternatives ─────────────────────────
 function renderAlts() {
-  $('alts').innerHTML = alts.map((a, i) => `<div class="alt${i === altOn ? ' on' : ''}" data-i="${i}"><canvas width="200" height="150"></canvas><div><b style="color:${SCOL(a.score)}">${a.score != null ? a.score.toFixed(2) : '—'}</b> · ${esc(a.view || C.viewKey(a.psi))}<br>${a.labels ? esc(['elbowL', 'elbowR'].map(k => a.labels[k] ? k.slice(-1) + ' elbow ' + a.labels[k] : '').filter(Boolean).join(' · ') + (a.labels.near_leg ? ' · near leg ' + a.labels.near_leg : '') + (a.labels.seed ? ' · ' + a.labels.seed : '')) : ''}</div></div>`).join('') || '<p class="hint">No alternatives.</p>';
-  [...$('alts').children].forEach((d, i) => { const c = d.querySelector('canvas'); if (!c) return; const [g, W, H, dpr] = fitCanvas(c); const a = alts[i];
+  $('alts').innerHTML = alts.map((a, i) => `<div class="alt${i === altOn ? ' on' : ''}" data-i="${i}"><canvas width="200" height="150"></canvas><div><b style="color:${SCOL(a.score)}">${a.score != null ? a.score.toFixed(2) : '—'}</b> · ${esc(a.view || C.viewKey(a.psi))}<br>${esc([a.seed || (a.labels && a.labels.seed) || '', a.labels && a.labels.elbowL ? 'elbows L ' + a.labels.elbowL + ' / R ' + a.labels.elbowR : '', a.labels && a.labels.near_leg ? 'near leg ' + a.labels.near_leg : ''].filter(Boolean).join(' · '))}</div></div>`).join('') || '<p class="hint">No alternatives.</p>';
+  renderAltsCanvases();
+}
+function renderAltsCanvases() {
+  if (!tgt) return;
+  [...$('alts').children].forEach((d, i) => { const c = d.querySelector('canvas'); if (!c || !alts[i]) return; const [g, W, H, dpr] = fitCanvas(c), a = alts[i];
     const s = T.scale_prior.px_per_cm * Math.exp(a.z[C.NP]), q = Math.min(W / tgt.W, H / tgt.H) * .92, ox = (W - tgt.W * q) / 2, oy = (H - tgt.H * q) / 2;
     g.fillStyle = '#050403'; g.fillRect(0, 0, W, H); g.globalAlpha = .35; g.drawImage(tgt.img, ox, oy, tgt.W * q, tgt.H * q); g.globalAlpha = 1;
     drawCards(g, dpr, { k: q * s, x0: ox + q * tgt.cx, y0: oy + q * tgt.floor }, C.fk(S, a.z), a.psi, a.z[0], a.z[1], null, .8); });
@@ -527,17 +789,13 @@ function drawPane(i, frame) {
   const ps = VIEWS[i], c = $('v' + i), [g, W, H, dpr] = fitCanvas(c);
   g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
   const zz = frame ? frame.z : z; if (!zz) return;
-  const J = frame ? frame.J : C.fk(S, zz), Tw = frame ? frame.T : groundT(J);
-  const cam = frame ? frame.cam : [0, 0, 0];
+  const J = frame ? frame.J : C.fk(S, zz), Tw = frame ? frame.T : groundT(J), cam = frame ? frame.cam : [0, 0, 0];
   const k = H / 225, V = { k, x0: W / 2 - k * C.project(cam, ps)[0], y0: H - 34 };
-  // floor
   g.strokeStyle = '#3a2e24'; g.beginPath(); g.moveTo(0, V.y0 + .5); g.lineTo(W, V.y0 + .5); g.stroke();
-  const FP = p => { const q = C.project([p[0], 0, p[1]], ps); return [V.x0 + k * q[0], V.y0 - k * .22 * q[2]]; };   // floor plane, oblique
+  const FP = p => { const q = C.project([p[0], 0, p[1]], ps); return [V.x0 + k * q[0], V.y0 - k * .22 * q[2]]; };
   const w = C.weight(J, Tw, frame && frame.win);
   if ($('wOn').checked && w.support.length) { g.fillStyle = w.balanced ? 'rgba(127,211,196,.22)' : 'rgba(255,107,90,.28)'; g.strokeStyle = w.balanced ? '#7fd3c4' : '#ff6b5a'; g.beginPath(); w.support.forEach((p, j) => { const q = FP(p); j ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); g.fill(); g.stroke(); }
-  // onion skin
   if (frame && $('lOnion').checked && loop.frames) for (const d of [12, 8, 4]) { const fr = loop.frames[(loop.f - d + loop.frames.length) % loop.frames.length]; sticks(g, V, fr.J, ps, 0, 0, fr.T, `rgba(199,154,98,${.5 - d / 30})`, 1.2); }
-  // pins + slide streaks
   if (frame && frame.pins) for (const pn of frame.pins) { const q = FP([pn.x, pn.z]); g.fillStyle = pn.slide > .6 ? '#ff6b5a' : '#e7a35a'; g.beginPath(); g.arc(q[0], q[1], 3.5, 0, 7); g.fill();
     if (pn.prev && pn.slide > .05) { const p0 = FP([pn.prev.x, pn.prev.z]); g.strokeStyle = pn.slide > .6 ? '#ff6b5a' : 'rgba(231,163,90,.6)'; g.lineWidth = 2; g.beginPath(); g.moveTo(p0[0], p0[1]); g.lineTo(q[0], q[1]); g.stroke(); } }
   drawCards(g, dpr, V, J, ps, 0, 0, Tw, 1);
@@ -546,7 +804,6 @@ function drawPane(i, frame) {
     g.strokeStyle = w.balanced ? '#7fd3c4' : '#ff6b5a'; g.setLineDash([4, 3]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(cs[0], cs[1]); g.lineTo(fq[0], fq[1]); g.stroke(); g.setLineDash([]);
     g.fillStyle = g.strokeStyle; g.beginPath(); g.arc(cs[0], cs[1], 5, 0, 7); g.fill(); g.fillStyle = '#050403'; g.beginPath(); g.arc(cs[0], cs[1], 2, 0, 7); g.fill();
     g.fillStyle = g.strokeStyle; g.beginPath(); g.moveTo(fq[0] - 5, fq[1]); g.lineTo(fq[0] + 5, fq[1]); g.lineTo(fq[0], fq[1] - 6); g.fill();
-    // force plates
     const bw = 10, bh = 40;
     [['L', W - 34], ['R', W - 18]].forEach(([sd, x]) => { g.strokeStyle = '#3a2e24'; g.strokeRect(x, 8, bw, bh); g.fillStyle = '#e7a35a'; const f = w.load[sd]; g.fillRect(x, 8 + bh * (1 - f), bw, bh * f); g.fillStyle = '#9a8d7e'; g.font = '9px JetBrains Mono, monospace'; g.fillText(sd, x + 2, 58); });
   }
@@ -563,51 +820,46 @@ function drawPane(i, frame) {
 function drawViews(frame) {
   let w; for (let i = 0; i < 4; i++) { const r = drawPane(i, frame); if (i === 0) w = r; }
   if (!w) return;
-  const lim = [];
-  const zz = frame ? frame.z : z;
+  const lim = [], zz = frame ? frame.z : z;
   if (zz && !$('sandbox').checked) for (const n in C.LIM) { if (C.KN.includes(n)) continue; const v = zz[C.PI[n]], L = C.LIM[n]; if (1 - Math.min(v - L[0], L[1] - v) / ((L[1] - L[0]) / 2) > .9) lim.push(n); }
   const fl = (frame && frame.flags ? frame.flags : []).concat(w.flags);
   $('flags').innerHTML = `${w.air ? 'airborne' : w.balanced ? '<span style="color:var(--plane)">centre of mass over the support</span>' : '<b>centre of mass outside the support polygon</b>'}${fl.filter(f => !/centre of mass/.test(f)).map(f => ' · <b>' + esc(f) + '</b>').join('')}${lim.length ? ' · at a joint limit: ' + lim.join(', ') : ''}`;
 }
 
-// ───────────────────────── joint zoom ─────────────────────────
+// ───────────────────────── 4. joint zoom ─────────────────────────
+const J2M = Object.fromEntries(C.MARKERS.map(([n, j]) => [j, n]));
 function openJoint(j) { jointSel = j; setLevel('joint'); renderJoint(); }
 function renderJoint() {
-  const j = jointSel, ji = C.JOINTS.indexOf(j); if (ji < 0) return;
+  const j = jointSel; if (!j) return;
   $('jTitle').textContent = C.JOINT_WORD[j] + ' · ' + shortName(T);
   const c = $('jc'), [g, W, H, dpr] = fitCanvas(c);
   g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
-  const s = T.scale_prior.px_per_cm * Math.exp(z[C.NP]), jp = C.jointsPx(pr, z)[ji], m = pr.match.find(([b, jj]) => jj === ji), B = m ? tgt.brads[m[0]] : null;
-  const cx_ = B ? (B[0] + jp[0]) / 2 : jp[0], cy_ = B ? (B[1] + jp[1]) / 2 : jp[1];
-  const R = 22 * s, q = Math.min(W, H) / (2 * R);           // 44 cm window
-  const ox = W / 2 - cx_ * q, oy = H / 2 - cy_ * q;
+  const s = T.scale_prior.px_per_cm * Math.exp(z[C.NP]), mp = C.markerPx(pr, z), mn = J2M[j], jp = mn ? mp[mn] : C.jointsPx(pr, z)[C.JOINTS.indexOf(j)], M = mn ? tgt.markers[mn] : null;
+  const cx_ = M ? (M[0] + jp[0]) / 2 : jp[0], cy_ = M ? (M[1] + jp[1]) / 2 : jp[1];
+  const R = 22 * s, q = Math.min(W, H) / (2 * R), ox = W / 2 - cx_ * q, oy = H / 2 - cy_ * q;
   g.globalAlpha = .8; g.drawImage(tgt.img, ox, oy, tgt.W * q, tgt.H * q); g.globalAlpha = 1;
   const J = C.fk(S, z), V = { k: q * s, x0: ox + q * tgt.cx, y0: oy + q * tgt.floor };
   const L = drawCards(g, dpr, V, J, psi, z[0], z[1], null, .45);
-  // card pivots at this joint
   const P = [ox + jp[0] * q, oy + jp[1] * q];
-  if (B) { const Bp = [ox + B[0] * q, oy + B[1] * q]; g.strokeStyle = '#5fd0ff'; g.lineWidth = 3; g.beginPath(); g.arc(Bp[0], Bp[1], Math.max(8, B[2] * q), 0, 7); g.stroke();
+  if (M) { const Bp = [ox + M[0] * q, oy + M[1] * q]; g.strokeStyle = MCOL(mn); g.lineWidth = 3; g.beginPath(); g.arc(Bp[0], Bp[1], 9, 0, 7); g.stroke();
     g.strokeStyle = '#fff'; g.setLineDash([5, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(Bp[0], Bp[1]); g.lineTo(P[0], P[1]); g.stroke(); g.setLineDash([]);
-    const gap = Math.hypot(B[0] - jp[0], B[1] - jp[1]) / s; g.fillStyle = gap > 4 ? '#ff6b5a' : '#7fd38a'; g.font = '600 16px JetBrains Mono, monospace'; g.fillText(gap.toFixed(1) + ' cm', (Bp[0] + P[0]) / 2 + 10, (Bp[1] + P[1]) / 2 - 8); }
+    const gap = Math.hypot(M[0] - jp[0], M[1] - jp[1]) / s; g.fillStyle = gap > 4 ? '#ff6b5a' : '#7fd38a'; g.font = '600 16px JetBrains Mono, monospace'; g.fillText(gap.toFixed(1) + ' cm', (Bp[0] + P[0]) / 2 + 10, (Bp[1] + P[1]) / 2 - 8); }
   g.fillStyle = '#ff6b5a'; g.beginPath(); g.arc(P[0], P[1], 7, 0, 7); g.fill();
-  // 1 cm grid ticks
-  g.strokeStyle = 'rgba(255,255,255,.18)'; for (let i = -20; i <= 20; i += 5) { const x = W / 2 + i * s * q; g.beginPath(); g.moveTo(x, H - 10); g.lineTo(x, H - (i % 10 ? 14 : 20)); g.stroke(); }
+  g.strokeStyle = 'rgba(231,163,90,.7)'; g.lineWidth = 2; for (const b of tgt.brads) { g.beginPath(); g.arc(ox + b[0] * q, oy + b[1] * q, Math.max(6, b[2] * q), 0, 7); g.stroke(); }
+  g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 1; for (let i = -20; i <= 20; i += 5) { const x = W / 2 + i * s * q; g.beginPath(); g.moveTo(x, H - 10); g.lineTo(x, H - (i % 10 ? 14 : 20)); g.stroke(); }
   g.fillStyle = '#9a8d7e'; g.font = '10px JetBrains Mono, monospace'; g.fillText('5 cm ticks', 8, H - 22);
   const dof = C.JOINT_DOF[j], v = z[C.PI[dof]], lim = C.LIM[dof];
   const owner = { neck: 'head', waist: 'torso', shL: 'upper_arm_L', shR: 'upper_arm_R', elL: 'forearm_L', elR: 'forearm_R', wrL: 'hand_L', wrR: 'hand_R', hipL: 'thigh_L', hipR: 'thigh_R', knL: 'shin_L', knR: 'shin_R', anL: 'shoe_L', anR: 'shoe_R' }[j];
-  const card = L.find(c => c.slot === owner);
-  const e = C.errors(pr, z);
-  $('jInfo').innerHTML = `<i>target brad</i><span>${B ? `${B[0].toFixed(0)}, ${B[1].toFixed(0)} px · ${esc(B[3])}` : 'none assigned'}</span>
+  const card = L.find(cc => cc.slot === owner), pvn = card ? ({ upper_arm: 'pivot', forearm: 'pivot', thigh: 'pivot', shin: 'pivot', hand: 'wrist', shoe: 'ankle', head: 'neck', torso: 'waist' }[card.cls] || 'pivot') : null;
+  $('jInfo').innerHTML = `<i>marker</i><span>${M ? `${esc(mn)} ${M[0].toFixed(0)}, ${M[1].toFixed(0)} px · ${esc(M[3])}${M[4] != null ? ' · conf ' + M[4] : ''}` : 'none'}</span>
     <i>rig brad</i><span>${jp[0].toFixed(0)}, ${jp[1].toFixed(0)} px</span>
-    <i>gap</i><span style="color:${(e[j] || 0) > 4 ? 'var(--bad)' : 'var(--ok)'}">${j in e ? e[j].toFixed(2) + ' cm' : '—'}</span>
+    <i>gap</i><span style="color:${M && Math.hypot(M[0] - jp[0], M[1] - jp[1]) / s > 4 ? 'var(--bad)' : 'var(--ok)'}">${M ? (Math.hypot(M[0] - jp[0], M[1] - jp[1]) / s).toFixed(2) + ' cm' : '—'}</span>
     <i>pivot card</i><span>${card ? esc(card.p.id) : '—'}</span>
-    <i>pivot point</i><span>${card ? esc(JSON.stringify(C.pt(card.p, { upper_arm: 'pivot', forearm: 'pivot', thigh: 'pivot', shin: 'pivot', hand: 'wrist', shoe: 'ankle', head: 'neck', torso: 'waist' }[card.cls] || 'pivot').map(Math.round))) + ' · ' + esc((card.p.src || {})[{ hand: 'wrist', shoe: 'ankle', head: 'neck', torso: 'waist' }[card.cls] || 'pivot'] || 'default') : ''}</span>
+    <i>pivot point</i><span>${card ? esc(JSON.stringify(C.pt(card.p, pvn).map(Math.round))) + ' · ' + esc((card.p.src || {})[pvn] || 'default') : ''}</span>
     <i>${esc(dof)}</i><span>${v.toFixed(1)}° (limit ${lim[0]}…${lim[1]}${$('sandbox').checked ? ', lifted' : ''})</span>`;
-  $('jAssign').innerHTML = tgt.brads.map((b, i) => { const mm = pr.match.find(x => x[0] === i); return `<button class="btn${m && m[0] === i ? ' on' : ''}" data-b="${i}">brad ${i}${mm ? ' (' + C.JOINT_WORD[C.JOINTS[mm[1]]] + ')' : ''}</button>`; }).join('') + `<button class="btn" data-b="-1">no brad</button>`;
-  $('jRd').textContent = `rig brad (red) · target brad (cyan) · ${C.viewKey(psi)} view`;
+  $('jRd').textContent = `rig brad (red) · marker (ring) · painted brads (orange) · ${C.viewKey(psi)} view`;
+  $('jRest').onclick = () => { if (card) { $('rView').value = { threequarter_back: 'back' }[C.viewKey(psi)] || C.viewKey(psi); restSel = owner; siteSel = pvn; setLevel('rest'); } };
 }
-$('jAssign').addEventListener('click', e => { const b = e.target.closest('[data-b]'); if (!b) return; const bi = +b.dataset.b, ji = C.JOINTS.indexOf(jointSel);
-  if (bi < 0) pr.match = pr.match.filter(([_, j]) => j !== ji); else assign(bi, ji); reSolve(50, `${C.JOINT_WORD[jointSel]} → brad ${bi}`); renderJoint(); });
 $('jPrev').onclick = () => { jointSel = C.JOINTS[(C.JOINTS.indexOf(jointSel) + C.JOINTS.length - 1) % C.JOINTS.length]; setLevel('joint'); renderJoint(); };
 $('jNext').onclick = () => { jointSel = C.JOINTS[(C.JOINTS.indexOf(jointSel) + 1) % C.JOINTS.length]; setLevel('joint'); renderJoint(); };
 $('jBack').onclick = () => setLevel('pose');
@@ -638,7 +890,6 @@ function buildLoop() {
   let K = loop.keys.map(k => Float64Array.from(k.z));
   if (K.length === 2 && $('lMirror').checked) K = [K[0], K[1], C.mirror(K[0]), C.mirror(K[1])];
   const per = Math.max(3, +$('lN').value || 8), N = K.length * per;
-  // each key grounded: lowest foot point on the floor; which feet are planted at the key
   const KJ = K.map(zz => C.fk(S, zz)), KT = KJ.map(J => { let m = -1e9; for (const sd of ['L', 'R']) for (const k of FEET) m = Math.max(m, J[k + sd][1]); return -m; });
   const KP = KJ.map((J, i) => plantedFeet(J, [0, KT[i], 0]));
   const legP = sd => ['hp' + sd + 'f', 'hp' + sd + 'b', 'kn' + sd, 'an' + sd].map(n => C.PI[n]);
@@ -648,17 +899,18 @@ function buildLoop() {
     const zi = Float64Array.from(a, (v, i) => v + (b[i] - v) * t), tyi = KT[ki] + (KT[(ki + 1) % K.length] - KT[ki]) * t;
     const both = new Set([...KP[ki]].filter(s => KP[(ki + 1) % K.length].has(s)));
     if (t === 0) for (const s of KP[ki]) both.add(s);
-    // a foot that just touched down is pinned where it is now; a lifted foot is released
     for (const sd of ['L', 'R']) if (!both.has(sd)) delete pins[sd];
     let zf = zi, Tf = [Tw[0] + vel[0], tyi, Tw[2] + vel[2]];
     const planted = [...both];
     if (planted.length) {
+      // pin the foot's lowest contact point (heel at the strike, ball once it rolls): re-pinned where it is when it changes
       const J0 = C.fk(S, zi);
-      for (const sd of planted) if (!pins[sd]) pins[sd] = C.add(J0['an' + sd], Tf);
+      for (const sd of planted) { const kk = J0['heel' + sd][1] >= J0['ball' + sd][1] ? 'heel' : 'ball';
+        if (!pins[sd] || pins[sd].k !== kk) pins[sd] = { k: kk, p: pins[sd] && pins[sd].k !== kk ? C.add(J0[kk + sd], Tf) : C.add(J0[kk + sd], Tf) }; }
       const idx = planted.flatMap(legP), x0 = [Tf[0], Tf[1], Tf[2]].concat(idx.map(i => zi[i]));
       const lo = [-1e4, tyi - 8, -1e4].concat(idx.map(i => C.LIM[C.PN[i]][0])), hi = [1e4, tyi + 8, 1e4].concat(idx.map(i => C.LIM[C.PN[i]][1]));
       const fun = x => { const zz = Float64Array.from(zi); idx.forEach((i, j) => zz[i] = x[3 + j]); const J = C.fk(S, zz), r = [];
-        for (const sd of planted) { const a_ = C.add(J['an' + sd], [x[0], x[1], x[2]]), p = pins[sd]; r.push(3 * (a_[0] - p[0]), 3 * (a_[1] - p[1]), 3 * (a_[2] - p[2])); }
+        for (const sd of planted) { const pn = pins[sd], a_ = C.add(J[pn.k + sd], [x[0], x[1], x[2]]), p = pn.p; r.push(3 * (a_[0] - p[0]), 3 * (a_[1] - p[1]), 3 * (a_[2] - p[2])); }
         idx.forEach((i, j) => r.push((x[3 + j] - zi[i]) / 12)); r.push((x[1] - tyi) / 4); return r; };
       const res = C.lm(fun, x0, lo, hi, x0.map((_, i) => i < 3 ? .05 : .1), 25);
       zf = Float64Array.from(zi); idx.forEach((i, j) => zf[i] = res.x[3 + j]); Tf = [res.x[0], res.x[1], res.x[2]];
@@ -666,22 +918,20 @@ function buildLoop() {
     vel = [Tf[0] - Tw[0], 0, Tf[2] - Tw[2]]; Tw = Tf;
     if (pass === 1) frames.push({ f, z: zf, T: Tf.slice(), J: C.fk(S, zf), planted, keyI: t === 0 ? ki : null });
   }
-  // checks per frame (crash-lab rules): planted heel/ball slide <= 0.6 cm/frame, COM over the support (walking: a +-8 frame window)
+  // crash-lab rules per frame: a planted heel/ball moves <= 0.6 cm/frame; the COM over the support (walking: +-8 frames)
   const contact = fr => C.groundPts(fr.J, fr.T);
   frames.forEach((fr, i) => {
     const win = []; for (let d = -8; d <= 8; d++) win.push(...contact(frames[(i + d + N) % N]));
-    fr.win = win; fr.flags = [];
+    fr.win = win; fr.flags = []; fr.pins = [];
     const prev = frames[(i - 1 + N) % N];
-    fr.pins = [];
     for (const sd of ['L', 'R']) for (const kk of ['heel', 'ball']) {
       const q = C.add(fr.J[kk + sd], fr.T), q0 = C.add(prev.J[kk + sd], prev.T);
       if (q[1] > -1 && q0[1] > -1) { const sl = i === 0 ? 0 : Math.hypot(q[0] - q0[0], q[2] - q0[2]); fr.pins.push({ x: q[0], z: q[2], slide: sl, prev: { x: q0[0], z: q0[2] } }); if (sl > .6) fr.flags.push(`${kk} ${sd} slides ${sl.toFixed(2)} cm`); }
     }
-    for (const sd of fr.planted) { const p = C.add(fr.J['an' + sd], fr.T); /* leg short of its pin */ }
     const w = C.weight(fr.J, fr.T, win); if (!w.air && !w.balanced) fr.flags.push('COM outside support');
   });
   const D = C.sub(frames[N - 1].T, frames[0].T);
-  frames.forEach((fr, i) => fr.cam = C.add(C.add(frames[0].T, C.mul(D, i / N)), [0, 0, 0]));
+  frames.forEach((fr, i) => fr.cam = C.add(frames[0].T, C.mul(D, i / N)));
   loop.frames = frames; loop.f = 0; loop.travel = D;
   $('lF').max = N - 1; $('lF').disabled = false; $('lPlay').disabled = false;
   const bad = frames.filter(fr => fr.flags.length);
@@ -694,7 +944,6 @@ $('lF').oninput = () => { loop.f = +$('lF').value; showFrame(); };
 let lastT = 0;
 function tick(t) { if (!loop.playing) return; if (t - lastT > 1000 / 24) { lastT = t; loop.f = (loop.f + 1) % loop.frames.length; showFrame(); } requestAnimationFrame(tick); }
 $('lPlay').onclick = () => { loop.playing = !loop.playing; $('lPlay').textContent = loop.playing ? '❚❚ Pause' : '▶ Play'; if (loop.playing) requestAnimationFrame(tick); else drawViews(); };
-// chronophotograph (Marey): every 4th frame in profile at its own place on the floor
 let CH = null;
 function drawChrono() {
   const c = $('chrono'), [g, W, H, dpr] = fitCanvas(c);
@@ -704,7 +953,7 @@ function drawChrono() {
   const V = { k, x0: 10 - k * x0, y0: H - 8 };
   g.strokeStyle = '#3a2e24'; g.beginPath(); g.moveTo(0, V.y0 + .5); g.lineTo(W, V.y0 + .5); g.stroke();
   F.forEach((fr, i) => { if (i % 4) return; drawCards(g, dpr, V, fr.J, 90, 0, 0, fr.T, .38); });
-  CH = { V, g, dpr, W, H, img: g.getImageData(0, 0, c.width, c.height) };
+  CH = { V, g, dpr, img: g.getImageData(0, 0, c.width, c.height) };
 }
 function drawChronoHead() {
   if (!CH || !loop.frames) return; const { g, V, dpr } = CH; g.setTransform(1, 0, 0, 1, 0, 0); g.putImageData(CH.img, 0, 0); g.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -713,14 +962,16 @@ function drawChronoHead() {
 
 // ───────────────────────── redraw ─────────────────────────
 function redraw() {
-  if (level === 'pose' && tgt) { drawTarget(); if (loop.frames && (loop.playing || +$('lF').value)) showFrame(); else drawViews(); }
+  if (level === 'pose' && tgt) { drawTarget(); renderAltsCanvases(); if (loop.frames && (loop.playing || +$('lF').value)) showFrame(); else drawViews(); }
   else if (level === 'joint' && tgt) renderJoint();
+  else if (level === 'rest' && DOC) { drawRest(); drawEditor(); }
 }
 ['ghost', 'showRig'].forEach(id => $(id).addEventListener('input', () => drawTarget()));
 ['wOn', 'arcOn', 'lOnion'].forEach(id => $(id).addEventListener('change', () => loop.frames && loop.f ? showFrame() : drawViews()));
 init().then(() => {
-  window.__pose = { C, get S() { return S; }, get z() { return z; }, set z(v) { z = v; }, get pr() { return pr; }, get tgt() { return tgt; }, get T() { return T; }, get POS() { return POS; }, get loop() { return loop; },
-    openTarget, openJoint, setLevel, pick, reSolve, autoSolve, buildLoop, showFrame, measure, get SC() { return SC; }, get alts() { return alts; }, redraw, drawViews };
+  window.__pose = { C, get S() { return S; }, get z() { return z; }, set z(v) { z = v; }, get zP() { return zP; }, get pr() { return pr; }, get tgt() { return tgt; }, get T() { return T; }, get POS() { return POS; }, get loop() { return loop; },
+    get REST() { return REST; }, get session() { return session; }, openTarget, openJoint, setLevel, pick, reSolve, autoSolve, buildLoop, showFrame, measure, renderRest, get SC() { return SC; }, get alts() { return alts; }, redraw, drawViews,
+    selectRest(slot, site) { restSel = slot; siteSel = site || null; renderRest(); } };
 });
 </script>
 </body>

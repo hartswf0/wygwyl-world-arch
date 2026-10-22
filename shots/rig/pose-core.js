@@ -19,7 +19,7 @@
     shLf: [-60, 180], shLb: [-30, 180], elL: [0, 150], wrL: [-70, 70], shRf: [-60, 180], shRb: [-30, 180], elR: [0, 150], wrR: [-70, 70],
     hpLf: [-30, 125], hpLb: [-25, 70], knL: [0, 140], anL: [-45, 30], hpRf: [-30, 125], hpRb: [-25, 70], knR: [0, 140], anR: [-45, 30],
     shLt: [-90, 90], shRt: [-90, 90], hpLt: [-45, 45], hpRt: [-45, 45],
-    kT: [-.3, .3], kU: [-.3, .3], kF: [-.3, .3], kTh: [-.3, .3], kSh: [-.3, .3], kHd: [-.3, .3]
+    kT: [-.7, .4], kU: [-.7, .4], kF: [-.7, .4], kTh: [-.7, .4], kSh: [-.7, .4], kHd: [-.7, .4]
   };
   const KN = ['kT', 'kU', 'kF', 'kTh', 'kSh', 'kHd'];
   const ANG = PN.map((n, i) => i).filter(i => i >= 6 && !KN.includes(PN[i]));
@@ -73,7 +73,9 @@
 
   // ---------------------------------------------------------------- forward kinematics
   function fk(S, x) {
-    const g = n => x[PI[n]] * DEG, ek = n => Math.exp(x[PI[n]]);
+    // proportions are relative: k is centred (mean 0), so the figure's overall size is the scale's job
+    const km = KN.reduce((a, n) => a + x[PI[n]], 0) / KN.length;
+    const g = n => x[PI[n]] * DEG, ek = n => Math.exp(x[PI[n]] - km);
     const R0 = mm(mm(Ry(g('twist')), Rx(-g('pitch'))), Rz(g('roll')));
     const J = { pelvis: [0, 0, 0] };
     J.hipL = mv(R0, [S.hipHalf, 0, 0]); J.hipR = mv(R0, [-S.hipHalf, 0, 0]);
@@ -260,9 +262,16 @@
       if (cls === 'shoe' || stretch === false) along = k;
       else { along = ld / lc; along = stretch === 'shrink' ? Math.min(k, Math.max(.5 * k, along)) : Math.min(1.7 * k, Math.max(.3 * k, along)); }
       const nc = [-uh[1], uh[0]], nd = [-dh[1], dh[0]];
-      // L = along * dh uh^T + k nd nc^T  (then the mirror on the right)
-      let L00 = along * dh[0] * uh[0] + k * nd[0] * nc[0], L01 = along * dh[0] * uh[1] + k * nd[0] * nc[1];
-      let L10 = along * dh[1] * uh[0] + k * nd[1] * nc[0], L11 = along * dh[1] * uh[1] + k * nd[1] * nc[1];
+      // a flat torso / hip card drawn for another view is foreshortened across its axis (cos of the yaw between)
+      let kx = k;
+      if ((cls === 'torso' || cls === 'hip') && p.view !== vk) {
+        const yaw = { front: 0, threequarter: 45, profile: 90, threequarter_back: 135, back: 180 }[p.view || 'front'] ?? 0;
+        const a = Math.abs((((psi % 360) + 360) % 360 > 180 ? 360 - (((psi % 360) + 360) % 360) : (((psi % 360) + 360) % 360)));
+        kx = k * Math.max(.3, Math.abs(Math.cos((a - yaw) * DEG)));
+      }
+      // L = along * dh uh^T + kx nd nc^T  (then the mirror on the right)
+      let L00 = along * dh[0] * uh[0] + kx * nd[0] * nc[0], L01 = along * dh[0] * uh[1] + kx * nd[0] * nc[1];
+      let L10 = along * dh[1] * uh[0] + kx * nd[1] * nc[0], L11 = along * dh[1] * uh[1] + kx * nd[1] * nc[1];
       if (flip) { L00 = -L00; L10 = -L10; }
       const pv0 = pt(p, cp);
       const tx = Aw[0] - (L00 * pv0[0] + L01 * pv0[1]), ty = Aw[1] - (L10 * pv0[0] + L11 * pv0[1]);
@@ -359,7 +368,7 @@
   function problem(S, target, psi, s0, ssig, opt = {}) {
     const pr = { S, t: target, psi, s0, ssig: ssig || .15, sandbox: !!opt.sandbox, flat: 3 };
     if (target.mask && !target.dt) { target.dt = chamfer(target.mask, target.W, target.H); target.C = contour(target.mask, target.W, target.H); }
-    pr.setStretch = on => { [pr.lo, pr.hi] = lims(pr.sandbox, on); const w = on ? .05 : Math.min(Math.log(1.8), 2.2 * pr.ssig); pr.lo[NP] = -w; pr.hi[NP] = w; };
+    pr.setStretch = on => { [pr.lo, pr.hi] = lims(pr.sandbox, on); const w = Math.min(Math.log(1.8), 2.2 * pr.ssig); pr.lo[NP] = -w; pr.hi[NP] = w; };
     pr.setStretch(false);
     pr.match = [];
     return pr;
@@ -387,17 +396,19 @@
       } else for (const [bi, ji] of pr.match) { const q = pj(JOINTS[ji]), b = B[bi]; out.push(1.5 * (q[0] - b[0]) / s, 1.5 * (q[1] - b[1]) / s); }
     }
     if (pr.t.dt) {
-      for (const n of INSIDE) { const q = pj(n); out.push(.7 * dtAt(pr.t, q[0], q[1]) / s); }
+      const wi = stage === 'M' ? .3 : .7, wc = stage === 'M' ? .1 : .45;      // with labelled markers the silhouette only assists
+      for (const n of INSIDE) { const q = pj(n); out.push(wi * dtAt(pr.t, q[0], q[1]) / s); }
       for (const c of pr.t.C) {
         let m = 1e9;
         for (const [a, b, rad] of SEGS) { const A = pj(a), Bq = pj(b); m = Math.min(m, segDist2(c, A, Bq) / s - rad); }
-        out.push(.45 * Math.max(0, m));
+        out.push(wc * Math.max(0, m));
       }
     }
     for (const [a, b] of FLAT) { const pa = project(J[a], pr.psi), pb = project(J[b], pr.psi); const L3 = len3(sub(J[b], J[a])); out.push(pr.flat * (Math.hypot(pb[0] - pa[0], pb[1] - pa[1]) / Math.max(L3, 1e-6) - 1)); }
     for (const i of ANG) out.push(.35 * x[i] / 90);
+    out.push(1.2 * x[PI.hf] / 90, 1.2 * x[PI.hb] / 90);      // heads stay upright unless the drawing insists
     for (let i = 3; i < 6; i++) out.push(.25 * x[i] / 90);
-    for (const n of KN) out.push(x[PI[n]] / .07);
+    for (const n of KN) out.push(x[PI[n]] / .25);
     out.push(ls / pr.ssig);
     return out;
   }

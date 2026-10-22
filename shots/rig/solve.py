@@ -277,7 +277,9 @@ def fk(S, X):
     vec = lambda v: np.tile(np.asarray(v, float), (B, 1))
     mm = lambda A, C: np.einsum('bij,bjk->bik', A, C)
     R0 = mm(mm(_ry(g('twist')), _rx(-g('pitch'))), _rz(g('roll')))
-    ek = lambda n: np.exp(X[:, PI[n]])[:, None]
+    # proportions are relative: k is centred (mean 0), so the figure's overall size is the scale's job
+    kmean = X[:, [PI[k] for k in KN]].mean(1)
+    ek = lambda n: np.exp(X[:, PI[n]] - kmean)[:, None]
     J = {'pelvis': np.zeros((B, 3))}
     J['hipL'] = _mv(R0, vec([S['hipHalf'], 0, 0])); J['hipR'] = _mv(R0, vec([-S['hipHalf'], 0, 0]))
     J['waist'] = _mv(R0, vec([0, -S['waistUp'], 0]) * ek('kT'))
@@ -475,7 +477,8 @@ class Problem:
         # rig points inside the target silhouette
         q = np.clip(px + self.pad, 0, np.array(self.dt.shape[::-1]) - 1)
         dtv = ndimage.map_coordinates(self.dt, [q[..., 1].ravel(), q[..., 0].ravel()], order=1).reshape(q.shape[:2])
-        out.append(.7 * dtv / s[:, None])
+        wi, wc = (.3, .1) if stage == 'M' else (.7, .45)     # with labelled markers the silhouette only assists
+        out.append(wi * dtv / s[:, None])
         # target silhouette covered by the rig's limbs (capsules)
         segd = []
         nm = {n: i for i, n in enumerate(names)}
@@ -487,7 +490,7 @@ class Problem:
             dd = np.linalg.norm(ap - tt[..., None] * ab, axis=-1) / s[:, None] - rad
             segd.append(dd)
         cov = np.maximum(0, np.min(np.stack(segd, 0), 0))
-        out.append(.45 * cov)
+        out.append(wc * cov)
         # cut-out figures are flat: a drawn limb shows its full length, so foreshortening costs
         for a, b in FLAT:
             pa, pb = project(J[a], self.psi)[0], project(J[b], self.psi)[0]
@@ -496,6 +499,7 @@ class Problem:
         # priors: neutral angles, figure scale
         ang = X[:, ANG] / 90.0
         out.append(.35 * ang)
+        out.append(1.2 * X[:, [PI['hf'], PI['hb']]] / 90.0)     # heads stay upright unless the drawing insists
         out.append(X[:, [PI[k] for k in KN]] / .25)
         out.append(.25 * X[:, 3:6] / 90.0)
         out.append(((ls - 0) / self.s_sig)[:, None])
@@ -504,8 +508,9 @@ class Problem:
     def set_stretch(self, on):
         lo, hi = lims(self.sandbox, on)
         # the figure's scale stays within ~2 sigma of the sheet prior (a robust loss would let it run away)
-        # with the proportions free (k), a free figure scale is degenerate with them: hold it at the sheet prior
-        w = .05 if on else min(math.log(1.8), 2.2 * self.s_sig)
+        # the figure's scale stays within ~2 sigma of the sheet prior; with the proportions free (k) their mean is
+        # held at 1 (a residual below), so k says only how the drawing's proportions differ, scale how big it is
+        w = min(math.log(1.8), 2.2 * self.s_sig)
         self.lo = np.append(lo, -w); self.hi = np.append(hi, w)
 
     def solve(self, z0, stage, nfev=120):
@@ -636,7 +641,12 @@ def place_cards(doc, S, J, psi, ox, oy, cards=None):
             if stretch == 'shrink': along = min(k, max(.5 * k, along))
             else: along = min(1.7 * k, max(.3 * k, along))
         nh_c = np.array([-uh[1], uh[0]]); nh_d = np.array([-dh[1], dh[0]])
-        L = along * np.outer(dh, uh) + k * np.outer(nh_d, nh_c)
+        kx = k
+        if cls in ('torso', 'hip') and p.get('view') != vk:     # foreshortened across its axis (pose-core.js too)
+            yaw = {'front': 0, 'threequarter': 45, 'profile': 90, 'threequarter_back': 135, 'back': 180}.get(p.get('view') or 'front', 0)
+            a = abs(((psi % 360) + 360) % 360); a = 360 - a if a > 180 else a
+            kx = k * max(.3, abs(math.cos(math.radians(a - yaw))))
+        L = along * np.outer(dh, uh) + kx * np.outer(nh_d, nh_c)
         if flip: L = L @ np.array([[-1.0, 0], [0, 1]])
         pv0 = np.array(pt(p, cp) if ca != 'hips' else pt(p, 'waist'), float)
         t = Aw - L @ pv0
@@ -774,7 +784,8 @@ def solve_target(doc, S, t, mask, prior, quick=False, sandbox=False):
         finals.append({'psi': best['psi'], 'seed': 'swap ' + what + ' of best', 'z': z, 'match': list(pr.match), 'costB': c2})
     # drawings are stylised (big heads, short torsos): the match is made with the proportions free (k), and
     # the keyframe keeps those joint ANGLES on the rig as built (rigidify, after the IoU refinement)
-    for f in finals: f['k'] = {n: round(math.exp(float(f['z'][PI[n]])), 3) for n in KN}
+    for f in finals:
+        km = float(np.mean([f['z'][PI[n]] for n in KN])); f['k'] = {n: round(math.exp(float(f['z'][PI[n]]) - km), 3) for n in KN}
     Ht, Wd = mask.shape
     for f in finals:
         s = s0 * math.exp(f['z'][NP])
@@ -828,7 +839,8 @@ def solve_markers(doc, S, t, mask, prior, seeds, quick=False, sandbox=False):
         z, c2 = pr.solve(swap_lr(best['z'], what), 'M', nfev=150)
         f = {'psi': best['psi'], 'seed': 'L/R ' + what + ' swapped', 'z': z, 'match': [], 'costB': c2, 'markers': M2}
         score_f(f); finals.append(f)
-    for f in finals: f['k'] = {n: round(math.exp(float(f['z'][PI[n]])), 3) for n in KN}
+    for f in finals:
+        km = float(np.mean([f['z'][PI[n]] for n in KN])); f['k'] = {n: round(math.exp(float(f['z'][PI[n]]) - km), 3) for n in KN}
     finals.sort(key=lambda f: f['rank'])
     return finals, {}
 
@@ -1051,6 +1063,7 @@ def solve_one(i):
               **({'markers': f['markers']} if f.get('markers') else {}),
               # the same pose with the drawing's own proportions (how well the POSE was read)
               'pose': {'iou': round(f['iou'], 3), 'mean_err_cm': round(pose_mean, 2) if pose_mean is not None else None,
+                       'params': {k: round(float(v), 3) for k, v in zip(PN, f['z'][:NP])},
                        'err_cm': {k: round(v, 2) for k, v in e_pose.items()},
                        'proportions': {n[1:]: f['k'][n] for n in KN}}}
         s_['score'] = round(score_of(s_), 3)
@@ -1075,11 +1088,13 @@ def score_of(s):
 
 def why_bad(s, t):
     w = []
-    if len(t['brads']) < 8: w.append(f'only {len(t["brads"])} brass brads found')
+    if s.get('against') != 'markers' and len(t['brads']) < 8: w.append(f'only {len(t["brads"])} brass brads found')
+    if s.get('against') == 'markers' and (t.get('movenet_conf') or 1) < .35: w.append(f'MoveNet unsure (confidence {t["movenet_conf"]:.2f})')
     if s['iou'] < .5: w.append(f'silhouette IoU {s["iou"]:.2f}')
-    if s['mean_err_cm'] is not None and s['mean_err_cm'] > 4: w.append(f'mean brad error {s["mean_err_cm"]:.1f} cm')
-    if s['flagged']: w.append('joints > 4 cm: ' + ', '.join(s['flagged']))
-    if len(s['unmatched_joints']) > 6: w.append(f'{len(s["unmatched_joints"])} joints without a target brad')
+    if s['mean_err_cm'] is not None and s['mean_err_cm'] > 4: w.append(f'mean {"marker" if s.get("against") == "markers" else "brad"} error {s["mean_err_cm"]:.1f} cm (rig as built)')
+    if s.get('pose') and s['pose'].get('mean_err_cm') is not None and s['pose']['mean_err_cm'] > 4: w.append(f'pose read {s["pose"]["mean_err_cm"]:.1f} cm off the markers')
+    if s['flagged']: w.append(f'{len(s["flagged"])} joints > 4 cm' + (': ' + ', '.join(s['flagged']) if len(s['flagged']) <= 5 else ''))
+    if len(s['unmatched_joints']) > 6: w.append(f'{len(s["unmatched_joints"])} joints without a {"marker" if s.get("against") == "markers" else "target brad"}')
     pr_ = (s.get('pose') or {}).get('proportions') or {}
     off = [f'{k} x{v:.2f}' for k, v in pr_.items() if v < .8 or v > 1.25]
     if off: w.append('drawing vs rig proportions: ' + ', '.join(off))
