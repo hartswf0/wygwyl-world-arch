@@ -8,11 +8,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--acc:#e7a35a;--sel:#5fd0ff;--mono:'JetBrains Mono',ui-monospace,monospace}
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--acc:#e7a35a;--sel:#5fd0ff;--arch:#d98bb0;--plane:#7fd3c4;--act:#b9c46a;--mono:'JetBrains Mono',ui-monospace,monospace}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
 header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
-header a,header select,.btn{font:12px var(--mono);color:var(--dim);background:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;text-decoration:none;cursor:pointer}
+header a,header select,.btn,select.btn{font:12px var(--mono);color:var(--dim);background:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;text-decoration:none;cursor:pointer}
 header a:hover,.btn:hover{color:var(--card);border-color:var(--card)}
 .btn.on{color:#1a120a;background:var(--card);border-color:var(--card)}
 h1{font:400 26px 'Permanent Marker',cursive;margin:0 8px 0 0;color:var(--ink)}
@@ -24,37 +24,48 @@ h1 span{color:var(--acc)}
 .sc .mini{width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;border-radius:4px;background:#000}
 .sc b{display:block;font:600 11px var(--mono);color:var(--acc);margin-top:4px}
 .sc span{font-size:12px;color:var(--ink)}
-main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:0;min-height:calc(100vh - 170px)}
-@media (max-width:980px){main{grid-template-columns:1fr}}
+main{display:grid;grid-template-columns:minmax(0,1fr) 380px;min-height:calc(100vh - 170px)}
+@media (max-width:1020px){main{grid-template-columns:1fr}}
 #left{padding:14px 16px;display:grid;gap:10px;align-content:start;min-width:0}
 #stageWrap{width:100%;aspect-ratio:16/9;position:relative;background:#050403;border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:none}
-.stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:0 0}
-.layer{position:absolute;user-select:none;-webkit-user-drag:none;cursor:grab}
-.layer.sel{outline:2px dashed var(--sel);outline-offset:2px}
+.stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:0 0;overflow:hidden}
+.layer{position:absolute;user-select:none;-webkit-user-drag:none;cursor:grab;object-fit:fill}
+.layer.sel{outline:3px dashed var(--sel);outline-offset:2px}
 .layer.hid{display:none}
+.tag{position:absolute;font:600 13px var(--mono);color:#120c08;background:var(--arch);padding:1px 7px;border-radius:3px;pointer-events:none;white-space:nowrap}
 #info h2{font:400 22px 'Permanent Marker',cursive;margin:0;color:var(--card)}
 #info .lines{font-style:italic;color:var(--dim)}
-#info .shot{max-width:90ch}
 .tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .hint{font:11px var(--mono);color:var(--dim)}
-aside{border-left:1px solid var(--line);display:grid;grid-template-rows:auto minmax(0,1fr) auto minmax(0,1.4fr);min-height:0;max-height:calc(100vh - 170px);position:sticky;top:0}
-@media (max-width:980px){aside{border-left:0;border-top:1px solid var(--line);max-height:none}}
+aside{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;max-height:calc(100vh - 170px);position:sticky;top:0}
+@media (max-width:1020px){aside{border-left:0;border-top:1px solid var(--line);max-height:none}}
 aside h3{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:0;padding:10px 12px 6px}
-#layers,#tray{overflow:auto;padding:0 8px 10px}
+#layers{overflow:auto;padding:0 8px 8px;max-height:32vh}
+#trayWrap{display:flex;flex-direction:column;min-height:0;flex:1}
+#tray{overflow:auto;padding:0 8px 10px;flex:1}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;padding:0 10px 6px}
 .li{display:flex;align-items:center;gap:6px;padding:3px 4px;border-radius:5px;cursor:pointer;font:12px var(--mono)}
 .li:hover{background:#1e1813}.li.sel{background:#1b2a31;color:var(--sel)}
-.li img{width:42px;height:24px;object-fit:contain;background:#000;border-radius:3px}
+.li img,.li i{width:42px;height:24px;object-fit:contain;background:#000;border-radius:3px;flex:0 0 42px}
+.li i{font:9px var(--mono);color:var(--act);display:grid;place-items:center;font-style:normal}
 .li .n{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.li .k{font-size:9px;padding:0 4px;border-radius:3px;border:1px solid var(--line)}
+.k.part{color:var(--card)}.k.plane{color:var(--plane)}.k.image{color:var(--arch)}.k.video{color:var(--arch)}.k.action{color:var(--act)}
 .li button{font:11px var(--mono);background:none;border:0;color:var(--dim);cursor:pointer;padding:0 2px}
-.li button:hover{color:var(--ink)}
 #q{width:calc(100% - 24px);margin:0 12px 6px;font:12px var(--mono);background:#0f0c0a;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
-.grp{font:600 11px var(--mono);color:var(--acc);margin:8px 4px 4px}
-.cells{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:5px}
-.cell{background:repeating-conic-gradient(#221c17 0 25%,#1a1511 0 50%) 0 0/12px 12px;border:1px solid var(--line);border-radius:5px;padding:3px;cursor:copy;display:grid;gap:2px}
+.grp{font:600 11px var(--mono);color:var(--acc);margin:8px 4px 4px;display:flex;gap:6px;align-items:center}
+.grp button{font:10px var(--mono);color:var(--plane);background:none;border:1px solid var(--line);border-radius:999px;cursor:pointer;padding:0 8px}
+.cells{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:5px}
+.cell{background:repeating-conic-gradient(#221c17 0 25%,#1a1511 0 50%) 0 0/12px 12px;border:1px solid var(--line);border-radius:5px;padding:3px;cursor:copy;display:grid;gap:2px;min-width:0}
 .cell:hover{border-color:var(--card)}
-.cell img{width:100%;height:52px;object-fit:contain}
+.cell img{width:100%;height:54px;object-fit:contain}
 .cell span{font:9.5px var(--mono);color:var(--dim);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-button:focus-visible,a:focus-visible,.cell:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.cell.wide{grid-column:span 2}
+.act{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:6px;border:1px solid var(--line);border-radius:6px;margin:0 0 5px;cursor:copy}
+.act:hover{border-color:var(--act)}
+.act b{font:600 12px Inter;color:var(--ink)}.act span{font:10px var(--mono);color:var(--dim)}
+.act em{grid-column:1/-1;font:11px Inter;color:var(--dim);font-style:normal}
+button:focus-visible,a:focus-visible,.cell:focus-visible,.act:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--card);color:#1a120a;font:600 13px Inter;padding:6px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none}
 </style>
 </head>
@@ -66,76 +77,144 @@ button:focus-visible,a:focus-visible,.cell:focus-visible{outline:2px solid var(-
   <span class="sp"></span>
   <a id="toPoem" href="#">Poem page →</a>
   <a id="toParts" href="#">Finished parts →</a>
+  <a href="../weave.html">Weave →</a>
+  <a href="../world.html">World →</a>
 </header>
 <div id="scenes" role="tablist" aria-label="Scenes"></div>
 <main>
   <div id="left">
     <div id="stageWrap"><div class="stage" id="stage"></div></div>
     <div class="tools">
+      <button class="btn" id="bPlay">❚❚ Pause</button>
       <button class="btn" id="bFlip">Flip (F)</button>
       <button class="btn" id="bBack">Back ([)</button>
       <button class="btn" id="bFwd">Forward (])</button>
       <button class="btn" id="bDel">Remove (Del)</button>
+      <select class="btn" id="bBlend" aria-label="Blend mode of the selected layer">
+        <option value="">blend: normal</option><option>multiply</option><option>screen</option><option>overlay</option>
+        <option>soft-light</option><option>luminosity</option><option>lighten</option><option>darken</option></select>
+      <label class="hint">opacity <input type="range" id="bOp" min="0.05" max="1" step="0.05" value="1"></label>
       <span class="sp"></span>
-      <button class="btn" id="bReset">Reset scene to plan</button>
+      <button class="btn" id="bReset">Reset scene</button>
       <button class="btn" id="bPng">Scene PNG</button>
       <button class="btn" id="bJson">Export poem JSON</button>
     </div>
-    <div class="hint">Drag to move · wheel or +/− to scale · Q/E to rotate · arrows to nudge · edits save in this browser · click a part in the tray to add it.</div>
+    <div class="hint">Drag to move · wheel or +/− to scale · Q/E rotate · arrows nudge · edits save in this browser. Archive material carries its tag on screen while it shows.</div>
     <div id="info"></div>
   </div>
   <aside>
     <h3>Layers, back to front</h3>
     <div id="layers"></div>
-    <h3>Parts tray · this poem's cut sheets</h3>
-    <div><input id="q" placeholder="filter parts…" aria-label="Filter parts"><div id="tray"></div></div>
+    <div id="trayWrap">
+      <h3>Add to the scene</h3>
+      <div class="tabs" id="tabs" role="tablist"></div>
+      <input id="q" placeholder="filter…" aria-label="Filter">
+      <div id="tray"></div>
+    </div>
   </aside>
 </main>
 <div id="toast" role="status" aria-live="polite"></div>
 <script>
 const $ = id => document.getElementById(id);
-const CUT = '../kits/cut/';
+const CUT = '../kits/cut/', W = 1600, H = 900;
 const POEMS = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14'];
 const qs = new URLSearchParams(location.search);
 let P = qs.get('p') || '04';
-let PLAN, CAT, ATLAS, cur = 0, sel = -1, parts = {}, scenes = [];
+let PLAN, CAT, ASSETS, ATLAS, cur = 0, sel = -1, parts = {}, scenes = [], TAB = 'parts', playing = true;
 const store = (() => { try { const k = '__t'; localStorage.setItem(k, k); localStorage.removeItem(k); return localStorage; } catch (e) { return null; } })();
 const key = s => `wygwyl.stage.${P}.${s}`;
-function toast(t) { const el = $('toast'); el.textContent = t; el.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.opacity = 0, 1500); }
+function toast(t) { const el = $('toast'); el.textContent = t; el.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.opacity = 0, 1600); }
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const kindOf = L => L.kind || (L.part ? 'part' : L.action ? 'action' : 'image');
+const isArchive = L => L.tag || /archive|markov|halfworld/.test(L.src || '');
+
+/* ── actions: solved clips, a display list per frame, drawn live ── */
+const CLIPS = {};
+async function clip(id) {
+  if (CLIPS[id]) return CLIPS[id];
+  const a = ASSETS.actions.find(x => x.id === id); if (!a) return null;
+  const j = await fetch(a.file).then(r => r.json());
+  const base = a.file.replace(/clips\/[^/]+$/, ''), IMG = {};   // clip image paths are relative to shots/arena/
+  await Promise.all(Object.entries(j.images).map(([k, f]) => new Promise(res => { const im = new Image(); im.onload = im.onerror = res; im.src = base + f; IMG[k] = im; })));
+  // bounds of the actor over the whole clip: transform each part's corners
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (let f = 0; f < j.frames.length; f += 5) for (const o of j.frames[f].draw) {
+    if (o.t !== 'img' || !IMG[o.id]?.naturalWidth) continue;
+    const [a1, b, c, d, e, g] = o.m, w = IMG[o.id].naturalWidth, h = IMG[o.id].naturalHeight;
+    for (const [u, v] of [[0, 0], [w, 0], [0, h], [w, h]]) { const X = a1 * u + c * v + e, Y = b * u + d * v + g; x0 = Math.min(x0, X); y0 = Math.min(y0, Y); x1 = Math.max(x1, X); y1 = Math.max(y1, Y); }
+  }
+  return CLIPS[id] = {j, IMG, box: [x0 - 20, y0 - 20, x1 + 20, y1 + 20], fps: j.clock?.fps || 24};
+}
+function drawClip(cv, C, f) {
+  const g = cv.getContext('2d'), [x0, y0, x1, y1] = C.box, k = cv.width / (x1 - x0);
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
+  g.setTransform(k, 0, 0, k, -x0 * k, -y0 * k);
+  for (const o of C.j.frames[f % C.j.frames.length].draw) {
+    if (o.t === 'img') { const im = C.IMG[o.id]; if (!im?.naturalWidth) continue; g.save(); g.transform(...o.m); g.drawImage(im, 0, 0); g.restore(); }
+    else if (o.t === 'shadow') { g.save(); g.globalAlpha = (o.a ?? .6) * .6; g.fillStyle = '#000'; g.beginPath(); g.ellipse(o.x, o.y, o.rx, (o.rx) * .18, 0, 0, 7); g.fill(); g.restore(); }
+    else if (o.t === 'poly') { g.beginPath(); o.pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); if (o.fill) { g.fillStyle = o.fill; g.fill(); } if (o.stroke) { g.lineWidth = o.w || 2; g.strokeStyle = o.stroke; g.stroke(); } }
+    else if (o.t === 'line') { g.beginPath(); (o.pts || [[o.x1, o.y1], [o.x2, o.y2]]).forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.lineWidth = o.w || 2; g.strokeStyle = o.stroke || o.color || '#1a120b'; g.stroke(); }
+  }
+}
+let T0 = performance.now();
+function tick(now) {
+  if (playing) document.querySelectorAll('canvas.layer[data-act]').forEach(cv => {
+    const C = CLIPS[cv.dataset.act]; if (!C) return;
+    const f0 = +cv.dataset.f0 || 0, f1 = +cv.dataset.f1 || C.j.frames.length;
+    drawClip(cv, C, f0 + Math.floor((now - T0) / 1000 * C.fps) % Math.max(1, f1 - f0));
+  });
+  requestAnimationFrame(tick);
+}
+
+/* ── layers ── */
+function size(L) {
+  const p = L.part && parts[L.part];
+  const ar = p ? p.bbox[3] / p.bbox[2] : L.ar || (kindOf(L) === 'action' && CLIPS[L.action] ? (CLIPS[L.action].box[3] - CLIPS[L.action].box[1]) / (CLIPS[L.action].box[2] - CLIPS[L.action].box[0]) : 9 / 16);
+  return [L.w, L.h || L.w * ar];
+}
+function srcOf(L) { const p = L.part && parts[L.part]; return p ? CUT + p.file : L.src; }
+function layerEl(L, i, mini) {
+  const k = kindOf(L); let el;
+  if (k === 'video') { el = document.createElement('video'); Object.assign(el, {src: L.src, muted: true, loop: true, autoplay: !mini, playsInline: true}); if (mini) el.preload = 'metadata'; }
+  else if (k === 'action') {
+    el = document.createElement('canvas'); el.dataset.act = L.action; if (L.f0) el.dataset.f0 = L.f0; if (L.f1) el.dataset.f1 = L.f1;
+    clip(L.action).then(C => { if (!C) return; const [w, h] = size(L); el.width = Math.round(w * (mini ? .2 : 1)); el.height = Math.round(h * (mini ? .2 : 1)); el.style.height = h + 'px'; el.style.top = (L.y - h / 2) + 'px'; drawClip(el, C, L.f0 || 0); });
+  } else { el = new Image(); el.src = srcOf(L) || ''; el.alt = ''; el.draggable = false; }
+  el.className = 'layer' + (!mini && i === sel ? ' sel' : '') + (L.hide ? ' hid' : '');
+  const [w, h] = size(L);
+  Object.assign(el.style, {left: (L.x - w / 2) + 'px', top: (L.y - h / 2) + 'px', width: w + 'px', height: h + 'px',
+    transform: `rotate(${L.rot || 0}deg) scaleX(${L.flip ? -1 : 1})`, opacity: L.op ?? 1, mixBlendMode: L.blend || 'normal'});
+  el.dataset.i = i;
+  return el;
+}
+function render(host, layers, mini) {
+  host.innerHTML = '';
+  layers.forEach((L, i) => {
+    host.appendChild(layerEl(L, i, mini));
+    if (!mini && !L.hide && isArchive(L)) {   // the weave's rule: archive is labelled for as long as it shows
+      const [w, h] = size(L), t = document.createElement('span'); t.className = 'tag';
+      t.textContent = L.tag || ('ARCHIVE · ' + (L.src || '').split('/').slice(-2).join('/'));
+      t.style.left = Math.max(4, L.x - w / 2 + 6) + 'px'; t.style.top = Math.max(4, L.y - h / 2 + 6) + 'px'; host.appendChild(t);
+    }
+  });
+}
+function fit() { $('stage').style.transform = `scale(${$('stageWrap').clientWidth / W})`; }
 
 async function load() {
   $('poem').innerHTML = POEMS.map(n => `<option value="${n}"${n === P ? ' selected' : ''}>Poem ${n}</option>`).join('');
   $('toPoem').href = `../poems/${P}.html`; $('toParts').href = `../poems/p${P}.html`;
-  CAT = CAT || await fetch(CUT + 'catalog.json').then(r => r.json());
+  [CAT, ASSETS] = await Promise.all([CAT || fetch(CUT + 'catalog.json').then(r => r.json()), ASSETS || fetch('assets.json').then(r => r.json())]);
   ATLAS = await fetch(`../poems/atlas/${P}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
   PLAN = await fetch(`plans/${P}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
   parts = {};
   for (const [sid, s] of Object.entries(CAT.sheets)) for (const p of s.parts) parts[p.id] = {...p, sheet: sid, poems: s.poems, folder: s.folder};
-  if (!PLAN) {   // no hand plan yet: one empty stage per scene-book scene
-    PLAN = {num: P, title: ATLAS?.title || P, scenes: (ATLAS?.scenes || []).map(s => ({key: s.key, name: s.name, shot: s.block || s.camera || '', layers: []}))};
-  }
+  if (!PLAN) PLAN = {num: P, title: ATLAS?.title || P, scenes: (ATLAS?.scenes || []).map(s => ({key: s.key, name: s.name, shot: s.block || s.camera || '', layers: []}))};
   document.title = `Stage ${P} ${PLAN.title}`;
   scenes = PLAN.scenes.map(s => { const saved = store?.getItem(key(s.key)); return saved ? {...s, layers: JSON.parse(saved), edited: true} : structuredClone(s); });
-  cur = Math.min(cur, scenes.length - 1); sel = -1;
-  strip(); tray(); show();
+  cur = Math.min(Math.max(0, +(qs.get('s') || 0)), scenes.length - 1); sel = -1;
+  await Promise.all(scenes.flatMap(s => s.layers.filter(L => L.action).map(L => clip(L.action))));
+  strip(); tabs(); tray(); show();
 }
-
-function layerEl(L, i, mini) {
-  const p = parts[L.part];
-  const img = new Image();
-  img.className = 'layer' + (mini ? '' : (i === sel ? ' sel' : '')) + (L.hide ? ' hid' : '');
-  img.alt = p ? p.label || p.id : L.part;
-  img.draggable = false;
-  img.src = p ? CUT + p.file : '';
-  const w = L.w, h = L.h || (p ? w * p.bbox[3] / p.bbox[2] : w);   // h: a strip stretched to fill (sky, sea)
-  Object.assign(img.style, {left: (L.x - w / 2) + 'px', top: (L.y - h / 2) + 'px', width: w + 'px', height: h + 'px',
-    transform: `rotate(${L.rot || 0}deg) scaleX(${L.flip ? -1 : 1})`, opacity: L.op ?? 1});
-  img.dataset.i = i;
-  return img;
-}
-function render(host, layers, mini) { host.innerHTML = ''; layers.forEach((L, i) => host.appendChild(layerEl(L, i, mini))); }
-function fit() { const w = $('stageWrap').clientWidth; $('stage').style.transform = `scale(${w / 1600})`; }
 function strip() {
   $('scenes').innerHTML = '';
   scenes.forEach((s, i) => {
@@ -144,7 +223,7 @@ function strip() {
     d.innerHTML = `<div class="mini"><div class="stage"></div></div><b>${esc(s.key)}${s.edited ? ' · edited' : ''}</b><span>${esc(s.name)}</span>`;
     d.onclick = d.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; cur = i; sel = -1; strip(); show(); };
     $('scenes').appendChild(d);
-    const st = d.querySelector('.stage'); render(st, s.layers, true); st.style.transform = 'scale(' + (166 / 1600) + ')';
+    const st = d.querySelector('.stage'); render(st, s.layers, true); st.style.transform = 'scale(' + (166 / W) + ')';
   });
 }
 function show() {
@@ -152,50 +231,110 @@ function show() {
   render($('stage'), s.layers); fit();
   const sb = (ATLAS?.scenes || []).find(x => x.key === s.key) || {};
   $('info').innerHTML = `<h2>${esc(s.key)} · ${esc(s.name)}</h2>${sb.lines ? `<p class="lines">${esc(sb.lines.join(' '))}</p>` : ''}
-    <p class="shot"><b>Shot:</b> ${esc(s.shot || sb.block || '')}</p>${sb.what ? `<p class="dim" style="color:var(--dim)">${esc(sb.what)}</p>` : ''}
-    ${s.set ? `<p class="hint">set: ${esc(s.set)} · ${s.layers.length} layers</p>` : `<p class="hint">${s.layers.length} layers</p>`}`;
+    <p><b>Shot:</b> ${esc(s.shot || sb.block || '')}</p>${sb.what ? `<p style="color:var(--dim)">${esc(sb.what)}</p>` : ''}
+    <p class="hint">${s.set ? 'set: ' + esc(s.set) + ' · ' : ''}${s.layers.length} layers${s.note ? ' · ' + esc(s.note) : ''}</p>`;
   layersList();
+  const L = s.layers[sel]; $('bBlend').value = L?.blend || ''; $('bOp').value = L?.op ?? 1;
+}
+function label(L) {
+  const k = kindOf(L);
+  if (k === 'part') return parts[L.part]?.label || L.part;
+  if (k === 'action') { const a = ASSETS.actions.find(x => x.id === L.action); return (a?.title || L.action) + ' · ' + (a?.cast || ''); }
+  return L.label || (L.src || '').split('/').slice(-2).join('/');
 }
 function layersList() {
   const s = scenes[cur];
-  $('layers').innerHTML = s.layers.map((L, i) => { const p = parts[L.part];
-    return `<div class="li${i === sel ? ' sel' : ''}" data-i="${i}"><img src="${p ? CUT + p.file : ''}" alt=""><span class="n" title="${esc(L.part)}">${esc((p?.label || L.part).slice(0, 40))}</span>
-      <button data-a="hide" title="show / hide">${L.hide ? '○' : '●'}</button></div>`; }).join('') || '<p class="hint" style="padding:0 6px">Empty stage: add parts from the tray.</p>';
+  $('layers').innerHTML = s.layers.map((L, i) => { const k = kindOf(L);
+    return `<div class="li${i === sel ? ' sel' : ''}" data-i="${i}">${k === 'action' ? '<i>ACT</i>' : k === 'video' ? '<i style="color:var(--arch)">FILM</i>' : `<img src="${esc(srcOf(L))}" alt="">`}
+      <span class="k ${k}">${k}</span><span class="n" title="${esc(label(L))}">${esc(label(L).slice(0, 44))}</span>
+      <button data-a="hide" title="show / hide">${L.hide ? '○' : '●'}</button></div>`; }).join('') || '<p class="hint" style="padding:0 6px">Empty stage: add from the tray below.</p>';
   $('layers').querySelectorAll('.li').forEach(el => el.onclick = e => {
     const i = +el.dataset.i;
     if (e.target.dataset.a === 'hide') { s.layers[i].hide = !s.layers[i].hide; save(); show(); return; }
     sel = i; show(); });
 }
+
+/* ── tray: kit parts, depth planes, images, archive, actions, films ── */
+const TABS = [['parts', 'Kit parts'], ['planes', 'Depth planes'], ['images', 'Stills + atlas'], ['archive', 'Archive'], ['actions', 'Actions'], ['films', 'Films']];
+function tabs() {
+  $('tabs').innerHTML = TABS.map(([k, t]) => `<button class="btn${k === TAB ? ' on' : ''}" data-t="${k}" role="tab">${t}</button>`).join('');
+  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { TAB = b.dataset.t; tabs(); tray(); });
+}
+function add(L, under) {
+  const ls = scenes[cur].layers;
+  if (under) { ls.splice(0, 0, ...(Array.isArray(L) ? L : [L])); sel = 0; } else { ls.push(L); sel = ls.length - 1; }
+  save(); show();
+}
+function cellHTML(attrs, img, text, wide) { return `<div class="cell${wide ? ' wide' : ''}" tabindex="0" ${attrs}><img loading="lazy" src="${esc(img)}" alt=""><span>${esc(text)}</span></div>`; }
+function bindCells(fn) { $('tray').querySelectorAll('[data-add]').forEach(el => el.onclick = el.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; fn(el.dataset, el); }); }
 function tray() {
-  const q = $('q').value.toLowerCase();
-  const groups = {};
-  for (const p of Object.values(parts)) {
-    if (!p.poems.includes(P)) continue;
-    if (q && !(p.label + ' ' + p.id).toLowerCase().includes(q)) continue;
-    (groups[p.sheet] = groups[p.sheet] || []).push(p);
+  const q = $('q').value.toLowerCase(), A = ASSETS.poems[P] || {planes: [], images: []};
+  const hit = s => !q || String(s).toLowerCase().includes(q);
+  let h = '';
+  if (TAB === 'parts') {
+    const groups = {};
+    for (const p of Object.values(parts)) if (p.poems.includes(P) && hit(p.label + ' ' + p.id)) (groups[p.sheet] = groups[p.sheet] || []).push(p);
+    const order = ['04_SETS_AND_BUILDINGS', '05_PAINTED_EFFECTS', '03_PROPS', '02_ACTIONS_AND_POSES', '01_CHARACTER_CORE'];
+    const sh = Object.keys(groups).sort((a, b) => order.indexOf(CAT.sheets[a].folder) - order.indexOf(CAT.sheets[b].folder) || a.localeCompare(b));
+    h = sh.map(sid => `<div class="grp">${esc(sid)}</div><div class="cells">${groups[sid].map(p => cellHTML(`data-add="part" data-id="${esc(p.id)}"`, CUT + p.file, p.label || p.id.split('/')[1])).join('')}</div>`).join('')
+      || '<p class="hint">No cut parts for this poem yet.</p>';
+    $('tray').innerHTML = h;
+    bindCells(d => { const p = parts[d.id]; add({part: p.id, x: 800, y: 450, w: Math.min(600, p.bbox[2])}); });
+    return;
   }
-  const order = ['04_SETS_AND_BUILDINGS', '05_PAINTED_EFFECTS', '03_PROPS', '02_ACTIONS_AND_POSES', '01_CHARACTER_CORE'];
-  const sheets = Object.keys(groups).sort((a, b) => order.indexOf(CAT.sheets[a].folder) - order.indexOf(CAT.sheets[b].folder) || a.localeCompare(b));
-  $('tray').innerHTML = sheets.map(sid => `<div class="grp">${esc(sid)}</div><div class="cells">${groups[sid].map(p =>
-    `<div class="cell" tabindex="0" data-id="${esc(p.id)}" title="${esc(p.label || p.id)}"><img loading="lazy" src="${CUT + p.file}" alt=""><span>${esc(p.label || p.id.split('/')[1])}</span></div>`).join('')}</div>`).join('');
-  $('tray').querySelectorAll('.cell').forEach(el => el.onclick = el.onkeydown = e => {
-    if (e.type === 'keydown' && e.key !== 'Enter') return;
-    const p = parts[el.dataset.id], w = Math.min(600, p.bbox[2]);
-    scenes[cur].layers.push({part: p.id, x: 800, y: 450, w}); sel = scenes[cur].layers.length - 1; save(); show(); });
+  if (TAB === 'planes') {
+    const ids = [...A.planes, ...Object.keys(ASSETS.planes).filter(k => !A.planes.includes(k))];
+    h = ids.filter(id => hit(id + ' ' + ASSETS.planes[id].sheets.map(s => (s.contents || []).join(' ')).join(' '))).map((id, n) => { const S = ASSETS.planes[id];
+      return `<div class="grp">${n < A.planes.length ? '★ ' : ''}${esc(S.short)} <button data-set="${esc(id)}">add as set</button></div><div class="cells">` +
+        cellHTML(`data-add="plane" data-src="${esc(S.backdrop)}" data-l="backdrop"`, S.thumb, 'backdrop') +
+        S.sheets.map(s => cellHTML(`data-add="plane" data-src="${esc(s.file)}" data-l="${esc((s.plane || s.sheet) + ': ' + (s.contents || []).join(', '))}"`, s.file, (s.plane || s.sheet) + ' · ' + (s.contents || []).slice(0, 2).join(', '))).join('') +
+        cellHTML(`data-add="plane" data-src="${esc(S.ink)}" data-l="ink pass" data-blend="multiply"`, S.ink, 'ink pass') + '</div>'; }).join('');
+    $('tray').innerHTML = '<p class="hint" style="margin:4px">The AI stills as a set: each split into depth sheets, far to near. ★ = this poem\'s own footage. "add as set" puts the whole stack under the scene.</p>' + h;
+    $('tray').querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const S = ASSETS.planes[b.dataset.set];
+      add([{kind: 'plane', src: S.backdrop, x: 800, y: 450, w: 1600, h: 900, label: S.short + ' backdrop'}, ...S.sheets.map(s => ({kind: 'plane', src: s.file, x: 800, y: 450, w: 1600, h: 900, label: S.short + ' ' + (s.plane || s.sheet)}))], true); toast('Set added under the scene'); });
+    bindCells(d => add({kind: 'plane', src: d.src, x: 800, y: 450, w: 1600, h: 900, label: d.l, blend: d.blend || undefined}, true));
+    return;
+  }
+  if (TAB === 'images') {
+    h = '<div class="cells">' + A.images.filter(i => hit(i.label + ' ' + i.source + ' ' + i.use)).map(i => cellHTML(`data-add="image" data-src="${esc(i.file)}" data-l="${esc(i.label)}" data-s="${esc(i.source)}"`, i.file, `${i.source} · ${i.label}`)).join('') + '</div>';
+    $('tray').innerHTML = '<p class="hint" style="margin:4px">Our stills and the atlas references chosen for this poem. Archive-sourced ones carry a tag on screen.</p>' + h;
+    bindCells((d, el) => { const im = el.querySelector('img'); add({kind: 'image', src: d.src, x: 800, y: 450, w: 520, ar: im.naturalHeight / im.naturalWidth || .5625, label: d.l, tag: /archive|markov|halfworld|foundry|sets/.test(d.s) ? `ARCHIVE · ${d.s} · ${d.l}`.slice(0, 70) : undefined}); });
+    return;
+  }
+  if (TAB === 'archive') {
+    h = '<div class="cells">' + ASSETS.archive.filter(i => hit(i.label)).map(i => cellHTML(`data-add="image" data-src="${esc(i.file)}" data-l="${esc(i.label)}"`, i.file, i.label)).join('') + '</div>';
+    $('tray').innerHTML = '<p class="hint" style="margin:4px">Archive film frames (weave). Placed as objects in the world, tagged while they show; use a blend mode to seat them.</p>' + h;
+    bindCells((d, el) => { const im = el.querySelector('img'); add({kind: 'image', src: d.src, x: 800, y: 300, w: 640, ar: im.naturalHeight / im.naturalWidth || .75, label: d.l, tag: 'ARCHIVE · ' + d.l, blend: 'screen', op: .85}); });
+    return;
+  }
+  if (TAB === 'actions') {
+    h = ASSETS.actions.filter(a => hit(a.title + ' ' + a.id + ' ' + a.situation)).map(a => `<div class="act" tabindex="0" data-add="action" data-id="${esc(a.id)}"><b>${esc(a.title)}</b><span>${esc(a.cast)} · ${a.frames}f</span><em>${esc(a.situation || '')}</em></div>`).join('');
+    $('tray').innerHTML = '<p class="hint" style="margin:4px">Solved actions from the Acting Arena (rigid parts, IK, planted feet). They play live on the stage.</p>' + h;
+    bindCells(async d => { const C = await clip(d.id); const L = {kind: 'action', action: d.id, x: 800, y: 520, w: 360}; L.ar = (C.box[3] - C.box[1]) / (C.box[2] - C.box[0]); add(L); });
+    return;
+  }
+  if (TAB === 'films') {
+    const fs = [];
+    if (A.film) fs.push({src: A.film, l: `poem ${P} film`});
+    for (const id of A.planes) { const S = ASSETS.planes[id]; if (S.film) fs.push({src: S.film, l: S.short + ' multiplane shot', thumb: S.thumb}); }
+    h = '<div class="cells">' + fs.filter(f => hit(f.l)).map(f => cellHTML(`data-add="video" data-src="${esc(f.src)}" data-l="${esc(f.l)}"`, f.thumb || '', f.l, true)).join('') + '</div>';
+    $('tray').innerHTML = '<p class="hint" style="margin:4px">Moving plates: the poem\'s film and each still\'s multiplane shot. Added under the scene, full frame.</p>' + h;
+    bindCells(d => add({kind: 'video', src: d.src, x: 800, y: 450, w: 1600, h: 900, label: d.l}, true));
+  }
 }
 function save() { const s = scenes[cur]; s.edited = true; store?.setItem(key(s.key), JSON.stringify(s.layers)); strip(); }
 
-// interaction on the stage
+/* ── direct manipulation ── */
 let drag = null;
 $('stage').addEventListener('pointerdown', e => {
   const t = e.target.closest('.layer'); if (!t) { sel = -1; show(); return; }
-  sel = +t.dataset.i; const L = scenes[cur].layers[sel], k = 1600 / $('stageWrap').clientWidth;
-  drag = {x: e.clientX, y: e.clientY, L, x0: L.x, y0: L.y, k}; $('stage').setPointerCapture(e.pointerId); show();
+  sel = +t.dataset.i; const L = scenes[cur].layers[sel];
+  drag = {x: e.clientX, y: e.clientY, L, x0: L.x, y0: L.y, k: W / $('stageWrap').clientWidth}; $('stage').setPointerCapture(e.pointerId); show();
 });
 $('stage').addEventListener('pointermove', e => { if (!drag) return;
   drag.L.x = Math.round(drag.x0 + (e.clientX - drag.x) * drag.k); drag.L.y = Math.round(drag.y0 + (e.clientY - drag.y) * drag.k);
-  const el = $('stage').children[sel]; if (el) { const w = drag.L.w, h = el.offsetHeight; el.style.left = (drag.L.x - w / 2) + 'px'; el.style.top = (drag.L.y - h / 2) + 'px'; } });
-$('stage').addEventListener('pointerup', () => { if (drag) { drag = null; save(); } });
+  const el = $('stage').querySelector(`.layer[data-i="${sel}"]`); if (el) { const [w, h] = size(drag.L); el.style.left = (drag.L.x - w / 2) + 'px'; el.style.top = (drag.L.y - h / 2) + 'px'; } });
+$('stage').addEventListener('pointerup', () => { if (drag) { drag = null; save(); show(); } });
 $('stageWrap').addEventListener('wheel', e => { if (sel < 0) return; e.preventDefault(); const L = scenes[cur].layers[sel];
   const f = e.deltaY < 0 ? 1.05 : 0.95; L.w = Math.max(10, Math.round(L.w * f)); if (L.h) L.h = Math.round(L.h * f); save(); show(); }, {passive: false});
 function act(a) {
@@ -207,6 +346,10 @@ function act(a) {
   save(); show();
 }
 $('bFlip').onclick = () => act('flip'); $('bDel').onclick = () => act('del'); $('bBack').onclick = () => act('back'); $('bFwd').onclick = () => act('fwd');
+$('bBlend').onchange = e => { const L = scenes[cur].layers[sel]; if (!L) return; L.blend = e.target.value || undefined; save(); show(); };
+$('bOp').oninput = e => { const L = scenes[cur].layers[sel]; if (!L) return; L.op = +e.target.value; const el = $('stage').querySelector(`.layer[data-i="${sel}"]`); if (el) el.style.opacity = L.op; };
+$('bOp').onchange = () => save();
+$('bPlay').onclick = () => { playing = !playing; $('bPlay').textContent = playing ? '❚❚ Pause' : '▶ Play'; document.querySelectorAll('#stage video').forEach(v => playing ? v.play() : v.pause()); };
 addEventListener('keydown', e => {
   if (e.target.matches('input,select')) return;
   const L = scenes[cur]?.layers[sel]; if (!L) return;
@@ -215,28 +358,31 @@ addEventListener('keydown', e => {
   else if (e.key === 'f' || e.key === 'F') L.flip = !L.flip;
   else if (e.key === 'q' || e.key === 'Q') L.rot = (L.rot || 0) - 3;
   else if (e.key === 'e' || e.key === 'E') L.rot = (L.rot || 0) + 3;
-  else if (e.key === '+' || e.key === '=') L.w = Math.round(L.w * 1.05);
-  else if (e.key === '-') L.w = Math.round(L.w * .95);
+  else if (e.key === '+' || e.key === '=') { L.w = Math.round(L.w * 1.05); if (L.h) L.h = Math.round(L.h * 1.05); }
+  else if (e.key === '-') { L.w = Math.round(L.w * .95); if (L.h) L.h = Math.round(L.h * .95); }
   else if (e.key === '[') return act('back');
   else if (e.key === ']') return act('fwd');
   else if (e.key === 'Delete' || e.key === 'Backspace') return act('del');
   else return;
   e.preventDefault(); save(); show();
 });
-$('bReset').onclick = () => { const s = scenes[cur]; store?.removeItem(key(s.key)); const o = PLAN.scenes[cur]; scenes[cur] = structuredClone(o); sel = -1; strip(); show(); toast('Scene reset to plan'); };
+$('bReset').onclick = () => { const s = scenes[cur]; store?.removeItem(key(s.key)); scenes[cur] = structuredClone(PLAN.scenes[cur]); sel = -1; strip(); show(); toast('Scene reset to plan'); };
 $('bJson').onclick = () => { const out = {...PLAN, scenes: scenes.map(({edited, ...s}) => s)};
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], {type: 'application/json'})); a.download = `${P}.json`; a.click(); toast('Saved ' + P + '.json'); };
+const COMP = {multiply: 'multiply', screen: 'screen', overlay: 'overlay', 'soft-light': 'soft-light', luminosity: 'luminosity', lighten: 'lighten', darken: 'darken'};
 $('bPng').onclick = async () => {
-  const c = document.createElement('canvas'); c.width = 1600; c.height = 900; const g = c.getContext('2d'); g.fillStyle = '#050403'; g.fillRect(0, 0, 1600, 900);
-  for (const L of scenes[cur].layers) { if (L.hide) continue; const p = parts[L.part]; if (!p) continue;
-    const im = new Image(); im.src = CUT + p.file; await im.decode().catch(() => {});
-    const w = L.w, h = L.h || w * p.bbox[3] / p.bbox[2]; g.save(); g.globalAlpha = L.op ?? 1; g.translate(L.x, L.y); g.rotate((L.rot || 0) * Math.PI / 180); g.scale(L.flip ? -1 : 1, 1); g.drawImage(im, -w / 2, -h / 2, w, h); g.restore(); }
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
+  const els = [...$('stage').querySelectorAll('.layer')];
+  for (const L of scenes[cur].layers) { const i = scenes[cur].layers.indexOf(L), el = els.find(e => +e.dataset.i === i); if (L.hide || !el) continue;
+    if (el.tagName === 'IMG') await el.decode().catch(() => {});
+    const [w, h] = size(L); g.save(); g.globalAlpha = L.op ?? 1; g.globalCompositeOperation = COMP[L.blend] || 'source-over';
+    g.translate(L.x, L.y); g.rotate((L.rot || 0) * Math.PI / 180); g.scale(L.flip ? -1 : 1, 1); try { g.drawImage(el, -w / 2, -h / 2, w, h); } catch (_) {} g.restore(); }
   c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `${scenes[cur].key}.png`; a.click(); });
 };
 $('q').oninput = tray;
 $('poem').onchange = e => { P = e.target.value; history.replaceState(null, '', '?p=' + P); cur = 0; load(); };
 addEventListener('resize', fit);
-load();
+load().then(() => requestAnimationFrame(tick));
 </script>
 <script src="../../nav.js" defer></script>
 </body>

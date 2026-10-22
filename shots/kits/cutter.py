@@ -96,9 +96,48 @@ def panels(fg):
         ys, xs = sl
         w, h = xs.stop - xs.start, ys.stop - ys.start
         # a cell enclosed by rules: not touching the sheet edge, and big enough to hold a figure
-        if xs.start > 2 and ys.start > 2 and xs.stop < W - 2 and ys.stop < H - 2 and w > 110 and h > 110 and (lab[sl] == i).mean() > .9:
+        if xs.start > 2 and ys.start > 2 and xs.stop < W - 2 and ys.stop < H - 2 and w > 110 and h > 110 and w * h < .6 * W * H and (lab[sl] == i).mean() > .9:
             out.append((xs.start, ys.start, w, h))
     return out, grid
+
+
+def pose_grid(line):
+    """Pose sheets: a grid only where rules span it, rows first (a rule across most of the width), then the
+    columns inside each row (a rule down most of that row). Figures' own folds and edges never qualify.
+    Returns cells and the rule mask; no spanning rules means no grid at all."""
+    m = line.astype(np.uint8)
+    H, W = m.shape
+    hl = cv2.morphologyEx(m, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (W // 6, 1))) & (1 - cv2.morphologyEx(m, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (1, 9))))
+
+    def runs(prof, thr):
+        idx = np.where(prof > thr)[0]
+        if not len(idx):
+            return []
+        groups, start = [], idx[0]
+        for a, b in zip(idx, idx[1:]):
+            if b - a > 3:
+                groups.append((start + a) // 2); start = b
+        groups.append((start + idx[-1]) // 2)
+        return groups
+    rows = runs(hl.sum(1), .6 * W)
+    if len(rows) < 2:
+        return [], np.zeros(line.shape, bool)
+    grid = np.zeros(line.shape, bool)
+    cells = []
+    for y0, y1 in zip(rows, rows[1:]):
+        if y1 - y0 < 110:
+            continue
+        band = m[y0 + 4:y1 - 4]
+        vl = cv2.morphologyEx(band, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (1, int((y1 - y0) * .6))))
+        cols = runs(vl.sum(0), .8 * (y1 - y0 - 8))
+        for x0, x1 in zip(cols, cols[1:]):
+            if x1 - x0 > 110:
+                cells.append((int(x0) + 4, int(y0) + 4, int(x1 - x0) - 8, int(y1 - y0) - 8))
+        for x in cols:
+            grid[y0:y1, max(0, x - 3):x + 4] = True
+    for y in rows:
+        grid[max(0, y - 3):y + 4] = True
+    return cells, grid
 
 
 def framed(sub_mask, filled, box):
@@ -130,18 +169,32 @@ def cut_sheet(path, sheet_id, outdir):
     LAB = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB).astype(np.float32)
     rim = np.concatenate([LAB[:4].reshape(-1, 3), LAB[-4:].reshape(-1, 3), LAB[:, :4].reshape(-1, 3), LAB[:, -4:].reshape(-1, 3)])
     dE = np.linalg.norm(LAB - np.median(rim, 0), axis=2)
-    near, _ = ndi.label(dE < 9)
+    # seal hairline gaps in a card's outline first (white robes, white paper props): flood an eroded paper,
+    # then grow the flood back only into paper-coloured pixels
+    cand = dE < 9
+    near, _ = ndi.label(ndi.binary_erosion(cand, iterations=2, border_value=1))
     edge_ids = np.unique(np.concatenate([near[0], near[-1], near[:, 0], near[:, -1]]))
-    fg = ~np.isin(near, edge_ids[edge_ids > 0])
-    ref_y = min([o['y'] for o in ws if re.match(r'REFERENCE', o['t'])] or [H])   # the REFERENCE ONLY band
+    paper_ = ndi.binary_dilation(np.isin(near, edge_ids[edge_ids > 0]), iterations=3) & cand
+    fg = ~paper_
+    ref_y = min([o['y'] for o in ws if re.match(r'REFERENCE', o['t']) and o['y'] > H * .55] or [H])   # the REFERENCE ONLY band (low on the sheet)
     textmask = np.zeros_like(fg)
     for w in ws:
         textmask[max(0, w['y'] - 3):w['y'] + w['h'] + 3, max(0, w['x'] - 3):w['x'] + w['w'] + 3] = True
     fg_parts = fg & ~textmask
-    cells, grid = panels(rgb.max(2) < 95)                  # rules are thin and near-black; card edges are kraft brown
+    pose_sheet = bool(re.search(r'pose', os.path.basename(path)))
+    # rules are thin lines: near-black on most sheets; on pose grids any thin line darker than the paper (grey rules)
+    if pose_sheet:   # three readings of the rules; keep the one that finds the most panels
+        dark = panels(rgb.max(2) < 95)
+        # a true panel carries its title in its top band: keep the reading with the most titled panels
+        # (an untitled panel means the reading split a real one: it counts against)
+        titled = lambda c: sum(1 if any(x < o['x'] < x + w and y - 6 < o['y'] < y + max(44, h * .16) for o in ws) else -1 for (x, y, w, h) in c[0])
+        cells, grid = max([dark, panels(dE > 28), pose_grid(dE > 28)], key=titled)
+        if not cells:
+            grid = np.zeros_like(fg)
+    else:
+        cells, grid = panels(rgb.max(2) < 95)
     cells = [c for c in cells if (dE[c[1]:c[1] + c[3], c[0]:c[0] + c[2]] < 9).mean() > .45]   # a panel is mostly white paper
     fg_parts &= ~grid
-    pose_sheet = bool(re.search(r'pose', os.path.basename(path)))
     incell = np.zeros_like(fg)
     for (x, y, w, h) in cells:
         incell[y:y + h, x:x + w] = True
@@ -253,7 +306,10 @@ def cut_sheet(path, sheet_id, outdir):
         hl, k = ndi.label(m & (d < 9))
         if k:
             sz = ndi.sum(np.ones_like(hl), hl, range(1, k + 1))
-            m = m & ~np.isin(hl, [j + 1 for j, z in enumerate(sz) if z > 120])
+            Lw = LAB[y:y + h, x:x + w, 0]
+            # an opening is flat paper; white paint (robes, wings, cream) is shaded: keep it
+            holes = [j + 1 for j, z in enumerate(sz) if z > 120 and (z < .04 * m.sum() or (Lw[hl == j + 1].std() < 2.5 and d[hl == j + 1].mean() < 4.5))]
+            m = m & ~np.isin(hl, holes)
         core = ndi.binary_erosion(m, iterations=3)
         band = ndi.binary_dilation(m, iterations=1) & ~core
         a = np.where(core, 1.0, np.where(band, np.clip((d - 8) / 26, 0, 1), 0.0))
@@ -289,18 +345,31 @@ def sheets():
     return list(S.values())
 
 
+def one(s):
+    r = cut_sheet(s['path'], s['id'], os.path.join(OUT, s['id']))
+    e = {'id': s['id']} | {k2: s[k2] for k2 in ('poems', 'folder', 'category')} | {'path': os.path.relpath(s['path'], HERE)} | r
+    json.dump(e, open(os.path.join(OUT, s['id'], 'sheet.json'), 'w'), indent=1)
+    return s['id'], len(r['parts']), len(r['refs']), r['title']
+
+
 def main():
     args = sys.argv[1:]
     todo = sheets()
     if args:
         todo = [s for s in todo if any(a[5:] in s['poems'] if a.startswith('poem=') else (os.path.abspath(a) == os.path.abspath(s['path']) or a in s['id']) for a in args)]
     os.makedirs(OUT, exist_ok=True)
+    # each sheet writes its own entry (cut/<id>/sheet.json), so parallel workers and stopped runs lose nothing;
+    # the catalog is the merge of every entry on disk
+    import multiprocessing as mp
+    os.environ['OMP_THREAD_LIMIT'] = '1'
+    with mp.Pool(int(os.environ.get('JOBS', os.cpu_count() or 2))) as pool:
+        for k, (sid, np_, nr, title) in enumerate(pool.imap_unordered(one, todo), 1):
+            print(f"[{k}/{len(todo)}] {sid}: {np_} parts, {nr} refs · {title[:50]}", flush=True)
     cat_path = os.path.join(OUT, 'catalog.json')
-    cat = json.load(open(cat_path)) if os.path.exists(cat_path) else {'sheets': {}}
-    for k, s in enumerate(todo, 1):
-        r = cut_sheet(s['path'], s['id'], os.path.join(OUT, s['id']))
-        cat['sheets'][s['id']] = {k2: s[k2] for k2 in ('poems', 'folder', 'category')} | {'path': os.path.relpath(s['path'], HERE)} | r
-        print(f"[{k}/{len(todo)}] {s['id']}: {len(r['parts'])} parts, {len(r['refs'])} refs · {r['title'][:50]}", flush=True)
+    cat = {'sheets': {}}
+    for f in sorted(glob.glob(os.path.join(OUT, '*', 'sheet.json'))):
+        e = json.load(open(f))
+        cat['sheets'][e.pop('id')] = e
     cat['totals'] = {'sheets': len(cat['sheets']), 'parts': sum(len(v['parts']) for v in cat['sheets'].values())}
     json.dump(cat, open(cat_path, 'w'), indent=1)
     print(cat['totals'])
