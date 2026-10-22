@@ -238,8 +238,8 @@ function resolve(s, ref) {
   const ls = s.layers, i = ls.findIndex(L => refOf(L, ls) === ref); if (i >= 0) return [i, false];
   const base = ref.replace(/#\d+$/, '');
   let j = -1;
-  if (base.startsWith('poet.')) j = ls.findIndex(L => L.part?.startsWith('poet.') && L.part.includes('main-poses'));
-  else if (base.startsWith('action:')) j = ls.findIndex(L => kindOf(L) === 'action');
+  if (base.startsWith('poet.')) { j = ls.findIndex(L => L.role === 'poet' && kindOf(L) === 'part'); if (j < 0) j = ls.findIndex(L => L.part?.startsWith('poet.') && L.part.includes('main-poses')); }
+  else if (base.startsWith('action:')) j = ls.findIndex(L => kindOf(L) === 'action' || (kindOf(L) === 'clip' && L.role === 'action'));
   else if (base.startsWith('ens:')) j = ls.findIndex(L => kindOf(L) === 'ensemble');
   else if (base.startsWith('sfx:')) j = ls.findIndex(L => kindOf(L) === 'sfx');
   else if (/\.json$/.test(base)) j = ls.findIndex(L => kindOf(L) === 'clip' && L.src.split('/').slice(-2, -1)[0] === base.split('/').slice(-2, -1)[0]);

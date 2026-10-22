@@ -23,6 +23,9 @@ from PIL import Image, ImageStat
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import scale as SC
+sys.path.insert(0, os.path.join(HERE, 'ensembles'))
+import stage_scene as STAGE_SCENE
+from recipes import SCENES as RECIPES
 
 SHOTS = os.path.dirname(HERE)
 CAT = json.load(open(os.path.join(SHOTS, 'kits', 'cut', 'catalog.json')))['sheets']
@@ -588,7 +591,23 @@ def plan(n, write_sets=True):
             if not names & words(shot_txt):
                 shot, cam_cm = 'CU', SC.SHOTS['CU']['cam']
         subj = 'young_poet' if re.search(r'young_poet|young poet|\bboy\b', shot_txt, re.I) and 'young_poet' in chars and not re.search(r'\bpoet\b', shot_txt.replace('YOUNG', ''), re.I) else 'poet'
+        R = RECIPES.get(sc['key'])
+        if R:   # staged from ensembles (ensembles/recipes.py, STAGING.md)
+            shot, cam_cm = R.get('shot', shot), R.get('cam', cam_cm)
         cam = SC.camera(shot, cam_cm, SC.character_cm(subj, n))
+        if R:
+            arch = archive_for(n, {'atlas_refs': spec_archive_refs(spec) if spec else []}, extra=g.get('refs') or [])
+            arch = [a for a in arch if a['source'] != 'foundry'] or arch
+            layers, focal = STAGE_SCENE.stage(n, sc, R, cam, SC, arch, {a['id'] for a in ASSETS['actions']})
+            use = {'ensembles': [e for e, _ in R['ens']], 'archive': next((L['src'] for L in layers if L.get('role') == 'archive'), None)}
+            scenes.append({'key': sc['key'], 'name': sc['name'], 'set': set_id, 'setSpec': f'sets/{n}.{set_id}.json' if spec else None,
+                           'shot': shot_txt, 'camera': cam | {'alternates': alts}, 'overrides': use,
+                           'ensembles': [{'id': e, **p} for e, p in R['ens']],
+                           'focal': R.get('focal_note') or (focal[0]['label'] if focal else None),
+                           'note': f"{cam['size']} · camera {cam['cam_cm']} cm · horizon y{cam['horizon_y']} · {cam['ppc']} px/cm at the subject · "
+                                   + ' + '.join(e for e, _ in R['ens']),
+                           'layers': layers})
+            continue
         if spec:
             layers, use, who = compose(n, sc, g, si, spec, cam, D, chars, used, prop_parts)
         else:
@@ -598,8 +617,9 @@ def plan(n, write_sets=True):
                        'note': f"{cam['size']} · camera {cam['cam_cm']} cm · horizon y{cam['horizon_y']} · {cam['ppc']} px/cm at the subject · set {set_id}"
                                + (' (interior)' if spec and spec['interior'] else '') + (' · footage ' + spec['footage'][0]['short'] if spec and spec['footage'] else ''),
                        'layers': layers})
-    return {'num': n, 'title': D.get('title'), 'auto': True, 'scale': 'scale.json',
-            'note': 'Built by plan_poems.py: each scene = a set spec (sets/) + a camera from the scale model (scale.py) + overrides; rearrange on the stage and export to keep.',
+    staged = all(RECIPES.get(sc['key']) for sc in A['scenes'])
+    return {'num': n, 'title': D.get('title'), 'auto': True, 'scale': 'scale.json', 'staging': 'ensembles/STAGING.md' if staged else None,
+            'note': ('Staged from ensembles (ensembles/*.json, recipes.py): each scene = a camera (scale.py) + 2-4 ensembles by depth + one focal action; ' if staged else '') + 'Built by plan_poems.py: each scene = a set spec (sets/) + a camera from the scale model (scale.py) + overrides; rearrange on the stage and export to keep.',
             'scenes': scenes}
 
 

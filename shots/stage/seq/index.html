@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stage Sequences</title>
+<style>
+:root{--bg:#0d0b0a;--ink:#efe6da;--dim:#9a8d7e;--line:#2a221c;--acc:#e7a35a;--ok:#b9c46a;--bad:#e0705a}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,sans-serif}
+header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
+select,button{font:12px monospace;color:var(--ink);background:#16120f;border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+canvas{display:block;width:100%;max-width:1600px;height:auto;margin:0 auto;background:#050403}
+#info{padding:8px 16px;color:var(--dim);font:12px monospace;white-space:pre-wrap}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+</style></head><body>
+<header><b>Stage <span style="color:var(--acc)">Sequences</span></b>
+<select id="clip"></select><button id="play">pause</button><input type="range" id="scrub" min="0" max="1" value="0"><span id="fr">f 0</span>
+<label><input type="checkbox" id="dbg"> contacts</label><a style="color:var(--dim)" href="../anim/index.html">anim library</a></header>
+<canvas id="cv" width="1600" height="900"></canvas><div id="info"></div>
+<script>
+const $=s=>document.querySelector(s);let C=null,IM={},f=0,playing=true,t0=performance.now(),acc=0;
+async function load(e){const u=new URL(e.path,location.href);C=await (await fetch(u)).json();IM={};
+ for(const[k,p]of Object.entries(C.images)){const im=new Image();im.src=new URL(p,u).href;IM[k]=im}
+ $('#scrub').max=C.frames.length-1;f=0;
+ $('#info').innerHTML=`${C.title}\ncheck: <span class="${e.check==='pass'?'ok':'bad'}">${e.check}</span>\n`+
+  C.contacts.map(c=>`contact f${c.f[0]}-${c.f[1]} ${c.what}: max ${c.max_err_cm} cm (tol ${c.tol_cm}) ${c.pass?'ok':'FAIL'}`).join('\n')+'\n'+
+  C.events.map(v=>`f${v.f} ${v.sfx} - ${v.label}`).join('\n')+'\n'+(C.notes||[]).join('\n')}
+function draw(){const g=$('#cv').getContext('2d');g.fillStyle='#18140f';g.fillRect(0,0,1600,900);if(!C)return;
+ const fr=C.frames[f];for(const o of fr.draw){g.save();g.globalAlpha=o.a??1;
+  if(o.t==='img'){const im=IM[o.id];if(im&&im.complete&&im.naturalWidth){g.transform(...o.m);if(o.shade)g.filter=`brightness(${1-o.shade})`;if(o.blend)g.globalCompositeOperation=o.blend;g.drawImage(im,0,0)}}
+  else if(o.t==='line'){g.strokeStyle=o.stroke;g.lineWidth=o.w;g.lineJoin='round';g.beginPath();o.pts.forEach((p,i)=>i?g.lineTo(...p):g.moveTo(...p));g.stroke()}
+  else if(o.t==='glow'){const r=g.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);r.addColorStop(0,o.color);r.addColorStop(1,'transparent');g.globalAlpha=o.a;g.globalCompositeOperation='screen';g.fillStyle=r;g.fillRect(o.x-o.r,o.y-o.r,2*o.r,2*o.r)}
+  g.restore()}
+ if($('#dbg').checked&&fr.dbg)for(const[a,p,x,y]of fr.dbg.contacts||[]){g.strokeStyle='#5fd0ff';g.lineWidth=2;g.beginPath();g.arc(x,y,7,0,7);g.stroke()}
+ const ev=C.events.filter(e=>Math.abs(e.f-f)<8).map(e=>e.sfx).join('  ');g.fillStyle='#e7a35a';g.font='16px monospace';g.fillText(ev,16,880)}
+function loop(n){if(playing&&C){acc+=(n-t0)/1000*24;while(acc>=1){f=(f+1)%C.frames.length;acc--}$('#scrub').value=f}t0=n;$('#fr').textContent='f '+f;draw();requestAnimationFrame(loop)}
+(async()=>{const I=await (await fetch('index.json')).json();$('#clip').innerHTML=I.clips.map((c,i)=>`<option value="${i}">${c.id}</option>`).join('');
+ $('#clip').onchange=()=>load(I.clips[+$('#clip').value]);$('#play').onclick=()=>{playing=!playing;$('#play').textContent=playing?'pause':'play'};
+ $('#scrub').oninput=e=>{playing=false;$('#play').textContent='play';f=+e.target.value};await load(I.clips[0]);requestAnimationFrame(loop)})();
+</script></body></html>

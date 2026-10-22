@@ -40,8 +40,30 @@ def catalog():
     return _CAT
 
 
+_SHEETS = None
+
+
+def _sheets():
+    global _SHEETS
+    if _SHEETS is None:
+        _SHEETS = json.load(open(os.path.join(CUT, 'catalog.json')))['sheets']
+    return _SHEETS
+
+
+def has_sheet(sheet):
+    return sheet in _sheets()
+
+
+def catalog_sheet(sheet):
+    """The parts of one cut sheet, in the cutter's order."""
+    return _sheets()[sheet]['parts']
+
+
 def _img_path(pid):
     """Path relative to shots/ and absolute path for a part id."""
+    if pid.startswith('crop:'):
+        rel = os.path.join('stage', 'anim', 'parts', 'crop', pid[5:] + '.png')
+        return rel, os.path.join(SHOTS, rel)
     if pid.startswith('pack:'):
         rel = os.path.join('kits', 'packs', pid[5:])
     else:
@@ -79,6 +101,8 @@ def _alpha(abs_path):
 
 
 def _brads(pid, A):
+    if pid.startswith('crop:'):
+        return []
     if pid.startswith('pack:'):
         return _pack_brads(A)
     return [tuple(map(float, b)) for b in catalog()[pid].get('brads', [])]
@@ -96,7 +120,7 @@ def resolve(pid, kind, hints=None):
     """Return {'id','img','abs','w','h','pts':{...},'faces':+1/-1/0}."""
     hints = dict(hints or {})
     rel, ab = _img_path(pid)
-    if not pid.startswith('pack:'):
+    if not pid.startswith(('pack:', 'crop:')):
         rel, ab = _cleaned(pid, rel, ab)
     A = _alpha(ab)
     h, w = A.shape

@@ -261,13 +261,16 @@ def cues_for(num, sb, ps, W, i0, i1, lines, t0, t1, CAT):
         c = {'t': W[k]['s'], 'w': k, 'word': W[k]['w'], 'layer': ref(L, layers), 'action': action, 'auto': True}
         c.update(kw); cues.append(c); return c
     early = [k for k in range(i0, i1) if W[k]['s'] >= t0 + min(1.2, 0.2 * (t1 - t0))] or list(range(i0, i1))
-    pose = next((L for L in layers if kind(L) == 'part' and L['part'].startswith('poet.') and 'main-poses' in L['part'] and not L.get('hide')), None) \
+    pose = next((L for L in layers if L.get('role') == 'poet' and kind(L) == 'part' and not L.get('hide')), None) \
+        or next((L for L in layers if kind(L) == 'part' and L['part'].startswith('poet.') and 'main-poses' in L['part'] and not L.get('hide')), None) \
         or next((L for L in layers if kind(L) == 'part' and L['part'].startswith('poet.') and not L.get('hide')), None)
     used = set()
 
     # 1. the solved action plays on its verb; the still pose swaps out on the same word
-    for L in [L for L in layers if kind(L) == 'action' and L.get('hide')][:1]:
-        n = int(re.search(r'ACT-0*(\d+)', L['action']).group(1)) if re.search(r'ACT-0*(\d+)', L['action']) else 0
+    # a hidden solved action: the old kind 'action', or a 'clip' layer whose role is 'action' (anim clips)
+    for L in [L for L in layers if (kind(L) == 'action' or (kind(L) == 'clip' and L.get('role') == 'action')) and L.get('hide')][:1]:
+        act = L.get('action') or L.get('src', '')
+        n = int(re.search(r'ACT-0*(\d+)', act).group(1)) if re.search(r'ACT-0*(\d+)', act) else 0
         keys = ACT_VERBS.get(n, '').split()
         k = next((k for k in early if stemhit(W[k]['w'], keys)), None)
         why = 'verb'
