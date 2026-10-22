@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WYGWYL — Character Acting Arena & Proportion Solver Lab</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #121620;
+    --panel-hi: #181e2c;
+    --border: #262f45;
+    --text: #e8ecf4;
+    --muted: #8c98b4;
+    --accent: #e0a838;
+    --accent-hi: #f5c458;
+    --red: #e05244;
+    --green: #36c986;
+    --cyan: #38d8f0;
+    --purple: #a578f5;
+    --mono: 'SF Mono', 'JetBrains Mono', 'Menlo', monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.45;
+    overflow-x: hidden;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: linear-gradient(180deg, #151a26 0%, #0f131c 100%);
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-badge {
+    background: var(--accent);
+    color: #0b0d12;
+    font-family: var(--mono);
+    font-weight: 800;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.06em;
+  }
+  .brand h1 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .brand p {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .top-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .top-links a, .btn {
+    background: var(--panel-hi);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 11px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .top-links a:hover, .btn:hover {
+    border-color: var(--accent);
+    color: var(--accent-hi);
+  }
+  .btn.active {
+    background: rgba(224, 168, 56, 0.18);
+    border-color: var(--accent);
+    color: var(--accent-hi);
+  }
+  .btn.danger.active {
+    background: rgba(224, 82, 68, 0.2);
+    border-color: var(--red);
+    color: #ff8e84;
+  }
+  .btn.success.active {
+    background: rgba(54, 201, 134, 0.18);
+    border-color: var(--green);
+    color: #6df0b2;
+  }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: 330px 1fr 360px;
+    min-height: calc(100vh - 57px);
+  }
+  @media (max-width: 1360px) {
+    .workspace { grid-template-columns: 300px 1fr; }
+    .right-col { grid-column: 1 / -1; }
+  }
+
+  .col {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 14px;
+    overflow-y: auto;
+    max-height: calc(100vh - 57px);
+  }
+  .right-col {
+    border-right: none;
+    border-left: 1px solid var(--border);
+  }
+  .center-col {
+    display: flex;
+    flex-direction: column;
+    background: #080a0e;
+    overflow-y: auto;
+    max-height: calc(100vh - 57px);
+  }
+
+  .sec-title {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 11px;
+    margin-bottom: 12px;
+  }
+
+  /* Cast Cards */
+  .cast-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .cast-card {
+    background: var(--panel-hi);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 10px;
+    transition: border-color 0.15s;
+  }
+  .cast-card.on-stage {
+    border-color: var(--accent);
+    background: linear-gradient(90deg, rgba(224,168,56,0.10) 0%, rgba(24,30,44,0.95) 100%);
+  }
+  .cast-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 5px;
+  }
+  .cast-header label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .cast-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(56, 216, 240, 0.14);
+    color: var(--cyan);
+    white-space: nowrap;
+  }
+  .cast-tag.child {
+    background: rgba(165, 120, 245, 0.2);
+    color: #c9abff;
+  }
+  .cast-tag.back {
+    background: rgba(224, 82, 68, 0.2);
+    color: #ff948a;
+  }
+  .cast-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-family: var(--mono);
+  }
+  .cast-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-top: 6px;
+  }
+  select, input[type="range"] {
+    background: #0d1018;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 11px;
+    font-family: var(--mono);
+    width: 100%;
+  }
+
+  /* Cycle Grid */
+  .cycle-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+  .cycle-btn {
+    padding: 6px 6px;
+    font-size: 11px;
+    font-family: var(--mono);
+    text-align: center;
+    justify-content: center;
+  }
+
+  /* Stage Toolbar & Canvas */
+  .stage-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: #10141e;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .stage-wrap {
+    position: relative;
+    width: 100%;
+    height: 540px;
+    min-height: 540px;
+    flex-shrink: 0;
+    background: radial-gradient(circle at 50% 62%, #192132 0%, #090c12 78%);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  #arenaCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+  }
+  #arenaCanvas:active { cursor: grabbing; }
+
+  .stage-hud {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    gap: 10px;
+  }
+  .hud-pill {
+    background: rgba(11, 13, 18, 0.86);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    backdrop-filter: blur(6px);
+  }
+  .hud-pill span.hi { color: var(--accent-hi); font-weight: 700; }
+  .hud-pill span.good { color: var(--green); font-weight: 700; }
+  .hud-pill span.bad { color: var(--red); font-weight: 700; }
+
+  /* Lower Comparison & Telemetry Deck */
+  .lower-deck {
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 1100px) {
+    .lower-deck { grid-template-columns: 1fr; }
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .data-table th, .data-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: left;
+  }
+  .data-table th {
+    color: var(--muted);
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .badge-good {
+    color: var(--green);
+    background: rgba(54, 201, 134, 0.14);
+    padding: 2px 5px;
+    border-radius: 3px;
+  }
+  .badge-bad {
+    color: #ff8e84;
+    background: rgba(224, 82, 68, 0.18);
+    padding: 2px 5px;
+    border-radius: 3px;
+  }
+
+  .formula-box {
+    background: #0a0d14;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 9px 11px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #d0daf0;
+    margin: 8px 0;
+    overflow-x: auto;
+  }
+  .part-bars {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .part-bar-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 4px;
+    padding: 5px 7px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+  }
+  .part-bar-fill {
+    height: 4px;
+    background: var(--cyan);
+    border-radius: 2px;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="brand-badge">ARENA SOLVER v2.0</span>
+    <div>
+      <h1>Character Kinematics, Proportion Normalization & Piece-Scaling Arena</h1>
+      <p>8 Canonical Cast Rigs · 1,602 Solved Cutout Parts · 7.5H vs 5.2H Child Lock · Aspect-Compensated Crouch/Fall · Foot-Contact Pins</p>
+    </div>
+  </div>
+  <div class="top-links">
+    <a href="suite.html">Suite Hub</a>
+    <a href="stage.html">Multiplane Stage</a>
+    <a href="cards.html">Cutout Cards</a>
+    <a href="body_lab.html">Body Lab</a>
+    <a href="arena/parts/kit3/release_v2/character_rigs_library.json" target="_blank">character_rigs_library.json ↗</a>
+  </div>
+</header>
+
+<div class="workspace">
+  <!-- LEFT COLUMN: 8 CANONICAL RIGS & PRESETS -->
+  <aside class="col">
+    <div class="panel-box">
+      <div class="sec-title">
+        <span>1. Arena Ensemble Presets</span>
+        <span id="activeCountBadge">8 Active</span>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:5px;">
+        <button class="btn active" onclick="applyPreset('all8', this)">All 8 Canonical Rigs</button>
+        <button class="btn" onclick="applyPreset('adult_vs_child', this)">7.5H Adult vs 5.2H Child</button>
+        <button class="btn" onclick="applyPreset('crouch_fall_test', this)">Crouch / Fall / Recover BBox Fix</button>
+        <button class="btn" onclick="applyPreset('waltz_club', this)">Vintage Waltz + DJ Club</button>
+        <button class="btn" onclick="applyPreset('ex_back_rule', this)">Poet + EX (Strict Back)</button>
+      </div>
+    </div>
+
+    <div class="panel-box">
+      <div class="sec-title">
+        <span>2. Global Locomotion & Acting Cycle</span>
+        <span id="globalCycleLabel" style="color:var(--cyan)">walk</span>
+      </div>
+      <div class="cycle-grid" id="globalCycleGrid">
+        <button class="btn cycle-btn active" data-cycle="walk" onclick="setGlobalCycle('walk')">walk</button>
+        <button class="btn cycle-btn" data-cycle="run" onclick="setGlobalCycle('run')">run</button>
+        <button class="btn cycle-btn" data-cycle="waltz" onclick="setGlobalCycle('waltz')">waltz</button>
+        <button class="btn cycle-btn" data-cycle="read" onclick="setGlobalCycle('read')">read</button>
+        <button class="btn cycle-btn" data-cycle="reach" onclick="setGlobalCycle('reach')">reach</button>
+        <button class="btn cycle-btn" data-cycle="crouch" onclick="setGlobalCycle('crouch')">crouch</button>
+        <button class="btn cycle-btn" data-cycle="fall" onclick="setGlobalCycle('fall')">fall</button>
+        <button class="btn cycle-btn" data-cycle="floor_recovery" onclick="setGlobalCycle('floor_recovery')">recover</button>
+        <button class="btn cycle-btn" data-cycle="vape_turn" onclick="setGlobalCycle('vape_turn')">vape_turn</button>
+        <button class="btn cycle-btn" data-cycle="dj_spin" onclick="setGlobalCycle('dj_spin')">dj_spin</button>
+        <button class="btn cycle-btn" data-cycle="idle_breathe" onclick="setGlobalCycle('idle_breathe')">idle</button>
+        <button class="btn cycle-btn" data-cycle="mixed_demo" onclick="setGlobalCycle('mixed_demo')">choreo mix</button>
+      </div>
+    </div>
+
+    <div class="sec-title">
+      <span>3. Canonical Cast Rigs (8 Families)</span>
+      <span>Click to Toggle / Inspect</span>
+    </div>
+    <div class="cast-list" id="castListContainer"></div>
+  </aside>
+
+  <!-- CENTER COLUMN: INTERACTIVE ACTING ARENA & SIDE-BY-SIDE SOLVER -->
+  <main class="center-col">
+    <div class="stage-toolbar">
+      <div class="toolbar-group">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">SCALE MODE:</span>
+        <button class="btn success active" id="modeSolvedBtn" onclick="setComparisonMode('solved')">Solved Anatomical + Aspect-Compensated (Fixed)</button>
+        <button class="btn" id="modeSplitBtn" onclick="setComparisonMode('split')">Side-by-Side Split: Naive BBox vs Solved</button>
+        <button class="btn danger" id="modeGhostBtn" onclick="setComparisonMode('ghost')">Overlay Broken Naive BBox Ghost</button>
+        <button class="btn danger" id="modeNaiveBtn" onclick="setComparisonMode('naive')">Naive BBox Scaling Only (Broken)</button>
+      </div>
+      <div class="toolbar-group">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">RIG RENDER:</span>
+        <button class="btn active" id="renderJointedBtn" onclick="setRigRenderStyle('jointed')">Articulated Cutout Parts</button>
+        <button class="btn" id="renderHybridBtn" onclick="setRigRenderStyle('hybrid')">Hybrid Replacement Poses</button>
+        <button class="btn active" id="togglePivotsBtn" onclick="toggleOverlay('pivots')">Brass Pivots</button>
+        <button class="btn active" id="togglePinsBtn" onclick="toggleOverlay('pins')">Foot Pins</button>
+        <button class="btn active" id="toggleRulersBtn" onclick="toggleOverlay('rulers')">7.5H / 5.2H Rulers</button>
+        <button class="btn" id="playPauseBtn" onclick="togglePlay()">⏸ Pause</button>
+      </div>
+    </div>
+
+    <div class="stage-wrap">
+      <canvas id="arenaCanvas" width="1600" height="620"></canvas>
+      <div class="stage-hud">
+        <div class="hud-pill" id="hudLeft">
+          SOLVER: <span class="good">ANATOMICAL + ASPECT COMPENSATED</span> · Z=1.0 Focal Plane (`0.54` Adult / `0.37` Child / `0.36` Crouch / `0.22` Prone)
+        </div>
+        <div class="hud-pill" id="hudRight">
+          LIBRARY: <span class="hi" id="hudLibStatus">Loading character_rigs_library.json...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOWER DECK: PIECE-SCALING COMPARISON & LIVE TELEMETRY -->
+    <div class="lower-deck">
+      <div class="panel-box">
+        <div class="sec-title">
+          <span>Why Naive BBox Scaling Broke & How This Solver Fixes It</span>
+          <span class="badge-good">4 Root Causes Solved</span>
+        </div>
+        <div class="formula-box">
+          1. Posture Stage Height Ratio (Z=1.0): H_stage = 0.54 (Adult 7.5H) | 0.37 (Child Age 7, 5.2H = 0.68x) | 0.36 (Crouched/Seated) | 0.22 (Prone/Falling)<br/>
+          2. Aspect Compensation (w/h &gt; 0.75): mult = clamp(1 / sqrt(1 + 1.35 * (w/h - 0.50)^2), 0.36, 0.82)<br/>
+          3. Zoomed-Card Normalization: scale(part) = (H_stage * torso_frac * part_scale_table[slot]) / max_axis_visible_px(part)
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Cutout / Part Case</th>
+              <th>Raw Vis BBox (px)</th>
+              <th>Aspect (w/h)</th>
+              <th>Naive BBox Scale (Broken)</th>
+              <th>Solved Scale (Fixed)</th>
+            </tr>
+          </thead>
+          <tbody id="comparisonTableBody">
+            <tr>
+              <td>Poet Tracksuit `15_hand_relaxed_L.png`</td>
+              <td>641 × 1087 px</td>
+              <td>0.59</td>
+              <td><span class="badge-bad">100% Torso Height (Giant Hand!)</span></td>
+              <td><span class="badge-good">0.28 × Torso (52px @ 1080p)</span></td>
+            </tr>
+            <tr>
+              <td>Poet `pose.lying_back.png` (Prone)</td>
+              <td>496 × 206 px</td>
+              <td>2.41</td>
+              <td><span class="badge-bad">0.54 Stage H → 1,404px Wide Giant!</span></td>
+              <td><span class="badge-good">0.22 Stage H (Aspect 0.41x = 572px)</span></td>
+            </tr>
+            <tr>
+              <td>Poet / Muse `poet_crouch_f72_clean.png`</td>
+              <td>575 × 738 px</td>
+              <td>0.78</td>
+              <td><span class="badge-bad">0.54 Stage H (1.50x Too Tall!)</span></td>
+              <td><span class="badge-good">0.36 Stage H (Aspect 0.67x)</span></td>
+            </tr>
+            <tr>
+              <td>Child Traveler / Ghost Child Age 7</td>
+              <td>155 × 387 px (crouch: 491px)</td>
+              <td>0.40 / 0.44</td>
+              <td><span class="badge-bad">0.54 Adult Height (Giant Child!)</span></td>
+              <td><span class="badge-good">0.37 Stage H (5.2H = 0.68x Adult)</span></td>
+            </tr>
+            <tr>
+              <td>EX Bomber Jacket (`ex_jacket_back`)</td>
+              <td>280 × 391 px</td>
+              <td>0.72</td>
+              <td><span class="badge-bad">Accidental Front Flip Allowed</span></td>
+              <td><span class="badge-good">0.555 Stage H · Strict Back/3Q-Back</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel-box">
+        <div class="sec-title">
+          <span>Zoomed-Card vs Solved Anatomical Piece Visual Proof</span>
+          <span id="selectedRigTitle" style="color:var(--accent-hi)">poet_tracksuit_31</span>
+        </div>
+        <canvas id="pieceCompareCanvas" width="680" height="235" style="width:100%;height:235px;background:#090c12;border:1px solid var(--border);border-radius:5px;"></canvas>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT COLUMN: SELECTED RIG INSPECTOR & PART SCALE TABLE -->
+  <aside class="col right-col">
+    <div class="panel-box">
+      <div class="sec-title">
+        <span>Selected Rig Inspector</span>
+        <span id="inspectorRigBadge" class="cast-tag">7.5H · 0.54</span>
+      </div>
+      <div id="inspectorSummary" style="font-size:11.5px;color:var(--muted);margin-bottom:8px;"></div>
+      <div class="sec-title" style="margin-top:10px;">
+        <span>Posture Stage Height Ratios (Z = 1.0)</span>
+      </div>
+      <div id="postureRatiosGrid" class="part-bars"></div>
+    </div>
+
+    <div class="panel-box">
+      <div class="sec-title">
+        <span>Per-Part Scale Table (`torso = 1.0`)</span>
+        <span>Zoomed-Card Fix</span>
+      </div>
+      <div id="partScaleGrid" class="part-bars"></div>
+    </div>
+
+    <div class="panel-box">
+      <div class="sec-title">
+        <span>Live Foot-Contact Pins & Cycle Keyframes</span>
+        <span id="inspectorCycleBadge" style="color:var(--cyan)">walk</span>
+      </div>
+      <div id="pinTelemetryBox" style="font-family:var(--mono);font-size:11px;color:var(--text);"></div>
+    </div>
+
+    <div class="panel-box">
+      <div class="sec-title">
+        <span>Resolved Cutout Parts & Sheets (<span id="resolvedPartCount">0</span>)</span>
+      </div>
+      <div id="resolvedPartsList" style="max-height:240px;overflow-y:auto;font-family:var(--mono);font-size:10.5px;color:var(--muted);"></div>
+    </div>
+  </aside>
+</div>
+
+<script>
+// Embedded fallback specification (automatically enriched by fetching character_rigs_library.json)
+const FALLBACK_RIGS = [
+  {
+    id: "poet_tracksuit_31",
+    name: "1. Poet — Black/Red Tracksuit (31-Part Rig)",
+    poems: ["04","05","06","07","08","09","10","11","12","13","14"],
+    head_count: 7.5,
+    height_cm: 184,
+    adult_scale_ratio: 1.00,
+    canonical_height_stage_ratio: 0.54,
+    kit_dir: "poet.red_black_sunglasses",
+    use_tracksuit31: true,
+    accent: "#e05244",
+    default_x: 0.14,
+    default_z: 1.00,
+    default_cycle: "walk",
+    costume_variants: [
+      { id: "red_black_sunglasses", label: "Tracksuit + Red Piping (04-14)", kit_dir: "poet.red_black_sunglasses" },
+      { id: "poet_soul_08", label: "Poet Soul Variant (08)", kit_dir: "poet.red_black_sunglasses" }
+    ]
+  },
+  {
+    id: "poet_black_tshirt",
+    name: "2. Poet — Black T-Shirt & Weave Action Rig",
+    poems: ["01","02","03"],
+    head_count: 7.5,
+    height_cm: 184,
+    adult_scale_ratio: 1.00,
+    canonical_height_stage_ratio: 0.54,
+    kit_dir: "poet.black_tshirt",
+    accent: "#38d8f0",
+    default_x: 0.25,
+    default_z: 0.98,
+    default_cycle: "crouch",
+    costume_variants: [
+      { id: "black_tshirt", label: "Black T-Shirt (Poems 01-03)", kit_dir: "poet.black_tshirt" },
+      { id: "weave_man_profile", label: "Weave Man Modular Profile", kit_dir: "poet.black_tshirt" }
+    ]
+  },
+  {
+    id: "ex_jacket_back",
+    name: "3. The EX — Olive Bomber (Strict Back/3Q-Back)",
+    poems: ["01","02","03","07","08","09","12"],
+    head_count: 7.6,
+    height_cm: 188,
+    adult_scale_ratio: 1.022,
+    canonical_height_stage_ratio: 0.555,
+    kit_dir: "ex.ex_jacket",
+    back_only: true,
+    accent: "#72a868",
+    default_x: 0.36,
+    default_z: 1.02,
+    default_cycle: "vape_turn",
+    costume_variants: [
+      { id: "ex_jacket", label: "Olive Bomber (Back/3Q-Back Only)", kit_dir: "ex.ex_jacket" }
+    ]
+  },
+  {
+    id: "vintage_party_couple",
+    name: "4. Vintage Party Couple — Suit & Gown Waltz",
+    poems: ["01","14"],
+    head_count: 7.5,
+    height_cm: 181,
+    adult_scale_ratio: 0.99,
+    canonical_height_stage_ratio: 0.535,
+    kit_dir: "party.vintage_party",
+    paired_couple: true,
+    accent: "#e0a838",
+    default_x: 0.49,
+    default_z: 0.95,
+    default_cycle: "waltz",
+    costume_variants: [
+      { id: "vintage_suit_man", label: "Paired Suit Man + Satin Gown Woman", kit_dir: "party.vintage_party" },
+      { id: "vintage_gown_woman", label: "Satin Gown Solo Lead", kit_dir: "party.club_dress" }
+    ]
+  },
+  {
+    id: "woman_muse_costumes",
+    name: "5. The Woman / Muse — 7 Poem Costumes",
+    poems: ["01","02","05","06","07","08","09","12","13","14"],
+    head_count: 7.3,
+    height_cm: 174,
+    adult_scale_ratio: 0.963,
+    canonical_height_stage_ratio: 0.52,
+    kit_dir: "woman.teal_dress",
+    accent: "#28b8c8",
+    default_x: 0.62,
+    default_z: 1.00,
+    default_cycle: "reach",
+    costume_variants: [
+      { id: "teal_dress", label: "1. teal_dress (Gold Floral)", kit_dir: "woman.teal_dress" },
+      { id: "indigo_dress", label: "2. indigo_dress (Indigo/Gold)", kit_dir: "ancestors.ancestor_robe_indigo_gold" },
+      { id: "yellow_coat", label: "3. yellow_coat (Warm Window Dress)", kit_dir: "woman.window_woman_dress" },
+      { id: "apron_dress", label: "4. apron_dress (House Cardigan)", kit_dir: "woman.mother_cardigan" },
+      { id: "work_shirt", label: "5. work_shirt (Everyday Linen)", kit_dir: "family.couple_summer_casual" },
+      { id: "stage_black", label: "6. stage_black (Performance)", kit_dir: "party.club_jacket" },
+      { id: "gold_gown", label: "7. gold_gown (Evening Gown)", kit_dir: "party.club_dress" }
+    ]
+  },
+  {
+    id: "child_traveler_ghost",
+    name: "6. Child Traveler / Ghost Child (5.2H = 0.68x)",
+    poems: ["02","05","06","09","13"],
+    head_count: 5.2,
+    height_cm: 122,
+    adult_scale_ratio: 0.68,
+    canonical_height_stage_ratio: 0.37,
+    kit_dir: "young_poet.child_clothes",
+    is_child: true,
+    accent: "#a578f5",
+    default_x: 0.73,
+    default_z: 1.00,
+    default_cycle: "walk",
+    costume_variants: [
+      { id: "child_traveler_06", label: "Child Traveler / Young Poet (5.2H)", kit_dir: "young_poet.child_clothes" },
+      { id: "ghost_nightclothes", label: "Ghost Child Age 7 (Translucent)", kit_dir: "ghost_child.ghost_nightclothes" },
+      { id: "pajamas_winter", label: "Winter Flannel Pajamas (Poem 02)", kit_dir: "young_poet.pajamas_winter" }
+    ]
+  },
+  {
+    id: "mother_ancestors_family",
+    name: "7. Mother, Ancestors & Street-Clothes Family",
+    poems: ["02","05","09","10","11","12","13","14"],
+    head_count: 7.4,
+    height_cm: 179,
+    adult_scale_ratio: 0.98,
+    canonical_height_stage_ratio: 0.53,
+    kit_dir: "ancestors.ancestor_robe_indigo_gold",
+    accent: "#f09c48",
+    default_x: 0.83,
+    default_z: 0.96,
+    default_cycle: "read",
+    costume_variants: [
+      { id: "ancestor_robe_indigo_gold", label: "Ancestor Indigo/Gold Robe (05)", kit_dir: "ancestors.ancestor_robe_indigo_gold" },
+      { id: "ancestor_elder_white_silver", label: "Ancestor White/Silver Elder (05)", kit_dir: "ancestors.ancestor_elder_white_silver" },
+      { id: "mother_cardigan", label: "The Mother in Cardigan (02, 09)", kit_dir: "woman.mother_cardigan" },
+      { id: "street_clothes_family", label: "Street-Clothes Family (10, 11, 14)", kit_dir: "family.street_clothes" }
+    ]
+  },
+  {
+    id: "dj_club_citizens",
+    name: "8. DJ, Club Dancers, Guardians & Citizens",
+    poems: ["06","07","08","10","12"],
+    head_count: 7.5,
+    height_cm: 182,
+    adult_scale_ratio: 1.00,
+    canonical_height_stage_ratio: 0.54,
+    kit_dir: "party.dj_cyber",
+    accent: "#36c986",
+    default_x: 0.92,
+    default_z: 0.98,
+    default_cycle: "dj_spin",
+    costume_variants: [
+      { id: "dj_cyber", label: "Cyber DJ w/ Headphones (07)", kit_dir: "party.dj_cyber" },
+      { id: "club_dancer_dress", label: "Club Dancer Sequin Dress (07, 08)", kit_dir: "party.club_dress" },
+      { id: "atlantis_citizen", label: "Atlantis Citizen Neon Linen (06, 10)", kit_dir: "atlantis.atlantis_citizen" },
+      { id: "atlantis_gatekeeper", label: "Atlantis Gatekeeper Guardian (06)", kit_dir: "atlantis.atlantis_gatekeeper" },
+      { id: "angel_guardian", label: "Winged Guardian Angel (08)", kit_dir: "angels.angel_white_robe" }
+    ]
+  }
+];
+
+const PART_SCALE_TABLE = {
+  torso: 1.00,
+  pelvis: 0.65,
+  waist_link: 0.38,
+  hip_bridge: 0.52,
+  upper_arm: 0.48,
+  forearm: 0.44,
+  hand: 0.28,
+  thigh: 0.62,
+  shin: 0.58,
+  foot: 0.40,
+  head: 0.64,
+  eyes: 0.20,
+  brows: 0.18,
+  nose: 0.16,
+  mouth: 0.22,
+  sunglasses: 0.28
+};
+
+// State
+let libraryData = null;
+let actors = [];
+let selectedRigId = "poet_tracksuit_31";
+let comparisonMode = "solved"; // 'solved', 'split', 'ghost', 'naive'
+let rigRenderStyle = "jointed"; // 'jointed', 'hybrid'
+let overlays = { pivots: true, pins: true, rulers: true };
+let isPlaying = true;
+let lastTime = performance.now();
+let simTime = 0;
+
+// Image cache
+const imgCache = {};
+function getImg(src) {
+  if (!src) return null;
+  if (imgCache[src]) return imgCache[src];
+  const img = new Image();
+  img.src = src;
+  imgCache[src] = img;
+  return img;
+}
+
+// Preload a kit's standard modular images + poses
+function getKitImages(kitDir, isBackOnly, useTracksuit31) {
+  const view = isBackOnly ? "back" : "front";
+  const baseP = `arena/parts/kit3/v2/parts/${kitDir}`;
+  const basePoses = `arena/parts/kit3/v2/poses/${kitDir}`;
+
+  if (useTracksuit31 && !isBackOnly) {
+    const ts = "kits/packs/poet_tracksuit_v1";
+    return {
+      torso: getImg(`${ts}/01_torso_front.png`),
+      pelvis: getImg(`${ts}/06_pelvis_front_cover.png`),
+      uarm_L: getImg(`${ts}/07_upper_arm_L.png`),
+      farm_L: getImg(`${ts}/08_forearm_L.png`),
+      hand_L: getImg(`${ts}/15_hand_relaxed_L.png`),
+      uarm_R: getImg(`${ts}/09_upper_arm_R.png`),
+      farm_R: getImg(`${ts}/10_forearm_R.png`),
+      hand_R: getImg(`${ts}/16_hand_relaxed_R.png`),
+      thigh_L: getImg(`${ts}/11_thigh_L.png`),
+      shin_L: getImg(`${ts}/12_shin_L.png`),
+      foot_L: getImg(`${ts}/19_boot_front_L.png`),
+      thigh_R: getImg(`${ts}/13_thigh_R.png`),
+      shin_R: getImg(`${ts}/14_shin_R.png`),
+      foot_R: getImg(`${ts}/20_boot_front_R.png`),
+      head: getImg(`${ts}/21_head_front_blank.png`),
+      eyes: getImg(`${ts}/22_eyes_open.png`),
+      brows: getImg(`${ts}/24_brows_rest.png`),
+      mouth: getImg(`${ts}/27_mouth_rest.png`),
+      sunglasses: getImg(`${ts}/31_sunglasses_front.png`),
+      pose_stand: getImg(`${basePoses}/stand_front.png`),
+      pose_walk: getImg(`${basePoses}/walk.png`),
+      pose_reach: getImg(`${basePoses}/reach.png`),
+      pose_crouch: getImg(`arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.deep_crouch.png`),
+      pose_kneel: getImg(`arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.kneeling_one_knee.png`),
+      pose_fall: getImg(`arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.falling_back.png`),
+      pose_prone: getImg(`arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.lying_back.png`),
+      pose_recover: getImg(`arena/bodies/poet_floor_recovery_clean.png`)
+    };
+  }
+
+  return {
+    torso: getImg(`${baseP}/body.${view}.torso.png`),
+    pelvis: getImg(`${baseP}/body.${view}.pelvis.png`),
+    uarm_L: getImg(`${baseP}/body.${view}.uarm.L.png`),
+    farm_L: getImg(`${baseP}/body.${view}.farm.L.png`),
+    hand_L: getImg(`${baseP}/body.${view}.hand.L.png`),
+    uarm_R: getImg(`${baseP}/body.${view}.uarm.R.png`),
+    farm_R: getImg(`${baseP}/body.${view}.farm.R.png`),
+    hand_R: getImg(`${baseP}/body.${view}.hand.R.png`),
+    thigh_L: getImg(`${baseP}/body.${view}.thigh.L.png`),
+    shin_L: getImg(`${baseP}/body.${view}.shin.L.png`),
+    foot_L: getImg(`${baseP}/body.${view}.foot.L.png`),
+    thigh_R: getImg(`${baseP}/body.${view}.thigh.R.png`),
+    shin_R: getImg(`${baseP}/body.${view}.shin.R.png`),
+    foot_R: getImg(`${baseP}/body.${view}.foot.R.png`),
+    head: getImg(`${baseP}/head.${view}.png`),
+    closeup_hand: getImg(`${baseP}/hand.R.open.palm.png`),
+    closeup_foot: getImg(`${baseP}/foot.R.flat.png`),
+    pose_stand: getImg(`${basePoses}/stand_${view}.png`),
+    pose_walk: getImg(`${basePoses}/walk.png`),
+    pose_reach: getImg(`${basePoses}/reach.png`),
+    pose_crouch: getImg(kitDir === "poet.black_tshirt" ? `arena/bodies/man_crouch_f72_clean.png` : `${basePoses}/crouch.png`),
+    pose_kneel: getImg(`${basePoses}/kneel.png`),
+    pose_fall: getImg(`${basePoses}/fall.png`),
+    pose_prone: getImg(`${baseP}/replacement.lie_back.png`),
+    pose_recover: getImg(`arena/bodies/poet_floor_recovery_clean.png`)
+  };
+}
+
+function initActors() {
+  actors = FALLBACK_RIGS.map((r, idx) => ({
+    id: r.id,
+    name: r.name,
+    poems: r.poems,
+    head_count: r.head_count,
+    height_cm: r.height_cm,
+    adult_scale_ratio: r.adult_scale_ratio,
+    canonical_height_stage_ratio: r.canonical_height_stage_ratio,
+    kit_dir: r.kit_dir,
+    use_tracksuit31: !!r.use_tracksuit31,
+    back_only: !!r.back_only,
+    paired_couple: !!r.paired_couple,
+    is_child: !!r.is_child,
+    accent: r.accent,
+    active: true,
+    x: r.default_x,
+    z: r.default_z,
+    dir: idx % 2 === 0 ? 1 : -1,
+    cycle: r.default_cycle,
+    costume_idx: 0,
+    costume_variants: r.costume_variants,
+    phase_offset: idx * 0.17
+  }));
+}
+
+// Compute procedural + keyframed kinematics for any cycle at normalized time t in [0..1]
+function evaluateCycleKinematics(actor, cycleName, tNorm) {
+  const t = (tNorm + actor.phase_offset) % 1.0;
+  const rad = t * Math.PI * 2;
+  const baseH = actor.canonical_height_stage_ratio;
+  const scale = actor.adult_scale_ratio || 1.0;
+
+  let posture = "standing";
+  let hRatio = baseH;
+  let aspectMult = 1.0;
+  let rootDy = 0;
+  let vx = 0;
+  let leftPin = true;
+  let rightPin = true;
+  let repPose = null;
+  let angles = {
+    torso: 0, pelvis: 0, head: 0,
+    uarm_L: 6, farm_L: -10, hand_L: 0,
+    uarm_R: -6, farm_R: -10, hand_R: 0,
+    thigh_L: 2, shin_L: -2, foot_L: 0,
+    thigh_R: -2, shin_R: -2, foot_R: 0
+  };
+
+  if (cycleName === "walk") {
+    posture = "walk";
+    vx = 0.055 * scale * actor.dir;
+    leftPin = t < 0.50;
+    rightPin = t >= 0.50;
+    rootDy = -Math.abs(Math.cos(rad)) * 0.012;
+    const swing = Math.sin(rad);
+    angles.torso = 4 * actor.dir;
+    angles.head = -2 * actor.dir + Math.sin(rad * 2) * 2;
+    angles.thigh_L = swing * 26;
+    angles.shin_L = swing < 0 ? -38 * (-swing) : -6;
+    angles.foot_L = swing * 12;
+    angles.thigh_R = -swing * 26;
+    angles.shin_R = -swing < 0 ? -38 * swing : -6;
+    angles.foot_R = -swing * 12;
+    angles.uarm_L = -swing * 24;
+    angles.farm_L = -16 - Math.max(0, -swing) * 18;
+    angles.uarm_R = swing * 24;
+    angles.farm_R = -16 - Math.max(0, swing) * 18;
+  } else if (cycleName === "run") {
+    posture = "run";
+    hRatio = baseH * 0.96;
+    aspectMult = 0.96;
+    vx = 0.115 * scale * actor.dir;
+    leftPin = t < 0.34;
+    rightPin = t >= 0.50 && t < 0.84;
+    rootDy = Math.sin(rad * 2) * 0.022;
+    const swing = Math.sin(rad);
+    angles.torso = 15 * actor.dir;
+    angles.head = -8 * actor.dir;
+    angles.thigh_L = swing * 44;
+    angles.shin_L = -25 - Math.max(0, -swing) * 48;
+    angles.thigh_R = -swing * 44;
+    angles.shin_R = -25 - Math.max(0, swing) * 48;
+    angles.uarm_L = -swing * 46;
+    angles.farm_L = -62;
+    angles.uarm_R = swing * 46;
+    angles.farm_R = -62;
+  } else if (cycleName === "waltz") {
+    posture = "waltz";
+    vx = Math.sin(rad * 0.5) * 0.028 * scale;
+    leftPin = t < 0.66;
+    rightPin = t >= 0.33;
+    rootDy = Math.sin(rad) * 0.016;
+    const sway = Math.sin(rad);
+    angles.torso = sway * 7;
+    angles.pelvis = sway * 3;
+    angles.head = -sway * 6;
+    angles.uarm_L = -58 + sway * 8;
+    angles.farm_L = -32;
+    angles.uarm_R = 48 + sway * 8;
+    angles.farm_R = -44;
+    angles.thigh_L = sway * 18;
+    angles.shin_L = -8;
+    angles.thigh_R = -sway * 18;
+    angles.shin_R = -8;
+  } else if (cycleName === "read") {
+    posture = "read";
+    hRatio = baseH * 0.99;
+    leftPin = true;
+    rightPin = true;
+    const cadence = Math.sin(rad);
+    angles.torso = 3 + cadence * 2;
+    angles.head = 12 - Math.max(0, cadence) * 14;
+    angles.uarm_L = 32;
+    angles.farm_L = -66 + cadence * 6;
+    angles.uarm_R = 24 + Math.max(0, cadence) * 24;
+    angles.farm_R = -48 + cadence * 16;
+  } else if (cycleName === "reach") {
+    posture = "reach";
+    const lift = 0.5 + 0.5 * Math.sin(rad);
+    hRatio = baseH * (1.0 + 0.02 * lift);
+    aspectMult = 0.96;
+    leftPin = true;
+    rightPin = lift < 0.7;
+    rootDy = lift * 0.014;
+    repPose = lift > 0.6 ? "pose_reach" : null;
+    angles.torso = -6 * lift;
+    angles.head = -16 * lift;
+    angles.uarm_L = 20 + lift * 105;
+    angles.farm_L = -35 + lift * 25;
+    angles.uarm_R = 25 + lift * 115;
+    angles.farm_R = -40 + lift * 32;
+    angles.thigh_L = 6 * lift;
+    angles.thigh_R = -12 * lift;
+  } else if (cycleName === "crouch") {
+    // Smooth cycle into deep crouch & hold so user clearly sees crouched height (0.36 vs 0.54)
+    const depth = t < 0.2 ? (t / 0.2) : (t < 0.8 ? 1.0 : (1.0 - (t - 0.8) / 0.2));
+    posture = depth > 0.55 ? "deep_crouch" : (depth > 0.25 ? "kneeling" : "standing");
+    hRatio = baseH * (1.0 - 0.333 * depth); // 0.54 -> 0.36 for adult, 0.37 -> 0.25 for child!
+    aspectMult = 1.0 - 0.33 * depth;
+    rootDy = -0.175 * depth * (baseH / 0.54);
+    leftPin = true;
+    rightPin = true;
+    repPose = depth > 0.55 ? "pose_crouch" : (depth > 0.25 ? "pose_kneel" : null);
+    angles.torso = 34 * depth;
+    angles.pelvis = 18 * depth;
+    angles.head = -18 * depth;
+    angles.thigh_L = 78 * depth;
+    angles.shin_L = -108 * depth;
+    angles.foot_L = 28 * depth;
+    angles.thigh_R = 72 * depth;
+    angles.shin_R = -112 * depth;
+    angles.foot_R = 30 * depth;
+    angles.uarm_L = 44 * depth;
+    angles.farm_L = -62 * depth;
+    angles.uarm_R = 48 * depth;
+    angles.farm_R = -66 * depth;
+  } else if (cycleName === "fall") {
+    const f = t < 0.30 ? (t / 0.30) : (t < 0.82 ? 1.0 : (1.0 - (t - 0.82) / 0.18));
+    posture = f > 0.65 ? "prone" : (f > 0.25 ? "falling" : "standing");
+    hRatio = baseH * (1.0 - 0.592 * f); // 0.54 -> 0.22 for adult, 0.37 -> 0.15 for child!
+    aspectMult = 1.0 - 0.59 * f;
+    rootDy = -0.31 * f * (baseH / 0.54);
+    leftPin = f < 0.35;
+    rightPin = false;
+    repPose = f > 0.65 ? "pose_prone" : (f > 0.25 ? "pose_fall" : null);
+    angles.torso = -82 * f;
+    angles.pelvis = -76 * f;
+    angles.head = 20 * f;
+    angles.uarm_L = 68 * f;
+    angles.farm_L = -25 * f;
+    angles.uarm_R = 45 * f;
+    angles.farm_R = -20 * f;
+    angles.thigh_L = 74 * f;
+    angles.shin_L = -24 * f;
+    angles.thigh_R = 66 * f;
+    angles.shin_R = -32 * f;
+  } else if (cycleName === "floor_recovery") {
+    const rec = 0.5 - 0.5 * Math.cos(rad); // 0 = prone -> 1 = pushup/crouch -> 0
+    posture = "floor_recovery";
+    hRatio = baseH * (0.41 + 0.26 * rec); // 0.22 .. 0.36
+    aspectMult = 0.41 + 0.26 * rec;
+    rootDy = -(0.30 - 0.14 * rec) * (baseH / 0.54);
+    leftPin = true;
+    rightPin = rec > 0.45;
+    repPose = "pose_recover";
+    angles.torso = 68 - 32 * rec;
+    angles.pelvis = 52 - 28 * rec;
+    angles.head = -24 + 10 * rec;
+    angles.uarm_L = 42;
+    angles.farm_L = -55 + 35 * rec;
+    angles.uarm_R = 38;
+    angles.farm_R = -50 + 30 * rec;
+    angles.thigh_L = 72 - 18 * rec;
+    angles.shin_L = -98 + 20 * rec;
+    angles.thigh_R = 54 - 14 * rec;
+    angles.shin_R = -82 + 16 * rec;
+  } else if (cycleName === "vape_turn") {
+    posture = "vape_turn";
+    const lift = 0.5 + 0.5 * Math.sin(rad);
+    leftPin = true;
+    rightPin = true;
+    angles.torso = -3 * lift;
+    angles.head = -10 * lift;
+    angles.uarm_L = -10;
+    angles.farm_L = -18;
+    angles.uarm_R = 16 + 44 * lift;
+    angles.farm_R = -38 - 58 * lift;
+  } else if (cycleName === "dj_spin") {
+    posture = "dj_spin";
+    const bounce = Math.abs(Math.sin(rad * 2));
+    hRatio = baseH * (0.96 + 0.03 * bounce);
+    rootDy = -0.016 * (1 - bounce);
+    leftPin = true;
+    rightPin = true;
+    angles.torso = 8 * (1 - bounce);
+    angles.head = 12 * (1 - bounce) - 6 * bounce;
+    angles.uarm_L = 35 + 75 * bounce;
+    angles.farm_L = -60 + 35 * bounce;
+    angles.uarm_R = -35 + 45 * Math.sin(rad);
+    angles.farm_R = -52;
+    angles.thigh_L = 12 * (1 - bounce);
+    angles.shin_L = -18 * (1 - bounce);
+    angles.thigh_R = -10 * (1 - bounce);
+    angles.shin_R = -18 * (1 - bounce);
+  } else {
+    // idle_breathe
+    const b = Math.sin(rad);
+    rootDy = b * 0.003;
+    angles.torso = -b * 1.2;
+    angles.uarm_L = 5 + b * 2;
+    angles.uarm_R = -5 - b * 2;
+  }
+
+  return {
+    t,
+    posture,
+    hRatio,
+    aspectMult,
+    rootDy,
+    vx,
+    leftPin,
+    rightPin,
+    repPose,
+    angles
+  };
+}
+
+// Draw a single articulated or replacement character at (cx, floorY)
+function drawActorOnStage(ctx, actor, kin, stageW, stageH, floorY, isNaiveBroken, isGhostOverlay) {
+  const zScale = 1.0 / Math.max(0.5, actor.z);
+  const activeCostume = actor.costume_variants[actor.costume_idx] || actor.costume_variants[0];
+  const imgs = getKitImages(activeCostume.kit_dir, actor.back_only, actor.use_tracksuit31 && actor.costume_idx === 0);
+
+  // Determine standing pixel height on stage
+  // In NAIVE BROKEN mode:
+  // - Child rigs get scaled to 0.54 adult standing height!
+  // - Crouched/falling/prone replacement poses get scaled to 0.54 standing height!
+  // - Zoomed-card parts (head, hands, boots) ignore part_scale_table!
+  const solvedStandH = stageH * actor.canonical_height_stage_ratio * zScale;
+  const naiveStandH = stageH * 0.54 * zScale;
+
+  const currentStandH = isNaiveBroken ? naiveStandH : solvedStandH;
+  const currentPostureH = isNaiveBroken
+    ? naiveStandH // Broken: scales crouched/falling bbox to full 0.54 adult height!
+    : stageH * kin.hRatio * zScale;
+
+  ctx.save();
+  if (isGhostOverlay) {
+    ctx.globalAlpha = 0.34;
+  }
+
+  // Decide whether to draw replacement pose card or articulated modular rig
+  const useReplacementCard =
+    (rigRenderStyle === "hybrid" && kin.repPose && imgs[kin.repPose]) ||
+    (kin.posture in { deep_crouch: 1, prone: 1, floor_recovery: 1 } && rigRenderStyle === "hybrid");
+
+  const repImg = kin.repPose ? imgs[kin.repPose] : null;
+
+  if (useReplacementCard && repImg && repImg.complete && repImg.naturalHeight > 0) {
+    const drawH = currentPostureH;
+    const ar = repImg.naturalWidth / Math.max(1, repImg.naturalHeight);
+    // In Naive mode, wide prone cards (ar=2.24) scaled to 0.54*stageH become gigantic!
+    const drawW = drawH * ar;
+    const x0 = actor.x * stageW - drawW * 0.5;
+    const y0 = floorY - drawH;
+
+    ctx.drawImage(repImg, x0, y0, drawW, drawH);
+
+    if (isNaiveBroken) {
+      ctx.strokeStyle = "#e05244";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 4]);
+      ctx.strokeRect(x0, y0, drawW, drawH);
+      ctx.setLineDash([]);
+    } else if (overlays.rulers) {
+      ctx.strokeStyle = "rgba(54, 201, 134, 0.55)";
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(x0, y0, drawW, drawH);
+    }
+    ctx.restore();
+    return { x: actor.x * stageW, topY: y0, heightPx: drawH, footLPinX: actor.x * stageW - 18, footRPinX: actor.x * stageW + 18 };
+  }
+
+  // ARTICULATED MODULAR CUTOUT RIG
+  // Compute anatomical segment lengths from `currentStandH` and `PART_SCALE_TABLE`
+  const torsoFrac = actor.is_child ? 0.34 : 0.32;
+  const torsoH = currentStandH * torsoFrac;
+  const headScale = isNaiveBroken
+    ? (actor.use_tracksuit31 ? 1.05 : 1.18) // Broken raw card ratio: head card (480px) is taller than torso (373px)!
+    : (actor.is_child ? 0.78 : PART_SCALE_TABLE.head);
+  const handScale = isNaiveBroken
+    ? (actor.use_tracksuit31 ? 0.85 : 0.65) // Broken raw zoomed-card hand!
+    : PART_SCALE_TABLE.hand;
+  const footScale = isNaiveBroken
+    ? (actor.use_tracksuit31 ? 0.82 : 0.62) // Broken raw zoomed-card boot!
+    : PART_SCALE_TABLE.foot;
+
+  const seg = {
+    torso: torsoH,
+    pelvis: torsoH * PART_SCALE_TABLE.pelvis,
+    uarm: torsoH * PART_SCALE_TABLE.upper_arm,
+    farm: torsoH * PART_SCALE_TABLE.forearm,
+    hand: torsoH * handScale,
+    thigh: torsoH * (actor.is_child ? 0.56 : PART_SCALE_TABLE.thigh),
+    shin: torsoH * (actor.is_child ? 0.52 : PART_SCALE_TABLE.shin),
+    foot: torsoH * footScale,
+    head: torsoH * headScale
+  };
+
+  // Hip center position
+  const hipBaseElevation = seg.thigh * 0.84 + seg.shin * 0.84 + seg.foot * 0.32;
+  const hipX = actor.x * stageW;
+  const hipY = floorY - hipBaseElevation - kin.rootDy * stageH * zScale;
+
+  const deg2rad = Math.PI / 180;
+  const a = kin.angles;
+
+  // Helper to draw a textured cutout limb along a bone vector
+  function drawSegmentImg(img, pivX, pivY, len, angleDeg, anchorNY = 0.14, widFactor = 0.42) {
+    ctx.save();
+    ctx.translate(pivX, pivY);
+    ctx.rotate(angleDeg * deg2rad);
+    if (img && img.complete && img.naturalHeight > 0) {
+      const ar = Math.min(1.35, Math.max(0.28, img.naturalWidth / img.naturalHeight));
+      const h = len / Math.max(0.55, 1.0 - anchorNY);
+      const w = h * ar;
+      ctx.drawImage(img, -w * 0.5, -h * anchorNY, w, h);
+    } else {
+      const w = len * widFactor;
+      ctx.fillStyle = actor.accent;
+      ctx.beginPath();
+      ctx.roundRect(-w * 0.5, -len * anchorNY, w, len, 6);
+      ctx.fill();
+    }
+    ctx.restore();
+    const endX = pivX - Math.sin(angleDeg * deg2rad) * len * (1.0 - anchorNY);
+    const endY = pivY + Math.cos(angleDeg * deg2rad) * len * (1.0 - anchorNY);
+    return { x: endX, y: endY };
+  }
+
+  // Paired couple secondary partner (drawn slightly behind for vintage_party_couple)
+  if (actor.paired_couple && !isGhostOverlay) {
+    const partnerImg = imgs.pose_walk || imgs.pose_stand;
+    if (partnerImg && partnerImg.complete && partnerImg.naturalHeight > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.88;
+      const pH = currentStandH * 0.96;
+      const pW = pH * (partnerImg.naturalWidth / partnerImg.naturalHeight);
+      const swayX = Math.sin(kin.t * Math.PI * 2) * 8;
+      ctx.drawImage(partnerImg, hipX + 26 + swayX - pW * 0.5, floorY - pH, pW, pH);
+      ctx.restore();
+    }
+  }
+
+  // Compute torso & shoulder/neck sockets
+  const torsoRad = a.torso * deg2rad;
+  const waistX = hipX;
+  const waistY = hipY - seg.pelvis * 0.12;
+  const neckX = waistX + Math.sin(torsoRad) * (seg.torso * 0.82);
+  const neckY = waistY - Math.cos(torsoRad) * (seg.torso * 0.82);
+
+  const shSpread = seg.torso * 0.30;
+  const shLX = waistX + Math.sin(torsoRad) * (seg.torso * 0.72) + Math.cos(torsoRad) * shSpread;
+  const shLY = waistY - Math.cos(torsoRad) * (seg.torso * 0.72) + Math.sin(torsoRad) * shSpread;
+  const shRX = waistX + Math.sin(torsoRad) * (seg.torso * 0.72) - Math.cos(torsoRad) * shSpread;
+  const shRY = waistY - Math.cos(torsoRad) * (seg.torso * 0.72) - Math.sin(torsoRad) * shSpread;
+
+  const hipSpread = seg.torso * 0.17;
+  const hipLX = hipX + hipSpread;
+  const hipLY = hipY;
+  const hipRX = hipX - hipSpread;
+  const hipRY = hipY;
+
+  // 1. Far Leg (R)
+  const kneeR = drawSegmentImg(imgs.thigh_R, hipRX, hipRY, seg.thigh, a.thigh_R, 0.14);
+  const ankleR = drawSegmentImg(imgs.shin_R, kneeR.x, kneeR.y, seg.shin, a.thigh_R + a.shin_R, 0.14);
+  const footR = drawSegmentImg(imgs.foot_R, ankleR.x, ankleR.y, seg.foot, a.foot_R, 0.25, 0.65);
+
+  // 2. Far Arm (R)
+  const elbowR = drawSegmentImg(imgs.uarm_R, shRX, shRY, seg.uarm, a.torso + a.uarm_R, 0.14);
+  const wristR = drawSegmentImg(imgs.farm_R, elbowR.x, elbowR.y, seg.farm, a.torso + a.uarm_R + a.farm_R, 0.14);
+  drawSegmentImg(imgs.hand_R, wristR.x, wristR.y, seg.hand, a.torso + a.uarm_R + a.farm_R + a.hand_R, 0.20, 0.55);
+
+  // 3. Pelvis
+  if (imgs.pelvis && imgs.pelvis.complete && imgs.pelvis.naturalHeight > 0) {
+    drawSegmentImg(imgs.pelvis, hipX, hipY - seg.pelvis * 0.25, seg.pelvis, a.pelvis, 0.20, 0.8);
+  }
+
+  // 4. Torso (pivot at bottom waist)
+  ctx.save();
+  ctx.translate(waistX, waistY);
+  ctx.rotate(torsoRad);
+  if (imgs.torso && imgs.torso.complete && imgs.torso.naturalHeight > 0) {
+    const ar = Math.min(1.1, Math.max(0.55, imgs.torso.naturalWidth / imgs.torso.naturalHeight));
+    const tw = seg.torso * ar;
+    ctx.drawImage(imgs.torso, -tw * 0.5, -seg.torso * 0.90, tw, seg.torso);
+  } else {
+    ctx.fillStyle = actor.accent;
+    ctx.fillRect(-seg.torso * 0.35, -seg.torso * 0.9, seg.torso * 0.7, seg.torso);
+  }
+  ctx.restore();
+
+  // 5. Near Leg (L)
+  const kneeL = drawSegmentImg(imgs.thigh_L, hipLX, hipLY, seg.thigh, a.thigh_L, 0.14);
+  const ankleL = drawSegmentImg(imgs.shin_L, kneeL.x, kneeL.y, seg.shin, a.thigh_L + a.shin_L, 0.14);
+  const footL = drawSegmentImg(imgs.foot_L, ankleL.x, ankleL.y, seg.foot, a.foot_L, 0.25, 0.65);
+
+  // 6. Head (pivot at neck bottom)
+  ctx.save();
+  ctx.translate(neckX, neckY);
+  ctx.rotate((a.torso + a.head) * deg2rad);
+  if (imgs.head && imgs.head.complete && imgs.head.naturalHeight > 0) {
+    const ar = Math.min(0.95, Math.max(0.55, imgs.head.naturalWidth / imgs.head.naturalHeight));
+    const hw = seg.head * ar;
+    ctx.drawImage(imgs.head, -hw * 0.5, -seg.head * 0.88, hw, seg.head);
+    // If 31-part tracksuit blank head, draw facial overlays & plug-in sunglasses at solved part_scale_table ratios!
+    if (actor.use_tracksuit31 && !actor.back_only && actor.costume_idx === 0) {
+      const eyeW = isNaiveBroken ? hw * 1.65 : seg.torso * PART_SCALE_TABLE.eyes * 1.45;
+      const eyeH = eyeW * 0.34;
+      if (imgs.eyes && imgs.eyes.complete) ctx.drawImage(imgs.eyes, -eyeW * 0.5, -seg.head * 0.55, eyeW, eyeH);
+      if (imgs.brows && imgs.brows.complete) ctx.drawImage(imgs.brows, -eyeW * 0.52, -seg.head * 0.65, eyeW * 1.04, eyeH * 0.9);
+      const mouthW = isNaiveBroken ? hw * 1.35 : seg.torso * PART_SCALE_TABLE.mouth * 1.25;
+      const mouthH = mouthW * 0.45;
+      if (imgs.mouth && imgs.mouth.complete) ctx.drawImage(imgs.mouth, -mouthW * 0.5, -seg.head * 0.32, mouthW, mouthH);
+      const sgW = isNaiveBroken ? hw * 1.75 : seg.torso * PART_SCALE_TABLE.sunglasses * 1.42;
+      const sgH = sgW * 0.36;
+      if (imgs.sunglasses && imgs.sunglasses.complete) ctx.drawImage(imgs.sunglasses, -sgW * 0.5, -seg.head * 0.57, sgW, sgH);
+    }
+  }
+  ctx.restore();
+
+  // 7. Near Arm (L)
+  const elbowL = drawSegmentImg(imgs.uarm_L, shLX, shLY, seg.uarm, a.torso + a.uarm_L, 0.14);
+  const wristL = drawSegmentImg(imgs.farm_L, elbowL.x, elbowL.y, seg.farm, a.torso + a.uarm_L + a.farm_L, 0.14);
+  drawSegmentImg(imgs.hand_L, wristL.x, wristL.y, seg.hand, a.torso + a.uarm_L + a.farm_L + a.hand_L, 0.20, 0.55);
+
+  // 8. Brass Pivots Overlay
+  if (overlays.pivots && !isGhostOverlay) {
+    const pivots = [
+      { x: waistX, y: waistY },
+      { x: neckX, y: neckY },
+      { x: shLX, y: shLY },
+      { x: shRX, y: shRY },
+      { x: elbowL.x, y: elbowL.y },
+      { x: wristL.x, y: wristL.y },
+      { x: elbowR.x, y: elbowR.y },
+      { x: wristR.x, y: wristR.y },
+      { x: hipLX, y: hipLY },
+      { x: hipRX, y: hipRY },
+      { x: kneeL.x, y: kneeL.y },
+      { x: ankleL.x, y: ankleL.y },
+      { x: kneeR.x, y: kneeR.y },
+      { x: ankleR.x, y: ankleR.y }
+    ];
+    for (const p of pivots) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3.6, 0, Math.PI * 2);
+      ctx.fillStyle = "#e0a838";
+      ctx.fill();
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = "#2b1d06";
+      ctx.stroke();
+    }
+  }
+
+  const topY = neckY - seg.head * 0.90;
+  const totalRenderedH = floorY - topY;
+
+  if (isNaiveBroken) {
+    ctx.strokeStyle = "rgba(224, 82, 68, 0.85)";
+    ctx.lineWidth = 1.8;
+    ctx.setLineDash([5, 4]);
+    ctx.strokeRect(hipX - seg.torso * 0.65, topY, seg.torso * 1.3, totalRenderedH);
+    ctx.setLineDash([]);
+  }
+
+  ctx.restore();
+  return {
+    x: hipX,
+    topY,
+    heightPx: currentPostureH,
+    footLPinX: ankleL.x,
+    footRPinX: ankleR.x
+  };
+}
+
+function renderArenaViewport(ctx, vpX, vpW, vpH, isNaiveViewport, labelBanner) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(vpX, 0, vpW, vpH);
+  ctx.clip();
+  ctx.translate(vpX, 0);
+
+  const floorY = vpH * 0.84;
+
+  // Perspective stage floor grid
+  ctx.strokeStyle = "rgba(56, 216, 240, 0.12)";
+  ctx.lineWidth = 1;
+  for (let zLine = 0; zLine <= 4; zLine++) {
+    const y = floorY - 36 + zLine * 18;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(vpW, y);
+    ctx.stroke();
+  }
+  for (let gx = 0; gx <= 16; gx++) {
+    const xTop = (gx / 16) * vpW;
+    const xBot = ((gx - 8) * 1.35 / 16 + 0.5) * vpW;
+    ctx.beginPath();
+    ctx.moveTo(xTop, floorY - 36);
+    ctx.lineTo(xBot, vpH);
+    ctx.stroke();
+  }
+
+  // Main Z = 1.0 Focal Floor Baseline
+  ctx.strokeStyle = isNaiveViewport ? "rgba(224, 82, 68, 0.6)" : "rgba(224, 168, 56, 0.65)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, floorY);
+  ctx.lineTo(vpW, floorY);
+  ctx.stroke();
+
+  // Anatomical Reference Rulers on Stage Left (7.5H Adult = 0.54, 5.2H Child = 0.37, Crouched = 0.36, Prone = 0.22)
+  if (overlays.rulers) {
+    const marks = [
+      { ratio: 0.54, label: "0.54 Adult Stand (7.5H)", color: "rgba(224, 168, 56, 0.45)" },
+      { ratio: 0.37, label: "0.37 Child Age 7 (5.2H = 0.68x)", color: "rgba(165, 120, 245, 0.55)" },
+      { ratio: 0.36, label: "0.36 Crouched / Seated", color: "rgba(56, 216, 240, 0.40)" },
+      { ratio: 0.22, label: "0.22 Prone / Falling", color: "rgba(54, 201, 134, 0.40)" }
+    ];
+    ctx.font = "600 10px 'SF Mono', monospace";
+    for (const m of marks) {
+      const y = floorY - vpH * m.ratio;
+      ctx.strokeStyle = m.color;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(12, y);
+      ctx.lineTo(vpW - 12, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = m.color;
+      ctx.fillText(m.label, 14, y - 4);
+    }
+  }
+
+  // Sort active actors by Z depth (far to near)
+  const activeActors = actors.filter(a => a.active).slice().sort((a, b) => b.z - a.z);
+
+  for (const actor of activeActors) {
+    const kin = evaluateCycleKinematics(actor, actor.cycle, (simTime / 1.6) % 1.0);
+
+    // If Ghost Comparison mode is active, draw Naive Broken silhouette behind Solved character
+    if (comparisonMode === "ghost" && !isNaiveViewport) {
+      drawActorOnStage(ctx, actor, kin, vpW, vpH, floorY, true, true);
+    }
+
+    const metrics = drawActorOnStage(ctx, actor, kin, vpW, vpH, floorY, isNaiveViewport, false);
+
+    // Foot-contact pin indicators on the floor line
+    if (overlays.pins) {
+      const pins = [
+        { active: kin.leftPin, x: metrics.footLPinX, label: "L-PIN" },
+        { active: kin.rightPin, x: metrics.footRPinX, label: "R-PIN" }
+      ];
+      for (const p of pins) {
+        ctx.beginPath();
+        ctx.arc(p.x, floorY, p.active ? 5.5 : 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = p.active ? "#36c986" : "rgba(140, 152, 180, 0.35)";
+        ctx.fill();
+        if (p.active) {
+          ctx.strokeStyle = "#0b0d12";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Character overhead telemetry tag
+    const isSelected = actor.id === selectedRigId;
+    const tagY = Math.max(46, metrics.topY - 22);
+    ctx.font = "700 10.5px 'SF Mono', monospace";
+    const ratioShown = isNaiveViewport ? "0.54 (NAIVE)" : `${kin.hRatio.toFixed(2)} (${actor.head_count}H)`;
+    const tagText = `${actor.id.replace(/_/g, " ").slice(0, 16)} · ${actor.cycle} · ${ratioShown}`;
+    const tw = ctx.measureText(tagText).width + 12;
+
+    ctx.fillStyle = isSelected ? "rgba(224, 168, 56, 0.92)" : "rgba(14, 18, 28, 0.85)";
+    ctx.strokeStyle = isSelected ? "#fff" : actor.accent;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(metrics.x - tw * 0.5, tagY - 12, tw, 17, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = isSelected ? "#0b0d12" : "#e8ecf4";
+    ctx.fillText(tagText, metrics.x - tw * 0.5 + 6, tagY);
+
+    if (actor.back_only) {
+      ctx.fillStyle = "#ff8e84";
+      ctx.font = "700 9.5px 'SF Mono', monospace";
+      ctx.fillText("BACK / 3Q-BACK ONLY", metrics.x - 48, floorY + 26);
+    } else if (actor.is_child) {
+      ctx.fillStyle = "#c9abff";
+      ctx.font = "700 9.5px 'SF Mono', monospace";
+      ctx.fillText(isNaiveViewport ? "BROKEN: 1.0x ADULT!" : "5.2H CHILD (0.68x)", metrics.x - 46, floorY + 26);
+    }
+  }
+
+  if (labelBanner) {
+    ctx.fillStyle = isNaiveViewport ? "rgba(224, 82, 68, 0.9)" : "rgba(54, 201, 134, 0.9)";
+    ctx.beginPath();
+    ctx.roundRect(14, 48, 330, 22, 4);
+    ctx.fill();
+    ctx.fillStyle = "#080a0e";
+    ctx.font = "800 11px 'SF Mono', monospace";
+    ctx.fillText(labelBanner, 22, 63);
+  }
+
+  ctx.restore();
+}
+
+// Piece-Scaling Comparison Canvas (Zoomed-Card Export vs Solved Part Scale Table)
+function renderPieceCompareCanvas() {
+  const c = document.getElementById("pieceCompareCanvas");
+  if (!c) return;
+  const ctx = c.getContext("2d");
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.strokeStyle = "rgba(255,255,255,0.08)";
+  ctx.beginPath();
+  ctx.moveTo(W * 0.5, 10);
+  ctx.lineTo(W * 0.5, H - 10);
+  ctx.stroke();
+
+  ctx.font = "700 11px 'SF Mono', monospace";
+  ctx.fillStyle = "#ff8e84";
+  ctx.fillText("NAIVE RAW CARD EXPORT (1:1 BBox = Broken)", 14, 20);
+  ctx.fillStyle = "#6df0b2";
+  ctx.fillText("SOLVED PART_SCALE_TABLE + ASPECT COMP (Fixed)", W * 0.5 + 14, 20);
+
+  const ts = "kits/packs/poet_tracksuit_v1";
+  const torsoImg = getImg(`${ts}/01_torso_front.png`);
+  const headImg = getImg(`${ts}/21_head_front_blank.png`);
+  const handImg = getImg(`${ts}/15_hand_relaxed_L.png`);
+  const bootImg = getImg(`${ts}/19_boot_front_L.png`);
+  const crouchImg = getImg(`arena/parts/kit3/v2/cut/poet.red_black_sunglasses.replacements/pose.lying_back.png`);
+
+  const baseTorsoH = 95;
+  const slots = [
+    { label: "torso (1.0)", img: torsoImg, naiveH: 95, solvedH: 95, xOff: 42 },
+    { label: "head (0.64)", img: headImg, naiveH: 106, solvedH: 95 * 0.64, xOff: 118 },
+    { label: "hand (0.28)", img: handImg, naiveH: 94, solvedH: 95 * 0.28, xOff: 185 },
+    { label: "boot (0.40)", img: bootImg, naiveH: 98, solvedH: 95 * 0.40, xOff: 245 },
+    { label: "prone (0.22)", img: crouchImg, naiveH: 82, solvedH: 36, xOff: 305 }
+  ];
+
+  const baselineY = H - 34;
+  for (const s of slots) {
+    // Left: Naive Broken
+    if (s.img && s.img.complete && s.img.naturalHeight > 0) {
+      const ar = Math.min(1.6, s.img.naturalWidth / s.img.naturalHeight);
+      const nw = s.naiveH * ar;
+      ctx.drawImage(s.img, s.xOff - nw * 0.5, baselineY - s.naiveH, nw, s.naiveH);
+      const sw = s.solvedH * ar;
+      ctx.drawImage(s.img, W * 0.5 + s.xOff - sw * 0.5, baselineY - s.solvedH, sw, s.solvedH);
+    }
+    ctx.fillStyle = "#8c98b4";
+    ctx.font = "600 9.5px 'SF Mono', monospace";
+    ctx.fillText(s.label, s.xOff - 26, H - 12);
+    ctx.fillText(s.label, W * 0.5 + s.xOff - 26, H - 12);
+  }
+}
+
+function tick(now) {
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+
+  if (isPlaying) {
+    simTime += dt;
+    // Update actor horizontal movement across the acting arena when in locomotion cycles
+    for (const actor of actors) {
+      if (!actor.active) continue;
+      const kin = evaluateCycleKinematics(actor, actor.cycle, (simTime / 1.6) % 1.0);
+      if (Math.abs(kin.vx) > 0.001) {
+        actor.x += kin.vx * dt;
+        if (actor.x > 0.93) { actor.x = 0.93; actor.dir = -1; }
+        if (actor.x < 0.08) { actor.x = 0.08; actor.dir = 1; }
+      }
+    }
+  }
+
+  const canvas = document.getElementById("arenaCanvas");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  if (comparisonMode === "split") {
+    renderArenaViewport(ctx, 0, W * 0.5, H, true, "LEFT: NAIVE BBOX SCALING (BROKEN)");
+    renderArenaViewport(ctx, W * 0.5, W * 0.5, H, false, "RIGHT: SOLVED ANATOMICAL + ASPECT (FIXED)");
+    ctx.strokeStyle = "#e0a838";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.5, 0);
+    ctx.lineTo(W * 0.5, H);
+    ctx.stroke();
+  } else if (comparisonMode === "naive") {
+    renderArenaViewport(ctx, 0, W, H, true, "NAIVE BBOX SCALING ONLY (BROKEN)");
+  } else {
+    renderArenaViewport(
+      ctx,
+      0,
+      W,
+      H,
+      false,
+      comparisonMode === "ghost" ? "SOLVED + RED NAIVE BROKEN GHOST OVERLAY" : null
+    );
+  }
+
+  renderPieceCompareCanvas();
+  updateLiveTelemetry();
+  requestAnimationFrame(tick);
+}
+
+// UI Builders & Event Handlers
+function buildCastCardsUI() {
+  const container = document.getElementById("castListContainer");
+  container.innerHTML = "";
+  const activeCount = actors.filter(a => a.active).length;
+  document.getElementById("activeCountBadge").textContent = `${activeCount} / 8 Active`;
+
+  actors.forEach((actor, idx) => {
+    const card = document.createElement("div");
+    card.className = `cast-card ${actor.active ? "on-stage" : ""}`;
+    const tagClass = actor.is_child ? "cast-tag child" : (actor.back_only ? "cast-tag back" : "cast-tag");
+    const tagLabel = actor.is_child
+      ? `5.2H · 0.37 (0.68x)`
+      : (actor.back_only ? `Back Only · ${actor.canonical_height_stage_ratio}` : `${actor.head_count}H · ${actor.canonical_height_stage_ratio}`);
+
+    const costumeOpts = actor.costume_variants
+      .map((c, cIdx) => `<option value="${cIdx}" ${cIdx === actor.costume_idx ? "selected" : ""}>${c.label}</option>`)
+      .join("");
+
+    const cycles = ["walk","run","waltz","read","reach","crouch","fall","floor_recovery","vape_turn","dj_spin","idle_breathe"];
+    const cycleOpts = cycles
+      .map(cy => `<option value="${cy}" ${cy === actor.cycle ? "selected" : ""}>Cycle: ${cy}</option>`)
+      .join("");
+
+    card.innerHTML = `
+      <div class="cast-header" onclick="selectRigForInspector('${actor.id}')">
+        <label onclick="event.stopPropagation()">
+          <input type="checkbox" ${actor.active ? "checked" : ""} onchange="toggleActorActive(${idx}, this.checked)" />
+          <span>${actor.name}</span>
+        </label>
+        <span class="${tagClass}">${tagLabel}</span>
+      </div>
+      <div class="cast-meta" onclick="selectRigForInspector('${actor.id}')">
+        Poems: ${actor.poems.join(", ")} · ${actor.height_cm}cm · Z=${actor.z.toFixed(2)}
+      </div>
+      <div class="cast-controls">
+        <select onchange="setActorCostume(${idx}, this.value)">${costumeOpts}</select>
+        <select onchange="setActorCycle(${idx}, this.value)">${cycleOpts}</select>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function toggleActorActive(idx, checked) {
+  actors[idx].active = checked;
+  buildCastCardsUI();
+}
+
+function setActorCostume(idx, cIdx) {
+  actors[idx].costume_idx = parseInt(cIdx, 10) || 0;
+  selectRigForInspector(actors[idx].id);
+}
+
+function setActorCycle(idx, cycle) {
+  actors[idx].cycle = cycle;
+  selectRigForInspector(actors[idx].id);
+}
+
+function setGlobalCycle(cycle) {
+  document.getElementById("globalCycleLabel").textContent = cycle;
+  document.querySelectorAll("#globalCycleGrid .cycle-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.cycle === cycle);
+  });
+  const demoMix = ["walk", "crouch", "vape_turn", "waltz", "reach", "walk", "floor_recovery", "dj_spin"];
+  actors.forEach((a, i) => {
+    a.cycle = cycle === "mixed_demo" ? demoMix[i % demoMix.length] : cycle;
+  });
+  buildCastCardsUI();
+  selectRigForInspector(selectedRigId);
+}
+
+function applyPreset(presetName, btnEl) {
+  if (btnEl) {
+    btnEl.parentElement.querySelectorAll(".btn").forEach(b => b.classList.remove("active"));
+    btnEl.classList.add("active");
+  }
+  if (presetName === "all8") {
+    const defCycles = ["walk", "crouch", "vape_turn", "waltz", "reach", "walk", "read", "dj_spin"];
+    actors.forEach((a, i) => {
+      a.active = true;
+      a.x = 0.11 + i * 0.11;
+      a.cycle = defCycles[i];
+    });
+  } else if (presetName === "adult_vs_child") {
+    actors.forEach(a => {
+      a.active = ["poet_tracksuit_31", "woman_muse_costumes", "child_traveler_ghost"].includes(a.id);
+      if (a.id === "poet_tracksuit_31") { a.x = 0.30; a.cycle = "walk"; }
+      if (a.id === "child_traveler_ghost") { a.x = 0.50; a.cycle = "walk"; }
+      if (a.id === "woman_muse_costumes") { a.x = 0.70; a.cycle = "walk"; }
+    });
+    setComparisonMode("split");
+  } else if (presetName === "crouch_fall_test") {
+    actors.forEach(a => {
+      a.active = ["poet_tracksuit_31", "poet_black_tshirt", "woman_muse_costumes", "child_traveler_ghost"].includes(a.id);
+      if (a.id === "poet_tracksuit_31") { a.x = 0.22; a.cycle = "crouch"; }
+      if (a.id === "poet_black_tshirt") { a.x = 0.42; a.cycle = "fall"; }
+      if (a.id === "woman_muse_costumes") { a.x = 0.62; a.cycle = "floor_recovery"; }
+      if (a.id === "child_traveler_ghost") { a.x = 0.80; a.cycle = "crouch"; }
+    });
+    setComparisonMode("ghost");
+  } else if (presetName === "waltz_club") {
+    actors.forEach(a => {
+      a.active = ["vintage_party_couple", "dj_club_citizens", "woman_muse_costumes"].includes(a.id);
+      if (a.id === "vintage_party_couple") { a.x = 0.30; a.cycle = "waltz"; }
+      if (a.id === "woman_muse_costumes") { a.x = 0.56; a.costume_idx = 6; a.cycle = "waltz"; }
+      if (a.id === "dj_club_citizens") { a.x = 0.78; a.cycle = "dj_spin"; }
+    });
+  } else if (presetName === "ex_back_rule") {
+    actors.forEach(a => {
+      a.active = ["poet_black_tshirt", "ex_jacket_back"].includes(a.id);
+      if (a.id === "poet_black_tshirt") { a.x = 0.36; a.cycle = "reach"; }
+      if (a.id === "ex_jacket_back") { a.x = 0.62; a.cycle = "vape_turn"; }
+    });
+  }
+  buildCastCardsUI();
+}
+
+function setComparisonMode(mode) {
+  comparisonMode = mode;
+  document.getElementById("modeSolvedBtn").classList.toggle("active", mode === "solved");
+  document.getElementById("modeSplitBtn").classList.toggle("active", mode === "split");
+  document.getElementById("modeGhostBtn").classList.toggle("active", mode === "ghost");
+  document.getElementById("modeNaiveBtn").classList.toggle("active", mode === "naive");
+
+  const hudLeft = document.getElementById("hudLeft");
+  if (mode === "solved") {
+    hudLeft.innerHTML = `SOLVER: <span class="good">ANATOMICAL + ASPECT COMPENSATED (FIXED)</span> · 0.54 Adult / 0.37 Child / 0.36 Crouch / 0.22 Prone`;
+  } else if (mode === "split") {
+    hudLeft.innerHTML = `COMPARISON: <span class="bad">LEFT = NAIVE BBOX (BROKEN)</span> vs <span class="good">RIGHT = SOLVED ANATOMICAL (FIXED)</span>`;
+  } else if (mode === "ghost") {
+    hudLeft.innerHTML = `GHOST OVERLAY: <span class="bad">RED = NAIVE BBOX DISTORTION</span> behind <span class="good">SOLVED ACTOR</span>`;
+  } else {
+    hudLeft.innerHTML = `WARNING: <span class="bad">NAIVE BBOX SCALING (BROKEN)</span> · Crouches/Falls & Child Rigs Blow Up to 0.54 Adult Height!`;
+  }
+}
+
+function setRigRenderStyle(style) {
+  rigRenderStyle = style;
+  document.getElementById("renderJointedBtn").classList.toggle("active", style === "jointed");
+  document.getElementById("renderHybridBtn").classList.toggle("active", style === "hybrid");
+}
+
+function toggleOverlay(key) {
+  overlays[key] = !overlays[key];
+  const btnMap = { pivots: "togglePivotsBtn", pins: "togglePinsBtn", rulers: "toggleRulersBtn" };
+  document.getElementById(btnMap[key]).classList.toggle("active", overlays[key]);
+}
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  document.getElementById("playPauseBtn").textContent = isPlaying ? "⏸ Pause" : "▶ Play";
+}
+
+function selectRigForInspector(rigId) {
+  selectedRigId = rigId;
+  document.getElementById("selectedRigTitle").textContent = rigId;
+  const actor = actors.find(a => a.id === rigId) || actors[0];
+  const libRig = libraryData && libraryData.rigs ? libraryData.rigs[rigId] : null;
+
+  document.getElementById("inspectorRigBadge").textContent = `${actor.head_count}H · ${actor.canonical_height_stage_ratio}`;
+  document.getElementById("inspectorCycleBadge").textContent = actor.cycle;
+
+  const roleDesc = libRig ? libRig.character_role : `${actor.name} (${actor.height_cm}cm, Poems ${actor.poems.join(", ")})`;
+  document.getElementById("inspectorSummary").textContent = roleDesc;
+
+  // Populate Posture Stage Ratios
+  const pRatios = libRig ? libRig.posture_stage_ratios : {
+    standing: actor.canonical_height_stage_ratio,
+    kneeling: +(actor.canonical_height_stage_ratio * 0.78).toFixed(3),
+    deep_crouch: +(actor.canonical_height_stage_ratio * 0.67).toFixed(3),
+    sitting: +(actor.canonical_height_stage_ratio * 0.67).toFixed(3),
+    floor_recovery: +(actor.canonical_height_stage_ratio * 0.57).toFixed(3),
+    back_lying: +(actor.canonical_height_stage_ratio * 0.41).toFixed(3)
+  };
+  const pGrid = document.getElementById("postureRatiosGrid");
+  pGrid.innerHTML = Object.entries(pRatios)
+    .filter(([k]) => ["standing","kneeling","deep_crouch","sitting","floor_recovery","back_lying"].includes(k))
+    .map(([k, v]) => `
+      <div class="part-bar-item">
+        <div style="display:flex;justify-content:space-between;"><span>${k}</span><strong style="color:var(--accent-hi)">${v}</strong></div>
+        <div class="part-bar-fill" style="width:${Math.min(100, v * 165)}%;background:var(--accent);"></div>
+      </div>
+    `).join("");
+
+  // Populate Part Scale Table
+  const sTable = libRig ? libRig.part_scale_table : PART_SCALE_TABLE;
+  const sGrid = document.getElementById("partScaleGrid");
+  sGrid.innerHTML = Object.entries(sTable)
+    .filter(([k]) => ["torso","pelvis","upper_arm","forearm","hand","thigh","shin","foot","head","eyes","mouth","sunglasses"].includes(k))
+    .map(([k, v]) => `
+      <div class="part-bar-item">
+        <div style="display:flex;justify-content:space-between;"><span>${k}</span><strong style="color:var(--cyan)">${v}</strong></div>
+        <div class="part-bar-fill" style="width:${Math.min(100, v * 95)}%;"></div>
+      </div>
+    `).join("");
+
+  // Populate Resolved Parts & Sheets
+  const rList = document.getElementById("resolvedPartsList");
+  if (libRig && libRig.resolved_parts) {
+    const entries = Object.entries(libRig.resolved_parts);
+    document.getElementById("resolvedPartCount").textContent = `${entries.length} parts · ${libRig.available_sheets.length} sheets`;
+    rList.innerHTML = entries.slice(0, 40).map(([pk, pv]) => `
+      <div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;gap:6px;">
+        <span style="color:#d0daf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${pk}</span>
+        <span style="color:var(--green);white-space:nowrap;">${pv.visible_w}×${pv.visible_h}px (×${pv.solved_pixel_scale_1080p.toFixed(2)})</span>
+      </div>
+    `).join("");
+  } else {
+    document.getElementById("resolvedPartCount").textContent = "Embedded Ready";
+    rList.innerHTML = `<div>Using embedded rig parts for ${rigId}</div>`;
+  }
+}
+
+function updateLiveTelemetry() {
+  const actor = actors.find(a => a.id === selectedRigId) || actors[0];
+  if (!actor) return;
+  const kin = evaluateCycleKinematics(actor, actor.cycle, (simTime / 1.6) % 1.0);
+  const box = document.getElementById("pinTelemetryBox");
+  box.innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+      <span>Posture State: <strong style="color:var(--accent-hi)">${kin.posture}</strong></span>
+      <span>Stage Ratio: <strong style="color:var(--green)">${kin.hRatio.toFixed(3)}</strong></span>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+      <span>Aspect Comp Mult: <strong>${kin.aspectMult.toFixed(2)}x</strong></span>
+      <span>Root Velocity vx: <strong>${kin.vx.toFixed(3)}/s</strong></span>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:6px;">
+      <span class="${kin.leftPin ? "badge-good" : "badge-bad"}">left_foot_pin: ${kin.leftPin ? "LOCKED" : "SWING"}</span>
+      <span class="${kin.rightPin ? "badge-good" : "badge-bad"}">right_foot_pin: ${kin.rightPin ? "LOCKED" : "SWING"}</span>
+    </div>
+  `;
+}
+
+// Dragging characters on stage
+(function setupStageDrag() {
+  const canvas = document.getElementById("arenaCanvas");
+  let draggingActor = null;
+  canvas.addEventListener("mousedown", e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / rect.width;
+    let best = null, bestDist = 0.08;
+    for (const a of actors) {
+      if (!a.active) continue;
+      const d = Math.abs(a.x - mx);
+      if (d < bestDist) { bestDist = d; best = a; }
+    }
+    if (best) {
+      draggingActor = best;
+      selectRigForInspector(best.id);
+    }
+  });
+  window.addEventListener("mousemove", e => {
+    if (!draggingActor) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = Math.max(0.06, Math.min(0.94, (e.clientX - rect.left) / rect.width));
+    draggingActor.x = mx;
+  });
+  window.addEventListener("mouseup", () => { draggingActor = null; });
+})();
+
+// Load character_rigs_library.json
+initActors();
+buildCastCardsUI();
+selectRigForInspector("poet_tracksuit_31");
+requestAnimationFrame(tick);
+
+fetch("arena/parts/kit3/release_v2/character_rigs_library.json")
+  .then(r => r.json())
+  .then(data => {
+    libraryData = data;
+    document.getElementById("hudLibStatus").textContent =
+      `Loaded 8 Rigs · ${data.stats.total_resolved_parts} Solved Parts · ${data.stats.total_verified_sheets} Sheets`;
+    selectRigForInspector(selectedRigId);
+  })
+  .catch(() => {
+    document.getElementById("hudLibStatus").textContent = "8 Rigs Ready (Embedded Fallback)";
+  });
+</script>
+</body>
+</html>

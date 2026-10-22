@@ -3,15 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WYGWYL · Body Lab · Master Anatomy &amp; Replacements Library</title>
+<title>WYGWYL · Body Lab · Unified Cross-Kit Anatomy &amp; Replacement Workbench</title>
 <link rel="icon" href="../favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0d0b0a;
     --panel: #16120f;
     --panel-card: #1d1713;
+    --panel-hi: #251d17;
     --line: #2a221c;
     --line-lit: #4a3b30;
     --ink: #efe6da;
@@ -21,173 +22,344 @@
     --blue: #01acd4;
     --ok: #9fe08a;
     --bad: #ff7b6b;
+    --red: #e03b2b;
     --mono: 'JetBrains Mono', ui-monospace, monospace;
     --sans: 'Inter', system-ui, sans-serif;
     --marker: 'Permanent Marker', cursive;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--sans); }
+  body { background: var(--bg); color: var(--ink); font: 14px/1.55 var(--sans); overflow-x: hidden; }
 
+  /* ── Sticky Top Navigation Bar ── */
   header {
-    background: var(--panel); border-bottom: 1px solid var(--line);
-    padding: 14px 24px; display: flex; align-items: center; gap: 14px;
-    flex-wrap: wrap; position: sticky; top: 0; z-index: 100;
+    background: rgba(22, 18, 15, 0.96); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 22px; display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap; position: sticky; top: 0; z-index: 200;
   }
-  header h1 { font: 400 24px var(--marker); color: var(--gold); }
-  header h1 small { font: 12px var(--mono); color: var(--dim); margin-left: 10px; letter-spacing: .08em; }
+  header h1 { font: 400 22px var(--marker); color: var(--gold); letter-spacing: .02em; white-space: nowrap; }
+  header h1 small { font: 600 11px var(--mono); color: var(--dim); margin-left: 8px; letter-spacing: .08em; }
   .sp { flex: 1; }
+  .nav-links { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .nav-btn {
-    color: var(--dim); font: 12px var(--mono); text-decoration: none;
-    border: 1px solid var(--line); padding: 5px 12px; border-radius: 999px;
-    transition: all .15s; font-weight: 600; cursor: pointer; background: transparent;
+    color: var(--dim); font: 600 11px var(--mono); text-decoration: none;
+    border: 1px solid var(--line); padding: 5px 11px; border-radius: 999px;
+    transition: all .14s; cursor: pointer; background: #120e0b; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 5px;
   }
-  .nav-btn:hover { color: var(--ink); border-color: var(--card); }
+  .nav-btn:hover { color: var(--ink); border-color: var(--card); background: var(--panel-card); }
   .nav-btn.gold { color: var(--gold); border-color: var(--gold); }
   .nav-btn.gold:hover { background: var(--gold); color: #16120f; }
+  .nav-btn.blue { color: var(--blue); border-color: var(--blue); }
+  .nav-btn.blue:hover { background: var(--blue); color: #091216; }
   .nav-btn.active { background: var(--card); color: #16120f; border-color: var(--card); font-weight: 800; }
 
   main {
-    max-width: 1480px; margin: 0 auto; padding: 28px 24px 120px;
-    display: flex; flex-direction: column; gap: 32px;
+    max-width: 1640px; margin: 0 auto; padding: 22px 22px 140px;
+    display: flex; flex-direction: column; gap: 22px;
   }
 
+  /* ── Hero Banner ── */
   .banner {
-    background: radial-gradient(ellipse at top left, #281d14 0%, #120e0b 70%);
-    border: 1px solid var(--card); border-radius: 12px; padding: 28px;
-    display: flex; flex-direction: column; gap: 14px;
+    background: radial-gradient(ellipse at top left, #2a1e14 0%, #120e0b 72%);
+    border: 1px solid var(--card); border-radius: 12px; padding: 22px 26px;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;
   }
-  .banner h2 { font: 400 32px var(--marker); color: var(--gold); }
-  .banner p { color: var(--dim); font-size: 15px; max-width: 90ch; }
-  
+  .banner-left { display: flex; flex-direction: column; gap: 10px; max-width: 980px; }
+  .banner h2 { font: 400 28px var(--marker); color: var(--gold); }
+  .banner p { color: var(--dim); font-size: 14px; line-height: 1.6; }
+  .badge-row { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
   .badge {
-    font: 11px var(--mono); padding: 3px 9px; border-radius: 999px;
-    background: #241c14; border: 1px solid var(--line); color: var(--card);
-    display: inline-block; font-weight: 600;
+    font: 600 11px var(--mono); padding: 3px 9px; border-radius: 999px;
+    background: #211912; border: 1px solid var(--line); color: var(--card);
   }
-  .badge.ok { border-color: var(--ok); color: var(--ok); }
-  .badge.gold { border-color: var(--gold); color: var(--gold); }
+  .badge.ok { border-color: rgba(159,224,138,.5); color: var(--ok); }
+  .badge.gold { border-color: rgba(245,185,66,.5); color: var(--gold); }
+  .badge.blue { border-color: rgba(1,172,212,.5); color: var(--blue); }
 
-  /* Toolbar: Category Switcher, Search, and Character Filters */
+  /* ── Mix-and-Match Body & Face Assembler Workbench ── */
+  .workbench-section {
+    background: var(--panel); border: 2px solid var(--gold); border-radius: 12px;
+    overflow: hidden; display: flex; flex-direction: column;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.55);
+  }
+  .workbench-section.collapsed .workbench-body { display: none; }
+  .workbench-header {
+    background: linear-gradient(90deg, #241b13 0%, #17120e 100%);
+    padding: 12px 20px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .workbench-header h3 { font: 400 20px var(--marker); color: var(--gold); display: flex; align-items: center; gap: 10px; }
+  .workbench-header h3 small { font: 600 11px var(--mono); color: var(--dim); }
+  .workbench-body {
+    display: grid; grid-template-columns: minmax(420px, 1.15fr) minmax(380px, 1fr);
+    gap: 20px; padding: 20px;
+  }
+  @media (max-width: 1080px) {
+    .workbench-body { grid-template-columns: 1fr; }
+  }
+
+  .mannequin-stage-wrap {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .mannequin-canvas-box {
+    background-color: #0b0908;
+    background-image: linear-gradient(45deg, #14100d 25%, transparent 25%),
+                      linear-gradient(-45deg, #14100d 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #14100d 75%),
+                      linear-gradient(-45deg, transparent 75%, #14100d 75%);
+    background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    border: 1px solid var(--line-lit); border-radius: 10px;
+    position: relative; height: 580px; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; cursor: grab;
+  }
+  .mannequin-canvas-box:active { cursor: grabbing; }
+  .mannequin-canvas-box canvas {
+    width: 100%; height: 100%; object-fit: contain; display: block;
+  }
+  .mannequin-hud-top {
+    position: absolute; top: 12px; left: 12px; right: 12px;
+    display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; pointer-events: none;
+  }
+  .mannequin-hud-top > * { pointer-events: auto; }
+  .mannequin-hud-bottom {
+    position: absolute; bottom: 12px; left: 12px; right: 12px;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
+    background: rgba(16, 12, 10, 0.88); border: 1px solid var(--line); border-radius: 6px;
+    padding: 6px 12px; font: 11px var(--mono); color: var(--dim);
+  }
+
+  .workbench-controls {
+    display: flex; flex-direction: column; gap: 14px; max-height: 580px; overflow-y: auto; padding-right: 4px;
+  }
+  .wb-panel {
+    background: var(--panel-card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .wb-panel h4 {
+    font: 700 11px var(--mono); color: var(--gold); text-transform: uppercase;
+    letter-spacing: .08em; display: flex; justify-content: space-between; align-items: center;
+  }
+  .preset-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .preset-btn {
+    background: #120e0b; border: 1px solid var(--line); color: var(--ink);
+    font: 600 11px var(--mono); padding: 5px 10px; border-radius: 6px; cursor: pointer;
+    transition: all .12s;
+  }
+  .preset-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .preset-btn.accent { border-color: var(--blue); color: var(--blue); }
+  .preset-btn.accent:hover { background: var(--blue); color: #091216; }
+
+  .slots-grid {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+  }
+  .slot-pill {
+    background: #120e0b; border: 1px solid var(--line); border-radius: 6px;
+    padding: 7px 9px; display: flex; align-items: center; gap: 8px; cursor: pointer;
+    transition: all .12s; position: relative;
+  }
+  .slot-pill:hover { border-color: var(--card); }
+  .slot-pill.selected { border-color: var(--gold); background: #261c13; box-shadow: inset 0 0 0 1px var(--gold); }
+  .slot-pill img {
+    width: 34px; height: 34px; object-fit: contain; background: #090706;
+    border-radius: 4px; border: 1px solid var(--line); flex-shrink: 0;
+  }
+  .slot-pill .slot-info { flex: 1; min-width: 0; font: 10px var(--mono); }
+  .slot-pill .slot-lbl { color: var(--gold); font-weight: 700; text-transform: uppercase; font-size: 9.5px; }
+  .slot-pill .slot-val { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slot-pill .slot-clr {
+    background: transparent; border: 0; color: var(--dim); font-size: 13px; cursor: pointer; padding: 0 3px;
+  }
+  .slot-pill .slot-clr:hover { color: var(--bad); }
+
+  .slider-row { display: flex; align-items: center; gap: 10px; font: 11px var(--mono); color: var(--dim); }
+  .slider-row label { flex: 0 0 110px; }
+  .slider-row input[type="range"] { flex: 1; accent-color: var(--gold); }
+  .slider-row span { flex: 0 0 48px; text-align: right; color: var(--ink); font-weight: 600; }
+
+  /* ── Multi-Dimensional Filter & Scale Toolbar ── */
   .toolbar {
     background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-    padding: 18px; display: flex; flex-direction: column; gap: 14px;
+    padding: 16px 18px; display: flex; flex-direction: column; gap: 14px;
+    position: sticky; top: 57px; z-index: 150; box-shadow: 0 8px 20px rgba(0,0,0,0.45);
   }
 
-  .cat-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  /* 8 Anatomical Category Tabs */
+  .cat-tabs { display: flex; gap: 7px; flex-wrap: wrap; }
   .cat-tab {
     background: var(--panel-card); border: 1px solid var(--line); color: var(--ink);
-    font: 600 13px var(--mono); padding: 8px 16px; border-radius: 8px; cursor: pointer;
-    transition: all .15s; display: flex; align-items: center; gap: 8px;
+    font: 700 12px var(--mono); padding: 8px 13px; border-radius: 8px; cursor: pointer;
+    transition: all .14s; display: flex; align-items: center; gap: 7px;
   }
   .cat-tab:hover { border-color: var(--gold); color: var(--gold); }
   .cat-tab.active { background: var(--card); color: #16120f; border-color: var(--card); font-weight: 800; }
   .cat-tab .cnt {
-    font-size: 10px; padding: 2px 6px; border-radius: 999px; background: rgba(0,0,0,0.3); color: inherit;
+    font-size: 10px; padding: 1px 6px; border-radius: 999px; background: rgba(0,0,0,0.35); color: inherit;
   }
 
-  .filter-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  /* Scale Toggle + Search Row */
+  .controls-bar {
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  }
   .search-box {
-    flex: 1; min-width: 240px; background: #0c0907; border: 1px solid var(--line);
-    color: var(--ink); font: 13px var(--mono); padding: 8px 16px; border-radius: 999px; outline: none;
+    flex: 1; min-width: 260px; background: #0b0907; border: 1px solid var(--line);
+    color: var(--ink); font: 12.5px var(--mono); padding: 8px 15px; border-radius: 999px; outline: none;
   }
   .search-box:focus { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
-  
-  .char-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-  .char-chip {
-    background: #140f0c; border: 1px solid var(--line); color: var(--dim);
-    font: 11px var(--mono); padding: 4px 10px; border-radius: 999px; cursor: pointer; transition: all .15s;
-  }
-  .char-chip:hover { border-color: var(--card); color: var(--ink); }
-  .char-chip.active { background: var(--gold); color: #16120f; border-color: var(--gold); font-weight: 700; }
 
-  /* Gallery Grid */
+  .scale-toggle-group {
+    display: inline-flex; background: #0b0907; border: 1px solid var(--line-lit);
+    border-radius: 999px; padding: 3px; gap: 3px;
+  }
+  .scale-btn {
+    background: transparent; border: 0; color: var(--dim); font: 700 11px var(--mono);
+    padding: 5px 13px; border-radius: 999px; cursor: pointer; transition: all .14s;
+  }
+  .scale-btn:hover { color: var(--ink); }
+  .scale-btn.active { background: var(--gold); color: #16120f; }
+
+  /* Filter Chips Rows (Character, View Angle, Poem) */
+  .filter-strip {
+    display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+    padding-top: 6px; border-top: 1px solid var(--line);
+  }
+  .chip-group { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+  .chip-label { font: 800 10px var(--mono); color: var(--gold); letter-spacing: .08em; margin-right: 3px; }
+  .f-chip {
+    background: #120e0b; border: 1px solid var(--line); color: var(--dim);
+    font: 600 11px var(--mono); padding: 3px 9px; border-radius: 999px; cursor: pointer; transition: all .12s;
+  }
+  .f-chip:hover { border-color: var(--card); color: var(--ink); }
+  .f-chip.active { background: var(--gold); color: #16120f; border-color: var(--gold); font-weight: 800; }
+  .f-chip.blue.active { background: var(--blue); color: #091216; border-color: var(--blue); }
+
+  /* ── Gallery Header & Parts Grid ── */
   .grid-header {
-    display: flex; justify-content: space-between; align-items: baseline;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
     font: 12px var(--mono); color: var(--dim);
   }
   .grid-header b { color: var(--gold); }
 
   .parts-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px;
   }
 
   .part-card {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 9px;
     padding: 10px; display: flex; flex-direction: column; gap: 8px; position: relative;
-    transition: all .15s;
+    transition: all .14s;
   }
-  .part-card:hover { border-color: var(--gold); transform: translateY(-3px); }
+  .part-card:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.45); }
+  .part-card.in-rig { border-color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); }
 
   .part-thumb {
-    width: 100%; height: 160px;
-    background-color: #0c0a09;
-    background-image: linear-gradient(45deg, #16120f 25%, transparent 25%),
-                      linear-gradient(-45deg, #16120f 25%, transparent 25%),
-                      linear-gradient(45deg, transparent 75%, #16120f 75%),
-                      linear-gradient(-45deg, transparent 75%, #16120f 75%);
+    width: 100%; height: 190px;
+    background-color: #0b0908;
+    background-image: linear-gradient(45deg, #15110e 25%, transparent 25%),
+                      linear-gradient(-45deg, #15110e 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #15110e 75%),
+                      linear-gradient(-45deg, transparent 75%, #15110e 75%);
     background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0;
     border-radius: 6px; display: flex; align-items: center; justify-content: center;
     padding: 8px; overflow: hidden; cursor: pointer; position: relative;
+    border: 1px solid #221b16;
   }
+
+  /* Scale ruler lines in TRUE ANATOMICAL SCALE mode */
+  .part-thumb.anatomical-mode::before {
+    content: "240px TORSO REF";
+    position: absolute; top: 4px; left: 6px;
+    font: 700 8.5px var(--mono); color: rgba(245, 185, 66, 0.55);
+    letter-spacing: .06em; pointer-events: none; z-index: 2;
+  }
+  .part-thumb.anatomical-mode::after {
+    content: "";
+    position: absolute; inset: 12px 10px;
+    border-top: 1px dashed rgba(245, 185, 66, 0.28);
+    border-bottom: 1px dashed rgba(245, 185, 66, 0.28);
+    pointer-events: none;
+  }
+
   .part-thumb img {
     max-width: 100%; max-height: 100%; object-fit: contain;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.7)); transition: transform .2s;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.75)); transition: transform .18s, width .18s, height .18s;
   }
-  .part-card:hover .part-thumb img { transform: scale(1.08); }
+  .part-card:hover .part-thumb.raw-mode img { transform: scale(1.06); }
+
+  .part-badges-overlay {
+    position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; pointer-events: none; z-index: 3;
+  }
+  .mini-tag {
+    font: 700 9px var(--mono); padding: 1px 5px; border-radius: 4px;
+    background: rgba(13, 11, 10, 0.85); border: 1px solid var(--line-lit); color: var(--dim);
+    text-transform: uppercase;
+  }
+  .mini-tag.piv { color: var(--gold); border-color: rgba(245,185,66,.5); }
+  .mini-tag.ang { color: var(--blue); border-color: rgba(1,172,212,.45); }
 
   .part-meta { display: flex; flex-direction: column; gap: 3px; font: 11px var(--mono); }
-  .part-title { font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
-  .part-sub { display: flex; justify-content: space-between; color: var(--dim); font-size: 10px; }
-  .part-char { color: var(--card); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 110px; }
+  .part-title { font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11.5px; }
+  .part-sub { display: flex; justify-content: space-between; color: var(--dim); font-size: 10px; gap: 6px; }
+  .part-char { color: var(--card); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .part-poems { color: var(--dim); font-size: 9.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-  .part-actions { display: flex; gap: 4px; margin-top: 4px; }
+  .part-actions { display: flex; gap: 4px; margin-top: 2px; }
   .btn-sm {
-    flex: 1; text-align: center; font: 600 10px var(--mono); background: var(--panel-card);
-    border: 1px solid var(--line); color: var(--dim); padding: 4px 6px; border-radius: 4px;
-    cursor: pointer; text-decoration: none; transition: all .12s;
+    flex: 1; text-align: center; font: 700 10px var(--mono); background: var(--panel-card);
+    border: 1px solid var(--line); color: var(--dim); padding: 5px 6px; border-radius: 4px;
+    cursor: pointer; text-decoration: none; transition: all .12s; white-space: nowrap;
   }
   .btn-sm:hover { border-color: var(--gold); color: var(--ink); }
+  .btn-sm.snap { border-color: rgba(159,224,138,.4); color: var(--ok); }
+  .btn-sm.snap:hover, .btn-sm.snap.active { background: var(--ok); color: #10180d; border-color: var(--ok); }
   .btn-sm.pin.pinned { background: var(--gold); color: #16120f; border-color: var(--gold); }
 
-  /* Drawer for Side-by-Side Comparison */
-  #compareDrawer {
-    position: fixed; bottom: 0; left: 0; right: 0; background: rgba(18, 14, 11, 0.96);
-    backdrop-filter: blur(10px); border-top: 2px solid var(--gold); padding: 14px 24px;
-    z-index: 500; display: none; flex-direction: column; gap: 10px; box-shadow: 0 -8px 24px rgba(0,0,0,0.8);
-  }
-  #compareDrawer.open { display: flex; }
-  .drawer-bar { display: flex; justify-content: space-between; align-items: center; }
-  .drawer-bar h3 { font: 400 18px var(--marker); color: var(--gold); }
-  .drawer-slots { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
-  .drawer-item {
-    background: #0d0a08; border: 1px solid var(--line); border-radius: 6px;
-    padding: 8px; width: 140px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; position: relative;
-  }
-  .drawer-item img { width: 100%; height: 90px; object-fit: contain; }
-  .drawer-item .t { font: 10px var(--mono); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .drawer-item .rm {
-    position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); color: #ff7b6b;
-    border: 0; font-size: 14px; cursor: pointer; padding: 0 4px; border-radius: 3px;
+  .load-more-wrap {
+    display: flex; justify-content: center; gap: 12px; padding: 22px 0;
   }
 
-  /* Modal Lightbox */
+  /* ── Side-by-Side Comparative Drawer ── */
+  #compareDrawer {
+    position: fixed; bottom: 0; left: 0; right: 0; background: rgba(18, 14, 11, 0.97);
+    backdrop-filter: blur(12px); border-top: 2px solid var(--gold); padding: 12px 24px;
+    z-index: 500; display: none; flex-direction: column; gap: 10px; box-shadow: 0 -8px 28px rgba(0,0,0,0.85);
+  }
+  #compareDrawer.open { display: flex; }
+  .drawer-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .drawer-bar h3 { font: 400 18px var(--marker); color: var(--gold); }
+  .drawer-slots { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; align-items: flex-end; }
+  .drawer-item {
+    background: #0d0a08; border: 1px solid var(--line); border-radius: 6px;
+    padding: 8px; width: 155px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; position: relative;
+  }
+  .drawer-item .d-img-box {
+    width: 100%; height: 115px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .drawer-item img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .drawer-item .t { font: 700 10px var(--mono); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .drawer-item .rm {
+    position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.75); color: var(--bad);
+    border: 0; font-size: 14px; cursor: pointer; padding: 0 5px; border-radius: 3px;
+  }
+
+  /* ── Lightbox Modal ── */
   .modal {
     position: fixed; inset: 0; background: rgba(8, 6, 5, 0.9); backdrop-filter: blur(8px);
     z-index: 9999; display: none; align-items: center; justify-content: center; padding: 24px;
   }
   .modal.active { display: flex; }
   .modal-box {
-    max-width: 900px; width: 100%; background: var(--panel); border: 2px solid var(--gold);
+    max-width: 960px; width: 100%; background: var(--panel); border: 2px solid var(--gold);
     border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;
   }
   .modal-bar {
     padding: 14px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center;
   }
-  .modal-bar h3 { font: 600 16px var(--mono); color: var(--gold); }
+  .modal-bar h3 { font: 700 15px var(--mono); color: var(--gold); }
   .modal-bar button { background: none; border: 0; color: var(--dim); font-size: 24px; cursor: pointer; }
   .modal-bar button:hover { color: #fff; }
   .modal-body {
-    padding: 24px; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; overflow: auto;
+    padding: 24px; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; overflow: auto;
   }
   @media(max-width: 720px) { .modal-body { grid-template-columns: 1fr; } }
   .modal-preview {
@@ -197,112 +369,260 @@
                       linear-gradient(45deg, transparent 75%, #16120f 75%),
                       linear-gradient(-45deg, transparent 75%, #16120f 75%);
     background-size: 18px 18px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
-    padding: 16px; min-height: 320px; border: 1px solid var(--line);
+    padding: 16px; min-height: 360px; border: 1px solid var(--line); position: relative;
   }
-  .modal-preview img { max-width: 100%; max-height: 380px; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.8)); }
+  .modal-preview canvas { max-width: 100%; max-height: 400px; object-fit: contain; }
   .modal-info { display: flex; flex-direction: column; gap: 12px; font: 12px var(--mono); }
-  .modal-info dl { display: grid; grid-template-columns: 100px 1fr; gap: 8px 12px; }
+  .modal-info dl { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; }
   .modal-info dt { color: var(--dim); }
-  .modal-info dd { color: var(--ink); font-weight: 600; }
+  .modal-info dd { color: var(--ink); font-weight: 600; word-break: break-word; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>BODY LAB <small>ALL HANDS · ALL SHOES · ALL HEADS · ALL EYES · ALL CAST</small></h1>
+  <h1>BODY LAB <small>UNIFIED CROSS-KIT ANATOMY &amp; MANNEQUIN WORKBENCH</small></h1>
   <div class="sp"></div>
-  <a class="nav-btn" href="kits.html">▦ Character Kits Spec</a>
-  <a class="nav-btn" href="cards.html">◫ Periodic Atlas (80 Scenes)</a>
-  <a class="nav-btn" href="faces.html">🎭 Profile Faces &amp; Overlap</a>
-  <a class="nav-btn" href="butcher_proof.html">✂ Butcher Workbench</a>
-  <a class="nav-btn gold" href="arena/parts/body_lab/body_lab_catalog.json" download>⬇ body_lab_catalog.json</a>
+  <nav class="nav-links">
+    <a class="nav-btn" href="cards.html">◫ Periodic Table &amp; Card Atlas</a>
+    <a class="nav-btn" href="stage.html">🎬 Multiplane Stage</a>
+    <a class="nav-btn" href="suite.html">▶ 14-Poem Suite Player</a>
+    <a class="nav-btn" href="arena_actors.html">🏃 Acting Arena</a>
+    <a class="nav-btn" href="weave.html">🕸 The Weave</a>
+    <a class="nav-btn" href="world.html">🏛 Atlantis World</a>
+    <a class="nav-btn" href="kits.html">▦ Character Kits</a>
+    <a class="nav-btn" href="faces.html">🎭 Faces &amp; Profiles</a>
+    <a class="nav-btn gold" href="arena/parts/body_lab/body_lab_unified.json" download>⬇ body_lab_unified.json</a>
+  </nav>
 </header>
 
 <main>
   <!-- Hero Banner -->
   <section class="banner">
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <span class="badge ok">✓ 573 Isolated Anatomical Cards</span>
-      <span class="badge gold">✓ 191 Hands</span>
-      <span class="badge gold">✓ 89 Shoes &amp; Boots</span>
-      <span class="badge gold">✓ 137 Heads &amp; Faces</span>
-      <span class="badge ok">✓ 93 Modular Eyes/Noses/Mouths</span>
-      <span class="badge ok">✓ Zero Rectangular Borders</span>
+    <div class="banner-left">
+      <div class="badge-row">
+        <span class="badge ok" id="bdgTotal">✓ 3,978 Unified Anatomical Parts</span>
+        <span class="badge gold">✓ 8 Anatomical Categories</span>
+        <span class="badge gold">✓ 31 Calibrated Tracksuit Parts (Brass Pivots)</span>
+        <span class="badge blue">✓ 240px True Anatomical Scale Solver</span>
+        <span class="badge ok">✓ All 14 Poems (P01–P14)</span>
+      </div>
+      <h2>Cross-Kit Comparative Body Lab &amp; Mannequin Assembler</h2>
+      <p>
+        Inspect, filter, and compare <strong>all hands, all shoes &amp; feet, all heads &amp; profiles, all eyes &amp; brows, all mouths &amp; noses, all sunglasses &amp; headgear, all torsos &amp; pelvises, and all limbs</strong> across every character kit and poem in <i>WYGWYL</i>. Switch between <strong>Raw Card Zoom</strong> (to inspect gouache brushwork and kraft edges) and <strong>True Anatomical Scale</strong> (normalized to a standard <code>240px</code> torso), or snap any part directly onto the calibrated <strong>Mix-and-Match Mannequin Workbench</strong> below.
+      </p>
     </div>
-    <h2>Anatomical Body Lab &amp; Replacement Library</h2>
-    <p>
-      In theatrical cut-out puppetry (referencing <i>TROUTTOWN</i> and our Weave master library), acting is driven by <strong>libraries of replacement parts</strong>. A character maintains volume across scenes by selecting from comprehensive banks of replacement hands, boots, heads, and facial features. Browse, filter, search, compare, and inspect every isolated body card across all 14 poems and character kits.
-    </p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="nav-btn gold" onclick="toggleWorkbenchSection()" id="btnToggleWB">🦿 Hide Assembler Workbench</button>
+      <button class="nav-btn blue" onclick="randomizeHybridRig()">🎲 Randomize Cross-Kit Hybrid</button>
+    </div>
   </section>
 
-  <!-- Interactive Toolbar -->
-  <section class="toolbar">
-    <!-- Category Tabs -->
-    <div class="cat-tabs" id="catTabs">
-      <button class="cat-tab active" data-cat="all" onclick="setCategory('all', this)">
-        🌐 All Parts <span class="cnt" id="cnt-all">573</span>
-      </button>
-      <button class="cat-tab" data-cat="hands" onclick="setCategory('hands', this)">
-        🙌 Hands <span class="cnt" id="cnt-hands">191</span>
-      </button>
-      <button class="cat-tab" data-cat="shoes" onclick="setCategory('shoes', this)">
-        👞 Shoes &amp; Boots <span class="cnt" id="cnt-shoes">89</span>
-      </button>
-      <button class="cat-tab" data-cat="heads" onclick="setCategory('heads', this)">
-        👤 Heads &amp; Turns <span class="cnt" id="cnt-heads">137</span>
-      </button>
-      <button class="cat-tab" data-cat="eyes" onclick="setCategory('eyes', this)">
-        👁️ Eyes <span class="cnt" id="cnt-eyes">16</span>
-      </button>
-      <button class="cat-tab" data-cat="noses" onclick="setCategory('noses', this)">
-        👃 Noses <span class="cnt" id="cnt-noses">34</span>
-      </button>
-      <button class="cat-tab" data-cat="mouths" onclick="setCategory('mouths', this)">
-        👄 Mouths <span class="cnt" id="cnt-mouths">14</span>
-      </button>
-      <button class="cat-tab" data-cat="accessories" onclick="setCategory('accessories', this)">
-        🕶️ Accessories &amp; Caps <span class="cnt" id="cnt-accessories">29</span>
-      </button>
-      <button class="cat-tab" data-cat="torsos" onclick="setCategory('torsos', this)">
-        🥋 Torsos &amp; Bodies <span class="cnt" id="cnt-torsos">63</span>
-      </button>
+  <!-- Interactive Mix-and-Match Body & Face Assembler Workbench -->
+  <section class="workbench-section" id="workbenchSection">
+    <div class="workbench-header">
+      <h3>
+        🦿 Mix-and-Match Body &amp; Face Assembler Workbench
+        <small>Click "+ Snap to Rig" on any card below to attach it to the calibrated mannequin</small>
+      </h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="nav-btn active" id="btnShowPivotsWB" onclick="toggleWBPivots()">◎ Brass Pivots: ON</button>
+        <button class="nav-btn active" id="btnShowGridWB" onclick="toggleWBGrid()">📏 240px Scale Ruler: ON</button>
+        <button class="nav-btn" onclick="exportAssemblyJSON()">⬇ Export Assembly JSON</button>
+        <button class="nav-btn gold" onclick="downloadMannequinPNG()">📸 Save PNG</button>
+      </div>
     </div>
 
-    <!-- Filter & Search Row -->
-    <div class="filter-row">
-      <input type="text" id="bodySearch" class="search-box" placeholder="Search anatomy (e.g. fist, open, chelsea, walk, profile, smile, sunglasses, child, elder, dj)..." oninput="renderParts()">
-      
-      <div class="char-chips">
-        <span style="font:700 11px var(--mono);color:var(--gold);margin-right:2px">CHARACTER:</span>
-        <button class="char-chip active" data-char="all" onclick="setCharacter('all', this)">All Cast</button>
-        <button class="char-chip" data-char="poet" onclick="setCharacter('poet', this)">Poet (Adult)</button>
-        <button class="char-chip" data-char="young" onclick="setCharacter('young', this)">Young Poet (6)</button>
-        <button class="char-chip" data-char="mother" onclick="setCharacter('mother', this)">The Mother</button>
-        <button class="char-chip" data-char="father" onclick="setCharacter('father', this)">Father &amp; Elders</button>
-        <button class="char-chip" data-char="dj" onclick="setCharacter('dj', this)">DJ Cyber &amp; Club</button>
-        <button class="char-chip" data-char="atlantis" onclick="setCharacter('atlantis', this)">Atlantis Ancestors</button>
-        <button class="char-chip" data-char="ghost" onclick="setCharacter('ghost', this)">Ghost Child (7)</button>
-        <button class="char-chip" data-char="ex" onclick="setCharacter('ex', this)">The Ex</button>
-        <button class="char-chip" data-char="shared" onclick="setCharacter('shared', this)">Shared Cast Parts</button>
+    <div class="workbench-body">
+      <!-- Left: Live Calibrated Mannequin Canvas -->
+      <div class="mannequin-stage-wrap">
+        <div class="mannequin-canvas-box" id="mannequinBox">
+          <canvas id="mannequinCanvas" width="960" height="900"></canvas>
+          <div class="mannequin-hud-top">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span class="badge gold" id="wbActivePresetLabel">Preset: Poet Tracksuit (Calibrated Rig)</span>
+              <span class="badge blue" id="wbActiveSlotBadge">Selected Slot: TORSO</span>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="nav-btn" onclick="resetSlotOffsets()">↺ Reset Offsets</button>
+              <button class="nav-btn" onclick="clearAllSlots()">✕ Clear Rig</button>
+            </div>
+          </div>
+          <div class="mannequin-hud-bottom">
+            <span id="wbReadout">Drag any part on the canvas to fine-tune placement · Brass grommets shown in gold</span>
+            <span>Ref Torso = <b style="color:var(--gold)">240px</b></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Presets, 14 Anatomical Slots & Transform Controls -->
+      <div class="workbench-controls">
+        <div class="wb-panel">
+          <h4>1. Character &amp; Cross-Kit Presets</h4>
+          <div class="preset-row">
+            <button class="preset-btn" onclick="loadPreset('poet_tracksuit')">Poet Tracksuit (Front)</button>
+            <button class="preset-btn" onclick="loadPreset('poet_profile')">Poet Profile Rig</button>
+            <button class="preset-btn" onclick="loadPreset('young_poet')">Young Poet (Age 6)</button>
+            <button class="preset-btn" onclick="loadPreset('mother')">The Mother (P09)</button>
+            <button class="preset-btn" onclick="loadPreset('ex_back')">The Ex (Bomber Back)</button>
+            <button class="preset-btn" onclick="loadPreset('dj_cyber')">DJ Cyber (P07)</button>
+            <button class="preset-btn accent" onclick="randomizeHybridRig()">🎲 Random Hybrid</button>
+          </div>
+        </div>
+
+        <div class="wb-panel">
+          <h4>
+            <span>2. Active Mannequin Slots (Click to Select / Filter Grid)</span>
+            <span style="color:var(--dim);font-weight:400">14 Sockets</span>
+          </h4>
+          <div class="slots-grid" id="wbSlotsGrid"></div>
+        </div>
+
+        <div class="wb-panel">
+          <h4>
+            <span>3. Fine-Tune Selected Slot: <span id="tuneSlotName" style="color:var(--ink)">TORSO</span></span>
+            <button class="preset-btn" style="padding:2px 8px;font-size:10px" onclick="flipSelectedSlot()">⇄ Flip H</button>
+          </h4>
+          <div class="slider-row">
+            <label>Scale Multiplier:</label>
+            <input type="range" id="slSlotScale" min="30" max="220" value="100" oninput="updateSelectedSlotTransform()">
+            <span id="valSlotScale">1.00×</span>
+          </div>
+          <div class="slider-row">
+            <label>Rotation (°):</label>
+            <input type="range" id="slSlotRot" min="-180" max="180" value="0" oninput="updateSelectedSlotTransform()">
+            <span id="valSlotRot">0°</span>
+          </div>
+          <div class="slider-row">
+            <label>Offset X / Y:</label>
+            <input type="range" id="slSlotX" min="-260" max="260" value="0" oninput="updateSelectedSlotTransform()">
+            <input type="range" id="slSlotY" min="-260" max="260" value="0" oninput="updateSelectedSlotTransform()">
+            <span id="valSlotXY">0, 0</span>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Gallery Header & Count Readout -->
+  <!-- Sticky Multi-Filter & Scale Normalization Toolbar -->
+  <section class="toolbar">
+    <!-- 8 Comprehensive Anatomical Categories -->
+    <div class="cat-tabs" id="catTabs">
+      <button class="cat-tab active" data-cat="all" onclick="setCategory('all', this)">
+        🌐 ALL <span class="cnt" id="cnt-all">0</span>
+      </button>
+      <button class="cat-tab" data-cat="hands" onclick="setCategory('hands', this)">
+        🙌 HANDS <span class="cnt" id="cnt-hands">0</span>
+      </button>
+      <button class="cat-tab" data-cat="shoes_feet" onclick="setCategory('shoes_feet', this)">
+        👞 SHOES &amp; FEET <span class="cnt" id="cnt-shoes_feet">0</span>
+      </button>
+      <button class="cat-tab" data-cat="heads" onclick="setCategory('heads', this)">
+        👤 HEADS &amp; PROFILES <span class="cnt" id="cnt-heads">0</span>
+      </button>
+      <button class="cat-tab" data-cat="eyes_brows" onclick="setCategory('eyes_brows', this)">
+        👁️ EYES &amp; BROWS <span class="cnt" id="cnt-eyes_brows">0</span>
+      </button>
+      <button class="cat-tab" data-cat="mouths_noses" onclick="setCategory('mouths_noses', this)">
+        👄 MOUTHS &amp; NOSES <span class="cnt" id="cnt-mouths_noses">0</span>
+      </button>
+      <button class="cat-tab" data-cat="sunglasses_acc" onclick="setCategory('sunglasses_acc', this)">
+        🕶️ SUNGLASSES &amp; GEAR <span class="cnt" id="cnt-sunglasses_acc">0</span>
+      </button>
+      <button class="cat-tab" data-cat="torsos_pelvis" onclick="setCategory('torsos_pelvis', this)">
+        🥋 TORSOS &amp; PELVIS <span class="cnt" id="cnt-torsos_pelvis">0</span>
+      </button>
+      <button class="cat-tab" data-cat="limbs" onclick="setCategory('limbs', this)">
+        💪 ARMS &amp; LEGS <span class="cnt" id="cnt-limbs">0</span>
+      </button>
+    </div>
+
+    <!-- Search + Scale Normalization Mode Toggle -->
+    <div class="controls-bar">
+      <input type="text" id="bodySearch" class="search-box" placeholder="Search 3,978 parts (e.g. relaxed, fist, chelsea, sneaker, blank head, raised brow, smile, sunglasses, bomber, mother, P04)..." oninput="resetPageAndRender()">
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span style="font:800 10px var(--mono);color:var(--gold);letter-spacing:.08em">SCALE MODE:</span>
+        <div class="scale-toggle-group">
+          <button class="scale-btn active" id="btnScaleRaw" onclick="setScaleMode('raw')">🔍 RAW CARD ZOOM</button>
+          <button class="scale-btn" id="btnScaleAnatomical" onclick="setScaleMode('anatomical')">📏 TRUE ANATOMICAL SCALE (240px Torso)</button>
+        </div>
+        <button class="nav-btn active" id="btnCardPivots" onclick="toggleCardPivots()">◎ Card Pivots</button>
+      </div>
+    </div>
+
+    <!-- Character Group, View Angle & Poem Filters -->
+    <div class="filter-strip">
+      <div class="chip-group" id="charChips">
+        <span class="chip-label">CHARACTER:</span>
+        <button class="f-chip active" data-char="all" onclick="setCharacter('all', this)">ALL CAST</button>
+        <button class="f-chip" data-char="Poet" onclick="setCharacter('Poet', this)">Poet</button>
+        <button class="f-chip" data-char="EX" onclick="setCharacter('EX', this)">EX</button>
+        <button class="f-chip" data-char="Woman / Muse" onclick="setCharacter('Woman / Muse', this)">Woman / Muse</button>
+        <button class="f-chip" data-char="Vintage Party" onclick="setCharacter('Vintage Party', this)">Vintage Party</button>
+        <button class="f-chip" data-char="Child / Ghost" onclick="setCharacter('Child / Ghost', this)">Child / Ghost</button>
+        <button class="f-chip" data-char="Family / Ancestors" onclick="setCharacter('Family / Ancestors', this)">Family / Ancestors</button>
+        <button class="f-chip" data-char="DJ / Club / Atlantis" onclick="setCharacter('DJ / Club / Atlantis', this)">DJ / Club / Atlantis</button>
+      </div>
+
+      <div class="chip-group" id="angleChips">
+        <span class="chip-label">VIEW ANGLE:</span>
+        <button class="f-chip blue active" data-angle="all" onclick="setViewAngle('all', this)">ALL</button>
+        <button class="f-chip blue" data-angle="front" onclick="setViewAngle('front', this)">FRONT</button>
+        <button class="f-chip blue" data-angle="profile" onclick="setViewAngle('profile', this)">PROFILE</button>
+        <button class="f-chip blue" data-angle="threequarter" onclick="setViewAngle('threequarter', this)">3/4</button>
+        <button class="f-chip blue" data-angle="back" onclick="setViewAngle('back', this)">BACK</button>
+      </div>
+
+      <div class="chip-group" id="poemChips">
+        <span class="chip-label">POEM:</span>
+        <button class="f-chip active" data-poem="all" onclick="setPoem('all', this)">ALL</button>
+        <button class="f-chip" data-poem="1" onclick="setPoem(1, this)">P01</button>
+        <button class="f-chip" data-poem="2" onclick="setPoem(2, this)">P02</button>
+        <button class="f-chip" data-poem="3" onclick="setPoem(3, this)">P03</button>
+        <button class="f-chip" data-poem="4" onclick="setPoem(4, this)">P04</button>
+        <button class="f-chip" data-poem="5" onclick="setPoem(5, this)">P05</button>
+        <button class="f-chip" data-poem="6" onclick="setPoem(6, this)">P06</button>
+        <button class="f-chip" data-poem="7" onclick="setPoem(7, this)">P07</button>
+        <button class="f-chip" data-poem="8" onclick="setPoem(8, this)">P08</button>
+        <button class="f-chip" data-poem="9" onclick="setPoem(9, this)">P09</button>
+        <button class="f-chip" data-poem="10" onclick="setPoem(10, this)">P10</button>
+        <button class="f-chip" data-poem="11" onclick="setPoem(11, this)">P11</button>
+        <button class="f-chip" data-poem="12" onclick="setPoem(12, this)">P12</button>
+        <button class="f-chip" data-poem="13" onclick="setPoem(13, this)">P13</button>
+        <button class="f-chip" data-poem="14" onclick="setPoem(14, this)">P14</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery Header & Readout -->
   <div class="grid-header">
-    <div>Showing <b id="visibleCount">573</b> parts in <b id="activeCategoryLabel">All Parts</b></div>
-    <div>Tip: Click <b>Pin to Compare</b> on any card to view items side-by-side below.</div>
+    <div>
+      Showing <b id="visibleCount">0</b> matching parts in <b id="activeCategoryLabel">ALL</b>
+      <span id="activeFiltersSummary" style="margin-left:8px;color:var(--blue)"></span>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <span>Click <b>⚡ Snap to Rig</b> to test on Mannequin · Click <b>+ Pin</b> for side-by-side comparison</span>
+      <button class="nav-btn" onclick="resetAllFilters()">↺ Reset Filters</button>
+    </div>
   </div>
 
   <!-- Parts Grid -->
   <div class="parts-grid" id="partsGrid"></div>
+
+  <!-- Load More Pagination -->
+  <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+    <button class="nav-btn gold" id="btnLoadMore" onclick="loadMoreParts()">Show More Parts (+240)</button>
+    <button class="nav-btn" onclick="showAllParts()">Show All Matching</button>
+  </div>
 </main>
 
-<!-- Side-by-Side Pinned Drawer -->
+<!-- Side-by-Side Comparative Anatomy Drawer -->
 <div id="compareDrawer">
   <div class="drawer-bar">
-    <h3>Comparative Anatomy Workbench (<span id="pinnedCount">0</span> Pinned)</h3>
+    <h3>Comparative Side-by-Side Anatomy Tray (<span id="pinnedCount">0</span> Pinned) · <small style="font:11px var(--mono);color:var(--dim)" id="drawerScaleNote">Mode: Raw Card Zoom</small></h3>
     <div style="display:flex;gap:8px">
+      <button class="nav-btn" onclick="setScaleMode(scaleMode === 'raw' ? 'anatomical' : 'raw')">⇄ Toggle True Scale in Tray</button>
       <button class="nav-btn" onclick="clearPinned()">Clear Pinned</button>
       <button class="nav-btn gold" onclick="closeDrawer()">Minimize</button>
     </div>
@@ -310,7 +630,7 @@
   <div class="drawer-slots" id="drawerSlots"></div>
 </div>
 
-<!-- Lightbox Modal -->
+<!-- Lightbox Inspection Modal -->
 <div class="modal" id="partModal" onclick="if(event.target===this)closeModal()">
   <div class="modal-box">
     <div class="modal-bar">
@@ -319,19 +639,25 @@
     </div>
     <div class="modal-body">
       <div class="modal-preview">
-        <img id="modalImg" src="" alt="Part Inspection">
+        <canvas id="modalCanvas" width="520" height="440"></canvas>
       </div>
       <div class="modal-info">
         <dl>
-          <dt>Character:</dt><dd id="modalChar">—</dd>
+          <dt>Part ID:</dt><dd id="modalId">—</dd>
           <dt>Category:</dt><dd id="modalCat">—</dd>
-          <dt>Dimensions:</dt><dd id="modalDim">—</dd>
+          <dt>Character Group:</dt><dd id="modalChar">—</dd>
+          <dt>View Angle:</dt><dd id="modalAngle">—</dd>
+          <dt>Poems:</dt><dd id="modalPoems">—</dd>
+          <dt>Native Pixels:</dt><dd id="modalDim">—</dd>
+          <dt>Normalized Scale:</dt><dd id="modalScale">—</dd>
+          <dt>Brass Pivots:</dt><dd id="modalPivots">—</dd>
           <dt>Source Sheet:</dt><dd id="modalSource">—</dd>
-          <dt>File Path:</dt><dd id="modalPath" style="word-break:break-all;font-size:11px">—</dd>
+          <dt>File Path:</dt><dd id="modalPath" style="font-size:11px">—</dd>
         </dl>
-        <div style="display:flex;gap:8px;margin-top:14px">
-          <a class="nav-btn gold" id="modalDownload" href="" download>Download Transparent PNG</a>
-          <button class="nav-btn" id="modalPinBtn" onclick="togglePinFromModal()">Pin to Compare</button>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button class="nav-btn gold" onclick="snapFromModal()">⚡ Snap to Mannequin Rig</button>
+          <button class="nav-btn" id="modalPinBtn" onclick="togglePinFromModal()">+ Pin to Compare</button>
+          <a class="nav-btn" id="modalDownload" href="" download>⬇ Download PNG</a>
         </div>
       </div>
     </div>
@@ -339,133 +665,946 @@
 </div>
 
 <script>
-let CATALOG = null;
+let UNIFIED = null;
+let ALL_PARTS = [];
+let PART_BY_ID = {};
+
 let activeCat = "all";
 let activeChar = "all";
+let activeAngle = "all";
+let activePoem = "all";
+let scaleMode = "raw"; // 'raw' | 'anatomical'
+let showCardPivots = true;
+let pageLimit = 240;
+
 let pinnedParts = [];
 let currentModalPart = null;
 
+// ============================================================================
+// MIX-AND-MATCH MANNEQUIN ASSEMBLER STATE
+// ============================================================================
+const WB_SLOT_DEFS = [
+  { key: "head",       label: "Head / Profile",     cat: "heads",          z: 50, defaultPos: { x: 480, y: 210 } },
+  { key: "eyes",       label: "Eyes",               cat: "eyes_brows",     z: 60, defaultPos: { x: 480, y: 205 } },
+  { key: "brows",      label: "Eyebrows",           cat: "eyes_brows",     z: 65, defaultPos: { x: 480, y: 182 } },
+  { key: "nose",       label: "Nose",               cat: "mouths_noses",   z: 68, defaultPos: { x: 480, y: 218 } },
+  { key: "mouth",      label: "Mouth / Beard",      cat: "mouths_noses",   z: 62, defaultPos: { x: 480, y: 248 } },
+  { key: "sunglasses", label: "Sunglasses / Gear",  cat: "sunglasses_acc", z: 75, defaultPos: { x: 480, y: 198 } },
+  { key: "torso",      label: "Torso / Dress",      cat: "torsos_pelvis",  z: 40, defaultPos: { x: 480, y: 400 } },
+  { key: "pelvis",     label: "Pelvis / Hip Bridge",cat: "torsos_pelvis",  z: 35, defaultPos: { x: 480, y: 525 } },
+  { key: "arm_L",      label: "Arm — L",            cat: "limbs",          z: 45, defaultPos: { x: 585, y: 425 } },
+  { key: "arm_R",      label: "Arm — R",            cat: "limbs",          z: 30, defaultPos: { x: 375, y: 425 } },
+  { key: "hand_L",     label: "Hand — L",           cat: "hands",          z: 48, defaultPos: { x: 615, y: 535 } },
+  { key: "hand_R",     label: "Hand — R",           cat: "hands",          z: 32, defaultPos: { x: 345, y: 535 } },
+  { key: "leg_L",      label: "Leg — L",            cat: "limbs",          z: 25, defaultPos: { x: 530, y: 655 } },
+  { key: "leg_R",      label: "Leg — R",            cat: "limbs",          z: 20, defaultPos: { x: 430, y: 655 } },
+  { key: "shoe_L",     label: "Shoe / Foot — L",    cat: "shoes_feet",     z: 28, defaultPos: { x: 545, y: 790 } },
+  { key: "shoe_R",     label: "Shoe / Foot — R",    cat: "shoes_feet",     z: 22, defaultPos: { x: 415, y: 790 } },
+];
+
+let wbSlots = {}; // key -> { part, dx, dy, scaleMult, rotDeg, flipH }
+let wbSelectedSlot = "torso";
+let wbShowPivots = true;
+let wbShowGrid = true;
+let wbImageCache = {};
+let wbDragging = null;
+
+function initSlotsState() {
+  for (const def of WB_SLOT_DEFS) {
+    wbSlots[def.key] = { part: null, dx: 0, dy: 0, scaleMult: 1.0, rotDeg: 0, flipH: false };
+  }
+}
+
 async function init() {
+  initSlotsState();
   try {
-    const res = await fetch("arena/parts/body_lab/body_lab_catalog.json");
-    CATALOG = await res.json();
+    const res = await fetch("arena/parts/body_lab/body_lab_unified.json");
+    UNIFIED = await res.json();
   } catch (e) {
-    console.error("Failed to load catalog, trying fallback", e);
+    console.error("Failed to load body_lab_unified.json:", e);
   }
-  if (!CATALOG) return;
+  if (!UNIFIED) return;
 
-  // update category badge counts
-  document.getElementById("cnt-all").textContent = Object.values(CATALOG).reduce((a, b) => a + b.length, 0);
-  for (const [k, v] of Object.entries(CATALOG)) {
-    const el = document.getElementById("cnt-" + k);
-    if (el) el.textContent = v.length;
+  ALL_PARTS = UNIFIED.parts || [];
+  for (const p of ALL_PARTS) {
+    PART_BY_ID[p.id] = p;
+    if (p.file && p.sheet_file && p.bbox_sheet) {
+      PART_BY_FILE[p.file.replace(/^\.\//, "")] = p;
+    }
   }
 
+  document.getElementById("bdgTotal").textContent = `✓ ${ALL_PARTS.length.toLocaleString()} Unified Anatomical Parts`;
+  updateCategoryBadges();
+  renderWBSlotsUI();
+  setupMannequinCanvasEvents();
+  loadPreset("poet_tracksuit");
   renderParts();
 }
 
+const PART_BY_FILE = {};
+const SHEET_IMG_CACHE = new Map();
+
+function loadSheetImg(src) {
+  if (!src) return Promise.resolve(null);
+  if (SHEET_IMG_CACHE.has(src)) return SHEET_IMG_CACHE.get(src);
+  const p = new Promise(resolve => {
+    const im = new Image();
+    im.crossOrigin = "anonymous";
+    im.onload = () => resolve(im);
+    im.onerror = () => resolve(null);
+    im.src = src;
+  });
+  SHEET_IMG_CACHE.set(src, p);
+  return p;
+}
+
+function cropAndKeyPartFromSheet(sheetImg, bbox) {
+  const [bx, by, bw, bh] = bbox;
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, bw);
+  c.height = Math.max(1, bh);
+  const cx = c.getContext("2d");
+  cx.drawImage(sheetImg, bx, by, bw, bh, 0, 0, bw, bh);
+  try {
+    const id = cx.getImageData(0, 0, bw, bh);
+    const d = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i], g = d[i + 1], b = d[i + 2];
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+      if (mx >= 236 && (mx - mn) <= 18) {
+        d[i + 3] = mx >= 244 ? 0 : Math.round(((244 - mx) / 8) * 255);
+      }
+    }
+    cx.putImageData(id, 0, 0);
+  } catch (_) {}
+  return c;
+}
+
+window.addEventListener("error", async e => {
+  const tg = e.target;
+  if (!tg || tg.tagName !== "IMG" || tg.dataset.fallbackTried) return;
+  const rel = (tg.getAttribute("src") || "").replace(/^\.\//, "");
+  const meta = PART_BY_FILE[rel];
+  if (meta && meta.sheet_file && meta.bbox_sheet) {
+    tg.dataset.fallbackTried = "1";
+    const shIm = await loadSheetImg(meta.sheet_file);
+    if (shIm) {
+      const c = cropAndKeyPartFromSheet(shIm, meta.bbox_sheet);
+      tg.src = c.toDataURL("image/png");
+    }
+  }
+}, true);
+
+function updateCategoryBadges() {
+  document.getElementById("cnt-all").textContent = ALL_PARTS.length;
+  const counts = UNIFIED.category_counts || {};
+  for (const [k, v] of Object.entries(counts)) {
+    const el = document.getElementById("cnt-" + k);
+    if (el) el.textContent = v;
+  }
+}
+
+// ============================================================================
+// FILTER & SCALE CONTROLS
+// ============================================================================
 function setCategory(cat, btn) {
   activeCat = cat;
   document.querySelectorAll(".cat-tab").forEach(t => t.classList.remove("active"));
-  btn.classList.add("active");
-  document.getElementById("activeCategoryLabel").textContent = btn.childNodes[0].textContent.trim();
-  renderParts();
+  if (btn) {
+    btn.classList.add("active");
+    document.getElementById("activeCategoryLabel").textContent = btn.childNodes[0].textContent.trim();
+  }
+  resetPageAndRender();
 }
 
 function setCharacter(char, btn) {
   activeChar = char;
-  document.querySelectorAll(".char-chip").forEach(t => t.classList.remove("active"));
-  btn.classList.add("active");
+  document.querySelectorAll("#charChips .f-chip").forEach(t => t.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  resetPageAndRender();
+}
+
+function setViewAngle(angle, btn) {
+  activeAngle = angle;
+  document.querySelectorAll("#angleChips .f-chip").forEach(t => t.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  resetPageAndRender();
+}
+
+function setPoem(poem, btn) {
+  activePoem = poem === "all" ? "all" : Number(poem);
+  document.querySelectorAll("#poemChips .f-chip").forEach(t => t.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  resetPageAndRender();
+}
+
+function setScaleMode(mode) {
+  scaleMode = mode;
+  document.getElementById("btnScaleRaw").classList.toggle("active", mode === "raw");
+  document.getElementById("btnScaleAnatomical").classList.toggle("active", mode === "anatomical");
+  document.getElementById("drawerScaleNote").textContent =
+    mode === "anatomical" ? "Mode: True Anatomical Scale (240px Torso)" : "Mode: Raw Card Zoom";
+  renderParts();
+  updateDrawer();
+}
+
+function toggleCardPivots() {
+  showCardPivots = !showCardPivots;
+  document.getElementById("btnCardPivots").classList.toggle("active", showCardPivots);
   renderParts();
 }
 
-function getAllParts() {
-  if (activeCat === "all") {
-    let all = [];
-    for (const list of Object.values(CATALOG)) { all = all.concat(list); }
-    return all;
-  }
-  return CATALOG[activeCat] || [];
+function resetAllFilters() {
+  document.getElementById("bodySearch").value = "";
+  setCategory("all", document.querySelector('.cat-tab[data-cat="all"]'));
+  setCharacter("all", document.querySelector('#charChips .f-chip[data-char="all"]'));
+  setViewAngle("all", document.querySelector('#angleChips .f-chip[data-angle="all"]'));
+  setPoem("all", document.querySelector('#poemChips .f-chip[data-poem="all"]'));
 }
 
-function renderParts() {
+function resetPageAndRender() {
+  pageLimit = 240;
+  renderParts();
+}
+
+function loadMoreParts() {
+  pageLimit += 240;
+  renderParts();
+}
+
+function showAllParts() {
+  pageLimit = 99999;
+  renderParts();
+}
+
+function getFilteredParts() {
   const q = document.getElementById("bodySearch").value.toLowerCase().trim();
-  const list = getAllParts();
-  
-  const filtered = list.filter(item => {
-    // Character filter
-    if (activeChar !== "all") {
-      const c = (item.character || "").toLowerCase();
-      if (!c.includes(activeChar)) return false;
-    }
-    // Search query
+  return ALL_PARTS.filter(item => {
+    if (activeCat !== "all" && item.category !== activeCat) return false;
+    if (activeChar !== "all" && item.character_group !== activeChar) return false;
+    if (activeAngle !== "all" && item.view_angle !== activeAngle) return false;
+    if (activePoem !== "all" && !(item.poems || []).includes(activePoem)) return false;
     if (q) {
-      const hay = `${item.name} ${item.character} ${item.source} ${item.category}`.toLowerCase();
+      const hay = `${item.name} ${item.id} ${item.character_group} ${item.category} ${item.view_angle} ${item.sheet_file}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
   });
+}
 
-  document.getElementById("visibleCount").textContent = filtered.length;
+function isPartInRig(id) {
+  return Object.values(wbSlots).some(s => s.part && s.part.id === id);
+}
+
+function renderParts() {
+  const filtered = getFilteredParts();
+  document.getElementById("visibleCount").textContent = filtered.length.toLocaleString();
+
+  const summaryBits = [];
+  if (activeChar !== "all") summaryBits.push(activeChar);
+  if (activeAngle !== "all") summaryBits.push(activeAngle.toUpperCase());
+  if (activePoem !== "all") summaryBits.push(`P${String(activePoem).padStart(2, "0")}`);
+  document.getElementById("activeFiltersSummary").textContent =
+    summaryBits.length ? `· Filtered by: ${summaryBits.join(" · ")}` : "";
+
   const grid = document.getElementById("partsGrid");
-  
+  const loadWrap = document.getElementById("loadMoreWrap");
+
   if (filtered.length === 0) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--dim);font:14px var(--mono)">No body parts match your active filters. Try clearing search or character chips.</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--dim);font:14px var(--mono)">No anatomical parts match your active filters. Click "Reset Filters" to view all ${ALL_PARTS.length.toLocaleString()} parts.</div>`;
+    loadWrap.style.display = "none";
     return;
   }
 
-  // Render cards
-  grid.innerHTML = filtered.map(item => {
+  const slice = filtered.slice(0, pageLimit);
+  if (filtered.length > pageLimit) {
+    loadWrap.style.display = "flex";
+    document.getElementById("btnLoadMore").textContent =
+      `Show More Parts (${slice.length} of ${filtered.length.toLocaleString()} shown)`;
+  } else {
+    loadWrap.style.display = "none";
+  }
+
+  grid.innerHTML = slice.map(item => {
     const isPinned = pinnedParts.some(p => p.id === item.id);
+    const inRig = isPartInRig(item.id);
+    const pivCount = (item.pivots || []).length;
+    const poemsStr = (item.poems || []).slice(0, 5).map(n => `P${String(n).padStart(2, "0")}`).join(",") +
+      ((item.poems || []).length > 5 ? "…" : "");
+
+    // Compute True Anatomical Scale CSS dimensions inside the 190px card box
+    // In 190px box (with 24px vertical margin = 166px = 240px reference scaled by 0.68)
+    const boxRatio = 164.0 / 240.0;
+    const anatW = Math.max(14, Math.min(188, Math.round(item.width * item.normalized_scale * boxRatio)));
+    const anatH = Math.max(14, Math.min(170, Math.round(item.height * item.normalized_scale * boxRatio)));
+    const imgStyle = scaleMode === "anatomical"
+      ? `width:${anatW}px;height:${anatH}px;max-width:none;max-height:none;`
+      : "";
+
     return `
-      <div class="part-card" data-id="${item.id}">
-        <div class="part-thumb" onclick="openModal('${item.id}')">
-          <img src="${item.path}" alt="${item.name}" loading="lazy">
+      <div class="part-card ${inRig ? 'in-rig' : ''}" data-id="${item.id}">
+        <div class="part-thumb ${scaleMode === 'anatomical' ? 'anatomical-mode' : 'raw-mode'}" onclick="openModal('${item.id}')">
+          <div class="part-badges-overlay">
+            <span class="mini-tag ang">${item.view_angle === 'threequarter' ? '3/4' : item.view_angle}</span>
+            ${showCardPivots && pivCount > 0 ? `<span class="mini-tag piv">◎ ${pivCount}</span>` : ''}
+          </div>
+          <img src="${item.file}" alt="${item.name}" loading="lazy" style="${imgStyle}">
         </div>
         <div class="part-meta">
           <div class="part-title" title="${item.name}">${item.name}</div>
           <div class="part-sub">
-            <span class="part-char" title="${item.character}">${item.character}</span>
+            <span class="part-char" title="${item.character_group}">${item.character_group}</span>
             <span>${item.width}×${item.height}</span>
+          </div>
+          <div class="part-sub">
+            <span class="part-poems" title="Poems: ${(item.poems||[]).join(', ')}">${poemsStr}</span>
+            <span style="color:var(--gold)">×${item.normalized_scale.toFixed(2)}</span>
           </div>
         </div>
         <div class="part-actions">
-          <button class="btn-sm" onclick="openModal('${item.id}')">Inspect</button>
-          <button class="btn-sm pin ${isPinned ? 'pinned' : ''}" onclick="togglePin('${item.id}')">${isPinned ? '✓ Pinned' : '+ Pin'}</button>
-          <a class="btn-sm" href="${item.path}" download title="Download PNG">⬇</a>
+          <button class="btn-sm snap ${inRig ? 'active' : ''}" onclick="snapPartToRig('${item.id}')">${inRig ? '✓ In Rig' : '⚡ Snap'}</button>
+          <button class="btn-sm pin ${isPinned ? 'pinned' : ''}" onclick="togglePin('${item.id}')">${isPinned ? '✓ Pin' : '+ Pin'}</button>
+          <button class="btn-sm" onclick="openModal('${item.id}')" title="Inspect & Pivots">🔍</button>
         </div>
       </div>
     `;
   }).join("");
 }
 
-function getPartById(id) {
-  for (const list of Object.values(CATALOG)) {
-    const f = list.find(x => x.id === id);
-    if (f) return f;
-  }
-  return null;
+// ============================================================================
+// MIX-AND-MATCH BODY & FACE ASSEMBLER WORKBENCH LOGIC
+// ============================================================================
+function toggleWorkbenchSection() {
+  const sec = document.getElementById("workbenchSection");
+  sec.classList.toggle("collapsed");
+  const isCol = sec.classList.contains("collapsed");
+  document.getElementById("btnToggleWB").textContent = isCol
+    ? "🦿 Open Assembler Workbench"
+    : "🦿 Hide Assembler Workbench";
 }
 
+function toggleWBPivots() {
+  wbShowPivots = !wbShowPivots;
+  const btn = document.getElementById("btnShowPivotsWB");
+  btn.classList.toggle("active", wbShowPivots);
+  btn.textContent = `◎ Brass Pivots: ${wbShowPivots ? "ON" : "OFF"}`;
+  drawMannequin();
+}
+
+function toggleWBGrid() {
+  wbShowGrid = !wbShowGrid;
+  const btn = document.getElementById("btnShowGridWB");
+  btn.classList.toggle("active", wbShowGrid);
+  btn.textContent = `📏 240px Scale Ruler: ${wbShowGrid ? "ON" : "OFF"}`;
+  drawMannequin();
+}
+
+function getOrLoadImage(src) {
+  if (!src) return null;
+  if (wbImageCache[src]) return wbImageCache[src];
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    wbImageCache[src].loaded = true;
+    drawMannequin();
+  };
+  img.onerror = async () => {
+    const rel = src.replace(/^\.\//, "");
+    const meta = PART_BY_FILE[rel];
+    if (meta && meta.sheet_file && meta.bbox_sheet) {
+      const shIm = await loadSheetImg(meta.sheet_file);
+      if (shIm) {
+        const c = cropAndKeyPartFromSheet(shIm, meta.bbox_sheet);
+        wbImageCache[src] = { img: c, loaded: true };
+        drawMannequin();
+      }
+    }
+  };
+  wbImageCache[src] = { img, loaded: false };
+  img.src = src;
+  return wbImageCache[src];
+}
+
+function chooseTargetSlotForPart(part) {
+  const cat = part.category;
+  const nl = `${part.name} ${part.id}`.toLowerCase();
+
+  // If currently selected slot matches this part's category, use it directly!
+  const selDef = WB_SLOT_DEFS.find(d => d.key === wbSelectedSlot);
+  if (selDef && selDef.cat === cat) {
+    return selDef.key;
+  }
+
+  if (cat === "heads") return "head";
+  if (cat === "sunglasses_acc") return "sunglasses";
+  if (cat === "eyes_brows") {
+    return nl.includes("brow") ? "brows" : "eyes";
+  }
+  if (cat === "mouths_noses") {
+    return nl.includes("nose") ? "nose" : "mouth";
+  }
+  if (cat === "torsos_pelvis") {
+    if (nl.includes("hip") || nl.includes("pelvis") || nl.includes("seat") || nl.includes("waist")) {
+      return "pelvis";
+    }
+    return "torso";
+  }
+  if (cat === "limbs") {
+    const isLeg = nl.includes("thigh") || nl.includes("shin") || nl.includes("leg") || nl.includes("calf");
+    const isRight = nl.includes("_r") || nl.includes(" r") || nl.includes("right");
+    if (isLeg) return isRight ? "leg_R" : "leg_L";
+    return isRight ? "arm_R" : "arm_L";
+  }
+  if (cat === "hands") {
+    if (nl.includes("_r") || nl.includes(" r") || nl.includes("right")) return "hand_R";
+    if (nl.includes("_l") || nl.includes(" l") || nl.includes("left")) return "hand_L";
+    return wbSlots.hand_L.part && !wbSlots.hand_R.part ? "hand_R" : "hand_L";
+  }
+  if (cat === "shoes_feet") {
+    if (nl.includes("_r") || nl.includes(" r") || nl.includes("right")) return "shoe_R";
+    if (nl.includes("_l") || nl.includes(" l") || nl.includes("left")) return "shoe_L";
+    return wbSlots.shoe_L.part && !wbSlots.shoe_R.part ? "shoe_R" : "shoe_L";
+  }
+  return "torso";
+}
+
+function snapPartToRig(partId, explicitSlotKey = null) {
+  const part = PART_BY_ID[partId];
+  if (!part) return;
+  const slotKey = explicitSlotKey || chooseTargetSlotForPart(part);
+  wbSlots[slotKey] = {
+    part,
+    dx: 0,
+    dy: 0,
+    scaleMult: 1.0,
+    rotDeg: 0,
+    flipH: false,
+  };
+  wbSelectedSlot = slotKey;
+  getOrLoadImage(part.file);
+
+  // Ensure workbench is visible
+  const sec = document.getElementById("workbenchSection");
+  if (sec.classList.contains("collapsed")) {
+    toggleWorkbenchSection();
+  }
+
+  renderWBSlotsUI();
+  syncSlidersToSelectedSlot();
+  drawMannequin();
+  renderParts();
+}
+
+function selectWBSlot(slotKey, filterCategory = false) {
+  wbSelectedSlot = slotKey;
+  const def = WB_SLOT_DEFS.find(d => d.key === slotKey);
+  document.getElementById("wbActiveSlotBadge").textContent = `Selected Slot: ${def ? def.label.toUpperCase() : slotKey}`;
+  document.getElementById("tuneSlotName").textContent = def ? def.label.toUpperCase() : slotKey;
+  renderWBSlotsUI();
+  syncSlidersToSelectedSlot();
+  drawMannequin();
+
+  if (filterCategory && def) {
+    const tabBtn = document.querySelector(`.cat-tab[data-cat="${def.cat}"]`);
+    if (tabBtn) setCategory(def.cat, tabBtn);
+  }
+}
+
+function clearWBSlot(slotKey, ev) {
+  if (ev) ev.stopPropagation();
+  wbSlots[slotKey].part = null;
+  renderWBSlotsUI();
+  drawMannequin();
+  renderParts();
+}
+
+function clearAllSlots() {
+  initSlotsState();
+  renderWBSlotsUI();
+  syncSlidersToSelectedSlot();
+  drawMannequin();
+  renderParts();
+}
+
+function resetSlotOffsets() {
+  for (const k of Object.keys(wbSlots)) {
+    wbSlots[k].dx = 0;
+    wbSlots[k].dy = 0;
+    wbSlots[k].scaleMult = 1.0;
+    wbSlots[k].rotDeg = 0;
+    wbSlots[k].flipH = false;
+  }
+  syncSlidersToSelectedSlot();
+  drawMannequin();
+}
+
+function flipSelectedSlot() {
+  const s = wbSlots[wbSelectedSlot];
+  if (!s) return;
+  s.flipH = !s.flipH;
+  drawMannequin();
+}
+
+function syncSlidersToSelectedSlot() {
+  const s = wbSlots[wbSelectedSlot];
+  if (!s) return;
+  document.getElementById("slSlotScale").value = Math.round(s.scaleMult * 100);
+  document.getElementById("valSlotScale").textContent = `${s.scaleMult.toFixed(2)}×`;
+  document.getElementById("slSlotRot").value = Math.round(s.rotDeg);
+  document.getElementById("valSlotRot").textContent = `${Math.round(s.rotDeg)}°`;
+  document.getElementById("slSlotX").value = Math.round(s.dx);
+  document.getElementById("slSlotY").value = Math.round(s.dy);
+  document.getElementById("valSlotXY").textContent = `${Math.round(s.dx)}, ${Math.round(s.dy)}`;
+}
+
+function updateSelectedSlotTransform() {
+  const s = wbSlots[wbSelectedSlot];
+  if (!s) return;
+  s.scaleMult = Number(document.getElementById("slSlotScale").value) / 100.0;
+  s.rotDeg = Number(document.getElementById("slSlotRot").value);
+  s.dx = Number(document.getElementById("slSlotX").value);
+  s.dy = Number(document.getElementById("slSlotY").value);
+  syncSlidersToSelectedSlot();
+  drawMannequin();
+}
+
+function renderWBSlotsUI() {
+  const grid = document.getElementById("wbSlotsGrid");
+  grid.innerHTML = WB_SLOT_DEFS.map(def => {
+    const st = wbSlots[def.key];
+    const p = st ? st.part : null;
+    const isSel = wbSelectedSlot === def.key;
+    return `
+      <div class="slot-pill ${isSel ? 'selected' : ''}" onclick="selectWBSlot('${def.key}', true)" title="Click to select slot and filter grid to ${def.label}">
+        ${p ? `<img src="${p.file}" alt="${p.name}">` : `<div style="width:34px;height:34px;border-radius:4px;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:12px">+</div>`}
+        <div class="slot-info">
+          <div class="slot-lbl">${def.label}</div>
+          <div class="slot-val">${p ? p.name : 'Empty (Click to pick)'}</div>
+        </div>
+        ${p ? `<button class="slot-clr" onclick="clearWBSlot('${def.key}', event)" title="Remove part">&times;</button>` : ''}
+      </div>
+    `;
+  }).join("");
+}
+
+function findPartByMatch(cat, substringList) {
+  const pool = (UNIFIED && UNIFIED.categories && UNIFIED.categories[cat]) ? UNIFIED.categories[cat] : [];
+  for (const sub of substringList) {
+    const sl = sub.toLowerCase();
+    const found = pool.find(p => p.id.toLowerCase().includes(sl) || p.name.toLowerCase().includes(sl));
+    if (found) return found;
+  }
+  return pool[0] || null;
+}
+
+function loadPreset(presetName) {
+  initSlotsState();
+  const assign = (slotKey, cat, matches, dx = 0, dy = 0, scaleMult = 1.0) => {
+    const p = findPartByMatch(cat, matches);
+    if (p) {
+      wbSlots[slotKey] = { part: p, dx, dy, scaleMult, rotDeg: 0, flipH: false };
+      getOrLoadImage(p.file);
+    }
+  };
+
+  if (presetName === "poet_tracksuit") {
+    document.getElementById("wbActivePresetLabel").textContent = "Preset: Poet Tracksuit (Calibrated 31-Part Rig)";
+    assign("torso",      "torsos_pelvis",  ["poet.tracksuit.01_torso_front"]);
+    assign("pelvis",     "torsos_pelvis",  ["poet.tracksuit.06_pelvis_front_cover"]);
+    assign("head",       "heads",          ["poet.tracksuit.21_head_front_blank"]);
+    assign("eyes",       "eyes_brows",     ["poet.tracksuit.22_eyes_open"]);
+    assign("brows",      "eyes_brows",     ["poet.tracksuit.24_brows_rest"]);
+    assign("nose",       "mouths_noses",   ["poet.tracksuit.26_nose_front"]);
+    assign("mouth",      "mouths_noses",   ["poet.tracksuit.27_mouth_rest"]);
+    assign("sunglasses", "sunglasses_acc", ["poet.tracksuit.31_sunglasses_front"]);
+    assign("arm_L",      "limbs",          ["poet.tracksuit.07_upper_arm_L"]);
+    assign("arm_R",      "limbs",          ["poet.tracksuit.09_upper_arm_R"]);
+    assign("hand_L",     "hands",          ["poet.tracksuit.15_hand_relaxed_L"]);
+    assign("hand_R",     "hands",          ["poet.tracksuit.16_hand_relaxed_R"]);
+    assign("leg_L",      "limbs",          ["poet.tracksuit.11_thigh_L"]);
+    assign("leg_R",      "limbs",          ["poet.tracksuit.13_thigh_R"]);
+    assign("shoe_L",     "shoes_feet",     ["poet.tracksuit.19_boot_front_L"]);
+    assign("shoe_R",     "shoes_feet",     ["poet.tracksuit.20_boot_front_R"]);
+  } else if (presetName === "poet_profile") {
+    document.getElementById("wbActivePresetLabel").textContent = "Preset: Poet Profile Modular Rig";
+    assign("torso",      "torsos_pelvis",  ["weave_rig_torso.profile", "poet.red_black_sunglasses.body.profile__p01"]);
+    assign("pelvis",     "torsos_pelvis",  ["weave_rig_pelvis.profile"]);
+    assign("head",       "heads",          ["face_base_poet_profile", "poet_head_head.profile_R"]);
+    assign("eyes",       "eyes_brows",     ["poet_profile_eyes_01"]);
+    assign("nose",       "mouths_noses",   ["poet_profile_nose_15"]);
+    assign("mouth",      "mouths_noses",   ["poet_profile_mouth_21"]);
+    assign("sunglasses", "sunglasses_acc", ["poet_profile_sunglasses_09"]);
+    assign("arm_L",      "limbs",          ["weave_rig_uarm.profile"]);
+    assign("hand_L",     "hands",          ["weave_rig_hand.profile.open"]);
+    assign("leg_L",      "limbs",          ["weave_rig_thigh.profile"]);
+    assign("shoe_L",     "shoes_feet",     ["weave_boot_boot.chelsea.flat"]);
+  } else if (presetName === "young_poet") {
+    document.getElementById("wbActivePresetLabel").textContent = "Preset: Young Poet (Age 6)";
+    assign("torso",      "torsos_pelvis",  ["young_poet.child_clothes.body.front__p01"]);
+    assign("pelvis",     "torsos_pelvis",  ["young_poet.child_clothes.hipcore__p05"]);
+    assign("head",       "heads",          ["face_base_child_profile", "young_poet_age_6_yp_head_01"]);
+    assign("eyes",       "eyes_brows",     ["yp_young_poet_eyes_01"]);
+    assign("nose",       "mouths_noses",   ["yp_young_poet_nose_01"]);
+    assign("mouth",      "mouths_noses",   ["yp_young_poet_mouth_01"]);
+    assign("sunglasses", "sunglasses_acc", ["yp_young_poet_acc_01"]);
+    assign("arm_L",      "limbs",          ["young_poet.child_clothes.body.front__p02"]);
+    assign("arm_R",      "limbs",          ["young_poet.child_clothes.body.front__p04"]);
+    assign("hand_L",     "hands",          ["young_poet_age_6_yp_hand_01"]);
+    assign("hand_R",     "hands",          ["young_poet_age_6_yp_hand_02"]);
+    assign("leg_L",      "limbs",          ["young_poet.child_clothes.body.front__p08"]);
+    assign("leg_R",      "limbs",          ["young_poet.child_clothes.body.front__p10"]);
+    assign("shoe_L",     "shoes_feet",     ["young_poet.child_clothes.feet__p01"]);
+    assign("shoe_R",     "shoes_feet",     ["young_poet.child_clothes.feet__p02"]);
+  } else if (presetName === "mother") {
+    document.getElementById("wbActivePresetLabel").textContent = "Preset: The Mother (Teal Dress · P09)";
+    assign("torso",      "torsos_pelvis",  ["woman.09.mother.body__p01"]);
+    assign("pelvis",     "torsos_pelvis",  ["woman.09.mother.body__p14"]);
+    assign("head",       "heads",          ["woman.09.mother.heads-hands__p01", "the_mother_teal_dress_mother_head_01"]);
+    assign("eyes",       "eyes_brows",     ["woman.09.mother.heads-hands__p06", "the_mother_teal_dress_mother_hand_07"]);
+    assign("brows",      "eyes_brows",     ["the_mother_teal_dress_mother_hand_02"]);
+    assign("mouth",      "mouths_noses",   ["woman.09.mother.heads-hands__p22", "the_mother_teal_dress_mother_hand_20"]);
+    assign("arm_L",      "limbs",          ["woman.09.mother.body__p04"]);
+    assign("arm_R",      "limbs",          ["woman.09.mother.body__p05"]);
+    assign("hand_L",     "hands",          ["the_mother_teal_dress_mother_hand_24"]);
+    assign("hand_R",     "hands",          ["the_mother_teal_dress_mother_hand_25"]);
+    assign("leg_L",      "limbs",          ["woman.09.mother.body__p10"]);
+    assign("leg_R",      "limbs",          ["woman.09.mother.body__p11"]);
+    assign("shoe_L",     "shoes_feet",     ["woman.09.mother.body__p16"]);
+    assign("shoe_R",     "shoes_feet",     ["woman.09.mother.body__p17"]);
+  } else if (presetName === "ex_back") {
+    document.getElementById("wbActivePresetLabel").textContent = "Preset: The Ex (Bomber Jacket Back · P01)";
+    assign("torso",      "torsos_pelvis",  ["ex.ex_jacket.body.back__p01"]);
+    assign("pelvis",     "torsos_pelvis",  ["ex.ex_jacket.hipcore__p03"]);
+    assign("head",       "heads",          ["the_ex_bomber_jacket_ex_head_01"]);
+    assign("sunglasses", "sunglasses_acc", ["ex.ex_jacket.body.back__p12"]);
+    assign("arm_L",      "limbs",          ["ex.ex_jacket.body.back__p02"]);
+    assign("arm_R",      "limbs",          ["ex.ex_jacket.body.back__p04"]);
+    assign("hand_L",     "hands",          ["the_ex_bomber_jacket_ex_hand_01"]);
+    assign("hand_R",     "hands",          ["the_ex_bomber_jacket_ex_hand_02"]);
+    assign("leg_L",      "limbs",          ["ex.ex_jacket.body.back__p08"]);
+    assign("leg_R",      "limbs",          ["ex.ex_jacket.body.back__p10"]);
+    assign("shoe_L",     "shoes_feet",     ["the_ex_bomber_jacket_ex_boot_01"]);
+    assign("shoe_R",     "shoes_feet",     ["the_ex_bomber_jacket_ex_boot_02"]);
+  } else if (presetName === "dj_cyber") {
+    document.getElementById("wbActivePresetLabel").textContent = "Preset: DJ Cyber (Club Kit · P07)";
+    assign("torso",      "torsos_pelvis",  ["party.dj_cyber.compact-core__p01"]);
+    assign("pelvis",     "torsos_pelvis",  ["party.dj_cyber.compact-core__p03"]);
+    assign("head",       "heads",          ["party.dj_cyber.heads__p01"]);
+    assign("eyes",       "eyes_brows",     ["party.dj_cyber.face-feet__p01"]);
+    assign("brows",      "eyes_brows",     ["party.dj_cyber.face-feet__p09"]);
+    assign("mouth",      "mouths_noses",   ["party.dj_cyber.face-feet__p15"]);
+    assign("sunglasses", "sunglasses_acc", ["party.07.dj-guest.cap-noses-headphones__p12"]);
+    assign("arm_L",      "limbs",          ["party.dj_cyber.compact-core__p05"]);
+    assign("arm_R",      "limbs",          ["party.dj_cyber.compact-core__p06"]);
+    assign("hand_L",     "hands",          ["party.07.dj-guest.action-hands__p01"]);
+    assign("hand_R",     "hands",          ["party.07.dj-guest.action-hands__p02"]);
+    assign("leg_L",      "limbs",          ["party.dj_cyber.compact-core__p09"]);
+    assign("leg_R",      "limbs",          ["party.dj_cyber.compact-core__p11"]);
+    assign("shoe_L",     "shoes_feet",     ["party.dj_cyber.compact-core__p13"]);
+    assign("shoe_R",     "shoes_feet",     ["party.dj_cyber.compact-core__p14"]);
+  }
+
+  renderWBSlotsUI();
+  syncSlidersToSelectedSlot();
+  drawMannequin();
+  renderParts();
+}
+
+function randomizeHybridRig() {
+  if (!UNIFIED || !UNIFIED.categories) return;
+  initSlotsState();
+  document.getElementById("wbActivePresetLabel").textContent = "Preset: 🎲 Cross-Kit Hybrid Mashup";
+
+  const pick = (cat, filterFn = null) => {
+    let pool = UNIFIED.categories[cat] || [];
+    if (filterFn) {
+      const sub = pool.filter(filterFn);
+      if (sub.length) pool = sub;
+    }
+    return pool[Math.floor(Math.random() * pool.length)] || null;
+  };
+
+  const setRand = (key, part) => {
+    if (!part) return;
+    wbSlots[key] = { part, dx: 0, dy: 0, scaleMult: 1.0, rotDeg: 0, flipH: false };
+    getOrLoadImage(part.file);
+  };
+
+  setRand("torso",      pick("torsos_pelvis", p => p.name.toLowerCase().includes("torso")));
+  setRand("pelvis",     pick("torsos_pelvis", p => p.name.toLowerCase().includes("hip") || p.name.toLowerCase().includes("pelvis")));
+  setRand("head",       pick("heads"));
+  setRand("eyes",       pick("eyes_brows", p => !p.name.toLowerCase().includes("brow")));
+  setRand("brows",      pick("eyes_brows", p => p.name.toLowerCase().includes("brow")));
+  setRand("nose",       pick("mouths_noses", p => p.name.toLowerCase().includes("nose")));
+  setRand("mouth",      pick("mouths_noses", p => !p.name.toLowerCase().includes("nose")));
+  setRand("sunglasses", pick("sunglasses_acc"));
+  setRand("arm_L",      pick("limbs", p => p.name.toLowerCase().includes("arm")));
+  setRand("arm_R",      pick("limbs", p => p.name.toLowerCase().includes("arm")));
+  setRand("hand_L",     pick("hands"));
+  setRand("hand_R",     pick("hands"));
+  setRand("leg_L",      pick("limbs", p => p.name.toLowerCase().includes("thigh") || p.name.toLowerCase().includes("leg")));
+  setRand("leg_R",      pick("limbs", p => p.name.toLowerCase().includes("thigh") || p.name.toLowerCase().includes("leg")));
+  setRand("shoe_L",     pick("shoes_feet"));
+  setRand("shoe_R",     pick("shoes_feet"));
+
+  renderWBSlotsUI();
+  syncSlidersToSelectedSlot();
+  drawMannequin();
+  renderParts();
+}
+
+function drawMannequin() {
+  const canvas = document.getElementById("mannequinCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width;
+  const H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // 1. Optional 240px Torso Reference Scale Grid
+  if (wbShowGrid) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(245, 185, 66, 0.16)";
+    ctx.lineWidth = 1;
+    for (let x = 60; x < W; x += 60) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 60; y < H; y += 60) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    // 240px Torso Reference Bracket at y=280..520
+    ctx.strokeStyle = "rgba(245, 185, 66, 0.55)";
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(140, 280); ctx.lineTo(820, 280);
+    ctx.moveTo(140, 520); ctx.lineTo(820, 520);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(245, 185, 66, 0.75)";
+    ctx.font = "700 11px 'JetBrains Mono', monospace";
+    ctx.fillText("▲ TORSO TOP (0px)", 148, 273);
+    ctx.fillText("▼ TORSO WAIST (+240px ANATOMICAL REFERENCE)", 148, 536);
+    ctx.restore();
+  }
+
+  // 2. Sort active slots by z-order and draw each part at its normalized anatomical scale
+  const sortedDefs = [...WB_SLOT_DEFS].sort((a, b) => a.z - b.z);
+  for (const def of sortedDefs) {
+    const st = wbSlots[def.key];
+    if (!st || !st.part) continue;
+    const p = st.part;
+    const entry = getOrLoadImage(p.file);
+    if (!entry || !entry.loaded) continue;
+
+    const cx = def.defaultPos.x + st.dx;
+    const cy = def.defaultPos.y + st.dy;
+    const sc = p.normalized_scale * st.scaleMult;
+    const drawW = p.width * sc;
+    const drawH = p.height * sc;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    if (st.rotDeg) ctx.rotate((st.rotDeg * Math.PI) / 180.0);
+    if (st.flipH) ctx.scale(-1, 1);
+
+    ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 4;
+    ctx.drawImage(entry.img, -drawW / 2, -drawH / 2, drawW, drawH);
+
+    // Highlight selected slot frame
+    if (wbSelectedSlot === def.key) {
+      ctx.shadowColor = "transparent";
+      ctx.strokeStyle = "rgba(245, 185, 66, 0.75)";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.strokeRect(-drawW / 2, -drawH / 2, drawW, drawH);
+      ctx.setLineDash([]);
+    }
+
+    // Draw calibrated brass pivot sockets
+    if (wbShowPivots && p.pivots && p.pivots.length) {
+      ctx.shadowColor = "transparent";
+      for (const piv of p.pivots) {
+        const px = -drawW / 2 + piv.x * sc;
+        const py = -drawH / 2 + piv.y * sc;
+        const pr = Math.max(4, Math.min(10, (piv.r || 8) * sc));
+        ctx.beginPath();
+        ctx.arc(px, py, pr, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(245, 185, 66, 0.35)";
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#f5b942";
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(px, py, 2, 0, Math.PI * 2);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+}
+
+function setupMannequinCanvasEvents() {
+  const canvas = document.getElementById("mannequinCanvas");
+  if (!canvas) return;
+
+  const getCanvasPt = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: (clientX - r.left) * scaleX, y: (clientY - r.top) * scaleY };
+  };
+
+  canvas.addEventListener("mousedown", (e) => {
+    const pt = getCanvasPt(e);
+    // Hit-test from top-most z down
+    const revDefs = [...WB_SLOT_DEFS].sort((a, b) => b.z - a.z);
+    for (const def of revDefs) {
+      const st = wbSlots[def.key];
+      if (!st || !st.part) continue;
+      const p = st.part;
+      const sc = p.normalized_scale * st.scaleMult;
+      const hw = Math.max(28, (p.width * sc) / 2);
+      const hh = Math.max(28, (p.height * sc) / 2);
+      const cx = def.defaultPos.x + st.dx;
+      const cy = def.defaultPos.y + st.dy;
+      if (Math.abs(pt.x - cx) <= hw && Math.abs(pt.y - cy) <= hh) {
+        selectWBSlot(def.key, false);
+        wbDragging = { key: def.key, startX: pt.x, startY: pt.y, origDx: st.dx, origDy: st.dy };
+        return;
+      }
+    }
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!wbDragging) return;
+    const pt = getCanvasPt(e);
+    const st = wbSlots[wbDragging.key];
+    if (!st) return;
+    st.dx = Math.round(wbDragging.origDx + (pt.x - wbDragging.startX));
+    st.dy = Math.round(wbDragging.origDy + (pt.y - wbDragging.startY));
+    syncSlidersToSelectedSlot();
+    drawMannequin();
+  });
+
+  window.addEventListener("mouseup", () => {
+    wbDragging = null;
+  });
+}
+
+function exportAssemblyJSON() {
+  const payload = {
+    exported_at: new Date().toISOString(),
+    reference_torso_height_px: 240,
+    slots: {}
+  };
+  for (const def of WB_SLOT_DEFS) {
+    const st = wbSlots[def.key];
+    if (st && st.part) {
+      payload.slots[def.key] = {
+        id: st.part.id,
+        name: st.part.name,
+        category: st.part.category,
+        character_group: st.part.character_group,
+        view_angle: st.part.view_angle,
+        file: st.part.file,
+        normalized_scale: st.part.normalized_scale,
+        scale_multiplier: st.scaleMult,
+        rotation_deg: st.rotDeg,
+        flip_h: st.flipH,
+        canvas_x: def.defaultPos.x + st.dx,
+        canvas_y: def.defaultPos.y + st.dy,
+        pivots: st.part.pivots,
+      };
+    }
+  }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "wygwyl_custom_body_assembly.json";
+  a.click();
+}
+
+function downloadMannequinPNG() {
+  const canvas = document.getElementById("mannequinCanvas");
+  if (!canvas) return;
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/png");
+  a.download = "wygwyl_mannequin_assembly.png";
+  a.click();
+}
+
+// ============================================================================
+// MODAL INSPECTION & SIDE-BY-SIDE PIN DRAWER
+// ============================================================================
 function openModal(id) {
-  const item = getPartById(id);
+  const item = PART_BY_ID[id];
   if (!item) return;
   currentModalPart = item;
-  
+
   document.getElementById("modalTitle").textContent = item.name;
-  document.getElementById("modalImg").src = item.path;
-  document.getElementById("modalChar").textContent = item.character;
+  document.getElementById("modalId").textContent = item.id;
   document.getElementById("modalCat").textContent = item.category.toUpperCase();
-  document.getElementById("modalDim").textContent = `${item.width} × ${item.height} px`;
-  document.getElementById("modalSource").textContent = item.source;
-  document.getElementById("modalPath").textContent = item.path;
-  document.getElementById("modalDownload").href = item.path;
-  
+  document.getElementById("modalChar").textContent = item.character_group;
+  document.getElementById("modalAngle").textContent = item.view_angle.toUpperCase();
+  document.getElementById("modalPoems").textContent = (item.poems || []).map(p => `P${String(p).padStart(2, "0")}`).join(", ");
+  document.getElementById("modalDim").textContent = `${item.width} × ${item.height} px (bbox: [${(item.bbox_sheet||[]).join(", ")}])`;
+  document.getElementById("modalScale").textContent = `${item.normalized_scale}× (relative to 240px torso)`;
+  document.getElementById("modalPivots").textContent = (item.pivots && item.pivots.length)
+    ? item.pivots.map(p => `${p.id || 'piv'}: (${p.x}, ${p.y})`).join(" · ")
+    : "None (Overlay / Feature Patch)";
+  document.getElementById("modalSource").textContent = item.sheet_file || "—";
+  document.getElementById("modalPath").textContent = item.file;
+  document.getElementById("modalDownload").href = item.file;
+
   const isPinned = pinnedParts.some(p => p.id === item.id);
-  const pinBtn = document.getElementById("modalPinBtn");
-  pinBtn.textContent = isPinned ? "Unpin from Compare" : "Pin to Compare";
-  
+  document.getElementById("modalPinBtn").textContent = isPinned ? "✓ Unpin from Compare" : "+ Pin to Compare";
+
   document.getElementById("partModal").classList.add("active");
+  drawModalCanvas(item);
+}
+
+function drawModalCanvas(item) {
+  const c = document.getElementById("modalCanvas");
+  const ctx = c.getContext("2d");
+  ctx.clearRect(0, 0, c.width, c.height);
+  const img = new Image();
+  img.onload = () => {
+    ctx.clearRect(0, 0, c.width, c.height);
+    const pad = 28;
+    const sc = Math.min((c.width - pad * 2) / item.width, (c.height - pad * 2) / item.height);
+    const dw = item.width * sc;
+    const dh = item.height * sc;
+    const ox = (c.width - dw) / 2;
+    const oy = (c.height - dh) / 2;
+    ctx.drawImage(img, ox, oy, dw, dh);
+
+    if (item.pivots && item.pivots.length) {
+      for (const piv of item.pivots) {
+        const px = ox + piv.x * sc;
+        const py = oy + piv.y * sc;
+        const pr = Math.max(6, (piv.r || 10) * sc);
+        ctx.beginPath();
+        ctx.arc(px, py, pr, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(245, 185, 66, 0.3)";
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = "#f5b942";
+        ctx.stroke();
+        if (piv.id) {
+          ctx.fillStyle = "#f5b942";
+          ctx.font = "700 11px 'JetBrains Mono', monospace";
+          ctx.fillText(piv.id, px + pr + 4, py + 4);
+        }
+      }
+    }
+  };
+  img.src = item.file;
 }
 
 function closeModal() {
@@ -473,8 +1612,15 @@ function closeModal() {
   currentModalPart = null;
 }
 
+function snapFromModal() {
+  if (currentModalPart) {
+    snapPartToRig(currentModalPart.id);
+    closeModal();
+  }
+}
+
 function togglePin(id) {
-  const item = getPartById(id);
+  const item = PART_BY_ID[id];
   if (!item) return;
   const idx = pinnedParts.findIndex(p => p.id === id);
   if (idx >= 0) {
@@ -490,29 +1636,41 @@ function togglePinFromModal() {
   if (currentModalPart) {
     togglePin(currentModalPart.id);
     const isPinned = pinnedParts.some(p => p.id === currentModalPart.id);
-    document.getElementById("modalPinBtn").textContent = isPinned ? "Unpin from Compare" : "Pin to Compare";
+    document.getElementById("modalPinBtn").textContent = isPinned ? "✓ Unpin from Compare" : "+ Pin to Compare";
   }
 }
 
 function updateDrawer() {
   const drawer = document.getElementById("compareDrawer");
   document.getElementById("pinnedCount").textContent = pinnedParts.length;
-  
+
   if (pinnedParts.length === 0) {
     drawer.classList.remove("open");
     return;
   }
-  
+
   drawer.classList.add("open");
   const slots = document.getElementById("drawerSlots");
-  slots.innerHTML = pinnedParts.map(p => `
-    <div class="drawer-item">
-      <button class="rm" onclick="togglePin('${p.id}')">&times;</button>
-      <img src="${p.path}" alt="${p.name}">
-      <div class="t" title="${p.name}">${p.name}</div>
-      <div style="font:9px var(--mono);color:var(--dim)">${p.width}×${p.height}</div>
-    </div>
-  `).join("");
+  const trayRatio = 105.0 / 240.0;
+
+  slots.innerHTML = pinnedParts.map(p => {
+    const wPx = Math.max(12, Math.min(140, Math.round(p.width * p.normalized_scale * trayRatio)));
+    const hPx = Math.max(12, Math.min(110, Math.round(p.height * p.normalized_scale * trayRatio)));
+    const st = scaleMode === "anatomical" ? `width:${wPx}px;height:${hPx}px;max-width:none;max-height:none;` : "";
+    return `
+      <div class="drawer-item">
+        <button class="rm" onclick="togglePin('${p.id}')">&times;</button>
+        <div class="d-img-box" onclick="openModal('${p.id}')" style="cursor:pointer">
+          <img src="${p.file}" alt="${p.name}" style="${st}">
+        </div>
+        <div class="t" title="${p.name}">${p.name}</div>
+        <div style="font:9px var(--mono);color:var(--dim);display:flex;justify-content:space-between">
+          <span>${p.character_group}</span>
+          <span style="color:var(--gold)">×${p.normalized_scale.toFixed(2)}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 function clearPinned() {
