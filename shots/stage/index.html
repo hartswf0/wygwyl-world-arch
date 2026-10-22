@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cut-Out Stage</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--acc:#e7a35a;--sel:#5fd0ff;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
+header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
+header a,header select,.btn{font:12px var(--mono);color:var(--dim);background:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;text-decoration:none;cursor:pointer}
+header a:hover,.btn:hover{color:var(--card);border-color:var(--card)}
+.btn.on{color:#1a120a;background:var(--card);border-color:var(--card)}
+h1{font:400 26px 'Permanent Marker',cursive;margin:0 8px 0 0;color:var(--ink)}
+h1 span{color:var(--acc)}
+.sp{flex:1}
+#scenes{display:flex;gap:8px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--line)}
+.sc{flex:0 0 auto;width:178px;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--panel)}
+.sc.on{border-color:var(--acc)}
+.sc .mini{width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;border-radius:4px;background:#000}
+.sc b{display:block;font:600 11px var(--mono);color:var(--acc);margin-top:4px}
+.sc span{font-size:12px;color:var(--ink)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:0;min-height:calc(100vh - 170px)}
+@media (max-width:980px){main{grid-template-columns:1fr}}
+#left{padding:14px 16px;display:grid;gap:10px;align-content:start;min-width:0}
+#stageWrap{width:100%;aspect-ratio:16/9;position:relative;background:#050403;border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:none}
+.stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:0 0}
+.layer{position:absolute;user-select:none;-webkit-user-drag:none;cursor:grab}
+.layer.sel{outline:2px dashed var(--sel);outline-offset:2px}
+.layer.hid{display:none}
+#info h2{font:400 22px 'Permanent Marker',cursive;margin:0;color:var(--card)}
+#info .lines{font-style:italic;color:var(--dim)}
+#info .shot{max-width:90ch}
+.tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.hint{font:11px var(--mono);color:var(--dim)}
+aside{border-left:1px solid var(--line);display:grid;grid-template-rows:auto minmax(0,1fr) auto minmax(0,1.4fr);min-height:0;max-height:calc(100vh - 170px);position:sticky;top:0}
+@media (max-width:980px){aside{border-left:0;border-top:1px solid var(--line);max-height:none}}
+aside h3{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:0;padding:10px 12px 6px}
+#layers,#tray{overflow:auto;padding:0 8px 10px}
+.li{display:flex;align-items:center;gap:6px;padding:3px 4px;border-radius:5px;cursor:pointer;font:12px var(--mono)}
+.li:hover{background:#1e1813}.li.sel{background:#1b2a31;color:var(--sel)}
+.li img{width:42px;height:24px;object-fit:contain;background:#000;border-radius:3px}
+.li .n{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.li button{font:11px var(--mono);background:none;border:0;color:var(--dim);cursor:pointer;padding:0 2px}
+.li button:hover{color:var(--ink)}
+#q{width:calc(100% - 24px);margin:0 12px 6px;font:12px var(--mono);background:#0f0c0a;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+.grp{font:600 11px var(--mono);color:var(--acc);margin:8px 4px 4px}
+.cells{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:5px}
+.cell{background:repeating-conic-gradient(#221c17 0 25%,#1a1511 0 50%) 0 0/12px 12px;border:1px solid var(--line);border-radius:5px;padding:3px;cursor:copy;display:grid;gap:2px}
+.cell:hover{border-color:var(--card)}
+.cell img{width:100%;height:52px;object-fit:contain}
+.cell span{font:9.5px var(--mono);color:var(--dim);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+button:focus-visible,a:focus-visible,.cell:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--card);color:#1a120a;font:600 13px Inter;padding:6px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none}
+</style>
+</head>
+<body>
+<header>
+  <a href="../../index.html" id="wy-index">← Index</a>
+  <h1>Cut-Out <span>Stage</span></h1>
+  <select id="poem" aria-label="Poem"></select>
+  <span class="sp"></span>
+  <a id="toPoem" href="#">Poem page →</a>
+  <a id="toParts" href="#">Finished parts →</a>
+</header>
+<div id="scenes" role="tablist" aria-label="Scenes"></div>
+<main>
+  <div id="left">
+    <div id="stageWrap"><div class="stage" id="stage"></div></div>
+    <div class="tools">
+      <button class="btn" id="bFlip">Flip (F)</button>
+      <button class="btn" id="bBack">Back ([)</button>
+      <button class="btn" id="bFwd">Forward (])</button>
+      <button class="btn" id="bDel">Remove (Del)</button>
+      <span class="sp"></span>
+      <button class="btn" id="bReset">Reset scene to plan</button>
+      <button class="btn" id="bPng">Scene PNG</button>
+      <button class="btn" id="bJson">Export poem JSON</button>
+    </div>
+    <div class="hint">Drag to move · wheel or +/− to scale · Q/E to rotate · arrows to nudge · edits save in this browser · click a part in the tray to add it.</div>
+    <div id="info"></div>
+  </div>
+  <aside>
+    <h3>Layers, back to front</h3>
+    <div id="layers"></div>
+    <h3>Parts tray · this poem's cut sheets</h3>
+    <div><input id="q" placeholder="filter parts…" aria-label="Filter parts"><div id="tray"></div></div>
+  </aside>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+const $ = id => document.getElementById(id);
+const CUT = '../kits/cut/';
+const POEMS = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14'];
+const qs = new URLSearchParams(location.search);
+let P = qs.get('p') || '04';
+let PLAN, CAT, ATLAS, cur = 0, sel = -1, parts = {}, scenes = [];
+const store = (() => { try { const k = '__t'; localStorage.setItem(k, k); localStorage.removeItem(k); return localStorage; } catch (e) { return null; } })();
+const key = s => `wygwyl.stage.${P}.${s}`;
+function toast(t) { const el = $('toast'); el.textContent = t; el.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.opacity = 0, 1500); }
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+
+async function load() {
+  $('poem').innerHTML = POEMS.map(n => `<option value="${n}"${n === P ? ' selected' : ''}>Poem ${n}</option>`).join('');
+  $('toPoem').href = `../poems/${P}.html`; $('toParts').href = `../poems/p${P}.html`;
+  CAT = CAT || await fetch(CUT + 'catalog.json').then(r => r.json());
+  ATLAS = await fetch(`../poems/atlas/${P}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
+  PLAN = await fetch(`plans/${P}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
+  parts = {};
+  for (const [sid, s] of Object.entries(CAT.sheets)) for (const p of s.parts) parts[p.id] = {...p, sheet: sid, poems: s.poems, folder: s.folder};
+  if (!PLAN) {   // no hand plan yet: one empty stage per scene-book scene
+    PLAN = {num: P, title: ATLAS?.title || P, scenes: (ATLAS?.scenes || []).map(s => ({key: s.key, name: s.name, shot: s.block || s.camera || '', layers: []}))};
+  }
+  document.title = `Stage ${P} ${PLAN.title}`;
+  scenes = PLAN.scenes.map(s => { const saved = store?.getItem(key(s.key)); return saved ? {...s, layers: JSON.parse(saved), edited: true} : structuredClone(s); });
+  cur = Math.min(cur, scenes.length - 1); sel = -1;
+  strip(); tray(); show();
+}
+
+function layerEl(L, i, mini) {
+  const p = parts[L.part];
+  const img = new Image();
+  img.className = 'layer' + (mini ? '' : (i === sel ? ' sel' : '')) + (L.hide ? ' hid' : '');
+  img.alt = p ? p.label || p.id : L.part;
+  img.draggable = false;
+  img.src = p ? CUT + p.file : '';
+  const w = L.w, h = L.h || (p ? w * p.bbox[3] / p.bbox[2] : w);   // h: a strip stretched to fill (sky, sea)
+  Object.assign(img.style, {left: (L.x - w / 2) + 'px', top: (L.y - h / 2) + 'px', width: w + 'px', height: h + 'px',
+    transform: `rotate(${L.rot || 0}deg) scaleX(${L.flip ? -1 : 1})`, opacity: L.op ?? 1});
+  img.dataset.i = i;
+  return img;
+}
+function render(host, layers, mini) { host.innerHTML = ''; layers.forEach((L, i) => host.appendChild(layerEl(L, i, mini))); }
+function fit() { const w = $('stageWrap').clientWidth; $('stage').style.transform = `scale(${w / 1600})`; }
+function strip() {
+  $('scenes').innerHTML = '';
+  scenes.forEach((s, i) => {
+    const d = document.createElement('div');
+    d.className = 'sc' + (i === cur ? ' on' : ''); d.setAttribute('role', 'tab'); d.tabIndex = 0;
+    d.innerHTML = `<div class="mini"><div class="stage"></div></div><b>${esc(s.key)}${s.edited ? ' · edited' : ''}</b><span>${esc(s.name)}</span>`;
+    d.onclick = d.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; cur = i; sel = -1; strip(); show(); };
+    $('scenes').appendChild(d);
+    const st = d.querySelector('.stage'); render(st, s.layers, true); st.style.transform = 'scale(' + (166 / 1600) + ')';
+  });
+}
+function show() {
+  const s = scenes[cur]; if (!s) return;
+  render($('stage'), s.layers); fit();
+  const sb = (ATLAS?.scenes || []).find(x => x.key === s.key) || {};
+  $('info').innerHTML = `<h2>${esc(s.key)} · ${esc(s.name)}</h2>${sb.lines ? `<p class="lines">${esc(sb.lines.join(' '))}</p>` : ''}
+    <p class="shot"><b>Shot:</b> ${esc(s.shot || sb.block || '')}</p>${sb.what ? `<p class="dim" style="color:var(--dim)">${esc(sb.what)}</p>` : ''}
+    ${s.set ? `<p class="hint">set: ${esc(s.set)} · ${s.layers.length} layers</p>` : `<p class="hint">${s.layers.length} layers</p>`}`;
+  layersList();
+}
+function layersList() {
+  const s = scenes[cur];
+  $('layers').innerHTML = s.layers.map((L, i) => { const p = parts[L.part];
+    return `<div class="li${i === sel ? ' sel' : ''}" data-i="${i}"><img src="${p ? CUT + p.file : ''}" alt=""><span class="n" title="${esc(L.part)}">${esc((p?.label || L.part).slice(0, 40))}</span>
+      <button data-a="hide" title="show / hide">${L.hide ? '○' : '●'}</button></div>`; }).join('') || '<p class="hint" style="padding:0 6px">Empty stage: add parts from the tray.</p>';
+  $('layers').querySelectorAll('.li').forEach(el => el.onclick = e => {
+    const i = +el.dataset.i;
+    if (e.target.dataset.a === 'hide') { s.layers[i].hide = !s.layers[i].hide; save(); show(); return; }
+    sel = i; show(); });
+}
+function tray() {
+  const q = $('q').value.toLowerCase();
+  const groups = {};
+  for (const p of Object.values(parts)) {
+    if (!p.poems.includes(P)) continue;
+    if (q && !(p.label + ' ' + p.id).toLowerCase().includes(q)) continue;
+    (groups[p.sheet] = groups[p.sheet] || []).push(p);
+  }
+  const order = ['04_SETS_AND_BUILDINGS', '05_PAINTED_EFFECTS', '03_PROPS', '02_ACTIONS_AND_POSES', '01_CHARACTER_CORE'];
+  const sheets = Object.keys(groups).sort((a, b) => order.indexOf(CAT.sheets[a].folder) - order.indexOf(CAT.sheets[b].folder) || a.localeCompare(b));
+  $('tray').innerHTML = sheets.map(sid => `<div class="grp">${esc(sid)}</div><div class="cells">${groups[sid].map(p =>
+    `<div class="cell" tabindex="0" data-id="${esc(p.id)}" title="${esc(p.label || p.id)}"><img loading="lazy" src="${CUT + p.file}" alt=""><span>${esc(p.label || p.id.split('/')[1])}</span></div>`).join('')}</div>`).join('');
+  $('tray').querySelectorAll('.cell').forEach(el => el.onclick = el.onkeydown = e => {
+    if (e.type === 'keydown' && e.key !== 'Enter') return;
+    const p = parts[el.dataset.id], w = Math.min(600, p.bbox[2]);
+    scenes[cur].layers.push({part: p.id, x: 800, y: 450, w}); sel = scenes[cur].layers.length - 1; save(); show(); });
+}
+function save() { const s = scenes[cur]; s.edited = true; store?.setItem(key(s.key), JSON.stringify(s.layers)); strip(); }
+
+// interaction on the stage
+let drag = null;
+$('stage').addEventListener('pointerdown', e => {
+  const t = e.target.closest('.layer'); if (!t) { sel = -1; show(); return; }
+  sel = +t.dataset.i; const L = scenes[cur].layers[sel], k = 1600 / $('stageWrap').clientWidth;
+  drag = {x: e.clientX, y: e.clientY, L, x0: L.x, y0: L.y, k}; $('stage').setPointerCapture(e.pointerId); show();
+});
+$('stage').addEventListener('pointermove', e => { if (!drag) return;
+  drag.L.x = Math.round(drag.x0 + (e.clientX - drag.x) * drag.k); drag.L.y = Math.round(drag.y0 + (e.clientY - drag.y) * drag.k);
+  const el = $('stage').children[sel]; if (el) { const w = drag.L.w, h = el.offsetHeight; el.style.left = (drag.L.x - w / 2) + 'px'; el.style.top = (drag.L.y - h / 2) + 'px'; } });
+$('stage').addEventListener('pointerup', () => { if (drag) { drag = null; save(); } });
+$('stageWrap').addEventListener('wheel', e => { if (sel < 0) return; e.preventDefault(); const L = scenes[cur].layers[sel];
+  const f = e.deltaY < 0 ? 1.05 : 0.95; L.w = Math.max(10, Math.round(L.w * f)); if (L.h) L.h = Math.round(L.h * f); save(); show(); }, {passive: false});
+function act(a) {
+  const ls = scenes[cur].layers, L = ls[sel]; if (!L) return;
+  if (a === 'flip') L.flip = !L.flip;
+  if (a === 'del') { ls.splice(sel, 1); sel = -1; }
+  if (a === 'back' && sel > 0) { [ls[sel - 1], ls[sel]] = [ls[sel], ls[sel - 1]]; sel--; }
+  if (a === 'fwd' && sel < ls.length - 1) { [ls[sel + 1], ls[sel]] = [ls[sel], ls[sel + 1]]; sel++; }
+  save(); show();
+}
+$('bFlip').onclick = () => act('flip'); $('bDel').onclick = () => act('del'); $('bBack').onclick = () => act('back'); $('bFwd').onclick = () => act('fwd');
+addEventListener('keydown', e => {
+  if (e.target.matches('input,select')) return;
+  const L = scenes[cur]?.layers[sel]; if (!L) return;
+  const n = e.shiftKey ? 20 : 4, m = {ArrowLeft: [-n, 0], ArrowRight: [n, 0], ArrowUp: [0, -n], ArrowDown: [0, n]}[e.key];
+  if (m) { L.x += m[0]; L.y += m[1]; }
+  else if (e.key === 'f' || e.key === 'F') L.flip = !L.flip;
+  else if (e.key === 'q' || e.key === 'Q') L.rot = (L.rot || 0) - 3;
+  else if (e.key === 'e' || e.key === 'E') L.rot = (L.rot || 0) + 3;
+  else if (e.key === '+' || e.key === '=') L.w = Math.round(L.w * 1.05);
+  else if (e.key === '-') L.w = Math.round(L.w * .95);
+  else if (e.key === '[') return act('back');
+  else if (e.key === ']') return act('fwd');
+  else if (e.key === 'Delete' || e.key === 'Backspace') return act('del');
+  else return;
+  e.preventDefault(); save(); show();
+});
+$('bReset').onclick = () => { const s = scenes[cur]; store?.removeItem(key(s.key)); const o = PLAN.scenes[cur]; scenes[cur] = structuredClone(o); sel = -1; strip(); show(); toast('Scene reset to plan'); };
+$('bJson').onclick = () => { const out = {...PLAN, scenes: scenes.map(({edited, ...s}) => s)};
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], {type: 'application/json'})); a.download = `${P}.json`; a.click(); toast('Saved ' + P + '.json'); };
+$('bPng').onclick = async () => {
+  const c = document.createElement('canvas'); c.width = 1600; c.height = 900; const g = c.getContext('2d'); g.fillStyle = '#050403'; g.fillRect(0, 0, 1600, 900);
+  for (const L of scenes[cur].layers) { if (L.hide) continue; const p = parts[L.part]; if (!p) continue;
+    const im = new Image(); im.src = CUT + p.file; await im.decode().catch(() => {});
+    const w = L.w, h = L.h || w * p.bbox[3] / p.bbox[2]; g.save(); g.globalAlpha = L.op ?? 1; g.translate(L.x, L.y); g.rotate((L.rot || 0) * Math.PI / 180); g.scale(L.flip ? -1 : 1, 1); g.drawImage(im, -w / 2, -h / 2, w, h); g.restore(); }
+  c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `${scenes[cur].key}.png`; a.click(); });
+};
+$('q').oninput = tray;
+$('poem').onchange = e => { P = e.target.value; history.replaceState(null, '', '?p=' + P); cur = 0; load(); };
+addEventListener('resize', fit);
+load();
+</script>
+<script src="../../nav.js" defer></script>
+</body>
+</html>

@@ -153,7 +153,7 @@ def atlas_section(D):
 
 def nav(dos, cur):
     links = ''.join(f'<a href="{esc(d["num"])}.html"{" aria-current=\"page\"" if d["num"] == cur else ""}>{esc(d["num"])}</a>' for d in dos)
-    return f'''<header class="top"><a href="../../index.html" id="wy-index">← Index</a><a href="index.html">All poems</a>{links}<a href="../kits.html">Character kits</a><a href="../production.html">Production bible</a>{f'<a href="p{esc(cur)}.html">Finished parts {esc(cur)} →</a>' if cur else ''}{SECTIONS if cur else ''}</header>'''
+    return f'''<header class="top"><a href="../../index.html" id="wy-index">← Index</a><a href="index.html">All poems</a>{links}<a href="../kits.html">Character kits</a><a href="../production.html">Production bible</a>{f'<a href="p{esc(cur)}.html">Finished parts {esc(cur)} →</a>' if cur else ''}{f'<a href="../stage/index.html?p={esc(cur)}">Stage {esc(cur)} →</a>' if cur else ''}{SECTIONS if cur else ''}</header>'''
 
 
 SECTIONS = ''.join(f'<a href="#{k}" style="border-style:dashed">{k}</a>' for k in ('footage', 'atlas', 'cast', 'props', 'places', 'kits'))

@@ -6,6 +6,7 @@ the masks are to be replaced by SAM 2.1 cuts (point prompts) that follow each ca
 
     python3 shots/kits/cutter.py                 # every unique sheet in packs/poem_NN -> cut/
     python3 shots/kits/cutter.py SHEET.png ...   # just these (for checking)
+    python3 shots/kits/cutter.py poem=04         # every sheet poem 04 uses
 
 Each sheet is white ground with detached cards and a label under every card. Per sheet:
   1. Tesseract reads every word; words are taken out of the picture and kept as labels.
@@ -18,7 +19,7 @@ Each sheet is white ground with detached cards and a label under every card. Per
 Parts are written as WebP with alpha to cut/<sheet id>/<slug>.webp; cut/catalog.json lists every
 sheet, its poems, its title and its parts (label, code, kind, bbox, size, brads, pivot).
 """
-import glob, hashlib, json, os, re, sys
+import glob, hashlib, json, os, re, shutil, sys
 import numpy as np
 import cv2
 import pytesseract
@@ -123,21 +124,29 @@ def cut_sheet(path, sheet_id, outdir):
             ws.append(w)
     L = lines(ws)
     # foreground: not white-ish paper (allow faint grey shadows to drop out)
-    mx, mn = rgb.max(2).astype(int), rgb.min(2).astype(int)
-    fg = ~((mn > 232) | ((mn > 200) & (mx - mn < 14)))
+    # the paper is what a flood from the sheet's edge reaches through colours close to the paper's own
+    # (Lab distance); every card is what it cannot reach, so the cut follows the card's own edge and any
+    # white paint inside a card stays (the prompts guarantee: pure white page, no shadows, nothing touches)
+    LAB = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB).astype(np.float32)
+    rim = np.concatenate([LAB[:4].reshape(-1, 3), LAB[-4:].reshape(-1, 3), LAB[:, :4].reshape(-1, 3), LAB[:, -4:].reshape(-1, 3)])
+    dE = np.linalg.norm(LAB - np.median(rim, 0), axis=2)
+    near, _ = ndi.label(dE < 9)
+    edge_ids = np.unique(np.concatenate([near[0], near[-1], near[:, 0], near[:, -1]]))
+    fg = ~np.isin(near, edge_ids[edge_ids > 0])
+    ref_y = min([o['y'] for o in ws if re.match(r'REFERENCE', o['t'])] or [H])   # the REFERENCE ONLY band
     textmask = np.zeros_like(fg)
     for w in ws:
         textmask[max(0, w['y'] - 3):w['y'] + w['h'] + 3, max(0, w['x'] - 3):w['x'] + w['w'] + 3] = True
     fg_parts = fg & ~textmask
     cells, grid = panels(rgb.max(2) < 95)                  # rules are thin and near-black; card edges are kraft brown
-    cells = [c for c in cells if fg[c[1]:c[1] + c[3], c[0]:c[0] + c[2]].mean() < .55]   # a panel is mostly white paper
+    cells = [c for c in cells if (dE[c[1]:c[1] + c[3], c[0]:c[0] + c[2]] < 9).mean() > .45]   # a panel is mostly white paper
     fg_parts &= ~grid
-    fg_parts = ndi.binary_opening(fg_parts, iterations=1)
     pose_sheet = bool(re.search(r'pose', os.path.basename(path)))
     incell = np.zeros_like(fg)
     for (x, y, w, h) in cells:
         incell[y:y + h, x:x + w] = True
-    lab, n = ndi.label(ndi.binary_closing(fg_parts & ~incell, iterations=2))
+    fg_parts[ref_y - 6:] = False
+    lab, n = ndi.label(fg_parts & ~incell)
     title = ''
     tops = [ln for ln in L if ln['y0'] < H * .09]
     if tops:
@@ -151,7 +160,12 @@ def cut_sheet(path, sheet_id, outdir):
             y0 = min(o['y'] for o in top)
             top = sorted([o for o in top if o['y'] < y0 + 1.5 * max(o['h'] for o in top)], key=lambda o: o['x'])
         name = ' '.join(o['t'] for o in top)
-        inner = fg_parts[y:y + h, x:x + w]
+        # a ruled panel is walled off from the sheet's edge: flood its paper from the panel's own border
+        Lc = LAB[y:y + h, x:x + w]
+        shadow = (Lc[..., 0] > 165) & (np.hypot(Lc[..., 1] - 128, Lc[..., 2] - 128) < 9)   # a pale grey floor shadow is paper here
+        nl, _ = ndi.label((dE[y:y + h, x:x + w] < 9) | shadow)
+        rid = np.unique(np.concatenate([nl[0], nl[-1], nl[:, 0], nl[:, -1]]))
+        inner = ~np.isin(nl, rid[rid > 0]) & ~textmask[y:y + h, x:x + w] & ~grid[y:y + h, x:x + w]
         ilab, k = ndi.label(ndi.binary_closing(inner, iterations=3))
         fig = None
         if k:
@@ -218,9 +232,14 @@ def cut_sheet(path, sheet_id, outdir):
             got = [g for g in got if g['y'] < first + 2.4 * max(g['h'] for g in got)]
             got.sort(key=lambda g: (round((g['y'] - first) / max(8, g['h'] * .8)), g['x']))
             return ' '.join(g['t'] for g in got)
-        label = strip(y + h - 6, y + h + 64) or strip(y - 64, y - 4)
+        def right():
+            got = sorted([o for o in ws if x + w - 4 < o['x'] < x + w + 240 and y - 4 < o['y'] + o['h'] / 2 < y + h + 4], key=lambda o: (o['y'], o['x']))
+            return ' '.join(o['t'] for o in got)
+        label = strip(y + h - 6, y + h + 64) or right() or strip(y - 64, y - 4)
         parts.append(dict(entry, kind='card', label=label, mask=filled, box=(x, y, w, h)))
-    # write
+    # write (a re-cut replaces the sheet's folder)
+    if os.path.isdir(outdir):
+        shutil.rmtree(outdir)
     os.makedirs(outdir, exist_ok=True)
     out, seen = [], {}
     parts.sort(key=lambda p: (p['box'][1] // 120, p['box'][0]))
@@ -228,9 +247,19 @@ def cut_sheet(path, sheet_id, outdir):
         x, y, w, h = p['box']
         m = p['mask']
         crop = rgb[y:y + h, x:x + w]
-        a = (ndi.binary_dilation(m, iterations=1) * 255).astype(np.uint8)
-        a = cv2.GaussianBlur(a, (3, 3), 0)
-        rgba = np.dstack([crop, a])
+        # edge matte from colour contrast: on the outer 2 px the alpha is how far a pixel is from the paper
+        # holes: paper showing through inside a card (a knot hole, a socket) is cut out too
+        d = dE[y:y + h, x:x + w]
+        hl, k = ndi.label(m & (d < 9))
+        if k:
+            sz = ndi.sum(np.ones_like(hl), hl, range(1, k + 1))
+            m = m & ~np.isin(hl, [j + 1 for j, z in enumerate(sz) if z > 120])
+        core = ndi.binary_erosion(m, iterations=3)
+        band = ndi.binary_dilation(m, iterations=1) & ~core
+        a = np.where(core, 1.0, np.where(band, np.clip((d - 8) / 26, 0, 1), 0.0))
+        rgba = np.dstack([crop, (a * 255).astype(np.uint8)])
+        cs, _ = cv2.findContours(m.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        cut = ' '.join('M' + ' L'.join(f'{q[0][0]},{q[0][1]}' for q in cv2.approxPolyDP(c, 1.0, True)) + ' Z' for c in cs if len(c) > 8)
         name = p['label'] or f"part {len(out) + 1}"
         code = CODE.search(name)
         s = slug(name)
@@ -240,7 +269,7 @@ def cut_sheet(path, sheet_id, outdir):
         Image.fromarray(rgba, 'RGBA').save(os.path.join(outdir, s + '.webp'), quality=86, method=5)
         bs = brads(crop)
         pv = min(bs, key=lambda b: b[1]) if bs else None
-        out.append({'id': f'{sheet_id}/{s}', 'file': f'{sheet_id}/{s}.webp', 'label': p['label'], 'kind': p['kind'],
+        out.append({'id': f'{sheet_id}/{s}', 'file': f'{sheet_id}/{s}.webp', 'label': p['label'], 'kind': p['kind'], 'cut': cut,
                     'scene': code.group(1) if code else None, 'bbox': [int(x), int(y), int(w), int(h)],
                     'brads': [[b[0], b[1]] for b in bs], 'pivot': [pv[0], pv[1]] if pv else None})
     notes = [ln['text'] for j, ln in enumerate(L) if j not in used_lines and ln['y0'] > H * .09 and len(ln['text']) > 12]
@@ -264,7 +293,8 @@ def main():
     args = sys.argv[1:]
     todo = sheets()
     if args:
-        todo = [s for s in todo if any(os.path.abspath(a) == os.path.abspath(s['path']) or a in s['id'] for a in args)]
+        todo = [s for s in todo if any(a[5:] in s['poems'] if a.startswith('poem=') else (os.path.abspath(a) == os.path.abspath(s['path']) or a in s['id']) for a in args)]
+    os.makedirs(OUT, exist_ok=True)
     cat_path = os.path.join(OUT, 'catalog.json')
     cat = json.load(open(cat_path)) if os.path.exists(cat_path) else {'sheets': {}}
     for k, s in enumerate(todo, 1):
