@@ -516,6 +516,9 @@ async function openTarget(rec) {
   const im = img('../' + rec.img);
   if (!im.complete || !im.naturalWidth) await new Promise(r => { im.addEventListener('load', r, { once: true }); im.addEventListener('error', r, { once: true }); });
   const mk = RigMoveNet.maskOf(im);
+  // every card any view may draw is loaded before the first IoU (an unloaded card would count as empty)
+  const need = new Set(); for (const v of ['front', 'threequarter', 'profile', 'back', 'threequarter_back']) for (const pid of Object.values(cardsFor(v))) if (pid) need.add(DOC.P[pid]);
+  await Promise.all([...need].map(p => { const i = partImg(p); return i.complete && i.naturalWidth ? null : new Promise(r => { i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }); }); }));
   const markers = JSON.parse(JSON.stringify(rec.markers || {}));
   for (const a of session.answers) if (a.t === 'marker' && a.part === rec.id) { if (a.v === 'none') delete markers[a.point]; else markers[a.point] = [a.xy[0], a.xy[1], 2, 'user', 1]; }
   tgt = { id: rec.id, img: im, brads: rec.brads.map(b => b.slice()), cx: rec.cx, floor: rec.floor, mask: mk.m, W: mk.W, H: mk.H, label: rec.label, markers };
@@ -875,7 +878,7 @@ $('lClear').onclick = () => { loop.keys = []; loop.frames = null; renderLoopKeys
 $('lWalk').onclick = () => {
   const w = POS.walk; if (!w) { toast('no anim walk in this pose file (run solve.py)'); return; }
   loop.keys = w.keys.map(k => ({ z: keyZ(C.fromParams(k.params)), label: `${k.label} (F${k.f})`, f: k.f })); $('lMirror').checked = false;
-  $('lN').value = Math.max(3, Math.round((w.keys[1].f - w.keys[0].f))); renderLoopKeys(); buildLoop();
+  renderLoopKeys(); buildLoop();
 };
 $('lTargets').onclick = () => {
   const W_ = POS.targets.filter(t => /walk|step|stride/i.test(t.label + ' ' + t.id) && t.solves && t.solves.length).sort((a, b) => b.score - a.score).slice(0, 2);
