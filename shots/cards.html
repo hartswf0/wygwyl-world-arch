@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WYGWYL TABLE — Periodic Atlas &amp; Staging Environment</title>
+<link rel="icon" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #0d0b0a;
+    --card: #16120f;
+    --card-surface: #1d1713;
+    --card-hover: #261f1a;
+    --ink: #efe6da;
+    --dim: #9a8d7e;
+    --faint: #2a221c;
+    --gold: #f5b942;
+    --cardboard: #c79a62;
+    --red: #ff7b6b;
+    --blue: #01acd4;
+    --ok: #9fe08a;
+    
+    --c-scene: #f5b942;
+    --c-character: #efe6da;
+    --c-action_pose: #e7a35a;
+    --c-prop: #01acd4;
+    --c-set_piece: #9fe08a;
+    --c-painted_effect: #ff7b6b;
+    
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --marker: 'Permanent Marker', cursive;
+  }
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--paper); font-family: var(--mono); color: var(--ink); line-height: 1.5; }
+  
+  /* Top Navigation & Sticky Toolbar */
+  #top {
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(13, 11, 10, 0.94);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--faint);
+    padding: 10px 18px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  
+  .top-row-main {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  }
+  
+  #brand {
+    font-size: 13px; font-weight: 800; letter-spacing: .25em; text-transform: uppercase;
+    color: var(--gold); display: flex; align-items: baseline; gap: 8px;
+  }
+  #brand em { font-style: normal; color: var(--dim); font-weight: 400; font-size: 11px; letter-spacing: .1em; }
+  #brand a { color: var(--dim); text-decoration: none; border-bottom: 1px dashed var(--dim); }
+  #brand a:hover { color: var(--ink); }
+  
+  .sp { flex: 1; }
+  
+  .chip {
+    border: 1px solid var(--faint); background: var(--card); cursor: pointer;
+    font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+    padding: 5px 11px; color: var(--dim); user-select: none; white-space: nowrap;
+    border-radius: 4px; transition: all .12s;
+  }
+  .chip:hover { border-color: var(--cardboard); color: var(--ink); }
+  .chip.on {
+    border-color: var(--cardboard); color: var(--paper); background: var(--cardboard);
+    font-weight: 800;
+  }
+  .chip.gold.on { background: var(--gold); border-color: var(--gold); color: #16120f; }
+  .chip.action { border-color: var(--gold); color: var(--gold); text-decoration: none; }
+  .chip.action:hover { background: var(--gold); color: #16120f; }
+  
+  #q {
+    border: 1px solid var(--faint); background: var(--card-surface);
+    padding: 5px 10px; font-size: 11px; font-family: var(--mono);
+    outline: none; color: var(--ink); letter-spacing: .06em; width: 170px;
+    border-radius: 4px;
+  }
+  #q:focus { border-color: var(--cardboard); box-shadow: 0 0 0 1px var(--cardboard); }
+  #count { font-size: 10px; letter-spacing: .15em; color: var(--dim); text-transform: uppercase; }
+  
+  .filter-row {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%;
+  }
+  .rowLabel {
+    font-size: 9px; letter-spacing: .22em; color: var(--gold); text-transform: uppercase;
+    font-weight: 800; margin-right: 2px;
+  }
+  
+  /* Periodic Table Section Layout */
+  #table { padding: 18px max(18px, env(safe-area-inset-right)); }
+  .section { margin-bottom: 32px; }
+  .secHead {
+    display: flex; align-items: baseline; gap: 12px; border-bottom: 1.5px solid var(--faint);
+    padding-bottom: 6px; margin-bottom: 12px;
+  }
+  .secHead .rn { font-family: var(--marker); font-size: 22px; color: var(--gold); letter-spacing: .05em; }
+  .secHead .st { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); }
+  .secHead .sc { margin-left: auto; font-size: 10px; color: var(--dim); letter-spacing: .12em; }
+  
+  .cells { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+  
+  .cell {
+    position: relative; border: 1px solid var(--faint); background: var(--card);
+    cursor: pointer; padding: 8px 8px 7px; min-height: 98px; display: flex;
+    flex-direction: column; border-radius: 5px; transition: transform .08s, border-color .08s, background .08s;
+  }
+  .cell:hover {
+    border-color: var(--cardboard); background: var(--card-surface);
+    transform: translateY(-2px); z-index: 5;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.5);
+  }
+  .cell .num {
+    font-size: 9px; color: var(--dim); letter-spacing: .08em; display: flex; justify-content: space-between;
+  }
+  .cell .num b { color: var(--blue); font-weight: 700; }
+  .cell .sym { font-size: 28px; font-weight: 900; letter-spacing: .02em; line-height: 1.1; margin: 3px 0 2px; }
+  .cell .nm {
+    font-size: 8px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink);
+    line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .cell .tbar { position: absolute; left: 0; top: 0; bottom: 0; width: 3.5px; border-radius: 5px 0 0 5px; }
+  
+  /* Double-wide Scene Cell */
+  .cell.scene {
+    grid-column: span 2; background: #18130d; border-color: #382c20;
+  }
+  .cell.scene:hover { border-color: var(--gold); }
+  .cell.scene .sym { font-size: 15px; letter-spacing: .12em; color: var(--gold); }
+  .cell.scene .nm { -webkit-line-clamp: 3; font-size: 8.5px; }
+  
+  /* Hover Peek Preview */
+  #peek {
+    position: fixed; z-index: 50; width: 230px; background: var(--card);
+    border: 1px solid var(--gold); box-shadow: 0 10px 25px rgba(0,0,0,.7);
+    pointer-events: none; display: none; border-radius: 6px; overflow: hidden;
+  }
+  #peek img, #peek canvas { display: block; width: 100%; height: 140px; object-fit: cover; background: #080605; }
+  #peek .pl {
+    font-size: 9px; letter-spacing: .12em; padding: 6px 9px; text-transform: uppercase;
+    border-top: 1px solid var(--faint); color: var(--ink); background: var(--card);
+  }
+  #peek .pd {
+    font-size: 8px; color: var(--dim); padding: 0 9px 6px; line-height: 1.35;
+  }
+  
+  /* Cards View */
+  #grid {
+    display: none; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px; padding: 20px;
+  }
+  body[data-view="cards"] #grid { display: grid; }
+  body[data-view="cards"] #table { display: none; }
+  
+  .cardBox {
+    background: var(--card); border: 1px solid var(--faint); border-radius: 8px;
+    cursor: pointer; overflow: hidden; display: flex; flex-direction: column;
+    transition: transform .1s, border-color .1s;
+  }
+  .cardBox:hover { border-color: var(--cardboard); transform: translateY(-3px); }
+  .cardBox .c-thumb {
+    width: 100%; height: 180px; background: #080605; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cardBox .c-thumb img { width: 100%; height: 100%; object-fit: contain; }
+  .cardBox.scene .c-thumb img { object-fit: cover; }
+  .cardBox .meta {
+    display: flex; gap: 8px; align-items: baseline; padding: 10px 12px;
+    border-top: 1px solid var(--faint); background: var(--card-surface);
+  }
+  .cardBox .meta .nm {
+    font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink);
+  }
+  .cardBox .meta .bk { font-size: 9px; color: var(--gold); letter-spacing: .08em; white-space: nowrap; }
+  .cardBox .meta .tp { font-size: 8.5px; color: var(--dim); letter-spacing: .12em; text-transform: uppercase; margin-left: auto; white-space: nowrap; }
+  
+  /* Staging Environment & Detail Sheet Modal */
+  #sheet {
+    position: fixed; inset: 0; z-index: 60; background: rgba(5, 4, 3, 0.85);
+    backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  #sheet.open { display: flex; }
+  #sheetCard {
+    background: var(--paper); border: 1px solid var(--cardboard); width: min(1200px, 96vw);
+    max-height: 92vh; display: flex; border-radius: 10px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+  }
+  @media(max-width: 900px) {
+    #sheetCard { flex-direction: column; max-height: 96vh; }
+  }
+  
+  #sheetLeft {
+    flex: 0 0 48%; border-right: 1px solid var(--faint); background: #090706;
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 320px; overflow: hidden;
+  }
+  @media(max-width: 900px) {
+    #sheetLeft { flex: 0 0 260px; border-right: 0; border-bottom: 1px solid var(--faint); }
+  }
+  
+  #sheetLeft canvas {
+    width: 100%; height: 100%; object-fit: contain; display: block;
+  }
+  
+  .canvas-overlay-bar {
+    position: absolute; bottom: 10px; left: 10px; right: 10px;
+    display: flex; gap: 8px; justify-content: center; z-index: 5;
+  }
+  .canvas-tag {
+    font-size: 9px; background: rgba(13,11,10,0.8); border: 1px solid var(--faint);
+    color: var(--dim); padding: 3px 8px; border-radius: 4px; letter-spacing: .08em;
+  }
+  
+  #sheetRight {
+    flex: 1; min-width: 0; overflow-y: auto; padding: 22px 24px; display: flex;
+    flex-direction: column; gap: 14px;
+  }
+  #sheetRight h2 {
+    font-size: 18px; letter-spacing: .12em; text-transform: uppercase;
+    display: flex; gap: 10px; align-items: baseline; color: var(--gold);
+  }
+  #sheetRight h2 .x {
+    margin-left: auto; cursor: pointer; color: var(--dim); font-size: 20px; font-weight: 400;
+  }
+  #sheetRight h2 .x:hover { color: var(--red); }
+  #sheetRight .sub {
+    font-size: 10px; letter-spacing: .16em; color: var(--dim); text-transform: uppercase;
+  }
+  #sheetRight h3 {
+    font-size: 10px; letter-spacing: .25em; text-transform: uppercase; color: var(--gold);
+    margin-top: 6px; border-bottom: 1px solid var(--faint); padding-bottom: 4px;
+  }
+  
+  #sheetRight .promptBox {
+    font-size: 11px; line-height: 1.65; background: var(--card);
+    border: 1px solid var(--faint); border-left: 3px solid var(--blue); padding: 10px 12px;
+    white-space: pre-wrap; word-break: break-word; max-height: 180px; overflow-y: auto;
+    color: var(--ink); border-radius: 4px;
+  }
+  #sheetRight .beat {
+    font-size: 11.5px; line-height: 1.6; padding: 6px 0 6px 26px; position: relative;
+    border-bottom: 1px solid var(--faint); color: var(--ink);
+  }
+  #sheetRight .beat::before {
+    content: attr(data-n); position: absolute; left: 0; top: 6px; font-weight: 800;
+    color: var(--gold); font-size: 11px;
+  }
+  
+  .needGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; }
+  .need {
+    border: 1px solid var(--faint); background: var(--card); padding: 8px 10px;
+    cursor: pointer; position: relative; border-radius: 4px; transition: all .12s;
+  }
+  .need:hover { border-color: var(--cardboard); background: var(--card-surface); }
+  .need .nsym { font-size: 18px; font-weight: 900; }
+  .need .nnm { font-size: 8.5px; letter-spacing: .08em; text-transform: uppercase; line-height: 1.3; color: var(--ink); }
+  .need .ntp { font-size: 7.5px; color: var(--dim); letter-spacing: .12em; text-transform: uppercase; }
+  
+  .linkRow { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .lbtn {
+    border: 1px solid var(--faint); background: var(--card); cursor: pointer; font-size: 9.5px;
+    letter-spacing: .14em; text-transform: uppercase; padding: 7px 12px; font-family: var(--mono);
+    text-decoration: none; color: var(--ink); border-radius: 4px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 5px; transition: all .12s;
+  }
+  .lbtn:hover { background: var(--cardboard); color: #16120f; border-color: var(--cardboard); }
+  .lbtn.gold { border-color: var(--gold); color: var(--gold); }
+  .lbtn.gold:hover { background: var(--gold); color: #16120f; }
+  .lbtn.red { border-color: var(--red); color: var(--red); }
+  .lbtn.red:hover { background: var(--red); color: #16120f; }
+  
+  #toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 100;
+    background: var(--gold); color: #16120f; font-size: 11px; font-weight: 700;
+    letter-spacing: .18em; text-transform: uppercase; padding: 10px 18px;
+    border-radius: 999px; opacity: 0; transition: opacity .25s; pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  }
+  #toast.show { opacity: 1; }
+  
+  #sheetNav { display: flex; gap: 8px; }
+  
+</style>
+</head>
+<body data-view="table">
+
+<div id="top">
+  <div class="top-row-main">
+    <div id="brand">
+      WYGWYL TABLE <em>&middot; periodic atlas &middot; where you go when you leave</em>
+    </div>
+    <div class="chip on" id="vTable">TABLE</div>
+    <div class="chip" id="vCards">CARDS</div>
+    <input id="q" placeholder="search atlas…">
+    <span id="count"></span>
+    <span class="sp"></span>
+    <a class="chip action" href="production.html">🎬 Production Bible</a>
+    <a class="chip action" href="kits.html">🧩 Character Kits</a>
+    <a class="chip action" href="../index.html">← Index</a>
+  </div>
+  
+  <!-- Filter Row 1: Poem Numbers -->
+  <div class="filter-row">
+    <span class="rowLabel">POEM</span>
+    <div id="poemChips" class="filter-row" style="width:auto"></div>
+  </div>
+  
+  <!-- Filter Row 2: Sort and Type -->
+  <div class="filter-row">
+    <span class="rowLabel">SORT</span><div id="sortChips" class="filter-row" style="width:auto"></div>
+    <span class="rowLabel" style="margin-left:14px">TYPE</span><div id="typeChips" class="filter-row" style="width:auto"></div>
+  </div>
+</div>
+
+<div id="table"></div>
+<div id="grid"></div>
+
+<!-- Hover Peek Preview -->
+<div id="peek">
+  <canvas id="peekCv" width="230" height="140"></canvas>
+  <div class="pl" id="peekLabel"></div>
+  <div class="pd" id="peekDesc"></div>
+</div>
+
+<!-- Staging Detail Sheet Modal -->
+<div id="sheet">
+  <div id="sheetCard">
+    <div id="sheetLeft">
+      <canvas id="sheetCv" width="960" height="640"></canvas>
+      <div class="canvas-overlay-bar">
+        <span class="canvas-tag" id="cvTagLayer">STAGE MULTIPLANE</span>
+        <span class="canvas-tag" id="cvTagBrads" style="display:none">BRADS DETECTED</span>
+      </div>
+    </div>
+    <div id="sheetRight"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+const TYPES = ["scene", "character", "action_pose", "prop", "set_piece", "painted_effect"];
+const SORTS = ["poem", "type", "uses", "name"];
+
+let DATA = null;
+let byId = new Map(), sceneById = new Map();
+let VIEW = "table", SORT = "poem", fPoem = 0, fTypes = new Set(), q = "";
+let toastTimer = 0;
+
+const $ = id => document.getElementById(id);
+
+function toast(msg) {
+  const el = $("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2400);
+}
+
+const typeColor = t => getComputedStyle(document.documentElement).getPropertyValue("--c-" + t) || "#efe6da";
+
+/* ── Init Data & UI ── */
+async function init() {
+  try {
+    const res = await fetch("cards_data.json");
+    DATA = await res.json();
+    
+    for (const a of DATA.assets) byId.set(a.id, a);
+    for (const s of DATA.scenes) sceneById.set(s.id, s);
+    
+    setupChips();
+    setupEvents();
+    renderCurrentView();
+    
+    // Check deep-link hash
+    const m = location.hash.match(/^#(scene|asset)\/(.+)$/);
+    if (m) renderSheet(m[1], decodeURIComponent(m[2]));
+  } catch (err) {
+    console.error("Failed to load cards_data.json:", err);
+    toast("ERR LOADING ATLAS DATA");
+  }
+}
+
+function setupChips() {
+  // Poem Chips (0 = ALL, 1..14)
+  const pHost = $("poemChips");
+  const allChip = document.createElement("div");
+  allChip.className = "chip on";
+  allChip.textContent = "ALL";
+  allChip.onclick = () => { fPoem = 0; updateChipStates(); renderCurrentView(); };
+  pHost.appendChild(allChip);
+  
+  for (let i = 1; i <= 14; i++) {
+    const c = document.createElement("div");
+    c.className = "chip";
+    c.textContent = String(i).padStart(2, '0');
+    c.onclick = () => { fPoem = (fPoem === i ? 0 : i); updateChipStates(); renderCurrentView(); };
+    pHost.appendChild(c);
+  }
+  
+  // Sort Chips
+  const sHost = $("sortChips");
+  for (const s of SORTS) {
+    const c = document.createElement("div");
+    c.className = "chip" + (s === SORT ? " on" : "");
+    c.textContent = s.toUpperCase();
+    c.onclick = () => { SORT = s; updateChipStates(); renderCurrentView(); };
+    sHost.appendChild(c);
+  }
+  
+  // Type Chips
+  const tHost = $("typeChips");
+  for (const t of TYPES) {
+    const c = document.createElement("div");
+    c.className = "chip";
+    c.textContent = t.replace(/_/g, ' ').toUpperCase();
+    c.style.borderLeft = `3px solid ${typeColor(t)}`;
+    c.onclick = () => {
+      if (fTypes.has(t)) fTypes.delete(t);
+      else fTypes.add(t);
+      updateChipStates();
+      renderCurrentView();
+    };
+    tHost.appendChild(c);
+  }
+}
+
+function updateChipStates() {
+  // Update poem chips
+  Array.from($("poemChips").children).forEach((c, idx) => {
+    if (idx === 0) c.classList.toggle("on", fPoem === 0);
+    else c.classList.toggle("on", fPoem === idx);
+  });
+  // Update sort chips
+  Array.from($("sortChips").children).forEach(c => {
+    c.classList.toggle("on", c.textContent.toLowerCase() === SORT);
+  });
+  // Update type chips
+  Array.from($("typeChips").children).forEach(c => {
+    const t = c.textContent.toLowerCase().replace(/ /g, '_');
+    c.classList.toggle("on", fTypes.has(t));
+  });
+}
+
+function setupEvents() {
+  $("vTable").onclick = () => { VIEW = "table"; document.body.dataset.view = "table"; $("vTable").classList.add("on"); $("vCards").classList.remove("on"); renderCurrentView(); };
+  $("vCards").onclick = () => { VIEW = "cards"; document.body.dataset.view = "cards"; $("vCards").classList.add("on"); $("vTable").classList.remove("on"); renderCurrentView(); };
+  $("q").oninput = e => { q = e.target.value.toLowerCase().trim(); renderCurrentView(); };
+  
+  addEventListener("popstate", () => {
+    const m = location.hash.match(/^#(scene|asset)\/(.+)$/);
+    if (m) renderSheet(m[1], decodeURIComponent(m[2]));
+    else $("sheet").classList.remove("open");
+  });
+}
+
+/* ── Filter Lists ── */
+function assetList() {
+  return DATA.assets.filter(a => {
+    if (fTypes.size && !fTypes.has(a.type)) return false;
+    if (fPoem && !(a.poems || []).includes(fPoem)) return false;
+    if (q && !(a.name + " " + a.id + " " + (a.description || "")).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function sceneList() {
+  return DATA.scenes.filter(s => {
+    if (fTypes.size && !fTypes.has("scene")) return false;
+    if (fPoem && s.poem !== fPoem) return false;
+    if (q && !(s.title + " " + s.id + " " + s.district + " " + (s.lines || "")).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderCurrentView() {
+  if (VIEW === "table") buildTable();
+  else buildCards();
+}
+
+/* ── Periodic Table HTML ── */
+function cellHTML(a) {
+  return `<div class="cell" data-kind="asset" data-id="${a.id}">
+    <span class="tbar" style="background:${typeColor(a.type)}"></span>
+    <div class="num"><span>${a.uses || 1}×</span><b>P${(a.poems || []).map(p => String(p).padStart(2, '0')).slice(0, 2).join('·')}</b></div>
+    <div class="sym" style="color:${typeColor(a.type)}">${a.symbol}</div>
+    <div class="nm">${a.name}</div>
+  </div>`;
+}
+
+function sceneCellHTML(s) {
+  return `<div class="cell scene" data-kind="scene" data-id="${s.id}">
+    <span class="tbar" style="background:var(--gold)"></span>
+    <div class="num"><span>${s.scene_num}</span><b>${s.assets.length} ASSETS</b></div>
+    <div class="sym">SC ${s.scene_num}</div>
+    <div class="nm">${s.title}</div>
+  </div>`;
+}
+
+function buildTable() {
+  const host = $("table");
+  host.innerHTML = "";
+  const assets = assetList(), scenes = sceneList();
+  $("count").textContent = `${scenes.length} SCENES · ${assets.length} ASSETS`;
+  
+  const section = (rn, st, items) => {
+    if (!items.trim()) return;
+    const el = document.createElement("div");
+    el.className = "section";
+    el.innerHTML = `<div class="secHead"><span class="rn">${rn}</span><span class="st">${st}</span></div>
+      <div class="cells">${items}</div>`;
+    host.appendChild(el);
+  };
+  
+  if (SORT === "poem") {
+    for (let p = 1; p <= 14; p++) {
+      if (fPoem && p !== fPoem) continue;
+      const sc = scenes.filter(s => s.poem === p);
+      const as = assets.filter(a => (a.poems || []).includes(p));
+      if (!sc.length && !as.length) continue;
+      
+      const dist = DATA.districts[p] || "The City";
+      section(`POEM ${String(p).padStart(2, '0')}`, `${dist} · ${sc.length} scenes · ${as.length} elements`,
+        sc.map(sceneCellHTML).join("") + as.map(cellHTML).join(""));
+    }
+  } else if (SORT === "type") {
+    if (scenes.length) section("SCENE STAGES", `${scenes.length} movements across 14 poems`, scenes.map(sceneCellHTML).join(""));
+    for (const t of TYPES) {
+      if (t === "scene") continue;
+      const as = assets.filter(a => a.type === t);
+      if (!as.length) continue;
+      section(t.replace(/_/g, ' ').toUpperCase(), `${as.length} elements`, as.map(cellHTML).join(""));
+    }
+  } else {
+    const sorted = assets.slice().sort(SORT === "uses"
+      ? (a, b) => (b.uses || 0) - (a.uses || 0)
+      : (a, b) => a.name.localeCompare(b.name));
+    section(SORT === "uses" ? "BY USES" : "A — Ω",
+      SORT === "uses" ? "continuity spine elements first" : "all elements alphabetically",
+      sorted.map(cellHTML).join("") + (SORT === "uses" ? "" : scenes.map(sceneCellHTML).join("")));
+  }
+  
+  host.querySelectorAll(".cell").forEach(el => {
+    el.onclick = () => openSheet(el.dataset.kind, el.dataset.id);
+    el.onmouseenter = e => peekShow(el, e);
+    el.onmousemove = e => peekMove(e);
+    el.onmouseleave = peekHide;
+  });
+}
+
+/* ── Cards Grid View ── */
+function buildCards() {
+  const grid = $("grid");
+  grid.innerHTML = "";
+  const list = [...sceneList().map(s => ({ kind: "scene", ...s })), ...assetList().map(a => ({ kind: "asset", ...a }))];
+  $("count").textContent = `${list.length} CARDS`;
+  
+  for (const it of list) {
+    const box = document.createElement("div");
+    box.className = "cardBox" + (it.kind === "scene" ? " scene" : "");
+    box.dataset.id = it.id;
+    box.dataset.kind = it.kind;
+    
+    const imgSrc = it.rel_sheet ? `../${it.rel_sheet}` : "../shots/arena/parts/kit3/v2/rendered/poet.red_black_sunglasses.replacements.png";
+    const poemBadge = it.kind === "scene" ? `P${it.poem_num}` : `P${(it.poems || []).slice(0, 3).map(p => String(p).padStart(2, '0')).join('·')}`;
+    
+    box.innerHTML = `
+      <div class="c-thumb">
+        <img src="${imgSrc}" alt="${it.name || it.title}" loading="lazy" onerror="this.src='../shots/arena/parts/kit3/v2/rendered/poet.red_black_sunglasses.replacements.png'">
+      </div>
+      <div class="meta">
+        <span class="nm">${it.kind === "scene" ? it.title : it.name}</span>
+        <span class="bk">${poemBadge}</span>
+        <span class="tp" style="color:${typeColor(it.kind === 'scene' ? 'scene' : it.type)}">${(it.kind === "scene" ? "scene" : it.type).replace(/_/g, ' ')}</span>
+      </div>`;
+    box.onclick = () => openSheet(it.kind, it.id);
+    grid.appendChild(box);
+  }
+}
+
+/* ── Hover Peek Preview ── */
+function peekShow(cell, e) {
+  const peek = $("peek"), cv = $("peekCv"), pl = $("peekLabel"), pd = $("peekDesc");
+  const kind = cell.dataset.kind, id = cell.dataset.id;
+  const item = kind === "scene" ? sceneById.get(id) : byId.get(id);
+  if (!item) return;
+  
+  pl.textContent = item.title || item.name;
+  pd.textContent = item.district ? `${item.district} · ${item.seconds}s` : (item.description || item.type);
+  
+  // Render quick thumbnail to canvas
+  const ctx = cv.getContext("2d");
+  ctx.fillStyle = "#090706";
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  
+  const img = new Image();
+  img.onload = () => ctx.drawImage(img, 0, 0, cv.width, cv.height);
+  img.src = item.rel_sheet ? `../${item.rel_sheet}` : "../shots/arena/parts/kit3/v2/rendered/poet.red_black_sunglasses.replacements.png";
+  
+  peek.style.display = "block";
+  peekMove(e);
+}
+
+function peekMove(e) {
+  const peek = $("peek");
+  const x = Math.min(window.innerWidth - 250, e.clientX + 16);
+  const y = Math.min(window.innerHeight - 200, e.clientY + 16);
+  peek.style.left = x + "px";
+  peek.style.top = y + "px";
+}
+
+function peekHide() {
+  $("peek").style.display = "none";
+}
+
+/* ── Detail Staging Modal ── */
+function openSheet(kind, id) {
+  history.pushState({ s: [kind, id] }, "", `#${kind}/${encodeURIComponent(id)}`);
+  renderSheet(kind, id);
+}
+
+function buildScenePrompt(s) {
+  return [
+    `SCENE: ${s.title} (${s.scene_num}) · POEM ${s.poem_num} · DISTRICT: ${s.district}`,
+    `TIMING: ${s.seconds} seconds`,
+    "",
+    "CHOREOGRAPHY & STAGING TREATMENT:",
+    s.treatment || "—",
+    "",
+    "SPOKEN POEM LINES:",
+    `"${s.lines || '—'}"`,
+    "",
+    "REQUIRED PRODUCTION ASSETS:",
+    s.assets.map(aid => {
+      const a = byId.get(aid);
+      return a ? `• ${a.name} [${a.type}] — ${a.prompt || a.description}` : `• ${aid} (pending cut)`;
+    }).join("\n"),
+    "",
+    "EXIT TRANSITION:",
+    s.exitState || "Cut to next choreographic movement."
+  ].join("\n");
+}
+
+function renderStagingCanvas(canvas, item, kind) {
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Warm kraft stage background
+  ctx.fillStyle = "#14100c";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw cardboard grid lines
+  ctx.strokeStyle = "#241c14";
+  ctx.lineWidth = 1;
+  for (let x = 0; x < canvas.width; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+  }
+  for (let y = 0; y < canvas.height; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+  }
+  
+  const img = new Image();
+  img.onload = () => {
+    // Center fit
+    const scale = Math.min((canvas.width - 40) / img.width, (canvas.height - 40) / img.height);
+    const dw = img.width * scale, dh = img.height * scale;
+    const dx = (canvas.width - dw) / 2, dy = (canvas.height - dh) / 2;
+    
+    // Draw drop shadow
+    ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 6;
+    ctx.drawImage(img, dx, dy, dw, dh);
+    ctx.shadowColor = "transparent";
+    
+    // Overlay brass joint pivot markers if brad coordinates exist
+    if (item.brads && item.brads.length) {
+      item.brads.forEach(b => {
+        const bx = dx + b.cx * scale, by = dy + b.cy * scale;
+        ctx.beginPath();
+        ctx.arc(bx, by, 7, 0, Math.PI * 2);
+        ctx.fillStyle = "#f5b942";
+        ctx.fill();
+        ctx.strokeStyle = "#3d2b14";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+    }
+  };
+  
+  img.src = item.rel_sheet ? `../${item.rel_sheet}` : "../shots/arena/parts/kit3/v2/rendered/poet.red_black_sunglasses.replacements.png";
+}
+
+function renderSheet(kind, id) {
+  peekHide();
+  const sheet = $("sheet"), right = $("sheetRight"), cv = $("sheetCv");
+  sheet.classList.add("open");
+  
+  const item = kind === "scene" ? sceneById.get(id) : byId.get(id);
+  if (!item) return;
+  
+  const nav = '<div id="sheetNav"><span class="lbtn" id="shBack">‹ BACK</span><span class="lbtn" id="shx2">✕ CLOSE</span></div>';
+  
+  if (kind === "scene") {
+    cv.width = 960; cv.height = 640;
+    $("cvTagLayer").textContent = `STAGE: ${item.district.toUpperCase()}`;
+    
+    right.innerHTML = nav + `
+      <h2>${item.title}<span class="x" id="shx">✕</span></h2>
+      <div class="sub">${item.scene_num} · POEM ${item.poem_num} · ${item.district} · ${item.seconds}s duration · ${item.assets.length} required assets</div>
+      
+      <div class="linkRow">
+        <a class="lbtn gold" href="poems/p${item.poem_num}.html">🎬 Production Page</a>
+        <a class="lbtn" href="kits.html#p${item.poem_num}">🧩 Character Kits</a>
+        <span class="lbtn" id="btnCpPrompt">📋 Copy Build Prompt</span>
+        <span class="lbtn" id="btnDlJson">⬇ Scene JSON</span>
+      </div>
+      
+      <h3>CHOREOGRAPHIC BEATS</h3>
+      ${item.beats.map((b, i) => `<div class="beat" data-n="${i+1}">${b}</div>`).join('')}
+      
+      <h3>REQUIRED ASSETS — the shot manifest (${item.assets.length})</h3>
+      <div class="needGrid">${item.assets.map(aid => {
+        const a = byId.get(aid);
+        if (!a) {
+          return `<div class="need" data-asset="${aid}">
+            <div class="nsym" style="color:var(--dim)">?</div>
+            <div class="nnm">${aid.replace(/_/g, ' ')}</div>
+            <div class="ntp">Pending Cut</div>
+          </div>`;
+        }
+        return `<div class="need" data-asset="${a.id}">
+          <div class="nsym" style="color:${typeColor(a.type)}">${a.symbol}</div>
+          <div class="nnm">${a.name}</div>
+          <div class="ntp" style="color:${typeColor(a.type)}">${a.type.replace(/_/g, ' ')}</div>
+        </div>`;
+      }).join('')}</div>
+      
+      <h3>SPOKEN POEM TEXT</h3>
+      <div class="promptBox">"${item.lines || '—'}"</div>
+      
+      <h3>FULL STAGING PROMPT</h3>
+      <div class="promptBox" style="border-left-color:var(--gold)">${buildScenePrompt(item).replace(/</g, '&lt;')}</div>
+    `;
+    
+    right.querySelector("#btnCpPrompt").onclick = () => {
+      navigator.clipboard.writeText(buildScenePrompt(item))
+        .then(() => toast("BUILD PROMPT COPIED!"), () => toast("CLIPBOARD ERROR"));
+    };
+    
+    right.querySelector("#btnDlJson").onclick = () => {
+      const blob = new Blob([JSON.stringify(item, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${item.id}.json`;
+      a.click();
+    };
+    
+  } else {
+    // Asset Detail Sheet
+    cv.width = 680; cv.height = 720;
+    $("cvTagLayer").textContent = `CARD: ${item.type.toUpperCase()}`;
+    
+    right.innerHTML = nav + `
+      <h2>${item.name}<span class="x" id="shx">✕</span></h2>
+      <div class="sub">${item.id} · ${item.type.replace(/_/g, ' ')} · appears ${item.uses || 1}× in poems ${(item.poems || []).map(p => `P${String(p).padStart(2,'0')}`).join(', ')}</div>
+      
+      <div class="linkRow">
+        <a class="lbtn gold" href="../${item.rel_sheet}" target="_blank" download>⬇ Download Sheet</a>
+        <a class="lbtn" href="kits.html">Explore All Kits</a>
+        <span class="lbtn" id="btnCpAssetPrompt">📋 Copy Prompt</span>
+      </div>
+      
+      <h3>APPEARS IN SCENES</h3>
+      <div>${(item.scenes || []).map(sid => `<span class="chip" data-scene="SC_${sid.replace('.', '_')}" style="margin:2px">${sid}</span>`).join(' ') || 'General Suite Card'}</div>
+      
+      <h3>GENERATION PROMPT &amp; IDENTITY</h3>
+      <div class="promptBox">${(item.prompt || item.description || '—').replace(/</g, '&lt;')}</div>
+    `;
+    
+    right.querySelector("#btnCpAssetPrompt").onclick = () => {
+      navigator.clipboard.writeText(item.prompt || item.description)
+        .then(() => toast("PROMPT COPIED!"), () => toast("CLIPBOARD ERROR"));
+    };
+    
+    right.querySelectorAll("[data-scene]").forEach(el => {
+      el.onclick = () => openSheet("scene", el.dataset.scene);
+    });
+  }
+  
+  renderStagingCanvas(cv, item, kind);
+  
+  // Close buttons
+  const closeSheet = () => {
+    if (location.hash) history.back();
+    else sheet.classList.remove("open");
+  };
+  right.querySelector("#shx").onclick = closeSheet;
+  right.querySelector("#shx2").onclick = closeSheet;
+  right.querySelector("#shBack").onclick = () => history.back();
+  
+  // Interactive links in needGrid
+  right.querySelectorAll("[data-asset]").forEach(el => {
+    el.onclick = () => openSheet("asset", el.dataset.asset);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
