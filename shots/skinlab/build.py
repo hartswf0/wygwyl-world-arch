@@ -167,6 +167,36 @@ def analyse(path, slot):
     return out
 
 
+FEATURE = [('eye', r'\beyes?\b|eye-|-eye|eyelid'), ('brow', r'brow'), ('mouth', r'mouth|\blips?\b|smile|grin|teeth|phoneme'), ('nose', r'\bnose')]
+
+
+def feature_cards(cat, N, R):
+    """Face features cut as their own cards (eyes, brows, mouths, noses) from the face and head sheets."""
+    sheet_ppc = {}
+    for pid, n in N.items():
+        if n.get('px_per_cm'):
+            sheet_ppc.setdefault(pid.split('/')[0], []).append(n['px_per_cm'])
+    char = {pid.split('/')[0]: (n.get('character'), n.get('costume')) for pid, n in N.items()}
+    out = []
+    for sid, sh in cat.items():
+        if not re.search(r'face|head|identit|nose', sid) or re.search(r'set\.|props?\.', sid):
+            continue
+        for p in sh['parts']:
+            n = p['id'].split('/')[-1].lower()
+            slot = next((k for k, pat in FEATURE if re.search(pat, n)), None)
+            if not slot or R.get(p['id'], {}).get('q') == 'C':
+                continue
+            path = os.path.join(SHOTS, 'kits', 'cut', p['file'])
+            w, h = Image.open(path).size
+            side = 'L' if re.search(r'(^|-)l(-|$)|left', n) else 'R' if re.search(r'(^|-)r(-|$)|right', n) else None
+            ch, co = char.get(sid, (re.split(r'[._]', sid)[0], None))
+            out.append({'id': p['id'], 'img': '../kits/cut/' + p['file'], 'w': w, 'h': h, 'slot': slot, 'side': side, 'view': view_of(n), 'state': None,
+                        'character': ch, 'costume': co, 'px_per_cm': round(statistics.median(sheet_ppc[sid]), 3) if sid in sheet_ppc else None,
+                        'A': [w / 2, h / 2], 'B': [w / 2, h / 2], 'pts': 'centre', 'q': R.get(p['id'], {}).get('q'), 'label': p.get('name') or '',
+                        'pair': slot in ('eye', 'brow') and side is None and w / max(1, h) > 2.2, 'brads': []})
+    return out
+
+
 def library():
     N = json.load(open(os.path.join(SHOTS, 'kits', 'cut', 'normalized.json')))['parts']
     cat = json.load(open(os.path.join(SHOTS, 'kits', 'cut', 'catalog.json')))['sheets']
@@ -187,7 +217,7 @@ def library():
                     'A': [round(float(A[0]), 1), round(float(A[1]), 1)], 'B': [round(float(B[0]), 1), round(float(B[1]), 1)], 'pts': how,
                     'q': R.get(pid, {}).get('q'), 'label': p.get('name') or p.get('label') or '',
                     'brads': [[round(float(x), 1), round(float(y), 1)] for x, y in (p.get('brads') or [])]})
-    out += pelvis_cards(cat, N, R)
+    out += pelvis_cards(cat, N, R) + feature_cards(cat, N, R)
     for c in out:
         c.update(analyse(os.path.join(SHOTS, 'kits', 'cut', c['img'][len('../kits/cut/'):]), c['slot']))
     return out
