@@ -1,0 +1,2706 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>WYGWYL × BOLAS · Range-Test Piece Rigger & 5-Stage Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0f17;
+  --panel: #111824;
+  --panel-2: #172131;
+  --ink: #e8eef7;
+  --ink-2: #94a3b8;
+  --muted: #64748b;
+  --rule: #243247;
+  --cyan: #00d2ff;
+  --blue: #3a86ff;
+  --yellow: #ffbe0b;
+  --green: #22c55e;
+  --magenta: #ff007f;
+  --orange: #fb5607;
+  --red: #ef4444;
+  --amber: #f59e0b;
+  --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-x: hidden;
+}
+/* Top Suite Nav */
+.suite-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 15, 23, 0.96);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+  padding: 8px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+.suite-brand {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.suite-brand .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--cyan);
+  display: inline-block;
+}
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.nav-links a {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-2);
+  text-decoration: none;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  background: rgba(255,255,255,0.02);
+}
+.nav-links a:hover {
+  color: var(--ink);
+  border-color: var(--rule);
+}
+.nav-links a.active {
+  color: var(--bg);
+  background: var(--cyan);
+  border-color: var(--cyan);
+  font-weight: 700;
+}
+
+.wrap {
+  max-width: 1460px;
+  margin: 0 auto;
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+/* Header + Rig Bar */
+.top-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: end;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 14px;
+}
+@media (max-width: 900px) {
+  .top-header { grid-template-columns: 1fr; }
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin: 0 0 4px;
+}
+h1 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(32px, 4.5vw, 56px);
+  line-height: 0.92;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+h1 .accent { color: var(--cyan); }
+.lede {
+  margin: 6px 0 0;
+  color: var(--ink-2);
+  max-width: 82ch;
+  font-size: 13px;
+}
+.lede b { color: var(--ink); }
+
+/* Rig Selector Strip */
+.rig-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  padding: 8px 10px;
+}
+.rig-strip-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+.rig-pill {
+  appearance: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--panel-2);
+  color: var(--ink-2);
+  border: 1px solid var(--rule);
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.rig-pill:hover { color: var(--ink); border-color: var(--ink-2); }
+.rig-pill[aria-pressed="true"] {
+  background: var(--cyan);
+  color: #061018;
+  border-color: var(--cyan);
+  font-weight: 700;
+}
+
+/* 5-Stage Meta Pipeline Stepper */
+.pipeline-stepper {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border: 1px solid var(--rule);
+  background: var(--panel);
+}
+@media (max-width: 960px) {
+  .pipeline-stepper { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .pipeline-stepper { grid-template-columns: 1fr; }
+}
+.step-btn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--rule);
+  color: var(--ink-2);
+  text-align: left;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: grid;
+  gap: 3px;
+  position: relative;
+}
+.step-btn:last-child { border-right: 0; }
+.step-btn .st-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+.step-btn .st-title {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.step-btn .st-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+.step-btn[aria-selected="true"] {
+  background: var(--panel-2);
+  box-shadow: inset 0 -3px 0 var(--cyan);
+}
+.step-btn[aria-selected="true"] .st-num {
+  color: var(--yellow);
+}
+
+/* Global Invariant Switches Bar */
+.invariant-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  background: #0e1520;
+  border: 1px solid var(--rule);
+  padding: 8px 12px;
+}
+.inv-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--yellow);
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+.inv-chip {
+  appearance: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--panel);
+  color: var(--ink-2);
+  border: 1px solid var(--rule);
+  padding: 5px 9px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.inv-chip .box {
+  width: 8px;
+  height: 8px;
+  border: 1px solid currentColor;
+  display: inline-block;
+}
+.inv-chip[aria-pressed="true"] {
+  color: var(--ink);
+  border-color: var(--green);
+  background: rgba(34, 197, 94, 0.12);
+}
+.inv-chip[aria-pressed="true"] .box {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+/* Panels & Grids */
+.two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .two-col { grid-template-columns: 1fr; }
+}
+.card-box {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.card-box h2, .card-box h3 {
+  font-family: var(--display);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+.card-box h2 { font-size: 24px; }
+.card-box h3 { font-size: 18px; color: var(--cyan); }
+
+.canvas-wrap {
+  position: relative;
+  background: #080b11;
+  border: 1px solid var(--rule);
+  overflow: hidden;
+}
+canvas.main-cv {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/10;
+  touch-action: none;
+  cursor: crosshair;
+}
+canvas.tall-cv {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4/3;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: center;
+}
+.btn {
+  appearance: none;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  background: var(--panel-2);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  padding: 6px 11px;
+  cursor: pointer;
+  min-height: 32px;
+}
+.btn:hover { border-color: var(--cyan); }
+.btn.primary {
+  background: var(--cyan);
+  color: #051018;
+  border-color: var(--cyan);
+  font-weight: 700;
+}
+.btn.warn {
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+  border-color: var(--red);
+}
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+}
+.seg button {
+  appearance: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--panel);
+  color: var(--ink-2);
+  border: 0;
+  border-right: 1px solid var(--rule);
+  padding: 5px 9px;
+  cursor: pointer;
+  min-height: 30px;
+}
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] {
+  background: var(--cyan);
+  color: #051018;
+  font-weight: 700;
+}
+
+/* Mixamo Modal Styling */
+.mixamo-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.mk-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+.mk-item.active {
+  border-color: var(--cyan);
+  background: rgba(0, 210, 255, 0.12);
+}
+.mk-ring {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid currentColor;
+  flex-shrink: 0;
+}
+
+/* ROM & Gate Tables */
+.rom-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+.rom-list li {
+  display: grid;
+  grid-template-columns: 9.5em minmax(0, 1fr) 5.8em;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.bar {
+  position: relative;
+  height: 9px;
+  background: #080b11;
+  border: 1px solid var(--rule);
+}
+.bar .rng { position: absolute; top: 0; bottom: 0; background: var(--blue); opacity: 0.85; }
+.bar .norm { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+.bar .cur { position: absolute; top: -2px; bottom: -2px; width: 3px; background: var(--yellow); }
+
+.gate-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+.gate-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule);
+  align-items: center;
+}
+.pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border: 1px solid currentColor;
+}
+.pill.ok { color: var(--green); }
+.pill.no { color: var(--red); }
+.pill.na { color: var(--cyan); }
+
+.keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.keys button {
+  appearance: none;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  background: var(--panel-2);
+  border: 1px solid var(--rule);
+  color: var(--ink-2);
+  padding: 3px 6px;
+  cursor: pointer;
+}
+.keys button b { color: var(--yellow); }
+.keys button.brk b { color: var(--cyan); }
+.keys button.cur { border-color: var(--cyan); color: var(--ink); background: rgba(0,210,255,0.14); }
+
+.scrub {
+  position: relative;
+  flex: 1 1 200px;
+  min-width: 140px;
+  height: 28px;
+}
+.scrub input {
+  position: absolute;
+  inset: auto 0 0 0;
+  width: 100%;
+  margin: 0;
+  accent-color: var(--cyan);
+}
+.ticks {
+  position: absolute;
+  inset: 0 8px 18px 8px;
+  pointer-events: none;
+}
+.ticks i {
+  position: absolute;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-1px);
+}
+.ticks i.k { height: 9px; background: var(--yellow); }
+.ticks i.b { height: 5px; background: var(--cyan); }
+
+/* 54 Contact Sheet Tiles */
+.sheetgrid { display: grid; gap: 18px; }
+.grp h3 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 24px;
+  text-transform: uppercase;
+  margin: 0 0 6px;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  color: var(--ink);
+}
+.grp h3 span {
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 8px;
+  border-top: 1px solid var(--rule);
+  padding-top: 8px;
+}
+.tile {
+  appearance: none;
+  border: 1px solid var(--rule);
+  background: var(--panel);
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  display: grid;
+  color: var(--ink);
+}
+.tile:hover { border-color: var(--cyan); }
+.tile[aria-current="true"] {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 1px var(--cyan);
+  background: var(--panel-2);
+}
+.tile canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: #080b11;
+}
+.tile .cap {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px;
+  padding: 5px 7px;
+  border-top: 1px solid var(--rule);
+  align-items: baseline;
+}
+.tile .cap b {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--cyan);
+}
+.tile .cap span {
+  font-size: 11.5px;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+/* Architectural Ideas Matrix Table */
+.idea-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 1024px) {
+  .idea-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .idea-grid { grid-template-columns: 1fr; }
+}
+.idea-card {
+  background: var(--panel-2);
+  border: 1px solid var(--rule);
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+.idea-card .ic-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--yellow);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.idea-card h4 {
+  font-family: var(--display);
+  font-size: 18px;
+  margin: 0;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.idea-card p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.mono-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.mono-table th, .mono-table td {
+  border: 1px solid var(--rule);
+  padding: 5px 7px;
+  text-align: left;
+}
+.mono-table th {
+  background: var(--panel-2);
+  color: var(--cyan);
+  text-transform: uppercase;
+  font-size: 10px;
+}
+</style>
+</head>
+<body>
+
+<nav class="suite-nav" aria-label="WYGWYL Suite Navigation">
+  <div class="suite-brand"><span class="dot"></span> WYGWYL × BOLAS · RANGE-TEST PIECE RIGGER</div>
+  <div class="nav-links">
+    <a href="cards.html">[CARDS ATLAS]</a>
+    <a href="body_lab.html">[BODY LAB]</a>
+    <a href="arena_actors.html">[ACTING ARENA]</a>
+    <a href="assembly.html">[ASSEMBLY TOYBOX]</a>
+    <a href="crash_lab.html">[CRASH LAB]</a>
+    <a href="range_rigger.html" class="active">[RANGE-TEST RIGGER]</a>
+    <a href="stage.html">[MULTIPLANE STAGE]</a>
+    <a href="suite.html">[24M SUITE]</a>
+    <a href="weave.html">[THE WEAVE]</a>
+    <a href="world.html">[WORLD ATLAS]</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header class="top-header">
+    <div>
+      <p class="eyebrow">5-STAGE PIPELINE · VITRUVIAN FRAME · MIXAMO MARKER RIGGER · 54 BOLAS RANGE TESTS</p>
+      <h1>Range-Test Piece Rigger<span class="accent">.</span></h1>
+      <p class="lede">
+        <b>Why Pose Detection Alone Cannot Rig Pre-Cut Kit Pieces:</b> On whole-figure drawings (<b>ACT-001..032</b>), ViTPose/MoveNet detects all <b>17 keypoints</b>, and the challenge is <b>ordered pixel claiming</b> when slicing limbs. On <b>pre-cut kit cards</b> (Tracksuit 31, Poet, EX, Waltz, Muse), pose detection fails on isolated boots, hands, and sleeves — setting pieces for animation requires solving <b>4 Connection &amp; Proportion Invariants</b>: <b>[1] Two-Pin Connection Sites (Pivot A &rarr; Socket B)</b>, <b>[2] Intrinsic Card Bone Axis (&theta;<sub>card</sub>)</b>, <b>[3] Vitruvian Square/Circle Bone-Span Normalization</b>, and <b>[4] Cuff-Over-Extremity Z-Order vs. Kinematic DAG</b>.
+      </p>
+    </div>
+    <div style="display:grid;gap:6px;justify-items:end">
+      <div class="seg" role="group" aria-label="Quick Stage Jump">
+        <button type="button" id="quickAll54" class="btn primary">JUMP TO 54 RANGE TESTS (STAGE 05)</button>
+      </div>
+      <span style="font-family:var(--mono);font-size:10.5px;color:var(--ink-2)">10 WYGWYL Rigs · 54 Bolas Motion Tests · 302 Swapper Parts</span>
+    </div>
+  </header>
+
+  <!-- Active Rig Selector -->
+  <div class="rig-strip" id="rigStrip">
+    <span class="rig-strip-label">ACTIVE RIG:</span>
+  </div>
+
+  <!-- 4 Connection Invariants Live Toggle Bar (applies across all 5 stages!) -->
+  <div class="invariant-bar" aria-label="4 Connection and Proportion Invariants">
+    <span class="inv-title">LIVE RIG SOLVER INVARIANTS:</span>
+    <button type="button" class="inv-chip" data-inv="twoPin" aria-pressed="true"><span class="box"></span>[1] TWO-PIN SOCKET INSIDE CUFF (A&rarr;B)</button>
+    <button type="button" class="inv-chip" data-inv="intrinsicRot" aria-pressed="true"><span class="box"></span>[2] INTRINSIC CARD AXIS (&theta;<sub>card</sub> 90&deg; HAND FIX)</button>
+    <button type="button" class="inv-chip" data-inv="vitruvianScale" aria-pressed="true"><span class="box"></span>[3] VITRUVIAN BONE-FIT SCALE (CM NORMALIZED)</button>
+    <button type="button" class="inv-chip" data-inv="cuffTuckZ" aria-pressed="true"><span class="box"></span>[4] CUFF-OVER-EXTREMITY Z-ORDER &amp; TAB-CLIP</button>
+    <button type="button" class="btn warn" id="breakAllBtn" style="margin-left:auto">BREAK ALL 4 (SEE RAW FAILURE)</button>
+    <button type="button" class="btn primary" id="solveAllBtn">SOLVE ALL 4 (CERTIFIED)</button>
+  </div>
+
+  <!-- 5-Stage Pipeline Stepper (Meta Animated Drawings + Vitruvian + Mixamo + Bolas 54) -->
+  <nav class="pipeline-stepper" role="tablist" aria-label="5-Stage Rigging Pipeline">
+    <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s1">
+      <span class="st-num">STAGE 01 · POSE VS PIECES</span>
+      <span class="st-title">Detection vs. Kit Cards</span>
+      <span class="st-sub">Whole-Figure 17-KP vs. Pre-Cut Cards</span>
+    </button>
+    <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s2">
+      <span class="st-num">STAGE 02 · PROPORTION FRAME</span>
+      <span class="st-title">Vitruvian Square &amp; Circle</span>
+      <span class="st-sub">170cm T-Square &amp; Navel X-Circle</span>
+    </button>
+    <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s3">
+      <span class="st-num">STAGE 03 · PLACE MARKERS</span>
+      <span class="st-title">Mixamo Rigger &amp; Pin Loupe</span>
+      <span class="st-sub">Color Rings + Per-Card Pivot A/B</span>
+    </button>
+    <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s4">
+      <span class="st-num">STAGE 04 · CONNECTION ORDER</span>
+      <span class="st-title">Kinematic DAG vs. Z-Order</span>
+      <span class="st-sub">Cuff-Tuck Layering &amp; Seam Loupes</span>
+    </button>
+    <button type="button" class="step-btn" role="tab" aria-selected="true" data-stage="s5">
+      <span class="st-num">STAGE 05 · FINAL ANIMATION</span>
+      <span class="st-title">Bolas 54 Range-Test Lab</span>
+      <span class="st-sub">All 54 Tests (A01–E54) + Contact Sheet</span>
+    </button>
+  </nav>
+
+  <!-- ==================== STAGE 01: POSE DETECTION VS PRE-CUT KIT PIECES ==================== -->
+  <section id="stage_s1" class="sheetgrid" hidden>
+    <div class="idea-grid">
+      <div class="idea-card">
+        <span class="ic-tag">ARCHITECTURAL QUESTION</span>
+        <h4>1. Pose Detection on Existing Bodies?</h4>
+        <p><b>YES on Whole-Figure Drawings (ACT-001..032):</b> ViTPose &amp; MoveNet detect 17/17 keypoints on intact cardboard figures. The bug there is <b>Voronoi nearest-bone cutting</b> (a crossed arm steals chest pixels), solved by <b>Ordered Layer Claiming</b> (Hand &rarr; Forearm &rarr; UpperArm &rarr; Head &rarr; Torso).</p>
+      </div>
+      <div class="idea-card">
+        <span class="ic-tag">WHY KIT CARDS FAIL POSE NETS</span>
+        <h4>2. Isolated Kit Pieces Have 0 Context</h4>
+        <p><b>NO on Pre-Cut Kit Pieces:</b> Running a human pose detector on an isolated Chelsea boot (<code>19_boot_front_L</code>) or horizontal hand (<code>74x43</code>) yields 0 keypoints. Pre-cut pieces require <b>Intrinsic Card Vector Registration (Pivot A &rarr; Socket B)</b>.</p>
+      </div>
+      <div class="idea-card">
+        <span class="ic-tag">CONNECTION SITE GEOMETRY</span>
+        <h4>3. Grommet Tab vs. Cuff Socket</h4>
+        <p>Putting a single pin at the tip of a protruding cardboard grommet tongue (<code>y=1320</code> on forearm) leaves a gap and double-tab collision. Each piece needs a <b>2-Pin Bone Vector (A&rarr;B)</b> anchored <b>inside the cuff lip</b> plus a <b>Cuff-Clip Plane</b>.</p>
+      </div>
+      <div class="idea-card">
+        <span class="ic-tag">ORDER OF CONNECTION</span>
+        <h4>4. Kinematic DAG &ne; Visual Z-Order</h4>
+        <p>Kinematically, <code>Forearm &rarr; Hand</code> and <code>Shin &rarr; Foot</code>. Visually, <b>Forearm Cuff draws OVER Hand Wrist</b> (<code>z_fore &gt; z_hand</code>) and <b>Shin Cuff draws OVER Boot Shaft</b> (<code>z_shin &gt; z_boot</code>), while camera yaw flips Far vs. Near limbs.</p>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card-box">
+        <div class="controls" style="justify-content:space-between">
+          <div>
+            <span class="eyebrow">PATH A · WHOLE-FIGURE POSE DETECTION (17 KEYPOINTS) vs. PATH B · PRE-CUT KIT ASSEMBLY</span>
+            <h2>Whole-Figure Pose Target vs. Rigged Kit Pieces</h2>
+          </div>
+          <select id="s1PoseSelect" class="btn" aria-label="Select Target Pose Drawing"></select>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="s1Canvas" class="main-cv"></canvas>
+        </div>
+        <div class="controls">
+          <button type="button" class="btn primary" id="s1SnapBtn">SNAP KIT PIECES TO DETECTED POSE BRADS</button>
+          <button type="button" class="btn" id="s1ToggleSlice">TOGGLE: VORONOI BLEED vs. ORDERED CLAIMING</button>
+          <button type="button" class="btn" id="s1GoStage3">EDIT MARKERS IN STAGE 03 &rarr;</button>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h3>Diagnosis Matrix: Whole-Figure Pipeline vs. Pre-Cut Kit Pipeline</h3>
+        <table class="mono-table">
+          <thead>
+            <tr>
+              <th>Pipeline Step</th>
+              <th>Path A: Whole-Figure (ACT-*)</th>
+              <th>Path B: Pre-Cut Kit Cards</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>01 Input Asset</b></td>
+              <td>Single posed character PNG (<code>ACT-001_p0.png</code>)</td>
+              <td>15–31 isolated part PNGs on multi-res sheets</td>
+            </tr>
+            <tr>
+              <td><b>02 Detection</b></td>
+              <td>ViTPose / MoveNet finds 17/17 keypoints</td>
+              <td>CLIP Semantic Classifier + Sheet Slot ID</td>
+            </tr>
+            <tr>
+              <td><b>03 Segmentation</b></td>
+              <td>Ordered Pixel Claiming (<code>Hand&rarr;Arm&rarr;Torso</code>)</td>
+              <td>Alpha Connected-Components + Cuff-Clip Line</td>
+            </tr>
+            <tr>
+              <td><b>04 Joint Registration</b></td>
+              <td>2D/3D Keypoints Projected onto Figure</td>
+              <td>Two-Pin Card Vector <code>Pivot A &rarr; Socket B</code></td>
+            </tr>
+            <tr>
+              <td><b>05 Scale &amp; Z-Order</b></td>
+              <td>Already 1:1 in source drawing</td>
+              <td>Vitruvian <code>fit_bone</code> + Cuff-Over-Extremity Z</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="margin:0;color:var(--ink-2);font-size:12px">
+          <b>Key Takeaway:</b> We use <b>Pose Detection (Path A)</b> on the 83 <code>ACT-*</code> reference drawings to extract <b>Target Keyframe Brads</b>, and we use the <b>4 Connection &amp; Proportion Invariants (Path B)</b> to hang our pre-cut kit pieces onto those brads and the 54 Bolas range tests!
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== STAGE 02: VITRUVIAN PROPORTION CALIBRATOR ==================== -->
+  <section id="stage_s2" class="sheetgrid" hidden>
+    <div class="two-col">
+      <div class="card-box">
+        <div class="controls" style="justify-content:space-between">
+          <div>
+            <span class="eyebrow">STAGE 02 · LEONARDO DA VINCI VITRUVIAN PROPORTION CALIBRATOR</span>
+            <h2>Vitruvian Square (T-Pose) &amp; Circle (X-Pose)</h2>
+          </div>
+          <div class="seg" role="group" aria-label="Vitruvian Pose Mode">
+            <button type="button" data-vit="dual" aria-pressed="true">DUAL (T + X)</button>
+            <button type="button" data-vit="square" aria-pressed="false">SQUARE (T-POSE)</button>
+            <button type="button" data-vit="circle" aria-pressed="false">CIRCLE (X-POSE)</button>
+            <button type="button" data-vit="neutral" aria-pressed="false">NEUTRAL</button>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="s2Canvas" class="main-cv"></canvas>
+        </div>
+        <div class="controls">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--ink-2)">
+            Toggle <b>[3] VITRUVIAN BONE-FIT SCALE</b> in the yellow bar above to see why un-normalized kit pieces (+68% forearm, +84% head) break the Vitruvian Square &amp; Circle!
+          </span>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h3>Vitruvian Canonical Bone Ledger (<span id="s2RigName">Poet Tracksuit</span>)</h3>
+        <p style="margin:0;color:var(--ink-2);font-size:12px">
+          In <code>bolas/lab/range-test/</code>, the skeleton is defined in exact centimeters (<code>H = 170 cm</code> adult, <code>118 cm</code> child). Every cut-out piece has pixel span <code>L_px = ||Socket_B - Pivot_A||</code> and is normalized by <code>scale = L_cm / L_px</code>:
+        </p>
+        <table class="mono-table" id="s2BoneTable">
+          <thead>
+            <tr>
+              <th>Part Slot</th>
+              <th>Card px</th>
+              <th>Span ||B-A||</th>
+              <th>Vitruvian cm</th>
+              <th>Raw Err</th>
+              <th>Solved Scale</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== STAGE 03: MIXAMO PLACE MARKERS & PIECE LOUPE ==================== -->
+  <section id="stage_s3" class="sheetgrid" hidden>
+    <div class="two-col">
+      <div class="card-box">
+        <div class="controls" style="justify-content:space-between">
+          <div>
+            <span class="eyebrow">STAGE 03 · MIXAMO-STYLE AUTO-RIGGER ("PLACE MARKERS" + SYMMETRY)</span>
+            <h2>Place Anatomical Color Rings on Rig</h2>
+          </div>
+          <div class="controls">
+            <label class="btn" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="checkbox" id="s3Symmetry" checked> USE SYMMETRY
+            </label>
+            <button type="button" class="btn" id="s3ResetMarkers">AUTO-CALIBRATE MARKERS</button>
+            <button type="button" class="btn primary" id="s3NextBtn">NEXT &rarr; TEST IN 54 MOTIONS</button>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="s3BodyCanvas" class="main-cv"></canvas>
+        </div>
+        <div class="mixamo-legend" id="s3MarkerLegend">
+          <div class="mk-item" data-mk="chin" style="color:var(--cyan)"><span class="mk-ring"></span><span><b>CHIN / HEAD</b> (Neck-to-Chin Pivot)</span></div>
+          <div class="mk-item" data-mk="shoulders" style="color:var(--blue)"><span class="mk-ring"></span><span><b>SHOULDERS L/R</b> (Clavicle Sockets)</span></div>
+          <div class="mk-item" data-mk="elbows" style="color:var(--yellow)"><span class="mk-ring"></span><span><b>ELBOWS L/R</b> (Upper&rarr;Forearm Hinge)</span></div>
+          <div class="mk-item" data-mk="wrists" style="color:var(--green)"><span class="mk-ring"></span><span><b>WRISTS L/R</b> (Inside Sleeve Cuff Lip)</span></div>
+          <div class="mk-item" data-mk="groin" style="color:var(--magenta)"><span class="mk-ring"></span><span><b>GROIN / PELVIS</b> (0.50H Root Center)</span></div>
+          <div class="mk-item" data-mk="knees" style="color:var(--orange)"><span class="mk-ring"></span><span><b>KNEES L/R</b> (Thigh&rarr;Shin Hinge)</span></div>
+          <div class="mk-item" data-mk="ankles" style="color:var(--red)"><span class="mk-ring"></span><span><b>ANKLES L/R</b> (Inside Pant Cuff Lip)</span></div>
+          <div class="mk-item" data-mk="toes" style="color:var(--amber)"><span class="mk-ring"></span><span><b>TOES / BALL OF FOOT</b> (Floor Contact Pin)</span></div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <div class="controls" style="justify-content:space-between">
+          <div>
+            <span class="eyebrow">PER-PIECE CONNECTION SITE INSPECTOR (PIVOT A &rarr; SOCKET B + CUFF-CLIP)</span>
+            <h3 id="s3SlotTitle">Slot: Forearm L (farm_L)</h3>
+          </div>
+          <select id="s3SlotSelect" class="btn" aria-label="Select Rig Slot to Inspect"></select>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="s3PieceCanvas" class="tall-cv"></canvas>
+        </div>
+        <div class="controls">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--ink-2)">
+            Drag <b>[A] Cyan Proximal Pin</b>, <b>[B] Amber Distal Socket</b>, or <b>[CLIP] Red Cuff-Clip Line</b> directly on the piece card above!
+          </span>
+        </div>
+        <div class="controls" style="justify-content:space-between;border-top:1px solid var(--rule);padding-top:8px">
+          <label style="font-family:var(--mono);font-size:11px">ROT OFFSET (&deg;): <input type="number" id="s3RotInput" step="5" style="width:64px;background:#080b11;color:var(--ink);border:1px solid var(--rule);padding:4px;font-family:var(--mono)"></label>
+          <label style="font-family:var(--mono);font-size:11px">CUFF CLIP Y: <input type="range" id="s3ClipInput" min="0.50" max="1.00" step="0.01" style="vertical-align:middle"></label>
+          <select id="s3SwapSelect" class="btn" aria-label="Hot-Swap Piece from Bank" style="max-width:210px"></select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== STAGE 04: CONNECTION ORDER & CUFF-TUCK TOPOLOGY DAG ==================== -->
+  <section id="stage_s4" class="sheetgrid" hidden>
+    <div class="two-col">
+      <div class="card-box">
+        <div>
+          <span class="eyebrow">STAGE 04 · KINEMATIC PARENT&rarr;CHILD ORDER vs. VISUAL CUFF-TUCK DRAW Z-ORDER</span>
+          <h2>Why Order of Connection &amp; Cuff-Tuck Solve Ragged Wrists &amp; Ankles</h2>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="s4DagCanvas" class="main-cv"></canvas>
+        </div>
+        <div class="controls">
+          <label style="font-family:var(--mono);font-size:11px">3D CAMERA YAW TURN (&deg;): <input type="range" id="s4YawSlider" min="-90" max="90" value="-25" style="vertical-align:middle;width:160px"> <b id="s4YawVal">-25&deg;</b></label>
+          <button type="button" class="btn" id="s4FlipYawBtn">FLIP NEAR / FAR SIDE (+35&deg; / -35&deg;)</button>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h3>Live 2.5&times; Wrist &amp; Ankle Seam Loupes (Solved Cuff-Tuck vs. Broken Grommet Tabs)</h3>
+        <div class="canvas-wrap">
+          <canvas id="s4LoupeCanvas" class="tall-cv"></canvas>
+        </div>
+        <p style="margin:0;color:var(--ink-2);font-size:12px">
+          <b>Why Kinematic Order &ne; Z-Order:</b> Kinematically, <code>Forearm</code> drives <code>Hand</code> and <code>Shin</code> drives <code>Boot</code>. But if you draw the child on top of the parent, the hand's brown mounting tab and the boot's rectangular pull-tab cover the ribbed sleeve/pant cuffs! Reversing the local extremity Z-order (<b>Forearm Cuff OVER Hand</b>, <b>Shin Cuff OVER Boot</b>) while clipping the parent's bottom grommet tab creates a seamless 2.5D telescopic socket across every rotation angle.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== STAGE 05: BOLAS 54 RANGE-TEST ENGINE (A01–E54) ==================== -->
+  <section id="stage_s5" class="sheetgrid">
+    <div class="two-col">
+      <div class="card-box">
+        <div class="controls" style="justify-content:space-between">
+          <div class="seg" role="group" aria-label="Render Mode">
+            <button type="button" data-rm="both" aria-pressed="true">CUT-OUT + BOLAS</button>
+            <button type="button" data-rm="cutout" aria-pressed="false">CUT-OUT ONLY</button>
+            <button type="button" data-rm="split" aria-pressed="false">SPLIT: BOLAS vs CUT-OUT</button>
+            <button type="button" data-rm="quad" aria-pressed="false">4X QUAD VIEW</button>
+            <button type="button" data-rm="bola" aria-pressed="false">BOLAS ONLY</button>
+          </div>
+          <div class="seg" role="group" aria-label="Camera View">
+            <button type="button" data-v="auto" aria-pressed="true">Auto</button>
+            <button type="button" data-v="front" aria-pressed="false">Front</button>
+            <button type="button" data-v="side" aria-pressed="false">Side</button>
+            <button type="button" data-v="tq" aria-pressed="false">3/4</button>
+            <button type="button" data-v="orbit" aria-pressed="false">Orbit</button>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="stage" class="main-cv" role="img" aria-label="Animated WYGWYL cut-out and Bolas skeleton performing the selected range test"></canvas>
+        </div>
+
+        <div class="controls">
+          <button class="btn primary" id="play" type="button">Pause</button>
+          <button class="btn" id="back" type="button">&lsaquo; 1</button>
+          <button class="btn" id="fwd" type="button">1 &rsaquo;</button>
+          <span id="readout" style="font-family:var(--mono);font-size:11.5px;color:var(--ink-2)"></span>
+          <div class="scrub"><div class="ticks" id="ticks"></div><input type="range" id="scrub" min="0" max="10" value="0" aria-label="Frame"></div>
+        </div>
+
+        <div class="controls">
+          <button class="inv-chip" type="button" data-t="arcs" aria-pressed="true"><span class="box"></span>Arcs</button>
+          <button class="inv-chip" type="button" data-t="onion" aria-pressed="false"><span class="box"></span>Onion</button>
+          <button class="inv-chip" type="button" data-t="pins" aria-pressed="true"><span class="box"></span>IK Pins &amp; Brads</button>
+          <button class="inv-chip" type="button" data-t="vit" aria-pressed="false"><span class="box"></span>Vitruvian Frame</button>
+          <button class="inv-chip" type="button" data-t="sil" aria-pressed="false"><span class="box"></span>Silhouette</button>
+          <button class="inv-chip" type="button" data-t="battery" aria-pressed="false"><span class="box"></span>Run All 54</button>
+        </div>
+      </div>
+
+      <article class="card-box" id="card"></article>
+    </div>
+
+    <div id="contact" class="sheetgrid"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+/* ================= math ================= */
+const DEG=Math.PI/180, RAD=180/Math.PI;
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]], mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2], cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const len=a=>Math.hypot(a[0],a[1],a[2]), norm=a=>{const l=len(a)||1;return [a[0]/l,a[1]/l,a[2]/l];};
+const lerp3=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t], mid=(a,b)=>lerp3(a,b,.5);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rX=d=>{const c=Math.cos(d*DEG),s=Math.sin(d*DEG);return [[1,0,0],[0,c,-s],[0,s,c]];};
+const rY=d=>{const c=Math.cos(d*DEG),s=Math.sin(d*DEG);return [[c,0,s],[0,1,0],[-s,0,c]];};
+const rZ=d=>{const c=Math.cos(d*DEG),s=Math.sin(d*DEG);return [[c,-s,0],[s,c,0],[0,0,1]];};
+const mm=(A,B)=>A.map(r=>[0,1,2].map(j=>r[0]*B[0][j]+r[1]*B[1][j]+r[2]*B[2][j]));
+const mv=(A,v)=>[A[0][0]*v[0]+A[0][1]*v[1]+A[0][2]*v[2],A[1][0]*v[0]+A[1][1]*v[1]+A[1][2]*v[2],A[2][0]*v[0]+A[2][1]*v[1]+A[2][2]*v[2]];
+function rotAxis(v,k,t){ const c=Math.cos(t),s=Math.sin(t); const kv=cross(k,v), kd=dot(k,v); return [v[0]*c+kv[0]*s+k[0]*kd*(1-c), v[1]*c+kv[1]*s+k[1]*kd*(1-c), v[2]*c+kv[2]*s+k[2]*kd*(1-c)]; }
+const angDeg=(a,b)=>{const la=len(a),lb=len(b); if(la<1e-6||lb<1e-6) return 0; return Math.acos(clamp(dot(a,b)/(la*lb),-1,1))*RAD;};
+function ease(t,m){ if(m==='lin')return t; if(m==='out')return 1-Math.pow(1-t,3); if(m==='in')return t*t*t; return t*t*(3-2*t); }
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const clone=o=>JSON.parse(JSON.stringify(o));
+function merge(a,b){ for(const k in b){ const v=b[k]; if(v&&typeof v==='object'&&!Array.isArray(v)&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k])) merge(a[k],v); else a[k]=clone(v); } return a; }
+
+/* ================= skeleton ================= */
+const L={thigh:45,shin:45,upper:30,fore:27,spine:52,hipW:10,shW:18,headR:11};
+const NEUTRAL=()=>({root:{x:0,y:93,z:0,yaw:0,pitch:0,roll:0},spine:{fwd:0,side:0,twist:0},head:{nod:0,turn:0,tilt:0},
+  armL:{flex:0,abd:8,horiz:0,rot:0,elbow:10},armR:{flex:0,abd:8,horiz:0,rot:0,elbow:10},
+  footL:[10,5,0],footR:[-10,5,0],handL:null,handR:null,poleL:null,poleR:null});
+
+function ik3(a,t,l1,l2,pole){
+  const d=sub(t,a), dist=len(d), dc=clamp(dist,Math.abs(l1-l2)+.01,l1+l2-.01), u=dist>1e-6?mul(d,1/dist):[0,-1,0];
+  let pv=sub(pole,mul(u,dot(pole,u))); if(len(pv)<1e-4) pv=cross(u,[1,0,0]); pv=norm(pv);
+  const x=(l1*l1-l2*l2+dc*dc)/(2*dc), h=Math.sqrt(Math.max(0,l1*l1-x*x));
+  return {j:add(a,add(mul(u,x),mul(pv,h))), e:add(a,mul(u,dc)), slip:Math.max(0,dist-dc)};
+}
+function frames(p){
+  const r=p.root;
+  const R0=mm(mm(rY(r.yaw),rX(r.pitch)),rZ(-r.roll));
+  const Rc=mm(mm(mm(R0,rY(p.spine.twist)),rX(p.spine.fwd)),rZ(-p.spine.side));
+  const Rh=mm(mm(mm(Rc,rY(p.head.turn)),rX(p.head.nod)),rZ(-p.head.tilt));
+  return {R0,Rc,Rh};
+}
+function handTarget(h,p,R0,sh){ if(!h) return null; if(Array.isArray(h)) return h; if(h.sh) return add(sh,h.sh); if(h.pel) return add([p.root.x,p.root.y,p.root.z],mv(R0,h.pel)); return null; }
+function solve(p){
+  const {R0,Rc,Rh}=frames(p), r=p.root, P=[r.x,r.y,r.z], at=(b,R,v)=>add(b,mv(R,v));
+  const J={pelvis:P}; let legSlip=0, armSlip=0;
+  J.hipL=at(P,R0,[L.hipW,0,0]); J.hipR=at(P,R0,[-L.hipW,0,0]);
+  J.spineMid=at(P,R0,[0,L.spine/2,0]); J.neck=at(J.spineMid,Rc,[0,L.spine/2,0]); J.chest=at(J.spineMid,Rc,[0,11,3]);
+  J.shoulderL=at(J.neck,Rc,[L.shW,-5,0]); J.shoulderR=at(J.neck,Rc,[-L.shW,-5,0]);
+  J.head=at(J.neck,Rh,[0,16,0]); J.nose=at(J.head,Rh,[0,0,L.headR]); J.eyeL=at(J.head,Rh,[4,3,9.5]); J.eyeR=at(J.head,Rh,[-4,3,9.5]);
+  J.earL=at(J.head,Rh,[10.5,1,0]); J.earR=at(J.head,Rh,[-10.5,1,0]); J.headTop=at(J.head,Rh,[0,L.headR,0]);
+  const Fc=mv(Rc,[0,0,1]), Uc=mv(Rc,[0,1,0]);
+  for(const [S,s] of [['L',1],['R',-1]]){
+    const a=p['arm'+S], sh=J['shoulder'+S], ht=handTarget(p['hand'+S],p,R0,sh);
+    if(ht){ const pole=mv(Rc,p['pole'+S]||[s*.45,-.35,-1]); const q=ik3(sh,ht,L.upper,L.fore,pole); J['elbow'+S]=q.j; J['wrist'+S]=q.e; armSlip=Math.max(armSlip,q.slip); }
+    else{
+      const u=mv(Rc,mv(rY(s*a.horiz),mv(rZ(s*a.abd),mv(rX(-a.flex),[0,-1,0]))));
+      J['elbow'+S]=add(sh,mul(u,L.upper));
+      const c1=cross(u,Fc), w=len(c1); let ax=add(c1,mul(cross(u,Uc),1-w)); if(len(ax)<1e-4) ax=mv(Rc,[1,0,0]); ax=norm(ax);
+      ax=rotAxis(ax,u,s*a.rot*DEG);
+      J['wrist'+S]=add(J['elbow'+S],mul(rotAxis(u,ax,a.elbow*DEG),L.fore));
+    }
+    const pole=mv(R0,[s*.15,0,1]); const q=ik3(J['hip'+S],p['foot'+S],L.thigh,L.shin,pole);
+    J['knee'+S]=q.j; J['ankle'+S]=q.e; legSlip=Math.max(legSlip,q.slip);
+    const yf=[Math.sin(r.yaw*DEG),0,Math.cos(r.yaw*DEG)], an=J['ankle'+S];
+    J['toe'+S]= an[1]<16? add(an,[yf[0]*11,-Math.min(an[1]-1,4),yf[2]*11]) : add(an,add(mul(norm(sub(an,J['knee'+S])),3),mul(yf,10)));
+  }
+  return {J,legSlip,armSlip,yaw:r.yaw};
+}
+
+/* ================= motion builder ================= */
+function M(def){
+  const m=Object.assign({keys:[],props:null,view:'tq'},def); let cur=NEUTRAL(); if(def.start) merge(cur,def.start);
+  m.k=(f,o={},e='io')=>{ const n=clone(cur); merge(n,o); n.f=f; n.ease=e; n.type=o._b?'brk':'key'; n.note=o._n||''; delete n._b; delete n._n; cur=n; m.keys.push(clone(n)); return m; };
+  m.cur=()=>cur;
+  return m;
+}
+function numMix(a,b,t){ if(typeof a==='number') return a+(b-a)*t; const o={}; for(const k in a) o[k]=numMix(a[k],b[k],t); return o; }
+function poseAt(m,f){
+  const K=m.keys; if(f<=K[0].f) return K[0]; const last=K[K.length-1]; if(f>=last.f) return last;
+  let i=0; while(K[i+1].f<=f) i++;
+  const a=K[i], b=K[i+1], raw=(f-a.f)/(b.f-a.f), t=ease(raw,b.ease);
+  const p={root:numMix(a.root,b.root,t),spine:numMix(a.spine,b.spine,t),head:numMix(a.head,b.head,t),armL:numMix(a.armL,b.armL,t),armR:numMix(a.armR,b.armR,t)};
+  for(const k of ['footL','footR']){ const A=a[k],B=b[k], v=lerp3(A,B,t), dh=Math.hypot(B[0]-A[0],B[2]-A[2]); if(dh>2) v[1]+=Math.sin(Math.PI*raw)*Math.min(14,dh*.35); p[k]=v; }
+  for(const S of ['L','R']){
+    const ha=a['hand'+S], hb=b['hand'+S];
+    if(ha||hb){
+      const Ja=(a._J||(a._J=solve(a).J)), Jb=(b._J||(b._J=solve(b).J));
+      const A=sub(ha? handTarget(ha,a,frames(a).R0) : Ja['wrist'+S], Ja['shoulder'+S]);
+      const B=sub(hb? handTarget(hb,b,frames(b).R0) : Jb['wrist'+S], Jb['shoulder'+S]);
+      p['hand'+S]={sh:lerp3(A,B,t)};
+      const pa=a['pole'+S]||[(S==='L'?1:-1)*.45,-.35,-1], pb=b['pole'+S]||[(S==='L'?1:-1)*.45,-.35,-1];
+      p['pole'+S]=lerp3(pa,pb,t);
+    } else p['hand'+S]=null;
+  }
+  return p;
+}
+
+/* ================= gait generator ================= */
+function gait(o){
+  const T=o.T, S=o.S, v=2*S/T, n=o.len, d=norm([o.dir[0],0,o.dir[1]]), yaw=o.yaw||0, lat=[Math.cos(yaw*DEG),0,-Math.sin(yaw*DEG)];
+  const start=mul(d,-v*n/2);
+  const rootAt=t=>add(start,mul(d,v*t));
+  const w=o.width??10, duty=o.duty, lift=o.lift, fy=o.footY??5;
+  const plant=(k,ph,side)=>{ const tm=(k-ph+duty/2)*T; const q=rootAt(tm); return add([q[0],fy,q[2]],mul(lat,side*w)); };
+  const foot=(f,ph,side)=>{ const c=f/T+ph, k=Math.floor(c), p=c-k;
+    if(p<duty) return plant(k,ph,side);
+    const s=(p-duty)/(1-duty), A=plant(k,ph,side), B=plant(k+1,ph,side), e=ease(s,'io'); const q=lerp3(A,B,e); q[1]+=lift*Math.sin(Math.PI*s); return q; };
+  return f=>{
+    const q=rootAt(f), ph=2*Math.PI*f/T;
+    const p=NEUTRAL();
+    p.root={x:q[0],y:o.y+(o.bob||0)*Math.cos(2*ph)+(o.flight?o.flight*Math.max(0,Math.sin(2*ph)):0),z:q[2],yaw,pitch:o.lean||0,roll:(o.sway||0)*Math.sin(ph)};
+    p.spine={fwd:o.fwd||0,side:0,twist:(o.twist||0)*Math.sin(ph)};
+    p.head={nod:o.nod||0,turn:0,tilt:0};
+    const amp=o.arm||0;
+    p.armL={flex:(o.armFlex||0)-amp*Math.sin(ph),abd:o.abd??10,horiz:0,rot:0,elbow:o.elbow??15};
+    p.armR={flex:(o.armFlex||0)+amp*Math.sin(ph),abd:o.abd??10,horiz:0,rot:0,elbow:o.elbow??15};
+    if(o.hop){ p.footL=foot(f,0,1); const h=add([p.root.x,0,p.root.z],mv(rY(yaw),[-8,0,-26])); p.footR=[h[0],p.root.y-46,h[2]]; }
+    else { p.footL=foot(f,0,1); p.footR=foot(f,.5,-1); }
+    return p;
+  };
+}
+
+/* ================= library ================= */
+const LIB=[];
+const GROUPS=[['A','Range of motion','one joint at a time, to the end of range'],['B','Movement screen','screening positions in the style of the FMS'],['C','Exercises','strength and conditioning patterns'],['D','Locomotion','gaits generated with planted feet'],['E','Tasks','everyday and sport actions with props']];
+function T(id,g,name,cue,rom,len,build,opt={}){ const m=M(Object.assign({id,group:g,name,cue,rom,len},opt)); build(m); const K=m.keys; if(!K.length||K[0].f>0) m.keys.unshift(Object.assign(clone(NEUTRAL()),opt.start?merge(NEUTRAL(),opt.start):{}, {f:0,ease:'io',type:'key',note:'start'})); if(K[K.length-1].f<len-1) m.k(len-1,{_b:1,_n:'hold'}); LIB.push(m); return m; }
+const both=o=>({armL:clone(o),armR:clone(o)});
+const SIDES=[['L',1],['R',-1]];
+const sym=(S,o)=>({['arm'+S]:o});
+
+/* ---- A. range of motion ---- */
+T('A01','A','Neck flexion and extension','Chin to chest, hold, then look up to the ceiling.',['neck'],96,m=>{
+  m.k(0,{_n:'neutral'}).k(16,{head:{nod:45},_n:'flexion'}).k(28,{_b:1,_n:'hold'}).k(46,{head:{nod:-55},_n:'extension'}).k(60,{_b:1,_n:'hold'}).k(78,{head:{nod:0},_n:'neutral'});},{view:'side'});
+T('A02','A','Neck rotation','Turn to look over the left shoulder, then the right.',['neckRot'],96,m=>{
+  m.k(0).k(16,{head:{turn:80},_n:'rotate left'}).k(28,{_b:1}).k(50,{head:{turn:-80},_n:'rotate right'}).k(62,{_b:1}).k(80,{head:{turn:0},_n:'neutral'});},{view:'front'});
+T('A03','A','Neck lateral flexion','Ear toward shoulder, both sides, shoulders level.',['neck'],96,m=>{
+  m.k(0).k(16,{head:{tilt:42},_n:'tilt left'}).k(28,{_b:1}).k(50,{head:{tilt:-42},_n:'tilt right'}).k(62,{_b:1}).k(80,{head:{tilt:0}});},{view:'front'});
+T('A04','A','Shoulder flexion and extension','Raise both arms forward to overhead, lower, then reach back.',['shoulderL','shoulderR'],120,m=>{
+  m.k(0).k(20,both({flex:90,abd:0,horiz:0,rot:0,elbow:4}),'io').k(36,both({flex:178,abd:0,horiz:0,rot:0,elbow:0}),'out').k(48,{_b:1,_n:'overhead hold'})
+   .k(68,both({flex:0,abd:8,horiz:0,rot:0,elbow:8})).k(84,both({flex:-55,abd:6,horiz:0,rot:0,elbow:4}),'out').k(96,{_b:1,_n:'extension hold'}).k(112,both({flex:0,abd:8,horiz:0,rot:0,elbow:10}));},{view:'side'});
+T('A05','A','Shoulder abduction','Raise both arms out to the side and on overhead, palms up past shoulder height.',['shoulderL','shoulderR'],100,m=>{
+  m.k(0).k(18,both({flex:0,abd:90,horiz:0,rot:0,elbow:4})).k(34,both({flex:0,abd:176,horiz:0,rot:0,elbow:0}),'out').k(46,{_b:1}).k(68,both({flex:0,abd:8,horiz:0,rot:0,elbow:10}));},{view:'front'});
+T('A06','A','Horizontal abduction and adduction','Arms forward at shoulder height, open wide, then cross the body.',['shoulderL','shoulderR'],110,m=>{
+  m.k(0).k(16,both({flex:90,abd:0,horiz:0,rot:0,elbow:4})).k(32,both({flex:90,abd:0,horiz:95,rot:0,elbow:4}),'out').k(42,{_b:1}).k(62,both({flex:90,abd:0,horiz:-38,rot:0,elbow:8})).k(72,{_b:1}).k(88,both({flex:90,abd:0,horiz:0,rot:0,elbow:4})).k(104,both({flex:0,abd:8,horiz:0,rot:0,elbow:10}));},{view:'top3'});
+T('A07','A','Shoulder rotation at 90/90','Upper arms out at shoulder height, elbows bent; rotate forearms up and down.',['shoulderRot'],110,m=>{
+  m.k(0).k(16,both({flex:0,abd:90,horiz:0,rot:0,elbow:90})).k(32,both({flex:0,abd:90,horiz:0,rot:-85,elbow:90}),'out').k(42,{_b:1,_n:'external'}).k(62,both({flex:0,abd:90,horiz:0,rot:70,elbow:90})).k(72,{_b:1,_n:'internal'}).k(88,both({flex:0,abd:90,horiz:0,rot:0,elbow:90})).k(104,both({flex:0,abd:8,horiz:0,rot:0,elbow:10}));},{view:'tq'});
+T('A08','A','Elbow flexion','Curl both hands to the shoulders, twice.',['elbowL','elbowR'],96,m=>{
+  m.k(0).k(16,both({flex:4,abd:6,horiz:0,rot:0,elbow:148}),'io').k(26,{_b:1}).k(42,both({flex:0,abd:6,horiz:0,rot:0,elbow:2})).k(58,both({flex:4,abd:6,horiz:0,rot:0,elbow:148})).k(68,{_b:1}).k(86,both({flex:0,abd:8,horiz:0,rot:0,elbow:10}));},{view:'side'});
+T('A09','A','Trunk flexion (toe touch)','Hinge and roll down until the fingertips pass the ankles.',['trunk','hipL','hipR'],100,m=>{
+  m.k(0).k(14,{root:{pitch:30,z:-4},spine:{fwd:12},_b:1,_n:'hinge'}).k(32,{root:{y:91,pitch:90,z:-16},spine:{fwd:78},head:{nod:4},handL:[10,22,14],handR:[-10,22,14],_n:'fingertips to ankles'})
+   .k(46,{_b:1,_n:'hold'}).k(64,{root:{pitch:28,z:-4,y:93},spine:{fwd:16},head:{nod:0},handL:null,handR:null,_b:1,_n:'roll up'}).k(80,{root:{pitch:0,z:0},spine:{fwd:0}});},{view:'side'});
+T('A10','A','Trunk extension','Hands on the low back, lean back and look up.',['trunk'],96,m=>{
+  m.k(0).k(14,{handL:{pel:[13,4,-12]},handR:{pel:[-13,4,-12]},poleL:[1,0,-.6],poleR:[-1,0,-.6],_n:'hands to back'}).k(32,{root:{pitch:-14,z:5},spine:{fwd:-28},head:{nod:-28},_n:'extension'}).k(44,{_b:1}).k(62,{root:{pitch:0,z:0},spine:{fwd:0},head:{nod:0}}).k(80,{handL:null,handR:null});},{view:'side'});
+T('A11','A','Trunk lateral flexion','Slide a hand down the side of the leg, then the other side.',['trunk'],100,m=>{
+  m.k(0).k(18,{root:{roll:8,x:-4},spine:{side:34},head:{tilt:8},_n:'side bend left'}).k(30,{_b:1}).k(56,{root:{roll:-8,x:4},spine:{side:-34},head:{tilt:-8},_n:'side bend right'}).k(68,{_b:1}).k(86,{root:{roll:0,x:0},spine:{side:0},head:{tilt:0}});},{view:'front'});
+T('A12','A','Trunk rotation','Arms guarding the chest, rotate to look behind, both ways, feet planted.',['trunkRot'],110,m=>{
+  m.k(0).k(12,both({flex:22,abd:68,horiz:0,rot:0,elbow:100})).k(30,{spine:{twist:50},root:{yaw:16},head:{turn:24},_n:'rotate left'}).k(42,{_b:1}).k(68,{spine:{twist:-50},root:{yaw:-16},head:{turn:-24},_n:'rotate right'}).k(80,{_b:1}).k(96,{spine:{twist:0},root:{yaw:0},head:{turn:0}}).k(108,both({flex:0,abd:8,horiz:0,rot:0,elbow:10}));},{view:'top3'});
+T('A13','A','Hip flexion (knee to chest)','Standing, pull one knee up toward the chest, then the other.',['hipL','hipR','kneeL','kneeR'],120,m=>{
+  m.k(0).k(12,{root:{x:-4},armR:{abd:20},_b:1,_n:'weight right'}).k(28,{footL:[11,68,20],handL:[13,96,30],poleL:[1,-.5,-.6],_n:'left knee up'}).k(40,{_b:1}).k(54,{footL:[10,5,0],handL:null,root:{x:0}})
+   .k(64,{root:{x:4},armL:{abd:20},_b:1}).k(80,{footR:[-11,68,20],handR:[-13,96,30],poleR:[-1,-.5,-.6],_n:'right knee up'}).k(92,{_b:1}).k(108,{footR:[-10,5,0],handR:null,root:{x:0},armL:{abd:8},armR:{abd:8}});},{view:'side'});
+T('A14','A','Hip extension','Standing tall, swing one leg straight back, then the other.',['hipL','hipR'],110,m=>{
+  m.k(0).k(10,{root:{x:-4},_b:1}).k(26,{footL:[12,24,-44],root:{pitch:12},armL:{flex:35},armR:{flex:35},_n:'left back'}).k(36,{_b:1}).k(52,{footL:[10,5,0],root:{pitch:0,x:0},armL:{flex:0},armR:{flex:0}})
+   .k(60,{root:{x:4},_b:1}).k(76,{footR:[-12,24,-44],root:{pitch:12},armL:{flex:35},armR:{flex:35},_n:'right back'}).k(86,{_b:1}).k(102,{footR:[-10,5,0],root:{pitch:0,x:0},armL:{flex:0},armR:{flex:0}});},{view:'side'});
+T('A15','A','Hip abduction','Lift one leg straight out to the side, then the other.',['spread'],110,m=>{
+  m.k(0).k(10,{root:{x:-5},_b:1}).k(26,{footL:[52,26,0],root:{roll:-10},armR:{abd:30},armL:{abd:55},_n:'left out'}).k(36,{_b:1}).k(52,{footL:[10,5,0],root:{roll:0,x:0},armL:{abd:8},armR:{abd:8}})
+   .k(60,{root:{x:5},_b:1}).k(76,{footR:[-52,26,0],root:{roll:10},armL:{abd:30},armR:{abd:55},_n:'right out'}).k(86,{_b:1}).k(102,{footR:[-10,5,0],root:{roll:0,x:0},armL:{abd:8},armR:{abd:8}});},{view:'front'});
+T('A16','A','Knee flexion (heel to glute)','Catch the ankle behind you and draw the heel to the glute; switch.',['kneeL','kneeR'],120,m=>{
+  m.k(0).k(10,{root:{x:-4},armR:{abd:30},_b:1}).k(26,{footL:[11,84,-18],handL:[13,86,-21],poleL:[.6,.4,-1],spine:{side:10},_n:'left heel up'}).k(40,{_b:1}).k(54,{footL:[10,5,0],handL:null,root:{x:0},armR:{abd:8},spine:{side:0}})
+   .k(64,{root:{x:4},armL:{abd:30},_b:1}).k(80,{footR:[-11,84,-18],handR:[-13,86,-21],poleR:[-.6,.4,-1],spine:{side:-10},_n:'right heel up'}).k(94,{_b:1}).k(108,{footR:[-10,5,0],handR:null,root:{x:0},armL:{abd:8},spine:{side:0}});},{view:'side'});
+T('A17','A','Ankle plantarflexion (calf raise)','Rise onto the toes, hold, lower; three times.',['ankle'],100,m=>{
+  m.k(0,both({flex:0,abd:22,horiz:0,rot:0,elbow:10}));
+  for(let i=0;i<3;i++){ const f=8+i*30; m.k(f+10,{root:{y:102},footL:[10,14,0],footR:[-10,14,0],_n:'on toes'},'out').k(f+16,{_b:1}).k(f+28,{root:{y:93},footL:[10,5,0],footR:[-10,5,0]}); } },{view:'side'});
+
+/* ---- B. movement screen ---- */
+T('B18','B','Deep squat, overhead','Dowel overhead, sink the hips below the knees, heels down.',['hipL','kneeL','shoulderL','trunk'],110,m=>{
+  m.k(0,{footL:[16,5,2],footR:[-16,5,2],...both({flex:174,abd:12,horiz:0,rot:0,elbow:0})}).k(14,{_b:1,_n:'set'}).k(40,{root:{y:46,z:-14,pitch:26},spine:{fwd:-4},head:{nod:-8},_n:'bottom'},'io').k(56,{_b:1,_n:'hold'}).k(82,{root:{y:93,z:0,pitch:0},spine:{fwd:0},head:{nod:0}});
+},{view:'side',start:{footL:[16,5,2],footR:[-16,5,2]},props:(f,J)=>[{t:'seg',a:add(J.wristL,[18,0,0]),b:add(J.wristR,[-18,0,0]),w:2.5}]});
+T('B19','B','Hurdle step','Step over a shin-high hurdle and tap the heel, without the pelvis dropping.',['hipL','hipR','kneeL','kneeR'],130,m=>{
+  const dowel={handL:{pel:[42,52,-6]},handR:{pel:[-42,52,-6]},poleL:[.2,-1,-.4],poleR:[-.2,-1,-.4]};
+  m.k(0,dowel).k(10,{root:{x:-4},_b:1}).k(26,{footL:[11,62,22],_n:'left over'}).k(38,{footL:[10,6,36],root:{y:88},_n:'heel tap'}).k(50,{footL:[11,62,22],root:{y:93},_b:1}).k(62,{footL:[10,5,0],root:{x:0}})
+   .k(70,{root:{x:4},_b:1}).k(86,{footR:[-11,62,22],_n:'right over'}).k(98,{footR:[-10,6,36],root:{y:88},_n:'heel tap'}).k(110,{footR:[-11,62,22],root:{y:93},_b:1}).k(122,{footR:[-10,5,0],root:{x:0}});
+},{view:'side',props:(f,J)=>[{t:'seg',a:[-34,46,22],b:[34,46,22],w:2},{t:'seg',a:[-34,0,22],b:[-34,46,22],w:1.5},{t:'seg',a:[34,0,22],b:[34,46,22],w:1.5},{t:'seg',a:add(J.wristL,[10,0,0]),b:add(J.wristR,[-10,0,0]),w:2.5}]});
+T('B20','B','Inline lunge','Feet heel-to-toe on a line, lower the back knee to the floor, rise; twice.',['kneeL','kneeR','hipR'],110,m=>{
+  m.k(0,{footL:[4,5,34],footR:[-4,5,-34],...both({flex:10,abd:10,horiz:0,rot:0,elbow:10})});
+  for(let i=0;i<2;i++){ const f=10+i*48; m.k(f+18,{root:{y:56,z:-2},head:{nod:4},_n:'back knee down'}).k(f+26,{_b:1}).k(f+44,{root:{y:86,z:0},head:{nod:0}}); }
+},{view:'side',start:{footL:[4,5,34],footR:[-4,5,-34],root:{y:86}}});
+T('B21','B','Shoulder mobility reach','One hand over the shoulder, the other up the back; bring the fists together, then switch.',['shoulderL','shoulderR'],120,m=>{
+  m.k(0).k(22,{handL:[-2,128,-15],poleL:[.4,1,.2],handR:[3,110,-16],poleR:[-.8,-1,-.4],_n:'left over, right under'}).k(40,{_b:1}).k(58,{handL:null,handR:null})
+   .k(80,{handR:[2,128,-15],poleR:[-.4,1,.2],handL:[-3,110,-16],poleL:[.8,-1,-.4],_n:'right over, left under'}).k(98,{_b:1}).k(116,{handL:null,handR:null});
+},{view:'tq'});
+T('B22','B','Active straight-leg raise','Lying on the back, raise one straight leg as high as it goes; then the other.',['hipL','hipR'],110,m=>{
+  m.k(0).k(10,{_b:1}).k(30,{footL:[10,96,18],_n:'left leg up'}).k(42,{_b:1}).k(58,{footL:[10,6,88]}).k(78,{footR:[-10,96,18],_n:'right leg up'}).k(90,{_b:1}).k(106,{footR:[-10,6,88]});
+},{view:'side',start:{root:{y:11,pitch:-90},footL:[10,6,88],footR:[-10,6,88],armL:{abd:14},armR:{abd:14}}});
+T('B23','B','Push-up','Hands under shoulders, body in one line, chest to the floor; three reps.',['elbowL','elbowR','trunk'],110,m=>{
+  const top={root:{x:0,y:37,z:0,pitch:71},handL:[22,2,46],handR:[-22,2,46],poleL:[.7,-.4,-1],poleR:[-.7,-.4,-1],footL:[10,6,-84],footR:[-10,6,-84],head:{nod:8}};
+  m.k(0,top);
+  for(let i=0;i<3;i++){ const f=8+i*32; m.k(f+14,{root:{y:20,z:2,pitch:80},_n:'down'}).k(f+18,{_b:1}).k(f+30,{root:{y:37,z:0,pitch:71},_n:'up'},'out'); }
+},{view:'side',start:{root:{y:37,pitch:71},handL:[22,2,46],handR:[-22,2,46],footL:[10,6,-84],footR:[-10,6,-84]}});
+T('B24','B','Rotary stability (bird dog)','On hands and knees, reach one arm forward and the opposite leg back; switch.',['shoulderL','shoulderR','hipL','hipR'],120,m=>{
+  const quad={root:{y:52,pitch:90},handL:[18,2,47],handR:[-18,2,47],poleL:[.5,0,-1],poleR:[-.5,0,-1],footL:[10,6,-42],footR:[-10,6,-42],head:{nod:0}};
+  m.k(0,quad).k(10,{_b:1}).k(30,{handL:null,armL:{flex:176,abd:4,horiz:0,rot:0,elbow:0},footR:[-10,54,-86],root:{roll:3},_n:'left arm, right leg'}).k(44,{_b:1}).k(58,{handL:[18,2,47],footR:[-10,6,-42],root:{roll:0}})
+   .k(78,{handR:null,armR:{flex:176,abd:4,horiz:0,rot:0,elbow:0},footL:[10,54,-86],root:{roll:-3},_n:'right arm, left leg'}).k(92,{_b:1}).k(106,{handR:[-18,2,47],footL:[10,6,-42],root:{roll:0}});
+},{view:'side',start:{root:{y:52,pitch:90},handL:[18,2,47],handR:[-18,2,47],footL:[10,6,-42],footR:[-10,6,-42]}});
+T('B25','B','Single-leg balance','Stand on one leg, sole against the standing knee, arms out; hold, then switch.',['hipR','kneeR','spread'],140,m=>{
+  m.k(0).k(10,{root:{x:5},_b:1}).k(26,{footR:[-3,50,6],...both({flex:0,abd:88,horiz:0,rot:0,elbow:6}),_n:'tree, left stance'}).k(40,{root:{x:6.5},armL:{abd:82},armR:{abd:96},_b:1,_n:'sway'}).k(54,{root:{x:4},armL:{abd:94},armR:{abd:84},_b:1,_n:'sway'})
+   .k(68,{footR:[-10,5,0],root:{x:0}}).k(76,{root:{x:-5},_b:1}).k(92,{footL:[3,50,6],_n:'tree, right stance'}).k(106,{root:{x:-6.5},_b:1}).k(118,{root:{x:-4},_b:1}).k(132,{footL:[10,5,0],root:{x:0},...both({flex:0,abd:8,horiz:0,rot:0,elbow:10})});
+},{view:'front'});
+T('B26','B','Sit to stand','From a chair, lean forward and stand without the hands; sit back down.',['hipL','kneeL','trunk'],120,m=>{
+  m.k(0).k(10,{_b:1}).k(26,{root:{pitch:36},spine:{fwd:10},...both({flex:70,abd:6,horiz:0,rot:0,elbow:10}),_n:'nose over toes'}).k(38,{root:{y:70,z:-10,pitch:30},_b:1,_n:'lift off'}).k(52,{root:{y:93,z:0,pitch:0},spine:{fwd:0},...both({flex:0,abd:8,horiz:0,rot:0,elbow:10}),_n:'stand'})
+   .k(66,{_b:1}).k(84,{root:{y:66,z:-14,pitch:32},spine:{fwd:8},...both({flex:60,abd:6,horiz:0,rot:0,elbow:10}),_b:1,_n:'reach back'}).k(100,{root:{y:47,z:-26,pitch:0},spine:{fwd:0},...both({flex:0,abd:8,horiz:0,rot:0,elbow:10}),_n:'seated'});
+},{view:'side',start:{root:{y:47,z:-26},footL:[12,5,10],footR:[-12,5,10]},props:()=>[{t:'box',c:[0,21,-30],s:[44,42,40]},{t:'box',c:[0,64,-52],s:[44,44,4]}]});
+T('B27','B','Plank with shoulder taps','Hold a straight plank, tap each shoulder without the hips rocking.',['trunk','shoulderL','shoulderR'],120,m=>{
+  const top={root:{y:37,pitch:71},handL:[22,2,46],handR:[-22,2,46],poleL:[.7,-.4,-1],poleR:[-.7,-.4,-1],footL:[12,6,-84],footR:[-12,6,-84]};
+  m.k(0,top).k(10,{_b:1});
+  for(let i=0;i<4;i++){ const f=12+i*26, S=i%2?'R':'L', s=i%2?-1:1; m.k(f+10,{['hand'+S]:[-s*14,50,40],['pole'+S]:[s*.3,-1,-.6],root:{roll:-s*5},_n:(S==='L'?'left':'right')+' hand to opposite shoulder'}).k(f+14,{_b:1}).k(f+24,{['hand'+S]:[s*22,2,46],root:{roll:0}}); }
+},{view:'tq',start:{root:{y:37,pitch:71},handL:[22,2,46],handR:[-22,2,46],footL:[12,6,-84],footR:[-12,6,-84]}});
+
+/* ---- C. exercises ---- */
+T('C28','C','Jumping jacks','Jump the feet wide as the arms sweep overhead; four reps.',['shoulderL','shoulderR','spread'],72,m=>{
+  m.k(0);
+  for(let i=0;i<4;i++){ const f=i*16; m.k(f+4,{root:{y:102},footL:[22,15,0],footR:[-22,15,0],...both({flex:0,abd:92,horiz:0,rot:0,elbow:8}),_b:1,_n:'air'})
+    .k(f+8,{root:{y:89},footL:[36,5,0],footR:[-36,5,0],...both({flex:0,abd:172,horiz:0,rot:0,elbow:4}),_n:'open'},'out')
+    .k(f+12,{root:{y:102},footL:[22,15,0],footR:[-22,15,0],...both({flex:0,abd:92,horiz:0,rot:0,elbow:8}),_b:1,_n:'air'})
+    .k(f+16,{root:{y:92},footL:[10,5,0],footR:[-10,5,0],...both({flex:0,abd:8,horiz:0,rot:0,elbow:10}),_n:'closed'},'out'); }
+},{view:'front'});
+T('C29','C','Burpee','Squat, hands down, jump the feet back to plank, jump them in, jump up.',['hipL','kneeL','shoulderL','trunk'],72,m=>{
+  const hands={handL:[18,3,27],handR:[-18,3,27],poleL:[.6,-.3,-1],poleR:[-.6,-.3,-1]};
+  m.k(0).k(10,{root:{y:37,z:-12,pitch:55},spine:{fwd:35},...hands,_n:'hands down'}).k(18,{root:{y:37,z:-16,pitch:71},spine:{fwd:0},footL:[10,6,-100],footR:[-10,6,-100],_n:'kick back to plank'},'out')
+   .k(26,{_b:1,_n:'plank'}).k(34,{root:{y:37,z:-12,pitch:55},spine:{fwd:35},footL:[10,5,0],footR:[-10,5,0],_n:'feet in'},'out')
+   .k(42,{root:{y:120,z:0,pitch:0},spine:{fwd:0},handL:null,handR:null,...both({flex:172,abd:10,horiz:0,rot:0,elbow:4}),footL:[10,30,0],footR:[-10,30,0],_n:'jump'},'out')
+   .k(50,{root:{y:78,z:-4,pitch:14},footL:[10,5,0],footR:[-10,5,0],...both({flex:110,abd:10,horiz:0,rot:0,elbow:10}),_n:'land'},'in').k(62,{root:{y:93,z:0,pitch:0},...both({flex:0,abd:8,horiz:0,rot:0,elbow:10})});
+},{view:'side'});
+T('C30','C','Reverse lunge','Step back into a lunge, knee to the floor, return; alternate legs.',['kneeL','kneeR','hipL'],110,m=>{
+  m.k(0,{handL:{pel:[17,2,4]},handR:{pel:[-17,2,4]},poleL:[1,0,-.3],poleR:[-1,0,-.3]});
+  m.k(18,{footR:[-10,5,-62],root:{y:56,z:-24},_n:'right back'}).k(26,{_b:1}).k(44,{footR:[-10,5,0],root:{y:93,z:0}})
+   .k(64,{footL:[10,5,-62],root:{y:56,z:-24},_n:'left back'}).k(72,{_b:1}).k(90,{footL:[10,5,0],root:{y:93,z:0}});
+},{view:'side'});
+T('C31','C','Squat jump','Load the hips, swing the arms, jump, land soft back into the squat; twice.',['hipL','kneeL','shoulderL'],110,m=>{
+  m.k(0);
+  for(let i=0;i<2;i++){ const f=i*50; m.k(f+16,{root:{y:52,z:-12,pitch:32},...both({flex:-45,abd:8,horiz:0,rot:0,elbow:6}),_n:'load'})
+    .k(f+22,{root:{y:93,z:0,pitch:4},...both({flex:120,abd:8,horiz:0,rot:0,elbow:6}),_b:1,_n:'drive'},'in')
+    .k(f+28,{root:{y:124},footL:[10,36,0],footR:[-10,36,0],...both({flex:168,abd:8,horiz:0,rot:0,elbow:4}),_n:'peak'},'out')
+    .k(f+34,{root:{y:94},footL:[10,5,0],footR:[-10,5,0],_b:1,_n:'contact'},'in')
+    .k(f+42,{root:{y:58,z:-10,pitch:26},...both({flex:60,abd:8,horiz:0,rot:0,elbow:12}),_n:'absorb'},'out'); }
+  m.k(104,{root:{y:93,z:0,pitch:0},...both({flex:0,abd:8,horiz:0,rot:0,elbow:10})});
+},{view:'side'});
+T('C32','C','Mountain climbers','From plank, drive the knees to the chest, alternating fast.',['hipL','hipR','kneeL','kneeR'],84,m=>{
+  const top={root:{y:37,pitch:71},handL:[22,2,46],handR:[-22,2,46],poleL:[.7,-.4,-1],poleR:[-.7,-.4,-1],footL:[10,6,-84],footR:[-10,6,-84]};
+  m.k(0,top).k(8,{_b:1});
+  for(let i=0;i<6;i++){ const f=10+i*12; m.k(f+6,i%2?{footR:[-10,24,-16],footL:[10,6,-84],_n:'right knee in'}:{footL:[10,24,-16],footR:[-10,6,-84],_n:'left knee in'},'out'); }
+  m.k(82,{footL:[10,6,-84],footR:[-10,6,-84]});
+},{view:'side',start:{root:{y:37,pitch:71},handL:[22,2,46],handR:[-22,2,46],footL:[10,6,-84],footR:[-10,6,-84]}});
+T('C33','C','Lateral lunge','Step wide to one side, sit the hips back over that foot; return; switch.',['kneeL','kneeR','spread'],110,m=>{
+  m.k(0).k(18,{footL:[54,5,2],root:{x:28,y:62,z:-10,pitch:26},...both({flex:70,abd:6,horiz:0,rot:0,elbow:30}),_n:'left side'}).k(28,{_b:1}).k(44,{footL:[10,5,0],root:{x:0,y:93,z:0,pitch:0},...both({flex:0,abd:8,horiz:0,rot:0,elbow:10})})
+   .k(64,{footR:[-54,5,2],root:{x:-28,y:62,z:-10,pitch:26},...both({flex:70,abd:6,horiz:0,rot:0,elbow:30}),_n:'right side'}).k(74,{_b:1}).k(90,{footR:[-10,5,0],root:{x:0,y:93,z:0,pitch:0},...both({flex:0,abd:8,horiz:0,rot:0,elbow:10})});
+},{view:'front'});
+T('C34','C','Deadlift','Hinge to the bar, flat back, stand it up to the thighs; three reps.',['hipL','kneeL','trunk'],120,m=>{
+  const bottom={root:{y:63,z:-18,pitch:72},spine:{fwd:15},head:{nod:-10},handL:[22,22,18],handR:[-22,22,18],poleL:[.4,0,-1],poleR:[-.4,0,-1]};
+  m.k(0,{footL:[12,5,0],footR:[-12,5,0]}).k(14,{root:{pitch:24,z:-6},spine:{fwd:6},_b:1,_n:'hinge'}).k(26,Object.assign({_n:'grip'},bottom));
+  for(let i=0;i<3;i++){ const f=26+i*30; m.k(f+14,{root:{y:93,z:0,pitch:0},spine:{fwd:0},head:{nod:0},handL:[20,90,5],handR:[-20,90,5],_n:'lockout'}).k(f+18,{_b:1}).k(f+30,Object.assign({_n:'bar to floor'},bottom)); }
+},{view:'side',start:{footL:[12,5,0],footR:[-12,5,0]},props:(f,J,m)=>{ const g=f>=26; const a=g?J.wristL:[22,22,18], b=g?J.wristR:[-22,22,18]; const d=norm(sub(a,b)); return [{t:'seg',a:add(a,mul(d,24)),b:sub(b,mul(d,24)),w:3},{t:'disc',c:add(a,mul(d,18)),r:22,ax:d},{t:'disc',c:sub(b,mul(d,18)),r:22,ax:d}]; }});
+T('C35','C','Overhead press','From the rack at the shoulders, press to lockout overhead; three reps.',['shoulderL','shoulderR','elbowL'],100,m=>{
+  m.k(0).k(12,both({flex:22,abd:72,horiz:0,rot:-80,elbow:120}));
+  for(let i=0;i<3;i++){ const f=12+i*28; m.k(f+12,both({flex:6,abd:172,horiz:0,rot:-80,elbow:4}),'out').k(f+16,{_b:1}).k(f+28,both({flex:22,abd:72,horiz:0,rot:-80,elbow:120})); }
+},{view:'front',props:(f,J)=>[{t:'seg',a:add(J.wristL,[16,0,0]),b:add(J.wristR,[-16,0,0]),w:3}]});
+T('C36','C','Sit-up','Knees bent, curl the trunk up to the thighs and roll back down; twice.',['trunk','hipL'],100,m=>{
+  m.k(0);
+  for(let i=0;i<2;i++){ const f=6+i*44; m.k(f+20,{root:{pitch:-32,y:13},spine:{fwd:38},head:{nod:14},_n:'up'}).k(f+26,{_b:1}).k(f+42,{root:{pitch:-90,y:11},spine:{fwd:0},head:{nod:0},_n:'down'}); }
+},{view:'side',start:{root:{y:11,pitch:-90},footL:[10,5,42],footR:[-10,5,42],armL:{flex:40,horiz:-30,elbow:128},armR:{flex:40,horiz:-30,elbow:128}}});
+T('C37','C','Glute bridge','Feet planted, drive the hips up to a straight line shoulders-to-knees; twice.',['hipL','hipR'],100,m=>{
+  const arms={handL:[24,3,-14],handR:[-24,3,-14],poleL:[1,.2,0],poleR:[-1,.2,0]};
+  m.k(0,arms);
+  for(let i=0;i<2;i++){ const f=6+i*44; m.k(f+18,{root:{y:38,pitch:-124},spine:{fwd:-6},_n:'bridge'},'out').k(f+28,{_b:1}).k(f+42,{root:{y:11,pitch:-90},spine:{fwd:0}}); }
+},{view:'side',start:{root:{y:11,pitch:-90},footL:[10,5,40],footR:[-10,5,40],handL:[24,3,-14],handR:[-24,3,-14]}});
+
+/* ---- D. locomotion (procedural) ---- */
+function G(id,name,cue,rom,len,o,opt={}){ const m=T(id,'D',name,cue,rom,len,mm=>{},Object.assign({view:'tq'},opt)); m.fn=gait(Object.assign({len},o)); m.keys=[]; const step=Math.round(o.T/2); for(let f=0;f<len;f+=step){ const p=m.fn(f); p.f=f; p.type=(f/step)%2?'brk':'key'; p.note=(f/step)%2?'passing':'contact'; m.keys.push(p);} return m; }
+G('D38','Walk','Even walk, heel strike, arms swinging opposite the legs.',['hipL','kneeL','shoulderL'],128,{T:32,S:34,duty:.62,y:91,bob:1.6,lean:3,arm:26,elbow:18,lift:9,dir:[0,1]});
+G('D39','Run','Run with a flight phase, elbows near 90°, forward lean.',['hipL','kneeL','elbowL','shoulderL'],108,{T:18,S:62,duty:.36,y:85,bob:2,flight:7,lean:12,fwd:4,arm:48,elbow:92,lift:32,dir:[0,1],twist:8});
+G('D40','Sneak','Crouched creep on the balls of the feet, arms up and quiet.',['kneeL','hipL','trunk'],144,{T:48,S:24,duty:.72,y:70,bob:1,lean:24,fwd:6,nod:-12,arm:8,armFlex:34,elbow:85,lift:13,footY:7,dir:[0,1]});
+G('D41','Skip','Big rhythmic skip: high knee, opposite arm high.',['hipL','kneeL','shoulderL'],120,{T:24,S:40,duty:.44,y:89,bob:0,flight:6,lean:5,arm:72,elbow:30,lift:36,dir:[0,1]});
+G('D42','Side shuffle','Athletic stance, shuffle sideways without crossing the feet.',['spread','kneeL','hipL'],100,{T:20,S:24,duty:.5,y:80,bob:2,lean:16,arm:0,armFlex:30,abd:28,elbow:72,lift:6,width:16,dir:[1,0],yaw:0},{view:'front'});
+G('D43','Walk backward','Reach back with the toe, roll through to the heel.',['hipL','kneeL'],128,{T:34,S:26,duty:.62,y:91,bob:1.2,lean:-3,arm:18,elbow:16,lift:7,dir:[0,-1]});
+G('D44','Hop on one leg','Repeated hops on the left leg, right knee held bent.',['kneeL','hipL','hipR'],100,{T:20,S:22,duty:.42,y:86,bob:0,flight:6,lean:8,arm:24,abd:24,elbow:40,lift:12,dir:[0,1],hop:1});
+T('D45','D','Turn 180° in place','Six small steps rotate the body to face behind; the feet never cross.',['trunkRot'],100,m=>{
+  m.k(0);
+  for(let i=1;i<=6;i++){ const y=30*i, f=i*14; const pL=mv(rY(y),[10,5,0]), pR=mv(rY(y),[-10,5,0]);
+    m.k(f,Object.assign({root:{yaw:y-(i<6?8:0)},_n:'step '+i}, i%2?{footL:pL}:{footR:pR},{spine:{twist:i<6?8:0},head:{turn:i<6?12:0}}),'io'); if(i===6) m.k(f,{footL:pL,footR:pR,_b:1}); }
+},{view:'tq'});
+
+/* ---- E. tasks ---- */
+T('E46','E','Lift a box from the floor','Squat to the box, hug it in, stand, set it back down.',['hipL','kneeL','elbowL','trunk'],120,m=>{
+  const grip={root:{y:42,z:-10,pitch:45},spine:{fwd:35},head:{nod:-6},handL:[17,16,25],handR:[-17,16,25],poleL:[.8,-.2,-.6],poleR:[-.8,-.2,-.6]};
+  m.k(0,{footL:[12,5,0],footR:[-12,5,0]}).k(22,Object.assign({_n:'squat to box'},grip)).k(30,{_b:1,_n:'grip'}).k(52,{root:{y:93,z:0,pitch:0},spine:{fwd:0},head:{nod:0},handL:[17,100,24],handR:[-17,100,24],_n:'stand, box at chest'})
+   .k(66,{_b:1}).k(88,Object.assign({_n:'set down'},grip)).k(96,{_b:1,_n:'release'}).k(114,{root:{y:93,z:0,pitch:0},spine:{fwd:0},head:{nod:0},handL:null,handR:null});
+},{view:'tq',start:{footL:[12,5,0],footR:[-12,5,0]},props:(f,J)=>{ const held=f>=30&&f<96; const c=held? add(mid(J.wristL,J.wristR),[0,0,0]) : [0,12,26]; return [{t:'box',c,s:[30,24,28]}]; }});
+T('E47','E','Throw overhand','Step, rotate, and throw a ball with the right arm; follow through across the body.',['shoulderR','elbowR','trunkRot'],90,m=>{
+  m.k(0,{footL:[12,5,18],footR:[-10,5,-12],root:{z:-2,y:91},armR:{flex:10,abd:20,elbow:60}}).k(18,{spine:{twist:-48},root:{yaw:-24,x:-4},head:{turn:40},armR:{flex:0,abd:92,horiz:42,rot:-70,elbow:95},armL:{flex:80,abd:10,horiz:20,elbow:10},_n:'wind-up'})
+   .k(30,{root:{z:6,x:0,yaw:-10},footL:[12,5,24],_b:1,_n:'stride'}).k(36,{spine:{twist:30},root:{yaw:10,pitch:12,z:10},head:{turn:-14},armR:{flex:40,abd:100,horiz:-30,rot:-20,elbow:30},armL:{flex:20,abd:20,horiz:-10,elbow:60},_n:'release'},'out')
+   .k(46,{spine:{twist:50,fwd:14},root:{pitch:22,yaw:18},head:{turn:-24},armR:{flex:40,abd:20,horiz:-70,rot:0,elbow:40},_n:'follow-through'}).k(64,{_b:1}).k(84,{spine:{twist:0,fwd:0},root:{pitch:0,yaw:0,z:0},head:{turn:0},armR:{flex:0,abd:8,horiz:0,rot:0,elbow:10},armL:{flex:0,abd:8,horiz:0,elbow:10},footL:[12,5,18]});
+},{view:'tq',ball:{hand:'R',release:36}});
+T('E48','E','Kick a ball','Plant beside the ball, swing from the hip, strike with the instep.',['hipR','kneeR'],84,m=>{
+  m.k(0,{root:{z:-30},footL:[12,5,-30],footR:[-10,5,-30]}).k(14,{root:{z:-6},footL:[14,5,14],_n:'plant'}).k(22,{footR:[-8,52,-34],root:{z:6,roll:6},armL:{abd:60,flex:30},armR:{abd:30,flex:-20},_n:'back-swing'})
+   .k(30,{footR:[-6,12,32],root:{z:10,pitch:-6},armL:{abd:50,flex:-10},armR:{abd:30,flex:30},_n:'strike'},'out').k(38,{footR:[-4,70,62],root:{pitch:-12,z:14},_n:'follow-through'},'out')
+   .k(54,{footR:[-10,5,30],root:{z:22,pitch:0,roll:0},armL:{abd:8,flex:0},armR:{abd:8,flex:0}}).k(70,{footL:[10,5,30],root:{z:30}});
+},{view:'side',ball:{kick:'R',contact:30,start:[-6,11,32]}});
+T('E49','E','Wave','Raise the right hand and wave side to side.',['shoulderR','elbowR'],96,m=>{
+  m.k(0).k(14,{armR:{flex:10,abd:148,rot:0,elbow:62},head:{tilt:-6},_n:'hand up'},'out');
+  for(let i=0;i<5;i++) m.k(20+i*12,{armR:{rot:i%2?24:-24},_b:1,_n:'wave'});
+  m.k(90,{armR:{flex:0,abd:8,rot:0,elbow:10},head:{tilt:0}});
+},{view:'front'});
+T('E50','E','Point and look','Look and point to the front-right, then the front-left.',['shoulderR','neckRot','trunkRot'],100,m=>{
+  m.k(0).k(18,{head:{turn:-34},spine:{twist:-14},armR:{flex:88,abd:0,horiz:34,elbow:2},_n:'point right'},'out').k(32,{_b:1}).k(46,{armR:{flex:0,abd:8,horiz:0,elbow:10},head:{turn:0},spine:{twist:0}})
+   .k(64,{head:{turn:34},spine:{twist:14},armL:{flex:88,abd:0,horiz:34,elbow:2},_n:'point left'},'out').k(78,{_b:1}).k(94,{armL:{flex:0,abd:8,horiz:0,elbow:10},head:{turn:0},spine:{twist:0}});
+},{view:'tq'});
+T('E51','E','Step up','Step onto a knee-high box, stand tall on top, step back down.',['hipL','kneeL'],120,m=>{
+  m.k(0).k(18,{footL:[10,36,34],root:{x:-3},_n:'left foot up'}).k(40,{root:{y:118,z:30,x:2,pitch:6},footR:[-10,40,22],_b:1,_n:'drive'}).k(50,{root:{y:124,z:34,x:0,pitch:0},footR:[-10,36,34],_n:'tall on top'})
+   .k(64,{_b:1}).k(80,{footR:[-10,5,0],root:{y:94,z:8,pitch:4},_n:'right foot down'}).k(98,{footL:[10,5,0],root:{y:93,z:0,pitch:0},_n:'left foot down'});
+},{view:'side',props:()=>[{t:'box',c:[0,15.5,36],s:[50,31,40]}]});
+T('E52','E','Kneel and rise','Lower to one knee, then both, then rise back up.',['kneeL','kneeR','hipL'],120,m=>{
+  m.k(0).k(10,{footL:[10,5,24],_b:1}).k(28,{root:{y:56,z:-2},footR:[-10,7,-40],_n:'half kneel'}).k(42,{_b:1}).k(58,{footL:[10,7,-40],root:{y:58,z:0},_n:'tall kneel'}).k(70,{_b:1})
+   .k(86,{footL:[10,5,24],root:{y:56,z:-2},_n:'half kneel'}).k(106,{footR:[-10,5,0],footL:[10,5,0],root:{y:93,z:0},_n:'stand'});
+},{view:'side'});
+T('E53','E','Reach a high shelf','Rise onto the toes and reach the right hand to a high shelf.',['shoulderR','ankle'],100,m=>{
+  m.k(0).k(14,{head:{nod:-28},_b:1,_n:'look up'}).k(34,{root:{y:102},footL:[10,14,0],footR:[-10,14,0],spine:{side:-6},handR:[-14,198,14],poleR:[-1,-.5,0],_n:'reach'},'out').k(48,{_b:1}).k(70,{root:{y:93},footL:[10,5,0],footR:[-10,5,0],spine:{side:0},handR:null,head:{nod:0}});
+},{view:'tq',props:()=>[{t:'box',c:[-20,196,24],s:[60,3,22]}]});
+T('E54','E','Push a heavy door','Staggered stance, lean in with the arms bent, drive with the back leg.',['kneeR','elbowL','trunk'],110,m=>{
+  m.k(0,{footL:[10,5,24],footR:[-10,5,-22]}).k(18,{root:{z:12,pitch:28,y:88},handL:[20,130,58],handR:[-20,130,58],poleL:[1,-.6,-.4],poleR:[-1,-.6,-.4],_n:'hands to door'}).k(36,{root:{z:17,pitch:34,y:85},_n:'drive'},'out').k(48,{_b:1})
+   .k(62,{root:{z:13,pitch:30,y:88},_b:1}).k(78,{root:{z:18,pitch:36,y:84},_n:'drive'},'out').k(92,{_b:1});
+},{view:'side',start:{footL:[10,5,24],footR:[-10,5,-22]},props:(f)=>[{t:'box',c:[0,100,62+(f>30?Math.min(6,(f-30)*.2):0)],s:[90,200,4]}]});
+
+/* ================= precompute ================= */
+function bake(m){
+  if(m.F) return m;
+  m.F=[];
+  for(let f=0;f<m.len;f++){ const p=m.fn? m.fn(f) : poseAt(m,f); m.F.push(solve(p)); }
+  // ball physics
+  if(m.ball){ const b=m.ball; m.ballPos=[];
+    if(b.hand){ const r=b.release, w='wrist'+b.hand; const v=mul(sub(m.F[r].J[w],m.F[r-1].J[w]),1.6); let p=m.F[r].J[w].slice(), vel=v.slice();
+      for(let f=0;f<m.len;f++){ if(f<=r){ m.ballPos.push(add(m.F[f].J[w],[0,0,0])); } else { vel=add(vel,[0,-0.9,0]); p=add(p,vel); if(p[1]<6){p[1]=6;vel=[vel[0]*.6,-vel[1]*.4,vel[2]*.6];} m.ballPos.push(p.slice()); } } }
+    else { let p=b.start.slice(), vel=[0,0,0];
+      for(let f=0;f<m.len;f++){ if(f===b.contact){ vel=[0,7,24]; } if(f>b.contact){ vel=add(vel,[0,-0.9,0]); p=add(p,vel); if(p[1]<11){p[1]=11;vel=[vel[0]*.7,-vel[1]*.45,vel[2]*.7];} } m.ballPos.push(p.slice()); } } }
+  // bbox for framing
+  let ymin=1e9,ymax=-1e9; for(const s of m.F) for(const k in s.J){ ymin=Math.min(ymin,s.J[k][1]); ymax=Math.max(ymax,s.J[k][1]); }
+  m.ybox=[Math.min(0,ymin),ymax];
+  m.metrics=measure(m.F.map(s=>s.J),true);
+  m.gate=gate(m);
+  return m;
+}
+
+/* ================= measurement ================= */
+const METRICS={
+  neck:{label:'Neck',norm:50,f:(J)=>angDeg(sub(mid(J.earL,J.earR),mid(J.shoulderL,J.shoulderR)),sub(mid(J.shoulderL,J.shoulderR),mid(J.hipL,J.hipR)))},
+  neckRot:{label:'Neck rotation',norm:80,d3:1,f:(J)=>{ const a=sub(J.earL,J.earR), b=sub(J.shoulderL,J.shoulderR); a[1]=0;b[1]=0; return angDeg(a,b);} },
+  shoulderL:{label:'Shoulder L',norm:180,f:J=>angDeg(sub(J.hipL,J.shoulderL),sub(J.elbowL,J.shoulderL))},
+  shoulderR:{label:'Shoulder R',norm:180,f:J=>angDeg(sub(J.hipR,J.shoulderR),sub(J.elbowR,J.shoulderR))},
+  shoulderRot:{label:'Shoulder rotation',norm:180,d3:1,f:J=>{ const u=norm(sub(J.elbowL,J.shoulderL)), fa=sub(J.wristL,J.elbowL), t=sub(J.hipL,J.shoulderL); const p1=sub(fa,mul(u,dot(fa,u))), p2=sub(t,mul(u,dot(t,u))); return angDeg(p1,p2);} },
+  elbowL:{label:'Elbow L',norm:150,f:J=>180-angDeg(sub(J.shoulderL,J.elbowL),sub(J.wristL,J.elbowL))},
+  elbowR:{label:'Elbow R',norm:150,f:J=>180-angDeg(sub(J.shoulderR,J.elbowR),sub(J.wristR,J.elbowR))},
+  trunk:{label:'Trunk inclination',norm:90,f:J=>angDeg(sub(mid(J.shoulderL,J.shoulderR),mid(J.hipL,J.hipR)),[0,1,0])},
+  trunkRot:{label:'Trunk rotation',norm:45,d3:1,f:J=>{ const a=sub(J.shoulderL,J.shoulderR), b=sub(J.hipL,J.hipR); a[1]=0;b[1]=0; return angDeg(a,b);} },
+  hipL:{label:'Hip L',norm:120,f:J=>180-angDeg(sub(J.shoulderL,J.hipL),sub(J.kneeL,J.hipL))},
+  hipR:{label:'Hip R',norm:120,f:J=>180-angDeg(sub(J.shoulderR,J.hipR),sub(J.kneeR,J.hipR))},
+  kneeL:{label:'Knee L',norm:135,f:J=>180-angDeg(sub(J.hipL,J.kneeL),sub(J.ankleL,J.kneeL))},
+  kneeR:{label:'Knee R',norm:135,f:J=>180-angDeg(sub(J.hipR,J.kneeR),sub(J.ankleR,J.kneeR))},
+  spread:{label:'Leg spread',norm:90,f:J=>angDeg(sub(J.kneeL,J.hipL),sub(J.kneeR,J.hipR))},
+  ankle:{label:'Heel rise (cm)',norm:10,unit:'cm',f:J=>Math.max(0,Math.min(J.ankleL[1],J.ankleR[1])-5)}
+};
+const ALLM=['neck','neckRot','shoulderL','shoulderR','shoulderRot','elbowL','elbowR','trunk','trunkRot','hipL','hipR','kneeL','kneeR','spread','ankle'];
+function measure(Js,is3d){
+  const out={};
+  for(const k of ALLM){ const M_=METRICS[k]; if(!is3d&&M_.d3){ out[k]=null; continue; }
+    const s=Js.map(J=>M_.f(J)); out[k]={series:s,min:Math.min(...s),max:Math.max(...s)}; }
+  return out;
+}
+function gate(m){
+  const F=m.F; let leg=0,arm=0,pinned=0,zig=0,holds=0,peak=0; const KF=new Set(); for(const k of m.keys) for(let d=-1;d<=1;d++) KF.add(k.f+d);
+  for(let f=0;f<F.length;f++){ leg=Math.max(leg,F[f].legSlip); arm=Math.max(arm,F[f].armSlip);
+    if(f>0){ for(const S of ['L','R']){ const a=F[f].J['ankle'+S], b=F[f-1].J['ankle'+S]; if(a[1]<8 && len(sub(a,b))<.15) { pinned++; break; } }
+      const sp=len(sub(F[f].J.pelvis,F[f-1].J.pelvis)); if(sp<.15) holds++; peak=Math.max(peak,sp); }
+    if(f>1&&!KF.has(f-1)){ const a=sub(F[f-1].J.nose,F[f-2].J.nose), b=sub(F[f].J.nose,F[f-1].J.nose); if(len(a)>1&&len(b)>1&&dot(a,b)/(len(a)*len(b))<-.3) zig++; } }
+  return {leg,arm,pinned,zig,holds,peak,pass:{reach:leg<1.5&&arm<2,arcs:zig<=4}};
+}
+
+
+/* ================= WYGWYL CUT-OUT RIGS + BOLAS 54 ENGINE ================= */
+const $ = id => document.getElementById(id);
+const C = {
+  paper: '#080b11', panel: '#111824', ink: '#e8eef7', ink2: '#94a3b8',
+  rule: '#1e293b', blue: '#3a86ff', red: '#ef4444', green: '#22c55e',
+  amber: '#f59e0b', cyan: '#00d2ff', yellow: '#ffbe0b', magenta: '#ff007f',
+  sil: '#e8eef7', silg: '#05070b', mono: '"JetBrains Mono", ui-monospace, monospace'
+};
+const VIEWS = { front: [0, 6], side: [-90, 4], tq: [-35, 12], top3: [-28, 34] };
+
+function camera(W, H, yaw, elev, center, scale) {
+  const cy = Math.cos(yaw * DEG), sy = Math.sin(yaw * DEG), ce = Math.cos(elev * DEG), se = Math.sin(elev * DEG);
+  return p => {
+    const x = p[0] - center[0], y = p[1] - center[1], z = p[2] - center[2];
+    const x1 = x * cy - z * sy, z1 = x * sy + z * cy;
+    const y2 = y * ce - z1 * se, z2 = y * se + z1 * ce;
+    return [W / 2 + x1 * scale, H * 0.54 - y2 * scale, z2];
+  };
+}
+
+function drawGrid(ctx, P, center, col, step = 25, R = 175) {
+  const cx = Math.round(center[0] / step) * step, cz = Math.round(center[2] / step) * step;
+  ctx.strokeStyle = col; ctx.lineWidth = 1;
+  for (let i = -R; i <= R; i += step) {
+    const a = P([cx + i, 0, cz - R]), b = P([cx + i, 0, cz + R]), c = P([cx - R, 0, cz + i]), d = P([cx + R, 0, cz + i]);
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.moveTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.stroke();
+  }
+}
+
+function drawProps(ctx, prims, P, sc, col) {
+  for (const q of prims) {
+    ctx.strokeStyle = col; ctx.lineWidth = (q.w || 1.4) * Math.max(1, sc * 1.2);
+    if (q.t === 'seg') {
+      const a = P(q.a), b = P(q.b); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    } else if (q.t === 'box') {
+      const [cx, cy, cz] = q.c, [w, h, d] = q.s.map(v => v / 2); const V = [];
+      for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) V.push(P([cx + sx * w, cy + sy * h, cz + sz * d]));
+      const E = [[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]];
+      ctx.lineWidth = 1.3; ctx.beginPath(); for (const [i, j] of E) { ctx.moveTo(V[i][0], V[i][1]); ctx.lineTo(V[j][0], V[j][1]); } ctx.stroke();
+    } else if (q.t === 'ball') {
+      const c = P(q.c); ctx.beginPath(); ctx.arc(c[0], c[1], q.r * sc, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,210,255,0.22)'; ctx.fill(); ctx.lineWidth = 1.6; ctx.stroke();
+    } else if (q.t === 'disc') {
+      const c = P(q.c), o = P(add(q.c, [0, q.r, 0])), s = P(add(q.c, mul(norm(cross(q.ax, [0, 1, 0])), q.r)));
+      const ry = Math.hypot(o[0] - c[0], o[1] - c[1]), rx = Math.max(2, Math.hypot(s[0] - c[0], s[1] - c[1]));
+      ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(c[0], c[1], rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+}
+
+function drawBola(ctx, J, P, sc, o = {}) {
+  const pt = k => J[k] ? P(J[k]) : null;
+  const ink = o.ink || C.cyan, sil = o.sil, ghost = o.ghost;
+  const bodyDepth = P(J.chest || J.pelvis)[2];
+  const sideDepth = S => (P(J['shoulder' + S])[2] + P(J['hip' + S])[2]) / 2;
+  const items = [];
+  const limb = (ks, w, side) => {
+    const ps = ks.map(pt).filter(Boolean); if (ps.length < 2) return;
+    const d = ps.reduce((s, p) => s + p[2], 0) / ps.length;
+    items.push({ d, draw: () => {
+      const far = !sil && !ghost && side && sideDepth(side) < sideDepth(side === 'L' ? 'R' : 'L') - 3;
+      ctx.globalAlpha = ghost ? 0.45 : far ? 0.45 : (o.alpha || 1);
+      ctx.strokeStyle = ghost || (sil ? C.sil : ink);
+      ctx.lineWidth = sil ? w * 3.6 * sc : ghost ? 1.2 : w;
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ps.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke();
+      if (!ghost) {
+        const e = ps[ps.length - 1];
+        if (o.ends && (ks.includes('wristL') || ks.includes('wristR'))) {
+          ctx.fillStyle = sil ? C.sil : ink; ctx.beginPath(); ctx.arc(e[0], e[1], (sil ? 6 : 3.2) * sc, 0, Math.PI * 2); ctx.fill();
+        }
+        if (!sil && ps.length > 2) {
+          const m_ = ps[1]; ctx.fillStyle = C.yellow; ctx.beginPath(); ctx.arc(m_[0], m_[1], 2.4, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+    }});
+  };
+  limb(['neck', 'head'], 1.8, 0);
+  limb(['shoulderL', 'elbowL', 'wristL'], 1.9, 'L');
+  limb(['shoulderR', 'elbowR', 'wristR'], 1.9, 'R');
+  limb(['hipL', 'kneeL', 'ankleL', 'toeL'], 2.0, 'L');
+  limb(['hipR', 'kneeR', 'ankleR', 'toeR'], 2.0, 'R');
+  items.push({ d: bodyDepth, draw: () => {
+    const col = ghost || (sil ? C.sil : ink); ctx.strokeStyle = col; ctx.globalAlpha = ghost ? 0.45 : (o.alpha || 1);
+    const p = pt('pelvis'), m_ = pt('spineMid'), n = pt('neck'), hl = pt('hipL'), hr = pt('hipR'), sl = pt('shoulderL'), sr = pt('shoulderR');
+    ctx.lineCap = 'round'; ctx.lineWidth = sil ? 22 * sc : ghost ? 1.1 : 2;
+    ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.quadraticCurveTo(m_[0], m_[1], n[0], n[1]); ctx.stroke();
+    ctx.lineWidth = sil ? 9 * sc : ghost ? 1 : 1.3;
+    ctx.beginPath(); ctx.moveTo(hl[0], hl[1]); ctx.lineTo(hr[0], hr[1]); ctx.moveTo(sl[0], sl[1]); ctx.lineTo(sr[0], sr[1]); ctx.stroke();
+    if (!ghost) {
+      const ell = (c, a, b, rx, ry) => {
+        const ang = Math.atan2(b[1] - a[1], b[0] - a[0]); const span = Math.hypot(b[0] - a[0], b[1] - a[1]) / 2;
+        ctx.beginPath(); ctx.ellipse(c[0], c[1], Math.max(span * 0.6, rx * sc * 0.55), ry * sc, ang, 0, Math.PI * 2);
+        ctx.fillStyle = sil ? C.sil : 'rgba(11,15,23,0.78)'; ctx.fill();
+        ctx.lineWidth = sil ? 0 : 1.5; if (!sil) ctx.stroke();
+      };
+      ell(p, hl, hr, 13, 6.5);
+      const ch = pt('chest'); if (ch) ell(ch, sl, sr, 18, 10);
+      const h = pt('head');
+      if (h) {
+        ctx.beginPath(); ctx.arc(h[0], h[1], L.headR * sc * (sil ? 1.12 : 1), 0, Math.PI * 2);
+        ctx.fillStyle = sil ? C.sil : 'rgba(11,15,23,0.82)'; ctx.fill();
+        if (!sil) {
+          ctx.lineWidth = 1.6; ctx.stroke();
+          const nz = pt('nose'), el = pt('eyeL'), er = pt('eyeR');
+          if (el && er) { ctx.beginPath(); ctx.moveTo(el[0], el[1]); ctx.lineTo(er[0], er[1]); ctx.stroke(); }
+          if (nz) { const dx = nz[0] - h[0], dy = nz[1] - h[1], dl = Math.hypot(dx, dy); if (dl > 1) { ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(nz[0], nz[1]); ctx.lineTo(nz[0] + dx / dl * 5 * sc, nz[1] + dy / dl * 5 * sc); ctx.stroke(); } }
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+  }});
+  items.sort((a, b) => a.d - b.d).forEach(i => i.draw());
+}
+
+/* ================= VITRUVIAN OVERLAY DRAWER ================= */
+function drawVitruvianOverlay(ctx, P, sc, centerPelvis, alpha = 0.85) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const x0 = centerPelvis[0], z0 = centerPelvis[2];
+  const H_cm = 170;
+  // Square: [-85..+85, 0..170]
+  const sqBL = P([x0 - 85, 0, z0]), sqBR = P([x0 + 85, 0, z0]), sqTL = P([x0 - 85, H_cm, z0]), sqTR = P([x0 + 85, H_cm, z0]);
+  ctx.strokeStyle = '#ffbe0b';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(sqBL[0], sqBL[1]); ctx.lineTo(sqBR[0], sqBR[1]); ctx.lineTo(sqTR[0], sqTR[1]); ctx.lineTo(sqTL[0], sqTL[1]); ctx.closePath();
+  ctx.stroke();
+
+  // Horizontal anatomical proportion rules
+  const marks = [
+    [0.25, '0.25H KNEE (42.5cm)'],
+    [0.50, '0.50H GROIN / ROOT (85cm)'],
+    [0.618, '0.618H NAVEL (CIRCLE CENTER 105cm)'],
+    [0.75, '0.75H CHEST / ARMPIT (127.5cm)'],
+    [0.875, '0.875H CHIN (148.7cm)'],
+    [1.00, '1.00H CROWN = WINGSPAN (170cm)']
+  ];
+  ctx.font = `600 9.5px ${C.mono}`;
+  for (const [ratio, label] of marks) {
+    const y = ratio * H_cm;
+    const a = P([x0 - 85, y, z0]), b = P([x0 + 85, y, z0]);
+    ctx.strokeStyle = ratio === 0.50 || ratio === 0.618 ? 'rgba(0,210,255,0.55)' : 'rgba(255,190,11,0.28)';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = ratio === 0.618 ? '#00d2ff' : '#ffbe0b';
+    ctx.textAlign = 'left';
+    ctx.fillText(label, a[0] + 5, a[1] - 3);
+  }
+
+  // Vitruvian Circle centered at Navel (y = 105 cm, R = 105 cm)
+  const nav = P([x0, 105, z0]), navTop = P([x0, 210, z0]), navSide = P([x0 + 105, 105, z0]);
+  const rx = Math.hypot(navSide[0] - nav[0], navSide[1] - nav[1]);
+  const ry = Math.hypot(navTop[0] - nav[0], navTop[1] - nav[1]);
+  ctx.strokeStyle = '#00d2ff';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.ellipse(nav[0], nav[1], Math.max(4, rx), Math.max(4, ry), 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Navel crosshair
+  ctx.fillStyle = '#00d2ff';
+  ctx.beginPath(); ctx.arc(nav[0], nav[1], 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+/* ================= WYGWYL CUT-OUT PIECE RENDERER (fit_bone + 4 Invariants) ================= */
+let CATALOG = null;
+let activeRigIdx = 0;
+let activeStage = 's5';
+const inv = { twoPin: true, intrinsicRot: true, vitruvianScale: true, cuffTuckZ: true };
+const imgCache = new Map();
+
+function getImg(relPath) {
+  if (!relPath) return null;
+  const inViewer = location.pathname.includes('/viewer/');
+  const resolved = (inViewer && !relPath.startsWith('../') && !relPath.startsWith('http')) ? ('../' + relPath) : relPath;
+  if (imgCache.has(resolved)) return imgCache.get(resolved);
+  const im = new Image();
+  im.crossOrigin = 'anonymous';
+  im.src = resolved;
+  im.onload = () => { requestRedrawAll(); };
+  imgCache.set(relPath, im);
+  return im;
+}
+
+// Mixamo marker overrides in normalized character space (can be dragged in Stage 03!)
+const mixamoMarkers = {
+  chin: [0.50, 0.165],
+  shoulderL: [0.39, 0.22],
+  shoulderR: [0.61, 0.22],
+  elbowL: [0.27, 0.36],
+  elbowR: [0.73, 0.36],
+  wristL: [0.18, 0.48],
+  wristR: [0.82, 0.48],
+  groin: [0.50, 0.50],
+  kneeL: [0.43, 0.72],
+  kneeR: [0.57, 0.72],
+  ankleL: [0.43, 0.91],
+  ankleR: [0.57, 0.91],
+  toeL: [0.41, 0.96],
+  toeR: [0.59, 0.96]
+};
+
+function currentRig() {
+  if (!CATALOG || !CATALOG.rigs.length) return null;
+  return CATALOG.rigs[activeRigIdx] || CATALOG.rigs[0];
+}
+
+function selectViewVariant(slotObj, camYawDeg, rig) {
+  if (!slotObj) return null;
+  const vv = slotObj.view_variants || {};
+  // Normalize yaw into [-180, 180]
+  let y = ((camYawDeg % 360) + 540) % 360 - 180;
+  if (rig && rig.strict_view_rule === 'back_or_3q_back_only') {
+    return vv.back || vv.threequarter || slotObj.file;
+  }
+  const absY = Math.abs(y);
+  if (absY > 135) return vv.back || slotObj.file;
+  if (absY > 65 && absY <= 135) return vv.profile || vv.threequarter || slotObj.file;
+  if (absY > 25 && absY <= 65) return vv.threequarter || slotObj.file;
+  return vv.front || slotObj.file;
+}
+
+// Draw a single WYGWYL cut-out piece hung between 2D projected joint_A and joint_B
+function drawPieceFitBone(ctx, slotKey, slotObj, ptA, ptB, sc, camYaw, rig, opts = {}) {
+  if (!slotObj || !ptA || !ptB) return;
+  const file = selectViewVariant(slotObj, camYaw, rig);
+  const im = getImg(file);
+  if (!im || !im.complete || !im.naturalWidth) return;
+
+  const W = im.naturalWidth, H = im.naturalHeight;
+  // Invariant 1: Two-Pin Connection Site (Pivot A -> Socket B inside cuff) vs Naive Box-Center / Grommet Tip
+  let pA = slotObj.pivot_A ? slotObj.pivot_A.slice() : [0.5, 0.15];
+  let sB = slotObj.socket_B ? slotObj.socket_B.slice() : [0.5, 0.82];
+  if (!inv.twoPin) {
+    // Broken grommet-tip / box-edge pins
+    if (slotKey.startsWith('farm') || slotKey.startsWith('shin')) sB = [0.5, 0.96];
+    if (slotKey.startsWith('hand') || slotKey.startsWith('foot')) pA = [0.5, 0.04];
+  }
+
+  const ax = pA[0] * W, ay = pA[1] * H;
+  const bx = sB[0] * W, by = sB[1] * H;
+  const cardDx = bx - ax, cardDy = by - ay;
+  const cardSpanPx = Math.max(12, Math.hypot(cardDx, cardDy));
+
+  // Target screen bone vector
+  const scrDx = ptB[0] - ptA[0], scrDy = ptB[1] - ptA[1];
+  const scrSpanPx = Math.max(2, Math.hypot(scrDx, scrDy));
+
+  // Invariant 2: Intrinsic Card Axis vs Naive Vertical assumption
+  const thetaTarget = Math.atan2(scrDy, scrDx);
+  let thetaCard = Math.atan2(cardDy, cardDx);
+  let extraRot = (slotObj.rot_offset_deg || 0) * DEG;
+  if (!inv.intrinsicRot) {
+    // Naive vertical assumption: ignores horizontal 74x43 card axis!
+    thetaCard = Math.PI / 2;
+    extraRot = 0;
+  }
+
+  // Invariant 3: Vitruvian Bone-Span Scale vs Raw Un-Normalized Card Scale
+  let scale = scrSpanPx / cardSpanPx;
+  if (!inv.vitruvianScale) {
+    // Broken raw card scale inflation (+34% to +84% mismatch)
+    const brokenMult = slotKey === 'head' ? 1.55 : slotKey.startsWith('farm') ? 1.42 : slotKey.startsWith('foot') ? 1.48 : slotKey.startsWith('hand') ? 1.38 : 1.18;
+    scale *= brokenMult;
+  }
+
+  ctx.save();
+  if (opts.alpha != null) ctx.globalAlpha = opts.alpha;
+  ctx.translate(ptA[0], ptA[1]);
+  ctx.rotate(thetaTarget - thetaCard + extraRot);
+  if (opts.flipX) ctx.scale(1, -1);
+  ctx.scale(scale, scale);
+
+  // Invariant 4: Cuff-Clip Ratio (trims protruding bottom cardboard grommet tab on forearms & shins)
+  const clipRatio = (inv.cuffTuckZ && slotObj.cuff_clip_ratio && slotObj.cuff_clip_ratio < 0.99) ? slotObj.cuff_clip_ratio : 1.0;
+  if (clipRatio < 0.999) {
+    ctx.beginPath();
+    ctx.rect(-ax, -ay, W, H * clipRatio);
+    ctx.clip();
+  }
+
+  ctx.drawImage(im, -ax, -ay, W, H);
+
+  if (opts.showPins) {
+    ctx.restore();
+    ctx.save();
+    // Draw Pivot A (Cyan) and Socket B (Amber)
+    ctx.strokeStyle = '#00d2ff'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(ptA[0], ptA[1], 4.2, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(ptB[0], ptB[1], 3.6, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Render the full WYGWYL character rig onto the projected 3D Bolas joints J
+function drawWygwylRigOnBolas(ctx, J, P, sc, camYaw, rig, opts = {}) {
+  if (!rig || !rig.slots) return;
+  const S = rig.slots;
+  const pt = k => J[k] ? P(J[k]) : null;
+
+  const pPelvis = pt('pelvis'), pNeck = pt('neck'), pHeadTop = pt('headTop'), pHead = pt('head');
+  const pShL = pt('shoulderL'), pElL = pt('elbowL'), pWrL = pt('wristL');
+  const pShR = pt('shoulderR'), pElR = pt('elbowR'), pWrR = pt('wristR');
+  const pHipL = pt('hipL'), pKnL = pt('kneeL'), pAnL = pt('ankleL'), pToeL = pt('toeL');
+  const pHipR = pt('hipR'), pKnR = pt('kneeR'), pAnR = pt('ankleR'), pToeR = pt('toeR');
+
+  // Synthesize distal hand tips along forearm direction
+  const handTip = (el, wr) => {
+    if (!el || !wr) return wr;
+    const dx = wr[0] - el[0], dy = wr[1] - el[1], l = Math.hypot(dx, dy) || 1;
+    const hLen = 15 * sc;
+    return [wr[0] + (dx / l) * hLen, wr[1] + (dy / l) * hLen, wr[2]];
+  };
+  const pHandTipL = handTip(pElL, pWrL);
+  const pHandTipR = handTip(pElR, pWrR);
+
+  // Determine Near vs Far side from 3D depth of shoulder + hip
+  const depthL = ((pShL ? pShL[2] : 0) + (pHipL ? pHipL[2] : 0)) * 0.5;
+  const depthR = ((pShR ? pShR[2] : 0) + (pHipR ? pHipR[2] : 0)) * 0.5;
+  const leftIsFar = depthL < depthR;
+
+  const drawSide = (side, isFar) => {
+    const sh = side === 'L' ? pShL : pShR;
+    const el = side === 'L' ? pElL : pElR;
+    const wr = side === 'L' ? pWrL : pWrR;
+    const hTip = side === 'L' ? pHandTipL : pHandTipR;
+    const hip = side === 'L' ? pHipL : pHipR;
+    const kn = side === 'L' ? pKnL : pKnR;
+    const an = side === 'L' ? pAnL : pAnR;
+    const toe = side === 'L' ? pToeL : pToeR;
+    const alpha = isFar ? 0.88 : 1.0;
+
+    // Leg stack: Invariant 4 (Cuff-Tuck Z-Order):
+    // When cuffTuckZ is ON: Thigh -> Foot (tucked) -> Shin (cuff OVER boot shaft!)
+    // When cuffTuckZ is OFF (Broken): Thigh -> Shin -> Foot (boot pull-tab sticks over pant cuff!)
+    drawPieceFitBone(ctx, 'thigh_' + side, S['thigh_' + side], hip, kn, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+    if (inv.cuffTuckZ) {
+      drawPieceFitBone(ctx, 'foot_' + side, S['foot_' + side], an, toe, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+      drawPieceFitBone(ctx, 'shin_' + side, S['shin_' + side], kn, an, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+    } else {
+      drawPieceFitBone(ctx, 'shin_' + side, S['shin_' + side], kn, an, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+      drawPieceFitBone(ctx, 'foot_' + side, S['foot_' + side], an, toe, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+    }
+
+    // Arm stack: Invariant 4 (Cuff-Tuck Z-Order):
+    // When cuffTuckZ is ON: UpperArm -> Hand (tucked) -> Forearm (cuff OVER wrist!)
+    // When cuffTuckZ is OFF (Broken): UpperArm -> Forearm -> Hand (brown tab covers sleeve cuff!)
+    drawPieceFitBone(ctx, 'uarm_' + side, S['uarm_' + side], sh, el, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+    if (inv.cuffTuckZ) {
+      drawPieceFitBone(ctx, 'hand_' + side, S['hand_' + side], wr, hTip, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+      drawPieceFitBone(ctx, 'farm_' + side, S['farm_' + side], el, wr, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+    } else {
+      drawPieceFitBone(ctx, 'farm_' + side, S['farm_' + side], el, wr, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+      drawPieceFitBone(ctx, 'hand_' + side, S['hand_' + side], wr, hTip, sc, camYaw, rig, { alpha, showPins: opts.showPins });
+    }
+  };
+
+  const farSide = leftIsFar ? 'L' : 'R';
+  const nearSide = leftIsFar ? 'R' : 'L';
+
+  // 1. Far Limbs
+  drawSide(farSide, true);
+
+  // 2. Pelvis & Torso & Head
+  const pHipMidDown = pPelvis ? [pPelvis[0], pPelvis[1] + 16 * sc, pPelvis[2]] : null;
+  if (S.pelvis && pPelvis && pHipMidDown) {
+    drawPieceFitBone(ctx, 'pelvis', S.pelvis, pPelvis, pHipMidDown, sc, camYaw, rig, { showPins: opts.showPins });
+  }
+  // Head & Torso (Neck tuck: when cuffTuckZ is ON, Head neck tucks behind Torso collar, or Head draws cleanly)
+  if (S.torso && pNeck && pPelvis) {
+    drawPieceFitBone(ctx, 'torso', S.torso, pNeck, pPelvis, sc, camYaw, rig, { showPins: opts.showPins });
+  }
+  if (S.head && pNeck && pHeadTop) {
+    drawPieceFitBone(ctx, 'head', S.head, pNeck, pHeadTop, sc, camYaw, rig, { showPins: opts.showPins });
+  }
+
+  // 3. Near Limbs
+  drawSide(nearSide, false);
+}
+
+/* ================= STAGE 05: BOLAS 54 RANGE-TEST UI & LOOP ================= */
+const st = {
+  i: 0, f: 0,
+  playing: !matchMedia('(prefers-reduced-motion: reduce)').matches,
+  view: 'auto',
+  renderMode: 'both',
+  t: { arcs: true, onion: false, pins: true, vit: false, sil: false, battery: false },
+  orbit: 0
+};
+
+const stage = $('stage'), sctx = stage.getContext('2d');
+let SW = 0, SH = 0;
+
+function sizeStage() {
+  const d = Math.min(2, devicePixelRatio || 1), r = stage.getBoundingClientRect();
+  if (!r.width) return;
+  SW = r.width; SH = r.width * 10 / 16;
+  stage.width = Math.round(SW * d); stage.height = Math.round(SH * d);
+  sctx.setTransform(d, 0, 0, d, 0, 0);
+  drawStage();
+}
+
+function viewFor(m) {
+  if (st.view === 'orbit') return [-35 + st.orbit, 12];
+  const v = st.view === 'auto' ? m.view : st.view;
+  return VIEWS[v] || VIEWS.tq;
+}
+
+let camC = null;
+function frameFor(m, W, H, f, smooth) {
+  const s = m.F[f]; const root = s.J.pelvis; const yr = m.ybox;
+  const hgt = Math.max(165, yr[1] - yr[0] + 34);
+  const target = [root[0], (yr[0] + yr[1]) / 2, root[2]];
+  if (smooth && camC) camC = lerp3(camC, target, 0.25); else camC = target.slice();
+  return { center: camC, scale: H * 0.82 / hgt };
+}
+
+function propsFor(m, f, J) {
+  const out = m.props ? m.props(f, J, m) : [];
+  if (m.ballPos) out.push({ t: 'ball', c: m.ballPos[f], r: m.ball.kick ? 11 : 4 });
+  return out;
+}
+function keyAt(m, f) { let k = null; for (const x of m.keys) { if (x.f <= f) k = x; else break; } return k; }
+function labelKeys(m) { let a = 0, b = 0; for (const k of m.keys) { k.id = k.type === 'brk' ? 'B' + String(++b).padStart(2, '0') : 'K' + String(++a).padStart(2, '0'); } }
+
+function drawViewport(ctx, vpX, vpY, vpW, vpH, m, f, yaw, el, labelOverride) {
+  const s = m.F[f], sil = st.t.sil, rig = currentRig();
+  const fr = frameFor(m, vpW, vpH, f, st.playing);
+  const PRaw = camera(vpW, vpH, yaw, el, fr.center, fr.scale);
+  const P = p => { const q = PRaw(p); return [q[0] + vpX, q[1] + vpY, q[2]]; };
+  const sc = fr.scale;
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(vpX, vpY, vpW, vpH); ctx.clip();
+
+  if (!sil) drawGrid(ctx, P, fr.center, C.rule);
+  if (st.t.vit && !sil) drawVitruvianOverlay(ctx, P, sc, s.J.pelvis, 0.72);
+  const prims = propsFor(m, f, s.J);
+  drawProps(ctx, prims, P, sc, sil ? C.sil : C.ink2);
+
+  if (!sil && st.t.onion) {
+    if (f >= 3) drawBola(ctx, m.F[f - 3].J, P, sc, { ghost: C.blue });
+    if (f + 3 < m.len) drawBola(ctx, m.F[f + 3].J, P, sc, { ghost: C.green });
+  }
+  if (!sil && st.t.arcs) {
+    const lo = Math.max(0, f - 36), hi = Math.min(m.len - 1, f + 36);
+    for (const [k, col] of [['nose', C.red], ['wristR', C.cyan], ['pelvis', C.green], ['ankleL', C.amber]]) {
+      ctx.fillStyle = col;
+      for (let i = lo; i <= hi; i++) {
+        const q = P(m.F[i].J[k]);
+        ctx.globalAlpha = 0.15 + 0.55 * (1 - Math.abs(i - f) / 38);
+        ctx.beginPath(); ctx.arc(q[0], q[1], i === f ? 2.6 : 1.3, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  const totalYaw = (s.yaw || 0) + yaw;
+  if (labelOverride === 'BOLAS SKELETON' || st.renderMode === 'bola' || sil) {
+    drawBola(ctx, s.J, P, sc, { sil, ends: true });
+  } else if (labelOverride === 'WYGWYL CUT-OUT' || st.renderMode === 'cutout') {
+    drawWygwylRigOnBolas(ctx, s.J, P, sc, totalYaw, rig, { showPins: st.t.pins });
+  } else {
+    // 'both': draw WYGWYL pieces + subtle Bolas skeleton & pins
+    drawWygwylRigOnBolas(ctx, s.J, P, sc, totalYaw, rig, { showPins: st.t.pins });
+    drawBola(ctx, s.J, P, sc, { alpha: 0.42, ends: true });
+  }
+
+  if (!sil && st.t.pins && f > 0) {
+    for (const S of ['L', 'R']) {
+      const a = s.J['ankle' + S], b = m.F[f - 1].J['ankle' + S];
+      if (a[1] < 8 && len(sub(a, b)) < 0.15) {
+        const q = P([a[0], 0, a[2]]);
+        ctx.fillStyle = C.red;
+        ctx.beginPath(); ctx.moveTo(q[0], q[1] - 2); ctx.lineTo(q[0] - 5, q[1] + 7); ctx.lineTo(q[0] + 5, q[1] + 7); ctx.closePath(); ctx.fill();
+      }
+    }
+  }
+
+  if (labelOverride) {
+    ctx.font = `700 10px ${C.mono}`;
+    ctx.fillStyle = C.cyan;
+    ctx.textAlign = 'left';
+    ctx.fillText(labelOverride, vpX + 10, vpY + 16);
+  }
+  ctx.restore();
+}
+
+function drawStage() {
+  if (!SW) return;
+  const m = bake(LIB[st.i]), f = st.f, s = m.F[f], ctx = sctx, sil = st.t.sil;
+  ctx.fillStyle = sil ? C.silg : C.paper;
+  ctx.fillRect(0, 0, SW, SH);
+
+  const [yaw, el] = viewFor(m);
+
+  if (st.renderMode === 'split') {
+    const hw = SW / 2;
+    drawViewport(ctx, 0, 0, hw, SH, m, f, yaw, el, 'BOLAS SKELETON');
+    drawViewport(ctx, hw, 0, hw, SH, m, f, yaw, el, 'WYGWYL CUT-OUT');
+    ctx.strokeStyle = C.rule; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(hw, 0); ctx.lineTo(hw, SH); ctx.stroke();
+  } else if (st.renderMode === 'quad') {
+    const hw = SW / 2, hh = SH / 2;
+    drawViewport(ctx, 0, 0, hw, hh, m, f, 0, 6, 'FRONT (0 DEG)');
+    drawViewport(ctx, hw, 0, hw, hh, m, f, -90, 4, 'SIDE PROFILE (-90 DEG)');
+    drawViewport(ctx, 0, hh, hw, hh, m, f, -35, 12, '3/4 VIEW (-35 DEG)');
+    drawViewport(ctx, hw, hh, hw, hh, m, f, -28, 38, 'TOP ELEVATION');
+    ctx.strokeStyle = C.rule; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(hw, 0); ctx.lineTo(hw, SH); ctx.moveTo(0, hh); ctx.lineTo(SW, hh); ctx.stroke();
+  } else {
+    drawViewport(ctx, 0, 0, SW, SH, m, f, yaw, el, null);
+  }
+
+  // Slate HUD
+  const k = keyAt(m, f);
+  const rig = currentRig();
+  ctx.font = `600 ${Math.max(9, Math.min(11.5, SW / 72))}px ${C.mono}`;
+  ctx.fillStyle = sil ? C.sil : C.ink;
+  ctx.textAlign = 'left';
+  if (SW >= 460 && st.renderMode !== 'split' && st.renderMode !== 'quad') {
+    ctx.fillText(`${m.id} · ${m.name.toUpperCase()}  [${rig ? rig.short_name.toUpperCase() : 'RIG'}]`, 12, 18);
+  }
+  ctx.textAlign = 'right';
+  ctx.fillStyle = C.cyan;
+  ctx.fillText(`F ${String(f).padStart(3, '0')}/${m.len - 1}  ${k ? k.id : ''}  VIEW ${(st.view === 'auto' ? m.view : st.view).toUpperCase()}`, SW - 12, 18);
+}
+
+function romRows(metrics, keysList, curF) {
+  return keysList.map(k => {
+    const M_ = METRICS[k], r = metrics[k];
+    if (!r) return `<li><span class="nm">${M_.label}</span><span class="bar"></span><span class="val">3D only</span></li>`;
+    const sc = v => clamp(v / (M_.norm * 1.15) * 100, 0, 100);
+    const cur = curF != null ? r.series[Math.min(curF, r.series.length - 1)] : null;
+    const u = M_.unit === 'cm' ? ' cm' : '°';
+    return `<li><span class="nm">${M_.label}</span><span class="bar" title="range ${r.min.toFixed(0)} to ${r.max.toFixed(0)}"><span class="rng" style="left:${sc(r.min)}%;width:${Math.max(0.8, sc(r.max) - sc(r.min))}%"></span><span class="norm" style="left:${sc(M_.norm)}%"></span>${cur != null ? `<span class="cur" style="left:${sc(cur)}%"></span>` : ''}</span><span class="val" style="text-align:right;color:var(--ink-2)">${r.max.toFixed(0)}${u} / ${M_.norm}${u}</span></li>`;
+  }).join('');
+}
+
+function renderCard() {
+  const m = bake(LIB[st.i]); labelKeys(m);
+  const g = m.gate, grp = GROUPS.find(x => x[0] === m.group);
+  const allInvSolved = inv.twoPin && inv.intrinsicRot && inv.vitruvianScale && inv.cuffTuckZ;
+  const row = (crit, val, ok) => `<li><div><div style="font-size:12.5px;color:var(--ink)">${crit}</div><div style="font-family:var(--mono);font-size:10.5px;color:var(--ink-2)">${val}</div></div><span class="pill ${ok === null ? 'na' : ok ? 'ok' : 'no'}">${ok === null ? 'INFO' : ok ? 'PASS' : 'FIX'}</span></li>`;
+  $('card').innerHTML = `
+    <div>
+      <p class="eyebrow">${m.id} · ${grp[1]}</p>
+      <h2>${m.name}</h2>
+      <p style="margin:4px 0 0;color:var(--ink-2);font-size:12.5px">${m.cue}</p>
+    </div>
+    <section>
+      <h3>Range Reached (Clinical Norm vs. Peak)</h3>
+      <ul class="rom-list" id="rom">${romRows(m.metrics, m.rom, st.f)}</ul>
+    </section>
+    <section>
+      <h3>Skeletal &amp; Cut-Out Registration Gate</h3>
+      <ul class="gate-list">
+        ${row('Every target reachable without stretching a bone', `max leg clamp ${g.leg.toFixed(2)} cm · max arm clamp ${g.arm.toFixed(2)} cm`, g.pass.reach)}
+        ${row('Cut-Out 4 Connection Invariants (Pins, 90° Axis, Scale, Cuff-Tuck)', allInvSolved ? 'Pivot A->B inside cuff · Vitruvian cm scale · Cuff-Over-Extremity Z' : 'INVARIANT DISABLED — inspect wrist/ankle/scale distortion on stage', allInvSolved)}
+        ${row('Nose arc free of accidental reversals', `${g.zig} sharp reversals while moving`, g.pass.arcs)}
+        ${row('Contacts and holds', `${g.pinned} frames planted foot · ${g.holds} pelvis holds · peak ${g.peak.toFixed(1)} cm/f`, null)}
+      </ul>
+    </section>
+    <section>
+      <h3>X-Sheet Keys &amp; Breakdowns</h3>
+      <div class="keys" id="keys">${m.keys.map(k => `<button type="button" class="${k.type === 'brk' ? 'brk' : ''}" data-f="${k.f}"><b>${k.id}</b> ${String(k.f).padStart(3, '0')} ${k.note || ''}</button>`).join('')}</div>
+    </section>`;
+  $('keys').querySelectorAll('button').forEach(b => b.onclick = () => { st.playing = false; syncPlay(); setF(+b.dataset.f); });
+  $('ticks').innerHTML = m.keys.map(k => `<i class="${k.type === 'brk' ? 'b' : 'k'}" style="left:${(k.f / (m.len - 1) * 100).toFixed(2)}%"></i>`).join('');
+  $('scrub').max = m.len - 1;
+  document.querySelectorAll('.tile').forEach(t => t.setAttribute('aria-current', String(+t.dataset.i === st.i)));
+}
+
+let lastKeyBtn = null;
+function setF(f) {
+  const m = LIB[st.i];
+  st.f = clamp(f, 0, m.len - 1);
+  $('scrub').value = st.f;
+  $('readout').innerHTML = `<b style="color:var(--ink)">${m.id}</b> F ${String(st.f).padStart(3, '0')}/${m.len - 1} · ${(st.f / 24).toFixed(2)}s`;
+  drawStage();
+  const rom = $('rom'); if (rom) rom.innerHTML = romRows(m.metrics, m.rom, st.f);
+  const k = keyAt(m, st.f);
+  const btn = k && $('keys')?.querySelector(`button[data-f="${k.f}"]`);
+  if (btn !== lastKeyBtn) { lastKeyBtn?.classList.remove('cur'); btn?.classList.add('cur'); lastKeyBtn = btn; }
+}
+
+function select(i) {
+  st.i = i; camC = null; lastKeyBtn = null;
+  renderCard(); setF(0);
+}
+function syncPlay() { $('play').textContent = st.playing ? 'Pause' : 'Play'; }
+$('play').onclick = () => { st.playing = !st.playing; syncPlay(); };
+$('back').onclick = () => { st.playing = false; syncPlay(); setF(st.f - 1); };
+$('fwd').onclick = () => { st.playing = false; syncPlay(); setF(st.f + 1); };
+$('scrub').oninput = () => { st.playing = false; syncPlay(); setF(+$('scrub').value); };
+
+document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => {
+  st.view = b.dataset.v;
+  document.querySelectorAll('[data-v]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  camC = null; drawStage();
+});
+document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {
+  st.renderMode = b.dataset.rm;
+  document.querySelectorAll('[data-rm]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  drawStage();
+});
+document.querySelectorAll('[data-t]').forEach(b => {
+  const k = b.dataset.t;
+  b.setAttribute('aria-pressed', String(st.t[k]));
+  b.onclick = () => {
+    st.t[k] = !st.t[k];
+    b.setAttribute('aria-pressed', String(st.t[k]));
+    if (k === 'battery' && st.t.battery) { st.playing = true; syncPlay(); }
+    drawStage();
+  };
+});
+
+/* Contact Sheet of all 54 tests */
+const tiles = []; const visible = new Set();
+function buildContact() {
+  const host = $('contact');
+  host.innerHTML = GROUPS.map(([g, name, sub]) => {
+    const items = LIB.map((m, i) => [m, i]).filter(([m]) => m.group === g);
+    return `<section class="grp"><h3>${g} · ${name} <span>${items.length} tests · ${sub}</span></h3><div class="tiles">${items.map(([m, i]) => `<button class="tile" type="button" data-i="${i}" aria-label="${m.id} ${m.name}"><canvas width="10" height="10"></canvas><span class="cap"><b>${m.id}</b><span>${m.name}</span></span></button>`).join('')}</div></section>`;
+  }).join('');
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    const i = +e.target.dataset.i;
+    if (e.isIntersecting) visible.add(i); else visible.delete(i);
+  }), { rootMargin: '120px' });
+  host.querySelectorAll('.tile').forEach(t => {
+    const c = t.querySelector('canvas'); tiles[+t.dataset.i] = c; io.observe(t);
+    t.onclick = () => {
+      st.t.battery = false;
+      document.querySelector('[data-t="battery"]').setAttribute('aria-pressed', 'false');
+      select(+t.dataset.i);
+      st.playing = true; syncPlay();
+      $('stage').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    };
+  });
+}
+
+function drawTile(i, tick) {
+  const c = tiles[i]; if (!c) return;
+  const m = bake(LIB[i]);
+  const d = Math.min(2, devicePixelRatio || 1), r = c.getBoundingClientRect(); if (!r.width) return;
+  const W = r.width, H = r.width * 0.75;
+  if (c.width !== Math.round(W * d)) { c.width = Math.round(W * d); c.height = Math.round(H * d); }
+  const ctx = c.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0);
+  ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+  const f = tick % m.len, s = m.F[f], yr = m.ybox, hgt = Math.max(155, yr[1] - yr[0] + 30);
+  const center = [s.J.pelvis[0], (yr[0] + yr[1]) / 2, s.J.pelvis[2]];
+  const [yaw, el] = VIEWS[m.view] || VIEWS.tq;
+  const sc = H * 0.84 / hgt;
+  const P = camera(W, H, yaw, el, center, sc);
+  drawGrid(ctx, P, center, C.rule, 50, 150);
+  drawProps(ctx, propsFor(m, f, s.J), P, sc, C.ink2);
+  const rig = currentRig();
+  if (rig && st.renderMode !== 'bola') {
+    drawWygwylRigOnBolas(ctx, s.J, P, sc, (s.yaw || 0) + yaw, rig, {});
+  }
+  drawBola(ctx, s.J, P, sc, { alpha: 0.55, ends: true });
+}
+
+/* ================= STAGE 01: POSE DETECTION VS KIT PIECES ================= */
+let s1PoseIdx = 0;
+let s1ShowOrderedClaim = true;
+function drawStage1() {
+  const cv = $('s1Canvas'); if (!cv || activeStage !== 's1' || !CATALOG) return;
+  const d = Math.min(2, devicePixelRatio || 1), r = cv.getBoundingClientRect(); if (!r.width) return;
+  const W = r.width, H = r.width * 10 / 16;
+  cv.width = Math.round(W * d); cv.height = Math.round(H * d);
+  const ctx = cv.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0);
+  ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+
+  const hw = W / 2;
+  const tp = CATALOG.target_poses[s1PoseIdx] || CATALOG.target_poses[0];
+  const rig = currentRig();
+
+  // Left half: Whole-figure ACT-* drawing + 17 ViTPose keypoints
+  ctx.save();
+  ctx.font = `700 11px ${C.mono}`; ctx.fillStyle = C.cyan;
+  ctx.fillText(`PATH A · WHOLE-FIGURE POSE DETECTION (${tp.act})`, 14, 22);
+  ctx.font = `400 10.5px ${C.mono}`; ctx.fillStyle = C.ink2;
+  ctx.fillText(s1ShowOrderedClaim ? 'SLICE MODE: ORDERED PIXEL CLAIMING (Hand->Arm->Torso: CLEAN)' : 'SLICE MODE: NAIVE VORONOI NEAREST-BONE (BLEEDS INTO CHEST!)', 14, 38);
+
+  const im = getImg(tp.file);
+  const boxH = H * 0.78, boxW = boxH * (tp.width / tp.height);
+  const ox = (hw - boxW) * 0.5, oy = H * 0.14;
+  if (im && im.complete && im.naturalWidth) {
+    ctx.drawImage(im, ox, oy, boxW, boxH);
+  }
+  const B = tp.brads_norm || {};
+  const bPt = k => B[k] ? [ox + B[k][0] * boxW, oy + B[k][1] * boxH] : null;
+  const edges = [
+    ['neck', 'head'], ['head', 'headTop'], ['neck', 'shoulderL'], ['neck', 'shoulderR'],
+    ['shoulderL', 'elbowL'], ['elbowL', 'wristL'], ['wristL', 'handTipL'],
+    ['shoulderR', 'elbowR'], ['elbowR', 'wristR'], ['wristR', 'handTipR'],
+    ['neck', 'pelvis'], ['pelvis', 'hipL'], ['pelvis', 'hipR'],
+    ['hipL', 'kneeL'], ['kneeL', 'ankleL'], ['ankleL', 'toeL'],
+    ['hipR', 'kneeR'], ['kneeR', 'ankleR'], ['ankleR', 'toeR']
+  ];
+
+  if (!s1ShowOrderedClaim) {
+    // Show Voronoi chest-bleed warning zone around elbow/wrist crossing torso
+    const elL = bPt('elbowL'), wrL = bPt('wristL');
+    if (elL && wrL) {
+      ctx.fillStyle = 'rgba(239,68,68,0.28)';
+      ctx.strokeStyle = C.red; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse((elL[0] + wrL[0]) / 2 + 14, (elL[1] + wrL[1]) / 2, 28, 42, -0.3, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = C.red; ctx.font = `700 10px ${C.mono}`;
+      ctx.fillText('VORONOI CHEST BITE!', (elL[0] + wrL[0]) / 2 - 20, (elL[1] + wrL[1]) / 2 - 48);
+    }
+  }
+
+  ctx.strokeStyle = C.green; ctx.lineWidth = 2.2;
+  for (const [a, b] of edges) {
+    const p1 = bPt(a), p2 = bPt(b);
+    if (p1 && p2) { ctx.beginPath(); ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.stroke(); }
+  }
+  for (const k in B) {
+    const p = bPt(k);
+    ctx.fillStyle = C.yellow;
+    ctx.beginPath(); ctx.arc(p[0], p[1], 3.8, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+
+  // Divider
+  ctx.strokeStyle = C.rule; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(hw, 0); ctx.lineTo(hw, H); ctx.stroke();
+
+  // Right half: Pre-Cut Kit Pieces hung onto the exact same detected pose brads!
+  ctx.save();
+  ctx.font = `700 11px ${C.mono}`; ctx.fillStyle = C.yellow;
+  ctx.fillText(`PATH B · PRE-CUT KIT PIECES SNAPPED TO BRADS (${rig ? rig.short_name : ''})`, hw + 14, 22);
+  ctx.font = `400 10.5px ${C.mono}`; ctx.fillStyle = C.ink2;
+  ctx.fillText('4 INVARIANTS: [1] Two-Pin A->B  [2] Intrinsic Rot  [3] Vitruvian Scale  [4] Cuff-Tuck Z', hw + 14, 38);
+
+  if (rig) {
+    const FakeJ = {};
+    for (const k in B) {
+      // Map normalized 2D pose coords into 3D cm coordinates for drawWygwylRigOnBolas
+      FakeJ[k] = [(B[k][0] - 0.5) * 140, (1.0 - B[k][1]) * 175, 0];
+    }
+    const P2 = p => [hw + hw * 0.5 + p[0] * (boxH / 175), oy + boxH - p[1] * (boxH / 175), p[2]];
+    drawWygwylRigOnBolas(ctx, FakeJ, P2, boxH / 175, tp.cam_yaw || 0, rig, { showPins: true });
+  }
+  ctx.restore();
+}
+
+/* ================= STAGE 02: VITRUVIAN SQUARE & CIRCLE CALIBRATOR ================= */
+let vitMode = 'dual';
+function makeVitruvianPose(kind) {
+  const p = NEUTRAL();
+  if (kind === 'square') {
+    // T-pose: arms horizontal 90 deg abduction, legs straight together
+    p.armL = { flex: 0, abd: 90, horiz: 0, rot: 0, elbow: 0 };
+    p.armR = { flex: 0, abd: 90, horiz: 0, rot: 0, elbow: 0 };
+    p.footL = [7, 5, 0]; p.footR = [-7, 5, 0];
+  } else if (kind === 'circle') {
+    // X-pose: arms abducted 120 deg to touch the circle top arc, legs spread 28 cm
+    p.armL = { flex: 0, abd: 122, horiz: 0, rot: 0, elbow: 0 };
+    p.armR = { flex: 0, abd: 122, horiz: 0, rot: 0, elbow: 0 };
+    p.footL = [32, 5, 0]; p.footR = [-32, 5, 0];
+  }
+  return solve(p).J;
+}
+
+function drawStage2() {
+  const cv = $('s2Canvas'); if (!cv || activeStage !== 's2' || !CATALOG) return;
+  const d = Math.min(2, devicePixelRatio || 1), r = cv.getBoundingClientRect(); if (!r.width) return;
+  const W = r.width, H = r.width * 10 / 16;
+  cv.width = Math.round(W * d); cv.height = Math.round(H * d);
+  const ctx = cv.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0);
+  ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+
+  const rig = currentRig();
+  $('s2RigName').textContent = rig ? rig.name : 'Rig';
+  const sc = H * 0.78 / 185;
+  const P = camera(W, H, 0, 2, [0, 88, 0], sc);
+
+  drawGrid(ctx, P, [0, 88, 0], C.rule);
+  drawVitruvianOverlay(ctx, P, sc, [0, 93, 0], 0.95);
+
+  if (vitMode === 'dual') {
+    const Jx = makeVitruvianPose('circle');
+    const Jt = makeVitruvianPose('square');
+    drawWygwylRigOnBolas(ctx, Jx, P, sc, 0, rig, { showPins: false });
+    drawBola(ctx, Jx, P, sc, { ghost: C.cyan });
+    drawWygwylRigOnBolas(ctx, Jt, P, sc, 0, rig, { showPins: true });
+    drawBola(ctx, Jt, P, sc, { alpha: 0.45, ends: true });
+  } else {
+    const J = makeVitruvianPose(vitMode);
+    drawWygwylRigOnBolas(ctx, J, P, sc, 0, rig, { showPins: true });
+    drawBola(ctx, J, P, sc, { alpha: 0.5, ends: true });
+  }
+
+  // Populate bone ledger table
+  if (rig && rig.slots) {
+    const rows = ['torso', 'head', 'uarm_L', 'farm_L', 'hand_L', 'thigh_L', 'shin_L', 'foot_L'].map(k => {
+      const s = rig.slots[k]; if (!s) return '';
+      const dx = (s.socket_B[0] - s.pivot_A[0]) * s.width;
+      const dy = (s.socket_B[1] - s.pivot_A[1]) * s.height;
+      const spanPx = Math.hypot(dx, dy);
+      const cm = s.canonical_cm_len || 30;
+      const solvedScale = (cm / spanPx).toFixed(3);
+      return `<tr>
+        <td><b>${k}</b></td>
+        <td>${s.width}&times;${s.height}</td>
+        <td>${spanPx.toFixed(0)} px</td>
+        <td style="color:var(--cyan)">${cm.toFixed(0)} cm</td>
+        <td style="color:var(--red)">+${Math.round((spanPx / (cm * 8) - 1) * 100)}%</td>
+        <td style="color:var(--green)">${solvedScale} cm/px</td>
+      </tr>`;
+    }).join('');
+    $('s2BoneTable').querySelector('tbody').innerHTML = rows;
+  }
+}
+
+document.querySelectorAll('[data-vit]').forEach(b => b.onclick = () => {
+  vitMode = b.dataset.vit;
+  document.querySelectorAll('[data-vit]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  drawStage2();
+});
+
+/* ================= STAGE 03: MIXAMO PLACE MARKERS & PIECE LOUPE ================= */
+let s3ActiveSlot = 'farm_L';
+let draggingMarker = null;
+let draggingPin = null;
+
+function drawStage3() {
+  const bcv = $('s3BodyCanvas'), pcv = $('s3PieceCanvas');
+  if (!bcv || !pcv || activeStage !== 's3' || !CATALOG) return;
+  const rig = currentRig(); if (!rig) return;
+
+  // 1. Left Canvas: Mixamo-style Place Markers on Character
+  {
+    const d = Math.min(2, devicePixelRatio || 1), r = bcv.getBoundingClientRect(); if (!r.width) return;
+    const W = r.width, H = r.width * 10 / 16;
+    bcv.width = Math.round(W * d); bcv.height = Math.round(H * d);
+    const ctx = bcv.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0);
+    ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+
+    // Build 3D joints from mixamoMarkers
+    const M = mixamoMarkers;
+    const to3D = k => [(M[k][0] - 0.5) * 150, (1.0 - M[k][1]) * 175, 0];
+    const J = {
+      pelvis: to3D('groin'),
+      neck: [to3D('chin')[0], to3D('chin')[1] - 7, 0],
+      head: [to3D('chin')[0], to3D('chin')[1] + 9, 0],
+      headTop: [to3D('chin')[0], to3D('chin')[1] + 22, 0],
+      shoulderL: to3D('shoulderL'), shoulderR: to3D('shoulderR'),
+      elbowL: to3D('elbowL'), elbowR: to3D('elbowR'),
+      wristL: to3D('wristL'), wristR: to3D('wristR'),
+      hipL: [to3D('groin')[0] - 10, to3D('groin')[1] - 2, 0],
+      hipR: [to3D('groin')[0] + 10, to3D('groin')[1] - 2, 0],
+      kneeL: to3D('kneeL'), kneeR: to3D('kneeR'),
+      ankleL: to3D('ankleL'), ankleR: to3D('ankleR'),
+      toeL: to3D('toeL'), toeR: to3D('toeR')
+    };
+    J.spineMid = mid(J.pelvis, J.neck);
+
+    const figW = H * 0.85, figH = H * 0.88;
+    const ox = (W - figW) * 0.5, oy = H * 0.06;
+    const P = p => [W / 2 + (p[0] / 150) * figW, oy + figH - (p[1] / 175) * figH, p[2]];
+
+    // Symmetry centerline
+    ctx.strokeStyle = 'rgba(0,210,255,0.25)'; ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke(); ctx.setLineDash([]);
+
+    drawWygwylRigOnBolas(ctx, J, P, figH / 175, 0, rig, { showPins: false });
+
+    // Draw Mixamo Color Rings
+    const ringDefs = [
+      ['chin', '#00d2ff', 'CHIN'],
+      ['shoulderL', '#3a86ff', 'SH.L'], ['shoulderR', '#3a86ff', 'SH.R'],
+      ['elbowL', '#ffbe0b', 'ELB.L'], ['elbowR', '#ffbe0b', 'ELB.R'],
+      ['wristL', '#22c55e', 'WRI.L'], ['wristR', '#22c55e', 'WRI.R'],
+      ['groin', '#ff007f', 'GROIN'],
+      ['kneeL', '#fb5607', 'KNE.L'], ['kneeR', '#fb5607', 'KNE.R'],
+      ['ankleL', '#ef4444', 'ANK.L'], ['ankleR', '#ef4444', 'ANK.R'],
+      ['toeL', '#f59e0b', 'TOE.L'], ['toeR', '#f59e0b', 'TOE.R']
+    ];
+    for (const [k, col, lbl] of ringDefs) {
+      const x = ox + M[k][0] * figW, y = oy + M[k][1] * figH;
+      ctx.fillStyle = 'rgba(8,11,17,0.75)';
+      ctx.strokeStyle = col; ctx.lineWidth = 3.2;
+      ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.font = `700 9.5px ${C.mono}`;
+      ctx.textAlign = 'center';
+      ctx.fillText(lbl, x, y - 14);
+    }
+    ctx.textAlign = 'left';
+    ctx.fillStyle = C.ink2; ctx.font = `600 10.5px ${C.mono}`;
+    ctx.fillText('DRAG ANY COLOR RING TO RE-RIG · SYMMETRY MIRRORS L<->R LIVE', 12, 20);
+  }
+
+  // 2. Right Canvas: Per-Piece Two-Pin (Pivot A -> Socket B + Cuff-Clip) Loupe
+  {
+    const slotObj = rig.slots[s3ActiveSlot]; if (!slotObj) return;
+    $('s3SlotTitle').textContent = `Slot: ${s3ActiveSlot} (${slotObj.width}×${slotObj.height} px · Target ${slotObj.canonical_cm_len || 30} cm)`;
+    $('s3RotInput').value = slotObj.rot_offset_deg || 0;
+    $('s3ClipInput').value = slotObj.cuff_clip_ratio || 1.0;
+
+    const d = Math.min(2, devicePixelRatio || 1), r = pcv.getBoundingClientRect(); if (!r.width) return;
+    const W = r.width, H = r.width * 0.75;
+    pcv.width = Math.round(W * d); pcv.height = Math.round(H * d);
+    const ctx = pcv.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0);
+    ctx.fillStyle = '#06090f'; ctx.fillRect(0, 0, W, H);
+
+    const im = getImg(slotObj.file);
+    if (im && im.complete && im.naturalWidth) {
+      const pad = 28;
+      const sc = Math.min((W - pad * 2) / im.naturalWidth, (H - pad * 2) / im.naturalHeight);
+      const dw = im.naturalWidth * sc, dh = im.naturalHeight * sc;
+      const ox = (W - dw) / 2, oy = (H - dh) / 2;
+
+      // Checkerboard card frame
+      ctx.strokeStyle = C.rule; ctx.lineWidth = 1;
+      ctx.strokeRect(ox, oy, dw, dh);
+      ctx.drawImage(im, ox, oy, dw, dh);
+
+      // Cuff-clip line & shaded clipped grommet zone
+      const clipRatio = slotObj.cuff_clip_ratio || 1.0;
+      if (clipRatio < 0.995) {
+        const cy = oy + dh * clipRatio;
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.28)';
+        ctx.fillRect(ox, cy, dw, dh * (1 - clipRatio));
+        ctx.strokeStyle = C.red; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+        ctx.beginPath(); ctx.moveTo(ox - 10, cy); ctx.lineTo(ox + dw + 10, cy); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = C.red; ctx.font = `700 10px ${C.mono}`;
+        ctx.fillText(`CUFF-CLIP LINE (y=${clipRatio.toFixed(3)}) — TRIMS PROTRUDING GROMMET TAB`, ox + 6, cy + 14);
+      }
+
+      // Pivot A and Socket B
+      const ax = ox + slotObj.pivot_A[0] * dw, ay = oy + slotObj.pivot_A[1] * dh;
+      const bx = ox + slotObj.socket_B[0] * dw, by = oy + slotObj.socket_B[1] * dh;
+
+      // Bone vector arrow A -> B
+      ctx.strokeStyle = C.yellow; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+
+      // Pivot A (Cyan)
+      ctx.fillStyle = '#080b11'; ctx.strokeStyle = C.cyan; ctx.lineWidth = 3.2;
+      ctx.beginPath(); ctx.arc(ax, ay, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = C.cyan; ctx.font = `700 10.5px ${C.mono}`;
+      ctx.fillText(`PIVOT A (${slotObj.pivot_A[0].toFixed(2)}, ${slotObj.pivot_A[1].toFixed(2)})`, ax + 14, ay + 4);
+
+      // Socket B (Amber)
+      ctx.fillStyle = '#080b11'; ctx.strokeStyle = C.amber; ctx.lineWidth = 3.2;
+      ctx.beginPath(); ctx.arc(bx, by, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = C.amber;
+      ctx.fillText(`SOCKET B (${slotObj.socket_B[0].toFixed(2)}, ${slotObj.socket_B[1].toFixed(2)})`, bx + 14, by + 4);
+
+      const deg = (Math.atan2(by - ay, bx - ax) * RAD).toFixed(1);
+      ctx.fillStyle = C.ink2; ctx.font = `600 10.5px ${C.mono}`;
+      ctx.fillText(`INTRINSIC AXIS: ${deg}° · ROT OFFSET: ${slotObj.rot_offset_deg || 0}°`, 12, 18);
+
+      pcv._box = { ox, oy, dw, dh, slotObj };
+    }
+  }
+}
+
+// Pointer drag for Stage 03 Mixamo Markers
+const bcvEl = $('s3BodyCanvas');
+bcvEl.addEventListener('pointerdown', e => {
+  const r = bcvEl.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;
+  const W = r.width, H = r.height;
+  const figW = H * 0.85, figH = H * 0.88, ox = (W - figW) * 0.5, oy = H * 0.06;
+  let best = null, bestD = 24;
+  for (const k in mixamoMarkers) {
+    const x = ox + mixamoMarkers[k][0] * figW, y = oy + mixamoMarkers[k][1] * figH;
+    const d = Math.hypot(mx - x, my - y);
+    if (d < bestD) { bestD = d; best = k; }
+  }
+  if (best) { draggingMarker = { k: best, ox, oy, figW, figH }; bcvEl.setPointerCapture(e.pointerId); }
+});
+bcvEl.addEventListener('pointermove', e => {
+  if (!draggingMarker) return;
+  const r = bcvEl.getBoundingClientRect();
+  const nx = clamp((e.clientX - r.left - draggingMarker.ox) / draggingMarker.figW, 0.05, 0.95);
+  const ny = clamp((e.clientY - r.top - draggingMarker.oy) / draggingMarker.figH, 0.04, 0.98);
+  const k = draggingMarker.k;
+  mixamoMarkers[k] = [nx, ny];
+  if ($('s3Symmetry').checked) {
+    if (k.endsWith('L')) mixamoMarkers[k.slice(0, -1) + 'R'] = [1 - nx, ny];
+    else if (k.endsWith('R')) mixamoMarkers[k.slice(0, -1) + 'L'] = [1 - nx, ny];
+  }
+  drawStage3();
+});
+bcvEl.addEventListener('pointerup', () => { draggingMarker = null; });
+
+// Pointer drag for Stage 03 Piece Pins (Pivot A & Socket B)
+const pcvEl = $('s3PieceCanvas');
+pcvEl.addEventListener('pointerdown', e => {
+  const box = pcvEl._box; if (!box) return;
+  const r = pcvEl.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;
+  const ax = box.ox + box.slotObj.pivot_A[0] * box.dw, ay = box.oy + box.slotObj.pivot_A[1] * box.dh;
+  const bx = box.ox + box.slotObj.socket_B[0] * box.dw, by = box.oy + box.slotObj.socket_B[1] * box.dh;
+  if (Math.hypot(mx - ax, my - ay) < 20) { draggingPin = 'pivot_A'; pcvEl.setPointerCapture(e.pointerId); }
+  else if (Math.hypot(mx - bx, my - by) < 20) { draggingPin = 'socket_B'; pcvEl.setPointerCapture(e.pointerId); }
+});
+pcvEl.addEventListener('pointermove', e => {
+  if (!draggingPin || !pcvEl._box) return;
+  const box = pcvEl._box, r = pcvEl.getBoundingClientRect();
+  const nx = clamp((e.clientX - r.left - box.ox) / box.dw, 0.02, 0.98);
+  const ny = clamp((e.clientY - r.top - box.oy) / box.dh, 0.02, 0.98);
+  box.slotObj[draggingPin] = [nx, ny];
+  drawStage3();
+});
+pcvEl.addEventListener('pointerup', () => { draggingPin = null; });
+
+$('s3ResetMarkers').onclick = () => {
+  Object.assign(mixamoMarkers, {
+    chin: [0.50, 0.165], shoulderL: [0.39, 0.22], shoulderR: [0.61, 0.22],
+    elbowL: [0.27, 0.36], elbowR: [0.73, 0.36], wristL: [0.18, 0.48], wristR: [0.82, 0.48],
+    groin: [0.50, 0.50], kneeL: [0.43, 0.72], kneeR: [0.57, 0.72],
+    ankleL: [0.43, 0.91], ankleR: [0.57, 0.91], toeL: [0.41, 0.96], toeR: [0.59, 0.96]
+  });
+  drawStage3();
+};
+$('s3NextBtn').onclick = () => switchStage('s5');
+$('s3RotInput').oninput = e => {
+  const rig = currentRig(); if (rig && rig.slots[s3ActiveSlot]) { rig.slots[s3ActiveSlot].rot_offset_deg = +e.target.value; drawStage3(); }
+};
+$('s3ClipInput').oninput = e => {
+  const rig = currentRig(); if (rig && rig.slots[s3ActiveSlot]) { rig.slots[s3ActiveSlot].cuff_clip_ratio = +e.target.value; drawStage3(); }
+};
+
+/* ================= STAGE 04: CONNECTION ORDER & CUFF-TUCK Z-DAG ================= */
+let s4Yaw = -25;
+function drawStage4() {
+  const dcv = $('s4DagCanvas'), lcv = $('s4LoupeCanvas');
+  if (!dcv || !lcv || activeStage !== 's4' || !CATALOG) return;
+  const rig = currentRig(); if (!rig) return;
+
+  // 1. Left Canvas: Kinematic Tree vs Visual Draw Z-Stack + Live Rotated Character
+  {
+    const d = Math.min(2, devicePixelRatio || 1), r = dcv.getBoundingClientRect(); if (!r.width) return;
+    const W = r.width, H = r.width * 10 / 16;
+    dcv.width = Math.round(W * d); dcv.height = Math.round(H * d);
+    const ctx = dcv.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0);
+    ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+
+    // Draw live walking pose on left 48%
+    const m = bake(LIB.find(x => x.id === 'D38') || LIB[0]);
+    const s = m.F[8];
+    const sc = H * 0.78 / 175;
+    const P = camera(W * 0.48, H, s4Yaw, 8, [0, 88, 0], sc);
+    drawGrid(ctx, P, [0, 88, 0], C.rule);
+    drawWygwylRigOnBolas(ctx, s.J, P, sc, s4Yaw, rig, { showPins: true });
+
+    // Right 52%: Dual DAG boxes (Kinematic Order vs Visual Z-Order)
+    const rx = W * 0.50;
+    ctx.strokeStyle = C.rule; ctx.beginPath(); ctx.moveTo(rx - 8, 0); ctx.lineTo(rx - 8, H); ctx.stroke();
+
+    ctx.font = `700 11px ${C.mono}`; ctx.fillStyle = C.cyan;
+    ctx.fillText('1. KINEMATIC PARENT -> CHILD DAG', rx, 24);
+    const kinNodes = [
+      'PELVIS (Root 0.50H)',
+      '  ├─> TORSO -> HEAD (Chin/Crown)',
+      '  ├─> UPPER ARM -> FOREARM -> HAND',
+      '  └─> THIGH -> SHIN -> FOOT / BOOT'
+    ];
+    ctx.font = `500 10.5px ${C.mono}`; ctx.fillStyle = C.ink;
+    kinNodes.forEach((ln, idx) => ctx.fillText(ln, rx, 44 + idx * 18));
+
+    const nearSide = s4Yaw < 0 ? 'R (NEAR)' : 'L (NEAR)';
+    const farSide = s4Yaw < 0 ? 'L (FAR)' : 'R (FAR)';
+    ctx.font = `700 11px ${C.mono}`; ctx.fillStyle = C.yellow;
+    ctx.fillText(`2. VISUAL DRAW Z-ORDER (YAW ${s4Yaw}° · CUFF-TUCK ${inv.cuffTuckZ ? 'ON' : 'OFF'})`, rx, 134);
+
+    const zStack = inv.cuffTuckZ ? [
+      ['Z01', `Far ${farSide} Thigh -> Foot [tucked] -> Shin Cuff`, C.ink2],
+      ['Z02', `Far ${farSide} UpperArm -> Hand [tucked] -> Forearm Cuff`, C.ink2],
+      ['Z03', 'Pelvis / Hip Bridge -> Torso Jacket -> Head', C.ink],
+      ['Z04', `Near ${nearSide} Thigh`, C.cyan],
+      ['Z05', `Near ${nearSide} Foot / Boot (DRAWN BEFORE SHIN!)`, C.green],
+      ['Z06', `Near ${nearSide} Shin Cuff (OVER BOOT SHAFT + TAB CLIPPED)`, C.yellow],
+      ['Z07', `Near ${nearSide} Upper Arm`, C.cyan],
+      ['Z08', `Near ${nearSide} Hand (DRAWN BEFORE FOREARM!)`, C.green],
+      ['Z09', `Near ${nearSide} Forearm Cuff (OVER WRIST + TAB CLIPPED)`, C.yellow]
+    ] : [
+      ['Z01', 'BROKEN NAIVE Z-ORDER (Child always on top of Parent):', C.red],
+      ['Z02', 'Forearm drawn BEFORE Hand -> Brown hand tab covers cuff!', C.red],
+      ['Z03', 'Shin drawn BEFORE Boot -> Tan boot pull-tab covers pant cuff!', C.red],
+      ['Z04', 'Grommet mounting tongues unclipped at wrist & ankle!', C.red]
+    ];
+
+    zStack.forEach(([z, txt, col], idx) => {
+      const y = 156 + idx * 24;
+      ctx.fillStyle = 'rgba(23,33,49,0.85)';
+      ctx.strokeStyle = col; ctx.lineWidth = 1;
+      ctx.fillRect(rx, y - 13, W - rx - 12, 20);
+      ctx.strokeRect(rx, y - 13, W - rx - 12, 20);
+      ctx.fillStyle = col; ctx.font = `600 10px ${C.mono}`;
+      ctx.fillText(`${z} · ${txt}`, rx + 6, y);
+    });
+  }
+
+  // 2. Right Canvas: 2.5x Zoomed Wrist & Ankle Seam Loupes
+  {
+    const d = Math.min(2, devicePixelRatio || 1), r = lcv.getBoundingClientRect(); if (!r.width) return;
+    const W = r.width, H = r.width * 0.75;
+    lcv.width = Math.round(W * d); lcv.height = Math.round(H * d);
+    const ctx = lcv.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0);
+    ctx.fillStyle = '#06090f'; ctx.fillRect(0, 0, W, H);
+
+    const hw = W / 2;
+    const S = rig.slots;
+
+    // Left Loupe: WRIST SEAM (Forearm -> Hand)
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, hw, H); ctx.clip();
+    ctx.font = `700 11px ${C.mono}`; ctx.fillStyle = inv.cuffTuckZ ? C.green : C.red;
+    ctx.fillText(`LOUPE A · WRIST SEAM (${inv.cuffTuckZ ? 'CUFF-TUCK SOLVED' : 'BROKEN TAB COLLISION'})`, 12, 20);
+    const elPt = [hw * 0.5, H * 0.12], wrPt = [hw * 0.5, H * 0.58], hTip = [hw * 0.5, H * 0.84];
+    if (inv.cuffTuckZ) {
+      drawPieceFitBone(ctx, 'hand_L', S.hand_L, wrPt, hTip, 2.2, 0, rig, { showPins: true });
+      drawPieceFitBone(ctx, 'farm_L', S.farm_L, elPt, wrPt, 2.2, 0, rig, { showPins: true });
+    } else {
+      drawPieceFitBone(ctx, 'farm_L', S.farm_L, elPt, wrPt, 2.2, 0, rig, { showPins: true });
+      drawPieceFitBone(ctx, 'hand_L', S.hand_L, wrPt, hTip, 2.2, 0, rig, { showPins: true });
+    }
+    ctx.restore();
+
+    ctx.strokeStyle = C.rule; ctx.beginPath(); ctx.moveTo(hw, 0); ctx.lineTo(hw, H); ctx.stroke();
+
+    // Right Loupe: ANKLE SEAM (Shin -> Boot/Foot)
+    ctx.save();
+    ctx.beginPath(); ctx.rect(hw, 0, hw, H); ctx.clip();
+    ctx.font = `700 11px ${C.mono}`; ctx.fillStyle = inv.cuffTuckZ ? C.green : C.red;
+    ctx.fillText(`LOUPE B · ANKLE SEAM (${inv.cuffTuckZ ? 'CUFF-TUCK SOLVED' : 'BROKEN BOOT PULL-TAB'})`, hw + 12, 20);
+    const knPt = [hw * 1.5, H * 0.10], anPt = [hw * 1.5, H * 0.62], toePt = [hw * 1.5 + 28, H * 0.84];
+    if (inv.cuffTuckZ) {
+      drawPieceFitBone(ctx, 'foot_L', S.foot_L, anPt, toePt, 2.2, 0, rig, { showPins: true });
+      drawPieceFitBone(ctx, 'shin_L', S.shin_L, knPt, anPt, 2.2, 0, rig, { showPins: true });
+    } else {
+      drawPieceFitBone(ctx, 'shin_L', S.shin_L, knPt, anPt, 2.2, 0, rig, { showPins: true });
+      drawPieceFitBone(ctx, 'foot_L', S.foot_L, anPt, toePt, 2.2, 0, rig, { showPins: true });
+    }
+    ctx.restore();
+  }
+}
+
+$('s4YawSlider').oninput = e => {
+  s4Yaw = +e.target.value;
+  $('s4YawVal').textContent = s4Yaw + '°';
+  drawStage4();
+};
+$('s4FlipYawBtn').onclick = () => {
+  s4Yaw = s4Yaw < 0 ? 35 : -35;
+  $('s4YawSlider').value = s4Yaw;
+  $('s4YawVal').textContent = s4Yaw + '°';
+  drawStage4();
+};
+
+/* ================= STAGE SWITCHING & INVARIANT CONTROLS ================= */
+function switchStage(s) {
+  activeStage = s;
+  document.querySelectorAll('.step-btn').forEach(b => b.setAttribute('aria-selected', String(b.dataset.stage === s)));
+  ['s1', 's2', 's3', 's4', 's5'].forEach(k => {
+    const el = $('stage_' + k);
+    if (el) el.hidden = k !== s;
+  });
+  requestRedrawAll();
+}
+document.querySelectorAll('.step-btn').forEach(b => b.onclick = () => switchStage(b.dataset.stage));
+$('quickAll54').onclick = () => switchStage('s5');
+
+function syncInvButtons() {
+  document.querySelectorAll('.inv-chip[data-inv]').forEach(b => {
+    b.setAttribute('aria-pressed', String(inv[b.dataset.inv]));
+  });
+  if (activeStage === 's5') renderCard();
+  requestRedrawAll();
+}
+document.querySelectorAll('.inv-chip[data-inv]').forEach(b => b.onclick = () => {
+  const k = b.dataset.inv;
+  inv[k] = !inv[k];
+  syncInvButtons();
+});
+$('breakAllBtn').onclick = () => {
+  inv.twoPin = false; inv.intrinsicRot = false; inv.vitruvianScale = false; inv.cuffTuckZ = false;
+  syncInvButtons();
+};
+$('solveAllBtn').onclick = () => {
+  inv.twoPin = true; inv.intrinsicRot = true; inv.vitruvianScale = true; inv.cuffTuckZ = true;
+  syncInvButtons();
+};
+
+function requestRedrawAll() {
+  if (activeStage === 's1') drawStage1();
+  else if (activeStage === 's2') drawStage2();
+  else if (activeStage === 's3') drawStage3();
+  else if (activeStage === 's4') drawStage4();
+  else { sizeStage(); drawStage(); }
+}
+
+/* ================= LOAD CATALOG & INITIALIZE ================= */
+async function initCatalog() {
+  const paths = [
+    'arena/parts/kit3/release_v2/crash_lab_catalog.json',
+    '../arena/parts/kit3/release_v2/crash_lab_catalog.json'
+  ];
+  for (const p of paths) {
+    try {
+      const r = await fetch(p);
+      if (r.ok) { CATALOG = await r.json(); break; }
+    } catch (e) {}
+  }
+  if (!CATALOG) return;
+
+  // Populate Rig Strip
+  const host = $('rigStrip');
+  CATALOG.rigs.forEach((rig, idx) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'rig-pill';
+    b.textContent = rig.short_name || rig.name;
+    b.setAttribute('aria-pressed', String(idx === activeRigIdx));
+    b.onclick = () => {
+      activeRigIdx = idx;
+      host.querySelectorAll('.rig-pill').forEach((x, j) => x.setAttribute('aria-pressed', String(j === idx)));
+      // Preload rig slot images
+      Object.values(rig.slots || {}).forEach(s => getImg(s.file));
+      populateStage3Selectors();
+      requestRedrawAll();
+    };
+    host.appendChild(b);
+  });
+
+  // Preload active rig images
+  const r0 = currentRig();
+  if (r0 && r0.slots) Object.values(r0.slots).forEach(s => getImg(s.file));
+
+  // Populate Stage 01 Target Pose selector
+  const s1Sel = $('s1PoseSelect');
+  s1Sel.innerHTML = CATALOG.target_poses.map((tp, i) => `<option value="${i}">${tp.label}</option>`).join('');
+  s1Sel.onchange = () => { s1PoseIdx = +s1Sel.value; drawStage1(); };
+  $('s1SnapBtn').onclick = () => { s1PoseIdx = (s1PoseIdx + 1) % CATALOG.target_poses.length; s1Sel.value = s1PoseIdx; drawStage1(); };
+  $('s1ToggleSlice').onclick = () => { s1ShowOrderedClaim = !s1ShowOrderedClaim; drawStage1(); };
+  $('s1GoStage3').onclick = () => switchStage('s3');
+
+  populateStage3Selectors();
+  requestRedrawAll();
+}
+
+function populateStage3Selectors() {
+  const rig = currentRig(); if (!rig || !rig.slots) return;
+  const sel = $('s3SlotSelect');
+  const keys = ['farm_L', 'hand_L', 'shin_L', 'foot_L', 'torso', 'head', 'uarm_L', 'thigh_L', 'farm_R', 'hand_R', 'shin_R', 'foot_R'];
+  sel.innerHTML = keys.filter(k => rig.slots[k]).map(k => `<option value="${k}" ${k === s3ActiveSlot ? 'selected' : ''}>${k}</option>`).join('');
+  sel.onchange = () => { s3ActiveSlot = sel.value; populateSwapDropdown(); drawStage3(); };
+  populateSwapDropdown();
+}
+
+function populateSwapDropdown() {
+  if (!CATALOG || !CATALOG.swapper_bank) return;
+  const catMap = {
+    hand_L: 'hands', hand_R: 'hands',
+    foot_L: 'shoes_feet', foot_R: 'shoes_feet',
+    head: 'heads', torso: 'torsos_pelvis',
+    farm_L: 'limbs', farm_R: 'limbs', shin_L: 'limbs', shin_R: 'limbs', uarm_L: 'limbs', thigh_L: 'limbs'
+  };
+  const bankKey = catMap[s3ActiveSlot] || 'limbs';
+  const list = CATALOG.swapper_bank[bankKey] || [];
+  const sw = $('s3SwapSelect');
+  sw.innerHTML = `<option value="">-- Swap ${bankKey} (${list.length} parts) --</option>` +
+    list.slice(0, 60).map((it, i) => `<option value="${i}">[${it.character_group}] ${it.name} (${it.clip_tag})</option>`).join('');
+  sw.onchange = () => {
+    const idx = +sw.value;
+    const item = list[idx];
+    const rig = currentRig();
+    if (item && rig && rig.slots[s3ActiveSlot]) {
+      const s = rig.slots[s3ActiveSlot];
+      s.file = item.file;
+      s.width = item.width || s.width;
+      s.height = item.height || s.height;
+      if (item.pivot_A) s.pivot_A = item.pivot_A.slice();
+      if (item.socket_B) s.socket_B = item.socket_B.slice();
+      if (item.rot_offset_deg != null) s.rot_offset_deg = item.rot_offset_deg;
+      getImg(s.file);
+      drawStage3();
+    }
+  };
+}
+
+/* Main 24fps Loop */
+let acc = 0, prev = performance.now(), tick = 0, tileAcc = 0;
+function loop(now) {
+  const dt = Math.min(100, now - prev); prev = now;
+  if (activeStage === 's5') {
+    if (st.playing) {
+      acc += dt;
+      while (acc >= 1000 / 24) {
+        acc -= 1000 / 24;
+        if (st.view === 'orbit') st.orbit = (st.orbit + 1.4) % 360;
+        const m = LIB[st.i];
+        if (st.f + 1 >= m.len) {
+          if (st.t.battery) select((st.i + 1) % LIB.length);
+          else setF(0);
+        } else setF(st.f + 1);
+      }
+    }
+    tileAcc += dt;
+    if (tileAcc >= 1000 / 12) {
+      tileAcc = 0; tick++;
+      visible.forEach(i => drawTile(i, tick));
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+new ResizeObserver(() => requestRedrawAll()).observe(document.body);
+buildContact();
+select(0);
+syncPlay();
+initCatalog();
+requestAnimationFrame(loop);
+window.__rangeRigger = { LIB, st, inv, switchStage, select, setF };
+})();
+</script>
+</body>
+</html>
