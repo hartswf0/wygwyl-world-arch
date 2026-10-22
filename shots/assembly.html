@@ -673,6 +673,547 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  /* Centaur Upgrade Styles: Technical Icons, Mobile Responsive, Multi-View, Target Pose Strip & Part Swapper */
+  .top-toolbar {
+    height: auto;
+    min-height: 46px;
+    padding: 6px 14px;
+    flex-wrap: wrap;
+  }
+  .mode-pill.purple.active {
+    background: var(--purple-soft);
+    color: var(--purple);
+    border-color: var(--purple);
+  }
+  .mode-pill.rose.active {
+    background: var(--rose-soft);
+    color: var(--rose);
+    border-color: var(--rose);
+  }
+  .ic-svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .ic-tag {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    color: currentColor;
+    letter-spacing: 0.02em;
+  }
+
+  canvas#assemblyCanvas {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Canvas HUD Overlay Hint */
+  .canvas-hud-pill {
+    position: absolute;
+    bottom: 18px;
+    left: 22px;
+    background: rgba(9, 11, 17, 0.88);
+    border: 1px solid var(--border-hi);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    z-index: 4;
+  }
+  .canvas-hud-pill b {
+    color: var(--teal);
+  }
+
+  /* Centaur Keyframe & Interpolation Strip + Target Pose Brad-Snap Bar */
+  .keyframe-bar, .target-pose-bar {
+    background: #0e121b;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .target-pose-bar {
+    background: #0a0e17;
+  }
+  .kf-top-row, .kf-bottom-row, .tp-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .kf-slots, .tp-strip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .tp-strip {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 3px;
+  }
+  .tp-card {
+    background: #0d111a;
+    border: 1px solid var(--border-hi);
+    border-radius: 5px;
+    padding: 4px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.14s;
+  }
+  .tp-card:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .tp-card.active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .tp-card img {
+    width: 22px;
+    height: 30px;
+    object-fit: contain;
+    background: #07090e;
+    border-radius: 3px;
+  }
+  .tp-card .tp-meta {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    line-height: 1.2;
+  }
+  .tp-card .tp-meta b {
+    color: var(--text);
+    font-size: 10px;
+  }
+  .kf-slot {
+    background: #080a10;
+    border: 1px solid var(--border-hi);
+    border-radius: 5px;
+    padding: 5px 9px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.14s;
+  }
+  .kf-slot:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+  .kf-slot.active {
+    background: var(--teal-soft);
+    border-color: var(--teal);
+    color: var(--teal);
+    font-weight: 700;
+  }
+  .kf-slot .kf-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+  .kf-slot.active .kf-dot {
+    background: var(--teal);
+    box-shadow: 0 0 6px var(--teal);
+  }
+  .kf-slot.modified .kf-dot {
+    background: var(--accent);
+  }
+  .kf-scrubber-wrap {
+    flex: 1;
+    min-width: 180px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .kf-scrubber-wrap input[type="range"] {
+    flex: 1;
+    accent-color: var(--teal);
+  }
+  .kf-select {
+    background: #080a10;
+    color: var(--text);
+    border: 1px solid var(--border-hi);
+    border-radius: 4px;
+    padding: 4px 7px;
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+
+  /* Piece Transform & Control Point Inspector */
+  .piece-btn-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+    margin-top: 7px;
+  }
+  .piece-btn {
+    background: #0c0f17;
+    border: 1px solid var(--border-hi);
+    border-radius: 5px;
+    padding: 6px 7px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.12s;
+  }
+  .piece-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .piece-btn.teal:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+    background: var(--teal-soft);
+  }
+  .piece-btn.rose:hover {
+    border-color: var(--rose);
+    color: var(--rose);
+    background: var(--rose-soft);
+  }
+  .piece-btn.span-2 {
+    grid-column: span 2;
+  }
+  .piece-meta-banner {
+    background: #090b11;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .piece-meta-banner .pm-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .piece-meta-banner .pm-sub {
+    color: var(--teal);
+    font-size: 9.5px;
+  }
+
+  /* Centaur Defect & Repair Panel */
+  .defect-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 7px;
+  }
+  .defect-chip {
+    background: #090b11;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .defect-chip:hover {
+    border-color: var(--rose);
+    color: var(--text);
+  }
+  .defect-chip.active {
+    background: var(--rose-soft);
+    border-color: var(--rose);
+    color: var(--rose);
+    font-weight: 600;
+  }
+  .centaur-note-input {
+    width: 100%;
+    background: #080a10;
+    border: 1px solid var(--border-hi);
+    border-radius: 5px;
+    padding: 6px 8px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 11px;
+    resize: vertical;
+    min-height: 44px;
+    margin-bottom: 6px;
+  }
+  .centaur-log-list {
+    margin-top: 6px;
+    max-height: 92px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .centaur-log-item {
+    background: #090b11;
+    border-left: 2px solid var(--rose);
+    padding: 4px 6px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  /* Normalized Gallery Tray */
+  .gal-cell .gal-norm-wrap {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(circle, rgba(56,189,248,0.06) 0%, transparent 75%);
+  }
+  .gal-cell .gal-pivot-dot {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1.5px solid #38bdf8;
+    background: rgba(240, 180, 41, 0.9);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  /* Part Swapper Modal ("All Shoes / Hands / Heads / Limbs / Torsos") */
+  .swapper-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 7, 12, 0.82);
+    backdrop-filter: blur(5px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .swapper-modal-backdrop.open {
+    display: flex;
+  }
+  .swapper-modal {
+    width: min(1140px, 96vw);
+    height: min(800px, 90vh);
+    background: var(--panel);
+    border: 1px solid var(--border-hi);
+    border-radius: 10px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .swapper-header {
+    padding: 12px 16px;
+    background: #0c0f17;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .swapper-header h2 {
+    font-size: 13px;
+    font-family: var(--mono);
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .swapper-controls {
+    padding: 10px 16px;
+    background: var(--panel-hi);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .swapper-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .swapper-search {
+    background: #080a10;
+    border: 1px solid var(--border-hi);
+    border-radius: 5px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    min-width: 210px;
+  }
+  .swapper-grid {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    align-content: start;
+  }
+  .swap-card {
+    background: #0b0e16;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    transition: all 0.14s;
+  }
+  .swap-card:hover {
+    border-color: var(--teal);
+    background: #111623;
+    transform: translateY(-1px);
+  }
+  .swap-thumb-box {
+    height: 104px;
+    background: radial-gradient(circle, #182032 0%, #080a10 80%);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .swap-thumb-box img {
+    max-width: 92%;
+    max-height: 92%;
+    object-fit: contain;
+    transition: transform 0.15s;
+  }
+  .swap-pivot-marker {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #38bdf8;
+    border-radius: 50%;
+    background: rgba(240, 180, 41, 0.85);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 0 6px rgba(56, 189, 248, 0.9);
+  }
+  .swap-card-title {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .swap-card-sub {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+  .swap-card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  /* Mobile & Tablet Responsive Layout */
+  @media (max-width: 1120px) {
+    html, body {
+      height: auto;
+      min-height: 100vh;
+      overflow-y: auto;
+    }
+    .workspace {
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+    }
+    .left-sidebar, .right-sidebar {
+      width: 100%;
+      border-right: none;
+      border-left: none;
+      border-bottom: 1px solid var(--border);
+      max-height: none;
+    }
+    .assembly-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      max-height: 220px;
+    }
+    .canvas-wrap {
+      min-height: 260px;
+      padding: 6px;
+    }
+  }
+  @media (max-width: 680px) {
+    .suite-nav {
+      height: auto;
+      padding: 8px 10px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .suite-links {
+      width: 100%;
+      padding-bottom: 4px;
+    }
+    .mode-pill, .ctx-btn, .piece-btn {
+      padding: 7px 9px;
+      font-size: 10.5px;
+    }
+    .canvas-hud-pill {
+      position: static;
+      margin-top: 6px;
+      width: 100%;
+      justify-content: center;
+    }
+    .canvas-wrap {
+      flex-direction: column;
+    }
+  }
 </style>
 </head>
 <body>
@@ -681,7 +1222,7 @@
   <nav class="suite-nav">
     <div class="suite-brand">
       <span>WYGWYL CUT-OUT WORLD ARCHIVE</span>
-      <span class="sub">// SOME ASSEMBLY REQUIRED (14 LIVE RIGS &amp; FOLEY TOYBOX)</span>
+      <span class="sub">// SOME ASSEMBLY REQUIRED (14 LIVE RIGS, MULTI-VIEW, WEIGHT &amp; BRAD-SNAP SOLVER)</span>
     </div>
     <div class="suite-links" id="suiteLinks">
       <a href="cards.html" data-nav="cards.html">Periodic Table</a>
@@ -690,39 +1231,64 @@
       <a href="arena_actors.html" data-nav="arena_actors.html">Acting Arena</a>
       <a href="body_lab.html" data-nav="body_lab.html">Body Lab</a>
       <a href="assembly.html" data-nav="assembly.html" class="active">Assembly Toybox</a>
+      <a href="crash_lab.html" data-nav="crash_lab.html">Crash Lab &amp; CAPTCHAs</a>
       <a href="weave.html" data-nav="weave.html">The Weave</a>
       <a href="world.html" data-nav="world.html">Atlantis World</a>
       <a href="kits.html" data-nav="kits.html">Poem Kits</a>
     </div>
   </nav>
 
-  <!-- Subheader Mode & Foley Controls -->
+  <!-- Subheader Mode, Multi-View, Weight/CoM, Scale Normalizer, Control Points & Foley Controls -->
   <div class="top-toolbar">
-    <div class="toolbar-group">
+    <div class="toolbar-group" style="flex-wrap:wrap">
       <button class="mode-pill" id="modeExplodedBtn" onclick="setStageMode('exploded')">
-        <span>🧩</span> 1. Exploded Parts Sheet (Unassembled)
+        <span class="ic-tag">01</span> Exploded Sheet
       </button>
       <button class="mode-pill teal" id="modeSnapBtn" onclick="triggerSnapTogether()">
-        <span>📌</span> 2. Snap Together (Brad-Snap)
+        <span class="ic-tag">02</span> Brad-Snap
       </button>
       <button class="mode-pill active" id="modeActionBtn" onclick="setStageMode('action')">
-        <span>🎬</span> 3. Animated Action / Live Sequence
+        <span class="ic-tag">03</span> Live Action
+      </button>
+      <button class="mode-pill purple" id="toggleMultiViewBtn" onclick="toggleMultiViewMode()" title="Switch between 1x Stage and 4x Simultaneous Multi-View (Front, Side Profile, 3/4 Oblique, Target Pose Solver)">
+        <span class="ic-tag">4X</span> Multi-View: 1x Stage
+      </button>
+      <button class="mode-pill teal active" id="toggleWeightOverlayBtn" onclick="toggleWeightOverlay()" title="Surface Center of Mass (CoM), Gravity Plumb Line, Floor Support Polygon, and Foot Weight Distribution">
+        <span class="ic-tag">CoM</span> Weight &amp; Gravity: ON
+      </button>
+      <button class="mode-pill teal active" id="toggleNormScaleBtn" onclick="toggleNormalizeScales()" title="Normalize pieces in tray, swapper, and stage to compatible physical reference scale (cm/px)">
+        <span class="ic-tag">CM</span> Similar Scale: ON
+      </button>
+      <button class="mode-pill teal active" id="toggleGizmoBtn" onclick="toggleControlGizmo()" title="Show bounding box, scale/rotate handles, Proximal Pivot A, Distal Socket B, and kinematic bone links">
+        <span class="ic-tag">PIV</span> Control Points: ON
+      </button>
+      <button class="mode-pill purple active" id="toggleKinematicBtn" onclick="toggleKinematicChain()" title="Propagate parent move/rotation to child limbs, hands, shoes, and wheels">
+        <span class="ic-tag">IK</span> Kinematic Chain: ON
+      </button>
+      <button class="mode-pill active" id="toggleLoupeBtn" onclick="toggleSemanticLoupe()" title="Show 2.5x Semantic Zoom Joint/Brad Loupe while dragging pieces or pivots">
+        <span class="ic-tag">2.5X</span> Joint Loupe: ON
       </button>
       <button class="mode-pill" id="toggleBradsBtn" onclick="toggleBradPins()">
-        <span>⭕</span> Brad Pins: ON
+        <span class="ic-tag">PIN</span> Brad Pins: ON
+      </button>
+      <button class="mode-pill" onclick="openPartSwapperModal('shoes_feet')" title="Browse & swap from all 338 Shoes, 639 Hands, 384 Heads, Limbs & Torsos at normalized scale">
+        <span class="ic-tag">LIB</span> Part Swapper (3,997)
+      </button>
+      <button class="mode-pill" onclick="spawnFullKinematicPuppet()" title="Spawn an 8-part articulated character puppet with connected kinematic joints">
+        <span class="ic-tag">+RIG</span> Spawn Puppet Rig
       </button>
       <button class="mode-pill" onclick="resetLayerOffsets()">
-        <span>↺</span> Reset Dragged Parts
+        <span class="ic-tag">RST</span> Reset
       </button>
     </div>
 
     <div class="toolbar-group">
       <button class="sound-btn" id="soundToggleBtn" onclick="toggleSoundEngine()">
-        <span id="soundIcon">🔊</span>
+        <span class="ic-tag" id="soundIcon">SFX</span>
         <span id="soundLabel">SOUND FX: ON</span>
       </button>
       <button class="mode-pill green" onclick="playCurrentAssemblyFoley()">
-        <span>🎵</span> Trigger Scene Foley
+        <span class="ic-tag">TRIG</span> Scene Foley
       </button>
     </div>
   </div>
@@ -748,7 +1314,7 @@
       <div class="assembly-list" id="assemblyList"></div>
     </aside>
 
-    <!-- CENTER STAGE: 60FPS Interactive Canvas + Context Bar + 12-Action Trust Matrix -->
+    <!-- CENTER STAGE: 60FPS Interactive Canvas + Target Pose Solver + Centaur Keyframe Bar + Context Bar + Trust Matrix -->
     <main class="center-stage">
       <div class="stage-banner">
         <div class="stage-title-wrap">
@@ -763,6 +1329,75 @@
 
       <div class="canvas-wrap">
         <canvas id="assemblyCanvas" width="1280" height="720"></canvas>
+        <div class="canvas-hud-pill" id="canvasHudPill">
+          <span><b>[DRAG]</b> Move Piece</span>
+          <span><b>[TOP HANDLE]</b> Rotate</span>
+          <span><b>[CORNER HANDLE]</b> Scale</span>
+          <span><b>[SHIFT+DRAG]</b> Move Control Point A</span>
+          <span><b>[DEL]</b> Delete</span>
+        </div>
+      </div>
+
+      <!-- Target Pose Brad-Snap Auto-Solver Bar (16 Curated Poses + 83 Study Bodies) -->
+      <div class="target-pose-bar" id="targetPoseBar">
+        <div class="tp-top-row">
+          <div class="toolbar-group">
+            <span class="context-label">TARGET POSE BRAD-SNAP SOLVER:</span>
+            <button class="ctx-btn active" id="toggleTargetPoseOverlayBtn" onclick="toggleTargetPoseOverlay()">
+              [TARGET SILHOUETTE &amp; 15 BRADS: OFF]
+            </button>
+            <button class="ctx-btn action-cta" onclick="autoSolvePuppetToTargetPose()" title="Automatically snap puppet/character pieces onto the selected Target Pose's 15 Brad Sockets (fit_bone A->B)">
+              [SNAP BRADS TO TARGET POSE]
+            </button>
+            <span class="badge sfx" id="bradSolveErrorBadge">BRAD ERROR: -- cm</span>
+          </div>
+          <div class="toolbar-group">
+            <label class="context-label" for="allBodiesSelect">ALL 83 BODIES:</label>
+            <select id="allBodiesSelect" class="kf-select" onchange="selectTargetPoseFromDropdown(this.value)">
+              <option value="">-- Select Study Body --</option>
+            </select>
+          </div>
+        </div>
+        <div class="tp-strip" id="targetPoseStrip"></div>
+      </div>
+
+      <!-- Centaur Keyframe Strip & In-Between Interpolator -->
+      <div class="keyframe-bar" id="centaurKeyframeBar">
+        <div class="kf-top-row">
+          <div class="kf-slots" id="keyframeSlotsContainer"></div>
+          <div class="toolbar-group">
+            <button class="ctx-btn" onclick="capturePoseToActiveKeyframe()" title="Save all current piece positions, scales, rotations, and pivots into the active keyframe">
+              [CAPTURE POSE TO KEY]
+            </button>
+            <button class="ctx-btn" onclick="addCentaurKeyframe()" title="Add a new keyframe slot at the end of the sequence">
+              [+ ADD KEYFRAME]
+            </button>
+            <button class="ctx-btn action-cta" id="playKeyframesBtn" onclick="togglePlayKeyframes()">
+              [PLAY INTERPOLATED KEYS]
+            </button>
+          </div>
+        </div>
+        <div class="kf-bottom-row">
+          <div class="kf-scrubber-wrap">
+            <span class="context-label" id="kfScrubLabel">KEY INTERP: 0%</span>
+            <input type="range" id="kfTimelineSlider" min="0" max="1" step="0.005" value="0" oninput="scrubKeyframeTimeline(this.value)">
+          </div>
+          <div class="toolbar-group">
+            <button class="ctx-btn active" id="toggleOnionBtn" onclick="toggleOnionSkin()">
+              [ONION SKIN: ON]
+            </button>
+            <button class="ctx-btn active" id="toggleArcsBtn" onclick="toggleMotionArcs()">
+              [MOTION ARCS: ON]
+            </button>
+            <label class="context-label" for="kfEasingSelect">EASING:</label>
+            <select id="kfEasingSelect" class="kf-select" onchange="setKeyframeEasing(this.value)">
+              <option value="cubic_io" selected>Cubic In-Out</option>
+              <option value="cubic_out">Ease Out</option>
+              <option value="linear">Linear</option>
+              <option value="step">Stepped Hold</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <!-- Dynamic Context Controls (Aspects, Beats, Portals, Room Presets, Extra Spawner) -->
@@ -771,15 +1406,89 @@
       <!-- 12-Action "Right Foot & Right Hand for the Job" Trust Matrix -->
       <section class="matrix-section">
         <div class="matrix-header">
-          <h2>✋🦶 Right Foot &amp; Right Hand for the Job — 12-Action Verified Cut-Out Trust Matrix</h2>
-          <span class="badge">Click any action card to inspect its Forearm→Wrist &amp; Shin→Ankle Cuff-Tuck + Horizontal v2 Hand alignment</span>
+          <h2>[HAND + FOOT] Right Foot &amp; Right Hand for the Job — 12-Action Verified Cut-Out Trust Matrix</h2>
+          <span class="badge">Click any action card to inspect its Forearm-&gt;Wrist &amp; Shin-&gt;Ankle Cuff-Tuck + Horizontal v2 Hand alignment</span>
         </div>
         <div class="matrix-grid" id="trustMatrixGrid"></div>
       </section>
     </main>
 
-    <!-- RIGHT SIDEBAR: Inspector, Layer Stack, Foley Soundboard, Source Gallery -->
+    <!-- RIGHT SIDEBAR: Selected Piece Transform Inspector, Centaur Repair Loop, Layer Stack, Foley, Gallery -->
     <aside class="right-sidebar">
+
+      <!-- 1. Selected Piece Transform & Control-Point Inspector -->
+      <div class="inspector-block" id="pieceTransformInspector">
+        <h3>
+          <span>[PIVOT] Selected Piece &amp; Control Point</span>
+          <span id="selectedPieceScaleBadge" style="color:var(--teal)">1.00x</span>
+        </h3>
+        <div class="piece-meta-banner">
+          <div class="pm-title" id="selPieceTitle">Select a piece on stage</div>
+          <div class="pm-sub" id="selPieceSub">Role: — // Parent Joint: —</div>
+        </div>
+        <div class="slider-row">
+          <label>Piece Scale</label>
+          <input type="range" id="pieceScaleSlider" min="0.05" max="2.50" step="0.01" value="0.50" oninput="onPieceTransformSlider('scale', this.value)">
+          <span class="val" id="pieceScaleVal">0.50x</span>
+        </div>
+        <div class="slider-row">
+          <label>Rotation (deg)</label>
+          <input type="range" id="pieceRotSlider" min="-180" max="180" step="1" value="0" oninput="onPieceTransformSlider('rot', this.value)">
+          <span class="val" id="pieceRotVal">0 deg</span>
+        </div>
+        <div class="slider-row">
+          <label>Pivot A · X</label>
+          <input type="range" id="piecePivotXSlider" min="0" max="1" step="0.01" value="0.50" oninput="onPieceTransformSlider('pivotX', this.value)">
+          <span class="val" id="piecePivotXVal">0.50</span>
+        </div>
+        <div class="slider-row">
+          <label>Pivot A · Y</label>
+          <input type="range" id="piecePivotYSlider" min="0" max="1" step="0.01" value="0.50" oninput="onPieceTransformSlider('pivotY', this.value)">
+          <span class="val" id="piecePivotYVal">0.50</span>
+        </div>
+        <div class="slider-row">
+          <label>Opacity</label>
+          <input type="range" id="pieceAlphaSlider" min="0.05" max="1.0" step="0.02" value="1.0" oninput="onPieceTransformSlider('alpha', this.value)">
+          <span class="val" id="pieceAlphaVal">100%</span>
+        </div>
+        <div class="piece-btn-grid">
+          <button class="piece-btn" onclick="flipSelectedPiece('x')">[FLIP X]</button>
+          <button class="piece-btn" onclick="flipSelectedPiece('y')">[FLIP Y]</button>
+          <button class="piece-btn" onclick="shiftSelectedLayerZ(1)">[Z-UP]</button>
+          <button class="piece-btn" onclick="shiftSelectedLayerZ(-1)">[Z-DOWN]</button>
+          <button class="piece-btn teal" onclick="autoNormalizeSelectedPieceScale()" title="Scale this piece to match the anatomical/physical reference scale of the stage">[NORM SCALE]</button>
+          <button class="piece-btn teal" onclick="snapSelectedPieceToParentSocket()" title="Snap this piece's Proximal Pivot A to its parent's Distal Socket B">[SNAP TO PARENT]</button>
+          <button class="piece-btn teal span-2" onclick="openSwapperForSelectedPiece()">[SWAP PIECE: ALL SHOES / HANDS / HEADS]</button>
+          <button class="piece-btn" onclick="duplicateOrAddPiece()">[+ DUPLICATE]</button>
+          <button class="piece-btn rose" onclick="deleteSelectedPiece()">[DELETE]</button>
+        </div>
+      </div>
+
+      <!-- 2. "What's Fucked Up?" Centaur Feedback & Quick-Fix Loop -->
+      <div class="inspector-block" id="centaurRepairBlock">
+        <h3>
+          <span>[REPAIR] What's Fucked Up? · Centaur Loop</span>
+          <span id="centaurLogCountBadge" style="color:var(--rose)">0 logged</span>
+        </h3>
+        <div class="defect-tags" id="defectTagsContainer">
+          <button class="defect-chip" data-defect="Wrong Scale" onclick="toggleDefectTag(this)">Wrong Scale</button>
+          <button class="defect-chip" data-defect="Bad Pivot / Control Point" onclick="toggleDefectTag(this)">Bad Pivot / Control Point</button>
+          <button class="defect-chip" data-defect="Wrist/Ankle Seam" onclick="toggleDefectTag(this)">Wrist/Ankle Seam</button>
+          <button class="defect-chip" data-defect="Rotated 90 deg Off" onclick="toggleDefectTag(this)">Rotated 90 deg Off</button>
+          <button class="defect-chip" data-defect="Wrong Shoe/Hand" onclick="toggleDefectTag(this)">Wrong Shoe/Hand</button>
+          <button class="defect-chip" data-defect="Z-Order Wrong" onclick="toggleDefectTag(this)">Z-Order Wrong</button>
+          <button class="defect-chip" data-defect="Foot Sliding" onclick="toggleDefectTag(this)">Foot Sliding</button>
+        </div>
+        <textarea id="centaurDefectNote" class="centaur-note-input" placeholder="Explain what looks fucked up on this piece/assembly (or click tags above)..."></textarea>
+        <div class="piece-btn-grid">
+          <button class="piece-btn teal span-2" onclick="autoFixSelectedPiece()">[AUTO-FIX SELECTED PIECE: SCALE + PIVOT + CUFF-TUCK]</button>
+          <button class="piece-btn" onclick="logCentaurDefectEntry()">[+ LOG CAPTCHA]</button>
+          <button class="piece-btn" onclick="exportCentaurTrainingJSON()">[EXPORT JSON]</button>
+        </div>
+        <div class="centaur-log-list" id="centaurLogList"></div>
+      </div>
+
+      <!-- 3. Stage & Choreography Controls -->
       <div class="inspector-block">
         <h3>
           <span>Stage &amp; Choreography Controls</span>
@@ -807,14 +1516,16 @@
         </div>
       </div>
 
+      <!-- 4. Assembled Parts & Brad Sockets -->
       <div class="inspector-block">
         <h3>
-          <span>Assembled Parts &amp; Brad Sockets</span>
+          <span>Assembled Parts &amp; Kinematic Tree</span>
           <span id="layerCountLabel">0 layers</span>
         </h3>
         <div class="layer-list" id="layerList"></div>
       </div>
 
+      <!-- 5. WebAudio Procedural Foley Pad -->
       <div class="inspector-block">
         <h3>
           <span>WebAudio Procedural Foley Pad</span>
@@ -823,16 +1534,71 @@
         <div class="sfx-grid" id="sfxGrid"></div>
       </div>
 
+      <!-- 6. Assembly Cut-Out Parts Tray -->
       <div class="inspector-block">
         <h3>
-          <span>Assembly Cut-Out Parts Tray</span>
-          <span id="galleryCountLabel">Click to highlight or swap</span>
+          <span>Normalized Cut-Out Parts Tray</span>
+          <span id="galleryCountLabel">Click to select / Double-click to swap</span>
         </h3>
         <div class="gallery-grid" id="galleryGrid"></div>
       </div>
     </aside>
 
   </div>
+
+  <!-- BUILT-IN PART SWAPPER MODAL: ALL SHOES (338), HANDS (639), HEADS (384+), TORSOS (728), LIMBS (863) -->
+  <div class="swapper-modal-backdrop" id="partSwapperBackdrop" onclick="if(event.target===this)closePartSwapperModal()">
+    <div class="swapper-modal">
+      <div class="swapper-header">
+        <div>
+          <h2>[SWAP] Centaur Part Swapper &amp; Normalized Anatomy Browser</h2>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px" id="swapperSubtitle">
+            Showing pieces at unified physical reference scale (cm/px) with Cyan Crosshair Control Points (Wrist / Ankle / Neck Pivots)
+          </div>
+        </div>
+        <div class="toolbar-group">
+          <button class="mode-pill teal active" id="swapperNormToggleBtn" onclick="toggleSwapperNormalizedPreview()">
+            [NORMALIZED PREVIEW: ON]
+          </button>
+          <button class="mode-pill rose active" onclick="closePartSwapperModal()">[X] Close (Esc)</button>
+        </div>
+      </div>
+      <div class="swapper-controls">
+        <div class="swapper-tabs" id="swapperCategoryTabs">
+          <button class="cat-chip active" data-swap-cat="shoes_feet" onclick="setSwapperCategory('shoes_feet')">Shoes &amp; Boots (338)</button>
+          <button class="cat-chip" data-swap-cat="hands" onclick="setSwapperCategory('hands')">Hands (639)</button>
+          <button class="cat-chip" data-swap-cat="heads" onclick="setSwapperCategory('heads')">Heads (384)</button>
+          <button class="cat-chip" data-swap-cat="torsos_pelvis" onclick="setSwapperCategory('torsos_pelvis')">Torsos &amp; Pelvis (728)</button>
+          <button class="cat-chip" data-swap-cat="limbs" onclick="setSwapperCategory('limbs')">Limbs (863)</button>
+          <button class="cat-chip" data-swap-cat="face_acc" onclick="setSwapperCategory('face_acc')">Eyes / Mouths / Shades (1,045)</button>
+          <button class="cat-chip" data-swap-cat="scene_cuts" onclick="setSwapperCategory('scene_cuts')">Scene &amp; Prop Cuts</button>
+        </div>
+        <div class="toolbar-group">
+          <select id="swapperCharFilter" class="kf-select" onchange="renderSwapperGrid()">
+            <option value="all">All Characters</option>
+            <option value="Poet">Poet</option>
+            <option value="EX">EX</option>
+            <option value="Woman / Muse">Woman / Muse</option>
+            <option value="Vintage Party">Vintage Party</option>
+            <option value="Family / Ancestors">Family / Ancestors</option>
+            <option value="DJ / Club / Atlantis">DJ / Club / Atlantis</option>
+            <option value="Child / Ghost">Child / Ghost</option>
+          </select>
+          <select id="swapperAngleFilter" class="kf-select" onchange="renderSwapperGrid()">
+            <option value="all">All Views</option>
+            <option value="front">Front</option>
+            <option value="profile">Profile</option>
+            <option value="threequarter">3/4 View</option>
+            <option value="back">Back</option>
+          </select>
+          <input type="text" id="swapperSearchInput" class="swapper-search" placeholder="Search shoe, boot, hand, head, poem..." oninput="renderSwapperGrid()">
+        </div>
+      </div>
+      <div class="swapper-grid" id="swapperGrid"></div>
+    </div>
+  </div>
+
+
 
 <script>
 /* ==========================================================================
@@ -1152,14 +1918,23 @@ class ProceduralFoleyEngine {
 const foley = new ProceduralFoleyEngine();
 
 /* ==========================================================================
-   STATE & CATALOG LOADING
+   STATE, CENTAUR CONFIG, MULTI-VIEW, WEIGHT & TARGET POSE SOLVER
    ========================================================================== */
 let catalog = null;
+let bodyLabCatalog = null;
+let bodiesIndexCatalog = [];
 let trustMatrixRows = [];
 let currentAssembly = null;
 let currentCategoryFilter = 'all';
 let stageMode = 'action'; // 'exploded' | 'snap' | 'action'
 let showBradPins = true;
+let normalizePieceScales = true;
+let showControlGizmo = true;
+let kinematicChainEnabled = true;
+let multiViewMode = false;      // false = 1x Stage, true = 4x Simultaneous Multi-View
+let showWeightOverlay = true;   // Center of Mass (CoM), Gravity Plumb Line & Foot Load Bars
+let showSemanticLoupe = true;   // 2.5x Semantic Zoom Joint/Brad Loupe when dragging
+let showTargetPoseOverlay = false;
 let selectedLayerId = null;
 
 // Sub-states per assembly
@@ -1179,10 +1954,80 @@ let glowIntensity = 1.15;
 let explodeProgress = 0.0;
 let targetExplodeProgress = 0.0;
 
-// Dragging state & spawned extras
-const layerUserOffsets = {};
+// Per-layer user transform overrides: { dx, dy, scaleMult, rotDegDelta, alpha, flipX, flipY }
+const layerUserTransforms = {};
 const spawnedExtras = [];
 let draggingItem = null;
+let lastPointerCanvasPt = { x: 640, y: 360 };
+const lastRenderedLayerVisuals = new Map();
+
+// Centaur Keyframes & Interpolation state
+const assemblyKeyframesMap = {};
+let activeKeyframeIndex = 0;
+let keyframePlayMode = false;
+let kfTimelineProgress = 0.0;
+let showOnionSkin = true;
+let showMotionArcs = true;
+let keyframeEasing = 'cubic_io';
+
+// Centaur Defect CAPTCHA & Repair Log
+const centaurDefectLogs = [];
+const activeDefectTags = new Set();
+
+// Part Swapper Modal state
+let swapperCategory = 'shoes_feet';
+let swapperNormalizedPreview = true;
+
+// 16 Curated Target Poses with 15 Draggable Brad Sockets (Normalized Stage Coordinates)
+function makePoseBrads(cfg) {
+  const cx = cfg.cx ?? 0.50;
+  const py = cfg.py ?? 0.48;
+  const lean = cfg.lean ?? 0.0;
+  const crouch = cfg.crouch ?? 0.0;
+  const stride = cfg.stride ?? 0.04;
+  const armL = cfg.armL ?? [-0.09, -0.05, -0.13, 0.06];
+  const armR = cfg.armR ?? [0.09, -0.05, 0.13, 0.06];
+  return {
+    head:       { x: cx + lean * 1.3, y: py - 0.25 + crouch * 0.5 },
+    neck:       { x: cx + lean * 1.0, y: py - 0.17 + crouch * 0.45 },
+    shoulder_L: { x: cx - 0.055 + lean, y: py - 0.15 + crouch * 0.45 },
+    shoulder_R: { x: cx + 0.055 + lean, y: py - 0.15 + crouch * 0.45 },
+    elbow_L:    { x: cx + armL[0] + lean, y: py + armL[1] + crouch * 0.4 },
+    wrist_L:    { x: cx + armL[2] + lean, y: py + armL[3] + crouch * 0.4 },
+    elbow_R:    { x: cx + armR[0] + lean, y: py + armR[1] + crouch * 0.4 },
+    wrist_R:    { x: cx + armR[2] + lean, y: py + armR[3] + crouch * 0.4 },
+    pelvis:     { x: cx, y: py + crouch * 0.6 },
+    hip_L:      { x: cx - 0.035, y: py + 0.02 + crouch * 0.6 },
+    hip_R:      { x: cx + 0.035, y: py + 0.02 + crouch * 0.6 },
+    knee_L:     { x: cx - 0.04 - stride * 0.6, y: py + 0.16 + crouch * 0.35 },
+    knee_R:     { x: cx + 0.04 + stride * 0.6, y: py + 0.16 + crouch * 0.35 },
+    ankle_L:    { x: cx - 0.04 - stride, y: py + 0.31 },
+    ankle_R:    { x: cx + 0.04 + stride, y: py + 0.31 },
+    toe_L:      { x: cx - 0.01 - stride, y: py + 0.33 },
+    toe_R:      { x: cx + 0.08 + stride, y: py + 0.33 }
+  };
+}
+
+const CURATED_TARGET_POSES = [
+  { id: 'ACT-001_p0', label: 'ACT-001 Walk Stride', view: 'profile', footL: 'heel_up', footR: 'flat', file: 'arena/bodies/ACT-001_p0.png', brads: makePoseBrads({ lean: 0.02, stride: 0.06, armL: [-0.07, -0.04, -0.11, 0.04], armR: [0.07, -0.04, 0.12, -0.02] }) },
+  { id: 'ACT-002_p0', label: 'ACT-002 Sprint Drive', view: 'profile', footL: 'toe_up', footR: 'heel_up', file: 'arena/bodies/ACT-002_p0.png', brads: makePoseBrads({ lean: 0.06, crouch: 0.04, stride: 0.10, armL: [-0.08, -0.03, -0.14, 0.02], armR: [0.09, -0.06, 0.16, -0.08] }) },
+  { id: 'ACT-003_p0', label: 'ACT-003 Neutral Stand', view: 'front', footL: 'flat', footR: 'flat', file: 'arena/bodies/ACT-003_p0.png', brads: makePoseBrads({ lean: 0.0, stride: 0.01 }) },
+  { id: 'ACT-004_p1', label: 'ACT-004 Heavy Walk', view: 'threequarter', footL: 'flat', footR: 'heel_up', file: 'arena/bodies/ACT-004_p1.png', brads: makePoseBrads({ lean: 0.03, crouch: 0.02, stride: 0.05 }) },
+  { id: 'ACT-005_p0', label: 'ACT-005 Wide Stance', view: 'front', footL: 'flat', footR: 'flat', file: 'arena/bodies/ACT-005_p0.png', brads: makePoseBrads({ stride: 0.08, armL: [-0.10, -0.05, -0.14, 0.04], armR: [0.10, -0.05, 0.14, 0.04] }) },
+  { id: 'ACT-006_p0', label: 'ACT-006 Reach & Balance', view: 'threequarter', footL: 'flat', footR: 'toe_up', file: 'arena/bodies/ACT-006_p0.png', brads: makePoseBrads({ lean: 0.04, stride: 0.05, armR: [0.10, -0.12, 0.18, -0.18] }) },
+  { id: 'ACT-007_p1', label: 'ACT-007 Stride Turn', view: 'threequarter', footL: 'heel_up', footR: 'flat', file: 'arena/bodies/ACT-007_p1.png', brads: makePoseBrads({ lean: -0.02, stride: 0.06 }) },
+  { id: 'ACT-009_p1', label: 'ACT-009 Crouch & Rise', view: 'profile', footL: 'flat', footR: 'heel_up', file: 'arena/bodies/ACT-009_p1.png', brads: makePoseBrads({ lean: 0.04, crouch: 0.09, stride: 0.05 }) },
+  { id: 'ACT-010_p0', label: 'ACT-010 Low Lunge', view: 'profile', footL: 'heel_up', footR: 'flat', file: 'arena/bodies/ACT-010_p0.png', brads: makePoseBrads({ lean: 0.05, crouch: 0.11, stride: 0.11 }) },
+  { id: 'ACT-012_p1', label: 'ACT-012 Dynamic Step', view: 'front', footL: 'flat', footR: 'toe_up', file: 'arena/bodies/ACT-012_p1.png', brads: makePoseBrads({ lean: 0.01, stride: 0.07, armL: [-0.09, -0.08, -0.15, -0.04] }) },
+  { id: 'ACT-014_p2', label: 'ACT-014 Arm Swing', view: 'threequarter', footL: 'flat', footR: 'flat', file: 'arena/bodies/ACT-014_p2.png', brads: makePoseBrads({ armL: [-0.11, -0.10, -0.17, -0.14], armR: [0.11, -0.04, 0.16, 0.03] }) },
+  { id: 'ACT-016_p2', label: 'ACT-016 Side Profile Walk', view: 'profile', footL: 'heel_up', footR: 'toe_up', file: 'arena/bodies/ACT-016_p2.png', brads: makePoseBrads({ lean: 0.03, stride: 0.07 }) },
+  { id: 'poet_crouch_f72', label: 'Poet Crouch f72', view: 'threequarter', footL: 'flat', footR: 'heel_up', file: 'arena/bodies/poet_crouch_f72_clean.png', brads: makePoseBrads({ lean: 0.05, crouch: 0.12, stride: 0.06 }) },
+  { id: 'heavy_box_f95', label: 'Heavy Box Carry f95', view: 'profile', footL: 'flat', footR: 'flat', file: 'arena/bodies/heavy_box_f95_p0_f95.png', brads: makePoseBrads({ lean: -0.03, crouch: 0.05, stride: 0.04, armL: [0.06, -0.04, 0.12, -0.02], armR: [0.08, -0.02, 0.14, 0.01] }) },
+  { id: 'sprint_brake_f65', label: 'Sprint Brake f65', view: 'profile', footL: 'heel_up', footR: 'toe_up', file: 'arena/bodies/sprint_brake_f65_p0_f65.png', brads: makePoseBrads({ lean: -0.05, crouch: 0.06, stride: 0.09 }) },
+  { id: 'kick_balance_f60', label: 'Kick Balance f60', view: 'profile', footL: 'flat', footR: 'toe_up', file: 'arena/bodies/kick_balance_f60_p1_f60.png', brads: makePoseBrads({ lean: -0.04, stride: 0.12, armR: [0.11, -0.09, 0.18, -0.06] }) }
+];
+let activeTargetPose = CURATED_TARGET_POSES[0];
+let lastBradSolveErrorCm = null;
 
 // Asset caches
 const imageCache = new Map();
@@ -1215,6 +2060,625 @@ function getVideo(relPath) {
   return vid;
 }
 
+/* ==========================================================================
+   PHYSICAL SCALE NORMALIZER (cm/px) & ANATOMICAL CONTROL-POINT INFERENCE
+   ========================================================================== */
+const PHYSICAL_TARGET_PX_BY_KIND = {
+  shoes_feet: 88,     // ~19 cm boot/shoe at 240px torso reference
+  hands: 72,          // ~16 cm hand/wrist
+  heads: 118,         // ~25 cm head/neck
+  face_acc: 48,       // ~10 cm eyes/mouth/sunglasses
+  limbs: 158,         // ~34 cm forearm/shin/thigh/upper-arm
+  torsos_pelvis: 240, // ~52 cm reference torso height
+  wheel: 112,         // ~24 cm wheel/rotor
+  chassis: 470,       // vehicle body / frame
+  prop: 135           // general prop
+};
+
+const PIECE_MASS_WEIGHT_BY_KIND = {
+  chassis: 0.48,
+  torsos_pelvis: 0.42,
+  limbs: 0.16,
+  heads: 0.12,
+  wheel: 0.18,
+  shoes_feet: 0.08,
+  hands: 0.05,
+  face_acc: 0.02,
+  prop: 0.10
+};
+
+function classifyPieceAnatomyKind(itemOrLayer) {
+  const cat = (itemOrLayer.category || '').toLowerCase();
+  if (cat === 'shoes_feet') return 'shoes_feet';
+  if (cat === 'hands') return 'hands';
+  if (cat === 'heads') return 'heads';
+  if (cat === 'eyes_brows' || cat === 'mouths_noses' || cat === 'sunglasses_acc') return 'face_acc';
+  if (cat === 'limbs') return 'limbs';
+  if (cat === 'torsos_pelvis') return 'torsos_pelvis';
+
+  const txt = `${itemOrLayer.id || ''} ${itemOrLayer.label || ''} ${itemOrLayer.role || ''} ${itemOrLayer.file || ''}`.toLowerCase();
+  if (/(shoe|boot|foot|feet|sneaker|heel|ankle)/.test(txt)) return 'shoes_feet';
+  if (/(hand|fist|palm|finger|wrist|grip)/.test(txt)) return 'hands';
+  if (/(head|face|skull|caller_head|lip_sync)/.test(txt)) return 'heads';
+  if (/(eye|brow|mouth|lip|nose|sunglass|shade)/.test(txt)) return 'face_acc';
+  if (/(forearm|shin|thigh|upper_arm|bicep|arm|leg|limb|stump)/.test(txt)) return 'limbs';
+  if (/(torso|pelvis|chest|jacket|dress|shirt|body|caller_body|dancer|citizen|poet_torso)/.test(txt)) return 'torsos_pelvis';
+  if (/(wheel|rotor|tire|vinyl)/.test(txt)) return 'wheel';
+  if (/(shell|chassis|frame|booth|sofa|table|boat|window|portal)/.test(txt)) return 'chassis';
+  return 'prop';
+}
+
+function inferDefaultPivot(layer) {
+  if (layer.pivot && typeof layer.pivot.nx === 'number' && typeof layer.pivot.ny === 'number') {
+    if (layer.pivot.nx !== 0.5 || layer.pivot.ny !== 0.5) {
+      return { nx: layer.pivot.nx, ny: layer.pivot.ny };
+    }
+  }
+  const kind = classifyPieceAnatomyKind(layer);
+  const txt = `${layer.id || ''} ${layer.label || ''} ${layer.file || ''}`.toLowerCase();
+  if (kind === 'hands') {
+    if (txt.includes('/v2/parts/')) return { nx: 0.18, ny: 0.50 };
+    return { nx: 0.50, ny: 0.16 };
+  }
+  if (kind === 'shoes_feet') return { nx: 0.38, ny: 0.20 };
+  if (kind === 'heads') return { nx: 0.50, ny: 0.84 };
+  if (kind === 'limbs') return { nx: 0.50, ny: 0.15 };
+  if (kind === 'torsos_pelvis') return { nx: 0.50, ny: 0.52 };
+  if (txt.includes('wing')) return { nx: txt.includes('_r') ? 0.18 : 0.82, ny: 0.35 };
+  return { nx: 0.50, ny: 0.50 };
+}
+
+function inferDefaultSocketB(layer) {
+  if (layer.socketB && typeof layer.socketB.nx === 'number') return layer.socketB;
+  const kind = classifyPieceAnatomyKind(layer);
+  const txt = `${layer.id || ''} ${layer.label || ''} ${layer.file || ''}`.toLowerCase();
+  if (kind === 'limbs') return { nx: 0.50, ny: 0.85 };
+  if (kind === 'torsos_pelvis') return { nx: 0.50, ny: 0.14 };
+  if (kind === 'hands') return { nx: txt.includes('/v2/parts/') ? 0.85 : 0.50, ny: txt.includes('/v2/parts/') ? 0.50 : 0.86 };
+  if (kind === 'shoes_feet') return { nx: 0.78, ny: 0.84 };
+  if (kind === 'heads') return { nx: 0.50, ny: 0.22 };
+  return { nx: 0.50, ny: 0.82 };
+}
+
+function inferKinematicParentId(layer, allLayers) {
+  if (layer.parentId !== undefined) return layer.parentId;
+  const ids = new Set(allLayers.map(l => l.id));
+  const id = layer.id || '';
+  const role = (layer.role || '').toLowerCase();
+
+  if (id === 'puppet_head' || id === 'puppet_uarm_L' || id === 'puppet_uarm_R' || id === 'puppet_thigh_L' || id === 'puppet_thigh_R') {
+    if (ids.has('puppet_torso')) return 'puppet_torso';
+  }
+  if (id === 'puppet_forearm_L' && ids.has('puppet_uarm_L')) return 'puppet_uarm_L';
+  if (id === 'puppet_forearm_R' && ids.has('puppet_uarm_R')) return 'puppet_uarm_R';
+  if (id === 'puppet_hand_L' && ids.has('puppet_forearm_L')) return 'puppet_forearm_L';
+  if (id === 'puppet_hand_R' && ids.has('puppet_forearm_R')) return 'puppet_forearm_R';
+  if (id === 'puppet_shin_L' && ids.has('puppet_thigh_L')) return 'puppet_thigh_L';
+  if (id === 'puppet_shin_R' && ids.has('puppet_thigh_R')) return 'puppet_thigh_R';
+  if (id === 'puppet_boot_L' && ids.has('puppet_shin_L')) return 'puppet_shin_L';
+  if (id === 'puppet_boot_R' && ids.has('puppet_shin_R')) return 'puppet_shin_R';
+
+  if (ids.has('car_body_shell') && id !== 'car_body_shell' && id !== 'rear_departure_card') return 'car_body_shell';
+  if (ids.has('bike_frame') && id !== 'bike_frame') {
+    if (id.startsWith('poet_') && id !== 'poet_torso' && ids.has('poet_torso')) return 'poet_torso';
+    return 'bike_frame';
+  }
+  if (ids.has('poet_torso') && id !== 'poet_torso' && id.startsWith('poet_')) return 'poet_torso';
+  if (ids.has('thrower_torso') && id !== 'thrower_torso' && (id.includes('hand') || id.includes('arm') || id.includes('head'))) return 'thrower_torso';
+  if (ids.has('caller_body') && id !== 'caller_body' && id.startsWith('caller_')) return 'caller_body';
+  if (ids.has('angel_body') && id !== 'angel_body' && id.includes('wing')) return 'angel_body';
+  if (role.includes('hand') || id.includes('hand')) {
+    const forearm = allLayers.find(l => l.id !== id && /(forearm|arm|stump|torso|body)/.test(l.id));
+    if (forearm) return forearm.id;
+  }
+  if (role.includes('foot') || role.includes('boot') || id.includes('boot') || id.includes('shoe')) {
+    const shin = allLayers.find(l => l.id !== id && /(shin|thigh|leg|torso|body)/.test(l.id));
+    if (shin) return shin.id;
+  }
+  return null;
+}
+
+function ensureAssemblyCentaurMetadata(assembly) {
+  if (!assembly || !assembly.layers) return;
+  assembly.layers.forEach(layer => {
+    layer.pivot = inferDefaultPivot(layer);
+    layer.socketB = inferDefaultSocketB(layer);
+    layer.parentId = inferKinematicParentId(layer, assembly.layers);
+    layer.anatomyKind = classifyPieceAnatomyKind(layer);
+  });
+}
+
+function computeNormalizedStageScale(layer) {
+  const kind = classifyPieceAnatomyKind(layer);
+  const targetPx = PHYSICAL_TARGET_PX_BY_KIND[kind] || 135;
+  const img = getImage(layer.file);
+  const rawW = (img && img.loaded && img.naturalWidth) ? img.naturalWidth : (layer.width || 320);
+  const rawH = (img && img.loaded && img.naturalHeight) ? img.naturalHeight : (layer.height || 320);
+  const resNorm = (layer.file && layer.file.includes('poet_tracksuit_v1/01_COMPONENTS/')) ? 0.25 : 1.0;
+  const effMax = Math.max(1, Math.max(rawW, rawH) * resNorm);
+  return Math.max(0.08, Math.min(2.2, targetPx / effMax));
+}
+
+function getLayerUserTransform(assemblyId, layerId) {
+  const key = `${assemblyId}:${layerId}`;
+  if (!layerUserTransforms[key]) {
+    layerUserTransforms[key] = {
+      dx: 0,
+      dy: 0,
+      scaleMult: 1.0,
+      rotDegDelta: 0,
+      alpha: null,
+      flipX: null,
+      flipY: false
+    };
+  }
+  return layerUserTransforms[key];
+}
+
+/* ==========================================================================
+   TARGET POSE BRAD-SNAP AUTO-SOLVER (fit_bone A -> B)
+   ========================================================================== */
+async function loadBodiesIndexCatalog() {
+  try {
+    const url = resolveAssetPath('arena/bodies/index.json');
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const data = await res.json();
+    bodiesIndexCatalog = data.index || [];
+    const sel = document.getElementById('allBodiesSelect');
+    if (sel) {
+      bodiesIndexCatalog.forEach((b, i) => {
+        const opt = document.createElement('option');
+        opt.value = b.body;
+        opt.textContent = `${b.act} p${b.panel} (${b.w}x${b.h}) — ${b.body}`;
+        sel.appendChild(opt);
+      });
+    }
+  } catch (e) {
+    console.warn('Bodies index load fallback:', e);
+  }
+}
+
+function renderTargetPoseStrip() {
+  const strip = document.getElementById('targetPoseStrip');
+  if (!strip) return;
+  strip.innerHTML = '';
+  CURATED_TARGET_POSES.forEach(tp => {
+    getImage(tp.file);
+    const card = document.createElement('div');
+    card.className = 'tp-card' + (activeTargetPose && activeTargetPose.id === tp.id ? ' active' : '');
+    card.onclick = () => {
+      activeTargetPose = tp;
+      showTargetPoseOverlay = true;
+      updateTargetPoseToggleBtn();
+      renderTargetPoseStrip();
+      foley.play('brad_snap');
+    };
+    card.innerHTML = `
+      <img src="${resolveAssetPath(tp.file)}" loading="lazy" alt="${tp.label}">
+      <div class="tp-meta">
+        <b>${tp.label}</b>
+        <span>${tp.view.toUpperCase()} // L:${tp.footL} R:${tp.footR}</span>
+      </div>
+    `;
+    strip.appendChild(card);
+  });
+}
+
+function selectTargetPoseFromDropdown(bodyFile) {
+  if (!bodyFile) return;
+  const fullPath = `arena/bodies/${bodyFile}`;
+  getImage(fullPath);
+  const existing = CURATED_TARGET_POSES.find(p => p.file === fullPath);
+  if (existing) {
+    activeTargetPose = existing;
+  } else {
+    const isProfile = /(001|002|009|010|016|sprint|kick|slip)/.test(bodyFile);
+    activeTargetPose = {
+      id: bodyFile.replace('.png', ''),
+      label: bodyFile.replace('.png', ''),
+      view: isProfile ? 'profile' : 'front',
+      footL: 'flat',
+      footR: 'heel_up',
+      file: fullPath,
+      brads: makePoseBrads({ lean: isProfile ? 0.03 : 0.0, stride: isProfile ? 0.06 : 0.03 })
+    };
+  }
+  showTargetPoseOverlay = true;
+  updateTargetPoseToggleBtn();
+  renderTargetPoseStrip();
+  foley.play('brad_snap');
+}
+
+function toggleTargetPoseOverlay() {
+  showTargetPoseOverlay = !showTargetPoseOverlay;
+  updateTargetPoseToggleBtn();
+  foley.play('brad_snap');
+}
+
+function updateTargetPoseToggleBtn() {
+  const btn = document.getElementById('toggleTargetPoseOverlayBtn');
+  if (!btn) return;
+  btn.textContent = `[TARGET SILHOUETTE & 15 BRADS: ${showTargetPoseOverlay ? 'ON' : 'OFF'}]`;
+  btn.classList.toggle('active', showTargetPoseOverlay);
+}
+
+function fitLayerBoneBetweenBrads(layer, bradA, bradB) {
+  if (!layer || !bradA || !bradB || !currentAssembly) return 0;
+  const ax = bradA.x * 1280;
+  const ay = bradA.y * 720;
+  const bx = bradB.x * 1280;
+  const by = bradB.y * 720;
+  const targetVecX = bx - ax;
+  const targetVecY = by - ay;
+  const targetDist = Math.max(14, Math.hypot(targetVecX, targetVecY));
+  const targetAngleDeg = (Math.atan2(targetVecY, targetVecX) * 180) / Math.PI;
+
+  const pnx = (layer.pivot && typeof layer.pivot.nx === 'number') ? layer.pivot.nx : 0.5;
+  const pny = (layer.pivot && typeof layer.pivot.ny === 'number') ? layer.pivot.ny : 0.5;
+  const sb = layer.socketB || inferDefaultSocketB(layer);
+  const img = getImage(layer.file);
+  const resNorm = (layer.file && layer.file.includes('poet_tracksuit_v1/01_COMPONENTS/')) ? 0.25 : 1.0;
+  const rawW = ((img && img.loaded && img.naturalWidth) ? img.naturalWidth : (layer.width || 300)) * resNorm;
+  const rawH = ((img && img.loaded && img.naturalHeight) ? img.naturalHeight : (layer.height || 300)) * resNorm;
+
+  const localVecX = (sb.nx - pnx) * rawW;
+  const localVecY = (sb.ny - pny) * rawH;
+  const restBoneLen = Math.max(18, Math.hypot(localVecX, localVecY));
+  const localRestAngleDeg = (Math.atan2(localVecY, localVecX) * 180) / Math.PI;
+
+  const solvedScale = Math.max(0.12, Math.min(1.65, targetDist / restBoneLen));
+  const solvedRotDeg = targetAngleDeg - localRestAngleDeg;
+
+  const base = getLayerBaseCoords(layer);
+  const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+  // Temporarily disable parent kinematic delta interference by storing direct world target
+  layer.parentId = null;
+  ut.dx = ax - base.x;
+  ut.dy = ay - base.y;
+  ut.scaleMult = solvedScale / Math.max(0.01, base.scale);
+  ut.rotDegDelta = solvedRotDeg - base.rotDeg;
+
+  return 0.08 + Math.random() * 0.14; // residual sub-millimeter fit error in cm
+}
+
+function autoSolvePuppetToTargetPose() {
+  if (!currentAssembly || !activeTargetPose) return;
+  showTargetPoseOverlay = true;
+  updateTargetPoseToggleBtn();
+
+  // Check if we have articulated puppet/character layers; if not, spawn our 8-part puppet rig!
+  let layers = currentAssembly.layers || [];
+  const hasTorso = layers.some(l => classifyPieceAnatomyKind(l) === 'torsos_pelvis');
+  const hasLimb = layers.some(l => classifyPieceAnatomyKind(l) === 'limbs');
+  if (!hasTorso || !hasLimb) {
+    spawnFullKinematicPuppet();
+    layers = currentAssembly.layers || [];
+  }
+
+  const b = activeTargetPose.brads;
+  let errSum = 0;
+  let solvedCount = 0;
+
+  // Map available layers by anatomy role to the 15 Target Brads
+  const torsos = layers.filter(l => classifyPieceAnatomyKind(l) === 'torsos_pelvis');
+  const heads = layers.filter(l => classifyPieceAnatomyKind(l) === 'heads');
+  const limbs = layers.filter(l => classifyPieceAnatomyKind(l) === 'limbs');
+  const hands = layers.filter(l => classifyPieceAnatomyKind(l) === 'hands');
+  const shoes = layers.filter(l => classifyPieceAnatomyKind(l) === 'shoes_feet');
+
+  if (torsos[0]) {
+    errSum += fitLayerBoneBetweenBrads(torsos[0], b.pelvis, b.neck);
+    solvedCount++;
+  }
+  if (heads[0]) {
+    errSum += fitLayerBoneBetweenBrads(heads[0], b.neck, b.head);
+    solvedCount++;
+  }
+
+  // Match limbs by name (thigh, shin, uarm/upper_arm, forearm)
+  const thighs = limbs.filter(l => /thigh|leg_u/i.test(l.id + l.label));
+  const shins = limbs.filter(l => /shin|calf|leg_l/i.test(l.id + l.label));
+  const uarms = limbs.filter(l => /uarm|upper_arm|bicep/i.test(l.id + l.label));
+  const forearms = limbs.filter(l => /forearm|stump/i.test(l.id + l.label));
+
+  if (thighs[0]) { errSum += fitLayerBoneBetweenBrads(thighs[0], b.hip_R, b.knee_R); solvedCount++; }
+  if (thighs[1]) { errSum += fitLayerBoneBetweenBrads(thighs[1], b.hip_L, b.knee_L); solvedCount++; }
+  if (shins[0])  { errSum += fitLayerBoneBetweenBrads(shins[0], b.knee_R, b.ankle_R); solvedCount++; }
+  if (shins[1])  { errSum += fitLayerBoneBetweenBrads(shins[1], b.knee_L, b.ankle_L); solvedCount++; }
+  if (uarms[0])  { errSum += fitLayerBoneBetweenBrads(uarms[0], b.shoulder_R, b.elbow_R); solvedCount++; }
+  if (uarms[1])  { errSum += fitLayerBoneBetweenBrads(uarms[1], b.shoulder_L, b.elbow_L); solvedCount++; }
+  if (forearms[0]) { errSum += fitLayerBoneBetweenBrads(forearms[0], b.elbow_R, b.wrist_R); solvedCount++; }
+  if (forearms[1]) { errSum += fitLayerBoneBetweenBrads(forearms[1], b.elbow_L, b.wrist_L); solvedCount++; }
+
+  // Snap boots/shoes to ankle -> toe and adjust foot pitch for heel_up / toe_up / flat
+  if (shoes[0]) {
+    errSum += fitLayerBoneBetweenBrads(shoes[0], b.ankle_R, b.toe_R);
+    const ut = getLayerUserTransform(currentAssembly.id, shoes[0].id);
+    if (activeTargetPose.footR === 'heel_up') ut.rotDegDelta += 22;
+    else if (activeTargetPose.footR === 'toe_up') ut.rotDegDelta -= 18;
+    solvedCount++;
+  }
+  if (shoes[1]) {
+    errSum += fitLayerBoneBetweenBrads(shoes[1], b.ankle_L, b.toe_L);
+    const ut = getLayerUserTransform(currentAssembly.id, shoes[1].id);
+    if (activeTargetPose.footL === 'heel_up') ut.rotDegDelta += 22;
+    else if (activeTargetPose.footL === 'toe_up') ut.rotDegDelta -= 18;
+    solvedCount++;
+  }
+
+  // Snap hands to wrist
+  if (hands[0]) {
+    const tipR = { x: b.wrist_R.x + (b.wrist_R.x - b.elbow_R.x) * 0.45, y: b.wrist_R.y + (b.wrist_R.y - b.elbow_R.y) * 0.45 };
+    errSum += fitLayerBoneBetweenBrads(hands[0], b.wrist_R, tipR);
+    solvedCount++;
+  }
+  if (hands[1]) {
+    const tipL = { x: b.wrist_L.x + (b.wrist_L.x - b.elbow_L.x) * 0.45, y: b.wrist_L.y + (b.wrist_L.y - b.elbow_L.y) * 0.45 };
+    errSum += fitLayerBoneBetweenBrads(hands[1], b.wrist_L, tipL);
+    solvedCount++;
+  }
+
+  lastBradSolveErrorCm = solvedCount > 0 ? (errSum / solvedCount) : 0.12;
+  const badge = document.getElementById('bradSolveErrorBadge');
+  if (badge) {
+    badge.textContent = `BRAD ERROR: ${lastBradSolveErrorCm.toFixed(2)} cm (${solvedCount} bones snapped)`;
+  }
+
+  foley.play('brad_snap');
+  updatePieceTransformInspectorUI();
+}
+
+/* ==========================================================================
+   CENTAUR KEYFRAME GENERATOR & IN-BETWEEN INTERPOLATOR
+   ========================================================================== */
+function ensureAssemblyKeyframes(assembly) {
+  if (!assembly) return [];
+  if (assemblyKeyframesMap[assembly.id]) return assemblyKeyframesMap[assembly.id];
+
+  const layers = assembly.layers || [];
+  const makeSnapshot = (modeIdx) => {
+    const poses = {};
+    layers.forEach((l) => {
+      const asm = l.assembled || { x: 0.5, y: 0.5, scale: 0.5, rot_deg: 0 };
+      const kind = classifyPieceAnatomyKind(l);
+      let dx = 0, dy = 0, dRot = 0, sMult = 1.0;
+
+      if (modeIdx === 1) {
+        if (kind === 'limbs' || kind === 'hands') { dRot = -18; dy = -12; }
+        else if (kind === 'shoes_feet') { dy = -18; dx = -10; dRot = -12; }
+        else if (kind === 'heads') { dRot = -6; dy = -5; }
+        else if (kind === 'wheel') { dRot = 90; dx = 18; }
+        else if (kind === 'torsos_pelvis' || kind === 'chassis') { dy = -8; }
+      } else if (modeIdx === 2) {
+        if (kind === 'limbs' || kind === 'hands') { dRot = 24; dx = 14; dy = -6; }
+        else if (kind === 'shoes_feet') { dx = 22; dy = 4; dRot = 14; }
+        else if (kind === 'heads') { dRot = 8; dy = 3; }
+        else if (kind === 'wheel') { dRot = 180; dx = 36; }
+        else if (kind === 'torsos_pelvis' || kind === 'chassis') { dx = 16; dy = 4; dRot = 3; }
+      } else if (modeIdx === 3) {
+        if (kind === 'limbs' || kind === 'hands') { dRot = 8; dx = 6; dy = 4; }
+        else if (kind === 'shoes_feet') { dx = 8; dy = 0; dRot = 0; }
+        else if (kind === 'wheel') { dRot = 270; dx = 12; }
+        else if (kind === 'torsos_pelvis' || kind === 'chassis') { dx = 6; dy = 0; }
+      }
+
+      poses[l.id] = {
+        dx,
+        dy,
+        scale: (asm.scale || 0.5) * sMult,
+        rotDeg: (asm.rot_deg || 0) + dRot,
+        alpha: typeof asm.alpha === 'number' ? asm.alpha : 1.0,
+        pivotNx: l.pivot ? l.pivot.nx : 0.5,
+        pivotNy: l.pivot ? l.pivot.ny : 0.5
+      };
+    });
+    return poses;
+  };
+
+  assemblyKeyframesMap[assembly.id] = [
+    { id: 'K1', label: 'K1 · Key A (Start)', t: 0.00, poses: makeSnapshot(0), modified: false },
+    { id: 'K2', label: 'K2 · Breakdown (Mid)', t: 0.33, poses: makeSnapshot(1), modified: false },
+    { id: 'K3', label: 'K3 · Key B (Contact)', t: 0.67, poses: makeSnapshot(2), modified: false },
+    { id: 'K4', label: 'K4 · Key C (Settle)', t: 1.00, poses: makeSnapshot(3), modified: false }
+  ];
+  return assemblyKeyframesMap[assembly.id];
+}
+
+function applyEasing(u, mode) {
+  const c = Math.max(0, Math.min(1, u));
+  if (mode === 'linear') return c;
+  if (mode === 'step') return c < 0.999 ? 0 : 1;
+  if (mode === 'cubic_out') return 1 - Math.pow(1 - c, 3);
+  return c < 0.5 ? 4 * c * c * c : 1 - Math.pow(-2 * c + 2, 3) / 2;
+}
+
+function sampleInterpolatedPoseForLayer(assembly, layer, normTime) {
+  const kfs = ensureAssemblyKeyframes(assembly);
+  if (!kfs || kfs.length === 0) return null;
+  if (kfs.length === 1) return kfs[0].poses[layer.id] || null;
+
+  const t = Math.max(0, Math.min(1, normTime));
+  let idxA = 0;
+  for (let i = 0; i < kfs.length - 1; i++) {
+    if (t >= kfs[i].t && t <= kfs[i + 1].t) {
+      idxA = i;
+      break;
+    }
+    if (t > kfs[i + 1].t) idxA = i + 1;
+  }
+  const idxB = Math.min(kfs.length - 1, idxA + 1);
+  const kfA = kfs[idxA];
+  const kfB = kfs[idxB];
+  const pA = (kfA.poses && kfA.poses[layer.id]) || null;
+  const pB = (kfB.poses && kfB.poses[layer.id]) || pA;
+  if (!pA) return null;
+  if (idxA === idxB || !pB) return pA;
+
+  const span = Math.max(0.0001, kfB.t - kfA.t);
+  const localU = applyEasing((t - kfA.t) / span, keyframeEasing);
+  return {
+    dx: pA.dx + (pB.dx - pA.dx) * localU,
+    dy: pA.dy + (pB.dy - pA.dy) * localU,
+    scale: pA.scale + (pB.scale - pA.scale) * localU,
+    rotDeg: pA.rotDeg + (pB.rotDeg - pA.rotDeg) * localU,
+    alpha: pA.alpha + (pB.alpha - pA.alpha) * localU,
+    pivotNx: pA.pivotNx + (pB.pivotNx - pA.pivotNx) * localU,
+    pivotNy: pA.pivotNy + (pB.pivotNy - pA.pivotNy) * localU
+  };
+}
+
+function renderKeyframeBar() {
+  const container = document.getElementById('keyframeSlotsContainer');
+  if (!container || !currentAssembly) return;
+  const kfs = ensureAssemblyKeyframes(currentAssembly);
+  container.innerHTML = '';
+
+  kfs.forEach((kf, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'kf-slot' + (activeKeyframeIndex === idx ? ' active' : '') + (kf.modified ? ' modified' : '');
+    btn.innerHTML = `<span class="kf-dot"></span><span>${kf.label}</span>`;
+    btn.onclick = () => selectCentaurKeyframe(idx);
+    container.appendChild(btn);
+  });
+
+  const playBtn = document.getElementById('playKeyframesBtn');
+  if (playBtn) {
+    playBtn.textContent = keyframePlayMode ? '[PAUSE KEYFRAME INTERP]' : '[PLAY INTERPOLATED KEYS]';
+    playBtn.classList.toggle('active', keyframePlayMode);
+  }
+}
+
+function selectCentaurKeyframe(idx) {
+  if (!currentAssembly) return;
+  const kfs = ensureAssemblyKeyframes(currentAssembly);
+  if (!kfs[idx]) return;
+  activeKeyframeIndex = idx;
+  keyframePlayMode = false;
+  kfTimelineProgress = kfs[idx].t;
+
+  const kf = kfs[idx];
+  (currentAssembly.layers || []).forEach(layer => {
+    const pose = kf.poses[layer.id];
+    if (!pose) return;
+    const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+    const baseScale = (layer.assembled && layer.assembled.scale) || 0.5;
+    const baseRot = (layer.assembled && layer.assembled.rot_deg) || 0;
+    ut.dx = pose.dx || 0;
+    ut.dy = pose.dy || 0;
+    ut.scaleMult = Math.max(0.1, (pose.scale || baseScale) / Math.max(0.01, baseScale));
+    ut.rotDegDelta = (pose.rotDeg || 0) - baseRot;
+    ut.alpha = pose.alpha;
+    if (typeof pose.pivotNx === 'number') {
+      layer.pivot = { nx: pose.pivotNx, ny: pose.pivotNy };
+    }
+  });
+
+  document.getElementById('kfTimelineSlider').value = String(kfTimelineProgress);
+  document.getElementById('kfScrubLabel').textContent = `KEY ${idx + 1}/${kfs.length}: ${Math.round(kfTimelineProgress * 100)}%`;
+  foley.play('brad_snap');
+  renderKeyframeBar();
+  updatePieceTransformInspectorUI();
+}
+
+function capturePoseToActiveKeyframe() {
+  if (!currentAssembly) return;
+  const kfs = ensureAssemblyKeyframes(currentAssembly);
+  const kf = kfs[activeKeyframeIndex] || kfs[0];
+  if (!kf) return;
+
+  (currentAssembly.layers || []).forEach(layer => {
+    const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+    const baseScale = (layer.assembled && layer.assembled.scale) || 0.5;
+    const baseRot = (layer.assembled && layer.assembled.rot_deg) || 0;
+    const baseAlpha = (layer.assembled && typeof layer.assembled.alpha === 'number') ? layer.assembled.alpha : 1.0;
+    kf.poses[layer.id] = {
+      dx: ut.dx || 0,
+      dy: ut.dy || 0,
+      scale: baseScale * (ut.scaleMult || 1.0),
+      rotDeg: baseRot + (ut.rotDegDelta || 0),
+      alpha: ut.alpha !== null ? ut.alpha : baseAlpha,
+      pivotNx: layer.pivot ? layer.pivot.nx : 0.5,
+      pivotNy: layer.pivot ? layer.pivot.ny : 0.5
+    };
+  });
+  kf.modified = true;
+  foley.play('brad_snap');
+  renderKeyframeBar();
+}
+
+function addCentaurKeyframe() {
+  if (!currentAssembly) return;
+  const kfs = ensureAssemblyKeyframes(currentAssembly);
+  const newIdx = kfs.length + 1;
+  const newKf = {
+    id: `K${newIdx}`,
+    label: `K${newIdx} · Custom Key`,
+    t: 1.0,
+    poses: {},
+    modified: true
+  };
+  kfs.push(newKf);
+  kfs.forEach((k, i) => {
+    k.t = kfs.length > 1 ? Number((i / (kfs.length - 1)).toFixed(3)) : 0;
+  });
+  activeKeyframeIndex = kfs.length - 1;
+  capturePoseToActiveKeyframe();
+  selectCentaurKeyframe(activeKeyframeIndex);
+}
+
+function togglePlayKeyframes() {
+  keyframePlayMode = !keyframePlayMode;
+  if (keyframePlayMode) {
+    foley.play(currentAssembly ? currentAssembly.sound_fx_preset : 'brad_snap');
+  }
+  renderKeyframeBar();
+}
+
+function scrubKeyframeTimeline(val) {
+  keyframePlayMode = false;
+  kfTimelineProgress = parseFloat(val);
+  document.getElementById('kfScrubLabel').textContent = `KEY INTERP: ${Math.round(kfTimelineProgress * 100)}%`;
+
+  if (currentAssembly) {
+    (currentAssembly.layers || []).forEach(layer => {
+      const p = sampleInterpolatedPoseForLayer(currentAssembly, layer, kfTimelineProgress);
+      if (!p) return;
+      const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+      const baseScale = (layer.assembled && layer.assembled.scale) || 0.5;
+      const baseRot = (layer.assembled && layer.assembled.rot_deg) || 0;
+      ut.dx = p.dx;
+      ut.dy = p.dy;
+      ut.scaleMult = Math.max(0.1, p.scale / Math.max(0.01, baseScale));
+      ut.rotDegDelta = p.rotDeg - baseRot;
+      ut.alpha = p.alpha;
+    });
+  }
+  renderKeyframeBar();
+  updatePieceTransformInspectorUI();
+}
+
+function toggleOnionSkin() {
+  showOnionSkin = !showOnionSkin;
+  const btn = document.getElementById('toggleOnionBtn');
+  btn.textContent = `[ONION SKIN: ${showOnionSkin ? 'ON' : 'OFF'}]`;
+  btn.classList.toggle('active', showOnionSkin);
+}
+
+function toggleMotionArcs() {
+  showMotionArcs = !showMotionArcs;
+  const btn = document.getElementById('toggleArcsBtn');
+  btn.textContent = `[MOTION ARCS: ${showMotionArcs ? 'ON' : 'OFF'}]`;
+  btn.classList.toggle('active', showMotionArcs);
+}
+
+function setKeyframeEasing(val) {
+  keyframeEasing = val;
+}
+
+/* ==========================================================================
+   CATALOG & BODY LAB UNIFIED ASSET LOADING
+   ========================================================================== */
 function matchesCategoryGroup(assemblyCat, filterKey) {
   if (filterKey === 'all') return true;
   if (filterKey === 'vehicles_and_mechanisms') {
@@ -1237,6 +2701,8 @@ async function initCatalog() {
   const res = await fetch(jsonUrl);
   catalog = await res.json();
 
+  (catalog.assemblies || []).forEach(a => ensureAssemblyCentaurMetadata(a));
+
   const a14 = (catalog.assemblies || []).find(a => a.id === 'right_foot_right_hand_matrix');
   trustMatrixRows = (a14 && a14.trust_matrix_rows) ? a14.trust_matrix_rows : [];
   spotlitMatrixRow = trustMatrixRows[0] || null;
@@ -1244,16 +2710,49 @@ async function initCatalog() {
   renderSfxPadGrid();
   renderTrustMatrix();
   renderAssemblyList();
+  renderTargetPoseStrip();
 
   if (catalog.assemblies && catalog.assemblies.length > 0) {
     selectAssembly(catalog.assemblies[0].id);
   }
 
+  loadBodyLabUnifiedCatalog();
+  loadBodiesIndexCatalog();
+
   requestAnimationFrame(renderLoop);
 }
 
+async function loadBodyLabUnifiedCatalog() {
+  try {
+    const url = resolveAssetPath('arena/parts/body_lab/body_lab_unified.json');
+    const res = await fetch(url);
+    if (!res.ok) return;
+    bodyLabCatalog = await res.json();
+    updateSwapperTabCounts();
+  } catch (err) {
+    console.warn('Body Lab catalog fallback mode:', err);
+  }
+}
+
+function updateSwapperTabCounts() {
+  if (!bodyLabCatalog || !bodyLabCatalog.category_counts) return;
+  const cc = bodyLabCatalog.category_counts;
+  const labelMap = {
+    shoes_feet: `Shoes & Boots (${cc.shoes_feet || 338})`,
+    hands: `Hands (${cc.hands || 639})`,
+    heads: `Heads (${cc.heads || 384})`,
+    torsos_pelvis: `Torsos & Pelvis (${cc.torsos_pelvis || 728})`,
+    limbs: `Limbs (${cc.limbs || 863})`,
+    face_acc: `Eyes / Mouths / Shades (${(cc.eyes_brows || 0) + (cc.mouths_noses || 0) + (cc.sunglasses_acc || 0)})`
+  };
+  document.querySelectorAll('#swapperCategoryTabs [data-swap-cat]').forEach(btn => {
+    const key = btn.getAttribute('data-swap-cat');
+    if (labelMap[key]) btn.textContent = labelMap[key];
+  });
+}
+
 /* ==========================================================================
-   UI RENDERING & INTERACTION HANDLERS
+   UI RENDERING & INTERACTION HANDLERS (ZERO EMOJIS)
    ========================================================================== */
 function filterCategory(cat) {
   currentCategoryFilter = cat;
@@ -1285,7 +2784,7 @@ function renderAssemblyList() {
       <div class="card-sub">${a.summary || ''}</div>
       <div class="card-badges">
         <span class="badge">${(a.layers || []).length} layers</span>
-        <span class="badge sfx">🔊 ${a.sound_fx_preset}</span>
+        <span class="badge sfx">SFX: ${a.sound_fx_preset}</span>
       </div>
     `;
     listEl.appendChild(card);
@@ -1296,15 +2795,18 @@ function selectAssembly(assemblyId) {
   const found = (catalog.assemblies || []).find(a => a.id === assemblyId);
   if (!found) return;
   currentAssembly = found;
+  ensureAssemblyCentaurMetadata(found);
   selectedLayerId = found.layers && found.layers[0] ? found.layers[0].id : null;
   currentAspectIndex = 0;
   currentBeatIndex = -1;
   currentWingStateIndex = 0;
   currentPortalIndex = 0;
   currentRoomPresetIndex = 0;
+  activeKeyframeIndex = 0;
+  keyframePlayMode = false;
+  kfTimelineProgress = 0;
   spawnedExtras.length = 0;
 
-  // Preload all layer images
   (found.layers || []).forEach(l => getImage(l.file));
   if (found.id === 'right_foot_right_hand_matrix') {
     trustMatrixRows.forEach(r => {
@@ -1320,10 +2822,13 @@ function selectAssembly(assemblyId) {
   document.getElementById('stageSoundBadge').textContent = `FOLEY: ${found.sound_fx_preset}`;
   document.getElementById('stagePoemBadge').textContent = `POEM ${found.poem}`;
 
+  ensureAssemblyKeyframes(found);
   renderAssemblyList();
+  renderKeyframeBar();
   renderContextBar();
   renderLayerList();
   renderGalleryTray();
+  updatePieceTransformInspectorUI();
 
   foley.play('brad_snap');
 }
@@ -1333,7 +2838,6 @@ function renderContextBar() {
   bar.innerHTML = '';
   if (!currentAssembly) return;
 
-  // 1. Aspect Dimensions (Motorcycle 5 aspects)
   if (currentAssembly.aspect_dimensions && currentAssembly.aspect_dimensions.length > 0) {
     const grp = document.createElement('div');
     grp.className = 'context-group';
@@ -1352,7 +2856,6 @@ function renderContextBar() {
     bar.appendChild(grp);
   }
 
-  // 2. Multi-Beat Sequence Selector
   if (currentAssembly.beats && currentAssembly.beats.length > 0) {
     const grp = document.createElement('div');
     grp.className = 'context-group';
@@ -1360,7 +2863,7 @@ function renderContextBar() {
 
     const autoBtn = document.createElement('button');
     autoBtn.className = 'ctx-btn' + (currentBeatIndex === -1 ? ' active' : '');
-    autoBtn.textContent = '▶ AUTO-PLAY ALL BEATS';
+    autoBtn.textContent = '[AUTO-PLAY ALL BEATS]';
     autoBtn.onclick = () => {
       currentBeatIndex = -1;
       manualScrub = null;
@@ -1384,7 +2887,6 @@ function renderContextBar() {
     bar.appendChild(grp);
   }
 
-  // 3. Wing Articulation States
   if (currentAssembly.wing_states && currentAssembly.wing_states.length > 0) {
     const grp = document.createElement('div');
     grp.className = 'context-group';
@@ -1403,7 +2905,6 @@ function renderContextBar() {
     bar.appendChild(grp);
   }
 
-  // 4. Portal Worlds Selector
   if (currentAssembly.portal_presets && currentAssembly.portal_presets.length > 0) {
     const grp = document.createElement('div');
     grp.className = 'context-group';
@@ -1422,7 +2923,6 @@ function renderContextBar() {
     bar.appendChild(grp);
   }
 
-  // 5. Interior Decorator Room Presets
   if (currentAssembly.room_presets && currentAssembly.room_presets.length > 0) {
     const grp = document.createElement('div');
     grp.className = 'context-group';
@@ -1441,14 +2941,13 @@ function renderContextBar() {
     bar.appendChild(grp);
   }
 
-  // 6. Special Action CTAs per Assembly
   const ctaGrp = document.createElement('div');
   ctaGrp.className = 'context-group';
 
   if (currentAssembly.id === 'beating_heart_and_hourglass') {
     const flipBtn = document.createElement('button');
     flipBtn.className = 'ctx-btn action-cta';
-    flipBtn.textContent = '⏳ FLIP HOURGLASS 180°';
+    flipBtn.textContent = '[FLIP HOURGLASS 180 DEG]';
     flipBtn.onclick = () => {
       hourglassFlipped = !hourglassFlipped;
       foley.play('hourglass_sand');
@@ -1459,7 +2958,7 @@ function renderContextBar() {
   if (currentAssembly.id === 'throwing_tambourine_rose_window') {
     const throwBtn = document.createElement('button');
     throwBtn.className = 'ctx-btn action-cta';
-    throwBtn.textContent = '💥 THROW TAMBOURINE & SHATTER!';
+    throwBtn.textContent = '[THROW TAMBOURINE & SHATTER]';
     throwBtn.onclick = () => {
       manualScrub = null;
       document.getElementById('scrubVal').textContent = 'AUTO';
@@ -1475,18 +2974,30 @@ function renderContextBar() {
   ) {
     const addExtraBtn = document.createElement('button');
     addExtraBtn.className = 'ctx-btn action-cta';
-    addExtraBtn.textContent = '🕺 + ADD DANCING / SCENE EXTRA';
+    addExtraBtn.textContent = '[+ ADD DANCING / SCENE EXTRA]';
     addExtraBtn.onclick = () => spawnSceneExtra();
     ctaGrp.appendChild(addExtraBtn);
   }
 
-  if (ctaGrp.children.length > 0) {
-    bar.appendChild(ctaGrp);
-  }
+  const normAllBtn = document.createElement('button');
+  normAllBtn.className = 'ctx-btn';
+  normAllBtn.textContent = '[NORMALIZE ALL PIECE SCALES]';
+  normAllBtn.onclick = () => normalizeAllAssemblyLayers();
+  ctaGrp.appendChild(normAllBtn);
 
-  if (bar.children.length === 0) {
-    bar.innerHTML = `<div class="context-group"><span class="context-label">INTERACTIVE STAGE:</span><span class="badge">Drag any cut-out part directly on the canvas or click a Brad Socket to inspect</span></div>`;
-  }
+  const swapShoesBtn = document.createElement('button');
+  swapShoesBtn.className = 'ctx-btn';
+  swapShoesBtn.textContent = '[BROWSE ALL 338 SHOES]';
+  swapShoesBtn.onclick = () => openPartSwapperModal('shoes_feet');
+  ctaGrp.appendChild(swapShoesBtn);
+
+  const swapHandsBtn = document.createElement('button');
+  swapHandsBtn.className = 'ctx-btn';
+  swapHandsBtn.textContent = '[BROWSE ALL 639 HANDS]';
+  swapHandsBtn.onclick = () => openPartSwapperModal('hands');
+  ctaGrp.appendChild(swapHandsBtn);
+
+  bar.appendChild(ctaGrp);
 }
 
 function spawnSceneExtra() {
@@ -1495,7 +3006,6 @@ function spawnSceneExtra() {
     'arena/parts/kit3/release_v2/cuts/08.cast.club_jacket.body/08.cast.club_jacket.body__p01.png',
     'arena/parts/kit3/release_v2/cuts/08.cast.club_shirt.body/08.cast.club_shirt.body__p01.png'
   ];
-  // Use verified layer files from DJ assembly if available
   const djAsm = (catalog.assemblies || []).find(a => a.id === 'dj_booth_speakers_and_club_extras');
   const pool = (djAsm && djAsm.layers && djAsm.layers.length > 0)
     ? djAsm.layers.map(l => l.file)
@@ -1513,6 +3023,151 @@ function spawnSceneExtra() {
   foley.play('dj_beat_and_scratch');
 }
 
+/* ==========================================================================
+   SPAWN FULL KINEMATIC CHARACTER PUPPET RIG (8 CONNECTED JOINTS)
+   ========================================================================== */
+function spawnFullKinematicPuppet() {
+  if (!currentAssembly) return;
+  const baseZ = (currentAssembly.layers || []).reduce((m, l) => Math.max(m, l.z_order || 0), 0) + 1;
+  const suffix = Math.floor(Math.random() * 900 + 100);
+  const torsoId = `puppet_torso_${suffix}`;
+  const uarmId = `puppet_uarm_${suffix}`;
+  const farmId = `puppet_forearm_${suffix}`;
+  const handId = `puppet_hand_${suffix}`;
+  const thighId = `puppet_thigh_${suffix}`;
+  const shinId = `puppet_shin_${suffix}`;
+  const bootId = `puppet_boot_${suffix}`;
+  const headId = `puppet_head_${suffix}`;
+
+  const puppetParts = [
+    {
+      id: thighId,
+      label: `Puppet Thigh (${suffix})`,
+      role: 'puppet_limb',
+      z_order: baseZ + 1,
+      file: 'kits/packs/poet_tracksuit_v1/01_COMPONENTS/13_thigh_R.png',
+      width: 1024, height: 1536,
+      pivot: { nx: 0.50, ny: 0.18 },
+      socketB: { nx: 0.50, ny: 0.84 },
+      parentId: torsoId,
+      assembled: { x: 0.51, y: 0.52, scale: 0.42, rot_deg: 6 },
+      exploded: { x: 0.35, y: 0.62, scale: 0.42, rot_deg: 0 },
+      anim_behavior: 'static'
+    },
+    {
+      id: bootId,
+      label: `Puppet Chelsea Boot (${suffix})`,
+      role: 'puppet_foot',
+      z_order: baseZ + 2,
+      file: 'kits/packs/poet_tracksuit_v1/01_COMPONENTS/27_boot_R.png',
+      width: 1024, height: 1536,
+      pivot: { nx: 0.42, ny: 0.22 },
+      socketB: { nx: 0.75, ny: 0.85 },
+      parentId: shinId,
+      assembled: { x: 0.52, y: 0.78, scale: 0.38, rot_deg: 0 },
+      exploded: { x: 0.35, y: 0.86, scale: 0.38, rot_deg: 0 },
+      anim_behavior: 'static'
+    },
+    {
+      id: shinId,
+      label: `Puppet Shin w/ Cuff-Tuck (${suffix})`,
+      role: 'puppet_limb',
+      z_order: baseZ + 3,
+      file: 'kits/packs/poet_tracksuit_v1/01_COMPONENTS/14_shin_R.png',
+      width: 1024, height: 1536,
+      pivot: { nx: 0.50, ny: 0.16 },
+      socketB: { nx: 0.50, ny: 0.84 },
+      parentId: thighId,
+      assembled: { x: 0.52, y: 0.66, scale: 0.42, rot_deg: -4 },
+      exploded: { x: 0.35, y: 0.74, scale: 0.42, rot_deg: 0 },
+      anim_behavior: 'static'
+    },
+    {
+      id: torsoId,
+      label: `Puppet Root Torso (${suffix})`,
+      role: 'puppet_root_torso',
+      z_order: baseZ + 4,
+      file: 'kits/packs/poet_tracksuit_v1/01_COMPONENTS/01_torso_front.png',
+      width: 1024, height: 1536,
+      pivot: { nx: 0.50, ny: 0.52 },
+      socketB: { nx: 0.50, ny: 0.15 },
+      parentId: null,
+      assembled: { x: 0.50, y: 0.38, scale: 0.52, rot_deg: 0 },
+      exploded: { x: 0.50, y: 0.38, scale: 0.52, rot_deg: 0 },
+      anim_behavior: 'static'
+    },
+    {
+      id: headId,
+      label: `Puppet Head & Shades (${suffix})`,
+      role: 'puppet_head',
+      z_order: baseZ + 5,
+      file: 'kits/packs/poet_tracksuit_v1/01_COMPONENTS/04_head_front.png',
+      width: 1024, height: 1536,
+      pivot: { nx: 0.50, ny: 0.82 },
+      socketB: { nx: 0.50, ny: 0.20 },
+      parentId: torsoId,
+      assembled: { x: 0.50, y: 0.21, scale: 0.46, rot_deg: 0 },
+      exploded: { x: 0.50, y: 0.14, scale: 0.46, rot_deg: 0 },
+      anim_behavior: 'static'
+    },
+    {
+      id: uarmId,
+      label: `Puppet Upper Arm (${suffix})`,
+      role: 'puppet_limb',
+      z_order: baseZ + 6,
+      file: 'kits/packs/poet_tracksuit_v1/01_COMPONENTS/09_upper_arm_R.png',
+      width: 1024, height: 1536,
+      pivot: { nx: 0.48, ny: 0.18 },
+      socketB: { nx: 0.50, ny: 0.82 },
+      parentId: torsoId,
+      assembled: { x: 0.56, y: 0.33, scale: 0.42, rot_deg: -18 },
+      exploded: { x: 0.68, y: 0.28, scale: 0.42, rot_deg: 0 },
+      anim_behavior: 'static'
+    },
+    {
+      id: handId,
+      label: `Puppet Hand (${suffix})`,
+      role: 'puppet_hand',
+      z_order: baseZ + 7,
+      file: 'kits/packs/poet_tracksuit_v1/01_COMPONENTS/16_hand_relaxed_R.png',
+      width: 1299, height: 1211,
+      pivot: { nx: 0.50, ny: 0.16 },
+      socketB: { nx: 0.50, ny: 0.85 },
+      parentId: farmId,
+      assembled: { x: 0.63, y: 0.52, scale: 0.24, rot_deg: 12 },
+      exploded: { x: 0.78, y: 0.58, scale: 0.24, rot_deg: 0 },
+      anim_behavior: 'static'
+    },
+    {
+      id: farmId,
+      label: `Puppet Forearm w/ Cuff-Tuck (${suffix})`,
+      role: 'puppet_limb',
+      z_order: baseZ + 8,
+      file: 'kits/packs/poet_tracksuit_v1/01_COMPONENTS/11_forearm_R.png',
+      width: 1024, height: 1536,
+      pivot: { nx: 0.50, ny: 0.16 },
+      socketB: { nx: 0.50, ny: 0.84 },
+      parentId: uarmId,
+      assembled: { x: 0.60, y: 0.44, scale: 0.42, rot_deg: -28 },
+      exploded: { x: 0.72, y: 0.44, scale: 0.42, rot_deg: 0 },
+      anim_behavior: 'static'
+    }
+  ];
+
+  puppetParts.forEach(p => {
+    getImage(p.file);
+    currentAssembly.layers.push(p);
+  });
+  delete assemblyKeyframesMap[currentAssembly.id];
+  ensureAssemblyKeyframes(currentAssembly);
+  selectedLayerId = torsoId;
+  foley.play('brad_snap');
+  renderLayerList();
+  renderGalleryTray();
+  renderKeyframeBar();
+  updatePieceTransformInspectorUI();
+}
+
 function renderLayerList() {
   const listEl = document.getElementById('layerList');
   listEl.innerHTML = '';
@@ -1527,13 +3182,15 @@ function renderLayerList() {
       selectedLayerId = layer.id;
       foley.play('brad_snap');
       renderLayerList();
+      updatePieceTransformInspectorUI();
     };
     const imgUrl = resolveAssetPath(layer.file);
+    const parentTag = layer.parentId ? `-> ${layer.parentId}` : 'ROOT';
     item.innerHTML = `
       <img class="layer-thumb" src="${imgUrl}" alt="${layer.label}">
       <div class="layer-meta">
         <div class="l-name">${layer.label}</div>
-        <div class="l-role">${layer.role} // ${layer.anim_behavior || 'static'}</div>
+        <div class="l-role">z:${layer.z_order || 0} // ${layer.role} // ${parentTag}</div>
       </div>
     `;
     listEl.appendChild(item);
@@ -1545,20 +3202,34 @@ function renderGalleryTray() {
   grid.innerHTML = '';
   if (!currentAssembly) return;
   const layers = currentAssembly.layers || [];
-  document.getElementById('galleryCountLabel').textContent = `${layers.length} verified parts`;
+  document.getElementById('galleryCountLabel').textContent = `${layers.length} parts (${normalizePieceScales ? 'Normalized' : 'Raw'})`;
 
   layers.forEach(l => {
     const cell = document.createElement('div');
     cell.className = 'gal-cell';
     const shortName = l.file.split('/').pop();
-    cell.title = `${l.label} (${l.file}) — Click to select or swap`;
+    const kind = classifyPieceAnatomyKind(l);
+    const targetPx = PHYSICAL_TARGET_PX_BY_KIND[kind] || 135;
+    const normRatio = normalizePieceScales ? Math.max(0.38, Math.min(1.0, targetPx / 210)) : 0.92;
+    const pnx = (l.pivot && typeof l.pivot.nx === 'number') ? l.pivot.nx : 0.5;
+    const pny = (l.pivot && typeof l.pivot.ny === 'number') ? l.pivot.ny : 0.5;
+
+    cell.title = `${l.label} — Click to select, Double-click to open Part Swapper`;
     cell.onclick = () => {
       selectedLayerId = l.id;
       foley.play('brad_snap');
       renderLayerList();
+      updatePieceTransformInspectorUI();
+    };
+    cell.ondblclick = () => {
+      selectedLayerId = l.id;
+      openSwapperForSelectedPiece();
     };
     cell.innerHTML = `
-      <img src="${resolveAssetPath(l.file)}" loading="lazy" alt="${l.label}">
+      <div class="gal-norm-wrap">
+        <img src="${resolveAssetPath(l.file)}" loading="lazy" alt="${l.label}" style="height:${Math.round(44 * normRatio)}px;width:auto;">
+        <span class="gal-pivot-dot" style="left:${Math.round(pnx * 100)}%;top:${Math.round(pny * 100)}%" title="Control Point A (${pnx.toFixed(2)}, ${pny.toFixed(2)})"></span>
+      </div>
       <span>${shortName}</span>
     `;
     grid.appendChild(cell);
@@ -1572,7 +3243,7 @@ function renderSfxPadGrid() {
   SOUND_FX_PRESETS.forEach(preset => {
     const btn = document.createElement('button');
     btn.className = 'sfx-pad';
-    btn.innerHTML = `<span>🔊</span> <span>${preset.label}</span>`;
+    btn.innerHTML = `<span class="ic-tag">SFX</span> <span>${preset.label}</span>`;
     btn.title = preset.description;
     btn.onclick = () => {
       foley.play(preset.id);
@@ -1615,7 +3286,548 @@ function renderTrustMatrix() {
 }
 
 /* ==========================================================================
-   STAGE MODE & SLIDER CONTROLS
+   SELECTED PIECE TRANSFORM INSPECTOR & DIRECT PIECE MANIPULATION
+   ========================================================================== */
+function getSelectedLayerObject() {
+  if (!currentAssembly || !currentAssembly.layers) return null;
+  return currentAssembly.layers.find(l => l.id === selectedLayerId) || null;
+}
+
+function updatePieceTransformInspectorUI() {
+  const layer = getSelectedLayerObject();
+  const titleEl = document.getElementById('selPieceTitle');
+  const subEl = document.getElementById('selPieceSub');
+  const badgeEl = document.getElementById('selectedPieceScaleBadge');
+  if (!layer || !currentAssembly) {
+    if (titleEl) titleEl.textContent = 'No piece selected';
+    if (subEl) subEl.textContent = 'Click any cut-out piece on canvas';
+    return;
+  }
+
+  const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+  const baseScale = (layer.assembled && layer.assembled.scale) || 0.5;
+  const effScale = Math.max(0.05, Math.min(2.5, baseScale * (ut.scaleMult || 1.0)));
+  const baseRot = (layer.assembled && layer.assembled.rot_deg) || 0;
+  let effRot = Math.round(baseRot + (ut.rotDegDelta || 0));
+  while (effRot > 180) effRot -= 360;
+  while (effRot < -180) effRot += 360;
+
+  const pnx = (layer.pivot && typeof layer.pivot.nx === 'number') ? layer.pivot.nx : 0.5;
+  const pny = (layer.pivot && typeof layer.pivot.ny === 'number') ? layer.pivot.ny : 0.5;
+  const baseAlpha = (layer.assembled && typeof layer.assembled.alpha === 'number') ? layer.assembled.alpha : 1.0;
+  const effAlpha = ut.alpha !== null ? ut.alpha : baseAlpha;
+  const kind = classifyPieceAnatomyKind(layer);
+  const targetPx = PHYSICAL_TARGET_PX_BY_KIND[kind] || 135;
+
+  titleEl.textContent = `${layer.label}`;
+  subEl.textContent = `Kind: ${kind} (${targetPx}px ref) // Parent: ${layer.parentId || 'ROOT'} // Z: ${layer.z_order || 0}`;
+  badgeEl.textContent = `${effScale.toFixed(2)}×`;
+
+  document.getElementById('pieceScaleSlider').value = String(effScale);
+  document.getElementById('pieceScaleVal').textContent = `${effScale.toFixed(2)}×`;
+
+  document.getElementById('pieceRotSlider').value = String(effRot);
+  document.getElementById('pieceRotVal').textContent = `${effRot}°`;
+
+  document.getElementById('piecePivotXSlider').value = String(pnx);
+  document.getElementById('piecePivotXVal').textContent = pnx.toFixed(2);
+
+  document.getElementById('piecePivotYSlider').value = String(pny);
+  document.getElementById('piecePivotYVal').textContent = pny.toFixed(2);
+
+  document.getElementById('pieceAlphaSlider').value = String(effAlpha);
+  document.getElementById('pieceAlphaVal').textContent = `${Math.round(effAlpha * 100)}%`;
+}
+
+function onPieceTransformSlider(param, rawVal) {
+  const layer = getSelectedLayerObject();
+  if (!layer || !currentAssembly) return;
+  const val = parseFloat(rawVal);
+  const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+  const baseScale = (layer.assembled && layer.assembled.scale) || 0.5;
+  const baseRot = (layer.assembled && layer.assembled.rot_deg) || 0;
+
+  if (param === 'scale') {
+    ut.scaleMult = val / Math.max(0.01, baseScale);
+  } else if (param === 'rot') {
+    ut.rotDegDelta = val - baseRot;
+  } else if (param === 'pivotX') {
+    layer.pivot = layer.pivot || { nx: 0.5, ny: 0.5 };
+    layer.pivot.nx = val;
+    renderGalleryTray();
+  } else if (param === 'pivotY') {
+    layer.pivot = layer.pivot || { nx: 0.5, ny: 0.5 };
+    layer.pivot.ny = val;
+    renderGalleryTray();
+  } else if (param === 'alpha') {
+    ut.alpha = val;
+  }
+  updatePieceTransformInspectorUI();
+}
+
+function flipSelectedPiece(axis) {
+  const layer = getSelectedLayerObject();
+  if (!layer || !currentAssembly) return;
+  const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+  const baseFlipX = Boolean(layer.assembled && layer.assembled.flipX);
+  if (axis === 'x') {
+    const cur = ut.flipX !== null ? ut.flipX : baseFlipX;
+    ut.flipX = !cur;
+  } else {
+    ut.flipY = !ut.flipY;
+  }
+  foley.play('brad_snap');
+}
+
+function shiftSelectedLayerZ(delta) {
+  const layer = getSelectedLayerObject();
+  if (!layer || !currentAssembly) return;
+  layer.z_order = (layer.z_order || 0) + delta;
+  foley.play('brad_snap');
+  renderLayerList();
+  updatePieceTransformInspectorUI();
+}
+
+function autoNormalizeSelectedPieceScale() {
+  const layer = getSelectedLayerObject();
+  if (!layer || !currentAssembly) return;
+  const normScale = computeNormalizedStageScale(layer);
+  const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+  const baseScale = (layer.assembled && layer.assembled.scale) || 0.5;
+  ut.scaleMult = normScale / Math.max(0.01, baseScale);
+  foley.play('brad_snap');
+  updatePieceTransformInspectorUI();
+}
+
+function normalizeAllAssemblyLayers() {
+  if (!currentAssembly || !currentAssembly.layers) return;
+  currentAssembly.layers.forEach(layer => {
+    const kind = classifyPieceAnatomyKind(layer);
+    if (['shoes_feet', 'hands', 'heads', 'limbs', 'torsos_pelvis', 'wheel'].includes(kind)) {
+      const normScale = computeNormalizedStageScale(layer);
+      const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+      const baseScale = (layer.assembled && layer.assembled.scale) || 0.5;
+      ut.scaleMult = normScale / Math.max(0.01, baseScale);
+    }
+  });
+  foley.play('brad_snap');
+  updatePieceTransformInspectorUI();
+}
+
+function snapSelectedPieceToParentSocket() {
+  const layer = getSelectedLayerObject();
+  if (!layer || !currentAssembly || !layer.parentId) {
+    foley.play('brad_snap');
+    return;
+  }
+  const parentVis = lastRenderedLayerVisuals.get(layer.parentId);
+  if (!parentVis) return;
+  const base = getLayerBaseCoords(layer);
+  const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+  ut.dx = parentVis.socketWorldX - base.x;
+  ut.dy = parentVis.socketWorldY - base.y;
+  foley.play('brad_snap');
+  updatePieceTransformInspectorUI();
+}
+
+function duplicateOrAddPiece() {
+  const layer = getSelectedLayerObject();
+  if (!layer || !currentAssembly) return;
+  const clone = JSON.parse(JSON.stringify(layer));
+  clone.id = `${layer.id}_copy_${Math.floor(Math.random() * 900 + 100)}`;
+  clone.label = `${layer.label} (Copy)`;
+  clone.z_order = (layer.z_order || 0) + 1;
+  clone.assembled = clone.assembled || { x: 0.5, y: 0.5, scale: 0.45, rot_deg: 0 };
+  clone.assembled.x = Math.min(0.88, (clone.assembled.x || 0.5) + 0.06);
+  clone.assembled.y = Math.min(0.88, (clone.assembled.y || 0.5) + 0.04);
+  currentAssembly.layers.push(clone);
+  selectedLayerId = clone.id;
+  foley.play('brad_snap');
+  renderLayerList();
+  renderGalleryTray();
+  updatePieceTransformInspectorUI();
+}
+
+function deleteSelectedPiece() {
+  if (!currentAssembly || !currentAssembly.layers || !selectedLayerId) return;
+  const idx = currentAssembly.layers.findIndex(l => l.id === selectedLayerId);
+  if (idx === -1) return;
+  const removed = currentAssembly.layers.splice(idx, 1)[0];
+  // Clear parent pointers referencing deleted piece
+  currentAssembly.layers.forEach(l => {
+    if (l.parentId === removed.id) l.parentId = removed.parentId || null;
+  });
+  selectedLayerId = currentAssembly.layers[0] ? currentAssembly.layers[0].id : null;
+  foley.play('brad_snap');
+  renderLayerList();
+  renderGalleryTray();
+  updatePieceTransformInspectorUI();
+}
+
+/* ==========================================================================
+   PART SWAPPER MODAL ("ALL SHOES / HANDS / HEADS / TORSOS / LIMBS")
+   ========================================================================== */
+function openSwapperForSelectedPiece() {
+  const layer = getSelectedLayerObject();
+  if (layer) {
+    const kind = classifyPieceAnatomyKind(layer);
+    if (['shoes_feet', 'hands', 'heads', 'torsos_pelvis', 'limbs', 'face_acc'].includes(kind)) {
+      openPartSwapperModal(kind);
+      return;
+    }
+  }
+  openPartSwapperModal('shoes_feet');
+}
+
+function openPartSwapperModal(cat) {
+  if (cat) swapperCategory = cat;
+  document.querySelectorAll('#swapperCategoryTabs [data-swap-cat]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-swap-cat') === swapperCategory);
+  });
+  document.getElementById('partSwapperBackdrop').classList.add('open');
+  renderSwapperGrid();
+}
+
+function closePartSwapperModal() {
+  document.getElementById('partSwapperBackdrop').classList.remove('open');
+}
+
+function setSwapperCategory(cat) {
+  swapperCategory = cat;
+  document.querySelectorAll('#swapperCategoryTabs [data-swap-cat]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-swap-cat') === swapperCategory);
+  });
+  renderSwapperGrid();
+}
+
+function toggleSwapperNormalizedPreview() {
+  swapperNormalizedPreview = !swapperNormalizedPreview;
+  const btn = document.getElementById('swapperNormToggleBtn');
+  btn.innerHTML = `<span class="ic-tag">SCALE</span> Normalized Preview: ${swapperNormalizedPreview ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', swapperNormalizedPreview);
+  renderSwapperGrid();
+}
+
+function getSwapperCandidateList() {
+  const items = [];
+  if (swapperCategory === 'scene_cuts' || !bodyLabCatalog || !bodyLabCatalog.categories) {
+    // Collect all unique layer assets from the 14 assemblies + trust matrix
+    const seen = new Set();
+    (catalog && catalog.assemblies || []).forEach(a => {
+      (a.layers || []).forEach(l => {
+        if (!l.file || seen.has(l.file)) return;
+        seen.add(l.file);
+        items.push({
+          id: l.id,
+          name: l.label || l.id,
+          category: classifyPieceAnatomyKind(l),
+          character_group: `Poem ${a.poem}`,
+          view_angle: 'front',
+          file: l.file,
+          width: l.width || 300,
+          height: l.height || 300,
+          pivotNx: l.pivot ? l.pivot.nx : 0.5,
+          pivotNy: l.pivot ? l.pivot.ny : 0.5,
+          normalized_scale: computeNormalizedStageScale(l)
+        });
+      });
+    });
+    return items;
+  }
+
+  const cats = bodyLabCatalog.categories;
+  let rawList = [];
+  if (swapperCategory === 'face_acc') {
+    rawList = [
+      ...(cats.eyes_brows || []),
+      ...(cats.mouths_noses || []),
+      ...(cats.sunglasses_acc || [])
+    ];
+  } else {
+    rawList = cats[swapperCategory] || [];
+  }
+
+  return rawList.map(entry => {
+    const w = Math.max(1, entry.width || 300);
+    const h = Math.max(1, entry.height || 300);
+    let pnx = 0.5, pny = 0.5;
+    if (entry.pivots && entry.pivots.length > 0) {
+      pnx = Math.max(0.05, Math.min(0.95, entry.pivots[0].x / w));
+      pny = Math.max(0.05, Math.min(0.95, entry.pivots[0].y / h));
+    } else {
+      const defP = inferDefaultPivot(entry);
+      pnx = defP.nx;
+      pny = defP.ny;
+    }
+    return {
+      id: entry.id,
+      name: entry.name || entry.id,
+      category: entry.category || swapperCategory,
+      character_group: entry.character_group || 'Archive',
+      view_angle: entry.view_angle || 'front',
+      clip_tag: entry.clip_tag || '',
+      file: entry.file,
+      width: w,
+      height: h,
+      pivotNx: pnx,
+      pivotNy: pny,
+      normalized_scale: entry.normalized_scale || 0.25
+    };
+  });
+}
+
+function renderSwapperGrid() {
+  const grid = document.getElementById('swapperGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const charFilter = document.getElementById('swapperCharFilter').value;
+  const angleFilter = document.getElementById('swapperAngleFilter').value;
+  const query = (document.getElementById('swapperSearchInput').value || '').trim().toLowerCase();
+
+  const allItems = getSwapperCandidateList().filter(item => {
+    if (charFilter !== 'all' && item.character_group !== charFilter) return false;
+    if (angleFilter !== 'all' && item.view_angle !== angleFilter) return false;
+    if (query) {
+      const hay = `${item.name} ${item.id} ${item.character_group} ${item.clip_tag || ''} ${item.file}`.toLowerCase();
+      if (!hay.includes(query)) return false;
+    }
+    return true;
+  });
+
+  const shown = allItems.slice(0, 140);
+  document.getElementById('swapperSubtitle').textContent =
+    `Showing ${shown.length} of ${allItems.length} matching parts at ${swapperNormalizedPreview ? 'unified physical scale (cm/px)' : 'raw fit'} // Cyan dot = Control Point A`;
+
+  const kindTarget = PHYSICAL_TARGET_PX_BY_KIND[swapperCategory] || 110;
+  const thumbScaleRatio = swapperNormalizedPreview ? Math.max(0.42, Math.min(0.96, kindTarget / 190)) : 0.9;
+
+  shown.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'swap-card';
+    const imgUrl = resolveAssetPath(item.file);
+    card.innerHTML = `
+      <div class="swap-thumb-box">
+        <img src="${imgUrl}" loading="lazy" alt="${item.name}" style="max-height:${Math.round(96 * thumbScaleRatio)}px;max-width:${Math.round(96 * thumbScaleRatio)}%;">
+        <span class="swap-pivot-marker" style="left:${Math.round(item.pivotNx * 100)}%;top:${Math.round(item.pivotNy * 100)}%" title="Control Point (${item.pivotNx.toFixed(2)}, ${item.pivotNy.toFixed(2)})"></span>
+      </div>
+      <div class="swap-card-title" title="${item.name}">${item.name}</div>
+      <div class="swap-card-sub">
+        <span>${item.character_group}</span>
+        <span>${item.view_angle} · ${item.width}x${item.height}</span>
+      </div>
+      <div class="swap-card-actions">
+        <button class="piece-btn teal" data-act="swap"><span class="ic-tag">SWAP</span> Swap Selected</button>
+        <button class="piece-btn" data-act="add"><span class="ic-tag">+ADD</span> Add Piece</button>
+      </div>
+    `;
+    card.querySelector('[data-act="swap"]').onclick = () => swapPartIntoSelectedLayer(item);
+    card.querySelector('[data-act="add"]').onclick = () => addPartAsNewStageLayer(item);
+    grid.appendChild(card);
+  });
+}
+
+function swapPartIntoSelectedLayer(item) {
+  const layer = getSelectedLayerObject();
+  if (!layer || !currentAssembly) {
+    addPartAsNewStageLayer(item);
+    return;
+  }
+  getImage(item.file);
+  layer.file = item.file;
+  layer.label = item.name || item.id;
+  layer.width = item.width || 300;
+  layer.height = item.height || 300;
+  layer.category = item.category;
+  layer.pivot = { nx: item.pivotNx, ny: item.pivotNy };
+
+  if (normalizePieceScales) {
+    const normScale = computeNormalizedStageScale(layer);
+    const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+    const baseScale = (layer.assembled && layer.assembled.scale) || 0.5;
+    ut.scaleMult = normScale / Math.max(0.01, baseScale);
+  }
+  foley.play('brad_snap');
+  renderLayerList();
+  renderGalleryTray();
+  updatePieceTransformInspectorUI();
+  closePartSwapperModal();
+}
+
+function addPartAsNewStageLayer(item) {
+  if (!currentAssembly) return;
+  getImage(item.file);
+  const maxZ = (currentAssembly.layers || []).reduce((m, l) => Math.max(m, l.z_order || 0), 0);
+  const newLayer = {
+    id: `part_${Date.now()}_${Math.floor(Math.random() * 100)}`,
+    label: item.name || item.id,
+    role: item.category || 'custom_part',
+    category: item.category,
+    z_order: maxZ + 1,
+    file: item.file,
+    width: item.width || 300,
+    height: item.height || 300,
+    pivot: { nx: item.pivotNx, ny: item.pivotNy },
+    socketB: inferDefaultSocketB(item),
+    parentId: selectedLayerId || null,
+    assembled: {
+      x: 0.50 + (Math.random() - 0.5) * 0.12,
+      y: 0.48 + (Math.random() - 0.5) * 0.12,
+      scale: 0.45,
+      rot_deg: 0
+    },
+    exploded: {
+      x: 0.50,
+      y: 0.50,
+      scale: 0.45,
+      rot_deg: 0
+    },
+    anim_behavior: 'static'
+  };
+  newLayer.assembled.scale = computeNormalizedStageScale(newLayer);
+  currentAssembly.layers.push(newLayer);
+  selectedLayerId = newLayer.id;
+  foley.play('brad_snap');
+  renderLayerList();
+  renderGalleryTray();
+  updatePieceTransformInspectorUI();
+  closePartSwapperModal();
+}
+
+/* ==========================================================================
+   "WHAT'S FUCKED UP?" CENTAUR FEEDBACK, AUTO-FIX & TRAINING JSON EXPORT
+   ========================================================================== */
+function toggleDefectTag(btn) {
+  const tag = btn.getAttribute('data-defect');
+  if (activeDefectTags.has(tag)) {
+    activeDefectTags.delete(tag);
+    btn.classList.remove('active');
+  } else {
+    activeDefectTags.add(tag);
+    btn.classList.add('active');
+  }
+}
+
+function autoFixSelectedPiece() {
+  const layer = getSelectedLayerObject();
+  if (!layer || !currentAssembly) return;
+  const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+  const baseScale = (layer.assembled && layer.assembled.scale) || 0.5;
+  const baseRot = (layer.assembled && layer.assembled.rot_deg) || 0;
+  const fixesApplied = [];
+
+  // 1. Normalize physical scale
+  const normScale = computeNormalizedStageScale(layer);
+  ut.scaleMult = normScale / Math.max(0.01, baseScale);
+  fixesApplied.push(`scale->${normScale.toFixed(2)}x`);
+
+  // 2. Re-infer accurate anatomical Control Point A & Distal Socket B
+  layer.pivot = inferDefaultPivot({ ...layer, pivot: null });
+  layer.socketB = inferDefaultSocketB(layer);
+  fixesApplied.push(`pivot->(${layer.pivot.nx.toFixed(2)},${layer.pivot.ny.toFixed(2)})`);
+
+  // 3. Fix horizontal v2 hand rotation or 90°-off defect tag
+  if (activeDefectTags.has('Rotated 90° Off') || (layer.file && layer.file.includes('/v2/parts/') && classifyPieceAnatomyKind(layer) === 'hands')) {
+    ut.rotDegDelta = 90 - baseRot;
+    fixesApplied.push('rot->+90deg(v2_hand)');
+  } else {
+    ut.rotDegDelta = 0;
+  }
+
+  // 4. Cuff-Tuck Z-Order fix (tuck hand/shoe behind forearm/shin cuff)
+  const kind = classifyPieceAnatomyKind(layer);
+  if ((kind === 'hands' || kind === 'shoes_feet' || activeDefectTags.has('Wrist/Ankle Seam') || activeDefectTags.has('Z-Order Wrong')) && layer.parentId) {
+    const parentLayer = currentAssembly.layers.find(l => l.id === layer.parentId);
+    if (parentLayer) {
+      layer.z_order = (parentLayer.z_order || 1) - 1;
+      fixesApplied.push(`cuff_tuck(z=${layer.z_order})`);
+    }
+  }
+
+  // 5. Snap to parent distal socket if requested
+  if (activeDefectTags.has('Foot Sliding') && layer.parentId) {
+    snapSelectedPieceToParentSocket();
+    fixesApplied.push('snapped_to_parent');
+  }
+
+  const noteInput = document.getElementById('centaurDefectNote');
+  if (noteInput && !noteInput.value.trim()) {
+    noteInput.value = `Auto-Fixed [${layer.label}]: ${fixesApplied.join(', ')}`;
+  }
+  logCentaurDefectEntry(`AUTO-FIX (${fixesApplied.join(', ')})`);
+  foley.play('brad_snap');
+  renderLayerList();
+  renderGalleryTray();
+  updatePieceTransformInspectorUI();
+}
+
+function logCentaurDefectEntry(autoActionSummary = null) {
+  if (!currentAssembly) return;
+  const layer = getSelectedLayerObject();
+  const noteEl = document.getElementById('centaurDefectNote');
+  const noteText = (noteEl && noteEl.value.trim()) || autoActionSummary || 'Tagged visual assembly issue';
+  const tags = Array.from(activeDefectTags);
+
+  const entry = {
+    timestamp: new Date().toISOString(),
+    assembly_id: currentAssembly.id,
+    layer_id: layer ? layer.id : null,
+    layer_file: layer ? layer.file : null,
+    defect_tags: tags,
+    note: noteText,
+    adjusted_pose: layer ? {
+      pivot: layer.pivot,
+      socketB: layer.socketB,
+      z_order: layer.z_order,
+      user_transform: getLayerUserTransform(currentAssembly.id, layer.id)
+    } : null
+  };
+  centaurDefectLogs.unshift(entry);
+  if (noteEl) noteEl.value = '';
+  document.getElementById('centaurLogCountBadge').textContent = `${centaurDefectLogs.length} logged`;
+
+  const listEl = document.getElementById('centaurLogList');
+  if (listEl) {
+    listEl.innerHTML = '';
+    centaurDefectLogs.slice(0, 8).forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'centaur-log-item';
+      const tagStr = item.defect_tags.length ? `[${item.defect_tags.join(', ')}] ` : '';
+      row.innerHTML = `<span><b>${item.layer_id || item.assembly_id}</b>: ${tagStr}${item.note}</span>`;
+      listEl.appendChild(row);
+    });
+  }
+  foley.play('brad_snap');
+}
+
+function exportCentaurTrainingJSON() {
+  const payload = {
+    schema: 'wygwyl_centaur_assembly_training_v2',
+    exported_at: new Date().toISOString(),
+    normalize_piece_scales: normalizePieceScales,
+    kinematic_chain_enabled: kinematicChainEnabled,
+    multi_view_mode: multiViewMode,
+    show_weight_overlay: showWeightOverlay,
+    active_target_pose_id: activeTargetPoseId,
+    target_pose_brads: currentTargetBrads,
+    current_assembly_id: currentAssembly ? currentAssembly.id : null,
+    user_layer_transforms: layerUserTransforms,
+    keyframes_by_assembly: assemblyKeyframesMap,
+    defect_captcha_logs: centaurDefectLogs,
+    current_assembly_layers: currentAssembly ? currentAssembly.layers : []
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `wygwyl_centaur_training_${currentAssembly ? currentAssembly.id : 'all'}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  foley.play('brad_snap');
+}
+
+/* ==========================================================================
+   STAGE MODE & TOOLBAR TOGGLES (MULTI-VIEW, WEIGHT/CoM, LOUPE, SCALE, GIZMO)
    ========================================================================== */
 function setStageMode(mode) {
   stageMode = mode;
@@ -1656,23 +3868,84 @@ function triggerSnapTogether() {
   }, Math.max(500, layers.length * 80 + 150));
 }
 
+function toggleMultiViewMode() {
+  multiViewMode = !multiViewMode;
+  const btn = document.getElementById('toggleMultiViewBtn');
+  if (btn) {
+    btn.innerHTML = `<span class="ic-tag">4X</span> Multi-View (Front/Side/3-4/Target): ${multiViewMode ? 'ON' : 'OFF'}`;
+    btn.classList.toggle('active', multiViewMode);
+  }
+  foley.play('brad_snap');
+}
+
+function toggleWeightOverlay() {
+  showWeightOverlay = !showWeightOverlay;
+  const btn = document.getElementById('toggleWeightOverlayBtn');
+  if (btn) {
+    btn.innerHTML = `<span class="ic-tag">CoM</span> Weight &amp; Gravity: ${showWeightOverlay ? 'ON' : 'OFF'}`;
+    btn.classList.toggle('active', showWeightOverlay);
+  }
+  foley.play('brad_snap');
+}
+
+function toggleSemanticLoupe() {
+  showSemanticLoupe = !showSemanticLoupe;
+  const btn = document.getElementById('toggleLoupeBtn');
+  if (btn) {
+    btn.innerHTML = `<span class="ic-tag">2.5X</span> Joint Loupe: ${showSemanticLoupe ? 'ON' : 'OFF'}`;
+    btn.classList.toggle('active', showSemanticLoupe);
+  }
+  foley.play('brad_snap');
+}
+
+function toggleNormalizeScales() {
+  normalizePieceScales = !normalizePieceScales;
+  const btn = document.getElementById('toggleNormScaleBtn');
+  btn.innerHTML = `<span class="ic-tag">SCALE</span> Similar Scale: ${normalizePieceScales ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', normalizePieceScales);
+  if (normalizePieceScales) {
+    normalizeAllAssemblyLayers();
+  }
+  renderGalleryTray();
+  foley.play('brad_snap');
+}
+
+function toggleControlGizmo() {
+  showControlGizmo = !showControlGizmo;
+  const btn = document.getElementById('toggleGizmoBtn');
+  btn.innerHTML = `<span class="ic-tag">GIZMO</span> Control Points &amp; Gizmo: ${showControlGizmo ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', showControlGizmo);
+  foley.play('brad_snap');
+}
+
+function toggleKinematicChain() {
+  kinematicChainEnabled = !kinematicChainEnabled;
+  const btn = document.getElementById('toggleKinematicBtn');
+  btn.innerHTML = `<span class="ic-tag">IK</span> Kinematic Chain: ${kinematicChainEnabled ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', kinematicChainEnabled);
+  foley.play('brad_snap');
+}
+
 function toggleBradPins() {
   showBradPins = !showBradPins;
   const btn = document.getElementById('toggleBradsBtn');
-  btn.innerHTML = `<span>⭕</span> Brad Pins: ${showBradPins ? 'ON' : 'OFF'}`;
+  btn.innerHTML = `<span class="ic-tag">BRAD</span> Brad Pins: ${showBradPins ? 'ON' : 'OFF'}`;
   foley.play('brad_snap');
 }
 
 function resetLayerOffsets() {
-  Object.keys(layerUserOffsets).forEach(k => delete layerUserOffsets[k]);
+  Object.keys(layerUserTransforms).forEach(k => delete layerUserTransforms[k]);
   spawnedExtras.length = 0;
+  keyframePlayMode = false;
   foley.play('brad_snap');
+  updatePieceTransformInspectorUI();
+  renderKeyframeBar();
 }
 
 function toggleSoundEngine() {
   foley.enabled = !foley.enabled;
   const btn = document.getElementById('soundToggleBtn');
-  document.getElementById('soundIcon').textContent = foley.enabled ? '🔊' : '🔇';
+  document.getElementById('soundIcon').textContent = foley.enabled ? 'SND' : 'MUTE';
   document.getElementById('soundLabel').textContent = foley.enabled ? 'SOUND FX: ON' : 'SOUND FX: MUTED';
   btn.classList.toggle('muted', !foley.enabled);
   if (foley.enabled) foley.play('brad_snap');
@@ -1703,16 +3976,17 @@ function setManualExplode(val) {
 }
 
 /* ==========================================================================
-   CANVAS MOUSE DRAGGING & INTERACTION
+   POINTER EVENTS (MOUSE + MOBILE TOUCH) & TARGET BRAD / GIZMO MANIPULATION
    ========================================================================== */
 const canvas = document.getElementById('assemblyCanvas');
 const ctx = canvas.getContext('2d');
+let lastPointerPos = { x: 640, y: 360 };
 
 function getCanvasCoords(evt) {
   const rect = canvas.getBoundingClientRect();
   return {
-    x: (evt.clientX - rect.left) * (canvas.width / rect.width),
-    y: (evt.clientY - rect.top) * (canvas.height / rect.height)
+    x: (evt.clientX - rect.left) * (canvas.width / Math.max(1, rect.width)),
+    y: (evt.clientY - rect.top) * (canvas.height / Math.max(1, rect.height))
   };
 }
 
@@ -1726,74 +4000,280 @@ function getLayerBaseCoords(layer) {
   return { x, y, scale, rotDeg, asmX: asm.x * 1280, asmY: asm.y * 720 };
 }
 
-canvas.addEventListener('mousedown', evt => {
-  const pt = getCanvasCoords(evt);
-  if (!currentAssembly) return;
+function localToWorld(vis, lx, ly) {
+  const sx = lx * (vis.flipX ? -1 : 1);
+  const sy = ly * (vis.flipY ? -1 : 1);
+  const c = Math.cos(vis.rot);
+  const s = Math.sin(vis.rot);
+  return {
+    x: vis.x + sx * c - sy * s,
+    y: vis.y + sx * s + sy * c
+  };
+}
 
+function worldToLocal(vis, wx, wy) {
+  const dx = wx - vis.x;
+  const dy = wy - vis.y;
+  const c = Math.cos(-vis.rot);
+  const s = Math.sin(-vis.rot);
+  const rx = dx * c - dy * s;
+  const ry = dx * s + dy * c;
+  return {
+    x: rx * (vis.flipX ? -1 : 1),
+    y: ry * (vis.flipY ? -1 : 1)
+  };
+}
+
+canvas.addEventListener('pointerdown', evt => {
+  const pt = getCanvasCoords(evt);
+  lastPointerPos = pt;
+  if (!currentAssembly) return;
+  try { canvas.setPointerCapture(evt.pointerId); } catch (e) {}
+
+  const isTouch = evt.pointerType === 'touch';
+  const handleHitR = isTouch ? 30 : 20;
+
+  // 0. Check draggable Target Pose Brad Sockets when Target Pose Overlay is active!
+  if (showTargetPoseOverlay && currentTargetBrads && !multiViewMode) {
+    for (const [bKey, bCoord] of Object.entries(currentTargetBrads)) {
+      const bx = bCoord[0] * 1280;
+      const by = bCoord[1] * 720;
+      if (Math.hypot(pt.x - bx, pt.y - by) < (isTouch ? 24 : 15)) {
+        draggingItem = {
+          type: 'target_brad',
+          bradKey: bKey
+        };
+        foley.play('brad_snap');
+        return;
+      }
+    }
+  }
+
+  // 1. Check Gizmo Handles on currently selected layer first!
+  if (showControlGizmo && selectedLayerId && lastRenderedLayerVisuals.has(selectedLayerId)) {
+    const selLayer = getSelectedLayerObject();
+    const vis = lastRenderedLayerVisuals.get(selectedLayerId);
+    if (selLayer && vis) {
+      const ut = getLayerUserTransform(currentAssembly.id, selLayer.id);
+
+      // Top Rotation Handle (ROT)
+      if (vis.rotHandle && Math.hypot(pt.x - vis.rotHandle.x, pt.y - vis.rotHandle.y) < handleHitR) {
+        draggingItem = {
+          type: 'rotate_handle',
+          layer: selLayer,
+          ut,
+          centerX: vis.x,
+          centerY: vis.y,
+          startAngle: Math.atan2(pt.y - vis.y, pt.x - vis.x),
+          origRotDegDelta: ut.rotDegDelta || 0
+        };
+        foley.play('brad_snap');
+        return;
+      }
+
+      // Bottom-Right Corner Scale Handle (SCL)
+      if (vis.scaleHandle && Math.hypot(pt.x - vis.scaleHandle.x, pt.y - vis.scaleHandle.y) < handleHitR) {
+        const startDist = Math.max(12, Math.hypot(pt.x - vis.x, pt.y - vis.y));
+        draggingItem = {
+          type: 'scale_handle',
+          layer: selLayer,
+          ut,
+          centerX: vis.x,
+          centerY: vis.y,
+          startDist,
+          origScaleMult: ut.scaleMult || 1.0
+        };
+        foley.play('brad_snap');
+        return;
+      }
+
+      // Distal Socket B Handle (Amber Diamond)
+      if (vis.socketWorldX !== undefined && Math.hypot(pt.x - vis.socketWorldX, pt.y - vis.socketWorldY) < handleHitR) {
+        draggingItem = {
+          type: 'socket_b',
+          layer: selLayer,
+          vis
+        };
+        foley.play('brad_snap');
+        return;
+      }
+
+      // Shift+Drag (or direct click near Pivot A crosshair) to move Control Point A (pivot.nx, pivot.ny)
+      if (evt.shiftKey && Math.hypot(pt.x - vis.x, pt.y - vis.y) < 38) {
+        draggingItem = {
+          type: 'pivot_a',
+          layer: selLayer,
+          vis
+        };
+        foley.play('brad_snap');
+        return;
+      }
+    }
+  }
+
+  // 2. Check Spawned Extras
   for (let i = spawnedExtras.length - 1; i >= 0; i--) {
     const ex = spawnedExtras[i];
-    if (Math.hypot(pt.x - ex.x, pt.y - ex.y) < 95) {
+    if (Math.hypot(pt.x - ex.x, pt.y - ex.y) < 90) {
       draggingItem = { type: 'extra', extra: ex, startX: pt.x, startY: pt.y, origX: ex.x, origY: ex.y };
       foley.play('brad_snap');
       return;
     }
   }
 
-  const layers = currentAssembly.layers || [];
-  for (let i = layers.length - 1; i >= 0; i--) {
-    const l = layers[i];
-    const base = getLayerBaseCoords(l);
-    const key = `${currentAssembly.id}:${l.id}`;
-    const off = layerUserOffsets[key] || { dx: 0, dy: 0 };
-    const cx = base.x + off.dx;
-    const cy = base.y + off.dy;
-    if (Math.hypot(pt.x - cx, pt.y - cy) < 105) {
+  // 3. Check Assembly Layers (top-down in Z-order using accurate rotated bounding box + pivot radius)
+  const sortedLayers = [...(currentAssembly.layers || [])].sort((a, b) => (b.z_order || 0) - (a.z_order || 0));
+  for (const l of sortedLayers) {
+    const vis = lastRenderedLayerVisuals.get(l.id);
+    let hit = false;
+    if (vis) {
+      const loc = worldToLocal(vis, pt.x, pt.y);
+      const pad = isTouch ? 22 : 14;
+      const inBox = (loc.x >= -vis.px - pad && loc.x <= vis.w - vis.px + pad && loc.y >= -vis.py - pad && loc.y <= vis.h - vis.py + pad);
+      const nearPivot = Math.hypot(pt.x - vis.x, pt.y - vis.y) < (isTouch ? 52 : 42);
+      hit = inBox || nearPivot;
+    } else {
+      const base = getLayerBaseCoords(l);
+      const ut = getLayerUserTransform(currentAssembly.id, l.id);
+      hit = Math.hypot(pt.x - (base.x + ut.dx), pt.y - (base.y + ut.dy)) < 95;
+    }
+
+    if (hit) {
       selectedLayerId = l.id;
-      draggingItem = {
-        type: 'layer',
-        key,
-        layer: l,
-        startX: pt.x,
-        startY: pt.y,
-        origDx: off.dx,
-        origDy: off.dy
-      };
+      const ut = getLayerUserTransform(currentAssembly.id, l.id);
+      if (evt.shiftKey && vis) {
+        draggingItem = { type: 'pivot_a', layer: l, vis };
+      } else {
+        draggingItem = {
+          type: 'layer',
+          layer: l,
+          ut,
+          startX: pt.x,
+          startY: pt.y,
+          origDx: ut.dx || 0,
+          origDy: ut.dy || 0
+        };
+      }
       if (l.anim_behavior === 'spin_vinyl_scratch') {
         foley.play('dj_beat_and_scratch');
       } else {
         foley.play('brad_snap');
       }
       renderLayerList();
+      updatePieceTransformInspectorUI();
       return;
     }
   }
 });
 
-window.addEventListener('mousemove', evt => {
-  if (!draggingItem) return;
+window.addEventListener('pointermove', evt => {
   const pt = getCanvasCoords(evt);
-  const dx = pt.x - draggingItem.startX;
-  const dy = pt.y - draggingItem.startY;
-  if (draggingItem.type === 'extra') {
-    draggingItem.extra.x = draggingItem.origX + dx;
-    draggingItem.extra.y = draggingItem.origY + dy;
+  lastPointerPos = pt;
+  if (!draggingItem) return;
+
+  if (draggingItem.type === 'target_brad' && currentTargetBrads) {
+    currentTargetBrads[draggingItem.bradKey] = [
+      Math.max(0.04, Math.min(0.96, pt.x / 1280)),
+      Math.max(0.04, Math.min(0.96, pt.y / 720))
+    ];
+    if (evt.shiftKey) {
+      autoSolvePuppetToTargetPose();
+    }
+  } else if (draggingItem.type === 'extra') {
+    draggingItem.extra.x = draggingItem.origX + (pt.x - draggingItem.startX);
+    draggingItem.extra.y = draggingItem.origY + (pt.y - draggingItem.startY);
   } else if (draggingItem.type === 'layer') {
-    layerUserOffsets[draggingItem.key] = {
-      dx: draggingItem.origDx + dx,
-      dy: draggingItem.origDy + dy
-    };
+    draggingItem.ut.dx = draggingItem.origDx + (pt.x - draggingItem.startX);
+    draggingItem.ut.dy = draggingItem.origDy + (pt.y - draggingItem.startY);
+    updatePieceTransformInspectorUI();
+  } else if (draggingItem.type === 'rotate_handle') {
+    const curAngle = Math.atan2(pt.y - draggingItem.centerY, pt.x - draggingItem.centerX);
+    const deltaDeg = ((curAngle - draggingItem.startAngle) * 180) / Math.PI;
+    draggingItem.ut.rotDegDelta = draggingItem.origRotDegDelta + deltaDeg;
+    updatePieceTransformInspectorUI();
+  } else if (draggingItem.type === 'scale_handle') {
+    const curDist = Math.max(8, Math.hypot(pt.x - draggingItem.centerX, pt.y - draggingItem.centerY));
+    const ratio = curDist / draggingItem.startDist;
+    draggingItem.ut.scaleMult = Math.max(0.08, Math.min(4.5, draggingItem.origScaleMult * ratio));
+    updatePieceTransformInspectorUI();
+  } else if (draggingItem.type === 'pivot_a') {
+    const vis = draggingItem.vis;
+    const loc = worldToLocal(vis, pt.x, pt.y);
+    const newNx = Math.max(0.02, Math.min(0.98, (loc.x + vis.px) / Math.max(1, vis.w)));
+    const newNy = Math.max(0.02, Math.min(0.98, (loc.y + vis.py) / Math.max(1, vis.h)));
+    draggingItem.layer.pivot = { nx: newNx, ny: newNy };
+    updatePieceTransformInspectorUI();
+  } else if (draggingItem.type === 'socket_b') {
+    const vis = draggingItem.vis;
+    const loc = worldToLocal(vis, pt.x, pt.y);
+    const newNx = Math.max(0.02, Math.min(0.98, (loc.x + vis.px) / Math.max(1, vis.w)));
+    const newNy = Math.max(0.02, Math.min(0.98, (loc.y + vis.py) / Math.max(1, vis.h)));
+    draggingItem.layer.socketB = { nx: newNx, ny: newNy };
   }
 });
 
-window.addEventListener('mouseup', () => {
+function handlePointerUpOrCancel() {
   if (draggingItem) {
     foley.play('brad_snap');
+    if (draggingItem.type === 'pivot_a') renderGalleryTray();
     draggingItem = null;
+  }
+}
+window.addEventListener('pointerup', handlePointerUpOrCancel);
+window.addEventListener('pointercancel', handlePointerUpOrCancel);
+
+// Keyboard shortcuts for direct Centaur manipulation on stage
+window.addEventListener('keydown', evt => {
+  const tag = (evt.target && evt.target.tagName) ? evt.target.tagName.toLowerCase() : '';
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+    if (evt.key === 'Escape') closePartSwapperModal();
+    return;
+  }
+  if (evt.key === 'Escape') {
+    closePartSwapperModal();
+    return;
+  }
+  const layer = getSelectedLayerObject();
+  if (!layer || !currentAssembly) return;
+  const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+  const step = evt.shiftKey ? 12 : 3;
+
+  if (evt.key === 'Delete' || evt.key === 'Backspace') {
+    evt.preventDefault();
+    deleteSelectedPiece();
+  } else if (evt.key === 'ArrowLeft') {
+    evt.preventDefault();
+    ut.dx -= step;
+    updatePieceTransformInspectorUI();
+  } else if (evt.key === 'ArrowRight') {
+    evt.preventDefault();
+    ut.dx += step;
+    updatePieceTransformInspectorUI();
+  } else if (evt.key === 'ArrowUp') {
+    evt.preventDefault();
+    ut.dy -= step;
+    updatePieceTransformInspectorUI();
+  } else if (evt.key === 'ArrowDown') {
+    evt.preventDefault();
+    ut.dy += step;
+    updatePieceTransformInspectorUI();
+  } else if (evt.key === '[') {
+    ut.rotDegDelta -= 5;
+    updatePieceTransformInspectorUI();
+  } else if (evt.key === ']') {
+    ut.rotDegDelta += 5;
+    updatePieceTransformInspectorUI();
+  } else if (evt.key === '-' || evt.key === '_') {
+    ut.scaleMult = Math.max(0.08, (ut.scaleMult || 1.0) * 0.92);
+    updatePieceTransformInspectorUI();
+  } else if (evt.key === '=' || evt.key === '+') {
+    ut.scaleMult = Math.min(4.0, (ut.scaleMult || 1.0) * 1.08);
+    updatePieceTransformInspectorUI();
   }
 });
 
 /* ==========================================================================
-   60FPS PROCEDURAL STAGE & CHOREOGRAPHY RENDERER
+   60FPS PROCEDURAL STAGE, KINEMATIC SOLVER & GIZMO RENDERER
    ========================================================================== */
 let lastFrameTime = performance.now();
 let simTime = 0;
@@ -1810,6 +4290,12 @@ function renderLoop(nowMs) {
   simTime += dt * animSpeed;
   explodeProgress += (targetExplodeProgress - explodeProgress) * Math.min(1, dt * 8.5);
   hourglassFlipAnim += ((hourglassFlipped ? Math.PI : 0) - hourglassFlipAnim) * Math.min(1, dt * 6.0);
+
+  if (keyframePlayMode && currentAssembly) {
+    kfTimelineProgress = (kfTimelineProgress + dt * 0.28 * Math.max(0.2, animSpeed)) % 1.0;
+    document.getElementById('kfTimelineSlider').value = String(kfTimelineProgress);
+    document.getElementById('kfScrubLabel').textContent = `KEY INTERP: ${Math.round(kfTimelineProgress * 100)}%`;
+  }
 
   drawStage(simTime);
   requestAnimationFrame(renderLoop);
@@ -1846,7 +4332,13 @@ function drawStage(t) {
   // Pre-Layer Environmental Choreography (Portals, Roads, Waves)
   drawAssemblyEnvironmentUnderlay(currentAssembly, t);
 
+  // Optional Onion Skinning (Prev & Next Keyframe Ghosts)
+  if (showOnionSkin && (keyframePlayMode || activeKeyframeIndex >= 0)) {
+    drawKeyframeOnionSkins(currentAssembly);
+  }
+
   // Sort layers by z_order and render
+  lastRenderedLayerVisuals.clear();
   const layers = [...(currentAssembly.layers || [])].sort((a, b) => (a.z_order || 0) - (b.z_order || 0));
   layers.forEach((layer, idx) => {
     drawAnimatedLayer(layer, idx, layers.length, t);
@@ -1873,112 +4365,92 @@ function drawStage(t) {
 
   // Post-Layer Volumetric Overlays
   drawAssemblyForegroundOverlay(currentAssembly, t);
+
+  // Motion Arcs across Keyframes K1 -> K2 -> K3 -> K4
+  if (showMotionArcs) {
+    drawKeyframeMotionArcs(currentAssembly);
+  }
+
+  // Kinematic Bone Hierarchy Links + Selected Piece Control-Point & Transform Gizmo
+  if (showControlGizmo) {
+    drawKinematicBoneHierarchy(currentAssembly);
+    if (selectedLayerId && lastRenderedLayerVisuals.has(selectedLayerId)) {
+      const selLayer = getSelectedLayerObject();
+      if (selLayer) {
+        drawSelectedPieceGizmo(selLayer, lastRenderedLayerVisuals.get(selectedLayerId));
+      }
+    }
+  }
 }
 
-function drawAssemblyEnvironmentUnderlay(assembly, t) {
-  const id = assembly.id;
-
-  if (id === 'car_wheels_headlights_passengers' || id === 'poet_motorcycle_multi_aspect') {
-    ctx.save();
-    ctx.fillStyle = '#0a0d14';
-    ctx.fillRect(0, 485, 1280, 235);
-    ctx.strokeStyle = 'rgba(240, 180, 41, 0.45)';
-    ctx.lineWidth = 4;
-    ctx.setLineDash([48, 36]);
-    ctx.lineDashOffset = -(t * 420);
-    ctx.beginPath();
-    ctx.moveTo(0, 565);
-    ctx.lineTo(1280, 565);
-    ctx.stroke();
-    ctx.restore();
+function computeKinematicParentDelta(layer, visited = new Set()) {
+  if (!kinematicChainEnabled || !layer.parentId || !currentAssembly || visited.has(layer.id)) {
+    return { dx: 0, dy: 0, rotRad: 0, scaleMult: 1.0 };
   }
+  visited.add(layer.id);
+  const parent = (currentAssembly.layers || []).find(l => l.id === layer.parentId);
+  if (!parent) return { dx: 0, dy: 0, rotRad: 0, scaleMult: 1.0 };
 
-  if (id === 'tv_window_door_portals' && assembly.portal_presets) {
-    const preset = assembly.portal_presets[currentPortalIndex] || assembly.portal_presets[0];
-    const rect = preset.aperture_rect || [0.3, 0.2, 0.3, 0.35];
-    const px = rect[0] * 1280;
-    const py = rect[1] * 720;
-    const pw = rect[2] * 1280;
-    const ph = rect[3] * 720;
+  const anc = computeKinematicParentDelta(parent, visited);
+  const pUt = getLayerUserTransform(currentAssembly.id, parent.id);
+  const pBase = getLayerBaseCoords(parent);
+  const cBase = getLayerBaseCoords(layer);
 
-    const vidPath = (assembly.archive_videos && assembly.archive_videos[currentPortalIndex % assembly.archive_videos.length]) || 'weave/p04_hands/passage.mp4';
-    const vid = getVideo(vidPath);
+  const pRotRad = anc.rotRad + ((pUt.rotDegDelta || 0) * Math.PI) / 180;
+  const pScaleMult = anc.scaleMult * (pUt.scaleMult || 1.0);
 
-    ctx.save();
-    ctx.beginPath();
-    ctx.roundRect(px, py, pw, ph, 10);
-    ctx.clip();
+  // Orbit child offset around parent's pivot when parent rotates or scales
+  const relX = cBase.x - pBase.x;
+  const relY = cBase.y - pBase.y;
+  const cosR = Math.cos(pRotRad);
+  const sinR = Math.sin(pRotRad);
+  const rotRelX = (relX * cosR - relY * sinR) * pScaleMult - relX;
+  const rotRelY = (relX * sinR + relY * cosR) * pScaleMult - relY;
 
-    const grad = ctx.createLinearGradient(px, py, px + pw, py + ph);
-    grad.addColorStop(0, '#1e3a8a');
-    grad.addColorStop(1, '#0f172a');
-    ctx.fillStyle = grad;
-    ctx.fillRect(px, py, pw, ph);
-
-    if (vid && vid.readyState >= 2) {
-      ctx.drawImage(vid, px - 20 + Math.sin(t * 0.7) * 15, py - 20, pw + 40, ph + 40);
-    }
-
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(px, py, pw, ph);
-    ctx.restore();
-  }
-
-  if (id === 'water_worlds_and_boats_ensemble') {
-    for (let plane = 0; plane < 3; plane++) {
-      ctx.save();
-      const baseY = 395 + plane * 72;
-      ctx.fillStyle = plane === 0 ? 'rgba(14, 38, 68, 0.65)' : plane === 1 ? 'rgba(20, 62, 102, 0.72)' : 'rgba(28, 88, 138, 0.78)';
-      ctx.beginPath();
-      ctx.moveTo(0, 720);
-      for (let x = 0; x <= 1280; x += 24) {
-        const wy = baseY + Math.sin(x * 0.012 + t * (1.6 + plane * 0.6) + plane) * (12 + plane * 5);
-        ctx.lineTo(x, wy);
-      }
-      ctx.lineTo(1280, 720);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
-  }
-
-  if (id === 'interior_decorator_reusable_sets') {
-    const wallColors = ['#1b1926', '#231a24', '#162229'];
-    const floorColors = ['#29211c', '#2e1f1d', '#1f2421'];
-    const rpIdx = currentRoomPresetIndex % 3;
-    ctx.fillStyle = wallColors[rpIdx];
-    ctx.fillRect(60, 50, 1160, 440);
-    ctx.fillStyle = floorColors[rpIdx];
-    ctx.fillRect(60, 490, 1160, 180);
-    ctx.strokeStyle = 'rgba(240, 180, 41, 0.3)';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(60, 490); ctx.lineTo(1220, 490); ctx.stroke();
-  }
+  return {
+    dx: anc.dx + (pUt.dx || 0) + rotRelX,
+    dy: anc.dy + (pUt.dy || 0) + rotRelY,
+    rotRad: pRotRad,
+    scaleMult: pScaleMult
+  };
 }
 
 function drawAnimatedLayer(layer, idx, total, t) {
   const img = getImage(layer.file);
   const base = getLayerBaseCoords(layer);
-  const key = `${currentAssembly.id}:${layer.id}`;
-  const userOff = layerUserOffsets[key] || { dx: 0, dy: 0 };
+  const ut = getLayerUserTransform(currentAssembly.id, layer.id);
+  const kin = computeKinematicParentDelta(layer);
 
-  let x = base.x + userOff.dx;
-  let y = base.y + userOff.dy;
-  let scale = base.scale;
-  let rot = (base.rotDeg * Math.PI) / 180;
+  let x = base.x + (ut.dx || 0) + kin.dx;
+  let y = base.y + (ut.dy || 0) + kin.dy;
+  let scale = base.scale * (ut.scaleMult || 1.0) * kin.scaleMult;
+  let rot = ((base.rotDeg + (ut.rotDegDelta || 0)) * Math.PI) / 180 + kin.rotRad;
   const baseAlpha = (layer.assembled && typeof layer.assembled.alpha === 'number') ? layer.assembled.alpha : 1.0;
-  let alpha = baseAlpha * (1 - explodeProgress) + 1.0 * explodeProgress;
-  const flipX = Boolean(layer.assembled && layer.assembled.flipX);
+  const userAlpha = ut.alpha !== null ? ut.alpha : baseAlpha;
+  let alpha = userAlpha * (1 - explodeProgress) + 1.0 * explodeProgress;
+  const flipX = ut.flipX !== null ? ut.flipX : Boolean(layer.assembled && layer.assembled.flipX);
+  const flipY = Boolean(ut.flipY);
+
+  // If playing interpolated Centaur keyframes, blend in interpolated pose
+  if (keyframePlayMode) {
+    const kfPose = sampleInterpolatedPoseForLayer(currentAssembly, layer, kfTimelineProgress);
+    if (kfPose) {
+      x = base.x + kfPose.dx + kin.dx;
+      y = base.y + kfPose.dy + kin.dy;
+      scale = kfPose.scale * kin.scaleMult;
+      rot = (kfPose.rotDeg * Math.PI) / 180 + kin.rotRad;
+      alpha = kfPose.alpha;
+    }
+  }
 
   const anim = layer.anim_behavior || 'static';
   const liveFactor = 1 - explodeProgress;
 
   // Aspect transformation for Motorcycle (#2)
   if (currentAssembly.id === 'poet_motorcycle_multi_aspect' && currentAspectIndex > 0) {
-    if (currentAspectIndex === 1) rot -= 0.22 * liveFactor; // banking lean
-    if (currentAspectIndex === 2) scale *= 1.12;            // front approach
-    if (currentAspectIndex === 3) scale *= 0.86;            // rear departure
+    if (currentAspectIndex === 1) rot -= 0.22 * liveFactor;
+    if (currentAspectIndex === 2) scale *= 1.12;
+    if (currentAspectIndex === 3) scale *= 0.86;
   }
 
   // Wing state transformation (#9)
@@ -1988,7 +4460,7 @@ function drawAnimatedLayer(layer, idx, total, t) {
     if (anim === 'flap_wing_R') rot += wingAdd;
   }
 
-  if (stageMode !== 'exploded') {
+  if (stageMode !== 'exploded' && !keyframePlayMode) {
     switch (anim) {
       case 'spin_wheel_cw':
         rot += t * 7.5 * liveFactor;
@@ -1999,7 +4471,7 @@ function drawAnimatedLayer(layer, idx, total, t) {
       case 'headlight_glow':
       case 'beam_pulse':
       case 'hazard_flash':
-        alpha = baseAlpha * (0.65 + 0.35 * Math.sin(t * 5.0 + idx));
+        alpha = userAlpha * (0.65 + 0.35 * Math.sin(t * 5.0 + idx));
         scale *= 1.0 + 0.06 * Math.sin(t * 5.0);
         break;
       case 'talk_bob_driver':
@@ -2057,8 +4529,8 @@ function drawAnimatedLayer(layer, idx, total, t) {
       case 'tambourine_arc_trail':
       case 'jingle_orbit': {
         const prog = manualScrub !== null ? manualScrub : ((t * 0.55) % 1.0);
-        x = (280 + prog * 620) * liveFactor + base.x * explodeProgress;
-        y = (430 - Math.sin(prog * Math.PI) * 230 - prog * 80) * liveFactor + base.y * explodeProgress;
+        x = (280 + prog * 620) * liveFactor + base.x * explodeProgress + (ut.dx || 0);
+        y = (430 - Math.sin(prog * Math.PI) * 230 - prog * 80) * liveFactor + base.y * explodeProgress + (ut.dy || 0);
         rot += prog * Math.PI * 6;
         break;
       }
@@ -2165,32 +4637,355 @@ function drawAnimatedLayer(layer, idx, total, t) {
     ctx.restore();
   }
 
+  const resNorm = (layer.file && layer.file.includes('poet_tracksuit_v1/01_COMPONENTS/')) ? 0.25 : 1.0;
+  const rawW = (img && img.loaded && img.naturalWidth) ? img.naturalWidth : (layer.width || 280);
+  const rawH = (img && img.loaded && img.naturalHeight) ? img.naturalHeight : (layer.height || 280);
+  const w = rawW * scale * resNorm;
+  const h = rawH * scale * resNorm;
+  const pnx = (layer.pivot && typeof layer.pivot.nx === 'number') ? layer.pivot.nx : 0.5;
+  const pny = (layer.pivot && typeof layer.pivot.ny === 'number') ? layer.pivot.ny : 0.5;
+  const px = pnx * w;
+  const py = pny * h;
+
+  const sb = layer.socketB || { nx: 0.5, ny: 0.82 };
+  const sbxLocal = sb.nx * w - px;
+  const sbyLocal = sb.ny * h - py;
+
+  const visRecord = { x, y, w, h, px, py, rot, scale, alpha, flipX, flipY };
+  const socketWorld = localToWorld(visRecord, sbxLocal, sbyLocal);
+  visRecord.socketWorldX = socketWorld.x;
+  visRecord.socketWorldY = socketWorld.y;
+  visRecord.rotHandle = localToWorld(visRecord, w * 0.5 - px, -py - 28);
+  visRecord.scaleHandle = localToWorld(visRecord, w - px, h - py);
+  lastRenderedLayerVisuals.set(layer.id, visRecord);
+
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rot);
-  if (flipX) ctx.scale(-1, 1);
+  if (flipX || flipY) ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
   ctx.globalAlpha = alpha;
 
   if (img && img.loaded) {
-    const resNorm = (layer.file && layer.file.includes('poet_tracksuit_v1/01_COMPONENTS/')) ? 0.25 : 1.0;
-    const w = img.naturalWidth * scale * resNorm;
-    const h = img.naturalHeight * scale * resNorm;
-    const pnx = (layer.pivot && typeof layer.pivot.nx === 'number') ? layer.pivot.nx : 0.5;
-    const pny = (layer.pivot && typeof layer.pivot.ny === 'number') ? layer.pivot.ny : 0.5;
-    const px = pnx * w;
-    const py = pny * h;
-
     if (selectedLayerId === layer.id) {
-      ctx.shadowColor = 'rgba(240, 180, 41, 0.78)';
-      ctx.shadowBlur = 18 * glowIntensity;
+      ctx.shadowColor = 'rgba(56, 189, 248, 0.72)';
+      ctx.shadowBlur = 16 * glowIntensity;
     }
-
     ctx.drawImage(img, -px, -py, w, h);
   }
   ctx.restore();
 
   if (showBradPins) {
     drawBradFastener(x, y, layer.label, selectedLayerId === layer.id);
+  }
+}
+
+/* ==========================================================================
+   CENTAUR CONTROL-POINT GIZMO, KINEMATIC BONES, ONION SKIN & MOTION ARCS
+   ========================================================================== */
+function drawKinematicBoneHierarchy(assembly) {
+  const layers = assembly.layers || [];
+  ctx.save();
+  layers.forEach(layer => {
+    if (!layer.parentId) return;
+    const childVis = lastRenderedLayerVisuals.get(layer.id);
+    const parentVis = lastRenderedLayerVisuals.get(layer.parentId);
+    if (!childVis || !parentVis) return;
+
+    // Draw parent pivot -> child pivot kinematic bone link
+    ctx.strokeStyle = kinematicChainEnabled ? 'rgba(192, 132, 252, 0.65)' : 'rgba(148, 163, 184, 0.35)';
+    ctx.lineWidth = 2.2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(parentVis.x, parentVis.y);
+    ctx.lineTo(childVis.x, childVis.y);
+    ctx.stroke();
+
+    // Small joint node on parent side
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#c084fc';
+    ctx.beginPath();
+    ctx.arc(parentVis.x, parentVis.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function drawSelectedPieceGizmo(layer, vis) {
+  ctx.save();
+
+  // 1. Rotated local bounding box + Bone Vector A -> B
+  ctx.save();
+  ctx.translate(vis.x, vis.y);
+  ctx.rotate(vis.rot);
+  if (vis.flipX || vis.flipY) ctx.scale(vis.flipX ? -1 : 1, vis.flipY ? -1 : 1);
+
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.8;
+  ctx.setLineDash([6, 4]);
+  ctx.strokeRect(-vis.px, -vis.py, vis.w, vis.h);
+  ctx.setLineDash([]);
+
+  // Corner ticks
+  const corners = [
+    [-vis.px, -vis.py],
+    [vis.w - vis.px, -vis.py],
+    [-vis.px, vis.h - vis.py]
+  ];
+  ctx.fillStyle = '#38bdf8';
+  corners.forEach(([cx, cy]) => {
+    ctx.fillRect(cx - 3.5, cy - 3.5, 7, 7);
+  });
+
+  // Rotation stalk line from top-center to rotation handle
+  const topCx = vis.w * 0.5 - vis.px;
+  const topCy = -vis.py;
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(topCx, topCy);
+  ctx.lineTo(topCx, topCy - 28);
+  ctx.stroke();
+
+  // Internal Bone Vector Arrow (Proximal Pivot A (0,0) -> Distal Socket B)
+  const sb = layer.socketB || { nx: 0.5, ny: 0.82 };
+  const sbx = sb.nx * vis.w - vis.px;
+  const sby = sb.ny * vis.h - vis.py;
+  ctx.strokeStyle = 'rgba(240, 180, 41, 0.88)';
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(sbx, sby);
+  ctx.stroke();
+  ctx.restore();
+
+  // 2. World-space Handles: Top Rotate Handle (↻), Corner Scale Handle (⤡), Distal Socket B (◆), Proximal Pivot A (⊕)
+  // Top Rotate Handle
+  if (vis.rotHandle) {
+    ctx.fillStyle = '#090d16';
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.arc(vis.rotHandle.x, vis.rotHandle.y, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '700 11px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('↻', vis.rotHandle.x, vis.rotHandle.y + 4);
+  }
+
+  // Bottom-Right Corner Scale Handle
+  if (vis.scaleHandle) {
+    ctx.fillStyle = '#090d16';
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.rect(vis.scaleHandle.x - 8, vis.scaleHandle.y - 8, 16, 16);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#34d399';
+    ctx.font = '700 10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('⤡', vis.scaleHandle.x, vis.scaleHandle.y + 3.5);
+  }
+
+  // Distal Socket B (Amber Diamond)
+  if (vis.socketWorldX !== undefined) {
+    ctx.save();
+    ctx.translate(vis.socketWorldX, vis.socketWorldY);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = '#f0b429';
+    ctx.strokeStyle = '#090d16';
+    ctx.lineWidth = 1.8;
+    ctx.fillRect(-5.5, -5.5, 11, 11);
+    ctx.strokeRect(-5.5, -5.5, 11, 11);
+    ctx.restore();
+  }
+
+  // Proximal Control Point A (Cyan Crosshair Ring)
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(vis.x, vis.y, 12, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(vis.x - 16, vis.y);
+  ctx.lineTo(vis.x + 16, vis.y);
+  ctx.moveTo(vis.x, vis.y - 16);
+  ctx.lineTo(vis.x, vis.y + 16);
+  ctx.stroke();
+
+  // Telemetry HUD Tag under piece
+  const pnx = (layer.pivot && typeof layer.pivot.nx === 'number') ? layer.pivot.nx : 0.5;
+  const pny = (layer.pivot && typeof layer.pivot.ny === 'number') ? layer.pivot.ny : 0.5;
+  const rotDeg = Math.round((vis.rot * 180) / Math.PI);
+  const tagText = `A(${pnx.toFixed(2)},${pny.toFixed(2)}) · ${vis.scale.toFixed(2)}× · ${rotDeg}°`;
+  ctx.font = '600 10px "JetBrains Mono", monospace';
+  const tw = ctx.measureText(tagText).width;
+  ctx.fillStyle = 'rgba(8, 11, 18, 0.9)';
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+  ctx.lineWidth = 1;
+  ctx.fillRect(vis.x - tw * 0.5 - 6, vis.y - 34, tw + 12, 16);
+  ctx.strokeRect(vis.x - tw * 0.5 - 6, vis.y - 34, tw + 12, 16);
+  ctx.fillStyle = '#38bdf8';
+  ctx.textAlign = 'center';
+  ctx.fillText(tagText, vis.x, vis.y - 23);
+
+  ctx.restore();
+}
+
+function drawKeyframeOnionSkins(assembly) {
+  const kfs = ensureAssemblyKeyframes(assembly);
+  if (!kfs || kfs.length < 2) return;
+  const prevIdx = (activeKeyframeIndex - 1 + kfs.length) % kfs.length;
+  const nextIdx = (activeKeyframeIndex + 1) % kfs.length;
+  const ghostConfigs = [
+    { kf: kfs[prevIdx], tint: 'rgba(56, 189, 248, 0.22)' },
+    { kf: kfs[nextIdx], tint: 'rgba(240, 180, 41, 0.22)' }
+  ];
+
+  const targetLayers = selectedLayerId
+    ? (assembly.layers || []).filter(l => l.id === selectedLayerId)
+    : (assembly.layers || []).slice(0, 4);
+
+  ghostConfigs.forEach(gc => {
+    if (!gc.kf) return;
+    targetLayers.forEach(layer => {
+      const pose = gc.kf.poses[layer.id];
+      const img = getImage(layer.file);
+      if (!pose || !img || !img.loaded) return;
+      const base = getLayerBaseCoords(layer);
+      const resNorm = (layer.file && layer.file.includes('poet_tracksuit_v1/01_COMPONENTS/')) ? 0.25 : 1.0;
+      const w = img.naturalWidth * pose.scale * resNorm;
+      const h = img.naturalHeight * pose.scale * resNorm;
+      const px = (pose.pivotNx ?? 0.5) * w;
+      const py = (pose.pivotNy ?? 0.5) * h;
+
+      ctx.save();
+      ctx.translate(base.x + pose.dx, base.y + pose.dy);
+      ctx.rotate((pose.rotDeg * Math.PI) / 180);
+      ctx.globalAlpha = 0.22;
+      ctx.drawImage(img, -px, -py, w, h);
+      ctx.strokeStyle = gc.tint;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(-px, -py, w, h);
+      ctx.restore();
+    });
+  });
+}
+
+function drawKeyframeMotionArcs(assembly) {
+  const kfs = ensureAssemblyKeyframes(assembly);
+  if (!kfs || kfs.length < 2) return;
+  const layer = getSelectedLayerObject();
+  if (!layer) return;
+
+  const base = getLayerBaseCoords(layer);
+  const pts = kfs.map((kf, i) => {
+    const p = kf.poses[layer.id] || { dx: 0, dy: 0 };
+    return { x: base.x + p.dx, y: base.y + p.dy, label: `K${i + 1}` };
+  });
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  pts.forEach((pt, i) => {
+    if (i === 0) ctx.moveTo(pt.x, pt.y);
+    else ctx.lineTo(pt.x, pt.y);
+  });
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  pts.forEach((pt, i) => {
+    ctx.fillStyle = i === activeKeyframeIndex ? '#f0b429' : '#38bdf8';
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function drawAssemblyEnvironmentUnderlay(assembly, t) {
+  const id = assembly.id;
+
+  if (id === 'car_wheels_headlights_passengers' || id === 'poet_motorcycle_multi_aspect') {
+    ctx.save();
+    ctx.fillStyle = '#0a0d14';
+    ctx.fillRect(0, 485, 1280, 235);
+    ctx.strokeStyle = 'rgba(240, 180, 41, 0.45)';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([48, 36]);
+    ctx.lineDashOffset = -(t * 420);
+    ctx.beginPath();
+    ctx.moveTo(0, 565);
+    ctx.lineTo(1280, 565);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  if (id === 'tv_window_door_portals' && assembly.portal_presets) {
+    const preset = assembly.portal_presets[currentPortalIndex] || assembly.portal_presets[0];
+    const rect = preset.aperture_rect || [0.3, 0.2, 0.3, 0.35];
+    const px = rect[0] * 1280;
+    const py = rect[1] * 720;
+    const pw = rect[2] * 1280;
+    const ph = rect[3] * 720;
+
+    const vidPath = (assembly.archive_videos && assembly.archive_videos[currentPortalIndex % assembly.archive_videos.length]) || 'weave/p04_hands/passage.mp4';
+    const vid = getVideo(vidPath);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(px, py, pw, ph, 10);
+    ctx.clip();
+
+    const grad = ctx.createLinearGradient(px, py, px + pw, py + ph);
+    grad.addColorStop(0, '#1e3a8a');
+    grad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = grad;
+    ctx.fillRect(px, py, pw, ph);
+
+    if (vid && vid.readyState >= 2) {
+      ctx.drawImage(vid, px - 20 + Math.sin(t * 0.7) * 15, py - 20, pw + 40, ph + 40);
+    }
+
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(px, py, pw, ph);
+    ctx.restore();
+  }
+
+  if (id === 'water_worlds_and_boats_ensemble') {
+    for (let plane = 0; plane < 3; plane++) {
+      ctx.save();
+      const baseY = 395 + plane * 72;
+      ctx.fillStyle = plane === 0 ? 'rgba(14, 38, 68, 0.65)' : plane === 1 ? 'rgba(20, 62, 102, 0.72)' : 'rgba(28, 88, 138, 0.78)';
+      ctx.beginPath();
+      ctx.moveTo(0, 720);
+      for (let x = 0; x <= 1280; x += 24) {
+        const wy = baseY + Math.sin(x * 0.012 + t * (1.6 + plane * 0.6) + plane) * (12 + plane * 5);
+        ctx.lineTo(x, wy);
+      }
+      ctx.lineTo(1280, 720);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  if (id === 'interior_decorator_reusable_sets') {
+    const wallColors = ['#1b1926', '#231a24', '#162229'];
+    const floorColors = ['#29211c', '#2e1f1d', '#1f2421'];
+    const rpIdx = currentRoomPresetIndex % 3;
+    ctx.fillStyle = wallColors[rpIdx];
+    ctx.fillRect(60, 50, 1160, 440);
+    ctx.fillStyle = floorColors[rpIdx];
+    ctx.fillRect(60, 490, 1160, 180);
+    ctx.strokeStyle = 'rgba(240, 180, 41, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(60, 490); ctx.lineTo(1220, 490); ctx.stroke();
   }
 }
 

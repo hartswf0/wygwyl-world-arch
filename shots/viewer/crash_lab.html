@@ -1,0 +1,3061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WYGWYL // CRASH LAB, BRAD-SNAP TARGET SOLVER &amp; CENTAUR CAPTCHA STUDIO</title>
+<style>
+  :root {
+    --bg-dark: #07090e;
+    --bg-panel: #0d111a;
+    --bg-card: #131926;
+    --bg-card-hover: #1a2234;
+    --border: #242f46;
+    --border-bright: #38bdf8;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --accent-cyan: #38bdf8;
+    --accent-teal: #14b8a6;
+    --accent-amber: #f59e0b;
+    --accent-red: #f43f5e;
+    --accent-green: #10b981;
+    --accent-purple: #a855f7;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* TOP HEADER */
+  .top-bar {
+    min-height: 52px;
+    background: #05070b;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 14px;
+    gap: 10px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .brand-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-mark {
+    width: 12px;
+    height: 12px;
+    background: var(--accent-cyan);
+    border: 2px solid #e0f2fe;
+    transform: rotate(45deg);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+    flex-shrink: 0;
+  }
+  .brand-title {
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .brand-badge {
+    background: rgba(56, 189, 248, 0.14);
+    border: 1px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+  }
+  .nav-links {
+    display: flex;
+    gap: 6px;
+    margin-left: 6px;
+    flex-wrap: wrap;
+  }
+  .nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 4px 7px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    transition: all 0.15s;
+  }
+  .nav-links a:hover {
+    color: var(--text-main);
+    border-color: var(--accent-cyan);
+  }
+
+  .mode-tabs {
+    display: flex;
+    gap: 5px;
+    background: var(--bg-panel);
+    padding: 3px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .mode-tab {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mode-tab:hover { color: var(--text-main); background: rgba(255,255,255,0.03); }
+  .mode-tab.active {
+    background: rgba(56, 189, 248, 0.16);
+    color: var(--accent-cyan);
+    border-color: rgba(56, 189, 248, 0.5);
+  }
+  .mode-tab.active[data-mode="captcha"] {
+    background: rgba(245, 158, 11, 0.16);
+    color: var(--accent-amber);
+    border-color: rgba(245, 158, 11, 0.5);
+  }
+  .mode-tab.active[data-mode="target"] {
+    background: rgba(16, 185, 129, 0.16);
+    color: var(--accent-green);
+    border-color: rgba(16, 185, 129, 0.5);
+  }
+
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 5px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    line-height: 1.1;
+  }
+  .btn:hover {
+    border-color: var(--accent-cyan);
+    background: var(--bg-card-hover);
+  }
+  .btn.active {
+    background: rgba(56, 189, 248, 0.22);
+    border-color: var(--accent-cyan);
+    color: #fff;
+  }
+  .btn-primary {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+  }
+  .btn-primary:hover { background: rgba(56, 189, 248, 0.28); }
+  .btn-success {
+    background: rgba(16, 185, 129, 0.18);
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+  }
+  .btn-success:hover { background: rgba(16, 185, 129, 0.28); }
+  .btn-warn {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: var(--accent-amber);
+    color: var(--accent-amber);
+  }
+  .btn-danger {
+    background: rgba(244, 63, 94, 0.18);
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+  }
+
+  /* MAIN 3-COLUMN WORKSPACE */
+  .workspace {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 330px 1fr 380px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .panel-right {
+    border-right: none;
+    border-left: 1px solid var(--border);
+  }
+
+  .panel-header {
+    padding: 9px 12px;
+    background: rgba(0, 0, 0, 0.28);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .panel-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* RIG SELECTOR & MANIFEST */
+  .control-group {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .control-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  select, input[type="text"] {
+    width: 100%;
+    background: #080b11;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    outline: none;
+  }
+  select:focus, input[type="text"]:focus { border-color: var(--accent-cyan); }
+
+  /* TEST MATRIX LIST */
+  .test-filter-bar {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .filter-pill {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 3px 6px;
+    border-radius: 3px;
+    background: #080b11;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .filter-pill.active {
+    background: rgba(56, 189, 248, 0.16);
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+  }
+
+  .test-item {
+    background: #0a0e17;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 7px 9px;
+    cursor: pointer;
+    transition: all 0.12s;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .test-item:hover { border-color: #475569; background: var(--bg-card-hover); }
+  .test-item.active {
+    border-color: var(--accent-cyan);
+    background: rgba(56, 189, 248, 0.09);
+  }
+  .test-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .test-cat-tag {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--text-muted);
+  }
+  .test-desc {
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.3;
+  }
+
+  /* 14-SLOT MANIFEST */
+  .slot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .slot-chip {
+    background: #080b11;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 7px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.12s;
+  }
+  .slot-chip:hover { border-color: var(--accent-cyan); }
+  .slot-chip.active {
+    background: rgba(56, 189, 248, 0.16);
+    border-color: var(--accent-cyan);
+    color: #fff;
+  }
+  .slot-chip.swapped {
+    border-left: 3px solid var(--accent-amber);
+  }
+  .slot-z {
+    color: var(--text-dim);
+    font-size: 9px;
+  }
+
+  /* CENTER STAGE */
+  .stage-column {
+    display: flex;
+    flex-direction: column;
+    background: #05070b;
+    min-height: 0;
+    position: relative;
+  }
+  .stage-toolbar {
+    padding: 7px 10px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    z-index: 5;
+  }
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .canvas-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 42%, #111927 0%, #05070b 80%);
+  }
+  #mainCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  /* FLOATING TELEMETRY OVERLAYS */
+  .stage-hud-tl {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .hud-pill {
+    background: rgba(8, 11, 17, 0.88);
+    border: 1px solid var(--border);
+    padding: 5px 9px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-main);
+    backdrop-filter: blur(4px);
+  }
+  .stage-hud-tr {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 245px;
+    pointer-events: none;
+  }
+  .invariant-box {
+    background: rgba(8, 11, 17, 0.92);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .inv-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .inv-pass { color: var(--accent-green); font-weight: 700; }
+  .inv-fail { color: var(--accent-red); font-weight: 700; }
+
+  /* CAPTCHA FLOATING PROMPT BANNER */
+  .captcha-banner {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    background: rgba(13, 17, 26, 0.95);
+    border: 1px solid var(--accent-amber);
+    border-radius: 6px;
+    padding: 10px 14px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    z-index: 10;
+  }
+  .captcha-banner.visible { display: flex; }
+  .captcha-q-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-amber);
+    margin-bottom: 3px;
+  }
+  .captcha-q-text {
+    font-size: 11px;
+    color: var(--text-main);
+    line-height: 1.35;
+  }
+
+  /* BOTTOM SCRUBBER & CAMERA JOYSTICK BAR */
+  .stage-footer {
+    height: 112px;
+    background: var(--bg-panel);
+    border-top: 1px solid var(--border);
+    padding: 8px 12px;
+    display: grid;
+    grid-template-columns: 104px 1fr 230px;
+    gap: 12px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .joystick-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  #joyPad {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #070a10;
+    border: 1px solid var(--border);
+    cursor: grab;
+    touch-action: none;
+  }
+  .scrubber-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+  .slider-row label {
+    width: 95px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent-cyan);
+    cursor: pointer;
+    touch-action: none;
+  }
+  .slider-val {
+    width: 50px;
+    text-align: right;
+    color: var(--accent-cyan);
+  }
+
+  /* RIGHT COLUMN: TARGET POSE SOLVER, BRAD INSPECTOR & SWAPPER BANK */
+  .target-solver-card {
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(13, 17, 26, 0.95) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    border-radius: 5px;
+    padding: 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .target-thumb-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .target-thumb-img {
+    width: 58px;
+    height: 58px;
+    object-fit: contain;
+    background: #06090f;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .target-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+  .metric-cell {
+    background: #080b11;
+    border: 1px solid var(--border);
+    padding: 4px 6px;
+    border-radius: 3px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .swapper-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+  }
+  .swap-tab {
+    background: #080b11;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 5px 2px;
+    text-align: center;
+    border-radius: 3px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .swap-tab.active {
+    background: rgba(56, 189, 248, 0.16);
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+  }
+  .parts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .part-card {
+    background: #080b11;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: all 0.12s;
+  }
+  .part-card:hover {
+    border-color: var(--accent-cyan);
+    transform: translateY(-1px);
+  }
+  .part-card.active {
+    border-color: var(--accent-amber);
+    background: rgba(245, 158, 11, 0.12);
+  }
+  .part-thumb-wrap {
+    width: 100%;
+    height: 54px;
+    background: repeating-conic-gradient(#0d121c 0% 25%, #141c2b 0% 50%) 50% / 12px 12px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .part-thumb-wrap img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+  }
+  .part-title {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: var(--text-muted);
+    text-align: center;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .option-btn {
+    width: 100%;
+    text-align: left;
+    background: #080b11;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .option-btn:hover { border-color: var(--accent-amber); }
+  .option-btn.correct {
+    border-color: var(--accent-green);
+    background: rgba(16, 185, 129, 0.16);
+    color: #fff;
+  }
+  .option-btn.wrong {
+    border-color: var(--accent-red);
+    background: rgba(244, 63, 94, 0.16);
+  }
+
+  /* TABLET & MOBILE RESPONSIVE BREAKPOINTS */
+  @media (max-width: 1120px) {
+    html, body {
+      height: auto;
+      min-height: 100vh;
+      overflow-y: auto;
+    }
+    .workspace {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto minmax(500px, 68vh) auto;
+      overflow: visible;
+      height: auto;
+    }
+    .panel {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      max-height: 360px;
+    }
+    .panel-right {
+      border-left: none;
+      border-top: 1px solid var(--border);
+      max-height: none;
+    }
+    .stage-hud-tr {
+      width: 205px;
+      font-size: 9px;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .top-bar {
+      padding: 6px 8px;
+    }
+    .brand-title { font-size: 11px; }
+    .stage-footer {
+      height: auto;
+      grid-template-columns: 84px 1fr;
+      padding: 8px;
+    }
+    .stage-footer > div:last-child {
+      grid-column: 1 / -1;
+    }
+    .stage-hud-tr {
+      display: none;
+    }
+    .captcha-banner {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP NAVIGATION & MODE BAR -->
+<header class="top-bar">
+  <div class="brand-block">
+    <div class="brand-mark"></div>
+    <div class="brand-title">
+      <span>WYGWYL // CRASH LAB &amp; BRAD-SNAP STUDIO</span>
+      <span class="brand-badge">KIT-3 v2.4</span>
+    </div>
+    <nav class="nav-links">
+      <a href="assembly.html" id="linkIndex">ASSEMBLY TOYBOX</a>
+      <a href="body_lab.html" id="linkKit3">BODY LAB</a>
+      <a href="arena_actors.html" id="linkArena">ACTING ARENA</a>
+      <a href="stage.html" id="linkLedger">STAGE</a>
+      <a href="suite.html">SUITE</a>
+      <a href="cards.html">CARDS</a>
+    </nav>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="rom" onclick="setStudioMode('rom')">[01] ROM CRASH LAB</button>
+    <button class="mode-tab" data-mode="target" onclick="setStudioMode('target')">[02] TARGET BRAD SOLVER</button>
+    <button class="mode-tab" data-mode="builder" onclick="setStudioMode('builder')">[03] CENTAUR BUILDER</button>
+    <button class="mode-tab" data-mode="captcha" onclick="setStudioMode('captcha')">[04] CAPTCHA TRAINER</button>
+  </div>
+
+  <div class="top-actions">
+    <button class="btn" id="btnViewSingle" onclick="setViewLayout('single')">[1X] SINGLE STAGE</button>
+    <button class="btn active" id="btnViewQuad" onclick="setViewLayout('quad')">[4X] QUAD MULTI-VIEW</button>
+    <button class="btn btn-success" id="btnSnapToTargetTop" onclick="snapRigToActiveTargetPose()">[SNAP BRADS TO TARGET]</button>
+    <button class="btn btn-primary" onclick="commitCurrentPatch()">[COMMIT PATCH]</button>
+    <button class="btn" onclick="revertCurrentPatch()">[REVERT]</button>
+    <button class="btn btn-warn" onclick="exportPatchedCatalog()">[EXPORT JSON]</button>
+  </div>
+</header>
+
+<!-- 3-COLUMN STUDIO WORKSPACE -->
+<main class="workspace">
+
+  <!-- LEFT PANEL: RIG SELECTOR + 20 CRASH TESTS + 14-SLOT MANIFEST -->
+  <aside class="panel">
+    <div class="panel-header">
+      <span>[A] RIG PROFILE &amp; 14-SLOT MANIFEST</span>
+      <span id="rigCountLabel">10 KITS</span>
+    </div>
+    <div class="panel-scroll">
+
+      <!-- ACTIVE CHARACTER RIG -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>ACTIVE CHARACTER RIG</span>
+          <span id="activeHeightBadge" style="color:var(--accent-cyan);">175 cm</span>
+        </div>
+        <select id="rigSelect" onchange="onSelectRig(this.value)"></select>
+        <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); font-family:var(--font-mono);">
+          <span id="rigScaleReadout">Scale: 0.250 cm/px</span>
+          <span id="rigSourceBadge">v2_parts</span>
+        </div>
+      </div>
+
+      <!-- 14-SLOT RIG CARD MANIFEST -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>14-SLOT CARD MANIFEST (CLICK TO INSPECT)</span>
+          <button class="btn" style="padding:2px 6px; font-size:9px;" onclick="resetSwappedSlots()">RESET SWAPS</button>
+        </div>
+        <div class="slot-grid" id="slotManifestGrid"></div>
+      </div>
+
+      <!-- 20 ROM & ACTING CRASH TESTS -->
+      <div class="control-group" style="flex:1; min-height:220px;">
+        <div class="control-label">
+          <span id="leftListTitle">20 ROM &amp; ACTING CRASH TESTS</span>
+          <span id="testScoreBadge" style="color:var(--accent-green);">[6/6 PASS]</span>
+        </div>
+        <div class="test-filter-bar" id="testFilterBar">
+          <span class="filter-pill active" onclick="filterTests('all')">ALL</span>
+          <span class="filter-pill" onclick="filterTests('basic_rom')">ROM</span>
+          <span class="filter-pill" onclick="filterTests('locomotion')">WALK</span>
+          <span class="filter-pill" onclick="filterTests('acting')">ACT</span>
+          <span class="filter-pill" onclick="filterTests('stress')">STRESS</span>
+          <span class="filter-pill" onclick="filterTests('multiview')">3D/YAW</span>
+        </div>
+        <div id="testListContainer" style="display:flex; flex-direction:column; gap:5px; overflow-y:auto; max-height:310px;"></div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- CENTER STAGE: INTERACTIVE RIG / 4-UP QUAD MULTI-VIEW / TARGET BRAD SOLVER -->
+  <section class="stage-column">
+    <div class="stage-toolbar">
+      <div class="toolbar-group">
+        <span style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted);">DRAG MODE:</span>
+        <button class="btn active" id="btnDragIK" onclick="setDragMode('ik')">[IK] TARGET PINS</button>
+        <button class="btn" id="btnDragFK" onclick="setDragMode('fk')">[FK] ROTATE BONE</button>
+        <button class="btn" id="btnDragBrad" onclick="setDragMode('brad')">[CARD] PIVOT A / SOCKET B</button>
+        <button class="btn" id="btnDragTargetBrad" onclick="setDragMode('target_brad')">[TARGET] POSE BRADS</button>
+      </div>
+
+      <div class="toolbar-group">
+        <button class="btn active" id="btnOverlaySeam" onclick="toggleOverlay('seam')">[CUFF CIRCLES]</button>
+        <button class="btn active" id="btnOverlayBones" onclick="toggleOverlay('bones')">[BONES &amp; BRADS]</button>
+        <button class="btn active" id="btnOverlayTarget" onclick="toggleOverlay('target')">[TARGET POSE OVERLAY]</button>
+        <button class="btn" id="btnOverlayLoupe" onclick="toggleOverlay('loupe')">[2.5X BRAD LOUPE]</button>
+        <button class="btn" id="btnOverlayGhost" onclick="toggleOverlay('ghost')">[DIFF BASELINE]</button>
+        <button class="btn btn-primary" id="btnPlayPause" onclick="togglePlay()">[PAUSE]</button>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="mainCanvas" width="1200" height="760"></canvas>
+
+      <!-- TOP-LEFT STAGE TELEMETRY -->
+      <div class="stage-hud-tl">
+        <div class="hud-pill" id="hudActiveTest">TEST: T01 // A-Pose Rest Baseline</div>
+        <div class="hud-pill" id="hudSelectedSlot">SELECTED CARD: torso (Z:10) // Parent -> Child Brad Fit</div>
+        <div class="hud-pill" id="hudPhysicsReadout" style="color:var(--accent-cyan);">
+          GRAVITY: 9.81 m/s² | CoM PLUMB: STABLE | LOAD L:50% R:50%
+        </div>
+        <div class="hud-pill" id="hudBradSnapReadout" style="color:var(--accent-green);">
+          TARGET BRAD MATCH: 98.4% | MEAN BRAD ERR: 0.42 cm
+        </div>
+      </div>
+
+      <!-- TOP-RIGHT EXECUTABLE INVARIANTS PANEL -->
+      <div class="stage-hud-tr">
+        <div class="invariant-box">
+          <div style="font-weight:800; color:var(--text-muted); border-bottom:1px solid var(--border); padding-bottom:3px; margin-bottom:2px; display:flex; justify-content:space-between;">
+            <span>EXECUTABLE RIG INVARIANTS</span>
+            <span id="invSummaryTag" class="inv-pass">[PASS]</span>
+          </div>
+          <div class="inv-row">
+            <span>1. Neck Seam Continuity</span>
+            <span id="invNeck" class="inv-pass">[PASS] 0.4cm</span>
+          </div>
+          <div class="inv-row">
+            <span>2. Torso-Groin Overlap</span>
+            <span id="invGroin" class="inv-pass">[PASS] 94%</span>
+          </div>
+          <div class="inv-row">
+            <span>3. Limb Length Conserv.</span>
+            <span id="invLimb" class="inv-pass">[PASS] 1.00x</span>
+          </div>
+          <div class="inv-row">
+            <span>4. Joint Angle Envelope</span>
+            <span id="invAngle" class="inv-pass">[PASS] OK</span>
+          </div>
+          <div class="inv-row">
+            <span>5. Z-Order Crossing</span>
+            <span id="invZOrder" class="inv-pass">[PASS] Z-OK</span>
+          </div>
+          <div class="inv-row">
+            <span>6. CoM Floor Balance</span>
+            <span id="invCoM" class="inv-pass">[PASS] STABLE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAPTCHA CHALLENGE OVERLAY BANNER -->
+      <div class="captcha-banner" id="captchaBanner">
+        <div style="flex:1;">
+          <div class="captcha-q-title" id="captchaBannerTitle">CAPTCHA #01 // NECK SEAM GAP</div>
+          <div class="captcha-q-text" id="captchaBannerPrompt">
+            Inspect the broken joint on the stage. Drag the Brad pin or use the quick-fix controls on the right, then click [VERIFY &amp; LOG FIX].
+          </div>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <button class="btn btn-warn" onclick="applyCaptchaAutoFix()">[AUTO-SNAP FIX]</button>
+          <button class="btn btn-success" onclick="verifyCaptchaChallenge()">[VERIFY &amp; LOG FIX]</button>
+          <button class="btn" onclick="nextCaptchaChallenge()">[NEXT &gt;]</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAGE FOOTER: 3D TURNTABLE JOYSTICK + TIMELINE & WEIGHT SCRUBBERS -->
+    <div class="stage-footer">
+      <div class="joystick-wrap">
+        <canvas id="joyPad" width="72" height="72" title="Drag to orbit Camera Yaw &amp; Pitch"></canvas>
+        <span style="font-family:var(--font-mono); font-size:9px; color:var(--text-muted);" id="joyLabel">YAW: 0°</span>
+      </div>
+
+      <div class="scrubber-col">
+        <div class="slider-row">
+          <label>PHASE SCRUB</label>
+          <input type="range" id="phaseSlider" min="0" max="100" value="0" oninput="onScrubPhase(this.value)">
+          <span class="slider-val" id="phaseVal">0%</span>
+        </div>
+        <div class="slider-row">
+          <label>CAMERA YAW</label>
+          <input type="range" id="yawSlider" min="-180" max="180" value="0" oninput="onScrubYaw(this.value)">
+          <span class="slider-val" id="yawVal">0°</span>
+        </div>
+        <div class="slider-row">
+          <label>STRESS AMP</label>
+          <input type="range" id="ampSlider" min="25" max="160" value="100" oninput="onScrubAmp(this.value)">
+          <span class="slider-val" id="ampVal">100%</span>
+        </div>
+      </div>
+
+      <div class="scrubber-col">
+        <div class="slider-row">
+          <label>GRAVITY DIP</label>
+          <input type="range" id="weightDipSlider" min="0" max="200" value="100" oninput="onScrubWeightDip(this.value)">
+          <span class="slider-val" id="weightDipVal">100%</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:var(--text-muted);">
+          <span>VIEW PRESETS:</span>
+          <span id="viewFlipTag" style="color:var(--accent-cyan);">FRONT (0°)</span>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:4px;">
+          <button class="btn" style="justify-content:center; padding:4px;" onclick="onScrubYaw(0)">0°</button>
+          <button class="btn" style="justify-content:center; padding:4px;" onclick="onScrubYaw(35)">35°</button>
+          <button class="btn" style="justify-content:center; padding:4px;" onclick="onScrubYaw(90)">90°</button>
+          <button class="btn" style="justify-content:center; padding:4px;" onclick="onScrubYaw(180)">180°</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT PANEL: TARGET POSE BRAD SOLVER + SLOT BRAD CALIBRATOR + SWAPPER BANK -->
+  <aside class="panel panel-right">
+    <div class="panel-header">
+      <span>[B] TARGET POSE BRAD SOLVER &amp; SWAPPER</span>
+      <span id="patchCounterBadge" style="color:var(--accent-amber);">0 PATCHES</span>
+    </div>
+    <div class="panel-scroll">
+
+      <!-- TARGET POSE BRAD-SNAP SOLVER ("TREAT EXISTING POSES AS TARGETS & SNAP WITH BRADS") -->
+      <div class="target-solver-card" id="targetSolverCard">
+        <div class="control-label" style="color:var(--accent-green); font-weight:800;">
+          <span>TARGET POSE BRAD-SNAP SOLVER</span>
+          <span id="targetPoseIdBadge">[ACT-001]</span>
+        </div>
+        <select id="targetPoseSelect" onchange="onSelectTargetPose(this.value)"></select>
+
+        <div class="target-thumb-row">
+          <img id="targetPoseThumb" class="target-thumb-img" src="" alt="Target Pose">
+          <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+            <div id="targetPoseMeta" style="font-family:var(--font-mono); font-size:9px; color:var(--text-muted); line-height:1.3;">
+              Select any harvested pose and snap the active rig's 15 joint brads directly onto the target pose brads.
+            </div>
+            <div style="display:flex; gap:4px; flex-wrap:wrap;">
+              <button class="btn btn-success" style="flex:1; justify-content:center;" onclick="snapRigToActiveTargetPose()">
+                [SNAP BRADS TO POSE]
+              </button>
+              <button class="btn" id="btnLockTargetSnap" onclick="toggleTargetSnapLock()" title="Continuously lock rig brads to target pose brads">
+                [LOCK: OFF]
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <label style="width:85px;">SNAP BLEND</label>
+          <input type="range" id="targetSnapAlphaSlider" min="0" max="100" value="100" oninput="onChangeTargetSnapAlpha(this.value)">
+          <span class="slider-val" id="targetSnapAlphaVal">100%</span>
+        </div>
+        <div class="slider-row">
+          <label style="width:85px;">REF OPACITY</label>
+          <input type="range" id="targetRefOpacitySlider" min="0" max="100" value="38" oninput="onChangeTargetRefOpacity(this.value)">
+          <span class="slider-val" id="targetRefOpacityVal">38%</span>
+        </div>
+
+        <div class="target-metrics-grid">
+          <div class="metric-cell">
+            <span style="color:var(--text-muted);">POSE MATCH:</span>
+            <span id="metricPoseMatch" style="color:var(--accent-green); font-weight:700;">98.4%</span>
+          </div>
+          <div class="metric-cell">
+            <span style="color:var(--text-muted);">BRAD ERROR:</span>
+            <span id="metricBradError" style="color:var(--accent-cyan); font-weight:700;">0.42 cm</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:4px;">
+          <button class="btn" style="flex:1; justify-content:center;" onclick="resetTargetPoseBrads()">[RESET TARGET BRADS]</button>
+          <button class="btn" style="flex:1; justify-content:center;" onclick="releaseTargetPoseSnap()">[RETURN TO ROM LOOP]</button>
+        </div>
+      </div>
+
+      <!-- CAPTCHA TRAINER QUICK-CHALLENGE BOX (VISIBLE IN CAPTCHA MODE) -->
+      <div class="control-group" id="captchaTrainerBox" style="display:none; border-color:var(--accent-amber);">
+        <div class="control-label" style="color:var(--accent-amber);">
+          <span>CENTAUR CAPTCHA CHALLENGE</span>
+          <span id="captchaScoreReadout">SOLVED: 0 / 12</span>
+        </div>
+        <select id="captchaSelect" onchange="selectCaptchaById(this.value)"></select>
+        <div id="captchaQuestionText" style="font-size:11px; color:var(--text-main); line-height:1.35; padding:4px 0;"></div>
+        <div id="captchaOptionsList" style="display:flex; flex-direction:column; gap:5px;"></div>
+      </div>
+
+      <!-- SELECTED SLOT BRAD & CUFF CALIBRATOR -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>BRAD PIVOT &amp; CUFF CALIBRATOR</span>
+          <span id="calibSlotLabel" style="color:var(--accent-cyan);">torso</span>
+        </div>
+
+        <div class="slider-row">
+          <label>PIVOT A (X,Y)</label>
+          <input type="range" id="proxXSlider" min="0" max="100" value="50" oninput="onCalibChange()">
+          <input type="range" id="proxYSlider" min="0" max="100" value="15" oninput="onCalibChange()">
+          <span class="slider-val" id="proxVal">0.50,0.15</span>
+        </div>
+
+        <div class="slider-row">
+          <label>SOCKET B (X,Y)</label>
+          <input type="range" id="distXSlider" min="0" max="100" value="50" oninput="onCalibChange()">
+          <input type="range" id="distYSlider" min="0" max="100" value="85" oninput="onCalibChange()">
+          <span class="slider-val" id="distVal">0.50,0.85</span>
+        </div>
+
+        <div class="slider-row">
+          <label>WIDTH SCALE</label>
+          <input type="range" id="widthScaleSlider" min="40" max="180" value="100" oninput="onCalibChange()">
+          <span class="slider-val" id="widthScaleVal">1.00x</span>
+        </div>
+
+        <div class="slider-row">
+          <label>CUFF RADIUS</label>
+          <input type="range" id="cuffRadSlider" min="1" max="35" value="14" oninput="onCalibChange()">
+          <span class="slider-val" id="cuffRadVal">0.14</span>
+        </div>
+
+        <div class="slider-row">
+          <label>Z-INDEX LAYER</label>
+          <input type="range" id="zOrderSlider" min="-15" max="35" value="10" oninput="onCalibChange()">
+          <span class="slider-val" id="zOrderVal">Z:10</span>
+        </div>
+
+        <div style="display:flex; gap:5px; margin-top:2px;">
+          <button class="btn" style="flex:1; justify-content:center;" onclick="flipSelectedSlotX()">[FLIP CARD X]</button>
+          <button class="btn" style="flex:1; justify-content:center;" onclick="autoAlignSelectedBrad()">[AUTO-CENTER BRAD]</button>
+        </div>
+      </div>
+
+      <!-- NORMALIZED PARTS SWAPPER TRAY (SHOES, HANDS, HEADS, TORSOS, LIMBS) -->
+      <div class="control-group" style="flex:1;">
+        <div class="control-label">
+          <span>NORMALIZED PARTS SWAPPER (302 CUTS)</span>
+          <span id="swapBankCount" style="color:var(--accent-teal);">49 ITEMS</span>
+        </div>
+
+        <div class="swapper-tabs" id="swapperTabs">
+          <div class="swap-tab active" data-cat="shoes_feet" onclick="setSwapperCategory('shoes_feet')">SHOES</div>
+          <div class="swap-tab" data-cat="hands" onclick="setSwapperCategory('hands')">HANDS</div>
+          <div class="swap-tab" data-cat="heads" onclick="setSwapperCategory('heads')">HEADS</div>
+          <div class="swap-tab" data-cat="torsos_pelvis" onclick="setSwapperCategory('torsos_pelvis')">TORSOS</div>
+          <div class="swap-tab" data-cat="limbs" onclick="setSwapperCategory('limbs')">LIMBS</div>
+        </div>
+
+        <div style="display:flex; gap:5px; align-items:center;">
+          <input type="text" id="swapSearchInput" placeholder="Filter by kit, view (front/side/back), slot..." oninput="renderSwapperGrid()">
+          <button class="btn" onclick="applyPartToMirrorPair()" title="Copy active part to both L &amp; R slots">[L=R SYNC]</button>
+        </div>
+
+        <div style="font-family:var(--font-mono); font-size:9px; color:var(--text-muted);">
+          TARGET SLOT: <strong id="swapTargetSlotName" style="color:var(--accent-amber);">foot_L</strong> (click any card below to hot-swap)
+        </div>
+
+        <div class="parts-grid" id="swapperGrid"></div>
+      </div>
+
+    </div>
+  </aside>
+
+</main>
+
+<script>
+// ============================================================================
+// WYGWYL CRASH LAB, TARGET POSE BRAD SOLVER & CENTAUR CAPTCHA ENGINE
+// Supports both /shots/crash_lab.html and /shots/viewer/crash_lab.html
+// ============================================================================
+const IS_VIEWER_SUBDIR = window.location.pathname.includes('/viewer/');
+const SHOT_PREFIX = IS_VIEWER_SUBDIR ? '../' : '';
+
+// Wire top navigation links dynamically so they work from either directory
+document.getElementById('linkIndex').href = SHOT_PREFIX + 'assembly.html';
+document.getElementById('linkKit3').href = SHOT_PREFIX + 'body_lab.html';
+document.getElementById('linkArena').href = SHOT_PREFIX + 'arena_actors.html';
+document.getElementById('linkLedger').href = SHOT_PREFIX + 'stage.html';
+
+const CATALOG_URL = SHOT_PREFIX + 'arena/parts/kit3/release_v2/crash_lab_catalog.json';
+
+const SLOT_ORDER = [
+  'pelvis', 'torso', 'head',
+  'upper_arm_L', 'forearm_L', 'hand_L',
+  'upper_arm_R', 'forearm_R', 'hand_R',
+  'thigh_L', 'shin_L', 'foot_L',
+  'thigh_R', 'shin_R', 'foot_R'
+];
+
+// Each card slot maps to [parentJoint, childJoint] in the 15-joint skeleton
+const SLOT_BONE_MAP = {
+  pelvis:      ['pelvis', 'torso'],
+  torso:       ['pelvis', 'neck'],
+  head:        ['neck', 'head'],
+  upper_arm_L: ['shoulder_L', 'elbow_L'],
+  forearm_L:   ['elbow_L', 'wrist_L'],
+  hand_L:      ['wrist_L', 'hand_tip_L'],
+  upper_arm_R: ['shoulder_R', 'elbow_R'],
+  forearm_R:   ['elbow_R', 'wrist_R'],
+  hand_R:      ['wrist_R', 'hand_tip_R'],
+  thigh_L:     ['hip_L', 'knee_L'],
+  shin_L:      ['knee_L', 'ankle_L'],
+  foot_L:      ['ankle_L', 'toe_L'],
+  thigh_R:     ['hip_R', 'knee_R'],
+  shin_R:      ['knee_R', 'ankle_R'],
+  foot_R:      ['ankle_R', 'toe_R']
+};
+
+const TARGET_BRAD_JOINTS = [
+  'pelvis', 'torso', 'neck', 'head',
+  'shoulder_L', 'elbow_L', 'wrist_L',
+  'shoulder_R', 'elbow_R', 'wrist_R',
+  'hip_L', 'knee_L', 'ankle_L',
+  'hip_R', 'knee_R', 'ankle_R'
+];
+
+// Global Studio State
+let catalog = null;
+let studioMode = 'rom';           // 'rom' | 'target' | 'builder' | 'captcha'
+let viewLayout = 'quad';          // 'single' | 'quad'
+let dragMode = 'ik';              // 'ik' | 'fk' | 'brad' | 'target_brad'
+let activeRigId = 'poet_tracksuit_31';
+let activeTestId = 'T01';
+let activeTestFilter = 'all';
+let activeSlotName = 'torso';
+let activeSwapCategory = 'shoes_feet';
+let activeCaptchaIndex = 0;
+let solvedCaptchas = new Set();
+
+// Target Pose Brad-Snap State
+let activeTargetPoseId = 'ACT-001';
+let targetSnapLocked = false;
+let targetSnapAlpha = 0.0;        // 0 = pure ROM procedural pose, 1 = 100% snapped to Target Pose Brads
+let targetRefOpacity = 0.38;
+let customTargetBrads = {};       // poseId -> cloned/edited brads_norm dict
+
+// Animation & Physics State
+let isPlaying = true;
+let animPhase = 0.0;              // 0..1
+let cameraYawDeg = 0;             // -180..180
+let cameraPitchDeg = 0;           // -45..45
+let stressAmp = 1.0;              // 0.25..1.6
+let weightDipStrength = 1.0;      // 0..2.0 physical landing compression
+
+// Overlays
+let overlays = {
+  seam: true,
+  bones: true,
+  target: true,
+  loupe: false,
+  ghost: false
+};
+
+// Runtime Rig Clones (Baseline vs Live Patched)
+let baselineRigs = {};
+let liveRigs = {};
+let committedPatches = [];
+
+// Image Cache
+const imageCache = new Map();
+function getCachedImage(relPath) {
+  if (!relPath) return null;
+  const fullUrl = relPath.startsWith('http') || relPath.startsWith('data:')
+    ? relPath
+    : SHOT_PREFIX + relPath;
+  if (imageCache.has(fullUrl)) return imageCache.get(fullUrl);
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = fullUrl;
+  imageCache.set(fullUrl, img);
+  return img;
+}
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+async function initCrashLab() {
+  try {
+    const res = await fetch(CATALOG_URL);
+    catalog = await res.json();
+  } catch (err) {
+    console.error('Failed to load crash_lab_catalog.json:', err);
+    return;
+  }
+
+  // Deep-clone rigs into baselineRigs and liveRigs
+  for (const rig of catalog.rigs) {
+    baselineRigs[rig.id] = JSON.parse(JSON.stringify(rig));
+    liveRigs[rig.id] = JSON.parse(JSON.stringify(rig));
+    for (const slot of Object.values(rig.slots)) {
+      if (slot.default_asset) getCachedImage(slot.default_asset);
+      if (slot.views) {
+        Object.values(slot.views).forEach(v => getCachedImage(v));
+      }
+    }
+  }
+
+  // Deep-clone target poses brads_norm for interactive direct brad editing
+  if (catalog.target_poses && catalog.target_poses.length > 0) {
+    for (const tp of catalog.target_poses) {
+      customTargetBrads[tp.id] = JSON.parse(JSON.stringify(tp.brads_norm));
+      if (tp.asset) getCachedImage(tp.asset);
+    }
+    activeTargetPoseId = catalog.target_poses[0].id;
+  }
+
+  populateRigSelect();
+  populateTargetPoseSelect();
+  populateCaptchaSelect();
+  renderSlotManifest();
+  renderTestList();
+  renderSwapperGrid();
+  syncCalibratorSliders();
+  setupCanvasInteractions();
+  setupJoystick();
+
+  requestAnimationFrame(animationLoop);
+}
+
+function populateRigSelect() {
+  const sel = document.getElementById('rigSelect');
+  sel.innerHTML = '';
+  for (const rig of catalog.rigs) {
+    const opt = document.createElement('option');
+    opt.value = rig.id;
+    opt.textContent = `${rig.label} (${rig.target_height_cm}cm)`;
+    if (rig.id === activeRigId) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  document.getElementById('rigCountLabel').textContent = `${catalog.rigs.length} KITS`;
+  updateRigHeaderInfo();
+}
+
+function updateRigHeaderInfo() {
+  const rig = liveRigs[activeRigId];
+  if (!rig) return;
+  document.getElementById('activeHeightBadge').textContent = `${rig.target_height_cm} cm`;
+  document.getElementById('rigScaleReadout').textContent = `Scale: ${rig.scale_cm_per_px.toFixed(3)} cm/px`;
+  document.getElementById('rigSourceBadge').textContent = rig.source_type;
+}
+
+function onSelectRig(rigId) {
+  activeRigId = rigId;
+  updateRigHeaderInfo();
+  renderSlotManifest();
+  syncCalibratorSliders();
+}
+
+// ============================================================================
+// TARGET POSE BRAD-SNAP SOLVER CONTROLS
+// ============================================================================
+function populateTargetPoseSelect() {
+  const sel = document.getElementById('targetPoseSelect');
+  if (!sel || !catalog.target_poses) return;
+  sel.innerHTML = '';
+  for (const tp of catalog.target_poses) {
+    const opt = document.createElement('option');
+    opt.value = tp.id;
+    opt.textContent = `${tp.id} // ${tp.title} (${tp.category})`;
+    if (tp.id === activeTargetPoseId) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  updateTargetPoseCardUI();
+}
+
+function getActiveTargetPose() {
+  if (!catalog || !catalog.target_poses) return null;
+  return catalog.target_poses.find(p => p.id === activeTargetPoseId) || catalog.target_poses[0];
+}
+
+function updateTargetPoseCardUI() {
+  const tp = getActiveTargetPose();
+  if (!tp) return;
+  document.getElementById('targetPoseIdBadge').textContent = `[${tp.id}]`;
+  const thumb = document.getElementById('targetPoseThumb');
+  thumb.src = SHOT_PREFIX + tp.asset;
+  document.getElementById('targetPoseMeta').textContent =
+    `${tp.title} // Cam Yaw: ${tp.cam_yaw || 0}° // 15 Normalized Joint Brads ready for fit_bone snap.`;
+}
+
+function onSelectTargetPose(poseId) {
+  activeTargetPoseId = poseId;
+  updateTargetPoseCardUI();
+  const tp = getActiveTargetPose();
+  if (tp && typeof tp.cam_yaw === 'number') {
+    onScrubYaw(tp.cam_yaw);
+  }
+  snapRigToActiveTargetPose();
+}
+
+function snapRigToActiveTargetPose() {
+  targetSnapAlpha = 1.0;
+  document.getElementById('targetSnapAlphaSlider').value = 100;
+  document.getElementById('targetSnapAlphaVal').textContent = '100%';
+  const tp = getActiveTargetPose();
+  if (tp && typeof tp.cam_yaw === 'number') {
+    cameraYawDeg = tp.cam_yaw;
+    document.getElementById('yawSlider').value = cameraYawDeg;
+    document.getElementById('yawVal').textContent = `${Math.round(cameraYawDeg)}°`;
+  }
+  // Clear manual IK overrides so target pose brads drive the rig cleanly
+  Object.keys(ikOverrides).forEach(k => delete ikOverrides[k]);
+  fkBoneAngles = {};
+  overlays.target = true;
+  document.getElementById('btnOverlayTarget').classList.add('active');
+}
+
+function toggleTargetSnapLock() {
+  targetSnapLocked = !targetSnapLocked;
+  const btn = document.getElementById('btnLockTargetSnap');
+  btn.textContent = targetSnapLocked ? '[LOCK: ON]' : '[LOCK: OFF]';
+  btn.classList.toggle('active', targetSnapLocked);
+  if (targetSnapLocked) {
+    snapRigToActiveTargetPose();
+  }
+}
+
+function onChangeTargetSnapAlpha(val) {
+  targetSnapAlpha = Number(val) / 100;
+  document.getElementById('targetSnapAlphaVal').textContent = `${val}%`;
+}
+
+function onChangeTargetRefOpacity(val) {
+  targetRefOpacity = Number(val) / 100;
+  document.getElementById('targetRefOpacityVal').textContent = `${val}%`;
+}
+
+function resetTargetPoseBrads() {
+  const tp = getActiveTargetPose();
+  if (!tp) return;
+  customTargetBrads[tp.id] = JSON.parse(JSON.stringify(tp.brads_norm));
+}
+
+function releaseTargetPoseSnap() {
+  targetSnapLocked = false;
+  targetSnapAlpha = 0.0;
+  document.getElementById('btnLockTargetSnap').textContent = '[LOCK: OFF]';
+  document.getElementById('btnLockTargetSnap').classList.remove('active');
+  document.getElementById('targetSnapAlphaSlider').value = 0;
+  document.getElementById('targetSnapAlphaVal').textContent = '0%';
+}
+
+// ============================================================================
+// 14-SLOT MANIFEST & BIDIRECTIONAL LINKING
+// ============================================================================
+function renderSlotManifest() {
+  const grid = document.getElementById('slotManifestGrid');
+  grid.innerHTML = '';
+  const rig = liveRigs[activeRigId];
+  if (!rig) return;
+
+  for (const slotName of SLOT_ORDER) {
+    const slot = rig.slots[slotName];
+    if (!slot) continue;
+    const chip = document.createElement('div');
+    chip.className = 'slot-chip' +
+      (slotName === activeSlotName ? ' active' : '') +
+      (slot.swapped ? ' swapped' : '');
+    chip.innerHTML = `
+      <span>${slotName}</span>
+      <span class="slot-z">Z:${slot.z_order}</span>
+    `;
+    chip.onclick = () => selectSlot(slotName);
+    grid.appendChild(chip);
+  }
+}
+
+function selectSlot(slotName) {
+  activeSlotName = slotName;
+  renderSlotManifest();
+  syncCalibratorSliders();
+  document.getElementById('swapTargetSlotName').textContent = slotName;
+
+  if (slotName.startsWith('foot')) setSwapperCategory('shoes_feet', false);
+  else if (slotName.startsWith('hand')) setSwapperCategory('hands', false);
+  else if (slotName === 'head') setSwapperCategory('heads', false);
+  else if (slotName === 'torso' || slotName === 'pelvis') setSwapperCategory('torsos_pelvis', false);
+  else setSwapperCategory('limbs', false);
+
+  const slot = liveRigs[activeRigId]?.slots[slotName];
+  if (slot) {
+    document.getElementById('hudSelectedSlot').textContent =
+      `SELECTED CARD: ${slotName} (Z:${slot.z_order}) // Brad A(${slot.proximal_xy[0].toFixed(2)},${slot.proximal_xy[1].toFixed(2)}) -> B(${slot.distal_xy[0].toFixed(2)},${slot.distal_xy[1].toFixed(2)})`;
+  }
+}
+
+// ============================================================================
+// 20 ROM & ACTING CRASH TESTS
+// ============================================================================
+function filterTests(cat) {
+  activeTestFilter = cat;
+  document.querySelectorAll('#testFilterBar .filter-pill').forEach(el => {
+    el.classList.toggle('active', el.textContent.toLowerCase().includes(cat === 'all' ? 'all' : cat.slice(0, 3)));
+  });
+  renderTestList();
+}
+
+function renderTestList() {
+  const container = document.getElementById('testListContainer');
+  container.innerHTML = '';
+  const tests = catalog.rom_tests.filter(t => activeTestFilter === 'all' || t.category === activeTestFilter);
+
+  for (const t of tests) {
+    const item = document.createElement('div');
+    item.className = 'test-item' + (t.id === activeTestId ? ' active' : '');
+    item.innerHTML = `
+      <div class="test-item-top">
+        <span>${t.id} // ${t.title}</span>
+        <span class="test-cat-tag">${t.category}</span>
+      </div>
+      <div class="test-desc">${t.description}</div>
+    `;
+    item.onclick = () => selectRomTest(t.id);
+    container.appendChild(item);
+  }
+}
+
+function selectRomTest(testId) {
+  activeTestId = testId;
+  // When user picks a ROM test, default back to ROM loop unless Target Snap Lock is enabled
+  if (!targetSnapLocked) {
+    targetSnapAlpha = 0.0;
+    document.getElementById('targetSnapAlphaSlider').value = 0;
+    document.getElementById('targetSnapAlphaVal').textContent = '0%';
+  }
+  renderTestList();
+  const t = catalog.rom_tests.find(x => x.id === testId);
+  if (t) {
+    document.getElementById('hudActiveTest').textContent = `TEST: ${t.id} // ${t.title}`;
+    if (t.id === 'T12') onScrubYaw(90);
+    else if (t.id === 'T13') onScrubYaw(180);
+  }
+}
+
+// ============================================================================
+// STUDIO MODES & VIEW LAYOUTS (1X SINGLE vs 4X QUAD MULTI-VIEW)
+// ============================================================================
+function setStudioMode(mode) {
+  studioMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+
+  const captchaBanner = document.getElementById('captchaBanner');
+  const captchaBox = document.getElementById('captchaTrainerBox');
+
+  if (mode === 'captcha') {
+    captchaBanner.classList.add('visible');
+    captchaBox.style.display = 'flex';
+    loadCaptchaChallenge(activeCaptchaIndex);
+  } else {
+    captchaBanner.classList.remove('visible');
+    captchaBox.style.display = 'none';
+  }
+
+  if (mode === 'target') {
+    snapRigToActiveTargetPose();
+    setDragMode('target_brad');
+  } else if (mode === 'builder') {
+    setDragMode('brad');
+  }
+}
+
+function setViewLayout(layout) {
+  viewLayout = layout;
+  document.getElementById('btnViewSingle').classList.toggle('active', layout === 'single');
+  document.getElementById('btnViewQuad').classList.toggle('active', layout === 'quad');
+}
+
+function setDragMode(mode) {
+  dragMode = mode;
+  document.getElementById('btnDragIK').classList.toggle('active', mode === 'ik');
+  document.getElementById('btnDragFK').classList.toggle('active', mode === 'fk');
+  document.getElementById('btnDragBrad').classList.toggle('active', mode === 'brad');
+  document.getElementById('btnDragTargetBrad').classList.toggle('active', mode === 'target_brad');
+}
+
+function toggleOverlay(key) {
+  overlays[key] = !overlays[key];
+  const mapBtn = {
+    seam: 'btnOverlaySeam',
+    bones: 'btnOverlayBones',
+    target: 'btnOverlayTarget',
+    loupe: 'btnOverlayLoupe',
+    ghost: 'btnOverlayGhost'
+  };
+  document.getElementById(mapBtn[key]).classList.toggle('active', overlays[key]);
+}
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  const btn = document.getElementById('btnPlayPause');
+  btn.textContent = isPlaying ? '[PAUSE]' : '[PLAY]';
+}
+
+function onScrubPhase(val) {
+  isPlaying = false;
+  document.getElementById('btnPlayPause').textContent = '[PLAY]';
+  animPhase = Number(val) / 100;
+  document.getElementById('phaseVal').textContent = `${val}%`;
+}
+
+function onScrubYaw(val) {
+  cameraYawDeg = Number(val);
+  document.getElementById('yawSlider').value = cameraYawDeg;
+  document.getElementById('yawVal').textContent = `${Math.round(cameraYawDeg)}°`;
+  document.getElementById('joyLabel').textContent = `YAW: ${Math.round(cameraYawDeg)}°`;
+  updateViewTag();
+  drawJoystick();
+}
+
+function onScrubAmp(val) {
+  stressAmp = Number(val) / 100;
+  document.getElementById('ampVal').textContent = `${val}%`;
+}
+
+function onScrubWeightDip(val) {
+  weightDipStrength = Number(val) / 100;
+  document.getElementById('weightDipVal').textContent = `${val}%`;
+}
+
+function updateViewTag() {
+  const absYaw = Math.abs(cameraYawDeg);
+  let vTag = 'FRONT (0°)';
+  if (absYaw >= 135) vTag = 'BACK (180°)';
+  else if (absYaw >= 55) vTag = cameraYawDeg > 0 ? 'SIDE R (+90°)' : 'SIDE L (-90°)';
+  else if (absYaw >= 20) vTag = cameraYawDeg > 0 ? '3/4 R (+35°)' : '3/4 L (-35°)';
+  document.getElementById('viewFlipTag').textContent = vTag;
+}
+
+// ============================================================================
+// BRAD PIVOT & CUFF CALIBRATOR
+// ============================================================================
+function syncCalibratorSliders() {
+  const slot = liveRigs[activeRigId]?.slots[activeSlotName];
+  if (!slot) return;
+  document.getElementById('calibSlotLabel').textContent = activeSlotName;
+  document.getElementById('proxXSlider').value = Math.round(slot.proximal_xy[0] * 100);
+  document.getElementById('proxYSlider').value = Math.round(slot.proximal_xy[1] * 100);
+  document.getElementById('distXSlider').value = Math.round(slot.distal_xy[0] * 100);
+  document.getElementById('distYSlider').value = Math.round(slot.distal_xy[1] * 100);
+  document.getElementById('widthScaleSlider').value = Math.round((slot.width_scale || 1.0) * 100);
+  document.getElementById('cuffRadSlider').value = Math.round((slot.cuff_radius_norm || 0.14) * 100);
+  document.getElementById('zOrderSlider').value = slot.z_order || 0;
+  updateCalibLabels(slot);
+}
+
+function updateCalibLabels(slot) {
+  document.getElementById('proxVal').textContent = `${slot.proximal_xy[0].toFixed(2)},${slot.proximal_xy[1].toFixed(2)}`;
+  document.getElementById('distVal').textContent = `${slot.distal_xy[0].toFixed(2)},${slot.distal_xy[1].toFixed(2)}`;
+  document.getElementById('widthScaleVal').textContent = `${(slot.width_scale || 1.0).toFixed(2)}x`;
+  document.getElementById('cuffRadVal').textContent = `${(slot.cuff_radius_norm || 0.14).toFixed(2)}`;
+  document.getElementById('zOrderVal').textContent = `Z:${slot.z_order}`;
+}
+
+function onCalibChange() {
+  const slot = liveRigs[activeRigId]?.slots[activeSlotName];
+  if (!slot) return;
+  slot.proximal_xy = [
+    Number(document.getElementById('proxXSlider').value) / 100,
+    Number(document.getElementById('proxYSlider').value) / 100
+  ];
+  slot.distal_xy = [
+    Number(document.getElementById('distXSlider').value) / 100,
+    Number(document.getElementById('distYSlider').value) / 100
+  ];
+  slot.width_scale = Number(document.getElementById('widthScaleSlider').value) / 100;
+  slot.cuff_radius_norm = Number(document.getElementById('cuffRadSlider').value) / 100;
+  slot.z_order = Number(document.getElementById('zOrderSlider').value);
+  updateCalibLabels(slot);
+  renderSlotManifest();
+}
+
+function flipSelectedSlotX() {
+  const slot = liveRigs[activeRigId]?.slots[activeSlotName];
+  if (!slot) return;
+  slot.flip_x = !slot.flip_x;
+}
+
+function autoAlignSelectedBrad() {
+  const baseSlot = baselineRigs[activeRigId]?.slots[activeSlotName];
+  const liveSlot = liveRigs[activeRigId]?.slots[activeSlotName];
+  if (!baseSlot || !liveSlot) return;
+  liveSlot.proximal_xy = [...baseSlot.proximal_xy];
+  liveSlot.distal_xy = [...baseSlot.distal_xy];
+  liveSlot.width_scale = baseSlot.width_scale;
+  liveSlot.cuff_radius_norm = baseSlot.cuff_radius_norm;
+  liveSlot.z_order = baseSlot.z_order;
+  syncCalibratorSliders();
+  renderSlotManifest();
+}
+
+// ============================================================================
+// NORMALIZED PARTS SWAPPER (SHOES, HANDS, HEADS, TORSOS, LIMBS)
+// ============================================================================
+function setSwapperCategory(cat, autoSelectSlot = true) {
+  activeSwapCategory = cat;
+  document.querySelectorAll('#swapperTabs .swap-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.cat === cat);
+  });
+
+  if (autoSelectSlot) {
+    if (cat === 'shoes_feet' && !activeSlotName.startsWith('foot')) selectSlot('foot_L');
+    else if (cat === 'hands' && !activeSlotName.startsWith('hand')) selectSlot('hand_L');
+    else if (cat === 'heads' && activeSlotName !== 'head') selectSlot('head');
+    else if (cat === 'torsos_pelvis' && activeSlotName !== 'torso' && activeSlotName !== 'pelvis') selectSlot('torso');
+    else if (cat === 'limbs' && ['foot_L','foot_R','hand_L','hand_R','head','torso','pelvis'].includes(activeSlotName)) selectSlot('upper_arm_L');
+  }
+  renderSwapperGrid();
+}
+
+function renderSwapperGrid() {
+  const grid = document.getElementById('swapperGrid');
+  if (!grid || !catalog) return;
+  grid.innerHTML = '';
+
+  const items = catalog.swapper_bank[activeSwapCategory] || [];
+  const query = (document.getElementById('swapSearchInput')?.value || '').trim().toLowerCase();
+
+  const filtered = items.filter(item => {
+    if (!query) return true;
+    return item.id.toLowerCase().includes(query) ||
+           item.kit.toLowerCase().includes(query) ||
+           item.view.toLowerCase().includes(query) ||
+           item.slot_hint.toLowerCase().includes(query);
+  });
+
+  document.getElementById('swapBankCount').textContent = `${filtered.length} ITEMS`;
+
+  const currentSlot = liveRigs[activeRigId]?.slots[activeSlotName];
+  for (const part of filtered.slice(0, 90)) {
+    const card = document.createElement('div');
+    const isCurrent = currentSlot && currentSlot.default_asset === part.asset;
+    card.className = 'part-card' + (isCurrent ? ' active' : '');
+    const imgUrl = SHOT_PREFIX + part.asset;
+    card.innerHTML = `
+      <div class="part-thumb-wrap">
+        <img src="${imgUrl}" loading="lazy" alt="${part.label}">
+      </div>
+      <div class="part-title" title="${part.kit} // ${part.label}">${part.kit.split('.').pop()} · ${part.view}</div>
+    `;
+    card.onclick = () => swapPartIntoActiveSlot(part);
+    grid.appendChild(card);
+  }
+}
+
+function swapPartIntoActiveSlot(part) {
+  const rig = liveRigs[activeRigId];
+  if (!rig || !rig.slots[activeSlotName]) return;
+  const slot = rig.slots[activeSlotName];
+  slot.default_asset = part.asset;
+  slot.views = { front: part.asset, side: part.asset, back: part.asset };
+  slot.proximal_xy = [...part.proximal_xy];
+  slot.distal_xy = [...part.distal_xy];
+  slot.swapped = true;
+  getCachedImage(part.asset);
+  syncCalibratorSliders();
+  renderSlotManifest();
+  renderSwapperGrid();
+}
+
+function applyPartToMirrorPair() {
+  const rig = liveRigs[activeRigId];
+  if (!rig) return;
+  let otherSlot = null;
+  if (activeSlotName.endsWith('_L')) otherSlot = activeSlotName.replace('_L', '_R');
+  else if (activeSlotName.endsWith('_R')) otherSlot = activeSlotName.replace('_R', '_L');
+  if (!otherSlot || !rig.slots[otherSlot]) return;
+
+  const src = rig.slots[activeSlotName];
+  const dst = rig.slots[otherSlot];
+  dst.default_asset = src.default_asset;
+  dst.views = JSON.parse(JSON.stringify(src.views));
+  dst.proximal_xy = [...src.proximal_xy];
+  dst.distal_xy = [...src.distal_xy];
+  dst.width_scale = src.width_scale;
+  dst.cuff_radius_norm = src.cuff_radius_norm;
+  dst.swapped = true;
+  renderSlotManifest();
+}
+
+function resetSwappedSlots() {
+  liveRigs[activeRigId] = JSON.parse(JSON.stringify(baselineRigs[activeRigId]));
+  syncCalibratorSliders();
+  renderSlotManifest();
+  renderSwapperGrid();
+}
+
+// ============================================================================
+// CENTAUR CAPTCHA TRAINER ENGINE
+// ============================================================================
+function populateCaptchaSelect() {
+  const sel = document.getElementById('captchaSelect');
+  sel.innerHTML = '';
+  catalog.captcha_challenges.forEach((ch, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = `${ idx + 1 }. ${ch.title}`;
+    sel.appendChild(opt);
+  });
+}
+
+function selectCaptchaById(idxStr) {
+  activeCaptchaIndex = Number(idxStr);
+  loadCaptchaChallenge(activeCaptchaIndex);
+}
+
+function loadCaptchaChallenge(idx) {
+  const ch = catalog.captcha_challenges[idx];
+  if (!ch) return;
+  document.getElementById('captchaSelect').value = idx;
+
+  if (liveRigs[ch.rig_id]) {
+    activeRigId = ch.rig_id;
+    document.getElementById('rigSelect').value = activeRigId;
+    liveRigs[activeRigId] = JSON.parse(JSON.stringify(baselineRigs[activeRigId]));
+  }
+  if (ch.test_id) {
+    selectRomTest(ch.test_id);
+  }
+  if (ch.target_slot && liveRigs[activeRigId]?.slots[ch.target_slot]) {
+    const slot = liveRigs[activeRigId].slots[ch.target_slot];
+    const p = ch.injected_perturbation || {};
+    if (p.proximal_xy_delta) {
+      slot.proximal_xy[0] += p.proximal_xy_delta[0];
+      slot.proximal_xy[1] += p.proximal_xy_delta[1];
+    }
+    if (p.distal_xy_delta) {
+      slot.distal_xy[0] += p.distal_xy_delta[0];
+      slot.distal_xy[1] += p.distal_xy_delta[1];
+    }
+    if (p.width_scale_mult) slot.width_scale = (slot.width_scale || 1.0) * p.width_scale_mult;
+    if (p.cuff_radius_mult) slot.cuff_radius_norm = (slot.cuff_radius_norm || 0.14) * p.cuff_radius_mult;
+    if (typeof p.z_order_override === 'number') slot.z_order = p.z_order_override;
+    selectSlot(ch.target_slot);
+  }
+
+  document.getElementById('captchaBannerTitle').textContent =
+    `CAPTCHA #${String(idx + 1).padStart(2, '0')} // ${ch.title}`;
+  document.getElementById('captchaBannerPrompt').textContent = ch.prompt;
+  document.getElementById('captchaQuestionText').textContent = ch.prompt;
+
+  const optContainer = document.getElementById('captchaOptionsList');
+  optContainer.innerHTML = '';
+  (ch.options || []).forEach((optText, optIdx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = optText;
+    btn.onclick = () => {
+      if (optIdx === ch.correct_option) {
+        btn.classList.add('correct');
+        applyCaptchaAutoFix();
+        verifyCaptchaChallenge();
+      } else {
+        btn.classList.add('wrong');
+      }
+    };
+    optContainer.appendChild(btn);
+  });
+}
+
+function applyCaptchaAutoFix() {
+  const ch = catalog.captcha_challenges[activeCaptchaIndex];
+  if (!ch) return;
+  const rig = liveRigs[activeRigId];
+  const baseRig = baselineRigs[activeRigId];
+  if (!rig || !baseRig || !rig.slots[ch.target_slot]) return;
+
+  const slot = rig.slots[ch.target_slot];
+  const baseSlot = baseRig.slots[ch.target_slot];
+  const fix = ch.target_fix || {};
+
+  slot.proximal_xy = fix.proximal_xy ? [...fix.proximal_xy] : [...baseSlot.proximal_xy];
+  slot.distal_xy = fix.distal_xy ? [...fix.distal_xy] : [...baseSlot.distal_xy];
+  slot.width_scale = fix.width_scale || baseSlot.width_scale;
+  slot.cuff_radius_norm = fix.cuff_radius_norm || baseSlot.cuff_radius_norm;
+  slot.z_order = typeof fix.z_order === 'number' ? fix.z_order : baseSlot.z_order;
+
+  if (ch.failure_type === 'shoe_orientation_mismatch') {
+    const shoes = catalog.swapper_bank.shoes_feet || [];
+    const sideShoe = shoes.find(s => s.view === 'side');
+    if (sideShoe) {
+      slot.default_asset = sideShoe.asset;
+      getCachedImage(sideShoe.asset);
+    }
+  } else if (ch.failure_type === 'hand_gesture_swap') {
+    const hands = catalog.swapper_bank.hands || [];
+    if (hands.length > 1) {
+      slot.default_asset = hands[1].asset;
+      getCachedImage(hands[1].asset);
+    }
+  }
+  syncCalibratorSliders();
+  renderSlotManifest();
+}
+
+function verifyCaptchaChallenge() {
+  const ch = catalog.captcha_challenges[activeCaptchaIndex];
+  if (!ch) return;
+  solvedCaptchas.add(ch.id);
+  document.getElementById('captchaScoreReadout').textContent =
+    `SOLVED: ${solvedCaptchas.size} / ${catalog.captcha_challenges.length}`;
+  commitCurrentPatch(`CAPTCHA_FIX:${ch.id}`);
+}
+
+function nextCaptchaChallenge() {
+  activeCaptchaIndex = (activeCaptchaIndex + 1) % catalog.captcha_challenges.length;
+  loadCaptchaChallenge(activeCaptchaIndex);
+}
+
+// ============================================================================
+// COMMIT / REVERT / EXPORT JSON PATCHES
+// ============================================================================
+function commitCurrentPatch(reason = 'MANUAL_BRAD_CALIB') {
+  const rig = liveRigs[activeRigId];
+  if (!rig) return;
+  baselineRigs[activeRigId] = JSON.parse(JSON.stringify(rig));
+  committedPatches.push({
+    timestamp: new Date().toISOString(),
+    rig_id: activeRigId,
+    slot: activeSlotName,
+    reason,
+    target_pose_id: activeTargetPoseId,
+    slot_state: JSON.parse(JSON.stringify(rig.slots[activeSlotName]))
+  });
+  document.getElementById('patchCounterBadge').textContent = `${committedPatches.length} PATCHES`;
+}
+
+function revertCurrentPatch() {
+  liveRigs[activeRigId] = JSON.parse(JSON.stringify(baselineRigs[activeRigId]));
+  Object.keys(ikOverrides).forEach(k => delete ikOverrides[k]);
+  fkBoneAngles = {};
+  syncCalibratorSliders();
+  renderSlotManifest();
+}
+
+function exportPatchedCatalog() {
+  const payload = {
+    schema: 'wygwyl.crash_lab_patch_export.v2',
+    exported_at: new Date().toISOString(),
+    committed_patches: committedPatches,
+    active_target_pose_id: activeTargetPoseId,
+    custom_target_brads: customTargetBrads,
+    rigs: Object.values(liveRigs)
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `crash_lab_patched_${activeRigId}.json`;
+  a.click();
+}
+
+// ============================================================================
+// 2D / 2.5D KINEMATIC SKELETON SOLVER, PHYSICAL GRAVITY LOOP & TARGET SNAP
+// ============================================================================
+// World coordinates are in centimeters (cm):
+// Floor Y = 178 cm; Character Center X = 0 cm; Character spans Y = 3..178 cm.
+const FLOOR_Y_CM = 178;
+const ikOverrides = {};
+let fkBoneAngles = {};
+let lastPhysicsState = {
+  comX: 0,
+  comY: 98,
+  loadL: 50,
+  loadR: 50,
+  stable: true,
+  pelvisDipCm: 0,
+  meanBradErrCm: 0.38,
+  poseMatchPct: 98.6
+};
+
+function solve2BoneIK(root, target, L1, L2, bendDir = 1) {
+  const dx = target[0] - root[0];
+  const dy = target[1] - root[1];
+  let dist = Math.hypot(dx, dy);
+  const maxReach = (L1 + L2) * 0.995;
+  const minReach = Math.abs(L1 - L2) + 0.5;
+
+  let clampedTarget = [target[0], target[1]];
+  if (dist > maxReach) {
+    const scale = maxReach / (dist || 1);
+    clampedTarget = [root[0] + dx * scale, root[1] + dy * scale];
+    dist = maxReach;
+  } else if (dist < minReach) {
+    const scale = minReach / (dist || 1);
+    clampedTarget = [root[0] + dx * scale, root[1] + dy * scale];
+    dist = minReach;
+  }
+
+  const cosAngle = Math.max(-1, Math.min(1, (L1 * L1 + dist * dist - L2 * L2) / (2 * L1 * dist)));
+  const baseAngle = Math.atan2(clampedTarget[1] - root[1], clampedTarget[0] - root[0]);
+  const bendAngle = Math.acos(cosAngle) * bendDir;
+  const midX = root[0] + Math.cos(baseAngle + bendAngle) * L1;
+  const midY = root[1] + Math.sin(baseAngle + bendAngle) * L1;
+
+  return { mid: [midX, midY], end: clampedTarget };
+}
+
+// Convert a Target Pose's normalized brads_norm (0..1 x,y) into cm space (X around 0, Y up to 178cm)
+function getTargetPoseJointsCm(poseId, yawDeg = 0) {
+  const brads = customTargetBrads[poseId] || (getActiveTargetPose() && getActiveTargetPose().brads_norm);
+  if (!brads) return null;
+
+  // Map normalized [0..1, 0..1] where (0.50, 0.91) = ankle floor level (Y = 166 cm) and (0.50, 0.14) = head (Y = 20 cm)
+  const spanXCm = 135;
+  const spanYCm = 188;
+  const topOffsetCm = -6;
+  const yawRad = (yawDeg * Math.PI) / 180;
+  const cosY = Math.cos(yawRad);
+
+  const out = {};
+  for (const [jName, pt] of Object.entries(brads)) {
+    const rawX = (pt[0] - 0.5) * spanXCm;
+    const rawY = topOffsetCm + pt[1] * spanYCm;
+    // Slight perspective foreshortening if orbiting around a target pose
+    const projX = rawX * (0.65 + 0.35 * Math.abs(cosY));
+    out[jName] = [projX, rawY];
+  }
+
+  // Synthesize hand_tip and toe from wrist/elbow and ankle/knee
+  for (const side of ['L', 'R']) {
+    const e = out[`elbow_${side}`] || [0, 70];
+    const w = out[`wrist_${side}`] || [0, 95];
+    const dxArm = w[0] - e[0];
+    const dyArm = w[1] - e[1];
+    const armLen = Math.hypot(dxArm, dyArm) || 1;
+    out[`hand_tip_${side}`] = [w[0] + (dxArm / armLen) * 14, w[1] + (dyArm / armLen) * 14];
+
+    const k = out[`knee_${side}`] || [0, 132];
+    const a = out[`ankle_${side}`] || [0, 166];
+    const footDir = side === 'L' ? -1 : 1;
+    out[`toe_${side}`] = [a[0] + footDir * 13, Math.min(FLOOR_Y_CM, a[1] + 9)];
+  }
+  return out;
+}
+
+function computeSkeletonJoints(testId, phase, yawDeg, amp) {
+  const s = Math.sin(phase * Math.PI * 2) * amp;
+  const c = Math.cos(phase * Math.PI * 2) * amp;
+  const halfS = Math.sin(phase * Math.PI) * amp;
+
+  let effYaw = yawDeg;
+  if (testId === 'T11') {
+    effYaw = ((phase * 360 + 180) % 360) - 180;
+  } else if (testId === 'T12') {
+    effYaw = 90;
+  } else if (testId === 'T13') {
+    effYaw = 180;
+  }
+
+  const yawRad = (effYaw * Math.PI) / 180;
+  const cosYaw = Math.cos(yawRad);
+  const sinYaw = Math.sin(yawRad);
+
+  // Base anatomical proportions in cm
+  let pelvisX = 0;
+  let pelvisY = 98;
+  let torsoLeanDeg = 0;
+  let headTiltDeg = 0;
+
+  let handL = [-34, 96];
+  let handR = [34, 96];
+  let footL = [-14, 166];
+  let footR = [14, 166];
+
+  switch (testId) {
+    case 'T01':
+      handL = [-32, 96 + s * 2];
+      handR = [32, 96 + s * 2];
+      break;
+    case 'T02':
+      handL = [-58, 44];
+      handR = [58, 44];
+      break;
+    case 'T03':
+      headTiltDeg = s * 28;
+      torsoLeanDeg = s * 8;
+      break;
+    case 'T04':
+      torsoLeanDeg = s * 34;
+      pelvisX = -s * 8;
+      handL = [-28 + s * 18, 92 + s * 14];
+      handR = [28 + s * 18, 92 - s * 14];
+      break;
+    case 'T05': {
+      const lift = (0.5 + 0.5 * s);
+      handL = [-24 - lift * 12, 98 - lift * 82];
+      handR = [24 + lift * 12, 98 - lift * 82];
+      break;
+    }
+    case 'T06':
+      handL = [22 * halfS, 68 - 10 * halfS];
+      handR = [-22 * halfS, 72 - 10 * halfS];
+      break;
+    case 'T07': {
+      const squat = 0.5 + 0.5 * Math.sin(phase * Math.PI * 2 - Math.PI / 2);
+      pelvisY = 98 + squat * 38 * amp;
+      torsoLeanDeg = squat * 16;
+      handL = [-26, 86 + squat * 18];
+      handR = [26, 86 + squat * 18];
+      footL = [-18, 166];
+      footR = [18, 166];
+      break;
+    }
+    case 'T08': {
+      const kick = 0.5 + 0.5 * s;
+      footL = [-14, 166];
+      footR = [18 + kick * 36, 166 - kick * 58];
+      handL = [-32, 78];
+      handR = [30, 82];
+      torsoLeanDeg = -kick * 12;
+      break;
+    }
+    case 'T09':
+      pelvisY = 98 + Math.abs(c) * 5;
+      footL = [-10 + s * 26, 166 - Math.max(0, c) * 16];
+      footR = [10 - s * 26, 166 - Math.max(0, -c) * 16];
+      handL = [-18 - s * 22, 92 + s * 12];
+      handR = [18 + s * 22, 92 - s * 12];
+      torsoLeanDeg = 6;
+      break;
+    case 'T10':
+      pelvisY = 94 - Math.abs(s) * 14 + Math.max(0, c) * 8;
+      torsoLeanDeg = 22;
+      footL = [s * 38, 164 - Math.max(0, c) * 28];
+      footR = [-s * 38, 164 - Math.max(0, -c) * 28];
+      handL = [-14 - s * 30, 78 + s * 18];
+      handR = [14 + s * 30, 78 - s * 18];
+      break;
+    case 'T12':
+      footL = [s * 28, 166 - Math.max(0, c) * 14];
+      footR = [-s * 28, 166 - Math.max(0, -c) * 14];
+      handL = [-s * 24, 90 + s * 10];
+      handR = [s * 24, 90 - s * 10];
+      break;
+    case 'T14':
+      pelvisY = 128 + s * 6;
+      torsoLeanDeg = 32 + s * 6;
+      headTiltDeg = -18;
+      handL = [-16, 152];
+      handR = [18, 148];
+      footL = [-20, 166];
+      footR = [18, 166];
+      break;
+    case 'T15':
+      pelvisY = 112 - s * 12;
+      torsoLeanDeg = 18 - s * 14;
+      handL = [-24, 118 - s * 24];
+      handR = [16, 134 - s * 28];
+      footL = [-22, 166];
+      footR = [16, 166];
+      break;
+    case 'T16':
+      pelvisY = 82 + s * 10;
+      handL = [-22, 18];
+      handR = [22, 18];
+      footL = [-12 + s * 8, 154 + s * 6];
+      footR = [12 + s * 8, 158 - s * 6];
+      break;
+    case 'T17':
+      pelvisY = 108 + s * 8;
+      torsoLeanDeg = 24;
+      handL = [-16, 102 + s * 10];
+      handR = [16, 102 + s * 10];
+      footL = [-18, 166];
+      footR = [18, 166];
+      break;
+    case 'T18':
+      pelvisY = 124;
+      torsoLeanDeg = 28;
+      headTiltDeg = 24;
+      handL = [-10, 62 + s * 4];
+      handR = [10, 62 + s * 4];
+      footL = [-16, 166];
+      footR = [16, 166];
+      break;
+    case 'T19':
+      pelvisY = 104 + s * 8;
+      torsoLeanDeg = -16 + s * 12;
+      handL = [-46, 54 + c * 18];
+      handR = [46, 54 - c * 18];
+      footL = [-26, 166];
+      footR = [28, 160 - Math.max(0, s) * 20];
+      break;
+    case 'T20':
+      torsoLeanDeg = s * 18;
+      handL = [26, 76 + s * 14];
+      handR = [-26, 82 - s * 14];
+      footL = [14, 166];
+      footR = [-14, 166];
+      break;
+  }
+
+  // Physical Gravity & Landing Impulse Dip:
+  // When feet strike floor or pelvis lowers rapidly, add a subtle physical weight compression dip
+  const footContactFactor = Math.max(0, 1 - Math.min(Math.abs(166 - footL[1]), Math.abs(166 - footR[1])) / 22);
+  const dynamicPulse = Math.max(0, Math.sin(phase * Math.PI * 4)) * 2.8 * weightDipStrength * footContactFactor;
+  pelvisY += dynamicPulse;
+
+  if (ikOverrides.pelvis) {
+    pelvisX = ikOverrides.pelvis[0];
+    pelvisY = ikOverrides.pelvis[1];
+  }
+
+  const widthFactor = cosYaw;
+  const depthShift = sinYaw * 6;
+
+  const pelvis = [pelvisX, pelvisY];
+  const leanRad = (torsoLeanDeg * Math.PI) / 180;
+  const torsoLen = 40;
+  const neck = [
+    pelvis[0] + Math.sin(leanRad) * torsoLen,
+    pelvis[1] - Math.cos(leanRad) * torsoLen
+  ];
+  const torsoMid = [
+    (pelvis[0] + neck[0]) * 0.5,
+    (pelvis[1] + neck[1]) * 0.5
+  ];
+
+  const headRad = ((torsoLeanDeg + headTiltDeg) * Math.PI) / 180;
+  let head = [
+    neck[0] + Math.sin(headRad) * 24,
+    neck[1] - Math.cos(headRad) * 24
+  ];
+  if (ikOverrides.head) head = [...ikOverrides.head];
+
+  const shoulderHalfW = 19 * widthFactor;
+  const hipHalfW = 11 * widthFactor;
+
+  const shoulder_L = [neck[0] - shoulderHalfW - depthShift * 0.4, neck[1] + 5];
+  const shoulder_R = [neck[0] + shoulderHalfW + depthShift * 0.4, neck[1] + 5];
+  const hip_L = [pelvis[0] - hipHalfW - depthShift * 0.3, pelvis[1] + 4];
+  const hip_R = [pelvis[0] + hipHalfW + depthShift * 0.3, pelvis[1] + 4];
+
+  const targetHandL = ikOverrides.hand_L ? [...ikOverrides.hand_L] : [handL[0] * (0.45 + 0.55 * Math.abs(cosYaw)) + sinYaw * 14, handL[1]];
+  const targetHandR = ikOverrides.hand_R ? [...ikOverrides.hand_R] : [handR[0] * (0.45 + 0.55 * Math.abs(cosYaw)) + sinYaw * 14, handR[1]];
+  const targetFootL = ikOverrides.foot_L ? [...ikOverrides.foot_L] : [footL[0] * (0.4 + 0.6 * Math.abs(cosYaw)) + sinYaw * 10, footL[1]];
+  const targetFootR = ikOverrides.foot_R ? [...ikOverrides.foot_R] : [footR[0] * (0.4 + 0.6 * Math.abs(cosYaw)) + sinYaw * 10, footR[1]];
+
+  const armBendDir = sinYaw >= 0 ? -1 : 1;
+  const legBendDir = sinYaw >= 0 ? 1 : -1;
+
+  const armL = solve2BoneIK(shoulder_L, targetHandL, 27, 25, armBendDir);
+  const armR = solve2BoneIK(shoulder_R, targetHandR, 27, 25, -armBendDir);
+  const legL = solve2BoneIK(hip_L, targetFootL, 38, 36, legBendDir);
+  const legR = solve2BoneIK(hip_R, targetFootR, 38, 36, -legBendDir);
+
+  if (fkBoneAngles.upper_arm_L !== undefined) {
+    const a = fkBoneAngles.upper_arm_L;
+    armL.mid = [shoulder_L[0] + Math.cos(a) * 27, shoulder_L[1] + Math.sin(a) * 27];
+    const b = fkBoneAngles.forearm_L !== undefined ? fkBoneAngles.forearm_L : a + 0.3;
+    armL.end = [armL.mid[0] + Math.cos(b) * 25, armL.mid[1] + Math.sin(b) * 25];
+  }
+  if (fkBoneAngles.upper_arm_R !== undefined) {
+    const a = fkBoneAngles.upper_arm_R;
+    armR.mid = [shoulder_R[0] + Math.cos(a) * 27, shoulder_R[1] + Math.sin(a) * 27];
+    const b = fkBoneAngles.forearm_R !== undefined ? fkBoneAngles.forearm_R : a + 0.3;
+    armR.end = [armR.mid[0] + Math.cos(b) * 25, armR.mid[1] + Math.sin(b) * 25];
+  }
+
+  const handAngleL = Math.atan2(armL.end[1] - armL.mid[1], armL.end[0] - armL.mid[0]);
+  const hand_tip_L = [armL.end[0] + Math.cos(handAngleL) * 13, armL.end[1] + Math.sin(handAngleL) * 13];
+
+  const handAngleR = Math.atan2(armR.end[1] - armR.mid[1], armR.end[0] - armR.mid[0]);
+  const hand_tip_R = [armR.end[0] + Math.cos(handAngleR) * 13, armR.end[1] + Math.sin(handAngleR) * 13];
+
+  const footDirL = sinYaw > 0.25 ? 1 : (sinYaw < -0.25 ? -1 : -0.7);
+  const footDirR = sinYaw > 0.25 ? 1 : (sinYaw < -0.25 ? -1 : 0.7);
+  const toe_L = [legL.end[0] + footDirL * 14, Math.min(FLOOR_Y_CM, legL.end[1] + 9)];
+  const toe_R = [legR.end[0] + footDirR * 14, Math.min(FLOOR_Y_CM, legR.end[1] + 9)];
+
+  const romJoints = {
+    pelvis,
+    torso: torsoMid,
+    neck,
+    head,
+    shoulder_L,
+    elbow_L: armL.mid,
+    wrist_L: armL.end,
+    hand_tip_L,
+    shoulder_R,
+    elbow_R: armR.mid,
+    wrist_R: armR.end,
+    hand_tip_R,
+    hip_L,
+    knee_L: legL.mid,
+    ankle_L: legL.end,
+    toe_L,
+    hip_R,
+    knee_R: legR.mid,
+    ankle_R: legR.end,
+    toe_R
+  };
+
+  // Blend with Target Pose Brads if targetSnapAlpha > 0 or targetSnapLocked
+  const snapAlpha = targetSnapLocked ? 1.0 : targetSnapAlpha;
+  const targetJoints = getTargetPoseJointsCm(activeTargetPoseId, effYaw);
+
+  const finalJoints = {};
+  let totalBradErrSq = 0;
+  let bradCount = 0;
+
+  for (const k of Object.keys(romJoints)) {
+    const rPt = romJoints[k];
+    const tPt = targetJoints && targetJoints[k] ? targetJoints[k] : rPt;
+    let bx = rPt[0] * (1 - snapAlpha) + tPt[0] * snapAlpha;
+    let by = rPt[1] * (1 - snapAlpha) + tPt[1] * snapAlpha;
+
+    // Allow IK pin overrides even on top of snapped pose
+    if (k === 'wrist_L' && ikOverrides.hand_L) { bx = ikOverrides.hand_L[0]; by = ikOverrides.hand_L[1]; }
+    if (k === 'wrist_R' && ikOverrides.hand_R) { bx = ikOverrides.hand_R[0]; by = ikOverrides.hand_R[1]; }
+    if (k === 'ankle_L' && ikOverrides.foot_L) { bx = ikOverrides.foot_L[0]; by = ikOverrides.foot_L[1]; }
+    if (k === 'ankle_R' && ikOverrides.foot_R) { bx = ikOverrides.foot_R[0]; by = ikOverrides.foot_R[1]; }
+    if (k === 'head' && ikOverrides.head) { bx = ikOverrides.head[0]; by = ikOverrides.head[1]; }
+    if (k === 'pelvis' && ikOverrides.pelvis) { bx = ikOverrides.pelvis[0]; by = ikOverrides.pelvis[1]; }
+
+    finalJoints[k] = [bx, by];
+
+    if (targetJoints && targetJoints[k] && TARGET_BRAD_JOINTS.includes(k)) {
+      const err = Math.hypot(bx - targetJoints[k][0], by - targetJoints[k][1]);
+      totalBradErrSq += err * err;
+      bradCount++;
+    }
+  }
+
+  // Compute Center of Mass (CoM) & Ground Reaction Load Distribution
+  const comX =
+    finalJoints.pelvis[0] * 0.35 +
+    finalJoints.torso[0] * 0.30 +
+    finalJoints.head[0] * 0.08 +
+    (finalJoints.knee_L[0] + finalJoints.knee_R[0]) * 0.09 +
+    (finalJoints.elbow_L[0] + finalJoints.elbow_R[0]) * 0.045;
+  const comY =
+    finalJoints.pelvis[1] * 0.35 +
+    finalJoints.torso[1] * 0.30 +
+    finalJoints.head[1] * 0.08 +
+    (finalJoints.knee_L[1] + finalJoints.knee_R[1]) * 0.09 +
+    (finalJoints.elbow_L[1] + finalJoints.elbow_R[1]) * 0.045;
+
+  const minFootX = Math.min(finalJoints.ankle_L[0], finalJoints.toe_L[0], finalJoints.ankle_R[0], finalJoints.toe_R[0]) - 10;
+  const maxFootX = Math.max(finalJoints.ankle_L[0], finalJoints.toe_L[0], finalJoints.ankle_R[0], finalJoints.toe_R[0]) + 10;
+  const stable = comX >= minFootX && comX <= maxFootX;
+
+  const distL = Math.max(2, Math.hypot(comX - finalJoints.ankle_L[0], (FLOOR_Y_CM - finalJoints.ankle_L[1]) * 2));
+  const distR = Math.max(2, Math.hypot(comX - finalJoints.ankle_R[0], (FLOOR_Y_CM - finalJoints.ankle_R[1]) * 2));
+  const invL = 1 / distL;
+  const invR = 1 / distR;
+  const loadL = Math.round((invL / (invL + invR)) * 100);
+  const loadR = 100 - loadL;
+
+  const rmsBradErr = bradCount > 0 ? Math.sqrt(totalBradErrSq / bradCount) : 0.4;
+  const poseMatchPct = Math.max(0, Math.min(100, 100 - rmsBradErr * 1.45));
+
+  lastPhysicsState = {
+    comX,
+    comY,
+    loadL,
+    loadR,
+    stable,
+    minFootX,
+    maxFootX,
+    pelvisDipCm: dynamicPulse,
+    meanBradErrCm: rmsBradErr,
+    poseMatchPct
+  };
+
+  return {
+    joints: finalJoints,
+    targetJoints,
+    effYaw,
+    sinYaw,
+    cosYaw
+  };
+}
+
+// ============================================================================
+// CORE `fit_bone` RENDERING & QUAD MULTI-VIEWPORT STAGE
+// ============================================================================
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
+let lastMouseCanvas = [600, 380];
+let activeViewportTransform = { cx: 600, cy: 52, pxPerCm: 3.45 };
+
+function worldToScreen(ptCm, vp) {
+  return [
+    vp.cx + ptCm[0] * vp.pxPerCm,
+    vp.cy + ptCm[1] * vp.pxPerCm
+  ];
+}
+
+function screenToWorld(ptPx, vp) {
+  return [
+    (ptPx[0] - vp.cx) / vp.pxPerCm,
+    (ptPx[1] - vp.cy) / vp.pxPerCm
+  ];
+}
+
+function selectSlotViewAsset(slot, effYaw) {
+  const absYaw = Math.abs(effYaw);
+  if (!slot.views) return slot.default_asset;
+  if (absYaw >= 135 && slot.views.back) return slot.views.back;
+  if (absYaw >= 50 && absYaw < 135 && slot.views.side) return slot.views.side;
+  return slot.views.front || slot.default_asset;
+}
+
+function drawWarpedCard(ctxTarget, slotName, slot, joints, effYaw, vp, isGhost = false) {
+  const pair = SLOT_BONE_MAP[slotName];
+  if (!pair) return null;
+  const parentWorld = joints[pair[0]];
+  const childWorld = joints[pair[1]];
+  if (!parentWorld || !childWorld) return null;
+
+  const pScreen = worldToScreen(parentWorld, vp);
+  const cScreen = worldToScreen(childWorld, vp);
+
+  const assetPath = selectSlotViewAsset(slot, effYaw);
+  const img = getCachedImage(assetPath);
+  if (!img || !img.complete || img.naturalWidth === 0) return null;
+
+  const W = img.naturalWidth;
+  const H = img.naturalHeight;
+
+  const prox = [slot.proximal_xy[0] * W, slot.proximal_xy[1] * H];
+  const dist = [slot.distal_xy[0] * W, slot.distal_xy[1] * H];
+
+  const dxSrc = dist[0] - prox[0];
+  const dySrc = dist[1] - prox[1];
+  const srcLen = Math.hypot(dxSrc, dySrc) || 1;
+  const srcAngle = Math.atan2(dySrc, dxSrc);
+
+  const dxDst = cScreen[0] - pScreen[0];
+  const dyDst = cScreen[1] - pScreen[1];
+  const dstLen = Math.hypot(dxDst, dyDst) || 1;
+  const dstAngle = Math.atan2(dyDst, dxDst);
+
+  const scaleAlong = dstLen / srcLen;
+  const scalePerp = scaleAlong * (slot.width_scale || 1.0);
+  const flipSign = slot.flip_x ? -1 : 1;
+
+  ctxTarget.save();
+  if (isGhost) {
+    ctxTarget.globalAlpha = 0.25;
+    ctxTarget.filter = 'hue-rotate(175deg) saturate(180%)';
+  }
+
+  ctxTarget.translate(pScreen[0], pScreen[1]);
+  ctxTarget.rotate(dstAngle);
+  ctxTarget.scale(scaleAlong, scalePerp * flipSign);
+  ctxTarget.rotate(-srcAngle);
+  ctxTarget.translate(-prox[0], -prox[1]);
+
+  ctxTarget.drawImage(img, 0, 0);
+  ctxTarget.restore();
+
+  const cuffRadiusPx = dstLen * (slot.cuff_radius_norm || 0.14);
+  return {
+    slotName,
+    pScreen,
+    cScreen,
+    dstLen,
+    cuffRadiusPx
+  };
+}
+
+function renderRigInViewport(vp, yawOverrideDeg, labelText, showTargetRef = false, isInteractiveViewport = false) {
+  const rig = liveRigs[activeRigId];
+  const baseRig = baselineRigs[activeRigId];
+  if (!rig) return null;
+
+  ctx.save();
+  // Clip to viewport rectangle
+  ctx.beginPath();
+  ctx.rect(vp.x, vp.y, vp.w, vp.h);
+  ctx.clip();
+
+  // Viewport frame & subtle grid
+  ctx.strokeStyle = 'rgba(36, 47, 70, 0.55)';
+  ctx.lineWidth = 1;
+  const step = Math.max(24, Math.round(18 * vp.pxPerCm));
+  for (let gx = vp.x; gx < vp.x + vp.w; gx += step) {
+    ctx.beginPath(); ctx.moveTo(gx, vp.y); ctx.lineTo(gx, vp.y + vp.h); ctx.stroke();
+  }
+  for (let gy = vp.y; gy < vp.y + vp.h; gy += step) {
+    ctx.beginPath(); ctx.moveTo(vp.x, gy); ctx.lineTo(vp.x + vp.w, gy); ctx.stroke();
+  }
+
+  // Floor Plane & Support Polygon
+  const floorScreenY = worldToScreen([0, FLOOR_Y_CM], vp)[1];
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(vp.x + 16, floorScreenY);
+  ctx.lineTo(vp.x + vp.w - 16, floorScreenY);
+  ctx.stroke();
+
+  const skel = computeSkeletonJoints(activeTestId, animPhase, yawOverrideDeg, stressAmp);
+  const { joints, targetJoints, effYaw, sinYaw } = skel;
+
+  // Optional Target Pose Reference Image Overlay
+  if (overlays.target && showTargetRef) {
+    const tp = getActiveTargetPose();
+    const tpImg = tp ? getCachedImage(tp.asset) : null;
+    if (tpImg && tpImg.complete && tpImg.naturalWidth > 0) {
+      const boxW = 135 * vp.pxPerCm;
+      const boxH = 188 * vp.pxPerCm;
+      const boxX = vp.cx - boxW * 0.5;
+      const boxY = vp.cy - 6 * vp.pxPerCm;
+      ctx.save();
+      ctx.globalAlpha = targetRefOpacity;
+      ctx.drawImage(tpImg, boxX, boxY, boxW, boxH);
+      ctx.restore();
+    }
+  }
+
+  // Dynamic Z-Order sorting based on camera yaw
+  const sortedSlots = [...SLOT_ORDER].map(name => {
+    const slot = rig.slots[name];
+    let z = slot ? (slot.z_order || 0) : 0;
+    if (Math.abs(sinYaw) > 0.25) {
+      const sideSign = sinYaw > 0 ? 1 : -1;
+      if (name.endsWith('_L')) z -= sideSign * 12;
+      if (name.endsWith('_R')) z += sideSign * 12;
+    }
+    return { name, slot, z };
+  }).sort((a, b) => a.z - b.z);
+
+  if (overlays.ghost && baseRig) {
+    for (const item of sortedSlots) {
+      const bSlot = baseRig.slots[item.name];
+      if (bSlot) drawWarpedCard(ctx, item.name, bSlot, joints, effYaw, vp, true);
+    }
+  }
+
+  const cardMetrics = {};
+  for (const item of sortedSlots) {
+    if (!item.slot) continue;
+    const m = drawWarpedCard(ctx, item.name, item.slot, joints, effYaw, vp, false);
+    if (m) cardMetrics[item.name] = m;
+  }
+
+  // Selected card cuff highlight + seam circles
+  if (overlays.seam) {
+    for (const [sName, m] of Object.entries(cardMetrics)) {
+      const isSelected = sName === activeSlotName;
+      ctx.save();
+      ctx.strokeStyle = isSelected ? '#f59e0b' : 'rgba(20, 184, 166, 0.42)';
+      ctx.lineWidth = isSelected ? 2.0 : 1.0;
+      ctx.setLineDash(isSelected ? [] : [3, 3]);
+      ctx.beginPath();
+      ctx.arc(m.pScreen[0], m.pScreen[1], m.cuffRadiusPx, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Center of Mass (CoM) Plumb Line & Ground Reaction Impulse Load Bars
+  const comScreen = worldToScreen([lastPhysicsState.comX, lastPhysicsState.comY], vp);
+  const comFloorScreen = worldToScreen([lastPhysicsState.comX, FLOOR_Y_CM], vp);
+  const supportL = worldToScreen([lastPhysicsState.minFootX, FLOOR_Y_CM], vp);
+  const supportR = worldToScreen([lastPhysicsState.maxFootX, FLOOR_Y_CM], vp);
+
+  // Support Polygon bar on floor
+  ctx.fillStyle = lastPhysicsState.stable ? 'rgba(16, 185, 129, 0.28)' : 'rgba(244, 63, 94, 0.35)';
+  ctx.fillRect(supportL[0], floorScreenY - 3, Math.max(8, supportR[0] - supportL[0]), 6);
+
+  // CoM Plumb Line
+  ctx.save();
+  ctx.strokeStyle = lastPhysicsState.stable ? '#10b981' : '#f43f5e';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(comScreen[0], comScreen[1]);
+  ctx.lineTo(comFloorScreen[0], comFloorScreen[1]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // CoM Diamond Marker
+  ctx.fillStyle = lastPhysicsState.stable ? '#10b981' : '#f43f5e';
+  ctx.beginPath();
+  ctx.moveTo(comScreen[0], comScreen[1] - 6);
+  ctx.lineTo(comScreen[0] + 6, comScreen[1]);
+  ctx.lineTo(comScreen[0], comScreen[1] + 6);
+  ctx.lineTo(comScreen[0] - 6, comScreen[1]);
+  ctx.closePath();
+  ctx.fill();
+
+  // Ground Reaction Load Bars under Left & Right Foot
+  const ankleLScreen = worldToScreen(joints.ankle_L, vp);
+  const ankleRScreen = worldToScreen(joints.ankle_R, vp);
+  ctx.font = 'bold 9px JetBrains Mono, monospace';
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillText(`L:${lastPhysicsState.loadL}%`, ankleLScreen[0] - 18, floorScreenY + 13);
+  ctx.fillText(`R:${lastPhysicsState.loadR}%`, ankleRScreen[0] - 18, floorScreenY + 13);
+  ctx.restore();
+
+  // Target Pose 15 Brad Crosshairs (when Target Overlay is active)
+  if (overlays.target && showTargetRef && targetJoints) {
+    ctx.save();
+    for (const jName of TARGET_BRAD_JOINTS) {
+      const tPt = targetJoints[jName];
+      if (!tPt) continue;
+      const sPt = worldToScreen(tPt, vp);
+      ctx.strokeStyle = dragMode === 'target_brad' ? '#10b981' : 'rgba(56, 189, 248, 0.8)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(sPt[0], sPt[1], 5, 0, Math.PI * 2);
+      ctx.moveTo(sPt[0] - 8, sPt[1]);
+      ctx.lineTo(sPt[0] + 8, sPt[1]);
+      ctx.moveTo(sPt[0], sPt[1] - 8);
+      ctx.lineTo(sPt[0], sPt[1] + 8);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Skeleton Bones & Interactive Handles
+  if (overlays.bones) {
+    ctx.save();
+    for (const [sName, pair] of Object.entries(SLOT_BONE_MAP)) {
+      const p1 = worldToScreen(joints[pair[0]], vp);
+      const p2 = worldToScreen(joints[pair[1]], vp);
+      const isSelected = sName === activeSlotName;
+      ctx.strokeStyle = isSelected ? '#f59e0b' : 'rgba(56, 189, 248, 0.72)';
+      ctx.lineWidth = isSelected ? 2.6 : 1.4;
+      ctx.beginPath();
+      ctx.moveTo(p1[0], p1[1]);
+      ctx.lineTo(p2[0], p2[1]);
+      ctx.stroke();
+
+      ctx.fillStyle = isSelected ? '#f59e0b' : '#0ea5e9';
+      ctx.beginPath();
+      ctx.arc(p1[0], p1[1], isSelected ? 4.5 : 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (isInteractiveViewport) {
+      const ikHandles = [
+        { key: 'hand_L', pt: joints.wrist_L, label: 'IK:hand_L' },
+        { key: 'hand_R', pt: joints.wrist_R, label: 'IK:hand_R' },
+        { key: 'foot_L', pt: joints.ankle_L, label: 'IK:foot_L' },
+        { key: 'foot_R', pt: joints.ankle_R, label: 'IK:foot_R' },
+        { key: 'head',   pt: joints.head,    label: 'IK:head' },
+        { key: 'pelvis', pt: joints.pelvis,  label: 'IK:pelvis' }
+      ];
+      for (const h of ikHandles) {
+        const sp = worldToScreen(h.pt, vp);
+        ctx.fillStyle = dragMode === 'ik' ? '#f43f5e' : '#64748b';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(sp[0], sp[1], 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  // Viewport Header Tag
+  ctx.fillStyle = 'rgba(7, 9, 14, 0.86)';
+  ctx.fillRect(vp.x + 8, vp.y + 8, 255, 22);
+  ctx.strokeStyle = '#242f46';
+  ctx.strokeRect(vp.x + 8, vp.y + 8, 255, 22);
+  ctx.fillStyle = isInteractiveViewport ? '#38bdf8' : '#94a3b8';
+  ctx.font = 'bold 10px JetBrains Mono, monospace';
+  ctx.fillText(labelText, vp.x + 14, vp.y + 22);
+
+  ctx.restore();
+  return { joints, targetJoints, cardMetrics };
+}
+
+// ============================================================================
+// SEMANTIC ZOOM: [2.5X BRAD LOUPE] INSPECTOR
+// ============================================================================
+function drawBradLoupe(joints, vp) {
+  if (!overlays.loupe) return;
+  const pair = SLOT_BONE_MAP[activeSlotName] || ['pelvis', 'neck'];
+  const focusWorld = joints[pair[0]] || joints.neck;
+  const focusScreen = worldToScreen(focusWorld, vp);
+
+  const loupeR = 78;
+  const lx = canvas.width - loupeR - 20;
+  const ly = canvas.height - loupeR - 20;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(lx, ly, loupeR, 0, Math.PI * 2);
+  ctx.clip();
+
+  ctx.fillStyle = '#070a10';
+  ctx.fillRect(lx - loupeR, ly - loupeR, loupeR * 2, loupeR * 2);
+
+  // Copy 2.5x magnified patch around focusScreen from canvas
+  const zoom = 2.5;
+  const srcW = (loupeR * 2) / zoom;
+  const srcH = (loupeR * 2) / zoom;
+  ctx.drawImage(
+    canvas,
+    focusScreen[0] - srcW / 2,
+    focusScreen[1] - srcH / 2,
+    srcW,
+    srcH,
+    lx - loupeR,
+    ly - loupeR,
+    loupeR * 2,
+    loupeR * 2
+  );
+
+  // Reticle crosshair inside loupe
+  ctx.strokeStyle = 'rgba(245, 158, 11, 0.8)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(lx - loupeR, ly); ctx.lineTo(lx + loupeR, ly);
+  ctx.moveTo(lx, ly - loupeR); ctx.lineTo(lx, ly + loupeR);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(lx, ly, loupeR, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = '#070a10';
+  ctx.fillRect(lx - 68, ly + loupeR - 18, 136, 16);
+  ctx.fillStyle = '#f59e0b';
+  ctx.font = 'bold 9px JetBrains Mono, monospace';
+  ctx.fillText(`2.5X LOUPE // ${activeSlotName}`, lx - 62, ly + loupeR - 7);
+  ctx.restore();
+}
+
+function renderStage() {
+  const W = canvas.width;
+  const H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  let primaryResult = null;
+
+  if (viewLayout === 'single') {
+    const vp = {
+      x: 0,
+      y: 0,
+      w: W,
+      h: H,
+      cx: W * 0.5,
+      cy: 42,
+      pxPerCm: 3.75
+    };
+    activeViewportTransform = vp;
+    primaryResult = renderRigInViewport(
+      vp,
+      cameraYawDeg,
+      `STAGE // YAW ${Math.round(cameraYawDeg)}° // TARGET: ${activeTargetPoseId}`,
+      true,
+      true
+    );
+  } else {
+    // [4X] QUAD MULTI-VIEW:
+    // Top-Left: Front 0° | Top-Right: Side Profile 90°
+    // Bottom-Left: 3/4 View 35° | Bottom-Right: Interactive Orbit + Target Pose Brad Solver
+    const halfW = Math.floor(W / 2);
+    const halfH = Math.floor(H / 2);
+
+    const vpTL = { x: 0,     y: 0,     w: halfW, h: halfH, cx: halfW * 0.5,         cy: 22,          pxPerCm: 1.88 };
+    const vpTR = { x: halfW, y: 0,     w: halfW, h: halfH, cx: halfW + halfW * 0.5, cy: 22,          pxPerCm: 1.88 };
+    const vpBL = { x: 0,     y: halfH, w: halfW, h: halfH, cx: halfW * 0.5,         cy: halfH + 22,  pxPerCm: 1.88 };
+    const vpBR = { x: halfW, y: halfH, w: halfW, h: halfH, cx: halfW + halfW * 0.5, cy: halfH + 22,  pxPerCm: 1.88 };
+
+    renderRigInViewport(vpTL, 0,   'VIEW 01 // FRONT ORTHO (0°)', false, false);
+    renderRigInViewport(vpTR, 90,  'VIEW 02 // SIDE PROFILE (+90°)', false, false);
+    renderRigInViewport(vpBL, 35,  'VIEW 03 // 3/4 CINEMATIC (+35°)', false, false);
+    primaryResult = renderRigInViewport(
+      vpBR,
+      cameraYawDeg,
+      `VIEW 04 // TARGET BRAD SOLVER (${activeTargetPoseId})`,
+      true,
+      true
+    );
+    activeViewportTransform = vpBR;
+
+    // Quad divider hairlines
+    ctx.strokeStyle = '#242f46';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(halfW, 0); ctx.lineTo(halfW, H);
+    ctx.moveTo(0, halfH); ctx.lineTo(W, halfH);
+    ctx.stroke();
+  }
+
+  if (primaryResult) {
+    evaluateInvariants(liveRigs[activeRigId], primaryResult.joints, primaryResult.cardMetrics);
+    drawBradLoupe(primaryResult.joints, activeViewportTransform);
+  }
+
+  // Update Physics & Target Brad HUD Readouts
+  document.getElementById('hudPhysicsReadout').textContent =
+    `GRAVITY: 9.81 m/s² | CoM PLUMB: ${lastPhysicsState.stable ? 'STABLE' : 'TIPPING'} | LOAD L:${lastPhysicsState.loadL}% R:${lastPhysicsState.loadR}%`;
+  document.getElementById('hudBradSnapReadout').textContent =
+    `TARGET BRAD MATCH (${activeTargetPoseId}): ${lastPhysicsState.poseMatchPct.toFixed(1)}% | MEAN BRAD ERR: ${lastPhysicsState.meanBradErrCm.toFixed(2)} cm`;
+  document.getElementById('metricPoseMatch').textContent = `${lastPhysicsState.poseMatchPct.toFixed(1)}%`;
+  document.getElementById('metricBradError').textContent = `${lastPhysicsState.meanBradErrCm.toFixed(2)} cm`;
+}
+
+// ============================================================================
+// 6 EXECUTABLE RIG INVARIANTS EVALUATOR
+// ============================================================================
+function evaluateInvariants(rig, joints, cardMetrics) {
+  const baseRig = baselineRigs[activeRigId];
+  if (!rig || !baseRig) return;
+
+  // 1. Neck Seam Continuity
+  const headSlot = rig.slots.head;
+  const baseHead = baseRig.slots.head;
+  const neckDelta = Math.hypot(
+    headSlot.proximal_xy[0] - baseHead.proximal_xy[0],
+    headSlot.proximal_xy[1] - baseHead.proximal_xy[1]
+  ) * 32;
+  const neckPass = neckDelta <= 3.0;
+
+  // 2. Torso-Groin Overlap
+  const pelvisSlot = rig.slots.pelvis;
+  const basePelvis = baseRig.slots.pelvis;
+  const groinDelta = Math.hypot(
+    pelvisSlot.proximal_xy[0] - basePelvis.proximal_xy[0],
+    pelvisSlot.proximal_xy[1] - basePelvis.proximal_xy[1]
+  );
+  const groinOverlapPct = Math.max(0, Math.round((1 - groinDelta * 2.2) * 100));
+  const groinPass = groinOverlapPct >= 65 && (pelvisSlot.cuff_radius_norm || 0.14) >= 0.08;
+
+  // 3. Limb Length Conservation
+  const activeSlot = rig.slots[activeSlotName];
+  const baseSlot = baseRig.slots[activeSlotName];
+  const wRatio = (activeSlot?.width_scale || 1.0) / (baseSlot?.width_scale || 1.0);
+  const limbPass = wRatio >= 0.72 && wRatio <= 1.35;
+
+  // 4. Joint Angle Envelope
+  const anglePass = stressAmp <= 1.35;
+
+  // 5. Z-Order Crossing Guard
+  const zPass = rig.slots.torso.z_order >= rig.slots.upper_arm_L.z_order &&
+                rig.slots.hand_R.z_order >= rig.slots.torso.z_order;
+
+  // 6. CoM Floor Balance
+  const comPass = lastPhysicsState.stable;
+
+  const setRow = (id, pass, text) => {
+    const el = document.getElementById(id);
+    el.className = pass ? 'inv-pass' : 'inv-fail';
+    el.textContent = (pass ? '[PASS] ' : '[FAIL] ') + text;
+  };
+
+  setRow('invNeck', neckPass, `${neckDelta.toFixed(1)}cm`);
+  setRow('invGroin', groinPass, `${groinOverlapPct}%`);
+  setRow('invLimb', limbPass, `${wRatio.toFixed(2)}x`);
+  setRow('invAngle', anglePass, anglePass ? 'OK' : 'EXTREME');
+  setRow('invZOrder', zPass, zPass ? 'Z-OK' : 'Z-FLIP');
+  setRow('invCoM', comPass, comPass ? 'STABLE' : 'UNSTABLE');
+
+  const passCount = [neckPass, groinPass, limbPass, anglePass, zPass, comPass].filter(Boolean).length;
+  const sumEl = document.getElementById('invSummaryTag');
+  sumEl.className = passCount === 6 ? 'inv-pass' : 'inv-fail';
+  sumEl.textContent = `[${passCount}/6 PASS]`;
+
+  const badgeEl = document.getElementById('testScoreBadge');
+  badgeEl.style.color = passCount === 6 ? 'var(--accent-green)' : 'var(--accent-red)';
+  badgeEl.textContent = `[${passCount}/6 PASS]`;
+}
+
+// ============================================================================
+// UNIFIED POINTER EVENTS (DESKTOP MOUSE + MOBILE TOUCH) ON STAGE CANVAS
+// ============================================================================
+let activeDragHandle = null;
+
+function getCanvasPointerPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return [
+    (e.clientX - rect.left) * (canvas.width / rect.width),
+    (e.clientY - rect.top) * (canvas.height / rect.height)
+  ];
+}
+
+function resolveViewportForPointer(ptPx) {
+  if (viewLayout === 'single') return activeViewportTransform;
+  const halfW = Math.floor(canvas.width / 2);
+  const halfH = Math.floor(canvas.height / 2);
+  const isRight = ptPx[0] >= halfW;
+  const isBottom = ptPx[1] >= halfH;
+  return {
+    x: isRight ? halfW : 0,
+    y: isBottom ? halfH : 0,
+    w: halfW,
+    h: halfH,
+    cx: (isRight ? halfW : 0) + halfW * 0.5,
+    cy: (isBottom ? halfH : 0) + 22,
+    pxPerCm: 1.88
+  };
+}
+
+function setupCanvasInteractions() {
+  canvas.addEventListener('pointerdown', e => {
+    canvas.setPointerCapture(e.pointerId);
+    const ptPx = getCanvasPointerPos(e);
+    lastMouseCanvas = ptPx;
+    const vp = resolveViewportForPointer(ptPx);
+    activeViewportTransform = vp;
+    const ptWorld = screenToWorld(ptPx, vp);
+
+    const skel = computeSkeletonJoints(activeTestId, animPhase, cameraYawDeg, stressAmp);
+    const { joints, targetJoints } = skel;
+
+    if (dragMode === 'target_brad' && targetJoints) {
+      let bestJ = null;
+      let bestDist = 18;
+      for (const jName of TARGET_BRAD_JOINTS) {
+        const tPt = targetJoints[jName];
+        if (!tPt) continue;
+        const d = Math.hypot(ptWorld[0] - tPt[0], ptWorld[1] - tPt[1]);
+        if (d < bestDist) {
+          bestDist = d;
+          bestJ = jName;
+        }
+      }
+      if (bestJ) {
+        activeDragHandle = { type: 'target_brad', key: bestJ };
+        return;
+      }
+    }
+
+    if (dragMode === 'ik') {
+      const candidates = [
+        { key: 'hand_L', pt: joints.wrist_L },
+        { key: 'hand_R', pt: joints.wrist_R },
+        { key: 'foot_L', pt: joints.ankle_L },
+        { key: 'foot_R', pt: joints.ankle_R },
+        { key: 'head',   pt: joints.head },
+        { key: 'pelvis', pt: joints.pelvis }
+      ];
+      let best = null;
+      let bestDist = 20;
+      for (const c of candidates) {
+        const d = Math.hypot(ptWorld[0] - c.pt[0], ptWorld[1] - c.pt[1]);
+        if (d < bestDist) {
+          bestDist = d;
+          best = c.key;
+        }
+      }
+      if (best) {
+        activeDragHandle = { type: 'ik', key: best };
+        return;
+      }
+    }
+
+    // Otherwise select the closest bone/card slot
+    let closestSlot = null;
+    let minSlotDist = 22;
+    for (const [sName, pair] of Object.entries(SLOT_BONE_MAP)) {
+      const p1 = joints[pair[0]];
+      const p2 = joints[pair[1]];
+      const mid = [(p1[0] + p2[0]) * 0.5, (p1[1] + p2[1]) * 0.5];
+      const d = Math.hypot(ptWorld[0] - mid[0], ptWorld[1] - mid[1]);
+      if (d < minSlotDist) {
+        minSlotDist = d;
+        closestSlot = sName;
+      }
+    }
+    if (closestSlot) {
+      selectSlot(closestSlot);
+      if (dragMode === 'fk') {
+        activeDragHandle = { type: 'fk', slot: closestSlot };
+      } else if (dragMode === 'brad') {
+        // Determine whether user grabbed closer to Pivot A (parent) or Socket B (child)
+        const pair = SLOT_BONE_MAP[closestSlot];
+        const dA = Math.hypot(ptWorld[0] - joints[pair[0]][0], ptWorld[1] - joints[pair[0]][1]);
+        const dB = Math.hypot(ptWorld[0] - joints[pair[1]][0], ptWorld[1] - joints[pair[1]][1]);
+        activeDragHandle = {
+          type: 'brad',
+          slot: closestSlot,
+          end: dA <= dB ? 'proximal_xy' : 'distal_xy',
+          startPx: ptPx
+        };
+      }
+    }
+  });
+
+  canvas.addEventListener('pointermove', e => {
+    const ptPx = getCanvasPointerPos(e);
+    lastMouseCanvas = ptPx;
+    if (!activeDragHandle) return;
+    const ptWorld = screenToWorld(ptPx, activeViewportTransform);
+
+    if (activeDragHandle.type === 'ik') {
+      ikOverrides[activeDragHandle.key] = ptWorld;
+    } else if (activeDragHandle.type === 'target_brad') {
+      const brads = customTargetBrads[activeTargetPoseId];
+      if (brads && brads[activeDragHandle.key]) {
+        const normX = Math.max(0.05, Math.min(0.95, ptWorld[0] / 135 + 0.5));
+        const normY = Math.max(0.04, Math.min(0.96, (ptWorld[1] + 6) / 188));
+        brads[activeDragHandle.key] = [normX, normY];
+      }
+    } else if (activeDragHandle.type === 'fk') {
+      const skel = computeSkeletonJoints(activeTestId, animPhase, cameraYawDeg, stressAmp);
+      const pair = SLOT_BONE_MAP[activeDragHandle.slot];
+      if (pair) {
+        const root = skel.joints[pair[0]];
+        fkBoneAngles[activeDragHandle.slot] = Math.atan2(ptWorld[1] - root[1], ptWorld[0] - root[0]);
+      }
+    } else if (activeDragHandle.type === 'brad') {
+      const slot = liveRigs[activeRigId]?.slots[activeDragHandle.slot];
+      if (slot) {
+        const dx = (ptPx[0] - activeDragHandle.startPx[0]) * 0.0025;
+        const dy = (ptPx[1] - activeDragHandle.startPx[1]) * 0.0025;
+        const targetArr = slot[activeDragHandle.end];
+        targetArr[0] = Math.max(0.05, Math.min(0.95, targetArr[0] + dx));
+        targetArr[1] = Math.max(0.02, Math.min(0.98, targetArr[1] + dy));
+        activeDragHandle.startPx = ptPx;
+        syncCalibratorSliders();
+      }
+    }
+  });
+
+  const endDrag = () => { activeDragHandle = null; };
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('dblclick', () => {
+    Object.keys(ikOverrides).forEach(k => delete ikOverrides[k]);
+    fkBoneAngles = {};
+  });
+}
+
+// ============================================================================
+// 3D TURNTABLE JOYSTICK WIDGET (UNIFIED POINTER EVENTS)
+// ============================================================================
+const joyCanvas = document.getElementById('joyPad');
+const joyCtx = joyCanvas.getContext('2d');
+let joyDragging = false;
+
+function setupJoystick() {
+  const updateFromEvent = e => {
+    const rect = joyCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    const maxR = rect.width / 2 - 6;
+    const normX = Math.max(-1, Math.min(1, x / maxR));
+    const normY = Math.max(-1, Math.min(1, y / maxR));
+    cameraPitchDeg = Math.round(normY * 45);
+    onScrubYaw(Math.round(normX * 180));
+  };
+
+  joyCanvas.addEventListener('pointerdown', e => {
+    joyDragging = true;
+    joyCanvas.setPointerCapture(e.pointerId);
+    updateFromEvent(e);
+  });
+  joyCanvas.addEventListener('pointermove', e => { if (joyDragging) updateFromEvent(e); });
+  joyCanvas.addEventListener('pointerup', () => { joyDragging = false; });
+  joyCanvas.addEventListener('pointercancel', () => { joyDragging = false; });
+  drawJoystick();
+}
+
+function drawJoystick() {
+  const w = joyCanvas.width;
+  const h = joyCanvas.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  joyCtx.clearRect(0, 0, w, h);
+
+  joyCtx.strokeStyle = '#242f46';
+  joyCtx.lineWidth = 1;
+  joyCtx.beginPath();
+  joyCtx.arc(cx, cy, cx - 4, 0, Math.PI * 2);
+  joyCtx.moveTo(cx, 4); joyCtx.lineTo(cx, h - 4);
+  joyCtx.moveTo(4, cy); joyCtx.lineTo(w - 4, cy);
+  joyCtx.stroke();
+
+  const px = cx + (cameraYawDeg / 180) * (cx - 10);
+  const py = cy + (cameraPitchDeg / 45) * (cy - 10);
+  joyCtx.fillStyle = '#38bdf8';
+  joyCtx.beginPath();
+  joyCtx.arc(px, py, 5.5, 0, Math.PI * 2);
+  joyCtx.fill();
+}
+
+// ============================================================================
+// MAIN ANIMATION LOOP
+// ============================================================================
+let lastTime = performance.now();
+function animationLoop(now) {
+  const dt = (now - lastTime) / 1000;
+  lastTime = now;
+
+  if (isPlaying) {
+    animPhase = (animPhase + dt * 0.42) % 1.0;
+    const slider = document.getElementById('phaseSlider');
+    if (slider) {
+      const pct = Math.round(animPhase * 100);
+      slider.value = pct;
+      document.getElementById('phaseVal').textContent = `${pct}%`;
+    }
+  }
+
+  renderStage();
+  requestAnimationFrame(animationLoop);
+}
+
+initCrashLab();
+</script>
+</body>
+</html>
