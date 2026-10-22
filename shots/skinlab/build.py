@@ -11,8 +11,12 @@ library.json  every body card that can skin a bone: its slot (torso, head, upper
               torso: A the lower brad (pelvis), B the upper (neck); hand: A the wrist eyelet, B the fingertip;
               foot: A the ankle brad, B the toe end; head: A the neck end, B the crown. Points are guesses
               where a card has fewer brads; the page lets you drag them, and saves the fix.
+              Also the hip bridges (pelvis connectors: one waist hole over two thigh holes), which the
+              normaliser has no slot for: scaled by the median px/cm of the body cards on the same sheet,
+              A the waist (top brad), B the crotch (bottom centre). Every card carries its brads, so the
+              page can snap a child's socket onto a real hole.
 """
-import glob, json, os
+import glob, json, os, re, statistics
 import numpy as np
 from PIL import Image
 
@@ -61,6 +65,48 @@ def points(path, slot, brads, view):
     return ((bot, top) if slot == 'torso' else (top, bot)) + ('axis',)
 
 
+PELVIS = re.compile(r'hip-bridge|bridge-hip|pelvis-conn|hip-conn|^hip-(profile|back|front)|waist-link|pelvis-\d*-?connector')
+
+
+def view_of(name):
+    for v, pat in (('threequarter_back', r'three-?quarter-back'), ('threequarter', r'three-?quarter|3-4'), ('profile', r'profile'), ('back', r'back'), ('front', r'front')):
+        if re.search(pat, name):
+            return v
+    return None
+
+
+def pelvis_cards(cat, N, R):
+    sheet_ppc = {}
+    for pid, n in N.items():
+        if n.get('px_per_cm'):
+            sheet_ppc.setdefault(pid.split('/')[0], []).append(n['px_per_cm'])
+    char = {pid.split('/')[0]: (n.get('character'), n.get('costume')) for pid, n in N.items()}
+    out = []
+    for sid, sh in cat.items():
+        if sid not in sheet_ppc or re.search(r'prop|set\.|fx\.|ref', sid):
+            continue
+        for p in sh['parts']:
+            n = p['id'].split('/')[-1].lower()
+            if not PELVIS.search(n) or R.get(p['id'], {}).get('q') == 'C':
+                continue
+            path = os.path.join(SHOTS, 'kits', 'cut', p['file'])
+            a = np.array(Image.open(path).convert('RGBA'))[..., 3] > 128
+            ys, xs = np.nonzero(a)
+            if not len(xs):
+                continue
+            B = sorted((p.get('brads') or []), key=lambda b: b[1])
+            cx = (xs.min() + xs.max()) / 2
+            top = B[0] if B else [cx, ys.min() + .08 * (ys.max() - ys.min())]
+            w, h = Image.open(path).size
+            ch, co = char.get(sid, (None, None))
+            out.append({'id': p['id'], 'img': '../kits/cut/' + p['file'], 'w': w, 'h': h, 'slot': 'pelvis', 'side': None, 'view': view_of(n),
+                        'state': None, 'character': ch, 'costume': co, 'px_per_cm': round(statistics.median(sheet_ppc[sid]), 3),
+                        'A': [round(float(top[0]), 1), round(float(top[1]), 1)], 'B': [round(float(cx), 1), round(float(ys.max()), 1)],
+                        'pts': 'waist+crotch' if B else 'guess', 'q': R.get(p['id'], {}).get('q'), 'label': p.get('name') or p.get('label') or '',
+                        'brads': [[round(float(x), 1), round(float(y), 1)] for x, y in (p.get('brads') or [])]})
+    return out
+
+
 def library():
     N = json.load(open(os.path.join(SHOTS, 'kits', 'cut', 'normalized.json')))['parts']
     cat = json.load(open(os.path.join(SHOTS, 'kits', 'cut', 'catalog.json')))['sheets']
@@ -79,8 +125,9 @@ def library():
         out.append({'id': pid, 'img': '../kits/cut/' + p['file'], 'w': w, 'h': h, 'slot': n['slot'], 'side': n.get('side'), 'view': n.get('view'),
                     'state': n.get('state'), 'character': n.get('character'), 'costume': n.get('costume'), 'px_per_cm': n['px_per_cm'],
                     'A': [round(float(A[0]), 1), round(float(A[1]), 1)], 'B': [round(float(B[0]), 1), round(float(B[1]), 1)], 'pts': how,
-                    'q': R.get(pid, {}).get('q'), 'label': p.get('name') or p.get('label') or ''})
-    return out
+                    'q': R.get(pid, {}).get('q'), 'label': p.get('name') or p.get('label') or '',
+                    'brads': [[round(float(x), 1), round(float(y), 1)] for x, y in (p.get('brads') or [])]})
+    return out + pelvis_cards(cat, N, R)
 
 
 def main():
