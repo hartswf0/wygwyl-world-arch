@@ -256,9 +256,20 @@ function solve(fr, port, style = S.style, puppet = S.puppet) {
 // fix[id].erase = [[x0,y0,x1,y1],...]: card-px rectangles made transparent (printed sheet labels);
 // fix[id].trim = px: erode the card's alpha by that many px (a white cut fringe goes); done once per card on a canvas
 const TRIM = {};
+// fix[id].flare = [at A, at B]: the card's width (across its A->B axis, which must run down the card) scaled row by row, from the
+// first factor at A's row to the second at B's (held beyond): a trouser leg keeps its painted cloth but its width at the knee
+// can be matched to the next card's. The canvas is padded sideways; drawCard reads o.pad.
+function flared(c, im, fl) {
+  const w = im.naturalWidth || im.width, h = im.naturalHeight || im.height, { A, B } = AB(c);
+  const mx = Math.max(fl[0], fl[1], 1), pad = Math.ceil(w * (mx - 1) / 2) + 2, o = P.canvas(w + 2 * pad, h), g = o.getContext('2d');
+  for (let y = 0; y < h; y++) { const t = Math.max(0, Math.min(1, (y - A[1]) / ((B[1] - A[1]) || 1))), k = fl[0] + (fl[1] - fl[0]) * t, ax = A[0] + (B[0] - A[0]) * t;
+    g.drawImage(im, 0, y, w, 1, pad + ax - ax * k, y, w * k, 1); }
+  o.pad = pad; return o;
+}
 function trimmed(c) {
-  const f = S.fix[c.id] || {}, r = Math.round(f.trim || 0), im = img(c); if ((!r && !f.erase) || !im.complete || !im.naturalWidth) return im;
+  const f = S.fix[c.id] || {}, r = Math.round(f.trim || 0), im = img(c); if ((!r && !f.erase && !f.flare) || !im.complete || !im.naturalWidth) return im;
   if (TRIM[c.id]) return TRIM[c.id];
+  if (f.flare && !r && !f.erase) { const o = flared(c, im, f.flare); o.complete = true; o.naturalWidth = o.width; return TRIM[c.id] = o; }
   const w = im.naturalWidth || im.width, h = im.naturalHeight || im.height, o = P.canvas(w, h), g = o.getContext('2d'); g.drawImage(im, 0, 0);
   for (const [x0, y0, x1, y1] of f.erase || []) g.clearRect(x0, y0, x1 - x0, y1 - y0);
   if (!r) { o.complete = true; o.naturalWidth = w; return TRIM[c.id] = o; }
@@ -295,9 +306,10 @@ function clampNeck(j, fwdv, hfwd, lim = 35) {
 function drawCard(g, x, alpha) {
   const im = trimmed(x.c); if (!im.complete || !im.naturalWidth) return;
   g.save(); g.globalAlpha = alpha;
+  if (S.farShade && /^far_/.test(x.role || '')) g.filter = `brightness(${S.farShade})`;   // the far limbs a step darker: the legs read as two
   g.translate(x.P[0], x.P[1]); g.rotate(x.ang); g.translate(x.off[0], x.off[1]);
   g.scale(x.s, x.s * (x.mir ? -1 : 1)); g.rotate(-x.ax);
-  g.drawImage(im, -x.A[0], -x.A[1]);
+  g.drawImage(im, -x.A[0] - (im.pad || 0), -x.A[1]);
   g.restore();
 }
 
@@ -442,10 +454,39 @@ function buildCard(kind, view, ch, onPaint) {
   paint(); S.lib.push(c); S.byId[id] = c;
   return c;
 }
+// a profile seat built by code (no painted card shows the seat from the side): the outline of a man's seat and hip in profile,
+// facing right (+x forward), in cm from the waist brad (y down); filled with the painted cloth of the rear-seat card (its cheek
+// shading) and edged like the kit cards. A = waist brad, B = crotch line (the pelvis bone), a brad at the hip joint for the thighs.
+function buildSeat(ch, srcId, o = {}) {
+  const id = `gen.${ch}/built-seat-side`; if (S.byId[id]) return S.byId[id];
+  const K = 8, m = 6, hip = o.hip_cm ?? 7, out = o.outline || [[5, -3], [-10, -3], [-13.5, 1], [-17, 6], [-19.5, 11.5], [-19.5, 16], [-17, 20], [-11, 23], [-3, 22.5], [5, 19]];
+  const xs = out.map(p => p[0]), ys = out.map(p => p[1]), x0 = Math.min(...xs), y0 = Math.min(...ys);
+  const W = Math.ceil((Math.max(...xs) - x0) * K + 2 * m), Hp = Math.ceil((Math.max(...ys) - y0) * K + 2 * m), Pt = p => [m + (p[0] - x0) * K, m + (p[1] - y0) * K];
+  const brads = [[0, 0], [0, hip]], src = S.byId[srcId];
+  const c = { id, gen: true, w: W, h: Hp, slot: 'pelvis', side: null, view: 'profile', character: ch, costume: 'built', px_per_cm: K,
+    A: Pt([0, 0]), B: Pt([0, o.crotch_cm ?? 20]), pts: 'brads', q: 'A', label: 'built by code: profile seat', brads: brads.map(Pt), pal: src?.pal, skin: 0, img: '' };
+  const paint = () => {
+    const cv = P.canvas(W, Hp), g = cv.getContext('2d'), path = () => { g.beginPath(); out.forEach((p, i) => { const q = Pt(p); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); };
+    path(); g.save(); g.clip();
+    const im = src && img(src);
+    if (im && im.complete && im.naturalWidth) {   // one cheek of the rear seat (its right half), its outer curve to the back
+      const iw = im.naturalWidth, ih = im.naturalHeight, sx = o.src_rect || [iw * .5, ih * .08, iw * .46, ih * .86];
+      g.translate(W, 0); g.scale(-1, 1); g.drawImage(im, sx[0], sx[1], sx[2], sx[3], -m, 0, W + 2 * m, Hp); g.setTransform(1, 0, 0, 1, 0, 0);
+    } else { g.fillStyle = '#1b1a1d'; g.fillRect(0, 0, W, Hp); if (im && im.addEventListener) im.addEventListener('load', paint, { once: true }); }
+    const gr = g.createRadialGradient(...Pt([-6, 14]), 2, ...Pt([-6, 14]), 16 * K); gr.addColorStop(0, '#ffffff14'); gr.addColorStop(.55, '#0000'); gr.addColorStop(1, '#0006'); g.fillStyle = gr; g.fillRect(0, 0, W, Hp);
+    g.restore(); g.lineJoin = 'round'; path();
+    g.lineWidth = 5; g.strokeStyle = '#c9a26b'; g.stroke(); g.lineWidth = 1; g.strokeStyle = '#6b4a2a'; g.stroke();
+    for (const b of brads) { const q = Pt(b), rg = g.createRadialGradient(q[0] - 2, q[1] - 2, 1, q[0], q[1], 9); rg.addColorStop(0, '#fff3c0'); rg.addColorStop(.5, '#d9a640'); rg.addColorStop(1, '#7a5410'); g.fillStyle = rg; g.beginPath(); g.arc(q[0], q[1], 8, 0, 7); g.fill(); }
+    IMG[id] = cv; cv.complete = true; cv.naturalWidth = W;
+  };
+  paint(); S.lib.push(c); S.byId[id] = c;
+  return c;
+}
 // cards a skin names by id that are built by code: rebuild them (index.html does this at boot)
 function rebuildGen(skin) {
   for (const k in skin) for (const id of Object.values(skin[k].cards || {})) if (id.startsWith('gen.')) {
     const m = id.match(/^gen\.(.+)\/built-(torso|hip)-(\w+)$/); if (m) buildCard(m[2] === 'hip' ? 'pelvis' : 'torso', m[3], m[1]);
+    const ms = id.match(/^gen\.(.+)\/built-seat-side$/); if (ms) buildSeat(ms[1], S.fix[id]?.from, S.fix[id] || {});
   }
 }
 function stick(g, pj, col, w) {
@@ -455,6 +496,6 @@ function stick(g, pj, col, w) {
 
 Object.assign(P, { ppcOf, cardsOf, trimmed, holdPoint, clampNeck, S, J, ji, HAND_CM, TOPO, PAR, GRP, GROUPS, VIT, FEET, measure, retarget, joints, SEG, LR, STYLES, STACK0, ARMS, VIEWS, VIEWOF, viewOf, OTHER, STICK,
   NAME, NOT, nameOK, human, painted, IMG, img, AB, pts, cardLeft, index, v3, len3, hyp, rot, makePort, centre, active, mk, fwd, inv, scaleOf, socket, ik2, roleOf, solve,
-  drawCard, decode, decodeProps, measureActor, presetK, cur, newSkin, dE, dress, kitbash, labCss, buildCard, rebuildGen, stick });
+  drawCard, decode, decodeProps, measureActor, presetK, cur, newSkin, dE, dress, kitbash, labCss, buildCard, buildSeat, rebuildGen, stick });
 root.PuppetCore = P;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -530,6 +530,7 @@ function render(f) {
   const drawCase = () => { const c = ps.case; if (!c) return; const s = cam.s(c.pos[2]), pr = E.edl.props.case;
     const anchor = c.held ? pr.grip : [.5, 1], at = c.held ? c.gripPx : cam.p(c.pos);
     drawPlaced(cardAt(pr.part, pr.w_cm, pr.h_cm, c.held ? port.k : s, anchor, at, 0)); };
+  if (Q.has('solo')) { g.fillStyle = '#505060'; g.fillRect(0, 0, W, H); drawPoet(); E.solved[f] = null; return; }   // ?solo=1: the puppet alone on grey, for side-by-sides with the painted poses
   if (inside) { drawPoet(); if (cordOver) drawTheCord(); drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam, fr.shot === 'booth' && E.edl.shots.booth.rail_fade ? { fadeBottom: E.edl.shots.booth.rail_fade } : {}); drawBoothCard('front-glass-pane-clear', cam, E.edl.shots.booth.glass_op != null ? { op: E.edl.shots.booth.glass_op } : {}); if (!caseDone) drawCase(); drawBoothCard('lamp', cam); }
   else { drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam); drawBoothCard('front-glass-pane-clear', cam); drawBoothCard('lamp', cam);
     const caseBehind = ps.case && !ps.case.held && ps.case.pos[2] < fr.a.A.j[0][2];
@@ -750,8 +751,9 @@ async function rigidScales() {
     const hcm = E.edl.head_painted_cm || (side && paintedH(side) / out[side.id]);   // one painted head height for every view
     if (hcm) for (const id of Object.values(hk.cards)) { const c = S.byId[id], h = paintedH(c); if (h) out[id] = h / hcm; }
     E.headCm = hcm; }
+  for (const id in out) if (S.fix[id]?.rigid_ppc && S.fix[id].px_per_cm) out[id] = S.fix[id].px_per_cm;   // a card drawn at its declared size (the boot: 26 cm long)
   for (const [id, f] of Object.entries(E.edl.card_scale || {})) if (out[id]) out[id] /= f;   // declared matches between cards (e.g. a shin no wider than its thigh at the knee)
-  S.cardPpc = out; S.sock = {};
+  S.cardPpc = out; S.sock = {}; S.farShade = E.edl.far_shade ?? null;
 }
 
 // ---------- boot ----------
