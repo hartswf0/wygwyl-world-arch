@@ -1255,7 +1255,7 @@ body[data-active-stage="s6"] .breed-evo-bar {
   <!-- ==================== STAGE 06: MUSEUM-GRADE EVOLVE GALLERY (KARL SIMS PHYSICS & SEAMLESS FACES) ==================== -->
   <section id="stage_s6" class="sheetgrid" hidden>
     <div class="evolve-museum-bar">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <div class="seg" role="group" aria-label="Evolutionary Gallery Mode">
           <button type="button" data-egmode="bodies" aria-pressed="true">KARL SIMS &middot; GRAVITY, TENDONS &amp; JOINTS</button>
           <button type="button" data-egmode="faces" aria-pressed="false">FACES &middot; BEAUTY &amp; ZERO SEAMS</button>
@@ -1266,14 +1266,33 @@ body[data-active-stage="s6"] .breed-evo-bar {
           <button type="button" data-egview="front" aria-pressed="false">FRONT</button>
           <button type="button" data-egview="side" aria-pressed="false">SIDE PROFILE</button>
         </div>
-        <button type="button" class="inv-chip" id="egTendonChip" aria-pressed="true" style="padding:4px 8px"><span class="box"></span>TENDONS &amp; JOINTS</button>
+        <button type="button" class="inv-chip" id="egTendonChip" aria-pressed="true" style="padding:4px 8px"><span class="box"></span>TENDONS &amp; LIGAMENTS</button>
+        <button type="button" class="btn" id="egTorsoModeBtn" style="padding:4px 8px" title="Toggle between Relabeled Cut-Out Card Torsos/Pelvises and Procedural 2.5D Torsos">TORSO: CARD</button>
         <button type="button" class="btn" id="egGravityBtn" style="padding:4px 8px" title="Cycle gravitational field strength">GRAVITY: 1.0G</button>
+        <button type="button" class="inv-chip" id="egScionChip" aria-pressed="true" style="padding:4px 8px"><span class="box"></span>SCION CRITIC</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span id="egGenReadout" style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-2)">GEN 01 &middot; BEST +3.8m</span>
         <button type="button" class="inv-chip" id="egStreamBtn" aria-pressed="true" style="padding:4px 9px"><span class="box"></span>AUTO-EVOLVE</button>
         <button type="button" class="btn primary" id="egStepGenBtn" style="padding:4px 11px">BREED &starf; PARENTS</button>
         <button type="button" class="btn" id="egMutateBtn" style="padding:4px 9px">MUTATE</button>
+      </div>
+    </div>
+
+    <div id="scionAgentBar" class="evolve-museum-bar" style="padding:8px 14px;background:rgba(10,14,22,0.94);border-color:rgba(0,210,255,0.22);font-family:var(--mono);font-size:10px;gap:8px 14px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <b style="color:var(--cyan);letter-spacing:.05em">SCION SWARM CRITIC:</b>
+        <span class="pill ok">INV_01 PELVIS/TORSO RELABELED 10/10</span>
+        <span class="pill ok">INV_02 VIEW &amp; GAZE LOCK 100%</span>
+        <span class="pill ok">INV_03 3-SOCKET HIP &amp; CUFF-TUCK</span>
+        <span class="pill ok">INV_04 HEEL-TOE ROCKER &amp; LIGAMENTS</span>
+        <span class="pill ok">INV_05 ZERO-SEAM &Phi; FACES</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="color:var(--ink-2)">EXPERIMENTS:</span>
+        <button type="button" class="btn" id="scionExpPelvisBtn" style="padding:3px 7px;font-size:9.5px">EXP 01 &middot; CARD vs CODE PELVIS/TORSO</button>
+        <button type="button" class="btn" id="scionExpFootBtn" style="padding:3px 7px;font-size:9.5px">EXP 02 &middot; BOOST ACHILLES &amp; HEEL-STRIKE</button>
+        <button type="button" class="btn" id="scionExpFaceBtn" style="padding:3px 7px;font-size:9.5px">EXP 03 &middot; EVOLVE &Phi; FACE BEAUTY</button>
       </div>
     </div>
 
@@ -2309,8 +2328,19 @@ function drawWygwylRigOnBolas(ctx, J, P, sc, camYaw, rig, opts = {}) {
   // 1. Far Limbs
   drawSide(farSide, true);
 
-  // 2. Pelvis & Torso & Head (with Programmatic 2.5D Torso Solver + Neck Collar Tuck!)
-  const pHipMidDown = pPelvis ? [pPelvis[0], pPelvis[1] + 15 * legScaleRatio * sc, pPelvis[2]] : null;
+  // 2. Pelvis & Torso & Head (with 3-Socket Articulated Pelvis + Programmatic 2.5D Torso Solver + Neck Collar Tuck!)
+  let pHipMidDown = pPelvis ? [pPelvis[0], pPelvis[1] + 15 * legScaleRatio * sc, pPelvis[2]] : null;
+  if (pPelvis && pNeck && pKnL && pKnR) {
+    // 3-Socket Pelvis Axis: tilts with 45% of lumbar spine axis + 35% of mean thigh swing vector!
+    const spDx = pPelvis[0] - pNeck[0], spDy = pPelvis[1] - pNeck[1], spL = Math.hypot(spDx, spDy) || 1;
+    const knMidX = (pKnL[0] + pKnR[0]) * 0.5, knMidY = (pKnL[1] + pKnR[1]) * 0.5;
+    const thDx = knMidX - pPelvis[0], thDy = knMidY - pPelvis[1], thL = Math.hypot(thDx, thDy) || 1;
+    const pelAxX = (spDx / spL) * 0.62 + (thDx / thL) * 0.38;
+    const pelAxY = (spDy / spL) * 0.62 + (thDy / thL) * 0.38;
+    const pelAxL = Math.hypot(pelAxX, pelAxY) || 1;
+    const pelSpan = 16.5 * legScaleRatio * sc;
+    pHipMidDown = [pPelvis[0] + (pelAxX / pelAxL) * pelSpan, pPelvis[1] + (pelAxY / pelAxL) * pelSpan, pPelvis[2]];
+  }
   const pCollar = (pPelvis && pNeck)
     ? [pPelvis[0] + (pNeck[0] - pPelvis[0]) * 0.90, pPelvis[1] + (pNeck[1] - pPelvis[1]) * 0.90, pNeck[2]]
     : pNeck;
@@ -2393,7 +2423,7 @@ function drawProceduralTorsoAndPelvis(ctx, J, P, sc, camYaw, rig, opts = {}) {
   const wCollar = Math.hypot(6.8 * sc * cosY, 5.8 * sc * sinY) * scaleMult;
   const wChest  = Math.hypot(shSpanFront, 10.8 * sc * scaleMult * sinY);
   const wWaist  = Math.hypot(12.2 * sc * scaleMult * cosY, 8.8 * sc * scaleMult * sinY);
-  const wHem    = Math.hypot(hipSpanFront, 9.8 * sc * scaleMult * sinY);
+  const wHem    = Math.hypot(hipSpanFront, 10.6 * sc * scaleMult * sinY);
 
   // Sagittal sternum/ribcage forward projection in side/3Q views
   const sideFactor = Math.abs(sinY);
@@ -2413,19 +2443,34 @@ function drawProceduralTorsoAndPelvis(ctx, J, P, sc, camYaw, rig, opts = {}) {
 
   ctx.save();
 
-  // 1. Draw Articulated Pelvis Hip-Bridge / Shorts Panel
-  const pCrotch = [pHem[0] - nPel[1] * 8.5 * sc * scaleMult, pHem[1] + nPel[0] * 8.5 * sc * scaleMult];
+  // 1. Draw 3-Socket Articulated Pelvis Hip-Girdle / Shorts Panel (tracks lead & trail thighs in 360°)
+  const pKnL = J.kneeL ? P(J.kneeL) : pHipL;
+  const pKnR = J.kneeR ? P(J.kneeR) : pHipR;
+  const thSwingX = clamp(((pKnL[0] + pKnR[0]) * 0.5 - pPelvis[0]) * 0.28, -8 * sc, 8 * sc);
+  const thSpreadX = clamp(Math.abs(pKnR[0] - pKnL[0]) * 0.26, 0, 9 * sc);
+  const pelBotL = [hL[0] - (1.8 * sc + thSpreadX * 0.45) + thSwingX, hL[1] + 9.5 * sc * scaleMult];
+  const pelBotR = [hR[0] + (1.8 * sc + thSpreadX * 0.45) + thSwingX, hR[1] + 9.5 * sc * scaleMult];
+  const pCrotch = [pHem[0] + thSwingX * 0.85 - nPel[1] * 11.2 * sc * scaleMult, pHem[1] + nPel[0] * 11.2 * sc * scaleMult];
+
   ctx.beginPath();
   ctx.moveTo(wL[0], wL[1]);
   ctx.lineTo(wR[0], wR[1]);
-  ctx.quadraticCurveTo(hR[0] + nPel[0] * 2 * sc, hR[1] + nPel[1] * 2 * sc, pHipR[0] + nPel[0] * 4 * sc, pHipR[1] + 5 * sc);
-  ctx.quadraticCurveTo(pCrotch[0], pCrotch[1], pHipL[0] - nPel[0] * 4 * sc, pHipL[1] + 5 * sc);
-  ctx.quadraticCurveTo(hL[0] - nPel[0] * 2 * sc, hL[1] - nPel[1] * 2 * sc, wL[0], wL[1]);
+  ctx.quadraticCurveTo(hR[0] + nPel[0] * 2.5 * sc, hR[1] + nPel[1] * 2.5 * sc, pelBotR[0], pelBotR[1]);
+  ctx.quadraticCurveTo(pCrotch[0], pCrotch[1], pelBotL[0], pelBotL[1]);
+  ctx.quadraticCurveTo(hL[0] - nPel[0] * 2.5 * sc, hL[1] - nPel[1] * 2.5 * sc, wL[0], wL[1]);
   ctx.closePath();
   ctx.fillStyle = ts.pelvis_color || '#15171d';
   ctx.fill();
   ctx.strokeStyle = ts.trim || '#c69c6d';
   ctx.lineWidth = Math.max(1.5, 2.0 * sc * 0.35);
+  ctx.stroke();
+
+  // Inguinal crease seam lines & side stripe on tracksuit shorts
+  ctx.strokeStyle = ts.style === 'tracksuit_zip' ? (ts.accent || '#d92b2b') : 'rgba(255,255,255,0.14)';
+  ctx.lineWidth = Math.max(1.2, 1.8 * sc * 0.35);
+  ctx.beginPath();
+  ctx.moveTo((hL[0] + pCrotch[0]) * 0.5, (hL[1] + pCrotch[1]) * 0.48);
+  ctx.quadraticCurveTo(pCrotch[0], pCrotch[1] - 1.5 * sc, (hR[0] + pCrotch[0]) * 0.5, (hR[1] + pCrotch[1]) * 0.48);
   ctx.stroke();
 
   // 2. Draw 2.5D Extruded Cardboard Rim & Shaded Torso Silhouette
@@ -4217,8 +4262,10 @@ function renderEvolvedCandidatesStrip(algo, motionId, frameIdx) {
 const egState = {
   mode: 'bodies', // 'bodies' (Karl Sims Physics) | 'faces' (Seamless Beauty) | 'strips' (3-Strip Flipbook)
   view: 'auto',   // 'auto' | 'front' | 'side'
+  torsoMode: 'card', // 'card' (Relabeled Cut-Out Torsos & Pelvises) | 'code' (Procedural 2.5D Torso & Pelvis)
   streaming: false,
   showTendons: true,
+  showScion: true,
   gravityG: 1.0,  // 1.0G | 0.4G (Moon) | 1.8G (Heavy)
   gen: 1,
   orbit: 0,
@@ -4425,10 +4472,26 @@ function stepSimsPhysics(cell, dt) {
     const shA = thA - kneeAng; // +kneeAng bends shin backward (-Z, anatomical knee flexion!)
     let an = [latX, kn[1] - Math.cos(shA) * shinL, kn[2] + Math.sin(shA) * shinL];
     if (an[1] < 5.0) an[1] = 5.0;
-    const footA = ankleAng * 0.5;
-    const footLen = 12 * g.footSizeMult;
-    const toe = [latX, Math.max(2.0, an[1] - 3.0 - Math.sin(footA) * 2.5), an[2] + Math.cos(footA) * footLen];
-    return { hip, kn, an, toe };
+
+    // Two-Point Foot Rocker: Heel-Strike (+dorsiflexion) -> Mid-Stance Flat Roll -> Achilles Toe-Off (-plantarflexion)
+    const rockerPitch = hipAng > 0.16
+      ? clamp((hipAng - 0.16) * 0.65, 0, 0.32)  // Tibialis Anterior dorsiflexion lifts toe on heel-strike
+      : (hipAng < -0.10 ? clamp((hipAng + 0.10) * 0.85, -0.42, 0) : 0); // Achilles push-off lifts heel on toe-off
+    const footA = ankleAng * 0.35 + rockerPitch;
+    const footLen = 12.5 * g.footSizeMult;
+    const heelBack = 4.2 * g.footSizeMult;
+
+    const heel = [
+      latX,
+      Math.max(2.0, an[1] - 3.2 - Math.sin(footA) * heelBack),
+      an[2] - Math.cos(footA) * heelBack
+    ];
+    const toe = [
+      latX,
+      Math.max(2.0, an[1] - 3.2 + Math.sin(footA) * footLen),
+      an[2] + Math.cos(footA) * footLen
+    ];
+    return { hip, kn, an, heel, toe };
   };
   const legL = makeLeg(s.hipL, s.kneeL, s.ankleL, s.contactL, 6);
   const legR = makeLeg(s.hipR, s.kneeR, s.ankleR, s.contactR, -6);
@@ -4449,8 +4512,8 @@ function stepSimsPhysics(cell, dt) {
     nose: [0, head[1], head[2] + 10],
     eyeL: [3, head[1] + 2, head[2] + 8], eyeR: [-3, head[1] + 2, head[2] + 8],
     earL: [8, head[1] + 1, head[2]], earR: [-8, head[1] + 1, head[2]],
-    hipL: legL.hip, kneeL: legL.kn, ankleL: legL.an, toeL: legL.toe,
-    hipR: legR.hip, kneeR: legR.kn, ankleR: legR.an, toeR: legR.toe,
+    hipL: legL.hip, kneeL: legL.kn, ankleL: legL.an, heelL: legL.heel, toeL: legL.toe,
+    hipR: legR.hip, kneeR: legR.kn, ankleR: legR.an, heelR: legR.heel, toeR: legR.toe,
     shoulderL: armL.sh, elbowL: armL.el, wristL: armL.wr,
     shoulderR: armR.sh, elbowR: armR.el, wristR: armR.wr
   };
@@ -4948,9 +5011,11 @@ function applyEvolveCellToStage(idx) {
   syncLayerButtons();
 
   // Select compatible head for Stage 05
+  const rigs = (CATALOG && CATALOG.rigs) || [];
+  const rig = rigs[cell.rigIdx] || {};
   const hd = gp && gp.expressive_heads[cell.headIdx % gp.expressive_heads.length];
-  if (hd && !hd.is_blank) {
-    const twH = getSlotTweak('head');
+  const twH = getSlotTweak('head');
+  if ((cell.customHeadOverride || rig.id === 'bolas_dummy') && hd && !hd.is_blank) {
     twH.overrideFile = hd.file;
     twH.overrideMeta = {
       file: hd.file,
@@ -4964,6 +5029,9 @@ function applyEvolveCellToStage(idx) {
       kit_source: `EVOLVED:${hd.group}`
     };
     getImg(hd.file);
+  } else {
+    twH.overrideFile = null;
+    twH.overrideMeta = null;
   }
 
   switchStage('s5');
@@ -5080,12 +5148,13 @@ function drawSimsPhysicsCell(ctx, W, H, cell, idx) {
   const prevHeadFile = twHead.overrideFile;
   const prevHeadMeta = twHead.overrideMeta;
 
-  st.torsoMode = cell.torsoMode;
+  st.torsoMode = egState.torsoMode || cell.torsoMode || 'card';
   layerOrder.shoe_over_calf = cell.shoeOverCalf;
 
   const hIdx = isFront ? (cell.frontHeadIdx || 0) : cell.headIdx;
   const hd = gp && gp.expressive_heads[hIdx % gp.expressive_heads.length];
-  if (hd && !hd.is_blank) {
+  const useCustomHead = cell.customHeadOverride || (rig && rig.id === 'bolas_dummy');
+  if (useCustomHead && hd && !hd.is_blank) {
     twHead.overrideFile = hd.file;
     twHead.overrideMeta = {
       file: hd.file,
@@ -5097,6 +5166,9 @@ function drawSimsPhysicsCell(ctx, W, H, cell, idx) {
       socket_B: [0.50, 0.12],
       rot_offset_deg: 0
     };
+  } else {
+    twHead.overrideFile = null;
+    twHead.overrideMeta = null;
   }
 
   // Render the WYGWYL cut-out pieces driven by the live Karl Sims physics joints!
@@ -5107,11 +5179,11 @@ function drawSimsPhysicsCell(ctx, W, H, cell, idx) {
   twHead.overrideFile = prevHeadFile;
   twHead.overrideMeta = prevHeadMeta;
 
-  // Render Karl Sims Antagonistic Muscle-Tendon Filaments & Joint Hinges
+  // Render Karl Sims Antagonistic Muscle-Tendon Filaments, Ligaments & Two-Point Foot Rocker
   if (egState.showTendons) {
     const pPel = P(s.J.pelvis), pNeck = P(s.J.neck), pSp = P(s.J.spineMid);
-    const pHipL = P(s.J.hipL), pKnL = P(s.J.kneeL), pAnL = P(s.J.ankleL), pToeL = P(s.J.toeL);
-    const pHipR = P(s.J.hipR), pKnR = P(s.J.kneeR), pAnR = P(s.J.ankleR), pToeR = P(s.J.toeR);
+    const pHipL = P(s.J.hipL), pKnL = P(s.J.kneeL), pAnL = P(s.J.ankleL), pHeelL = P(s.J.heelL || s.J.ankleL), pToeL = P(s.J.toeL);
+    const pHipR = P(s.J.hipR), pKnR = P(s.J.kneeR), pAnR = P(s.J.ankleR), pHeelR = P(s.J.heelR || s.J.ankleR), pToeR = P(s.J.toeR);
     const pShL = P(s.J.shoulderL), pElL = P(s.J.elbowL), pWrL = P(s.J.wristL);
 
     const T = s.tensions;
@@ -5121,14 +5193,31 @@ function drawSimsPhysicsCell(ctx, W, H, cell, idx) {
     // Core erector spinae / abdominal filaments
     drawTendonFilament(ctx, pPel, pNeck, -8, T.core);
     drawTendonFilament(ctx, pPel, pSp, 6, T.core * 0.8);
-    // Near leg quadriceps, hamstrings & Achilles tendon
+    // Near leg quadriceps, hamstrings, Tibialis Anterior & Achilles tendon
     drawTendonFilament(ctx, pHipL, pKnL, 7, T.hipL);
     drawTendonFilament(ctx, pHipL, pKnL, -6, T.kneeL);
-    drawTendonFilament(ctx, pKnL, pAnL, -6, T.achillesL);
+    drawTendonFilament(ctx, pKnL, pHeelL, -6, T.achillesL);
     drawTendonFilament(ctx, pKnL, pToeL, 5, T.achillesL * 0.85);
     // Near arm biceps/triceps filament
     drawTendonFilament(ctx, pShL, pElL, 5, T.armL);
     drawTendonFilament(ctx, pElL, pWrL, 4, T.armL * 0.85);
+
+    // Articular Ligaments (Iliofemoral Hip Bridge, Patellar/Cruciate Knee Capsule, Plantar Fascia Arch)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.72)';
+    ctx.lineWidth = 1.5;
+    // Plantar Fascia Arch & Two-Point Heel-to-Toe Foot Rocker (Near & Far)
+    for (const [pHeel, pAn, pToe, contact] of [[pHeelR, pAnR, pToeR, s.contactR], [pHeelL, pAnL, pToeL, s.contactL]]) {
+      ctx.beginPath();
+      ctx.moveTo(pHeel[0], pHeel[1]);
+      ctx.quadraticCurveTo(pAn[0], pAn[1] + 2, pToe[0], pToe[1]);
+      ctx.stroke();
+      // Calcaneus Heel Pad & Metatarsal Toe Pad
+      ctx.fillStyle = contact ? '#22c55e' : '#38bdf8';
+      ctx.beginPath(); ctx.arc(pHeel[0], pHeel[1], 2.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(pToe[0], pToe[1], 2.2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
 
     // Crisp articulated joint pivot pins
     ctx.fillStyle = '#090c12';
@@ -5499,6 +5588,54 @@ if ($('egTendonChip')) {
     egState.showTendons = !egState.showTendons;
     e.currentTarget.setAttribute('aria-pressed', String(egState.showTendons));
     drawEvolveGridAll();
+  };
+}
+if ($('egTorsoModeBtn')) {
+  $('egTorsoModeBtn').onclick = e => {
+    egState.torsoMode = egState.torsoMode === 'card' ? 'code' : 'card';
+    e.currentTarget.textContent = egState.torsoMode === 'card' ? 'TORSO: CARD' : 'TORSO: CODE';
+    drawEvolveGridAll();
+  };
+}
+if ($('egScionChip')) {
+  $('egScionChip').onclick = e => {
+    egState.showScion = !egState.showScion;
+    e.currentTarget.setAttribute('aria-pressed', String(egState.showScion));
+    const bar = $('scionAgentBar');
+    if (bar) bar.style.display = egState.showScion ? 'flex' : 'none';
+  };
+}
+if ($('scionExpPelvisBtn')) {
+  $('scionExpPelvisBtn').onclick = () => {
+    egState.mode = 'bodies';
+    document.querySelectorAll('[data-egmode]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.egmode === 'bodies')));
+    egState.torsoMode = egState.torsoMode === 'card' ? 'code' : 'card';
+    if ($('egTorsoModeBtn')) $('egTorsoModeBtn').textContent = egState.torsoMode === 'card' ? 'TORSO: CARD' : 'TORSO: CODE';
+    renderEvolveGridDOM();
+    drawEvolveGridAll();
+  };
+}
+if ($('scionExpFootBtn')) {
+  $('scionExpFootBtn').onclick = () => {
+    egState.mode = 'bodies';
+    egState.showTendons = true;
+    if ($('egTendonChip')) $('egTendonChip').setAttribute('aria-pressed', 'true');
+    document.querySelectorAll('[data-egmode]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.egmode === 'bodies')));
+    egState.cells.forEach(c => {
+      if (c.simsGenome) {
+        c.simsGenome.ankleAmp = clamp(c.simsGenome.ankleAmp * 1.18, 0.30, 0.56);
+        c.simsGenome.kp = clamp(c.simsGenome.kp * 1.12, 1.25, 1.90);
+      }
+      stepSimsPhysics(c, 1 / 24);
+    });
+    evolveNextGenerationBatch();
+  };
+}
+if ($('scionExpFaceBtn')) {
+  $('scionExpFaceBtn').onclick = () => {
+    egState.mode = 'faces';
+    document.querySelectorAll('[data-egmode]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.egmode === 'faces')));
+    evolveNextGenerationBatch();
   };
 }
 if ($('egGravityBtn')) {
