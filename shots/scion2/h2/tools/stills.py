@@ -4,7 +4,7 @@ usage: stills.py kill|all"""
 import sys, os, json, cv2, numpy as np
 sys.path.insert(0, os.path.dirname(__file__)); import h2
 H2 = os.path.join(h2.ROOT, 'shots/scion2/h2')
-COVERED, NEAR = 0.65, 1.10    # thresholds on D, set by looking at the picks (see README)
+COVERED, NEAR = 0.55, 1.10    # thresholds on D, set by looking at the picks (see README)
 
 def status(D):
     return 'covered' if D <= COVERED else ('approximate' if D <= NEAR else 'gap')
@@ -25,8 +25,14 @@ def run(ids, outdir, sheetname, cols):
         lab = [f"{kind}: {tid.replace('.main-poses','')}  |  pick: {r['src'].replace('.main-poses','')}{' (mirrored)' if r['mirror'] else ''}",
                f"distance D={r['D']:.2f} (pose {r['terms']['pose']:.2f}, silhouette IoU {r['iou']:.2f})  -> {st.upper()}"]
         rows.append(h2.pair_panel(tid, fig, off, lab, H=560))
-    W = max(p.shape[1] for p in rows)
-    rows = [np.pad(p, ((0, 0), (0, W - p.shape[1]), (0, 0)), constant_values=255) for p in rows]
+    W = int(np.percentile([p.shape[1] for p in rows], 75))
+    def fitw(p):
+        if p.shape[1] > W:   # very wide pair (lying): shrink to the cell, keep the label legible-ish
+            p = cv2.resize(p, (W, int(p.shape[0]*W/p.shape[1])), interpolation=cv2.INTER_AREA)
+            p = np.pad(p, ((rows[0].shape[0]-p.shape[0], 0), (0, 0), (0, 0)), constant_values=255)
+        l = (W - p.shape[1])//2
+        return np.pad(p, ((0, 0), (l, W - p.shape[1] - l), (0, 0)), constant_values=255)
+    rows = [fitw(p) for p in rows]
     while len(rows) % cols: rows.append(np.full_like(rows[0], 255))
     grid = np.vstack([np.hstack([np.pad(p, ((4,4),(4,4),(0,0)), constant_values=200) for p in rows[i:i+cols]]) for i in range(0, len(rows), cols)])
     cv2.imwrite(os.path.join(outdir, sheetname), grid, [cv2.IMWRITE_JPEG_QUALITY, 86])

@@ -157,5 +157,5 @@ C = {
 "poet.13.main-poses/06-refocus": ("track","ok","front","stand",["sunglasses in hand"],"head","side","glasses off, hand at temple"),
 "poet.13.main-poses/07-hello": ("track","ok","front","stand",[],"wave","fwd","waving, glasses off"),
 "poet.13.main-poses/08-table-release-stand": ("track","ok","3qR","lean",["table"],"reach","side","half crouch rising"),
-"poet.13.main-poses/part-2": ("track","crop","3qR","sit",["cup"],"holding","side","left side of 02-cafe"),
+"poet.13.main-poses/part-2": ("track","crop","3qR","sit",["cup"],"holding","side","left side of 02-cafe; head in profile, body 3/4 to screen-right, seat not painted"),
 }
