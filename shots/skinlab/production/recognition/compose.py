@@ -102,7 +102,7 @@ def compose(ch):
         key['blind'][tok + '.jpg'] = {'painting': n, 'id': r['id']}; key['paintings'][str(n)] = r['id']
         fl = flags_of(r, costume)
         hv = [f"{s['k']}<-{s['card'].split('/')[1]}" for s in r['segments'] if 'harvest.' in (s.get('card') or '') and '/' in s['card']]
-        summary.append({'n': n, 'id': r['id'], 'rendered': True, 'hand_states': r.get('hand_states') or {}, 'harvested': hv, 'props': r.get('props') or [], 'chains': r.get('chains') or [], 'warnings': r.get('warnings', [])[:6], 'view': r['view'], 'facing': r['facing'], 'via': r['via'], 'atlas': cnt,
+        summary.append({'n': n, 'id': r['id'], 'rendered': True, 'hand_states': r.get('hand_states') or {}, 'harvested': hv, 'props': r.get('props') or [], 'head_swap': r.get('head_swap'), 'cropped_sides': r.get('cropped_sides') or [], 'cropped_hard': bool(r.get('cropped_hard')), 'joints_adjusted': bool(r.get('joints_adjusted')), 'chains': r.get('chains') or [], 'warnings': r.get('warnings', [])[:6], 'view': r['view'], 'facing': r['facing'], 'via': r['via'], 'atlas': cnt,
                         'max_miss_cm': max([s.get('miss_cm') or 0 for s in r['segments']] or [0]), 'flags': fl, 'pair': f"{ch}/pairs/{n:02d}_{r['safe']}.jpg"})
     # numbered paintings (numbers follow the shuffle, so the contact sheet gives no order away)
     cw, chh, cols = 220, 330, 8; cells = sorted(ok, key=lambda r: num[r['id']])

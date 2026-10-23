@@ -49,9 +49,11 @@ def cropped(img):
 def clean_card(card, painted, s_px, own=None):
     """a clean cut-out edge for a harvested limb: holes closed and filled (the occluding limb or prop inpainted from the limb's
     own cloth), the torn outline smoothed (blurred and re-thresholded, never past the painted figure except to close a hole),
-    and a 1.5 px feathered edge. Returns the card and the share of its area that had to be filled."""
+    and a crisp cut-paper edge (alpha anti-aliased over at most 0.5 px; no feather). Only SMALL holes are inpainted: each filled
+    patch at most ~1.5 cm across. Returns the card, the share of its area that had to be filled, and the largest single fill
+    patch in cm^2 (a larger fill would be invented cloth, so the caller rejects the card for the contract card)."""
     sel = card[..., 3] > 100; h, w = sel.shape
-    if sel.sum() < 20: return card, 0.0
+    if sel.sum() < 20: return card, 0.0, 0.0
     pad = 6; P = lambda a: np.pad(a, pad)
     m = P(sel).astype(np.uint8); pm = P(painted)
     r = max(2, int(round(2.0 * s_px)))                         # close gaps narrower than ~4 cm
@@ -67,12 +69,15 @@ def clean_card(card, painted, s_px, own=None):
     rgb = np.pad(card[..., :3], ((pad, pad), (pad, pad), (0, 0)))
     known_own = P(own) if own is not None else (m > 0)
     fill = final & ~known_own                                   # holes, and another limb's paint inside this limb's outline
+    big = 0.0
     if fill.any():
-        rgb = cv2.inpaint(rgb, fill.astype(np.uint8) * 255, 5, cv2.INPAINT_TELEA)
-    a = cv2.GaussianBlur(final.astype(np.float32), (0, 0), .75) * 255
-    a[~cv2.dilate(final.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)] = 0
+        nf, _, stf, _ = cv2.connectedComponentsWithStats(fill.astype(np.uint8), connectivity=8)
+        big = float(stf[1:, cv2.CC_STAT_AREA].max()) / (s_px * s_px) if nf > 1 else 0.0
+        rgb = cv2.inpaint(rgb, fill.astype(np.uint8) * 255, 2, cv2.INPAINT_TELEA)   # small radius: no smear across the cloth
+    # crisp edge: the binary outline as alpha, no feather (the canvas's own resampling is the only anti-alias, < 0.5 px)
+    a = final.astype(np.float32) * 255
     out = np.dstack([rgb, np.clip(a, 0, 255).astype(np.uint8)])[pad:pad + h, pad:pad + w]
-    return out, float(fill.sum() / max(1, final.sum()))
+    return out, float(fill.sum() / max(1, final.sum())), big
 
 def lab_mean(rgb, m):
     if m.sum() < 5: return None
@@ -187,8 +192,9 @@ def harvest():
                 if par == 'torso': chain_ids |= {idx[('torso', None)]}
                 oo = sel & np.isin(owner, list(chain_ids))
                 ownl = np.zeros(card.shape[:2], bool); ownl[P2[oo, 1].astype(int) - y0, P2[oo, 0].astype(int) - x0] = True
-                card, occl = clean_card(card, im[y0:y1, x0:x1, 3] > 100, s_px, ownl)
+                card, occl, bigfill = clean_card(card, im[y0:y1, x0:x1, 3] > 100, s_px, ownl)
                 if part not in ('torso', 'head') and occl > .18: why.append(f'{occl:.0%} of the limb is hidden in the painting (another limb or a prop): filled by inpainting would be invented')
+                elif part not in ('head',) and (bigfill > 4 or occl > .06): why.append(f'needs a large fill ({occl:.0%} of the card, largest patch {bigfill:.1f} cm2): the contract card instead')
                 fpath = os.path.join(OUTC, sheet, pose, part + (f'-{sd.lower()}' if sd else '') + '.webp')
                 Image.fromarray(card).save(fpath, lossless=True)
                 rgb = im[..., :3]; m2 = np.zeros(mask.shape, bool); m2[ys_, xs_] = True
