@@ -84,6 +84,27 @@ def lab_mean(rgb, m):
     L = cv2.cvtColor(rgb[None, m].astype(np.uint8), cv2.COLOR_RGB2LAB)[0].astype(float).mean(0)
     return [round(L[0] * 100 / 255, 1), round(L[1] - 128, 1), round(L[2] - 128, 1)]
 
+def built_profile_sunglasses():
+    """the kit has no profile head with sunglasses (heads/profile and /threequarter are blank plates; face.front/sunglasses is a
+    printed label). Built card: the contract's own painted profile head (master/left) with ONE lens of the master/front head's
+    sunglasses, narrowed to its side-on width, over the eye, and the temple arm run back to the ear. Same sheet, same paint style,
+    same px/cm as the front sunglasses head, so the set keeps one face."""
+    cut = os.path.join(SHOTS, 'kits', 'cut', 'poet.red_black_sunglasses.master')
+    head = Image.open(os.path.join(cut, 'left.webp')).convert('RGBA'); front = Image.open(os.path.join(cut, 'front.webp')).convert('RGBA')
+    lens = front.crop((52, 49, 81, 71))                                   # his left lens (screen right) with its frame
+    la = np.asarray(lens).copy(); dark = la[..., :3].astype(int).sum(2) < 200; la[..., 3] = np.where(dark, 255, 0).astype(np.uint8)
+    lens = Image.fromarray(la).resize((21, 19), Image.LANCZOS)           # side-on: about 70% of its face-on width
+    out = head.copy(); d = ImageDraw.Draw(out)
+    d.line([(80, 49), (45, 52)], fill=(18, 18, 20, 255), width=2)        # the temple arm, lens to the top of the ear
+    out.alpha_composite(lens, (78, 45))
+    a = np.asarray(out).copy(); a[..., 3] = np.minimum(a[..., 3], np.asarray(head)[..., 3]); out = Image.fromarray(a)   # never past the head's own outline
+    os.makedirs(os.path.join(OUTC, '_built'), exist_ok=True); fpath = os.path.join(OUTC, '_built', 'master-left-sunglasses.webp')
+    out.save(fpath, lossless=True)
+    return {'id': 'built.poet.master-left-sunglasses', 'img': os.path.relpath(fpath, SKIN), 'w': head.width, 'h': head.height, 'slot': 'head', 'side': None,
+            'view': 'profile', 'state': 'built', 'character': CH, 'costume': C.get('costume'), 'px_per_cm': 5.147, 'A': [37, 127], 'B': [52, 2], 'faces': 'R',
+            'pts': 'built', 'q': 'A', 'brads': [], 'label': 'profile head with sunglasses: master/left + one master/front lens + temple arm',
+            'from': 'poet.red_black_sunglasses.master/left', 'source': None, 'ratio': 1.0, 'bad': False, 'why': [], 'dir_cam': None}
+
 def harvest():
     files = [f for f in os.listdir(os.path.join(SHOTS, 'rig', 'poses')) if f.startswith(CH + '__') and f.endswith('.json')]
     lib, skipped, sets, boxes = [], [], [], []
@@ -226,6 +247,7 @@ def harvest():
     lib.append({'id': 'harvest._blank', 'img': os.path.relpath(os.path.join(OUTC, '_blank.webp'), SKIN), 'w': 8, 'h': 8, 'slot': 'hand', 'side': None, 'view': 'front',
                 'state': 'pocket', 'character': CH, 'costume': C.get('costume'), 'px_per_cm': 1.0, 'A': [4, 0], 'B': [4, 8], 'pts': 'blank', 'q': 'A', 'brads': [],
                 'label': 'a hand in a pocket: nothing drawn (the sleeve ends at the pocket)', 'source': None, 'ratio': 1.0, 'bad': False, 'why': [], 'dir_cam': None})
+    lib.append(built_profile_sunglasses())
     json.dump({'about': __doc__.split('\n\n')[0] + ' See shots/skinlab/production/recognition/harvest.py. Cards marked bad stay listed (never deleted).',
                'skipped': skipped, 'sets': sets, 'prop_boxes': boxes, 'cards': lib}, open(os.path.join(SKIN, 'library_harvest.json'), 'w'), indent=1)
     return lib, skipped

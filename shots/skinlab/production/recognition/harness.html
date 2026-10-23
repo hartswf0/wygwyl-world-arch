@@ -230,7 +230,12 @@ async function run(ch, file, U, opts) {
       if (glasses && hc && P.S.skin.head) {
         const hv = hc.view, cid0 = P.S.skin.head.cards[hv] || P.S.skin.head.cards.front, c0 = P.S.byId[cid0];
         let pick = null;
+        const built = (HV?.cards || []).find(c => c.id === 'built.poet.master-left-sunglasses');
         if (VG(hv) === 'front' && hv !== 'threequarter') pick = P.S.byId['poet.red_black_sunglasses.master/front'];
+        else if (built && (hv === 'side' || hv === 'profile' || hv === 'threequarter') && cid0 === built.from) {
+          // round 11: the contract's own profile head (master/left) with the master/front lens built on: one face across the set
+          pick = built; P.S.fix[built.id] ||= { ...(P.S.fix[built.from] || {}) };
+        }
         else if (harvest) { const want = camDir(jo, 'neckBase', 'headTop', port); let best = -1;
           const cands = [];
           for (const c of harvest) { if (c.slot !== 'head' || c.bad || !c.source || !sharp(c, port) || family(c.source) === family(t.id) || (PM.glasses_absent || []).includes(c.source) || !c.dir_cam) continue;
@@ -267,9 +272,21 @@ async function run(ch, file, U, opts) {
         P.S.skin[k].cards = Object.fromEntries(VIEWS_.map(v => [v, BL])); P.S.skin[k].states = {}; } };
       const unhide = () => { for (const [k, v] of Object.entries(hidden)) { P.S.skin[k].cards = v.cards; P.S.skin[k].states = v.states; delete hidden[k]; } };
       const nearLeg = nearS ? ['thigh_', 'shin_', 'foot_'].map(x => x + nearS) : [];
+      // the chest emblem where the painting shows it (front / three-quarter torso): the kit's blue disc at the painting's own spot;
+      // an arm the dry render puts across it is drawn after it (a second pass with only those arm cards)
+      const em = !nearS && (PM.emblem || {})[t.id] && (VG(view) === 'front' || view === 'threequarter') ? PM.emblem[t.id] : null;
+      let emAt = null, crossing = [];
+      if (em) { emAt = [em[0] * kU + offX, em[1] * kU + offY, em[2] * kU];
+        const dseg = (q, a, b) => { const v = [b[0] - a[0], b[1] - a[1]], L = v[0] * v[0] + v[1] * v[1] || 1, u = Math.max(0, Math.min(1, ((q[0] - a[0]) * v[0] + (q[1] - a[1]) * v[1]) / L)); return Math.hypot(a[0] + u * v[0] - q[0], a[1] + u * v[1] - q[1]); };
+        for (const sg of dry.segments || []) if (/^(upper_arm|forearm|hand)_[LR]$/.test(sg.k) && dseg(emAt, sg.P, sg.end) < emAt[2] / 2 + 4.5 * port.k) crossing.push(sg.k); }
       const behind = await drawProps(ctx, props, 'behind', geo);
       if (nearS) hide(nearLeg);
+      if (crossing.length) hide(crossing);
       const r = P.renderPose(ctx, args);
+      if (em) { const im = await propImg(PM.emblem_card || '04.props.heart/blue-point');
+        if (im) { drawAt(ctx, im, emAt[0], emAt[1], emAt[2], emAt[2] * im.height / im.width, false); behind.push((PM.emblem_card || '04.props.heart/blue-point') + ' (chest emblem' + (crossing.length ? ', under ' + crossing.join('+') : '') + ')'); }
+        if (crossing.length) { unhide(); hide(Object.keys(P.S.skin).filter(k => !crossing.includes(k))); P.renderPose(ctx, args); }
+        unhide(); }
       if (nearS) {
         unhide(); geo.hand = handFrom(r.segments || [], geo, kU, offX, offY);
         behind.push(...await drawProps(ctx, props, 'mid', geo));
