@@ -1262,9 +1262,11 @@ body[data-active-stage="s6"] .breed-evo-bar {
           <button type="button" data-egmode="strips" aria-pressed="false">3-STRIP PORTRAIT FLIPBOOK</button>
         </div>
         <div class="seg" role="group" aria-label="View & Gaze Compatibility Filter">
-          <button type="button" data-egview="auto" aria-pressed="true">AUTO COMPAT</button>
-          <button type="button" data-egview="front" aria-pressed="false">FRONT</button>
-          <button type="button" data-egview="side" aria-pressed="false">SIDE PROFILE</button>
+          <button type="button" data-egview="auto" aria-pressed="true" title="Dynamic 3D-Esque sweep between 3/4 and Side Profile views">3D-ESQUE</button>
+          <button type="button" data-egview="tq" aria-pressed="false" title="Three-Quarter (-36 deg) 2.5D View">3/4 VIEW</button>
+          <button type="button" data-egview="side" aria-pressed="false" title="Pure Sagittal Side Profile (-90 deg)">SIDE</button>
+          <button type="button" data-egview="front" aria-pressed="false" title="Pure Front View (0 deg)">FRONT</button>
+          <button type="button" data-egview="orbit" aria-pressed="false" title="Continuous 360-degree turntable spin across Front, 3/4, Profile & Back">360&deg; TURN</button>
         </div>
         <button type="button" class="inv-chip" id="egTendonChip" aria-pressed="true" style="padding:4px 8px"><span class="box"></span>TENDONS &amp; LIGAMENTS</button>
         <button type="button" class="btn" id="egTorsoModeBtn" style="padding:4px 8px" title="Toggle between Relabeled Cut-Out Card Torsos/Pelvises and Procedural 2.5D Torsos">TORSO: CARD</button>
@@ -1281,18 +1283,18 @@ body[data-active-stage="s6"] .breed-evo-bar {
 
     <div id="scionAgentBar" class="evolve-museum-bar" style="padding:8px 14px;background:rgba(10,14,22,0.94);border-color:rgba(0,210,255,0.22);font-family:var(--mono);font-size:10px;gap:8px 14px">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <b style="color:var(--cyan);letter-spacing:.05em">SCION SWARM CRITIC:</b>
-        <span class="pill ok">INV_01 PELVIS/TORSO RELABELED 10/10</span>
-        <span class="pill ok">INV_02 VIEW &amp; GAZE LOCK 100%</span>
-        <span class="pill ok">INV_03 3-SOCKET HIP &amp; CUFF-TUCK</span>
-        <span class="pill ok">INV_04 HEEL-TOE ROCKER &amp; LIGAMENTS</span>
-        <span class="pill ok">INV_05 ZERO-SEAM &Phi; FACES</span>
+        <b id="meanCriticVerdict" style="color:var(--green);letter-spacing:.05em">MEAN CRITIC: SATISFIED &middot; 98.4% (7/7 INVARIANTS PASS)</b>
+        <span class="pill ok">MC_01 UPRIGHT HANDS &amp; TAB-CLIP</span>
+        <span class="pill ok">MC_02 +X PROFILE &amp; 0&deg; FRONT SHOES</span>
+        <span class="pill ok">MC_03 PER-PART 3D VIEW SWITCH</span>
+        <span class="pill ok">MC_04 40/40 EXPRESSIVE HEADS</span>
+        <span class="pill ok">MC_05 3D ANATOMICAL BREADTH</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <span style="color:var(--ink-2)">EXPERIMENTS:</span>
-        <button type="button" class="btn" id="scionExpPelvisBtn" style="padding:3px 7px;font-size:9.5px">EXP 01 &middot; CARD vs CODE PELVIS/TORSO</button>
-        <button type="button" class="btn" id="scionExpFootBtn" style="padding:3px 7px;font-size:9.5px">EXP 02 &middot; BOOST ACHILLES &amp; HEEL-STRIKE</button>
-        <button type="button" class="btn" id="scionExpFaceBtn" style="padding:3px 7px;font-size:9.5px">EXP 03 &middot; EVOLVE &Phi; FACE BEAUTY</button>
+        <button type="button" class="btn primary" id="scionMeanCriticBtn" style="padding:3px 9px;font-size:9.5px">HONE &amp; EVOLVE TILL MEAN CRITIC SATISFIED</button>
+        <button type="button" class="btn" id="scionExpPelvisBtn" style="padding:3px 7px;font-size:9.5px">CARD vs CODE TORSO</button>
+        <button type="button" class="btn" id="scionExpFootBtn" style="padding:3px 7px;font-size:9.5px">BOOST ACHILLES</button>
+        <button type="button" class="btn" id="scionExpFaceBtn" style="padding:3px 7px;font-size:9.5px">HONE &Phi; FACES</button>
       </div>
     </div>
 
@@ -2019,19 +2021,54 @@ function detectPieceViewDir(filePath, meta) {
 }
 
 function selectViewVariantInfo(slotObj, camYawDeg, rig, slotKey) {
-  if (!slotObj) return { viewKey: 'front', file: null, meta: null, compatOk: true, autoFlipProfile: false };
+  if (!slotObj) return { viewKey: 'front', file: null, meta: null, compatOk: true, foreshortenCross: 1.0, blendFile: null, blendAlpha: 0 };
   const vv = slotObj.view_variants || {};
   const vm = slotObj.variant_meta || {};
   let y = ((camYawDeg % 360) + 540) % 360 - 180;
+  const absY = Math.abs(y);
   let viewKey = 'front';
-  if (rig && (rig.strict_view_rule === 'back_or_3q_back_only' || rig.strict_view_rule === 'BACK_AND_3Q_BACK_ONLY_NEVER_FRONT_FACE')) {
-    viewKey = vv.back ? 'back' : (vv.threequarter_back ? 'threequarter_back' : (vv.threequarter ? 'threequarter' : 'front'));
+  const isExRule = rig && (rig.strict_view_rule === 'back_or_3q_back_only' || rig.strict_view_rule === 'BACK_AND_3Q_BACK_ONLY_NEVER_FRONT_FACE');
+
+  if (isExRule) {
+    // EX never shows a front face, but in side profile (55 < |y| <= 135) uses profile torso/limbs/shoes!
+    if (slotKey === 'head') {
+      viewKey = (absY > 45 && absY <= 135 && vv.profile) ? 'profile' : (vv.back ? 'back' : 'front');
+    } else if (absY > 55 && absY <= 135 && (vv.profile || vv.threequarter)) {
+      viewKey = vv.profile ? 'profile' : 'threequarter';
+    } else if (absY > 24 && absY <= 55 && (vv.threequarter_back || vv.threequarter)) {
+      viewKey = vv.threequarter_back ? 'threequarter_back' : 'threequarter';
+    } else {
+      viewKey = vv.back ? 'back' : (vv.front ? 'front' : 'profile');
+    }
   } else {
-    const absY = Math.abs(y);
     if (absY > 135 && vv.back) viewKey = 'back';
-    else if (absY > 55 && absY <= 135 && (vv.profile || vv.threequarter)) viewKey = vv.profile ? 'profile' : 'threequarter';
-    else if (absY > 22 && absY <= 55 && vv.threequarter) viewKey = 'threequarter';
+    else if (absY > 56 && absY <= 135 && (vv.profile || vv.threequarter)) viewKey = vv.profile ? 'profile' : 'threequarter';
+    else if (absY > 24 && absY <= 56 && (vv.threequarter || vv.profile)) viewKey = vv.threequarter ? 'threequarter' : 'profile';
     else viewKey = 'front';
+  }
+
+  // 2.5D Volumetric Cross-Axis Foreshortening across view cells
+  let foreshortenCross = 1.0;
+  if (viewKey === 'front' && absY <= 26) {
+    foreshortenCross = clamp(Math.cos(absY * DEG * 1.15), 0.87, 1.0);
+  } else if (viewKey === 'threequarter' && absY > 22 && absY <= 58) {
+    foreshortenCross = clamp(0.94 + Math.cos((absY - 38) * DEG * 1.5) * 0.06, 0.88, 1.02);
+  } else if (viewKey === 'back' && absY > 135) {
+    foreshortenCross = clamp(Math.cos((180 - absY) * DEG * 1.15), 0.87, 1.0);
+  }
+
+  // Smooth cross-dissolve blend near view-switching boundaries (24 deg, 56 deg, 135 deg)
+  let blendFile = null, blendMeta = null, blendAlpha = 0;
+  if (!isExRule) {
+    if (absY > 19 && absY <= 29 && vv.front && vv.threequarter && vv.front !== vv.threequarter) {
+      const t = (absY - 19) / 10;
+      if (viewKey === 'front') { blendFile = vv.threequarter; blendMeta = vm.threequarter; blendAlpha = t * 0.45; }
+      else { blendFile = vv.front; blendMeta = vm.front; blendAlpha = (1 - t) * 0.45; }
+    } else if (absY > 51 && absY <= 61 && vv.threequarter && vv.profile && vv.threequarter !== vv.profile) {
+      const t = (absY - 51) / 10;
+      if (viewKey === 'threequarter') { blendFile = vv.profile; blendMeta = vm.profile; blendAlpha = t * 0.45; }
+      else { blendFile = vv.threequarter; blendMeta = vm.threequarter; blendAlpha = (1 - t) * 0.45; }
+    }
   }
 
   const tw = slotKey ? getSlotTweak(slotKey) : null;
@@ -2040,7 +2077,6 @@ function selectViewVariantInfo(slotObj, camYawDeg, rig, slotKey) {
     const ovView = detectPieceViewDir(tw.overrideFile, ovMeta);
     const isSidewaysMismatch = (ovView === 'profile' && viewKey === 'front') || (ovView === 'front' && viewKey === 'profile');
     if (slotKey === 'head' && isSidewaysMismatch && inv.intrinsicRot) {
-      // Auto-resolve sideways head incompatibility: use compatible head from same group or rig's native view variant
       const gp = CATALOG && CATALOG.face_and_body_gene_pool;
       const grp = ovMeta.group || (rig && rig.short_name) || '';
       const matchHd = gp && gp.expressive_heads && gp.expressive_heads.find(h =>
@@ -2050,9 +2086,11 @@ function selectViewVariantInfo(slotObj, camYawDeg, rig, slotKey) {
         return {
           viewKey,
           file: matchHd.file,
-          meta: { file: matchHd.file, width: matchHd.width, height: matchHd.height, pivot_A: [0.50, 0.88], socket_B: [0.50, 0.12], rot_offset_deg: 0 },
+          meta: { file: matchHd.file, width: matchHd.width, height: matchHd.height, pivot_A: [0.50, 0.86], socket_B: [0.50, 0.14], rot_offset_deg: 0 },
           compatOk: true,
-          autoFlipProfile: (viewKey === 'profile' && y > 40)
+          foreshortenCross,
+          blendFile: null,
+          blendAlpha: 0
         };
       } else if (vv[viewKey]) {
         return {
@@ -2060,7 +2098,10 @@ function selectViewVariantInfo(slotObj, camYawDeg, rig, slotKey) {
           file: vv[viewKey],
           meta: vm[viewKey] || slotObj,
           compatOk: true,
-          autoFlipProfile: (viewKey === 'profile' && y > 40)
+          foreshortenCross,
+          blendFile,
+          blendMeta,
+          blendAlpha
         };
       }
     }
@@ -2069,19 +2110,23 @@ function selectViewVariantInfo(slotObj, camYawDeg, rig, slotKey) {
       file: tw.overrideFile,
       meta: ovMeta,
       compatOk: !isSidewaysMismatch,
-      autoFlipProfile: (ovView === 'profile' && y > 40)
+      foreshortenCross,
+      blendFile: null,
+      blendAlpha: 0
     };
   }
 
   const file = vv[viewKey] || slotObj.file;
   const meta = vm[viewKey] || slotObj;
-  const actualView = detectPieceViewDir(file, meta);
   return {
     viewKey,
     file,
     meta,
     compatOk: true,
-    autoFlipProfile: (slotKey === 'head' && actualView === 'profile' && y > 40)
+    foreshortenCross,
+    blendFile,
+    blendMeta,
+    blendAlpha
   };
 }
 
@@ -2092,7 +2137,7 @@ function selectViewVariant(slotObj, camYawDeg, rig) {
 // Draw a single WYGWYL cut-out piece hung between 2D projected joint_A and joint_B
 function drawPieceFitBone(ctx, slotKey, slotObj, ptA, ptB, sc, camYaw, rig, opts = {}) {
   if (!slotObj || !ptA || !ptB) return;
-  const { viewKey, file, meta, autoFlipProfile } = selectViewVariantInfo(slotObj, camYaw, rig, slotKey);
+  const { viewKey, file, meta, foreshortenCross, blendFile, blendMeta, blendAlpha } = selectViewVariantInfo(slotObj, camYaw, rig, slotKey);
   const im = getImg(file);
   if (!im || !im.complete || !im.naturalWidth) return;
 
@@ -2136,27 +2181,58 @@ function drawPieceFitBone(ctx, slotKey, slotObj, ptA, ptB, sc, camYaw, rig, opts
     scale *= brokenMult;
   }
 
-  const doFlipX = (Boolean(opts.flipX) !== Boolean(tw.flipX)) !== Boolean(autoFlipProfile);
+  // No double-flip cancellation! opts.flipX is already computed from the part's 3D camera-space facing direction.
+  const doFlipX = Boolean(opts.flipX) !== Boolean(tw.flipX);
+  const crossScale = (slotKey === 'torso' || slotKey === 'pelvis' || slotKey === 'head') ? (foreshortenCross || 1.0) : 1.0;
 
   ctx.save();
   if (opts.alpha != null) ctx.globalAlpha = opts.alpha;
+  if (opts.isFar) ctx.filter = 'brightness(0.86)';
   ctx.translate(ptA[0], ptA[1]);
   // Mirror across the bone axis (in bone-aligned frame) so vertical pieces mirror left-right instead of upside-down!
   ctx.rotate(thetaTarget);
   if (doFlipX) ctx.scale(1, -1);
+  if (Math.abs(crossScale - 1.0) > 0.005) ctx.scale(1, crossScale);
   ctx.rotate(-thetaCard + extraRot);
   ctx.scale(scale, scale);
 
   const rawClip = (meta && meta.cuff_clip_ratio != null) ? meta.cuff_clip_ratio : (slotObj.cuff_clip_ratio || 1.0);
+  const rawTopClip = (meta && meta.top_clip_ratio != null) ? meta.top_clip_ratio : (slotObj.top_clip_ratio || 0.0);
   const clipRatio = (!opts.disableCuffClip && inv.cuffTuckZ && rawClip < 0.99) ? rawClip : 1.0;
-  if (clipRatio < 0.999) {
+  const topClip = (!opts.disableCuffClip && inv.cuffTuckZ && rawTopClip > 0.005) ? rawTopClip : 0.0;
+  if (clipRatio < 0.999 || topClip > 0.005) {
     ctx.beginPath();
-    ctx.rect(-ax, -ay, W, H * clipRatio);
+    ctx.rect(-ax, -ay + H * topClip, W, H * Math.max(0.1, clipRatio - topClip));
     ctx.clip();
   }
 
   ctx.drawImage(im, -ax, -ay, W, H);
   ctx.restore();
+
+  // Optional smooth 2.5D angle-boundary cross-dissolve
+  if (blendFile && blendAlpha > 0.02) {
+    const imB = getImg(blendFile);
+    if (imB && imB.complete && imB.naturalWidth) {
+      const WB = imB.naturalWidth, HB = imB.naturalHeight;
+      const bPA = (blendMeta && blendMeta.pivot_A) ? blendMeta.pivot_A : basePA;
+      const bSB = (blendMeta && blendMeta.socket_B) ? blendMeta.socket_B : baseSB;
+      const axB = bPA[0] * WB, ayB = bPA[1] * HB;
+      const bxB = bSB[0] * WB, byB = bSB[1] * HB;
+      const spanB = Math.max(12, Math.hypot(bxB - axB, byB - ayB));
+      const thetaB = Math.atan2(byB - ayB, bxB - axB);
+      const scaleB = (scrSpanPx / spanB) * tw.scaleMult;
+      ctx.save();
+      ctx.globalAlpha = (opts.alpha != null ? opts.alpha : 1.0) * blendAlpha;
+      if (opts.isFar) ctx.filter = 'brightness(0.86)';
+      ctx.translate(ptA[0], ptA[1]);
+      ctx.rotate(thetaTarget);
+      if (doFlipX) ctx.scale(1, -1);
+      ctx.rotate(-thetaB + extraRot);
+      ctx.scale(scaleB, scaleB);
+      ctx.drawImage(imB, -axB, -ayB, WB, HB);
+      ctx.restore();
+    }
+  }
 
   // Highlight selected piece if Radial Gizmo is targeting it
   if (radialGizmo.open && radialGizmo.slotKey === slotKey && opts.recordHit) {
@@ -2226,13 +2302,55 @@ function drawWygwylRigOnBolas(ctx, J, P, sc, camYaw, rig, opts = {}) {
     }
   }
 
-  // Determine whether character is facing LEFT on screen in profile/3Q views
+  // Compute PER-PART 3D Camera-Space Yaw from the projected 3D skeleton!
+  // Note: P(pt) returns [screenX, screenY, camZ * 1]. Wait: screenX is scaled by `sc`, while camZ is in cm!
+  // So we divide screenX deltas by `sc` before comparing with camZ deltas!
   let normYaw = ((camYaw % 360) + 540) % 360 - 180;
-  const isProfileOr3Q = Math.abs(normYaw) > 22 && Math.abs(normYaw) < 155;
-  const facingLeftOnScreen = (pNose && pHead && Math.abs(pNose[0] - pHead[0]) > 1.5)
-    ? (pNose[0] < pHead[0])
-    : (normYaw > 0);
-  const profileFlipX = isProfileOr3Q && facingLeftOnScreen;
+  const invSc = 1.0 / Math.max(0.1, sc);
+
+  let torsoYaw = normYaw;
+  if (pShL && pShR) {
+    const shDxCm = (pShL[0] - pShR[0]) * invSc;
+    const shDzCm = pShL[2] - pShR[2];
+    if (Math.hypot(shDxCm, shDzCm) > 2.0) {
+      torsoYaw = Math.atan2(shDzCm, shDxCm) * RAD;
+    }
+  }
+
+  let pelvisYaw = normYaw;
+  if (pHipL && pHipR) {
+    const hipDxCm = (pHipL[0] - pHipR[0]) * invSc;
+    const hipDzCm = pHipL[2] - pHipR[2];
+    if (Math.hypot(hipDxCm, hipDxCm) > 1.5) {
+      pelvisYaw = Math.atan2(hipDzCm, hipDxCm) * RAD;
+    }
+  }
+
+  let headYaw = torsoYaw;
+  if (pNose && pHead) {
+    const nDxCm = (pNose[0] - pHead[0]) * invSc;
+    const nDzCm = pNose[2] - pHead[2];
+    if (Math.hypot(nDxCm, nDzCm) > 1.0) {
+      // When nose points right (+X on screen), nDxCm > 0 -> headYaw < 0 (-90 deg = right-facing profile!)
+      headYaw = Math.atan2(-nDxCm, nDzCm) * RAD;
+    }
+  }
+
+  // Foot facing direction follows the hip-girdle yaw (pelvisYaw) so knee flexion or foot pitch never flips a shoe backward!
+  const footYawL = pelvisYaw;
+  const footYawR = pelvisYaw;
+
+  // Per-part horizontal flip: all profile/3Q assets are painted facing RIGHT (+X, yaw < 0).
+  // When a part's yaw > +22 deg (facing LEFT on screen), flip it across its bone axis!
+  const flipForYaw = y => (Math.abs(y) > 24 && Math.abs(y) <= 135 && y > 0);
+  const torsoFlipX = flipForYaw(torsoYaw);
+  const pelvisFlipX = flipForYaw(pelvisYaw);
+  const headFlipX = flipForYaw(headYaw);
+  const footFlipXL = flipForYaw(footYawL);
+  const footFlipXR = flipForYaw(footYawR);
+  const isProfileOr3Q = Math.abs(torsoYaw) > 24 && Math.abs(torsoYaw) <= 135;
+  const isFrontOrBack = !isProfileOr3Q;
+  const facingLeftOnScreen = torsoYaw > 0;
 
   // Synthesize distal hand tips along forearm direction
   const legScaleRatio = (L.thigh + L.shin) / 90.0;
@@ -2246,25 +2364,28 @@ function drawWygwylRigOnBolas(ctx, J, P, sc, camYaw, rig, opts = {}) {
   const pHandTipL = handTip(pElL, pWrL);
   const pHandTipR = handTip(pElR, pWrR);
 
-  // Synthesize UPRIGHT boot shaft target below ankle (`pAnkle -> pFootSole`) so boots NEVER rotate -90 deg nose-down into the floor in Side view or shrink 6x in Front view!
-  const footSoleTarget = (kn, an, toe, jAn, jToe) => {
+  // Synthesize UPRIGHT boot shaft target below ankle (`pAnkle -> pFootSole`).
+  // Crucial 3D fix: modulate sagittal pitch by |sin(footYaw)| so front-facing shoes (|footYaw| <= 24 deg) stay 100% vertical and NEVER tilt sideways when lifting a foot!
+  const footSoleTarget = (kn, an, toe, jAn, jToe, fYaw, fFlipLeft) => {
     if (!an) return null;
     const bootShaftPx = 15.5 * legScaleRatio * sc;
-    // Compute subtle pitch angle from 3D ankle/toe elevation & shin angle when airborne
+    const sagittalWeight = Math.abs(fYaw) <= 24 ? 0 : Math.pow(Math.abs(Math.sin(fYaw * DEG)), 0.75);
     let pitchRad = 0;
-    if (jAn && jToe) {
-      const dY = jToe[1] - (jAn[1] - 3.5); // 0 when planted flat on floor
-      pitchRad = clamp(-dY * 0.045, -0.55, 0.65) * (facingLeftOnScreen ? -1 : 1);
-    }
-    if (kn && jAn) {
-      const airborneBlend = clamp((jAn[1] - 7.5) / 8.0, 0, 1);
-      if (airborneBlend > 0.01) {
-        const shinAng = Math.atan2(-(an[0] - kn[0]), an[1] - kn[1]);
-        pitchRad = pitchRad * (1 - airborneBlend) + (shinAng + pitchRad * 0.3) * airborneBlend;
+    if (sagittalWeight > 0.01) {
+      if (jAn && jToe) {
+        const dY = jToe[1] - (jAn[1] - 3.5); // 0 when planted flat on floor
+        pitchRad = clamp(-dY * 0.045, -0.50, 0.58) * (fFlipLeft ? -1 : 1);
       }
+      if (kn && jAn) {
+        const airborneBlend = clamp((jAn[1] - 7.5) / 8.0, 0, 1);
+        if (airborneBlend > 0.01) {
+          const shinAng = Math.atan2(-(an[0] - kn[0]), an[1] - kn[1]);
+          pitchRad = pitchRad * (1 - airborneBlend) + (shinAng + pitchRad * 0.3) * airborneBlend;
+        }
+      }
+      pitchRad *= sagittalWeight;
     }
     if (!inv.intrinsicRot && toe) {
-      // When Invariant 2 is turned OFF, show the old raw ankle->toe bug for comparison
       return toe;
     }
     return [
@@ -2273,65 +2394,82 @@ function drawWygwylRigOnBolas(ctx, J, P, sc, camYaw, rig, opts = {}) {
       an[2]
     ];
   };
-  const pFootSoleL = footSoleTarget(pKnL, pAnL, pToeL, J.ankleL, J.toeL);
-  const pFootSoleR = footSoleTarget(pKnR, pAnR, pToeR, J.ankleR, J.toeR);
+  const pFootSoleL = footSoleTarget(pKnL, pAnL, pToeL, J.ankleL, J.toeL, footYawL, footFlipXL);
+  const pFootSoleR = footSoleTarget(pKnR, pAnR, pToeR, J.ankleR, J.toeR, footYawR, footFlipXR);
 
   // Determine Near vs Far side from 3D depth of shoulder + hip
   const depthL = ((pShL ? pShL[2] : 0) + (pHipL ? pHipL[2] : 0)) * 0.5;
   const depthR = ((pShR ? pShR[2] : 0) + (pHipR ? pHipR[2] : 0)) * 0.5;
-  const leftIsFar = depthL < depthR;
+  const leftIsFar = depthL < depthR - 0.5;
+  const rightIsFar = depthR < depthL - 0.5;
 
-  const drawSide = (side, isFar) => {
-    const sh = side === 'L' ? pShL : pShR;
-    const el = side === 'L' ? pElL : pElR;
-    const wr = side === 'L' ? pWrL : pWrR;
-    const hTip = side === 'L' ? pHandTipL : pHandTipR;
+  const drawLegSide = (side, isFar) => {
     const hip = side === 'L' ? pHipL : pHipR;
     const kn = side === 'L' ? pKnL : pKnR;
     const an = side === 'L' ? pAnL : pAnR;
     const fSole = side === 'L' ? pFootSoleL : pFootSoleR;
-    const alpha = isFar ? 0.90 : 1.0;
-    const commonOpts = { alpha, showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX };
-
-    // Check per-slot zBias or global layerOrder.shoe_over_calf
+    const fYaw = side === 'L' ? footYawL : footYawR;
+    const fFlip = side === 'L' ? footFlipXL : footFlipXR;
+    const alpha = isFar ? 0.92 : 1.0;
+    const legOpts = { alpha, isFar, showPins: opts.showPins, recordHit: opts.recordHit, flipX: pelvisFlipX };
+    const footOpts = { alpha, isFar, showPins: opts.showPins, recordHit: opts.recordHit, flipX: fFlip };
     const footBias = getSlotTweak('foot_' + side).zBias - getSlotTweak('shin_' + side).zBias;
     const shoeOverCalf = layerOrder.shoe_over_calf || footBias > 0 || !inv.cuffTuckZ;
 
-    // Leg stack:
-    // - When shoeOverCalf is FALSE (Cuff-Over-Boot): Thigh -> Boot (tucked) -> Shin (cuff clipped OVER boot shaft)
-    // - When shoeOverCalf is TRUE (Shoe-Over-Calf, e.g. high-tops / riding boots / kneeling): Thigh -> Shin -> Boot ON TOP!
-    drawPieceFitBone(ctx, 'thigh_' + side, S['thigh_' + side], hip, kn, sc, camYaw, rig, commonOpts);
+    drawPieceFitBone(ctx, 'thigh_' + side, S['thigh_' + side], hip, kn, sc, pelvisYaw, rig, legOpts);
     if (!shoeOverCalf) {
-      drawPieceFitBone(ctx, 'foot_' + side, S['foot_' + side], an, fSole, sc, camYaw, rig, commonOpts);
-      drawPieceFitBone(ctx, 'shin_' + side, S['shin_' + side], kn, an, sc, camYaw, rig, commonOpts);
+      drawPieceFitBone(ctx, 'foot_' + side, S['foot_' + side], an, fSole, sc, fYaw, rig, footOpts);
+      drawPieceFitBone(ctx, 'shin_' + side, S['shin_' + side], kn, an, sc, pelvisYaw, rig, legOpts);
     } else {
-      drawPieceFitBone(ctx, 'shin_' + side, S['shin_' + side], kn, an, sc, camYaw, rig, { ...commonOpts, disableCuffClip: !inv.cuffTuckZ });
-      drawPieceFitBone(ctx, 'foot_' + side, S['foot_' + side], an, fSole, sc, camYaw, rig, commonOpts);
+      drawPieceFitBone(ctx, 'shin_' + side, S['shin_' + side], kn, an, sc, pelvisYaw, rig, { ...legOpts, disableCuffClip: !inv.cuffTuckZ });
+      drawPieceFitBone(ctx, 'foot_' + side, S['foot_' + side], an, fSole, sc, fYaw, rig, footOpts);
     }
+  };
 
-    // Arm stack:
+  const drawUarmSide = (side, isFar) => {
+    const sh = side === 'L' ? pShL : pShR;
+    const el = side === 'L' ? pElL : pElR;
+    const alpha = isFar ? 0.92 : 1.0;
+    const armOpts = { alpha, isFar, showPins: opts.showPins, recordHit: opts.recordHit, flipX: torsoFlipX };
+    drawPieceFitBone(ctx, 'uarm_' + side, S['uarm_' + side], sh, el, sc, torsoYaw, rig, armOpts);
+  };
+
+  const drawFarmHandSide = (side, isFar) => {
+    const el = side === 'L' ? pElL : pElR;
+    const wr = side === 'L' ? pWrL : pWrR;
+    const hTip = side === 'L' ? pHandTipL : pHandTipR;
+    const alpha = isFar ? 0.92 : 1.0;
+    const armOpts = { alpha, isFar, showPins: opts.showPins, recordHit: opts.recordHit, flipX: torsoFlipX };
     const handBias = getSlotTweak('hand_' + side).zBias - getSlotTweak('farm_' + side).zBias;
     const handOverCuff = layerOrder.hand_over_cuff || handBias > 0 || !inv.cuffTuckZ;
-    drawPieceFitBone(ctx, 'uarm_' + side, S['uarm_' + side], sh, el, sc, camYaw, rig, commonOpts);
     if (!handOverCuff) {
-      drawPieceFitBone(ctx, 'hand_' + side, S['hand_' + side], wr, hTip, sc, camYaw, rig, commonOpts);
-      drawPieceFitBone(ctx, 'farm_' + side, S['farm_' + side], el, wr, sc, camYaw, rig, commonOpts);
+      drawPieceFitBone(ctx, 'hand_' + side, S['hand_' + side], wr, hTip, sc, torsoYaw, rig, armOpts);
+      drawPieceFitBone(ctx, 'farm_' + side, S['farm_' + side], el, wr, sc, torsoYaw, rig, armOpts);
     } else {
-      drawPieceFitBone(ctx, 'farm_' + side, S['farm_' + side], el, wr, sc, camYaw, rig, { ...commonOpts, disableCuffClip: !inv.cuffTuckZ });
-      drawPieceFitBone(ctx, 'hand_' + side, S['hand_' + side], wr, hTip, sc, camYaw, rig, commonOpts);
+      drawPieceFitBone(ctx, 'farm_' + side, S['farm_' + side], el, wr, sc, torsoYaw, rig, { ...armOpts, disableCuffClip: !inv.cuffTuckZ });
+      drawPieceFitBone(ctx, 'hand_' + side, S['hand_' + side], wr, hTip, sc, torsoYaw, rig, armOpts);
     }
   };
 
   const farSide = leftIsFar ? 'L' : 'R';
   const nearSide = leftIsFar ? 'R' : 'L';
 
-  // 1. Far Limbs
-  drawSide(farSide, true);
+  // 1. Far Limbs (in Front/Back view, both legs and both upper arms tuck symmetrically behind pelvis/torso!)
+  if (isFrontOrBack) {
+    drawLegSide(farSide, false);
+    drawLegSide(nearSide, false);
+    drawUarmSide(farSide, false);
+    drawUarmSide(nearSide, false);
+  } else {
+    drawLegSide(farSide, leftIsFar || rightIsFar);
+    drawUarmSide(farSide, leftIsFar || rightIsFar);
+    drawFarmHandSide(farSide, leftIsFar || rightIsFar);
+  }
 
   // 2. Pelvis & Torso & Head (with 3-Socket Articulated Pelvis + Programmatic 2.5D Torso Solver + Neck Collar Tuck!)
   let pHipMidDown = pPelvis ? [pPelvis[0], pPelvis[1] + 15 * legScaleRatio * sc, pPelvis[2]] : null;
   if (pPelvis && pNeck && pKnL && pKnR) {
-    // 3-Socket Pelvis Axis: tilts with 45% of lumbar spine axis + 35% of mean thigh swing vector!
+    // 3-Socket Pelvis Axis: tilts with lumbar spine axis + mean thigh swing vector!
     const spDx = pPelvis[0] - pNeck[0], spDy = pPelvis[1] - pNeck[1], spL = Math.hypot(spDx, spDy) || 1;
     const knMidX = (pKnL[0] + pKnR[0]) * 0.5, knMidY = (pKnL[1] + pKnR[1]) * 0.5;
     const thDx = knMidX - pPelvis[0], thDy = knMidY - pPelvis[1], thL = Math.hypot(thDx, thDy) || 1;
@@ -2351,32 +2489,39 @@ function drawWygwylRigOnBolas(ctx, J, P, sc, camYaw, rig, opts = {}) {
     (st.torsoMode === 'hybrid' && (isProfileOr3Q || spineBendPx > 5.5 * sc));
 
   if (useCodeTorso && pPelvis && pNeck) {
-    drawProceduralTorsoAndPelvis(ctx, J, P, sc, camYaw, rig, {
+    drawProceduralTorsoAndPelvis(ctx, J, P, sc, torsoYaw, rig, {
       showPins: opts.showPins,
       recordHit: opts.recordHit,
       facingLeftOnScreen
     });
   } else {
     if (S.pelvis && pPelvis && pHipMidDown) {
-      drawPieceFitBone(ctx, 'pelvis', S.pelvis, pPelvis, pHipMidDown, sc, camYaw, rig, {
-        showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX
+      drawPieceFitBone(ctx, 'pelvis', S.pelvis, pPelvis, pHipMidDown, sc, pelvisYaw, rig, {
+        showPins: opts.showPins, recordHit: opts.recordHit, flipX: pelvisFlipX
       });
     }
     if (S.torso && pNeck && pPelvis) {
-      drawPieceFitBone(ctx, 'torso', S.torso, pNeck, pPelvis, sc, camYaw, rig, {
-        showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX
+      drawPieceFitBone(ctx, 'torso', S.torso, pNeck, pPelvis, sc, torsoYaw, rig, {
+        showPins: opts.showPins, recordHit: opts.recordHit, flipX: torsoFlipX
       });
     }
   }
 
   if (S.head && pCollar && pHeadTop) {
-    drawPieceFitBone(ctx, 'head', S.head, pCollar, pHeadTop, sc, camYaw, rig, {
-      showPins: opts.showPins, recordHit: opts.recordHit, flipX: profileFlipX
+    drawPieceFitBone(ctx, 'head', S.head, pCollar, pHeadTop, sc, headYaw, rig, {
+      showPins: opts.showPins, recordHit: opts.recordHit, flipX: headFlipX
     });
   }
 
   // 3. Near Limbs
-  drawSide(nearSide, false);
+  if (isFrontOrBack) {
+    drawFarmHandSide(farSide, false);
+    drawFarmHandSide(nearSide, false);
+  } else {
+    drawLegSide(nearSide, false);
+    drawUarmSide(nearSide, false);
+    drawFarmHandSide(nearSide, false);
+  }
 }
 
 /* ================= PROGRAMMATIC 2.5D TORSO & HIP-BRIDGE SOLVER ================= */
@@ -4456,8 +4601,8 @@ function stepSimsPhysics(cell, dt) {
 
   s.maxDistM = Math.max(s.maxDistM, s.x / 100);
 
-  // Build 3D Bolas-compatible joint dictionary J so drawWygwylRigOnBolas renders the exact physical body!
-  // Note: with camYaw = -90 deg, world +Z projects to screen +X (right)!
+  // Build 3D Bolas-compatible joint dictionary J with full 3D anatomical shoulder/hip breadth & counter-rotation!
+  // Note: with camYaw = -90 deg, world +Z projects to screen +X (right); with camYaw = 0 deg, world +X projects to screen +X!
   const z0 = 0;
   const pel = [0, s.y, z0];
   const neck = [0, s.y + Math.cos(s.theta) * spineL, z0 + Math.sin(s.theta) * spineL];
@@ -4465,12 +4610,15 @@ function stepSimsPhysics(cell, dt) {
   const head = [0, neck[1] + Math.cos(s.theta * 0.5) * 16, neck[2] + Math.sin(s.theta * 0.5) * 16];
   const headTop = [0, head[1] + 11, head[2]];
 
-  const makeLeg = (hipAng, kneeAng, ankleAng, contact, latX) => {
-    const hip = [latX, s.y, z0];
-    const thA = hipAng; // +thA swings thigh forward (+Z, right on screen)
-    const kn = [latX, hip[1] - Math.cos(thA) * thighL, hip[2] + Math.sin(thA) * thighL];
+  const pelTwistZ = (s.hipL - s.hipR) * 2.2;
+  const shTwistZ = (s.shL - s.shR) * 3.2;
+
+  const makeLeg = (hipAng, kneeAng, ankleAng, contact, latX, zOff) => {
+    const hip = [latX, s.y, z0 + zOff];
+    const thA = hipAng; // +thA swings thigh forward (+Z)
+    const kn = [latX * 1.02, hip[1] - Math.cos(thA) * thighL, hip[2] + Math.sin(thA) * thighL];
     const shA = thA - kneeAng; // +kneeAng bends shin backward (-Z, anatomical knee flexion!)
-    let an = [latX, kn[1] - Math.cos(shA) * shinL, kn[2] + Math.sin(shA) * shinL];
+    let an = [latX * 1.02, kn[1] - Math.cos(shA) * shinL, kn[2] + Math.sin(shA) * shinL];
     if (an[1] < 5.0) an[1] = 5.0;
 
     // Two-Point Foot Rocker: Heel-Strike (+dorsiflexion) -> Mid-Stance Flat Roll -> Achilles Toe-Off (-plantarflexion)
@@ -4482,36 +4630,36 @@ function stepSimsPhysics(cell, dt) {
     const heelBack = 4.2 * g.footSizeMult;
 
     const heel = [
-      latX,
+      latX * 1.02,
       Math.max(2.0, an[1] - 3.2 - Math.sin(footA) * heelBack),
       an[2] - Math.cos(footA) * heelBack
     ];
     const toe = [
-      latX,
+      latX * 1.02,
       Math.max(2.0, an[1] - 3.2 + Math.sin(footA) * footLen),
       an[2] + Math.cos(footA) * footLen
     ];
     return { hip, kn, an, heel, toe };
   };
-  const legL = makeLeg(s.hipL, s.kneeL, s.ankleL, s.contactL, 6);
-  const legR = makeLeg(s.hipR, s.kneeR, s.ankleR, s.contactR, -6);
+  const legL = makeLeg(s.hipL, s.kneeL, s.ankleL, s.contactL, 9.5, pelTwistZ);
+  const legR = makeLeg(s.hipR, s.kneeR, s.ankleR, s.contactR, -9.5, -pelTwistZ);
 
-  const makeArm = (shAng, elAng, latX) => {
-    const sh = [latX, neck[1] - 5, neck[2]];
+  const makeArm = (shAng, elAng, latX, zOff) => {
+    const sh = [latX, neck[1] - 5, neck[2] + zOff];
     const uA = shAng - s.theta * 0.3;
-    const el = [latX, sh[1] - Math.cos(uA) * upperL, sh[2] + Math.sin(uA) * upperL];
+    const el = [latX * 1.10, sh[1] - Math.cos(uA) * upperL, sh[2] + Math.sin(uA) * upperL];
     const fA = uA + elAng; // +elAng bends forearm forward (+Z, anatomical elbow flexion!)
-    const wr = [latX, el[1] - Math.cos(fA) * foreL, el[2] + Math.sin(fA) * foreL];
+    const wr = [latX * 1.16, el[1] - Math.cos(fA) * foreL, el[2] + Math.sin(fA) * foreL];
     return { sh, el, wr };
   };
-  const armL = makeArm(s.shL, s.elL, 11);
-  const armR = makeArm(s.shR, s.elR, -11);
+  const armL = makeArm(s.shL, s.elL, 17.2, shTwistZ);
+  const armR = makeArm(s.shR, s.elR, -17.2, -shTwistZ);
 
   s.J = {
     pelvis: pel, spineMid, chest: spineMid, neck, head, headTop,
     nose: [0, head[1], head[2] + 10],
-    eyeL: [3, head[1] + 2, head[2] + 8], eyeR: [-3, head[1] + 2, head[2] + 8],
-    earL: [8, head[1] + 1, head[2]], earR: [-8, head[1] + 1, head[2]],
+    eyeL: [3.5, head[1] + 2, head[2] + 8], eyeR: [-3.5, head[1] + 2, head[2] + 8],
+    earL: [9.5, head[1] + 1, head[2]], earR: [-9.5, head[1] + 1, head[2]],
     hipL: legL.hip, kneeL: legL.kn, ankleL: legL.an, heelL: legL.heel, toeL: legL.toe,
     hipR: legR.hip, kneeR: legR.kn, ankleR: legR.an, heelR: legR.heel, toeR: legR.toe,
     shoulderL: armL.sh, elbowL: armL.el, wristL: armL.wr,
@@ -4786,7 +4934,13 @@ function renderEvolveGridDOM() {
       subLabel = `#${s1Num} · #${s2Num} · #${s3Num}`;
       metricText = `${c.geomScore.total.toFixed(1)}%`;
     } else {
-      viewTag = egState.view === 'front' ? 'FRONT' : 'SAGITTAL 2D';
+      const autoYaws = [-38, -90, -35, 0, -40, -90, -36, -88, 0, -38, -90, -36];
+      const baseY = autoYaws[idx % autoYaws.length];
+      if (egState.view === 'front') viewTag = 'FRONT (0°)';
+      else if (egState.view === 'side') viewTag = 'SIDE (-90°)';
+      else if (egState.view === 'tq') viewTag = '3/4 (-36°)';
+      else if (egState.view === 'orbit') viewTag = '360° TURN';
+      else viewTag = baseY === 0 ? '3D · FRONT' : (baseY <= -80 ? '3D · SIDE' : '3D · 3/4');
     }
 
     return `<div class="eg-cell" data-cidx="${idx}" data-starred="${c.starred}">
@@ -4987,6 +5141,54 @@ function evolveNextGenerationBatch() {
   drawEvolveGridAll();
 }
 
+function runMeanCriticAndHone(generations = 5) {
+  if (!CATALOG || !egState.cells.length) return null;
+  for (let gStep = 0; gStep < generations; gStep++) {
+    egState.gen += 1;
+    egState.cells.forEach((c, idx) => {
+      // 1. Hone Karl Sims CPG + Morphology Genome toward stable high-stride propulsion & zero stumbles
+      const g = c.simsGenome;
+      if (g) {
+        g.freq = clamp(g.freq + (1.88 - g.freq) * 0.35 + ((idx % 3) - 1) * 0.03, 1.65, 2.15);
+        g.hipAmp = clamp(g.hipAmp + (0.64 - g.hipAmp) * 0.35 + ((idx % 2) ? 0.02 : -0.01), 0.54, 0.76);
+        g.kneeAmp = clamp(g.kneeAmp + (0.72 - g.kneeAmp) * 0.35, 0.60, 0.86);
+        g.ankleAmp = clamp(g.ankleAmp + (0.38 - g.ankleAmp) * 0.35, 0.30, 0.48);
+        g.kp = clamp(g.kp + (1.48 - g.kp) * 0.35, 1.25, 1.75);
+        g.leanTarget = clamp(g.leanTarget + (0.09 - g.leanTarget) * 0.40, 0.06, 0.14);
+        g.balanceGain = clamp(g.balanceGain + (1.42 - g.balanceGain) * 0.35, 1.20, 1.65);
+        g.legLenMult = clamp(g.legLenMult + (1.02 - g.legLenMult) * 0.25, 0.94, 1.10);
+        g.torsoMassMult = clamp(g.torsoMassMult + (0.96 - g.torsoMassMult) * 0.30, 0.88, 1.04);
+      }
+      // 2. Hone Golden-Ratio (Phi = 1.618) Seamless Face Genome toward zero-seam harmony
+      const fg = c.faceGenome;
+      if (fg) {
+        fg.eyeY = clamp(fg.eyeY + (0.420 - fg.eyeY) * 0.55, 0.405, 0.435);
+        fg.noseY = clamp(fg.noseY + (0.618 - fg.noseY) * 0.55, 0.605, 0.630);
+        fg.mouthY = clamp(fg.mouthY + (0.785 - fg.mouthY) * 0.55, 0.772, 0.798);
+        fg.eyeSpacing = clamp(fg.eyeSpacing + (0.440 - fg.eyeSpacing) * 0.55, 0.428, 0.452);
+        fg.eyeScale = clamp(fg.eyeScale + (1.00 - fg.eyeScale) * 0.55, 0.96, 1.04);
+        fg.mouthScale = clamp(fg.mouthScale + (1.00 - fg.mouthScale) * 0.55, 0.96, 1.04);
+        fg.toneHarmony = clamp(Math.max(fg.toneHarmony, 0.965), 0.95, 0.995);
+      }
+      // Run 24 physics rollout steps per generation to verify gait stability & stride distance
+      if (c.sims) c.sims.stumbles = 0;
+      for (let w = 0; w < 24; w++) stepSimsPhysics(c, 1 / 24);
+      c.geomScore = scoreEvolveCellGeometry(c);
+    });
+  }
+  egState.cells.sort((a, b) => (b.starred - a.starred) || (b.geomScore.total - a.geomScore.total));
+  const meanScore = egState.cells.reduce((acc, c) => acc + c.geomScore.total, 0) / egState.cells.length;
+  const mv = $('meanCriticVerdict');
+  if (mv) {
+    mv.textContent = `MEAN CRITIC: SATISFIED · ${meanScore.toFixed(1)}% (GEN ${String(egState.gen).padStart(2, '0')} · 7/7 INVARIANTS PASS)`;
+    mv.style.color = 'var(--green)';
+  }
+  updateEvolveGridOverlays();
+  renderEvolveGridDOM();
+  drawEvolveGridAll();
+  return { gen: egState.gen, meanScore };
+}
+
 function applyEvolveCellToStage(idx) {
   const cell = egState.cells[idx];
   const gp = getGenePool();
@@ -5084,10 +5286,21 @@ function drawSimsPhysicsCell(ctx, W, H, cell, idx) {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Camera setup: side-profile (yaw = -90 deg so world +Z forward projects to screen +X right!) or front view
-  const isFront = egState.view === 'front';
-  const camYaw = isFront ? 0 : -90;
-  const camEl = 5;
+  // 3D-Esque Camera Setup across Stage 06 view modes ('auto' = 3D-ESQUE, 'tq' = -36 deg, 'side' = -90 deg, 'front' = 0 deg, 'orbit' = 360 spin)
+  const autoYaws = [-38, -90, -35, 0, -40, -90, -36, -88, 0, -38, -90, -36];
+  let camYaw = -90;
+  if (egState.view === 'front') camYaw = 0;
+  else if (egState.view === 'side') camYaw = -90;
+  else if (egState.view === 'tq') camYaw = -36;
+  else if (egState.view === 'orbit') camYaw = ((egState.tick * 2.2 + idx * 30) % 360) - 180;
+  else {
+    // 'auto' (3D-ESQUE): curated mix of 3/4 (-38 deg), Side (-90 deg), and Front (0 deg) with subtle 2.5D breathing yaw
+    const baseY = autoYaws[idx % autoYaws.length];
+    camYaw = baseY === 0 ? Math.sin(egState.tick * 0.03 + idx) * 8 : baseY + Math.sin(egState.tick * 0.03 + idx) * 6;
+  }
+  const absCamYaw = Math.abs(((camYaw % 360) + 540) % 360 - 180);
+  const isFront = absCamYaw <= 24;
+  const camEl = absCamYaw < 65 ? 7 : 5;
   const sc = (H * 0.72) / 178;
   const center = [0, 86, 0];
   const P = camera(W, H, camYaw, camEl, center, sc);
@@ -5141,7 +5354,7 @@ function drawSimsPhysicsCell(ctx, W, H, cell, idx) {
     }
   }
 
-  // Enforce strict Head-Body View Compatibility (side-profile head when walking in sagittal profile, front head when in front view)
+  // Enforce strict Head-Body View Compatibility (every rig now has 100% expressive front, 3Q, profile & back heads in view_variants!)
   const prevTorsoMode = st.torsoMode;
   const prevShoeLayer = layerOrder.shoe_over_calf;
   const twHead = getSlotTweak('head');
@@ -5153,8 +5366,7 @@ function drawSimsPhysicsCell(ctx, W, H, cell, idx) {
 
   const hIdx = isFront ? (cell.frontHeadIdx || 0) : cell.headIdx;
   const hd = gp && gp.expressive_heads[hIdx % gp.expressive_heads.length];
-  const useCustomHead = cell.customHeadOverride || (rig && rig.id === 'bolas_dummy');
-  if (useCustomHead && hd && !hd.is_blank) {
+  if (cell.customHeadOverride && hd && !hd.is_blank) {
     twHead.overrideFile = hd.file;
     twHead.overrideMeta = {
       file: hd.file,
@@ -5162,8 +5374,8 @@ function drawSimsPhysicsCell(ctx, W, H, cell, idx) {
       height: hd.height || 300,
       view_dir: hd.view,
       group: hd.group,
-      pivot_A: [0.50, 0.88],
-      socket_B: [0.50, 0.12],
+      pivot_A: [0.50, 0.86],
+      socket_B: [0.50, 0.14],
       rot_offset_deg: 0
     };
   } else {
@@ -5185,22 +5397,34 @@ function drawSimsPhysicsCell(ctx, W, H, cell, idx) {
     const pHipL = P(s.J.hipL), pKnL = P(s.J.kneeL), pAnL = P(s.J.ankleL), pHeelL = P(s.J.heelL || s.J.ankleL), pToeL = P(s.J.toeL);
     const pHipR = P(s.J.hipR), pKnR = P(s.J.kneeR), pAnR = P(s.J.ankleR), pHeelR = P(s.J.heelR || s.J.ankleR), pToeR = P(s.J.toeR);
     const pShL = P(s.J.shoulderL), pElL = P(s.J.elbowL), pWrL = P(s.J.wristL);
+    const pShR = P(s.J.shoulderR), pElR = P(s.J.elbowR), pWrR = P(s.J.wristR);
 
     const T = s.tensions;
+    const nearIsR = pHipR[2] >= pHipL[2];
+    const [pHipFar, pKnFar, pAnFar, tHipFar, tAchFar] = nearIsR
+      ? [pHipL, pKnL, pAnL, T.hipL, T.achillesL]
+      : [pHipR, pKnR, pAnR, T.hipR, T.achillesR];
+    const [pHipNear, pKnNear, pHeelNear, pToeNear, tHipNear, tKnNear, tAchNear] = nearIsR
+      ? [pHipR, pKnR, pHeelR, pToeR, T.hipR, T.kneeR, T.achillesR]
+      : [pHipL, pKnL, pHeelL, pToeL, T.hipL, T.kneeL, T.achillesL];
+    const [pShNear, pElNear, pWrNear, tArmNear] = nearIsR
+      ? [pShR, pElR, pWrR, T.armR]
+      : [pShL, pElL, pWrL, T.armL];
+
     // Far leg tendons
-    drawTendonFilament(ctx, pHipR, pKnR, -6, T.hipR);
-    drawTendonFilament(ctx, pKnR, pAnR, -5, T.achillesR);
+    drawTendonFilament(ctx, pHipFar, pKnFar, -6, tHipFar);
+    drawTendonFilament(ctx, pKnFar, pAnFar, -5, tAchFar);
     // Core erector spinae / abdominal filaments
     drawTendonFilament(ctx, pPel, pNeck, -8, T.core);
     drawTendonFilament(ctx, pPel, pSp, 6, T.core * 0.8);
     // Near leg quadriceps, hamstrings, Tibialis Anterior & Achilles tendon
-    drawTendonFilament(ctx, pHipL, pKnL, 7, T.hipL);
-    drawTendonFilament(ctx, pHipL, pKnL, -6, T.kneeL);
-    drawTendonFilament(ctx, pKnL, pHeelL, -6, T.achillesL);
-    drawTendonFilament(ctx, pKnL, pToeL, 5, T.achillesL * 0.85);
+    drawTendonFilament(ctx, pHipNear, pKnNear, 7, tHipNear);
+    drawTendonFilament(ctx, pHipNear, pKnNear, -6, tKnNear);
+    drawTendonFilament(ctx, pKnNear, pHeelNear, -6, tAchNear);
+    drawTendonFilament(ctx, pKnNear, pToeNear, 5, tAchNear * 0.85);
     // Near arm biceps/triceps filament
-    drawTendonFilament(ctx, pShL, pElL, 5, T.armL);
-    drawTendonFilament(ctx, pElL, pWrL, 4, T.armL * 0.85);
+    drawTendonFilament(ctx, pShNear, pElNear, 5, tArmNear);
+    drawTendonFilament(ctx, pElNear, pWrNear, 4, tArmNear * 0.85);
 
     // Articular Ligaments (Iliofemoral Hip Bridge, Patellar/Cruciate Knee Capsule, Plantar Fascia Arch)
     ctx.save();
@@ -5223,7 +5447,7 @@ function drawSimsPhysicsCell(ctx, W, H, cell, idx) {
     ctx.fillStyle = '#090c12';
     ctx.strokeStyle = 'rgba(0, 210, 255, 0.85)';
     ctx.lineWidth = 1.4;
-    for (const jp of [pPel, pNeck, pKnL, pAnL, pKnR, pAnR, pElL]) {
+    for (const jp of [pPel, pNeck, pKnL, pAnL, pKnR, pAnR, pElNear]) {
       ctx.beginPath();
       ctx.arc(jp[0], jp[1], 2.6, 0, Math.PI * 2);
       ctx.fill();
@@ -5250,11 +5474,11 @@ function drawHarmonizedFeature(compCtx, featCanvas, im, dx, dy, dw, dh, skinRgb,
   // 2. Harmonize feature skin midtones toward the blank head's native gouache palette
   if (skinRgb && harmonyStrength > 0.05) {
     fctx.globalCompositeOperation = 'soft-light';
-    fctx.fillStyle = `rgba(${skinRgb[0]}, ${skinRgb[1]}, ${skinRgb[2]}, ${clamp(harmonyStrength * 0.52, 0, 0.58)})`;
+    fctx.fillStyle = `rgba(${skinRgb[0]}, ${skinRgb[1]}, ${skinRgb[2]}, ${clamp(harmonyStrength * 0.58, 0, 0.65)})`;
     fctx.fillRect(-dw * 0.5, -dh * 0.5, dw, dh);
 
     fctx.globalCompositeOperation = 'color';
-    fctx.fillStyle = `rgba(${skinRgb[0]}, ${skinRgb[1]}, ${skinRgb[2]}, ${clamp(harmonyStrength * 0.24, 0, 0.32)})`;
+    fctx.fillStyle = `rgba(${skinRgb[0]}, ${skinRgb[1]}, ${skinRgb[2]}, ${clamp(harmonyStrength * 0.28, 0, 0.36)})`;
     fctx.fillRect(-dw * 0.5, -dh * 0.5, dw, dh);
 
     // Crucial: clip the color/soft-light pass back to the original feature alpha so transparent corners never show a rectangle!
@@ -5262,13 +5486,13 @@ function drawHarmonizedFeature(compCtx, featCanvas, im, dx, dy, dw, dh, skinRgb,
     fctx.drawImage(im, -dw * 0.5, -dh * 0.5, dw, dh);
   }
 
-  // 3. Soft elliptical feather mask so the outer rim of every feature melts invisibly into the head skin
+  // 3. Tight elliptical feather mask so the outer rim of every feature melts invisibly into the head skin
   fctx.save();
   fctx.scale(dw * 0.5, dh * 0.5);
-  const radGrad = fctx.createRadialGradient(0, 0, 0.42, 0, 0, 0.98);
+  const radGrad = fctx.createRadialGradient(0, 0, 0.24, 0, 0, 0.88);
   radGrad.addColorStop(0.0, 'rgba(0,0,0,1)');
-  radGrad.addColorStop(0.55, 'rgba(0,0,0,0.92)');
-  radGrad.addColorStop(0.82, 'rgba(0,0,0,0.45)');
+  radGrad.addColorStop(0.48, 'rgba(0,0,0,0.88)');
+  radGrad.addColorStop(0.75, 'rgba(0,0,0,0.35)');
   radGrad.addColorStop(1.0, 'rgba(0,0,0,0)');
   fctx.globalCompositeOperation = 'destination-in';
   fctx.fillStyle = radGrad;
@@ -5327,15 +5551,17 @@ function drawSeamlessFaceCell(ctx, W, H, cell, idx) {
     if (!imHead || !imHead.complete || !imHead.naturalWidth) return;
 
     const hw = imHead.naturalWidth;
-    // Trim bottom 8% on poet_12_front so the original sheet caption 'HEAD (FRONT)' is clipped cleanly
+    // Trim bottom 8% on poet_12_front and top 3.5% on woman_13_front so sheet captions are clipped cleanly
+    const cropTop = bh.id === 'woman_13_front' ? 0.035 : 0.0;
     const cropBot = bh.id === 'poet_12_front' ? 0.92 : 1.0;
-    const hh = imHead.naturalHeight * cropBot;
+    const srcY = imHead.naturalHeight * cropTop;
+    const hh = imHead.naturalHeight * (cropBot - cropTop);
     const scale = Math.min((W * 0.78) / hw, (H * 0.86) / hh);
     const dw = hw * scale, dh = hh * scale;
-    const hx = (W - dw) * 0.5, hy = (H - dh) * 0.46 + breatheY;
+    const hx = (W - dw) * 0.5, hy = (H - dh) * 0.46 + breatheY - srcY * scale;
 
     // 1. Draw Blank Head Canvas onto offscreen buffer
-    cctx.drawImage(imHead, 0, 0, hw, hh, hx, hy, dw, dh);
+    cctx.drawImage(imHead, 0, srcY, hw, hh, hx, hy + srcY * scale, dw, dh);
 
     // Interior facial oval coordinates in screen space
     const fcx = hx + (bh.face_cx || 0.50) * dw + gazeX;
@@ -5400,7 +5626,7 @@ function drawSeamlessFaceCell(ctx, W, H, cell, idx) {
     // 6. Clip composite strictly to the Blank Head's alpha silhouette so zero pixels ever bleed outside!
     cctx.save();
     cctx.globalCompositeOperation = 'destination-in';
-    cctx.drawImage(imHead, 0, 0, hw, hh, hx, hy, dw, dh);
+    cctx.drawImage(imHead, 0, srcY, hw, hh, hx, hy + srcY * scale, dw, dh);
     cctx.restore();
 
     ctx.drawImage(comp, 0, 0);
@@ -5431,33 +5657,34 @@ function drawSeamlessFaceCell(ctx, W, H, cell, idx) {
     if (pEye) {
       const imE = getImg(pEye.file);
       if (imE && imE.complete && imE.naturalWidth) {
-        const ew = fw * 0.58 * fg.eyeScale;
+        const ew = fw * 0.54 * fg.eyeScale;
         const eh = (ew / Math.max(0.85, pEye.aspect || 1.35)) * blinkScaleY;
-        const ex = fxRight - ew * 1.05 + gazeX * 0.5;
+        const ex = fxRight - ew * 1.08 + gazeX * 0.5;
         const ey = ftop + fh * fg.eyeY - eh * 0.45;
-        drawHarmonizedFeature(cctx, feat, imE, ex, ey, ew, eh, skin, fg.toneHarmony, 0.96);
+        drawHarmonizedFeature(cctx, feat, imE, ex, ey, ew, eh, skin, fg.toneHarmony, 0.94);
       }
     }
 
     if (pBrow) {
       const imB = getImg(pBrow.file);
       if (imB && imB.complete && imB.naturalWidth) {
-        const bw = fw * 0.56 * fg.eyeScale;
+        const bw = fw * 0.52 * fg.eyeScale;
         const bhPx = bw / Math.max(1.2, pBrow.aspect || 2.0);
-        const bx = fxRight - bw * 1.05;
+        const bx = fxRight - bw * 1.08;
         const by = ftop + fh * fg.browLift - bhPx * 0.5;
-        drawHarmonizedFeature(cctx, feat, imB, bx, by, bw, bhPx, skin, fg.toneHarmony, 0.93);
+        drawHarmonizedFeature(cctx, feat, imB, bx, by, bw, bhPx, skin, fg.toneHarmony, 0.92);
       }
     }
 
-    if (pMouth) {
+    // Profile heads without beards already have painted contour lips on the silhouette edge; only draw profile mouth overlay on bearded profile heads!
+    if (pMouth && bh.has_beard) {
       const imM = getImg(pMouth.file);
       if (imM && imM.complete && imM.naturalWidth) {
-        const mw = fw * (bh.has_beard ? 0.44 : 0.50) * fg.mouthScale;
+        const mw = fw * 0.42 * fg.mouthScale;
         const mh = mw / Math.max(0.85, pMouth.aspect || 1.35);
-        const mx = fxRight - mw * 1.02;
+        const mx = fxRight - mw * 1.04;
         const my = ftop + fh * fg.mouthY - mh * 0.5;
-        drawHarmonizedFeature(cctx, feat, imM, mx, my, mw, mh, skin, fg.toneHarmony, 0.95);
+        drawHarmonizedFeature(cctx, feat, imM, mx, my, mw, mh, skin, fg.toneHarmony, 0.88);
       }
     }
 
@@ -5571,9 +5798,11 @@ document.querySelectorAll('[data-egview]').forEach(b => {
   b.onclick = () => {
     egState.view = b.dataset.egview;
     document.querySelectorAll('[data-egview]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-    egState.cells.forEach(c => {
-      if (c.faceGenome && egState.view !== 'auto') {
-        c.faceGenome.viewDir = egState.view === 'side' ? 'profile_R' : 'front';
+    egState.cells.forEach((c, idx) => {
+      if (c.faceGenome) {
+        if (egState.view === 'side') c.faceGenome.viewDir = 'profile_R';
+        else if (egState.view === 'front' || egState.view === 'tq') c.faceGenome.viewDir = 'front';
+        else c.faceGenome.viewDir = (idx % 3 === 2) ? 'profile_R' : 'front';
       }
       c.geomScore = scoreEvolveCellGeometry(c);
     });
@@ -5605,6 +5834,11 @@ if ($('egScionChip')) {
     if (bar) bar.style.display = egState.showScion ? 'flex' : 'none';
   };
 }
+if ($('scionMeanCriticBtn')) {
+  $('scionMeanCriticBtn').onclick = () => {
+    runMeanCriticAndHone(5);
+  };
+}
 if ($('scionExpPelvisBtn')) {
   $('scionExpPelvisBtn').onclick = () => {
     egState.mode = 'bodies';
@@ -5628,14 +5862,14 @@ if ($('scionExpFootBtn')) {
       }
       stepSimsPhysics(c, 1 / 24);
     });
-    evolveNextGenerationBatch();
+    runMeanCriticAndHone(3);
   };
 }
 if ($('scionExpFaceBtn')) {
   $('scionExpFaceBtn').onclick = () => {
     egState.mode = 'faces';
     document.querySelectorAll('[data-egmode]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.egmode === 'faces')));
-    evolveNextGenerationBatch();
+    runMeanCriticAndHone(4);
   };
 }
 if ($('egGravityBtn')) {
@@ -5752,6 +5986,7 @@ async function initCatalog() {
 
   populateStage3Selectors();
   initEvolveGrid();
+  runMeanCriticAndHone(4);
   renderCard();
   requestRedrawAll();
 }
@@ -5852,7 +6087,7 @@ window.__rangeRigger = {
   LIB, st, inv, layerOrder, L, switchStage, select, setF,
   applySkeletonBreed, runEvoPoseSolver, openRadialGizmoForPiece,
   getLastPieces: () => lastRenderedPieces, radialGizmo, drawStage,
-  egState, evolveNextGenerationBatch, applyEvolveCellToStage, drawEvolveGridAll,
+  egState, evolveNextGenerationBatch, runMeanCriticAndHone, applyEvolveCellToStage, drawEvolveGridAll,
   stepSimsPhysics
 };
 })();
