@@ -1,4 +1,4 @@
-// run.mjs OUT_DIR [ids,comma,separated]: re-solves every target through shots/skinlab/resolve.html (serve the repo root on :8811). PICS=1 saves before/after PNGs; FORCE=1 redoes done ids. Needs puppeteer.
+// run.mjs OUT_DIR [ids,comma,separated]: re-solves every target through shots/skinlab/resolve.html (serve the repo root on :8811). PICS=1 saves before/after PNGs; FORCE=1 redoes done ids. Needs puppeteer; CHROME overrides the browser path.
 import puppeteer from 'puppeteer'; import fs from 'fs';
 const out=process.argv[2], ids=process.argv[3]?process.argv[3].split(','):null, pics=!!process.env.PICS;
 const b=await puppeteer.launch({headless:'new',args:['--no-sandbox'],executablePath:process.env.CHROME||'/opt/pw-browsers/chromium-1194/chrome-linux/chrome'});
