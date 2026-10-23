@@ -101,8 +101,10 @@ two men at once, so the changes are cuts.
   (palms-up, push-apart, arms-up); a short notch at the back of a bent knee; occasional thin red
   stripe fragments at the forearm where the elbow bends; on the kneel and hand-at-ear outputs
   a small light sliver near the hip / knee.
-- Move (`out/move_log.json`): palms-up painting warped for frames 0-~25, a cut to 11
-  welcome-new-day for 2-3 frames, a cut to the 12/02 painting, held, then the reverse. At each
+- Move (`out/move_log.json`): frames 0-24 the palms-up painting warped, 25-27 11
+  welcome-new-day warped, 28-70 the 12/02 painting (warped, then itself at the hold), 71-72
+  welcome-new-day, 73-96 palms-up. The 12/02 figure is drawn about 15% bigger than the palms-up
+  figure at the same neck-to-ankle span, so the size pops at the cuts too. At each
   cut the drawing changes: the chest emblem disappears, the head size and the outline thickness
   change, open hands become fists. Before the first cut the warped palms-up drawing shows torn
   dark flaps under the left armpit and a jagged V at the crotch as the legs open.
