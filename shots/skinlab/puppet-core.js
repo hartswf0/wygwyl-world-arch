@@ -612,7 +612,7 @@ function facings(j) {   // body frame x = his left, y = up: forward = left x up
 // a neutral standing pose with this skeleton's own bone lengths, facing +z: sockets are bound and card scales fixed on it
 function neutralOf(j) {
   const d = (a, b) => len3(v3(j[ji[a]], j[ji[b]])), av = (a, b) => (d(a + 'L', b + 'L') + d(a + 'R', b + 'R')) / 2;
-  const ankH = Math.min(12, Math.max(6, (j[ji.ankleL][1] - Math.min(j[ji.heelL][1], j[ji.toeL][1]) + j[ji.ankleR][1] - Math.min(j[ji.heelR][1], j[ji.toeR][1])) / 2 || 9));
+  const ankH = Math.min(12, Math.max(6, .72 * (d('ankleL', 'heelL') + d('ankleR', 'heelR')) / 2 || 9));   // from the skeleton, not the pose: the bind pose stays one per skeleton
   const footL = av('heel', 'toe') || 26, th = av('hip', 'knee'), sh = av('knee', 'ankle'), hy = ankH + th + sh, hh = d('hipL', 'hipR') / 2;
   const n = {}; n.pelvis = [0, hy, 0];
   for (const [s, x] of [['L', 1], ['R', -1]]) {

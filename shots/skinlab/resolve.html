@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Puppet Re-solve</title>
+<style>
+:root { --bg: #505060; --ink: #efe6da; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 13px/1.4 system-ui, sans-serif; }
+#log { white-space: pre-wrap; font: 11px ui-monospace, monospace; padding: 8px 16px; }
+</style>
+</head>
+<body>
+<div id="log">loading</div>
+<script src="../rig/pose-core.js"></script>
+<script src="puppet-core.js"></script>
+<script>
+'use strict';
+/* Re-solve a painted pose with the puppet in the loop (driven by production/recognition/solve_v2/run.mjs).
+   For a candidate 3D pose (Pose Lab params + view yaw psi) the puppet is drawn by PuppetCore.renderPose in the painting's own
+   registration (the Pose Lab projection: px = project(J, psi, ox, oy) * scale + (cx, floor)), and scored against the painting:
+     (1 - silhouette IoU)  +  .04 x marker error (cm, weighted mean of the labelled 2D joints)  +  style priors:
+     - a painted head is drawn full size: penalise a head foreshortened below 85%, and a head tilted on screen away from the
+       painting's chin->head line (or, without confident head markers, more than 15 deg off the torso)
+     - standing legs do not cross unless the painting's ankle markers cross (front, back, three-quarter views)
+     - a limb painted at full length is not end-on: its projected/true length follows the painting's marker length
+     - a re-solve may not trade the joints away for silhouette: marker error beyond 1.3x the old solve's + 1 cm is penalised
+   Search: the stored solves and their L/R mirrors as seeds, the three best refined by coordinate descent over the joint
+   angles, the root offset and the view yaw (within 20 deg of its seed's view; steps halving three times). The frame given to the puppet is built exactly as
+   the recognition harness builds it (production/recognition/harness.html joints()). */
+const PC = PoseCore, P = PuppetCore, Q = new URLSearchParams(location.search);
+const json = u => fetch(u, { cache: 'no-store' }).then(r => { if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); });
+const BOLAS = 'pelvis hipL hipR kneeL kneeR ankleL ankleR heelL heelR ballL ballR toeL toeR spineMid neckBase chest shoulderL shoulderR elbowL elbowR wristL wristR headBase head headTop nose'.split(' ');
+const FROM = { pelvis: 'pelvis', hipL: 'hipL', hipR: 'hipR', kneeL: 'knL', kneeR: 'knR', ankleL: 'anL', ankleR: 'anR', heelL: 'heelL', heelR: 'heelR',
+  ballL: 'ballL', ballR: 'ballR', toeL: 'toeL', toeR: 'toeR', spineMid: 'waist', neckBase: 'neck', chest: 'chest', shoulderL: 'shL', shoulderR: 'shR',
+  elbowL: 'elL', elbowR: 'elR', wristL: 'wrL', wristR: 'wrR', head: 'headC', headTop: 'top' };
+const W3 = p => [p[0], -p[1], p[2]], zcol = R => { const v = [R[2], R[5], R[8]], l = Math.hypot(...v) || 1; return W3(v.map(a => a / l)); };
+const lerp3 = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+let DOC = null, C = null, LIB = null;
+function frameOf(J) {   // = harness.html joints(): the Skin Lab pelvis 7 cm below the Pose Lab waist, so the torso card spans waist -> neck
+  const F = J._F, j = BOLAS.map(n => FROM[n] ? W3(J[FROM[n]]) : null);
+  j[BOLAS.indexOf('headBase')] = W3(lerp3(J.neck, J.headC, .25));
+  const u = J.waist.map((v, i) => v - J.pelvis[i]), lu = Math.hypot(...u) || 1; j[0] = W3(J.waist.map((v, i) => v - u[i] / lu * 7));
+  const hf = zcol(F.Rh); j[BOLAS.indexOf('nose')] = W3(J.headC).map((v, i) => v + hf[i] * 10);
+  return { j, fwd: zcol(F.Rt), hfwd: hf, pfwd: zcol(F.R0) };
+}
+function portOf(t, psi, s, ox, oy, f) {
+  const c = Math.cos(psi * Math.PI / 180), sn = Math.sin(psi * Math.PI / 180);
+  return { label: 'rs:' + t.id + ':' + f, yaw: psi, k: s * f, cx: 0, cz: 0, toward: [-sn, 0, c], right: [c, 0, sn],
+    p(q) { const r = PC.project([q[0], -q[1], q[2]], psi, ox, oy); return [(r[0] * s + t.cx) * f, (r[1] * s + t.floor) * f, r[2]]; } };
+}
+const px = (t, J, n, psi, s, ox, oy) => { const r = PC.project(J[n], psi, ox, oy); return [r[0] * s + t.cx, r[1] * s + t.floor]; };
+async function maskOf(t, f) {
+  const im = new Image(); im.src = '../' + t.img; await im.decode();
+  const W = Math.round(t.w * f), H = Math.round(t.h * f), cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d'); g.drawImage(im, 0, 0, W, H); const d = g.getImageData(0, 0, W, H).data, m = new Uint8Array(W * H);
+  for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 100; return { m, W, H, im };
+}
+// one evaluation
+function score(E, x) {
+  const { t, s, f } = E, prm = x.params, z = PC.fromParams(prm), J = PC.fk(DOC.skeleton, z), psi = x.psi, ox = prm.ox || 0, oy = prm.oy || 0;
+  const g = E.g; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, E.W, E.H);
+  const r = P.renderPose(g, { contract: C, library: LIB, joints3d: frameOf(J), port: portOf(t, psi, s, ox, oy, f), farShade: 0 });
+  const d = g.getImageData(0, 0, E.W, E.H).data; let I = 0, U = 0;
+  for (let i = 0; i < E.m.length; i++) { const a = d[i * 4 + 3] > 100, b = E.m[i]; if (a && b) I++; if (a || b) U++; }
+  const iou = U ? I / U : 0;
+  // marker error (cm)
+  let ew = 0, es = 0;
+  for (const [mn, rp] of PC.MARKERS) { const mk = t.markers?.[mn]; if (!mk || !J[rp]) continue; const w = Math.min(2, mk[2] || 1) * (PC.MW[mn] || 1), q = px(t, J, rp, psi, s, ox, oy);
+    es += w * Math.min(30, Math.hypot(q[0] - mk[0], q[1] - mk[1]) / s); ew += w; }
+  const err = ew ? es / ew : 0;
+  // priors
+  let pri = 0; const why = {};
+  const conf = n => t.markers?.[n] && (t.markers[n][4] ?? 1) >= .4;
+  const L3 = (a, b) => Math.hypot(J[a][0] - J[b][0], J[a][1] - J[b][1], J[a][2] - J[b][2]);
+  const P2 = n => px(t, J, n, psi, s, ox, oy), ang = (a, b) => Math.atan2(b[0] - a[0], -(b[1] - a[1])) * 180 / Math.PI, dA = (a, b) => { let d = a - b; while (d > 180) d -= 360; while (d < -180) d += 360; return d; };
+  { const n2 = P2('neck'), t2 = P2('top'), rh = Math.hypot(t2[0] - n2[0], t2[1] - n2[1]) / (L3('neck', 'top') * s);
+    if (rh < .85) { const p = ((.85 - rh) / .25) ** 2 * .4; pri += p; why.head_foreshortened = +p.toFixed(3); }
+    const ac = ang(n2, t2);
+    if (conf('chin') && conf('head')) { const ap = ang(t.markers.chin, t.markers.head), p = (dA(ac, ap) / 25) ** 2 * .2; pri += p; why.head_tilt_vs_painting = +p.toFixed(3); }
+    else { const at = ang(P2('waist'), n2), dd = Math.max(0, Math.abs(dA(ac, at)) - 15), p = (dd / 20) ** 2 * .2; pri += p; why.head_off_torso = +p.toFixed(3); } }
+  if (Math.abs(Math.sin(psi * Math.PI / 180)) < .8 && conf('ankleL') && conf('ankleR') && conf('hipL') && conf('hipR')) {
+    const sg = (a, b) => Math.sign(a[0] - b[0]), painted = sg(t.markers.ankleL, t.markers.ankleR) * sg(t.markers.hipL, t.markers.hipR);
+    const aL = P2('anL'), aR = P2('anR'), hL = P2('hipL'), hR = P2('hipR'), cand = sg(aL, aR) * sg(hL, hR);
+    if (painted > 0 && cand < 0 && Math.abs(aL[0] - aR[0]) > 3 * s) { pri += .3; why.legs_cross = .3; } }
+  for (const sd of ['L', 'R']) for (const [a, b, ma, mb] of [['sh', 'el', 'shoulder', 'elbow'], ['el', 'wr', 'elbow', 'wrist'], ['hip', 'kn', 'hip', 'knee'], ['kn', 'an', 'knee', 'ankle']]) {
+    const A = a + sd, B = b + sd; if (!conf(ma + sd) || !conf(mb + sd)) continue; const L = L3(A, B) * s; if (!L) continue;
+    const pa = Math.min(1.05, Math.hypot(t.markers[ma + sd][0] - t.markers[mb + sd][0], t.markers[ma + sd][1] - t.markers[mb + sd][1]) / L);
+    const qa = P2(A), qb = P2(B), ca = Math.hypot(qa[0] - qb[0], qa[1] - qb[1]) / L;
+    if (pa >= .75 && ca < pa - .15) { const p = ((pa - .15 - ca) / .25) ** 2 * .15; pri += p; why['planar_' + A + B] = +p.toFixed(3); } }
+  if (E.err0 != null) { const p = .1 * Math.max(0, err - 1.3 * E.err0 - 1); if (p) { pri += p; why.markers_worse_than_old = +p.toFixed(3); } }   // never trade the joints away for silhouette
+  const obj = (1 - iou) + .04 * err + pri;
+  return { obj, iou, err, pri, why, warnings: r.warnings };
+}
+const VARS = [['ox', 4], ['oy', 4], ['psi', 5], ['pitch', 8], ['roll', 8], ['twist', 10], ['tf', 10], ['tb', 8], ['hf', 10], ['hb', 10],
+  ['shLf', 15], ['shLb', 15], ['elL', 15], ['wrL', 15], ['shRf', 15], ['shRb', 15], ['elR', 15], ['wrR', 15],
+  ['hpLf', 12], ['hpLb', 10], ['knL', 15], ['anL', 10], ['hpRf', 12], ['hpRb', 10], ['knR', 15], ['anR', 10], ['shLt', 15], ['shRt', 15], ['hpLt', 10], ['hpRt', 10]];
+function clampP(n, v) { const l = PC.LIM[n]; return l ? Math.max(l[0], Math.min(l[1], v)) : v; }
+function viewLabel(psi) { const vk = PC.viewKey(psi); if (vk === 'front' || vk === 'back') return vk; return vk + (Math.sin(psi * Math.PI / 180) > 0 ? ' facing right' : ' facing left'); }
+async function resolveOne(id, opt = {}) {
+  const T0 = performance.now(), t = DOC.targets.find(t => t.id === id); if (!t) return { id, error: 'no target' };
+  if (!t.solves?.length) return { id, error: 'no solve to start from' };
+  const s0 = t.solves[0], s = s0.scale_px_per_cm, f = (opt.maskH || 150) / t.h;
+  const mk = await maskOf(t, f), cv = document.createElement('canvas'); cv.width = mk.W; cv.height = mk.H;
+  const E = { t, s, f, m: mk.m, W: mk.W, H: mk.H, g: cv.getContext('2d', { willReadFrequently: true }) };
+  const seeds = [];
+  t.solves.forEach((sv, i) => { const p = { ...(sv.pose?.params || sv.params) };
+    seeds.push({ psi: sv.psi, params: p, from: `solves[${i}]` });
+    const zm = PC.mirror(PC.fromParams(p)), pm = { ...p }; PC.PN.forEach((n, k) => pm[n] = zm[k]); seeds.push({ psi: sv.psi, params: pm, from: `solves[${i}] L/R mirrored` }); });
+  for (const sd of seeds) sd.sc = score(E, sd);
+  const before = seeds[0].sc; E.err0 = before.err; for (const sd of seeds) sd.sc = score(E, sd); seeds.sort((a, b) => a.sc.obj - b.sc.obj);
+  let best = null, evals = seeds.length;
+  for (const sd of seeds.slice(0, opt.starts || 3)) {
+    let cur = { psi: sd.psi, params: { ...sd.params }, from: sd.from }, cs = sd.sc;
+    for (const scale of [1, .5, .25]) for (let pass = 0; pass < 2; pass++) { let moved = false;
+      for (const [n, st] of VARS) { let bestTry = null;
+        for (const dir of [1, -1]) { const c = { psi: cur.psi, params: { ...cur.params }, from: cur.from };
+          if (n === 'psi') { c.psi = cur.psi + dir * st * scale; if (Math.abs(c.psi - sd.psi) > 20) continue; } else c.params[n] = clampP(n, (cur.params[n] || 0) + dir * st * scale);
+          const sc = score(E, c); evals++; if (sc.obj < (bestTry?.sc.obj ?? cs.obj) - 1e-4) bestTry = { c, sc }; }
+        if (bestTry) { cur = bestTry.c; cs = bestTry.sc; moved = true; } }
+      if (!moved) break; }
+    if (!best || cs.obj < best.sc.obj) best = { x: cur, sc: cs };
+  }
+  // pictures at a readable size: before (solves[0]) and after, the painting registration
+  const pic = x => { const F = 420 / t.h, c2 = document.createElement('canvas'); c2.width = Math.round(t.w * F); c2.height = 420; const g2 = c2.getContext('2d');
+    const z = PC.fromParams(x.params), J = PC.fk(DOC.skeleton, z); P.renderPose(g2, { contract: C, library: LIB, joints3d: frameOf(J), port: portOf(t, x.psi, s, x.params.ox || 0, x.params.oy || 0, F) }); return c2.toDataURL('image/png'); };
+  const r3 = v => +v.toFixed(3);
+  const out = { id, ms: Math.round(performance.now() - T0), evals,
+    before: { from: 'solves[0]', psi: s0.psi, iou: r3(before.iou), marker_err_cm: r3(before.err), priors: r3(before.pri), obj: r3(before.obj), why: before.why },
+    after: { from: best.x.from, psi: r3(best.x.psi), iou: r3(best.sc.iou), marker_err_cm: r3(best.sc.err), priors: r3(best.sc.pri), obj: r3(best.sc.obj), why: best.sc.why, warnings: best.sc.warnings },
+    solve: { psi: +best.x.psi.toFixed(2), view: viewLabel(best.x.psi), seed: 'puppet-in-loop (' + best.x.from + ')', labels: s0.labels,
+      params: Object.fromEntries(Object.entries(best.x.params).map(([k, v]) => [k, +(+v).toFixed(3)])), scale_px_per_cm: s,
+      iou: r3(best.sc.iou), mean_err_cm: r3(best.sc.err), against: 'puppet silhouette (PuppetCore.renderPose) + markers + style priors',
+      pose: { iou: r3(best.sc.iou), mean_err_cm: r3(best.sc.err), params: Object.fromEntries(Object.entries(best.x.params).map(([k, v]) => [k, +(+v).toFixed(3)])) },
+      score: r3(best.sc.iou * Math.exp(-best.sc.err / 10)) } };
+  if (opt.pics) { out.png_before = pic({ psi: s0.psi, params: s0.pose?.params || s0.params }); out.png_after = pic(best.x); }
+  return out;
+}
+async function boot() {
+  [C, LIB, DOC] = await Promise.all([json(Q.get('contract') || 'contracts/poet.json'), json('library.json'), json(Q.get('poses') || '../rig/poses/poet__red_black_sunglasses.json')]);
+  await P.prepare({ contract: C, library: LIB });
+  window.__doc = { about: DOC.about, n: DOC.targets.length, ids: DOC.targets.map(t => t.id) };
+  window.__resolve = resolveOne; window.__ready = true; document.getElementById('log').textContent = 'ready ' + DOC.targets.length;
+}
+boot().catch(e => { window.__error = String(e && e.stack || e); document.getElementById('log').textContent = window.__error; });
+</script>
+</body>
+</html>
