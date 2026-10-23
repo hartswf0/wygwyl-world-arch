@@ -181,8 +181,30 @@ def blind4(ch, keyfile, outdir='/tmp/claude-0/blind4', keyout='/tmp/claude-0/-ho
     json.dump(key, open(keyout, 'w'), indent=1)
     print('blind4', len(ids), 'renders ->', outdir, '; key ->', keyout)
 
+def blind5(ch, keyfile, outdir='/tmp/claude-0/blind5', keyout='/tmp/claude-0/-home-user/f7ade34c-fa5f-538f-b092-e7629f2f6294/scratchpad/blind5_key.json',
+           paintings_from=('/tmp/claude-0/blind4', '/tmp/claude-0/blind3')):
+    """blind5: as blind4 (same poses as keyfile, a new shuffle) but named f01..fNN, with the critic's paintings_part*.jpg sheets copied in
+    beside them. Only f??.jpg and paintings_part*.jpg in outdir are replaced; the key goes to a scratch path outside the repo.
+    Run only when the orchestrator says so (renders must be current): python3 compose.py poet --blind5 results/blind1_key.json"""
+    import glob, shutil
+    rd = os.path.join(HERE, ch, 'renders'); K1 = json.load(open(keyfile)); K1 = K1.get('files', K1); os.makedirs(outdir, exist_ok=True)
+    for f in glob.glob(os.path.join(outdir, 'f[0-9][0-9].jpg')): os.remove(f)
+    src = next((d for d in paintings_from if glob.glob(os.path.join(d, 'paintings_part*.jpg'))), None)
+    if not src: sys.exit('blind5: no paintings_part*.jpg found in ' + ', '.join(paintings_from))
+    for f in sorted(glob.glob(os.path.join(src, 'paintings_part*.jpg'))): shutil.copy(f, os.path.join(outdir, os.path.basename(f)))
+    ids = [v['id'] for v in K1.values()]; random.Random(os.urandom(16)).shuffle(ids)
+    key = {'about': 'BLIND KEY (blind5): not for critics. file -> painting number on paintings_contact.jpg and pose id.', 'paintings_from': src, 'files': {}}
+    S = {p['id']: p for p in json.load(open(os.path.join(HERE, ch, 'summary.json')))['poses']}
+    for i, pid in enumerate(ids):
+        im = on_bg(Image.open(os.path.join(rd, pid.replace('/', '__') + '.png')).convert('RGBA')); im = fit(im, H / im.height)
+        b = Image.new('RGB', (im.width + 40, H + 40), BG); b.paste(im, (20, 20)); name = 'f%02d.jpg' % (i + 1)
+        b.save(os.path.join(outdir, name), quality=82); key['files'][name] = {'painting': S[pid].get('n'), 'id': pid}
+    json.dump(key, open(keyout, 'w'), indent=1)
+    print('blind5', len(ids), 'renders ->', outdir, '; key ->', keyout)
+
 if __name__ == '__main__':
     if '--index' in sys.argv: index()
+    elif '--blind5' in sys.argv: blind5(sys.argv[1], sys.argv[sys.argv.index('--blind5') + 1])   # poet --blind5 results/blind1_key.json
     elif '--blind4' in sys.argv: blind4(sys.argv[1], sys.argv[sys.argv.index('--blind4') + 1])   # e.g. poet --blind4 results/blind1_key.json
     elif '--blind2' in sys.argv: blind2(sys.argv[1], sys.argv[sys.argv.index('--blind2') + 1], sys.argv[sys.argv.index('--name') + 1] if '--name' in sys.argv else 'blind2')
     else: compose(sys.argv[1])

@@ -85,8 +85,8 @@ async function drawProps(ctx, list, phase, g) {
       const ww = im.width * sc, hh = im.height * sc, flip = pr.flip === 'auto' && g.facing === 'left', bottom = pr.size_cm ? g.floorY : Y + h;
       drawAt(ctx, im, X + w / 2, bottom - hh / 2, ww, hh, flip); drawn.push(pr.card + ' (box)');
     } else if (pr.place === 'seat') {
-      const hh = pr.size_cm * g.k, ww = hh * ar, pel = g.pelvis;
-      drawAt(ctx, im, pel[0], pel[1] + 4 * g.k - .55 * hh + hh / 2, ww, hh, g.facing === 'left'); drawn.push(pr.card + ' (seat)');
+      const hh = pr.size_cm * g.k, ww = pr.width_cm ? pr.width_cm * g.k : hh * ar, pel = g.pelvis, sy = pr.seat_y ?? .55;   // its seat surface under the hip line
+      drawAt(ctx, im, pel[0], pel[1] + 6 * g.k - sy * hh + hh / 2, ww, hh, g.facing === 'left'); drawn.push(pr.card + ' (seat)');
     } else if (pr.place === 'stand') {
       const hand = g.hand(pr.hand); if (!hand) continue; const hh = pr.size_cm * g.k, ww = pr.width_cm ? pr.width_cm * g.k : Math.max(4, hh * ar);
       drawAt(ctx, im, hand.mid[0], g.floorY - hh / 2, ww, hh, false); drawn.push(pr.card + ' (stand)');
@@ -128,18 +128,22 @@ function pickChains(H, jo, port, view, ratios) {
   }
   return picks;
 }
+const cross3_ = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 // move one wrist (and its hand) to the ear and re-bend the elbow with two-bone IK (Pose Lab body frame: X his left, Y down, Z forward);
 // the hand is the one the painting shows nearer the head (its labelled wrist markers)
-function handToEar(J, S, t) {
+function handToEar(J, S, t, where = 'ear') {
   const M = t.markers || {}, hd = M.head || M.chin; let s = 'R';
   if (hd && M.wristL && M.wristR) s = Math.hypot(M.wristL[0] - hd[0], M.wristL[1] - hd[1]) < Math.hypot(M.wristR[0] - hd[0], M.wristR[1] - hd[1]) ? 'L' : 'R';
   const sub = (a, b) => a.map((v, i) => v - b[i]), add = (a, b) => a.map((v, i) => v + b[i]), mul = (a, k) => a.map(v => v * k), nrm = a => { const l = Math.hypot(...a) || 1; return a.map(v => v / l); };
   const lat = nrm(sub(J['sh' + s], J['sh' + (s === 'L' ? 'R' : 'L')])), up = nrm(sub(J.top, J.neck));
-  const ear = add(J.headC, mul(lat, 8)), W = add(add(ear, mul(up, -7)), mul(lat, 3)), Sh = J['sh' + s];
+  const fwd = nrm(cross3_(sub(J.shL, J.shR), mul(up, -1)));
+  const ear = where === 'mouth' ? add(add(J.chin, mul(fwd, 9)), mul(lat, 2)) : add(J.headC, mul(lat, 8));
+  const W = where === 'mouth' ? add(add(ear, mul(up, -9)), mul(fwd, 2)) : add(add(ear, mul(up, -7)), mul(lat, 3)), Sh = J['sh' + s];
   const l1 = S['uarm' + s], l2 = S['farm' + s], d = sub(W, Sh), L = Math.min(l1 + l2 - .5, Math.hypot(...d)), u = nrm(d);
   const a = (l1 * l1 - l2 * l2 + L * L) / (2 * L), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
   let pole = nrm(add(mul(lat, 1), [0, 1, 0])); pole = nrm(sub(pole, mul(u, pole.reduce((x, v, i) => x + v * u[i], 0))));   // the elbow out and down
   J['el' + s] = add(add(Sh, mul(u, a)), mul(pole, h)); J['wr' + s] = add(Sh, mul(u, L)); J['tip' + s] = add(J['wr' + s], mul(up, S['hand' + s] || 19));
+  return s;
 }
 function handFrom(segs, geo, kU, offX, offY) {
   const hseg = s => segs.find(x => x.k === 'hand_' + s);
@@ -147,6 +151,20 @@ function handFrom(segs, geo, kU, offX, offY) {
       if (sm && a && b) { const c = [sm.centroid[0] * kU + offX, sm.centroid[1] * kU + offY], da = Math.hypot(a.end[0] - c[0], a.end[1] - c[1]), db = Math.hypot(b.end[0] - c[0], b.end[1] - c[1]); s = da < db ? 'L' : 'R'; }
       else s = a && b ? (a.end[1] < b.end[1] ? 'L' : 'R') : a ? 'L' : 'R'; }
     const h = hseg(s); return h && { side: s, mid: [(h.P[0] + h.end[0]) / 2, (h.P[1] + h.end[1]) / 2] }; };
+}
+const cutMemo = {};
+async function cutSides(t, q = .9) { return cutMemo[t.img + q] ||= await cutSides_(t, q); }
+async function cutSides_(t, q) {   // the card touches its own left / right / top edge with the figure (the cutter cut it off)
+  const im = await loadImg('/shots/' + t.img); if (!im) return [];
+  const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const g = c.getContext('2d'); g.drawImage(im, 0, 0);
+  const d = g.getImageData(0, 0, c.width, c.height).data, A = (x, y) => d[(y * c.width + x) * 4 + 3] > 128;
+  // A cut edge is straight: the silhouette at the card's edge carries on inward at the same height (edge coverage / coverage 6-8 px in >= .9; a wheel rim tangent to the box reaches .85),
+  // and it covers a real stretch of the edge (>= 24%). A limb that merely touches the bounding box tapers away from it and fails the ratio.
+  // The cutter's line can sit a pixel or two inside the card (anti-aliased border), so the edge is the strongest of the outer three lines.
+  const col = x => { let n = 0; for (let y = 0; y < c.height; y++) n += A(x, y); return n / c.height; }, row = y => { let n = 0; for (let x = 0; x < c.width; x++) n += A(x, y); return n / c.width; };
+  const W = c.width - 1, mx = (f, ks) => Math.max(...ks.map(f));
+  const isCut = (f, edge, inner) => { const e = mx(f, edge), i = mx(f, inner); return e >= .24 && i > 0 && e / i >= q; };
+  return [isCut(col, [0, 1, 2], [6, 7, 8]) && 'left', isCut(col, [W, W - 1, W - 2], [W - 6, W - 7, W - 8]) && 'right', isCut(row, [0, 1, 2], [6, 7, 8]) && 'top'].filter(Boolean);
 }
 function bboxOf(cv) {
   const g = cv.getContext('2d'), d = g.getImageData(0, 0, cv.width, cv.height).data; let x0 = cv.width, y0 = cv.height, x1 = -1, y1 = -1;
@@ -181,8 +199,9 @@ async function run(ch, file, U, opts) {
       // the Pose Lab fk() result goes to renderPose as is (its fromPoseLab converts it: head matrix, pelvis height); jo is the same
       // conversion, for choosing chains and placing props
       const J = PC.fk(D.skeleton, PC.PN.map(n => sol.params[n] ?? 0));
-      const props = (PM.poses || {})[t.id], hands = { ...((PM.hands || {})[t.id] || {}) };
-      for (const pr of props || []) if (pr.hand_to === 'ear') handToEar(J, D.skeleton, t);   // the painting holds the handset at the ear
+      const props = ((PM.poses || {})[t.id] || null)?.map(pr => ({ ...pr })), hands = { ...((PM.hands || {})[t.id] || {}) };
+      // the painting holds the handset at the ear, the cup at the mouth; the prop goes in the hand that was raised
+      for (const pr of props || []) if (pr.hand_to) pr.hand ||= handToEar(J, D.skeleton, t, pr.hand_to);
       const jo = P.fromPoseLab(J), args = { contract: C, joints3d: J, port, psi: sol.psi, ground: false, handStates: hands };
       const dry = P.renderPose(null, args), view = dry.view, ratios = Object.fromEntries((dry.cards || []).map(c => [c.part, c.projRatio]));
       // harvested chains (leave one painted pose and its family out), forced through the contract's own card slots for this call
@@ -196,6 +215,32 @@ async function run(ch, file, U, opts) {
         P.S.cardPpc[g.c.id] = g.c.px_per_cm;
       }
       for (const id of new Set(picks.flatMap(pk => pk.got.map(g => g.c.id)))) await new Promise(r => { const im = P.img(P.S.byId[id]); if (im.complete && im.naturalWidth) r(); else { im.onload = im.onerror = r; setTimeout(r, 4000); } });
+      // sunglasses: where the painting shows them, a head that wears them (front: the kit's master/front; else a clean harvested
+      // head from another painting family, the closest head direction); scaled to the contract head's neck-to-crown length
+      let headSwap = null;
+      const glasses = /red_black/.test(file) && !(PM.glasses_absent || []).includes(t.id), hc = (dry.cards || []).find(c => c.part === 'head');
+      if (glasses && hc && P.S.skin.head) {
+        const hv = hc.view, cid0 = P.S.skin.head.cards[hv] || P.S.skin.head.cards.front, c0 = P.S.byId[cid0];
+        let pick = null;
+        if (VG(hv) === 'front' && hv !== 'threequarter') pick = P.S.byId['poet.red_black_sunglasses.master/front'];
+        else if (harvest) { const want = camDir(jo, 'neckBase', 'headTop', port); let best = -1;
+          const cands = [];
+          for (const c of harvest) { if (c.slot !== 'head' || c.bad || !c.source || family(c.source) === family(t.id) || (PM.glasses_absent || []).includes(c.source) || !c.dir_cam) continue;
+            if (VG(c.view) !== VG(hv) && !(hv === 'side' && c.view === 'profile')) continue;
+            const cs = cosv(c.dir_cam, want); if (cs >= .8) cands.push([cs, c]); }
+          // a head the painting's own frame cut through (half a face) is no head: skip it for the next closest
+          for (const [, c] of cands.sort((a, b) => b[0] - a[0])) if (!(await cutSides({ img: c.img.replace(/^\.\.\//, '') }, .8)).length) { pick = c; break; } }   // feathered harvest edges: a looser ratio (.8)
+        if (pick && c0) {
+          if (!P.S.byId[pick.id]) { P.S.lib.push(pick); P.S.byId[pick.id] = pick; }
+          if (pick.facing && !pick.faces) pick.faces = pick.facing === 'left' ? 'L' : 'R';
+          const AB_ = c => { const f = P.S.fix[c.id] || {}, A = f.A || c.A, B = f.B || c.B; return Math.hypot(B[0] - A[0], B[1] - A[1]); };
+          const ppc0 = P.S.cardPpc[cid0]; if (ppc0) P.S.cardPpc[pick.id] = ppc0 * AB_(pick) / AB_(c0);
+          saved.head ||= { cards: { ...P.S.skin.head.cards }, states: P.S.skin.head.states };
+          P.S.skin.head.cards = { ...P.S.skin.head.cards, [hv]: pick.id };
+          await new Promise(r => { const im = P.img(pick); if (im.complete && im.naturalWidth) r(); else { im.onload = im.onerror = r; setTimeout(r, 4000); } });
+          headSwap = pick.id;
+        }
+      }
       // props: the kit's cards, placed by the painting's layout and the puppet's own hands and pelvis
       const pel = port.p(jo.pelvis);
       const geo = { kU, offX, offY, k: port.k, facing: sol.psi % 180 === 0 ? 'camera' : (((sol.psi % 360) + 360) % 360 < 180 ? 'right' : 'left'), pelvis: pel, floorY: t.floor * kU + offY,
@@ -213,11 +258,14 @@ async function run(ch, file, U, opts) {
       const bb = bboxOf(cv), pb = [offX, offY, offX + t.w * kU, offY + t.h * kU];
       const u = bb ? [Math.min(bb[0], pb[0]), Math.min(bb[1], pb[1]), Math.max(bb[2], pb[2]), Math.max(bb[3], pb[3])] : pb;
       const m = Math.round(.05 * (u[3] - u[1])), crop = [Math.max(0, u[0] - m), Math.max(0, u[1] - m), Math.min(FW, u[2] + m), Math.min(FH, u[3] + m)];
+      // where the painting cuts the figure off, the render is cut at the same edge, so like is compared with like
+      const cut = await cutSides(t);
+      if (cut.includes('left')) crop[0] = Math.round(pb[0]); if (cut.includes('right')) crop[2] = Math.round(pb[2]); if (cut.includes('top')) crop[1] = Math.round(pb[1]);
       const o = document.createElement('canvas'); o.width = crop[2] - crop[0]; o.height = crop[3] - crop[1]; o.getContext('2d').drawImage(cv, -crop[0], -crop[1]);
       const sh = s => ({ ...s, P: [s.P[0] - crop[0], s.P[1] - crop[1]], Q: [s.Q[0] - crop[0], s.Q[1] - crop[1]], end: [s.end[0] - crop[0], s.end[1] - crop[1]] });
       const psi = sol.psi;
       out.push({ ...base, view: PC.viewKey(psi), psi, facing: psi % 180 === 0 ? (Math.abs(psi) === 180 ? 'away' : 'camera') : ((psi % 360) + 360) % 360 < 180 ? 'right' : 'left',
-        solve_iou: sol.iou, solve_err_cm: sol.mean_err_cm, poses_dir: posesDir, hand_states: hands, resolved: sol.resolved ?? null, via: 'PuppetCore.renderPose', props: behind.concat(front),
+        solve_iou: sol.iou, solve_err_cm: sol.mean_err_cm, poses_dir: posesDir, hand_states: hands, head_swap: headSwap, cropped_sides: cut, resolved: sol.resolved ?? null, via: 'PuppetCore.renderPose', props: behind.concat(front),
         chains: picks.map(pk => ({ source: pk.src, parts: pk.got.map(g => g.k + ':' + Math.round(g.cos * 100) + '%') })),
         frame: { kU, paintX: offX - crop[0], paintY: offY - crop[1], w: o.width, h: o.height }, puppet_bbox: bb && [bb[0] - crop[0], bb[1] - crop[1], bb[2] - crop[0], bb[3] - crop[1]],
         segments: (r.segments || []).map(sh), cards: r.cards, warnings: r.warnings, png: o.toDataURL('image/png') });
