@@ -41,6 +41,9 @@ PIECE_C, SNAP_C, STUD_C = .006, .004, .003
 SNAP_B, STUD_B = .004, .003          # bonus (share of figure) used while ranking attachments
 OVL = .12
 MAXSTEPS = 45
+ANG = 30                 # degrees between growth variants (the settle refines by 3 and 6)
+KS = (.9, 1.1)           # uniform scales of the growth variants (x target px/cm / card px/cm)
+SUBSET = .35             # share of the pieces tried at one growth step (seeded by the program prefix: deterministic)
 
 
 # ------------------------------------------------------------------ variants with brads
@@ -53,7 +56,7 @@ def build(pieces, t):
             continue
         a = p['px'][..., 3] / 255.
         h, w = a.shape
-        for k in FL.K_STEPS:
+        for k in KS:
             g = t['s'] / p['ppc'] * k * t['r']
             if g * max(h, w) < 3:
                 continue
@@ -64,7 +67,7 @@ def build(pieces, t):
             bs = p['brads'] * [sw_ / w, sh_ / h]
             D = int(math.ceil(math.hypot(sh_, sw_))) + 2
             for mir in (0, 1):
-                for ang in range(0, 360, FL.ANG_STEP):
+                for ang in range(0, 360, ANG):
                     M = FL.rot_mat(ang, mir, 1.0, (sw_ / 2, sh_ / 2), (D / 2, D / 2))
                     m = cv2.warpAffine(small, M, (D, D), flags=cv2.INTER_LINEAR) > .5
                     ys, xs = np.nonzero(m)
@@ -109,6 +112,8 @@ class Grower:
         self.rng = random.Random(seed)
         self.cache = {}
         self.prior = prior or {}                  # {(parent piece id, child piece id): count} (learned grammar)
+        ids = {p['id']: i for i, p in enumerate(self.pieces)}
+        self.prior_piece = {ids[c]: 1 for (_, c) in self.prior if c in ids}   # always tried in prior mode
         yy, xx = np.mgrid[0:self.shape[0], 0:self.shape[1]]
         self.yy, self.xx = yy, xx
 
@@ -177,10 +182,12 @@ class Grower:
                 st.free.append((idx, j))
         return st
 
-    def candidates(self, st):
+    def candidates(self, st, key=()):
         """top attachments: (rank value, vi, loc, free brad, my brad)"""
         if not st.free:
             return []
+        rs = random.Random(hash(key) & 0xffffffff)
+        tried = {pi for pi in range(len(self.pieces)) if rs.random() < SUBSET}
         S = self.score(st)
         Hs, Ws = S.shape
         F = np.array([st.placed[f[0]]['bw'][f[1]] for f in st.free])
@@ -212,6 +219,8 @@ class Grower:
         for vi, v in enumerate(self.V):
             if v['area'] + bonus_max - self.lam <= thr:
                 break                          # variants are sorted by area: nothing later can beat the threshold
+            if v['pi'] not in tried and not self.prior_piece.get(v['pi']):
+                continue
             rad = v['rad']
             if rad not in rcache:
                 rcache[rad] = reach(rad)
@@ -262,8 +271,8 @@ class Grower:
                 thr = heap[0][0]
         return [h[1:] for h in sorted(heap, key=lambda x: -x[1])[:TOPK]]
 
-    def step(self, st, rank):
-        C = self.candidates(st)
+    def step(self, st, rank, key=()):
+        C = self.candidates(st, key)
         C = [c for c in C if c[5] - self.lam > 0]          # the piece must pay for itself in coverage
         if not C:
             st.done = True
@@ -290,7 +299,7 @@ class Grower:
         i = k
         while not st.done and len(st.placed) < MAXSTEPS:
             r = prog[i] if i < len(prog) else 0
-            st, ch = self.step(st, r)
+            st, ch = self.step(st, r, key + tuple(used))
             if ch is None:
                 break
             used.append(r)
