@@ -58,6 +58,11 @@ def load_markers(char='poet__red_black_sunglasses'):
             out.update({t['id']: t for t in json.load(open(f))['targets']})
         for tid in getattr(spec, 'EXCLUDE_TARGETS', {}):
             out.pop(tid, None)
+        for tid, fix in getattr(spec, 'MARKER_FIX', {}).items():     # hand corrections {id: {marker: (x, y)}}
+            m = dict(out[tid]['markers'])
+            for k, (x, y) in fix.items():
+                m[k] = [float(x), float(y)] + list(m.get(k, [0, 0, 1.0, 'fix', 1.0])[2:4]) + [1.0]
+            out[tid] = dict(out[tid], markers=m)
         _MK[char] = out
     return _MK[char]
 

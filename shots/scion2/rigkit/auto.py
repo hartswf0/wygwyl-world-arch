@@ -66,8 +66,16 @@ def find_brads(rgb, fig, T):
     return out
 
 
-def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True):
-    """plain_fn(rgb, fig) -> mask of plain cloth to fill hidden areas from (default: the poet's black fabric)"""
+def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True, tip_len=0.22, open_torso=0.0, hand_skin=False, split_legs=False):
+    """plain_fn(rgb, fig) -> mask of plain cloth to fill hidden areas from (default: the poet's black fabric);
+    tip_len: hand length beyond the wrist, in torso lengths (bare, long-fingered hands need more);
+    open_torso: if > 0, the torso mask is opened with a disc of that many torso lengths and keeps
+    its main piece (drops sleeve slivers and skin scraps the arm masks left behind);
+    hand_skin: bare hands -- skin pixels near a wrist that touch that arm join it (fingers spread
+    wider than an arm's width);
+    split_legs: the near leg (his right when he faces screen right) is its own layer in front of the
+    far leg and the seat, its top fading into the seat, so a stride that differs from the master's
+    does not smear the cloth between the thighs"""
     H, W = a.shape
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     fig = a > 0.5
@@ -102,7 +110,7 @@ def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True):
     for S in 'RL':
         f = J['wr' + S] - J['el' + S]
         f = f / (np.linalg.norm(f) + 1e-6)
-        J['tip' + S] = J['wr' + S] + 0.22 * T * f
+        J['tip' + S] = J['wr' + S] + tip_len * T * f
         toe = m.get('toe' + S)
         if toe and toe[4] >= 0.35 and np.linalg.norm(np.array(toe[:2]) - J['an' + S]) > 0.1 * T:
             J['to' + S] = np.array(toe[:2], float)
@@ -146,6 +154,15 @@ def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True):
                 if dArm[S][comp].min() < 0.05 * T:
                     keep |= comp
             arm[S] = keep
+    if hand_skin:
+        sk = (rgb[..., 2] > 70) & (rgb[..., 2] > rgb[..., 1] + 12) & (rgb[..., 1] > rgb[..., 0] + 15) & fig & ~head
+        for S in 'RL':
+            other = 'L' if S == 'R' else 'R'
+            near_w = np.hypot(xx - J['wr' + S][0], yy - J['wr' + S][1]) < 0.5 * T
+            cand = (sk & near_w & ~arm[other]).astype(np.uint8)
+            n_, lab_, st_, _ = cv2.connectedComponentsWithStats(cand | arm[S].astype(np.uint8))
+            ids = np.unique(lab_[arm[S]])
+            arm[S] |= (cand > 0) & np.isin(lab_, ids[ids > 0])
     legs_vis = fig & ~head & ~arm['R'] & ~arm['L'] & ((np.minimum(dLeg['R'], dLeg['L']) < rL) |
                                                        (((xx - J['midhip'][0]) * up[0] + (yy - J['midhip'][1]) * up[1]) < -0.05 * T))
     torso_vis = fig & ~head & ~arm['R'] & ~arm['L'] & ~legs_vis
@@ -162,6 +179,13 @@ def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True):
     torso_m = (torso_vis | torso_q) & ~(legs_vis & below) & ~(head & (rel_h > s0 + 3))
     if not torso_over_legs:     # the filled torso stops at the jacket hem: no fill over the trousers' waist
         torso_m &= ~legs_vis
+    if open_torso > 0:
+        k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(open_torso * T) | 1,) * 2)
+        tm = cv2.morphologyEx(torso_m.astype(np.uint8), cv2.MORPH_OPEN, k)
+        n_, lab_, st_, _ = cv2.connectedComponentsWithStats(tm)
+        if n_ > 1:
+            tm = (lab_ == 1 + np.argmax(st_[1:, cv2.CC_STAT_AREA])).astype(np.uint8)
+        torso_m &= tm > 0
     torso_rgb = inpaint(rgb, torso_m & ~torso_vis, torso_vis & plain)
     waist_q = np.array([J['hipR'] + 0.25 * T * up, J['hipL'] + 0.25 * T * up, J['hipL'], J['hipR']], np.float32)
     cw = waist_q.mean(0)
@@ -191,6 +215,35 @@ def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True):
                            'hand' + S: [('wr' + S, 'tip' + S)]},
                     tau=0.025 * T, hand={S: (float(hx), float(hy), float(-f[0]), float(-f[1]))}, side=S)
 
+    legN = None
+    if split_legs:
+        nl = 'R' if ch[0] >= J['neck'][0] else 'L'
+        fl = 'L' if nl == 'R' else 'R'
+        hip = J['hip' + nl]
+        kv = J['kn' + nl] - hip; kl = np.linalg.norm(kv) + 1e-6; kv = kv / kl
+        t_th = (xx - hip[0]) * kv[0] + (yy - hip[1]) * kv[1]
+        # the near leg is in front: it owns every pixel within its own width, the far leg the rest
+        nearL = legs_vis & ((dLeg[nl] < 0.13 * T) | (dLeg[nl] < dLeg[fl])) & (t_th > -0.02 * T)
+        n_, lab_, st_, _ = cv2.connectedComponentsWithStats(nearL.astype(np.uint8))
+        if n_ > 1:
+            nearL = lab_ == 1 + np.argmax(st_[1:, cv2.CC_STAT_AREA])
+        seat = nearL & (np.hypot(xx - hip[0], yy - hip[1]) < 0.2 * T)
+        # the far leg where the near one hides it is filled in along its bones from its own cloth
+        # (the near leg's own painted outline, a few px round it, goes with it)
+        nearD = (cv2.dilate(nearL.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))) > 0) & legs_vis
+        hidden = nearD & (dLeg[fl] < 0.12 * T) & ~seat
+        legs_m = (legs_m & ~nearD) | seat | hidden    # the far layer keeps the seat under the near hip
+        known = legs_m & ~nearD & legs_vis & plain
+        refill = hidden | seat                        # plain cloth: no painted outline of the near thigh left behind
+        legs_rgb = np.where(refill[..., None], inpaint(rgb, refill, known), legs_rgb)
+        # no fade at its top (the torso is drawn over it; a fade shows as haze where it is not), but no
+        # paper edge there either
+        seam_n = nearL & (t_th < 0.19 * T)
+        aNL = nearL.astype(np.float32)
+        legN = dict(name='legN', rgb=rgb.copy(), alpha=aNL.astype(np.float32), edgeok=(~seam_n).astype(np.float32),
+                    bones={'pelvis': [('waist', 'midhip')], 'thigh' + nl: [('hip' + nl, 'kn' + nl)],
+                           'shin' + nl: [('kn' + nl, 'an' + nl)], 'foot' + nl: [('an' + nl, 'to' + nl)]},
+                    tau=0.03 * T)
     layers = [
         arm_layer(far, aF, None),
         dict(name='legs', rgb=legs_rgb, alpha=legs_m.astype(np.float32), edgeok=(~((wq > 0) & ~legs_vis)).astype(np.float32),
@@ -204,6 +257,8 @@ def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True):
              tau=1.0, is_head=True),
         arm_layer(near, aN, seamN),
     ]
+    if legN is not None:
+        layers.insert(2, legN)
     # brads
     brads = []
     jl = {'sh': ('uarm', 'arm'), 'el': ('farm', 'arm'), 'hip': ('thigh', 'legs'), 'kn': ('shin', 'legs'), 'an': ('foot', 'legs')}
@@ -216,6 +271,8 @@ def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True):
                     best, bd = (j + S, bone + S, lay + S if lay == 'arm' else lay), d
         if best:
             jn, bone, lay = best
+            if legN is not None and lay == 'legs' and jn[-1] == nl:
+                lay = 'legN'
             if jn.startswith('sh') and lay == 'arm' + far:
                 lay, bone = 'torso', 'chest'
             brads.append((jn, lay, bone, bx, by, max(br, 0.04 * T), max(br * 1.5, 0.07 * T)))
