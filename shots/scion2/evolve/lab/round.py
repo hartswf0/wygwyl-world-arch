@@ -45,7 +45,7 @@ def safe(tid):
 def algo_hash(name):
     src = open(os.path.join(HERE, 'algos', name + '.py'), 'rb').read()
     deps = b''
-    for d in ('../puzzle/fill.py', '../puzzle/grow.py', 'harness.py'):
+    for d in ('../puzzle/fill.py', '../puzzle/grow.py', '../puzzle/pieces.py', '../puzzle/hygiene.py', 'harness.py'):
         deps += open(os.path.join(HERE, d), 'rb').read()
     return hashlib.sha1(src + deps).hexdigest()[:12]
 
@@ -178,7 +178,7 @@ def job(a):
             r = {'algo': al, 'target': entry['id'], 'error': repr(e), 'hash': hsh}
         json.dump(r, open(f, 'w'))
         out.append(r)
-        print('%s %s %s' % (al, entry['id'], {k: round(v, 3) for k, v in r.get('scores', {}).items()} if 'scores' in r else r.get('error')), flush=True)
+        print('%s %s %s' % (al, entry['id'], {k: round(v, 3) for k, v in r.get('scores', {}).items() if isinstance(v, (int, float))} if 'scores' in r else r.get('error')), flush=True)
     return out
 
 
@@ -193,7 +193,7 @@ def means(R, algo):
     rs = [r['scores'] for r in R if r['algo'] == algo and 'scores' in r]
     if not rs:
         return {}
-    out = {k: float(np.nanmean([s[k] for s in rs])) for k in rs[0]}
+    out = {k: float(np.nanmean([s[k] for s in rs])) for k in rs[0] if isinstance(rs[0][k], (int, float))}
     out['n'] = len(rs)
     out['one_component'] = sum(1 for s in rs if s['components'] == 1)
     return out

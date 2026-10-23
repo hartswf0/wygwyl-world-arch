@@ -14,8 +14,10 @@ Scores (score()):
   components  connected components of the snapped graph (pieces with no edge are their own component); a body is 1
   pieces, snaps
   clip        cosine of CLIP ViT-B/32 image embeddings, render vs reference, same crop, same neutral background
-  Q           coverage - 10 overflow - 0.05 (components - 1) - 0.003 pieces + 0.5 clip   (the selection proxy; the
-              blind critic's verdicts outrank it)
+  segments_missing  skeleton segments (head, torso, hips, each upper arm / forearm / hand / thigh / shin / foot) whose
+              region of the figure is less than 50% covered (round 02)
+  Q           coverage - 10 overflow - 0.05 (components - 1) - 0.003 pieces + 0.5 clip - 0.05 segments_missing
+              (the selection proxy; the blind critic's verdicts outrank it)
 """
 import importlib, json, math, os, sys, time
 import numpy as np, cv2
@@ -76,6 +78,28 @@ def skeleton_distance(t):
     Z = np.zeros((H, W), np.float32)
     Z[ys, xs] = D
     return Z
+
+
+def segment_coverage(t, U):
+    """share of each skeleton segment's region of the figure (pixels nearest that segment) that the assembly covers"""
+    m = t['markers']
+    mid = (m['hipL'] + m['hipR']) / 2
+    segs = {'head': (m['neck'], m['neck'] + 1.3 * (m['head'] - m['neck'])), 'torso': (m['neck'], mid), 'hips': (m['hipL'], m['hipR'])}
+    for S in 'LR':
+        e, w_ = m['elbow' + S], m['wrist' + S]
+        segs.update({'upper_arm' + S: (m['shoulder' + S], e), 'forearm' + S: (e, w_), 'hand' + S: (w_, w_ + .6 * (w_ - e)),
+                     'thigh' + S: (m['hip' + S], m['knee' + S]), 'shin' + S: (m['knee' + S], m['ankle' + S]), 'foot' + S: (m['ankle' + S], m['toe' + S])})
+    ys, xs = np.nonzero(t['fig_t'])
+    P = np.stack([xs, ys], 1).astype(np.float64)
+    names = list(segs)
+    lab = np.argmin(np.stack([FL.AS_seg(P, a, b) for a, b in segs.values()], 1), 1)
+    cov = U[ys, xs]
+    out = {}
+    for i, nm in enumerate(names):
+        sel = lab == i
+        if sel.sum() >= 20:
+            out[nm] = float(cov[sel].mean())
+    return out
 
 
 def FL_resample(t):
@@ -179,7 +203,11 @@ def score(ctx, asm):
         clip = float('nan')
     s = {'coverage': float((U & fig).sum() / area), 'overflow': float((U & ~fd & ~ign).sum() / area),
          'components': int(comp) if n else 0, 'pieces': n, 'snaps': len(asm.get('edges', [])), 'clip': clip}
-    s['Q'] = float(s['coverage'] - 10 * s['overflow'] - .05 * max(0, s['components'] - 1) - .003 * n + .5 * (0 if math.isnan(clip) else clip))
+    seg = segment_coverage(t, U)
+    s['segments_missing'] = int(sum(1 for v in seg.values() if v < .5))
+    s['segment_coverage'] = {k: round(v, 3) for k, v in seg.items()}
+    s['Q'] = float(s['coverage'] - 10 * s['overflow'] - .05 * max(0, s['components'] - 1) - .003 * n + .5 * (0 if math.isnan(clip) else clip)
+                   - .05 * s['segments_missing'])
     return s, ms, ren
 
 

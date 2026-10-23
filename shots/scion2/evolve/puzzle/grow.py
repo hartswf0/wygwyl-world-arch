@@ -48,7 +48,8 @@ SUBSET = .35             # share of the pieces tried at one growth step (seeded 
 
 
 # ------------------------------------------------------------------ variants with brads
-def build(pieces, t):
+def build(pieces, t, appear=False):
+    """appear: each variant also carries its paint as CIE-Lab at work resolution (v['lab'], h x w x 3)"""
     V = []
     fig_area = t['inside_w'].sum()
     min_a = max(4, .0015 * fig_area)
@@ -63,6 +64,8 @@ def build(pieces, t):
                 continue
             sw_, sh_ = max(1, int(round(w * g))), max(1, int(round(h * g)))
             small = cv2.resize(a, (sw_, sh_), interpolation=cv2.INTER_AREA)
+            if appear:
+                col = cv2.resize(p['px'][..., :3].astype(np.float32), (sw_, sh_), interpolation=cv2.INTER_AREA)
             if (small > .5).sum() < min_a or (small > .5).sum() > fig_area:
                 continue
             bs = p['brads'] * [sw_ / w, sh_ / h]
@@ -81,8 +84,19 @@ def build(pieces, t):
                                                        - b[None]).T).max(), 1)))
                     V.append({'pi': pi, 'k': k, 'mir': mir, 'ang': ang, 'm': np.ascontiguousarray(mm, np.float32),
                               'c': (D / 2 - x0, D / 2 - y0), 'area': int(len(xs)), 'b': b, 'rad': rad})
+                    if appear:
+                        cr = cv2.warpAffine(col, M, (D, D), flags=cv2.INTER_LINEAR)[y0:y1, x0:x1]
+                        V[-1]['lab'] = to_lab(cr).astype(np.float16)
     V.sort(key=lambda v: -v['area'])
     return V
+
+
+def to_lab(bgr):
+    return cv2.cvtColor(np.clip(bgr, 0, 255).astype(np.uint8), cv2.COLOR_BGR2LAB).astype(np.float32) * [100 / 255., 1, 1] - [0, 128, 128]
+
+
+def wrap_deg(a):
+    return (a + 180) % 360 - 180
 
 
 # ------------------------------------------------------------------ state
@@ -106,9 +120,10 @@ class Grower:
         if ctx is not None:
             self.t = t = ctx['t']
             self.pieces = ctx['pieces']
-            if 'V_grow' not in ctx:
-                ctx['V_grow'] = build(self.pieces, t)
-            self.V = ctx['V_grow']
+            vk = 'V_grow_appear' if self.opts.get('appear') else 'V_grow'
+            if vk not in ctx:
+                ctx[vk] = build(self.pieces, t, appear=bool(self.opts.get('appear')))
+            self.V = ctx[vk]
         else:
             self.t = t = FL.target(char, costume, tid)
             self.pieces, _ = PC.pieces_for(char, costume, tid)
@@ -124,6 +139,15 @@ class Grower:
         self.prior = prior or {}                  # {(parent piece id, child piece id): count} (learned grammar)
         ids = {p['id']: i for i, p in enumerate(self.pieces)}
         self.prior_piece = {ids[c]: 1 for (_, c) in self.prior if c in ids}   # always tried in prior mode
+        self.allowed = self.opts.get('allowed')            # set of piece indices (hygiene), None = all
+        self.heads = self.opts.get('heads') or set()       # piece indices that are heads (one per body, upright)
+        self.PAD = max(max(v['m'].shape) for v in self.V) + 2 if self.V else 64
+        if self.opts.get('appear'):
+            Wk, Hk = t['work_size']
+            ref = t['ref'].astype(np.float32)
+            a = ref[..., 3:] / 255.
+            col = cv2.resize(ref[..., :3] * a, (Wk, Hk), interpolation=cv2.INTER_AREA) / np.maximum(cv2.resize(a[..., 0], (Wk, Hk), interpolation=cv2.INTER_AREA)[..., None], 1e-3)
+            self.ref_lab = np.pad(to_lab(col), ((0, self.PAD), (0, self.PAD), (0, 0)))
         yy, xx = np.mgrid[0:self.shape[0], 0:self.shape[1]]
         self.yy, self.xx = yy, xx
 
@@ -148,7 +172,7 @@ class Grower:
         S = self.score(State(self.shape))
         out, seen = [], set()
         for vi, v in enumerate(self.V):
-            if len(v['b']) < 2 or v['pi'] in seen:
+            if len(v['b']) < 2 or v['pi'] in seen or v['pi'] in self.heads or (self.allowed is not None and v['pi'] not in self.allowed):
                 continue
             m = v['m']
             if m.shape[0] > S.shape[0] or m.shape[1] > S.shape[1]:
@@ -215,7 +239,10 @@ class Grower:
         fmap = np.nonzero(live)[0]
         Fall = F
         F = F[live]
-        Spad = np.pad(S, ((0, 64), (0, 64)), constant_values=-FL.BIG)
+        Spad = np.pad(S, ((0, self.PAD), (0, self.PAD)), constant_values=-FL.BIG)
+        n_heads = sum(1 for p in st.placed if self.V[p['vi']]['pi'] in self.heads)
+        appear = bool(self.opts.get('appear'))
+        hrot = self.opts.get('head_rot', 180)
         heap = []
         thr = -1e9
         bonus_max = 0.        # prune and keep on raw gain (top TOPK * 3); bonuses re-rank those afterwards
@@ -232,6 +259,10 @@ class Grower:
             if v['area'] + bonus_max - self.lam <= thr:
                 break                          # variants are sorted by area: nothing later can beat the threshold
             if v['pi'] not in tried and not self.prior_piece.get(v['pi']):
+                continue
+            if self.allowed is not None and v['pi'] not in self.allowed:
+                continue
+            if v['pi'] in self.heads and (n_heads >= self.opts.get('max_heads', 99) or abs(wrap_deg(v['ang'])) > hrot):
                 continue
             rad = v['rad']
             if rad not in rcache:
@@ -275,12 +306,26 @@ class Grower:
                     val += SNAP_B * self.area
                 if len(self.studs) and np.min(np.hypot(*(self.studs - p).T)) <= self.snap_r:
                     val += STUD_B * self.area
-            if len(heap) < 3 * TOPK:
+            K = (10 if appear else 3) * TOPK
+            if len(heap) < K:
                 heapq.heappush(heap, (g - self.lam, val, vi, loc, fi, int(j), g))
             elif g - self.lam > heap[0][0]:
                 heapq.heapreplace(heap, (g - self.lam, val, vi, loc, fi, int(j), g))
-            if len(heap) == 3 * TOPK:
+            if len(heap) == K:
                 thr = heap[0][0]
+        if appear:
+            # re-score the shape shortlist by appearance: a covered cell counts +1 when the piece's paint is within
+            # dE 30 of the reference's local colour there, down to -0.3 when it is far (skin on trousers costs)
+            out = []
+            for _, val, vi, loc, fi, j, g in heap:
+                v = self.V[vi]
+                h_, w_ = v['m'].shape
+                win = S[loc[1]:loc[1] + h_, loc[0]:loc[0] + w_]
+                dE = np.linalg.norm(self.ref_lab[loc[1]:loc[1] + h_, loc[0]:loc[0] + w_] - v['lab'].astype(np.float32), axis=-1)
+                wgt = -.3 + 1.3 * np.clip(1 - dE / 30., 0, 1)
+                ga = float((np.where(win > 0, win * wgt, win) * v['m']).sum())
+                out.append((val - g + ga, vi, loc, fi, j, ga))
+            return sorted(out, key=lambda x: -x[0])[:TOPK]
         return [h[1:] for h in sorted(heap, key=lambda x: -x[1])[:TOPK]]
 
     def step(self, st, rank, key=()):
@@ -330,6 +375,20 @@ class Grower:
             if len(self.cache) < 6000:
                 self.cache[key + tuple(used)] = st.copy()
         return st, used
+
+    def force(self, st, pis):
+        """attach the best piece from pis (e.g. a head) at any free brad, even if it does not pay the piece cost"""
+        a0, lam0 = self.allowed, self.lam
+        self.allowed, self.lam = set(pis), 0.
+        try:
+            C = [c for c in self.candidates(st, ('force',)) if c[5] > 0]
+        finally:
+            self.allowed, self.lam = a0, lam0
+        if not C:
+            return st, None
+        val, vi, loc, fi, j, g = C[0]
+        f = st.free[fi]
+        return self.place(st.copy(), vi, loc, f[0], f[1], j), C[0]
 
     def fitness(self, st):
         ins = self.t['inside_w']

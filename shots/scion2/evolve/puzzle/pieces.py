@@ -57,7 +57,8 @@ def card_pixels(cid, img, erase):
     mask = np.zeros((ff.shape[0] + 2, ff.shape[1] + 2), np.uint8)
     cv2.floodFill(ff, mask, (0, 0), 2)
     holes = ff[1:-1, 1:-1] == 1
-    im[..., 3][holes] = 255
+    if holes.sum() < .03 * hard.sum():          # small keyed-out specks only; a hole painted on purpose (hollow chest) stays
+        im[..., 3][holes] = 255
     return im
 
 
