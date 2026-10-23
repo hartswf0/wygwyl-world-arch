@@ -66,7 +66,35 @@ def build(view):
     rgb, a = im[..., :3], im[..., 3] / 255.
     S = fn(rgb, a)
     J = S['joints']
-    meta = {'master': mid, 'view': view, 'joints': {k: list(v) for k, v in J.items()}, 'layers': []}
+    meta = {'master': mid, 'view': view, 'joints': {k: list(v) for k, v in J.items()}, 'layers': [],
+            'brads': [list(b) for b in S.get('brads', [])]}
+    # every painted brad is removed from every layer (filled from the surrounding cloth/leather);
+    # each is drawn back once at render time from one clean source brad
+    b_, g_, r_ = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    goldish = (r_ > 110) & (r_ - b_ > 40)
+    yy, xx = np.mgrid[0:a.shape[0], 0:a.shape[1]].astype(np.float32)
+    for L in S['layers']:
+        img = np.clip(L['rgb'], 0, 255).astype(np.uint8)
+        for (_, _, _, bx, by, br, rr) in S.get('brads', []):
+            circ = (xx - bx) ** 2 + (yy - by) ** 2 <= rr * rr
+            if not (circ & (L['alpha'] > 0.5)).any():
+                continue
+            ring = ((xx - bx) ** 2 + (yy - by) ** 2 <= (rr + 6) ** 2) & ~circ & ~goldish & (a > 0.5)
+            m = (~ring).astype(np.uint8) * 255
+            src = img.copy(); src[~ring] = 0
+            filled = cv2.inpaint(src, m, 6, cv2.INPAINT_TELEA)
+            img[circ] = filled[circ]
+        L['rgb'] = img.astype(np.float32)
+    # the one clean source brad: the front master's right-shoulder brad, 6x, round soft edge
+    fm = read_rgba(os.path.join(CUT, specs.MASTERS['front'][0] + '.webp')).astype(np.float32)
+    K, cx, cy, R0 = 6, 116.3, 86.0, 8.5
+    big = cv2.resize(fm[int(cy) - 12:int(cy) + 13, int(cx) - 12:int(cx) + 13], None, fx=K, fy=K, interpolation=cv2.INTER_CUBIC)
+    gy, gx = np.mgrid[0:big.shape[0], 0:big.shape[1]].astype(np.float32)
+    ox, oy = (cx - (int(cx) - 12)) * K, (cy - (int(cy) - 12)) * K
+    d = np.hypot(gx - ox, gy - oy) / K
+    big[..., 3] = 255 * np.clip((R0 - d) * 2.0 + 0.5, 0, 1)
+    cv2.imwrite(os.path.join(out, 'brad.png'), np.clip(big, 0, 255).astype(np.uint8))
+    meta['brad_src'] = {'painting': specs.MASTERS['front'][0], 'center': [ox / K, oy / K], 'K': K, 'brass_r': 6.5, 'R0': R0}
     for L in S['layers']:
         al = strip_edge(L['alpha'], S['fig'], S['border'])
         rgba = np.dstack([np.clip(L['rgb'], 0, 255), np.clip(al * 255, 0, 255)]).astype(np.uint8)
@@ -76,12 +104,7 @@ def build(view):
         dM = cv2.distanceTransform(np.pad(S['fig'].astype(np.uint8), 1), cv2.DIST_L2, 5)[1:-1, 1:-1]
         E = np.where(L['edgeok'] < 0.5, 0.0, np.where(dM < S['border'] + 2.5, 1.0, 0.5))
         cv2.imwrite(os.path.join(out, f"edge_{L['name']}.png"), (E * 255).astype(np.uint8))
-        brads = []
-        for j, b, r in L.get('brads', []):
-            c = refine_brad(rgb, J[j])
-            brads.append([j, b, float(c[0]), float(c[1]), r])
         m = {k: L[k] for k in ('name', 'bones', 'tau', 'torso', 'hand', 'is_head', 'side') if k in L}
-        m['brads'] = brads
         meta['layers'].append(m)
     cv2.imwrite(os.path.join(out, 'master.png'), im.astype(np.uint8))
     json.dump(meta, open(os.path.join(out, 'rig.json'), 'w'), indent=1)
@@ -117,7 +140,10 @@ class Rig:
         self.tex, self.edge, self.mesh, self.nohand = {}, {}, {}, {}
         master = read_rgba(os.path.join(d, 'master.png'))
         mu = cv2.resize(master.astype(np.float32), None, fx=U, fy=U, interpolation=cv2.INTER_CUBIC)
-        self.brad_tex = {}
+        self.brads = self.meta.get('brads', [])
+        bs = cv2.imread(os.path.join(d, 'brad.png'), cv2.IMREAD_UNCHANGED).astype(np.float32)
+        bs[..., :3] *= bs[..., 3:] / 255.
+        self.brad_spr = (bs, self.meta['brad_src'])
         for L in self.layers:
             n = L['name']
             rgba = cv2.imread(os.path.join(d, f'layer_{n}.png'), cv2.IMREAD_UNCHANGED)
@@ -131,15 +157,6 @@ class Rig:
                 yy, xx = np.mgrid[0:H, 0:W].astype(np.float32) / U
                 keep = np.clip(((xx - x0) * nx + (yy - y0) * ny) / 1.5, 0, 1)
                 self.nohand[n] = self.tex[n] * keep[..., None]
-            for j, b, x, y, r in L['brads']:
-                R = int(math.ceil(r * U)) + 2
-                M = np.float32([[1, 0, -(x * U - R)], [0, 1, -(y * U - R)]])
-                spr = cv2.warpAffine(mu, M, (2 * R + 1, 2 * R + 1), flags=cv2.INTER_LINEAR)
-                gy, gx = np.mgrid[0:2 * R + 1, 0:2 * R + 1]
-                dd = np.sqrt((gx - R) ** 2 + (gy - R) ** 2) / U
-                spr[..., 3] = np.clip(spr[..., 3], 0, 255) * np.clip((r - dd) / 1.2 + 0.5, 0, 1)
-                spr[..., :3] *= spr[..., 3:] / 255.
-                self.brad_tex[j] = (spr, R)
 
     def _mesh(self, L, mask, step):
         H, W = mask.shape
@@ -320,19 +337,22 @@ class Rig:
             acc = self._piece(acc, lay, E, sc_o)
             if cuff is not None:
                 acc = over(acc, cuff)
-            for j, b, bx, by, r in L['brads']:
-                spr, R = self.brad_tex[j]
+            for (bn, bl, b, bx, by, br, rr) in self.brads:
+                if bl != n:
+                    continue
+                spr, meta = self.brad_spr
                 Mb = A[b]
                 p = Mb[:, :2] @ np.array([bx, by]) + Mb[:, 2]
                 po = Gs[:, :2] @ p + Gs[:, 2]
-                s = sc_o / U
-                half = int(math.ceil(s * R)) + 3
+                k = sc_o * br / meta['brass_r'] / meta['K']        # sprite px -> output px
+                ox, oy = meta['center'][0] * meta['K'], meta['center'][1] * meta['K']
+                half = int(math.ceil(k * spr.shape[0])) + 3
                 cx0, cy0 = max(int(po[0]) - half, 0), max(int(po[1]) - half, 0)
                 cx1, cy1 = min(int(po[0]) + half + 1, W2), min(int(po[1]) + half + 1, H2)
                 if cx1 <= cx0 or cy1 <= cy0:
                     continue
-                M = np.float32([[s, 0, po[0] - s * R - cx0], [0, s, po[1] - s * R - cy0]])
-                so = cv2.warpAffine(spr, M, (cx1 - cx0, cy1 - cy0), flags=cv2.INTER_LINEAR)
+                M = np.float32([[k, 0, po[0] - k * ox - cx0], [0, k, po[1] - k * oy - cy0]])
+                so = cv2.warpAffine(spr, M, (cx1 - cx0, cy1 - cy0), flags=cv2.INTER_AREA)
                 acc[cy0:cy1, cx0:cx1] = over(acc[cy0:cy1, cx0:cx1], so)
         out = cv2.resize(acc, (Wo, Ho), interpolation=cv2.INTER_AREA)
         # drop detached specks (stray texels from a part's margin): keep components >= 2% of the figure

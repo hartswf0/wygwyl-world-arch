@@ -95,9 +95,14 @@ def build_front(rgb, a):
         xo2 = np.interp(y, [80, 100, 130, 160, HEM], [216, 216, 211, 208, 208])
         side[y, int(xo):int(interp_x(y, DIV_R)) + 1] = True
         side[y, int(interp_x(y, DIV_L)):int(xo2) + 1] = True
-    side &= fig | (yy < 152)
+    side &= fig | (yy < 160)
+    # the jacket body with rounded shoulders: no square tab beyond the deltoid
+    halfR = [(140, 58), (128, 64), (118, 70), (110, 77), (106, 86), (105, 96), (107, 120), (110, 150), (110, HEM + 1)]
+    body = poly(H, W, halfR + [(319 - x, y) for x, y in halfR[::-1]])
+    torso_vis &= body
+    side &= body
     neck = (yy >= 44) & (yy < 66) & (xx > 145) & (xx < 175)
-    torso_m = torso_vis | side | (neck & head)
+    torso_m = ((torso_vis | side | (neck & head)) & (body | (neck & head))) | (body & (yy > 60))
     plain = plain_fabric(rgb, fig)
     fill = torso_m & ~torso_vis
     torso_rgb = inpaint(rgb, fill, torso_vis & plain)
@@ -122,19 +127,25 @@ def build_front(rgb, a):
         dict(name='legs', rgb=legs_rgb, alpha=legs_m.astype(np.float32), edgeok=legs_ok,
              bones={'pelvis': [('waist', 'crotch'), ('hipR', 'hipL')], 'thighR': [('hipR', 'knR')], 'shinR': [('knR', 'anR')],
                     'footR': [('anR', 'toR')], 'thighL': [('hipL', 'knL')], 'shinL': [('knL', 'anL')], 'footL': [('anL', 'toL')]},
-             tau=3.2, brads=[('hipR', 'thighR', 10.5), ('hipL', 'thighL', 10.5), ('knR', 'shinR', 13), ('knL', 'shinL', 13)]),
+             tau=3.2),
         dict(name='torso', rgb=torso_rgb, alpha=torso_m.astype(np.float32), edgeok=ones(a),
-             bones='torso', torso=dict(y0=128, y1=176, caps=[('shR', 'uarmR'), ('shL', 'uarmL')], cx=159.5), brads=[]),
+             bones='torso', torso=dict(y0=128, y1=176, caps=[('shR', 'uarmR'), ('shL', 'uarmL')], cx=159.5)),
         dict(name='head', rgb=rgb.copy(), alpha=head_a, edgeok=head_ok, bones={'head': [('headpiv', 'headtop')]}, tau=1.0,
-             brads=[], is_head=True),
+             is_head=True),
         dict(name='armR', rgb=rgb.copy(), alpha=aR, edgeok=(~seamR).astype(np.float32),
              bones={'chest': [('neck', 'shR')], 'uarmR': [('shR', 'elR')], 'farmR': [('elR', 'wrR')], 'handR': [('wrR', 'tipR')]},
-             tau=2.6, brads=[('shR', 'uarmR', 11), ('elR', 'farmR', 9.5)], hand={'R': (50.0, 0, 1.0, 0.0)}, side='R'),
+             tau=2.6, hand={'R': (50.0, 0, 1.0, 0.0)}, side='R'),
         dict(name='armL', rgb=rgb.copy(), alpha=aL, edgeok=(~seamL).astype(np.float32),
              bones={'chest': [('neck', 'shL')], 'uarmL': [('shL', 'elL')], 'farmL': [('elL', 'wrL')], 'handL': [('wrL', 'tipL')]},
-             tau=2.6, brads=[('shL', 'uarmL', 11), ('elL', 'farmL', 9.5)], hand={'L': (270.0, 0, -1.0, 0.0)}, side='L'),
+             tau=2.6, hand={'L': (270.0, 0, -1.0, 0.0)}, side='L'),
     ]
-    return dict(joints=J, layers=layers, border=3.5, fig=fig)
+    # brads: (name, layer drawn after, bone, x, y, brass radius, removal radius)
+    brads = [('shR', 'armR', 'uarmR', 116.3, 86.0, 6.5, 10), ('elR', 'armR', 'farmR', 94.0, 147.0, 6.0, 9),
+             ('shL', 'armL', 'uarmL', 203.0, 86.0, 6.5, 10), ('elL', 'armL', 'farmL', 226.0, 146.0, 6.0, 9),
+             ('hipR', 'legs', 'thighR', 129.0, 190.0, 6.5, 10), ('hipL', 'legs', 'thighL', 189.0, 190.0, 6.5, 10),
+             ('knR', 'legs', 'shinR', 120.0, 287.0, 6.5, 11), ('knL', 'legs', 'shinL', 198.0, 287.0, 6.5, 11),
+             ('anR', 'legs', 'footR', 105.0, 363.0, 6.0, 12), ('anL', 'legs', 'footL', 214.0, 362.0, 6.0, 12)]
+    return dict(joints=J, layers=layers, border=3.5, fig=fig, brads=brads)
 
 
 # ---------------------------------------------------------------- 3/4 to screen right
@@ -169,8 +180,11 @@ def build_q3(rgb, a):
                        (100, 86), (118, 78)])
     front = poly(H, W, [(140, 66), (146, 90), (149, 115), (150, 140), (146, 140), (143, 100), (138, 70)])
     neck = poly(H, W, [(118, 44), (140, 50), (146, 66), (124, 68)])
-    torso_m = torso_vis | (back & (armN | ~fig) & (yy > 58)) | (front & (armF | fig)) | (neck & head) | \
-        (armN & (yy < 96) & (xx > 66))   # shoulder top stays on the jacket under the sleeve's fade
+    body = poly(H, W, [(112, 52), (100, 57), (86, 62), (75, 74), (68, 94), (65, 125), (66, HEM + 2), (153, HEM + 2),
+                       (152, 140), (149, 110), (145, 86), (140, 66), (128, 58)])
+    torso_m = (torso_vis | (back & (armN | ~fig) & (yy > 58)) | (front & (armF | fig)) | (neck & head) |
+               (armN & (yy < 96) & (xx > 66)) | body) & (body | (neck & head))
+    torso_vis &= body
     plain = plain_fabric(rgb, fig, 7)
     torso_rgb = inpaint(rgb, torso_m & ~torso_vis, torso_vis & plain)
     torso_rgb[neck & head] = np.median(rgb[40:50, 150:156].reshape(-1, 3), 0) * 0.55
@@ -178,8 +192,9 @@ def build_q3(rgb, a):
     legs_vis = fig & (yy >= HEM - 6) & ~armN & ~armF
     near = legs_vis & poly(H, W, [(60, 160), (100, 172), (104, 200), (108, 232), (100, 300), (70, 384), (0, 384), (0, 160)])
     farp = legs_vis & ~near
-    waist = (yy >= 135) & (yy < HEM + 4) & poly(H, W, [(72, 135), (150, 135), (158, HEM + 4), (66, HEM + 4)])
-    farp_m = farp | waist | (near & (yy < 205))   # the seat continues under the near thigh's top
+    waist = (yy >= 148) & (yy < HEM + 4) & poly(H, W, [(74, 148), (148, 148), (152, HEM + 4), (70, HEM + 4)])
+    hipc = (xx - J['hipR'][0]) ** 2 + (yy - J['hipR'][1]) ** 2 <= 16 ** 2
+    farp_m = farp | waist | (near & hipc & (yy < 200))   # the seat continues under the near hip only
     lrgb = inpaint(rgb, farp_m & ~(farp & (yy > HEM + 2)), legs_vis & (yy > HEM + 2) & (yy < 230) & plain, 7)
     # near leg's top fades into the seat around the hip
     near_a = near.astype(np.float32)
@@ -195,23 +210,28 @@ def build_q3(rgb, a):
     layers = [
         dict(name='armL', rgb=rgb.copy(), alpha=armF.astype(np.float32), edgeok=ones(),
              bones={'chest': [('neck', 'shL')], 'uarmL': [('shL', 'elL')], 'farmL': [('elL', 'wrL')], 'handL': [('wrL', 'tipL')]},
-             tau=2.4, brads=[('elL', 'farmL', 7.5)], hand={'L': (0, 184.0, 0.0, -1.0)}, side='L'),
+             tau=2.4, hand={'L': (0, 184.0, 0.0, -1.0)}, side='L'),
         dict(name='legs', rgb=lrgb, alpha=farp_m.astype(np.float32), edgeok=(yy > HEM - 2).astype(np.float32),
              bones={'pelvis': [('waist', 'crotch'), ('hipR', 'hipL')], 'thighL': [('hipL', 'knL')], 'shinL': [('knL', 'anL')],
                     'footL': [('anL', 'toL')]},
-             tau=3.0, brads=[('hipL', 'thighL', 10.5), ('knL', 'shinL', 11)]),
+             tau=3.0),
         dict(name='legN', rgb=nrgb, alpha=near_a, edgeok=(~seam_n).astype(np.float32),
              bones={'pelvis': [('waist', 'midhip')], 'thighR': [('hipR', 'knR')], 'shinR': [('knR', 'anR')], 'footR': [('anR', 'toR')]},
-             tau=3.0, brads=[('knR', 'shinR', 12)]),
+             tau=3.0),
         dict(name='torso', rgb=torso_rgb, alpha=torso_m.astype(np.float32), edgeok=ones(),
-             bones='torso', torso=dict(y0=115, y1=160, caps=[('shR', 'uarmR')], cx=118.0), brads=[]),
+             bones='torso', torso=dict(y0=115, y1=160, caps=[('shR', 'uarmR')], cx=118.0)),
         dict(name='head', rgb=rgb.copy(), alpha=head_a, edgeok=(yy < cy - 4).astype(np.float32),
-             bones={'head': [('headpiv', 'headtop')]}, tau=1.0, brads=[], is_head=True),
+             bones={'head': [('headpiv', 'headtop')]}, tau=1.0, is_head=True),
         dict(name='armR', rgb=rgb.copy(), alpha=aN, edgeok=(~seamA).astype(np.float32),
              bones={'chest': [('neck', 'shR')], 'uarmR': [('shR', 'elR')], 'farmR': [('elR', 'wrR')], 'handR': [('wrR', 'tipR')]},
-             tau=2.6, brads=[('shR', 'uarmR', 11), ('elR', 'farmR', 10.5)], hand={'R': (0, 176.0, 0.0, -1.0)}, side='R'),
+             tau=2.6, hand={'R': (0, 176.0, 0.0, -1.0)}, side='R'),
     ]
-    return dict(joints=J, layers=layers, border=3.5, fig=fig)
+    brads = [('shR', 'armR', 'uarmR', 98.0, 70.0, 5.5, 9), ('elR', 'armR', 'farmR', 58.0, 123.0, 5.7, 9),
+             ('shL', 'torso', 'chest', 147.0, 82.0, 5.0, 8), ('elL', 'armL', 'farmL', 155.0, 139.0, 4.5, 7),
+             ('hipL', 'legs', 'thighL', 105.0, 169.0, 5.7, 9), ('knL', 'legs', 'shinL', 145.0, 253.0, 6.0, 10),
+             ('anL', 'legs', 'footL', 167.0, 334.0, 6.0, 11), ('knR', 'legN', 'shinR', 74.0, 262.0, 6.0, 10),
+             ('anR', 'legN', 'footR', 32.0, 324.0, 5.7, 11)]
+    return dict(joints=J, layers=layers, border=3.5, fig=fig, brads=brads)
 
 
 MASTERS = {
