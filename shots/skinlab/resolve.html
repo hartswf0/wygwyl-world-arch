@@ -22,6 +22,7 @@ html, body { margin: 0; background: var(--bg); color: var(--ink); font: 13px/1.4
      (1 - silhouette IoU)  +  .04 x marker error (cm, weighted mean of the labelled 2D joints)  +  style priors:
      - a painted head is drawn full size: penalise a head foreshortened below 85%, and a head tilted on screen away from the
        painting's chin->head line (or, without confident head markers, more than 15 deg off the torso)
+     - the torso's screen axis (groin -> neck) follows the painting's markers
      - standing legs do not cross unless the painting's ankle markers cross (front, back, three-quarter views)
      - a limb painted at full length is not end-on: its projected/true length follows the painting's marker length
      - proportions (kT..kHd, which the old solves fit per painting) are searched too but pulled to the character's own (.3 x sum k^2)
@@ -79,8 +80,13 @@ function score(E, x) {
   { const n2 = P2('neck'), t2 = P2('top'), rh = Math.hypot(t2[0] - n2[0], t2[1] - n2[1]) / (L3('neck', 'top') * s);
     if (rh < .85) { const p = ((.85 - rh) / .25) ** 2 * .4; pri += p; why.head_foreshortened = +p.toFixed(3); }
     const ac = ang(n2, t2);
-    if (conf('chin') && conf('head')) { const ap = ang(t.markers.chin, t.markers.head), p = (dA(ac, ap) / 25) ** 2 * .2; pri += p; why.head_tilt_vs_painting = +p.toFixed(3); }
+    if (conf('neck') && conf('head')) { const ap = ang(t.markers.neck, t.markers.head), p = (dA(ac, ap) / 25) ** 2 * .2; pri += p; why.head_tilt_vs_painting = +p.toFixed(3); }
     else { const at = ang(P2('waist'), n2), dd = Math.max(0, Math.abs(dA(ac, at)) - 15), p = (dd / 20) ** 2 * .2; pri += p; why.head_off_torso = +p.toFixed(3); } }
+  if (conf('neck') && conf('groin')) {   // the torso leans (or folds forward) as painted: groin -> neck axis on screen
+    const ap = ang(t.markers.groin, t.markers.neck), ac = ang(P2('pelvis'), P2('neck')), p = (dA(ac, ap) / 20) ** 2 * .3; pri += p; why.torso_vs_painting = +p.toFixed(3);
+    // and folds toward the camera as much as painted: its on-screen length over its true length follows the painting's
+    const L = L3('pelvis', 'neck') * s, pl = Math.hypot(t.markers.groin[0] - t.markers.neck[0], t.markers.groin[1] - t.markers.neck[1]) / L, qa = P2('pelvis'), qb = P2('neck'), cl = Math.hypot(qa[0] - qb[0], qa[1] - qb[1]) / L;
+    if (pl < .9) { const p2 = ((cl - pl) / .2) ** 2 * .3; pri += p2; why.torso_fold_vs_painting = +p2.toFixed(3); } }
   if (Math.abs(Math.sin(psi * Math.PI / 180)) < .8 && conf('ankleL') && conf('ankleR') && conf('hipL') && conf('hipR')) {
     const sg = (a, b) => Math.sign(a[0] - b[0]), painted = sg(t.markers.ankleL, t.markers.ankleR) * sg(t.markers.hipL, t.markers.hipR);
     const aL = P2('anL'), aR = P2('anR'), hL = P2('hipL'), hR = P2('hipR'), cand = sg(aL, aR) * sg(hL, hR);

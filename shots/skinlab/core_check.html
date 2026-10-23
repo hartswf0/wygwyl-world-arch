@@ -40,8 +40,9 @@ window.__render = (id, si = 0) => {
   const s = t.solves[si]; if (!s) return { error: 'no solve' };
   const pr = s.pose?.params || s.params, z = PoseCore.fromParams(pr), J = PoseCore.fk(DOC.skeleton, z);
   g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#505060'; g.fillRect(0, 0, cv.width, cv.height);
-  const res = P.renderPose(g, { contract: window.__contract, joints3d: J, psi: s.psi, heightPx: 560, x: cv.width / 2, y: cv.height - 50, harvest: window.__harvest, harvestExclude: id });
-  delete res.sol; res.id = id; res.solve = { psi: s.psi, view: s.view, score: s.score ?? t.score };
+  // target: the painting's own markers decide the head axis and a hand held at the head
+  const res = P.renderPose(g, { contract: window.__contract, joints3d: J, psi: s.psi, heightPx: 560, x: cv.width / 2, y: cv.height - 50, harvest: window.__harvest, harvestExclude: id, target: t });
+  window.__last = res.sol; delete res.sol; res.id = id; res.solve = { psi: s.psi, view: s.view, score: s.score ?? t.score };
   document.getElementById('log').textContent = JSON.stringify(res, null, 1);
   return res;
 };
