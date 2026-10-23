@@ -80,3 +80,17 @@ Python 3 with numpy, scipy, OpenCV (cv2) and scikit-image; ffmpeg at /usr/bin/ff
 ## 7. Deliverables
 - `shots/scion2/<h>/`: the code, a `README.md` (method, what it can't do), `out/<test id>.png` (12 reproductions), `out/move.mp4` and `out/move_strip.jpg`, and `gaps.json` (H2 and others: the poses it couldn't reach, with painting briefs).
 - `shots/scion2/BAKEOFF.md` (orchestrator): the three judges' verdicts per hypothesis, the card-puppet control, the winner and why, and the next step.
+
+## Amendment 1 (after H3 round 2; applies from round 3; earlier scores stand)
+**Problem.** The mean critic fails poses for parts that exist only in the target painting's own family:
+- the phone (09);
+- the laughing head (12);
+- sunglasses held in the hand (13);
+- the chest emblem (04).
+
+Under leave-one-family-out for everything, those parts are unreachable, so the test demanded what it forbade.
+
+**Rule from round 3.**
+- **The BODY POSE** (the master or rig, and limb placement) still comes only from other families. This is the generalisation test: poses nobody painted.
+- **REPLACEMENT PARTS** may come from any painting except the target painting itself (leave-one-painting-out). Parts are heads and expressions, hands and hand-props, props, and costume details such as the emblem. This matches production, where a parts library holds every drawing of him.
+- Every output records the source painting of every part, and the orchestrator checks that none is the target.
