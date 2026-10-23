@@ -33,12 +33,14 @@ def _P(m, k):
     return np.array(m[k][:2], float)
 
 
-def torso_len(t):
+def torso_len(t, prior=True):
+    """neck -> mid-hip in px; with prior, a length outside 36-54 cm of the card's scale prior is
+    replaced by 45 cm (a character module sets SCALE_PRIOR = False when its prior is wrong)"""
     m = t['markers']
     mid = (_P(m, 'hipR') + _P(m, 'hipL')) / 2
     T = float(np.linalg.norm(_P(m, 'neck') - mid))
     ppcm = t.get('scale_prior', {}).get('px_per_cm')
-    if ppcm and not (36 * ppcm < T < 54 * ppcm):
+    if prior and ppcm and not (36 * ppcm < T < 54 * ppcm):
         T = TORSO_CM * ppcm
     return T
 
@@ -101,7 +103,7 @@ def cut_auto(char, tid, t, catalog, index):
     H, W = im.shape[:2]
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     m = t['markers']
-    T = torso_len(t)
+    T = torso_len(t, getattr(core.char_module(char), 'SCALE_PRIOR', True))
     th = torso_axis(t)
     fig = im[..., 3] > 127
     sk = skin(im[..., :3]) & fig
@@ -203,7 +205,7 @@ def cut_curated(char, pid, c, index, MK):
         (ax_, ay), (bx, by) = c['seat_line']
         seat_ok &= ((xx - ax_) * (by - ay) - (yy - ay) * (bx - ax_)) * c.get('seat_sign', 1) > 4 * math.hypot(bx - ax_, by - ay)
     if c['src'] in MK:
-        T = torso_len(MK[c['src']])
+        T = torso_len(MK[c['src']], getattr(core.char_module(char), 'SCALE_PRIOR', True))
     else:
         T = c['torso']
     meta = dict(kind=c['kind'], painting=c['src'], family=c['src'].split('/')[0], torso=T, attrs=c.get('attrs', {}), curated=True)
