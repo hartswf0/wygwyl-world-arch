@@ -42,8 +42,40 @@ def context(char, costume, tid):
         t['ignore'] = t['ignore'] | drop
         t['fig_t'] = t['fig_t'] & ~drop
         FL_resample(t)
+    # props merged with the figure (a door frame, a table, a window): alpha farther than PROP_CM from every segment
+    # of the Pose Lab skeleton is not the figure (round 02)
+    Z = skeleton_distance(t)
+    prop = t['fig_t'] & (Z > PROP_CM * t['s'])
+    if prop.any():
+        n, lab, st, _ = cv2.connectedComponentsWithStats(prop.astype(np.uint8))
+        for i in range(1, n):
+            if st[i, cv2.CC_STAT_AREA] >= 40:          # specks at the outline stay figure
+                t['ignore'] = t['ignore'] | (lab == i)
+                t['fig_t'] = t['fig_t'] & ~(lab == i)
+        FL_resample(t)
     pieces, gone = PC.pieces_for(char, costume, tid)
     return {'t': t, 'pieces': pieces, 'excluded': gone, 'char': char, 'costume': costume, 'id': tid}
+
+
+PROP_CM = 16.0
+
+
+def skeleton_distance(t):
+    m = t['markers']
+    mid = (m['hipL'] + m['hipR']) / 2
+    sp = m['neck'] - mid
+    segs = [(m['neck'], m['neck'] + 1.3 * (m['head'] - m['neck'])), (m['neck'], mid), (m['hipL'], m['hipR'])]
+    for S in 'LR':
+        e, w_ = m['elbow' + S], m['wrist' + S]
+        segs += [(m['neck'], m['shoulder' + S]), (m['shoulder' + S], e), (e, w_), (w_, w_ + .6 * (w_ - e)),
+                 (m['hip' + S], m['knee' + S]), (m['knee' + S], m['ankle' + S]), (m['ankle' + S], m['toe' + S])]
+    H, W = t['fig_t'].shape
+    ys, xs = np.nonzero(t['fig_t'])
+    P = np.stack([xs, ys], 1).astype(np.float64)
+    D = np.min(np.stack([FL.AS_seg(P, a, b) for a, b in segs], 1), 1)
+    Z = np.zeros((H, W), np.float32)
+    Z[ys, xs] = D
+    return Z
 
 
 def FL_resample(t):

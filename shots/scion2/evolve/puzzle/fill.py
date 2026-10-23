@@ -108,6 +108,8 @@ def best_of(V, idx, S, lam, SZ=None, vz=None):
     for i in idx:
         v = V[i]
         m = v['m']
+        if m.shape[0] > Hs or m.shape[1] > Ws:
+            continue
         if SZ is not None and vz.get(i) in SZ:
             if v['area'] * (1 + PRIOR_B) - lam <= best[0]:
                 continue

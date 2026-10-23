@@ -87,20 +87,22 @@ def build(pieces, t):
 
 # ------------------------------------------------------------------ state
 class State:
-    __slots__ = ('placed', 'cov', 'free', 'snaps', 'studs_used', 'done')
+    __slots__ = ('placed', 'cov', 'free', 'snaps', 'studs_used', 'done', 'joins', 'ends')
 
     def __init__(self, shape):
         self.placed, self.cov, self.free, self.snaps, self.studs_used, self.done = [], np.zeros(shape, np.float32), [], [], set(), False
+        self.joins, self.ends = {}, False
 
     def copy(self):
         s = State.__new__(State)
         s.placed = list(self.placed); s.cov = self.cov.copy(); s.free = list(self.free); s.snaps = list(self.snaps)
-        s.studs_used = set(self.studs_used); s.done = self.done
+        s.studs_used = set(self.studs_used); s.done = self.done; s.joins = dict(self.joins); s.ends = self.ends
         return s
 
 
 class Grower:
-    def __init__(self, char, costume, tid, seed=0, prior=None, ctx=None):
+    def __init__(self, char, costume, tid, seed=0, prior=None, ctx=None, opts=None):
+        self.opts = dict({'max_joins': 1, 'ends': None}, **(opts or {}))
         if ctx is not None:
             self.t = t = ctx['t']
             self.pieces = ctx['pieces']
@@ -169,7 +171,9 @@ class Grower:
         st.placed.append({'vi': vi, 'loc': loc, 'bw': bw, 'parent': parent, 'pb': pb, 'cb': cb})
         used = {cb} if cb is not None else set()
         if parent is not None:
-            st.free = [f for f in st.free if f != (parent, pb)]
+            st.joins[(parent, pb)] = st.joins.get((parent, pb), 1) + 1
+            if st.joins[(parent, pb)] > self.opts['max_joins']:      # a brad takes max_joins children (1 = a plain pair)
+                st.free = [f for f in st.free if f != (parent, pb)]
             st.snaps.append((parent, pb, idx, cb))
         # extra snaps: another of my brads on another free brad
         for j, p in enumerate(bw):
@@ -280,8 +284,14 @@ class Grower:
         return [h[1:] for h in sorted(heap, key=lambda x: -x[1])[:TOPK]]
 
     def step(self, st, rank, key=()):
-        C = self.candidates(st, key)
-        C = [c for c in C if c[5] - self.lam > 0]          # the piece must pay for itself in coverage
+        lam0 = self.lam
+        if st.ends:
+            self.lam = lam0 * self.opts['ends']                # ends phase: small pieces pay for themselves
+        try:
+            C = self.candidates(st, key)
+            C = [c for c in C if c[5] - self.lam > 0]          # the piece must pay for itself in coverage
+        finally:
+            self.lam = lam0
         if not C:
             st.done = True
             return st, None
@@ -305,11 +315,16 @@ class Grower:
             self.cache[key] = st.copy()
         used = list(prog[:k])
         i = k
-        while not st.done and len(st.placed) < MAXSTEPS:
+        while len(st.placed) < MAXSTEPS:
+            if st.done:
+                if self.opts['ends'] and not st.ends:
+                    st.done, st.ends = False, True
+                else:
+                    break
             r = prog[i] if i < len(prog) else 0
             st, ch = self.step(st, r, key + tuple(used))
             if ch is None:
-                break
+                continue
             used.append(r)
             i += 1
             if len(self.cache) < 6000:
