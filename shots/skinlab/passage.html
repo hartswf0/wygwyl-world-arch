@@ -87,23 +87,42 @@ function transform(seg, pose, T) {   // retarget → neck → mirror → turn �
   let j = Object.keys(K).length ? P.retarget(pose.j, K) : pose.j.map(q => q.slice());
   let fw = [pose.fwd, pose.hfwd, pose.pfwd], props = JSON.parse(JSON.stringify(pose.p));
   if (E.edl.neck_deg) { const c = P.clampNeck(j, fw[0], fw[1], seg.neck_deg ?? E.edl.neck_deg); j = c.j; fw[1] = c.hfwd; }
+  if (seg.upright && pose.up0) {   // the trunk and head held nearer the trial's first (standing) pose: the source bows to a table we do not have
+    const w = seg.upright.w, U = ['spineMid', 'chest', 'neckBase', 'shoulderL', 'shoulderR', 'headBase', 'head', 'headTop', 'nose'], free = (seg.upright.free || []).map(s => seg.mirror ? (s === 'L' ? 'R' : 'L') : s);
+    const p0 = j[0], q0 = pose.up0[0], dS = {};
+    for (const n of U) { const i = ji[n], t = pose.up0[i].map((v, c) => v - q0[c] + p0[c]); dS[n] = t.map((v, c) => (v - j[i][c]) * w); j[i] = j[i].map((v, c) => v + dS[n][c]); }
+    for (const s of free) for (const n of ['elbow', 'wrist']) { const i = ji[n + s]; j[i] = j[i].map((v, c) => v + dS['shoulder' + s][c]); }
+    fw[1] = fw[1].map((v, c) => lerp(v, pose.up0h[c], w));
+  }
   if (seg.mirror) {
     j = MIRROR_IDX.map(i => [-j[i][0], j[i][1], j[i][2]]);
     fw = fw.map(v => [-v[0], v[1], v[2]]);
     for (const q of Object.values(props)) { q.pos[0] = -q.pos[0]; q.held = mirHeld(q.held); q.rot = [q.rot[0], -q.rot[1], -q.rot[2]]; }
   }
   if (seg.rot) { j = j.map(q => rotY(q, seg.rot)); fw = fw.map(v => rotY(v, seg.rot)); for (const q of Object.values(props)) { q.pos = rotY(q.pos, seg.rot); q.rot[1] += seg.rot; } }
+  const lens0 = { L: armLens(j, 'L'), R: armLens(j, 'R') }, moved = new Set();
   for (const w of seg.warp || []) {
     const sf = pose.sf, [a, pk, b] = w.src, k = sf <= a || sf >= b ? 0 : sf <= pk ? smooth((sf - a) / (pk - a)) : smooth((b - sf) / (b - pk));
     for (const n of w.joints) {
       const wt = (w.weights?.[n] ?? 1);
       if (n.startsWith('prop:')) { const q = props[n.slice(5)]; if (q && !q.held) q.pos = q.pos.map((v, i) => v + w.add[i]); else if (q) q.pos = q.pos.map((v, i) => v + w.add[i] * k); continue; }
-      const i = ji[n]; j[i] = j[i].map((v, c) => v + w.add[c] * k * wt);
+      const i = ji[n]; j[i] = j[i].map((v, c) => v + w.add[c] * k * wt); if (/^wrist/.test(n)) moved.add(n.slice(-1));
     }
   }
+  for (const s of moved) fixArm(j, s, ...lens0[s], j[ji['elbow' + s]].map((v, c) => v - (c === 1 ? 25 : 0)));   // the reaching elbow hangs
   if (T) { j = j.map(q => [q[0] + T[0], q[1], q[2] + T[1]]); for (const q of Object.values(props)) q.pos = [q.pos[0] + T[0], q.pos[1], q.pos[2] + T[1]]; }
   return { j, fwd: fw[0], hfwd: fw[1], pfwd: fw[2], p: props, sf: pose.sf };
 }
+// a moved wrist keeps its arm: the elbow is solved again in 3D from the shoulder with the bone lengths the arm had before the
+// move (so a rigid card is never shrunk or grown by a warp), bending toward the pole (the moved elbow); out of reach, the wrist is pulled in
+function fixArm(j, side, L1, L2, pole) {
+  const S0 = j[ji['shoulder' + side]], W0 = j[ji['wrist' + side]], d = P.v3(S0, W0), D = P.len3(d) || 1, reach = (L1 + L2) * .995;
+  const Dc = Math.min(D, reach), u = d.map(v => v / D), Wt = S0.map((v, c) => v + u[c] * Dc);
+  const a = (L1 * L1 + Dc * Dc - L2 * L2) / (2 * Dc), h = Math.sqrt(Math.max(0, L1 * L1 - a * a));
+  const pv = P.v3(S0, pole), pp = pv.map((v, c) => v - u[c] * (pv[0] * u[0] + pv[1] * u[1] + pv[2] * u[2])), pl = P.len3(pp) || 1;
+  j[ji['wrist' + side]] = Wt; j[ji['elbow' + side]] = S0.map((v, c) => v + u[c] * a + pp[c] / pl * h);
+}
+const armLens = (j, s) => [P.len3(P.v3(j[ji['shoulder' + s]], j[ji['elbow' + s]])), P.len3(P.v3(j[ji['elbow' + s]], j[ji['wrist' + s]]))];
 function headBasis(pose) {
   const o = pose.j[ji.head], f0 = pose.hfwd, l = Math.hypot(f0[0], f0[2]) || 1, f = [f0[0] / l, 0, f0[2] / l], s = [f[2], 0, -f[0]];
   return { o, f, s };
@@ -111,11 +130,15 @@ function headBasis(pose) {
 function sampleSeg(i, t) {
   const seg = E.segs[i], d = E.trials[seg.trial], sf = srcAt(seg, t);
   const pose = rawPose(d, sf); pose.sf = sf;
+  if (seg.upright) { const K = kOf(seg.trial), z = rawPose(d, seg.upright.frame ?? 0), r = Object.keys(K).length ? P.retarget(z.j, K) : z.j;
+    pose.up0 = r; pose.up0h = z.hfwd; }
   if (!seg.T) seg.T = [0, 0];
   const out = transform(seg, pose, seg.T);
   if (seg.hold_to_head && seg.ref) {   // keep a hand where it sits against the head in the reference pose (a handset at the ear)
     const b = headBasis(out);
+    const lens = { L: armLens(out.j, 'L'), R: armLens(out.j, 'R') };
     for (const [n, loc] of Object.entries(seg.ref)) out.j[ji[n]] = [0, 1, 2].map(c => b.o[c] + b.s[c] * loc[0] + (c === 1 ? loc[1] : 0) + b.f[c] * loc[2]);
+    for (const s of new Set(Object.keys(seg.ref).filter(n => /^wrist/.test(n)).map(n => n.slice(-1)))) fixArm(out.j, s, ...lens[s], out.j[ji['elbow' + s]]);
   }
   out.seg = i; return out;
 }
@@ -149,6 +172,8 @@ async function assemble() {
       pose.j = pose.j.map((q, n) => q.map((v, c) => lerp(prev.j[n][c], v, w)));
       for (const key of ['fwd', 'hfwd', 'pfwd']) { const v = pose[key].map((x, c) => lerp(prev[key][c], x, w)), l = Math.hypot(...v) || 1; pose[key] = v.map(x => x / l); }
       pose.blendW = w;
+      // a blend shortens the arms on the way: put each arm back at its own lengths, the elbow toward where the blend put it
+      for (const sd of ['L', 'R']) fixArm(pose.j, sd, E.target.upper_arm, E.target.forearm, pose.j[ji['elbow' + sd]].map((v, c) => v - (c === 1 ? 10 : 0)));
     }
     const shot = Object.entries(E.edl.shots).find(([, v]) => t >= v.t[0] - 1e-6 && t < v.t[1] - 1e-6)?.[0] || s.shot;
     E.frames.push({ f, t, tReal: edl.t0 + f / fps, seg: i, segName: s.name, shot, sf: pose.sf, a: { A: { j: pose.j, fwd: pose.fwd, hfwd: pose.hfwd, pfwd: pose.pfwd, hands: s.hands || null } }, p: pose.p });
@@ -368,26 +393,33 @@ function measureFrame(f, fr, sol, port, cam, hc) {
   if (!sol) return null;
   const out = { f, t: fr.tReal, shot: fr.shot, seg: fr.segName, view: sol.view, stretch: 0, gap: 0, miss: 0, wrongView: 0, feet: {}, hand: null, ear: null };
   for (const x of sol.order) {
-    const tru = port.k / x.c.px_per_cm, r = x.s / tru - 1; if (Math.abs(r) > Math.abs(out.stretch)) out.stretch = r;
-    out.gap = Math.max(out.gap, x.gap); out.miss = Math.max(out.miss, x.miss); if (x.view !== x.want) out.wrongView++;
+    const tru = port.k / P.ppcOf(x.c), r = x.s / tru - 1; if (Math.abs(r) > Math.abs(out.stretch)) { out.stretch = r; out.stretchCard = x.k + ':' + x.c.id; }
+    out.gap = Math.max(out.gap, x.gap); if (x.miss > out.miss) { out.miss = x.miss; out.missCard = x.k; } if (x.view !== x.want) out.wrongView++;
   }
+  out.contact = {};
+  for (const s of ['L', 'R']) { const jj = fr.a.A.j, c = ['heel', 'ball', 'toe'].map(n => [n, jj[ji[n + s]]]).sort((a, b) => a[1][1] - b[1][1])[0];
+    out.contact[s] = { n: c[0], p: c[1].slice() }; }
   for (const s of ['L', 'R']) { const x = sol.X['foot_' + s]; if (!x) continue; const a = P.fwd(x, x.A), b = P.fwd(x, x.B);
     out.feet[s] = { a: [a[0] / port.k, a[1] / port.k], b: [b[0] / port.k, b[1] / port.k], low: Math.min(fr.a.A.j[ji['heel' + s]][1], fr.a.A.j[ji['ball' + s]][1], fr.a.A.j[ji['toe' + s]][1]) }; }
   const hx = sol.X['hand_' + E.edl.props.handset.hand];
   if (hx) { const gp = handPoint(hx, .42, 0); out.hand = [gp[0] / port.k, gp[1] / port.k]; }
-  if (hc) { const e = hc.pt(...E.edl.props.handset.ear), head = earPx(fr, cam, E.edl.props.handset.hand, sol); out.ear = Math.hypot(e[0] - head[0], e[1] - head[1]) / port.k; out.handsetGrip = [hc.at[0] / port.k, hc.at[1] / port.k]; out.handsetUp = hc.up ?? 0; }
+  if (hc && E.props[f].handset === 'hand') { const e = hc.pt(...E.edl.props.handset.ear), head = earPx(fr, cam, E.edl.props.handset.hand, sol); out.ear = Math.hypot(e[0] - head[0], e[1] - head[1]) / port.k; out.handsetGrip = [hc.at[0] / port.k, hc.at[1] / port.k]; out.handsetUp = hc.up ?? 0; }
   out.k = port.k;
   return out;
 }
 window.__measure = async () => {
-  const all = [];
+  const all = [], fps = E.edl.fps;
   for (let f = 0; f < E.N; f++) { ST.f = f; render(f); all.push(E.solved[f]); }
   // foot slide: a planted foot (its lowest point within 2.5 cm of the floor in both frames, in the same shot) should not move
+  // foot slide: a foot's contact point (the lowest of heel, ball, toe) while it stays the same point and within 1.5 cm of the floor,
+  // world cm per output frame (on twos a pose holds two frames, so the move between distinct poses is divided by the frames between)
   const slides = [];
-  for (let f = 1; f < all.length; f++) { const a = all[f - 1], b = all[f]; if (!a || !b || a.shot !== b.shot) continue;
-    for (const s of ['L', 'R']) { const p = a.feet[s], q = b.feet[s]; if (!p || !q || p.low > 2.5 || q.low > 2.5) continue;
-      slides.push({ f, foot: s, cm: Math.max(Math.hypot(q.a[0] - p.a[0], q.a[1] - p.a[1]), Math.hypot(q.b[0] - p.b[0], q.b[1] - p.b[1])) }); } }
-  const fps = E.edl.fps, lift = E.edl.lines.find(l => l.key === 'lift lands').t[0];
+  for (let f = 1; f < all.length; f++) { const b = all[f]; if (!b) continue; let a = null, k = 1;
+    for (let q = f - 1; q >= 0; q--) { if (all[q] && E.frames[q].t !== E.frames[f].t) { a = all[q]; k = f - q; break; } }
+    if (!a || a.shot !== b.shot || E.frames[f].t === E.frames[f - 1].t) continue;
+    for (const s of ['L', 'R']) { const p = a.contact[s], q = b.contact[s]; if (p.n !== q.n || p.p[1] > 1.5 || q.p[1] > 1.5) continue;
+      slides.push({ f, foot: s, cm: Math.hypot(q.p[0] - p.p[0], q.p[2] - p.p[2]) / Math.max(1, E.frames[f].t - E.frames[f - k].t > 0 ? Math.round((E.frames[f].t - E.frames[f - k].t) * fps) : 1) }); } }
+  const lift = E.edl.lines.find(l => l.key === 'lift lands').t[0];
   const landing = all.findIndex((m, f) => m && m.handsetUp > .95 && m.ear < 9 && all.slice(f, f + 12).every(n => n && n.ear < 9));
   const grab = E.grabFrame;
   return {
@@ -403,6 +435,8 @@ window.__measure = async () => {
       sync_offset_frames: landing >= 0 ? +((E.edl.t0 + landing / fps - lift) * fps).toFixed(2) : null,
       ear_cm_max_after_landing: landing >= 0 ? Math.max(...all.slice(landing).map(m => m?.ear ?? 99)) : null },
     views_by_frame: all.map(m => m?.view?.[0]).join(''),
+    worst_stretch: (() => { const m = all.reduce((a, b) => Math.abs(b?.stretch || 0) > Math.abs(a?.stretch || 0) ? b : a, null); return m && { f: m.f, card: m.stretchCard, ratio: +(1 + m.stretch).toFixed(3) }; })(),
+    worst_miss: (() => { const m = all.reduce((a, b) => (b?.miss || 0) > (a?.miss || 0) ? b : a, null); return m && { f: m.f, seg: m.missCard, cm: +m.miss.toFixed(1) }; })(),
     per_frame: all.map(m => m && { f: m.f, seg: m.seg, view: m.view, stretch: +m.stretch.toFixed(3), gap: +m.gap.toFixed(2), miss: +m.miss.toFixed(2), ear: m.ear != null ? +m.ear.toFixed(1) : null })
   };
 };
