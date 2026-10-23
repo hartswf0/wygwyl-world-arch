@@ -1,0 +1,164 @@
+<title>Cast Spec Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a cast list on the left, one character's spec sheet on the right (stacked on phones). */
+:root{
+  --bg:#eceef0; --panel:#f8f9fa; --ink:#1c2026; --muted:#5d6570; --line:#d4d8dd;
+  --kraft:#a8743a; --kraft-soft:#efe3d3; --pipe:#b3262e;
+  --ok:#2f7a4b; --ok-soft:#dff0e5; --warn:#a46a00; --warn-soft:#f6ead0; --bad:#a3302a; --bad-soft:#f4dedc;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Source Sans 3",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#14171b; --panel:#1c2026; --ink:#e6e8eb; --muted:#9aa2ad; --line:#2e343c;
+  --kraft:#d29a5a; --kraft-soft:#33291f; --pipe:#e0545b;
+  --ok:#6cc48d; --ok-soft:#1d3326; --warn:#e0b04a; --warn-soft:#352b17; --bad:#ee7a72; --bad-soft:#3a201e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14171b; --panel:#1c2026; --ink:#e6e8eb; --muted:#9aa2ad; --line:#2e343c;
+  --kraft:#d29a5a; --kraft-soft:#33291f; --pipe:#e0545b;
+  --ok:#6cc48d; --ok-soft:#1d3326; --warn:#e0b04a; --warn-soft:#352b17; --bad:#ee7a72; --bad-soft:#3a201e; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-body)}
+.wrap{display:grid;grid-template-columns:280px minmax(0,1fr);gap:20px;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1500px;margin:0 auto}
+@media (max-width:820px){.wrap{grid-template-columns:minmax(0,1fr)}}
+header.top{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 18px}
+h1{font:700 1.7rem/1.1 var(--f-display);margin:0;text-wrap:balance}
+.lede{color:var(--muted);margin:0;max-width:70ch}
+.sum{font:600 .8rem var(--f-mono);color:var(--muted);letter-spacing:.02em}
+nav.cast{display:flex;flex-direction:column;gap:2px;align-self:start;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 40px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px}
+@media (max-width:820px){nav.cast{position:static;max-height:280px}}
+.ch{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center;text-align:left;width:100%;border:0;background:none;color:inherit;padding:7px 8px;border-radius:6px;cursor:pointer;font:inherit}
+.ch:hover{background:var(--kraft-soft)}
+.ch[aria-current="true"]{background:var(--kraft-soft);box-shadow:inset 3px 0 0 var(--kraft)}
+.ch:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--kraft);outline-offset:2px}
+.ch .n{font-weight:600;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch .m{grid-column:1;font:400 .72rem var(--f-mono);color:var(--muted)}
+.pill{font:600 .68rem var(--f-mono);text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:99px;white-space:nowrap}
+.p-approve{background:var(--ok-soft);color:var(--ok)} .p-fix{background:var(--warn-soft);color:var(--warn)}
+.p-rework{background:var(--bad-soft);color:var(--bad)} .p-cut{background:var(--line);color:var(--muted)}
+.p-none{background:transparent;color:var(--muted);border:1px dashed var(--line)}
+main{min-width:0;display:flex;flex-direction:column;gap:16px}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.sheet h2{font:700 1.45rem/1.15 var(--f-display);margin:0;text-wrap:balance}
+.who{color:var(--muted);margin:0}
+.facts{display:flex;flex-wrap:wrap;gap:6px 16px;font:400 .8rem var(--f-mono);color:var(--muted)}
+.facts b{color:var(--ink);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font:600 .72rem var(--f-mono);padding:2px 6px;border:1px solid var(--line);border-radius:4px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.box{min-width:0}
+.box h3{font:600 .72rem var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 6px}
+.box ul{margin:0;padding-left:18px;font-size:.9rem}
+.box li{margin-bottom:2px}
+.verdict{display:flex;flex-wrap:wrap;gap:6px}
+.vbtn{border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 12px;border-radius:6px;font:600 .9rem var(--f-body);cursor:pointer}
+.vbtn[aria-pressed="true"].approve{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.vbtn[aria-pressed="true"].fix{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.vbtn[aria-pressed="true"].rework{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.vbtn[aria-pressed="true"].cut{background:var(--line);border-color:var(--muted)}
+textarea{width:100%;box-sizing:border-box;min-height:96px;resize:vertical;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.save{display:flex;align-items:center;gap:10px;font:400 .8rem var(--f-mono);color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.pose{background:var(--bg);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.pose[data-mark="keep"]{border-color:var(--ok)} .pose[data-mark="fix"]{border-color:var(--warn)} .pose[data-mark="drop"]{border-color:var(--bad);opacity:.75}
+.pose img{display:block;width:100%;height:auto;max-width:100%;background:#efede9}
+.pose .cap{padding:7px 8px;display:flex;flex-direction:column;gap:5px;font-size:.8rem}
+.pose .pid{font:400 .7rem var(--f-mono);color:var(--muted);word-break:break-all}
+.pose .fl{color:var(--pipe);font-size:.75rem}
+.marks{display:flex;gap:4px}
+.mk{flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:5px;padding:4px 0;font:600 .72rem var(--f-mono);cursor:pointer}
+.mk[aria-pressed="true"][data-v="keep"]{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.mk[aria-pressed="true"][data-v="fix"]{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.mk[aria-pressed="true"][data-v="drop"]{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.pose input{width:100%;box-sizing:border-box;font:inherit;font-size:.78rem;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:4px 6px}
+.legend{font-size:.85rem;color:var(--muted)}
+.empty{color:var(--muted);font-style:italic}
+.note{background:var(--kraft-soft);border-radius:6px;padding:8px 10px;font-size:.9rem}
+@media (prefers-reduced-motion:no-preference){.pose{transition:border-color .15s}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Cast Spec Board</h1>
+    <p class="lede">Every character in the 14 poems. Each tile is the painting (left) beside the rig (right). Set a verdict and write the spec for each character, and mark single poses keep / fix / drop. Everything you enter is saved for Claude to read before production restarts.</p>
+    <span class="sum" id="sum"></span>
+  </header>
+  <nav class="cast" id="nav" aria-label="Characters"></nav>
+  <main id="main"><div class="sheet"><p class="empty">Loading the cast…</p></div></main>
+</div>
+
+<script>
+const VERDICTS=[["approve","Approve"],["fix","Fix listed issues"],["rework","Rework"],["cut","Cut from film"]];
+let CAST=[],cur=null,db=null,specs={},saving={};
+const $=(s,r=document)=>r.querySelector(s);
+const el=(t,a={},...k)=>{const e=document.createElement(t);for(const[x,v]of Object.entries(a)){if(x==="text")e.textContent=v;else if(x.startsWith("on"))e.addEventListener(x.slice(2),v);else e.setAttribute(x,v)}for(const c of k)if(c!=null)e.append(c);return e};
+const docId=c=>c.dir.replace(/[^A-Za-z0-9_-]/g,"_");
+const fmtT=s=>s==null?"—":(s>=60?Math.floor(s/60)+"m "+Math.round(s%60)+"s":Math.round(s)+"s");
+
+function pillFor(c){const v=(specs[docId(c)]||{}).verdict;const lab=v?VERDICTS.find(x=>x[0]===v)[1]:"no spec";return el("span",{class:"pill p-"+(v||"none"),text:v?v:"open"})}
+function nav(){
+  const n=$("#nav");n.replaceChildren();
+  for(const c of CAST){
+    const s=specs[docId(c)]||{},marks=Object.values(s.poses||{}).filter(p=>p.mark).length;
+    const b=el("button",{class:"ch","aria-current":String(cur===c),onclick:()=>{cur=c;try{localStorage.setItem("cast.cur",c.dir)}catch(e){}render()}},
+      el("span",{class:"n",text:c.name}),pillFor(c),
+      el("span",{class:"m",text:(c.status==="built"?c.poses.length+" poses":c.status)+" · "+fmtT(c.screen)+(marks?" · "+marks+" marked":"")}));
+    n.append(b)}
+  const done=CAST.filter(c=>(specs[docId(c)]||{}).verdict).length;
+  $("#sum").textContent=done+" of "+CAST.length+" characters specced · "+CAST.reduce((a,c)=>a+c.poses.length,0)+" poses";
+}
+async function save(c){
+  const id=docId(c),s=specs[id];s.updated=Date.now();
+  const st=$("#savestate");if(st)st.textContent="Saving…";
+  if(!db){if(st)st.textContent="Not saved: sign in to claude.ai to save specs.";return}
+  try{await db.doc("specs/"+id).set(s);if(st)st.textContent="Saved"}catch(e){if(st)st.textContent="Not saved ("+(e.code||e.message||"error")+"). Your edit is still on screen; try again."}
+}
+let tmr={};function saveSoon(c){clearTimeout(tmr[c.dir]);tmr[c.dir]=setTimeout(()=>save(c),700)}
+function spec(c){const id=docId(c);return specs[id]||(specs[id]={character:c.key,name:c.name,verdict:"",notes:"",poses:{}})}
+
+function render(){
+  nav();const c=cur,s=spec(c),m=$("#main");m.replaceChildren();
+  const sheet=el("section",{class:"sheet"});
+  sheet.append(el("div",{},el("h2",{text:c.name}),el("p",{class:"who",text:c.who||""})));
+  const facts=el("div",{class:"facts"},
+    el("span",{},"status ",el("b",{text:c.status})),
+    el("span",{},"on screen ",el("b",{text:fmtT(c.screen)})),
+    el("span",{},"rendered poses ",el("b",{text:String(c.poses.length)})));
+  const chips=el("div",{class:"chips"},...(c.poems||[]).map(p=>el("span",{class:"chip",text:"poem "+p})));
+  sheet.append(facts,chips);
+  if(c.status!=="built")sheet.append(el("p",{class:"note",text:c.status==="skipped"?"Skipped: no whole-figure painting exists for this character. Spec what you want (paint new art, use a flat card, or cut).":"Not built yet. Production paused before this character. Spec it now and it will be built to your spec."}));
+  const ms=Object.entries(c.masters||{}).filter(([,v])=>v);
+  sheet.append(el("div",{class:"cols"},
+    el("div",{class:"box"},el("h3",{text:"Master painting per view"}),ms.length?el("ul",{},...ms.map(([v,p])=>el("li",{},el("b",{text:v+": "}),p))):el("p",{class:"empty",text:"none listed"})),
+    el("div",{class:"box"},el("h3",{text:"Known gaps"}),(c.gaps||[]).length?el("ul",{},...c.gaps.map(g=>el("li",{text:g}))):el("p",{class:"empty",text:"none listed"}))));
+  const vb=el("div",{class:"verdict",role:"group","aria-label":"Verdict"});
+  for(const[v,lab]of VERDICTS)vb.append(el("button",{class:"vbtn "+v,"aria-pressed":String(s.verdict===v),onclick:()=>{s.verdict=s.verdict===v?"":v;render();save(c)}},lab));
+  const ta=el("textarea",{id:"notes-"+docId(c),placeholder:"Your spec for this character: look, proportions, which views and poses the poems need, what to fix, what to paint new…","aria-label":"Spec notes"});
+  ta.value=s.notes||"";ta.addEventListener("input",()=>{s.notes=ta.value;saveSoon(c)});
+  sheet.append(el("div",{class:"box"},el("h3",{text:"Verdict and spec"}),vb),ta,el("div",{class:"save"},el("span",{id:"savestate",text:db?(s.updated?"Saved":"Not yet saved"):"Connecting…"})));
+  m.append(sheet);
+  if(c.poses.length){
+    const g=el("div",{class:"grid"});
+    c.poses.forEach((p,i)=>{
+      const ps=s.poses[i]||{};const card=el("article",{class:"pose","data-mark":ps.mark||""});
+      const marks=el("div",{class:"marks",role:"group","aria-label":"Mark pose"});
+      for(const v of["keep","fix","drop"])marks.append(el("button",{class:"mk","data-v":v,"aria-pressed":String(ps.mark===v),onclick:()=>{const q=s.poses[i]||(s.poses[i]={id:p.id});q.mark=q.mark===v?"":v;card.dataset.mark=q.mark;marks.querySelectorAll(".mk").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===q.mark)));nav();save(c)}},v));
+      const inp=el("input",{type:"text",id:"pn-"+docId(c)+"-"+i,placeholder:"note on this pose","aria-label":"Note on "+p.id});inp.value=ps.note||"";
+      inp.addEventListener("input",()=>{const q=s.poses[i]||(s.poses[i]={id:p.id});q.note=inp.value;saveSoon(c)});
+      card.append(el("img",{src:p.thumb,alt:"Painting and rig for "+p.id,loading:"lazy"}),
+        el("div",{class:"cap"},el("span",{class:"pid",text:p.id}),...(p.flags||[]).slice(0,2).map(f=>el("span",{class:"fl",text:f})),marks,inp));
+      g.append(card)});
+    m.append(el("section",{class:"sheet"},el("h3",{class:"legend",text:"Poses: painting left, rig right. Mark keep / fix / drop and add a note where it helps."}),g));
+  }
+}
+(async()=>{
+  try{CAST=await (await fetch("cast.json")).json()}catch(e){$("#main").replaceChildren(el("div",{class:"sheet"},el("p",{text:"Could not load the cast list."})));return}
+  let want=null;try{want=localStorage.getItem("cast.cur")}catch(e){}
+  cur=CAST.find(c=>c.dir===want)||CAST[0];render();
+  db=await claude.use("db").catch(()=>null);
+  if(db){try{const snap=await db.collection("specs").get();(snap.docs||snap).forEach(d=>{const v=d.data?d.data():d;specs[d.id]=v})}catch(e){}
+  render()}else{const st=$("#savestate");if(st)st.textContent="Not saved: sign in to claude.ai to save specs."}
+})();
+</script>
