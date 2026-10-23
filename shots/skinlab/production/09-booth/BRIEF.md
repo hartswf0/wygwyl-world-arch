@@ -43,6 +43,28 @@ External film references were **not reachable** from this environment (archive.o
 8. **Staging.** The booth light groups the poet. The silhouette reads against the quay, and the planes give depth without clutter.
 9. **It is a film moment, not a test.** A fresh viewer would understand who, where and what without any text.
 
+## Critic protocol v2: kill, don't grade (after the person's review of v9)
+The person saw what three critics passed:
+- **No butt:** the profile has no seat or buttocks; the hip is a thin link.
+- **The legs aren't natural:** they don't read as one trouser leg.
+- **The shoes are the wrong scale.**
+- **The legs bend wrongly in side view.**
+
+The critics were not harsh enough. From now on:
+- **The reference is the kit's own painted art, not "plausible".** Compare against `shots/kits/cut/poet.09.main-poses/` (`phone-palm`, `on-glass-1`, `on-glass-2`, `hang-up`, `falter-at-shoulder-contact`), `poet.04.main-poses/04-1-walk-hollow`, and `poet.08.main-poses/02-sag-on-tired-one-body-hip-leaning`. These are the same man in the same suit, painted whole. Put the puppet and the painting side by side at the same height, at matching beats, and say where the silhouettes differ.
+- **Anatomy fails on sight.** Any of these fails item 1 or 2 outright, whatever else works:
+  - a profile with no seat (buttocks) or no hip mass;
+  - trousers that break into separate cards at the knee instead of one leg;
+  - a knee that bends the wrong way or at the wrong height;
+  - a shin whose width jumps at the knee;
+  - converging or crossing shins in a stance;
+  - a boot whose length isn't about 1/7 of his height, or whose height differs from the painted boots relative to the shin;
+  - a wrist past ~90°;
+  - a far limb drawn over the face.
+- **One second at playback size.** If a fresh viewer would notice it within 1 s at 1600×900, it is a failure, not a "secondary".
+- **The verdict carries an overlay.** For every anatomy claim, include a side-by-side crop: the puppet at the moment, next to the painted reference.
+- **No "narrowly met" on anatomy.** Anatomy is met or failed.
+
 ## Character contract format (shared by every builder): `shots/skinlab/contracts/<character>.json`
 ```json
 {
