@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Joint Atlas</title>
+<style>
+:root{--bg:#0d0b0a;--ink:#efe6da;--dim:#9a8d7e;--line:#2a221c;--ok:#8fd16a;--warn:#e7c35a;--bad:#ef6a5a;--sel:#5fd0ff;--mono:ui-monospace,'JetBrains Mono',monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 system-ui,sans-serif}
+header{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+h1{font-size:18px;margin:0 10px 0 0}
+.btn{font:12px var(--mono);color:var(--dim);background:none;border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+.btn.on{background:var(--warn);color:#1a120a;border-color:var(--warn)}
+#views{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+canvas{width:100%;height:440px;display:block;border-right:1px solid var(--line)}
+.ctl{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 16px;padding:10px 14px;border-top:1px solid var(--line)}
+.ctl label{display:flex;gap:6px;align-items:center;font:11px var(--mono);color:var(--dim)}
+.ctl input{flex:1;accent-color:var(--warn)}
+table{border-collapse:collapse;margin:10px 14px;font:12px var(--mono)}
+td,th{border-bottom:1px solid var(--line);padding:3px 10px;text-align:left}
+th{color:var(--dim);font-weight:400}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.key{padding:0 14px 12px;color:var(--dim);font-size:12px}
+</style>
+</head>
+<body>
+<header><h1>Joint Atlas</h1><span id="presets"></span></header>
+<div id="views"><canvas id="cs"></canvas><canvas id="cq"></canvas><canvas id="cf"></canvas></div>
+<div class="key">Segments: <span class="ok">green</span> = a rigid card rotated in the picture plane can draw it (projected length ≥ 88% of true, inside the 12% stretch rule) ·
+<span class="warn">amber</span> = foreshortened: needs a replacement card, overlap or a declared shortening (55–88%) · <span class="bad">red</span> = end-on to the camera: needs a dedicated card or a different view (&lt; 55%).
+Joints: a <b style="color:var(--sel)">blue ring</b> = the hinge bends across the screen in this view (rotate cards); a <b class="bad">red ring</b> = the hinge bends toward the camera (cards cannot rotate to show it).</div>
+<div class="ctl" id="ctl"></div>
+<table id="tab"></table>
+<script>
+'use strict';
+// ---------- a skeleton posed by joint angles (degrees), forward kinematics in cm; x = his left, y = up, z = forward ----------
+const L = { torso: 52, neck: 10, head: 23, sh: 19, ua: 30, fa: 27, hand: 19, hip: 10, thigh: 46, shin: 43, foot: 26, ankleH: 8 };
+const ANG = { lean: 0, neck: 0, hipL: 0, hipR: 0, kneeL: 0, kneeR: 0, ankleL: 0, ankleR: 0, abdL: 0, abdR: 0,
+  shL: 0, shR: 0, sabL: 0, sabR: 0, elbL: 0, elbR: 0, wrL: 0, wrR: 0 };
+const PRESETS = {
+  stand: {},
+  'walk contact': { hipL: 28, kneeL: 4, ankleL: -8, hipR: -14, kneeR: 22, ankleR: 18, shL: -22, shR: 24, elbL: 12, elbR: 20 },
+  sit: { hipL: 90, hipR: 90, kneeL: 90, kneeR: 90, lean: 4, shL: 20, shR: 20, elbL: 40, elbR: 40 },
+  kneel: { hipL: 88, kneeL: 92, hipR: -5, kneeR: 95, ankleR: 40, lean: 2, shL: 10, shR: 0, elbL: 30 },
+  'phone at ear': { shL: 35, sabL: 55, elbL: 145, wrL: 20, neck: 10 },
+  'lean on glass': { lean: 8, shR: 85, sabR: 5, elbR: 25, wrR: 70, kneeL: 10, hipL: 5 },
+  'reach forward': { shR: 80, elbR: 8, lean: 12, hipL: 8, hipR: 8 },
+  'carry case': { lean: -4, sabR: 12, shL: 15, elbL: 10 },
+};
+const rad = d => d * Math.PI / 180;
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+const rotX = (v, a) => [v[0], v[1] * Math.cos(a) - v[2] * Math.sin(a), v[1] * Math.sin(a) + v[2] * Math.cos(a)];   // pitch: + tips the down-vector forward
+const rotZ = (v, a) => [v[0] * Math.cos(a) - v[1] * Math.sin(a), v[0] * Math.sin(a) + v[1] * Math.cos(a), v[2]];   // roll: sideways
+const down = [0, -1, 0], up = [0, 1, 0], fwd = [0, 0, 1];
+function pose(A) {
+  const P = {}, S = {};   // points, segments [a, b, hinge axis]
+  P.pelvis = [0, L.ankleH + L.shin + L.thigh, 0];
+  const spine = rotX(up, -rad(A.lean)), neckBase = add(P.pelvis, mul(spine, L.torso));
+  P.neck = neckBase; P.headTop = add(neckBase, mul(rotX(spine, -rad(A.neck)), L.neck + L.head));
+  for (const s of ['L', 'R']) {
+    const sx = s === 'L' ? 1 : -1;
+    // leg: hip flexion pitches the thigh forward (axis x), abduction rolls it out (axis z); the knee folds the shin back
+    P['hip' + s] = add(P.pelvis, [sx * L.hip, 0, 0]);
+    const th = rotZ(rotX(down, -rad(A['hip' + s])), sx * rad(A['abd' + s]));
+    P['knee' + s] = add(P['hip' + s], mul(th, L.thigh));
+    const sh = rotZ(rotX(down, -rad(A['hip' + s] - A['knee' + s])), sx * rad(A['abd' + s]));
+    P['ankle' + s] = add(P['knee' + s], mul(sh, L.shin));
+    const ft = rotX(fwd, -rad(A['hip' + s] - A['knee' + s] + A['ankle' + s]) + rad(0));
+    P['toe' + s] = add(P['ankle' + s], mul(rotX(ft, rad(12)), L.foot * .85));
+    S['thigh_' + s] = ['hip' + s, 'knee' + s, [1, 0, 0]]; S['shin_' + s] = ['knee' + s, 'ankle' + s, [1, 0, 0]]; S['foot_' + s] = ['ankle' + s, 'toe' + s, [1, 0, 0]];
+    // arm: shoulder flexion pitches it forward/up, abduction rolls it out; the elbow folds the forearm forward/up
+    P['sh' + s] = add(neckBase, add(mul(spine, -4), [sx * L.sh, 0, 0]));
+    const ua = rotX(rotZ(down, sx * rad(A['sab' + s])), -rad(A['sh' + s]));
+    P['elb' + s] = add(P['sh' + s], mul(ua, L.ua));
+    const elbowAxis = rotX(rotZ([1, 0, 0], sx * rad(A['sab' + s])), -rad(A['sh' + s]));
+    const fa = rodrigues(ua, elbowAxis, -rad(A['elb' + s]));   // flexion folds the forearm forward and up
+    P['wr' + s] = add(P['elb' + s], mul(fa, L.fa));
+    const hd = rodrigues(fa, elbowAxis, -rad(A['wr' + s]));
+    P['tip' + s] = add(P['wr' + s], mul(hd, L.hand));
+    S['upper_arm_' + s] = ['sh' + s, 'elb' + s, elbowAxis]; S['forearm_' + s] = ['elb' + s, 'wr' + s, elbowAxis]; S['hand_' + s] = ['wr' + s, 'tip' + s, elbowAxis];
+  }
+  S.torso = ['pelvis', 'neck', [1, 0, 0]]; S.head = ['neck', 'headTop', [1, 0, 0]];
+  const sole = Math.min(...['ankleL', 'ankleR', 'toeL', 'toeR'].map(k => P[k][1] - (k.startsWith('ankle') ? L.ankleH : 0)));
+  for (const k in P) P[k] = [P[k][0], P[k][1] - sole, P[k][2]];   // stand him on the floor
+  return { P, S };
+}
+function rodrigues(v, k, a) { const n = Math.hypot(...k); k = k.map(c => c / n); const c = Math.cos(a), s = Math.sin(a), d = v[0] * k[0] + v[1] * k[1] + v[2] * k[2];
+  const x = [k[1] * v[2] - k[2] * v[1], k[2] * v[0] - k[0] * v[2], k[0] * v[1] - k[1] * v[0]]; return [0, 1, 2].map(i => v[i] * c + x[i] * s + k[i] * d * (1 - c)); }
+// ---------- the three cameras: side (looking along −x at his left side: he faces screen-right), three-quarter, front ----------
+const VIEWS = [['side', 'cs', 90], ['three-quarter', 'cq', 45], ['front', 'cf', 0]];
+// screen x = x·cos + z·sin, depth (toward the viewer) = −x·sin + z·cos. At yaw 90 he faces screen-RIGHT and the camera sees his
+// RIGHT side (near = R, far = L); at yaw 0 he faces us and his left is on screen right.
+function cam(yaw) { const a = rad(yaw); return { p: q => [q[0] * Math.cos(a) + q[2] * Math.sin(a), q[1], -q[0] * Math.sin(a) + q[2] * Math.cos(a)] }; }
+function verdict(r) { return r >= .88 ? 'ok' : r >= .55 ? 'warn' : 'bad'; }
+const COL = { ok: '#8fd16a', warn: '#e7c35a', bad: '#ef6a5a' };
+function draw() {
+  const { P, S } = pose(ANG), rows = {};
+  for (const [name, id, yaw] of VIEWS) {
+    const cv = document.getElementById(id), r = cv.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+    cv.width = r.width * dpr; cv.height = r.height * dpr; const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, r.width, r.height);
+    const C = cam(yaw), k = (r.height - 50) / 200, T = q => { const p = C.p(q); return [r.width / 2 + p[0] * k, r.height - 24 - p[1] * k, p[2]]; };
+    g.strokeStyle = '#3a3027'; g.beginPath(); g.moveTo(0, r.height - 24); g.lineTo(r.width, r.height - 24); g.stroke();
+    // far side first (smaller depth)
+    const segs = Object.entries(S).map(([s, [a, b, ax]]) => { const pa = T(P[a]), pb = T(P[b]); return { s, a, b, ax, pa, pb, d: (pa[2] + pb[2]) / 2 }; }).sort((x, y) => x.d - y.d);
+    for (const q of segs) {
+      const true3 = Math.hypot(...[0, 1, 2].map(i => P[q.b][i] - P[q.a][i])), proj = Math.hypot(q.pb[0] - q.pa[0], q.pb[1] - q.pa[1]) / k, ratio = proj / true3, v = verdict(ratio);
+      (rows[q.s] ||= {})[name] = { ratio, v };
+      const w = /torso/.test(q.s) ? 26 : /head/.test(q.s) ? 18 : /thigh/.test(q.s) ? 14 : /shin|upper/.test(q.s) ? 11 : 9;
+      const far = yaw > 0 && q.d < T(P.pelvis)[2] - 1;   // the far limbs, darker, drawn first
+      g.lineCap = 'round'; g.strokeStyle = COL[v]; g.globalAlpha = far ? .45 : .92; g.lineWidth = w * k * 1.6;
+      g.beginPath(); g.moveTo(q.pa[0], q.pa[1]); g.lineTo(q.pb[0], q.pb[1]); g.stroke(); g.globalAlpha = 1;
+    }
+    // hinge rings: does the joint bend across the screen (its hinge axis points at the camera) or toward it?
+    const dir = [-Math.sin(rad(yaw)), 0, Math.cos(rad(yaw))];
+    for (const [j, segName] of [['kneeL', 'shin_L'], ['kneeR', 'shin_R'], ['elbL', 'forearm_L'], ['elbR', 'forearm_R'], ['hipL', 'thigh_L'], ['hipR', 'thigh_R'], ['ankleL', 'foot_L'], ['ankleR', 'foot_R']]) {
+      const ax = S[segName][2], n = Math.hypot(...ax), c = Math.abs((ax[0] * dir[0] + ax[1] * dir[1] + ax[2] * dir[2]) / n), inPlane = c > .7, p = T(P[j]);
+      (rows[j] ||= {})[name] = { inPlane, c };
+      g.strokeStyle = inPlane ? '#5fd0ff' : '#ef6a5a'; g.lineWidth = 2.5; g.beginPath(); g.arc(p[0], p[1], 7, 0, 7); g.stroke();
+    }
+    g.fillStyle = '#9a8d7e'; g.font = '12px ui-monospace,monospace'; g.fillText(name + (yaw === 90 ? ' — faces right: we see his RIGHT side' : yaw === 0 ? ' — faces us: his left on screen right' : ''), 10, 18);
+  }
+  // the table: per segment, what a card can do in each view; per hinge, whether it bends across the screen
+  const segNames = Object.keys(rows).filter(k => !/^(knee|elb|hip|ankle)[LR]$/.test(k)), hinges = Object.keys(rows).filter(k => /^(knee|elb|hip|ankle)[LR]$/.test(k));
+  const meth = { ok: 'rotate the card', warn: 'replacement card / overlap / ≤12% shorten', bad: 'dedicated card or restage' };
+  document.getElementById('tab').innerHTML = `<tr><th>segment</th>${VIEWS.map(v => `<th>${v[0]}</th>`).join('')}</tr>` +
+    segNames.map(s => `<tr><td>${s.replace('_', ' ')}</td>${VIEWS.map(([n]) => { const x = rows[s][n]; return `<td class="${x.v}">${Math.round(x.ratio * 100)}% · ${meth[x.v]}</td>`; }).join('')}</tr>`).join('') +
+    `<tr><th>hinge</th>${VIEWS.map(v => `<th>${v[0]}</th>`).join('')}</tr>` +
+    hinges.map(h => `<tr><td>${h}</td>${VIEWS.map(([n]) => { const x = rows[h][n]; return `<td class="${x.inPlane ? 'ok' : 'bad'}">${x.inPlane ? 'bends across the screen' : 'bends toward the camera'}</td>`; }).join('')}</tr>`).join('');
+  window.__rows = rows;
+}
+function ui() {
+  document.getElementById('presets').innerHTML = Object.keys(PRESETS).map(p => `<button class="btn" data-p="${p}">${p}</button>`).join(' ');
+  document.getElementById('presets').onclick = e => { const p = e.target.dataset.p; if (!p) return; setPreset(p); };
+  document.getElementById('ctl').innerHTML = Object.keys(ANG).map(k => `<label>${k}<input type="range" min="-60" max="160" value="0" data-k="${k}"><span>0°</span></label>`).join('');
+  document.getElementById('ctl').oninput = e => { const k = e.target.dataset.k; if (!k) return; ANG[k] = +e.target.value; e.target.nextElementSibling.textContent = ANG[k] + '°'; draw(); };
+}
+function setPreset(p) { for (const k in ANG) ANG[k] = PRESETS[p][k] || 0; document.querySelectorAll('[data-k]').forEach(i => { i.value = ANG[i.dataset.k]; i.nextElementSibling.textContent = ANG[i.dataset.k] + '°'; });
+  document.querySelectorAll('[data-p]').forEach(b => b.classList.toggle('on', b.dataset.p === p)); draw(); }
+window.setPreset = setPreset;
+ui(); setPreset(location.hash.slice(1).replace(/-/g, ' ') || 'stand'); addEventListener('resize', draw);
+</script>
+</body>
+</html>
