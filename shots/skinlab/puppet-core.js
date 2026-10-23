@@ -34,7 +34,7 @@
        handStates?,            // {L: 'open' | 'grip' | ..., R: ...}: limbs.hand_*.states
        harvest?, harvestExclude?, // replacement cards (harvestExclude: a source id, a list of them, or a predicate (card) => bool) (library_harvest.json rows: slot/side/view/dir_cam/ratio/bad): used for a foreshortened limb
                                //   when one of the same part and view has a bone direction within ~20 deg; harvestExclude leaves one source out
-       headScale? = 1.25,      // heads at the paintings' canon (1.2-1.3x the contract head); headCm?, headLeanDeg? = 15, neckDeg?, farShade? = .72,
+       headScale? = 1.05,      // heads at the paintings' canon: top of hair to chin = 0.152 of his height, measured on 7 standing paintings; headCm?, headLeanDeg? (20 front/back/3q, 35 side), neckDeg?, farShade? = .72,
        rescale?,               // card scales, sockets and width matches are fixed by the first pose drawn with a contract; true re-fits them to this skeleton
        cardView?, ground?      // force the card view; ground (default true without a port) puts his lowest foot point on the floor
      })
@@ -285,6 +285,9 @@ function solve(fr, port, style = S.style, puppet = S.puppet) {
     const parent = sg.par.find(p => X[p]);
     const sock = parent ? socket(k, X[parent], port, puppet) : null;
     let start = puppet && sock ? sock.p : Pp, ang = Math.atan2(Q[1] - start[1], Q[0] - start[0]);
+    if (k === 'head' && a.headLim != null) {   // the head looks the skeleton's way from its own neck (not from wherever the collar socket sits), rolled at most headLim off the drawn torso
+      ang = Math.atan2(Q[1] - Pp[1], Q[0] - Pp[0]);
+      if (X.torso) { const rel = Math.atan2(Math.sin(ang - X.torso.ang), Math.cos(ang - X.torso.ang)), L = a.headLim * Math.PI / 180; if (Math.abs(rel) > L) ang = X.torso.ang + Math.sign(rel) * L; } }
     const low = puppet && !a.noik?.[k] && segs.find(q => SEG[q].ik === k && S.skin[q]);
     if (low) {
       const lc = active(low, S.skin[low], a, port);
@@ -540,11 +543,14 @@ function buildSeat(ch, srcId, o = {}) {
       g.beginPath(); g.moveTo(...mid(0)); for (let i = 1; i <= n; i++) g.quadraticCurveTo(...q[i % n], ...mid(i)); g.closePath(); };
     path(); g.save(); g.clip();
     const im = src && img(src);
-    if (im && im.complete && im.naturalWidth) {   // one cheek of the rear seat (its right half), its outer curve to the back
+    const th = S.byId[S.skin?.thigh_L?.cards?.side], ti = th && img(th);
+    if (ti && ti.complete && ti.naturalWidth && !o.src_rect) {   // the profile trouser's own cloth (the thigh card's upper half, its folds and sheen): seat and thigh read as one garment
+      const iw = ti.naturalWidth, ih = ti.naturalHeight; g.drawImage(ti, iw * .22, ih * .08, iw * .5, ih * .42, -m, -m, W + 2 * m, Hp + 2 * m);
+    } else if (im && im.complete && im.naturalWidth) {   // one cheek of the rear seat (its right half), its outer curve to the back
       const iw = im.naturalWidth, ih = im.naturalHeight, sx = o.src_rect || [iw * .5, ih * .08, iw * .46, ih * .86];
       g.translate(W, 0); g.scale(-1, 1); g.drawImage(im, sx[0], sx[1], sx[2], sx[3], -m, 0, W + 2 * m, Hp); g.setTransform(1, 0, 0, 1, 0, 0);
     } else { g.fillStyle = '#1b1a1d'; g.fillRect(0, 0, W, Hp); if (im && im.addEventListener) im.addEventListener('load', paint, { once: true }); }
-    const gr = g.createRadialGradient(...Pt([-6, 14]), 2, ...Pt([-6, 14]), 16 * K); gr.addColorStop(0, '#ffffff14'); gr.addColorStop(.55, '#0000'); gr.addColorStop(1, '#0006'); g.fillStyle = gr; g.fillRect(0, 0, W, Hp);
+    const gr = g.createRadialGradient(...Pt([-6, 14]), 2, ...Pt([-6, 14]), 16 * K); gr.addColorStop(0, '#ffffff1c'); gr.addColorStop(.6, '#0000'); gr.addColorStop(1, '#0004'); g.fillStyle = gr; g.fillRect(0, 0, W, Hp);
     g.restore(); g.lineJoin = 'round'; path();
     g.lineWidth = 5; g.strokeStyle = '#c9a26b'; g.stroke(); g.lineWidth = 1; g.strokeStyle = '#6b4a2a'; g.stroke();
     for (const b of brads) { const q = Pt(b), rg = g.createRadialGradient(q[0] - 2, q[1] - 2, 1, q[0], q[1], 9); rg.addColorStop(0, '#fff3c0'); rg.addColorStop(.5, '#d9a640'); rg.addColorStop(1, '#7a5410'); g.fillStyle = rg; g.beginPath(); g.arc(q[0], q[1], 8, 0, 7); g.fill(); }
@@ -552,6 +558,35 @@ function buildSeat(ch, srcId, o = {}) {
   };
   paint(); S.lib.push(c); S.byId[id] = c;
   return c;
+}
+// the trouser top for front, back and three-quarter views, built by code: waist to below the hip joints, as wide as the thigh roots, so
+// the jacket hem, the hips and both thigh tops read as one piece of cloth (no gap at the hip seam). Filled with the costume's own
+// cloth: the rear-seat card (pockets, seat seam) for the back, the hip bridge's cloth for the front. A = waist brad, B = crotch line,
+// brads on the hip joints. Geometry from the skeleton: drop = waist to hip line, hh = half the hip span (cm).
+function buildHips(ch, view, srcId, o) {
+  const id = `gen.${ch}/built-hips-${view}`; if (S.byId[id] && !o.rebuild) return S.byId[id];
+  S.lib = S.lib.filter(c => c.id !== id); delete IMG[id]; delete TRIM[id];
+  const K = 8, m = 6, d = o.drop, hh = o.hh, out = [[-(hh + 3), -3], [hh + 3, -3], [hh + 5.5, d * .55], [hh + 6, d + 2], [hh + 4, d + 5], [2.5, d + 5], [0, d + 3], [-2.5, d + 5], [-(hh + 4), d + 5], [-(hh + 6), d + 2], [-(hh + 5.5), d * .55]];   // inside the thigh roots' outline: no lobes past the legs
+  const xs = out.map(p => p[0]), ys = out.map(p => p[1]), x0 = Math.min(...xs), y0 = Math.min(...ys);
+  const W = Math.ceil((Math.max(...xs) - x0) * K + 2 * m), Hp = Math.ceil((Math.max(...ys) - y0) * K + 2 * m), Pt = p => [m + (p[0] - x0) * K, m + (p[1] - y0) * K];
+  const brads = [[0, 0], [hh, d], [-hh, d]], src = S.byId[srcId];
+  const c = { id, gen: true, w: W, h: Hp, slot: 'pelvis', side: null, view, character: ch, costume: 'built', px_per_cm: K,
+    A: Pt([0, 0]), B: Pt([0, 20]), pts: 'brads', q: 'A', label: 'built by code: trouser top (' + view + ')', brads: brads.map(Pt), pal: src?.pal, skin: 0, img: '' };
+  const paint = () => {
+    const cv = P.canvas(W, Hp), g = cv.getContext('2d'), q = out.map(Pt), n = q.length, mid = i => { const a = q[i % n], b = q[(i + 1) % n]; return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; };
+    const path = () => { g.beginPath(); g.moveTo(...mid(0)); for (let i = 1; i <= n; i++) g.quadraticCurveTo(...q[i % n], ...mid(i)); g.closePath(); };
+    path(); g.save(); g.clip();
+    const im = src && img(src);
+    if (im && im.complete && im.naturalWidth) { const iw = im.naturalWidth, ih = im.naturalHeight;
+      if (view === 'back') g.drawImage(im, iw * .05, ih * .02, iw * .9, ih * .62, 0, 0, W, Hp);      // the rear seat: waistband, pockets, the seat seam
+      else { const sw = iw * .3, sh = ih * .3; for (let y = 0; y < Hp; y += sh) for (let x = 0; x < W; x += sw) g.drawImage(im, iw * .35, ih * .3, sw, sh, x, y, sw, sh); } }
+    else { g.fillStyle = '#1b1a1d'; g.fillRect(0, 0, W, Hp); }
+    const gr = g.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, '#0006'); gr.addColorStop(.5, '#0000'); gr.addColorStop(1, '#0006'); g.fillStyle = gr; g.fillRect(0, 0, W, Hp);
+    g.restore(); g.lineJoin = 'round'; path(); g.lineWidth = 5; g.strokeStyle = '#c9a26b'; g.stroke(); g.lineWidth = 1; g.strokeStyle = '#6b4a2a'; g.stroke();
+    for (const b of brads) { const p = Pt(b), rg = g.createRadialGradient(p[0] - 2, p[1] - 2, 1, p[0], p[1], 9); rg.addColorStop(0, '#fff3c0'); rg.addColorStop(.5, '#d9a640'); rg.addColorStop(1, '#7a5410'); g.fillStyle = rg; g.beginPath(); g.arc(p[0], p[1], 8, 0, 7); g.fill(); }
+    IMG[id] = cv; cv.complete = true; cv.naturalWidth = W;
+  };
+  paint(); S.lib.push(c); S.byId[id] = c; return c;
 }
 // cards a skin names by id that are built by code: rebuild them (index.html does this at boot)
 function rebuildGen(skin) {
@@ -717,14 +752,18 @@ function renderPose(ctx, o) {
   if (o.ground ?? !o.port) { const lo = Math.min(...FEET.map(i => j[i][1])); j = j.map(q => [q[0], q[1] - lo, q[2]]); if (tips) for (const s of 'LR') tips[s][1] -= lo; }
   const yaw = o.port ? Math.atan2(-o.port.right[2], o.port.right[0]) * 180 / Math.PI : yawOf(o), view = o.cardView || cardViewOf(yaw), cy = Math.cos(yaw * Math.PI / 180), sy = Math.sin(yaw * Math.PI / 180);
   // the skeleton's own bone lengths fix the card scales and the bind pose (recomputed only when they change); heads drawn at the
-  // painted canon (o.headScale, default 1.25: the paintings' heads are 1.2-1.3x the contract head)
-  const hs = o.headScale ?? 1.25, nj = neutralOf(j), key = nj.map(q => q.map(v => Math.round(v)).join(',')).join(';') + '|' + hs + '|' + (o.headCm || '');
+  // painted canon (o.headScale, default 1.05: top of hair to chin is 0.152 of his height in 7 standing paintings; 0.145 at 1.0)
+  const hs = o.headScale ?? 1.05, nj = neutralOf(j), key = nj.map(q => q.map(v => Math.round(v)).join(',')).join(';') + '|' + hs + '|' + (o.headCm || '');
   if (RP.key == null || (o.rescale && key !== RP.key)) {   // card scales are fixed once per contract (one scale per card for every pose); o.rescale re-fits them to a new skeleton
     // the code-built seat sits on this skeleton's hip line: its hip brad as far under the waist brad as the hips are
     const nfr = frameOf(nj, { fwd: [0, 0, 1], hfwd: [0, 0, 1], pfwd: [0, 0, 1] }), njj = joints(nfr, 'A'), drop = njj[ji.waist][1] - (njj[ji.hipL][1] + njj[ji.hipR][1]) / 2;
     for (const id of Object.values(S.skin.pelvis?.cards || {})) { const mm = id.match(/^gen\.(.+)\/built-seat-side$/); if (!mm || Math.abs((RP.seatDrop ?? 7) - drop) < .5 && S.byId[id]) continue;
       S.lib = S.lib.filter(c => c.id !== id); delete S.byId[id]; delete IMG[id]; delete TRIM[id]; buildSeat(mm[1], S.fix[id]?.from, { ...(S.fix[id] || {}), hip_cm: drop }); RP.seatDrop = drop; }
+    RP.hips = {}; if (o.builtHips !== false && S.skin.pelvis) { const ch = (S.skin.pelvis.cards.side || '').match(/^gen\.(.+)\//)?.[1] || 'puppet', hh = len3(v3(njj[ji.hipL], njj[ji.hipR])) / 2;
+      const front = S.skin.pelvis.cards.front, rear = Object.values(S.fix).find(f => f.from && /seat/.test(f.from))?.from || S.skin.pelvis.cards.back;
+      for (const v of ['front', 'back']) RP.hips[v] = buildHips(ch, v, v === 'back' ? rear : front, { drop, hh, rebuild: true }).id; }
     const r = rigidScalesFor(nj, o.headCm); for (const id of Object.values(S.skin.head?.cards || {})) if (r.ppc[id]) r.ppc[id] /= hs;
+    for (const id of Object.values(RP.hips)) r.ppc[id] = 8 * len3(v3(njj[ji.waist], njj[ji.crotch])) / 20 > 0 ? 160 / len3(v3(njj[ji.waist], njj[ji.crotch])) : 8;
     S.cardPpc = r.ppc; RP.headCm = r.headCm; RP.key = key; RP.bind = {}; S.sock = {}; RP.statureCm = nj[ji.headTop][1]; RP.harvested = {};
     // matched widths at a shared joint: a child card whose root is wider or narrower than its parent's end (>10%) is flared to meet it
     S.autoFlare = {}; RP.flares = [];
@@ -759,7 +798,7 @@ function renderPose(ctx, o) {
       warnings.push(`head: bowed ${(Math.asin(Math.min(1, Math.abs(along))) * 180 / Math.PI) | 0} deg toward the camera; turned into the picture plane (a painted head cannot foreshorten)`); }
     const F0 = facings(j), cn = clampNeck(j, F0.fwd, F0.hfwd, o.neckDeg ?? (Math.abs(along) > .45 ? 20 : 40)); j = cn.j; }
   // a painted head is drawn nearly upright on its collar: across the screen it leans at most headLeanDeg off the torso (front, back, 3/4)
-  if (view !== 'side') { const lim = (o.headLeanDeg ?? 15) * Math.PI / 180, up = [0, 1, 0], nb = j[ji.neckBase];
+  if (view !== 'side') { const lim = (o.headLeanDeg ?? 20) * Math.PI / 180, up = [0, 1, 0], nb = j[ji.neckBase];
     const sa = v => Math.atan2(dot3(v, port.right), dot3(v, up)), dt = sa(v3(j[ji.spineMid], nb)), dh = sa(v3(nb, j[ji.headTop]));
     let df = Math.atan2(Math.sin(dh - dt), Math.cos(dh - dt));
     if (Math.abs(df) > lim) { const th = (Math.abs(df) - lim) * Math.sign(df), ax = port.toward, c = Math.cos(th), sn = Math.sin(th);
@@ -776,13 +815,19 @@ function renderPose(ctx, o) {
     if (dyaw > 60 && view !== 'side') headView = tqHead && !tqProfile && view !== 'threequarter' ? 'threequarter' : 'side';
     else if (view === 'threequarter' && tqProfile) headView = 'front';
     if (headView !== view) warnings.push(`head: ${headView} card on a ${view} body (head turned ${dyaw | 0} deg off the body)`); }
-  const a = { j, ...F, views: { body: view, head: headView }, torsoLim: o.torsoLimDeg ?? 50, lat: o.facing ? (o.facing === 'left' ? -1 : 1) : lat, hands: o.handStates || {}, bend: {}, sx: {}, states: {} };
+  const a = { j, ...F, views: { body: view, head: headView }, torsoLim: o.torsoLimDeg ?? 50, headLim: o.headLeanDeg ?? (view === 'side' ? 35 : 20), lat: o.facing ? (o.facing === 'left' ? -1 : 1) : lat, hands: o.handStates || {}, bend: {}, sx: {}, states: {} };
   RP.lat = a.lat;
   if (tips) {   // the hand follows the solve's wrist, bent at most 80 deg off the forearm (a cut-out wrist past 90 reads as broken)
     a.tips = {}; for (const s of 'LR') { const w = j[ji['wrist' + s]], fa = nrm3(v3(j[ji['elbow' + s]], w)), h = v3(w, tips[s]), hl = len3(h) || 1, c = dot3(fa, h) / hl;
       let d = h; if (c < Math.cos(80 * Math.PI / 180)) { const t = nrm3(h.map((x, i) => x / hl - c * fa[i])), m = 80 * Math.PI / 180; d = fa.map((x, i) => (x * Math.cos(m) + t[i] * Math.sin(m)) * hl); }
       a.tips[s] = w.map((x, i) => x + d[i]); } }
   a.noik = {}; a.cardIds = {};
+  // the pelvis card: built trouser top in front/back/three-quarter; a seated or kneeling three-quarter figure takes the profile seat (its seat mass shows)
+  { const hipFlex = s => { const sp = nrm3(v3(j[0], j[ji.spineMid])), th = nrm3(v3(j[ji['hip' + s]], j[ji['knee' + s]])); return Math.acos(Math.max(-1, Math.min(1, -dot3(sp, th)))) * 180 / Math.PI; };
+    const seated = (hipFlex('L') + hipFlex('R')) / 2 > 55, seat = S.skin.pelvis?.cards.side;
+    if (view === 'threequarter' && seated && seat?.startsWith('gen.')) a.cardIds.pelvis = seat;
+    else if (view !== 'side' && RP.hips?.[view === 'back' ? 'back' : 'front']) a.cardIds.pelvis = RP.hips[view === 'back' ? 'back' : 'front'];
+    if (a.cardIds.pelvis) RP.pelvisNote = a.cardIds.pelvis === seat ? 'profile seat (seated three-quarter)' : 'built trouser top (hip sleeve)'; }
   // per segment: how much of its true length the view shows (the joint atlas verdict), and what the puppet does about it
   const fr = { a: { A: a } }; port.cx = j[0][0]; port.cz = j[0][2];
   const jj = joints(fr, 'A'), pj = jj.map(q => port.p(q)), report = {};
@@ -825,7 +870,13 @@ function renderPose(ctx, o) {
   { const T = sol.X.torso; if (T) { const arm = x => /^(far|near)_(upper_arm|forearm|hand|mitt|arm)$/.test(x.role), under = [], rest = [];
       for (const x of sol.order) (x !== T && arm(x) && x.d <= T.d + 6 && (x.role.startsWith('far_') || x.d < T.d - 6) ? under : rest).push(x);
       const ti = rest.indexOf(T); sol.order = [...rest.slice(0, ti).filter(x => !under.includes(x)), ...under, ...rest.slice(ti)]; } }
-  if (ctx) for (const x of sol.order) drawCard(ctx, x, 1);
+  if (ctx) {
+    for (const x of sol.order) drawCard(ctx, x, 1);
+    // knee sleeves: the thigh's end redrawn over the shin's root inside a disc at the knee, so no seam, gap or hole shows at the joint
+    if (o.sleeves !== false) for (const sd of ['L', 'R']) { const th = sol.X['thigh_' + sd], sh = sol.X['shin_' + sd]; if (!th || !sh || sol.order.indexOf(sh) < sol.order.indexOf(th)) continue;
+      const wpx = widthAt(th.c, .9); if (!wpx) continue; const fl = S.fix[th.c.id]?.flare || S.autoFlare?.[th.c.id], r = .55 * wpx * (fl ? fl[1] : 1) * th.s, kn = sh.P;
+      ctx.save(); ctx.beginPath(); ctx.arc(kn[0], kn[1], r, 0, Math.PI * 2); ctx.clip(); drawCard(ctx, th, 1); ctx.restore(); }
+  }
   S.farShade = prevShade;
   const cards = sol.order.map(x => ({ part: x.k, card: x.c.id, view: x.view, role: x.role, mirrored: !!x.mir, ...(report[x.k] || {}), gap_cm: +x.gap.toFixed(1), miss_cm: +x.miss.toFixed(1) }));
   for (const c of cards) if (c.miss_cm > 12 && LIMB.test(c.part)) warnings.push(`${c.part}: card ends ${c.miss_cm} cm from its joint`);
@@ -839,6 +890,6 @@ Object.assign(P, { renderPose, prepare, applyContract, fromPoseLab, neutralOf, y
 
 Object.assign(P, { ppcOf, cardsOf, trimmed, holdPoint, clampNeck, S, J, ji, HAND_CM, TOPO, PAR, GRP, GROUPS, VIT, FEET, measure, retarget, joints, SEG, LR, STYLES, STACK0, ARMS, VIEWS, VIEWOF, viewOf, OTHER, STICK,
   NAME, NOT, nameOK, human, painted, IMG, img, AB, pts, cardLeft, index, v3, len3, hyp, rot, makePort, centre, active, mk, fwd, inv, scaleOf, socket, ik2, roleOf, solve,
-  drawCard, decode, decodeProps, measureActor, presetK, cur, newSkin, dE, dress, kitbash, labCss, buildCard, buildSeat, rebuildGen, stick });
+  drawCard, decode, decodeProps, measureActor, presetK, cur, newSkin, dE, dress, kitbash, labCss, buildCard, buildSeat, buildHips, rebuildGen, stick });
 root.PuppetCore = P;
 })(typeof window !== 'undefined' ? window : globalThis);

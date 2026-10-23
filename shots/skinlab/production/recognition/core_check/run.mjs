@@ -6,7 +6,7 @@ const out=process.argv[2], ids=process.argv[3].split(',');
 const b=await puppeteer.launch({headless:'new',args:['--no-sandbox'],executablePath:process.env.CHROME||'/opt/pw-browsers/chromium-1194/chrome-linux/chrome'});
 const p=await b.newPage(); await p.setViewport({width:600,height:700});
 p.on('pageerror',e=>console.log('pageerror',e.message));
-await p.goto('http://localhost:8811/shots/skinlab/core_check.html'+(process.env.HARVEST?'?harvest=1':''),{waitUntil:'networkidle0',timeout:120000});
+await p.goto('http://localhost:8811/shots/skinlab/core_check.html?x=1'+(process.env.HARVEST?'&harvest=1':'')+(process.env.CORE?'&core='+process.env.CORE:'')+(process.env.POSES?'&poses='+process.env.POSES:''),{waitUntil:'networkidle0',timeout:120000});
 await p.waitForFunction('window.__ready||window.__error',{timeout:100000});
 const err=await p.evaluate(()=>window.__error); if(err){console.log(err);process.exit(1);}
 fs.mkdirSync(out,{recursive:true}); const all={};
