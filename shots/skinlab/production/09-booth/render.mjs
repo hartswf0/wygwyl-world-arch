@@ -61,7 +61,7 @@ try {
     const f = Math.min(N - 1, Math.max(0, Math.round((t - edl.t0) * edl.fps)));
     execFileSync(FFMPEG, ['-y', '-loglevel', 'error', '-i', path.join(tmp, `f${String(f).padStart(4, '0')}.png`), '-q:v', '3', path.join(HERE, `v${V}_key_${k}_f${f}.jpg`)]);
   }
-  fs.rmSync(tmp, { recursive: true, force: true });
+  if (process.env.KEEP_FRAMES) { fs.rmSync(process.env.KEEP_FRAMES, { recursive: true, force: true }); fs.renameSync(tmp, process.env.KEEP_FRAMES); } else fs.rmSync(tmp, { recursive: true, force: true });   // KEEP_FRAMES=dir keeps the PNGs (for the image check)
   const sz = fs.statSync(mp4).size;
   console.log(`passage_v${V}.mp4 ${(sz / 1e6).toFixed(2)} MB · ${N} frames · foot slide max ${measures.foot_slide_cm_per_frame.max.toFixed(2)} cm/f · lift sync ${measures.handset_at_ear.sync_offset_frames} frames`);
   await done(0);

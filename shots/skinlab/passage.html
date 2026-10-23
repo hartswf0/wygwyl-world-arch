@@ -337,6 +337,107 @@ function solveFrame(fr, cam) {
   return { sol, port };
 }
 function caseAt(f) { return E.caseTrack[f]; }
+
+// ---------- card space: pose-to-pose keys (round 3) ----------
+// A drawn pose is a root (the pelvis card's waist brad, world cm) and one angle per card (screen degrees, the card's A→B line);
+// every child hangs at its socket on its parent card (the same sockets the solve uses), so a pose is cut-out FK: cards turned
+// about their brads. card_keys in the EDL list every drawn pose at its frame (keys and the in-betweens designed between them);
+// a pose holds until the next one.
+const KEY_A = { fwd: [1, 0, 0], hfwd: [1, 0, 0], pfwd: [1, 0, 0], views: { body: 'side', head: 'side' }, lat: 1, hands: { R: 'grip' } };
+function keyActor(ck) { return { ...KEY_A, fwd: ck.facing === 'left' ? [-1, 0, 0] : [1, 0, 0], lat: ck.facing === 'left' ? -1 : 1, hands: ck.hands || KEY_A.hands }; }
+function fkPose(pose, cam, ck) {
+  const a = keyActor(ck), port = { label: 'cam', yaw: 0, k: cam.s(pose.root[2]), toward: [0, 0, 1], right: [1, 0, 0], cx: 0, cz: 0, p: q => cam.p(q) };
+  const near = ck.near || { arm: 'R', leg: 'R' }, X = {};
+  for (const k of P.STYLES[S.style].segs) {
+    const sk = S.skin[k], ang = pose.ang[k]; if (!sk || ang == null) continue;
+    const ac = P.active(k, sk, a, port); if (!ac) continue;
+    const s = P.scaleOf(k, ac.c, sk, null, null, port, true), parent = P.SEG[k].par.find(q => X[q]);
+    const sock = parent ? P.socket(k, X[parent], port, true) : null, start = sock ? sock.p : cam.p(pose.root);
+    const x = P.mk(k, ac.c, sk, start, ang * Math.PI / 180, s, ac.mir);
+    x.view = 'side'; x.want = 'side'; x.parent = parent; x.sockP = sock?.p; x.gap = 0; x.miss = 0; x.d = 0; x.role = P.roleOf(k, near);
+    X[k] = x;
+  }
+  const st = S.stack.side, rank = x => { const i = st.indexOf(x.role); return i < 0 ? 99 : i; };
+  return { sol: { X, order: Object.values(X).sort((p1, p2) => rank(p1) - rank(p2)), view: 'side', near, pj: null, keyed: true }, port };
+}
+function captureCards(sol, port, cam) {   // a solved figure as a card-space pose
+  const r = sol.X.pelvis || sol.X.torso, z = E.frames[0] ? 0 : 0;
+  return { ang: Object.fromEntries(Object.entries(sol.X).map(([k, x]) => [k, +(x.ang * 180 / Math.PI).toFixed(2)])), rootPx: r.P.slice() };
+}
+const unproject = (cam, px, z) => { const s = cam.s(z); return [cam.x + (px[0] - W / 2) / s, cam.height - (px[1] - cam.hz) / s, z]; };
+function keyAt(f) { const K = E.cardKeys; if (!K || f < K.poses[0].f) return null; let k = K.poses[0]; for (const q of K.poses) if (q.f <= f) k = q; return k; }
+// compile the designed lift, bow and sink into explicit card poses (run with ?compile=1; the result is written into the EDL)
+function compileKeys() {
+  const D = E.edl.card_key_design, f0 = D.from_frame, fr = E.frames[f0], cam = camOf(fr.shot);
+  const { sol, port } = solveFrame(fr, cam), base = captureCards(sol, port, cam), z = fr.a.A.j[0][2];
+  const root0 = unproject(cam, base.rootPx, z), k = cam.s(z), ck = D;
+  const hand = 'hand_' + D.hand, ua = 'upper_arm_' + D.hand, fa = 'forearm_' + D.hand;
+  const place = pose => fkPose(pose, cam, ck).sol.X;
+  const deg = r => +(r * 180 / Math.PI).toFixed(2), rad = d => d * Math.PI / 180;
+  const X0 = place({ root: root0, ang: base.ang });
+  const G0 = P.holdPoint(X0[hand]), hs0 = E.edl.props.handset;
+  // which side the arm bends on stays the side it bends on at the grasp
+  const S0 = X0[ua].P, W0 = X0[fa].P === undefined ? null : P.fwd(X0[fa], X0[fa].B), El0 = P.fwd(X0[ua], X0[ua].B);
+  const bendSide = ((W0[0] - S0[0]) * (El0[1] - S0[1]) - (W0[1] - S0[1]) * (El0[0] - S0[0])) >= 0 ? 1 : -1;
+  const earOf = X => { const hx = X.head, e = S.fix[hx.c.id]?.ears?.[D.hand] || S.fix[hx.c.id]?.ears?.L; return e ? P.fwd(hx, e) : P.fwd(hx, [(hx.A[0] + hx.B[0]) / 2, (hx.A[1] + hx.B[1]) / 2]); };
+  const facing = D.facing === 'left' ? -1 : 1;
+  // a pose with the phone hand put so its hold point is at G, the hand turned to handAng, the handset at hsAng
+  function armTo(pose, G, handAng) {
+    const X = place(pose), hx = X[hand], probe = P.mk(hand, hx.c, hx.sk, [0, 0], handAng, hx.s, hx.mir), hp = P.holdPoint(probe), Wt = [G[0] - hp[0], G[1] - hp[1]];
+    const S1 = X[ua].P, l1 = X[ua].lab * X[ua].s, l2 = X[fa].lab * X[fa].s;
+    const a1 = P.ik2(S1, Wt, [0, 0], l1, l2, bendSide), El = [S1[0] + Math.cos(a1) * l1, S1[1] + Math.sin(a1) * l1];
+    pose.ang[ua] = deg(a1 - X[ua].ax * 0) ; pose.ang[fa] = deg(Math.atan2(Wt[1] - El[1], Wt[0] - El[0])); pose.ang[hand] = deg(handAng);
+    return pose;
+  }
+  // the card angle mk takes is the A→B line's screen angle; ik2 returns the line from shoulder to elbow, the same thing
+  const poses = [];
+  const clone = q => JSON.parse(JSON.stringify(q));
+  const P0 = { f: f0, root: root0, ang: clone(base.ang), handset_ang: 0, note: 'grasp: the hand closes on the handset on its hook (the solved reach, captured)' };
+  poses.push(P0);
+  // the contact pose: head raised to the design angle, the hand at the ear holding the handset along the face
+  const headUp = base.ang.head + D.head_raise;
+  const contactOf = (pose, extraHead = 0) => {
+    const q = clone(pose); q.ang.head = headUp + extraHead;
+    const X = place(q), ear = earOf(X), axis = X.head.ang;   // head A→B (neck→crown) on screen
+    const down = [-Math.cos(axis), -Math.sin(axis)], fwdv = [facing * -Math.sin(axis), facing * Math.cos(axis)];
+    const md = [down[0] * .86 + fwdv[0] * .5, down[1] * .86 + fwdv[1] * .5], ml = Math.hypot(...md);
+    const gap = (hs0.grip[1] - hs0.ear[1]) * hs0.h_cm * k, G = [ear[0] + md[0] / ml * gap, ear[1] + md[1] / ml * gap];
+    const hsAng = Math.atan2(ear[0] - G[0], -(ear[1] - G[1]));   // handset: earpiece (up the card) toward the ear
+    const handAng = Math.atan2(ear[1] - G[1], ear[0] - G[0]) + facing * rad(D.hand_turn || 0);
+    return { q: armTo(q, G, handAng), G, hsAng, handAng };
+  };
+  const C = contactOf(P0);
+  // in-betweens: the hold point on an arc in front of the face, eased into the ear; the hand and the handset turn by the same share
+  const hand0 = rad(base.ang[hand]), u = D.lift_u, ctrl = [(G0[0] + C.G[0]) / 2 + facing * D.arc_cm * k, (G0[1] + C.G[1]) / 2 + (D.arc_down_cm || 0) * k];
+  D.lift_frames.forEach((f, i) => {
+    const t = u[i], b = [(1 - t) * (1 - t) * G0[0] + 2 * (1 - t) * t * ctrl[0] + t * t * C.G[0], (1 - t) * (1 - t) * G0[1] + 2 * (1 - t) * t * ctrl[1] + t * t * C.G[1]];
+    const q = clone(P0); q.ang.head = lerp(base.ang.head, headUp, t);
+    let dh = C.handAng - hand0; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
+    armTo(q, b, hand0 + dh * t);
+    let dhs = C.hsAng; dhs = Math.atan2(Math.sin(dhs), Math.cos(dhs));
+    poses.push({ f, root: root0, ang: q.ang, handset_ang: +(dhs * t).toFixed(4), note: i === u.length - 1 ? 'contact: the earpiece on the ear' : `lift in-between ${i + 1}: ${Math.round(t * 100)}% of the way` });
+  });
+  // the bow and the sink, stepped: each step a held pose; the handset stays on the ear (the arm re-solved to the moved ear)
+  let last = poses[poses.length - 1];
+  for (const st of D.steps) {
+    const q = clone(last); q.f = st.f;
+    q.ang.torso = base.ang.torso + facing * (st.torso || 0);
+    if (st.sink) q.root = [root0[0], root0[1] - st.sink, root0[2]];
+    const Xq = place(q), headRot = facing * (st.bow || 0);
+    const c = contactOf(q, headRot); c.q.f = st.f; c.q.handset_ang = +c.hsAng.toFixed(4); c.q.root = q.root; c.q.note = st.note;
+    if (st.sink) {   // legs: thigh and shin re-solved from the moved hip sockets to the ankles where they stood
+      const X0b = place(P0), Xs = place(c.q);
+      for (const sd of ['L', 'R']) { const th = 'thigh_' + sd, sh = 'shin_' + sd; if (!Xs[th] || !Xs[sh]) continue;
+        const ank = P.fwd(X0b[sh], X0b[sh].B), Hp = Xs[th].P, l1 = Xs[th].lab * Xs[th].s, l2 = Xs[sh].lab * Xs[sh].s, Kn0 = P.fwd(X0b[th], X0b[th].B);
+        const side = ((ank[0] - X0b[th].P[0]) * (Kn0[1] - X0b[th].P[1]) - (ank[1] - X0b[th].P[1]) * (Kn0[0] - X0b[th].P[0])) >= 0 ? 1 : -1;
+        const a1 = P.ik2(Hp, ank, [0, 0], l1, l2, side), Kn = [Hp[0] + Math.cos(a1) * l1, Hp[1] + Math.sin(a1) * l1];
+        c.q.ang[th] = deg(a1); c.q.ang[sh] = deg(Math.atan2(ank[1] - Kn[1], ank[0] - Kn[0])); }
+    }
+    poses.push(c.q); last = c.q;
+  }
+  for (const q of poses) { q.root = q.root.map(v => +v.toFixed(2)); for (const kk in q.ang) q.ang[kk] = +(+q.ang[kk]).toFixed(2); }
+  return { about: 'compiled by passage.html?compile=1 from card_key_design: every drawn pose of the close shot from the grasp on, a root (pelvis waist brad, world cm) and per-card screen angles (deg); a pose holds until the next', facing: D.facing, hand: D.hand, hands: D.hands, near: D.near, over_head: D.over_head, poses };
+}
 function render(f) {
   const fr = E.frames[f], cam = camOf(fr.shot), inside = fr.shot === 'booth';
   g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
@@ -344,7 +445,7 @@ function render(f) {
   drawBack(cam); drawQuay(cam);
   for (const l of E.edl.world.extra) drawStand(l.part, E.edl.world.booth.x + l.x_cm, l.y_cm, E.edl.world.booth.z - l.z_cm, l.w_cm, l.h_cm, cam, { op: l.op });
   const back = drawBoothCard('booth back', cam);
-  const { sol, port } = solveFrame(fr, cam); ST.lastSol = sol; ST.port = port;
+  const kp = keyAt(f), { sol, port } = kp ? fkPose(kp, cam, E.cardKeys) : solveFrame(fr, cam); ST.lastSol = sol; ST.port = port;
   const ps = E.props[f];
   // the hook and, while it hangs there, the handset
   const hk = E.hook && cam.p(E.hook.world);
@@ -352,12 +453,12 @@ function render(f) {
   let handsetCard = null;
   if (ps.handset === 'hook' && E.hook) handsetCard = cardAt(E.edl.props.handset.part, E.edl.props.handset.w_cm, E.edl.props.handset.h_cm, hs, E.edl.props.handset.grip, hk, 0);
   else if (sol?.X['hand_' + E.edl.props.handset.hand]) {
-    const hx = sol.X['hand_' + E.edl.props.handset.hand], grip = handPoint(hx, .42, 0), head = sol.pj[ji.head];
+    const hx = sol.X['hand_' + E.edl.props.handset.hand], grip = handPoint(hx, .42, 0);
     // the handset lies along the face from ear to mouth when it is up; hanging, it hangs; between, it turns with the hand
     // the handset stays in the hand (its grip on the hand's hold point); lifted, its earpiece turns to the ear
     const ear = earPx(fr, cam, E.edl.props.handset.hand, sol), d = [ear[0] - grip[0], ear[1] - grip[1]];
-    const up = clamp(1 - (Math.hypot(d[0], d[1]) / port.k - 12) / 25, 0, 1);
-    const ang = lerp(0, Math.atan2(d[0], -d[1]), smooth(up));
+    const up = kp ? (kp.handset_ang ? 1 : 0) : clamp(1 - (Math.hypot(d[0], d[1]) / port.k - 12) / 25, 0, 1);
+    const ang = kp ? kp.handset_ang : lerp(0, Math.atan2(d[0], -d[1]), smooth(up));
     handsetCard = cardAt(E.edl.props.handset.part, E.edl.props.handset.w_cm, E.edl.props.handset.h_cm, port.k, E.edl.props.handset.grip, grip, ang);
     handsetCard.up = up;
   }
@@ -374,7 +475,7 @@ function render(f) {
     const hk = 'hand_' + E.edl.props.handset.hand;
     let drewHandset = ps.handset === 'hook';
     if (drewHandset) drawPlaced(handsetCard);
-    const sg = E.segs[fr.seg], over = sg.over_head || [], under = sg.under_torso || [];
+    const sg = E.segs[fr.seg], over = (kp ? E.cardKeys.over_head : sg.over_head) || [], under = (kp ? [] : sg.under_torso) || [];
     let order = sol.order.filter(x => !over.includes(x.k) && !under.includes(x.k)).concat(over.map(k => sol.X[k]).filter(Boolean));
     if (under.length) { const ti = Math.max(0, order.findIndex(x => x.k === 'torso')); order.splice(ti, 0, ...under.map(k => sol.X[k]).filter(Boolean)); }
     for (const x of order) { if (x.k === hk && !drewHandset) { drawPlaced(handsetCard); drewHandset = true; } P.drawCard(g, x, 1); }
@@ -383,7 +484,7 @@ function render(f) {
   const drawCase = () => { const c = ps.case; if (!c) return; const s = cam.s(c.pos[2]), pr = E.edl.props.case;
     const anchor = c.held ? pr.grip : [.5, 1], at = c.held ? c.gripPx : cam.p(c.pos);
     drawPlaced(cardAt(pr.part, pr.w_cm, pr.h_cm, c.held ? port.k : s, anchor, at, 0)); };
-  if (inside) { drawPoet(); if (cordOver) drawTheCord(); drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam); drawBoothCard('front-glass-pane-clear', cam); drawCase(); drawBoothCard('lamp', cam); }
+  if (inside) { drawPoet(); if (cordOver) drawTheCord(); drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam); drawBoothCard('front-glass-pane-clear', cam, E.edl.shots.booth.glass_op != null ? { op: E.edl.shots.booth.glass_op } : {}); drawCase(); drawBoothCard('lamp', cam); }
   else { drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam); drawBoothCard('front-glass-pane-clear', cam); drawBoothCard('lamp', cam);
     const caseBehind = ps.case && !ps.case.held && ps.case.pos[2] < fr.a.A.j[0][2];
     if (caseBehind) drawCase(); drawPoet(); if (!caseBehind) drawCase(); }
@@ -408,7 +509,7 @@ function light(cam) {
   g.save(); g.globalCompositeOperation = 'screen'; g.fillStyle = gr; g.fillRect(p[0] - r, p[1] - r, 2 * r, 2 * r); g.restore();
 }
 function diag(sol, port) {
-  if (!sol) return;
+  if (!sol || !sol.pj) return;
   g.save(); P.stick(g, sol.pj, '#5fd0ffaa', 2);
   for (const x of sol.order) if (x.sockP) { g.strokeStyle = x.gap > 2 ? '#ef6a5a' : '#e7c35a'; g.lineWidth = 1.5; g.beginPath(); g.arc(x.sockP[0], x.sockP[1], 3.5, 0, 7); g.stroke(); }
   g.fillStyle = '#efe6da'; g.font = '13px monospace'; const m = E.solved[ST.f];
@@ -452,7 +553,7 @@ window.__measure = async () => {
     for (const s of ['L', 'R']) { const p = a.contact[s], q = b.contact[s]; if (p.n !== q.n || p.p[1] > 1.5 || q.p[1] > 1.5) continue;
       slides.push({ f, foot: s, cm: Math.hypot(q.p[0] - p.p[0], q.p[2] - p.p[2]) / Math.max(1, E.frames[f].t - E.frames[f - k].t > 0 ? Math.round((E.frames[f].t - E.frames[f - k].t) * fps) : 1) }); } }
   const lift = E.edl.lines.find(l => l.key === 'lift lands').t[0];
-  const landing = all.findIndex((m, f) => m && m.handsetUp > .95 && m.ear < 9 && all.slice(f, f + 12).every(n => n && n.ear < 9));
+  const landing = all.findIndex((m, f) => m && m.ear != null && m.ear < 2 && all.slice(f, f + 12).every(n => n && n.ear != null && n.ear < 2));   // contact: the earpiece within 2 cm of the ear site, and staying
   const grab = E.grabFrame;
   return {
     passage: E.edl.id, edl_version: E.edl.version, contract: E.contractFrom, frames: E.N, fps,
@@ -656,6 +757,8 @@ async function boot() {
   await Promise.all([...ids].map(id => waitImg(loadImg(partSrc(id)))));
   console.log('stage', 'await placeHook();', performance.now()|0);
   await placeHook();
+  E.cardKeys = Q.get('compile') ? null : E.edl.card_keys || null;
+  if (Q.get('compile')) { window.__compiled = compileKeys(); E.cardKeys = window.__compiled; }
   console.log('stage', 'caseGrips();', performance.now()|0);
   caseGrips();
   document.getElementById('scrub').max = E.N - 1;
