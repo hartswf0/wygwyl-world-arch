@@ -97,6 +97,7 @@ async function drawProps(ctx, list, phase, g) {
       else { const h = g.hand(pr.hand); if (!h) continue; c = h.mid; }
       const hh = pr.size_cm * g.k * (ar < 1 ? 1 : 1 / ar), ww = hh * ar;
       if (pr.above) c = [c[0], c[1] - hh / 2 - 3 * g.k];   // resting on top of the raised hands, not in front of the face
+      if (pr.rest) c = [c[0], c[1] - hh / 2 + 2 * g.k];    // standing on the cupped palms: its base just inside the hands
       drawAt(ctx, im, c[0], c[1], ww, hh, false); drawn.push(pr.card + ' (' + pr.place + ')');
     }
   }
@@ -112,23 +113,31 @@ const cosv = (a, b) => { const la = Math.hypot(...a) || 1, lb = Math.hypot(...b)
 const sharp = (c, port) => !c.px_per_cm || c.px_per_cm * 1.5 >= port.k;
 function pickChains(H, jo, port, view, ratios) {
   const bySrc = {}; for (const c of H) (bySrc[c.source] ||= []).push(c);
-  const picks = [];
-  for (const s of 'LR') for (const ch of CH(s)) {
-    if (!ch.parts.some(k => (ratios[k] ?? 1) < .88)) continue;          // the chain is seen at full length: contract cards
+  const fit = (cs, s, ch) => {   // this source's whole chain for side s, or null
     const want = [...ch.parts, ...ch.opt].map((k, i) => ({ k, slot: k.replace(/_[LR]$/, ''), dir: camDir(jo, ch.j[i], ch.j[i + 1], port) }));
-    let best = null;
-    for (const [src, cs] of Object.entries(bySrc)) {
-      const got = []; let ok = true, sum = 0;
-      for (const w of want) {
-        const c = cs.find(c => c.slot === w.slot && c.side === s && VG(c.view) === VG(view) && sharp(c, port));
-        const cs_ = c ? cosv(c.dir_cam, w.dir) : -1;
-        if (ch.parts.includes(w.k)) { if (!c || cs_ < .8) { ok = false; break; } sum += 1 - cs_; got.push({ k: w.k, c, cos: cs_ }); }
-        else if (c && cs_ >= .8) got.push({ k: w.k, c, cos: cs_ });
-      }
-      if (ok && (!best || sum < best.sum)) best = { src, sum, got };
+    const got = []; let sum = 0;
+    for (const w of want) {
+      const c = cs.find(c => c.slot === w.slot && c.side === s && VG(c.view) === VG(view) && sharp(c, port));
+      const cs_ = c ? cosv(c.dir_cam, w.dir) : -1;
+      if (ch.parts.includes(w.k)) { if (!c || cs_ < .8) return null; sum += 1 - cs_; got.push({ k: w.k, c, cos: cs_ }); }
+      else if (c && cs_ >= .8) got.push({ k: w.k, c, cos: cs_ });
     }
-    if (best) picks.push(best);
-  }
+    return { sum, got };
+  };
+  const short = ch => ch.parts.some(k => (ratios[k] ?? 1) < .88);
+  const picks = [];
+  // arms: each side on its own (the chain is seen at full length: contract cards)
+  for (const s of 'LR') { const ch = CH(s)[0]; if (!short(ch)) continue; let best = null;
+    for (const [src, cs] of Object.entries(bySrc)) { const f = fit(cs, s, ch); if (f && (!best || f.sum < best.sum)) best = { src, ...f }; }
+    if (best) picks.push(best); }
+  // legs: one trouser per figure (round 11). If either leg needs a harvested chain, both legs come from ONE painting
+  // (each leg's chain fits its own bone directions), or neither is harvested: a harvested leg beside a contract leg shows two
+  // textures, two widths and a different knee rivet
+  const legs = ['L', 'R'].map(s => CH(s)[1]);
+  if (legs.some(short)) { let best = null;
+    for (const [src, cs] of Object.entries(bySrc)) { const fl = fit(cs, 'L', legs[0]), fr = fit(cs, 'R', legs[1]);
+      if (fl && fr && (!best || fl.sum + fr.sum < best.sum)) best = { src, sum: fl.sum + fr.sum, f: [fl, fr] }; }
+    if (best) for (const f of best.f) picks.push({ src: best.src, sum: f.sum, got: f.got }); }
   return picks;
 }
 const cross3_ = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
@@ -146,6 +155,19 @@ function handToEar(J, S, t, where = 'ear') {
   const a = (l1 * l1 - l2 * l2 + L * L) / (2 * L), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
   let pole = nrm(add(mul(lat, 1), [0, 1, 0])); pole = nrm(sub(pole, mul(u, pole.reduce((x, v, i) => x + v * u[i], 0))));   // the elbow out and down
   J['el' + s] = add(add(Sh, mul(u, a)), mul(pole, h)); J['wr' + s] = add(Sh, mul(u, L)); J['tip' + s] = add(J['wr' + s], mul(up, S['hand' + s] || 19));
+  return s;
+}
+// two-handed hold (round 11): the free hand is brought to the holding hand (the one nearer the prop's painted spot, or the lower
+// one), beside it across the prop, by the same two-bone IK in the Pose Lab frame
+function handBeside(J, S) {
+  const sub = (a, b) => a.map((v, i) => v - b[i]), add = (a, b) => a.map((v, i) => v + b[i]), mul = (a, k) => a.map(v => v * k), nrm = a => { const l = Math.hypot(...a) || 1; return a.map(v => v / l); };
+  const hold = J.wrR[1] >= J.wrL[1] ? 'R' : 'L', s = hold === 'R' ? 'L' : 'R';   // Pose Lab Y is down: the lower wrist holds
+  const lat = nrm(sub(J['sh' + s], J['sh' + hold])), W = add(J['wr' + hold], mul(lat, 9)), Sh = J['sh' + s];
+  const l1 = S['uarm' + s], l2 = S['farm' + s], d = sub(W, Sh), L = Math.min(l1 + l2 - .5, Math.hypot(...d)), u = nrm(d);
+  const a = (l1 * l1 - l2 * l2 + L * L) / (2 * L), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
+  let pole = nrm(add(lat, [0, 1, 0])); pole = nrm(sub(pole, mul(u, pole.reduce((x, v, i) => x + v * u[i], 0))));
+  const tip = sub(J['tip' + hold], J['wr' + hold]);
+  J['el' + s] = add(add(Sh, mul(u, a)), mul(pole, h)); J['wr' + s] = add(Sh, mul(u, L)); J['tip' + s] = add(J['wr' + s], tip);
   return s;
 }
 function handFrom(segs, geo, kU, offX, offY) {
@@ -205,6 +227,7 @@ async function run(ch, file, U, opts) {
       const props = ((PM.poses || {})[t.id] || null)?.map(pr => ({ ...pr })), hands = { ...((PM.hands || {})[t.id] || {}) };
       // the painting holds the handset at the ear, the cup at the mouth; the prop goes in the hand that was raised
       for (const pr of props || []) if (pr.hand_to) pr.hand ||= handToEar(J, D.skeleton, t, pr.hand_to);
+      for (const pr of props || []) if (pr.two_hands) handBeside(J, D.skeleton);   // both hands on the prop, as painted
       const args = { contract: C, joints3d: J, port, psi: sol.psi, ground: false, handStates: hands, target: t };   // target: the painting decides head lean and hand-at-head (renderPose round 9)
       // the joints renderPose will actually draw (B's PuppetCore.adjustJoints: the painting's hand-at-head, head lean): chains, heads
       // and props are chosen from these, so a harvested arm reaches the hand where it is drawn. Without adjustJoints: the solve.

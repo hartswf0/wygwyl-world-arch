@@ -188,6 +188,12 @@ def blind6(ch, keyfile):
     blind5(ch, keyfile, outdir='/tmp/claude-0/blind6', keyout=os.path.join(SCRATCH, 'blind6_key.json'),
            paintings_from=('/tmp/claude-0/blind5', '/tmp/claude-0/blind4', '/tmp/claude-0/blind3'), prefix='g', tag='blind6')
 
+def blind7(ch, keyfile):
+    """blind7: as blind5, named h01..hNN, in /tmp/claude-0/blind7, key to scratchpad/blind7_key.json, paintings sheets copied in.
+    Run only when the orchestrator says so: python3 compose.py poet --blind7 results/blind1_key.json"""
+    blind5(ch, keyfile, outdir='/tmp/claude-0/blind7', keyout=os.path.join(SCRATCH, 'blind7_key.json'),
+           paintings_from=('/tmp/claude-0/blind6', '/tmp/claude-0/blind5', '/tmp/claude-0/blind4', '/tmp/claude-0/blind3'), prefix='h', tag='blind7')
+
 def blind5(ch, keyfile, outdir='/tmp/claude-0/blind5', keyout='/tmp/claude-0/-home-user/f7ade34c-fa5f-538f-b092-e7629f2f6294/scratchpad/blind5_key.json',
            paintings_from=('/tmp/claude-0/blind4', '/tmp/claude-0/blind3'), prefix='f', tag='blind5'):
     """blind5: as blind4 (same poses as keyfile, a new shuffle) but named f01..fNN, with the critic's paintings_part*.jpg sheets copied in
@@ -211,6 +217,7 @@ def blind5(ch, keyfile, outdir='/tmp/claude-0/blind5', keyout='/tmp/claude-0/-ho
 
 if __name__ == '__main__':
     if '--index' in sys.argv: index()
+    elif '--blind7' in sys.argv: blind7(sys.argv[1], sys.argv[sys.argv.index('--blind7') + 1])   # poet --blind7 results/blind1_key.json
     elif '--blind6' in sys.argv: blind6(sys.argv[1], sys.argv[sys.argv.index('--blind6') + 1])   # poet --blind6 results/blind1_key.json
     elif '--blind5' in sys.argv: blind5(sys.argv[1], sys.argv[sys.argv.index('--blind5') + 1])   # poet --blind5 results/blind1_key.json
     elif '--blind4' in sys.argv: blind4(sys.argv[1], sys.argv[sys.argv.index('--blind4') + 1])   # e.g. poet --blind4 results/blind1_key.json
