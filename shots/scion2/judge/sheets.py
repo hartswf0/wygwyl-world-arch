@@ -7,6 +7,7 @@ import json, os, random, sys
 from PIL import Image, ImageDraw
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
 out, keyf = sys.argv[1:3]
+ONLY = sys.argv[3].split(',') if len(sys.argv) > 3 else None
 T = json.load(open(os.path.join(ROOT, 'shots/scion2/test_set.json')))['poses']
 M = {'h1': 'shots/scion2/h1/out', 'h2': 'shots/scion2/h2/out', 'h3': 'shots/scion2/h3/out', 'control': 'shots/scion2/control/out'}
 def crop(im):
@@ -15,10 +16,11 @@ def crop(im):
     g = im.convert('L').point(lambda x: 255 if x < 225 else 0); return im.crop(g.getbbox())
 items, missing = [], []
 for m, d in M.items():
+    if ONLY and m not in ONLY: continue
     for p in T:
         b = p['id'].replace('/', '__'); f = next((os.path.join(ROOT, d, b + e) for e in ('.png', '.jpg') if os.path.exists(os.path.join(ROOT, d, b + e))), None)
         (items if f else missing).append((m, p, f))
-random.Random(20261023).shuffle(items); os.makedirs(out, exist_ok=True); key = {}; H = 900
+random.Random(20261023 + len(items)).shuffle(items); os.makedirs(out, exist_ok=True); key = {}; H = 900
 for i, (m, p, f) in enumerate(items, 1):
     pa = crop(Image.open(os.path.join(ROOT, p['painting']))); pu = crop(Image.open(f))
     def flat(x):
