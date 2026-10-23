@@ -290,6 +290,8 @@ class Grower:
         SC, SCpad = {}, {}
         if self.ident:
             for c, ok_ in self.zone_ok.items():
+                if getattr(self, '_region', None) is not None:
+                    ok_ = ok_ | self._region          # an end part's own region is its zone
                 SC[c] = np.where(ok_ | (S <= -1000), S, -2.).astype(np.float32)
                 SCpad[c] = np.pad(SC[c], ((0, self.PAD), (0, self.PAD)), constant_values=-FL.BIG)
         n_heads = sum(1 for p in st.placed if self.V[p['vi']]['pi'] in self.heads)

@@ -114,10 +114,19 @@ def row_image(ctx, asm, s, ms, ren, title):
     rr = to_rgb(ren, box)
     pm = piece_map(ctx, asm, ms).crop(box)
     cm = coverage_map(ctx, ms).crop(box)
-    ims = [fit(i, PH) for i in (ref, rr, pm, cm)]
+    panels = [ref, rr, pm, cm]
+    labels = ['REFERENCE', 'RENDER', 'PIECE MAP (green = snapped brads, red dot = free brad, thick red = disconnected)', 'COVERAGE (grey filled, blue empty, red overflow)']
+    if asm.get('_seg') is not None:          # seg_clip family: the reference's SAM part regions beside the render
+        Lm = asm['_seg']
+        cols = np.array([[int(255 * c) for c in colorsys.hsv_to_rgb((i * .61803) % 1, .6, .9)] for i in range(16)], np.uint8)
+        sg = np.full(Lm.shape + (3,), 255, np.uint8)
+        sg[Lm >= 0] = cols[Lm[Lm >= 0]]
+        panels.insert(2, Image.fromarray(sg).crop(box))
+        labels.insert(2, 'SEGMENTATION (SAM part regions of the reference: guidance only)')
+    ims = [fit(i, PH) for i in panels]
     pw = max(i.width for i in ims)
     W = 1600
-    k = min(1., (W - 50) / (4 * pw))
+    k = min(1., (W - 50) / (len(ims) * pw))
     ims = [i.resize((max(1, int(i.width * k)), max(1, int(i.height * k)))) for i in ims]
     ph = ims[0].height
     out = Image.new('RGB', (W, ph + 58), (255, 255, 255))
@@ -127,9 +136,9 @@ def row_image(ctx, asm, s, ms, ren, title):
            (100 * s['coverage'], 100 * s['overflow'], s['components'], s['pieces'], s['snaps'], s['clip'], s['Q']),
            fill=(180, 30, 30) if s['components'] != 1 or s['overflow'] > .005 else (28, 32, 38), font=F)
     x = 8
-    for i, lab in zip(ims, ('REFERENCE', 'RENDER', 'PIECE MAP (green = snapped brads, red dot = free brad, thick red = disconnected)', 'COVERAGE (grey filled, blue empty, red overflow)')):
+    for i, lab in zip(ims, labels):
         out.paste(i, (x, 44))
-        x += (W - 16) // 4
+        x += (W - 16) // len(ims)
     return out
 
 
@@ -265,11 +274,17 @@ def main():
         g.save(os.path.join(rd, 'failures.jpg'), quality=80)
     # critic pack
     rng = random.Random(rnd)
-    top = ranked[:3]
+    segs = [a for a in ranked if a.startswith('seg_')][:1]
+    top = [a for a in ranked if not a.startswith('seg_')][:3 if not segs else 2] + segs
     picks = []
     pool = [(a, e['id']) for a in top for e in BENCH['train']
             if os.path.exists(os.path.join(SCORES, a, safe(e['id']) + '_pair.jpg'))]
-    rng.shuffle(pool)
+    if segs:                                  # about a third of the sheets from the seg family, still blind
+        sp = [x for x in pool if x[0] == segs[0]]; op = [x for x in pool if x[0] != segs[0]]
+        rng.shuffle(sp); rng.shuffle(op)
+        pool = sp[:4] + op
+    else:
+        rng.shuffle(pool)
     seen_t = {}
     for a, tid in pool:
         if seen_t.get(tid, 0) >= 1 and len({p[1] for p in pool}) > 12:
@@ -278,6 +293,7 @@ def main():
         if len(picks) == 12:
             break
     key = {}
+    rng.shuffle(picks)                        # the seg sheets are not s01..s04
     for i, (a, tid) in enumerate(picks, 1):
         Image.open(os.path.join(SCORES, a, safe(tid) + '_pair.jpg')).save(os.path.join(rd, 'critic', 's%02d.jpg' % i), quality=88)
         key['s%02d' % i] = {'algo': a, 'target': tid}
