@@ -107,15 +107,19 @@ def auto_view(view, cut=None, **extra):
 _JB = {'sh': ('shoulder', 'uarm'), 'el': ('elbow', 'farm'), 'hip': ('hip', 'thigh'), 'kn': ('knee', 'shin')}
 
 
-def joint_brads(S, rgb, m, rad=4.5, thr=0.65, reach=0.25):
+def joint_brads(S, rgb, m, rad=4.5, thr=0.65, reach=0.25, sat=None):
     """his brass brads sit inside painted gold rings: auto.find_brads sees ring and brad as one blob
     too big for a brad and misses most of them (they would stay painted and smear as the joint bends).
     Here solid brass discs are found as peaks of brass density in a brad-sized disc (a thin ring, the
     rust tie or a lapel edge cannot fill one), then each joint marker takes the best peak within 0.25
-    torso lengths, ranked by density and distance.  The rings stay painted."""
+    torso lengths, ranked by density and distance.  The rings stay painted.
+    sat: also require (r - b) / r above it (warm ivory satin passes the plain brass test)"""
     T, fig = S['T'], S['fig']
     b, g, r = [rgb[..., i].astype(np.float32) for i in range(3)]
-    gold = ((r > 120) & (r - b > 45) & (r >= g) & (g > 0.6 * r) & fig).astype(np.float32)
+    gold = (r > 120) & (r - b > 45) & (r >= g) & (g > 0.6 * r) & fig
+    if sat is not None:
+        gold &= (r - b) > sat * r
+    gold = gold.astype(np.float32)
     k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(2 * rad) | 1,) * 2).astype(np.float32)
     dens = cv2.filter2D(gold, -1, k / k.sum())
     peak = (dens >= thr) & (dens >= cv2.dilate(dens, np.ones((int(2 * rad) | 1,) * 2, np.uint8)) - 1e-6)
