@@ -34,7 +34,7 @@
        handStates?,            // {L: 'open' | 'grip' | ..., R: ...}: limbs.hand_*.states
        harvest?, harvestExclude?, // replacement cards (harvestExclude: a source id, a list of them, or a predicate (card) => bool) (library_harvest.json rows: slot/side/view/dir_cam/ratio/bad): used for a foreshortened limb
                                //   when one of the same part and view has a bone direction within ~20 deg; harvestExclude leaves one source out
-       headScale? = 1.05,      // heads at the paintings' canon: top of hair to chin = 0.152 of his height, measured on 7 standing paintings; headCm?, target? (the Pose Lab target: its neck/head markers give paintedHeadDeg), paintedHeadDeg? (the painting's head axis from its markers, screen deg clockwise from up: the drawn head stays within 15 deg of it), headLeanDeg? = 60 (only without paintedHeadDeg), neckDeg?, farShade? = .72,
+       headScale? = 1.05,      // heads at the paintings' canon: top of hair to chin = 0.152 of his height, measured on 7 standing paintings; headCm?, target? (the Pose Lab target: its neck/head markers give paintedHeadDeg), paintedHeadDeg? (the painting's head axis from its markers, screen deg clockwise from up: the drawn head stays within 15 deg of it), headLeanDeg? = 10 (only without a painted head axis), neckDeg?, farShade? = .72,
        rescale?,               // card scales, sockets and width matches are fixed by the first pose drawn with a contract; true re-fits them to this skeleton
        cardView?, ground?      // force the card view; ground (default true without a port) puts his lowest foot point on the floor
      })
@@ -56,7 +56,7 @@
    - hinges bending across the screen use two-card IK the anatomical way (knees forward, elbows back); hinges bending toward the camera
      get no IK (each card aims at its own joint), so front legs stand straight with the skeleton's stance, never bowed into a diamond
    - the head is a painted card: bowed toward the camera it is turned into the picture plane; across the screen the painting decides
-     (paintedHeadDeg: the solve's tilt within 15 deg of the painted head axis, else the painted axis), else it leans at most headLeanDeg (60) off the torso; hands bend <= 80 deg
+     (paintedHeadDeg: the solve's tilt within 15 deg of the painted head axis, else the painted axis), else it rolls at most headLeanDeg (10) off the torso; hands bend <= 80 deg
    - near limbs (his right when he faces screen-right) over the body, far limbs under and darker (farShade); the contract's stack per
      view; its fix fields: A/B, px_per_cm, rigid_ppc, view, left, sockets, hold, erase, trim, flare, states; code-built cards (the seat)
    Proven on 12 painted poses: shots/skinlab/core_check.html + production/recognition/core_check/ (painting | puppet side-by-sides).
@@ -758,11 +758,14 @@ function harvestFor(H, kk, view, jj, sg, port, exclude) {
 // head markers when both are confident (>= .4). Uniform scale and offset (the host's registration) do not change the angle.
 function paintedHead(o) {
   if (o.paintedHeadDeg != null) return o.paintedHeadDeg;
-  const mk = o.target?.markers, ok = n => mk?.[n] && (mk[n][4] ?? 1) >= .4;
-  if (!(ok('neck') && ok('head'))) return null;
+  const mk = o.target?.markers, c = n => mk?.[n] ? (mk[n][4] ?? 1) : 0, ang = (a, b) => Math.atan2(b[0] - a[0], -(b[1] - a[1])) * 180 / Math.PI;
+  if (!(c('head') >= .4 && (c('neck') >= .4 || (c('head') >= .5 && c('neck') >= .25)))) return null;   // a confident head marker carries a weaker neck
   const nh = Math.hypot(mk.head[0] - mk.neck[0], mk.head[1] - mk.neck[1]);
-  if (ok('shoulderL') && ok('shoulderR') && nh < .62 * Math.hypot(mk.shoulderL[0] - mk.shoulderR[0], mk.shoulderL[1] - mk.shoulderR[1])) return null;   // a head the painting bows toward us: its marker axis is not its tilt
-  return Math.atan2(mk.head[0] - mk.neck[0], -(mk.head[1] - mk.neck[1])) * 180 / Math.PI;
+  if (c('shoulderL') >= .4 && c('shoulderR') >= .4 && nh < .62 * Math.hypot(mk.shoulderL[0] - mk.shoulderR[0], mk.shoulderL[1] - mk.shoulderR[1])) return null;   // a head the painting bows toward us: its marker axis is not its tilt
+  let a = ang(mk.neck, mk.head);
+  // the head marker rides the hair and the face turn: the painted head axis is held within 30 deg of the painted torso (groin -> neck)
+  if (c('groin') >= .35) { const t = ang(mk.groin, mk.neck); let d = a - t; while (d > 180) d -= 360; while (d < -180) d += 360; if (Math.abs(d) > 30) a = t + Math.sign(d) * 30; }
+  return a;
 }
 const VERDICT = r => r >= .88 ? 'rotate' : r >= .55 ? 'replace/shorten' : 'dedicated/restage';
 const LIMB = /^(upper_arm|forearm|thigh|shin)_[LR]$/;
@@ -794,7 +797,7 @@ function adjustJoints(joints3d, o) {
       moves.push(`head: bowed ${(Math.asin(Math.min(1, Math.abs(along))) * 180 / Math.PI) | 0} deg toward the camera; turned into the picture plane (a painted head cannot foreshorten)`); }
     const F0 = facings(j), cn = clampNeck(j, F0.fwd, F0.hfwd, o.neckDeg ?? (Math.abs(along) > .45 ? 20 : 40)); j = cn.j; }
   // a painted head is drawn nearly upright on its collar: across the screen it leans at most headLeanDeg off the torso (front, back, 3/4)
-  if (view !== 'side' && paintedHead(o) == null) { const lim = (o.headLeanDeg ?? 60) * Math.PI / 180, up = [0, 1, 0], nb = j[ji.neckBase];
+  if (view !== 'side' && paintedHead(o) == null) { const lim = (o.headLeanDeg ?? 10) * Math.PI / 180, up = [0, 1, 0], nb = j[ji.neckBase];
     const sa = v => Math.atan2(dot3(v, port.right), dot3(v, up)), dt = sa(v3(j[ji.spineMid], nb)), dh = sa(v3(nb, j[ji.headTop]));
     let df = Math.atan2(Math.sin(dh - dt), Math.cos(dh - dt));
     if (Math.abs(df) > lim) { const th = (Math.abs(df) - lim) * Math.sign(df), ax = port.toward, c = Math.cos(th), sn = Math.sin(th);
@@ -821,8 +824,21 @@ function adjustJoints(joints3d, o) {
         const pole = v3(sh, el), pp = nrm3(pole.map((x, i) => x - dot3(pole, u) * u[i])), ne = sh.map((v, i) => v + (u[i] * Math.cos(a1) + pp[i] * Math.sin(a1)) * l1);   // the elbow keeps its side
         const mv = v3(w, nw); j[ji['elbow' + sd]] = ne; j[ji['wrist' + sd]] = nw; if (tips?.[sd]) tips[sd] = tips[sd].map((v, i) => v + mv[i]);
         moves.push(`hand_${sd}: brought ${(dl - want).toFixed(0)} cm to the head, elbow re-solved (the painting holds the hand there)`); } } }
+  // an arm the painting holds straight (its shoulder-elbow-wrist markers open to more than 145 deg, elbow marker conf >= .3) is drawn
+  // straight: elbow and wrist laid along the solve's shoulder->wrist line at the arm's own length, the hand carried with the wrist
+  const straight = {};
+  { const mk = o.target?.markers, c = n => mk?.[n] ? (mk[n][4] ?? 1) : 0;
+    for (const sd of ['L', 'R']) { if (c('shoulder' + sd) < .4 || c('wrist' + sd) < .4 || c('elbow' + sd) < .3) continue;
+      const S0 = mk['shoulder' + sd], E = mk['elbow' + sd], W = mk['wrist' + sd], u = [S0[0] - E[0], S0[1] - E[1]], v = [W[0] - E[0], W[1] - E[1]];
+      const angd = Math.acos(Math.max(-1, Math.min(1, (u[0] * v[0] + u[1] * v[1]) / ((Math.hypot(...u) * Math.hypot(...v)) || 1)))) * 180 / Math.PI;
+      if (angd < 145) continue;
+      const sh = j[ji['shoulder' + sd]], el = j[ji['elbow' + sd]], w = j[ji['wrist' + sd]], l1 = len3(v3(sh, el)), l2 = len3(v3(el, w)), dir = nrm3(v3(sh, w));
+      const flex = Math.acos(Math.max(-1, Math.min(1, dot3(nrm3(v3(el, sh)), nrm3(v3(el, w)))))) * 180 / Math.PI;
+      const ne = sh.map((x, i) => x + dir[i] * l1), nw = sh.map((x, i) => x + dir[i] * (l1 + l2)), mv = v3(w, nw);
+      j[ji['elbow' + sd]] = ne; j[ji['wrist' + sd]] = nw; if (tips?.[sd]) tips[sd] = tips[sd].map((x, i) => x + mv[i]); straight[sd] = true;
+      moves.push(`arm_${sd}: straightened (painted ${angd | 0} deg, the solve had ${flex | 0} deg)`); } }
   const named = Object.fromEntries(J.map((n, i) => [n, j[i].slice()])); if (tips) { named.tipL = tips.L.slice(); named.tipR = tips.R.slice(); }
-  return { adjusted: true, j, tips, named, joints3d: named, yaw, moves, warnings: warnings.concat(moves) };
+  return { adjusted: true, j, tips, named, joints3d: named, yaw, straight, moves, warnings: warnings.concat(moves) };
 }
 function renderPose(ctx, o) {
   const warnings = [];
@@ -881,7 +897,7 @@ function renderPose(ctx, o) {
     if (dyaw > 80 && hh > .5 && view !== 'side') headView = tqHead && !tqProfile && view !== 'threequarter' ? 'threequarter' : 'side';
     else if (view === 'threequarter' && tqProfile) headView = 'front';
     if (headView !== view) warnings.push(`head: ${headView} card on a ${view} body (head turned ${dyaw | 0} deg off the body)`); }
-  const a = { j, ...F, views: { body: view, head: headView }, torsoLim: o.torsoLimDeg ?? 50, headLim: o.headLeanDeg ?? 60, headRef: paintedHead(o), lat: o.facing ? (o.facing === 'left' ? -1 : 1) : lat, hands: o.handStates || {}, bend: {}, sx: {}, states: {} };
+  const a = { j, ...F, views: { body: view, head: headView }, torsoLim: o.torsoLimDeg ?? 50, headLim: o.headLeanDeg ?? 10, headRef: paintedHead(o), lat: o.facing ? (o.facing === 'left' ? -1 : 1) : lat, hands: o.handStates || {}, bend: {}, sx: {}, states: {} };
   RP.lat = a.lat;
   if (tips) a.tips = tips;
   a.noik = {}; a.cardIds = {}; a.minLen = { shin_L: o.minShin ?? .88, shin_R: o.minShin ?? .88 };
@@ -917,6 +933,7 @@ function renderPose(ctx, o) {
     const u = v3(jj[ji[up + s]], jj[ji[mid + s]]), w = v3(jj[ji[mid + s]], jj[ji[end + s]]), n = cross3(u, w), nl = len3(n) / ((len3(u) * len3(w)) || 1);
     if (nl >= .17 && Math.abs(dot3(nrm3(n), port.toward)) <= .5) { a.noik[seg + s] = true; if (report[seg + s]) report[seg + s].method += ' (bends toward the camera: no IK, aimed at its own joint)'; }
   }
+  for (const sd of Object.keys(AJ.straight || {})) { a.noik['upper_arm_' + sd] = true; if (report['upper_arm_' + sd]) report['upper_arm_' + sd].method += ' (painted straight: no IK bend)'; }
   // hinges that bend across the screen bend the anatomical way: knees forward, elbows back (side and three-quarter views)
   if (view === 'side' || Math.abs(Math.abs(yaw) - 90) < 50) {
     const fs = Math.sign(dot3(F.pfwd, port.right)) || a.lat, fa = Math.sign(dot3(F.fwd, port.right)) || a.lat;
@@ -944,7 +961,11 @@ function renderPose(ctx, o) {
   // hard overlaps at the knee: the thigh (the parent) is drawn right after its shin, so the thigh's own painted end lies crisply over
   // the shin's root, as paper overlaps (no redrawn disc, no feathering)
   if (o.overlapKnees !== false) for (const sd of ['L', 'R']) { const th = sol.X['thigh_' + sd], sh = sol.X['shin_' + sd]; if (!th || !sh) continue;
-    const it = sol.order.indexOf(th), is = sol.order.indexOf(sh); if (it < 0 || is < 0 || it > is) continue; sol.order.splice(it, 1); sol.order.splice(sol.order.indexOf(sh) + 1, 0, th); }
+    const it = sol.order.indexOf(th), is = sol.order.indexOf(sh); if (it < 0 || is < 0) continue;
+    if (sh.d > th.d + 6) {   // a folded shin nearer the camera than its thigh (sitting on the floor, the near shin of a kneel) lies over it, its boot with it
+      if (is < it) { sol.order.splice(is, 1); sol.order.splice(sol.order.indexOf(th) + 1, 0, sh); const ft = sol.X['foot_' + sd]; if (ft && sol.order.indexOf(ft) < sol.order.indexOf(sh)) { sol.order.splice(sol.order.indexOf(ft), 1); sol.order.splice(sol.order.indexOf(sh) + 1, 0, ft); } }
+      continue; }
+    if (it > is) continue; sol.order.splice(it, 1); sol.order.splice(sol.order.indexOf(sh) + 1, 0, th); }
   // one true scale per figure: no two boots, and no replacement limb card against the contract's, may differ by more than 10%;
   // a harvested boot is brought to the other boot's length; anything still off is a SCALE INVARIANT warning (the gate fails on it)
   { const cmLen = x => { const b = alphaBox(x.c); return b ? Math.max(b[2] - b[0], b[3] - b[1]) * x.s * (x.sx || 1) / port.k : null; };
