@@ -168,6 +168,10 @@ def fit(S, T, cap=CAP):
         cb = min(cap, HEAD_CAP) if b == 'head' else cap
         rot[b] = float(np.clip(d, -cb, cb))
         over[b] = max(0.0, abs(d) - cb)
+    # boots stay rigid with the shin: the toe markers are silhouette guesses and a boot
+    # turned on its own tears at the ankle
+    for sd in 'LR':
+        rot['foot' + sd] = rot['shin' + sd]
     if legs_cross(S):
         # crossed legs are one sheet of drawing: they ride with the torso, unbent
         for b in ['thighL', 'shinL', 'footL', 'thighR', 'shinR', 'footR']:
@@ -274,7 +278,7 @@ def variants(t):
                 yield dict(mirror=mir, swap_arm=sa, swap_leg=sl), X
 
 
-def rank_sources(tid, targets, exclude_family=True, allow=None, T=None, Ct=None):
+def rank_sources(tid, targets, exclude_family=True, allow=None, T=None, Ct=None, costume=True):
     t = targets[tid]
     if T is None:
         T = markers(t); Ct = conf(t)
@@ -282,7 +286,7 @@ def rank_sources(tid, targets, exclude_family=True, allow=None, T=None, Ct=None)
     for pid in candidates(family(tid) if exclude_family else None, allow):
         best = None
         for v, S in variants(targets[pid]):
-            c, info = pose_cost(S, T, Ct, emblem=(has_emblem(pid), has_emblem(tid)))
+            c, info = pose_cost(S, T, Ct, emblem=(has_emblem(pid), has_emblem(tid)) if costume else None)
             # the swapped pairings are only for markers mislabelled L/R; small penalty
             c += .05 * (v['swap_arm'] + v['swap_leg']) + .02 * v['mirror']
             if best is None or c < best[0]:

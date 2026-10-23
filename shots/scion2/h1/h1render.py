@@ -80,7 +80,14 @@ def prepare(pid, v, targets, exclude_family):
     gray = rgba[..., :3].astype(float).mean(2)
     rr = max(2.5, .03 * L)
     rim = ((dt < rr) & (gray > 75)).astype(np.float32)
-    res = dict(maps=maps, rim=rim, rr=rr, rgba=rgba, M=M, labels=labels, parts=parts, tmask=tmask, body=body_rgba,
+    # cut edges: where a part mask ends inside the painted figure (a line the painter never
+    # drew). If such an edge ends up against the background it gets a dark outline.
+    interior = cv2.erode(a, np.ones((5, 5), np.uint8)) > 0
+    cut = np.zeros(a.shape, np.float32)
+    for m in masks.values():
+        mu = m.astype(np.uint8)
+        cut[(mu > 0) & (cv2.erode(mu, np.ones((3, 3), np.uint8)) == 0) & interior] = 1
+    res = dict(cut=cut, maps=maps, rim=rim, rr=rr, rgba=rgba, M=M, labels=labels, parts=parts, tmask=tmask, body=body_rgba,
                filled=filled, masks=masks, L=L, seg=seg, donor=donor_id)
     _cache[key] = res
     return res
@@ -134,6 +141,8 @@ def render(pid, v, T, targets, exclude_family, F=None, cap=H.CAP, pad=None):
         out, (mx, my) = W.warp_layer(img, mask, bones, pr['seg'], F['X'], pr['labels'], pr['parts'],
                                      shape, off, pr['L'], maps=pr['maps'])
         rimw = cv2.remap(pr['rim'], mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+        cutw = cv2.remap(pr['cut'], mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+        cutall = cutw if l == layer_order(M, F)[0] else np.maximum(cutall, cutw)
         layers[l] = out; rims.append((out, rimw))
         canvas = W.over(canvas, out)
     # second pass: drop rim pixels that ended up inside the figure
@@ -151,6 +160,15 @@ def render(pid, v, T, targets, exclude_family, F=None, cap=H.CAP, pad=None):
     for out, rimw in rims:
         k = 1 - np.clip(rimw * 1.5, 0, 1) * inner
         canvas = W.over(canvas, out * k[..., None])
+    # exposed cut edges: dark, softened outline like the painted inner edges
+    Af = canvas[..., 3] > 128
+    band = cv2.distanceTransform(Af.astype(np.uint8), cv2.DIST_L2, 3) < max(2.0, 1.6 * s)
+    cutd = cv2.dilate(cutall, np.ones((5, 5), np.uint8)) > .3
+    edge = band & cutd & (canvas[..., 3] > 0)
+    if edge.any():
+        canvas[edge, :3] *= .45
+        soft = cv2.GaussianBlur(canvas, (0, 0), .9)
+        canvas[edge] = soft[edge]
     return canvas, dict(F=F, off=off, donor=pr['donor'], filled=int(pr['filled'].sum()))
 
 
