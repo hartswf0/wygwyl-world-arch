@@ -1,4 +1,5 @@
 {
+ "extensions": "fields the Skin Lab index.html does not read yet, interpreted by prove.mjs and handed to puppet-core.js: limbs.hand_*.states, fix[id].hold, fix[id].sockets, fix[id].erase, fix[id].trim, fix[id].hole, bind_per_view",
  "character": "poet",
  "costume": "red_black_sunglasses",
  "height_cm": 186,
@@ -39,7 +40,6 @@
    "far_arm",
    "far_forearm",
    "far_mitt",
-   "far_hand",
    "far_thigh",
    "far_leg",
    "far_shin",
@@ -55,6 +55,7 @@
    "near_arm",
    "near_forearm",
    "near_mitt",
+   "far_hand",
    "near_hand"
   ],
   "back": [
@@ -63,17 +64,17 @@
    "far_forearm",
    "far_mitt",
    "far_hand",
-   "head",
-   "torso",
-   "pelvis",
    "far_thigh",
    "far_leg",
    "far_shin",
    "far_foot",
    "near_thigh",
    "near_leg",
+   "pelvis",
    "near_shin",
    "near_foot",
+   "head",
+   "torso",
    "near_upper_arm",
    "near_arm",
    "near_forearm",
@@ -194,7 +195,20 @@
    "dx": 0,
    "dy": 0,
    "mirror": false,
-   "swap": false
+   "swap": false,
+   "states": {
+    "open": {
+     "side": "poet.red_black_sunglasses.body.profile/hand-l",
+     "front": "poet.red_black_sunglasses.body.front/4-hand-l",
+     "back": "poet.red_black_sunglasses.body.back/l"
+    },
+    "grip": {
+     "side": "poet.red_black_sunglasses.hands/grip-palm",
+     "front": "poet.14.action.red_black_sunglasses.parts.02/hand-l-grip",
+     "back": "poet.14.action.red_black_sunglasses.parts.02/hand-r-grip"
+    }
+   },
+   "states_note": "grip when the trial says this hand holds a prop (bank props: held A.L / A.R); a hand seen from the back uses the other hand's fist (mirror twin); grip cards come from the red_black hands sheet (profile) and the poet.14 red_black parts sheet (fists): declared same-costume substitutes"
   },
   "thigh_L": {
    "cards": {
@@ -308,7 +322,20 @@
    "dx": 0,
    "dy": 0,
    "mirror": false,
-   "swap": false
+   "swap": false,
+   "states": {
+    "open": {
+     "side": "poet.red_black_sunglasses.body.profile/hand-l",
+     "front": "poet.red_black_sunglasses.body.front/7-hand-r",
+     "back": "poet.red_black_sunglasses.body.back/hand-r"
+    },
+    "grip": {
+     "side": "poet.red_black_sunglasses.hands/grip-palm",
+     "front": "poet.14.action.red_black_sunglasses.parts.02/hand-r-grip",
+     "back": "poet.14.action.red_black_sunglasses.parts.02/hand-l-grip"
+    }
+   },
+   "states_note": "grip when the trial says this hand holds a prop (bank props: held A.L / A.R); a hand seen from the back uses the other hand's fist (mirror twin); grip cards come from the red_black hands sheet (profile) and the poet.14 red_black parts sheet (fists): declared same-costume substitutes"
   },
   "thigh_R": {
    "cards": {
@@ -384,7 +411,19 @@
     172,
     44
    ],
-   "note": "built-in A/B were card corners; now waist brad and collar (neck) brad"
+   "sockets": {
+    "upper_arm": [
+     40,
+     155
+    ]
+   },
+   "hole": [
+    44,
+    185,
+    30,
+    68
+   ],
+   "note": "built-in A/B were card corners; now waist brad and collar (neck) brad. sockets.upper_arm: the shoulder site is the drawn armhole (site 40,155, upper part of the oval; chosen from 6 sites by measured exposure), not the collar brad the lab would snap to, so the near sleeve covers the painted hole; hole = [cx,cy,rx,ry] of that oval, measured for exposure"
   },
   "poet.red_black_sunglasses.body.profile/part-4": {
    "slot": "forearm",
@@ -506,6 +545,14 @@
    "note": "back of the right hand; A was on a finger, B off the card"
   },
   "poet.red_black_sunglasses.body.back/poet-red-black-sunglasses-body-back": {
+   "erase": [
+    [
+     0,
+     400,
+     167,
+     419
+    ]
+   ],
    "slot": "thigh",
    "A": [
     81,
@@ -524,6 +571,14 @@
    "note": "filed upper_arm (px_per_cm taken from its twin shin-r); it is the left shin, the twin of shin-r (130x358 vs 129x358) with the ankle cuff"
   },
   "poet.red_black_sunglasses.master/left": {
+   "erase": [
+    [
+     0,
+     148,
+     108,
+     161
+    ]
+   ],
    "view": "side",
    "painted": true,
    "left": false,
@@ -535,9 +590,28 @@
     52,
     2
    ],
-   "note": "painted profile, faces right; A moved onto the neck brad. Printed HEAD below the neck: stacked under the torso so the collar hides it"
+   "note": "painted profile, faces right; A moved onto the neck brad. Printed HEAD below the neck: stacked under the torso so the collar hides it",
+   "ears": {
+    "L": [
+     40,
+     63
+    ],
+    "R": [
+     40,
+     63
+    ]
+   },
+   "ears_note": "ears: card px of his left and right ear (where a handset clamped at the ear sits); a profile shows one ear for both"
   },
   "poet.red_black_sunglasses.master/back": {
+   "erase": [
+    [
+     0,
+     149,
+     93,
+     163
+    ]
+   ],
    "view": "back",
    "painted": false,
    "A": [
@@ -547,11 +621,23 @@
    "B": [
     46,
     0
-   ]
+   ],
+   "ears": {
+    "L": [
+     6,
+     65
+    ],
+    "R": [
+     88,
+     64
+    ]
+   },
+   "ears_note": "ears: card px of his left and right ear (where a handset clamped at the ear sits); a profile shows one ear for both"
   },
   "poet.01.action.black_tshirt.parts.02/face-reference-detached": {
    "view": "front",
    "painted": true,
+   "trim": 6,
    "A": [
     63,
     168
@@ -560,7 +646,18 @@
     60,
     0
    ],
-   "note": "painted frontal face, no sunglasses (matches the painted profiles); from the black_tshirt sheet: a declared same-person substitute"
+   "note": "painted frontal face, no sunglasses (matches the painted profiles); from the black_tshirt sheet: a declared same-person substitute. trim 6: the cut leaves a light fringe up to 6 px wide on the left cheek and jaw (measured row by row); eroding the alpha 6 px removes it. Its finish is smoother than the master profile heads: no red_black front head without sunglasses exists in the kits (master/front, poet.05/06/07 heads all wear them; heads/front and master/blank are blank)",
+   "ears": {
+    "L": [
+     112,
+     84
+    ],
+    "R": [
+     7,
+     82
+    ]
+   },
+   "ears_note": "ears: card px of his left and right ear (where a handset clamped at the ear sits); a profile shows one ear for both"
   },
   "poet.red_black_sunglasses.feet/footwear-six-states": {
    "view": "front",
@@ -587,6 +684,67 @@
    ],
    "px_per_cm": 21.6,
    "note": "filed threequarter, it is the back of the boot (heel and pull tab); px_per_cm claimed for a 17 cm boot; B past the sole as for the front boot"
+  },
+  "poet.red_black_sunglasses.body.back/poet-black-upper-arm-l": {
+   "erase": [
+    [
+     130,
+     436,
+     260,
+     460
+    ]
+   ],
+   "view": "back",
+   "note": "torso back (named upper-arm-l by the cutter); the printed TORSO label below the hem (rows 436-459) is erased, not part of the drawing"
+  },
+  "poet.red_black_sunglasses.hands/grip-palm": {
+   "view": "side",
+   "left": false,
+   "A": [
+    23,
+    72
+   ],
+   "B": [
+    270,
+    72
+   ],
+   "hold": [
+    165,
+    95
+   ],
+   "note": "profile grip: eyelet tab = wrist (A), fingers curl to the right; B set past the curl so the hand draws at hand size (curled length ~14 cm of an 18.5 cm hand); hold = the gap between curled fingers and thumb"
+  },
+  "poet.14.action.red_black_sunglasses.parts.02/hand-l-grip": {
+   "view": "front",
+   "A": [
+    34,
+    91
+   ],
+   "B": [
+    38,
+    -59
+   ],
+   "hold": [
+    40,
+    42
+   ],
+   "note": "left fist, wrist eyelet at the bottom (A); B past the knuckles so the fist draws ~10 cm wide; hold = centre of the curled fingers"
+  },
+  "poet.14.action.red_black_sunglasses.parts.02/hand-r-grip": {
+   "view": "front",
+   "A": [
+    48,
+    92
+   ],
+   "B": [
+    45,
+    -58
+   ],
+   "hold": [
+    44,
+    42
+   ],
+   "note": "right fist; as hand-l-grip"
   }
  },
  "face": {
@@ -602,36 +760,39 @@
    "mouth": null,
    "nose": null
   },
-  "why": "painted heads read at 1600x900. The sunglasses master/front was rejected: the painted profiles have no sunglasses (two faces in one turn), and dark glasses at night on the quay. Blank kit heads (heads/front, heads/profile, face.front/1-head) were rejected: the Skin Lab solve draws no feature cards on a head."
+  "why": "painted heads read at 1600x900. The sunglasses master/front was rejected: the painted profiles have no sunglasses (two faces in one turn), and dark glasses at night on the quay; every other painted red_black front head (poet.05/06/07) wears them too. Blank kit heads were rejected: the Skin Lab solve draws no feature cards. The chosen front head is trimmed 6 px (fix.trim) to drop its light cut fringe."
  },
  "claims_by": "agent-vision",
  "sheets_per_view": {
   "side": [
    "poet.red_black_sunglasses.body.profile (torso, arms, hand, thigh, shin, boot)",
    "poet.red_black_sunglasses.hipcore (waist link)",
-   "poet.red_black_sunglasses.master (painted profile head, declared same-costume substitute)"
+   "poet.red_black_sunglasses.master (painted profile head, declared same-costume substitute)",
+   "poet.red_black_sunglasses.hands (grip-palm, while holding)"
   ],
   "front": [
    "poet.red_black_sunglasses.body.front (torso, arms, hands, thighs, shins)",
    "poet.red_black_sunglasses.hipcore (hip bridge)",
    "poet.red_black_sunglasses.feet (front boot)",
-   "poet.01.action.black_tshirt.parts.02 (painted frontal face; declared substitute: same man, no sunglasses, matching the painted profiles)"
+   "poet.01.action.black_tshirt.parts.02 (painted frontal face; declared substitute: same man, no sunglasses, matching the painted profiles)",
+   "poet.14.action.red_black_sunglasses.parts.02 (grip fists; declared same-costume substitute)"
   ],
   "back": [
    "poet.red_black_sunglasses.body.back (torso, arms, hands, thighs, shins)",
    "poet.red_black_sunglasses.hipcore (hip bridge)",
    "poet.red_black_sunglasses.feet (back boot)",
-   "poet.red_black_sunglasses.master (back of head)"
+   "poet.red_black_sunglasses.master (back of head)",
+   "poet.14.action.red_black_sunglasses.parts.02 (grip fists; declared same-costume substitute)"
   ]
  },
  "claims": {
   "labels_file": "shots/skinlab/labels.json",
-  "cards_settled": 113,
-  "claims_settled": 170,
+  "cards_settled": 157,
+  "claims_settled": 223,
   "by": "agent-vision (a Claude agent viewing each card image with A/B and brads drawn; not a person)"
  },
  "invariants": {
-  "measured_by": "shots/skinlab/contracts/prove.mjs in the real Skin Lab (index.html, unmodified), puppet IK, every frame of T014 T009 T025 T006 T016 T020; full table in contracts/proof/poet/invariants.json",
+  "measured_by": "shots/skinlab/contracts/prove.mjs in the real Skin Lab (index.html, unmodified; contract extensions interpreted at run time), puppet IK, every frame of T014 T009 T025 T006 T016 T020; full table in contracts/proof/poet/invariants.json",
   "wrong_view_frames": {
    "T014": 0,
    "T009": 0,
@@ -649,19 +810,94 @@
    "T016": 0,
    "T020": 27
   },
+  "armhole_exposed_share_side_view": {
+   "T014": {
+    "frames": 64,
+    "max": 0.012,
+    "mean": 0.012,
+    "frames_over_10pct": 0
+   },
+   "T009": {
+    "frames": 180,
+    "max": 0.123,
+    "mean": 0.033,
+    "frames_over_10pct": 21
+   },
+   "T025": null,
+   "T006": null,
+   "T016": {
+    "frames": 170,
+    "max": 0.296,
+    "mean": 0.207,
+    "frames_over_10pct": 144
+   },
+   "T020": {
+    "frames": 170,
+    "max": 0.333,
+    "mean": 0.073,
+    "frames_over_10pct": 44
+   }
+  },
+  "grip_frames": {
+   "T014": 0,
+   "T009": 141,
+   "T025": 88,
+   "T006": 0,
+   "T016": 0,
+   "T020": 67
+  },
+  "grip_cards_used": {
+   "T014": [],
+   "T009": [
+    "hand_R:side:grip-palm"
+   ],
+   "T025": [
+    "hand_L:front:hand-l-grip"
+   ],
+   "T006": [],
+   "T016": [],
+   "T020": [
+    "hand_R:side:grip-palm"
+   ]
+  },
+  "grip_hold_point_to_trial_prop_position_cm_median": {
+   "T014": null,
+   "T009": 20.8,
+   "T025": 25,
+   "T006": null,
+   "T016": null,
+   "T020": 10.3
+  },
+  "handset_at_ear_frames": {
+   "T014": 0,
+   "T009": 0,
+   "T025": 84,
+   "T006": 0,
+   "T016": 0,
+   "T020": 0
+  },
+  "ear_site_to_trial_prop_position_cm_median": {
+   "T014": null,
+   "T009": null,
+   "T025": 20.2,
+   "T006": null,
+   "T016": null,
+   "T020": null
+  },
   "card_scale_vs_claimed_px_per_cm_range": [
-   0.773,
+   0.466,
    1.398
   ],
   "card_scale_outside_12pct": [
-   "T014 hand_L 0.79-0.904 (front:4-hand-l, side:hand-l, back:l)",
    "T014 head 1.085-1.293 (front:face-reference-detached, side:left, back:back)",
+   "T014 hand_L 0.79-0.904 (front:4-hand-l, side:hand-l, back:l)",
    "T014 hand_R 0.79-0.966 (front:7-hand-r, side:hand-l, back:hand-r)",
    "T009 hand_L 0.773-0.773 (side:hand-l)",
    "T009 head 1.059-1.398 (side:left, front:face-reference-detached)",
-   "T009 hand_R 0.773-0.773 (side:hand-l)",
+   "T009 hand_R 0.705-0.773 (side:hand-l, side:grip-palm)",
    "T025 head 1.15-1.386 (side:left, front:face-reference-detached)",
    "T025 torso 0.864-0.881 (front:1)",
+   "T025 hand_L 0.466-0.884 (front:4-hand-l, front:hand-l-grip)",
    "T006 upper_arm_L 1.017-1.134 (front:upper-arm-l)",
    "T006 forearm_L 1.044-1.164 (front:3-forearm-l)",
    "T006 upper_arm_R 1.033-1.152 (front:5-upper-arm)",
@@ -671,7 +907,7 @@
    "T016 hand_L 0.788-0.788 (side:hand-l)",
    "T020 hand_L 0.79-0.79 (side:hand-l)",
    "T020 head 1.177-1.295 (side:left)",
-   "T020 hand_R 0.79-0.79 (side:hand-l)"
+   "T020 hand_R 0.721-0.79 (side:hand-l, side:grip-palm)"
   ],
   "shown_length_vs_vitruvian_canon_range": [
    0.788,
@@ -679,14 +915,14 @@
   ],
   "chain_end_miss_max_cm": {
    "T014": {
-    "forearm_L": 5.08,
-    "forearm_R": 6.16,
+    "forearm_L": 5.89,
+    "forearm_R": 3.98,
     "shin_L": 0,
     "shin_R": 0
    },
    "T009": {
-    "forearm_L": 12.41,
-    "forearm_R": 0,
+    "forearm_L": 0,
+    "forearm_R": 7.18,
     "shin_L": 0,
     "shin_R": 0.02
    },
@@ -704,33 +940,33 @@
    },
    "T016": {
     "forearm_L": 0,
-    "forearm_R": 4.93,
+    "forearm_R": 14.95,
     "shin_L": 0,
     "shin_R": 0
    },
    "T020": {
-    "forearm_L": 5.96,
-    "forearm_R": 0,
+    "forearm_L": 0,
+    "forearm_R": 8.68,
     "shin_L": 0,
     "shin_R": 0.11
    }
   },
   "any_card_end_miss_max_cm": {
    "T014": 19.81,
-   "T009": 13.6,
+   "T009": 17.97,
    "T025": 27.91,
    "T006": 31.01,
-   "T016": 20.21,
-   "T020": 18.03
+   "T016": 20.76,
+   "T020": 21.24
   },
   "brad_gap_cm": "0 by construction in puppet mode (every child card is pinned at its socket on the parent card)",
   "shoulder_hip_socket_drift_max_cm": {
-   "T014": 17.63,
-   "T009": 13.2,
+   "T014": 24.11,
+   "T009": 22.51,
    "T025": 10.53,
    "T006": 20.33,
-   "T016": 9.65,
-   "T020": 15.81
+   "T016": 21.25,
+   "T020": 21.84
   },
   "planted_toe_slide_max_cm_per_frame": {
    "T014": 0.57,
@@ -747,16 +983,18 @@
    "poet.01.action.black_tshirt.parts.02",
    "poet.red_black_sunglasses.body.profile",
    "poet.red_black_sunglasses.master",
-   "poet.red_black_sunglasses.body.back"
+   "poet.red_black_sunglasses.body.back",
+   "poet.red_black_sunglasses.hands",
+   "poet.14.action.red_black_sunglasses.parts.02"
   ]
  },
  "weaknesses": [
-  "Head facing flips in side view when the trial head looks down past vertical (T009 f11-31 lift, T020 coin pick-up): the lab mirrors each profile card from its own forward vector, and the Bolas head vector tips backward there. Not fixable from the contract.",
-  "Side torso (body.profile/torso) has its armhole drawn on the back half and no shoulder brad; the near arm snaps to the collar brad, so the empty armhole shows behind the arm.",
-  "The front face (black_tshirt sheet) carries a light cut fringe along the left cheek, visible at 1600x900.",
-  "Sockets are bound per view and facing (bind_per_view): the lab binds every view at one frame, which crossed the arms in the back view of T014; prove.mjs presses the lab's bind once per view. A film using this contract needs the same per-view binding.",
-  "Shoulder sockets drift from the skeleton shoulder up to 10-20 cm (rigid torso card vs. shrug/lean/three-quarter poses); elbows and knees miss by up to ~20-30 cm in extreme poses (sit, phone), wrists and ankles are reached except forearms at 12-16 cm in T009/T006.",
-  "Card scale vs the library px_per_cm: heads shown 1.06-1.40x (master profile head) and the profile hand 0.77-0.79x; those px_per_cm values come from normalize.py, so this is self-confirming either way. Heights differ by trial (185.6 cm in the passage trials, 189.8 cm in T014).",
-  "No three-quarter view in the lab: during the turn the side/front swap lands where the torso crosses the 57-degree threshold, not on a chosen pose."
+  "Head facing flips in side view when the trial head looks down past vertical (T009 f11-31 lift, T020 coin pick-up): the lab mirrors each profile card from its own forward vector. Machinery (neck clamp), not contract.",
+  "Side armhole: the near sleeve now hangs from the drawn armhole (fix.sockets), which covers it while the arm hangs (T014 1%, T009 mean 3%, max 12%); with the arm raised forward the lower oval shows (T016 kneel mean 21%, max 30%; T020 max 33%). The shoulder therefore sits ~10 cm behind the skeleton shoulder in side view (socket drift up to ~24 cm).",
+  "Grip cards come from two other red_black sheets (hands sheet for side, poet.14 parts for the fists): same costume and painter, not the body sheets. The fists are lower resolution (80x113 px) than the body cards.",
+  "The trial prop positions sit ~20-25 cm from the drawn hold point (the bank stores the prop centre and the cards miss the skeleton wrist by up to ~12-18 cm); the proof draws the prop at the hand, so the prop travels with the hand.",
+  "Front face from the black_tshirt sheet is smoother in finish than the master profile/back heads; trimmed 6 px for the fringe.",
+  "Sockets are bound per view and facing (bind_per_view); stacking, grips, erase, trim, sockets, ears and hold are contract fields that index.html does not read: prove.mjs interprets them; puppet-core.js must implement them for the film.",
+  "No three-quarter view in the lab: the side/front swap lands where the torso crosses the ~57 degree threshold, not on a chosen pose."
  ]
 }

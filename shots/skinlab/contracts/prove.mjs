@@ -43,7 +43,60 @@ try {
   // in-page helpers: wait for card images, measure a frame, grab the canvas
   await page.evaluate((C) => {
     window.__C = C;
-    window.__imgs = async () => { const ids = new Set(); for (const sk of Object.values(S.skin)) for (const id of Object.values(sk.cards)) ids.add(id);
+    // ---- contract fields the lab's index.html does not read yet. They are interpreted here, at run time, without editing
+    // the page (Builder B implements the same fields in puppet-core.js):
+    //   fix[id].erase   [[x0,y0,x1,y1],...] card-px rectangles made transparent (printed sheet labels: TORSO, THIGH, HEAD)
+    //   fix[id].trim    erode the card's alpha by n px (a light cut fringe)
+    //   fix[id].sockets {group: [x,y]} where a child of that group hangs on this card, instead of the lab's snapped brad
+    //   fix[id].hold    [x,y] where a held prop's handle sits on a grip card
+    //   limbs.hand_*.states {open:{view:id}, grip:{view:id}}: grip while the trial's bank props say this hand holds a prop
+    window.__prep = async () => {
+      for (const [id, f] of Object.entries(C.fix)) { if (!f.erase && !f.trim) continue; const c = S.byId[id]; if (!c) continue;
+        const im = img(c); if (!(im.complete && im.naturalWidth)) await new Promise(r => { im.onload = im.onerror = r; });
+        const o = document.createElement('canvas'); o.width = c.w; o.height = c.h; const g = o.getContext('2d'); g.drawImage(im, 0, 0, c.w, c.h);
+        for (const [x0, y0, x1, y1] of f.erase || []) g.clearRect(x0, y0, x1 - x0, y1 - y0);
+        if (f.trim) { const d = g.getImageData(0, 0, c.w, c.h), a = new Uint8Array(c.w * c.h), r = f.trim; for (let i = 0; i < a.length; i++) a[i] = d.data[i * 4 + 3];
+          for (let y = 0; y < c.h; y++) for (let x = 0; x < c.w; x++) { let m = a[y * c.w + x]; if (!m) continue;
+            for (let dy = -r; dy <= r && m; dy++) for (let dx = -r; dx <= r; dx++) { if (dx * dx + dy * dy > r * r) continue; const X = x + dx, Y = y + dy;
+              const v = X < 0 || Y < 0 || X >= c.w || Y >= c.h ? 0 : a[Y * c.w + X]; if (v < m) m = v; if (!m) break; }
+            d.data[(y * c.w + x) * 4 + 3] = m; }
+          g.putImageData(d, 0, 0); }
+        const ni = new Image(); ni.src = o.toDataURL(); await new Promise(r => { ni.onload = r; }); IMG[id] = ni; delete ALPHA[id];
+      }
+    };
+    const sock0 = socket;
+    window.socket = function (k, px, port, puppet) { const site = C.fix[px.c.id]?.sockets?.[SEG[k].g]; if (site) return { p: fwd(px, site), how: 'site' }; return sock0(k, px, port, puppet); };
+    window.__props = () => { const out = []; for (const [name, p] of Object.entries(S.data.props || {})) { const per = p.per_frame, cur = new Array(per).fill(0), fr = [];
+      for (let f = 0; f < S.data.n; f++) { for (let i = 0; i < per; i++) cur[i] += p.f[f * per + i]; fr.push({ pos: [cur[0] / 2, cur[1] / 2, cur[2] / 2], held: cur[6] >= 0 ? p.held[cur[6]] : 'absent' }); }
+      out.push({ name, type: p.type, size: p.size, fr }); } return out; };
+    window.__TP = [];
+    const HOLD = { 'A.R': 'hand_R', 'A.L': 'hand_L' };
+    window.__state = (f) => { const held = {}; for (const p of __TP) { const h = HOLD[p.fr[f]?.held]; if (h) held[h] = p; }
+      for (const k of ['hand_L', 'hand_R']) { const st = C.limbs[k]?.states; if (st && S.skin[k]) S.skin[k].cards = { ...(held[k] ? st.grip : st.open) }; }
+      window.__held = held; };
+    // a plain paper prop at the hand's hold point (suitcase: hangs from its handle; handset: across the fist), or at the
+    // trial's own prop position when no hand holds it (the phone clamped at the ear)
+    window.__drawProp = (g, p, at, x) => { const k = S.ports[0].k; g.save(); g.lineJoin = 'round';
+      const paper = (path, fill) => { g.fillStyle = fill; path(); g.fill(); g.lineWidth = 3; g.strokeStyle = '#c9a26b'; path(); g.stroke(); g.lineWidth = 1; g.strokeStyle = '#6b4a2a'; path(); g.stroke(); };
+      const brad = (q, r) => { const rg = g.createRadialGradient(q[0] - 1, q[1] - 1, 1, q[0], q[1], r); rg.addColorStop(0, '#fff3c0'); rg.addColorStop(.5, '#d9a640'); rg.addColorStop(1, '#7a5410'); g.fillStyle = rg; g.beginPath(); g.arc(q[0], q[1], r, 0, 7); g.fill(); };
+      if (p.type === 'suitcase') { const w = 46 * k, h = 34 * k, top = at[1] + 5 * k;
+        const handle = () => { g.beginPath(); g.moveTo(at[0] - 6 * k, top); g.quadraticCurveTo(at[0], at[1] - 4 * k, at[0] + 6 * k, top); }; g.lineCap = 'round'; g.lineWidth = 3.4 * k; g.strokeStyle = '#c9a26b'; handle(); g.stroke(); g.lineWidth = 2.2 * k; g.strokeStyle = '#7a4a28'; handle(); g.stroke();
+        paper(() => { g.beginPath(); g.roundRect(at[0] - w / 2, top, w, h, 2 * k); }, '#6a4428');
+        g.strokeStyle = '#3d2614'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(at[0] - w / 2 + 3 * k, top + 6 * k); g.lineTo(at[0] + w / 2 - 3 * k, top + 6 * k); g.stroke();
+        brad([at[0] - 6 * k, top + 1.5 * k], .9 * k); brad([at[0] + 6 * k, top + 1.5 * k], .9 * k); }
+      else if (p.type === 'phone') { const ang = x ? x.ang + Math.PI / 2 : -Math.PI / 2 + .25, L = 21 * k;
+        g.translate(at[0], at[1]); g.rotate(ang);
+        paper(() => { g.beginPath(); g.roundRect(-L / 2, -1.6 * k, L, 3.2 * k, 1.6 * k); g.moveTo(-L / 2 + 3.4 * k, 0); g.arc(-L / 2 + 3 * k, 0, 3.4 * k, 0, 7); g.moveTo(L / 2 - 2.6 * k, 0); g.arc(L / 2 - 3 * k, 0, 3.4 * k, 0, 7); }, '#1d1916');
+        brad([0, 0], .8 * k); }
+      g.restore(); };
+    const dc0 = drawCard;
+    window.drawCard = function (g, x, alpha) { const after = [];
+      if (S.data && !S.grid) for (const p of __TP) { const h = p.fr[S.f]?.held;
+        if (HOLD[h] === x.k) { const hp = C.fix[x.c.id]?.hold; if (hp) __drawProp(g, p, fwd(x, hp), x); }
+        if (/^A\.ear/.test(h || '') && x.k === 'head') after.push([p, h.slice(-1)]); }
+      dc0(g, x, alpha);
+      for (const [p, side] of after) { const e = C.fix[x.c.id]?.ears?.[side]; __drawProp(g, p, e ? fwd(x, e) : S.ports[0].p(p.fr[S.f].pos), null); } };
+    window.__imgs = async () => { const ids = new Set(); for (const sk of Object.values(S.skin)) for (const id of Object.values(sk.cards)) ids.add(id); for (const l of Object.values(C.limbs)) for (const st of Object.values(l.states || {})) for (const id of Object.values(st)) ids.add(id);
       await Promise.all([...ids].map(id => { const im = img(S.byId[id]); return im.complete && im.naturalWidth ? 0 : new Promise(r => { im.onload = im.onerror = r; }); })); };
     const sheet = id => id.split('/')[0];
     const ppcOf = c => C.fix[c.id]?.px_per_cm || c.px_per_cm;
@@ -55,10 +108,23 @@ try {
       for (const x of sol.order) {
         const g = SEG[x.k].g, trueCm = x.lab / ppcOf(x.c), shownCm = x.lab * x.s / port.k;
         out.cards[x.k] = { id: x.c.id, view: x.view, want: x.want, miss: +x.miss.toFixed(2), gap: +x.gap.toFixed(2), sock: x.sockHow || null,
-          sockOff: x.sockP && (x.sockHow === 'brad' || x.sockHow === 'bound') ? +(hyp(x.sockP, sol.pj[ji[SEG[x.k].from]]) / port.k).toFixed(2) : 0,
+          sockOff: x.sockP && (x.sockHow === 'brad' || x.sockHow === 'bound' || x.sockHow === 'site') ? +(hyp(x.sockP, sol.pj[ji[SEG[x.k].from]]) / port.k).toFixed(2) : 0,
           facesLeft: x.view === 'side' ? (x.mir !== cardLeft(x.c)) : null,
           stretch: +(shownCm / trueCm).toFixed(3), canon: +(trueCm / (VIT[g] * S.H)).toFixed(3), shownCanon: +(shownCm / (VIT[g] * S.H)).toFixed(3) };
       }
+      // the painted armhole of the side torso: the share of the oval not covered by a card drawn after the torso
+      const T = sol.X.torso, hole = T && C.fix[T.c.id]?.hole;
+      if (T && hole && T.view === 'side') { const [cx, cy, rx, ry] = hole, later = sol.order.slice(sol.order.indexOf(T) + 1); let n = 0, open = 0;
+        for (let i = -5; i <= 5; i++) for (let j = -5; j <= 5; j++) { const u = i / 5, v = j / 5; if (u * u + v * v > 1) continue; n++;
+          const p = fwd(T, [cx + u * rx, cy + v * ry]);
+          if (!later.some(y => { const q = inv(y, p), a = alphaOf(y.c), X = Math.round(q[0]), Y = Math.round(q[1]); return a && X >= 0 && Y >= 0 && X < y.c.w && Y < y.c.h && a[Y * y.c.w + X] > 128; })) open++; }
+        out.hole = +(open / n).toFixed(3); }
+      // a handset clamped at the ear: drawn at the head card's ear site; how far that is from the trial's own prop position
+      for (const p of __TP) { const h = p.fr[f]?.held; if (/^A\.ear/.test(h || '') && sol.X.head) { const e = C.fix[sol.X.head.c.id]?.ears?.[h.slice(-1)];
+        out.ear = { card: sol.X.head.c.id, view: sol.X.head.view, earToPropCm: e ? +(hyp(fwd(sol.X.head, e), port.p(p.fr[f].pos)) / port.k).toFixed(1) : null }; } }
+      // held props: which hand grips, and how far the grip's hold point is from the trial's prop position
+      out.held = {}; for (const [k, p] of Object.entries(__held || {})) { const x = sol.X[k], hp = x && C.fix[x.c.id]?.hold;
+        out.held[k] = { prop: p.type, card: x?.c.id, view: x?.view, holdToPropCm: hp ? +(hyp(fwd(x, hp), port.p(p.fr[f].pos)) / port.k).toFixed(1) : null }; }
       // feet on the floor, in world cm: the foot card's toe end, read through the inverse of the stage projection
       const rk = port.k, J = sol.j;
       out.world = {};
@@ -72,7 +138,7 @@ try {
     // frame of the trial whose torso wants that view and faces that way — the lab's own "bind here", pressed once per view.
     // the pose key of a frame: which view the torso wants, and (side view) which way its card is mirrored
     window.__key = (f) => { const port = S.ports[0], fr = S.data.frames[f]; centre(port, fr); const sol = solve(fr, port), t = sol?.X?.torso; return t ? t.want + (t.view === 'side' ? (t.mir ? '<' : '>') : '') : null; };
-    window.__bind = (f) => { S.bindF = __B.front; if (__B.per) { const k = __key(f); if (k && __B.per[k] != null) S.bindF = __B.per[k]; } };
+    window.__bind = (f) => { __state(f); S.bindF = __B.front; if (__B.per) { const k = __key(f); if (k && __B.per[k] != null) S.bindF = __B.per[k]; } };
     window.__goto = (f) => { __bind(f); S.f = f; draw(); };
     window.__setTrialBind = (front, perView) => { window.__B = { front, per: null }; if (!perView) return __B; __B.per = {};
       for (let f = 0; f < S.data.frames.length; f++) { const k = __key(f); if (k && __B.per[k] == null) __B.per[k] = f; }
@@ -94,6 +160,7 @@ try {
       return o.toDataURL('image/webp', 0.8);
     };
   }, C);
+  await page.evaluate(async () => { await __imgs(); await __prep(); });
   const save = (file, dataUrl) => fs.writeFileSync(path.join(OUT, file), Buffer.from(dataUrl.split(',')[1], 'base64'));
   // load a trial, bind sockets at the contract frame, set the camera (trial camera, or side/front of the actor)
   const trial = async (id, view) => {
@@ -101,7 +168,7 @@ try {
       await loadTrial(id); S.bindF = bind; S.sock = {};
       S.view = view || 'cam'; const fy = trialFacing();
       S.yaw = view === 'side' ? fy + 90 : view === 'front' ? fy : (S.data.view?.yaw ?? -22); S.yaw = ((S.yaw + 540) % 360) - 180;
-      layout(); await __imgs(); __setTrialBind(bind, backRule); draw();
+      layout(); await __imgs(); window.__TP = __props(); __setTrialBind(bind, backRule); draw();
     }, id, view, C.bind_frame || 0, C.bind_per_view === true);
     await new Promise(r => setTimeout(r, 150));
     return page.evaluate(() => ({ n: S.data.frames.length, K: S.K, rec: S.rec, H: S.H, yaw: S.yaw, preset: S.preset, bind: __B }));
@@ -139,7 +206,13 @@ try {
         // the camera follows the pelvis: add back the follow shift projected on the screen's right axis
         const yawR = info.yaw * Math.PI / 180, shift = (b.cx - a.cx) * Math.cos(yawR) - (b.cz - a.cz) * Math.sin(yawR);
         slideMax = Math.max(slideMax, Math.hypot(dx + shift, dy)); } }
-    inv.trials[id] = { name, frames: info.n, camera_yaw: info.yaw, height_cm: +info.H.toFixed(1), hip_width_cm: +(info.rec.hips * (info.K.hips ?? 1)).toFixed(1), K: info.K, wrong_view_frames: wrong.length, wrong_view_examples: wrong.slice(0, 6),
+    const holes = per.filter(m => m?.hole != null).map(m => m.hole), med = a => a.length ? +[...a].sort((x, y) => x - y)[Math.floor(a.length / 2)].toFixed(1) : null;
+    const grips = per.flatMap(m => Object.entries(m?.held || {}).map(([k, h]) => ({ f: m.f, k, ...h })));
+    const ears = per.filter(m => m?.ear).map(m => m.ear);
+    const extra = { armhole_exposed_share: holes.length ? { frames: holes.length, max: Math.max(...holes), mean: +(holes.reduce((a, b) => a + b, 0) / holes.length).toFixed(3), frames_over_10pct: holes.filter(h => h > .1).length } : null,
+      grip_frames: grips.length, grip_cards: [...new Set(grips.map(g => `${g.k}:${g.view}:${g.card?.split('/').pop()}`))], grip_hold_to_trial_prop_cm_median: med(grips.map(g => g.holdToPropCm).filter(v => v != null)),
+      ear_frames: ears.length, ear_site_to_trial_prop_cm_median: med(ears.map(e => e.earToPropCm).filter(v => v != null)) };
+    inv.trials[id] = { name, ...extra, frames: info.n, camera_yaw: info.yaw, height_cm: +info.H.toFixed(1), hip_width_cm: +(info.rec.hips * (info.K.hips ?? 1)).toFixed(1), K: info.K, wrong_view_frames: wrong.length, wrong_view_examples: wrong.slice(0, 6),
       layer_order_bad_frames: layerBad, facing_mismatch_frames: facing.length, facing_mismatch_examples: facing.slice(0, 8),
       socket_offset_max_cm: Math.max(0, ...Object.values(parts).map(p => p.sockOffMax)), bind: info.bind, max_miss_cm: +maxMiss.toFixed(2), max_miss_at: maxMissAt, planted_toe_slide_max_cm_per_frame: +slideMax.toFixed(2), planted_frames: slideN,
       sheets_per_view: Object.fromEntries(Object.entries(sheetsPerView).map(([v, s]) => [v, [...s]])), torso_view_swaps: swaps, parts };
