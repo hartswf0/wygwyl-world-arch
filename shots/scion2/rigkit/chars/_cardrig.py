@@ -127,7 +127,17 @@ def lost_to_torso(S):
 def build_card(rgb, a, m, card, plain_fn, auto_opts, border):
     a = fill_holes_at(a, card.get('fill'))
     if card.get('cut'):
-        a = np.where(poly_mask(a.shape, card['cut']), 0, a)
+        cm = poly_mask(a.shape, card['cut'])
+        if card.get('cut_keeps_skin'):
+            # a hand resting on the object cut away stays: skin inside the cut, joined to skin outside it
+            from ..parts import skin
+            sk = skin(np.clip(rgb, 0, 255).astype(np.uint8)) & (a > 0.5)
+            n, lab = cv2.connectedComponents(sk.astype(np.uint8))
+            ids = np.unique(lab[sk & ~cm])
+            keep = np.isin(lab, ids[ids > 0]) & sk
+            keep = cv2.morphologyEx(keep.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8)) > 0
+            cm &= ~keep
+        a = np.where(cm, 0, a)
     pr = card.get('prop')
     opts = dict(auto_opts, **card.get('auto', {}))
     if card.get('head'):
