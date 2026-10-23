@@ -64,3 +64,34 @@ Its two real limits are:
   - holds that settle and breathe.
 
 **Judges unchanged.** The same mean critic and motion critic, fresh each round, until the stop condition is met.
+
+## H3 round 2 (replacement heads and hands, crisp edges, rendered from master, stepping feet, 3/4-right rig)
+**Mean critic: 0/9 accepted, 3 not attempted** (kneel, seated with cup, lying).
+
+- **First correct pose of the run:** the bent-knee dance. It failed only on drawing: one boot rotated toe-down, different hair, a smudge at the jaw.
+
+Defects, ranked:
+1. **Smeared or doubled ankle and knee brads** on every sheet.
+2. **Head view or expression doesn't match:**
+   - crouch: the head is turned, the painting's looks down;
+   - head-back: the painting is in 3/4 profile, the puppet frontal;
+   - refocus: 3/4 in the painting;
+   - fists-up: no laugh.
+3. **Hands and props:**
+   - push-apart: the stop palms should be edge-on blades;
+   - side stride: the reaching hand is wrong;
+   - phone-palm: no phone;
+   - refocus: no sunglasses in the hand;
+   - palms-up: hands too low and wide.
+4. **Dark slivers or flaps** under the armpits, at the jacket sides and at the hip (5 sheets).
+5. **Forearm and elbow angles flattened** (crouch, fists-up, palms-up).
+6. **The emblem missing** (04 targets).
+
+Some of these failures, such as the phone, the laughing head, the held sunglasses and the emblem, exist only in the target's own family. Hence amendment 1, applying from round 3.
+
+**Motion critic: FAIL, now much closer.**
+- **What works:** no tears, holes, halos or double images; the boots planted; good weight in the lunge and squat; the knees bend cleanly.
+- **What fails:**
+  - **f037→f038:** the head swap (3/4 up → frontal, larger) and the palm→fist swap happen together, mid-motion. This breaks "one man by one hand". f059→f060 does the same in reverse.
+  - **Square sleeve-cap tabs** stick out under both armpits whenever the arms are above about 45° (f016–f037, f060–f081).
+  - **A 21-frame dead hold** at the top, and no punch, overshoot or settle on the fists.
