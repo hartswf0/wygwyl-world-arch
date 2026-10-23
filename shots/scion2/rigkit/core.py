@@ -44,9 +44,21 @@ _MK = {}
 
 
 def load_markers(char='poet__red_black_sunglasses'):
+    """{painting id: target}.  A character module may list its own MARKER_FILES (merged in order,
+    later files win) and EXCLUDE_TARGETS ({id: reason}: paintings in those files that are not this
+    character, e.g. the ex solved on a poet sheet)."""
     if char not in _MK:
-        d = json.load(open(markers_path(char)))
-        _MK[char] = {t['id']: t for t in d['targets']}
+        try:
+            spec = char_module(char)
+        except ImportError:
+            spec = None
+        files = [os.path.join(ROOT, f) for f in getattr(spec, 'MARKER_FILES', [])] or [markers_path(char)]
+        out = {}
+        for f in files:
+            out.update({t['id']: t for t in json.load(open(f))['targets']})
+        for tid in getattr(spec, 'EXCLUDE_TARGETS', {}):
+            out.pop(tid, None)
+        _MK[char] = out
     return _MK[char]
 
 
@@ -85,7 +97,8 @@ def build_rig(char, view, master_painting=None):
     if fn == 'auto':
         from . import auto
         mk = load_markers(char)[mid]['markers']
-        fn = lambda rgb, a: auto.build_auto(rgb, a, mk)
+        fn = lambda rgb, a: auto.build_auto(rgb, a, mk, plain_fn=getattr(specs, 'PLAIN_FABRIC', None),
+                                              **getattr(specs, 'AUTO_OPTS', {}))
     out = os.path.join(BUILD, char, 'rig', view)
     os.makedirs(out, exist_ok=True)
     im = read_rgba(os.path.join(CUT, mid + '.webp')).astype(np.float32)

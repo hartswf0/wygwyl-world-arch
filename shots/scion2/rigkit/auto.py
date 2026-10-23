@@ -66,7 +66,8 @@ def find_brads(rgb, fig, T):
     return out
 
 
-def build_auto(rgb, a, markers, cls=None):
+def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True):
+    """plain_fn(rgb, fig) -> mask of plain cloth to fill hidden areas from (default: the poet's black fabric)"""
     H, W = a.shape
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     fig = a > 0.5
@@ -156,9 +157,11 @@ def build_auto(rgb, a, markers, cls=None):
     near = 'R' if cover['R'] >= cover['L'] else 'L'
     far = 'L' if near == 'R' else 'R'
     # completion
-    plain = plain_fabric(rgb, fig)
+    plain = (plain_fn or plain_fabric)(rgb, fig)
     below = ((xx - J['midhip'][0]) * up[0] + (yy - J['midhip'][1]) * up[1]) < 0.02 * T
     torso_m = (torso_vis | torso_q) & ~(legs_vis & below) & ~(head & (rel_h > s0 + 3))
+    if not torso_over_legs:     # the filled torso stops at the jacket hem: no fill over the trousers' waist
+        torso_m &= ~legs_vis
     torso_rgb = inpaint(rgb, torso_m & ~torso_vis, torso_vis & plain)
     waist_q = np.array([J['hipR'] + 0.25 * T * up, J['hipL'] + 0.25 * T * up, J['hipL'], J['hipR']], np.float32)
     cw = waist_q.mean(0)

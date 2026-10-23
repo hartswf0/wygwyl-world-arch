@@ -77,6 +77,8 @@ def run(char, ids=None):
             os.remove(os.path.join(od, f))
     contact(rows, os.path.join(od, 'contact_%d.jpg'))
     json.dump(info, open(os.path.join(od, 'poses.json'), 'w'), indent=1)
+    for tid, why in getattr(core.char_module(char), 'EXCLUDE_TARGETS', {}).items():
+        flags[tid] = ['not rendered: ' + why]
     json.dump(flags, open(os.path.join(od, 'flags.json'), 'w'), indent=1)
 
 

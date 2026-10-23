@@ -209,6 +209,14 @@ def choose_hands(char, tid, sm, keys, mirror):
     return out
 
 
+def hand_src(pt, spec, master):
+    if spec is None:
+        return master
+    if isinstance(spec, str):          # 'none' (hidden, e.g. in a pocket) or 'cuff'
+        return spec
+    return pt.index[spec[0]]['painting']
+
+
 def pose_from_markers(char, tid, keys=None, markers=None):
     spec = core.char_module(char)
     keys = dict(getattr(spec, 'KEYS', {}).get(tid, {}), **(keys or {}))
@@ -231,7 +239,7 @@ def pose_from_markers(char, tid, keys=None, markers=None):
     flags = list(spec.painting_flags(tid, catalog(char))) if hasattr(spec, 'painting_flags') else []
     if c.get('cls') in getattr(spec, 'UNREACHED', {}) and c.get('cls') not in spec.VIEW_RIGS:
         flags.append('posture %s: no %s rig, rendered on the %s rig' % (c['cls'], c['cls'], view))
-    if c.get('view', '').startswith('back'):
+    if c.get('view', '').startswith('back') and view not in getattr(spec, 'BACK_RIGS', ()):
         flags.append('back view: rendered as a front/3-4 figure')
     if c.get('use') == 'crop':
         flags.append('target painting is cropped by the sheet edge; markers partial')
@@ -247,8 +255,8 @@ def pose_from_markers(char, tid, keys=None, markers=None):
     pt = parts(char)
     src = {'body': R.meta['master'] + (' (mirrored)' if mirror else ''),
            'head': pt.index[head[0]]['painting'] if head else R.meta['master'],
-           'handR': pt.index[hands['R'][0]]['painting'] if 'R' in hands else R.meta['master'],
-           'handL': pt.index[hands['L'][0]]['painting'] if 'L' in hands else R.meta['master'],
+           'handR': hand_src(pt, hands.get('R'), R.meta['master']),
+           'handL': hand_src(pt, hands.get('L'), R.meta['master']),
            'props': [pt.index[p[0]]['painting'] for p in props]}
     return {'char': char, 'target': tid, 'view': view, 'mirror': mirror, 'P': {k: float(v) for k, v in P.items()},
             'G': G.tolist(), 'size': [t['w'], t['h']], 'opts': opts, 'sources': src, 'flags': flags, 'info': info}
