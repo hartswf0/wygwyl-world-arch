@@ -24,7 +24,8 @@ JUNK = {'text': ['printed text, a caption label with words', 'a strip of printed
         'figure': ['a small complete figure of a whole person', 'a full body puppet of a man, head to feet'],
         'feature': ['a single eye', 'a mouth with lips', 'an eyebrow', 'a nose'],
         'prop': ['a flower', 'a microphone', 'a wine glass', 'a mobile phone', 'a pen', 'a letter or envelope', 'a suitcase'],
-        'blank': ['a blank white paper plate', 'a plain empty piece of paper']}
+        'blank': ['a blank white paper plate', 'a plain empty piece of paper'],
+        'wire': ['a grey wireframe rectangle outline', 'a thin line drawing of a box', 'a diagram with thin lines']}
 FACE = {'painted': ['a head with painted eyes, nose and mouth', 'a face with eyes and lips'],
         'blank': ['a head with a blank face, no eyes, no mouth', 'the back of a head, hair only, no face']}
 MEAN, STD = np.array([0.48145466, 0.4578275, 0.40821073]), np.array([0.26862954, 0.26130258, 0.27577711])
@@ -91,6 +92,15 @@ def pixel_tests(px):
     light = (g > 205) & (tex < 6) & a
     if light.sum() > .45 * n:
         return 'blank plate (%.0f%% flat near-white)' % (100 * light.sum() / n)
+    # thin strokes (wireframes, text, outlines): most of the alpha disappears under a 7 px erosion
+    er = cv2.erode(a.astype(np.uint8), np.ones((7, 7), np.uint8))
+    if er.sum() < .35 * n:
+        return 'thin strokes (%.0f%% survives a 7 px erosion: wireframe / text)' % (100 * er.sum() / n)
+    # a text strip: a long thin band (aspect > 5) with many dark marks
+    ys, xs = np.nonzero(a)
+    hh, ww = ys.max() - ys.min() + 1, xs.max() - xs.min() + 1
+    if max(hh, ww) > 5 * min(hh, ww) and ((g < 80) & a).sum() > .08 * n and ((g > 200) & a).sum() > .3 * n:
+        return 'text strip (aspect %.1f, dark marks on light)' % (max(hh, ww) / min(hh, ww))
     k, lab, st, _ = cv2.connectedComponentsWithStats(a.astype(np.uint8))
     big = (st[1:, cv2.CC_STAT_AREA] >= .01 * n).sum()
     if big > 6:
@@ -128,15 +138,17 @@ def classify(pieces):
     return C
 
 
-MARGIN = .02     # a junk prompt must beat the best body-part prompt by this much (0.005 threw out sleeves as 'props')
+MARGIN = {'text': 0., 'figure': 0., 'wire': 0., 'blank': .01, 'feature': .02, 'prop': .02}
+# a junk prompt must beat the best body-part prompt by this much (0.005 everywhere threw out sleeves as 'props');
+# round 03: text, whole figures and wireframes at 0 (the round 02 critic still found label strips and wireframes)
 
 
 def junk(r):
     if r.get('pixel'):
         return r['pixel']
-    jk = max(r['junk_scores'], key=r['junk_scores'].get)
-    if r['junk_scores'][jk] > r['body'] + MARGIN:
-        return 'CLIP reads %s (%.3f) over a body part (%.3f)' % (jk, r['junk_scores'][jk], r['body'])
+    for jk, v in sorted(r['junk_scores'].items(), key=lambda kv: -kv[1]):
+        if v > r['body'] + MARGIN.get(jk, .02):
+            return 'CLIP reads %s (%.3f) over a body part (%.3f)' % (jk, v, r['body'])
     return None
 
 

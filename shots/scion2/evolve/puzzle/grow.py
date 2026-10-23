@@ -152,7 +152,7 @@ class Grower:
             self.V = build(self.pieces, t)
         self.shape = t['inside_w'].shape
         self.area = float(t['inside_w'].sum())
-        self.lam = FL.LAMBDA_SHARE * self.area
+        self.lam = FL.LAMBDA_SHARE * self.area * self.opts.get('lam_scale', 1.)
         u = t['s'] * t['r']                       # work px per cm
         self.snap_r, self.pivot_r = SNAP_CM * u, PIVOT_CM * u
         self.studs = t['ref_brads'] * t['r'] if len(t['ref_brads']) else np.zeros((0, 2))
@@ -176,6 +176,21 @@ class Grower:
             self.extremity = extremity_map(t['inside_w'], self.opts['ends_extremity'])
         hm = t['markers']['head'] * t['r']
         self.head_region = ((xx - hm[0]) ** 2 + (yy - hm[1]) ** 2 <= (13 * u) ** 2) & t['inside_w']
+        mk = {k: np.asarray(v) * t['r'] for k, v in t['markers'].items()}
+        self.end_regions = {'head': self.head_region}
+        for S in 'LR':
+            c = mk['wrist' + S] + .45 * (mk['wrist' + S] - mk['elbow' + S])
+            self.end_regions['hand' + S] = ((xx - c[0]) ** 2 + (yy - c[1]) ** 2 <= (10 * u) ** 2) & t['inside_w']
+            c = (mk['ankle' + S] + mk['toe' + S]) / 2
+            self.end_regions['foot' + S] = ((xx - c[0]) ** 2 + (yy - c[1]) ** 2 <= (13 * u) ** 2) & t['inside_w']
+        # identity gating: a piece of a confident class pays -2 per cell outside the skeleton zones of its class
+        self.ident = self.opts.get('identity') or {}
+        if self.ident:
+            Z = FL.zone_map(t, self.shape)
+            zi = {z: i for i, z in enumerate(FL.ZONES)}
+            allow = {'head': ['head'], 'hand': ['hand'], 'foot': ['foot'],
+                     'cloth': ['torso', 'hips', 'upper_arm', 'forearm', 'thigh', 'shin']}
+            self.zone_ok = {c: np.isin(Z, [zi[z] for z in zs]) for c, zs in allow.items()}
 
     # score map: +1 uncovered figure, -OVL covered (0 near a free brad), -BIG outside
     def score(self, st):
@@ -192,7 +207,8 @@ class Grower:
             S[cov & near] = 0.
         S[self.t['outside_w']] = -FL.BIG
         if getattr(self, '_region', None) is not None:          # force(): only this region pays
-            S = np.where(self._region, S, np.minimum(S, 0)).astype(np.float32)
+            # an end part is drawn over what is there (a hand over the jacket): its region counts even if covered
+            S = np.where(self._region & (S > -1000), np.maximum(S, .5), np.minimum(S, 0)).astype(np.float32)
         return S
 
     def seeds(self, n):
@@ -251,7 +267,7 @@ class Grower:
         if not st.free:
             return []
         rs = random.Random(hash(key) & 0xffffffff)
-        tried = {pi for pi in range(len(self.pieces)) if rs.random() < SUBSET}
+        tried = {pi for pi in range(len(self.pieces)) if rs.random() < SUBSET or getattr(self, '_region', None) is not None}
         S = self.score(st)
         Hs, Ws = S.shape
         F = np.array([st.placed[f[0]]['bw'][f[1]] for f in st.free])
@@ -271,6 +287,11 @@ class Grower:
         Fall = F
         F = F[live]
         Spad = np.pad(S, ((0, self.PAD), (0, self.PAD)), constant_values=-FL.BIG)
+        SC, SCpad = {}, {}
+        if self.ident:
+            for c, ok_ in self.zone_ok.items():
+                SC[c] = np.where(ok_ | (S <= -1000), S, -2.).astype(np.float32)
+                SCpad[c] = np.pad(SC[c], ((0, self.PAD), (0, self.PAD)), constant_values=-FL.BIG)
         n_heads = sum(1 for p in st.placed if self.V[p['vi']]['pi'] in self.heads)
         appear = bool(self.opts.get('appear'))
         hrot = self.opts.get('head_rot', 180)
@@ -308,14 +329,16 @@ class Grower:
             if not ok.any():
                 continue
             h_, w_ = m.shape
+            cls = self.ident.get(v['pi'], 'cloth') if self.ident else None
+            Sv, Svpad = (SC[cls], SCpad[cls]) if cls else (S, Spad)
             if h_ > 64 or w_ > 64:
-                R = cv2.matchTemplate(S, m, cv2.TM_CCORR)
+                R = cv2.matchTemplate(Sv, m, cv2.TM_CCORR)
                 vals = np.where(ok, R[np.minimum(np.maximum(L[..., 1], 0), R.shape[0] - 1), np.minimum(np.maximum(L[..., 0], 0), R.shape[1] - 1)], -1e9)
             else:
                 ly, lx = np.nonzero(ok)
                 yy = L[ly, lx, 1][:, None, None] + np.arange(h_)[None, :, None]
                 xx = L[ly, lx, 0][:, None, None] + np.arange(w_)[None, None, :]
-                win = Spad[yy, xx]
+                win = Svpad[yy, xx]
                 vals = np.full(ok.shape, -1e9)
                 vals[ly, lx] = (win * m).sum((1, 2))
             fi, j = np.unravel_index(int(np.argmax(vals)), vals.shape)
@@ -351,7 +374,8 @@ class Grower:
             for _, val, vi, loc, fi, j, g in heap:
                 v = self.V[vi]
                 h_, w_ = v['m'].shape
-                win = S[loc[1]:loc[1] + h_, loc[0]:loc[0] + w_]
+                cls = self.ident.get(v['pi'], 'cloth') if self.ident else None
+                win = (SC[cls] if cls else S)[loc[1]:loc[1] + h_, loc[0]:loc[0] + w_]
                 dE = np.linalg.norm(self.ref_lab[loc[1]:loc[1] + h_, loc[0]:loc[0] + w_] - v['lab'].astype(np.float32), axis=-1)
                 fl = self.opts.get('appear_floor', -.3)
                 wgt = fl + (1 - fl) * np.clip(1 - dE / 30., 0, 1)
@@ -413,15 +437,22 @@ class Grower:
         region: only uncovered cells there count"""
         a0, lam0 = self.allowed, self.lam
         self.allowed, self.lam, self._region = set(pis), 0., region
+        stf = st.copy()
+        if region is not None:          # an end part may snap at ANY brad of the body (a wrist brad already joined)
+            stf.free = [(i, j) for i, p in enumerate(st.placed) for j in range(len(p['bw']))]
         try:
-            C = [c for c in self.candidates(st, ('force',)) if c[5] > 0]
+            C = [c for c in self.candidates(stf, ('force',)) if c[5] > 0]
         finally:
             self.allowed, self.lam, self._region = a0, lam0, None
         if not C:
             return st, None
         val, vi, loc, fi, j, g = C[0]
-        f = st.free[fi]
-        return self.place(st.copy(), vi, loc, f[0], f[1], j), C[0]
+        f = stf.free[fi]
+        st2 = self.place(stf, vi, loc, f[0], f[1], j)
+        new = len(st2.placed) - 1
+        st2.free = [x for x in st.free if x in st2.free or x[0] == new] + [x for x in st2.free if x[0] == new and x not in st.free]
+        st2.free = list(dict.fromkeys(st2.free))
+        return st2, C[0]
 
     def fitness(self, st):
         ins = self.t['inside_w']

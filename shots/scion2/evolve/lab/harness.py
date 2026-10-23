@@ -51,7 +51,7 @@ def context(char, costume, tid):
     # the head and the shoes are round the head / ankle markers, not along a bone: within 32 / 30 cm is figure
     yy, xx = np.mgrid[0:prop.shape[0], 0:prop.shape[1]]
     mk = t['markers']
-    for k, r in (('head', 32.), ('ankleL', 30.), ('ankleR', 30.)):
+    for k, r in (('head', 32.), ('neck', 34.), ('ankleL', 30.), ('ankleR', 30.)):
         prop &= (xx - mk[k][0]) ** 2 + (yy - mk[k][1]) ** 2 > (r * t['s']) ** 2
     if prop.any():
         n, lab, st, _ = cv2.connectedComponentsWithStats(prop.astype(np.uint8))

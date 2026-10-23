@@ -41,7 +41,33 @@ def opts_for(ctx, extra=None):
         allowed.add(i)
     o = dict(BASE, allowed=allowed, heads=heads)
     o.update(extra or {})
+    if o.get('identity'):
+        o['identity'] = identity(ctx, allowed)
+    if o.get('parts_last'):
+        pools = {c: {i for i in allowed if o['identity'].get(i) == c} for c in ('head', 'hand', 'foot')}
+        pools['head'] = pools['head'] & heads if heads & pools['head'] else pools['head']
+        o['pools'] = pools
+        o['allowed'] = allowed - pools['head'] - pools['hand'] - pools['foot']
     return o
+
+
+CONF = .6
+CLASS = {'head': 'head', 'hand': 'hand', 'foot': 'foot', 'torso': 'cloth', 'pelvis': 'cloth', 'thigh': 'cloth', 'shin': 'cloth',
+         'upper_arm': 'cloth', 'forearm': 'cloth'}
+
+
+def identity(ctx, allowed):
+    """piece -> head / hand / foot / cloth from the Skin Lab's learnt part classifier (clip_label.py: CLIP embedding +
+    logistic regression; library.json clip.part, kept when part_p >= 0.6: at that confidence it agrees with the card's
+    filing on 93% of 731 cards). Cards it is unsure of, and harvest cards (never classified), are 'cloth'."""
+    from evolve import library as LB
+    import json, os
+    L = {c['id']: c for c in json.load(open(os.path.join(LB.SKIN, 'library.json')))}
+    out = {}
+    for i, p in enumerate(ctx['pieces']):
+        cl = (L.get(p['id']) or {}).get('clip') or {}
+        out[i] = CLASS.get(cl.get('part'), 'cloth') if cl.get('part_p', 0) >= CONF else 'cloth'
+    return out
 
 
 def run(target, seed, key, extra=None, search=0):
@@ -75,6 +101,20 @@ def run(target, seed, key, extra=None, search=0):
         return {'pieces': [], 'edges': [], 'info': {'error': 'no seed fits'}}
     st = best[1]
     forced = None
+    ends_missing = []
+    if g.opts.get('parts_last'):
+        # one head, a hand at each wrist end, a boot at each ankle end: each the best (by appearance when on) of its
+        # class pool, snapped at a free brad, scored only on its own region
+        a0 = g.allowed
+        for reg, pool in (('head', 'head'), ('handL', 'hand'), ('handR', 'hand'), ('footL', 'foot'), ('footR', 'foot')):
+            P_ = g.opts['pools'][pool]
+            st2, ch = g.force(st, P_, g.end_regions[reg]) if P_ else (st, None)
+            if ch is None:
+                ends_missing.append(reg)
+            else:
+                st = st2
+        g.allowed = a0
+
     def head_cover(st):
         import numpy as np
         c = np.zeros(g.shape, bool)
@@ -87,7 +127,7 @@ def run(target, seed, key, extra=None, search=0):
     need = not any(g.V[p['vi']]['pi'] in g.heads for p in st.placed)
     if g.opts.get('head_fit') and not need:
         need = head_cover(st) < .5
-    if g.heads and need:
+    if g.heads and need and not g.opts.get('parts_last'):
         if g.opts.get('head_fit'):            # the head slot is free again: other head pieces are not removed (a known gap)
             g.opts['max_heads'] = 2
         st2, ch = g.force(st, g.heads, g.head_region if g.opts.get('head_fit') else None)   # one head, even if it does not pay
@@ -96,7 +136,8 @@ def run(target, seed, key, extra=None, search=0):
             st, forced = st2, g.pieces[g.V[ch[1]]['pi']]['id']
     Ms, masks, alive = GR.settle(g, st, time.time() + 60)
     asm = _g.to_asm(g, st, Ms, alive)
-    asm['info'] = {'program': best[2], 'allowed': len(g.allowed), 'heads': len(g.heads), 'forced_head': forced}
+    asm['info'] = {'program': best[2], 'allowed': len(g.allowed), 'heads': len(g.heads), 'forced_head': forced,
+                   'ends_missing': ends_missing, 'valid': not ends_missing}
     return asm
 
 
