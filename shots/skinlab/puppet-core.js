@@ -127,6 +127,7 @@ P.canvas = (w, h) => { const o = document.createElement('canvas'); o.width = w; 
 P.imgBase = '';   // prefix for card img paths (library img paths are relative to shots/skinlab/)
 const img = c => IMG[c.id] || (IMG[c.id] = P.loadImage(c.img.startsWith('data:') ? c.img : P.imgBase + c.img));
 const AB = c => ({ A: S.fix[c.id]?.A || c.A, B: S.fix[c.id]?.B || c.B });
+const ppcOf = c => S.fix[c.id]?.px_per_cm || c.px_per_cm;   // a contract may re-claim a card's true scale
 const pts = (c, sk) => { const p = AB(c); return sk.swap ? { A: p.B, B: p.A } : p; };
 const cardLeft = c => S.fix[c.id]?.left ?? c.human?.left ?? (c.slot === 'foot' ? AB(c).B[0] < AB(c).A[0] : c.faces === 'L');
 function index() {
@@ -152,13 +153,21 @@ function centre(port, fr) {
 }
 
 // ---------- which card shows: the body's facing against the camera ----------
+// A host may declare, per frame, on the actor's frame record a: a.views = {body: 'side'|'front'|'back', head: ...} (the view every card
+// shows, so a swap lands where the host says: hysteresis, planted feet), a.lat = ±1 (which way a side figure faces, one sign for every
+// card, head included) and a.hands = {L: 'grip', R: 'open'} (a hand state: limbs.hand_L.states[state] = {side, front, back}).
+function cardsOf(k, sk, a) {
+  const m = k.match(/^(hand|mitt)_([LR])$/), st = m && a.hands?.[m[2]];
+  return st && sk.states?.[st] ? { ...sk.cards, ...sk.states[st] } : sk.cards;
+}
 function active(k, sk, a, port) {
   const f = a[SEG[k].face] || a.fwd, dot = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
-  const d = dot(f, port.toward), lat = dot(f, port.right);
-  const want = d > .55 ? 'front' : d < -.55 ? 'back' : 'side';
+  const d = dot(f, port.toward), lat = a.lat ?? dot(f, port.right);
+  const want = a.views ? (k === 'head' ? a.views.head || a.views.body : a.views.body) : d > .55 ? 'front' : d < -.55 ? 'back' : 'side';
+  const cards = cardsOf(k, sk, a);
   const order = { side: ['side', 'front', 'back'], front: ['front', 'side', 'back'], back: ['back', 'front', 'side'] }[want];
-  const v = order.find(v => sk.cards[v] && S.byId[sk.cards[v]]); if (!v) return null;
-  const c = S.byId[sk.cards[v]];
+  const v = order.find(v => cards[v] && S.byId[cards[v]]); if (!v) return null;
+  const c = S.byId[cards[v]];
   // profile cards are drawn facing right unless marked: mirror across the A→B line when the body faces screen-left
   const mir = sk.mirror !== (v === 'side' && (lat < 0) !== cardLeft(c));
   return { c, view: v, want, mir };
@@ -174,7 +183,7 @@ function fwd(x, q) { let u = rot([q[0] - x.A[0], q[1] - x.A[1]], -x.ax); u = [u[
 function inv(x, p) { let u = rot([p[0] - x.P[0], p[1] - x.P[1]], -x.ang); u = [(u[0] - x.off[0]) / x.s, (u[1] - x.off[1]) / x.s * (x.mir ? -1 : 1)]; u = rot(u, x.ax); return [u[0] + x.A[0], u[1] + x.A[1]]; }
 function scaleOf(k, c, sk, j, pj, port, puppet) {
   const sg = SEG[k], { A, B } = pts(c, sk), lab = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1;
-  if (sk.mode === 'true') return port.k / c.px_per_cm * sk.scale;
+  if (sk.mode === 'true') return port.k / ppcOf(c) * sk.scale;
   // fit: pinned cards stretch to the bone as seen; puppet cards stay rigid at the bone's real 3D length
   return (puppet ? len3(v3(j[ji[sg.from]], j[ji[sg.to]])) * port.k : hyp(pj[ji[sg.from]], pj[ji[sg.to]])) / lab * sk.scale;
 }
@@ -239,8 +248,44 @@ function solve(fr, port, style = S.style, puppet = S.puppet) {
   const order = Object.values(X).sort((a, b) => rank(a) - rank(b) || a.d - b.d);
   return { X, pj, j, near, view, order };
 }
+// fix[id].trim = px: erode the card's alpha by that many px (a white cut fringe goes); done once per card on a canvas
+const TRIM = {};
+function trimmed(c) {
+  const r = Math.round(S.fix[c.id]?.trim || 0), im = img(c); if (!r || !im.complete || !im.naturalWidth) return im;
+  if (TRIM[c.id]) return TRIM[c.id];
+  const w = im.naturalWidth || im.width, h = im.naturalHeight || im.height, o = P.canvas(w, h), g = o.getContext('2d'); g.drawImage(im, 0, 0);
+  let d; try { d = g.getImageData(0, 0, w, h); } catch { return im; }
+  const A = new Uint8Array(w * h); for (let i = 0; i < A.length; i++) A[i] = d.data[i * 4 + 3];
+  const B = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let m = 255; for (let q = Math.max(0, x - r); q <= Math.min(w - 1, x + r) && m; q++) m = Math.min(m, A[y * w + q]); B[y * w + x] = m; }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let m = 255; for (let q = Math.max(0, y - r); q <= Math.min(h - 1, y + r) && m; q++) m = Math.min(m, B[q * w + x]); d.data[(y * w + x) * 4 + 3] = m; }
+  g.putImageData(d, 0, 0); o.complete = true; o.naturalWidth = w;
+  return TRIM[c.id] = o;
+}
+// where a held thing sits on a placed hand card: fix[id].hold (card px) when the contract gives it, else u along A→B
+function holdPoint(x, u = .45) {
+  const h = S.fix[x.c.id]?.hold; if (h) return fwd(x, h);
+  const A = x.A, B = x.B; return fwd(x, [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u]);
+}
+// the neck holds: the head turns at most lim degrees off the torso (up/down and sideways); returns a new joint list and hfwd
+function clampNeck(j, fwdv, hfwd, lim = 35) {
+  const out = j.map(q => q.slice()), nb = j[ji.neckBase], tor = v3(j[0], nb), hd = v3(nb, j[ji.headTop]);
+  const ang = (u, v) => Math.acos(Math.max(-1, Math.min(1, (u[0] * v[0] + u[1] * v[1] + u[2] * v[2]) / ((len3(u) * len3(v)) || 1))));
+  const a = ang(tor, hd), L = lim * Math.PI / 180;
+  if (a > L) {   // rotate the head points about the neck base, in the plane of the torso and head axes, back to lim
+    const n = [tor[1] * hd[2] - tor[2] * hd[1], tor[2] * hd[0] - tor[0] * hd[2], tor[0] * hd[1] - tor[1] * hd[0]], nl = len3(n) || 1, k = n.map(v => v / nl), th = -(a - L);
+    const R = p => { const c = Math.cos(th), s = Math.sin(th), d = k[0] * p[0] + k[1] * p[1] + k[2] * p[2], x = [k[1] * p[2] - k[2] * p[1], k[2] * p[0] - k[0] * p[2], k[0] * p[1] - k[1] * p[0]];
+      return [0, 1, 2].map(i => p[i] * c + x[i] * s + k[i] * d * (1 - c)); };
+    for (const nme of ['headBase', 'head', 'headTop', 'nose']) { const i = ji[nme], r = R(v3(nb, j[i])); out[i] = [nb[0] + r[0], nb[1] + r[1], nb[2] + r[2]]; }
+  }
+  // sideways: the head's facing within lim of the torso's
+  const yf = Math.atan2(fwdv[0], fwdv[2]), yh = Math.atan2(hfwd[0], hfwd[2]); let dy = yh - yf; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+  const cy = Math.max(-L, Math.min(L, dy)), hl = Math.hypot(hfwd[0], hfwd[2]);
+  const h2 = Math.abs(dy) > L ? [Math.sin(yf + cy) * hl, hfwd[1], Math.cos(yf + cy) * hl] : hfwd.slice();
+  return { j: out, hfwd: h2 };
+}
 function drawCard(g, x, alpha) {
-  const im = img(x.c); if (!im.complete || !im.naturalWidth) return;
+  const im = trimmed(x.c); if (!im.complete || !im.naturalWidth) return;
   g.save(); g.globalAlpha = alpha;
   g.translate(x.P[0], x.P[1]); g.rotate(x.ang); g.translate(x.off[0], x.off[1]);
   g.scale(x.s, x.s * (x.mir ? -1 : 1)); g.rotate(-x.ax);
@@ -400,7 +445,7 @@ function stick(g, pj, col, w) {
   for (const [a, b] of STICK) { const p = pj[ji[a]], q = pj[ji[b]]; g.beginPath(); g.moveTo(p[0], p[1]); g.lineTo(q[0], q[1]); g.stroke(); }
 }
 
-Object.assign(P, { S, J, ji, HAND_CM, TOPO, PAR, GRP, GROUPS, VIT, FEET, measure, retarget, joints, SEG, LR, STYLES, STACK0, ARMS, VIEWS, VIEWOF, viewOf, OTHER, STICK,
+Object.assign(P, { ppcOf, cardsOf, trimmed, holdPoint, clampNeck, S, J, ji, HAND_CM, TOPO, PAR, GRP, GROUPS, VIT, FEET, measure, retarget, joints, SEG, LR, STYLES, STACK0, ARMS, VIEWS, VIEWOF, viewOf, OTHER, STICK,
   NAME, NOT, nameOK, human, painted, IMG, img, AB, pts, cardLeft, index, v3, len3, hyp, rot, makePort, centre, active, mk, fwd, inv, scaleOf, socket, ik2, roleOf, solve,
   drawCard, decode, decodeProps, measureActor, presetK, cur, newSkin, dE, dress, kitbash, labCss, buildCard, rebuildGen, stick });
 root.PuppetCore = P;

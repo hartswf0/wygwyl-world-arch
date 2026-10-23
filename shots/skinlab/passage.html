@@ -75,9 +75,18 @@ function rawPose(d, sf) {   // a source frame (fractional: the two neighbours mi
   for (const [k, pa] of Object.entries(A.p || {})) { const pb = (B.p || {})[k] || pa; pose.p[k] = { ...pa, pos: mixv(pa.pos, pb.pos), rot: mixv(pa.rot, pb.rot), held: u < .5 ? pa.held : pb.held }; }
   return pose;
 }
-function transform(seg, pose, T) {   // retarget → mirror → turn → warp → place
-  let j = Object.keys(E.K).length ? P.retarget(pose.j, E.K) : pose.j.map(q => q.slice());
+// one man in every trial: each trial's skeleton is retargeted to the same bone lengths (the contract's, in cm), so a join
+// between trials recorded at different heights does not change his size
+function kOf(trialId) {
+  const d = E.trials[trialId]; if (!d || !E.target) return {};
+  if (!d.K) { const rec = P.measure(d.frames[0].a.A.j); d.K = Object.fromEntries(Object.entries(E.target).map(([g, L]) => [g, L / rec[g]])); }
+  return d.K;
+}
+function transform(seg, pose, T) {   // retarget → neck → mirror → turn → warp → place
+  const K = kOf(seg.trial || 'T025');
+  let j = Object.keys(K).length ? P.retarget(pose.j, K) : pose.j.map(q => q.slice());
   let fw = [pose.fwd, pose.hfwd, pose.pfwd], props = JSON.parse(JSON.stringify(pose.p));
+  if (E.edl.neck_deg) { const c = P.clampNeck(j, fw[0], fw[1], seg.neck_deg ?? E.edl.neck_deg); j = c.j; fw[1] = c.hfwd; }
   if (seg.mirror) {
     j = MIRROR_IDX.map(i => [-j[i][0], j[i][1], j[i][2]]);
     fw = fw.map(v => [-v[0], v[1], v[2]]);
@@ -115,9 +124,10 @@ async function assemble() {
   for (const s of edl.segments) await trial(s.trial);
   E.segs = edl.segments.map(s => ({ ...s, t0: s.map[0][0], t1: s.map[s.map.length - 1][0] }));
   // reference poses for hold_to_head: the joints in the head's own frame
-  for (const s of E.segs) if (s.hold_to_head) {
+  for (const s of E.segs) if (s.hold_to_head?.local) s.ref = s.hold_to_head.local;   // explicit: [side (+ = his left), up, forward] cm from the head centre
+  for (const s of E.segs) if (s.hold_to_head && !s.hold_to_head.local) {
     const r = s.hold_to_head.ref, d = await trial(r.trial), pose = rawPose(d, r.frame); pose.sf = r.frame;
-    const tp = transform({ mirror: r.mirror }, pose, null), b = headBasis(tp);
+    const tp = transform({ mirror: r.mirror, trial: r.trial }, pose, null), b = headBasis(tp);
     s.ref = Object.fromEntries(s.hold_to_head.joints.map(n => { const v = P.v3(b.o, tp.j[ji[n]]); return [n, [v[0] * b.s[0] + v[2] * b.s[2], v[1], v[0] * b.f[0] + v[2] * b.f[2]]]; }));
   }
   // placement: the first segment of a shot is placed by a joint; the rest are re-rooted on the planted foot at the join
@@ -141,7 +151,38 @@ async function assemble() {
       pose.blendW = w;
     }
     const shot = Object.entries(E.edl.shots).find(([, v]) => t >= v.t[0] - 1e-6 && t < v.t[1] - 1e-6)?.[0] || s.shot;
-    E.frames.push({ f, t, tReal: edl.t0 + f / fps, seg: i, segName: s.name, shot, sf: pose.sf, a: { A: { j: pose.j, fwd: pose.fwd, hfwd: pose.hfwd, pfwd: pose.pfwd } }, p: pose.p });
+    E.frames.push({ f, t, tReal: edl.t0 + f / fps, seg: i, segName: s.name, shot, sf: pose.sf, a: { A: { j: pose.j, fwd: pose.fwd, hfwd: pose.hfwd, pfwd: pose.pfwd, hands: s.hands || null } }, p: pose.p });
+  }
+}
+
+// ---------- which view shows, and when it swaps ----------
+// The lab picks a view per frame from the torso's facing (57° thresholds), which flickers through a turn and swaps mid-stride.
+// Here a view is chosen per frame from the torso, then held: a run shorter than hold_frames joins its neighbour, a swap is moved
+// (within ±3 frames, on the cadence) to a frame where both feet are down, and the EDL may declare a view from a poem time on.
+// The head always shows the body's view and faces the body's way (no declared head turns in this passage).
+function planViews() {
+  const F = E.frames, n = F.length, hold = E.edl.hold_frames || 8, cad = E.edl.cadence || 1;
+  const raw = F.map(fr => { const v = fr.a.A.fwd, d = v[2]; return d > .55 ? 'front' : d < -.55 ? 'back' : 'side'; });
+  for (const dv of E.edl.views || []) for (let f = 0; f < n; f++) if (F[f].t >= dv.t[0] - 1e-6 && F[f].t < dv.t[1] - 1e-6) raw[f] = dv.view;
+  const runs = () => { const r = []; for (let f = 0; f < n; f++) { const L = r[r.length - 1]; if (L && L.v === raw[f] && F[L.a].shot === F[f].shot) L.b = f; else r.push({ v: raw[f], a: f, b: f }); } return r; };
+  for (let it = 0; it < 50; it++) {
+    const r = runs(), short = r.map((x, i) => [x, i]).filter(([x, i]) => x.b - x.a + 1 < hold).sort((p, q) => (p[0].b - p[0].a) - (q[0].b - q[0].a))[0];
+    if (!short) break;
+    const [x, i] = short, prev = r[i - 1], next = r[i + 1] && F[r[i + 1].a].shot === F[x.a].shot ? r[i + 1] : null;
+    const to = prev && F[prev.b].shot === F[x.a].shot ? prev.v : next ? next.v : x.v;
+    for (let f = x.a; f <= x.b; f++) raw[f] = to;
+  }
+  const planted = f => ['L', 'R'].every(sd => Math.min(...['heel', 'ball', 'toe'].map(p => F[f].a.A.j[ji[p + sd]][1])) < 3);
+  for (const x of runs().slice(1)) {
+    if (F[x.a - 1]?.shot !== F[x.a].shot) continue;
+    let best = x.a, bd = 99;
+    for (let f = x.a - 3; f <= x.a + 3; f++) { if (f < 1 || f >= n || f % cad || F[f].shot !== F[x.a].shot) continue; const d = Math.abs(f - x.a) + (planted(f) ? 0 : 10); if (d < bd) { bd = d; best = f; } }
+    if (best < x.a) for (let f = best; f < x.a; f++) raw[f] = x.v; else for (let f = x.a; f < best; f++) raw[f] = raw[x.a - 1];
+  }
+  E.viewRuns = runs().map(x => [x.v, x.a, x.b]);
+  for (const x of runs()) {
+    let lat = 0; for (let f = x.a; f <= x.b; f++) lat += F[f].a.A.fwd[0];
+    for (let f = x.a; f <= x.b; f++) { F[f].a.A.views = { body: x.v, head: x.v }; F[f].a.A.lat = lat >= 0 ? 1 : -1; }
   }
 }
 
@@ -167,7 +208,7 @@ function drawStand(id, x, y, z, w, h, cam, o = {}) {
   if (o.reflect) { g.save(); g.globalAlpha = o.reflect; g.translate(0, foot[1] * 2); g.scale(1, -1); g.drawImage(im, box[0], box[1], box[2], box[3]); g.restore(); }
   return box;
 }
-function boothLayer(name) { return E.ens.booth.layers.find(l => l.name === name || l.part.endsWith(name)); }
+function boothLayer(name) { const l = E.ens.booth.layers.find(l => l.name === name || l.part.endsWith(name)); return l && { ...l, ...(E.edl.world.booth.override?.[l.name || name] || {}) }; }
 function drawBoothCard(name, cam, o = {}) {
   const l = boothLayer(name), b = E.edl.world.booth;
   return drawStand(l.part, b.x + l.x_cm, l.y_cm, b.z - l.z_cm, l.w_cm, l.h_cm, cam, { op: l.op, reflect: l.reflect?.op ? l.reflect.op * .6 : 0, ...o });
@@ -202,7 +243,8 @@ function drawQuay(cam) {
 }
 
 // ---------- props ----------
-function handPoint(x, u, v) {   // a point on a placed hand card: u along A→B, v across (fractions of the A→B length)
+function handPoint(x, u, v) {
+  if (S.fix[x.c.id]?.hold) return P.holdPoint(x);   // a point on a placed hand card: u along A→B, v across (fractions of the A→B length)
   const A = x.A, B = x.B, d = [B[0] - A[0], B[1] - A[1]], n = [-d[1], d[0]];
   return P.fwd(x, [A[0] + d[0] * u + n[0] * v, A[1] + d[1] * u + n[1] * v]);
 }
@@ -222,13 +264,18 @@ function drawCord(a, b, sag, wpx, id) {   // the coiled cord: slices of the cord
     const p = pts[i], q = pts[i + 1], L = Math.hypot(q[0] - p[0], q[1] - p[1]); if (L < .01) continue;
     const ang = Math.atan2(q[1] - p[1], q[0] - p[0]) - Math.PI / 2;
     let done = 0;
-    while (L - done > 1e-3) { const y0 = run % tile, step = Math.min(L - done, tile - y0);
+    while (L - done > 1e-3) { const y0 = run % tile, step = Math.max(.05, Math.min(L - done, tile - y0));
       g.save(); g.translate(p[0] + (q[0] - p[0]) * done / L, p[1] + (q[1] - p[1]) * done / L); g.rotate(ang);
       g.drawImage(im, 0, (y0 + tile * .5) / k, im.naturalWidth, step / k + .6, -wpx / 2, 0, wpx, step + .6); g.restore();
       done += step; run += step; }
   }
 }
 
+// the ear on the holding side, on screen: the head centre carried 7 cm to that side (in the head's own frame)
+function earPx(fr, cam, side) {
+  const a = fr.a.A, b = headBasis({ j: a.j, hfwd: a.hfwd }), sg = side === 'L' ? 1 : -1;
+  return cam.p([0, 1, 2].map(c => b.o[c] + b.s[c] * 7 * sg + (c === 1 ? 1 : 0)));
+}
 // ---------- one frame ----------
 const ST = { f: 0, playing: false, diag: Q.has('diag'), lastSol: null };
 function solveFrame(fr, cam) {
@@ -255,9 +302,10 @@ function render(f) {
   else if (sol?.X['hand_' + E.edl.props.handset.hand]) {
     const hx = sol.X['hand_' + E.edl.props.handset.hand], grip = handPoint(hx, .42, 0), head = sol.pj[ji.head];
     // the handset lies along the face from ear to mouth when it is up; hanging, it hangs; between, it turns with the hand
-    const up = clamp(1 - (Math.hypot(grip[0] - head[0], grip[1] - head[1]) / port.k - 10) / 30, 0, 1);
-    const handAng = hx.ang + Math.PI / 2, faceAng = Math.atan2(sol.pj[ji.nose][0] - head[0], 1) * 0 + (fr.a.A.hfwd[0] > .3 ? -.35 : fr.a.A.hfwd[0] < -.3 ? .35 : (grip[0] < head[0] ? .28 : -.28));
-    const ang = lerp(handAng - Math.PI / 2 + Math.PI / 2, faceAng, smooth(up));
+    // the handset stays in the hand (its grip on the hand's hold point); lifted, its earpiece turns to the ear
+    const ear = earPx(fr, cam, E.edl.props.handset.hand), d = [ear[0] - grip[0], ear[1] - grip[1]];
+    const up = clamp(1 - (Math.hypot(d[0], d[1]) / port.k - 12) / 25, 0, 1);
+    const ang = lerp(0, Math.atan2(d[0], -d[1]), smooth(up));
     handsetCard = cardAt(E.edl.props.handset.part, E.edl.props.handset.w_cm, E.edl.props.handset.h_cm, port.k, E.edl.props.handset.grip, grip, ang);
     handsetCard.up = up;
   }
@@ -272,7 +320,8 @@ function render(f) {
     const hk = 'hand_' + E.edl.props.handset.hand;
     let drewHandset = ps.handset === 'hook';
     if (drewHandset) drawPlaced(handsetCard);
-    for (const x of sol.order) { if (x.k === hk && !drewHandset) { drawPlaced(handsetCard); drewHandset = true; } P.drawCard(g, x, 1); }
+    const over = E.segs[fr.seg].over_head || [], order = sol.order.filter(x => !over.includes(x.k)).concat(over.map(k => sol.X[k]).filter(Boolean));
+    for (const x of order) { if (x.k === hk && !drewHandset) { drawPlaced(handsetCard); drewHandset = true; } P.drawCard(g, x, 1); }
     if (!drewHandset) drawPlaced(handsetCard);
   };
   const drawCase = () => { const c = ps.case; if (!c) return; const s = cam.s(c.pos[2]), pr = E.edl.props.case;
@@ -298,8 +347,8 @@ function light(cam) {
     lg.fillStyle = gr; lg.beginPath(); lg.ellipse(p[0], p[1] + r * .35, r * 1.25, r * 1.5, 0, 0, 7); lg.fill(); }
   g.save(); g.globalCompositeOperation = 'multiply'; g.drawImage(o, 0, 0); g.restore();
   // the roof light itself glows
-  const b = E.edl.world.booth, rl = boothLayer('roof light'), p = cam.p([b.x, rl.y_cm + 20, b.z - rl.z_cm]), r = 90 * cam.s(-rl.z_cm);
-  const gr = g.createRadialGradient(p[0], p[1], 2, p[0], p[1], r); gr.addColorStop(0, 'rgba(255,230,170,.55)'); gr.addColorStop(1, 'rgba(255,230,170,0)');
+  const b = E.edl.world.booth, rl = boothLayer('roof light'), p = cam.p([b.x, rl.y_cm + 20, b.z - rl.z_cm]), r = 55 * cam.s(-rl.z_cm);
+  const gr = g.createRadialGradient(p[0], p[1], 2, p[0], p[1], r); gr.addColorStop(0, 'rgba(255,230,170,.35)'); gr.addColorStop(1, 'rgba(255,230,170,0)');
   g.save(); g.globalCompositeOperation = 'screen'; g.fillStyle = gr; g.fillRect(p[0] - r, p[1] - r, 2 * r, 2 * r); g.restore();
 }
 function diag(sol, port) {
@@ -324,7 +373,7 @@ function measureFrame(f, fr, sol, port, cam, hc) {
     out.feet[s] = { a: [a[0] / port.k, a[1] / port.k], b: [b[0] / port.k, b[1] / port.k], low: Math.min(fr.a.A.j[ji['heel' + s]][1], fr.a.A.j[ji['ball' + s]][1], fr.a.A.j[ji['toe' + s]][1]) }; }
   const hx = sol.X['hand_' + E.edl.props.handset.hand];
   if (hx) { const gp = handPoint(hx, .42, 0); out.hand = [gp[0] / port.k, gp[1] / port.k]; }
-  if (hc) { const e = hc.pt(...E.edl.props.handset.ear), head = sol.pj[ji.head]; out.ear = Math.hypot(e[0] - head[0], e[1] - head[1]) / port.k; out.handsetGrip = [hc.at[0] / port.k, hc.at[1] / port.k]; out.handsetUp = hc.up ?? 0; }
+  if (hc) { const e = hc.pt(...E.edl.props.handset.ear), head = earPx(fr, cam, E.edl.props.handset.hand); out.ear = Math.hypot(e[0] - head[0], e[1] - head[1]) / port.k; out.handsetGrip = [hc.at[0] / port.k, hc.at[1] / port.k]; out.handsetUp = hc.up ?? 0; }
   out.k = port.k;
   return out;
 }
@@ -370,7 +419,8 @@ function propTracks() {
     out.case = cas && { ...cas, pos: cas.pos.slice() };
     // the handset: on the hook until the trial's phone is held by the hand, then with the hand (it is never put back)
     const pt = fr.p.phone;
-    if (!grabbed && pt && pt.held && /^A\.[LR]$/.test(pt.held)) { grabbed = true; E.grabFrame = f; }
+    const gs = seg.grab_src;
+    if (!grabbed && (gs != null ? (seg.name === 'reach' || seg.grab_src != null) && fr.sf >= gs : pt && pt.held && /^A\.[LR]$/.test(pt.held))) { grabbed = true; E.grabFrame = f; }
     out.handset = grabbed ? 'hand' : 'hook';
     E.props.push(out);
   }
@@ -415,7 +465,7 @@ function applyContract(c) {
   S.skin = {};
   for (const [k, l] of Object.entries(c.limbs || {})) S.skin[k] = { ...P.newSkin(), ...l, cards: { ...(l.cards || {}) } };
   const st = c.stack || {}; S.stack = Object.fromEntries(P.VIEWS.map(v => [v, st[v]?.length ? st[v].slice() : P.STACK0.slice()]));
-  E.K = c.proportions?.K || {};
+  E.contractK = c.proportions?.K || {}; E.preset = c.proportions?.preset || 'bolas';
 }
 async function provisional() {
   // auto-dress the poet the way the Skin Lab's dress('poet') does: one costume, each view from the sheet most of its cards
@@ -438,7 +488,7 @@ async function provisional() {
 // sockets are bound per view, on a neutral standing pose turned to that view (the lab binds at one frame for every view)
 function bindFrames() {
   const d = E.trials.T025, base = rawPose(d, 0); base.sf = 0;
-  const mk = yaw => { const p = transform({ rot: yaw }, base, [0, 0]); return { a: { A: { j: p.j, fwd: p.fwd, hfwd: p.hfwd, pfwd: p.pfwd } } }; };
+  const mk = yaw => { const p = transform({ rot: yaw, trial: 'T025' }, base, [0, 0]); return { a: { A: { j: p.j, fwd: p.fwd, hfwd: p.hfwd, pfwd: p.pfwd } } }; };
   const F = { front: mk(0), back: mk(180), right: mk(90), left: mk(-90) };
   S.bindFrame = (k, px) => {
     const v = px.view || 'side';
@@ -471,7 +521,11 @@ async function boot() {
   S.actor = 'A'; S.puppet = true;
   await trial('T025');
   // cards built by code need the skeleton's measures at the contract's proportions
-  S.preset = 'custom'; S.K = E.K; P.measureActor(E.trials.T025.frames[0]); S.K = E.K;
+  // the target bone lengths: the contract's preset read at T025 frame 0 (the passage's own trial), as the Skin Lab would
+  S.preset = E.preset === 'vitruvian' ? 'vitruvian' : 'custom'; S.K = { ...E.contractK };
+  P.measureActor(E.trials.T025.frames[0]);   // vitruvian: K from S.H and S.rec; custom/cards: the contract's K
+  if (E.preset !== 'vitruvian') S.K = { ...E.contractK };
+  E.K = { ...S.K }; E.target = Object.fromEntries(P.GROUPS.map(gk => [gk, S.rec[gk] * (E.K[gk] ?? 1)]));
   const srcs = Object.values(S.skin).flatMap(sk => Object.values(sk.cards)).map(id => S.byId[id]).filter(Boolean);
   await Promise.all(srcs.filter(c => !c.gen).map(c => waitImg(P.img(c))));
   const torsoSrc = S.lib.filter(c => c.character === c.character && !c.gen && (c.slot === 'torso' || c.slot === 'pelvis') && c.character === 'poet').slice(0, 40);
@@ -486,6 +540,7 @@ async function boot() {
   console.log('stage', 'await assemble();', performance.now()|0);
   await assemble();
   console.log('stage', 'propTracks();', performance.now()|0);
+  planViews();
   propTracks();
   // every image the passage draws
   const ids = new Set([...E.ens.sky.layers, ...E.ens.quay.layers, ...E.ens.booth.layers, ...E.edl.world.extra].map(l => l.part));
