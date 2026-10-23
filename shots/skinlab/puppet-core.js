@@ -459,14 +459,15 @@ function buildCard(kind, view, ch, onPaint) {
 // shading) and edged like the kit cards. A = waist brad, B = crotch line (the pelvis bone), a brad at the hip joint for the thighs.
 function buildSeat(ch, srcId, o = {}) {
   const id = `gen.${ch}/built-seat-side`; if (S.byId[id]) return S.byId[id];
-  const K = 8, m = 6, hip = o.hip_cm ?? 7, out = o.outline || [[5, -3], [-10, -3], [-13.5, 1], [-17, 6], [-19.5, 11.5], [-19.5, 16], [-17, 20], [-11, 23], [-3, 22.5], [5, 19]];
+  const K = 8, m = 6, hip = o.hip_cm ?? 7, out = o.outline || [[5, -3], [-9, -3], [-11.5, 1], [-14.5, 6], [-17.5, 11], [-18, 15.5], [-16.5, 19.5], [-13, 23], [-9, 25.5], [-4, 24.5], [5, 20]];
   const xs = out.map(p => p[0]), ys = out.map(p => p[1]), x0 = Math.min(...xs), y0 = Math.min(...ys);
   const W = Math.ceil((Math.max(...xs) - x0) * K + 2 * m), Hp = Math.ceil((Math.max(...ys) - y0) * K + 2 * m), Pt = p => [m + (p[0] - x0) * K, m + (p[1] - y0) * K];
   const brads = [[0, 0], [0, hip]], src = S.byId[srcId];
   const c = { id, gen: true, w: W, h: Hp, slot: 'pelvis', side: null, view: 'profile', character: ch, costume: 'built', px_per_cm: K,
     A: Pt([0, 0]), B: Pt([0, o.crotch_cm ?? 20]), pts: 'brads', q: 'A', label: 'built by code: profile seat', brads: brads.map(Pt), pal: src?.pal, skin: 0, img: '' };
   const paint = () => {
-    const cv = P.canvas(W, Hp), g = cv.getContext('2d'), path = () => { g.beginPath(); out.forEach((p, i) => { const q = Pt(p); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); };
+    const cv = P.canvas(W, Hp), g = cv.getContext('2d'), path = () => { const q = out.map(Pt), n = q.length, mid = i => { const a = q[i % n], b = q[(i + 1) % n]; return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; };   // a smooth outline through the points' midpoints
+      g.beginPath(); g.moveTo(...mid(0)); for (let i = 1; i <= n; i++) g.quadraticCurveTo(...q[i % n], ...mid(i)); g.closePath(); };
     path(); g.save(); g.clip();
     const im = src && img(src);
     if (im && im.complete && im.naturalWidth) {   // one cheek of the rear seat (its right half), its outer curve to the back

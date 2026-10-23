@@ -116,8 +116,30 @@ function transform(seg, pose, T) {   // retarget → neck → mirror → turn �
     }
   }
   for (const s of moved) fixArm(j, s, ...lens0[s], j[ji['elbow' + s]].map((v, c) => v - (c === 1 ? 25 : 0)));   // the reaching elbow hangs
+  if (seg.soften_swing) softenSwing(j, seg.soften_swing);
   if (T) { j = j.map(q => [q[0] + T[0], q[1], q[2] + T[1]]); for (const q of Object.values(props)) q.pos = [q.pos[0] + T[0], q.pos[1], q.pos[2] + T[1]]; }
   return { j, fwd: fw[0], hfwd: fw[1], pfwd: fw[2], p: props, sf: pose.sf };
+}
+// the swinging leg less folded (seg.soften_swing = {thigh, knee, lift: [cm, cm]}): while a foot is off the ground (its lowest point above
+// lift[0] cm, fully from lift[1]) the thigh's angle off the vertical is scaled by 'thigh' and the knee's flexion by 'knee', each
+// joint turned about its parent so no bone changes length; a planted foot is untouched, so it does not slide
+function rotAB(a, b, v) {
+  const k = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]], sn = P.len3(k), cs = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  if (sn < 1e-6) return v.slice(); const u = k.map(x => x / sn), d = u[0] * v[0] + u[1] * v[1] + u[2] * v[2], x = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+  return [0, 1, 2].map(i => v[i] * cs + x[i] * sn + u[i] * d * (1 - cs));
+}
+function softenSwing(j, o) {
+  const nrm = v => { const l = P.len3(v) || 1; return v.map(x => x / l); }, lift = o.lift || [11, 19];
+  for (const s of ['L', 'R']) {
+    const H = j[ji['hip' + s]], low = ['ankle', 'heel', 'ball', 'toe'].map(n => ji[n + s]);
+    const foot = Math.min(...['heel', 'ball', 'toe'].map(n => j[ji[n + s]][1])), w = smooth(clamp((foot - lift[0]) / (lift[1] - lift[0]), 0, 1)); if (w <= 0) continue;
+    const turn = (piv, ids, a, b) => { for (const i of ids) { const r = rotAB(a, b, P.v3(piv, j[i])); j[i] = piv.map((v, c) => v + r[c]); } };
+    const T = nrm(P.v3(H, j[ji['knee' + s]])), T2 = nrm(T.map((v, c) => lerp(v, [0, -1, 0][c], (1 - (o.thigh ?? 1)) * w)));
+    turn(H, [ji['knee' + s], ...low], T, T2);
+    const K = j[ji['knee' + s]], D = nrm(P.v3(K, j[ji['ankle' + s]])), D2 = nrm(D.map((v, c) => lerp(v, T2[c], (1 - (o.knee ?? 1)) * w)));
+    turn(K, low, D, D2);
+    const floor = Math.min(...low.slice(1).map(i => j[i][1]), j[ji['ankle' + s]][1] - 8); if (floor < 0) for (const i of low) j[i][1] -= floor;
+  }
 }
 // a moved wrist keeps its arm: the elbow is solved again in 3D from the shoulder with the bone lengths the arm had before the
 // move (so a rigid card is never shrunk or grown by a warp), bending toward the pole (the moved elbow); out of reach, the wrist is pulled in
@@ -518,7 +540,7 @@ function render(f) {
     if (!sol) return;
     const hk = 'hand_' + E.edl.props.handset.hand;
     let drewHandset = ps.handset === 'hook';
-    if (drewHandset) drawPlaced(handsetCard);
+    if (drewHandset && !Q.has('solo')) drawPlaced(handsetCard);
     const sg = E.segs[fr.seg], over = (kp ? E.cardKeys.over_head : sg.over_head) || [], under = (kp ? [] : sg.under_torso) || [];
     let order = sol.order.filter(x => !over.includes(x.k) && !under.includes(x.k)).concat(over.map(k => sol.X[k]).filter(Boolean));
     if (under.length) { const ti = Math.max(0, order.findIndex(x => x.k === 'torso')); order.splice(ti, 0, ...under.map(k => sol.X[k]).filter(Boolean)); }
@@ -789,6 +811,7 @@ async function boot() {
   await Promise.all(torsoSrc.map(c => waitImg(P.img(c))));
   for (const id of Object.keys(S.byId)) if (id.startsWith('gen.')) delete S.byId[id];
   S.lib = S.lib.filter(c => !c.gen);
+  await Promise.all(Object.entries(S.fix).filter(([id, f]) => id.startsWith('gen.') && f.from && S.byId[f.from]).map(([, f]) => waitImg(P.img(S.byId[f.from]))));   // a built card's painted source
   P.rebuildGen(S.skin);
   S.K = {};   // the assembled frames are retargeted already
   S.pv++;
