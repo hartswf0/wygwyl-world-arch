@@ -5,74 +5,63 @@
 <script src="../../puppet-core.js"></script>
 <script src="../../../rig/pose-core.js"></script>
 </head><body>
-<p>Headless page for recognize.mjs: it poses a character contract into the Pose Lab's solves of the painted poses through PuppetCore. Nothing to see here by hand.</p>
+<p>Headless page for recognize.mjs: it poses a character contract into the Pose Lab's solves of the painted poses through PuppetCore.renderPose. Nothing to see here by hand.</p>
 <script>
 'use strict';
-// The harness's only job: Pose Lab solve -> 26 Skin Lab joints + a port projecting exactly like the Pose Lab, then
-// PuppetCore draws. PuppetCore.renderPose (Builder B's API) is used when present; else a thin stub over solve()/drawCard().
+// The harness's only jobs: Pose Lab solve -> joints + a port that projects exactly like the Pose Lab (the painting's own floor,
+// centre and px/cm); the painting's set piece (flat); the leave-one-family-out filter on harvested cards; framing the whole
+// puppet. All mechanics are PuppetCore.renderPose's (Builder B).
 const P = PuppetCore, PC = PoseCore;
-P.imgBase = '/shots/skinlab/';
-let LIB = null;
-const BOLAS = 'pelvis hipL hipR kneeL kneeR ankleL ankleR heelL heelR ballL ballR toeL toeR spineMid neckBase chest shoulderL shoulderR elbowL elbowR wristL wristR headBase head headTop nose'.split(' ');
-const FROM = { pelvis: 'pelvis', hipL: 'hipL', hipR: 'hipR', kneeL: 'knL', kneeR: 'knR', ankleL: 'anL', ankleR: 'anR', heelL: 'heelL', heelR: 'heelR',
-  ballL: 'ballL', ballR: 'ballR', toeL: 'toeL', toeR: 'toeR', spineMid: 'waist', neckBase: 'neck', chest: 'chest', shoulderL: 'shL', shoulderR: 'shR',
-  elbowL: 'elL', elbowR: 'elR', wristL: 'wrL', wristR: 'wrR', head: 'headC', headTop: 'top' };
-const W3 = p => [p[0], -p[1], p[2]];                         // Pose Lab body frame (Y down) -> Skin Lab world (y up)
-const zcol = R => { const v = [R[2], R[5], R[8]], l = Math.hypot(...v) || 1; return W3(v.map(a => a / l)); };
-const lerp = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
-const len3 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
-// the joint atlas: projected / 3D length of a segment in this view -> what a cut-out must do there
-const verdict = (r, k) => /^foot/.test(k) ? (r >= .88 ? 'ROTATE' : 'DEDICATED-CARD') : r >= .88 ? 'ROTATE' : r >= .55 ? 'SHORTEN12+OVERLAP' : 'NEEDS-FORESHORTENED-CARD';
-
-function setup(C) {
-  P.S.lib = LIB; P.S.fix = C.fix || {}; P.index();
-  P.S.skin = Object.fromEntries(Object.entries(C.limbs).map(([k, l]) => [k, { cards: { ...l.cards }, src: l.src, mode: l.mode || 'fit', scale: l.scale ?? 1, rot: l.rot || 0, dx: l.dx || 0, dy: l.dy || 0, mirror: !!l.mirror, swap: !!l.swap }]));
-  P.S.style = C.style || 'hips'; P.S.stack = C.stack; P.S.K = {}; P.S.preset = 'bolas'; P.S.puppet = true; P.S.farShade = C.far_shade ?? .7;
-  P.S.centre = () => {};                                    // the port already carries the painting's own placement
-  P.rebuildGen(P.S.skin);
-}
-async function preload() {
-  const ids = new Set(); for (const sk of Object.values(P.S.skin)) for (const id of Object.values(sk.cards)) ids.add(id);
-  await Promise.all([...ids].map(id => { const c = P.S.byId[id]; if (!c) return 0; const im = P.img(c);
-    return im.complete && im.naturalWidth ? 0 : new Promise(r => { im.onload = im.onerror = r; setTimeout(r, 4000); }); }));
-}
+let LIB = null, HV = null;
+const NAMES = { pelvis: 'pelvis', hipL: 'hipL', hipR: 'hipR', knL: 'kneeL', knR: 'kneeR', anL: 'ankleL', anR: 'ankleR', heelL: 'heelL', heelR: 'heelR',
+  ballL: 'ballL', ballR: 'ballR', toeL: 'toeL', toeR: 'toeR', waist: 'spineMid', neck: 'neckBase', chest: 'chest', shL: 'shoulderL', shR: 'shoulderR',
+  elL: 'elbowL', elR: 'elbowR', wrL: 'wristL', wrR: 'wristR', headC: 'head', top: 'headTop', tipL: 'tipL', tipR: 'tipR' };
+const W3 = p => [p[0], -p[1], p[2]];                        // Pose Lab body frame (Y down) -> renderPose (y up)
+const family = id => id.replace(/-\d+$/, '').replace(/-\d+(\.jpg)?$/, '');   // 'x-1' and 'x-2' are one painted pose drawn twice
 function joints(D, sol) {
-  const x = PC.PN.map(n => sol.params[n] ?? 0), J = PC.fk(D.skeleton, x), F = J._F;
-  const j = BOLAS.map(n => FROM[n] ? W3(J[FROM[n]]) : null);
-  j[BOLAS.indexOf('headBase')] = W3(lerp(J.neck, J.headC, .25));
-  // the Skin Lab adds its waist 7 cm above its pelvis joint along the spine and hangs the torso card waist -> neck. The Pose
-  // Lab's waist is the jacket hem, 19.4 cm above the hip line (measured from this costume's cards), so the Skin Lab pelvis
-  // joint is put 7 cm below the Pose Lab waist: the torso card then spans the painted waist -> neck; the thighs still hang
-  // from the true hip joints (their sockets bind at the hips' own positions).
+  const x = PC.PN.map(n => sol.params[n] ?? 0), J = PC.fk(D.skeleton, x), o = {};
+  for (const [a, b] of Object.entries(NAMES)) if (J[a]) o[b] = W3(J[a]);
+  o.headBase = W3(J.neck.map((v, i) => v + (J.headC[i] - v) * .25));
+  const R = J._F.Rh, f = [R[2], R[5], R[8]];                  // pose-core matrices are flat, row-major: the head's forward is column 2
+  o.nose = W3(J.headC.map((v, i) => v + f[i] * 10));
+  // the Skin Lab hangs its torso card from a waist 7 cm above its pelvis joint; the Pose Lab waist is the jacket hem, 19.4 cm above
+  // the hip line (measured from this costume's cards): the pelvis joint goes 7 cm under the Pose Lab waist, so the torso card spans
+  // the painted hem -> neck; the thighs still hang from the true hip joints
   const u = J.waist.map((v, i) => v - J.pelvis[i]), lu = Math.hypot(...u) || 1;
-  j[0] = W3(J.waist.map((v, i) => v - u[i] / lu * 7));
-  const hf = zcol(F.Rh); j[BOLAS.indexOf('nose')] = W3(J.headC).map((v, i) => v + hf[i] * 10);
-  return { j, fwd: zcol(F.Rt), hfwd: hf, pfwd: zcol(F.R0) };
+  o.pelvis = W3(J.waist.map((v, i) => v - u[i] / lu * 7));
+  return o;
 }
-function makePort(t, sol, U, label) {
-  const psi = sol.psi, s = sol.scale_px_per_cm, k = U / t.h, Wc = Math.max(t.w, .75 * t.h), dx = (Wc - t.w) / 2 * k;
-  const ox = sol.params.ox || 0, oy = sol.params.oy || 0, c = Math.cos(psi * Math.PI / 180), sn = Math.sin(psi * Math.PI / 180);
-  return { label, yaw: psi, k: s * k, cx: 0, cz: 0, x: 0, y: 0, w: Math.round(Wc * k), h: U, toward: [-sn, 0, c], right: [c, 0, sn], dx,
-    p(q) { const r = PC.project([q[0], -q[1], q[2]], psi, ox, oy); return [(r[0] * s + t.cx) * k + dx, (r[1] * s + t.floor) * k, r[2]]; } };
+// the Pose Lab's projection (with its small oblique offset), mapped into a frame canvas: painting px * kU + (offX, offY)
+function makePort(t, sol, kU, offX, offY, label) {
+  const psi = sol.psi, s = sol.scale_px_per_cm, ox = sol.params.ox || 0, oy = sol.params.oy || 0, c = Math.cos(psi * Math.PI / 180), sn = Math.sin(psi * Math.PI / 180);
+  return { label, yaw: -psi, k: s * kU, cx: 0, cz: 0, toward: [-sn, 0, c], right: [c, 0, sn],
+    p(q) { const r = PC.project([q[0], -q[1], q[2]], psi, ox, oy); return [(r[0] * s + t.cx) * kU + offX, (r[1] * s + t.floor) * kU + offY, r[2]]; } };
 }
-function draw(ctx, C, frame, port, t, sol) {
-  const view = PC.viewKey(sol.psi), facing = ((sol.psi % 360) + 360) % 360 < 180 && sol.psi % 180 ? 'right' : sol.psi % 180 ? 'left' : 'none';
-  if (P.renderPose) {                                        // Builder B's general API
-    const r = P.renderPose(ctx, { contract: C, library: LIB, joints3d: frame.a.A, view, facing, heightPx: (D_H * port.k), x: port.p(frame.a.A.j[0])[0], y: port.p([0, 0, 0])[1], handStates: {}, port });
-    return { via: 'PuppetCore.renderPose', sol: r && r.sol, segments: r && r.segments };
-  }
-  P.S.data = { frames: [frame], n: 1 }; P.S.actor = 'A'; P.S.bindF = 0; P.S.sock = {}; P.S.pv++; P.measureActor(); P.S.K = {};
-  const sl = P.solve(frame, port, P.S.style, true);
-  if (sl) for (const x of sl.order) P.drawCard(ctx, x, 1);
-  return { via: 'stub: PuppetCore.solve + drawCard (puppet IK, rigid cards pinned at brads)', sol: sl };
+const loadImg = src => new Promise(r => { const im = new Image(); im.onload = () => r(im); im.onerror = () => r(null); im.src = src; });
+async function setPiece(ctx, set, kU, offX, offY) {   // the painting's prop as a flat card: its silhouette in grey kraft, edged
+  const im = await loadImg('/shots/skinlab/' + set.img); if (!im) return false;
+  const w = Math.round(set.w * kU), h = Math.round(set.h * kU), o = document.createElement('canvas'); o.width = w + 8; o.height = h + 8; const g = o.getContext('2d');
+  g.drawImage(im, 4, 4, w, h); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#c9a26b'; g.fillRect(0, 0, o.width, o.height);
+  const o2 = document.createElement('canvas'); o2.width = o.width; o2.height = o.height; const g2 = o2.getContext('2d');
+  for (const [dx, dy] of [[-2, 0], [2, 0], [0, -2], [0, 2]]) g2.drawImage(o, dx, dy);   // a kraft edge
+  const o3 = document.createElement('canvas'); o3.width = o.width; o3.height = o.height; const g3 = o3.getContext('2d');
+  g3.drawImage(im, 4, 4, w, h); g3.globalCompositeOperation = 'source-in'; g3.fillStyle = '#6f665c'; g3.fillRect(0, 0, o.width, o.height);
+  g2.drawImage(o3, 0, 0);
+  ctx.drawImage(o2, set.x0 * kU + offX - 4, set.y0 * kU + offY - 4); return true;
 }
-let D_H = 180;
-async function run(ch, file, U) {
+function bboxOf(cv) {
+  const g = cv.getContext('2d'), d = g.getImageData(0, 0, cv.width, cv.height).data; let x0 = cv.width, y0 = cv.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < cv.height; y += 2) for (let x = 0; x < cv.width; x += 2) if (d[(y * cv.width + x) * 4 + 3] > 40) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return x1 < 0 ? null : [x0, y0, x1, y1];
+}
+async function run(ch, file, U, opts) {
   if (!LIB) LIB = await (await fetch('/shots/skinlab/library.json')).json();
   const C = await (await fetch(`/shots/skinlab/contracts/${ch}.json`, { cache: 'no-store' })).json();
   const D = await (await fetch(`/shots/rig/poses/${file}.json`, { cache: 'no-store' })).json();
-  D_H = D.skeleton.standing_cm || D.skeleton.H || 180;
-  setup(C); await preload();
+  if (opts.harvest && !HV) { try { HV = await (await fetch('/shots/skinlab/library_harvest.json', { cache: 'no-store' })).json(); } catch { HV = { cards: [], sets: [] }; } }
+  const harvest = opts.harvest ? HV.cards.filter(c => !c.bad && c.character === ch) : null;
+  await P.prepare({ contract: C, library: LIB, imgBase: '/shots/skinlab/', harvest: harvest || undefined });
+  const sets = Object.fromEntries((opts.props && HV ? HV.sets : []).map(s => [s.source, s]));
   const out = [];
   for (const t of D.targets) {
     const safe = t.id.replace(/\//g, '__');
@@ -80,23 +69,27 @@ async function run(ch, file, U) {
     const sol = (t.solves || [])[0];
     if (!sol) { out.push({ ...base, error: 'the Pose Lab has no solve for this painting' }); continue; }
     try {
-      const frame = { a: { A: joints(D, sol) } }, port = makePort(t, sol, U, t.id);
-      const cv = document.createElement('canvas'); cv.width = port.w; cv.height = U; const ctx = cv.getContext('2d');
-      const r = draw(ctx, C, frame, port, t, sol);
-      const jj = P.joints(frame, 'A'), pj = jj.map(q => port.p(q));
-      const segments = r.segments || (r.sol ? r.sol.order.map(x => {
-        const sg = P.SEG[x.k], a = P.ji[sg.from], b = P.ji[sg.to], L3 = len3(jj[a], jj[b]), L2 = Math.hypot(pj[b][0] - pj[a][0], pj[b][1] - pj[a][1]) / port.k, ratio = L3 ? L2 / L3 : 1;
-        const e = P.fwd(x, x.B);
-        return { k: x.k, role: x.role, card: x.c.id, view: x.view, want: x.want, mirrored: !!x.mir, miss_cm: +x.miss.toFixed(1), ratio: +ratio.toFixed(3), atlas: verdict(ratio, x.k),
-          drawn: 'rigid card, rotated in plane (puppet IK)', P: [Math.round(x.P[0]), Math.round(x.P[1])], Q: [Math.round(pj[b][0]), Math.round(pj[b][1])], end: [Math.round(e[0]), Math.round(e[1])] };
-      }) : []);
+      // a big frame: the painting at kU px per painting px, placed with room on every side; cropped later to puppet + painting + set
+      const kU = U / t.h, FW = Math.round(Math.max(t.w, t.h) * kU * 2.6), FH = Math.round(U * 2.2), offX = Math.round((FW - t.w * kU) / 2), offY = Math.round(.6 * U);
+      const port = makePort(t, sol, kU, offX, offY, 'pose|' + t.id);
+      const cv = document.createElement('canvas'); cv.width = FW; cv.height = FH; const ctx = cv.getContext('2d');
+      const set = sets[t.id]; let setDrawn = false; if (set) setDrawn = await setPiece(ctx, set, kU, offX, offY);
+      const H = harvest && harvest.filter(c => family(c.source) !== family(t.id));   // leave one painted pose (and its twin) out
+      const r = P.renderPose(ctx, { contract: C, joints3d: joints(D, sol), port, psi: sol.psi, ground: false, handStates: {}, harvest: H || undefined, harvestExclude: t.id });
+      const bb = bboxOf(cv), pb = [offX, offY, offX + t.w * kU, offY + t.h * kU];
+      const u = bb ? [Math.min(bb[0], pb[0]), Math.min(bb[1], pb[1]), Math.max(bb[2], pb[2]), Math.max(bb[3], pb[3])] : pb;
+      const m = Math.round(.05 * (u[3] - u[1])), crop = [Math.max(0, u[0] - m), Math.max(0, u[1] - m), Math.min(FW, u[2] + m), Math.min(FH, u[3] + m)];
+      const o = document.createElement('canvas'); o.width = crop[2] - crop[0]; o.height = crop[3] - crop[1]; o.getContext('2d').drawImage(cv, -crop[0], -crop[1]);
+      const sh = s => ({ ...s, P: [s.P[0] - crop[0], s.P[1] - crop[1]], Q: [s.Q[0] - crop[0], s.Q[1] - crop[1]], end: [s.end[0] - crop[0], s.end[1] - crop[1]] });
       const psi = sol.psi;
       out.push({ ...base, view: PC.viewKey(psi), psi, facing: psi % 180 === 0 ? (Math.abs(psi) === 180 ? 'away' : 'camera') : ((psi % 360) + 360) % 360 < 180 ? 'right' : 'left',
-        solve_iou: sol.iou, solve_err_cm: sol.mean_err_cm, via: r.via, canvasW: port.w, dx: port.dx, segments, png: cv.toDataURL('image/png') });
+        solve_iou: sol.iou, solve_err_cm: sol.mean_err_cm, via: 'PuppetCore.renderPose', set: setDrawn ? set.img : null,
+        frame: { kU, paintX: offX - crop[0], paintY: offY - crop[1], w: o.width, h: o.height }, puppet_bbox: bb && [bb[0] - crop[0], bb[1] - crop[1], bb[2] - crop[0], bb[3] - crop[1]],
+        segments: (r.segments || []).map(sh), cards: r.cards, warnings: r.warnings, png: o.toDataURL('image/png') });
     } catch (e) { out.push({ ...base, error: 'render failed: ' + e.message }); }
   }
   return out;
 }
-window.harness = { run, api: () => P.renderPose ? 'PuppetCore.renderPose' : 'stub over PuppetCore.solve/drawCard (renderPose not published yet)' };
+window.harness = { run, api: () => P.renderPose ? 'PuppetCore.renderPose' : 'none' };
 </script>
 </body></html>

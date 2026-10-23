@@ -53,7 +53,7 @@ def lab_mean(rgb, m):
 
 def harvest():
     files = [f for f in os.listdir(os.path.join(SHOTS, 'rig', 'poses')) if f.startswith(CH + '__') and f.endswith('.json')]
-    lib, skipped = [], []
+    lib, skipped, sets = [], [], []
     for fn in sorted(files):
         D = json.load(open(os.path.join(SHOTS, 'rig', 'poses', fn))); costume = fn.split('__', 1)[1][:-5]
         if costume != C.get('costume'): skipped.append({'file': fn, 'why': f'costume {costume} is not the contract costume'}); continue
@@ -77,16 +77,30 @@ def harvest():
             im = np.asarray(Image.open(os.path.join(SHOTS, t['img'])).convert('RGBA')); Hh, Ww = im.shape[:2]
             mask = im[..., 3] > 100
             ys, xs = np.nonzero(mask); P2 = np.stack([xs, ys], 1).astype(float)
-            dist = np.full((len(SEGS), len(P2)), np.inf)
+            dist = np.full((len(SEGS), len(P2)), np.inf); draw = np.full(len(P2), np.inf)
             for i, (part, sd, a, b, cap, (t0, t1), par) in enumerate(SEGS):
                 A, B = pt[a], pt[b]; v = B - A; L2 = float(v @ v) or 1.0
                 tt = ((P2 - A) @ v) / L2; tc = np.clip(tt, t0, t1)
                 d = np.linalg.norm(P2 - (A + tc[:, None] * v), axis=1)
+                draw = np.minimum(draw, d)
                 d[(tt < t0 - .15) | (tt > t1 + .15)] = np.inf; d[d > cap * s_px] = np.inf
                 dist[i] = d
             owner = np.argmin(dist, 0); owner[np.isinf(dist.min(0))] = -1
             sheet, pose = t['id'].split('/', 1)
             os.makedirs(os.path.join(OUTC, sheet, pose), exist_ok=True)
+            # the set piece: painted pixels no bone claims (a bike, a chair, a cup, a mirror), as one silhouette card
+            rest = np.zeros(mask.shape, np.uint8); rr = owner == -1; rest[P2[rr, 1].astype(int), P2[rr, 0].astype(int)] = 1
+            n_, lab_, st_, _ = cv2.connectedComponentsWithStats(rest, connectivity=8)
+            rawd = np.zeros(mask.shape, np.float32); rawd[P2[:, 1].astype(int), P2[:, 0].astype(int)] = draw / s_px
+            # a prop, not a stray edge of the figure: a sizeable piece whose pixels lie on average > 14 cm from every bone
+            keep = [i for i in range(1, n_) if st_[i, cv2.CC_STAT_AREA] > .015 * mask.sum() and rawd[lab_ == i].mean() > 14]
+            if keep:
+                km = np.isin(lab_, keep); yy, xx = np.nonzero(km)
+                sx0, sx1, sy0, sy1 = xx.min(), xx.max() + 1, yy.min(), yy.max() + 1
+                card = np.zeros((sy1 - sy0, sx1 - sx0, 4), np.uint8); card[yy - sy0, xx - sx0] = im[yy, xx]
+                spath = os.path.join(OUTC, sheet, pose, '_set.webp'); Image.fromarray(card).save(spath, lossless=True)
+                sets.append({'source': t['id'], 'img': os.path.relpath(spath, SKIN), 'x0': int(sx0), 'y0': int(sy0), 'w': int(sx1 - sx0), 'h': int(sy1 - sy0),
+                             'area': int(km.sum()), 'share_of_figure': round(float(km.sum() / mask.sum()), 3)})
             idx = {(sg[0], sg[1]): i for i, sg in enumerate(SEGS)}
             for i, (part, sd, a, b, cap, tr, par) in enumerate(SEGS):
                 sel = owner == i
@@ -100,7 +114,7 @@ def harvest():
                 why = []
                 if sel.sum() < 40: why.append('too few pixels')
                 exp = max(L2, 4) * cap * s_px * s_px * .5
-                if part not in ('torso', 'head') and sel.sum() < .18 * exp: why.append(f'thin: {int(sel.sum())} px of ~{int(exp)} expected (hidden or overlapped in the painting)')
+                if part not in ('torso', 'head') and sel.sum() < .3 * exp: why.append(f'thin: {int(sel.sum())} px of ~{int(exp)} expected (hidden or overlapped in the painting)')
                 for q, nm in ((pt[a], 'root'), (pt[b], 'end')):
                     qi = (int(round(q[1])), int(round(q[0])))
                     if not (0 <= qi[0] < Hh and 0 <= qi[1] < Ww): why.append(f'{nm} joint off the painting')
@@ -108,10 +122,24 @@ def harvest():
                 xs_, ys_ = P2[sel, 0].astype(int), P2[sel, 1].astype(int)
                 x0, x1, y0, y1 = max(0, xs_.min() - 2), min(Ww, xs_.max() + 3), max(0, ys_.min() - 2), min(Hh, ys_.max() + 3)
                 card = np.zeros((y1 - y0, x1 - x0, 4), np.uint8); card[ys_ - y0, xs_ - x0] = im[ys_, xs_]
+                al = (card[..., 3] > 100).astype(np.uint8); n_, lab_, st_, _ = cv2.connectedComponentsWithStats(al, connectivity=8)
+                if n_ > 1 and st_[1:, cv2.CC_STAT_AREA].max() < .85 * al.sum(): why.append('broken into pieces (another part crosses it in the painting)')
+                dil = cv2.dilate(al, np.ones((9, 9), np.uint8))
+                for q, nm in ((pt[a], 'root'), (pt[b], 'end')):
+                    qx, qy = int(round(q[0] - x0)), int(round(q[1] - y0))
+                    if not (0 <= qy < dil.shape[0] and 0 <= qx < dil.shape[1] and dil[qy, qx]) and part not in ('hand', 'head'): why.append(f'{nm} joint is not on the painted limb')
+                if part == 'foot' and dep[b] - dep[a] < -12 and VIEW(psi) == 'front': why.append('boot seen from behind in a front view')
                 fpath = os.path.join(OUTC, sheet, pose, part + (f'-{sd.lower()}' if sd else '') + '.webp')
                 Image.fromarray(card).save(fpath, lossless=True)
                 rgb = im[..., :3]; m2 = np.zeros(mask.shape, bool); m2[ys_, xs_] = True
-                skinm = m2 & (rgb[..., 0].astype(int) - rgb[..., 2] > 25) & (rgb[..., 0] > 70)
+                r_, g_, b_ = (rgb[..., i].astype(int) for i in range(3))
+                skinm = m2 & (r_ - b_ > 25) & (r_ - b_ < 120) & (g_ - b_ < 70) & (r_ > 70) & (r_ >= g_) & (g_ >= b_)   # painted brown skin, not brass or gold
+                skin_share = float(skinm.sum() / max(1, m2.sum()))
+                if part == 'hand' and skin_share < .4: why.append(f'not a hand: only {skin_share:.0%} skin (a sleeve, a prop or a held object)')
+                pl = lab_mean(rgb, m2)
+                if part == 'hand' and pl and pl[0] > 62: why.append(f'too light for a hand (L {pl[0]}): paper, stone or a cup')
+                if part == 'head' and skin_share < .2: why.append(f'not a face: only {skin_share:.0%} skin')
+                if part in ('upper_arm', 'forearm', 'thigh', 'shin', 'torso') and skin_share > .45: why.append(f'mostly skin ({skin_share:.0%}): a hand or face, not cloth')
                 flex = None
                 if part in ('forearm', 'shin', 'hand', 'foot'):
                     up = {'forearm': ('sh', 'el'), 'shin': ('hip', 'kn'), 'hand': ('el', 'wr'), 'foot': ('kn', 'an')}[part]
@@ -127,7 +155,7 @@ def harvest():
                             'dir_cam': dir_cam, 'ratio': round(L2 / L3, 3) if L3 else 1.0, 'flex': flex, 'solve_iou': sol.get('iou'),
                             'bad': bool(why), 'why': why})
     json.dump({'about': __doc__.split('\n\n')[0] + ' See shots/skinlab/production/recognition/harvest.py. Cards marked bad stay listed (never deleted).',
-               'skipped': skipped, 'cards': lib}, open(os.path.join(SKIN, 'library_harvest.json'), 'w'), indent=1)
+               'skipped': skipped, 'sets': sets, 'cards': lib}, open(os.path.join(SKIN, 'library_harvest.json'), 'w'), indent=1)
     return lib, skipped
 
 def contact(lib):
