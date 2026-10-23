@@ -28,6 +28,9 @@ async function boot() {
   DOC = doc;
   if (Q.get('harvest')) { const h = await json('library_harvest.json'); window.__harvest = Array.isArray(h) ? h : h.cards; }   // leave-one-out replacement cards
   const r = await P.prepare({ contract, library, harvest: window.__harvest });
+  { // fix the card scales once on the character's rest pose (all angles and proportions 0): one scale per card for every painting
+    const z0 = PoseCore.fromParams({}), J0 = PoseCore.fk(DOC.skeleton, z0), cv0 = document.createElement('canvas'); cv0.width = cv0.height = 200;
+    P.renderPose(cv0.getContext('2d'), { contract: contract, library: library, joints3d: J0, psi: 0, heightPx: 180, x: 100, y: 190, rescale: true }); }
   window.__contract = contract;
   window.__ready = true; document.getElementById('log').textContent = 'ready: ' + JSON.stringify(r);
   if (Q.get('id')) window.__render(Q.get('id'), +(Q.get('solve') || 0));
