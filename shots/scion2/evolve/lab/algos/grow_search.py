@@ -6,7 +6,7 @@ from evolve.puzzle import grow as GR
 from . import grow as _g
 
 OPTS = {'max_joins': 3, 'ends': .3}
-BUDGET = 90
+BUDGET = 60
 
 
 def assemble(target, library, seed):

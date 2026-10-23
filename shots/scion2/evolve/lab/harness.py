@@ -59,18 +59,19 @@ def context(char, costume, tid):
     return {'t': t, 'pieces': pieces, 'excluded': gone, 'char': char, 'costume': costume, 'id': tid}
 
 
-PROP_CM = 16.0
+PROP_CM = 20.0
 
 
 def skeleton_distance(t):
     m = t['markers']
     mid = (m['hipL'] + m['hipR']) / 2
     sp = m['neck'] - mid
-    segs = [(m['neck'], m['neck'] + 1.3 * (m['head'] - m['neck'])), (m['neck'], mid), (m['hipL'], m['hipR'])]
+    # the head marker sits on the face, the toe marker inside the shoe: both segments are extended past them
+    segs = [(m['neck'], m['neck'] + 2.2 * (m['head'] - m['neck'])), (m['neck'], mid), (m['hipL'], m['hipR'])]
     for S in 'LR':
         e, w_ = m['elbow' + S], m['wrist' + S]
-        segs += [(m['neck'], m['shoulder' + S]), (m['shoulder' + S], e), (e, w_), (w_, w_ + .6 * (w_ - e)),
-                 (m['hip' + S], m['knee' + S]), (m['knee' + S], m['ankle' + S]), (m['ankle' + S], m['toe' + S])]
+        segs += [(m['neck'], m['shoulder' + S]), (m['shoulder' + S], e), (e, w_), (w_, w_ + .8 * (w_ - e)),
+                 (m['hip' + S], m['knee' + S]), (m['knee' + S], m['ankle' + S]), (m['ankle' + S], m['toe' + S] + .6 * (m['toe' + S] - m['ankle' + S]))]
     H, W = t['fig_t'].shape
     ys, xs = np.nonzero(t['fig_t'])
     P = np.stack([xs, ys], 1).astype(np.float64)
