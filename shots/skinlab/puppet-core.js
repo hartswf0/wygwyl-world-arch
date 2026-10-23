@@ -66,8 +66,8 @@ function joints(fr, id) {
   const a = fr.a[id]; if (!a) return null;
   const K = id === S.actor ? S.K : {};
   const j = Object.keys(K).length ? retarget(a.j, K) : a.j.map(q => q.slice());
-  for (const s of ['L', 'R']) {              // fingertip: the forearm carried on by a hand length
-    const e = j[ji['elbow' + s]], w = j[ji['wrist' + s]], d = v3(e, w), l = len3(d) || 1, h = HAND_CM * (K.hand ?? 1);
+  for (const s of ['L', 'R']) {              // fingertip: the forearm carried on by a hand length (or where the host aims the hand: a.tips)
+    const e = j[ji['elbow' + s]], w = j[ji['wrist' + s]], h = HAND_CM * (K.hand ?? 1), t = a.tips?.[s], d = t ? v3(w, t) : v3(e, w), l = len3(d) || 1;
     j.push([w[0] + d[0] / l * h, w[1] + d[1] / l * h, w[2] + d[2] / l * h]);
   }
   const p = j[0], u = v3(p, j[ji.spineMid]), l = len3(u) || 1;   // waist above the pelvis joint, crotch below: the hip bridge's span

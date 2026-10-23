@@ -139,6 +139,21 @@ function sampleSeg(i, t) {
     const lens = { L: armLens(out.j, 'L'), R: armLens(out.j, 'R') };
     for (const [n, loc] of Object.entries(seg.ref)) out.j[ji[n]] = [0, 1, 2].map(c => b.o[c] + b.s[c] * loc[0] + (c === 1 ? loc[1] : 0) + b.f[c] * loc[2]);
     for (const s of new Set(Object.keys(seg.ref).filter(n => /^wrist/.test(n)).map(n => n.slice(-1)))) fixArm(out.j, s, ...lens[s], out.j[ji['elbow' + s]]);
+    if (seg.hold_to_head.tip) { const [sd, q] = seg.hold_to_head.tip; out.tips = { [sd]: [0, 1, 2].map(c => b.o[c] + b.s[c] * q[0] + (c === 1 ? q[1] : 0) + b.f[c] * q[2]) }; }
+  }
+  if (seg.arm_hold) {   // a held arm set from the shoulder: upper arm and forearm directions (his side, up, forward), the hand aimed at the ear
+    const h = seg.arm_hold, sd = h.side, b = headBasis(out), L1 = E.target.upper_arm, L2 = E.target.forearm;
+    const dir = v => { const q = [0, 1, 2].map(c => b.s[c] * v[0] * (sd === 'L' ? 1 : -1) + (c === 1 ? v[1] : 0) + b.f[c] * v[2]), l = P.len3(q) || 1; return q.map(x => x / l); };
+    const sh = out.j[ji['shoulder' + sd]], u = dir(h.upper), el = sh.map((v, c) => v + u[c] * L1);
+    const loc = q => [0, 1, 2].map(c => b.o[c] + b.s[c] * q[0] * (sd === 'L' ? 1 : -1) + (c === 1 ? q[1] : 0) + b.f[c] * q[2]);
+    let fo; if (h.fore_to) { const tg = loc(h.fore_to), d = P.v3(el, tg), l = P.len3(d) || 1; fo = d.map(x => x / l); } else fo = dir(h.fore);
+    const wr = el.map((v, c) => v + fo[c] * L2);
+    out.j[ji['elbow' + sd]] = el; out.j[ji['wrist' + sd]] = wr;
+    out.tips = { [sd]: [0, 1, 2].map(c => b.o[c] + b.s[c] * 7 * (sd === 'L' ? 1 : -1) + (c === 1 ? (h.tip_up ?? 2) : 0)) };
+  }
+  if (seg.sag) {   // the weight gives: everything above the ankles sinks (the leg IK bends the knees), held once it has gone
+    const [s0, s1] = seg.sag.t, w = smooth(clamp((t - s0) / (s1 - s0), 0, 1)), FEETJ = ['ankle', 'heel', 'ball', 'toe'].flatMap(n => [n + 'L', n + 'R']).map(n => ji[n]);
+    out.j = out.j.map((q, n) => FEETJ.includes(n) ? q : [q[0] + (seg.sag.dx || 0) * w, q[1] + seg.sag.dy * w, q[2]]);
   }
   out.seg = i; return out;
 }
@@ -176,7 +191,7 @@ async function assemble() {
       for (const sd of ['L', 'R']) fixArm(pose.j, sd, E.target.upper_arm, E.target.forearm, pose.j[ji['elbow' + sd]].map((v, c) => v - (c === 1 ? 10 : 0)));
     }
     const shot = Object.entries(E.edl.shots).find(([, v]) => t >= v.t[0] - 1e-6 && t < v.t[1] - 1e-6)?.[0] || s.shot;
-    E.frames.push({ f, t, tReal: edl.t0 + f / fps, seg: i, segName: s.name, shot, sf: pose.sf, a: { A: { j: pose.j, fwd: pose.fwd, hfwd: pose.hfwd, pfwd: pose.pfwd, hands: s.hands || null } }, p: pose.p });
+    E.frames.push({ f, t, tReal: edl.t0 + f / fps, seg: i, segName: s.name, shot, sf: pose.sf, a: { A: { j: pose.j, fwd: pose.fwd, hfwd: pose.hfwd, pfwd: pose.pfwd, hands: s.hands || null, tips: pose.tips || null } }, p: pose.p });
   }
 }
 
@@ -347,7 +362,9 @@ function render(f) {
     const hk = 'hand_' + E.edl.props.handset.hand;
     let drewHandset = ps.handset === 'hook';
     if (drewHandset) drawPlaced(handsetCard);
-    const over = E.segs[fr.seg].over_head || [], order = sol.order.filter(x => !over.includes(x.k)).concat(over.map(k => sol.X[k]).filter(Boolean));
+    const sg = E.segs[fr.seg], over = sg.over_head || [], under = sg.under_torso || [];
+    let order = sol.order.filter(x => !over.includes(x.k) && !under.includes(x.k)).concat(over.map(k => sol.X[k]).filter(Boolean));
+    if (under.length) { const ti = Math.max(0, order.findIndex(x => x.k === 'torso')); order.splice(ti, 0, ...under.map(k => sol.X[k]).filter(Boolean)); }
     for (const x of order) { if (x.k === hk && !drewHandset) { drawPlaced(handsetCard); drewHandset = true; } P.drawCard(g, x, 1); }
     if (!drewHandset) drawPlaced(handsetCard);
   };
@@ -603,6 +620,7 @@ function info() {
     + E.segs.map(s => `${s.name}: ${s.trial} ${s.mirror ? 'mirrored ' : ''}rot ${s.rot} · ${s.t0}–${s.t1} s · src ${s.map[0][1]}–${s.map[s.map.length - 1][1]}`).join('\n');
 }
 window.__render = f => { ST.f = f; render(f); return true; };
+window.__ST = ST;
 // playback: the audio is the clock
 const au = document.getElementById('au');
 function tick() {
