@@ -109,7 +109,7 @@ function transform(seg, pose, T) {   // retarget → neck → mirror → turn �
   for (const w of seg.warp || []) {
     const sf = pose.sf, src = w.src || [0, 0, 0], [a, pk] = src, pk2 = src.length > 3 ? src[2] : pk, b = src[src.length - 1];   // [rise, peak, (hold to), fall]
     const k = w.const ? 1 : sf <= a || sf >= b ? 0 : sf <= pk ? smooth((sf - a) / (pk - a)) : sf <= pk2 ? 1 : smooth((b - sf) / (b - pk2));
-    for (const n of w.joints) {
+    for (const n of (w.joints[0] === '*' ? J : w.joints)) {   // '*': every joint (the whole body, e.g. stepping up)
       const wt = (w.weights?.[n] ?? 1);
       if (n.startsWith('prop:')) { const q = props[n.slice(5)]; if (q && !q.held) q.pos = q.pos.map((v, i) => v + w.add[i]); else if (q) q.pos = q.pos.map((v, i) => v + w.add[i] * k); continue; }
       const i = ji[n]; j[i] = j[i].map((v, c) => v + w.add[c] * k * wt); if (/^wrist/.test(n)) moved.add(n.slice(-1));
@@ -255,7 +255,11 @@ function drawStand(id, x, y, z, w, h, cam, o = {}) {
   const box = [foot[0] - w * s / 2, foot[1] - hh * s, w * s, hh * s];
   g.save(); g.globalAlpha = o.op ?? 1; if (o.blend) g.globalCompositeOperation = o.blend;
   if (o.flip) { g.translate(foot[0], 0); g.scale(-1, 1); g.translate(-foot[0], 0); }
-  g.drawImage(im, ...box);
+  if (o.fadeBottom) {   // the bottom share of the card drawn see-through (the legs read through the rail)
+    const [fr, al] = o.fadeBottom, cut = box[1] + box[3] * (1 - fr), ih = im.naturalHeight * (1 - fr);
+    g.drawImage(im, 0, 0, im.naturalWidth, ih, box[0], box[1], box[2], box[3] * (1 - fr));
+    g.globalAlpha *= al; g.drawImage(im, 0, ih, im.naturalWidth, im.naturalHeight - ih, box[0], cut, box[2], box[3] * fr);
+  } else g.drawImage(im, ...box);
   g.restore();
   if (o.reflect) { g.save(); g.globalAlpha = o.reflect; g.translate(0, foot[1] * 2); g.scale(1, -1); g.drawImage(im, box[0], box[1], box[2], box[3]); g.restore(); }
   return box;
@@ -463,7 +467,7 @@ function compileKeys() {
 }
 function render(f) {
   E.tick = Math.floor(f / (E.edl.cadence || 1));
-  const fr = E.frames[f], cam = camOf(fr.shot), inside = fr.shot === 'booth';
+  const fr = E.frames[f], cam = camOf(fr.shot), inside = fr.shot === 'booth' || fr.a.A.j[0][2] < E.edl.world.booth.z + (E.edl.world.booth.threshold_z ?? 0);   // past the door's threshold he is inside: drawn behind the frame
   g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
   g.fillStyle = '#05070c'; g.fillRect(0, 0, W, H);
   drawBack(cam); drawQuay(cam);
@@ -508,7 +512,7 @@ function render(f) {
   const drawCase = () => { const c = ps.case; if (!c) return; const s = cam.s(c.pos[2]), pr = E.edl.props.case;
     const anchor = c.held ? pr.grip : [.5, 1], at = c.held ? c.gripPx : cam.p(c.pos);
     drawPlaced(cardAt(pr.part, pr.w_cm, pr.h_cm, c.held ? port.k : s, anchor, at, 0)); };
-  if (inside) { drawPoet(); if (cordOver) drawTheCord(); drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam); drawBoothCard('front-glass-pane-clear', cam, E.edl.shots.booth.glass_op != null ? { op: E.edl.shots.booth.glass_op } : {}); drawCase(); drawBoothCard('lamp', cam); }
+  if (inside) { drawPoet(); if (cordOver) drawTheCord(); drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam, fr.shot === 'booth' && E.edl.shots.booth.rail_fade ? { fadeBottom: E.edl.shots.booth.rail_fade } : {}); drawBoothCard('front-glass-pane-clear', cam, E.edl.shots.booth.glass_op != null ? { op: E.edl.shots.booth.glass_op } : {}); drawCase(); drawBoothCard('lamp', cam); }
   else { drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam); drawBoothCard('front-glass-pane-clear', cam); drawBoothCard('lamp', cam);
     const caseBehind = ps.case && !ps.case.held && ps.case.pos[2] < fr.a.A.j[0][2];
     if (caseBehind) drawCase(); drawPoet(); if (!caseBehind) drawCase(); }
