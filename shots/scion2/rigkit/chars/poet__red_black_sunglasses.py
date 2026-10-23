@@ -242,7 +242,14 @@ BRAD_SOURCE = ('poet.11.main-poses/02-front-guide-stone', 116.3, 86.0, 6.5, 8.5)
 MASTERS = {
     'front': ('poet.11.main-poses/02-front-guide-stone', build_front),
     'q3r': ('poet.10.main-poses/q1-approach-bike', build_q3),
+    # posture masters, cut automatically from their markers (rigkit/auto.py)
+    'kneel': ('poet.04.main-poses/04-2-heart-seated', 'auto'),
+    'sit': ('poet.13.main-poses/02-cafe', 'auto'),
+    'lie': ('poet.05.main-poses/q3-restless-lying-1', 'auto'),
+    'crouch3q': ('poet.13.main-poses/03-letter-fire-crouch', 'auto'),
 }
+# which way each master faces on screen (for mirroring a target that faces the other way)
+MASTER_FACING = {'front': None, 'q3r': 'R', 'kneel': 'R', 'sit': 'R', 'lie': 'L', 'crouch3q': 'R'}
 
 
 # ---------------------------------------------------------------- parts and hints
@@ -298,11 +305,12 @@ CURATED_PARTS = {
                      poly=[(99, 104), (113, 102), (127, 104), (129, 118), (127, 132), (113, 134), (99, 132), (97, 118)],
                      anchor=(113.5, 120), angle=-1.5708, bone='chest', circle=(113.5, 120, 14), no_edge=True),
 }
-PROP_ANCHORS = {'emblem04': (159.5, 118.0)}
+PROP_SPINE_FRAC = {'emblem04': 0.30}
 
 # catalog view / posture -> (rig view, mirrored)
+POSTURE_RIGS = {'kneel': 'kneel', 'sit': 'sit', 'lie': 'lie', 'crouch3q': 'crouch3q'}
 VIEW_RIGS = {'front': ('front', False), '3qR': ('q3r', False), '3qL': ('q3r', True), 'profR': ('q3r', False),
              'profL': ('q3r', True), 'back': ('front', False), 'back3qR': ('q3r', False), 'back3qL': ('q3r', True)}
-UNREACHED = {'kneel': 1, 'sit': 1, 'lie': 1, 'fall': 1, 'ride': 1}
+UNREACHED = {'fall': 1, 'ride': 1}
 COSTUME_PROPS = {'track-disc': [['emblem04', 'torso']]}
 KEYS = {}

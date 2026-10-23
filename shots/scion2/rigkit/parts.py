@@ -314,7 +314,9 @@ class Parts:
         p = self.index[pid]
         J = R.J
         Mb = A[p.get('bone', 'chest')]
-        anchor_rig = np.array(opts.get('prop_at', {}).get(pid, R.specs.PROP_ANCHORS.get(pid, J['neck'])), float)
+        nk = np.array(J.get('mkneck', J['neck']), float)
+        frac = getattr(R.specs, 'PROP_SPINE_FRAC', {}).get(pid, 0.33)   # down the spine from the neck
+        anchor_rig = np.array(opts.get('prop_at', {}).get(pid, nk + frac * (J['midhip'] - nk)), float)
         dst = Mb[:, :2] @ anchor_rig + Mb[:, 2]
         tv = Mb[:, :2] @ np.array([0.0, -1.0])
         rig_T = np.linalg.norm(J['neck'] - J['midhip'])

@@ -86,8 +86,14 @@ def choose_view(char, tid, t, keys):
     hint = c.get('view') or ''
     cls = c.get('cls') or ''
     VR = spec.VIEW_RIGS
-    if cls in VR:                   # a posture rig (kneel / sit / lie) wins over the view
-        return VR[cls]
+    PR = getattr(spec, 'POSTURE_RIGS', {})
+    if cls == 'crouch' and hint not in ('front', '') and 'crouch3q' in PR:
+        cls = 'crouch3q'
+    if cls in PR:                   # a posture rig (kneel / sit / lie) wins over the view
+        rv = PR[cls]
+        mf = spec.MASTER_FACING.get(rv)
+        tf = hint[-1] if hint[-1:] in ('R', 'L') else None
+        return rv, bool(mf and tf and mf != tf)
     if hint in VR:
         return VR[hint]
     m = t['markers']

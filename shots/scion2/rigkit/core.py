@@ -79,9 +79,13 @@ def build_rig(char, view, master_painting=None):
     """Build one view rig of a character: layers, meshes' source textures, edge classes, brads.
     The layer cuts come from chars/<char>.py MASTERS[view] = (painting id, builder fn)."""
     specs = char_module(char)
-    mid, fn = specs.MASTERS[view]
+    mid, fn = specs.MASTERS.get(view, (master_painting, 'auto'))
     if master_painting:
         mid = master_painting
+    if fn == 'auto':
+        from . import auto
+        mk = load_markers(char)[mid]['markers']
+        fn = lambda rgb, a: auto.build_auto(rgb, a, mk)
     out = os.path.join(BUILD, char, 'rig', view)
     os.makedirs(out, exist_ok=True)
     im = read_rgba(os.path.join(CUT, mid + '.webp')).astype(np.float32)
@@ -212,7 +216,13 @@ class Rig:
         J = self.J
         if L['bones'] == 'torso':
             T = L['torso']
-            t = np.clip((V[:, 1] - T['y0']) / (T['y1'] - T['y0']), 0, 1); t = t * t * (3 - 2 * t)
+            if 'p0' in T:      # blend along the spine: p1 = all chest, p0 = all pelvis
+                p0, p1 = np.array(T['p0']), np.array(T['p1'])
+                dv = p0 - p1
+                t = np.clip(((V - p1) @ dv) / (dv @ dv), 0, 1)
+            else:
+                t = np.clip((V[:, 1] - T['y0']) / (T['y1'] - T['y0']), 0, 1)
+            t = t * t * (3 - 2 * t)
             wa = []
             names = ['chest', 'pelvis']
             for sj, bone in T['caps']:
