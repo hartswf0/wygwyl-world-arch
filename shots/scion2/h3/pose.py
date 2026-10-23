@@ -58,8 +58,13 @@ def solve(tid, keys=None):
     }
     s = float(np.median(list(rat.values()))) * keys.get('scale', 1.0)
 
+    sp_t = P2(m, 'neck') - hip_t; sp_r = P2(r, 'neck') - hip_r
+    spine = wrap(ang(sp_t) - ang(sp_r))
+    # beyond 35 deg the whole figure turns (lying, falling); the rest is the chest's lean
+    rr = spine - clamp(spine, math.radians(-35), math.radians(35)) if keys.get('root_turn', True) else 0.0
+
     def d_ang(a, b):  # absolute rotation that takes master bone a->b to target bone a->b
-        return wrap(ang(P2(m, b) - P2(m, a)) - ang(P2(r, b) - P2(r, a)))
+        return wrap(ang(P2(m, b) - P2(m, a)) - ang(P2(r, b) - P2(r, a)) - rr)
 
     def d_len(a, b, lo=0.62, hi=1.15):
         return clamp(L(m, a, b) / (s * L(r, a, b)), lo, hi)
@@ -67,8 +72,7 @@ def solve(tid, keys=None):
     P = {}
     P['pelvis'] = clamp(d_ang('hipR', 'hipL'), math.radians(-15), math.radians(15))
     P['hipw'] = clamp(L(m, 'hipR', 'hipL') / (s * L(r, 'hipR', 'hipL')), 0.75, 1.12)
-    sp_t = P2(m, 'neck') - hip_t; sp_r = P2(r, 'neck') - hip_r
-    P['chest'] = clamp(wrap(ang(sp_t) - ang(sp_r)), math.radians(-35), math.radians(35))
+    P['chest'] = clamp(spine - rr, math.radians(-35), math.radians(35))
     P['torso_len'] = clamp(np.linalg.norm(sp_t) / (s * np.linalg.norm(sp_r)), 0.8, 1.1)
     P['shw'] = clamp(rat['shoulders'] / s, 0.72, 1.08)
     # The 'head' marker sits on the face side in 3/4 views, so it cannot give the tilt;
@@ -94,8 +98,11 @@ def solve(tid, keys=None):
             pass
     # elbow / knee bend amounts (for the record)
     bends = {S: (math.degrees(wrap(P['farm' + S] - P['uarm' + S])), math.degrees(wrap(P['shin' + S] - P['thigh' + S]))) for S in 'RL'}
-    G = np.array([[s, 0, 0], [0, s, 0]], float)
-    G[:, 2] = hip_t - s * rig.J['midhip']
+    c_, s_ = math.cos(rr), math.sin(rr)
+    G = np.array([[s * c_, -s * s_, 0], [s * s_, s * c_, 0]], float)
+    G[:, 2] = hip_t - G[:, :2] @ rig.J['midhip']
+    if rr:
+        log.append(f'whole figure turned {math.degrees(rr):.0f} deg')
     return P, G, (t['w'], t['h']), {'scale': s, 'ratios': rat, 'bends_deg': bends, 'log': log,
                                      'head_yaw': keys.get('yaw', 0.0), 'hands': keys.get('hands', {})}
 
@@ -191,6 +198,5 @@ if __name__ == '__main__':
         infos[tid] = {'scale': info['scale'], 'bends_deg': info['bends_deg'], 'log': info['log'],
                       'params_deg': {k: (round(math.degrees(v), 1) if k[0] not in 'l' and k not in ('hipw', 'shw', 'torso_len') else round(v, 3)) for k, v in P.items()}}
         print(tid, info['bends_deg'], info['log'])
-    if mode == 'kill':
-        sheet(rows, os.path.join(od, 'sheet.jpg'))
+    sheet(rows, os.path.join(od, 'sheet.jpg' if len(sys.argv) <= 2 else 'sheet_partial.jpg'), H=420)
     json.dump(infos, open(os.path.join(od, 'poses.json'), 'w'), indent=1)
