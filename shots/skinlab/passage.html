@@ -246,6 +246,10 @@ function camOf(shot) {
 }
 function portFor(cam, fr) {
   const zp = fr ? fr.a.A.j[0][2] : 0;
+  if (cam.flat_figure != null) {   // the figure keeps one size: a plane change by layering, not by perspective; his feet still follow the floor
+    const s0 = cam.s(cam.flat_figure), root = fr ? fr.a.A.j[0] : [0, 0, 0], base = cam.p([root[0], 0, root[2]]);
+    return { label: 'cam', yaw: 0, k: s0, toward: [0, 0, 1], right: [1, 0, 0], cx: 0, cz: 0, p: q => [base[0] + (q[0] - root[0]) * s0, base[1] - q[1] * s0, q[2]] };
+  }
   return { label: 'cam', yaw: 0, k: cam.s(zp), toward: [0, 0, 1], right: [1, 0, 0], cx: 0, cz: 0, p: q => cam.p(q) };
 }
 // a card standing on the floor: x centre, y_cm its foot above the floor, z depth (world, toward the camera)
@@ -449,15 +453,26 @@ function compileKeys() {
     if (st.wall != null) {   // the free hand on the panel ahead: from where it hung to wall_from_shoulder, by the step's share
       const Sf = X['upper_arm_' + fh].P, Gw = [Sf[0] + cm(D.wall_from_shoulder)[0], Sf[1] + cm(D.wall_from_shoulder)[1]];
       const Gt = [lerp(freeStart[0], Gw[0], st.wall), lerp(freeStart[1], Gw[1], st.wall)];
-      let dh = rad(D.wall_hand_ang) - freeHand0; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
-      armTo(q, fh, Gt, freeHand0 + dh * st.wall);
+      // the elbow hangs below the hand (pick the bend side that puts it lower) and the wrist stays straight: the hand
+      // continues the forearm, turned by wall_wrist at most (the palm on the glass, not a hand bent back on the arm)
+      let ang = freeHand0;
+      for (let it = 0; it < 3; it++) {
+        const save = bend[fh]; let best = null;
+        for (const sgn of [1, -1]) { bend[fh] = sgn; const qq = JSON.parse(JSON.stringify(q)); armTo(qq, fh, Gt, ang); const Xq = place(qq), el = P.fwd(Xq['upper_arm_' + fh], Xq['upper_arm_' + fh].B);
+          if (!best || el[1] > best.y) best = { y: el[1], sgn, qq }; }
+        bend[fh] = best.sgn; Object.assign(q.ang, best.qq.ang);
+        ang = rad(q.ang['forearm_' + fh]) + facing * rad(D.wall_wrist || 0) * st.wall;
+        bend[fh] = best.sgn;
+      }
+      armTo(q, fh, Gt, ang);
     }
     const c = contactOf(q); armTo(q, ph, c.G, c.handAng); q.handset_ang = +c.hsAng.toFixed(4); q.handset = 'hand';
     if (st.sink || st.lean_cm) {   // legs re-solved from the moved hip sockets to the ankles where they stood
       const Xb = place(poses[0]), Xs = place(q);
       for (const sd of ['L', 'R']) { const th = 'thigh_' + sd, sh = 'shin_' + sd; if (!Xs[th] || !Xs[sh]) continue;
         const ank = P.fwd(Xb[sh], Xb[sh].B), Hp = Xs[th].P, l1 = Xs[th].lab * Xs[th].s, l2 = Xs[sh].lab * Xs[sh].s, Kn0 = P.fwd(Xb[th], Xb[th].B);
-        const side = ((ank[0] - Xb[th].P[0]) * (Kn0[1] - Xb[th].P[1]) - (ank[1] - Xb[th].P[1]) * (Kn0[0] - Xb[th].P[0])) >= 0 ? 1 : -1;
+        const kneeX = sg => { const a1 = P.ik2(Hp, ank, [0, 0], l1, l2, sg); return Hp[0] + Math.cos(a1) * l1; };
+        const side = facing * (kneeX(1) - kneeX(-1)) >= 0 ? 1 : -1;   // side view: both knees bend forward, in the picture plane
         const a1 = P.ik2(Hp, ank, [0, 0], l1, l2, side), Kn = [Hp[0] + Math.cos(a1) * l1, Hp[1] + Math.sin(a1) * l1];
         q.ang[th] = deg(a1); q.ang[sh] = deg(Math.atan2(ank[1] - Kn[1], ank[0] - Kn[0])); } }
     poses.push(q); last = q;
@@ -498,6 +513,7 @@ function render(f) {
     const c = E.edl.props.cord, a = [back[0] + back[2] * c.from_payphone[0], back[1] + back[3] * c.from_payphone[1]], b = handsetCard.pt(...E.edl.props.handset.mouth);
     drawCord(a, b, (E.segs[fr.seg].cord_over?.sag ?? c.sag) * hs, c.w_cm * hs, c.part); };
   if (!cordOver) drawTheCord();   // behind the poet: it runs back to the wall
+  const caseUnder = !!(E.edl.props.case.under_near_leg && ps.case?.held); let caseDone = false;
   const drawPoet = () => {
     if (!sol) return;
     const hk = 'hand_' + E.edl.props.handset.hand;
@@ -506,16 +522,18 @@ function render(f) {
     const sg = E.segs[fr.seg], over = (kp ? E.cardKeys.over_head : sg.over_head) || [], under = (kp ? [] : sg.under_torso) || [];
     let order = sol.order.filter(x => !over.includes(x.k) && !under.includes(x.k)).concat(over.map(k => sol.X[k]).filter(Boolean));
     if (under.length) { const ti = Math.max(0, order.findIndex(x => x.k === 'torso')); order.splice(ti, 0, ...under.map(k => sol.X[k]).filter(Boolean)); }
-    for (const x of order) { if (x.k === hk && !drewHandset) { drawPlaced(handsetCard); drewHandset = true; } P.drawCard(g, x, 1); }
+    for (const x of order) { if (x.k === hk && !drewHandset) { drawPlaced(handsetCard); drewHandset = true; }
+      if (caseUnder && !caseDone && /^near_(thigh|leg)$/.test(x.role)) { drawCase(); caseDone = true; }   // the carried case between the legs' layers: the near leg's stride reads over it
+      P.drawCard(g, x, 1); }
     if (!drewHandset) drawPlaced(handsetCard);
   };
   const drawCase = () => { const c = ps.case; if (!c) return; const s = cam.s(c.pos[2]), pr = E.edl.props.case;
     const anchor = c.held ? pr.grip : [.5, 1], at = c.held ? c.gripPx : cam.p(c.pos);
     drawPlaced(cardAt(pr.part, pr.w_cm, pr.h_cm, c.held ? port.k : s, anchor, at, 0)); };
-  if (inside) { drawPoet(); if (cordOver) drawTheCord(); drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam, fr.shot === 'booth' && E.edl.shots.booth.rail_fade ? { fadeBottom: E.edl.shots.booth.rail_fade } : {}); drawBoothCard('front-glass-pane-clear', cam, E.edl.shots.booth.glass_op != null ? { op: E.edl.shots.booth.glass_op } : {}); drawCase(); drawBoothCard('lamp', cam); }
+  if (inside) { drawPoet(); if (cordOver) drawTheCord(); drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam, fr.shot === 'booth' && E.edl.shots.booth.rail_fade ? { fadeBottom: E.edl.shots.booth.rail_fade } : {}); drawBoothCard('front-glass-pane-clear', cam, E.edl.shots.booth.glass_op != null ? { op: E.edl.shots.booth.glass_op } : {}); if (!caseDone) drawCase(); drawBoothCard('lamp', cam); }
   else { drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam); drawBoothCard('front-glass-pane-clear', cam); drawBoothCard('lamp', cam);
     const caseBehind = ps.case && !ps.case.held && ps.case.pos[2] < fr.a.A.j[0][2];
-    if (caseBehind) drawCase(); drawPoet(); if (!caseBehind) drawCase(); }
+    if (caseBehind) drawCase(); drawPoet(); if (!caseBehind && !caseDone) drawCase(); }
   light(cam);
   E.solved[f] = measureFrame(f, fr, sol, port, cam, handsetCard);
   if (ST.diag) diag(sol, port);
@@ -732,6 +750,7 @@ async function rigidScales() {
     const hcm = E.edl.head_painted_cm || (side && paintedH(side) / out[side.id]);   // one painted head height for every view
     if (hcm) for (const id of Object.values(hk.cards)) { const c = S.byId[id], h = paintedH(c); if (h) out[id] = h / hcm; }
     E.headCm = hcm; }
+  for (const [id, f] of Object.entries(E.edl.card_scale || {})) if (out[id]) out[id] /= f;   // declared matches between cards (e.g. a shin no wider than its thigh at the knee)
   S.cardPpc = out; S.sock = {};
 }
 
