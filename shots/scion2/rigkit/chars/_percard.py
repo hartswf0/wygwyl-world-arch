@@ -101,6 +101,10 @@ def torso_scraps(S, rgb):
     return S
 
 
+def very_dark(rgb, t=58):
+    return np.asarray(rgb).max(-1) < t
+
+
 def warm(rgb):
     """a wooden cane, a brass handle: warm saturated pixels"""
     b, g, r = [rgb[..., i].astype(np.float32) for i in range(3)]
@@ -191,6 +195,24 @@ def far_arm_hidden(S, rgb, far, keep=None):
     return lost_to_torso(S)
 
 
+def arms_in_front(S, root=0.14):
+    """both arms are painted over the body (a profile with the far arm reaching across the chest, an arm
+    hanging over the coat's side): the far arm moves from behind the torso to just in front of it (under
+    the head and the near arm); its shoulder root, now on top, carries no paper edge"""
+    names = [L['name'] for L in S['layers']]
+    far = S['layers'][0]
+    if not far['name'].startswith('arm'):
+        return S
+    J, T = S['joints'], S['T']
+    yy, xx = np.mgrid[0:S['fig'].shape[0], 0:S['fig'].shape[1]].astype(np.float32)
+    sh = J['sh' + far['name'][-1]]
+    far['edgeok'] = np.where(np.hypot(xx - sh[0], yy - sh[1]) < root * T, 0.0, far['edgeok']).astype(np.float32)
+    rest = S['layers'][1:]
+    i = [L['bones'] == 'torso' for L in rest].index(True)
+    S['layers'] = rest[:i + 1] + [far] + rest[i + 1:]
+    return S
+
+
 def fill_under_arms(S, rgb, k=0.2):
     """arm pixels lying inside the torso's closed outline: the torso keeps them too, inpainted from its
     own cloth round them (an arm moved off the coat shows coat, not a hole)"""
@@ -205,7 +227,8 @@ def fill_under_arms(S, rgb, k=0.2):
         r = int(k * S['T']) | 1
         hull = cv2.morphologyEx(own.astype(np.uint8), cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (r, r))) > 0
     under = np.zeros(own.shape, bool)
-    for L in S['layers']:
+    after = S['layers'][S['layers'].index(tor) + 1:]
+    for L in after:
         if L['name'].startswith('arm'):
             under |= (L['alpha'] > 0.5) & hull & ~own
     if under.any():
@@ -226,13 +249,16 @@ def prop_bone(S, side, end):
 
 
 def builder(char, pid, cut=(), keep=None, head=None, seat=None, give_=(), far_hidden=None, far_keep=None, plain=None,
-            opts=None, border=None, post=None, prop_ends=None, fill_arms=None):
+            opts=None, border=None, post=None, prop_ends=None, fill_arms=None, cut_pred=(), front_arms=False):
     def fn(rgb, a):
+        a0 = a.copy()
         a = a.copy()
         if keep is not None:
             a[~poly_mask(a.shape, keep)] = 0
         for p in cut:
             a[poly_mask(a.shape, p)] = 0
+        for p, pr in cut_pred:          # e.g. the partner's dark jacket between the fingers of a hand laid on it
+            a[poly_mask(a.shape, p) & pr(rgb)] = 0
         m = core.load_markers(char)[pid]['markers']
         S = auto.build_auto(rgb, a, m, plain_fn=plain, erase_emblem=False, **(opts or {}))
         S['brads'] = []                 # painted brads stay painted (each card is its own master)
@@ -245,13 +271,20 @@ def builder(char, pid, cut=(), keep=None, head=None, seat=None, give_=(), far_hi
             S = give(S, rgb, *g)
         for side, end in (prop_ends or {}).items():
             S = prop_bone(S, side, end)
+        if front_arms:
+            S = arms_in_front(S)
         if fill_arms:
             S = fill_under_arms(S, rgb, fill_arms)
         if head is not None:
             S = hand_head(S, rgb, head, seat)
         if post:
             S = post(S, rgb, a, m)
-        return torso_scraps(lost_to_torso(S), rgb)
+        S = torso_scraps(lost_to_torso(S), rgb)
+        if keep is not None or cut_pred:
+            # the paper edge is stripped only along the card's own silhouette: where a partner was cut away
+            # there is no paper edge to strip (the cut gets the rig's crisp edge where it shows)
+            S['fig'] = S['fig'] | (a0 > 0.5)
+        return S
     return fn
 
 

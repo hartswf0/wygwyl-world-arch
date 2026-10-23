@@ -41,9 +41,10 @@ COAT_W = [(64, 260), (205, 260), (205, 335), (250, 335), (250, 490), (170, 490),
 TROUSERS_W = [(100, 343), (152, 343), (165, 470), (80, 470)]
 
 OPTS = {'tip_len': 0.2, 'hand_skin': True, 'torso_over_legs': False, 'limb_r': (0.22, 0.2)}
-GIVE_W = [('torso', COAT_W), ('legs', TROUSERS_W), ('armR', CANE_W, pc.warm, 'torso')]
+# the black ferrule at the cane's foot is not warm: given by position
+GIVE_W = [('torso', COAT_W), ('legs', TROUSERS_W), ('armR', CANE_W, pc.warm, 'torso'), ('armR', [(10, 640), (46, 640), (46, 690), (10, 690)])]
 
-walk = pc.builder(CHAR, WALK, head=_HEAD_W, seat=_SEAT_W, give_=GIVE_W, opts=OPTS, prop_ends={'R': (28, 668)}, fill_arms='hull')
+walk = pc.builder(CHAR, WALK, head=_HEAD_W, seat=_SEAT_W, give_=GIVE_W, opts=OPTS, prop_ends={'R': (28, 668)}, fill_arms='hull', front_arms=True)
 
 _NOTES = {'walk': 'standing 3/4 to screen right, cane planted in his right hand'}
 MASTERS_ = {'walk': (WALK, walk, 'R', '3qR', 'walk')}
@@ -52,3 +53,33 @@ pc.finish(sys.modules[__name__], MASTERS_, _NOTES, 'overcoat', {'walk': 'side'},
                   'his left hand is hidden at his side (no hand painted below the cuff)',
                   'no back view of him exists (09.4 wants two backs walking away)']})
 BRAD_SOURCE = (WALK, 56.0, 142.0, 6.0, 7.5)
+
+# ---- steady: the father split off the two-figure card (the poet cut away)
+_HAND_S = [(244, 178), (258, 163), (270, 152), (285, 148), (306, 148), (311, 154), (306, 160), (304, 165), (296, 170),
+           (290, 177), (278, 186), (268, 198), (256, 208), (246, 212), (244, 200)]
+KEEP_S = [(0, 0), (200, 0), (200, 150), (230, 178)] + _HAND_S[:-1] + [(248, 222), (200, 240), (178, 240), (176, 430),
+                                                                       (170, 682), (0, 682)]
+_HEAD_S = [(48, 92), (44, 60), (44, 40), (50, 15), (70, 0), (100, -4), (140, 10), (178, 28), (180, 44), (158, 50), (160, 70),
+           (156, 92), (150, 112), (144, 124), (128, 124), (112, 126), (100, 121), (62, 100)]
+_SEAT_S = [(50, 95), (62, 100), (100, 121), (112, 126), (128, 124), (150, 124)]
+CANE_S = [(96, 362), (132, 362), (130, 682), (104, 682)]
+# the coat below the shoulders, less his near sleeve (upper arm down the back, forearm to the cuff)
+COAT_S = [(48, 230), (176, 230), (176, 482), (0, 482), (0, 300), (20, 300), (40, 335), (62, 348), (104, 316), (72, 250),
+          (48, 240)]
+steady = pc.builder(CHAR, STEADY, keep=KEEP_S, cut_pred=[(_HAND_S, pc.very_dark)], head=_HEAD_S, seat=_SEAT_S,
+                    give_=[('torso', COAT_S), ('armR', [(20, 248), (72, 248), (105, 316), (62, 350), (38, 337), (18, 300)]),
+                           ('armR', CANE_S, pc.warm, 'torso'),
+                           ('armR', [(68, 312), (142, 312), (142, 392), (68, 392)], pc.warm, 'torso'),
+                           ('armR', [(108, 668), (132, 668), (132, 682), (106, 682)])], opts=OPTS, prop_ends={'R': (118, 678)},
+                    fill_arms='hull', front_arms=True)
+_NOTES['steady'] = ('profile to screen right, his left hand laid on the poet\'s shoulder, the cane in his right; split off '
+                    'the two-figure card father-elder-poet-steady-shoulder-falter (the poet is cut away)')
+MASTERS_['steady'] = (STEADY, steady, 'R', 'profR', 'stand')
+pc.finish(sys.modules[__name__], MASTERS_, _NOTES, 'overcoat', {'walk': 'side', 'steady': 'side'},
+          {WALK: ['the cane rides his right hand (cut with it); the coat behind it is filled from the coat round it',
+                  'his left hand is hidden at his side (no hand painted below the cuff)',
+                  'no back view of him exists (09.4 wants two backs walking away)'],
+           STEADY: ['split off a two-figure card: the painting column shows the whole card, the rig only the father',
+                    'his reaching hand was painted on the poet\'s shoulder: the poet\'s dark jacket between its fingers is cut '
+                    'away, so a few finger gaps show; alone, the hand rests on air',
+                    'his far shoulder, far knee and hips are hidden (placed by eye); the cane rides his near hand']})
