@@ -23,9 +23,15 @@ for tid, r in R.items():
     C.save(os.path.join(out, tid.split('/')[-1] + '.jpg'), quality=85); tiles.append(C)
     rows.append(f"| {tid} | {bf['iou']} | {af['iou']} | {bf['marker_err_cm']} | {af['marker_err_cm']} | {bf['priors']} | {af['priors']} | {af['from']} |")
 open(os.path.join(out, 'table.md'), 'w').write('\n'.join(rows) + '\n')
-if tiles:
-    cols = 4; tw = max(t.width for t in tiles); th = max(t.height for t in tiles); n = len(tiles)
-    for page in range(0, n, 16):
-        sub = tiles[page:page + 16]; rws = (len(sub) + cols - 1) // cols; S = Image.new('RGB', (cols * tw, rws * th), (20, 20, 24))
-        for i, t in enumerate(sub): S.paste(t, ((i % cols) * tw, (i // cols) * th))
-        S.resize((S.width // 2, S.height // 2)).save(os.path.join(out, f'contact_{page // 16 + 1}.jpg'), quality=80)
+if tiles:   # contact sheets: tiles at one height, packed into rows 1800 px wide, 12 per sheet
+    h = 240; tl = [t.resize((min(900, int(t.width * h / t.height)), h)) for t in tiles]
+    for page in range(0, len(tl), 12):
+        rows, row, w = [], [], 0
+        for t in tl[page:page + 12]:
+            if w + t.width > 1800: rows.append(row); row, w = [], 0
+            row.append(t); w += t.width
+        rows.append(row); S = Image.new('RGB', (1800, h * len(rows)), (20, 20, 24))
+        for r_, rw in enumerate(rows):
+            x = 0
+            for t in rw: S.paste(t, (x, r_ * h)); x += t.width
+        S.save(os.path.join(out, f'contact_{page // 12 + 1}.jpg'), quality=80)

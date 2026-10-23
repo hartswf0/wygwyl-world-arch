@@ -32,7 +32,7 @@
        port?,                  // or a host projection {p(q) -> [x, y, depth], k px/cm, right, toward, label}; wins over psi/view and x/y/heightPx
        heightPx?, x?, y?,      // without a port: his standing height in px, screen x of the pelvis, screen y of the floor
        handStates?,            // {L: 'open' | 'grip' | ..., R: ...}: limbs.hand_*.states
-       harvest?, harvestExclude?, // replacement cards (library_harvest.json rows: slot/side/view/dir_cam/ratio/bad): used for a foreshortened limb
+       harvest?, harvestExclude?, // replacement cards (harvestExclude: a source id, a list of them, or a predicate (card) => bool) (library_harvest.json rows: slot/side/view/dir_cam/ratio/bad): used for a foreshortened limb
                                //   when one of the same part and view has a bone direction within ~20 deg; harvestExclude leaves one source out
        headScale? = 1.25,      // heads at the paintings' canon (1.2-1.3x the contract head); headCm?, headLeanDeg? = 15, neckDeg?, farShade? = .72,
        cardView?, ground?      // force the card view; ground (default true without a port) puts his lowest foot point on the floor
@@ -557,7 +557,12 @@ function fromPoseLab(J) {
   for (const [a, b] of Object.entries(POSELAB)) if (J[a]) o[b] = c(J[a]);
   if (J.tipL) o.tipL = c(J.tipL); if (J.tipR) o.tipR = c(J.tipR);
   if (J.neck && J.top) o.headBase = c(J.neck.map((v, i) => v + (J.top[i] - v) * .12));
-  const Rh = J._F?.Rh; if (Rh && J.headC) { const f = [Rh[0][2], Rh[1][2], Rh[2][2]]; o.nose = c(J.headC.map((v, i) => v + f[i] * 10)); }
+  // pose-core matrices are flat row-major arrays: the head's forward (its z column) is [R[2], R[5], R[8]]
+  const Rh = J._F?.Rh; if (Rh && J.headC) { const f = [Rh[2], Rh[5], Rh[8]], l = Math.hypot(...f) || 1; o.nose = c(J.headC.map((v, i) => v + f[i] / l * 10)); }
+  // the Pose Lab waist is the jacket hem (19 cm above the hip line); the puppet hangs its torso card from 7 cm above its pelvis
+  // joint, so that joint is put 7 cm under the Pose Lab waist: the torso card spans the painted hem -> neck (the thighs still
+  // hang from the true hip joints)
+  if (J.waist && J.pelvis) { const u = J.waist.map((v, i) => v - J.pelvis[i]), lu = Math.hypot(...u) || 1; o.pelvis = c(J.waist.map((v, i) => v - u[i] / lu * 7)); }
   return o;
 }
 function applyContract(c) {
@@ -666,7 +671,7 @@ function harvestFor(H, kk, view, jj, sg, port, exclude) {
   for (const c of H) {
     if (c.bad || (c.slot || c.part) !== m[1] || (c.side && c.side !== m[2]) || !c.dir_cam) continue;
     if (VIEWOF(c.view) !== VIEWOF(view) && !(view === 'threequarter' && c.view === 'threequarter')) continue;
-    if (exclude && (exclude === c.source || exclude === c.pose || (c.id || '').includes(exclude))) continue;   // leave-one-out
+    if (exclude && (typeof exclude === 'function' ? exclude(c) : [].concat(exclude).some(e => e === c.source || e === c.pose || (c.id || '').includes(e)))) continue;   // leave-one-out: an id, a list, or a predicate on the card
     const cs = dot3(nrm3(c.dir_cam), cam); if (cs > .94 && (!best || cs > best.cos)) best = { c, cos: cs };
   }
   if (!best) return null;
