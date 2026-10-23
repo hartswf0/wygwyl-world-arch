@@ -83,17 +83,37 @@ def auto_view(view, cut=None, **extra):
 # blue, not brown
 BORDER = 1.0
 PART_BORDER = 1.0
-EDGE = ((196, 160, 118), (226, 200, 168), (1.0, 0.7))
+EDGE = ((196, 160, 118), (226, 200, 168), (0.9, 0.3))
+
+
+def build_kneel(rgb, a):
+    """part-4: one arm over the ring, the other folded across his chest, the ring tilted behind the
+    hand.  The auto cut tears this apart (the ring goes to the head window, the folded arm to fill),
+    so the whole upper body -- ring, both arms, jacket -- is one painted torso piece that bends with
+    the spine; only the legs are cut.  The arm and head layers are left empty."""
+    S = auto_view('kneel')(rgb, a)
+    fig = S['fig']
+    legs_vis = np.zeros(fig.shape, bool)
+    for L in S['layers']:
+        if L['name'] in ('legs', 'legN'):
+            legs_vis |= (L['alpha'] > 0.5) & fig & (np.abs(L['rgb'] - rgb).sum(-1) < 1)   # painted, not filled
+    for L in S['layers']:
+        if L['bones'] == 'torso':
+            L['rgb'] = rgb.copy()
+            L['alpha'] = (fig & ~legs_vis).astype(np.float32)
+        elif L['name'].startswith('arm') or L.get('is_head'):
+            L['alpha'] = np.zeros(fig.shape, np.float32)
+    return S
 
 
 # the ledge slab under 05-ledge-sit-2 (card px); his left hand rests on it and is kept
-LEDGE = [[(0, 263), (200, 263), (204, 276), (0, 276)]]
+LEDGE = [[(0, 263), (200, 263), (204, 276), (0, 276)], [(56, 254), (84, 254), (84, 263), (56, 263)]]
 
 MASTERS = {
     'front': (SHEET + 'part-10', auto_view('front')),
-    'q3r': (SHEET + 'stand-front', auto_view('q3r', split_legs=True)),
+    'q3r': (SHEET + 'stand-front', auto_view('q3r')),
     'sit': (SHEET + '05-ledge-sit-2', auto_view('sit', LEDGE)),
-    'kneel': (SHEET + 'part-4', auto_view('kneel')),
+    'kneel': (SHEET + 'part-4', build_kneel),
 }
 MASTER_FACING = {'front': None, 'q3r': 'R', 'sit': 'R', 'kneel': 'R'}
 BACK_RIGS = ('sit',)
@@ -129,8 +149,19 @@ def painting_flags(tid, cat):
     return out + EXTRA_FLAGS.get(tid, [])
 
 
-EXTRA_FLAGS = {}
-CURATED_PARTS = {}
+EXTRA_FLAGS = {
+    SHEET + '05-ledge-sit': ['a pale sliver of collar shows between the ring stem and the jacket collar'],
+    SHEET + 'part-4': ['kneel rig: ring, both arms and jacket are one piece (the shielding arms cannot move on their own); '
+                       'only the spine and legs pose'],
+}
+# his hands are acetate, not skin, so the automatic hand cut finds none; 05-ledge-sit's open palms
+# are cut by hand (card px; R = screen-right as the rig's R)
+CURATED_PARTS = {
+    'palmL_ls': dict(kind='hand', side='L', src=SHEET + '05-ledge-sit', poly=[(0, 175), (48, 175), (54, 200), (50, 210), (30, 228), (0, 228)],
+                     wr=(50, 195), el=(100, 157), seat_r=5, attrs={'shape': 'palm up'}),
+    'palmR_ls': dict(kind='hand', side='R', src=SHEET + '05-ledge-sit', poly=[(322, 148), (371, 148), (371, 196), (322, 196)],
+                     wr=(323, 174), el=(272, 145), seat_r=5, attrs={'shape': 'palm up'}),
+}
 POSTURE_RIGS = {'sit': 'sit', 'kneel': 'kneel'}
 VIEW_RIGS = {'front': ('front', False), '3qR': ('q3r', False), '3qL': ('q3r', True), 'profR': ('q3r', False),
              'profL': ('q3r', True), 'back': ('front', False), 'back3qR': ('sit', False), 'back3qL': ('sit', True)}
@@ -138,5 +169,11 @@ VIEW_RIGS = {'front': ('front', False), '3qR': ('q3r', False), '3qL': ('q3r', Tr
 # edge) refuses every ring; the rings are whole: each card keeps its own
 KEYS = {SHEET + k: {'head': [SHEET + k + '#head', False]} for k in ('part-10', '03-crouch-shield', 'stand-front', '05-ledge-sit',
                                                                   '05-ledge-sit-2')}
+# the kneel rig's ring and arms are painted into its torso piece: no head or hand parts on top
+KEYS[SHEET + 'part-4'] = {'head': None, 'hands': {}}
+# arms out, palms up: the front rig with the card's own open palms (the mirrored 3/4 rig knots its legs)
+# (its own ring is seated on its leaning torso axis and comes out tipped off the collar: the front
+# master's upright ring instead -- the same drawing)
+KEYS[SHEET + '05-ledge-sit'] = dict(hands={'R': ['palmR_ls', False], 'L': ['palmL_ls', False]}, head=[SHEET + 'part-10#head', False])
 # the sheet's scale prior (2.10 px/cm) makes his ~119 px torsos 57 cm: trust the markers
 SCALE_PRIOR = False
