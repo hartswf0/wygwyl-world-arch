@@ -25,8 +25,10 @@ def torso_poly(M, L, grow=0.14):
     up = (M['neck'] - M['groin']) / (L + 1e-6)
     g = M['groin'] - up * .1 * L
     # the shoulder slope up to the collar is torso too
+    hv = M['hipL'] - M['hipR']; hv = hv / (np.linalg.norm(hv) + 1e-6)
+    # the jacket hem runs wider than the hip joints
     pts = np.array([M['shoulderL'] + up * .16 * L, M['neck'] + up * .06 * L, M['shoulderR'] + up * .16 * L,
-                    M['hipR'], g, M['hipL']], float)
+                    M['hipR'] - hv * .1 * L, g, M['hipL'] + hv * .1 * L], float)
     c = pts.mean(0)
     return c + (pts - c) * (1 + grow)
 
@@ -87,6 +89,17 @@ def segment_parts(rgba, M):
         radii[b] = rr
         d, t = seg_dist(P, A, C)
         cst = d - rr
+        if b == 'head':
+            # the head owns what is above the neck point; the collar stays with the torso
+            up = (M['neck'] - M['groin']) / (L + 1e-6)
+            above = (P - M['neck']) @ up
+            lateral = np.linalg.norm((P - M['neck']) - above[:, None] * up[None], axis=1)
+            hc = (M['head'] + M['chin']) / 2 - M['neck']
+            lat_c = abs(hc[0] * up[1] - hc[1] * up[0])  # the head may lean off the axis
+            own = above > .02 * L
+            for k in ('shoulderL', 'shoulderR'):   # the shoulder rivets never ride on the head
+                own &= np.linalg.norm(P - M[k], axis=1) > .16 * L
+            cst = np.where(own, cst, 1e6)
         # the shoulder cap and the hip belong to the torso: a limb owns only what lies
         # past its root joint (and, for a leg inside the torso outline, well past it)
         if b[:-1] in ('uarm', 'thigh'):
@@ -157,7 +170,12 @@ def fill_torso(rgba, M, labels, parts, tmask, donor):
     drgba, DM = donor
     src = np.array([DM[k] for k in ['shoulderL', 'shoulderR', 'hipL', 'hipR', 'neck', 'groin']], np.float32)
     dst = np.array([M[k] for k in ['shoulderL', 'shoulderR', 'hipL', 'hipR', 'neck', 'groin']], np.float32)
-    A, _ = cv2.estimateAffine2D(src, dst, method=cv2.LMEDS)
+    A, _ = cv2.estimateAffinePartial2D(src, dst, method=cv2.LMEDS)  # no shear: rivets stay round
+    # the shoulder joint itself stays with the arm's own drawing (no second rivet there)
+    L = np.linalg.norm(M['neck'] - M['groin'])
+    yy, xx = np.mgrid[0:hole.shape[0], 0:hole.shape[1]]
+    for k in ['shoulderL', 'shoulderR']:
+        hole &= (xx - M[k][0]) ** 2 + (yy - M[k][1]) ** 2 > (.14 * L) ** 2
     if A is None:
         return out, hole & False
     w = cv2.warpAffine(drgba, A, (rgba.shape[1], rgba.shape[0]), flags=cv2.INTER_LINEAR,

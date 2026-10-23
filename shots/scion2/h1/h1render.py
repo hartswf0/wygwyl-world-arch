@@ -139,7 +139,15 @@ def render(pid, v, T, targets, exclude_family, F=None, cap=H.CAP, pad=None):
     # second pass: drop rim pixels that ended up inside the figure
     A = (canvas[..., 3] > 128).astype(np.uint8)
     inner = cv2.distanceTransform(A, cv2.DIST_L2, 3) > pr['rr'] * s + 1.5
-    canvas = under
+    # the underlay may only close wedges between parts, never stick out past them
+    over_parts = np.zeros(A.shape, np.float32)
+    for out, _ in rims:
+        over_parts = np.maximum(over_parts, out[..., 3])
+    P_ = (over_parts > 128).astype(np.uint8)
+    k = max(3, int(.16 * pr['L'] * s)) | 1
+    closed = cv2.morphologyEx(P_, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k)))
+    closed = cv2.GaussianBlur(closed.astype(np.float32), (5, 5), 0)
+    canvas = under * closed[..., None]
     for out, rimw in rims:
         k = 1 - np.clip(rimw * 1.5, 0, 1) * inner
         canvas = W.over(canvas, out * k[..., None])

@@ -11,6 +11,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')
 MARKERS = os.path.join(ROOT, 'shots/rig/poses_v2/poet__red_black_sunglasses.json')
 TESTSET = os.path.join(ROOT, 'shots/scion2/test_set.json')
 
+HEAD_CAP = 20.0  # the head turns less: the neck seam shows first
 CAP = 30.0  # max in-plane rotation of any part away from how it was painted (degrees)
 
 # ---------------------------------------------------------------- source curation
@@ -164,8 +165,9 @@ def fit(S, T, cap=CAP):
     for b, (a, c) in BONES.items():
         d = wrap(ang(T[c] - T[a]) - ang(S[c] - S[a]))
         want[b] = d
-        rot[b] = float(np.clip(d, -cap, cap))
-        over[b] = abs(d) - cap if abs(d) > cap else 0.0
+        cb = min(cap, HEAD_CAP) if b == 'head' else cap
+        rot[b] = float(np.clip(d, -cb, cb))
+        over[b] = max(0.0, abs(d) - cb)
     if legs_cross(S):
         # crossed legs are one sheet of drawing: they ride with the torso, unbent
         for b in ['thighL', 'shinL', 'footL', 'thighR', 'shinR', 'footR']:
