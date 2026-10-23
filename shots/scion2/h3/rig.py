@@ -41,7 +41,7 @@ def load_markers():
 # ----------------------------------------------------------------- rest skeleton (master px)
 J = dict(
     neck=(159.5, 80.0), headtop=(161.0, 4.0), headpiv=(159.5, 66.0),
-    midhip=(159.0, 190.0), waist=(159.0, 150.0),
+    midhip=(159.0, 190.0), waist=(159.0, 150.0), crotch=(158.5, 212.0),
     shR=(117.0, 87.5), elR=(93.5, 148.5), wrR=(51.0, 151.0), tipR=(10.0, 138.0),
     shL=(203.0, 87.5), elL=(226.0, 148.5), wrL=(269.0, 150.0), tipL=(310.0, 138.0),
     hipR=(129.5, 190.0), knR=(120.5, 288.0), anR=(104.5, 366.0), toR=(70.0, 404.0),
@@ -118,7 +118,7 @@ def build(out_dir=None):
         xo2 = np.interp(y, [80, 100, 130, 160, HEM_Y], [216, 216, 211, 208, 208])
         side[y, int(xo):int(_interp_x(y, DIV_R)) + 1] = True
         side[y, int(_interp_x(y, DIV_L)):int(xo2) + 1] = True
-    side &= fig   # only where the arm covered the jacket; elsewhere the painted edge is real
+    side &= fig | (yy < 152)   # the jacket side runs straight down under the arm to the elbow gap
     neck = (yy >= 44) & (yy < 66) & (xx > 140) & (xx < 180)
     torso_m = torso_vis | side | neck
     fill = (torso_m & ~torso_vis) | neck & head
@@ -227,7 +227,7 @@ def refine_brad(rgb, a, c, win):
 # ----------------------------------------------------------------- runtime rig
 class Rig:
     LAYER_BONES = {
-        'legs': {'pelvis': [('waist', 'midhip'), ('hipR', 'hipL')],
+        'legs': {'pelvis': [('waist', 'crotch'), ('hipR', 'hipL')],
                  'thighR': [('hipR', 'knR')], 'shinR': [('knR', 'anR')], 'footR': [('anR', 'toR')],
                  'thighL': [('hipL', 'knL')], 'shinL': [('knL', 'anL')], 'footL': [('anL', 'toL')]},
         'torso': None,  # weights by height (pelvis at the hem, chest above)
@@ -307,8 +307,17 @@ class Rig:
         if name == 'torso':
             t = np.clip((V[:, 1] - 128) / (176 - 128), 0, 1)
             t = t * t * (3 - 2 * t)
-            names = ['chest', 'pelvis']
-            Wt = np.stack([1 - t, t], 1)
+            # the shoulder cap partly follows the upper arm, so a raised arm lifts the deltoid
+            # instead of leaving a fixed shoulder pad under it
+            wa = []
+            for sd in 'RL':
+                d = np.linalg.norm(V - J['sh' + sd], axis=1)
+                lat = np.clip((np.abs(V[:, 0] - 159.5) - (abs(J['sh' + sd][0] - 159.5) - 12)) / 12, 0, 1)
+                wa.append(0.6 * np.clip(1 - d / 20, 0, 1) * lat)
+            wa = np.stack(wa, 1)
+            rest = 1 - wa.sum(1, keepdims=True)
+            names = ['chest', 'pelvis', 'uarmR', 'uarmL']
+            Wt = np.hstack([rest * (1 - t)[:, None], rest * t[:, None], wa])
         else:
             spec = self.LAYER_BONES[name]
             names = list(spec)
@@ -324,7 +333,10 @@ class Rig:
         depth = (Wt @ np.array([self.DEPTH[b] for b in names], float))
         tdepth = depth[tris].mean(1)
         order = np.argsort(tdepth, kind='stable')
-        return {'V': V, 'T': tris[order], 'W': Wt, 'names': names}
+        Tt = tris[order]
+        av = mask[np.clip(V[:, 1].astype(int), 0, H - 1), np.clip(V[:, 0].astype(int), 0, W - 1)]
+        opaque = av[Tt].all(1)
+        return {'V': V, 'T': Tt, 'W': Wt, 'names': names, 'G': np.round(tdepth[order] * 2).astype(int), 'opaque': opaque}
 
     # ------------------------------------------------------------ posing
     def transforms(self, P):
@@ -382,6 +394,30 @@ class Rig:
         return out
 
     def render(self, P, G, size, ss=2, border=True, head_yaw=0.0, hands=None):
+        """Render only the figure's bounding window, then place it on the full canvas."""
+        Wo, Ho = size
+        A = self.transforms(P)
+        pts = []
+        for name in self.ORDER:
+            m = self.mesh[name]; V = m['V']
+            Vp = np.zeros_like(V)
+            for k, b in enumerate(m['names']):
+                Mb = A[b]; Vp += m['W'][:, k:k + 1] * (V @ Mb[:, :2].T + Mb[:, 2])
+            pts.append(Vp @ G[:, :2].T + G[:, 2])
+        pts = np.vstack(pts)
+        sc = math.sqrt(abs(np.linalg.det(G[:, :2])))
+        mg = int(30 * sc) + 8
+        x0 = max(0, int(pts[:, 0].min()) - mg); y0 = max(0, int(pts[:, 1].min()) - mg)
+        x1 = min(Wo, int(pts[:, 0].max()) + mg); y1 = min(Ho, int(pts[:, 1].max()) + mg)
+        out = np.zeros((Ho, Wo, 4), np.uint8)
+        if x1 <= x0 or y1 <= y0:
+            return out, self.joint_pos(A)
+        G2 = G.copy(); G2[:, 2] -= (x0, y0)
+        img, jp = self._render(P, G2, (x1 - x0, y1 - y0), ss, border, head_yaw, hands)
+        out[y0:y1, x0:x1] = img
+        return out, jp
+
+    def _render(self, P, G, size, ss=2, border=True, head_yaw=0.0, hands=None):
         """G: global 2x3 similarity master px -> output px.  size=(W,H).  Returns RGBA uint8."""
         Wo, Ho = size
         A = self.transforms(P)
@@ -404,12 +440,21 @@ class Rig:
             UV = V * U
             if name == 'head' and abs(head_yaw) > 1e-3:
                 UV = yaw_lookup(V, head_yaw) * U
-            mx, my, cov = raster(Vo, UV, m['T'], Wo * ss, Ho * ss)
+            # triangles stretched far past their painted size (the empty wedge of the crotch when
+            # the legs spread) would smear the paper edge across the gap: they are dropped
+            T = m['T']
+            sc_o = math.sqrt(abs(np.linalg.det(Gs[:, :2])))
+            er = np.stack([np.linalg.norm(V[T[:, i]] - V[T[:, (i + 1) % 3]], axis=1) for i in range(3)], 1)
+            eo = np.stack([np.linalg.norm(Vo[T[:, i]] - Vo[T[:, (i + 1) % 3]], axis=1) for i in range(3)], 1)
+            stretched = (eo.max(1) / (sc_o * er.max(1) + 1e-6)) > 1.8
+            keep = ~(stretched & ~m['opaque'])
+            mx, my, cov = raster_fast(Vo, UV, T[keep], m['G'][keep], Wo * ss, Ho * ss, self.tex[name][..., 3])
             hands = hands or {}
             texname = name
-            if name.startswith('arm') and hands.get(name[-1]) == 'fist':
+            if name.startswith('arm') and hands.get(name[-1]) in ('fist', 'none'):
                 texname = name + '_nohand'
-                acc = over(acc, self._fist(name[-1], A, Gs, Wo * ss, Ho * ss))
+                if hands.get(name[-1]) == 'fist':
+                    acc = over(acc, self._fist(name[-1], A, Gs, Wo * ss, Ho * ss))
             lay = cv2.remap(self.tex[texname], mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
             lay *= cov[..., None]
             if border:
@@ -438,9 +483,16 @@ class Rig:
                 p = Mb[:, :2] @ np.array([bx, by]) + Mb[:, 2]
                 po = Gs[:, :2] @ p + Gs[:, 2]
                 sc = math.sqrt(abs(np.linalg.det(Gs[:, :2]))) / U
-                M = np.float32([[sc, 0, po[0] - sc * R], [0, sc, po[1] - sc * R]])
-                spr_o = cv2.warpAffine(spr, M, (Wo * ss, Ho * ss), flags=cv2.INTER_LINEAR)
-                acc = over(acc, spr_o)
+                # composite in a local window only
+                half = int(math.ceil(sc * R)) + 3
+                x0, y0 = int(po[0]) - half, int(po[1]) - half
+                x1, y1 = x0 + 2 * half + 1, y0 + 2 * half + 1
+                cx0, cy0, cx1, cy1 = max(x0, 0), max(y0, 0), min(x1, Wo * ss), min(y1, Ho * ss)
+                if cx1 <= cx0 or cy1 <= cy0:
+                    continue
+                M = np.float32([[sc, 0, po[0] - sc * R - cx0], [0, sc, po[1] - sc * R - cy0]])
+                spr_o = cv2.warpAffine(spr, M, (cx1 - cx0, cy1 - cy0), flags=cv2.INTER_LINEAR)
+                acc[cy0:cy1, cx0:cx1] = over(acc[cy0:cy1, cx0:cx1], spr_o)
         if border:
             # thin outer lip outside the tanned cut edges, like the painting's outermost light line
             fa = acc[..., 3] / 255.
@@ -479,7 +531,7 @@ def yaw_lookup(V, yaw):
     cx, cy, rx, ry = 161.0, 34.0, 27.0, 34.0
     dx = (V[:, 0] - cx) / rx; dy = (V[:, 1] - cy) / ry
     r2 = np.clip(1 - dx * dx - dy * dy, 0, 1)
-    shift = yaw * 7.0 * r2      # px in master space at the face centre
+    shift = yaw * 10.0 * r2      # px in master space at the face centre
     S = V.copy(); S[:, 0] = V[:, 0] - shift
     return S
 
@@ -489,7 +541,10 @@ def over(dst, src):
     return src + dst * (1 - a)
 
 
-def raster(Vo, UV, T, W, H):
+def raster(Vo, UV, T, W, H, alpha=None):
+    """Rasterise a deformed mesh into a lookup map.  Where triangles overlap (a fold), a later
+    triangle only wins on pixels where its own texel is painted, so the transparent margin
+    of the mesh never punches a hole through cloth drawn before it."""
     mx = np.full((H, W), -10, np.float32); my = np.full((H, W), -10, np.float32)
     cov = np.zeros((H, W), np.float32)
     P = Vo[T]; Q = UV[T]
@@ -516,7 +571,47 @@ def raster(Vo, UV, T, W, H):
         u = l1 * q[0, 0] + l2 * q[1, 0] + l3 * q[2, 0]
         v = l1 * q[0, 1] + l2 * q[1, 1] + l3 * q[2, 1]
         sl = (slice(ya, yb + 1), slice(xa, xb + 1))
+        if alpha is not None:
+            ai = alpha[np.clip(v.astype(int), 0, alpha.shape[0] - 1), np.clip(u.astype(int), 0, alpha.shape[1] - 1)]
+            ins &= (ai > 60) | (cov[sl] == 0)
         mx[sl][ins] = u[ins]; my[sl][ins] = v[ins]; cov[sl][ins] = 1
+    return mx, my, cov
+
+
+def raster_fast(Vo, UV, T, groups, W, H, alpha):
+    """Same result as raster(), done per depth group with an ID buffer: each group's
+    triangles are filled (OpenCV) with their index, the texture coordinate of every pixel
+    comes from its triangle's affine map, and a later group only replaces pixels where its
+    own texel is painted (or nothing was there)."""
+    mx = np.full((H, W), -10, np.float32); my = np.full((H, W), -10, np.float32)
+    cov = np.zeros((H, W), np.float32)
+    P = Vo[T]; Q = UV[T]
+    # per-triangle affine out(x,y,1) -> uv
+    X = np.concatenate([P, np.ones(P.shape[:2] + (1,))], 2)       # N,3,3
+    det = np.linalg.det(X)
+    good = np.abs(det) > 1e-9
+    Minv = np.zeros_like(X); Minv[good] = np.linalg.inv(X[good])
+    Mu = np.einsum('nij,njk->nik', Minv, Q)                          # N,3,2 : [x y 1] @ Mu = uv
+    SH = 4
+    for g in np.unique(groups):
+        idx = np.nonzero((groups == g) & good)[0]
+        if not len(idx):
+            continue
+        ids = np.zeros((H, W), np.int32)
+        pts = np.round(P[idx] * (1 << SH) - (1 << (SH - 1))).astype(np.int32)
+        for k, i in enumerate(idx):
+            cv2.fillConvexPoly(ids, pts[k], int(i) + 1, lineType=cv2.LINE_8, shift=SH)
+        ys, xs = np.nonzero(ids)
+        if not len(ys):
+            continue
+        t = ids[ys, xs] - 1
+        px = xs + 0.5; py = ys + 0.5
+        u = px * Mu[t, 0, 0] + py * Mu[t, 1, 0] + Mu[t, 2, 0]
+        v = px * Mu[t, 0, 1] + py * Mu[t, 1, 1] + Mu[t, 2, 1]
+        ai = alpha[np.clip(v.astype(int), 0, alpha.shape[0] - 1), np.clip(u.astype(int), 0, alpha.shape[1] - 1)]
+        ok = (ai > 60) | (cov[ys, xs] == 0)
+        ys, xs, u, v = ys[ok], xs[ok], u[ok], v[ok]
+        mx[ys, xs] = u; my[ys, xs] = v; cov[ys, xs] = 1
     return mx, my, cov
 
 

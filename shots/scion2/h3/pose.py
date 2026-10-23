@@ -49,7 +49,6 @@ def solve(tid, keys=None):
     L = lambda mm, a, b: np.linalg.norm(P2(mm, a) - P2(mm, b))
     rat = {
         'torso': np.linalg.norm(P2(m, 'neck') - hip_t) / np.linalg.norm(P2(r, 'neck') - hip_r),
-        'head': L(m, 'head', 'neck') / L(r, 'head', 'neck'),
         'legs': max(L(m, 'hipR', 'kneeR') + L(m, 'kneeR', 'ankleR'), L(m, 'hipL', 'kneeL') + L(m, 'kneeL', 'ankleL')) /
                 ((L(r, 'hipR', 'kneeR') + L(r, 'kneeR', 'ankleR') + L(r, 'hipL', 'kneeL') + L(r, 'kneeL', 'ankleL')) / 2),
         'shoulders': L(m, 'shoulderR', 'shoulderL') / L(r, 'shoulderR', 'shoulderL'),
@@ -150,6 +149,10 @@ def sheet(rows, path, H=520, label=True):
             s = H / im.shape[0]
             pair.append(cv2.resize(c, (max(1, int(im.shape[1] * s)), H), interpolation=cv2.INTER_AREA))
         t = np.hstack([pair[0], np.full((H, 6, 3), 255, np.uint8), pair[1]])
+        if t.shape[1] > 2300:   # very wide paintings (lying): both shrink together, still the same height
+            k = 2300 / t.shape[1]
+            t = cv2.resize(t, (2300, int(H * k)), interpolation=cv2.INTER_AREA)
+            t = cv2.copyMakeBorder(t, 0, H - t.shape[0], 0, 0, cv2.BORDER_CONSTANT, value=(255, 255, 255))
         t = cv2.copyMakeBorder(t, 26, 0, 0, 0, cv2.BORDER_CONSTANT, value=(255, 255, 255))
         if label:
             cv2.putText(t, title[:60], (4, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
@@ -163,7 +166,7 @@ def sheet(rows, path, H=520, label=True):
     out = []
     for rr in rows_img:
         im = np.hstack(sum([[t, np.full((t.shape[0], 12, 3), 255, np.uint8)] for t in rr], []))
-        im = cv2.copyMakeBorder(im, 0, 12, 0, MAXW + 200 - im.shape[1], cv2.BORDER_CONSTANT, value=(255, 255, 255))
+        im = cv2.copyMakeBorder(im, 0, 12, 0, 0, cv2.BORDER_CONSTANT, value=(255, 255, 255))
         out.append(im)
     W = max(o.shape[1] for o in out)
     out = [cv2.copyMakeBorder(o, 0, 0, 0, W - o.shape[1], cv2.BORDER_CONSTANT, value=(255, 255, 255)) for o in out]
@@ -180,12 +183,16 @@ def fam(tid):
 if __name__ == '__main__':
     mode = sys.argv[1] if len(sys.argv) > 1 else 'kill'
     TS = json.load(open(os.path.join(ROOT, 'shots/scion2/test_set.json')))
-    if mode == 'kill':
+    GAPS = json.load(open(os.path.join(HERE, 'gaps.json')))['cannot_attempt'] if os.path.exists(os.path.join(HERE, 'gaps.json')) else {}
+    if mode == 'forced':   # what the front rig does when made to try a gap pose (evidence, not output)
+        ids = list(GAPS)
+        od = os.path.join(HERE, 'gaps', 'forced')
+    elif mode == 'kill':
         ids = ['poet.07.main-poses/push-two-sides-apart', 'poet.04.main-poses/04-6-rise-flex-reflect',
                'poet.08.main-poses/03-gentle-slow-bent-knee-dance-alone']
         od = os.path.join(HERE, 'kill')
     else:
-        ids = sys.argv[2:] or [p['id'] for p in TS['poses']]
+        ids = sys.argv[2:] or [p['id'] for p in TS['poses'] if p['id'] not in GAPS]
         od = os.path.join(HERE, 'out')
     os.makedirs(od, exist_ok=True)
     rows = []; infos = {}
