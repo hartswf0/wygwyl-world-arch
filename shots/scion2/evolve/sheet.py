@@ -47,7 +47,37 @@ def draw_skel(im, pts, bones, color, scale):
             d.line([tuple(pts[a]), tuple(pts[b])], fill=color + (150,), width=w)
     r = max(3, round(4 * scale))
     for k, (x, y) in pts.items():
+        if k.startswith('_'):
+            continue
         d.ellipse([x - r, y - r, x + r, y + r], fill=color + (255,), outline=(255, 255, 255, 255), width=1)
+
+
+def rings(im, pts, color):
+    d = ImageDraw.Draw(im, 'RGBA')
+    for k, (x, y) in pts.items():
+        if k.startswith('_b'):
+            d.ellipse([x - 7, y - 7, x + 7, y + 7], outline=color + (255,), width=2)
+
+
+def overlay(cand_rgba, t, F2, box, h=150):
+    """reference figure grey, candidate holes blue, spill red"""
+    import cv2
+    W, H = t['size']
+    ca = np.asarray(cand_rgba)[..., 3] > 128
+    ca = cv2.resize(ca.astype(np.uint8), (W, H), interpolation=cv2.INTER_NEAREST) > 0
+    fig, ign = t['fig'], t['ignore']
+    o = np.full((H, W, 3), 255, np.uint8)
+    o[fig & ca] = (170, 170, 170)
+    o[fig & ~ca & ~ign] = (30, 110, 220)
+    o[ca & ~fig & ~ign] = (220, 40, 40)
+    o[ign] = (255, 230, 120)
+    im = Image.fromarray(o)
+    x0, y0, x1, y1 = [int(v / F2) for v in box]
+    im = im.crop((max(0, x0), max(0, y0), min(W, x1), min(H, y1)))
+    k = h / im.height
+    im = im.resize((max(1, int(im.width * k)), h), Image.NEAREST)
+    ImageDraw.Draw(im).rectangle([0, 0, im.width - 1, im.height - 1], outline=(90, 90, 90))
+    return im
 
 
 def fit_panel(im, pts, box):
@@ -84,10 +114,17 @@ def make(res, outdir, F2=2.0):
         PL = AS.place(G, t, lib)
         img, _ = AS.render_full(PL, G['view'], t, F=F2)
         J = {k: v * F2 for k, v in AS.joints_out(PL).items()}
+        n_ = 0
+        for k_, arr in AS.card_brads(PL).items():
+            for b_ in arr:
+                J['_b%d' % n_] = b_ * F2; n_ += 1
         renders.append((bgra_to_pil(img), J, c))
     ref = bgra_to_pil(np.asarray(__import__('cv2').resize(t['ref'], (int(W * F2), int(H * F2)))))
     rp = {k: t['pts'][k] * F2 for k in ('neck', 'head', 'shoulderL', 'shoulderR', 'elbowL', 'elbowR', 'wristL', 'wristR',
-                                         'groin', 'hipL', 'hipR', 'kneeL', 'kneeR', 'ankleL', 'ankleR', 'toeL', 'toeR') if k in t['pts']}
+                                         'groin', 'hipL', 'hipR', 'kneeL', 'kneeR', 'ankleL', 'ankleR', 'toeL', 'toeR') if k in t['markers']}
+    rp = {k: t['markers'][k] * F2 for k in rp}
+    for i, b in enumerate(t['ref_brads']):
+        rp['_b%d' % i] = b * F2
     # one crop box for every panel of the row (same scale, so the reader can compare sizes)
     xs, ys = [], []
     for im, J, _ in renders + [(ref, rp, None)]:
@@ -104,20 +141,28 @@ def make(res, outdir, F2=2.0):
     im, pts = fit_panel(ref, rp, box)
     im = flat(im)
     draw_skel(im, pts, MK_BONES, REF_C, sc)
+    rings(im, pts, REF_C)
     tag(im, 'REFERENCE', REF_C)
     lines = [('target painting (reference only,', FS, MUTED), ('never a source of pixels):', FS, MUTED), (tid, FS, INK),
-             ('blue = Pose Lab markers', FS, REF_C), ('scale %.2f px per card-cm' % t['s'], FS, MUTED),
+             ('blue dots = Pose Lab markers', FS, REF_C), ('blue rings = painted brads found (%d);' % len(t['ref_brads']), FS, REF_C),
+             ('%d used as joint targets' % len(t['brad_joints']), FS, REF_C), ('scale %.2f px per card-cm' % t['s'], FS, MUTED),
+             ('thumbnails: grey = filled, blue = HOLE,', FS, MUTED), ('red = SPILL, yellow = prop ignored', FS, MUTED),
              ('facing: %s' % (t['facing'] or ('back' if t['back'] else 'camera')), FS, MUTED)]
     panels.append((im, lines))
     for n, (im, J, c) in enumerate(renders, 1):
         pim, pts = fit_panel(im, J, box)
         pim = flat(pim)
         draw_skel(pim, pts, AS.SKEL, PUP_C, sc)
+        rings(pim, pts, PUP_C)
         tag(pim, 'CANDIDATE %d' % n, PUP_C)
+        ov = overlay(im, t, F2, box)
+        pim.paste(ov, (PANEL_W - ov.width - 4, PANEL_H - ov.height - 4))
         s = c['scores']
         G = c['genome']
-        lines = [('view %s · total %.2f' % (G['view'], s['total']), F, INK),
-                 ('joint %.1f cm · sil 1-IoU %.2f' % (s['joint'], s['sil']), FS, INK),
+        lines = [('HOLE %.1f%%   SPILL %.1f%%' % (100 * s['hole'], 100 * s['spill']), FB, (200, 30, 30) if max(s['hole'], s['spill']) > .1 else INK),
+                 ('hips covered %.0f%%%s · brad %.1f cm' % (100 * s['hip_cov'], '' if s['valid'] else ' INVALID', s['brad']), FS, INK),
+                 ('view %s · total %.2f' % (G['view'], s['total']), F, INK),
+                 ('joint %.1f cm · 1-IoU %.2f' % (s['joint'], s['sil']), FS, INK),
                  ('coh %.2f · integ %.2f · copy %.2f' % (s['coh'], s['integ'], s['copy']), FS, INK),
                  ('width step %.2f · gap %.1f cm · overstretch %.2f' % (s['width_step'], s['gap_cm'], s['overstretch']), FS, MUTED),
                  ('max ncc vs reference %.2f (%s)' % (s['max_ncc'][0], s['max_ncc'][1]), FS, MUTED)]
@@ -137,7 +182,7 @@ def make(res, outdir, F2=2.0):
     d = ImageDraw.Draw(out)
     d.text((12, 10), '%s — %s (%s)' % (t['label'] or '', tid, char), fill=INK, font=FT)
     d.text((12, 46), 'REFERENCE: the target painting + its marker skeleton (blue).  CANDIDATE n: library cards evolved onto those '
-                      'markers, drawn with the skeleton it was posed on (red). Brown text = a harvest card (cut from ANOTHER painting).',
+                      'markers / brads (red; red rings = the cards\' own brads). Brown text = a harvest card (cut from ANOTHER painting).',
            fill=MUTED, font=F)
     d.text((12, 68), 'Lower is better for every term; they are proxies (joint = pose, sil = painting shape, coh = one costume, '
                       'integ = joints hold, copy = looks like the painting\'s own pixels).', fill=MUTED, font=F)

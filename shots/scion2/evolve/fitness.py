@@ -3,7 +3,13 @@
   joint      mean distance (cm, in the target's own scale) between where the candidate's chain joints landed and the
              Pose Lab markers: elbows, wrists, knees, ankles (shoulders, hips and neck are pinned, so 0 by construction),
              toes (foot card tip vs toe marker, half weight). It measures pose, not looks.
-  sil        1 - IoU of the candidate's alpha with the reference painting's alpha (the painting's SHAPE only).
+  hole       share of the reference figure (alpha minus REF_IGNORE props) the candidate leaves empty.
+  spill      candidate pixels outside the reference figure, as a share of the reference figure's area.
+             (sil = 1 - IoU is still reported, not used.)
+  hips       HARD: the reference's hip region (hip line to crotch, +25% past each hip joint, inside the figure) must be
+             >= 90% covered and a hip card present; otherwise the candidate is invalid (+100, never shown).
+  brad       mean cm, per joint where the reference shows a painted brad, from that brad to the nearest brad on the
+             cards meeting there (card brads from library.json); 12 cm when the cards carry none.
   coh        coherence: colour dE (CIE76, /10) between neighbouring cloth parts and between left/right twins;
              +0.15 per extra kit family among the cloth cards (one costume, one sheet is best); +0.5 if the two hands,
              +0.5 if the two boots come from different families; view mismatch with the genome's view (0.15 unknown,
@@ -19,14 +25,17 @@
              grey pixels with the reference painting's grey pixels under it; any part above 0.6 adds (ncc - 0.6).
              Cards cut from the target are already excluded from the pool; this catches a kit card that is the same
              drawing as the painted part.
-  total = joint/4 + 2*sil + coh + integ + 2*copy
+  total = joint/4 + 8*(hole + spill) + brad/6 + coh + integ + 2*copy (+100 if invalid)
 """
 import math
 import numpy as np, cv2
 
 from . import assemble as AS
 
-W_JOINT, W_SIL, W_COPY = 1 / 4., 2.0, 2.0
+W_JOINT, W_SIL, W_COPY, W_BRAD = 1 / 4., 8.0, 2.0, 1 / 6.
+HIP_MIN = .9          # share of the reference hip region a candidate must cover, or it is invalid
+INVALID = 100.        # added to an invalid candidate's total: it never reaches the sheet
+BRAD_MISS = 12.       # cm charged for a joint whose cards carry no brad near it
 
 
 def dE(a, b):
@@ -61,8 +70,30 @@ def score(G, t, lib, PL=None, prep_ref=None):
         prep_ref = prep_reference(t)
     ra, rg = prep_ref
     ca = acc[..., 3] > 128
-    inter = (ca & ra).sum(); uni = (ca | ra).sum()
+    keep = ~t['ignore']
+    fig = ra & keep
+    area = max(fig.sum(), 1)
+    terms['hole'] = float((fig & ~ca).sum() / area)            # reference figure the candidate leaves empty
+    terms['spill'] = float((ca & ~ra & keep).sum() / area)     # candidate outside the reference figure
+    inter = (ca & fig).sum(); uni = ((ca & keep) | fig).sum()
     terms['sil'] = float(1 - inter / max(uni, 1))
+    # hips (hard): the hip region of the reference (hip line to crotch, inside the figure) must be filled
+    hr = t['hip_region']
+    terms['hip_cov'] = float((hr & ca).sum() / max(hr.sum(), 1))
+    terms['valid'] = bool(terms['hip_cov'] >= HIP_MIN and 'pelvis' in PL)
+    # brads: per joint, cm from the reference's painted brad to the nearest brad on the cards meeting there
+    CB = AS.card_brads(PL)
+    meet = {'shoulder': ('uarm', 'torso'), 'elbow': ('uarm', 'farm'), 'wrist': ('farm', 'hand'), 'hip': ('thigh', 'pelvis'),
+            'knee': ('thigh', 'shin'), 'ankle': ('shin', 'foot')}
+    bd = {}
+    for j, rp in t['brad_joints'].items():
+        base, S = j[:-1], j[-1]
+        cand = [CB.get(k + S if k not in ('torso', 'pelvis') else k) for k in meet[base]]
+        cand = np.vstack([c for c in cand if c is not None and len(c)] or [np.zeros((0, 2))])
+        d = float(np.min(np.linalg.norm(cand - rp, axis=1)) / s) if len(cand) else BRAD_MISS
+        bd[j] = round(min(d, BRAD_MISS), 2)
+    terms['brad'] = float(np.mean(list(bd.values()))) if bd else 0.
+    terms['brad_by_joint'] = bd
     # coherence
     coh = 0.
     cloth_pairs = [('torso', 'uarmL'), ('torso', 'uarmR'), ('uarmL', 'farmL'), ('uarmR', 'farmR'), ('thighL', 'shinL'),
@@ -135,7 +166,8 @@ def score(G, t, lib, PL=None, prep_ref=None):
             worst = (ncc, k)
     terms['copy'] = float(cp)
     terms['max_ncc'] = [round(worst[0], 3), worst[1]]
-    terms['total'] = float(W_JOINT * terms['joint'] + W_SIL * terms['sil'] + terms['coh'] + terms['integ'] + W_COPY * terms['copy'])
+    terms['total'] = float(W_JOINT * terms['joint'] + W_SIL * (terms['hole'] + terms['spill']) + W_BRAD * terms['brad'] +
+                           terms['coh'] + terms['integ'] + W_COPY * terms['copy'] + (0. if terms['valid'] else INVALID))
     return terms
 
 

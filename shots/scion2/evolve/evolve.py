@@ -16,6 +16,7 @@ import numpy as np
 from . import library, assemble as AS, cards as C, fitness as FIT
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+K_RANGE = {'hand': (.85, 1.3), 'head': (.85, 1.2), 'foot': (.85, 1.25), 'pelvis': (.85, 1.25)}   # uniform scale only
 POP, GENS, ELITE, MIN_DIFF, TOP, ISLANDS = 56, 30, 2, 4, 6, 7
 KILL = [('poet', 'red_black_sunglasses', 'poet.09.main-poses/falter-at-shoulder-contact'),
         ('poet', 'red_black_sunglasses', 'poet.04.main-poses/04-6-rise-flex-reflect'),
@@ -154,9 +155,6 @@ class Evo:
             fam = self.rng.choice(fams) if fams else None
         G = {'view': v, 'parts': {}}
         for key in AS.KEYS:
-            if key == 'pelvis' and self.rng.random() < .3:
-                G['parts'][key] = None
-                continue
             G['parts'][key] = self.gene(key, self.pick(key, v, fam))
         return self.fix_auto(G)
 
@@ -189,8 +187,8 @@ class Evo:
         if r < .05:
             G['view'] = self.rng.choice(self.views)
         elif r < .55 or g is None:
-            if key == 'pelvis' and self.rng.random() < .25:
-                G['parts'][key] = None if g else self.gene(key, self.pick(key, G['view']))
+            if False:
+                pass
             else:
                 nb = {'farm': 'uarm', 'uarm': 'farm', 'hand': 'hand', 'shin': 'thigh', 'thigh': 'shin', 'foot': 'foot'}.get(key[:-1])
                 fam = home if (home and self.rng.random() < .5) else None
@@ -199,7 +197,8 @@ class Evo:
                     fam = self.lib[other['id']]['family'] if other else None
                 G['parts'][key] = self.gene(key, self.pick(key, G['view'], fam))
         elif r < .8:
-            g['k'] = round(float(np.clip(g['k'] + self.rng.gauss(0, .03), .9, 1.1)), 3)
+            lo, hi = K_RANGE.get(key[:-1] if key[-1] in 'LR' else key, (.9, 1.1))
+            g['k'] = round(float(np.clip(g['k'] + self.rng.gauss(0, .04), lo, hi)), 3)
         elif r < .95:
             lim = 30 if key.startswith('hand') else 10
             g['rot'] = round(float(np.clip(g['rot'] + self.rng.gauss(0, 4), -lim, lim)), 1)
@@ -304,7 +303,8 @@ class Evo:
             for key in AS.KEYS:
                 if not best['parts'][key]:
                     continue
-                for field, steps, lo, hi in (('k', (-.04, .04), .9, 1.1), ('rot', (-6, 6), -30, 30)):
+                klo, khi = K_RANGE.get(key[:-1] if key[-1] in 'LR' else key, (.9, 1.1))
+                for field, steps, lo, hi in (('k', (-.04, .04), klo, khi), ('rot', (-6, 6), -30, 30)):
                     for d in steps:
                         H = json.loads(json.dumps(best))
                         v = H['parts'][key][field] + d
@@ -336,7 +336,11 @@ class Evo:
             b = min(P, key=lambda G: self.evaluate(G)['total'])
             firsts.append((b, self.evaluate(b)))
         items = sorted(firsts, key=lambda x: x[1]['total']) + sorted(self.archive.values(), key=lambda x: x[1]['total'])
+        nvalid = sum(1 for _, sc in self.archive.values() if sc['valid'])
+        self.n_valid = nvalid
         for G, sc in items:
+            if not sc['valid'] and nvalid >= n:
+                continue
             if all(self.distinct(G, H) >= MIN_DIFF for H, _ in out):
                 out.append((G, sc))
             if len(out) == n:
@@ -359,7 +363,8 @@ def run_target(spec, outdir, seed=0):
     # re-pick distinct after polish
     tops.sort(key=lambda x: x[1]['total'])
     res = {'target': tid, 'char': char, 'costume': costume, 's_px_per_card_cm': E.t['s'], 'painting_scale_prior': E.t['scale_prior'],
-           'facing': E.t['facing'], 'views_tried': E.views, 'pool_sizes': {k: len(v) for k, v in E.pool.items()},
+           'facing': E.t['facing'], 'views_tried': E.views, 'valid_genomes': E.n_valid, 'scored_genomes': len(E.archive),
+           'ref_brads': E.t['ref_brads'].tolist(), 'brad_joints': {k: v.tolist() for k, v in E.t['brad_joints'].items()}, 'pool_sizes': {k: len(v) for k, v in E.pool.items()},
            'excluded': [{'id': i, 'why': w} for i, w in E.gone], 'history_best_median': hist, 'evals': E.evals,
            'seconds': round(time.time() - t0, 1),
            'candidates': [{'rank': r + 1, 'genome': G, 'scores': sc,

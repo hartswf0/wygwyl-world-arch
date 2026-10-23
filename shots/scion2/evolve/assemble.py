@@ -99,9 +99,102 @@ def target(char, costume, tid):
         d = pts['toe' + S] - pts['ankle' + S]
         side_on = abs(d[0]) > .9 * abs(d[1]) and abs(d[0]) > .12 * torso
         fv['foot_view_' + S] = (['side', 'threequarter_back'] if back else ['side']) if side_on else (['back', 'threequarter_back'] if back else ['front', 'threequarter'])
+    markers = {k: v.copy() for k, v in pts.items()}
+    # the reference's own figure: its alpha, minus props / labels listed in REF_IGNORE
+    fig = ref[..., 3] > 128
+    ign = np.zeros_like(fig)
+    for x0, y0, x1, y1 in REF_IGNORE.get(tid, []):
+        ign[y0:y1, x0:x1] = True
+    # painted brads -> joint targets: each joint takes the nearest brad within 22% of the torso; else its marker
+    rb = ref_brads(ref)
+    bj = {}
+    used = set()
+    for j in BRAD_JOINTS:
+        if j not in pts or not len(rb):
+            continue
+        d = np.linalg.norm(rb - pts[j], axis=1)
+        for i in np.argsort(d):
+            if d[i] > .22 * torso:
+                break
+            if i not in used:
+                bj[j] = rb[i]; used.add(i)
+                break
+    for j, p in bj.items():
+        pts[j] = p.copy()
+    pts['midhip'] = (pts['hipL'] + pts['hipR']) / 2
+    # the hip region the candidate must fill: from 15% of the spine above the hip line down to the crotch,
+    # across the two hip joints (+ 25%), inside the reference figure
+    sp = pts['neck'] - pts['midhip']
+    down = -sp / (np.linalg.norm(sp) + 1e-9)
+    hl, hr = pts['hipL'], pts['hipR']
+    ex = .25 * (hr - hl)
+    poly = np.array([hl - ex + .15 * sp, hr + ex + .15 * sp, hr + ex + down * .06 * torso, (hl + hr) / 2 + down * .14 * torso,
+                     hl - ex + down * .06 * torso])
+    hm = np.zeros(fig.shape, np.uint8)
+    cv2.fillPoly(hm, [np.round(poly).astype(np.int32)], 1)
+    hip_region = (hm > 0) & fig & ~ign
     return {'char': char, 'costume': costume, 'id': tid, 'pts': pts, 's': s, 'size': (T['w'], T['h']), 'ref': ref,
-            'head_view': head_view, **fv,
+            'markers': markers, 'ref_brads': rb, 'brad_joints': bj, 'fig': fig, 'ignore': ign, 'hip_region': hip_region,
+            'hip_poly': poly, 'head_view': head_view, **fv,
             'sw': sw, 'back': back, 'facing': facing, 'label': T.get('label'), 'scale_prior': (T.get('scale_prior') or {}).get('px_per_cm')}
+
+
+BRAD_JOINTS = ['shoulderL', 'shoulderR', 'elbowL', 'elbowR', 'wristL', 'wristR', 'hipL', 'hipR', 'kneeL', 'kneeR',
+               'ankleL', 'ankleR']
+REF_IGNORE = {'ex.ex_jacket.master/back-view-neutral-stand-with-vape-pen-01': [(10, 222, 32, 262)]}   # the vape pen
+
+
+def ref_brads(ref):
+    """centres of the painted gold brads on a reference painting (hue 16-32, saturated, bright, round, 15-400 px,
+    at least 5 px inside the figure)"""
+    hsv = cv2.cvtColor(ref[..., :3], cv2.COLOR_BGR2HSV)
+    h, s_, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    inner = cv2.erode((ref[..., 3] > 128).astype(np.uint8), np.ones((11, 11), np.uint8)) > 0
+    gold = ((h >= 16) & (h <= 32) & (s_ > 100) & (v > 150) & inner).astype(np.uint8)
+    gold = cv2.morphologyEx(gold, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+    n, lab, st, cen = cv2.connectedComponentsWithStats(gold)
+    out = [cen[i] for i in range(1, n) if 15 <= st[i, 4] <= 400 and .5 < st[i, 2] / max(st[i, 3], 1) < 2 and max(st[i, 2], st[i, 3]) <= 26]
+    return np.array(out, float).reshape(-1, 2)
+
+
+def fig_width(t, P, Q):
+    """the reference figure's width (px) across the bone P->Q: median over 35/50/65%, None if ambiguous"""
+    fig = t['fig']
+    u = (Q - P) / (np.linalg.norm(Q - P) + 1e-9)
+    n = np.array([-u[1], u[0]])
+    H, W = fig.shape
+    ws = []
+    for f in (.35, .5, .65):
+        c = P + f * (Q - P)
+        if not (0 <= c[0] < W and 0 <= c[1] < H) or not fig[int(c[1]), int(c[0])]:
+            continue
+        ext = []
+        for sgn in (1, -1):
+            k = 0
+            while k < 200:
+                q = c + sgn * (k + 1) * n
+                if not (0 <= q[0] < W and 0 <= q[1] < H) or not fig[int(q[1]), int(q[0])]:
+                    break
+                k += 1
+            ext.append(k)
+        ws.append(sum(ext))
+    return float(np.median(ws)) if ws else None
+
+
+WIDTH_FIT = (.8, 1.25)
+
+
+def width_fit(t, card, P, Q, k):
+    """across-bone scale that makes the card as wide as the reference limb there; 1 when the reference width is
+    ambiguous (the limb crosses the body, or is over 1.7x the card)"""
+    rw = fig_width(t, P, Q)
+    cw = (card.wmid or 0) * t['s'] * k
+    if not rw or cw < 1:
+        return 1.0
+    r = rw / cw
+    if r > 1.7 or r < .5:
+        return 1.0
+    return float(np.clip(r, *WIDTH_FIT))
 
 
 # ------------------------------------------------------------------ placing
@@ -132,13 +225,13 @@ def app(M, p):
     return M[:, :2] @ np.asarray(p, float) + M[:, 2]
 
 
-def _aimed(card, P, Q, s, k, rot, mir, stretch=True):
+def _aimed(card, P, Q, s, k, rot, mir, stretch=True, wf=1.0):
     nat = card.len_cm * s * k
     want = np.linalg.norm(Q - P)
     st = float(np.clip(want / nat, *STRETCH)) if stretch else 1.0
     th = math.atan2(Q[1] - P[1], Q[0] - P[0]) + math.radians(rot)
     sc = s * k * card.ppc ** -1
-    M = _aff(card, P, th, sc * st, sc, mir)
+    M = _aff(card, P, th, sc * st, sc * wf, mir)
     return M, th, st, want / nat
 
 
@@ -169,8 +262,9 @@ def place(G, t, lib):
     sc = s * g['k'] / c.ppc
     # build with the card's B as the proximal end
     rev = C.Card(c); rev['A'], rev['B'] = c.B, c.A
-    M = _aff(rev, pts['neck'], th, sc * st, sc, g['mir'])
-    out['torso'] = Placed(key='torso', card=c, g=g, M=M, P=app(M, c.B), Q=app(M, c.A), th=th, st=st, want=want / nat)
+    wf = width_fit(t, c, pts['neck'], pts['midhip'], g['k'])
+    M = _aff(rev, pts['neck'], th, sc * st, sc * wf, g['mir'])
+    out['torso'] = Placed(key='torso', card=c, g=g, M=M, P=app(M, c.B), Q=app(M, c.A), th=th, st=st, want=want / nat, wf=wf)
     spine = pts['neck'] - pts['midhip']
     # pelvis
     c, g = card('pelvis')
@@ -183,7 +277,7 @@ def place(G, t, lib):
         h1, h2 = np.asarray(c.hip1), np.asarray(c.hip2)
         tl, tr = (pts['hipR'], pts['hipL']) if pts['hipR'][0] < pts['hipL'][0] else (pts['hipL'], pts['hipR'])
         sc = s * g['k'] / c.ppc
-        sx = float(np.clip(np.linalg.norm(tr - tl) / (sc * np.linalg.norm(h2 - h1) + 1e-6), .55, 1.15))
+        sx = float(np.clip(np.linalg.norm(tr - tl) / (sc * np.linalg.norm(h2 - h1) + 1e-6), .55, 1.25))
         th = math.atan2(tr[1] - tl[1], tr[0] - tl[0]) + math.radians(g['rot'])
         u = (h2 - h1) / (np.linalg.norm(h2 - h1) + 1e-9)
         Rc = np.array([[u[0], u[1]], [-u[1], u[0]]])            # card hip axis -> +x
@@ -222,10 +316,22 @@ def place(G, t, lib):
                 M = _aff(c, P, math.radians(g['rot']), s * g['k'] / c.ppc, s * g['k'] / c.ppc, g['mir'], flipx=True)
                 th, st, w = math.radians(g['rot']), 1.0, 1.0
             else:
-                M, th, st, w = _aimed(c, P, pts[b], s, g['k'], g['rot'], g['mir'])
-            pl = Placed(key=key, card=c, g=g, M=M, P=app(M, c.A), Q=app(M, c.B), th=th, st=st, want=w)
+                wf = width_fit(t, c, P, pts[b], g['k'])
+                M, th, st, w = _aimed(c, P, pts[b], s, g['k'], g['rot'], g['mir'], wf=wf)
+            pl = Placed(key=key, card=c, g=g, M=M, P=app(M, c.A), Q=app(M, c.B), th=th, st=st, want=w,
+                        wf=wf if not key.startswith(('hand', 'foot')) else 1.0)
             out[key] = pl
             prev = pl
+    return out
+
+
+def card_brads(PL):
+    """every placed card's own painted brads, canvas px: {key: array (n, 2)}"""
+    out = {}
+    for k, p in PL.items():
+        cb = p.card.cbrads
+        b = np.asarray(cb if cb is not None else [], float).reshape(-1, 2)
+        out[k] = b @ p.M[:, :2].T + p.M[:, 2] if len(b) else b
     return out
 
 

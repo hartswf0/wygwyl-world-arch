@@ -215,6 +215,21 @@ def _prep(cid, img, slot, A, B, ppc, erase, trim, pts, brads, kind='kit', ppc_fi
                 ppc = ppc * np.linalg.norm(B2 - A2) / L0
             A, B = A2, B2
             out['why'].append('anchors re-read from the alpha axis')
+    # the card's own brads: a limb's joint ends snap to the brad nearest them (within 15% of the bone), so that
+    # placing A/B on the reference's brads lands brad on brad
+    cb = np.asarray(brads, float).reshape(-1, 2)
+    if slot in ('upper_arm', 'forearm', 'thigh', 'shin', 'hand', 'foot') and len(cb):
+        L0 = np.linalg.norm(B - A)
+        ends = (('A', A), ('B', B)) if slot in ('upper_arm', 'forearm', 'thigh', 'shin') else (('A', A),)
+        for nm, pt in ends:
+            d = np.linalg.norm(cb - pt, axis=1)
+            i = int(np.argmin(d))
+            if d[i] < .15 * L0:
+                if nm == 'A':
+                    A = cb[i].copy()
+                else:
+                    B = cb[i].copy()
+    out['cbrads'] = cb
     L = np.linalg.norm(B - A)
     # kit hands and boots: library px/cm was normalised on anchors that are often wrong; size them by the drawing
     # (hand: wrist eyelet to fingertip 19 cm; boot: 26 cm heel to toe in profile, 11 cm across from the front/back).
