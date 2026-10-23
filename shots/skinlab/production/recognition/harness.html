@@ -133,6 +133,10 @@ async function run(ch, file, U, opts) {
   const harvest = opts.harvest ? HV.cards.filter(c => !c.bad && c.character === ch) : null;
   await P.prepare({ contract: C, library: LIB, imgBase: '/shots/skinlab/', harvest: harvest || undefined });
   if (!PM) PM = await (await fetch('/shots/skinlab/production/recognition/props_map.json', { cache: 'no-store' })).json();
+  // card scales are fixed once per contract: fit them on the rest pose of this skeleton first (as core_check.html / resolve.html do),
+  // so no painting sets every card's size
+  { const cv0 = document.createElement('canvas'); cv0.width = 200; cv0.height = 200;
+    P.renderPose(cv0.getContext('2d'), { contract: C, joints3d: PC.fk(D.skeleton, PC.PN.map(() => 0)), psi: 0, heightPx: 180, x: 100, y: 190, rescale: true }); }
   const out = [];
   for (const t of D.targets) {
     const safe = t.id.replace(/\//g, '__');
@@ -144,7 +148,9 @@ async function run(ch, file, U, opts) {
       const kU = U / t.h, FW = Math.round(Math.max(t.w, t.h) * kU * 2.6), FH = Math.round(U * 2.2), offX = Math.round((FW - t.w * kU) / 2), offY = Math.round(.6 * U);
       const port = makePort(t, sol, kU, offX, offY, 'pose|' + t.id);
       const cv = document.createElement('canvas'); cv.width = FW; cv.height = FH; const ctx = cv.getContext('2d');
-      const jo = joints(D, sol), args = { contract: C, joints3d: jo, port, psi: sol.psi, ground: false, handStates: {} };
+      // the Pose Lab fk() result goes to renderPose as is (its fromPoseLab converts it: head matrix, pelvis height); jo is the same
+      // conversion, for choosing chains and placing props
+      const J = PC.fk(D.skeleton, PC.PN.map(n => sol.params[n] ?? 0)), jo = P.fromPoseLab(J), args = { contract: C, joints3d: J, port, psi: sol.psi, ground: false, handStates: {} };
       const dry = P.renderPose(null, args), view = dry.view, ratios = Object.fromEntries((dry.cards || []).map(c => [c.part, c.projRatio]));
       // harvested chains (leave one painted pose and its family out), forced through the contract's own card slots for this call
       const H = harvest && harvest.filter(c => family(c.source) !== family(t.id));
