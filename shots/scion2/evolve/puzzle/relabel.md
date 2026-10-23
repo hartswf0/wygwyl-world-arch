@@ -1,6 +1,6 @@
 # Pieces whose learned zone disagrees with their library label
 
-Learned from 4 blind fills: a piece's zone is the skeleton zone holding most of its pixels where the blind puzzle put it (read after the fill). Listed when the most frequent zone (>= 2 landings) is not the label.
+Learned from 9 blind fills: a piece's zone is the skeleton zone holding most of its pixels where the blind puzzle put it (read after the fill). Listed when the most frequent zone (>= 2 landings) is not the label.
 
 ## learned: foot (2 pieces) — contact sheet relabel/foot.jpg
 
@@ -14,4 +14,11 @@ Learned from 4 blind fills: a piece's zone is the skeleton zone holding most of 
 | # | piece | library label | landings in shin / all | all zones |
 |---|---|---|---|---|
 | 1 | `poet.04.action.red_black_sunglasses.parts.02/foot-r` | foot | 2 / 2 | shin 2 |
+
+## learned: upper_arm (2 pieces) — contact sheet relabel/upper_arm.jpg
+
+| # | piece | library label | landings in upper_arm / all | all zones |
+|---|---|---|---|---|
+| 1 | `poet.14.exit/3a-torso-rear-3-4` | torso | 2 / 2 | upper_arm 2 |
+| 2 | `harvest.poet.08.main-poses/to-one-side/hand-l` | hand | 2 / 2 | upper_arm 2 |
 
