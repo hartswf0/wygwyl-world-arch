@@ -156,10 +156,11 @@ function centre(port, fr) {
 // A host may declare, per frame, on the actor's frame record a: a.views = {body: 'side'|'front'|'back', head: ...} (the view every card
 // shows, so a swap lands where the host says: hysteresis, planted feet), a.lat = ±1 (which way a side figure faces, one sign for every
 // card, head included) and a.hands = {L: 'grip', R: 'open'} (a hand state: limbs.hand_L.states[state] = {side, front, back}).
+// a.states = {segment: state} picks limbs[k].states[state] for any segment (e.g. a bent-knee card); a.hands names a hand's state
 function cardsOf(k, sk, a) {
-  const m = k.match(/^(hand|mitt)_([LR])$/); if (!m || !sk.states) return sk.cards;
-  const st = a.hands?.[m[2]] || 'open';
-  return sk.states[st] ? { ...sk.cards, ...sk.states[st] } : sk.cards;
+  if (!sk.states) return sk.cards;
+  const m = k.match(/^(hand|mitt)_([LR])$/), st = a.states?.[k] || (m ? a.hands?.[m[2]] || 'open' : null);
+  return st && sk.states[st] ? { ...sk.cards, ...sk.states[st] } : sk.cards;
 }
 function active(k, sk, a, port) {
   const f = a[SEG[k].face] || a.fwd, dot = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
@@ -176,12 +177,13 @@ function active(k, sk, a, port) {
 
 // ---------- placing a card ----------
 // screen = P + R(ang)·(off + s·M·R(-ax)·(q − A)), M mirrors across the card's own A→B line
-function mk(k, c, sk, Pp, ang, s, mir) {
+// sx: an optional shortening along the card's own A→B axis (a declared foreshortening, never below 0.88 by the 12% rule)
+function mk(k, c, sk, Pp, ang, s, mir, sx = 1) {
   const { A, B } = pts(c, sk), ax = Math.atan2(B[1] - A[1], B[0] - A[0]), lab = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1;
-  return { k, c, sk, P: Pp, ang, s, mir, A, B, ax, lab, off: [sk.dx * lab * s / 100, sk.dy * lab * s / 100] };
+  return { k, c, sk, P: Pp, ang, s, mir, sx, A, B, ax, lab, off: [sk.dx * lab * s / 100, sk.dy * lab * s / 100] };
 }
-function fwd(x, q) { let u = rot([q[0] - x.A[0], q[1] - x.A[1]], -x.ax); u = [u[0] * x.s + x.off[0], u[1] * x.s * (x.mir ? -1 : 1) + x.off[1]]; u = rot(u, x.ang); return [x.P[0] + u[0], x.P[1] + u[1]]; }
-function inv(x, p) { let u = rot([p[0] - x.P[0], p[1] - x.P[1]], -x.ang); u = [(u[0] - x.off[0]) / x.s, (u[1] - x.off[1]) / x.s * (x.mir ? -1 : 1)]; u = rot(u, x.ax); return [u[0] + x.A[0], u[1] + x.A[1]]; }
+function fwd(x, q) { let u = rot([q[0] - x.A[0], q[1] - x.A[1]], -x.ax); u = [u[0] * x.s * (x.sx || 1) + x.off[0], u[1] * x.s * (x.mir ? -1 : 1) + x.off[1]]; u = rot(u, x.ang); return [x.P[0] + u[0], x.P[1] + u[1]]; }
+function inv(x, p) { let u = rot([p[0] - x.P[0], p[1] - x.P[1]], -x.ang); u = [(u[0] - x.off[0]) / (x.s * (x.sx || 1)), (u[1] - x.off[1]) / x.s * (x.mir ? -1 : 1)]; u = rot(u, x.ax); return [u[0] + x.A[0], u[1] + x.A[1]]; }
 function scaleOf(k, c, sk, j, pj, port, puppet) {
   const sg = SEG[k], { A, B } = pts(c, sk), lab = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1;
   if (sk.mode === 'true') return port.k / ppcOf(c) * sk.scale;
@@ -231,17 +233,17 @@ function solve(fr, port, style = S.style, puppet = S.puppet) {
   for (const k of segs) {
     const sg = SEG[k], sk = S.skin[k]; if (!sk) continue;
     const ac = active(k, sk, a, port); if (!ac) continue;
-    const Pp = pj[ji[sg.from]], Q = pj[ji[sg.to]], s = scaleOf(k, ac.c, sk, j, pj, port, puppet);
+    const Pp = pj[ji[sg.from]], Q = pj[ji[sg.to]], s = scaleOf(k, ac.c, sk, j, pj, port, puppet), sx = a.sx?.[k] ?? 1;
     const parent = sg.par.find(p => X[p]);
     const sock = parent ? socket(k, X[parent], port, puppet) : null;
     let start = puppet && sock ? sock.p : Pp, ang = Math.atan2(Q[1] - start[1], Q[0] - start[0]);
     const low = puppet && segs.find(q => SEG[q].ik === k && S.skin[q]);
     if (low) {
       const lc = active(low, S.skin[low], a, port);
-      if (lc) { const { A, B } = pts(lc.c, S.skin[low]); const l2 = Math.hypot(B[0] - A[0], B[1] - A[1]) * scaleOf(low, lc.c, S.skin[low], j, pj, port, puppet);
-        const { A: a1, B: b1 } = pts(ac.c, sk); ang = ik2(start, pj[ji[SEG[low].to]], Q, Math.hypot(b1[0] - a1[0], b1[1] - a1[1]) * s, l2, a.bend?.[k.slice(-1)]); }   // a.bend = {L: ±1}: the host fixes which way a folded limb bends on screen
+      if (lc) { const { A, B } = pts(lc.c, S.skin[low]); const l2 = Math.hypot(B[0] - A[0], B[1] - A[1]) * scaleOf(low, lc.c, S.skin[low], j, pj, port, puppet) * (a.sx?.[low] ?? 1);
+        const { A: a1, B: b1 } = pts(ac.c, sk); ang = ik2(start, pj[ji[SEG[low].to]], Q, Math.hypot(b1[0] - a1[0], b1[1] - a1[1]) * s * sx, l2, a.bend?.[k] ?? a.bend?.[k.slice(-1)]); }   // a.bend = {thigh_L: ±1} or {L: ±1}: the host fixes which way a folded limb bends on screen
     }
-    const x = mk(k, ac.c, sk, start, ang + sk.rot * Math.PI / 180, s, ac.mir);
+    const x = mk(k, ac.c, sk, start, ang + sk.rot * Math.PI / 180, s, ac.mir, sx);
     x.view = ac.view; x.want = ac.want; x.parent = parent; x.sockHow = sock?.how; x.sockP = sock?.p;
     x.gap = sock ? hyp(fwd(x, x.A), sock.p) / port.k : 0;
     x.miss = hyp(fwd(x, x.B), Q) / port.k;
@@ -308,7 +310,7 @@ function drawCard(g, x, alpha) {
   g.save(); g.globalAlpha = alpha;
   if (S.farShade && /^far_/.test(x.role || '')) g.filter = `brightness(${S.farShade})`;   // the far limbs a step darker: the legs read as two
   g.translate(x.P[0], x.P[1]); g.rotate(x.ang); g.translate(x.off[0], x.off[1]);
-  g.scale(x.s, x.s * (x.mir ? -1 : 1)); g.rotate(-x.ax);
+  g.scale(x.s * (x.sx || 1), x.s * (x.mir ? -1 : 1)); g.rotate(-x.ax);
   g.drawImage(im, -x.A[0] - (im.pad || 0), -x.A[1]);
   g.restore();
 }
@@ -494,6 +496,178 @@ function stick(g, pj, col, w) {
   g.strokeStyle = col; g.lineWidth = w; g.lineCap = 'round';
   for (const [a, b] of STICK) { const p = pj[ji[a]], q = pj[ji[b]]; g.beginPath(); g.moveTo(p[0], p[1]); g.lineTo(q[0], q[1]); g.stroke(); }
 }
+
+
+// =====================================================================================================================
+// renderPose: one general renderer, any pose through the same puppet (see the API contract at the top of this file)
+// =====================================================================================================================
+const RP = { contract: null, ready: false, key: null, bind: {}, statureCm: null, headCm: null };
+const POSELAB = { pelvis: 'pelvis', hipL: 'hipL', hipR: 'hipR', knL: 'kneeL', knR: 'kneeR', anL: 'ankleL', anR: 'ankleR', heelL: 'heelL', heelR: 'heelR',
+  ballL: 'ballL', ballR: 'ballR', toeL: 'toeL', toeR: 'toeR', waist: 'spineMid', chest: 'chest', neck: 'neckBase', shL: 'shoulderL', shR: 'shoulderR',
+  elL: 'elbowL', elR: 'elbowR', wrL: 'wristL', wrR: 'wristR', headC: 'head', top: 'headTop' };
+// Pose Lab fk() output (X = his left, Y = down, Z = forward) -> renderPose joints (x = his left, y = up, z = forward)
+function fromPoseLab(J) {
+  const o = {}, c = q => [q[0], -q[1], q[2]];
+  for (const [a, b] of Object.entries(POSELAB)) if (J[a]) o[b] = c(J[a]);
+  if (J.tipL) o.tipL = c(J.tipL); if (J.tipR) o.tipR = c(J.tipR);
+  if (J.neck && J.top) o.headBase = c(J.neck.map((v, i) => v + (J.top[i] - v) * .12));
+  const Rh = J._F?.Rh; if (Rh && J.headC) { const f = [Rh[0][2], Rh[1][2], Rh[2][2]]; o.nose = c(J.headC.map((v, i) => v + f[i] * 10)); }
+  return o;
+}
+function applyContract(c) {
+  S.style = c.style || 'hips'; S.fix = c.fix || {}; index();
+  S.skin = {}; for (const [k, l] of Object.entries(c.limbs || {})) S.skin[k] = { ...newSkin(), ...l, cards: { ...(l.cards || {}) } };
+  const st = c.stack || {}; S.stack = Object.fromEntries(VIEWS.map(v => [v, st[v]?.length ? st[v].slice() : STACK0.slice()]));
+  S.K = {}; S.sock = {}; S.cardPpc = null; S.pv++;
+}
+const loaded = im => new Promise(r => { if (!im || im.complete && im.naturalWidth) return r(); const t = setTimeout(r, 15000); im.addEventListener?.('load', () => { clearTimeout(t); r(); }); im.addEventListener?.('error', () => { clearTimeout(t); r(); }); });
+// prepare({contract, library, imgBase}) → Promise: indexes the library, applies the contract, loads every card it names, builds code cards
+async function prepare(o) {
+  if (o.library) { S.lib = o.library.filter(c => !c.gen); }
+  if (o.imgBase != null) P.imgBase = o.imgBase;
+  applyContract(o.contract);
+  const ids = new Set();
+  for (const sk of Object.values(S.skin)) { for (const id of Object.values(sk.cards)) ids.add(id); for (const st of Object.values(sk.states || {})) for (const id of Object.values(st)) ids.add(id); }
+  for (const [id, f] of Object.entries(S.fix)) if (id.startsWith('gen.') && f.from) ids.add(f.from);
+  await Promise.all([...ids].map(id => S.byId[id] && !S.byId[id].gen ? loaded(img(S.byId[id])) : null));
+  rebuildGen(S.skin);
+  RP.contract = o.contract; RP.ready = true; RP.key = null; RP.bind = {};
+  return { cards: ids.size, missing: [...ids].filter(id => !S.byId[id]) };
+}
+const ORDER26 = J;
+function jointArray(o, warn) {
+  const g = n => o[n], j = [];
+  for (const n of ORDER26) {
+    let q = g(n);
+    if (!q && /^(heel|ball|toe)[LR]$/.test(n)) { const s = n.slice(-1), an = g('ankle' + s), kn = g('knee' + s); if (an) { const f = [0, 0, 1]; const d = n.startsWith('heel') ? -5 : n.startsWith('ball') ? 14 : 19; q = [an[0] + f[0] * d, Math.max(0, an[1] - 9), an[2] + f[2] * d]; } }
+    if (!q && n === 'spineMid') { const p = g('pelvis'), nb = g('neckBase'); if (p && nb) q = p.map((v, i) => v + (nb[i] - v) * .33); }
+    if (!q && n === 'chest') { const p = g('pelvis'), nb = g('neckBase'); if (p && nb) q = p.map((v, i) => v + (nb[i] - v) * .7); }
+    if (!q && n === 'headBase') { const nb = g('neckBase'), t = g('headTop'); if (nb && t) q = nb.map((v, i) => v + (t[i] - v) * .12); }
+    if (!q && n === 'head') { const nb = g('neckBase'), t = g('headTop'); if (nb && t) q = nb.map((v, i) => v + (t[i] - v) * .55); }
+    if (!q && n === 'nose') { const h = g('head') || j[ji.head]; if (h) q = [h[0], h[1] - 2, h[2] + 10]; }
+    if (!q) { warn.push('missing joint ' + n); q = [0, 0, 0]; }
+    j.push(q.slice());
+  }
+  return j;
+}
+const nrm3 = v => { const l = len3(v) || 1; return v.map(x => x / l); };
+const cross3 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+function facings(j) {   // body frame x = his left, y = up: forward = left x up
+  const pf = nrm3(cross3(v3(j[ji.hipR], j[ji.hipL]), v3(j[0], j[ji.spineMid]))), tf = nrm3(cross3(v3(j[ji.shoulderR], j[ji.shoulderL]), v3(j[ji.spineMid], j[ji.neckBase])));
+  const hf = nrm3(v3(j[ji.head], j[ji.nose]));
+  return { fwd: tf, pfwd: pf, hfwd: hf };
+}
+// a neutral standing pose with this skeleton's own bone lengths, facing +z: sockets are bound and card scales fixed on it
+function neutralOf(j) {
+  const d = (a, b) => len3(v3(j[ji[a]], j[ji[b]])), av = (a, b) => (d(a + 'L', b + 'L') + d(a + 'R', b + 'R')) / 2;
+  const ankH = Math.min(12, Math.max(6, (j[ji.ankleL][1] - Math.min(j[ji.heelL][1], j[ji.toeL][1]) + j[ji.ankleR][1] - Math.min(j[ji.heelR][1], j[ji.toeR][1])) / 2 || 9));
+  const footL = av('heel', 'toe') || 26, th = av('hip', 'knee'), sh = av('knee', 'ankle'), hy = ankH + th + sh, hh = d('hipL', 'hipR') / 2;
+  const n = {}; n.pelvis = [0, hy, 0];
+  for (const [s, x] of [['L', 1], ['R', -1]]) {
+    n['hip' + s] = [x * hh, hy, 0]; n['knee' + s] = [x * hh, hy - th, 0]; n['ankle' + s] = [x * hh, ankH, 0];
+    n['heel' + s] = [x * hh, 0, -.25 * footL]; n['ball' + s] = [x * hh, 0, .5 * footL]; n['toe' + s] = [x * hh, 0, .75 * footL];
+  }
+  n.spineMid = [0, hy + d('pelvis', 'spineMid'), 0]; n.chest = [0, n.spineMid[1] + d('spineMid', 'chest'), 0]; n.neckBase = [0, n.chest[1] + d('chest', 'neckBase'), 0];
+  const shl = (d('neckBase', 'shoulderL') + d('neckBase', 'shoulderR')) / 2, sw = d('shoulderL', 'shoulderR') / 2, sdrop = Math.sqrt(Math.max(0, shl * shl - sw * sw));
+  for (const [s, x] of [['L', 1], ['R', -1]]) {
+    n['shoulder' + s] = [x * sw, n.neckBase[1] - sdrop, 0]; n['elbow' + s] = [x * (sw + 2), n['shoulder' + s][1] - av('shoulder', 'elbow'), -1];
+    n['wrist' + s] = [x * (sw + 3), n['elbow' + s][1] - av('elbow', 'wrist'), 1];
+  }
+  n.headBase = [0, n.neckBase[1] + d('neckBase', 'headBase'), 0]; n.head = [0, n.headBase[1] + d('headBase', 'head'), 0]; n.headTop = [0, n.head[1] + d('head', 'headTop'), 0];
+  n.nose = [0, n.head[1] - 2, Math.max(8, d('head', 'nose'))];
+  return ORDER26.map(k => n[k]);
+}
+const rotYv = (v, t) => [v[0] * Math.cos(t) + v[2] * Math.sin(t), v[1], -v[0] * Math.sin(t) + v[2] * Math.cos(t)];
+function frameOf(j, f, extra) { return { a: { A: { j, fwd: f.fwd, hfwd: f.hfwd, pfwd: f.pfwd, ...extra } } }; }
+// the yaw of the camera: view + facing (or psi, the Pose Lab's view yaw: +90 = profile facing screen-right)
+function yawOf(o) {
+  if (o.psi != null) return -o.psi;
+  const r = (o.facing || 'right') !== 'left';
+  return { front: 0, back: 180, side: r ? -90 : 90, profile: r ? -90 : 90, threequarter: r ? -45 : 45, threequarter_back: r ? -135 : 135 }[o.view || 'side'] ?? 0;
+}
+function cardViewOf(yaw) { const a = Math.abs((((yaw + 180) % 360) + 360) % 360 - 180); return a <= 67.5 ? 'front' : a >= 112.5 ? 'back' : 'side'; }
+function paintedH(c) {
+  const im = img(c); if (!im || !(im.naturalWidth || im.width)) return null;
+  const w = c.w, h = c.h, o = P.canvas(w, h), g = o.getContext('2d'); g.drawImage(im, 0, 0, w, h);
+  let d; try { d = g.getImageData(0, 0, w, h).data; } catch { return null; }
+  let y0 = h, y1 = 0; for (let y = 0; y < h; y++) for (let x = 0; x < w; x += 2) if (d[(y * w + x) * 4 + 3] > 128) { if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return y1 - y0;
+}
+// one scale per card for every pose: its A→B length over its bone in the neutral pose; heads one painted height in every view
+function rigidScalesFor(nj, headCm) {
+  const fr = frameOf(nj, { fwd: [0, 0, 1], hfwd: [0, 0, 1], pfwd: [0, 0, 1] }), j = joints(fr, 'A'), out = {};
+  const bone = k => len3(v3(j[ji[SEG[k].from]], j[ji[SEG[k].to]]));
+  for (const [k, sk] of Object.entries(S.skin)) { if (!SEG[k]) continue;
+    for (const id of new Set([...Object.values(sk.cards), ...Object.values(sk.states || {}).flatMap(o => Object.values(o))])) { const c = S.byId[id]; if (!c) continue; const { A, B } = pts(c, sk); out[id] = Math.hypot(B[0] - A[0], B[1] - A[1]) / bone(k); } }
+  const hk = S.skin.head; let hcm = headCm;
+  if (hk) { const side = S.byId[hk.cards.side]; if (!hcm && side && out[side.id]) { const h = paintedH(side); if (h) hcm = h / out[side.id]; }
+    if (hcm) for (const id of Object.values(hk.cards)) { const c = S.byId[id], h = c && paintedH(c); if (h) out[id] = h / hcm; } }
+  for (const id in out) if (S.fix[id]?.rigid_ppc && S.fix[id].px_per_cm) out[id] = S.fix[id].px_per_cm;
+  return { ppc: out, headCm: hcm };
+}
+const VERDICT = r => r >= .88 ? 'rotate' : r >= .55 ? 'replace/shorten' : 'dedicated/restage';
+const LIMB = /^(upper_arm|forearm|thigh|shin)_[LR]$/;
+function renderPose(ctx, o) {
+  const warnings = [];
+  if (!RP.ready || (o.contract && o.contract !== RP.contract)) return { cards: [], warnings: ['call PuppetCore.prepare({contract, library}) with this contract first (await it)'] };
+  let src = o.joints3d || {}; if (src.shL || src.knL) src = fromPoseLab(src);
+  let j = jointArray(src, warnings);
+  if (o.ground !== false) { const lo = Math.min(...FEET.map(i => j[i][1])); j = j.map(q => [q[0], q[1] - lo, q[2]]); }
+  const yaw = yawOf(o), view = o.cardView || cardViewOf(yaw), cy = Math.cos(yaw * Math.PI / 180), sy = Math.sin(yaw * Math.PI / 180);
+  // the skeleton's own bone lengths fix the card scales and the bind pose (recomputed only when they change)
+  const nj = neutralOf(j), key = nj.map(q => q.map(v => Math.round(v)).join(',')).join(';');
+  if (key !== RP.key) { const r = rigidScalesFor(nj, o.headCm); S.cardPpc = r.ppc; RP.headCm = r.headCm; RP.key = key; RP.bind = {}; S.sock = {}; RP.statureCm = nj[ji.headTop][1]; }
+  const stature = o.statureCm || RP.statureCm, k = (o.heightPx || 400) / stature;
+  const port = { label: 'rp' + key.length, yaw, k, cx: 0, cz: 0, toward: [sy, 0, cy], right: [cy, 0, -sy],
+    p(q) { const X = q[0] - this.cx, Z = q[2] - this.cz; return [o.x + (X * cy - Z * sy) * k, o.y - q[1] * k, X * sy + Z * cy]; } };
+  S.centre = (pt, fr) => { const q = fr.a.A.j[0]; pt.cx = q[0]; pt.cz = q[2]; };
+  // sockets bind on the neutral pose turned to show the card the way it is drawn now
+  S.bindFrame = (kk, px, pt) => {
+    const v = px.view || 'side', c = px.c, sk = px.sk, mirLeft = sk.mirror !== (true !== cardLeft(c)), want = v === 'side' ? (px.mir === mirLeft ? 'left' : 'right') : v;
+    const id = want + '|' + Math.round(pt.yaw);
+    if (!RP.bind[id]) { const d = { front: pt.toward, back: pt.toward.map(x => -x), right: pt.right, left: pt.right.map(x => -x) }[want], t = Math.atan2(d[0], d[2]);
+      const jj = nj.map(q => rotYv(q, t)), f = rotYv([0, 0, 1], t); RP.bind[id] = frameOf(jj, { fwd: f, hfwd: f, pfwd: f }, { views: { body: v, head: v } }); }
+    return RP.bind[id];
+  };
+  const F = facings(j), lat = Math.sign(dot3(F.pfwd, port.right)) || ((o.facing || 'right') === 'left' ? -1 : 1);
+  const a = { j, ...F, views: { body: view, head: view }, lat: o.facing ? (o.facing === 'left' ? -1 : 1) : lat, hands: o.handStates || {}, bend: {}, sx: {}, states: {} };
+  // per segment: how much of its true length the view shows (the joint atlas verdict), and what the puppet does about it
+  const fr = { a: { A: a } }; port.cx = j[0][0]; port.cz = j[0][2];
+  const jj = joints(fr, 'A'), pj = jj.map(q => port.p(q)), report = {};
+  for (const kk of STYLES[S.style].segs) {
+    const sg = SEG[kk], sk = S.skin[kk]; if (!sg || !sk) continue;
+    const L3 = len3(v3(jj[ji[sg.from]], jj[ji[sg.to]])), r = L3 ? hyp(pj[ji[sg.from]], pj[ji[sg.to]]) / (L3 * k) : 1;
+    let method = 'rotate';
+    if (!LIMB.test(kk)) method = /^(hand|foot)_/.test(kk) ? (r >= .55 ? 'rigid card (own size)' : 'rigid card (own size), end-on: the view\'s ' + view + ' card') : 'body card (' + view + ')';
+    else if (r < .88) {
+      const bent = sk.states?.bent?.[view] && S.byId[sk.states.bent[view]], endon = sk.states?.endon?.[view] && S.byId[sk.states.endon[view]];
+      if (r < .55 && endon) { a.states[kk] = 'endon'; method = 'dedicated end-on card'; }
+      else if (bent) { a.states[kk] = 'bent'; method = 'replacement card (bent)'; }
+      else { a.sx[kk] = Math.max(r, .88); method = r >= .55 ? `declared shortening x${a.sx[kk].toFixed(2)} + overlap` : 'shortened x0.88 + overlap; END-ON: needs a dedicated card or another view';
+        if (r < .55) warnings.push(`${kk}: end-on in ${view} view (shows ${(r * 100) | 0}% of its length) - restage or add a dedicated card`); }
+    }
+    report[kk] = { projRatio: +r.toFixed(3), verdict: VERDICT(r), method };
+  }
+  // hinges that bend across the screen bend the anatomical way: knees forward, elbows back (side and three-quarter views)
+  if (view === 'side' || Math.abs(Math.abs(yaw) - 90) < 50) {
+    const fs = Math.sign(dot3(F.pfwd, port.right)) || a.lat, fa = Math.sign(dot3(F.fwd, port.right)) || a.lat;
+    for (const s of ['L', 'R']) for (const [up, mid, end, sgn] of [['hip', 'knee', 'ankle', -fs], ['shoulder', 'elbow', 'wrist', fa]]) {
+      const u = v3(jj[ji[up + s]], jj[ji[mid + s]]), w = v3(jj[ji[mid + s]], jj[ji[end + s]]), n = cross3(u, w), nl = len3(n) / ((len3(u) * len3(w)) || 1);
+      if (nl < .17 || Math.abs(dot3(nrm3(n), port.toward)) > .5) a.bend[(up === 'hip' ? 'thigh_' : 'upper_arm_') + s] = sgn;   // straight or bending across the screen
+    }
+  }
+  const prevShade = S.farShade; S.farShade = o.farShade ?? .72;
+  const sol = solve(fr, port, S.style, true);
+  if (!sol) { S.farShade = prevShade; return { cards: [], warnings: warnings.concat('no solve') }; }
+  for (const kk of Object.keys(report)) if (!sol.X[kk]) warnings.push(`${kk}: no ${view} card in the contract`);
+  if (ctx) for (const x of sol.order) drawCard(ctx, x, 1);
+  S.farShade = prevShade;
+  const cards = sol.order.map(x => ({ part: x.k, card: x.c.id, view: x.view, role: x.role, mirrored: !!x.mir, ...(report[x.k] || {}), gap_cm: +x.gap.toFixed(1), miss_cm: +x.miss.toFixed(1) }));
+  for (const c of cards) if (c.miss_cm > 12 && LIMB.test(c.part)) warnings.push(`${c.part}: card ends ${c.miss_cm} cm from its joint`);
+  return { cards, warnings, view, yaw, px_per_cm: k, bbox: (() => { const xs = sol.order.flatMap(x => [x.P[0]]), ys = sol.order.flatMap(x => [x.P[1]]); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; })() };
+}
+Object.assign(P, { renderPose, prepare, applyContract, fromPoseLab, neutralOf, yawOf, cardViewOf, rigidScalesFor });
 
 Object.assign(P, { ppcOf, cardsOf, trimmed, holdPoint, clampNeck, S, J, ji, HAND_CM, TOPO, PAR, GRP, GROUPS, VIT, FEET, measure, retarget, joints, SEG, LR, STYLES, STACK0, ARMS, VIEWS, VIEWOF, viewOf, OTHER, STICK,
   NAME, NOT, nameOK, human, painted, IMG, img, AB, pts, cardLeft, index, v3, len3, hyp, rot, makePort, centre, active, mk, fwd, inv, scaleOf, socket, ik2, roleOf, solve,

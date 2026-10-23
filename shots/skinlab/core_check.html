@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Puppet Core Check</title>
+<style>
+:root { --bg: #505060; --ink: #efe6da; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 13px/1.4 system-ui, sans-serif; }
+canvas { display: block; }
+#log { white-space: pre-wrap; font: 11px ui-monospace, monospace; padding: 8px 16px; }
+</style>
+</head>
+<body>
+<canvas id="cv" width="600" height="700"></canvas>
+<div id="log"></div>
+<script src="../rig/pose-core.js"></script>
+<script src="puppet-core.js"></script>
+<script>
+'use strict';
+// A plain host for PuppetCore.renderPose: one painted pose from the Pose Lab batch (shots/rig/poses/<char>.json), solved to
+// joints by PoseCore.fk, drawn by the general renderer. ?id=<target id>&solve=0 ; window.__render(id, solveIdx) for scripts.
+const Q = new URLSearchParams(location.search), P = PuppetCore, cv = document.getElementById('cv'), g = cv.getContext('2d');
+const json = u => fetch(u).then(r => { if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); });
+let DOC = null;
+async function boot() {
+  const [contract, library, doc] = await Promise.all([json(Q.get('contract') || 'contracts/poet.json'), json('library.json'), json(Q.get('poses') || '../rig/poses/poet__red_black_sunglasses.json')]);
+  DOC = doc;
+  const r = await P.prepare({ contract, library });
+  window.__contract = contract;
+  window.__ready = true; document.getElementById('log').textContent = 'ready: ' + JSON.stringify(r);
+  if (Q.get('id')) window.__render(Q.get('id'), +(Q.get('solve') || 0));
+}
+window.__render = (id, si = 0) => {
+  const t = DOC.targets.find(t => t.id === id); if (!t) return { error: 'no target ' + id };
+  const s = t.solves[si]; if (!s) return { error: 'no solve' };
+  const pr = s.pose?.params || s.params, z = PoseCore.fromParams(pr), J = PoseCore.fk(DOC.skeleton, z);
+  g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#505060'; g.fillRect(0, 0, cv.width, cv.height);
+  const res = P.renderPose(g, { contract: window.__contract, joints3d: J, psi: s.psi, heightPx: 560, x: cv.width / 2, y: cv.height - 50 });
+  res.id = id; res.solve = { psi: s.psi, view: s.view, score: s.score ?? t.score };
+  document.getElementById('log').textContent = JSON.stringify(res, null, 1);
+  return res;
+};
+boot().catch(e => { window.__error = String(e && e.stack || e); document.getElementById('log').textContent = window.__error; });
+</script>
+</body>
+</html>
