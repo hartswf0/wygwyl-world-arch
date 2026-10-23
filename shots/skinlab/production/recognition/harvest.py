@@ -53,7 +53,7 @@ def lab_mean(rgb, m):
 
 def harvest():
     files = [f for f in os.listdir(os.path.join(SHOTS, 'rig', 'poses')) if f.startswith(CH + '__') and f.endswith('.json')]
-    lib, skipped, sets = [], [], []
+    lib, skipped, sets, boxes = [], [], [], []
     for fn in sorted(files):
         D = json.load(open(os.path.join(SHOTS, 'rig', 'poses', fn))); costume = fn.split('__', 1)[1][:-5]
         if costume != C.get('costume'): skipped.append({'file': fn, 'why': f'costume {costume} is not the contract costume'}); continue
@@ -98,6 +98,12 @@ def harvest():
                 a_, md = st_[i, cv2.CC_STAT_AREA], rawd[lab_ == i].mean()
                 return a_ > .015 * mask.sum() and (md > 20 or (a_ > .08 * mask.sum() and md > 12))
             keep = [i for i in range(1, n_) if is_prop(i)]
+            # layout only (no pixels are used): where every unclaimed piece of the painting sits, for placing the kit's own prop cards
+            for i in range(1, n_):
+                if st_[i, cv2.CC_STAT_AREA] > .004 * mask.sum():
+                    x_, y_, w_, h_ = (int(v) for v in st_[i, :4]); yy_, xx_ = np.nonzero(lab_ == i)
+                    boxes.append({'source': t['id'], 'box': [x_, y_, w_, h_], 'centroid': [round(float(xx_.mean()), 1), round(float(yy_.mean()), 1)],
+                                  'area_share': round(float(st_[i, cv2.CC_STAT_AREA] / mask.sum()), 3), 'mean_bone_dist_cm': round(float(rawd[lab_ == i].mean()), 1)})
             if keep:
                 km = np.isin(lab_, keep); yy, xx = np.nonzero(km)
                 sx0, sx1, sy0, sy1 = xx.min(), xx.max() + 1, yy.min(), yy.max() + 1
@@ -162,7 +168,7 @@ def harvest():
                             'dir_cam': dir_cam, 'ratio': round(L2 / L3, 3) if L3 else 1.0, 'flex': flex, 'solve_iou': sol.get('iou'),
                             'bad': bool(why), 'why': why})
     json.dump({'about': __doc__.split('\n\n')[0] + ' See shots/skinlab/production/recognition/harvest.py. Cards marked bad stay listed (never deleted).',
-               'skipped': skipped, 'sets': sets, 'cards': lib}, open(os.path.join(SKIN, 'library_harvest.json'), 'w'), indent=1)
+               'skipped': skipped, 'sets': sets, 'prop_boxes': boxes, 'cards': lib}, open(os.path.join(SKIN, 'library_harvest.json'), 'w'), indent=1)
     return lib, skipped
 
 def contact(lib):

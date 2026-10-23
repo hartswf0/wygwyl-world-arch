@@ -12,7 +12,7 @@
 // centre and px/cm); the painting's set piece (flat); the leave-one-family-out filter on harvested cards; framing the whole
 // puppet. All mechanics are PuppetCore.renderPose's (Builder B).
 const P = PuppetCore, PC = PoseCore;
-let LIB = null, HV = null;
+let LIB = null, HV = null, PM = null;
 const NAMES = { pelvis: 'pelvis', hipL: 'hipL', hipR: 'hipR', knL: 'kneeL', knR: 'kneeR', anL: 'ankleL', anR: 'ankleR', heelL: 'heelL', heelR: 'heelR',
   ballL: 'ballL', ballR: 'ballR', toeL: 'toeL', toeR: 'toeR', waist: 'spineMid', neck: 'neckBase', chest: 'chest', shL: 'shoulderL', shR: 'shoulderR',
   elL: 'elbowL', elR: 'elbowR', wrL: 'wristL', wrR: 'wristR', headC: 'head', top: 'headTop', tipL: 'tipL', tipR: 'tipR' };
@@ -40,7 +40,7 @@ function makePort(t, sol, kU, offX, offY, label) {
     p(q) { const r = PC.project([q[0], -q[1], q[2]], psi, ox, oy); return [(r[0] * s + t.cx) * kU + offX, (r[1] * s + t.floor) * kU + offY, r[2]]; } };
 }
 const loadImg = src => new Promise(r => { const im = new Image(); im.onload = () => r(im); im.onerror = () => r(null); im.src = src; });
-async function setPiece(ctx, set, kU, offX, offY) {   // the painting's prop as a flat card: its silhouette in grey kraft, edged
+async function setPieceUNUSED(ctx, set, kU, offX, offY) {   // the painting's prop as a flat card: its silhouette in grey kraft, edged
   const im = await loadImg('/shots/skinlab/' + set.img); if (!im) return false;
   const w = Math.round(set.w * kU), h = Math.round(set.h * kU), o = document.createElement('canvas'); o.width = w + 8; o.height = h + 8; const g = o.getContext('2d');
   g.drawImage(im, 4, 4, w, h); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#c9a26b'; g.fillRect(0, 0, o.width, o.height);
@@ -51,6 +51,73 @@ async function setPiece(ctx, set, kU, offX, offY) {   // the painting's prop as 
   g2.drawImage(o3, 0, 0);
   ctx.drawImage(o2, set.x0 * kU + offX - 4, set.y0 * kU + offY - 4); return true;
 }
+// ---- the kit's own prop cards, placed by the painting's layout (props_map.json, prop_boxes): no pixel of the target painting is drawn
+const PIMG = {};
+const propImg = id => PIMG[id] || (PIMG[id] = loadImg('/shots/kits/cut/' + id + '.webp'));
+function drawAt(ctx, im, cx, cy, w, h, flip) { ctx.save(); ctx.translate(cx, cy); if (flip) ctx.scale(-1, 1); ctx.drawImage(im, -w / 2, -h / 2, w, h); ctx.restore(); }
+async function drawProps(ctx, list, phase, g) {
+  const drawn = [];
+  for (const pr of list || []) {
+    const behind = pr.place === 'box' || pr.place === 'seat' || pr.place === 'stand';
+    if ((phase === 'behind') !== behind) continue;
+    const im = await propImg(pr.card); if (!im) continue;
+    const ar = im.width / im.height;
+    if (pr.place === 'box') {
+      const bx = (g.boxes || []).slice().sort((a, b) => b.area_share - a.area_share)[0]; if (!bx) continue;
+      const [x, y, w, h] = bx.box.map(v => v * g.kU), X = x + g.offX, Y = y + g.offY;
+      const sc = pr.size_cm ? pr.size_cm * g.k / (pr.dim === 'w' ? im.width : im.height) : Math.min(w / im.width, h / im.height);   // real size, else fit the box
+      const ww = im.width * sc, hh = im.height * sc, flip = pr.flip === 'auto' && g.facing === 'left', bottom = pr.size_cm ? g.floorY : Y + h;
+      drawAt(ctx, im, X + w / 2, bottom - hh / 2, ww, hh, flip); drawn.push(pr.card + ' (box)');
+    } else if (pr.place === 'seat') {
+      const hh = pr.size_cm * g.k, ww = hh * ar, pel = g.pelvis;
+      drawAt(ctx, im, pel[0], pel[1] + 4 * g.k - .55 * hh + hh / 2, ww, hh, g.facing === 'left'); drawn.push(pr.card + ' (seat)');
+    } else if (pr.place === 'stand') {
+      const hand = g.hand(pr.hand); if (!hand) continue; const hh = pr.size_cm * g.k, ww = pr.width_cm ? pr.width_cm * g.k : Math.max(4, hh * ar);
+      drawAt(ctx, im, hand.mid[0], g.floorY - hh / 2, ww, hh, false); drawn.push(pr.card + ' (stand)');
+    } else if (pr.place === 'hand' || pr.place === 'hands') {
+      let c;
+      if (pr.place === 'hands') { const a = g.hand('L'), b = g.hand('R'); if (!a || !b) continue; c = [(a.mid[0] + b.mid[0]) / 2, (a.mid[1] + b.mid[1]) / 2]; }
+      else { const h = g.hand(pr.hand); if (!h) continue; c = h.mid; }
+      const hh = pr.size_cm * g.k * (ar < 1 ? 1 : 1 / ar), ww = hh * ar;
+      drawAt(ctx, im, c[0], c[1], ww, hh, false); drawn.push(pr.card + ' (' + pr.place + ')');
+    }
+  }
+  return drawn;
+}
+// ---- harvested limbs, whole chains from ONE source painting (leave-one-family-out); otherwise the chain stays on contract cards
+const VG = v => ({ profile: 'side', side: 'side', front: 'front', threequarter: 'front', back: 'back', threequarter_back: 'back' })[v] || v;
+const CH = s => [{ parts: ['upper_arm_' + s, 'forearm_' + s], opt: ['hand_' + s], j: ['shoulder' + s, 'elbow' + s, 'wrist' + s, 'tip' + s] },
+                 { parts: ['thigh_' + s, 'shin_' + s], opt: ['foot_' + s], j: ['hip' + s, 'knee' + s, 'ankle' + s, 'toe' + s] }];
+function camDir(jo, a, b, port) { const d = jo[b].map((v, i) => v - jo[a][i]), l = Math.hypot(...d) || 1, u = d.map(v => v / l); return [u[0] * port.right[0] + u[2] * port.right[2], -u[1], u[0] * port.toward[0] + u[2] * port.toward[2]]; }
+const cosv = (a, b) => { const la = Math.hypot(...a) || 1, lb = Math.hypot(...b) || 1; return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (la * lb); };
+function pickChains(H, jo, port, view, ratios) {
+  const bySrc = {}; for (const c of H) (bySrc[c.source] ||= []).push(c);
+  const picks = [];
+  for (const s of 'LR') for (const ch of CH(s)) {
+    if (!ch.parts.some(k => (ratios[k] ?? 1) < .88)) continue;          // the chain is seen at full length: contract cards
+    const want = [...ch.parts, ...ch.opt].map((k, i) => ({ k, slot: k.replace(/_[LR]$/, ''), dir: camDir(jo, ch.j[i], ch.j[i + 1], port) }));
+    let best = null;
+    for (const [src, cs] of Object.entries(bySrc)) {
+      const got = []; let ok = true, sum = 0;
+      for (const w of want) {
+        const c = cs.find(c => c.slot === w.slot && c.side === s && VG(c.view) === VG(view));
+        const cs_ = c ? cosv(c.dir_cam, w.dir) : -1;
+        if (ch.parts.includes(w.k)) { if (!c || cs_ < .8) { ok = false; break; } sum += 1 - cs_; got.push({ k: w.k, c, cos: cs_ }); }
+        else if (c && cs_ >= .8) got.push({ k: w.k, c, cos: cs_ });
+      }
+      if (ok && (!best || sum < best.sum)) best = { src, sum, got };
+    }
+    if (best) picks.push(best);
+  }
+  return picks;
+}
+function handFrom(segs, geo, kU, offX, offY) {
+  const hseg = s => segs.find(x => x.k === 'hand_' + s);
+  return s => { if (!s) { const a = hseg('L'), b = hseg('R'); const sm = (geo.boxes.filter(b => b.area_share < .15).sort((a, b) => b.area_share - a.area_share)[0]);
+      if (sm && a && b) { const c = [sm.centroid[0] * kU + offX, sm.centroid[1] * kU + offY], da = Math.hypot(a.end[0] - c[0], a.end[1] - c[1]), db = Math.hypot(b.end[0] - c[0], b.end[1] - c[1]); s = da < db ? 'L' : 'R'; }
+      else s = a && b ? (a.end[1] < b.end[1] ? 'L' : 'R') : a ? 'L' : 'R'; }
+    const h = hseg(s); return h && { side: s, mid: [(h.P[0] + h.end[0]) / 2, (h.P[1] + h.end[1]) / 2] }; };
+}
 function bboxOf(cv) {
   const g = cv.getContext('2d'), d = g.getImageData(0, 0, cv.width, cv.height).data; let x0 = cv.width, y0 = cv.height, x1 = -1, y1 = -1;
   for (let y = 0; y < cv.height; y += 2) for (let x = 0; x < cv.width; x += 2) if (d[(y * cv.width + x) * 4 + 3] > 40) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
@@ -59,11 +126,11 @@ function bboxOf(cv) {
 async function run(ch, file, U, opts) {
   if (!LIB) LIB = await (await fetch('/shots/skinlab/library.json')).json();
   const C = await (await fetch(`/shots/skinlab/contracts/${ch}.json`, { cache: 'no-store' })).json();
-  const D = await (await fetch(`/shots/rig/poses/${file}.json`, { cache: 'no-store' })).json();
+  const D = await (await fetch(`/shots/rig/${opts.poses || 'poses'}/${file}.json`, { cache: 'no-store' })).json();
   if (opts.harvest && !HV) { try { HV = await (await fetch('/shots/skinlab/library_harvest.json', { cache: 'no-store' })).json(); } catch { HV = { cards: [], sets: [] }; } }
   const harvest = opts.harvest ? HV.cards.filter(c => !c.bad && c.character === ch) : null;
   await P.prepare({ contract: C, library: LIB, imgBase: '/shots/skinlab/', harvest: harvest || undefined });
-  const sets = Object.fromEntries((opts.props && HV ? HV.sets : []).map(s => [s.source, s]));
+  if (!PM) PM = await (await fetch('/shots/skinlab/production/recognition/props_map.json', { cache: 'no-store' })).json();
   const out = [];
   for (const t of D.targets) {
     const safe = t.id.replace(/\//g, '__');
@@ -75,9 +142,30 @@ async function run(ch, file, U, opts) {
       const kU = U / t.h, FW = Math.round(Math.max(t.w, t.h) * kU * 2.6), FH = Math.round(U * 2.2), offX = Math.round((FW - t.w * kU) / 2), offY = Math.round(.6 * U);
       const port = makePort(t, sol, kU, offX, offY, 'pose|' + t.id);
       const cv = document.createElement('canvas'); cv.width = FW; cv.height = FH; const ctx = cv.getContext('2d');
-      const set = sets[t.id]; let setDrawn = false; if (set) setDrawn = await setPiece(ctx, set, kU, offX, offY);
-      const H = harvest && harvest.filter(c => family(c.source) !== family(t.id));   // leave one painted pose (and its twin) out
-      const r = P.renderPose(ctx, { contract: C, joints3d: joints(D, sol), port, psi: sol.psi, ground: false, handStates: {}, harvest: H || undefined, harvestExclude: t.id });
+      const jo = joints(D, sol), args = { contract: C, joints3d: jo, port, psi: sol.psi, ground: false, handStates: {} };
+      const dry = P.renderPose(null, args), view = dry.view, ratios = Object.fromEntries((dry.cards || []).map(c => [c.part, c.projRatio]));
+      // harvested chains (leave one painted pose and its family out), forced through the contract's own card slots for this call
+      const H = harvest && harvest.filter(c => family(c.source) !== family(t.id));
+      const picks = H ? pickChains(H, jo, port, view, ratios) : [], saved = {};
+      for (const pk of picks) for (const g of pk.got) {
+        const sk = P.S.skin[g.k]; if (!sk) continue; saved[g.k] ||= { cards: { ...sk.cards }, states: sk.states };
+        if (!P.S.byId[g.c.id]) { P.S.lib.push(g.c); P.S.byId[g.c.id] = g.c; }
+        if (g.c.facing && !g.c.faces) g.c.faces = g.c.facing === 'left' ? 'L' : 'R';
+        sk.cards = { ...sk.cards, [view]: g.c.id }; sk.states = { ...(sk.states || {}), bent: { ...(sk.states?.bent || {}), [view]: g.c.id }, endon: { ...(sk.states?.endon || {}), [view]: g.c.id } };
+        P.S.cardPpc[g.c.id] = g.c.px_per_cm;
+      }
+      for (const id of new Set(picks.flatMap(pk => pk.got.map(g => g.c.id)))) await new Promise(r => { const im = P.img(P.S.byId[id]); if (im.complete && im.naturalWidth) r(); else { im.onload = im.onerror = r; setTimeout(r, 4000); } });
+      // props: the kit's cards, placed by the painting's layout and the puppet's own hands and pelvis
+      const props = (PM.poses || {})[t.id], pel = port.p(jo.pelvis);
+      const geo = { kU, offX, offY, k: port.k, facing: sol.psi % 180 === 0 ? 'camera' : (((sol.psi % 360) + 360) % 360 < 180 ? 'right' : 'left'), pelvis: pel, floorY: t.floor * kU + offY,
+        boxes: (HV?.prop_boxes || []).filter(b => b.source === t.id), hand: null };
+      geo.hand = handFrom(dry.segments || [], geo, kU, offX, offY);
+      const behind = await drawProps(ctx, props, 'behind', geo);
+      const r = P.renderPose(ctx, args);
+      for (const [k, v] of Object.entries(saved)) { P.S.skin[k].cards = v.cards; P.S.skin[k].states = v.states; }
+      geo.hand = handFrom(r.segments || [], geo, kU, offX, offY);
+      const front = await drawProps(ctx, props, 'front', geo);
+      const set = null, setDrawn = false;
       const bb = bboxOf(cv), pb = [offX, offY, offX + t.w * kU, offY + t.h * kU];
       const u = bb ? [Math.min(bb[0], pb[0]), Math.min(bb[1], pb[1]), Math.max(bb[2], pb[2]), Math.max(bb[3], pb[3])] : pb;
       const m = Math.round(.05 * (u[3] - u[1])), crop = [Math.max(0, u[0] - m), Math.max(0, u[1] - m), Math.min(FW, u[2] + m), Math.min(FH, u[3] + m)];
@@ -85,7 +173,8 @@ async function run(ch, file, U, opts) {
       const sh = s => ({ ...s, P: [s.P[0] - crop[0], s.P[1] - crop[1]], Q: [s.Q[0] - crop[0], s.Q[1] - crop[1]], end: [s.end[0] - crop[0], s.end[1] - crop[1]] });
       const psi = sol.psi;
       out.push({ ...base, view: PC.viewKey(psi), psi, facing: psi % 180 === 0 ? (Math.abs(psi) === 180 ? 'away' : 'camera') : ((psi % 360) + 360) % 360 < 180 ? 'right' : 'left',
-        solve_iou: sol.iou, solve_err_cm: sol.mean_err_cm, via: 'PuppetCore.renderPose', set: setDrawn ? set.img : null,
+        solve_iou: sol.iou, solve_err_cm: sol.mean_err_cm, via: 'PuppetCore.renderPose', props: behind.concat(front),
+        chains: picks.map(pk => ({ source: pk.src, parts: pk.got.map(g => g.k + ':' + Math.round(g.cos * 100) + '%') })),
         frame: { kU, paintX: offX - crop[0], paintY: offY - crop[1], w: o.width, h: o.height }, puppet_bbox: bb && [bb[0] - crop[0], bb[1] - crop[1], bb[2] - crop[0], bb[3] - crop[1]],
         segments: (r.segments || []).map(sh), cards: r.cards, warnings: r.warnings, png: o.toDataURL('image/png') });
     } catch (e) { out.push({ ...base, error: 'render failed: ' + e.message }); }

@@ -3,6 +3,7 @@
 //
 //   node shots/skinlab/production/recognition/recognize.mjs                      # every character in CHARACTERS below
 //   node shots/skinlab/production/recognition/recognize.mjs poet                 # one character
+//   POSES=poses_v2 node ... poet                                                  # solves from shots/rig/poses_v2 (Builder B's re-solve)
 //
 // Character-agnostic: a contract (shots/skinlab/contracts/<character>.json) and Pose Lab target files
 // (shots/rig/poses/<character>__<costume>.json) in; renders + per-pose reports out, then compose.py builds
@@ -10,7 +11,8 @@
 //
 // The mechanics are NOT here. Rendering goes through shots/skinlab/puppet-core.js: PuppetCore.renderPose(ctx, {...})
 // (Builder B's general API), with the harvested replacement cards (shots/skinlab/library_harvest.json, harvest.py) filtered
-// leave-one-family-out per pose, and the painting's set piece drawn flat behind the puppet. This file only converts the Pose Lab solve into joints (pose-core.js fk) and a port
+// leave-one-family-out per pose and taken as whole limb chains from one source painting, and the kit's own prop cards
+// (props_map.json) placed by the painting's layout; no pixel of the target painting is drawn. This file only converts the Pose Lab solve into joints (pose-core.js fk) and a port
 // that projects exactly as the Pose Lab does, so the puppet lands on the painting's own floor, centre and scale.
 import { spawn, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -46,7 +48,7 @@ try {
     fs.rmSync(rdir, { recursive: true, force: true }); fs.mkdirSync(rdir, { recursive: true });
     const reports = [];
     for (const file of CHARACTERS[ch]) {
-      const res = await page.evaluate(async (ch, file, U) => harness.run(ch, file, U, { harvest: true, props: true }), ch, file, U);
+      const res = await page.evaluate(async (ch, file, U) => harness.run(ch, file, U, { harvest: true, props: true, poses: process.env.POSES || 'poses' }), ch, file, U);
       for (const r of res) {
         if (r.png) { fs.writeFileSync(path.join(rdir, r.safe + '.png'), Buffer.from(r.png.split(',')[1], 'base64')); delete r.png; }
         reports.push(r);
