@@ -168,5 +168,5 @@ def blind2(ch, keyfile, name='blind2'):
 
 if __name__ == '__main__':
     if '--index' in sys.argv: index()
-    elif '--blind2' in sys.argv: blind2(sys.argv[1], sys.argv[sys.argv.index('--blind2') + 1])
+    elif '--blind2' in sys.argv: blind2(sys.argv[1], sys.argv[sys.argv.index('--blind2') + 1], sys.argv[sys.argv.index('--name') + 1] if '--name' in sys.argv else 'blind2')
     else: compose(sys.argv[1])
