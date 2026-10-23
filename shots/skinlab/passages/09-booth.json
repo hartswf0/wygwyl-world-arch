@@ -1,0 +1,94 @@
+{
+ "id": "09-booth",
+ "version": 1,
+ "about": "Edit decision list for the booth passage of poem 09 (shots/skinlab/production/09-booth/BRIEF.md). Played by shots/skinlab/passage.html. Times are poem seconds (the audio clock); 'map' pairs a poem time with a source frame of the trial (piecewise linear between pairs), so every segment is retimed to the voice. World units are cm: x right, y up, z toward the camera (the Bolas convention); the booth's floor-centre is the origin and an ensemble's z_cm (away from the camera) is world -z.",
+ "poem": "09",
+ "audio": "../stage/audio/09.mp3",
+ "t0": 34.79,
+ "t1": 43.40,
+ "fps": 24,
+ "src_fps": 30,
+ "cadence": 2,
+ "lines": [
+  { "t": [35.10, 36.80], "text": "You help me gather my things to go." },
+  { "t": [37.98, 38.58], "text": "Before I go," },
+  { "t": [38.74, 39.48], "text": "I call on my mother.", "key": "lift lands" },
+  { "t": [40.30, 43.40], "text": "In tears, speaking of an abyss, she's never known.", "key": "hold" }
+ ],
+ "character": { "contract": "contracts/poet.json", "fallback": "contracts/poet.provisional.json", "actor": "A" },
+ "keys": { "setdown": 36.95, "turn": 37.80, "grab": 38.40, "lift": 38.74, "turn_out": 40.00, "hold": 41.40 },
+
+ "segments": [
+  { "name": "carry", "shot": "wide", "trial": "T009", "mirror": true, "rot": 0,
+    "why": "the heavy suitcase, mirrored so the case hangs from the near (left) hand while he walks screen-left along the quay; the trunk leans away from the case",
+    "place": { "joint": "pelvis", "at": [112, 45] },
+    "map": [[34.79, 98], [36.62, 152], [37.40, 179]] },
+  { "name": "turn into the booth", "shot": "wide", "trial": "T014", "mirror": true, "rot": -90,
+    "why": "the quarter turn on the spot, mirrored and rotated: from facing screen-left to his back to us, facing the booth's door",
+    "plant": "ankleL", "blend": 4,
+    "map": [[37.40, 0], [37.96, 30]] },
+  { "name": "reach", "shot": "booth", "trial": "T025", "mirror": true, "rot": 180,
+    "why": "the phone lifted from its rest: mirrored to the right hand, turned to face the payphone on the back panel; the reach is raised to the hook (see warp)",
+    "place": { "joint": "pelvis", "at": [6, -24] },
+    "warp": [{ "joints": ["wristR", "elbowR", "prop:phone"], "add": [0, 44, 0], "src": [12, 23, 31], "weights": { "elbowR": 0.6 } }],
+    "map": [[37.96, 10], [38.40, 25], [38.52, 30]] },
+  { "name": "lift lands", "shot": "booth", "trial": "T025", "mirror": true, "rot": 180,
+    "why": "the handset at the ear: the trial's f32-40 (hand behind the head) is skipped; the blend carries the hand from f30 straight to the ear pose of f44, landing on 'I call'",
+    "plant": "ankleL", "blend": 5,
+    "map": [[38.52, 44], [38.74, 44], [39.62, 62]] },
+  { "name": "turn out", "shot": "booth", "trial": "T014", "mirror": false, "rot": 90,
+    "why": "the half turn through profile, back to front, on the pause before 'In tears'; the right hand keeps the handset at the ear (hold_to_head)",
+    "plant": "ankleL", "blend": 3,
+    "hold_to_head": { "joints": ["wristR", "elbowR"], "ref": { "trial": "T025", "frame": 62, "mirror": true } },
+    "map": [[39.62, 30], [40.38, 80]] },
+  { "name": "in tears", "shot": "booth", "trial": "T025", "mirror": true, "rot": 0,
+    "why": "facing out, the head goes down into the handset (T025 f70-82) slowly, then a dead hold through the line",
+    "plant": "ankleL", "blend": 5,
+    "map": [[40.38, 66], [40.75, 70], [41.70, 82], [43.40, 82]] }
+ ],
+
+ "shots": {
+  "wide": { "t": [34.79, 37.96], "why": "the quay at night, the lit booth, the lamp; he arrives, sets the case down and turns to the door",
+            "cam": { "x": 40, "height": 125, "dist": 820, "ppc": 2.05, "foot_y": 838 } },
+  "booth": { "t": [37.96, 43.40], "why": "cut on the turn to inside the booth: the reach, the lift on 'I call on my mother', the turn out into the light, the hold",
+             "cam": { "x": 4, "height": 140, "dist": 520, "ppc": 3.25, "foot_y": 862 } }
+ },
+
+ "world": {
+  "about": "Ensemble cards at true size (w_cm/h_cm as the ensembles give them), one px/cm per shot; the booth from stage/ensembles/ens.phone_booth.quay.json, the quay from ens.harbour.quay.json, the sky from ens.sky.harbour_night.json",
+  "ensembles": ["../stage/ensembles/ens.sky.harbour_night.json", "../stage/ensembles/ens.harbour.quay.json", "../stage/ensembles/ens.phone_booth.quay.json"],
+  "quay_lip_z": -420,
+  "booth": { "x": 0, "z": 0, "interior_z": [-55, 5] },
+  "quay": { "x": -60, "skip": ["ladder", "lamp R"] },
+  "extra": [
+   { "name": "booth floor", "part": "09.props.phonebooth/steel-grey", "x_cm": 0, "y_cm": 0, "z_cm": 25, "w_cm": 130, "h_cm": 14, "plane": "floor" },
+   { "name": "pavement wedge", "part": "09.props.phonebooth/pavement-grey", "x_cm": 6, "y_cm": -3, "z_cm": -18, "w_cm": 150, "h_cm": 22, "op": 0.85, "plane": "floor" }
+  ]
+ },
+
+ "props": {
+  "case": { "part": "09.props.suitcases-notice/closed-card-2", "w_cm": 58, "h_cm": 52, "grip": [0.5, 0.05], "track": "T009.case", "in": "carry",
+            "why": "the brown leather case, carried by the handle; held while the trial says A.R (mirrored: A.L), then let go and it drops the last centimetres to the pavement and stays" },
+  "hook": { "part": "09.props.phonebooth/phone-hook-black", "w_cm": 10, "h_cm": 9, "on": "booth back" },
+  "handset": { "part": "09.props.phones-chair/receiver", "w_cm": 7.5, "h_cm": 22, "ear": [0.5, 0.1], "mouth": [0.55, 0.92], "grip": [0.45, 0.5],
+               "track": "T025.phone", "in": "reach", "hand": "R",
+               "why": "hangs on the hook where the warped trial puts the phone; from the trial's grab on it travels with the right hand's card; at the ear its earpiece sits at the ear" },
+  "cord": { "part": "09.props.phones-chair/coiled-cord", "from_payphone": [0.69, 0.66], "sag": 14, "w_cm": 3.2 }
+ },
+
+ "layers": {
+  "about": "back to front; 'poet' is the whole puppet in its own per-view stack; the handset is drawn just under the hand that holds it",
+  "inside": ["sky", "far", "water", "quay", "floor", "booth back", "hook", "cord", "handset", "poet", "roof light", "booth frame", "front glass", "case", "lamp"],
+  "outside": ["sky", "far", "water", "quay", "floor", "booth back", "hook", "cord", "handset", "roof light", "booth frame", "front glass", "lamp", "poet", "case"]
+ },
+
+ "light": {
+  "ambient": [34, 44, 74],
+  "lights": [
+   { "name": "booth", "x": 0, "y": 205, "z": -20, "rgb": [255, 214, 150], "r_cm": 150, "power": 1.0 },
+   { "name": "lamp", "x": 190, "y": 330, "z": -10, "rgb": [255, 190, 120], "r_cm": 170, "power": 0.55 },
+   { "name": "moon", "x": -900, "y": 900, "z": -3000, "rgb": [140, 160, 210], "r_cm": 0, "power": 0 }
+  ],
+  "why": "night: everything is pushed to a cold ambient; the booth light is the one warm pool and the poet is inside it from the cut on"
+ }
+}

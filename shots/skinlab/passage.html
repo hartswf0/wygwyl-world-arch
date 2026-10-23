@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Booth Passage</title>
+<style>
+:root{--bg:#0b0a09;--ink:#efe6da;--dim:#9a8d7e;--line:#2a221c;--acc:#e7a35a;--mono:ui-monospace,'JetBrains Mono',monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.4 system-ui,sans-serif}
+#wrap{max-width:1600px;margin:0 auto}
+canvas{display:block;width:100%;height:auto;background:#000}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 10px;border-top:1px solid var(--line)}
+.bar input[type=range]{flex:1;min-width:140px;accent-color:var(--acc)}
+.btn{font:12px var(--mono);color:var(--dim);background:none;border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+.btn.on{color:#1a120a;background:var(--acc);border-color:var(--acc)}
+#info{font:11px var(--mono);color:var(--dim);padding:4px 10px;white-space:pre-wrap}
+body.render .bar,body.render #info{display:none}
+body.render{background:#000}
+body.render #wrap{max-width:none}
+body.render canvas{width:1600px;height:900px}
+</style>
+</head>
+<body>
+<div id="wrap">
+<canvas id="cv" width="1600" height="900"></canvas>
+<div class="bar">
+  <button class="btn" id="play">▶ play</button>
+  <input type="range" id="scrub" min="0" max="0" value="0">
+  <span id="fr" style="font:12px var(--mono);width:120px">0</span>
+  <button class="btn" id="diag" title="skeleton, brads and the measured invariants over the picture">diagnostics</button>
+</div>
+<div id="info"></div>
+</div>
+<audio id="au" preload="auto"></audio>
+<script src="puppet-core.js"></script>
+<script>
+'use strict';
+/* The booth passage player. Loads library.json, a passage EDL (passages/*.json), a character contract (contracts/poet.json,
+   else contracts/poet.provisional.json, else an auto-dress made here), assembles the motion from the Crash Lab bank,
+   and draws the set, the puppet, the props and the light. ?f=N draws frame N only (for rendering); ?dress=poet builds the
+   provisional contract (window.__contract). window.__measure() returns the measured invariants for every frame. */
+const Q = new URLSearchParams(location.search);
+const P = PuppetCore, S = P.S, ji = P.ji, J = P.J;
+const cv = document.getElementById('cv'), g = cv.getContext('2d'), W = 1600, H = 900;
+if (Q.has('f') || Q.has('render')) document.body.classList.add('render');
+const json = async u => { const r = await fetch(u); if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); };
+const tryJson = async u => { try { const r = await fetch(u, { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch { return null; } };
+const IM = {}; const loadImg = src => IM[src] || (IM[src] = Object.assign(new Image(), { src }));
+const waitImg = im => new Promise(r => { if (im.complete) return r(); const t = setTimeout(() => { console.log('image slow', im.src); r(); }, 8000); im.addEventListener('load', () => { clearTimeout(t); r(); }); im.addEventListener('error', () => { clearTimeout(t); r(); }); });
+const okImg = im => im && im.complete && im.naturalWidth > 0;
+const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const smooth = t => t * t * (3 - 2 * t);
+const E = { frames: [], segs: [], shots: {}, parts: {}, ens: {}, trials: {}, K: {}, contract: null, contractFrom: '' };
+
+// ---------- a trial's frames, mirrored, turned, retargeted and placed ----------
+const MIRROR_IDX = J.map(n => { const m = n.match(/^(.*)([LR])$/); return m && J.includes(m[1] + (m[2] === 'L' ? 'R' : 'L')) ? J.indexOf(m[1] + (m[2] === 'L' ? 'R' : 'L')) : J.indexOf(n); });
+const rotY = (v, deg) => { const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a); return [v[0] * c + v[2] * s, v[1], -v[0] * s + v[2] * c]; };
+const mirHeld = h => h ? h.replace(/(L|R)$/, m => m === 'L' ? 'R' : 'L') : h;
+async function trial(id) {
+  if (E.trials[id]) return E.trials[id];
+  const d = P.decode(await json('bank/' + id + '.json'));
+  return E.trials[id] = d;
+}
+function srcAt(seg, t) {   // poem time → source frame (float), piecewise linear on the map
+  const m = seg.map; if (t <= m[0][0]) return m[0][1];
+  for (let i = 1; i < m.length; i++) if (t <= m[i][0]) return lerp(m[i - 1][1], m[i][1], (t - m[i - 1][0]) / ((m[i][0] - m[i - 1][0]) || 1));
+  return m[m.length - 1][1];
+}
+function rawPose(d, sf) {   // a source frame (fractional: the two neighbours mixed)
+  const n = d.frames.length, f0 = clamp(Math.floor(sf), 0, n - 1), f1 = clamp(f0 + 1, 0, n - 1), u = clamp(sf - f0, 0, 1);
+  const A = d.frames[f0], B = d.frames[f1], a = A.a.A, b = B.a.A;
+  const mixv = (p, q) => p.map((v, i) => lerp(v, q[i], u));
+  const pose = { j: a.j.map((q, i) => mixv(q, b.j[i])), fwd: mixv(a.fwd, b.fwd), hfwd: mixv(a.hfwd, b.hfwd), pfwd: mixv(a.pfwd, b.pfwd), p: {} };
+  for (const [k, pa] of Object.entries(A.p || {})) { const pb = (B.p || {})[k] || pa; pose.p[k] = { ...pa, pos: mixv(pa.pos, pb.pos), rot: mixv(pa.rot, pb.rot), held: u < .5 ? pa.held : pb.held }; }
+  return pose;
+}
+function transform(seg, pose, T) {   // retarget → mirror → turn → warp → place
+  let j = Object.keys(E.K).length ? P.retarget(pose.j, E.K) : pose.j.map(q => q.slice());
+  let fw = [pose.fwd, pose.hfwd, pose.pfwd], props = JSON.parse(JSON.stringify(pose.p));
+  if (seg.mirror) {
+    j = MIRROR_IDX.map(i => [-j[i][0], j[i][1], j[i][2]]);
+    fw = fw.map(v => [-v[0], v[1], v[2]]);
+    for (const q of Object.values(props)) { q.pos[0] = -q.pos[0]; q.held = mirHeld(q.held); q.rot = [q.rot[0], -q.rot[1], -q.rot[2]]; }
+  }
+  if (seg.rot) { j = j.map(q => rotY(q, seg.rot)); fw = fw.map(v => rotY(v, seg.rot)); for (const q of Object.values(props)) { q.pos = rotY(q.pos, seg.rot); q.rot[1] += seg.rot; } }
+  for (const w of seg.warp || []) {
+    const sf = pose.sf, [a, pk, b] = w.src, k = sf <= a || sf >= b ? 0 : sf <= pk ? smooth((sf - a) / (pk - a)) : smooth((b - sf) / (b - pk));
+    for (const n of w.joints) {
+      const wt = (w.weights?.[n] ?? 1);
+      if (n.startsWith('prop:')) { const q = props[n.slice(5)]; if (q && !q.held) q.pos = q.pos.map((v, i) => v + w.add[i]); else if (q) q.pos = q.pos.map((v, i) => v + w.add[i] * k); continue; }
+      const i = ji[n]; j[i] = j[i].map((v, c) => v + w.add[c] * k * wt);
+    }
+  }
+  if (T) { j = j.map(q => [q[0] + T[0], q[1], q[2] + T[1]]); for (const q of Object.values(props)) q.pos = [q.pos[0] + T[0], q.pos[1], q.pos[2] + T[1]]; }
+  return { j, fwd: fw[0], hfwd: fw[1], pfwd: fw[2], p: props, sf: pose.sf };
+}
+function headBasis(pose) {
+  const o = pose.j[ji.head], f0 = pose.hfwd, l = Math.hypot(f0[0], f0[2]) || 1, f = [f0[0] / l, 0, f0[2] / l], s = [f[2], 0, -f[0]];
+  return { o, f, s };
+}
+function sampleSeg(i, t) {
+  const seg = E.segs[i], d = E.trials[seg.trial], sf = srcAt(seg, t);
+  const pose = rawPose(d, sf); pose.sf = sf;
+  if (!seg.T) seg.T = [0, 0];
+  const out = transform(seg, pose, seg.T);
+  if (seg.hold_to_head && seg.ref) {   // keep a hand where it sits against the head in the reference pose (a handset at the ear)
+    const b = headBasis(out);
+    for (const [n, loc] of Object.entries(seg.ref)) out.j[ji[n]] = [0, 1, 2].map(c => b.o[c] + b.s[c] * loc[0] + (c === 1 ? loc[1] : 0) + b.f[c] * loc[2]);
+  }
+  out.seg = i; return out;
+}
+async function assemble() {
+  const edl = E.edl;
+  for (const s of edl.segments) await trial(s.trial);
+  E.segs = edl.segments.map(s => ({ ...s, t0: s.map[0][0], t1: s.map[s.map.length - 1][0] }));
+  // reference poses for hold_to_head: the joints in the head's own frame
+  for (const s of E.segs) if (s.hold_to_head) {
+    const r = s.hold_to_head.ref, d = await trial(r.trial), pose = rawPose(d, r.frame); pose.sf = r.frame;
+    const tp = transform({ mirror: r.mirror }, pose, null), b = headBasis(tp);
+    s.ref = Object.fromEntries(s.hold_to_head.joints.map(n => { const v = P.v3(b.o, tp.j[ji[n]]); return [n, [v[0] * b.s[0] + v[2] * b.s[2], v[1], v[0] * b.f[0] + v[2] * b.f[2]]]; }));
+  }
+  // placement: the first segment of a shot is placed by a joint; the rest are re-rooted on the planted foot at the join
+  E.segs.forEach((s, i) => {
+    if (s.place) { s.T = [0, 0]; const a = sampleSeg(i, s.t0), p = a.j[ji[s.place.joint]]; s.T = [s.place.at[0] - p[0], s.place.at[1] - p[2]]; }
+    else if (s.plant) { const prev = sampleSeg(i - 1, E.segs[i - 1].t1); s.T = [0, 0]; const a = sampleSeg(i, s.t0), n = ji[s.plant];
+      s.T = [prev.j[n][0] - a.j[n][0], prev.j[n][2] - a.j[n][2]]; }
+  });
+  const fps = edl.fps, N = Math.round((edl.t1 - edl.t0) * fps) + 1, cad = edl.cadence || 1;
+  E.N = N; E.frames = [];
+  let handset = 'hook', caseState = null;
+  for (let f = 0; f < N; f++) {
+    const fq = Math.floor(f / cad) * cad, t = edl.t0 + fq / fps;
+    let i = E.segs.findIndex(s => t >= s.t0 && t < s.t1); if (i < 0) i = t < E.segs[0].t0 ? 0 : E.segs.length - 1;
+    const s = E.segs[i]; let pose = sampleSeg(i, t);
+    const k = Math.round((t - s.t0) * fps);
+    if (s.blend && i > 0 && E.segs[i - 1].shot === s.shot && k < s.blend) {   // blend in from the previous segment's last pose (root-aligned on the planted foot)
+      const prev = sampleSeg(i - 1, E.segs[i - 1].t1), w = smooth((k + 1) / (s.blend + 1));
+      pose.j = pose.j.map((q, n) => q.map((v, c) => lerp(prev.j[n][c], v, w)));
+      for (const key of ['fwd', 'hfwd', 'pfwd']) { const v = pose[key].map((x, c) => lerp(prev[key][c], x, w)), l = Math.hypot(...v) || 1; pose[key] = v.map(x => x / l); }
+      pose.blendW = w;
+    }
+    const shot = Object.entries(E.edl.shots).find(([, v]) => t >= v.t[0] - 1e-6 && t < v.t[1] - 1e-6)?.[0] || s.shot;
+    E.frames.push({ f, t, tReal: edl.t0 + f / fps, seg: i, segName: s.name, shot, sf: pose.sf, a: { A: { j: pose.j, fwd: pose.fwd, hfwd: pose.hfwd, pfwd: pose.pfwd } }, p: pose.p });
+  }
+}
+
+// ---------- the world ----------
+function partSrc(id) { const p = E.parts[id]; return p ? '../kits/cut/' + p.file : null; }
+function camOf(shot) {
+  const c = E.edl.shots[shot].cam, hz = c.foot_y - c.height * c.ppc;
+  return { ...c, hz, s: z => c.ppc * c.dist / (c.dist - z), p(q) { const s = this.s(q[2]); return [W / 2 + (q[0] - c.x) * s, hz + (c.height - q[1]) * s, q[2]]; } };
+}
+function portFor(cam, fr) {
+  const zp = fr ? fr.a.A.j[0][2] : 0;
+  return { label: 'cam', yaw: 0, k: cam.s(zp), toward: [0, 0, 1], right: [1, 0, 0], cx: 0, cz: 0, p: q => cam.p(q) };
+}
+// a card standing on the floor: x centre, y_cm its foot above the floor, z depth (world, toward the camera)
+function drawStand(id, x, y, z, w, h, cam, o = {}) {
+  const im = loadImg(partSrc(id)); if (!okImg(im)) return null;
+  const s = cam.s(z), hh = h || w * im.naturalHeight / im.naturalWidth, foot = cam.p([x, y, z]);
+  const box = [foot[0] - w * s / 2, foot[1] - hh * s, w * s, hh * s];
+  g.save(); g.globalAlpha = o.op ?? 1; if (o.blend) g.globalCompositeOperation = o.blend;
+  if (o.flip) { g.translate(foot[0], 0); g.scale(-1, 1); g.translate(-foot[0], 0); }
+  g.drawImage(im, ...box);
+  g.restore();
+  if (o.reflect) { g.save(); g.globalAlpha = o.reflect; g.translate(0, foot[1] * 2); g.scale(1, -1); g.drawImage(im, box[0], box[1], box[2], box[3]); g.restore(); }
+  return box;
+}
+function boothLayer(name) { return E.ens.booth.layers.find(l => l.name === name || l.part.endsWith(name)); }
+function drawBoothCard(name, cam, o = {}) {
+  const l = boothLayer(name), b = E.edl.world.booth;
+  return drawStand(l.part, b.x + l.x_cm, l.y_cm, b.z - l.z_cm, l.w_cm, l.h_cm, cam, { op: l.op, reflect: l.reflect?.op ? l.reflect.op * .6 : 0, ...o });
+}
+function drawBack(cam) {
+  const sky = E.ens.sky, hz = cam.hz, par = -(cam.x) * cam.ppc * .06;
+  for (const l of sky.layers) {
+    const im = loadImg(partSrc(l.part)); if (!okImg(im)) continue;
+    g.save(); g.globalAlpha = l.op ?? 1; if (l.blend) g.globalCompositeOperation = l.blend;
+    if (l.fill === 'sky') { const s = Math.max(W / im.naturalWidth, (hz + 40) / im.naturalHeight); g.drawImage(im, W / 2 - im.naturalWidth * s / 2 + par * .3, hz + 40 - im.naturalHeight * s, im.naturalWidth * s, im.naturalHeight * s); }
+    else if (l.fill === 'band') { const k = cam.ppc / 2.093 * .8, w = l.w_px * k, h = l.h_px * k; g.drawImage(im, W / 2 + (l.x_px - 800) * k + par - w / 2, hz + l.y_px - h, w, h); }
+    else if (l.fill === 'far' && l.order !== 'water') { const k = cam.ppc / 2.093 * .8, h = l.h_px * k, w = h * im.naturalWidth / im.naturalHeight; g.drawImage(im, W / 2 + (l.x_px - 800) * k + par * (l.name === 'moon' ? .2 : 1) - w / 2, hz + l.y_px * k - h / 2, w, h); }
+    g.restore();
+  }
+  // water: from the horizon to the quay lip
+  const lipY = cam.p([0, 0, E.edl.world.quay_lip_z])[1];
+  const wl = sky.layers.find(l => l.fill === 'water'), wim = loadImg(partSrc(wl.part));
+  if (okImg(wim)) g.drawImage(wim, -20, hz - 4, W + 40, lipY - hz + 8);
+  for (const l of sky.layers.filter(l => l.order === 'water')) {
+    const im = loadImg(partSrc(l.part)); if (!okImg(im)) continue;
+    const k = (lipY - hz) / 170, h = l.h_px * k, w = h * im.naturalWidth / im.naturalHeight;
+    g.save(); g.globalAlpha = l.op ?? 1; g.globalCompositeOperation = l.blend || 'source-over';
+    g.drawImage(im, W / 2 + (l.x_px - 800) * cam.ppc / 2.093 * .8 + par - w / 2, hz + 2, w, Math.min(h, lipY - hz)); g.restore();
+  }
+}
+function drawQuay(cam) {
+  const q = E.ens.quay, lipZ = E.edl.world.quay_lip_z, lipY = cam.p([0, 0, lipZ])[1], qx = E.edl.world.quay.x;
+  const floor = q.layers.find(l => l.fill === 'floor'), lip = q.layers.find(l => l.fill === 'strip');
+  const fim = loadImg(partSrc(floor.part)); if (okImg(fim)) g.drawImage(fim, -60, lipY - 6, W + 120, H - lipY + 12);
+  const lim = loadImg(partSrc(lip.part)); if (okImg(lim)) { const h = lip.h_cm * cam.s(lipZ); g.drawImage(lim, -40, lipY - 2, W + 80, h); }
+  for (const l of q.layers) if (!l.fill && !(E.edl.world.quay.skip || []).includes(l.name)) drawStand(l.part, qx + l.x_cm, Math.max(0, l.y_cm), lipZ - l.z_cm, l.w_cm, l.h_cm, cam);
+}
+
+// ---------- props ----------
+function handPoint(x, u, v) {   // a point on a placed hand card: u along A→B, v across (fractions of the A→B length)
+  const A = x.A, B = x.B, d = [B[0] - A[0], B[1] - A[1]], n = [-d[1], d[0]];
+  return P.fwd(x, [A[0] + d[0] * u + n[0] * v, A[1] + d[1] * u + n[1] * v]);
+}
+function cardAt(id, wcm, hcm, s, anchor, at, ang) {   // place a prop card: its anchor (fractions of the card) at a screen point, turned by ang
+  const im = loadImg(partSrc(id)); if (!okImg(im)) return null;
+  const w = wcm * s, h = hcm * s;
+  return { im, w, h, at, ang, ax: anchor[0] * w, ay: anchor[1] * h,
+    pt(fx, fy) { const dx = fx * w - this.ax, dy = fy * h - this.ay, c = Math.cos(ang), sn = Math.sin(ang); return [at[0] + dx * c - dy * sn, at[1] + dx * sn + dy * c]; } };
+}
+function drawPlaced(c) { if (!c) return; g.save(); g.translate(c.at[0], c.at[1]); g.rotate(c.ang); g.drawImage(c.im, -c.ax, -c.ay, c.w, c.h); g.restore(); }
+function drawCord(a, b, sag, wpx, id) {   // the coiled cord: slices of the cord card laid along a sagging curve
+  const im = loadImg(partSrc(id)); if (!okImg(im)) return;
+  const mid = [(a[0] + b[0]) / 2, Math.max(a[1], b[1]) + sag], pts = [];
+  for (let i = 0; i <= 60; i++) { const t = i / 60, u = 1 - t; pts.push([u * u * a[0] + 2 * u * t * mid[0] + t * t * b[0], u * u * a[1] + 2 * u * t * mid[1] + t * t * b[1]]); }
+  const k = wpx / im.naturalWidth, tile = im.naturalHeight * k * .5; let run = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p = pts[i], q = pts[i + 1], L = Math.hypot(q[0] - p[0], q[1] - p[1]); if (L < .01) continue;
+    const ang = Math.atan2(q[1] - p[1], q[0] - p[0]) - Math.PI / 2;
+    let done = 0;
+    while (L - done > 1e-3) { const y0 = run % tile, step = Math.min(L - done, tile - y0);
+      g.save(); g.translate(p[0] + (q[0] - p[0]) * done / L, p[1] + (q[1] - p[1]) * done / L); g.rotate(ang);
+      g.drawImage(im, 0, (y0 + tile * .5) / k, im.naturalWidth, step / k + .6, -wpx / 2, 0, wpx, step + .6); g.restore();
+      done += step; run += step; }
+  }
+}
+
+// ---------- one frame ----------
+const ST = { f: 0, playing: false, diag: Q.has('diag'), lastSol: null };
+function solveFrame(fr, cam) {
+  const port = portFor(cam, fr);
+  S.data = { frames: [fr] }; S.bindF = 0;
+  const sol = P.solve(fr, port);
+  return { sol, port };
+}
+function caseAt(f) { return E.caseTrack[f]; }
+function render(f) {
+  const fr = E.frames[f], cam = camOf(fr.shot), inside = fr.shot === 'booth';
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+  g.fillStyle = '#05070c'; g.fillRect(0, 0, W, H);
+  drawBack(cam); drawQuay(cam);
+  for (const l of E.edl.world.extra) drawStand(l.part, E.edl.world.booth.x + l.x_cm, l.y_cm, E.edl.world.booth.z - l.z_cm, l.w_cm, l.h_cm, cam, { op: l.op });
+  const back = drawBoothCard('booth back', cam);
+  const { sol, port } = solveFrame(fr, cam); ST.lastSol = sol; ST.port = port;
+  const ps = E.props[f];
+  // the hook and, while it hangs there, the handset
+  const hk = E.hook && cam.p(E.hook.world);
+  const hs = cam.s(E.hook ? E.hook.world[2] : 0);
+  let handsetCard = null;
+  if (ps.handset === 'hook' && E.hook) handsetCard = cardAt(E.edl.props.handset.part, E.edl.props.handset.w_cm, E.edl.props.handset.h_cm, hs, E.edl.props.handset.grip, hk, 0);
+  else if (sol?.X['hand_' + E.edl.props.handset.hand]) {
+    const hx = sol.X['hand_' + E.edl.props.handset.hand], grip = handPoint(hx, .42, 0), head = sol.pj[ji.head];
+    // the handset lies along the face from ear to mouth when it is up; hanging, it hangs; between, it turns with the hand
+    const up = clamp(1 - (Math.hypot(grip[0] - head[0], grip[1] - head[1]) / port.k - 10) / 30, 0, 1);
+    const handAng = hx.ang + Math.PI / 2, faceAng = Math.atan2(sol.pj[ji.nose][0] - head[0], 1) * 0 + (fr.a.A.hfwd[0] > .3 ? -.35 : fr.a.A.hfwd[0] < -.3 ? .35 : (grip[0] < head[0] ? .28 : -.28));
+    const ang = lerp(handAng - Math.PI / 2 + Math.PI / 2, faceAng, smooth(up));
+    handsetCard = cardAt(E.edl.props.handset.part, E.edl.props.handset.w_cm, E.edl.props.handset.h_cm, port.k, E.edl.props.handset.grip, grip, ang);
+    handsetCard.up = up;
+  }
+  if (E.hook) { const hkc = cardAt(E.edl.props.hook.part, E.edl.props.hook.w_cm, E.edl.props.hook.h_cm, hs, [.5, .25], [hk[0] + 3 * hs, hk[1] - E.edl.props.handset.h_cm * hs * (E.edl.props.handset.grip[1] - .08)], 0); drawPlaced(hkc); }
+  // the cord, from the payphone to the handset's mouth end (behind the poet: it runs back to the wall)
+  if (handsetCard && back) {
+    const c = E.edl.props.cord, a = [back[0] + back[2] * c.from_payphone[0], back[1] + back[3] * c.from_payphone[1]], b = handsetCard.pt(...E.edl.props.handset.mouth);
+    drawCord(a, b, c.sag * hs, c.w_cm * hs, c.part);
+  }
+  const drawPoet = () => {
+    if (!sol) return;
+    const hk = 'hand_' + E.edl.props.handset.hand;
+    let drewHandset = ps.handset === 'hook';
+    if (drewHandset) drawPlaced(handsetCard);
+    for (const x of sol.order) { if (x.k === hk && !drewHandset) { drawPlaced(handsetCard); drewHandset = true; } P.drawCard(g, x, 1); }
+    if (!drewHandset) drawPlaced(handsetCard);
+  };
+  const drawCase = () => { const c = ps.case; if (!c) return; const s = cam.s(c.pos[2]), pr = E.edl.props.case;
+    const anchor = c.held ? pr.grip : [.5, 1], at = c.held ? c.gripPx : cam.p(c.pos);
+    drawPlaced(cardAt(pr.part, pr.w_cm, pr.h_cm, c.held ? port.k : s, anchor, at, 0)); };
+  if (inside) { drawPoet(); drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam); drawBoothCard('front-glass-pane-clear', cam); drawCase(); drawBoothCard('lamp', cam); }
+  else { drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam); drawBoothCard('front-glass-pane-clear', cam); drawBoothCard('lamp', cam);
+    const caseBehind = ps.case && !ps.case.held && ps.case.pos[2] < fr.a.A.j[0][2];
+    if (caseBehind) drawCase(); drawPoet(); if (!caseBehind) drawCase(); }
+  light(cam);
+  E.solved[f] = measureFrame(f, fr, sol, port, cam, handsetCard);
+  if (ST.diag) diag(sol, port);
+  document.getElementById('fr').textContent = `${f}/${E.N - 1} · ${fr.tReal.toFixed(2)} s · ${fr.segName}`;
+}
+function light(cam) {
+  const L = E.edl.light, o = E.lightCv || (E.lightCv = document.createElement('canvas')); o.width = W; o.height = H;
+  const lg = o.getContext('2d'); lg.fillStyle = `rgb(${L.ambient})`; lg.fillRect(0, 0, W, H);
+  lg.globalCompositeOperation = 'lighter';
+  for (const l of L.lights) { if (!l.power) continue;
+    const p = cam.p([l.x, l.y, l.z]), r = l.r_cm * cam.s(l.z), gr = lg.createRadialGradient(p[0], p[1] + r * .35, r * .05, p[0], p[1] + r * .35, r * 1.25);
+    const c = l.rgb.map(v => Math.round(v * l.power));
+    gr.addColorStop(0, `rgba(${c},1)`); gr.addColorStop(.55, `rgba(${c},.55)`); gr.addColorStop(1, `rgba(${c},0)`);
+    lg.fillStyle = gr; lg.beginPath(); lg.ellipse(p[0], p[1] + r * .35, r * 1.25, r * 1.5, 0, 0, 7); lg.fill(); }
+  g.save(); g.globalCompositeOperation = 'multiply'; g.drawImage(o, 0, 0); g.restore();
+  // the roof light itself glows
+  const b = E.edl.world.booth, rl = boothLayer('roof light'), p = cam.p([b.x, rl.y_cm + 20, b.z - rl.z_cm]), r = 90 * cam.s(-rl.z_cm);
+  const gr = g.createRadialGradient(p[0], p[1], 2, p[0], p[1], r); gr.addColorStop(0, 'rgba(255,230,170,.55)'); gr.addColorStop(1, 'rgba(255,230,170,0)');
+  g.save(); g.globalCompositeOperation = 'screen'; g.fillStyle = gr; g.fillRect(p[0] - r, p[1] - r, 2 * r, 2 * r); g.restore();
+}
+function diag(sol, port) {
+  if (!sol) return;
+  g.save(); P.stick(g, sol.pj, '#5fd0ffaa', 2);
+  for (const x of sol.order) if (x.sockP) { g.strokeStyle = x.gap > 2 ? '#ef6a5a' : '#e7c35a'; g.lineWidth = 1.5; g.beginPath(); g.arc(x.sockP[0], x.sockP[1], 3.5, 0, 7); g.stroke(); }
+  g.fillStyle = '#efe6da'; g.font = '13px monospace'; const m = E.solved[ST.f];
+  if (m) g.fillText(`view ${sol.view} · stretch ${(m.stretch * 100).toFixed(0)}% · gap ${m.gap.toFixed(1)} cm · miss ${m.miss.toFixed(1)} cm · wrong view ${m.wrongView}`, 14, 22);
+  g.restore();
+}
+
+// ---------- measures (from the solved puppet, per frame) ----------
+E.solved = [];
+function measureFrame(f, fr, sol, port, cam, hc) {
+  if (!sol) return null;
+  const out = { f, t: fr.tReal, shot: fr.shot, seg: fr.segName, view: sol.view, stretch: 0, gap: 0, miss: 0, wrongView: 0, feet: {}, hand: null, ear: null };
+  for (const x of sol.order) {
+    const tru = port.k / x.c.px_per_cm, r = x.s / tru - 1; if (Math.abs(r) > Math.abs(out.stretch)) out.stretch = r;
+    out.gap = Math.max(out.gap, x.gap); out.miss = Math.max(out.miss, x.miss); if (x.view !== x.want) out.wrongView++;
+  }
+  for (const s of ['L', 'R']) { const x = sol.X['foot_' + s]; if (!x) continue; const a = P.fwd(x, x.A), b = P.fwd(x, x.B);
+    out.feet[s] = { a: [a[0] / port.k, a[1] / port.k], b: [b[0] / port.k, b[1] / port.k], low: Math.min(fr.a.A.j[ji['heel' + s]][1], fr.a.A.j[ji['ball' + s]][1], fr.a.A.j[ji['toe' + s]][1]) }; }
+  const hx = sol.X['hand_' + E.edl.props.handset.hand];
+  if (hx) { const gp = handPoint(hx, .42, 0); out.hand = [gp[0] / port.k, gp[1] / port.k]; }
+  if (hc) { const e = hc.pt(...E.edl.props.handset.ear), head = sol.pj[ji.head]; out.ear = Math.hypot(e[0] - head[0], e[1] - head[1]) / port.k; out.handsetGrip = [hc.at[0] / port.k, hc.at[1] / port.k]; out.handsetUp = hc.up ?? 0; }
+  out.k = port.k;
+  return out;
+}
+window.__measure = async () => {
+  const all = [];
+  for (let f = 0; f < E.N; f++) { ST.f = f; render(f); all.push(E.solved[f]); }
+  // foot slide: a planted foot (its lowest point within 2.5 cm of the floor in both frames, in the same shot) should not move
+  const slides = [];
+  for (let f = 1; f < all.length; f++) { const a = all[f - 1], b = all[f]; if (!a || !b || a.shot !== b.shot) continue;
+    for (const s of ['L', 'R']) { const p = a.feet[s], q = b.feet[s]; if (!p || !q || p.low > 2.5 || q.low > 2.5) continue;
+      slides.push({ f, foot: s, cm: Math.max(Math.hypot(q.a[0] - p.a[0], q.a[1] - p.a[1]), Math.hypot(q.b[0] - p.b[0], q.b[1] - p.b[1])) }); } }
+  const fps = E.edl.fps, lift = E.edl.lines.find(l => l.key === 'lift lands').t[0];
+  const landing = all.findIndex((m, f) => m && m.handsetUp > .95 && m.ear < 9 && all.slice(f, f + 12).every(n => n && n.ear < 9));
+  const grab = E.grabFrame;
+  return {
+    passage: E.edl.id, edl_version: E.edl.version, contract: E.contractFrom, frames: E.N, fps,
+    foot_slide_cm_per_frame: { max: Math.max(0, ...slides.map(s => s.cm)), mean: slides.length ? slides.reduce((t, s) => t + s.cm, 0) / slides.length : 0,
+      over_0_6: slides.filter(s => s.cm > .6).map(s => [s.f, s.foot, +s.cm.toFixed(2)]), planted_samples: slides.length },
+    card_stretch_max: Math.max(...all.map(m => Math.abs(m?.stretch || 0))),
+    brad_gap_cm_max: Math.max(...all.map(m => m?.gap || 0)),
+    joint_miss_cm_max: Math.max(...all.map(m => m?.miss || 0)),
+    wrong_view_frames: all.filter(m => m?.wrongView).map(m => [m.f, m.wrongView]),
+    grab: grab != null ? { frame: grab, t: +(E.edl.t0 + grab / fps).toFixed(3), hand_to_handset_cm: E.grabDist } : null,
+    handset_at_ear: { landing_frame: landing, landing_t: landing >= 0 ? +(E.edl.t0 + landing / fps).toFixed(3) : null, target_t: lift,
+      sync_offset_frames: landing >= 0 ? +((E.edl.t0 + landing / fps - lift) * fps).toFixed(2) : null,
+      ear_cm_max_after_landing: landing >= 0 ? Math.max(...all.slice(landing).map(m => m?.ear ?? 99)) : null },
+    views_by_frame: all.map(m => m?.view?.[0]).join(''),
+    per_frame: all.map(m => m && { f: m.f, seg: m.seg, view: m.view, stretch: +m.stretch.toFixed(3), gap: +m.gap.toFixed(2), miss: +m.miss.toFixed(2), ear: m.ear != null ? +m.ear.toFixed(1) : null })
+  };
+};
+
+// ---------- props over time: the case and the handset ----------
+function propTracks() {
+  E.props = []; E.caseTrack = [];
+  let cas = null, handset = 'hook', grabbed = false;
+  for (let f = 0; f < E.N; f++) {
+    const fr = E.frames[f], seg = E.segs[fr.seg], out = {};
+    // the case: from its trial track while its segment plays; held → hangs from the hand; let go → falls to the pavement and stays
+    const ct = seg.trial === 'T009' ? fr.p.case : null;
+    if (ct && ct.held) cas = { held: ct.held, pos: ct.pos.slice() };
+    else if (cas && cas.held) cas = { held: null, pos: cas.pos.slice(), vy: 0, fall: true };
+    if (cas && !cas.held && cas.fall) { cas.vy += 981 / E.edl.fps / E.edl.fps * 2; cas.pos[1] -= cas.vy; if (cas.pos[1] <= 0) { cas.pos[1] = 0; cas.fall = false; } }
+    out.case = cas && { ...cas, pos: cas.pos.slice() };
+    // the handset: on the hook until the trial's phone is held by the hand, then with the hand (it is never put back)
+    const pt = fr.p.phone;
+    if (!grabbed && pt && pt.held && /^A\.[LR]$/.test(pt.held)) { grabbed = true; E.grabFrame = f; }
+    out.handset = grabbed ? 'hand' : 'hook';
+    E.props.push(out);
+  }
+}
+async function placeHook() {
+  // the handset hangs where the hand lands on it: the hand's grip point on its card at the grab frame, on the booth's back panel
+  if (E.grabFrame == null) return;
+  const fr = E.frames[E.grabFrame], cam = camOf(fr.shot), { sol, port } = solveFrame(fr, cam), hx = sol.X['hand_' + E.edl.props.handset.hand];
+  const gp = handPoint(hx, .42, 0), back = E.edl.world.booth.z - boothLayer('booth back').z_cm + 3, s = cam.s(back);
+  const x = cam.x + (gp[0] - W / 2) / s, y = cam.height - (gp[1] - cam.hz) / s;
+  E.hook = { world: [x, y, back] };
+  // honest check: the trial's own phone position against where the hand lands
+  const ph = fr.p.phone; if (ph) { const q = cam.p(ph.pos); E.trialPhoneToGrip = Math.hypot(q[0] - gp[0], q[1] - gp[1]) / port.k; }
+  E.grabDist = 0;   // by construction the hook is placed under the landing hand; trialPhoneToGrip says how far that is from the trial's phone
+}
+// the case's held position: the hand card's grip (computed after the solve, per frame)
+function caseGrips() {
+  for (let f = 0; f < E.N; f++) { const c = E.props[f].case; if (!c || !c.held) continue;
+    const fr = E.frames[f], cam = camOf(fr.shot), { sol } = solveFrame(fr, cam), hx = sol?.X['hand_' + c.held.slice(-1)];
+    if (hx) { c.gripPx = handPoint(hx, .45, 0); } else c.gripPx = cam.p(c.pos);
+    // where it would stand: if the hanging case reaches the floor it rests on it
+    const s = camOf(fr.shot).s(c.pos[2]), floorY = cam.p([c.pos[0], 0, c.pos[2]])[1], bottom = c.gripPx[1] + E.edl.props.case.h_cm * s * (1 - E.edl.props.case.grip[1]);
+    if (bottom > floorY) c.gripPx = [c.gripPx[0], c.gripPx[1] - (bottom - floorY)];
+    // the world position of the case follows the drawn one, so a release drops it from where it was
+    c.pos[1] = cam.height - (c.gripPx[1] + E.edl.props.case.h_cm * s * (1 - E.edl.props.case.grip[1]) - cam.hz) / s;
+    c.pos[0] = cam.x + (c.gripPx[0] - W / 2) / s;
+  }
+  // re-run the fall from the last held position
+  let last = null;
+  for (let f = 0; f < E.N; f++) { const c = E.props[f].case; if (!c) continue; if (c.held) { last = c; continue; }
+    if (last) { c.pos = last.pos.slice(); c.vy = 0; c.fall = true; last = null; }
+    const prev = E.props[f - 1]?.case;
+    if (prev && !prev.held && f > 0) { c.pos = prev.pos.slice(); c.vy = prev.vy || 0; c.fall = prev.fall; if (c.fall) { c.vy += 981 / E.edl.fps / E.edl.fps; c.pos[1] -= c.vy; if (c.pos[1] <= 0) { c.pos[1] = 0; c.fall = false; } } }
+  }
+}
+
+// ---------- the character contract ----------
+function applyContract(c) {
+  S.style = c.style || 'hips';
+  S.fix = c.fix || {};
+  P.index();
+  S.skin = {};
+  for (const [k, l] of Object.entries(c.limbs || {})) S.skin[k] = { ...P.newSkin(), ...l, cards: { ...(l.cards || {}) } };
+  const st = c.stack || {}; S.stack = Object.fromEntries(P.VIEWS.map(v => [v, st[v]?.length ? st[v].slice() : P.STACK0.slice()]));
+  E.K = c.proportions?.K || {};
+}
+async function provisional() {
+  // auto-dress the poet the way the Skin Lab's dress('poet') does: one costume, each view from the sheet most of its cards
+  // came from, bone lengths read at trial T001 frame 0 (the lab's first trial), gaps kitbashed, torso and hips built by code
+  const d = await trial('T001'); S.data = d; S.actor = 'A'; S.preset = 'bolas'; S.K = {}; S.fix = {};
+  P.index(); P.measureActor(d.frames[0]);
+  const skin = P.dress('poet', d.frames[0]);
+  S.skin = skin; S.preset = 'cards'; const K = P.presetK('cards');
+  const lim = {}; for (const [k, sk] of Object.entries(skin)) lim[k] = { cards: sk.cards, src: Object.fromEntries(Object.keys(sk.cards).map(v => [v, sk.src?.[v] || 'kit'])), mode: sk.mode, scale: sk.scale, rot: sk.rot, dx: sk.dx, dy: sk.dy, mirror: sk.mirror, swap: sk.swap };
+  const head = skin.head?.cards?.front && S.byId[skin.head.cards.front];
+  return { character: 'poet', costume: (() => { const n = {}; for (const sk of Object.values(skin)) for (const id of Object.values(sk.cards)) { const c = S.byId[id]; if (c?.character === 'poet' && c.costume) n[c.costume] = (n[c.costume] || 0) + 1; } return Object.keys(n).sort((a, b) => n[b] - n[a])[0]; })(),
+    height_cm: +(P.GROUPS.includes('shin') ? (8 + ['shin', 'thigh', 'torso', 'head'].reduce((t, gk) => t + S.rec[gk] * (K[gk] ?? 1), 0)).toFixed(1) : 0),
+    style: 'hips', proportions: { preset: 'cards', K }, bind_frame: 0, bind_trial: 'T001',
+    stack: { side: P.STACK0.slice(), front: P.STACK0.slice(), back: P.STACK0.slice() }, limbs: lim, fix: {},
+    face: { head: head?.id || null, painted: head ? !!P.painted(head) : null, features: { eye: null, brow: null, mouth: null, nose: null } },
+    claims_by: 'pixels', provisional: true,
+    about: 'PROVISIONAL: auto-dressed by shots/skinlab/passage.html?dress=poet the way the Skin Lab dress(\'poet\') does (style hips, preset cards). No claim here is settled by a person; contracts/poet.json (Builder A) replaces it when it exists.',
+    invariants: {} };
+}
+// sockets are bound per view, on a neutral standing pose turned to that view (the lab binds at one frame for every view)
+function bindFrames() {
+  const d = E.trials.T025, base = rawPose(d, 0); base.sf = 0;
+  const mk = yaw => { const p = transform({ rot: yaw }, base, [0, 0]); return { a: { A: { j: p.j, fwd: p.fwd, hfwd: p.hfwd, pfwd: p.pfwd } } }; };
+  const F = { front: mk(0), back: mk(180), right: mk(90), left: mk(-90) };
+  S.bindFrame = (k, px) => {
+    const v = px.view || 'side';
+    if (v !== 'side') return F[v];
+    // a side card: bind facing the way that gives this card its current mirror
+    const c = px.c, sk = px.sk, mirLeft = sk.mirror !== (true !== P.cardLeft(c));
+    return px.mir === mirLeft ? F.left : F.right;
+  };
+}
+
+// ---------- boot ----------
+async function boot() {
+  console.log('stage', 'E.edl = await json(', performance.now()|0);
+  E.edl = await json(Q.get('p') || 'passages/09-booth.json');
+  const cat = await json('../kits/cut/catalog.json');
+  for (const s of Object.values(cat.sheets)) for (const p of s.parts) E.parts[p.id] = p;
+  const [sky, quay, booth] = await Promise.all(E.edl.world.ensembles.map(json));
+  E.ens = { sky, quay, booth };
+  S.lib = await json('library.json'); P.index();
+  let c = null;
+  if (Q.get('dress')) { c = await provisional(); E.contractFrom = 'auto-dress (this page)'; }
+  else {
+    c = await tryJson(E.edl.character.contract); E.contractFrom = E.edl.character.contract;
+    if (!c) { c = await tryJson(E.edl.character.fallback); E.contractFrom = E.edl.character.fallback; }
+    if (!c) { c = await provisional(); E.contractFrom = 'auto-dress (this page)'; }
+  }
+  window.__contract = c; E.contract = c;
+  console.log('stage', 'applyContract(c);', performance.now()|0);
+  applyContract(c);
+  S.actor = 'A'; S.puppet = true;
+  await trial('T025');
+  // cards built by code need the skeleton's measures at the contract's proportions
+  S.preset = 'custom'; S.K = E.K; P.measureActor(E.trials.T025.frames[0]); S.K = E.K;
+  const srcs = Object.values(S.skin).flatMap(sk => Object.values(sk.cards)).map(id => S.byId[id]).filter(Boolean);
+  await Promise.all(srcs.filter(c => !c.gen).map(c => waitImg(P.img(c))));
+  const torsoSrc = S.lib.filter(c => c.character === c.character && !c.gen && (c.slot === 'torso' || c.slot === 'pelvis') && c.character === 'poet').slice(0, 40);
+  await Promise.all(torsoSrc.map(c => waitImg(P.img(c))));
+  for (const id of Object.keys(S.byId)) if (id.startsWith('gen.')) delete S.byId[id];
+  S.lib = S.lib.filter(c => !c.gen);
+  P.rebuildGen(S.skin);
+  S.K = {};   // the assembled frames are retargeted already
+  S.pv++;
+  console.log('stage', 'bindFrames();', performance.now()|0);
+  bindFrames();
+  console.log('stage', 'await assemble();', performance.now()|0);
+  await assemble();
+  console.log('stage', 'propTracks();', performance.now()|0);
+  propTracks();
+  // every image the passage draws
+  const ids = new Set([...E.ens.sky.layers, ...E.ens.quay.layers, ...E.ens.booth.layers, ...E.edl.world.extra].map(l => l.part));
+  for (const p of Object.values(E.edl.props)) if (p.part) ids.add(p.part);
+  await Promise.all([...ids].map(id => waitImg(loadImg(partSrc(id)))));
+  console.log('stage', 'await placeHook();', performance.now()|0);
+  await placeHook();
+  console.log('stage', 'caseGrips();', performance.now()|0);
+  caseGrips();
+  document.getElementById('scrub').max = E.N - 1;
+  const au = document.getElementById('au'); au.src = E.edl.audio;
+  window.__ready = true; window.__N = E.N; window.__E = E;
+  const f0 = Q.has('f') ? +Q.get('f') : 0; ST.f = f0; render(f0);
+  info();
+}
+function info() {
+  const c = E.contract;
+  document.getElementById('info').textContent = `${E.edl.id} v${E.edl.version} · ${E.N} frames at ${E.edl.fps} fps · contract ${E.contractFrom}${c.provisional ? ' (provisional)' : ''} · head ${c.face?.head}\n`
+    + E.segs.map(s => `${s.name}: ${s.trial} ${s.mirror ? 'mirrored ' : ''}rot ${s.rot} · ${s.t0}–${s.t1} s · src ${s.map[0][1]}–${s.map[s.map.length - 1][1]}`).join('\n');
+}
+window.__render = f => { ST.f = f; render(f); return true; };
+// playback: the audio is the clock
+const au = document.getElementById('au');
+function tick() {
+  if (ST.playing) { const t = au.currentTime; if (t >= E.edl.t1 || au.ended) { ST.playing = false; au.pause(); document.getElementById('play').textContent = '▶ play'; }
+    const f = clamp(Math.round((t - E.edl.t0) * E.edl.fps), 0, E.N - 1); if (f !== ST.f) { ST.f = f; render(f); document.getElementById('scrub').value = f; } }
+  requestAnimationFrame(tick);
+}
+document.getElementById('play').onclick = () => {
+  ST.playing = !ST.playing; document.getElementById('play').textContent = ST.playing ? '❚❚ pause' : '▶ play';
+  if (ST.playing) { au.currentTime = E.edl.t0 + ST.f / E.edl.fps; au.play(); } else au.pause();
+};
+document.getElementById('scrub').oninput = e => { ST.f = +e.target.value; render(ST.f); };
+document.getElementById('diag').onclick = e => { ST.diag = !ST.diag; e.target.classList.toggle('on', ST.diag); render(ST.f); };
+addEventListener('keydown', e => { if (e.key === 'ArrowRight') { ST.f = Math.min(E.N - 1, ST.f + 1); render(ST.f); } if (e.key === 'ArrowLeft') { ST.f = Math.max(0, ST.f - 1); render(ST.f); } if (e.key === ' ') { e.preventDefault(); document.getElementById('play').click(); } });
+boot().catch(e => { console.error(e); window.__error = String(e.stack || e); document.getElementById('info').textContent = 'error: ' + e.message; });
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
