@@ -90,7 +90,12 @@ function transform(seg, pose, T) {   // retarget → neck → mirror → turn �
   if (seg.upright && pose.up0) {   // the trunk and head held nearer the trial's first (standing) pose: the source bows to a table we do not have
     const w = seg.upright.w, U = ['spineMid', 'chest', 'neckBase', 'shoulderL', 'shoulderR', 'headBase', 'head', 'headTop', 'nose'], free = (seg.upright.free || []).map(s => seg.mirror ? (s === 'L' ? 'R' : 'L') : s);
     const p0 = j[0], q0 = pose.up0[0], dS = {};
+    const H = ['headBase', 'head', 'headTop', 'nose'], hw = seg.upright.head_w ?? w, nb0 = j[ji.neckBase].slice();
+    const relBow = Object.fromEntries(H.map(n => [n, P.v3(nb0, j[ji[n]])]));
     for (const n of U) { const i = ji[n], t = pose.up0[i].map((v, c) => v - q0[c] + p0[c]); dS[n] = t.map((v, c) => (v - j[i][c]) * w); j[i] = j[i].map((v, c) => v + dS[n][c]); }
+    const nb = j[ji.neckBase];   // the head: its offsets from the neck, mixed between upright and bowed, each kept at its own length
+    for (const n of H) { const up = P.v3(pose.up0[ji.neckBase], pose.up0[ji[n]]), m = up.map((v, c) => lerp(relBow[n][c], v, hw)), l = P.len3(m) || 1, L = P.len3(up);
+      j[ji[n]] = nb.map((v, c) => v + m[c] / l * L); }
     for (const s of free) for (const n of ['elbow', 'wrist']) { const i = ji[n + s]; j[i] = j[i].map((v, c) => v + dS['shoulder' + s][c]); }
     fw[1] = fw[1].map((v, c) => lerp(v, pose.up0h[c], w));
   }
@@ -102,7 +107,7 @@ function transform(seg, pose, T) {   // retarget → neck → mirror → turn �
   if (seg.rot) { j = j.map(q => rotY(q, seg.rot)); fw = fw.map(v => rotY(v, seg.rot)); for (const q of Object.values(props)) { q.pos = rotY(q.pos, seg.rot); q.rot[1] += seg.rot; } }
   const lens0 = { L: armLens(j, 'L'), R: armLens(j, 'R') }, moved = new Set();
   for (const w of seg.warp || []) {
-    const sf = pose.sf, [a, pk, b] = w.src, k = sf <= a || sf >= b ? 0 : sf <= pk ? smooth((sf - a) / (pk - a)) : smooth((b - sf) / (b - pk));
+    const sf = pose.sf, [a, pk, b] = w.src || [0, 0, 0], k = w.const ? 1 : sf <= a || sf >= b ? 0 : sf <= pk ? smooth((sf - a) / (pk - a)) : smooth((b - sf) / (b - pk));
     for (const n of w.joints) {
       const wt = (w.weights?.[n] ?? 1);
       if (n.startsWith('prop:')) { const q = props[n.slice(5)]; if (q && !q.held) q.pos = q.pos.map((v, i) => v + w.add[i]); else if (q) q.pos = q.pos.map((v, i) => v + w.add[i] * k); continue; }
@@ -187,13 +192,16 @@ async function assemble() {
       pose.j = pose.j.map((q, n) => q.map((v, c) => lerp(prev.j[n][c], v, w)));
       for (const key of ['fwd', 'hfwd', 'pfwd']) { const v = pose[key].map((x, c) => lerp(prev[key][c], x, w)), l = Math.hypot(...v) || 1; pose[key] = v.map(x => x / l); }
       pose.blendW = w;
+      if (pose.tips && !prev.tips) for (const sd of Object.keys(pose.tips)) {   // an aimed hand turns in with the blend, from where the forearm pointed it
+        const e = prev.j[ji['elbow' + sd]], wr = prev.j[ji['wrist' + sd]], d = P.v3(e, wr), l = P.len3(d) || 1, nat = wr.map((v, c) => v + d[c] / l * 18);
+        pose.tips[sd] = pose.tips[sd].map((v, c) => lerp(nat[c], v, w)); }
       // a blend shortens the arms on the way: put each arm back at its own lengths, the elbow toward where the blend put it
       for (const sd of ['L', 'R']) fixArm(pose.j, sd, E.target.upper_arm, E.target.forearm, pose.j[ji['elbow' + sd]].map((v, c) => v - (c === 1 ? 10 : 0)));
     }
     const shot = Object.entries(E.edl.shots).find(([, v]) => t >= v.t[0] - 1e-6 && t < v.t[1] - 1e-6)?.[0] || s.shot;
     const fy = E.edl.shots[shot]?.floor_y || 0;   // inside the booth he stands on its floor plate, not the pavement
     if (fy) { pose.j = pose.j.map(q => [q[0], q[1] + fy, q[2]]); if (pose.tips) for (const k in pose.tips) pose.tips[k] = [pose.tips[k][0], pose.tips[k][1] + fy, pose.tips[k][2]]; }
-    E.frames.push({ f, t, tReal: edl.t0 + f / fps, seg: i, segName: s.name, shot, sf: pose.sf, a: { A: { j: pose.j, fwd: pose.fwd, hfwd: pose.hfwd, pfwd: pose.pfwd, hands: s.hands || null, tips: pose.tips || null } }, p: pose.p });
+    E.frames.push({ f, t, tReal: edl.t0 + f / fps, seg: i, segName: s.name, shot, sf: pose.sf, a: { A: { j: pose.j, fwd: pose.fwd, hfwd: pose.hfwd, pfwd: pose.pfwd, hands: s.hands || null, tips: pose.tips || null, bend: s.bend || null } }, p: pose.p });
   }
 }
 
@@ -355,10 +363,11 @@ function render(f) {
   }
   if (E.hook) { const hkc = cardAt(E.edl.props.hook.part, E.edl.props.hook.w_cm, E.edl.props.hook.h_cm, hs, [.5, .25], [hk[0] + 3 * hs, hk[1] - E.edl.props.handset.h_cm * hs * (E.edl.props.handset.grip[1] - .08)], 0); drawPlaced(hkc); }
   // the cord, from the payphone to the handset's mouth end (behind the poet: it runs back to the wall)
-  const cordOver = !!E.segs[fr.seg].cord_over;
-  const drawTheCord = () => { if (!handsetCard || !back) return;
+  const cordOver = !!E.segs[fr.seg].cord_over || (E.edl.props.cord.over_in_hand && ps.handset === 'hand');
+  E.cordDrawn = E.cordDrawn || []; E.cordDrawn[f] = false;
+  const drawTheCord = () => { if (!handsetCard || !back) return; E.cordDrawn[f] = true;
     const c = E.edl.props.cord, a = [back[0] + back[2] * c.from_payphone[0], back[1] + back[3] * c.from_payphone[1]], b = handsetCard.pt(...E.edl.props.handset.mouth);
-    drawCord(a, b, (cordOver ? E.segs[fr.seg].cord_over.sag ?? c.sag : c.sag) * hs, c.w_cm * hs, c.part); };
+    drawCord(a, b, (E.segs[fr.seg].cord_over?.sag ?? c.sag) * hs, c.w_cm * hs, c.part); };
   if (!cordOver) drawTheCord();   // behind the poet: it runs back to the wall
   const drawPoet = () => {
     if (!sol) return;
@@ -425,6 +434,9 @@ function measureFrame(f, fr, sol, port, cam, hc) {
   if (hx) { const gp = handPoint(hx, .42, 0); out.hand = [gp[0] / port.k, gp[1] / port.k]; }
   if (hc && E.props[f].handset === 'hand') { const e = hc.pt(...E.edl.props.handset.ear), head = earPx(fr, cam, E.edl.props.handset.hand, sol); out.ear = Math.hypot(e[0] - head[0], e[1] - head[1]) / port.k; out.handsetGrip = [hc.at[0] / port.k, hc.at[1] / port.k]; out.handsetUp = hc.up ?? 0; }
   out.k = port.k;
+  const hx2 = sol.X.head, tx = sol.X.torso;
+  out.headCard = hx2 && hx2.c.id; out.headScale = hx2 && +(hx2.s / port.k).toFixed(4); out.torsoScale = tx && +(tx.s / port.k).toFixed(4); out.torsoCard = tx && tx.c.id;
+  out.cord = !!E.cordDrawn?.[f]; out.handsetAt = hc ? [+(hc.at[0] / port.k).toFixed(1), +(hc.at[1] / port.k).toFixed(1)] : null; out.handsetState = E.props[f].handset;
   return out;
 }
 window.__measure = async () => {
@@ -455,6 +467,17 @@ window.__measure = async () => {
       sync_offset_frames: landing >= 0 ? +((E.edl.t0 + landing / fps - lift) * fps).toFixed(2) : null,
       ear_cm_max_after_landing: landing >= 0 ? Math.max(...all.slice(landing).map(m => m?.ear ?? 99)) : null },
     views_by_frame: all.map(m => m?.view?.[0]).join(''),
+    acceptance_lift: (() => {   // the critic's acceptance condition for the lift (round 2), checked per frame
+      const R = all.slice(84, Math.min(all.length, 206)), byView = {};
+      for (const m of all) if (m?.headCard) (byView[m.view] ||= new Set()).add(m.headCard + '@' + m.headScale);
+      const hs = all.map(m => m?.handsetAt), moves = [];
+      for (let f = 85; f < Math.min(all.length, 100); f++) if (hs[f] && hs[f - 1] && (hs[f][0] !== hs[f - 1][0] || hs[f][1] !== hs[f - 1][1])) moves.push([f, Math.hypot(hs[f][0] - hs[f - 1][0], hs[f][1] - hs[f - 1][1]).toFixed(1) + ' cm']);
+      const sideRun = all.filter(m => m?.view === 'side' && m.shot === 'booth');
+      return { cord_drawn_every_frame_84_205: R.every(m => m?.cord), frames_without_cord: R.filter(m => m && !m.cord).map(m => m.f),
+        head_cards_per_view_at_scale: Object.fromEntries(Object.entries(byView).map(([v, s]) => [v, [...s]])),
+        torso_scale_range_booth_side: sideRun.length ? [Math.min(...sideRun.map(m => m.torsoScale)), Math.max(...sideRun.map(m => m.torsoScale))] : null,
+        handset_moves_f85_99: moves, grab_frame: E.grabFrame };
+    })(),
     worst_stretch: (() => { const m = all.reduce((a, b) => Math.abs(b?.stretch || 0) > Math.abs(a?.stretch || 0) ? b : a, null); return m && { f: m.f, card: m.stretchCard, ratio: +(1 + m.stretch).toFixed(3) }; })(),
     worst_miss: (() => { const m = all.reduce((a, b) => (b?.miss || 0) > (a?.miss || 0) ? b : a, null); return m && { f: m.f, seg: m.missCard, cm: +m.miss.toFixed(1) }; })(),
     per_frame: all.map(m => m && { f: m.f, seg: m.seg, view: m.view, stretch: +m.stretch.toFixed(3), gap: +m.gap.toFixed(2), miss: +m.miss.toFixed(2), ear: m.ear != null ? +m.ear.toFixed(1) : null })
@@ -560,6 +583,29 @@ function bindFrames() {
   };
 }
 
+// ---------- one scale per card ----------
+// Each card is drawn at one scale for the whole passage: its A→B length over its bone's length in the neutral pose (the contract's
+// proportions). Heads are matched across views by painted height (the side head's, at that scale), so the three heads are one size.
+async function rigidScales() {
+  if (E.edl.rigid === false) return;
+  const fr = S.bindFrame('torso', { view: 'front' }), j = P.joints(fr, S.actor), out = {};
+  const bone = k => P.len3(P.v3(j[ji[P.SEG[k].from]], j[ji[P.SEG[k].to]]));
+  const paintedH = c => { const im = P.img(c); if (!im.naturalWidth) return null; const o = document.createElement('canvas'); o.width = c.w; o.height = c.h;
+    const gg = o.getContext('2d'); gg.drawImage(im, 0, 0); const d = gg.getImageData(0, 0, c.w, c.h).data; let y0 = c.h, y1 = 0;
+    for (let y = 0; y < c.h; y++) for (let x = 0; x < c.w; x += 2) if (d[(y * c.w + x) * 4 + 3] > 128) { if (y < y0) y0 = y; if (y > y1) y1 = y; } return y1 - y0; };
+  for (const [k, sk] of Object.entries(S.skin)) {
+    if (!P.SEG[k]) continue;
+    const ids = new Set([...Object.values(sk.cards), ...Object.values(sk.states || {}).flatMap(o => Object.values(o))]);
+    for (const id of ids) { const c = S.byId[id]; if (!c) continue; const { A, B } = P.pts(c, sk); out[id] = Math.hypot(B[0] - A[0], B[1] - A[1]) / bone(k); }
+  }
+  const hk = S.skin.head;
+  if (hk) { const side = S.byId[hk.cards.side]; await Promise.all(Object.values(hk.cards).map(id => waitImg(P.img(S.byId[id]))));
+    const hcm = E.edl.head_painted_cm || (side && paintedH(side) / out[side.id]);   // one painted head height for every view
+    if (hcm) for (const id of Object.values(hk.cards)) { const c = S.byId[id], h = paintedH(c); if (h) out[id] = h / hcm; }
+    E.headCm = hcm; }
+  S.cardPpc = out; S.sock = {};
+}
+
 // ---------- boot ----------
 async function boot() {
   console.log('stage', 'E.edl = await json(', performance.now()|0);
@@ -598,6 +644,7 @@ async function boot() {
   S.pv++;
   console.log('stage', 'bindFrames();', performance.now()|0);
   bindFrames();
+  await rigidScales();
   console.log('stage', 'await assemble();', performance.now()|0);
   await assemble();
   console.log('stage', 'propTracks();', performance.now()|0);

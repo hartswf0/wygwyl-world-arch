@@ -1,6 +1,6 @@
 {
  "id": "09-booth",
- "version": 5,
+ "version": 6,
  "about": "Edit decision list for the booth passage of poem 09 (shots/skinlab/production/09-booth/BRIEF.md). Played by shots/skinlab/passage.html. Times are poem seconds (the audio clock); 'map' pairs a poem time with a source frame of the trial (piecewise linear between pairs), so every segment is retimed to the voice. World units are cm: x right, y up, z toward the camera (the Bolas convention); the booth's floor-centre is the origin and an ensemble's z_cm (away from the camera) is world -z.",
  "poem": "09",
  "audio": "../stage/audio/09.mp3",
@@ -50,10 +50,10 @@
   "setdown": 37.0,
   "turn": 37.44,
   "cut": 38.04,
-  "grab": 38.42,
+  "grab": 38.54,
   "lift": 38.74,
-  "turn_out": 39.9,
-  "front": 40.21,
+  "turn_out": 39.6,
+  "front": 39.8,
   "hold": 42.6
  },
  "segments": [
@@ -67,7 +67,7 @@
    "place": {
     "joint": "pelvis",
     "at": [
-     150,
+     95,
      45
     ]
    },
@@ -87,7 +87,25 @@
    ],
    "hands": {
     "L": "grip"
-   }
+   },
+   "warp": [
+    {
+     "joints": [
+      "wristL",
+      "shoulderL"
+     ],
+     "add": [
+      0,
+      -14,
+      0
+     ],
+     "const": true,
+     "weights": {
+      "shoulderL": 0.3
+     },
+     "why": "the case pulls: the carrying arm hangs straight (the wrist target is put out of reach, so the arm extends) and the shoulder drops 4 cm"
+    }
+   ]
   },
   {
    "name": "turn into the booth",
@@ -118,26 +136,26 @@
    "name": "reach",
    "shot": "booth",
    "trial": "T025",
-   "mirror": false,
-   "rot": -90,
-   "why": "the phone lifted from its rest with the near (left) hand, turned to face the payphone (screen-left) so the reach is seen in profile, not foreshortened into the wall; the reach is raised to the hook (warp)",
+   "mirror": true,
+   "rot": 90,
+   "why": "the phone lifted from its hook with the near (right) hand: T025 mirrored and turned to face screen-right, toward the payphone, so the reach is seen in profile inside the door opening; raised to the hook (warp), trunk upright",
    "place": {
     "joint": "pelvis",
     "at": [
-     10,
+     -3,
      -26
     ]
    },
    "warp": [
     {
      "joints": [
-      "wristL",
-      "elbowL",
+      "wristR",
+      "elbowR",
       "prop:phone"
      ],
      "add": [
-      -6,
-      58,
+      -14,
+      42,
       0
      ],
      "src": [
@@ -146,7 +164,7 @@
       31
      ],
      "weights": {
-      "elbowL": 0.6
+      "elbowR": 0.6
      }
     }
    ],
@@ -156,11 +174,11 @@
      12
     ],
     [
-     38.56,
+     38.54,
      22
     ],
     [
-     38.6,
+     38.56,
      22
     ]
    ],
@@ -169,34 +187,38 @@
    },
    "grab_src": 22,
    "upright": {
-    "w": 0.75,
+    "w": 1.0,
+    "head_w": 0.55,
     "frame": 0,
     "free": [
-     "R"
+     "L"
     ],
-    "why": "T025 bows over a table; at a wall hook he stays nearly upright, a quarter of the bow kept as the look down to the handset"
+    "why": "T025 bows over a table; at a wall hook his trunk stays upright (exact lengths) and only the head looks down to the handset, renormalised"
+   },
+   "bend": {
+    "R": 1
    }
   },
   {
    "name": "lift lands",
    "shot": "booth",
    "trial": "T025",
-   "mirror": false,
-   "rot": -90,
-   "why": "from the grab straight to the ear: a 4-frame blend (the hand's path is a line from the hook to the ear, the elbow kept at the arm's lengths), landing on 'I call'; the trial's f23-43 (a lift past the head) is not used",
+   "mirror": true,
+   "rot": 90,
+   "why": "from the grab straight to the ear: a 6-frame blend (three drawn positions on twos), landing on 'I call'; the trial's f23-43 (a lift past the head) is not used",
    "plant": "ankleL",
-   "blend": 4,
+   "blend": 6,
    "map": [
     [
-     38.6,
+     38.56,
      44
     ],
     [
-     38.78,
+     38.82,
      44
     ],
     [
-     39.62,
+     39.5,
      62
     ]
    ],
@@ -205,36 +227,52 @@
    },
    "hold_to_head": {
     "local": {
-     "wristL": [
-      9,
+     "wristR": [
+      -5,
       -17,
-      4
+      2
      ],
-     "elbowL": [
-      30,
-      -50,
-      25
+     "elbowR": [
+      -30,
+      -42,
+      8
      ]
     },
-    "why": "the handset at the ear: wrist under the left ear, elbow down, out and forward (a pole; the elbow is solved at the arm's own lengths)"
+    "tip": [
+     "R",
+     [
+      -6,
+      2,
+      2
+     ]
+    ],
+    "why": "one hold from the grab to the end: the hand under the ear on his near side, turned up to the ear"
+   },
+   "over_head": [
+    "upper_arm_R",
+    "forearm_R",
+    "hand_R"
+   ],
+   "bend": {
+    "R": 1
    }
   },
   {
    "name": "turn out",
    "shot": "booth",
    "trial": "T014",
-   "mirror": false,
-   "rot": -90,
-   "why": "the quarter turn from profile to facing out (T014 f0-30, the right foot the pivot), on the pause before 'In tears'; the left hand keeps the handset at the ear (hold_to_head)",
-   "plant": "ankleR",
+   "mirror": true,
+   "rot": 90,
+   "why": "the quarter turn from profile (facing the payphone, screen-right) to facing out (T014 f0-30 mirrored), on the pause before 'In tears'; the right hand keeps the handset at the ear",
+   "plant": "ankleL",
    "blend": 3,
    "map": [
     [
-     39.62,
+     39.5,
      0
     ],
     [
-     40.3,
+     40.02,
      30
     ]
    ],
@@ -242,57 +280,56 @@
     "L": "grip"
    },
    "over_head": [
-    "upper_arm_L",
-    "forearm_L",
-    "hand_L"
+    "upper_arm_R",
+    "forearm_R",
+    "hand_R"
    ],
    "hold_to_head": {
     "local": {
-     "wristL": [
-      5,
-      -16,
-      9
+     "wristR": [
+      -5,
+      -17,
+      2
      ],
-     "elbowL": [
-      34,
-      -40,
-      10
+     "elbowR": [
+      -30,
+      -42,
+      8
      ]
     },
     "tip": [
-     "L",
+     "R",
      [
-      6,
+      -6,
       2,
-      6
+      2
      ]
-    ],
-    "why": "facing out, the hand is at the cheek (over the edge of the face), turned up to the ear; the handset lies from the ear down past the jaw; the elbow goes out and down (rigid cards cannot fold a forward elbow)"
+    ]
    },
-   "cord_over": {
-    "sag": 30
+   "bend": {
+    "R": 1
    }
   },
   {
    "name": "in tears",
    "shot": "booth",
    "trial": "T025",
-   "mirror": false,
+   "mirror": true,
    "rot": 0,
    "why": "facing out, the head goes down into the handset (T025 f70-82) slowly, then a dead hold through the line",
    "plant": "ankleL",
-   "blend": 5,
+   "blend": 3,
    "map": [
     [
-     40.3,
+     40.02,
      62
     ],
     [
-     40.7,
+     40.45,
      70
     ],
     [
-     41.7,
+     41.45,
      78
     ],
     [
@@ -304,9 +341,9 @@
     "L": "grip"
    },
    "over_head": [
-    "upper_arm_L",
-    "forearm_L",
-    "hand_L"
+    "upper_arm_R",
+    "forearm_R",
+    "hand_R"
    ],
    "sag": {
     "t": [
@@ -314,35 +351,33 @@
      42.3
     ],
     "dy": -5,
-    "dx": -2,
+    "dx": 0,
     "why": "on 'abyss' the knees give and he sinks five centimetres onto the call; then nothing moves"
    },
    "hold_to_head": {
     "local": {
-     "wristL": [
-      5,
-      -16,
-      9
+     "wristR": [
+      -5,
+      -17,
+      2
      ],
-     "elbowL": [
-      34,
-      -40,
-      10
+     "elbowR": [
+      -30,
+      -42,
+      8
      ]
     },
     "tip": [
-     "L",
+     "R",
      [
-      6,
+      -6,
       2,
-      6
+      2
      ]
-    ],
-    "why": "facing out, the hand is at the cheek (over the edge of the face), turned up to the ear; the handset lies from the ear down past the jaw; the elbow goes out and down (rigid cards cannot fold a forward elbow)"
+    ]
    },
-   "cord_over": {
-    "sag": 34,
-    "why": "facing out, the coiled cord hangs in front of him from the handset to the box: the one line that holds him to the call"
+   "bend": {
+    "R": 1
    }
   }
  ],
@@ -394,7 +429,7 @@
    ],
    "override": {
     "lamp": {
-     "x_cm": 330,
+     "x_cm": 430,
      "z_cm": 160,
      "why": "the lamp stands back and out to the right, so it frames the booth instead of standing in front of the call"
     }
@@ -469,7 +504,7 @@
    ],
    "track": "T025.phone",
    "in": "reach",
-   "hand": "L",
+   "hand": "R",
    "why": "hangs on the hook where the warped trial puts the phone; from the trial's grab on it travels with the right hand's card; at the ear its earpiece sits at the ear"
   },
   "cord": {
@@ -479,7 +514,8 @@
     0.66
    ],
    "sag": 14,
-   "w_cm": 3.2
+   "w_cm": 3.2,
+   "over_in_hand": true
   }
  },
  "layers": {
@@ -577,23 +613,25 @@
     38.04
    ],
    "view": "back",
-   "why": "the quarter turn lands on his back to us, held 14 frames before the cut"
+   "why": "the quarter turn lands with his back to us, facing the booth door, held 14 frames before the cut"
   },
   {
    "t": [
     38.04,
-    39.96
+    39.78
    ],
    "view": "side",
-   "why": "inside, in profile to the payphone: the reach and the lift read in silhouette"
+   "why": "inside, in profile facing the payphone (screen-right): the reach and the lift read in silhouette inside the door opening"
   },
   {
    "t": [
-    39.96,
+    39.78,
     43.41
    ],
    "view": "front",
-   "why": "the turn out lands facing us just before 'In tears'"
+   "why": "the turn out lands facing us and settles before 'In tears' (40.30)"
   }
- ]
+ ],
+ "rigid": true,
+ "head_painted_cm": 35
 }

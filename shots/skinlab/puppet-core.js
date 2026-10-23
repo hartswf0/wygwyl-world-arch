@@ -185,6 +185,8 @@ function inv(x, p) { let u = rot([p[0] - x.P[0], p[1] - x.P[1]], -x.ang); u = [(
 function scaleOf(k, c, sk, j, pj, port, puppet) {
   const sg = SEG[k], { A, B } = pts(c, sk), lab = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1;
   if (sk.mode === 'true') return port.k / ppcOf(c) * sk.scale;
+  // rigid: a host may fix each card's scale once (S.cardPpc[id] = card px per cm), so pose edits never resize a card
+  if (puppet && S.cardPpc?.[c.id]) return port.k / S.cardPpc[c.id] * sk.scale;
   // fit: pinned cards stretch to the bone as seen; puppet cards stay rigid at the bone's real 3D length
   return (puppet ? len3(v3(j[ji[sg.from]], j[ji[sg.to]])) * port.k : hyp(pj[ji[sg.from]], pj[ji[sg.to]])) / lab * sk.scale;
 }
@@ -211,11 +213,11 @@ function socket(k, px, port, puppet) {
   return { p: fwd(px, q.q), how: q.how };
 }
 // two rigid cards from S0 reaching for T, bending the way the skeleton's middle joint E bends
-function ik2(S0, T, E, l1, l2) {
+function ik2(S0, T, E, l1, l2, side) {
   const dx = T[0] - S0[0], dy = T[1] - S0[1], base = Math.atan2(dy, dx);
   const d = Math.max(Math.abs(l1 - l2) + 1e-3, Math.min(l1 + l2 - 1e-3, Math.hypot(dx, dy)));
   const a = Math.acos(Math.max(-1, Math.min(1, (l1 * l1 + d * d - l2 * l2) / (2 * l1 * d))));
-  return base + (dx * (E[1] - S0[1]) - dy * (E[0] - S0[0]) >= 0 ? 1 : -1) * a;
+  return base + (side || (dx * (E[1] - S0[1]) - dy * (E[0] - S0[0]) >= 0 ? 1 : -1)) * a;
 }
 function roleOf(k, near) {
   const m = k.match(/^(.*)_([LR])$/); if (!m) return k;
@@ -237,7 +239,7 @@ function solve(fr, port, style = S.style, puppet = S.puppet) {
     if (low) {
       const lc = active(low, S.skin[low], a, port);
       if (lc) { const { A, B } = pts(lc.c, S.skin[low]); const l2 = Math.hypot(B[0] - A[0], B[1] - A[1]) * scaleOf(low, lc.c, S.skin[low], j, pj, port, puppet);
-        const { A: a1, B: b1 } = pts(ac.c, sk); ang = ik2(start, pj[ji[SEG[low].to]], Q, Math.hypot(b1[0] - a1[0], b1[1] - a1[1]) * s, l2); }
+        const { A: a1, B: b1 } = pts(ac.c, sk); ang = ik2(start, pj[ji[SEG[low].to]], Q, Math.hypot(b1[0] - a1[0], b1[1] - a1[1]) * s, l2, a.bend?.[k.slice(-1)]); }   // a.bend = {L: ±1}: the host fixes which way a folded limb bends on screen
     }
     const x = mk(k, ac.c, sk, start, ang + sk.rot * Math.PI / 180, s, ac.mir);
     x.view = ac.view; x.want = ac.want; x.parent = parent; x.sockHow = sock?.how; x.sockP = sock?.p;
