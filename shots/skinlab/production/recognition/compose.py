@@ -14,17 +14,27 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 SHOTS = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
 H = 720; BG = (233, 226, 212)
-COL = {'ROTATE': (40, 150, 60), 'SHORTEN12+OVERLAP': (225, 140, 20), 'NEEDS-FORESHORTENED-CARD': (210, 30, 30), 'DEDICATED-CARD': (40, 90, 200)}
+COL = {'HARVESTED': (150, 60, 200), 'ROTATE': (40, 150, 60), 'SHORTEN12+OVERLAP': (225, 140, 20), 'NEEDS-FORESHORTENED-CARD': (210, 30, 30), 'DEDICATED-CARD': (40, 90, 200)}
 
 def font(sz):
     for f in ('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'):
         if os.path.exists(f): return ImageFont.truetype(f, sz)
     return ImageFont.load_default()
 
-def painting(r, W):
-    im = Image.open(os.path.join(SHOTS, r['img'])).convert('RGBA'); k = H / im.height
-    im = im.resize((max(1, round(im.width * k)), H), Image.LANCZOS)
-    out = Image.new('RGB', (W, H), BG); out.paste(im, (round(r['dx']), 0), im); return out
+def painting(r):
+    F = r['frame']; im = Image.open(os.path.join(SHOTS, r['img'])).convert('RGBA')
+    im = im.resize((max(1, round(im.width * F['kU'])), max(1, round(im.height * F['kU']))), Image.LANCZOS)
+    out = Image.new('RGB', (F['w'], F['h']), BG); out.paste(im, (round(F['paintX']), round(F['paintY'])), im); return out
+
+def fit(im, k):
+    return im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)
+
+ATL = {'rotate': 'ROTATE', 'replace/shorten': 'SHORTEN12+OVERLAP', 'dedicated/restage': 'NEEDS-FORESHORTENED-CARD'}
+def atlas_of(s):
+    a = s.get('atlas') or 'ROTATE'; a = ATL.get(a, a)
+    if s['k'].startswith('foot') and a != 'ROTATE': a = 'DEDICATED-CARD'
+    if 'harvest' in (s.get('drawn') or '') or 'harvest' in (s.get('card') or ''): a = 'HARVESTED'
+    return a
 
 def on_bg(im):
     out = Image.new('RGB', im.size, BG); out.paste(im, (0, 0), im); return out
@@ -45,9 +55,9 @@ def flags_of(r, costume):
     if costume and tc != costume: f.append(f'painted in the {tc} costume; the puppet wears the contract costume ({costume})')
     need = [s['k'] for s in r['segments'] if s['atlas'] == 'NEEDS-FORESHORTENED-CARD']
     if need: f.append('needs foreshortened cards the kit lacks: ' + ', '.join(need))
-    bad = [f"{s['k']} {s['miss_cm']}cm" for s in r['segments'] if s['miss_cm'] > 8 and not s['k'].startswith(('hand', 'foot', 'head'))]
+    bad = [f"{s['k']} {s.get('miss_cm')}cm" for s in r['segments'] if (s.get('miss_cm') or 0) > 8 and not s['k'].startswith(('hand', 'foot', 'head'))]
     if bad: f.append('cards miss their joints by > 8 cm: ' + ', '.join(bad))
-    wrong = [f"{s['k']} {s['want']}->{s['view']}" for s in r['segments'] if s['view'] != s['want']]
+    wrong = [f"{s['k']} {s.get('want')}->{s.get('view')}" for s in r['segments'] if s.get('want') and s.get('view') != s.get('want')]
     if wrong: f.append('no card for the wanted view: ' + ', '.join(wrong))
     if (r.get('solve_iou') or 0) < .55: f.append(f"the Pose Lab solve itself is weak (IoU {r.get('solve_iou')})")
     return f
@@ -70,28 +80,30 @@ def compose(ch):
         if r.get('error'):
             summary.append({'id': r['id'], 'rendered': False, 'why': r['error']}); continue
         n = num[r['id']]
-        pup = on_bg(Image.open(os.path.join(rd, r['safe'] + '.png')).convert('RGBA'))
-        pnt = painting(r, pup.width)
-        meth = Image.blend(pup, Image.new('RGB', pup.size, BG), .55); d = ImageDraw.Draw(meth)
+        pup0 = on_bg(Image.open(os.path.join(rd, r['safe'] + '.png')).convert('RGBA'))
+        pnt0 = painting(r)
+        meth0 = Image.blend(pup0, Image.new('RGB', pup0.size, BG), .55); d = ImageDraw.Draw(meth0)
         cnt = {}
         for s in r['segments']:
-            c = COL[s['atlas']]; cnt[s['atlas']] = cnt.get(s['atlas'], 0) + 1
+            a = atlas_of(s); s['atlas'] = a; c = COL.get(a, (90, 90, 90)); cnt[a] = cnt.get(a, 0) + 1
             d.line([tuple(s['P']), tuple(s['end'])], fill=c, width=4)
             q = s['Q']; d.ellipse([q[0] - 5, q[1] - 5, q[0] + 5, q[1] + 5], outline=c, width=2)
+        kk = H / pup0.height; pup, pnt, meth = fit(pup0, kk), fit(pnt0, kk), fit(meth0, kk)
         gap, top = 22, 58
         sheet = Image.new('RGB', (max(3 * pup.width + 4 * gap, 900), H + top + 64), BG); dd = ImageDraw.Draw(sheet)
         for i, (im, lab) in enumerate(((pnt, 'painting'), (pup, 'puppet'), (meth, 'method (joint atlas)'))):
             x = gap + i * (pup.width + gap); sheet.paste(im, (x, top)); dd.text((x, top - 22), lab, fill=(60, 50, 40), font=Fs)
         dd.text((gap, 10), f"{n:02d}  {r['id']}   view {r['view']} (psi {r['psi']}), facing {r['facing']}   solve IoU {r.get('solve_iou')}", fill=(30, 25, 20), font=Fs)
         dd.text((gap, top + H + 10), '  '.join(f'{k} {v}' for k, v in sorted(cnt.items())), fill=(60, 50, 40), font=Fs)
-        dd.text((gap, top + H + 32), 'green rotate · amber 12% shortening + overlap · red needs a foreshortened card · blue dedicated boot card · ring = joint to reach', fill=(90, 80, 70), font=Fs)
+        dd.text((gap, top + H + 32), 'green rotate · amber 12% shortening + overlap · violet harvested foreshortened card (from another painting) · red needs a card, none found · blue boot · ring = joint', fill=(90, 80, 70), font=Fs)
         sheet.save(os.path.join(out, 'pairs', f"{n:02d}_{r['safe']}.jpg"), quality=74)
         tok = hashlib.sha1((r['id'] + '|blind|' + ch).encode()).hexdigest()[:10]
         b = Image.new('RGB', (pup.width + 40, H + 40), BG); b.paste(pup, (20, 20)); b.save(os.path.join(out, 'blind', tok + '.jpg'), quality=80)
         key['blind'][tok + '.jpg'] = {'painting': n, 'id': r['id']}; key['paintings'][str(n)] = r['id']
         fl = flags_of(r, costume)
-        summary.append({'n': n, 'id': r['id'], 'rendered': True, 'view': r['view'], 'facing': r['facing'], 'via': r['via'], 'atlas': cnt,
-                        'max_miss_cm': max([s['miss_cm'] for s in r['segments']] or [0]), 'flags': fl, 'pair': f"{ch}/pairs/{n:02d}_{r['safe']}.jpg"})
+        hv = [f"{s['k']}<-{s['card'].split('/')[1]}" for s in r['segments'] if 'harvest' in (s.get('card') or '')]
+        summary.append({'n': n, 'id': r['id'], 'rendered': True, 'harvested': hv, 'set_piece': bool(r.get('set')), 'warnings': r.get('warnings', [])[:6], 'view': r['view'], 'facing': r['facing'], 'via': r['via'], 'atlas': cnt,
+                        'max_miss_cm': max([s.get('miss_cm') or 0 for s in r['segments']] or [0]), 'flags': fl, 'pair': f"{ch}/pairs/{n:02d}_{r['safe']}.jpg"})
     # numbered paintings (numbers follow the shuffle, so the contact sheet gives no order away)
     cw, chh, cols = 220, 330, 8; cells = sorted(ok, key=lambda r: num[r['id']])
     cs = Image.new('RGB', (cols * cw, max(1, (len(cells) + cols - 1) // cols) * chh), BG); d = ImageDraw.Draw(cs)
@@ -138,6 +150,23 @@ figure{{margin:0 0 22px}} img{{max-width:100%;height:auto;display:block;border:1
 </body></html>'''
     open(os.path.join(HERE, '..', 'recognition.html') if False else os.path.join(HERE, 'index.html'), 'w').write(html)
 
+def blind2(ch, keyfile, name='blind2'):
+    """the same poses as an earlier blind test, re-rendered, under new random names (key: <name>_key.json, hidden from critics)"""
+    out = os.path.join(HERE, ch); rd = os.path.join(out, 'renders'); K1 = json.load(open(keyfile))
+    dd = os.path.join(out, name); os.makedirs(dd, exist_ok=True)
+    for f in os.listdir(dd): os.remove(os.path.join(dd, f))
+    ids = [v['id'] for v in K1.values()]; rng = random.Random(name + '-' + ch + '-' + str(len(ids))); rng.shuffle(ids)
+    S = {p['id']: p for p in json.load(open(os.path.join(out, 'summary.json')))['poses']}
+    key = {'about': f'BLIND KEY ({name}): critics must not read this file. file -> painting number on paintings_contact.jpg and pose id.', 'files': {}}
+    for i, pid in enumerate(ids):
+        im = on_bg(Image.open(os.path.join(rd, pid.replace('/', '__') + '.png')).convert('RGBA')); im = fit(im, H / im.height)
+        b = Image.new('RGB', (im.width + 40, H + 40), BG); b.paste(im, (20, 20))
+        tok = 'c%02d_' % (i + 1) + hashlib.sha1((pid + name).encode()).hexdigest()[:6]
+        b.save(os.path.join(dd, tok + '.jpg'), quality=82); key['files'][tok + '.jpg'] = {'painting': S[pid].get('n'), 'id': pid}
+    json.dump(key, open(os.path.join(out, name + '_key.json'), 'w'), indent=1)
+    print(name, len(ids), 'renders')
+
 if __name__ == '__main__':
     if '--index' in sys.argv: index()
+    elif '--blind2' in sys.argv: blind2(sys.argv[1], sys.argv[sys.argv.index('--blind2') + 1])
     else: compose(sys.argv[1])

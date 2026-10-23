@@ -92,8 +92,12 @@ def harvest():
             rest = np.zeros(mask.shape, np.uint8); rr = owner == -1; rest[P2[rr, 1].astype(int), P2[rr, 0].astype(int)] = 1
             n_, lab_, st_, _ = cv2.connectedComponentsWithStats(rest, connectivity=8)
             rawd = np.zeros(mask.shape, np.float32); rawd[P2[:, 1].astype(int), P2[:, 0].astype(int)] = draw / s_px
-            # a prop, not a stray edge of the figure: a sizeable piece whose pixels lie on average > 14 cm from every bone
-            keep = [i for i in range(1, n_) if st_[i, cv2.CC_STAT_AREA] > .015 * mask.sum() and rawd[lab_ == i].mean() > 14]
+            # a prop, not a stray edge of the figure (hair, a coat tail): a piece whose pixels lie on average > 20 cm from every bone,
+            # or a big one (> 8% of the figure) > 12 cm away
+            def is_prop(i):
+                a_, md = st_[i, cv2.CC_STAT_AREA], rawd[lab_ == i].mean()
+                return a_ > .015 * mask.sum() and (md > 20 or (a_ > .08 * mask.sum() and md > 12))
+            keep = [i for i in range(1, n_) if is_prop(i)]
             if keep:
                 km = np.isin(lab_, keep); yy, xx = np.nonzero(km)
                 sx0, sx1, sy0, sy1 = xx.min(), xx.max() + 1, yy.min(), yy.max() + 1
@@ -135,6 +139,9 @@ def harvest():
                 r_, g_, b_ = (rgb[..., i].astype(int) for i in range(3))
                 skinm = m2 & (r_ - b_ > 25) & (r_ - b_ < 120) & (g_ - b_ < 70) & (r_ > 70) & (r_ >= g_) & (g_ >= b_)   # painted brown skin, not brass or gold
                 skin_share = float(skinm.sum() / max(1, m2.sum()))
+                mx, mn = np.maximum(np.maximum(r_, g_), b_), np.minimum(np.minimum(r_, g_), b_)
+                metal = float((m2 & (mx > 105) & (mx - mn < 28)).sum() / max(1, m2.sum()))   # chrome, steel, stone: light and grey
+                if metal > .08: why.append(f'{metal:.0%} grey/chrome pixels: a prop (bike, stone, glass) inside the cut')
                 if part == 'hand' and skin_share < .4: why.append(f'not a hand: only {skin_share:.0%} skin (a sleeve, a prop or a held object)')
                 pl = lab_mean(rgb, m2)
                 if part == 'hand' and pl and pl[0] > 62: why.append(f'too light for a hand (L {pl[0]}): paper, stone or a cup')

@@ -17,7 +17,9 @@ const NAMES = { pelvis: 'pelvis', hipL: 'hipL', hipR: 'hipR', knL: 'kneeL', knR:
   ballL: 'ballL', ballR: 'ballR', toeL: 'toeL', toeR: 'toeR', waist: 'spineMid', neck: 'neckBase', chest: 'chest', shL: 'shoulderL', shR: 'shoulderR',
   elL: 'elbowL', elR: 'elbowR', wrL: 'wristL', wrR: 'wristR', headC: 'head', top: 'headTop', tipL: 'tipL', tipR: 'tipR' };
 const W3 = p => [p[0], -p[1], p[2]];                        // Pose Lab body frame (Y down) -> renderPose (y up)
-const family = id => id.replace(/-\d+$/, '').replace(/-\d+(\.jpg)?$/, '');   // 'x-1' and 'x-2' are one painted pose drawn twice
+// leave-one-FAMILY-out: a painting, its numbered twins ('x-1', 'x-2') and, on the same sheet, the paintings sharing its beat code
+// ('04-2-kneel-hollow' and '04-2-heart-seated'; 'q3-...') are one family; a pose never uses a card harvested from its own family
+const family = id => { const [sheet, pose] = id.split('/'); const m = pose.match(/^([a-z]?\d+(?:-\d+)?)-/); return sheet + '/' + (m ? m[1] : pose.replace(/-\d+$/, '')); };
 function joints(D, sol) {
   const x = PC.PN.map(n => sol.params[n] ?? 0), J = PC.fk(D.skeleton, x), o = {};
   for (const [a, b] of Object.entries(NAMES)) if (J[a]) o[b] = W3(J[a]);

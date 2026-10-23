@@ -9,8 +9,8 @@
 // pairs/, blind/ (hidden key.json), paintings_contact.jpg, summary.json and ../index.html.
 //
 // The mechanics are NOT here. Rendering goes through shots/skinlab/puppet-core.js: PuppetCore.renderPose(ctx, {...})
-// when it exists (Builder B's general API), otherwise a thin stub over the same file's solve()/drawCard() (the Skin
-// Lab's puppet IK on rigid cards). This file only converts the Pose Lab solve into joints (pose-core.js fk) and a port
+// (Builder B's general API), with the harvested replacement cards (shots/skinlab/library_harvest.json, harvest.py) filtered
+// leave-one-family-out per pose, and the painting's set piece drawn flat behind the puppet. This file only converts the Pose Lab solve into joints (pose-core.js fk) and a port
 // that projects exactly as the Pose Lab does, so the puppet lands on the painting's own floor, centre and scale.
 import { spawn, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -46,7 +46,7 @@ try {
     fs.rmSync(rdir, { recursive: true, force: true }); fs.mkdirSync(rdir, { recursive: true });
     const reports = [];
     for (const file of CHARACTERS[ch]) {
-      const res = await page.evaluate(async (ch, file, U) => harness.run(ch, file, U), ch, file, U);
+      const res = await page.evaluate(async (ch, file, U) => harness.run(ch, file, U, { harvest: true, props: true }), ch, file, U);
       for (const r of res) {
         if (r.png) { fs.writeFileSync(path.join(rdir, r.safe + '.png'), Buffer.from(r.png.split(',')[1], 'base64')); delete r.png; }
         reports.push(r);
