@@ -26,7 +26,8 @@ let DOC = null;
 async function boot() {
   const [contract, library, doc] = await Promise.all([json(Q.get('contract') || 'contracts/poet.json'), json('library.json'), json(Q.get('poses') || '../rig/poses/poet__red_black_sunglasses.json')]);
   DOC = doc;
-  const r = await P.prepare({ contract, library });
+  if (Q.get('harvest')) { const h = await json('library_harvest.json'); window.__harvest = Array.isArray(h) ? h : h.cards; }   // leave-one-out replacement cards
+  const r = await P.prepare({ contract, library, harvest: window.__harvest });
   window.__contract = contract;
   window.__ready = true; document.getElementById('log').textContent = 'ready: ' + JSON.stringify(r);
   if (Q.get('id')) window.__render(Q.get('id'), +(Q.get('solve') || 0));
@@ -36,8 +37,8 @@ window.__render = (id, si = 0) => {
   const s = t.solves[si]; if (!s) return { error: 'no solve' };
   const pr = s.pose?.params || s.params, z = PoseCore.fromParams(pr), J = PoseCore.fk(DOC.skeleton, z);
   g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#505060'; g.fillRect(0, 0, cv.width, cv.height);
-  const res = P.renderPose(g, { contract: window.__contract, joints3d: J, psi: s.psi, heightPx: 560, x: cv.width / 2, y: cv.height - 50 });
-  res.id = id; res.solve = { psi: s.psi, view: s.view, score: s.score ?? t.score };
+  const res = P.renderPose(g, { contract: window.__contract, joints3d: J, psi: s.psi, heightPx: 560, x: cv.width / 2, y: cv.height - 50, harvest: window.__harvest, harvestExclude: id });
+  delete res.sol; res.id = id; res.solve = { psi: s.psi, view: s.view, score: s.score ?? t.score };
   document.getElementById('log').textContent = JSON.stringify(res, null, 1);
   return res;
 };

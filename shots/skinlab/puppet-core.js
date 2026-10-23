@@ -15,6 +15,49 @@
    hangs on its parent (socket); two-card IK (ik2); the per-view layer stack by near/far role (roleOf, STACK0); the
    whole-figure solve; drawCard; the compact bank decoder (decode, decodeProps); auto-dress and kitbash; cards built by code.
 
+   ---------------------------------------------------------------------------------------------------------------------------
+   API CONTRACT: the general renderer (stable; Builder B owns this file, hosts call it)
+
+     await PuppetCore.prepare({ contract, library, imgBase?, harvest? }) // loads every card the contract names (and harvested cards), builds code cards
+     const r = PuppetCore.renderPose(ctx, {
+       contract,               // a character contract (contracts/<ch>.json, parsed); applied on first use if prepare() was not awaited
+       library?,               // library.json (parsed); needed when the contract is new and prepare() was not called
+       joints3d,               // EITHER {name: [x, y, z]} with the 26 Bolas names (pelvis hipL hipR kneeL kneeR ankleL ankleR heelL heelR ballL ballR
+                               //   toeL toeR spineMid neckBase chest shoulderL shoulderR elbowL elbowR wristL wristR headBase head headTop nose;
+                               //   optional tipL tipR), cm, x = his LEFT, y = UP, z = his FORWARD; missing feet/spine/head points are filled
+                               // OR a Pose Lab fk() result (names shL, knL, ...: converted by PuppetCore.fromPoseLab)
+                               // OR a frame record {j: [26 joints in that order], ...} in the same body frame
+       view?, facing?,         // 'front' | 'side' (= 'profile') | 'back' | 'threequarter' | 'threequarter_back';  'right' | 'left'
+       psi?,                   // or the Pose Lab view yaw (0 front, +90 profile facing screen-right, 180 back); wins over view/facing
+       port?,                  // or a host projection {p(q) -> [x, y, depth], k px/cm, right, toward, label}; wins over psi/view and x/y/heightPx
+       heightPx?, x?, y?,      // without a port: his standing height in px, screen x of the pelvis, screen y of the floor
+       handStates?,            // {L: 'open' | 'grip' | ..., R: ...}: limbs.hand_*.states
+       harvest?, harvestExclude?, // replacement cards (library_harvest.json rows: slot/side/view/dir_cam/ratio/bad): used for a foreshortened limb
+                               //   when one of the same part and view has a bone direction within ~20 deg; harvestExclude leaves one source out
+       headScale? = 1.25,      // heads at the paintings' canon (1.2-1.3x the contract head); headCm?, headLeanDeg? = 15, neckDeg?, farShade? = .72,
+       cardView?, ground?      // force the card view; ground (default true without a port) puts his lowest foot point on the floor
+     })
+     -> { cards: [{part, card, view, role, mirrored, projRatio, verdict, method, gap_cm, miss_cm}],
+          segments: [{k, role, card, view, want, mirrored, miss_cm, ratio, atlas, drawn, P, Q, end}],   // the same, in the harness's shape
+          sol, warnings: [string], view, yaw, px_per_cm, bbox }
+
+   What it does, the same for every pose (no tuning to a shot):
+   - card view from the yaw: front |yaw| <= 22.5, three-quarter <= 67.5 (contract 'threequarter' cards, else front), side, back >= 112.5;
+     every card of the figure in that one view (no mid-swap); a profile or sided three-quarter card is mirrored for a figure facing left
+   - one scale per card: A->B over its bone in a neutral pose built from this skeleton's own bone lengths (fix.rigid_ppc wins; heads one
+     painted height in every view, times headScale); sockets bind on that neutral pose turned to the card's view and facing
+   - the joint atlas per segment: projected / true length >= .88 rotate; .55-.88 replace (contract limbs[k].states.bent[view], or a
+     harvested card) or declared shortening (x >= .88, along the card's own axis) + overlap; < .55 a dedicated card
+     (states.endon[view], or harvested), else shortened and flagged for restaging
+   - hinges bending across the screen use two-card IK the anatomical way (knees forward, elbows back); hinges bending toward the camera
+     get no IK (each card aims at its own joint), so front legs stand straight with the skeleton's stance, never bowed into a diamond
+   - the head is a painted card: bowed toward the camera it is turned into the picture plane; across the screen it leans at most
+     headLeanDeg off the torso; the neck holds it within neckDeg; hands bend at most 80 deg off the forearm
+   - near limbs (his right when he faces screen-right) over the body, far limbs under and darker (farShade); the contract's stack per
+     view; its fix fields: A/B, px_per_cm, rigid_ppc, view, left, sockets, hold, erase, trim, flare, states; code-built cards (the seat)
+   Proven on 12 painted poses: shots/skinlab/core_check.html + production/recognition/core_check/ (painting | puppet side-by-sides).
+   ---------------------------------------------------------------------------------------------------------------------------
+
    Hooks a host may set on S (all optional):
      S.bindFrame(k, parentPlaced, port) → the frame to bind a socket at (default S.data.frames[S.bindF])
      S.centre(port, frame)              → set port.cx / port.cz before binding (default: follow the pelvis)
@@ -158,6 +201,7 @@ function centre(port, fr) {
 // card, head included) and a.hands = {L: 'grip', R: 'open'} (a hand state: limbs.hand_L.states[state] = {side, front, back}).
 // a.states = {segment: state} picks limbs[k].states[state] for any segment (e.g. a bent-knee card); a.hands names a hand's state
 function cardsOf(k, sk, a) {
+  if (a.cardIds?.[k]) { const id = a.cardIds[k]; return { side: id, front: id, back: id, threequarter: id }; }   // a host's chosen card for this pose
   if (!sk.states) return sk.cards;
   const m = k.match(/^(hand|mitt)_([LR])$/), st = a.states?.[k] || (m ? a.hands?.[m[2]] || 'open' : null);
   return st && sk.states[st] ? { ...sk.cards, ...sk.states[st] } : sk.cards;
@@ -239,7 +283,7 @@ function solve(fr, port, style = S.style, puppet = S.puppet) {
     const parent = sg.par.find(p => X[p]);
     const sock = parent ? socket(k, X[parent], port, puppet) : null;
     let start = puppet && sock ? sock.p : Pp, ang = Math.atan2(Q[1] - start[1], Q[0] - start[0]);
-    const low = puppet && segs.find(q => SEG[q].ik === k && S.skin[q]);
+    const low = puppet && !a.noik?.[k] && segs.find(q => SEG[q].ik === k && S.skin[q]);
     if (low) {
       const lc = active(low, S.skin[low], a, port);
       if (lc) { const { A, B } = pts(lc.c, S.skin[low]); const l2 = Math.hypot(B[0] - A[0], B[1] - A[1]) * scaleOf(low, lc.c, S.skin[low], j, pj, port, puppet) * (a.sx?.[low] ?? 1);
@@ -525,13 +569,14 @@ function applyContract(c) {
 const loaded = im => new Promise(r => { if (!im || im.complete && im.naturalWidth) return r(); const t = setTimeout(r, 15000); im.addEventListener?.('load', () => { clearTimeout(t); r(); }); im.addEventListener?.('error', () => { clearTimeout(t); r(); }); });
 // prepare({contract, library, imgBase}) → Promise: indexes the library, applies the contract, loads every card it names, builds code cards
 async function prepare(o) {
-  if (o.library) { S.lib = o.library.filter(c => !c.gen); }
+  if (o.library) { S.lib = o.library.filter(c => !c.gen); RP.library = o.library; }
   if (o.imgBase != null) P.imgBase = o.imgBase;
   applyContract(o.contract);
   const ids = new Set();
   for (const sk of Object.values(S.skin)) { for (const id of Object.values(sk.cards)) ids.add(id); for (const st of Object.values(sk.states || {})) for (const id of Object.values(st)) ids.add(id); }
   for (const [id, f] of Object.entries(S.fix)) if (id.startsWith('gen.') && f.from) ids.add(f.from);
   await Promise.all([...ids].map(id => S.byId[id] && !S.byId[id].gen ? loaded(img(S.byId[id])) : null));
+  if (o.harvest) await Promise.all(o.harvest.filter(c => !c.bad).map(c => { if (!S.byId[c.id]) { S.lib.push(c); S.byId[c.id] = c; } return loaded(img(c)); }));   // replacement cards ready to draw
   rebuildGen(S.skin);
   RP.contract = o.contract; RP.ready = true; RP.key = null; RP.bind = {};
   return { cards: ids.size, missing: [...ids].filter(id => !S.byId[id]) };
@@ -612,20 +657,45 @@ function rigidScalesFor(nj, headCm) {
   for (const id in out) if (S.fix[id]?.rigid_ppc && S.fix[id].px_per_cm) out[id] = S.fix[id].px_per_cm;
   return { ppc: out, headCm: hcm };
 }
+// a harvested replacement card (Builder A's library_harvest.json: library fields + view, facing, dir_cam = the bone's unit direction in
+// camera space [screen x, screen y down, toward the camera], ratio, bad): same part and side, same card view, the closest bone direction
+function harvestFor(H, kk, view, jj, sg, port, exclude) {
+  if (!H || !H.length) return null;
+  const m = kk.match(/^(.*)_([LR])$/), d = nrm3(v3(jj[ji[sg.from]], jj[ji[sg.to]])), cam = [dot3(d, port.right), -d[1], dot3(d, port.toward)];
+  let best = null;
+  for (const c of H) {
+    if (c.bad || (c.slot || c.part) !== m[1] || (c.side && c.side !== m[2]) || !c.dir_cam) continue;
+    if (VIEWOF(c.view) !== VIEWOF(view) && !(view === 'threequarter' && c.view === 'threequarter')) continue;
+    if (exclude && (exclude === c.source || exclude === c.pose || (c.id || '').includes(exclude))) continue;   // leave-one-out
+    const cs = dot3(nrm3(c.dir_cam), cam); if (cs > .94 && (!best || cs > best.cos)) best = { c, cos: cs };
+  }
+  if (!best) return null;
+  const im = img(best.c); if (!(im.complete && im.naturalWidth)) return null;   // not loaded (pass harvest to prepare() to preload): fall back
+  if (!S.byId[best.c.id]) { S.lib.push(best.c); S.byId[best.c.id] = best.c; if (best.c.facing && !best.c.faces) best.c.faces = best.c.facing === 'left' ? 'L' : 'R'; }
+  return best;
+}
 const VERDICT = r => r >= .88 ? 'rotate' : r >= .55 ? 'replace/shorten' : 'dedicated/restage';
 const LIMB = /^(upper_arm|forearm|thigh|shin)_[LR]$/;
 function renderPose(ctx, o) {
   const warnings = [];
-  if (!RP.ready || (o.contract && o.contract !== RP.contract)) return { cards: [], warnings: ['call PuppetCore.prepare({contract, library}) with this contract first (await it)'] };
-  let src = o.joints3d || {}; if (src.shL || src.knL) src = fromPoseLab(src);
-  let j = jointArray(src, warnings);
-  if (o.ground !== false) { const lo = Math.min(...FEET.map(i => j[i][1])); j = j.map(q => [q[0], q[1] - lo, q[2]]); }
-  const yaw = yawOf(o), view = o.cardView || cardViewOf(yaw), cy = Math.cos(yaw * Math.PI / 180), sy = Math.sin(yaw * Math.PI / 180);
-  // the skeleton's own bone lengths fix the card scales and the bind pose (recomputed only when they change)
-  const nj = neutralOf(j), key = nj.map(q => q.map(v => Math.round(v)).join(',')).join(';');
-  if (key !== RP.key) { const r = rigidScalesFor(nj, o.headCm); S.cardPpc = r.ppc; RP.headCm = r.headCm; RP.key = key; RP.bind = {}; S.sock = {}; RP.statureCm = nj[ji.headTop][1]; }
-  const stature = o.statureCm || RP.statureCm, k = (o.heightPx || 400) / stature;
-  const port = { label: 'rp' + key.length, yaw, k, cx: 0, cz: 0, toward: [sy, 0, cy], right: [cy, 0, -sy],
+  if (o.contract && o.contract !== RP.contract) {   // not prepared for this contract: apply it now (images the host has not loaded yet draw blank)
+    if (o.library && o.library !== RP.library) { S.lib = o.library.filter(c => !c.gen); RP.library = o.library; }
+    applyContract(o.contract); rebuildGen(S.skin); RP.contract = o.contract; RP.ready = true; RP.key = null; RP.bind = {};
+  }
+  if (!RP.ready) return { cards: [], segments: [], warnings: ['no contract: pass o.contract or await PuppetCore.prepare({contract, library})'] };
+  let src = o.joints3d || {}, tips = null;
+  let j;
+  if (Array.isArray(src.j)) j = src.j.map((q, i) => q ? q.slice() : (warnings.push('missing joint ' + J[i]), [0, 0, 0])).slice(0, 26);   // a frame record {j: 26 Bolas joints}
+  else { if (src.shL || src.knL) src = fromPoseLab(src); j = jointArray(src, warnings); if (src.tipL && src.tipR) tips = { L: src.tipL.slice(), R: src.tipR.slice() }; }
+  if (o.ground ?? !o.port) { const lo = Math.min(...FEET.map(i => j[i][1])); j = j.map(q => [q[0], q[1] - lo, q[2]]); if (tips) for (const s of 'LR') tips[s][1] -= lo; }
+  const yaw = o.port ? Math.atan2(-o.port.right[2], o.port.right[0]) * 180 / Math.PI : yawOf(o), view = o.cardView || cardViewOf(yaw), cy = Math.cos(yaw * Math.PI / 180), sy = Math.sin(yaw * Math.PI / 180);
+  // the skeleton's own bone lengths fix the card scales and the bind pose (recomputed only when they change); heads drawn at the
+  // painted canon (o.headScale, default 1.25: the paintings' heads are 1.2-1.3x the contract head)
+  const hs = o.headScale ?? 1.25, nj = neutralOf(j), key = nj.map(q => q.map(v => Math.round(v)).join(',')).join(';') + '|' + hs + '|' + (o.headCm || '');
+  if (key !== RP.key) { const r = rigidScalesFor(nj, o.headCm); for (const id of Object.values(S.skin.head?.cards || {})) if (r.ppc[id]) r.ppc[id] /= hs;
+    S.cardPpc = r.ppc; RP.headCm = r.headCm; RP.key = key; RP.bind = {}; S.sock = {}; RP.statureCm = nj[ji.headTop][1]; RP.harvested = {}; }
+  const stature = o.statureCm || RP.statureCm, k = o.port ? o.port.k : (o.heightPx || 400) / stature;
+  const port = o.port || { label: 'rp' + key.length, yaw, k, cx: 0, cz: 0, toward: [sy, 0, cy], right: [cy, 0, -sy],
     p(q) { const X = q[0] - this.cx, Z = q[2] - this.cz; return [o.x + (X * cy - Z * sy) * k, o.y - q[1] * k, X * sy + Z * cy]; } };
   S.centre = (pt, fr) => { const q = fr.a.A.j[0]; pt.cx = q[0]; pt.cz = q[2]; };
   // sockets bind on the neutral pose turned to show the card the way it is drawn now
@@ -659,6 +729,11 @@ function renderPose(ctx, o) {
   const F = facings(j), lat = Math.sign(dot3(F.pfwd, port.right)) || ((o.facing || 'right') === 'left' ? -1 : 1);
   const a = { j, ...F, views: { body: view, head: view }, lat: o.facing ? (o.facing === 'left' ? -1 : 1) : lat, hands: o.handStates || {}, bend: {}, sx: {}, states: {} };
   RP.lat = a.lat;
+  if (tips) {   // the hand follows the solve's wrist, bent at most 80 deg off the forearm (a cut-out wrist past 90 reads as broken)
+    a.tips = {}; for (const s of 'LR') { const w = j[ji['wrist' + s]], fa = nrm3(v3(j[ji['elbow' + s]], w)), h = v3(w, tips[s]), hl = len3(h) || 1, c = dot3(fa, h) / hl;
+      let d = h; if (c < Math.cos(80 * Math.PI / 180)) { const t = nrm3(h.map((x, i) => x / hl - c * fa[i])), m = 80 * Math.PI / 180; d = fa.map((x, i) => (x * Math.cos(m) + t[i] * Math.sin(m)) * hl); }
+      a.tips[s] = w.map((x, i) => x + d[i]); } }
+  a.noik = {}; a.cardIds = {};
   // per segment: how much of its true length the view shows (the joint atlas verdict), and what the puppet does about it
   const fr = { a: { A: a } }; port.cx = j[0][0]; port.cz = j[0][2];
   const jj = joints(fr, 'A'), pj = jj.map(q => port.p(q)), report = {};
@@ -670,12 +745,20 @@ function renderPose(ctx, o) {
       if ((kk === 'torso' || kk === 'pelvis') && r < .88) { a.sx[kk] = Math.max(r, .88); method += ` shortened x${a.sx[kk].toFixed(2)}`; } }
     else if (r < .88) {
       const bent = sk.states?.bent?.[view] && S.byId[sk.states.bent[view]], endon = sk.states?.endon?.[view] && S.byId[sk.states.endon[view]];
-      if (r < .55 && endon) { a.states[kk] = 'endon'; method = 'dedicated end-on card'; }
+      const hv = harvestFor(o.harvest, kk, view, jj, sg, port, o.harvestExclude);
+      if (hv) { a.cardIds[kk] = hv.c.id; S.cardPpc[hv.c.id] = ppcOf(hv.c); method = `harvested foreshortened card (${hv.c.id}, bone direction ${(hv.cos * 100) | 0}% alike)`; }
+      else if (r < .55 && endon) { a.states[kk] = 'endon'; method = 'dedicated end-on card'; }
       else if (bent) { a.states[kk] = 'bent'; method = 'replacement card (bent)'; }
       else { a.sx[kk] = Math.max(r, .88); method = r >= .55 ? `declared shortening x${a.sx[kk].toFixed(2)} + overlap` : 'shortened x0.88 + overlap; END-ON: needs a dedicated card or another view';
         if (r < .55) warnings.push(`${kk}: end-on in ${view} view (shows ${(r * 100) | 0}% of its length) - restage or add a dedicated card`); }
     }
     report[kk] = { projRatio: +r.toFixed(3), verdict: VERDICT(r), method };
+  }
+  // a hinge that bends toward the camera is not bent across the screen: each card aims at its own joint (no IK), so front legs stand
+  // straight with the stance the skeleton gives, never bowed into a diamond; the foreshortening is the shortening/replacement above
+  for (const s of ['L', 'R']) for (const [up, mid, end, seg] of [['hip', 'knee', 'ankle', 'thigh_'], ['shoulder', 'elbow', 'wrist', 'upper_arm_']]) {
+    const u = v3(jj[ji[up + s]], jj[ji[mid + s]]), w = v3(jj[ji[mid + s]], jj[ji[end + s]]), n = cross3(u, w), nl = len3(n) / ((len3(u) * len3(w)) || 1);
+    if (nl >= .17 && Math.abs(dot3(nrm3(n), port.toward)) <= .5) { a.noik[seg + s] = true; if (report[seg + s]) report[seg + s].method += ' (bends toward the camera: no IK, aimed at its own joint)'; }
   }
   // hinges that bend across the screen bend the anatomical way: knees forward, elbows back (side and three-quarter views)
   if (view === 'side' || Math.abs(Math.abs(yaw) - 90) < 50) {
@@ -693,7 +776,10 @@ function renderPose(ctx, o) {
   S.farShade = prevShade;
   const cards = sol.order.map(x => ({ part: x.k, card: x.c.id, view: x.view, role: x.role, mirrored: !!x.mir, ...(report[x.k] || {}), gap_cm: +x.gap.toFixed(1), miss_cm: +x.miss.toFixed(1) }));
   for (const c of cards) if (c.miss_cm > 12 && LIMB.test(c.part)) warnings.push(`${c.part}: card ends ${c.miss_cm} cm from its joint`);
-  return { cards, warnings, view, yaw, px_per_cm: k, bbox: (() => { const xs = sol.order.flatMap(x => [x.P[0]]), ys = sol.order.flatMap(x => [x.P[1]]); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; })() };
+  const segments = sol.order.map(x => { const sg = SEG[x.k], e = fwd(x, x.B), q = pj[ji[sg.to]], rp = report[x.k] || {};
+    return { k: x.k, role: x.role, card: x.c.id, view: x.view, want: x.want, mirrored: !!x.mir, miss_cm: +x.miss.toFixed(1), ratio: rp.projRatio, atlas: rp.verdict, drawn: rp.method,
+      P: [Math.round(x.P[0]), Math.round(x.P[1])], Q: [Math.round(q[0]), Math.round(q[1])], end: [Math.round(e[0]), Math.round(e[1])] }; });
+  return { cards, segments, sol, warnings, view, yaw, px_per_cm: k, bbox: (() => { const xs = sol.order.flatMap(x => [x.P[0]]), ys = sol.order.flatMap(x => [x.P[1]]); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; })() };
 }
 Object.assign(P, { renderPose, prepare, applyContract, fromPoseLab, neutralOf, yawOf, cardViewOf, rigidScalesFor });
 
