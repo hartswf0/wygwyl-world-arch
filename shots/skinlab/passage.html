@@ -191,6 +191,8 @@ async function assemble() {
       for (const sd of ['L', 'R']) fixArm(pose.j, sd, E.target.upper_arm, E.target.forearm, pose.j[ji['elbow' + sd]].map((v, c) => v - (c === 1 ? 10 : 0)));
     }
     const shot = Object.entries(E.edl.shots).find(([, v]) => t >= v.t[0] - 1e-6 && t < v.t[1] - 1e-6)?.[0] || s.shot;
+    const fy = E.edl.shots[shot]?.floor_y || 0;   // inside the booth he stands on its floor plate, not the pavement
+    if (fy) { pose.j = pose.j.map(q => [q[0], q[1] + fy, q[2]]); if (pose.tips) for (const k in pose.tips) pose.tips[k] = [pose.tips[k][0], pose.tips[k][1] + fy, pose.tips[k][2]]; }
     E.frames.push({ f, t, tReal: edl.t0 + f / fps, seg: i, segName: s.name, shot, sf: pose.sf, a: { A: { j: pose.j, fwd: pose.fwd, hfwd: pose.hfwd, pfwd: pose.pfwd, hands: s.hands || null, tips: pose.tips || null } }, p: pose.p });
   }
 }
@@ -270,7 +272,7 @@ function drawBack(cam) {
   for (const l of sky.layers.filter(l => l.order === 'water')) {
     const im = loadImg(partSrc(l.part)); if (!okImg(im)) continue;
     const k = (lipY - hz) / 170, h = l.h_px * k, w = h * im.naturalWidth / im.naturalHeight;
-    g.save(); g.globalAlpha = l.op ?? 1; g.globalCompositeOperation = l.blend || 'source-over';
+    g.save(); g.globalAlpha = (l.op ?? 1) * (E.edl.world.water_streak_op ?? 1); g.globalCompositeOperation = l.blend || 'source-over';
     g.drawImage(im, W / 2 + (l.x_px - 800) * cam.ppc / 2.093 * .8 + par - w / 2, hz + 2, w, Math.min(h, lipY - hz)); g.restore();
   }
 }
@@ -353,10 +355,11 @@ function render(f) {
   }
   if (E.hook) { const hkc = cardAt(E.edl.props.hook.part, E.edl.props.hook.w_cm, E.edl.props.hook.h_cm, hs, [.5, .25], [hk[0] + 3 * hs, hk[1] - E.edl.props.handset.h_cm * hs * (E.edl.props.handset.grip[1] - .08)], 0); drawPlaced(hkc); }
   // the cord, from the payphone to the handset's mouth end (behind the poet: it runs back to the wall)
-  if (handsetCard && back) {
+  const cordOver = !!E.segs[fr.seg].cord_over;
+  const drawTheCord = () => { if (!handsetCard || !back) return;
     const c = E.edl.props.cord, a = [back[0] + back[2] * c.from_payphone[0], back[1] + back[3] * c.from_payphone[1]], b = handsetCard.pt(...E.edl.props.handset.mouth);
-    drawCord(a, b, c.sag * hs, c.w_cm * hs, c.part);
-  }
+    drawCord(a, b, (cordOver ? E.segs[fr.seg].cord_over.sag ?? c.sag : c.sag) * hs, c.w_cm * hs, c.part); };
+  if (!cordOver) drawTheCord();   // behind the poet: it runs back to the wall
   const drawPoet = () => {
     if (!sol) return;
     const hk = 'hand_' + E.edl.props.handset.hand;
@@ -371,7 +374,7 @@ function render(f) {
   const drawCase = () => { const c = ps.case; if (!c) return; const s = cam.s(c.pos[2]), pr = E.edl.props.case;
     const anchor = c.held ? pr.grip : [.5, 1], at = c.held ? c.gripPx : cam.p(c.pos);
     drawPlaced(cardAt(pr.part, pr.w_cm, pr.h_cm, c.held ? port.k : s, anchor, at, 0)); };
-  if (inside) { drawPoet(); drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam); drawBoothCard('front-glass-pane-clear', cam); drawCase(); drawBoothCard('lamp', cam); }
+  if (inside) { drawPoet(); if (cordOver) drawTheCord(); drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam); drawBoothCard('front-glass-pane-clear', cam); drawCase(); drawBoothCard('lamp', cam); }
   else { drawBoothCard('roof light', cam); drawBoothCard('booth frame', cam); drawBoothCard('front-glass-pane-clear', cam); drawBoothCard('lamp', cam);
     const caseBehind = ps.case && !ps.case.held && ps.case.pos[2] < fr.a.A.j[0][2];
     if (caseBehind) drawCase(); drawPoet(); if (!caseBehind) drawCase(); }
@@ -415,7 +418,7 @@ function measureFrame(f, fr, sol, port, cam, hc) {
   }
   out.contact = {};
   for (const s of ['L', 'R']) { const jj = fr.a.A.j, c = ['heel', 'ball', 'toe'].map(n => [n, jj[ji[n + s]]]).sort((a, b) => a[1][1] - b[1][1])[0];
-    out.contact[s] = { n: c[0], p: c[1].slice() }; }
+    const fy = E.edl.shots[fr.shot]?.floor_y || 0; out.contact[s] = { n: c[0], p: [c[1][0], c[1][1] - fy, c[1][2]] }; }
   for (const s of ['L', 'R']) { const x = sol.X['foot_' + s]; if (!x) continue; const a = P.fwd(x, x.A), b = P.fwd(x, x.B);
     out.feet[s] = { a: [a[0] / port.k, a[1] / port.k], b: [b[0] / port.k, b[1] / port.k], low: Math.min(fr.a.A.j[ji['heel' + s]][1], fr.a.A.j[ji['ball' + s]][1], fr.a.A.j[ji['toe' + s]][1]) }; }
   const hx = sol.X['hand_' + E.edl.props.handset.hand];
