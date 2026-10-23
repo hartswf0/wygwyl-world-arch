@@ -126,7 +126,9 @@ function bboxOf(cv) {
 async function run(ch, file, U, opts) {
   if (!LIB) LIB = await (await fetch('/shots/skinlab/library.json')).json();
   const C = await (await fetch(`/shots/skinlab/contracts/${ch}.json`, { cache: 'no-store' })).json();
-  const D = await (await fetch(`/shots/rig/${opts.poses || 'poses'}/${file}.json`, { cache: 'no-store' })).json();
+  let resp = await fetch(`/shots/rig/${opts.poses || 'poses'}/${file}.json`, { cache: 'no-store' }), posesDir = opts.poses || 'poses';
+  if (!resp.ok) { resp = await fetch(`/shots/rig/poses/${file}.json`, { cache: 'no-store' }); posesDir = 'poses'; }   // no re-solve for this costume yet
+  const D = await resp.json();
   if (opts.harvest && !HV) { try { HV = await (await fetch('/shots/skinlab/library_harvest.json', { cache: 'no-store' })).json(); } catch { HV = { cards: [], sets: [] }; } }
   const harvest = opts.harvest ? HV.cards.filter(c => !c.bad && c.character === ch) : null;
   await P.prepare({ contract: C, library: LIB, imgBase: '/shots/skinlab/', harvest: harvest || undefined });
@@ -173,7 +175,7 @@ async function run(ch, file, U, opts) {
       const sh = s => ({ ...s, P: [s.P[0] - crop[0], s.P[1] - crop[1]], Q: [s.Q[0] - crop[0], s.Q[1] - crop[1]], end: [s.end[0] - crop[0], s.end[1] - crop[1]] });
       const psi = sol.psi;
       out.push({ ...base, view: PC.viewKey(psi), psi, facing: psi % 180 === 0 ? (Math.abs(psi) === 180 ? 'away' : 'camera') : ((psi % 360) + 360) % 360 < 180 ? 'right' : 'left',
-        solve_iou: sol.iou, solve_err_cm: sol.mean_err_cm, via: 'PuppetCore.renderPose', props: behind.concat(front),
+        solve_iou: sol.iou, solve_err_cm: sol.mean_err_cm, poses_dir: posesDir, resolved: sol.resolved ?? null, via: 'PuppetCore.renderPose', props: behind.concat(front),
         chains: picks.map(pk => ({ source: pk.src, parts: pk.got.map(g => g.k + ':' + Math.round(g.cos * 100) + '%') })),
         frame: { kU, paintX: offX - crop[0], paintY: offY - crop[1], w: o.width, h: o.height }, puppet_bbox: bb && [bb[0] - crop[0], bb[1] - crop[1], bb[2] - crop[0], bb[3] - crop[1]],
         segments: (r.segments || []).map(sh), cards: r.cards, warnings: r.warnings, png: o.toDataURL('image/png') });

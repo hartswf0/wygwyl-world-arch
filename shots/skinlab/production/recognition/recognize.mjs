@@ -48,7 +48,7 @@ try {
     fs.rmSync(rdir, { recursive: true, force: true }); fs.mkdirSync(rdir, { recursive: true });
     const reports = [];
     for (const file of CHARACTERS[ch]) {
-      const res = await page.evaluate(async (ch, file, U) => harness.run(ch, file, U, { harvest: true, props: true, poses: process.env.POSES || 'poses' }), ch, file, U);
+      const res = await page.evaluate(async (ch, file, U, poses) => harness.run(ch, file, U, { harvest: true, props: true, poses }), ch, file, U, process.env.POSES || 'poses');
       for (const r of res) {
         if (r.png) { fs.writeFileSync(path.join(rdir, r.safe + '.png'), Buffer.from(r.png.split(',')[1], 'base64')); delete r.png; }
         reports.push(r);
