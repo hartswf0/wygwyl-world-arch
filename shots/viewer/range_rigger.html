@@ -795,11 +795,25 @@ canvas.tall-cv {
 }
 .step-btn .st-title { font-size: 15px; }
 
-/* Live Batch / Grid Evolutionary Breeder (Stage 06) */
+/* Live Batch / Grid Evolutionary Breeder (Stage 06 — Museum-Grade Frameless Vitrines) */
+body[data-active-stage="s6"] .breed-evo-bar {
+  display: none !important;
+}
+.evolve-museum-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 10px 14px;
+  background: rgba(13, 18, 27, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
 .evolve-grid-matrix {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 12px;
 }
 @media (max-width: 1120px) {
   .evolve-grid-matrix { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -808,42 +822,26 @@ canvas.tall-cv {
   .evolve-grid-matrix { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .eg-cell {
-  background: #080b11;
-  border: 1.5px solid var(--rule);
-  display: flex;
-  flex-direction: column;
+  background: #090c12;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+  overflow: hidden;
   position: relative;
-  transition: border-color 0.14s, box-shadow 0.14s;
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
-.eg-cell:hover { border-color: var(--cyan); }
+.eg-cell:hover {
+  border-color: rgba(0, 210, 255, 0.48);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+}
 .eg-cell[data-starred="true"] {
-  border-color: var(--yellow);
-  box-shadow: 0 0 0 1px rgba(255, 190, 11, 0.35), inset 0 0 18px rgba(255, 190, 11, 0.08);
-}
-.eg-hdr {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px 7px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--rule);
-  font-family: var(--mono);
-  font-size: 9.5px;
-}
-.eg-hdr .eg-rank { font-weight: 700; color: var(--cyan); }
-.eg-cell[data-starred="true"] .eg-hdr .eg-rank { color: var(--yellow); }
-.eg-hdr .eg-score {
-  font-weight: 700;
-  padding: 1px 5px;
-  background: rgba(34, 197, 94, 0.15);
-  color: var(--green);
-  border: 1px solid rgba(34, 197, 94, 0.45);
+  border-color: rgba(255, 190, 11, 0.75);
+  box-shadow: 0 0 0 1px rgba(255, 190, 11, 0.28), 0 8px 26px rgba(0, 0, 0, 0.5);
 }
 .eg-cv-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 11 / 10;
-  background: #0d1017;
+  aspect-ratio: 10 / 9;
+  background: #090c12;
   cursor: pointer;
 }
 .eg-cv-wrap canvas {
@@ -851,33 +849,79 @@ canvas.tall-cv {
   height: 100%;
   display: block;
 }
-.eg-ftr {
+/* Whisper-quiet museum vitrine overlays */
+.eg-overlay-top {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  right: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 4px;
-  padding: 4px 6px;
-  background: var(--panel);
-  border-top: 1px solid var(--rule);
+  pointer-events: none;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  color: rgba(232, 238, 247, 0.62);
+}
+.eg-overlay-top .eg-num {
+  font-weight: 700;
+  color: rgba(232, 238, 247, 0.82);
+}
+.eg-cell[data-starred="true"] .eg-overlay-top .eg-num {
+  color: var(--yellow);
+}
+.eg-overlay-top .eg-metric {
+  font-weight: 600;
+  color: rgba(0, 210, 255, 0.85);
+  background: rgba(8, 11, 17, 0.65);
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+.eg-overlay-actions {
+  position: absolute;
+  bottom: 8px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+.eg-cell:hover .eg-overlay-actions,
+.eg-cell[data-starred="true"] .eg-overlay-actions {
+  opacity: 1;
+}
+.eg-overlay-actions .eg-sub {
   font-family: var(--mono);
   font-size: 9px;
-}
-.eg-ftr .eg-recipe {
-  color: var(--ink-2);
+  color: rgba(232, 238, 247, 0.58);
+  background: rgba(8, 11, 17, 0.72);
+  padding: 2px 6px;
+  border-radius: 2px;
+  max-width: 48%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 125px;
+}
+.eg-btn-group {
+  display: flex;
+  gap: 4px;
+  pointer-events: auto;
 }
 .eg-btn {
   appearance: none;
-  background: var(--panel-2);
+  background: rgba(14, 20, 30, 0.86);
+  backdrop-filter: blur(6px);
   color: var(--ink);
-  border: 1px solid var(--rule);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
   font-family: var(--mono);
   font-size: 9px;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 3px 7px;
   cursor: pointer;
 }
 .eg-btn:hover { border-color: var(--cyan); color: var(--cyan); }
@@ -886,20 +930,16 @@ canvas.tall-cv {
   border-color: var(--yellow);
   color: var(--yellow);
 }
-.eg-btn.apply {
-  border-color: var(--cyan);
-  color: var(--cyan);
-}
 .eg-btn.apply:hover {
   background: var(--cyan);
   color: #06090e;
 }
 </style>
 </head>
-<body>
+<body data-active-stage="s5">
 
 <nav class="suite-nav" aria-label="WYGWYL Suite Navigation">
-  <div class="suite-brand"><span class="dot"></span> WYGWYL × BOLAS · VISUAL PIECE RIGGER &amp; KITBASH STUDIO</div>
+  <div class="suite-brand"><span class="dot"></span> WYGWYL &times; BOLAS &middot; EVOLUTIONARY PHYSICS &amp; SEAMLESS FACE GALLERY</div>
   <div class="nav-links">
     <a href="cards.html">[CARDS ATLAS]</a>
     <a href="body_lab.html">[BODY LAB]</a>
@@ -916,15 +956,15 @@ canvas.tall-cv {
 
 <div class="wrap" style="padding-top:8px;gap:8px">
   <!-- Visual Avatar Rig Strip -->
-  <div class="rig-strip" id="rigStrip" style="padding:6px 10px">
-    <span class="rig-strip-label">RIG:</span>
+  <div class="rig-strip" id="rigStrip" style="padding:5px 10px">
+    <span class="rig-strip-label">CAST:</span>
     <div style="margin-left:auto;display:flex;gap:6px">
-      <button type="button" id="quickEvolveGrid" class="btn warn" style="padding:4px 9px;font-size:10px;border-color:var(--yellow);color:var(--yellow)">EVOLVE FACES &amp; BODIES GRID</button>
-      <button type="button" id="quickAll54" class="btn primary" style="padding:4px 8px;font-size:10px">54 RANGE LAB</button>
+      <button type="button" id="quickEvolveGrid" class="btn primary" style="padding:4px 10px;font-size:10px">EVOLVE GALLERY (SIMS &amp; FACES)</button>
+      <button type="button" id="quickAll54" class="btn" style="padding:4px 9px;font-size:10px">54 RANGE LAB</button>
     </div>
   </div>
 
-  <!-- Compact Visual Studio Control Bar (Torso Code Solver + Breeds + Layer Flip + Evo/MC/RL) -->
+  <!-- Compact Visual Studio Control Bar (Hidden automatically in Stage 06 Museum Gallery) -->
   <div class="breed-evo-bar" aria-label="Torso Solver, Skeleton Breeds, Layer Order, and Pose Solver">
     <span class="bar-label">TORSO:</span>
     <div class="seg" role="group" aria-label="Torso Render Solver">
@@ -951,42 +991,41 @@ canvas.tall-cv {
     <button type="button" class="inv-chip" id="autoEvoKeyChip" aria-pressed="false" style="padding:4px 7px"><span class="box"></span>AUTO</button>
 
     <div class="evo-candidates" id="evoCandidatesStrip">
-      <span style="font-family:var(--mono);font-size:10px;color:var(--yellow)">RIGHT-CLICK / LONG-PRESS ANY PIECE = RADIAL GIZMO · DRAG JOINTS = BONE TWEAK</span>
-      <button type="button" class="inv-chip" data-inv="twoPin" aria-pressed="true" style="margin-left:auto;padding:2px 6px;font-size:9.5px"><span class="box"></span>1:PINS</button>
+      <button type="button" class="inv-chip" data-inv="twoPin" aria-pressed="true" style="padding:2px 6px;font-size:9.5px"><span class="box"></span>1:PINS</button>
       <button type="button" class="inv-chip" data-inv="intrinsicRot" aria-pressed="true" style="padding:2px 6px;font-size:9.5px"><span class="box"></span>2:AXIS</button>
       <button type="button" class="inv-chip" data-inv="vitruvianScale" aria-pressed="true" style="padding:2px 6px;font-size:9.5px"><span class="box"></span>3:SCALE</button>
       <button type="button" class="inv-chip" data-inv="cuffTuckZ" aria-pressed="true" style="padding:2px 6px;font-size:9.5px"><span class="box"></span>4:CUFF-Z</button>
       <button type="button" class="btn warn" id="breakAllBtn" style="padding:2px 6px;font-size:9.5px">RAW</button>
       <button type="button" class="btn primary" id="solveAllBtn" style="padding:2px 6px;font-size:9.5px">SOLVE</button>
-      <span id="evoStatusText" style="font-family:var(--mono);font-size:10px;color:var(--ink-2)"></span>
+      <span id="evoStatusText" style="font-family:var(--mono);font-size:10px;color:var(--ink-2);margin-left:auto"></span>
     </div>
   </div>
 
   <!-- Compact 6-Stage Pipeline Stepper -->
   <nav class="pipeline-stepper" role="tablist" aria-label="6-Stage Rigging & Evolution Pipeline">
     <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s1">
-      <span class="st-num">01 · POSE VS CARDS</span>
+      <span class="st-num">01 &middot; POSE VS KIT</span>
       <span class="st-title">17-KP vs Kit</span>
     </button>
     <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s2">
-      <span class="st-num">02 · PROPORTIONS</span>
+      <span class="st-num">02 &middot; PROPORTIONS</span>
       <span class="st-title">Vitruvian Frame</span>
     </button>
     <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s3">
-      <span class="st-num">03 · MARKERS</span>
+      <span class="st-num">03 &middot; MARKERS</span>
       <span class="st-title">Pin &amp; Cuff Loupe</span>
     </button>
     <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s4">
-      <span class="st-num">04 · TOPOLOGY</span>
+      <span class="st-num">04 &middot; TOPOLOGY</span>
       <span class="st-title">DAG vs Z-Order</span>
     </button>
     <button type="button" class="step-btn" role="tab" aria-selected="true" data-stage="s5">
-      <span class="st-num">05 · ANIMATION LAB</span>
-      <span class="st-title">54 Range Tests + Kitbash</span>
+      <span class="st-num">05 &middot; RANGE LAB</span>
+      <span class="st-title">54 Tests + Kitbash</span>
     </button>
     <button type="button" class="step-btn" role="tab" aria-selected="false" data-stage="s6">
-      <span class="st-num">06 · EVOLVE GRID</span>
-      <span class="st-title">Faces &amp; Bodies Batch</span>
+      <span class="st-num">06 &middot; EVOLVE GALLERY</span>
+      <span class="st-title">Sims Physics &amp; Faces</span>
     </button>
   </nav>
 
@@ -1213,34 +1252,32 @@ canvas.tall-cv {
     <div id="contact" class="sheetgrid"></div>
   </section>
 
-  <!-- ==================== STAGE 06: LIVE EVOLUTIONARY BATCH GRID (FACES & BODIES) ==================== -->
+  <!-- ==================== STAGE 06: MUSEUM-GRADE EVOLVE GALLERY (KARL SIMS PHYSICS & SEAMLESS FACES) ==================== -->
   <section id="stage_s6" class="sheetgrid" hidden>
-    <div class="card-box" style="padding:10px 12px;gap:8px">
-      <div class="controls" style="justify-content:space-between;gap:8px">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <div class="seg" role="group" aria-label="Evolutionary Grid Mode">
-            <button type="button" data-egmode="bodies" aria-pressed="true" title="12 full bodies moving simultaneously through film motions, evolving cross-kit pieces, breeds & 2.5D torsos">12 BODIES &times; FILM</button>
-            <button type="button" data-egmode="strips" aria-pressed="false" title="Photo-Fit 3-Strip Flipbook (#11 / #24 / #36 horizontal brow/eye, nose, and mouth strips)">3-STRIP FLIPBOOK (#11/#24/#36)</button>
-            <button type="button" data-egmode="cubist" aria-pressed="false" title="Multi-Window Assisted Self-Portrait & Cubist Multi-Angle Collage Breeder">CUBIST / MULTI-WINDOW COLLAGE</button>
-          </div>
-          <div class="seg" role="group" aria-label="Grid Camera Angle">
-            <button type="button" data-egview="auto" aria-pressed="true">AUTO</button>
-            <button type="button" data-egview="front" aria-pressed="false">FRONT</button>
-            <button type="button" data-egview="tq" aria-pressed="false">3/4</button>
-            <button type="button" data-egview="side" aria-pressed="false">SIDE</button>
-            <button type="button" data-egview="orbit" aria-pressed="false">ORBIT</button>
-          </div>
+    <div class="evolve-museum-bar">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="seg" role="group" aria-label="Evolutionary Gallery Mode">
+          <button type="button" data-egmode="bodies" aria-pressed="true">KARL SIMS &middot; GRAVITY, TENDONS &amp; JOINTS</button>
+          <button type="button" data-egmode="faces" aria-pressed="false">FACES &middot; BEAUTY &amp; ZERO SEAMS</button>
+          <button type="button" data-egmode="strips" aria-pressed="false">3-STRIP PORTRAIT FLIPBOOK</button>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span id="egGenReadout" style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--yellow)">GEN 01 · GEOM MAX 98.4%</span>
-          <button type="button" class="inv-chip" id="egStreamBtn" aria-pressed="true" style="padding:5px 9px;border-color:var(--green);color:var(--green)"><span class="box"></span>STREAM FILM EVOLUTION</button>
-          <button type="button" class="btn primary" id="egStepGenBtn" style="padding:5px 10px">EVOLVE NEXT GEN (BREED ★)</button>
-          <button type="button" class="btn" id="egMutateBtn" style="padding:5px 9px">MUTATE UNSTARRED</button>
+        <div class="seg" role="group" aria-label="View & Gaze Compatibility Filter">
+          <button type="button" data-egview="auto" aria-pressed="true">AUTO COMPAT</button>
+          <button type="button" data-egview="front" aria-pressed="false">FRONT</button>
+          <button type="button" data-egview="side" aria-pressed="false">SIDE PROFILE</button>
         </div>
+        <button type="button" class="inv-chip" id="egTendonChip" aria-pressed="true" style="padding:4px 8px"><span class="box"></span>TENDONS &amp; JOINTS</button>
+        <button type="button" class="btn" id="egGravityBtn" style="padding:4px 8px" title="Cycle gravitational field strength">GRAVITY: 1.0G</button>
       </div>
-
-      <div class="evolve-grid-matrix" id="evolveGridHost"></div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span id="egGenReadout" style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-2)">GEN 01 &middot; BEST +3.8m</span>
+        <button type="button" class="inv-chip" id="egStreamBtn" aria-pressed="true" style="padding:4px 9px"><span class="box"></span>AUTO-EVOLVE</button>
+        <button type="button" class="btn primary" id="egStepGenBtn" style="padding:4px 11px">BREED &starf; PARENTS</button>
+        <button type="button" class="btn" id="egMutateBtn" style="padding:4px 9px">MUTATE</button>
+      </div>
     </div>
+
+    <div class="evolve-grid-matrix" id="evolveGridHost"></div>
   </section>
 </div>
 
@@ -1953,16 +1990,17 @@ function centerAllBonesAndVitruvianSnap() {
   applySkeletonBreed('vitruvian_8h');
 }
 
+function detectPieceViewDir(filePath, meta) {
+  if (meta && (meta.view_dir || meta.view)) return meta.view_dir || meta.view;
+  const f = (filePath || '').toLowerCase();
+  if (f.includes('threequarter_back') || f.includes('.back.') || f.includes('_back')) return 'back';
+  if (f.includes('profile')) return 'profile';
+  if (f.includes('threequarter') || f.includes('3q')) return 'threequarter';
+  return 'front';
+}
+
 function selectViewVariantInfo(slotObj, camYawDeg, rig, slotKey) {
-  if (!slotObj) return { viewKey: 'front', file: null, meta: null };
-  const tw = slotKey ? getSlotTweak(slotKey) : null;
-  if (tw && tw.overrideFile) {
-    return {
-      viewKey: 'custom',
-      file: tw.overrideFile,
-      meta: tw.overrideMeta || slotObj
-    };
-  }
+  if (!slotObj) return { viewKey: 'front', file: null, meta: null, compatOk: true, autoFlipProfile: false };
   const vv = slotObj.view_variants || {};
   const vm = slotObj.variant_meta || {};
   let y = ((camYawDeg % 360) + 540) % 360 - 180;
@@ -1976,9 +2014,56 @@ function selectViewVariantInfo(slotObj, camYawDeg, rig, slotKey) {
     else if (absY > 22 && absY <= 55 && vv.threequarter) viewKey = 'threequarter';
     else viewKey = 'front';
   }
+
+  const tw = slotKey ? getSlotTweak(slotKey) : null;
+  if (tw && tw.overrideFile) {
+    const ovMeta = tw.overrideMeta || slotObj;
+    const ovView = detectPieceViewDir(tw.overrideFile, ovMeta);
+    const isSidewaysMismatch = (ovView === 'profile' && viewKey === 'front') || (ovView === 'front' && viewKey === 'profile');
+    if (slotKey === 'head' && isSidewaysMismatch && inv.intrinsicRot) {
+      // Auto-resolve sideways head incompatibility: use compatible head from same group or rig's native view variant
+      const gp = CATALOG && CATALOG.face_and_body_gene_pool;
+      const grp = ovMeta.group || (rig && rig.short_name) || '';
+      const matchHd = gp && gp.expressive_heads && gp.expressive_heads.find(h =>
+        !h.is_blank && h.view === viewKey && (h.group === grp || (rig && h.file.includes(rig.id.split('_')[0])))
+      );
+      if (matchHd) {
+        return {
+          viewKey,
+          file: matchHd.file,
+          meta: { file: matchHd.file, width: matchHd.width, height: matchHd.height, pivot_A: [0.50, 0.88], socket_B: [0.50, 0.12], rot_offset_deg: 0 },
+          compatOk: true,
+          autoFlipProfile: (viewKey === 'profile' && y > 40)
+        };
+      } else if (vv[viewKey]) {
+        return {
+          viewKey,
+          file: vv[viewKey],
+          meta: vm[viewKey] || slotObj,
+          compatOk: true,
+          autoFlipProfile: (viewKey === 'profile' && y > 40)
+        };
+      }
+    }
+    return {
+      viewKey: ovView,
+      file: tw.overrideFile,
+      meta: ovMeta,
+      compatOk: !isSidewaysMismatch,
+      autoFlipProfile: (ovView === 'profile' && y > 40)
+    };
+  }
+
   const file = vv[viewKey] || slotObj.file;
   const meta = vm[viewKey] || slotObj;
-  return { viewKey, file, meta };
+  const actualView = detectPieceViewDir(file, meta);
+  return {
+    viewKey,
+    file,
+    meta,
+    compatOk: true,
+    autoFlipProfile: (slotKey === 'head' && actualView === 'profile' && y > 40)
+  };
 }
 
 function selectViewVariant(slotObj, camYawDeg, rig) {
@@ -1988,7 +2073,7 @@ function selectViewVariant(slotObj, camYawDeg, rig) {
 // Draw a single WYGWYL cut-out piece hung between 2D projected joint_A and joint_B
 function drawPieceFitBone(ctx, slotKey, slotObj, ptA, ptB, sc, camYaw, rig, opts = {}) {
   if (!slotObj || !ptA || !ptB) return;
-  const { viewKey, file, meta } = selectViewVariantInfo(slotObj, camYaw, rig, slotKey);
+  const { viewKey, file, meta, autoFlipProfile } = selectViewVariantInfo(slotObj, camYaw, rig, slotKey);
   const im = getImg(file);
   if (!im || !im.complete || !im.naturalWidth) return;
 
@@ -2032,13 +2117,15 @@ function drawPieceFitBone(ctx, slotKey, slotObj, ptA, ptB, sc, camYaw, rig, opts
     scale *= brokenMult;
   }
 
-  const doFlipX = Boolean(opts.flipX) !== Boolean(tw.flipX);
+  const doFlipX = (Boolean(opts.flipX) !== Boolean(tw.flipX)) !== Boolean(autoFlipProfile);
 
   ctx.save();
   if (opts.alpha != null) ctx.globalAlpha = opts.alpha;
   ctx.translate(ptA[0], ptA[1]);
-  ctx.rotate(thetaTarget - thetaCard + extraRot);
+  // Mirror across the bone axis (in bone-aligned frame) so vertical pieces mirror left-right instead of upside-down!
+  ctx.rotate(thetaTarget);
   if (doFlipX) ctx.scale(1, -1);
+  ctx.rotate(-thetaCard + extraRot);
   ctx.scale(scale, scale);
 
   const rawClip = (meta && meta.cuff_clip_ratio != null) ? meta.cuff_clip_ratio : (slotObj.cuff_clip_ratio || 1.0);
@@ -3556,6 +3643,7 @@ $('s4FlipYawBtn').onclick = () => {
 /* ================= STAGE SWITCHING & INVARIANT CONTROLS ================= */
 function switchStage(s) {
   activeStage = s;
+  document.body.dataset.activeStage = s;
   document.querySelectorAll('.step-btn').forEach(b => b.setAttribute('aria-selected', String(b.dataset.stage === s)));
   ['s1', 's2', 's3', 's4', 's5', 's6'].forEach(k => {
     const el = $('stage_' + k);
@@ -4125,11 +4213,13 @@ function renderEvolvedCandidatesStrip(algo, motionId, frameIdx) {
   });
 }
 
-/* ================= STAGE 06: LIVE EVOLUTIONARY BATCH GRID (FACES & BODIES) ================= */
+/* ================= STAGE 06: MUSEUM-GRADE EVOLVE GALLERY (KARL SIMS PHYSICS & SEAMLESS FACES) ================= */
 const egState = {
-  mode: 'bodies', // 'bodies' | 'strips' | 'cubist'
-  view: 'auto',
-  streaming: true,
+  mode: 'bodies', // 'bodies' (Karl Sims Physics) | 'faces' (Seamless Beauty) | 'strips' (3-Strip Flipbook)
+  view: 'auto',   // 'auto' | 'front' | 'side'
+  streaming: false,
+  showTendons: true,
+  gravityG: 1.0,  // 1.0G | 0.4G (Moon) | 1.8G (Heavy)
   gen: 1,
   orbit: 0,
   tick: 0,
@@ -4137,77 +4227,364 @@ const egState = {
 };
 const egCanvases = [];
 
+// Offscreen compositing canvases for zero-seam skin-tone harmonization and head silhouette clipping
+let _faceCompCv = null, _faceFeatCv = null;
+function getFaceCompCanvases(w, h) {
+  if (!_faceCompCv) {
+    _faceCompCv = document.createElement('canvas');
+    _faceFeatCv = document.createElement('canvas');
+  }
+  if (_faceCompCv.width !== w || _faceCompCv.height !== h) {
+    _faceCompCv.width = w; _faceCompCv.height = h;
+    _faceFeatCv.width = w; _faceFeatCv.height = h;
+  }
+  return { comp: _faceCompCv, feat: _faceFeatCv };
+}
+
 function getGenePool() {
   if (!CATALOG) return null;
   return CATALOG.face_and_body_gene_pool || null;
 }
 
-function scoreEvolveCellGeometry(cell) {
+function getSeamlessPool() {
   const gp = getGenePool();
-  if (!gp || !CATALOG) return { total: 92.0, align: 92, prop: 92, seam: 92, contrast: 92 };
-  const rig = CATALOG.rigs[cell.rigIdx] || CATALOG.rigs[0];
-  const br = (CATALOG.skeleton_breeds || []).find(b => b.id === cell.breedId) || (CATALOG.skeleton_breeds || [])[0];
-  const hd = gp.expressive_heads[cell.headIdx % gp.expressive_heads.length] || gp.expressive_heads[0];
+  return (gp && gp.seamless_face_pool) ? gp.seamless_face_pool : null;
+}
 
-  // 1. Orientation & View Registration Harmony (28%)
-  const viewMatch = (egState.view === 'auto' || hd.view === egState.view || (egState.view === 'tq' && hd.view === 'threequarter') || (egState.view === 'side' && hd.view === 'profile')) ? 0.97 : 0.86;
-  const align = clamp(viewMatch + (cell.torsoMode === 'code' ? 0.03 : 0), 0.72, 0.995);
+/* ---- KARL SIMS 2D ARTICULATED RIGID-BODY + MUSCLE-TENDON + GRAVITY PHYSICS ENGINE ---- */
+function createSimsPhysicsState(genome) {
+  const legLen = (44 + 44) * genome.legLenMult;
+  return {
+    t: 0,
+    x: 0,
+    y: legLen * 0.94,
+    vx: 26 * genome.freq,
+    vy: 0,
+    theta: genome.leanTarget,
+    omega: 0,
+    hipL: 0.25, hipR: -0.25,
+    hipVelL: 0, hipVelR: 0,
+    kneeL: 0.22, kneeR: 0.42,
+    kneeVelL: 0, kneeVelR: 0,
+    ankleL: 0.05, ankleR: -0.10,
+    shL: -0.20, shR: 0.20,
+    elL: 0.35, elR: 0.35,
+    contactL: true, contactR: false,
+    anchorXL: 6, anchorXR: -12,
+    rippleL: 0, rippleR: 0,
+    stumbles: 0,
+    maxDistM: 0,
+    tensions: { hipL: 0.4, hipR: 0.6, kneeL: 0.5, kneeR: 0.3, achillesL: 0.7, achillesR: 0.2, core: 0.4, armL: 0.3, armR: 0.5 },
+    J: null
+  };
+}
 
-  // 2. Vitruvian Golden-Ratio Proportion Score (28%)
-  let prop = 0.92;
-  if (br && br.bones) {
-    const leg = br.bones.thigh + br.bones.shin;
-    const tot = leg + br.bones.spine + br.bones.headR * 2.4;
-    const grErr = Math.abs(leg / tot - 0.50);
-    prop = clamp(1.0 - grErr * 1.9 - Math.abs(cell.limbScale - 1.0) * 0.4, 0.76, 0.995);
+function stepSimsPhysics(cell, dt) {
+  const g = cell.simsGenome;
+  const s = cell.sims || (cell.sims = createSimsPhysicsState(g));
+  const grav = 980 * egState.gravityG; // cm/s^2
+  const subSteps = 3;
+  const h = clamp(dt, 0.008, 0.05) / subSteps;
+
+  const thighL = 45 * g.legLenMult;
+  const shinL  = 45 * g.legLenMult;
+  const spineL = 52 * g.torsoMassMult;
+  const upperL = 30 * g.armLenMult;
+  const foreL  = 27 * g.armLenMult;
+
+  for (let step = 0; step < subSteps; step++) {
+    s.t += h;
+    const ph = s.t * g.freq * Math.PI * 2;
+
+    // 1. Central Pattern Generator (CPG) + Vestibular Balance Reflex targets
+    // Stepping reflex swings the leg FORWARD (+reflexHip) when trunk pitches forward to catch CoM!
+    const reflexHip = clamp((s.theta - g.leanTarget) * g.balanceGain * 0.45, -0.22, 0.28);
+    const targetHipL = 0.12 + Math.sin(ph) * g.hipAmp + reflexHip;
+    const targetHipR = 0.12 + Math.sin(ph + Math.PI) * g.hipAmp + reflexHip;
+
+    // Knees flex during swing (as leg swings from back to front) and extend during stance push-off
+    const swingL = Math.max(0, Math.cos(ph - 0.35));
+    const swingR = Math.max(0, Math.cos(ph + Math.PI - 0.35));
+    const targetKneeL = clamp(0.08 + swingL * g.kneeAmp * 0.85, 0.05, 1.45);
+    const targetKneeR = clamp(0.08 + swingR * g.kneeAmp * 0.85, 0.05, 1.45);
+
+    const targetAnkleL = clamp(Math.sin(ph - 0.5) * g.ankleAmp, -0.38, 0.45);
+    const targetAnkleR = clamp(Math.sin(ph + Math.PI - 0.5) * g.ankleAmp, -0.38, 0.45);
+
+    // 2. Antagonistic Muscle-Tendon PD Torques & Joint Angle Limits
+    const kp = 46 * g.kp, kd = 6.8;
+    const tauHipL = kp * (targetHipL - s.hipL) - kd * s.hipVelL;
+    const tauHipR = kp * (targetHipR - s.hipR) - kd * s.hipVelR;
+    const tauKneeL = kp * 1.25 * (targetKneeL - s.kneeL) - kd * s.kneeVelL;
+    const tauKneeR = kp * 1.25 * (targetKneeR - s.kneeR) - kd * s.kneeVelR;
+
+    s.hipVelL = (s.hipVelL + tauHipL * h) * 0.90;
+    s.hipVelR = (s.hipVelR + tauHipR * h) * 0.90;
+    s.kneeVelL = (s.kneeVelL + tauKneeL * h) * 0.88;
+    s.kneeVelR = (s.kneeVelR + tauKneeR * h) * 0.88;
+
+    s.hipL = clamp(s.hipL + s.hipVelL * h, -0.75, 0.88);
+    s.hipR = clamp(s.hipR + s.hipVelR * h, -0.75, 0.88);
+    // Strict anatomical knee stop (cannot hyperextend past 0.04 rad!)
+    s.kneeL = clamp(s.kneeL + s.kneeVelL * h, 0.04, 1.65);
+    s.kneeR = clamp(s.kneeR + s.kneeVelR * h, 0.04, 1.65);
+    s.ankleL = targetAnkleL;
+    s.ankleR = targetAnkleR;
+
+    // Counter-swinging arms driven by shoulder/elbow tendons
+    s.shL = -s.hipL * 0.82;
+    s.shR = -s.hipR * 0.82;
+    s.elL = clamp(0.32 + Math.max(0, s.shL) * 0.75, 0.10, 1.45);
+    s.elR = clamp(0.32 + Math.max(0, s.shR) * 0.75, 0.10, 1.45);
+
+    // 3. Forward Kinematics of Left & Right Legs in Sagittal Plane (+x/+z = forward right, +y = up)
+    const hipYL = s.y, hipYR = s.y;
+    const thAngL = s.hipL; // > 0 swings thigh forward (+x)
+    const thAngR = s.hipR;
+    const knXL = s.x + Math.sin(thAngL) * thighL;
+    const knYL = hipYL - Math.cos(thAngL) * thighL;
+    const knXR = s.x + Math.sin(thAngR) * thighL;
+    const knYR = hipYR - Math.cos(thAngR) * thighL;
+
+    // Knee flexion bends the shin BACKWARD (-s.kneeL), never hyperextending forward!
+    const shAngL = thAngL - s.kneeL;
+    const shAngR = thAngR - s.kneeR;
+    const anXL = knXL + Math.sin(shAngL) * shinL;
+    const anYL = knYL - Math.cos(shAngL) * shinL;
+    const anXR = knXR + Math.sin(shAngR) * shinL;
+    const anYR = knYR - Math.cos(shAngR) * shinL;
+
+    // 4. Gravity + Ground Contact Normal Force + Coulomb Friction Propulsion
+    const footClear = 5.0;
+    const penL = Math.max(0, footClear - anYL);
+    const penR = Math.max(0, footClear - anYR);
+
+    const prevCL = s.contactL, prevCR = s.contactR;
+    s.contactL = penL > 0;
+    s.contactR = penR > 0;
+    if (s.contactL && !prevCL) { s.anchorXL = anXL; s.rippleL = 1.0; }
+    if (s.contactR && !prevCR) { s.anchorXR = anXR; s.rippleR = 1.0; }
+    s.rippleL = Math.max(0, s.rippleL - h * 2.8);
+    s.rippleR = Math.max(0, s.rippleR - h * 2.8);
+
+    // Vertical dynamics: gravity vs stance leg ground reaction + Achilles push-off
+    const legStiff = 210 * g.kp / Math.max(0.7, g.torsoMassMult);
+    const normalForce = (penL + penR) * legStiff + ((s.contactL || s.contactR) ? grav * 0.92 : 0);
+    const targetPelvisY = (thighL + shinL) * Math.cos(0.22) * 0.95;
+    const postureLift = (s.contactL || s.contactR) ? (targetPelvisY - s.y) * 55 * g.kp : 0;
+
+    s.vy += (normalForce + postureLift - grav) * h;
+    s.vy *= 0.91;
+    s.y = clamp(s.y + s.vy * h, 38, (thighL + shinL) * 1.12);
+
+    // Horizontal dynamics: Coulomb stance push-off from hip extensor & ankle plantarflexion
+    let driveForce = 0;
+    if (s.contactL) driveForce += (Math.abs(s.hipVelL) * 45 + Math.max(0, -s.ankleL) * 85) * g.kp;
+    if (s.contactR) driveForce += (Math.abs(s.hipVelR) * 45 + Math.max(0, -s.ankleR) * 85) * g.kp;
+    const cruiseTargetVx = (thighL + shinL) * 0.72 * g.freq * g.hipAmp * (1.0 / Math.max(0.75, g.torsoMassMult * 0.9));
+    if (s.contactL || s.contactR) {
+      driveForce += (cruiseTargetVx - s.vx) * 9.5;
+    }
+    s.vx = clamp(s.vx + driveForce * h, 8, 135);
+    s.x += s.vx * h;
+
+    // Trunk pitch dynamics under gravity torque & erector-spinae reflex
+    const gravTorque = Math.sin(s.theta) * (grav * 0.012) * g.torsoMassMult;
+    const coreTorque = -68 * g.balanceGain * (s.theta - g.leanTarget * 0.55) - 11.5 * s.omega;
+    s.omega += (gravTorque + coreTorque) * h;
+    s.theta = clamp(s.theta + s.omega * h, -0.18, 0.24);
+    if (Math.abs(s.theta - g.leanTarget * 0.55) > 0.22) s.stumbles += h;
+
+    // Record instantaneous normalized muscle-tendon tensions [0..1] for visual filament glow
+    s.tensions.hipL = clamp(Math.abs(tauHipL) / 28, 0.12, 1.0);
+    s.tensions.hipR = clamp(Math.abs(tauHipR) / 28, 0.12, 1.0);
+    s.tensions.kneeL = clamp(Math.abs(tauKneeL) / 32, 0.12, 1.0);
+    s.tensions.kneeR = clamp(Math.abs(tauKneeR) / 32, 0.12, 1.0);
+    s.tensions.achillesL = clamp(s.contactL ? (0.45 + Math.abs(s.ankleL) * 1.4) : 0.18, 0.12, 1.0);
+    s.tensions.achillesR = clamp(s.contactR ? (0.45 + Math.abs(s.ankleR) * 1.4) : 0.18, 0.12, 1.0);
+    s.tensions.core = clamp(Math.abs(coreTorque) / 18, 0.15, 1.0);
+    s.tensions.armL = clamp(Math.abs(s.shL) * 1.3, 0.15, 1.0);
+    s.tensions.armR = clamp(Math.abs(s.shR) * 1.3, 0.15, 1.0);
   }
 
-  // 3. Seam & Cuff-Tuck Continuity (22%)
-  const seam = clamp((cell.torsoMode === 'code' ? 0.96 : 0.90) + (inv.cuffTuckZ ? 0.035 : -0.12), 0.70, 0.995);
+  s.maxDistM = Math.max(s.maxDistM, s.x / 100);
 
-  // 4. Visual Contrast & Cubist/Strip Interest (22%)
-  const eyeTension = Math.abs(cell.eyeLScale - cell.eyeRScale);
-  const contrastBase = egState.mode === 'cubist'
-    ? (0.88 + clamp(eyeTension * 0.35, 0, 0.11))
-    : (egState.mode === 'strips' ? 0.94 : 0.93);
-  const contrast = clamp(contrastBase + ((cell.strip1Idx * 7 + cell.strip3Idx * 3) % 11) * 0.005, 0.78, 0.995);
+  // Build 3D Bolas-compatible joint dictionary J so drawWygwylRigOnBolas renders the exact physical body!
+  // Note: with camYaw = -90 deg, world +Z projects to screen +X (right)!
+  const z0 = 0;
+  const pel = [0, s.y, z0];
+  const neck = [0, s.y + Math.cos(s.theta) * spineL, z0 + Math.sin(s.theta) * spineL];
+  const spineMid = mid(pel, neck);
+  const head = [0, neck[1] + Math.cos(s.theta * 0.5) * 16, neck[2] + Math.sin(s.theta * 0.5) * 16];
+  const headTop = [0, head[1] + 11, head[2]];
 
-  const starBoost = cell.starred ? 2.2 : 0;
-  const total = clamp((align * 0.28 + prop * 0.28 + seam * 0.22 + contrast * 0.22) * 100 + starBoost, 74.0, 99.8);
+  const makeLeg = (hipAng, kneeAng, ankleAng, contact, latX) => {
+    const hip = [latX, s.y, z0];
+    const thA = hipAng; // +thA swings thigh forward (+Z, right on screen)
+    const kn = [latX, hip[1] - Math.cos(thA) * thighL, hip[2] + Math.sin(thA) * thighL];
+    const shA = thA - kneeAng; // +kneeAng bends shin backward (-Z, anatomical knee flexion!)
+    let an = [latX, kn[1] - Math.cos(shA) * shinL, kn[2] + Math.sin(shA) * shinL];
+    if (an[1] < 5.0) an[1] = 5.0;
+    const footA = ankleAng * 0.5;
+    const footLen = 12 * g.footSizeMult;
+    const toe = [latX, Math.max(2.0, an[1] - 3.0 - Math.sin(footA) * 2.5), an[2] + Math.cos(footA) * footLen];
+    return { hip, kn, an, toe };
+  };
+  const legL = makeLeg(s.hipL, s.kneeL, s.ankleL, s.contactL, 6);
+  const legR = makeLeg(s.hipR, s.kneeR, s.ankleR, s.contactR, -6);
+
+  const makeArm = (shAng, elAng, latX) => {
+    const sh = [latX, neck[1] - 5, neck[2]];
+    const uA = shAng - s.theta * 0.3;
+    const el = [latX, sh[1] - Math.cos(uA) * upperL, sh[2] + Math.sin(uA) * upperL];
+    const fA = uA + elAng; // +elAng bends forearm forward (+Z, anatomical elbow flexion!)
+    const wr = [latX, el[1] - Math.cos(fA) * foreL, el[2] + Math.sin(fA) * foreL];
+    return { sh, el, wr };
+  };
+  const armL = makeArm(s.shL, s.elL, 11);
+  const armR = makeArm(s.shR, s.elR, -11);
+
+  s.J = {
+    pelvis: pel, spineMid, chest: spineMid, neck, head, headTop,
+    nose: [0, head[1], head[2] + 10],
+    eyeL: [3, head[1] + 2, head[2] + 8], eyeR: [-3, head[1] + 2, head[2] + 8],
+    earL: [8, head[1] + 1, head[2]], earR: [-8, head[1] + 1, head[2]],
+    hipL: legL.hip, kneeL: legL.kn, ankleL: legL.an, toeL: legL.toe,
+    hipR: legR.hip, kneeR: legR.kn, ankleR: legR.an, toeR: legR.toe,
+    shoulderL: armL.sh, elbowL: armL.el, wristL: armL.wr,
+    shoulderR: armR.sh, elbowR: armR.el, wristR: armR.wr
+  };
+
+  // Compute live Karl Sims Physical Locomotion Fitness
+  const speedScore = clamp(s.vx / 68, 0.45, 1.08);
+  const stabilityScore = clamp(1.0 - Math.abs(s.theta - g.leanTarget) * 1.4 - s.stumbles * 0.04, 0.55, 1.0);
+  const efficiencyScore = clamp(1.0 - Math.abs(g.legLenMult - 1.0) * 0.35 - Math.abs(g.torsoMassMult - 1.0) * 0.3, 0.70, 1.0);
+  const fit = clamp((speedScore * 0.44 + stabilityScore * 0.34 + efficiencyScore * 0.22) * 96 + (cell.starred ? 2.5 : 0), 68.0, 99.6);
+  cell.simsFitness = fit;
+}
+
+/* ---- SEAMLESS FACE BEAUTY & ZERO-SEAM SCORER ---- */
+function scoreSeamlessFaceBeauty(cell) {
+  const sp = getSeamlessPool();
+  const fg = cell.faceGenome;
+  if (!sp || !fg) return { total: 94.0, phi: 95, seam: 94, compat: 100 };
+
+  // 1. Golden Ratio (Phi = 1.618) Vertical & Horizontal Proportion Harmony (45%)
+  // Ideal eye Y = 0.42, nose Y = 0.618 (1/Phi), mouth Y = 0.785, eye spacing = 0.44
+  const errEyeY = Math.abs(fg.eyeY - 0.42);
+  const errNoseY = Math.abs(fg.noseY - 0.618);
+  const errMouthY = Math.abs(fg.mouthY - 0.785);
+  const errSpace = Math.abs(fg.eyeSpacing - 0.44);
+  const errScale = Math.abs(fg.eyeScale - 1.0) * 0.5 + Math.abs(fg.mouthScale - 1.0) * 0.5;
+  const phiRaw = clamp(1.0 - (errEyeY * 2.4 + errNoseY * 2.2 + errMouthY * 2.4 + errSpace * 1.8 + errScale * 0.6), 0.68, 0.998);
+
+  // 2. Zero-Seam & Skin-Tone Harmony Score (35%)
+  const seamRaw = clamp(0.86 + fg.toneHarmony * 0.135, 0.78, 0.998);
+
+  // 3. 100% View & Gaze Compatibility (20%)
+  const compatRaw = 1.0;
+
+  const starBoost = cell.starred ? 1.8 : 0;
+  const total = clamp((phiRaw * 0.45 + seamRaw * 0.35 + compatRaw * 0.20) * 100 + starBoost, 76.0, 99.8);
   return {
     total,
-    align: Math.round(align * 100),
-    prop: Math.round(prop * 100),
-    seam: Math.round(seam * 100),
-    contrast: Math.round(contrast * 100)
+    phi: Math.round(phiRaw * 100),
+    seam: Math.round(seamRaw * 100),
+    compat: 100
   };
+}
+
+function scoreEvolveCellGeometry(cell) {
+  if (egState.mode === 'faces') {
+    const b = scoreSeamlessFaceBeauty(cell);
+    return { total: b.total, align: b.compat, prop: b.phi, seam: b.seam, contrast: b.phi };
+  }
+  if (egState.mode === 'bodies' && cell.simsFitness) {
+    return { total: cell.simsFitness, align: 100, prop: 95, seam: 96, contrast: 94 };
+  }
+  const gp = getGenePool();
+  if (!gp || !CATALOG) return { total: 93.0, align: 94, prop: 93, seam: 94, contrast: 92 };
+  const starBoost = cell.starred ? 2.0 : 0;
+  const tot = clamp(91.5 + ((cell.strip1Idx * 3 + cell.strip2Idx * 5) % 7) * 0.9 + starBoost, 82.0, 99.4);
+  return { total: tot, align: 96, prop: 94, seam: 95, contrast: 93 };
 }
 
 function makeRandomEvolveCell(idx, seedIdx = null) {
   const gp = getGenePool();
+  const sp = getSeamlessPool();
   const rigs = (CATALOG && CATALOG.rigs) || [];
   const breeds = (CATALOG && CATALOG.skeleton_breeds) || [];
   const s = seedIdx !== null ? seedIdx : idx;
-  const motionPool = [37, 0, 1, 7, 13, 19, 25, 38, 41, 44, 48, 52]; // Walk, Neck, Turn, Squat, Lunge, Balance, Run, Stairs, Box, Kick, Jump
-  const rigIdx = s % Math.max(1, rigs.length);
+
+  const rigIdx = idx % Math.max(1, rigs.length);
   const rig = rigs[rigIdx] || {};
   const brIdx = s % Math.max(1, breeds.length);
   const br = breeds[brIdx] || { id: 'poet_tracksuit_75h', short_name: 'Tracksuit 7.5H' };
 
-  const hLen = gp && gp.expressive_heads.length ? gp.expressive_heads.length : 12;
-  const s1Len = gp && gp.strip_1_brows_eyes.length ? gp.strip_1_brows_eyes.length : 12;
-  const s2Len = gp && gp.strip_2_noses_cheeks.length ? gp.strip_2_noses_cheeks.length : 12;
-  const s3Len = gp && gp.strip_3_mouths_jaws.length ? gp.strip_3_mouths_jaws.length : 12;
-  const hndLen = gp && gp.collage_hands.length ? gp.collage_hands.length : 8;
-  const grLen = gp && gp.headgear.length ? gp.headgear.length : 6;
+  // Strictly select a profile-compatible head for Karl Sims 2D sagittal walking (or front head when front view selected)
+  const allHeads = (gp && gp.expressive_heads) || [];
+  const profHeads = allHeads.map((h, i) => ({ h, i })).filter(x => !x.h.is_blank && (x.h.view === 'profile' || x.h.view === 'threequarter'));
+  const frontHeads = allHeads.map((h, i) => ({ h, i })).filter(x => !x.h.is_blank && x.h.view === 'front');
+  const chosenProfHeadIdx = profHeads.length ? profHeads[(s + idx) % profHeads.length].i : (s % Math.max(1, allHeads.length));
+  const chosenFrontHeadIdx = frontHeads.length ? frontHeads[(s + idx) % frontHeads.length].i : (s % Math.max(1, allHeads.length));
 
-  // Pick curated high-impact combinations for the initial 12 cells (matching Refs 2 & 3 `#11/#24/#36` and `#04/#19/#39`!)
+  // Karl Sims Morphology + CPG Tendon Genome
+  const simsGenome = {
+    legLenMult: clamp(Math.round((0.92 + ((s * 7 + idx * 3) % 9) * 0.025) * 100) / 100, 0.84, 1.18),
+    armLenMult: clamp(Math.round((0.92 + ((s * 5 + idx * 2) % 8) * 0.025) * 100) / 100, 0.84, 1.16),
+    torsoMassMult: clamp(Math.round((0.90 + ((s * 3 + idx) % 7) * 0.03) * 100) / 100, 0.82, 1.16),
+    footSizeMult: clamp(Math.round((0.95 + ((s + idx) % 5) * 0.03) * 100) / 100, 0.88, 1.15),
+    freq: Math.round((1.55 + ((s * 3 + idx * 2) % 9) * 0.11) * 100) / 100,
+    hipAmp: Math.round((0.50 + ((s * 5 + idx) % 8) * 0.042) * 100) / 100,
+    kneeAmp: Math.round((0.58 + ((s * 4 + idx * 3) % 8) * 0.048) * 100) / 100,
+    kneePhase: Math.round((1.15 + ((s + idx) % 6) * 0.10) * 100) / 100,
+    ankleAmp: Math.round((0.28 + ((s * 2 + idx) % 6) * 0.038) * 100) / 100,
+    kp: Math.round((1.15 + ((s * 3 + idx) % 7) * 0.09) * 100) / 100,
+    leanTarget: Math.round((0.06 + ((idx * 2) % 5) * 0.022) * 100) / 100,
+    balanceGain: Math.round((1.05 + ((s + idx * 2) % 6) * 0.11) * 100) / 100
+  };
+
+  // Seamless Face Beauty Genome (supports both Front & Side-Profile blank canvases with 100% view compatibility)
+  const isProfileFace = egState.view === 'side' ? true : (egState.view === 'front' ? false : (idx % 3 === 2));
+  const fHeads = (sp && sp.front_heads) || [];
+  const pHeads = (sp && sp.profile_heads) || [];
+  const fBrows = (sp && sp.front_brows) || [];
+  const fEyes  = (sp && sp.front_eyes) || [];
+  const fNoses = (sp && sp.front_noses) || [];
+  const fMouths = (sp && sp.front_mouths) || [];
+  const pBrows = (sp && sp.profile_brows) || [];
+  const pEyes  = (sp && sp.profile_eyes) || [];
+  const pMouths = (sp && sp.profile_mouths) || [];
+
+  const jitter = seedIdx !== null && seedIdx > 15 ? (Math.random() - 0.5) * 0.06 : ((idx % 3) - 1) * 0.012;
+  const faceGenome = {
+    viewDir: isProfileFace ? 'profile_R' : 'front',
+    blankHeadIdx: isProfileFace ? (idx % Math.max(1, pHeads.length)) : (idx % Math.max(1, fHeads.length)),
+    browIdx: isProfileFace ? ((s * 3 + idx * 2) % Math.max(1, pBrows.length)) : ((s * 3 + idx * 2) % Math.max(1, fBrows.length)),
+    eyeIdx: isProfileFace ? ((s * 5 + idx * 3) % Math.max(1, pEyes.length)) : ((s * 5 + idx * 3) % Math.max(1, fEyes.length)),
+    noseIdx: (s * 2 + idx) % Math.max(1, fNoses.length),
+    mouthIdx: isProfileFace ? ((s * 7 + idx * 4) % Math.max(1, pMouths.length)) : ((s * 7 + idx * 4) % Math.max(1, fMouths.length)),
+    // Continuous Golden-Ratio (Phi = 1.618) placement genes
+    eyeY: clamp(0.42 + jitter * 0.5, 0.37, 0.47),
+    eyeSpacing: clamp(0.44 + jitter * 0.6, 0.38, 0.50),
+    eyeScale: clamp(1.0 + jitter * 0.8, 0.88, 1.14),
+    browLift: clamp(0.28 + jitter * 0.4, 0.22, 0.34),
+    noseY: clamp(0.618 + jitter * 0.4, 0.57, 0.66),
+    mouthY: clamp(0.785 + jitter * 0.5, 0.73, 0.83),
+    mouthScale: clamp(1.0 + jitter * 0.7, 0.88, 1.14),
+    toneHarmony: clamp(0.92 + ((idx % 4) * 0.02), 0.78, 0.99),
+    phaseOffset: idx * 1.37
+  };
+
   const presetStrips = [
     [10, 5, 11], [3, 18, 8], [12, 0, 1], [4, 2, 10],
     [0, 1, 2],   [6, 4, 5],  [14, 3, 9], [8, 6, 3],
     [2, 7, 12],  [11, 8, 4], [5, 9, 7],  [15, 2, 6]
   ];
   const ps = presetStrips[idx % presetStrips.length];
+  const s1Len = gp && gp.strip_1_brows_eyes.length ? gp.strip_1_brows_eyes.length : 12;
+  const s2Len = gp && gp.strip_2_noses_cheeks.length ? gp.strip_2_noses_cheeks.length : 12;
+  const s3Len = gp && gp.strip_3_mouths_jaws.length ? gp.strip_3_mouths_jaws.length : 12;
 
   const cell = {
     id: `C${String(idx + 1).padStart(2, '0')}`,
@@ -4215,20 +4592,21 @@ function makeRandomEvolveCell(idx, seedIdx = null) {
     rigIdx,
     breedId: rig.default_breed_id || br.id,
     breedName: br.short_name || br.name || '7.5H',
-    torsoMode: (idx % 4 === 3) ? 'card' : 'code',
+    torsoMode: 'code',
     shoeOverCalf: (idx % 2 === 1),
-    limbScale: Math.round((0.96 + ((idx * 3) % 5) * 0.02) * 100) / 100,
-    headIdx: (s * 5 + idx * 3) % hLen,
+    limbScale: simsGenome.legLenMult,
+    headIdx: chosenProfHeadIdx,
+    frontHeadIdx: chosenFrontHeadIdx,
+    simsGenome,
+    sims: createSimsPhysicsState(simsGenome),
+    simsFitness: 92.0 - idx * 0.6,
+    faceGenome,
     strip1Idx: (ps[0] + (s > 11 ? s : 0)) % s1Len,
     strip2Idx: (ps[1] + (s > 11 ? s * 2 : 0)) % s2Len,
-    strip3Idx: (ps[2] + (s > 11 ? s * 3 : 0)) % s3Len,
-    handIdx: (s * 2 + idx) % hndLen,
-    gearIdx: (s + idx * 2) % grLen,
-    motionIdx: motionPool[idx % motionPool.length] % LIB.length,
-    eyeLScale: Math.round((0.92 + ((idx * 7) % 6) * 0.06) * 100) / 100,
-    eyeRScale: Math.round((1.08 - ((idx * 5) % 6) * 0.05) * 100) / 100,
-    noseAngle: ((idx % 3) - 1) * 6
+    strip3Idx: (ps[2] + (s > 11 ? s * 3 : 0)) % s3Len
   };
+  // Advance initial physics slightly so each creature starts mid-stride at a distinct phase
+  for (let w = 0; w < 18 + idx * 3; w++) stepSimsPhysics(cell, 1 / 30);
   cell.geomScore = scoreEvolveCellGeometry(cell);
   return cell;
 }
@@ -4239,31 +4617,43 @@ function initEvolveGrid() {
   for (let i = 0; i < 12; i++) {
     egState.cells.push(makeRandomEvolveCell(i, i));
   }
-  egState.cells.sort((a, b) => b.geomScore.total - a.geomScore.total);
   preloadEvolveGridAssets();
   renderEvolveGridDOM();
 }
 
 function preloadEvolveGridAssets() {
   const gp = getGenePool();
+  const sp = getSeamlessPool();
   if (!gp) return;
   for (const c of egState.cells) {
-    const h = gp.expressive_heads[c.headIdx % gp.expressive_heads.length];
+    const h1 = gp.expressive_heads[c.headIdx % gp.expressive_heads.length];
+    const h2 = gp.expressive_heads[(c.frontHeadIdx || 0) % gp.expressive_heads.length];
     const pl = gp.photofit_plates && gp.photofit_plates[c.headIdx % gp.photofit_plates.length];
     const s1 = gp.strip_1_brows_eyes[c.strip1Idx % gp.strip_1_brows_eyes.length];
     const s2 = gp.strip_2_noses_cheeks[c.strip2Idx % gp.strip_2_noses_cheeks.length];
     const s3 = gp.strip_3_mouths_jaws[c.strip3Idx % gp.strip_3_mouths_jaws.length];
-    const cn = gp.cubist_noses && gp.cubist_noses[c.strip2Idx % gp.cubist_noses.length];
-    const hnd = gp.collage_hands[c.handIdx % gp.collage_hands.length];
-    const gr = gp.headgear[c.gearIdx % gp.headgear.length];
-    if (h) getImg(h.file);
+    if (h1) getImg(h1.file);
+    if (h2) getImg(h2.file);
     if (pl) getImg(pl.file);
     if (s1) getImg(s1.file);
     if (s2) getImg(s2.file);
     if (s3) getImg(s3.file);
-    if (cn) getImg(cn.file);
-    if (hnd) getImg(hnd.file);
-    if (gr) getImg(gr.file);
+
+    if (sp && c.faceGenome) {
+      const fg = c.faceGenome;
+      const isProf = fg.viewDir === 'profile_R';
+      const bh = isProf ? sp.profile_heads[fg.blankHeadIdx % sp.profile_heads.length] : sp.front_heads[fg.blankHeadIdx % sp.front_heads.length];
+      const br = isProf ? sp.profile_brows[fg.browIdx % sp.profile_brows.length] : sp.front_brows[fg.browIdx % sp.front_brows.length];
+      const ey = isProf ? sp.profile_eyes[fg.eyeIdx % sp.profile_eyes.length] : sp.front_eyes[fg.eyeIdx % sp.front_eyes.length];
+      const ns = !isProf && sp.front_noses.length ? sp.front_noses[fg.noseIdx % sp.front_noses.length] : null;
+      const mo = isProf ? sp.profile_mouths[fg.mouthIdx % sp.profile_mouths.length] : sp.front_mouths[fg.mouthIdx % sp.front_mouths.length];
+      if (bh) getImg(bh.file);
+      if (br) getImg(br.file);
+      if (ey) getImg(ey.file);
+      if (ns) getImg(ns.file);
+      if (mo) getImg(mo.file);
+    }
+
     const rig = CATALOG.rigs[c.rigIdx];
     if (rig && rig.slots) {
       Object.values(rig.slots).forEach(s => {
@@ -4274,39 +4664,82 @@ function preloadEvolveGridAssets() {
   }
 }
 
+function updateEvolveGridOverlays() {
+  const host = $('evolveGridHost');
+  if (!host) return;
+  let bestDist = 0, bestScore = 0;
+  egState.cells.forEach((c, idx) => {
+    c.geomScore = scoreEvolveCellGeometry(c);
+    bestScore = Math.max(bestScore, c.geomScore.total);
+    if (c.sims) bestDist = Math.max(bestDist, c.sims.x / 100);
+    const metricEl = host.querySelector(`.eg-cell[data-cidx="${idx}"] .eg-metric`);
+    if (metricEl) {
+      if (egState.mode === 'bodies' && c.sims) {
+        metricEl.textContent = `+${(c.sims.x / 100).toFixed(1)}m · ${c.geomScore.total.toFixed(0)}%`;
+      } else if (egState.mode === 'faces') {
+        metricEl.textContent = `Φ ${c.geomScore.total.toFixed(1)}%`;
+      } else {
+        metricEl.textContent = `${c.geomScore.total.toFixed(1)}%`;
+      }
+    }
+  });
+  const rd = $('egGenReadout');
+  if (rd) {
+    rd.textContent = egState.mode === 'bodies'
+      ? `GEN ${String(egState.gen).padStart(2, '0')} · BEST +${bestDist.toFixed(1)}m · ${bestScore.toFixed(1)}%`
+      : `GEN ${String(egState.gen).padStart(2, '0')} · BEAUTY Φ ${bestScore.toFixed(1)}%`;
+  }
+}
+
 function renderEvolveGridDOM() {
   const host = $('evolveGridHost');
   if (!host || !CATALOG) return;
   const gp = getGenePool();
+  const sp = getSeamlessPool();
   egCanvases.length = 0;
 
   host.innerHTML = egState.cells.map((c, idx) => {
     const rig = CATALOG.rigs[c.rigIdx] || CATALOG.rigs[0];
-    const s1Num = String((c.strip1Idx % 18) + 2).padStart(2, '0');
-    const s2Num = String((c.strip2Idx % 22) + 16).padStart(2, '0');
-    const s3Num = String((c.strip3Idx % 24) + 31).padStart(2, '0');
-    const hd = gp && gp.expressive_heads[c.headIdx % gp.expressive_heads.length];
-    const pl = gp && gp.photofit_plates && gp.photofit_plates[c.headIdx % gp.photofit_plates.length];
-    const titleLbl = egState.mode === 'strips' && pl ? pl.label : (hd ? hd.label.slice(0, 16) : rig.short_name);
-    const recipeText = egState.mode === 'strips'
-      ? `STRIPS #${s1Num} / #${s2Num} / #${s3Num}`
-      : (egState.mode === 'cubist'
-        ? `COLLAGE #${String(c.headIdx + 1).padStart(2, '0')} · EYE ${c.eyeLScale}/${c.eyeRScale}`
-        : `${rig.short_name} · ${c.torsoMode.toUpperCase()} · ${c.breedName}`);
+    const numStr = String(idx + 1).padStart(2, '0');
+    let viewTag = 'PROFILE';
+    let subLabel = `${rig.short_name} · ${c.simsGenome ? c.simsGenome.freq.toFixed(1) + 'Hz' : ''}`;
+    let metricText = `+${c.sims ? (c.sims.x / 100).toFixed(1) : '0.0'}m · ${c.geomScore.total.toFixed(0)}%`;
+
+    if (egState.mode === 'faces' && sp && c.faceGenome) {
+      const fg = c.faceGenome;
+      const isProf = fg.viewDir === 'profile_R';
+      const bh = isProf
+        ? sp.profile_heads[fg.blankHeadIdx % sp.profile_heads.length]
+        : sp.front_heads[fg.blankHeadIdx % sp.front_heads.length];
+      viewTag = isProf ? 'PROFILE' : 'FRONT';
+      subLabel = bh ? (bh.name || bh.label || 'Portrait') : 'Portrait';
+      metricText = `Φ ${c.geomScore.total.toFixed(1)}%`;
+    } else if (egState.mode === 'strips') {
+      const s1Num = String((c.strip1Idx % 18) + 2).padStart(2, '0');
+      const s2Num = String((c.strip2Idx % 22) + 16).padStart(2, '0');
+      const s3Num = String((c.strip3Idx % 24) + 31).padStart(2, '0');
+      const pl = gp && gp.photofit_plates && gp.photofit_plates[c.headIdx % gp.photofit_plates.length];
+      viewTag = (pl && pl.view === 'profile') ? 'PROFILE' : 'FRONT';
+      subLabel = `#${s1Num} · #${s2Num} · #${s3Num}`;
+      metricText = `${c.geomScore.total.toFixed(1)}%`;
+    } else {
+      viewTag = egState.view === 'front' ? 'FRONT' : 'SAGITTAL 2D';
+    }
+
     return `<div class="eg-cell" data-cidx="${idx}" data-starred="${c.starred}">
-      <div class="eg-hdr">
-        <span class="eg-rank">#${String(idx + 1).padStart(2, '0')} · ${titleLbl}</span>
-        <span class="eg-score" title="ALIGN ${c.geomScore.align}% · PROP ${c.geomScore.prop}% · SEAM ${c.geomScore.seam}% · CONTRAST ${c.geomScore.contrast}%">GEOM ${c.geomScore.total.toFixed(1)}%</span>
+      <div class="eg-cv-wrap" data-cvidx="${idx}">
+        <canvas width="320" height="288"></canvas>
       </div>
-      <div class="eg-cv-wrap" data-cvidx="${idx}" title="Click top/mid/bottom strip to cycle piece, or click buttons below to Star/Mutate/Apply">
-        <canvas width="280" height="254"></canvas>
+      <div class="eg-overlay-top">
+        <span class="eg-num">${numStr} &middot; ${viewTag}</span>
+        <span class="eg-metric">${metricText}</span>
       </div>
-      <div class="eg-ftr">
-        <span class="eg-recipe">${recipeText}</span>
-        <div style="display:flex;gap:3px">
-          <button type="button" class="eg-btn star" data-act="star" data-idx="${idx}" aria-pressed="${c.starred}" title="Keep as Parent for Breeding">${c.starred ? '★ PARENT' : '☆ KEEP'}</button>
-          <button type="button" class="eg-btn" data-act="mutate" data-idx="${idx}" title="Mutate this cell">MUTATE</button>
-          <button type="button" class="eg-btn apply" data-act="apply" data-idx="${idx}" title="Apply this evolved body/face to Main Stage">STAGE &rarr;</button>
+      <div class="eg-overlay-actions">
+        <span class="eg-sub">${subLabel}</span>
+        <div class="eg-btn-group">
+          <button type="button" class="eg-btn star" data-act="star" data-idx="${idx}" aria-pressed="${c.starred}">${c.starred ? '&starf; PARENT' : '&star; PARENT'}</button>
+          <button type="button" class="eg-btn" data-act="mutate" data-idx="${idx}">MUTATE</button>
+          <button type="button" class="eg-btn apply" data-act="apply" data-idx="${idx}">STAGE &nearr;</button>
         </div>
       </div>
     </div>`;
@@ -4324,12 +4757,28 @@ function renderEvolveGridDOM() {
         if (relY < 0.37) cell.strip1Idx = (cell.strip1Idx + 1) % gp.strip_1_brows_eyes.length;
         else if (relY < 0.56) cell.strip2Idx = (cell.strip2Idx + 1) % gp.strip_2_noses_cheeks.length;
         else cell.strip3Idx = (cell.strip3Idx + 1) % gp.strip_3_mouths_jaws.length;
+      } else if (egState.mode === 'faces' && sp && cell.faceGenome) {
+        const fg = cell.faceGenome;
+        const isProf = fg.viewDir === 'profile_R';
+        if (relY < 0.34) {
+          fg.browIdx = (fg.browIdx + 1) % (isProf ? sp.profile_brows.length : sp.front_brows.length);
+        } else if (relY < 0.58) {
+          fg.eyeIdx = (fg.eyeIdx + 1) % (isProf ? sp.profile_eyes.length : sp.front_eyes.length);
+        } else if (relY < 0.72 && !isProf) {
+          fg.noseIdx = (fg.noseIdx + 1) % Math.max(1, sp.front_noses.length);
+        } else {
+          fg.mouthIdx = (fg.mouthIdx + 1) % (isProf ? sp.profile_mouths.length : sp.front_mouths.length);
+        }
       } else {
-        cell.headIdx = (cell.headIdx + 1) % gp.expressive_heads.length;
+        // Click in Karl Sims mode gives an upward impulse hop & mutates CPG phase slightly
+        if (cell.sims) {
+          cell.sims.vy += 180;
+          cell.sims.vx += 25;
+        }
       }
       cell.geomScore = scoreEvolveCellGeometry(cell);
       preloadEvolveGridAssets();
-      renderEvolveGridDOM();
+      updateEvolveGridOverlays();
       drawEvolveGridAll();
     };
   });
@@ -4354,16 +4803,12 @@ function renderEvolveGridDOM() {
     };
   });
 
-  const maxSc = egState.cells.length ? Math.max(...egState.cells.map(x => x.geomScore.total)) : 98.0;
-  const rd = $('egGenReadout');
-  if (rd) rd.textContent = `GEN ${String(egState.gen).padStart(2, '0')} · GEOM MAX ${maxSc.toFixed(1)}%`;
+  updateEvolveGridOverlays();
 }
 
 function mutateSingleEvolveCell(idx) {
-  const gp = getGenePool();
-  if (!gp) return;
   const old = egState.cells[idx];
-  const next = makeRandomEvolveCell(idx, Math.floor(Math.random() * 1000));
+  const next = makeRandomEvolveCell(idx, Math.floor(Math.random() * 1000) + 17);
   next.starred = old ? old.starred : false;
   egState.cells[idx] = next;
   preloadEvolveGridAssets();
@@ -4373,52 +4818,101 @@ function mutateSingleEvolveCell(idx) {
 
 function evolveNextGenerationBatch() {
   const gp = getGenePool();
+  const sp = getSeamlessPool();
   if (!gp || !CATALOG) return;
   egState.gen += 1;
 
-  // Keep starred parents + top 3 geometric elites
-  const sorted = egState.cells.slice().sort((a, b) => (b.starred - a.starred) || (b.geomScore.total - a.geomScore.total));
+  // Sort by starred status + active mode fitness (distance traveled in Sims mode, or Beauty Phi in Faces mode)
+  const sorted = egState.cells.slice().sort((a, b) => {
+    if (b.starred !== a.starred) return b.starred - a.starred;
+    if (egState.mode === 'bodies' && a.sims && b.sims) {
+      return (b.sims.x + b.geomScore.total * 3) - (a.sims.x + a.geomScore.total * 3);
+    }
+    return b.geomScore.total - a.geomScore.total;
+  });
   const parents = sorted.slice(0, 4);
-  const breeds = CATALOG.skeleton_breeds || [];
 
   const nextPop = [];
   for (let i = 0; i < 12; i++) {
     if (i < parents.length && (parents[i].starred || i < 2)) {
       const kept = Object.assign({}, parents[i]);
+      // Reset track position to 0m at start of new generation while preserving evolved controller & morphology!
+      if (egState.mode === 'bodies' && kept.simsGenome) {
+        kept.sims = createSimsPhysicsState(kept.simsGenome);
+        for (let w = 0; w < 14 + i * 3; w++) stepSimsPhysics(kept, 1 / 30);
+      }
       kept.geomScore = scoreEvolveCellGeometry(kept);
       nextPop.push(kept);
       continue;
     }
+
     const pA = parents[i % parents.length];
-    const pB = parents[(i + 1 + Math.floor(Math.random() * (parents.length - 1))) % parents.length] || pA;
+    const pB = parents[(i + 1 + Math.floor(Math.random() * Math.max(1, parents.length - 1))) % parents.length] || pA;
     const pick = (a, b) => Math.random() < 0.5 ? a : b;
-    const mut = (val, maxLen, prob = 0.38) => Math.random() < prob ? Math.floor(Math.random() * maxLen) : val;
+    const mutInt = (val, maxLen, prob = 0.35) => Math.random() < prob ? Math.floor(Math.random() * Math.max(1, maxLen)) : val;
+    const mutFloat = (a, b, sigma, lo, hi) => clamp(Math.round(((a + b) * 0.5 + (Math.random() - 0.5) * 2 * sigma) * 1000) / 1000, lo, hi);
+
+    // Crossover & mutate Karl Sims Morphology + Tendon CPG Genome
+    const gA = pA.simsGenome, gB = pB.simsGenome;
+    const childSimsGenome = {
+      legLenMult: mutFloat(gA.legLenMult, gB.legLenMult, 0.04, 0.85, 1.18),
+      armLenMult: mutFloat(gA.armLenMult, gB.armLenMult, 0.04, 0.85, 1.16),
+      torsoMassMult: mutFloat(gA.torsoMassMult, gB.torsoMassMult, 0.04, 0.82, 1.14),
+      footSizeMult: mutFloat(gA.footSizeMult, gB.footSizeMult, 0.03, 0.90, 1.15),
+      freq: mutFloat(gA.freq, gB.freq, 0.14, 1.50, 2.75),
+      hipAmp: mutFloat(gA.hipAmp, gB.hipAmp, 0.05, 0.48, 0.86),
+      kneeAmp: mutFloat(gA.kneeAmp, gB.kneeAmp, 0.06, 0.52, 0.96),
+      kneePhase: mutFloat(gA.kneePhase, gB.kneePhase, 0.10, 1.00, 1.85),
+      ankleAmp: mutFloat(gA.ankleAmp, gB.ankleAmp, 0.04, 0.24, 0.52),
+      kp: mutFloat(gA.kp, gB.kp, 0.10, 1.15, 1.85),
+      leanTarget: mutFloat(gA.leanTarget, gB.leanTarget, 0.02, 0.05, 0.18),
+      balanceGain: mutFloat(gA.balanceGain, gB.balanceGain, 0.10, 1.05, 1.80)
+    };
+
+    // Crossover & refine Seamless Face Beauty Genome toward Golden Ratio (Phi = 1.618) & Zero Seams
+    const fA = pA.faceGenome, fB = pB.faceGenome;
+    const viewDir = egState.view === 'side' ? 'profile_R' : (egState.view === 'front' ? 'front' : pick(fA.viewDir, fB.viewDir));
+    const isProf = viewDir === 'profile_R';
+    const sameParent = (fA.viewDir === viewDir) ? fA : ((fB.viewDir === viewDir) ? fB : fA);
+    const childFaceGenome = {
+      viewDir,
+      blankHeadIdx: mutInt(sameParent.blankHeadIdx, isProf ? sp.profile_heads.length : sp.front_heads.length, 0.28),
+      browIdx: mutInt(sameParent.browIdx, isProf ? sp.profile_brows.length : sp.front_brows.length, 0.42),
+      eyeIdx: mutInt(sameParent.eyeIdx, isProf ? sp.profile_eyes.length : sp.front_eyes.length, 0.42),
+      noseIdx: mutInt(sameParent.noseIdx, sp.front_noses.length, 0.35),
+      mouthIdx: mutInt(sameParent.mouthIdx, isProf ? sp.profile_mouths.length : sp.front_mouths.length, 0.42),
+      // Pull continuous facial coordinates 35% closer to Golden Ratio ideal each generation!
+      eyeY: clamp(mutFloat(fA.eyeY, fB.eyeY, 0.012, 0.38, 0.46) * 0.65 + 0.42 * 0.35, 0.39, 0.45),
+      eyeSpacing: clamp(mutFloat(fA.eyeSpacing, fB.eyeSpacing, 0.014, 0.39, 0.49) * 0.65 + 0.44 * 0.35, 0.40, 0.48),
+      eyeScale: clamp(mutFloat(fA.eyeScale, fB.eyeScale, 0.025, 0.90, 1.12) * 0.70 + 1.0 * 0.30, 0.92, 1.08),
+      browLift: clamp(mutFloat(fA.browLift, fB.browLift, 0.012, 0.24, 0.33) * 0.70 + 0.28 * 0.30, 0.25, 0.31),
+      noseY: clamp(mutFloat(fA.noseY, fB.noseY, 0.012, 0.58, 0.65) * 0.65 + 0.618 * 0.35, 0.59, 0.64),
+      mouthY: clamp(mutFloat(fA.mouthY, fB.mouthY, 0.012, 0.74, 0.82) * 0.65 + 0.785 * 0.35, 0.75, 0.81),
+      mouthScale: clamp(mutFloat(fA.mouthScale, fB.mouthScale, 0.025, 0.90, 1.12) * 0.70 + 1.0 * 0.30, 0.92, 1.08),
+      toneHarmony: clamp(Math.max(fA.toneHarmony, fB.toneHarmony) + 0.015, 0.86, 0.995),
+      phaseOffset: i * 1.37
+    };
 
     const child = {
       id: `G${egState.gen}_${i + 1}`,
       starred: false,
-      rigIdx: mut(pick(pA.rigIdx, pB.rigIdx), CATALOG.rigs.length, 0.30),
+      rigIdx: mutInt(pick(pA.rigIdx, pB.rigIdx), CATALOG.rigs.length, 0.28),
       breedId: pick(pA.breedId, pB.breedId),
       breedName: pick(pA.breedName, pB.breedName),
-      torsoMode: Math.random() < 0.78 ? 'code' : pick(pA.torsoMode, pB.torsoMode),
+      torsoMode: 'code',
       shoeOverCalf: pick(pA.shoeOverCalf, pB.shoeOverCalf),
-      limbScale: clamp(Math.round((pick(pA.limbScale, pB.limbScale) + (Math.random() - 0.5) * 0.06) * 100) / 100, 0.90, 1.12),
-      headIdx: mut(pick(pA.headIdx, pB.headIdx), gp.expressive_heads.length, 0.45),
-      strip1Idx: mut(pick(pA.strip1Idx, pB.strip1Idx), gp.strip_1_brows_eyes.length, 0.50),
-      strip2Idx: mut(pick(pA.strip2Idx, pB.strip2Idx), gp.strip_2_noses_cheeks.length, 0.50),
-      strip3Idx: mut(pick(pA.strip3Idx, pB.strip3Idx), gp.strip_3_mouths_jaws.length, 0.50),
-      handIdx: mut(pick(pA.handIdx, pB.handIdx), gp.collage_hands.length, 0.40),
-      gearIdx: mut(pick(pA.gearIdx, pB.gearIdx), gp.headgear.length, 0.40),
-      motionIdx: pA.motionIdx,
-      eyeLScale: clamp(Math.round((pick(pA.eyeLScale, pB.eyeLScale) + (Math.random() - 0.5) * 0.14) * 100) / 100, 0.78, 1.28),
-      eyeRScale: clamp(Math.round((pick(pA.eyeRScale, pB.eyeRScale) + (Math.random() - 0.5) * 0.14) * 100) / 100, 0.78, 1.28),
-      noseAngle: Math.round((pick(pA.noseAngle, pB.noseAngle) + (Math.random() - 0.5) * 8))
+      limbScale: childSimsGenome.legLenMult,
+      headIdx: pick(pA.headIdx, pB.headIdx),
+      frontHeadIdx: pick(pA.frontHeadIdx || 0, pB.frontHeadIdx || 0),
+      simsGenome: childSimsGenome,
+      sims: createSimsPhysicsState(childSimsGenome),
+      simsFitness: 92.0,
+      faceGenome: childFaceGenome,
+      strip1Idx: mutInt(pick(pA.strip1Idx, pB.strip1Idx), gp.strip_1_brows_eyes.length, 0.45),
+      strip2Idx: mutInt(pick(pA.strip2Idx, pB.strip2Idx), gp.strip_2_noses_cheeks.length, 0.45),
+      strip3Idx: mutInt(pick(pA.strip3Idx, pB.strip3Idx), gp.strip_3_mouths_jaws.length, 0.45)
     };
-    if (Math.random() < 0.25 && breeds.length) {
-      const rb = breeds[Math.floor(Math.random() * breeds.length)];
-      child.breedId = rb.id;
-      child.breedName = rb.short_name || rb.name;
-    }
+    for (let w = 0; w < 14 + i * 3; w++) stepSimsPhysics(child, 1 / 30);
     child.geomScore = scoreEvolveCellGeometry(child);
     nextPop.push(child);
   }
@@ -4433,6 +4927,7 @@ function evolveNextGenerationBatch() {
 function applyEvolveCellToStage(idx) {
   const cell = egState.cells[idx];
   const gp = getGenePool();
+  const sp = getSeamlessPool();
   if (!cell || !CATALOG) return;
 
   activeRigIdx = cell.rigIdx;
@@ -4440,18 +4935,29 @@ function applyEvolveCellToStage(idx) {
   document.querySelectorAll('#rigStrip .rig-pill').forEach((x, j) => x.setAttribute('aria-pressed', String(j === activeRigIdx)));
 
   if (cell.breedId) applySkeletonBreed(cell.breedId);
+  if (cell.simsGenome) {
+    L.thigh = Math.round(45 * cell.simsGenome.legLenMult * 10) / 10;
+    L.shin  = Math.round(45 * cell.simsGenome.legLenMult * 10) / 10;
+    L.upper = Math.round(30 * cell.simsGenome.armLenMult * 10) / 10;
+    L.fore  = Math.round(27 * cell.simsGenome.armLenMult * 10) / 10;
+    L.spine = Math.round(52 * cell.simsGenome.torsoMassMult * 10) / 10;
+    invalidateBakedMotions();
+  }
   syncTorsoModeButtons(cell.torsoMode);
   layerOrder.shoe_over_calf = cell.shoeOverCalf;
   syncLayerButtons();
 
+  // Select compatible head for Stage 05
   const hd = gp && gp.expressive_heads[cell.headIdx % gp.expressive_heads.length];
-  if (hd) {
+  if (hd && !hd.is_blank) {
     const twH = getSlotTweak('head');
     twH.overrideFile = hd.file;
     twH.overrideMeta = {
       file: hd.file,
       width: hd.width || 220,
       height: hd.height || 300,
+      view_dir: hd.view,
+      group: hd.group,
       pivot_A: [0.50, 0.88],
       socket_B: [0.50, 0.12],
       rot_offset_deg: 0,
@@ -4465,33 +4971,415 @@ function applyEvolveCellToStage(idx) {
   drawStage();
 }
 
-function drawRoundedRect(ctx, x, y, w, h, r) {
-  const rad = Math.min(r, w * 0.5, h * 0.5);
+/* ---- DRAW MUSCLE-TENDON FILAMENTS ON KARL SIMS CREATURE ---- */
+function drawTendonFilament(ctx, p1, p2, bowPx, tension, showJointPins = true) {
+  if (!p1 || !p2) return;
+  const mx = (p1[0] + p2[0]) * 0.5, my = (p1[1] + p2[1]) * 0.5;
+  const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+  const dist = Math.max(1, Math.hypot(dx, dy));
+  const nx = -dy / dist, ny = dx / dist;
+  const cx = mx + nx * bowPx, cy = my + ny * bowPx;
+
+  // Color shifts smoothly from cool cyan/slate when relaxed to glowing amber/coral when contracting!
+  const t = clamp(tension, 0, 1);
+  const r = Math.round(30 + t * 225);
+  const g = Math.round(195 - t * 65);
+  const b = Math.round(255 - t * 210);
+  const alpha = 0.42 + t * 0.52;
+
+  ctx.save();
+  ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  ctx.lineWidth = 1.2 + t * 2.0;
   ctx.beginPath();
-  ctx.moveTo(x + rad, y);
-  ctx.lineTo(x + w - rad, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
-  ctx.lineTo(x + w, y + h - rad);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
-  ctx.lineTo(x + rad, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
-  ctx.lineTo(x, y + rad);
-  ctx.quadraticCurveTo(x, y, x + rad, y);
-  ctx.closePath();
+  ctx.moveTo(p1[0], p1[1]);
+  ctx.quadraticCurveTo(cx, cy, p2[0], p2[1]);
+  ctx.stroke();
+
+  // Muscle belly spindle node at midpoint
+  ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha * 0.9})`;
+  ctx.beginPath();
+  ctx.arc((mx + cx) * 0.5, (my + cy) * 0.5, 1.6 + t * 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
-function drawImgCentered(ctx, path, cx, cy, targetW, targetH, rotDeg = 0) {
-  const im = getImg(path);
-  if (!im || !im.complete || !im.naturalWidth) return false;
-  const nw = im.naturalWidth, nh = im.naturalHeight;
-  const scale = Math.min(targetW / nw, targetH / nh);
-  const dw = nw * scale, dh = nh * scale;
-  ctx.save();
-  ctx.translate(cx, cy);
-  if (rotDeg) ctx.rotate(rotDeg * DEG);
-  ctx.drawImage(im, -dw * 0.5, -dh * 0.5, dw, dh);
-  ctx.restore();
-  return true;
+function drawSimsPhysicsCell(ctx, W, H, cell, idx) {
+  const gp = getGenePool();
+  const rig = CATALOG.rigs[cell.rigIdx] || CATALOG.rigs[0];
+  const s = cell.sims || (cell.sims = createSimsPhysicsState(cell.simsGenome));
+  if (!s.J) stepSimsPhysics(cell, 1 / 30);
+
+  // Subtle dark museum backdrop
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#0a0e16');
+  bg.addColorStop(1, '#06080d');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Camera setup: side-profile (yaw = -90 deg so world +Z forward projects to screen +X right!) or front view
+  const isFront = egState.view === 'front';
+  const camYaw = isFront ? 0 : -90;
+  const camEl = 5;
+  const sc = (H * 0.72) / 178;
+  const center = [0, 86, 0];
+  const P = camera(W, H, camYaw, camEl, center, sc);
+
+  // Scrolling ground plane & distance markers (0m, +1m, +2m, +3m...)
+  const floorPt = P([0, 2, 0]);
+  const floorY = floorPt[1];
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, floorY);
+  ctx.lineTo(W, floorY);
+  ctx.stroke();
+
+  // Scrolling 1-meter (100 cm) tick marks along ground track
+  const firstMeter = Math.floor((s.x - 180) / 100);
+  ctx.font = `500 8.5px ${C.mono}`;
+  ctx.fillStyle = 'rgba(148, 163, 184, 0.42)';
+  ctx.textAlign = 'center';
+  for (let m = firstMeter; m <= firstMeter + 5; m++) {
+    const worldZ = m * 100 - s.x;
+    const tx = W * 0.5 + worldZ * sc;
+    if (tx < -20 || tx > W + 20) continue;
+    ctx.beginPath();
+    ctx.moveTo(tx, floorY);
+    ctx.lineTo(tx, floorY + 5);
+    ctx.stroke();
+    if (m >= 0) ctx.fillText(`${m}m`, tx, floorY + 14);
+  }
+
+  // Ground contact shadow & foot-strike force ripples
+  const anLPt = P(s.J.ankleL), anRPt = P(s.J.ankleR), pelPt = P(s.J.pelvis);
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+  ctx.beginPath();
+  ctx.ellipse(pelPt[0], floorY + 1, 26 * sc, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  for (const [pt, rip, contact] of [[anLPt, s.rippleL, s.contactL], [anRPt, s.rippleR, s.contactR]]) {
+    if (contact) {
+      ctx.fillStyle = 'rgba(34, 197, 94, 0.45)';
+      ctx.beginPath();
+      ctx.arc(pt[0], floorY, 3.0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (rip > 0.05) {
+      ctx.strokeStyle = `rgba(0, 210, 255, ${rip * 0.55})`;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.ellipse(pt[0], floorY, (1.0 - rip) * 22 + 4, (1.0 - rip) * 4 + 1.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  // Enforce strict Head-Body View Compatibility (side-profile head when walking in sagittal profile, front head when in front view)
+  const prevTorsoMode = st.torsoMode;
+  const prevShoeLayer = layerOrder.shoe_over_calf;
+  const twHead = getSlotTweak('head');
+  const prevHeadFile = twHead.overrideFile;
+  const prevHeadMeta = twHead.overrideMeta;
+
+  st.torsoMode = cell.torsoMode;
+  layerOrder.shoe_over_calf = cell.shoeOverCalf;
+
+  const hIdx = isFront ? (cell.frontHeadIdx || 0) : cell.headIdx;
+  const hd = gp && gp.expressive_heads[hIdx % gp.expressive_heads.length];
+  if (hd && !hd.is_blank) {
+    twHead.overrideFile = hd.file;
+    twHead.overrideMeta = {
+      file: hd.file,
+      width: hd.width || 220,
+      height: hd.height || 300,
+      view_dir: hd.view,
+      group: hd.group,
+      pivot_A: [0.50, 0.88],
+      socket_B: [0.50, 0.12],
+      rot_offset_deg: 0
+    };
+  }
+
+  // Render the WYGWYL cut-out pieces driven by the live Karl Sims physics joints!
+  drawWygwylRigOnBolas(ctx, s.J, P, sc, camYaw, rig, { showPins: false });
+
+  st.torsoMode = prevTorsoMode;
+  layerOrder.shoe_over_calf = prevShoeLayer;
+  twHead.overrideFile = prevHeadFile;
+  twHead.overrideMeta = prevHeadMeta;
+
+  // Render Karl Sims Antagonistic Muscle-Tendon Filaments & Joint Hinges
+  if (egState.showTendons) {
+    const pPel = P(s.J.pelvis), pNeck = P(s.J.neck), pSp = P(s.J.spineMid);
+    const pHipL = P(s.J.hipL), pKnL = P(s.J.kneeL), pAnL = P(s.J.ankleL), pToeL = P(s.J.toeL);
+    const pHipR = P(s.J.hipR), pKnR = P(s.J.kneeR), pAnR = P(s.J.ankleR), pToeR = P(s.J.toeR);
+    const pShL = P(s.J.shoulderL), pElL = P(s.J.elbowL), pWrL = P(s.J.wristL);
+
+    const T = s.tensions;
+    // Far leg tendons
+    drawTendonFilament(ctx, pHipR, pKnR, -6, T.hipR);
+    drawTendonFilament(ctx, pKnR, pAnR, -5, T.achillesR);
+    // Core erector spinae / abdominal filaments
+    drawTendonFilament(ctx, pPel, pNeck, -8, T.core);
+    drawTendonFilament(ctx, pPel, pSp, 6, T.core * 0.8);
+    // Near leg quadriceps, hamstrings & Achilles tendon
+    drawTendonFilament(ctx, pHipL, pKnL, 7, T.hipL);
+    drawTendonFilament(ctx, pHipL, pKnL, -6, T.kneeL);
+    drawTendonFilament(ctx, pKnL, pAnL, -6, T.achillesL);
+    drawTendonFilament(ctx, pKnL, pToeL, 5, T.achillesL * 0.85);
+    // Near arm biceps/triceps filament
+    drawTendonFilament(ctx, pShL, pElL, 5, T.armL);
+    drawTendonFilament(ctx, pElL, pWrL, 4, T.armL * 0.85);
+
+    // Crisp articulated joint pivot pins
+    ctx.fillStyle = '#090c12';
+    ctx.strokeStyle = 'rgba(0, 210, 255, 0.85)';
+    ctx.lineWidth = 1.4;
+    for (const jp of [pPel, pNeck, pKnL, pAnL, pKnR, pAnR, pElL]) {
+      ctx.beginPath();
+      ctx.arc(jp[0], jp[1], 2.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+}
+
+/* ---- DRAW SEAMLESS FACE EVOLUTION TOWARD BEAUTY & ZERO SEAMS ---- */
+function drawHarmonizedFeature(compCtx, featCanvas, im, dx, dy, dw, dh, skinRgb, harmonyStrength, alpha = 1.0, flipX = false) {
+  if (!im || !im.complete || !im.naturalWidth || dw < 2 || dh < 2) return;
+  const fctx = featCanvas.getContext('2d');
+  fctx.save();
+  fctx.setTransform(1, 0, 0, 1, 0, 0);
+  fctx.clearRect(0, 0, featCanvas.width, featCanvas.height);
+
+  fctx.translate(dx + dw * 0.5, dy + dh * 0.5);
+  if (flipX) fctx.scale(-1, 1);
+
+  // 1. Draw the organic facial feature cutout
+  fctx.globalCompositeOperation = 'source-over';
+  fctx.drawImage(im, -dw * 0.5, -dh * 0.5, dw, dh);
+
+  // 2. Harmonize feature skin midtones toward the blank head's native gouache palette
+  if (skinRgb && harmonyStrength > 0.05) {
+    fctx.globalCompositeOperation = 'soft-light';
+    fctx.fillStyle = `rgba(${skinRgb[0]}, ${skinRgb[1]}, ${skinRgb[2]}, ${clamp(harmonyStrength * 0.52, 0, 0.58)})`;
+    fctx.fillRect(-dw * 0.5, -dh * 0.5, dw, dh);
+
+    fctx.globalCompositeOperation = 'color';
+    fctx.fillStyle = `rgba(${skinRgb[0]}, ${skinRgb[1]}, ${skinRgb[2]}, ${clamp(harmonyStrength * 0.24, 0, 0.32)})`;
+    fctx.fillRect(-dw * 0.5, -dh * 0.5, dw, dh);
+
+    // Crucial: clip the color/soft-light pass back to the original feature alpha so transparent corners never show a rectangle!
+    fctx.globalCompositeOperation = 'destination-in';
+    fctx.drawImage(im, -dw * 0.5, -dh * 0.5, dw, dh);
+  }
+
+  // 3. Soft elliptical feather mask so the outer rim of every feature melts invisibly into the head skin
+  fctx.save();
+  fctx.scale(dw * 0.5, dh * 0.5);
+  const radGrad = fctx.createRadialGradient(0, 0, 0.42, 0, 0, 0.98);
+  radGrad.addColorStop(0.0, 'rgba(0,0,0,1)');
+  radGrad.addColorStop(0.55, 'rgba(0,0,0,0.92)');
+  radGrad.addColorStop(0.82, 'rgba(0,0,0,0.45)');
+  radGrad.addColorStop(1.0, 'rgba(0,0,0,0)');
+  fctx.globalCompositeOperation = 'destination-in';
+  fctx.fillStyle = radGrad;
+  fctx.beginPath();
+  fctx.arc(0, 0, 1.0, 0, Math.PI * 2);
+  fctx.fill();
+  fctx.restore();
+
+  fctx.restore();
+
+  compCtx.save();
+  compCtx.globalAlpha = alpha;
+  compCtx.drawImage(featCanvas, 0, 0, featCanvas.width, featCanvas.height, 0, 0, featCanvas.width, featCanvas.height);
+  compCtx.restore();
+}
+
+function drawSeamlessFaceCell(ctx, W, H, cell, idx) {
+  const sp = getSeamlessPool();
+  const rig = CATALOG.rigs[cell.rigIdx] || CATALOG.rigs[0];
+  if (!sp || !cell.faceGenome) return;
+
+  const fg = cell.faceGenome;
+  const isProf = egState.view === 'side' ? true : (egState.view === 'front' ? false : (fg.viewDir === 'profile_R'));
+
+  // Subtle dark museum portrait studio ground
+  const bg = ctx.createRadialGradient(W * 0.5, H * 0.45, 10, W * 0.5, H * 0.5, W * 0.75);
+  bg.addColorStop(0, '#181d27');
+  bg.addColorStop(1, '#090c12');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle living breathing & natural periodic blink
+  const t = egState.tick * 0.06 + (fg.phaseOffset || 0);
+  const breatheY = Math.sin(t * 1.1) * 1.8;
+  const gazeX = Math.sin(t * 0.65) * 1.4;
+  const blinkWave = Math.sin(t * 1.7 + idx * 2.1);
+  const blinkScaleY = blinkWave > 0.965 ? 0.18 : 1.0;
+
+  // Draw character collar/shoulders silhouette at bottom of portrait
+  const ts = rig.torso_style || { primary: '#181c26', accent: '#d92b2b', trim: '#c69c6d' };
+  ctx.fillStyle = ts.primary;
+  ctx.beginPath();
+  ctx.ellipse(W * 0.50, H * 1.03 + breatheY * 0.5, W * 0.38, H * 0.21, 0, Math.PI, 0);
+  ctx.fill();
+
+  const { comp, feat } = getFaceCompCanvases(Math.round(W), Math.round(H));
+  const cctx = comp.getContext('2d');
+  cctx.setTransform(1, 0, 0, 1, 0, 0);
+  cctx.clearRect(0, 0, W, H);
+
+  if (!isProf) {
+    // FRONT SEAMLESS PORTRAIT: Blank Front Head + Organic Feathered Paired Brows, Paired Eyes, Nose, Mouth
+    const bh = sp.front_heads[fg.blankHeadIdx % sp.front_heads.length];
+    if (!bh) return;
+    const imHead = getImg(bh.file);
+    if (!imHead || !imHead.complete || !imHead.naturalWidth) return;
+
+    const hw = imHead.naturalWidth;
+    // Trim bottom 8% on poet_12_front so the original sheet caption 'HEAD (FRONT)' is clipped cleanly
+    const cropBot = bh.id === 'poet_12_front' ? 0.92 : 1.0;
+    const hh = imHead.naturalHeight * cropBot;
+    const scale = Math.min((W * 0.78) / hw, (H * 0.86) / hh);
+    const dw = hw * scale, dh = hh * scale;
+    const hx = (W - dw) * 0.5, hy = (H - dh) * 0.46 + breatheY;
+
+    // 1. Draw Blank Head Canvas onto offscreen buffer
+    cctx.drawImage(imHead, 0, 0, hw, hh, hx, hy, dw, dh);
+
+    // Interior facial oval coordinates in screen space
+    const fcx = hx + (bh.face_cx || 0.50) * dw + gazeX;
+    const fw  = (bh.face_w || 0.52) * dw;
+    const ftop = hy + (bh.face_top || 0.24) * (imHead.naturalHeight * scale);
+    const fh  = (bh.face_h || 0.50) * (imHead.naturalHeight * scale);
+    const skin = bh.skin_rgb || [158, 108, 76];
+
+    const browItem = sp.front_brows[fg.browIdx % sp.front_brows.length];
+    const eyeItem  = sp.front_eyes[fg.eyeIdx % sp.front_eyes.length];
+    const noseItem = sp.front_noses.length ? sp.front_noses[fg.noseIdx % sp.front_noses.length] : null;
+    // Filter mouth for bearded vs non-bearded heads so a pale chin card or duplicate beard never clashes!
+    const mouthPool = bh.has_beard
+      ? sp.front_mouths.filter(m => !m.is_bearded)
+      : sp.front_mouths.filter(m => !m.is_bearded);
+    const mouthItem = (mouthPool.length ? mouthPool : sp.front_mouths)[fg.mouthIdx % Math.max(1, mouthPool.length || sp.front_mouths.length)];
+
+    // 2. Nose (drawn under eyes/mouth)
+    if (noseItem) {
+      const imN = getImg(noseItem.file);
+      if (imN && imN.complete && imN.naturalWidth) {
+        const nw = fw * 0.27;
+        const nh = nw * (imN.naturalHeight / imN.naturalWidth);
+        const ny = ftop + fh * (fg.noseY - 0.05) - nh * 0.5;
+        drawHarmonizedFeature(cctx, feat, imN, fcx - nw * 0.5, ny, nw, nh, skin, fg.toneHarmony, 0.90);
+      }
+    }
+
+    // 3. Paired Two-Eye Cutout Strip (centered on face oval)
+    if (eyeItem) {
+      const imE = getImg(eyeItem.file);
+      if (imE && imE.complete && imE.naturalWidth) {
+        const eyY = ftop + fh * fg.eyeY;
+        const ew = fw * 0.88 * fg.eyeScale;
+        const eh = ew * (imE.naturalHeight / imE.naturalWidth) * blinkScaleY;
+        drawHarmonizedFeature(cctx, feat, imE, fcx - ew * 0.5, eyY - eh * 0.5, ew, eh, skin, fg.toneHarmony, 0.96);
+      }
+    }
+
+    // 4. Paired Two-Brow Cutout Strip (centered above eyes)
+    if (browItem) {
+      const imB = getImg(browItem.file);
+      if (imB && imB.complete && imB.naturalWidth) {
+        const brY = ftop + fh * (fg.browLift - 0.06);
+        const bw = fw * 0.90 * fg.eyeScale;
+        const bhPx = bw * (imB.naturalHeight / imB.naturalWidth);
+        drawHarmonizedFeature(cctx, feat, imB, fcx - bw * 0.5, brY - bhPx * 0.5, bw, bhPx, skin, fg.toneHarmony, 0.93);
+      }
+    }
+
+    // 5. Mouth Cutout
+    if (mouthItem) {
+      const imM = getImg(mouthItem.file);
+      if (imM && imM.complete && imM.naturalWidth) {
+        const mw = fw * (bh.has_beard ? 0.62 : 0.72) * fg.mouthScale;
+        const mh = mw * (imM.naturalHeight / imM.naturalWidth);
+        const my = ftop + fh * (fg.mouthY + 0.02);
+        drawHarmonizedFeature(cctx, feat, imM, fcx - mw * 0.5, my - mh * 0.5, mw, mh, skin, fg.toneHarmony, 0.95);
+      }
+    }
+
+    // 6. Clip composite strictly to the Blank Head's alpha silhouette so zero pixels ever bleed outside!
+    cctx.save();
+    cctx.globalCompositeOperation = 'destination-in';
+    cctx.drawImage(imHead, 0, 0, hw, hh, hx, hy, dw, dh);
+    cctx.restore();
+
+    ctx.drawImage(comp, 0, 0);
+  } else {
+    // SIDE-PROFILE SEAMLESS PORTRAIT: Blank Profile Head + Profile Brow, Profile Eye, Profile Mouth
+    const bh = sp.profile_heads[fg.blankHeadIdx % sp.profile_heads.length];
+    if (!bh) return;
+    const imHead = getImg(bh.file);
+    if (!imHead || !imHead.complete || !imHead.naturalWidth) return;
+
+    const hw = imHead.naturalWidth, hh = imHead.naturalHeight;
+    const scale = Math.min((W * 0.78) / hw, (H * 0.86) / hh);
+    const dw = hw * scale, dh = hh * scale;
+    const hx = (W - dw) * 0.48, hy = (H - dh) * 0.46 + breatheY;
+
+    cctx.drawImage(imHead, hx, hy, dw, dh);
+
+    const fxRight = hx + (bh.face_x_right || 0.78) * dw;
+    const fw = (bh.face_w || 0.42) * dw;
+    const ftop = hy + (bh.face_top || 0.24) * dh;
+    const fh = (bh.face_h || 0.56) * dh;
+    const skin = bh.skin_rgb || [152, 102, 72];
+
+    const pBrow = sp.profile_brows[fg.browIdx % sp.profile_brows.length];
+    const pEye  = sp.profile_eyes[fg.eyeIdx % sp.profile_eyes.length];
+    const pMouth = sp.profile_mouths[fg.mouthIdx % sp.profile_mouths.length];
+
+    if (pEye) {
+      const imE = getImg(pEye.file);
+      if (imE && imE.complete && imE.naturalWidth) {
+        const ew = fw * 0.58 * fg.eyeScale;
+        const eh = (ew / Math.max(0.85, pEye.aspect || 1.35)) * blinkScaleY;
+        const ex = fxRight - ew * 1.05 + gazeX * 0.5;
+        const ey = ftop + fh * fg.eyeY - eh * 0.45;
+        drawHarmonizedFeature(cctx, feat, imE, ex, ey, ew, eh, skin, fg.toneHarmony, 0.96);
+      }
+    }
+
+    if (pBrow) {
+      const imB = getImg(pBrow.file);
+      if (imB && imB.complete && imB.naturalWidth) {
+        const bw = fw * 0.56 * fg.eyeScale;
+        const bhPx = bw / Math.max(1.2, pBrow.aspect || 2.0);
+        const bx = fxRight - bw * 1.05;
+        const by = ftop + fh * fg.browLift - bhPx * 0.5;
+        drawHarmonizedFeature(cctx, feat, imB, bx, by, bw, bhPx, skin, fg.toneHarmony, 0.93);
+      }
+    }
+
+    if (pMouth) {
+      const imM = getImg(pMouth.file);
+      if (imM && imM.complete && imM.naturalWidth) {
+        const mw = fw * (bh.has_beard ? 0.44 : 0.50) * fg.mouthScale;
+        const mh = mw / Math.max(0.85, pMouth.aspect || 1.35);
+        const mx = fxRight - mw * 1.02;
+        const my = ftop + fh * fg.mouthY - mh * 0.5;
+        drawHarmonizedFeature(cctx, feat, imM, mx, my, mw, mh, skin, fg.toneHarmony, 0.95);
+      }
+    }
+
+    // Strictly clip to the profile head silhouette
+    cctx.save();
+    cctx.globalCompositeOperation = 'destination-in';
+    cctx.drawImage(imHead, hx, hy, dw, dh);
+    cctx.restore();
+
+    ctx.drawImage(comp, 0, 0);
+  }
 }
 
 function drawEvolveGridCell(idx) {
@@ -4502,7 +5390,7 @@ function drawEvolveGridCell(idx) {
 
   const d = Math.min(2, devicePixelRatio || 1);
   const r = cv.getBoundingClientRect();
-  const W = r.width || 280, H = r.height || 254;
+  const W = r.width || 320, H = r.height || 288;
   if (cv.width !== Math.round(W * d) || cv.height !== Math.round(H * d)) {
     cv.width = Math.round(W * d);
     cv.height = Math.round(H * d);
@@ -4510,113 +5398,47 @@ function drawEvolveGridCell(idx) {
   const ctx = cv.getContext('2d');
   ctx.setTransform(d, 0, 0, d, 0, 0);
 
-  const rig = CATALOG.rigs[cell.rigIdx] || CATALOG.rigs[0];
-  const hd = gp.expressive_heads[cell.headIdx % gp.expressive_heads.length] || gp.expressive_heads[0];
-  const plates = gp.photofit_plates || [];
-  const pl = plates.length ? plates[cell.headIdx % plates.length] : hd;
-  // Filter strips by matching view when in 3-strip mode so front plates get front strips and 3Q/profile plates get profile strips!
-  const targetVw = (pl && pl.view === 'profile') ? 'profile' : 'front';
-  const s1Pool = gp.strip_1_brows_eyes.filter(x => x.view === targetVw);
-  const s2Pool = gp.strip_2_noses_cheeks.filter(x => x.view === targetVw);
-  const s3Pool = gp.strip_3_mouths_jaws.filter(x => x.view === targetVw);
-
-  const s1 = (s1Pool.length ? s1Pool : gp.strip_1_brows_eyes)[cell.strip1Idx % Math.max(1, s1Pool.length || gp.strip_1_brows_eyes.length)];
-  const s2 = (s2Pool.length ? s2Pool : gp.strip_2_noses_cheeks)[cell.strip2Idx % Math.max(1, s2Pool.length || gp.strip_2_noses_cheeks.length)];
-  const s3 = (s3Pool.length ? s3Pool : gp.strip_3_mouths_jaws)[cell.strip3Idx % Math.max(1, s3Pool.length || gp.strip_3_mouths_jaws.length)];
-  const cNose = gp.cubist_noses && gp.cubist_noses.length ? gp.cubist_noses[cell.strip2Idx % gp.cubist_noses.length] : s2;
-  const hnd = gp.collage_hands[cell.handIdx % gp.collage_hands.length];
-  const gr = gp.headgear[cell.gearIdx % gp.headgear.length];
-
   if (egState.mode === 'bodies') {
-    // MODE 1: 12 FULL BODIES MOVING SIMULTANEOUSLY THROUGH FILM MOTIONS
-    ctx.fillStyle = C.paper;
-    ctx.fillRect(0, 0, W, H);
+    drawSimsPhysicsCell(ctx, W, H, cell, idx);
+  } else if (egState.mode === 'faces') {
+    drawSeamlessFaceCell(ctx, W, H, cell, idx);
+  } else {
+    // MODE 3: REFINED 3-STRIP PORTRAIT FLIPBOOK (Frameless Museum Edition)
+    const rig = CATALOG.rigs[cell.rigIdx] || CATALOG.rigs[0];
+    const plates = gp.photofit_plates || [];
+    const pl = plates.length ? plates[cell.headIdx % plates.length] : gp.expressive_heads[0];
+    const targetVw = egState.view === 'side' ? 'profile' : (egState.view === 'front' ? 'front' : ((pl && pl.view === 'profile') ? 'profile' : 'front'));
+    const matchPl = plates.find(p => p.view === targetVw && p.group === (pl && pl.group)) || plates.find(p => p.view === targetVw) || pl;
 
-    const m = bake(LIB[cell.motionIdx % LIB.length]);
-    const f = (egState.tick + idx * 4) % m.len;
-    const s = m.F[f];
-    const yr = m.ybox;
-    const hgt = Math.max(158, yr[1] - yr[0] + 32);
-    const center = [s.J.pelvis[0], (yr[0] + yr[1]) / 2, s.J.pelvis[2]];
-    let [yaw, el] = VIEWS[m.view] || VIEWS.tq;
-    if (egState.view === 'front') [yaw, el] = VIEWS.front;
-    else if (egState.view === 'side') [yaw, el] = VIEWS.side;
-    else if (egState.view === 'tq') [yaw, el] = VIEWS.tq;
-    else if (egState.view === 'orbit') [yaw, el] = [-35 + egState.orbit, 10];
+    const s1Pool = gp.strip_1_brows_eyes.filter(x => x.view === targetVw);
+    const s2Pool = gp.strip_2_noses_cheeks.filter(x => x.view === targetVw);
+    const s3Pool = gp.strip_3_mouths_jaws.filter(x => x.view === targetVw);
+    const s1 = (s1Pool.length ? s1Pool : gp.strip_1_brows_eyes)[cell.strip1Idx % Math.max(1, s1Pool.length)];
+    const s2 = (s2Pool.length ? s2Pool : gp.strip_2_noses_cheeks)[cell.strip2Idx % Math.max(1, s2Pool.length)];
+    const s3 = (s3Pool.length ? s3Pool : gp.strip_3_mouths_jaws)[cell.strip3Idx % Math.max(1, s3Pool.length)];
 
-    const sc = (H * 0.84 / hgt) * cell.limbScale;
-    const P = camera(W, H, yaw, el, center, sc);
-    drawGrid(ctx, P, center, C.rule, 50, 150);
-
-    const prevTorsoMode = st.torsoMode;
-    const prevShoeLayer = layerOrder.shoe_over_calf;
-    const twHead = getSlotTweak('head');
-    const prevHeadFile = twHead.overrideFile;
-    const prevHeadMeta = twHead.overrideMeta;
-
-    st.torsoMode = cell.torsoMode;
-    layerOrder.shoe_over_calf = cell.shoeOverCalf;
-    if (hd && !hd.is_blank) {
-      twHead.overrideFile = hd.file;
-      twHead.overrideMeta = {
-        file: hd.file,
-        width: hd.width || 220,
-        height: hd.height || 300,
-        pivot_A: [0.50, 0.88],
-        socket_B: [0.50, 0.12],
-        rot_offset_deg: 0
-      };
-    }
-
-    drawWygwylRigOnBolas(ctx, s.J, P, sc, (s.yaw || 0) + yaw, rig, { showPins: false });
-    drawBola(ctx, s.J, P, sc, { alpha: 0.32, ends: false });
-
-    st.torsoMode = prevTorsoMode;
-    layerOrder.shoe_over_calf = prevShoeLayer;
-    twHead.overrideFile = prevHeadFile;
-    twHead.overrideMeta = prevHeadMeta;
-
-    ctx.font = `600 8.5px ${C.mono}`;
-    ctx.fillStyle = C.ink2;
-    ctx.textAlign = 'left';
-    ctx.fillText(`${m.id}@F${String(f).padStart(2, '0')} · ${cell.shoeOverCalf ? 'SHOE>CALF' : 'CALF>SHOE'}`, 6, H - 6);
-    ctx.textAlign = 'right';
-    ctx.fillStyle = C.cyan;
-    ctx.fillText(`HEAD #${String(cell.headIdx + 1).padStart(2, '0')}`, W - 6, H - 6);
-
-  } else if (egState.mode === 'strips') {
-    // MODE 2: NATIVE 3-STRIP PHOTO-FIT FLIPBOOK (#11 / #24 / #36 — Exact match to Refs 2 & 3!)
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-    bgGrad.addColorStop(0, '#3a322d');
-    bgGrad.addColorStop(1, '#1d1815');
+    const bgGrad = ctx.createRadialGradient(W * 0.5, H * 0.45, 10, W * 0.5, H * 0.5, W * 0.75);
+    bgGrad.addColorStop(0, '#1e1916');
+    bgGrad.addColorStop(1, '#0b0908');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
-    // Draw collar/shoulders at bottom
     const ts = rig.torso_style || { primary: '#181a20', accent: '#d92b2b', trim: '#c69c6d' };
     ctx.fillStyle = ts.primary;
     ctx.beginPath();
-    ctx.ellipse(W * 0.47, H * 1.03, W * 0.42, H * 0.22, 0, Math.PI, 0);
+    ctx.ellipse(W * 0.50, H * 1.03, W * 0.38, H * 0.20, 0, Math.PI, 0);
     ctx.fill();
-    ctx.strokeStyle = ts.trim || '#c69c6d';
-    ctx.lineWidth = 2;
-    ctx.stroke();
 
-    // Draw Photo-Fit Portrait Plate (`face.front.plate.png` or `face.profile.plate.png`)
-    const imPlate = getImg(pl.file);
+    const imPlate = matchPl ? getImg(matchPl.file) : null;
     if (imPlate && imPlate.complete && imPlate.naturalWidth) {
       const pw = imPlate.naturalWidth, ph = imPlate.naturalHeight;
-      const scale = Math.min((W * 0.78) / pw, (H * 0.88) / ph);
+      const scale = Math.min((W * 0.78) / pw, (H * 0.86) / ph);
       const dw = pw * scale, dh = ph * scale;
-      const px = W * 0.44 - dw * 0.5, py = (H - dh) * 0.46;
+      const px = (W - dw) * 0.5, py = (H - dh) * 0.48;
       ctx.drawImage(imPlate, px, py, dw, dh);
 
-      const isProf = pl.view === 'profile';
-      const s1Num = String((cell.strip1Idx % 18) + 2).padStart(2, '0');
-      const s2Num = String((cell.strip2Idx % 22) + 16).padStart(2, '0');
-      const s3Num = String((cell.strip3Idx % 24) + 31).padStart(2, '0');
-
-      const drawPhotoFitStrip = (item, relX, relY, numStr) => {
+      const isProf = targetVw === 'profile';
+      const drawPhotoFitStrip = (item, relX, relY) => {
         if (!item) return;
         const imS = getImg(item.file);
         if (!imS || !imS.complete || !imS.naturalWidth) return;
@@ -4625,105 +5447,11 @@ function drawEvolveGridCell(idx) {
         const sx = isProf ? (px + dw * relX) : (px + (dw - sw) * 0.5);
         const sy = py + dh * relY;
         ctx.drawImage(imS, sx, sy, sw, sh);
-
-        // Bold right-hand Photo-Fit index number (`11 / 24 / 36` & `4 / 19 / 39` style!)
-        ctx.font = `700 18px ${C.disp}`;
-        ctx.fillStyle = '#f8f5ee';
-        ctx.textAlign = 'left';
-        ctx.fillText(numStr, Math.min(W - 26, sx + sw + 8), sy + sh * 0.68);
       };
 
-      // Native strip coordinates on `face.front.plate` (320x527) and `face.profile.plate` (360x488)
-      drawPhotoFitStrip(s1, 0.34, 0.28, s1Num); // Strip 1: Brows
-      drawPhotoFitStrip(s2, 0.38, 0.39, s2Num); // Strip 2: Eyes
-      drawPhotoFitStrip(s3, 0.56, 0.62, s3Num); // Strip 3: Mouth
-    }
-
-    ctx.font = `600 8.5px ${C.mono}`;
-    ctx.fillStyle = C.yellow;
-    ctx.textAlign = 'left';
-    ctx.fillText(`CLICK TOP / MID / BOT STRIP TO SPIN`, 7, H - 5);
-
-  } else {
-    // MODE 3: CUBIST / MULTI-WINDOW ASSISTED SELF-PORTRAIT COLLAGE (Refs 1, 4 & 5!)
-    ctx.fillStyle = '#d8d2c5'; // Warm gallery paper ground like Refs 4 & 5
-    ctx.fillRect(0, 0, W, H);
-
-    // Subtle geometric golden-ratio construction lines
-    ctx.strokeStyle = 'rgba(20, 24, 32, 0.14)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(W * 0.5, 0); ctx.lineTo(W * 0.5, H);
-    ctx.moveTo(0, H * 0.42); ctx.lineTo(W, H * 0.42);
-    ctx.moveTo(0, H * 0.68); ctx.lineTo(W, H * 0.68);
-    ctx.stroke();
-
-    // 1. Bold Cut-Out Collar & Shoulders at Bottom
-    const ts = rig.torso_style || { primary: '#1d3152', accent: '#d92b2b', trim: '#111318' };
-    ctx.fillStyle = ts.primary;
-    ctx.beginPath();
-    ctx.moveTo(W * 0.12, H);
-    ctx.lineTo(W * 0.24, H * 0.76);
-    ctx.lineTo(W * 0.78, H * 0.78);
-    ctx.lineTo(W * 0.90, H);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#14171f';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // 2. Base Head Cut-Out (Polygonal Collage Fragment)
-    drawImgCentered(ctx, hd.file, W * 0.49, H * 0.49, W * 0.66, H * 0.76, -2);
-
-    // Helper for Multi-Window Assisted Self-Portrait Floating Window (Ref 1 + Ref 4/5)
-    const drawCollageWindow = (wx, wy, ww, wh, title, imgPath, scaleMult = 1.0, rot = 0, borderCol = '#181c24') => {
-      ctx.save();
-      ctx.translate(wx + ww * 0.5, wy + wh * 0.5);
-      ctx.rotate(rot * DEG);
-      const x0 = -ww * 0.5, y0 = -wh * 0.5;
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.24)';
-      ctx.fillRect(x0 + 3, y0 + 3, ww, wh);
-      ctx.fillStyle = '#efe9dc';
-      ctx.fillRect(x0, y0, ww, wh);
-      ctx.fillStyle = borderCol;
-      ctx.fillRect(x0, y0, ww, 10);
-      ctx.fillStyle = '#f4efe6';
-      ctx.font = `700 6.5px ${C.mono}`;
-      ctx.textAlign = 'left';
-      ctx.fillText(title, x0 + 3, y0 + 7.5);
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(x0 + 1, y0 + 10, ww - 2, wh - 11);
-      ctx.clip();
-      drawImgCentered(ctx, imgPath, 0, 5, (ww - 4) * scaleMult, (wh - 12) * scaleMult, 0);
-      ctx.restore();
-      ctx.strokeStyle = borderCol;
-      ctx.lineWidth = 1.4;
-      ctx.strokeRect(x0, y0, ww, wh);
-      ctx.restore();
-    };
-
-    // 3. Left Eye Window & Right Eye Window (Mismatched Cubist Scale like Ref 4 & 5!)
-    const s2Alt = gp.strip_2_noses_cheeks[(cell.strip2Idx + 5) % gp.strip_2_noses_cheeks.length] || s2;
-    if (s2) {
-      drawCollageWindow(W * 0.14, H * 0.25, W * 0.34, H * 0.19, `EYE.L #${cell.strip2Idx + 1}`, s2.file, cell.eyeLScale * 1.45, -3.5, '#1b2432');
-      drawCollageWindow(W * 0.50, H * 0.23, W * 0.35, H * 0.21, `EYE.R #${cell.strip2Idx + 6}`, s2Alt.file, cell.eyeRScale * 1.45, 2.5, '#2b1e1e');
-    }
-    // 4. Sculptural Nose Cut-Out Window (Strictly Purified Noses!)
-    if (cNose) {
-      drawCollageWindow(W * 0.37, H * 0.41, W * 0.26, H * 0.22, `NOSE #${(cell.strip2Idx % 18) + 1}`, cNose.file, 1.15, cell.noseAngle, '#1f2937');
-    }
-    // 5. Mouth / Jaw Window
-    if (s3) {
-      drawCollageWindow(W * 0.28, H * 0.62, W * 0.44, H * 0.19, `MOUTH #${cell.strip3Idx + 1}`, s3.file, 1.35, -1.5, '#3b1d1d');
-    }
-    // 6. Headgear / Cap / Sunglasses Cut-Out at Crown
-    if (gr) {
-      drawImgCentered(ctx, gr.file, W * 0.50, H * 0.15, W * 0.54, H * 0.25, -4);
-    }
-    // 7. Expressive Hand Gesture near Chin/Cheek (just like Ref 4!)
-    if (hnd) {
-      drawImgCentered(ctx, hnd.file, W * 0.80, H * 0.74, W * 0.28, H * 0.30, (hnd.rot_offset_deg || 0) - 25);
+      drawPhotoFitStrip(s1, 0.34, 0.28);
+      drawPhotoFitStrip(s2, 0.38, 0.39);
+      drawPhotoFitStrip(s3, 0.56, 0.62);
     }
   }
 }
@@ -4740,7 +5468,11 @@ document.querySelectorAll('[data-egmode]').forEach(b => {
   b.onclick = () => {
     egState.mode = b.dataset.egmode;
     document.querySelectorAll('[data-egmode]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    const tChip = $('egTendonChip'), gBtn = $('egGravityBtn');
+    if (tChip) tChip.style.display = egState.mode === 'bodies' ? '' : 'none';
+    if (gBtn) gBtn.style.display = egState.mode === 'bodies' ? '' : 'none';
     egState.cells.forEach(c => { c.geomScore = scoreEvolveCellGeometry(c); });
+    preloadEvolveGridAssets();
     renderEvolveGridDOM();
     drawEvolveGridAll();
   };
@@ -4750,11 +5482,38 @@ document.querySelectorAll('[data-egview]').forEach(b => {
   b.onclick = () => {
     egState.view = b.dataset.egview;
     document.querySelectorAll('[data-egview]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-    egState.cells.forEach(c => { c.geomScore = scoreEvolveCellGeometry(c); });
+    egState.cells.forEach(c => {
+      if (c.faceGenome && egState.view !== 'auto') {
+        c.faceGenome.viewDir = egState.view === 'side' ? 'profile_R' : 'front';
+      }
+      c.geomScore = scoreEvolveCellGeometry(c);
+    });
+    preloadEvolveGridAssets();
     renderEvolveGridDOM();
     drawEvolveGridAll();
   };
 });
+
+if ($('egTendonChip')) {
+  $('egTendonChip').onclick = e => {
+    egState.showTendons = !egState.showTendons;
+    e.currentTarget.setAttribute('aria-pressed', String(egState.showTendons));
+    drawEvolveGridAll();
+  };
+}
+if ($('egGravityBtn')) {
+  $('egGravityBtn').onclick = e => {
+    const levels = [
+      { g: 1.0, lbl: 'GRAVITY: 1.0G' },
+      { g: 0.4, lbl: 'GRAVITY: 0.4G (MOON)' },
+      { g: 1.8, lbl: 'GRAVITY: 1.8G (HEAVY)' }
+    ];
+    const curIdx = levels.findIndex(x => Math.abs(x.g - egState.gravityG) < 0.1);
+    const next = levels[(curIdx + 1) % levels.length];
+    egState.gravityG = next.g;
+    e.currentTarget.textContent = next.lbl;
+  };
+}
 
 if ($('egStreamBtn')) {
   $('egStreamBtn').onclick = e => {
@@ -4927,11 +5686,16 @@ function loop(now) {
     }
   } else if (activeStage === 's6') {
     egAcc += dt;
-    if (egAcc >= 1000 / 18) {
+    if (egAcc >= 1000 / 24) {
       egAcc = 0;
       egState.tick++;
-      if (egState.view === 'orbit') egState.orbit = (egState.orbit + 2.2) % 360;
-      if (egState.streaming && egState.tick % 48 === 0) {
+      if (egState.mode === 'bodies') {
+        egState.cells.forEach(c => stepSimsPhysics(c, 1 / 24));
+      }
+      if (egState.tick % 6 === 0) {
+        updateEvolveGridOverlays();
+      }
+      if (egState.streaming && egState.tick % 96 === 0) {
         evolveNextGenerationBatch();
       } else {
         drawEvolveGridAll();
@@ -4951,7 +5715,8 @@ window.__rangeRigger = {
   LIB, st, inv, layerOrder, L, switchStage, select, setF,
   applySkeletonBreed, runEvoPoseSolver, openRadialGizmoForPiece,
   getLastPieces: () => lastRenderedPieces, radialGizmo, drawStage,
-  egState, evolveNextGenerationBatch, applyEvolveCellToStage, drawEvolveGridAll
+  egState, evolveNextGenerationBatch, applyEvolveCellToStage, drawEvolveGridAll,
+  stepSimsPhysics
 };
 })();
 </script>
