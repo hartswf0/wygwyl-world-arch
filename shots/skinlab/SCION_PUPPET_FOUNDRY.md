@@ -162,6 +162,50 @@ Invariants (measured, every frame; a failure blocks acceptance):
 - painted heads carry no feature cards; features sit inside their Photo-FIT bands at canon spacing.
 
 
+4b. MECHANICS DIFFER BY VIEW; DO NOT SOLVE THEM ALIKE
+
+◻ VIEW
+→ [Decides] → ◻ WHICH JOINTS CAN BEND IN THE PICTURE PLANE
+→ [Decides] → ◻ WHAT A CARD CAN AND CANNOT SHOW
+→ [Requires] → ◻ ITS OWN SOLVER, CARDS AND CHECKS
+
+Rigid cards bend only in the picture plane. A joint whose bend points at the camera cannot be drawn by rotating cards.
+Every limb must be solved with the rule of the view it is seen in (learned the hard way on the booth passage: front legs
+read as "tombstones", knees missed by 32 cm, a kneel the puppet would not follow, the phone arm folded flat across the chest).
+
+- Side view (profile): hips, knees, ankles, elbows and shoulders flex IN the picture plane. Two-bone IK on rigid
+  cards works here. Stride runs along screen x. Near and far limbs overlap and are layered (near over body, far under,
+  far darkened). Feet roll heel, flat, ball, toe on the floor line; the planted foot is pinned. Weight reads as lean
+  and counter-lean along x (a side load can only lean in depth: cheat it with a dropped shoulder, a straight carrying
+  arm and the free arm out).
+- Front / back view: hip and knee flexion point AT the camera, so a bent knee cannot be drawn by rotating cards.
+  Legs move by stance width, lateral hip shift and pelvis tilt. Knee bend is shown by replacement cards (bent-knee
+  front cards, binned by flexion), by shortening the visible thigh/shin (a declared paper cheat: vertical scale
+  within the 12% stretch invariant, or overlap of shin over thigh), and by the body sinking. Feet show as toes out,
+  plant by lateral position, and never roll. Arms raised toward the camera need a foreshortened card or a different
+  staging, never a flat fold across the chest. The face reads; the profile silhouette does not.
+- Three-quarter: blend the two rules. Flexion mostly in plane on the near side; replacement cards for the far side.
+  Swap views only on held poses and planted feet; never mid-stride.
+- Choose the VIEW for the ACTION: stage an action in the view where its key joint bends in plane. The handset lift
+  works in profile (near hand to the visible ear) and fails facing out. A kneel reads in profile, a stance in front.
+  If the story needs the other view, cut, or use replacement cards; do not force IK through it.
+- Checks per view: side, knee and ankle hit their skeleton joints (miss under 3 cm) and planted feet slide under
+  0.6 cm/frame. Front, stance width and pelvis height match the source, and no card is stretched beyond 12% to fake
+  flexion. Every view, an image-difference check: no single-frame jump larger than the passage's own reach spacing
+  unless it is a declared cut or swap on a held pose.
+
+EVOLVING BETTER MECHANICS FOR OTHER SCENES
+- Every passage that passes independent review becomes a verified mechanics module: its key poses in card space, the
+  view each beat is staged in, its invariants and its critic verdict. Examples: walk with a load, set-down,
+  turn into a doorway, reach and lift to the ear, lean on a wall. The next scene starts from the module, retargeted to
+  its character contract, not from raw motion capture.
+- Breed variants of a module (Skin Lab grid / Creature Lab) for a new scene: key spacing, the view per beat, which
+  replacement cards, stance and lean. Score them on the per-view checks and physics (balance, foot slide). A fresh critic
+  judges the finalists from frames. Fitness only proposes; the critic decides.
+- Feed every critic's failure back as a new check: "pop at the grasp" became the image-difference check, "geography
+  across the cut" became the cut-pair check. The checks grow; the bar does not drop.
+
+
 5. MAKE THE SWARM ACCOUNTABLE TO ARTIFACTS
 
 ◻ PRODUCTION SWARM
