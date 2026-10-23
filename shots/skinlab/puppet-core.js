@@ -104,7 +104,7 @@ const STACK0 = ['far_upper_arm', 'far_arm', 'far_forearm', 'far_mitt', 'far_hand
   'near_shin', 'near_foot', 'torso', 'head', 'near_upper_arm', 'near_arm', 'near_forearm', 'near_mitt', 'near_hand'];
 S.stack = { side: STACK0.slice(), front: STACK0.slice(), back: STACK0.slice() };
 const ARMS = /^(upper_arm|forearm|mitt|arm|hand)$/;
-const VIEWS = ['side', 'front', 'back'];
+const VIEWS = ['side', 'front', 'back', 'threequarter'];
 const VIEWOF = v => v === 'profile' || v === 'side' ? 'side' : v === 'front' || v === 'threequarter' ? 'front' : v === 'back' || v === 'threequarter_back' ? 'back' : null;
 const viewOf = c => VIEWOF(S.fix[c.id]?.view || c.human?.view || c.view || (c.clip?.view_l_p > .8 && c.clip.view_l) || c.est_view) || 'side';
 const OTHER = k => k.endsWith('_L') ? k.slice(0, -1) + 'R' : k.endsWith('_R') ? k.slice(0, -1) + 'L' : null;
@@ -167,11 +167,13 @@ function active(k, sk, a, port) {
   const d = dot(f, port.toward), lat = a.lat ?? dot(f, port.right);
   const want = a.views ? (k === 'head' ? a.views.head || a.views.body : a.views.body) : d > .55 ? 'front' : d < -.55 ? 'back' : 'side';
   const cards = cardsOf(k, sk, a);
-  const order = { side: ['side', 'front', 'back'], front: ['front', 'side', 'back'], back: ['back', 'front', 'side'] }[want];
+  const order = { side: ['side', 'front', 'back'], front: ['front', 'side', 'back'], back: ['back', 'front', 'side'], threequarter: ['threequarter', 'front', 'side', 'back'] }[want];
   const v = order.find(v => cards[v] && S.byId[cards[v]]); if (!v) return null;
   const c = S.byId[cards[v]];
-  // profile cards are drawn facing right unless marked: mirror across the A→B line when the body faces screen-left
-  const mir = sk.mirror !== (v === 'side' && (lat < 0) !== cardLeft(c));
+  // profile cards are drawn facing right unless marked: mirror across the A→B line when the body faces screen-left; a three-quarter
+  // card is mirrored the same way when its facing is known (a declared fix.left, a library 'faces', or a boot's toe)
+  const sided = v === 'side' || (v === 'threequarter' && (S.fix[c.id]?.left != null || c.faces || c.slot === 'foot'));
+  const mir = sk.mirror !== (sided && (lat < 0) !== cardLeft(c));
   return { c, view: v, want, mir };
 }
 
@@ -517,7 +519,7 @@ function fromPoseLab(J) {
 function applyContract(c) {
   S.style = c.style || 'hips'; S.fix = c.fix || {}; index();
   S.skin = {}; for (const [k, l] of Object.entries(c.limbs || {})) S.skin[k] = { ...newSkin(), ...l, cards: { ...(l.cards || {}) } };
-  const st = c.stack || {}; S.stack = Object.fromEntries(VIEWS.map(v => [v, st[v]?.length ? st[v].slice() : STACK0.slice()]));
+  const st = c.stack || {}; S.stack = Object.fromEntries(VIEWS.map(v => [v, (st[v]?.length ? st[v] : v === 'threequarter' && st.front?.length ? st.front : STACK0).slice()]));
   S.K = {}; S.sock = {}; S.cardPpc = null; S.pv++;
 }
 const loaded = im => new Promise(r => { if (!im || im.complete && im.naturalWidth) return r(); const t = setTimeout(r, 15000); im.addEventListener?.('load', () => { clearTimeout(t); r(); }); im.addEventListener?.('error', () => { clearTimeout(t); r(); }); });
@@ -551,6 +553,10 @@ function jointArray(o, warn) {
   return j;
 }
 const nrm3 = v => { const l = len3(v) || 1; return v.map(x => x / l); };
+function rotAB3(a, b, v) {   // v turned by the rotation that takes unit a to unit b
+  const k = cross3(a, b), sn = len3(k), cs = dot3(a, b); if (sn < 1e-6) return v.slice();
+  const u = k.map(x => x / sn), d = dot3(u, v), x = cross3(u, v); return [0, 1, 2].map(i => v[i] * cs + x[i] * sn + u[i] * d * (1 - cs));
+}
 const cross3 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 function facings(j) {   // body frame x = his left, y = up: forward = left x up
@@ -586,7 +592,7 @@ function yawOf(o) {
   const r = (o.facing || 'right') !== 'left';
   return { front: 0, back: 180, side: r ? -90 : 90, profile: r ? -90 : 90, threequarter: r ? -45 : 45, threequarter_back: r ? -135 : 135 }[o.view || 'side'] ?? 0;
 }
-function cardViewOf(yaw) { const a = Math.abs((((yaw + 180) % 360) + 360) % 360 - 180); return a <= 67.5 ? 'front' : a >= 112.5 ? 'back' : 'side'; }
+function cardViewOf(yaw) { const a = Math.abs((((yaw + 180) % 360) + 360) % 360 - 180); return a <= 22.5 ? 'front' : a <= 67.5 ? 'threequarter' : a >= 112.5 ? 'back' : 'side'; }
 function paintedH(c) {
   const im = img(c); if (!im || !(im.naturalWidth || im.width)) return null;
   const w = c.w, h = c.h, o = P.canvas(w, h), g = o.getContext('2d'); g.drawImage(im, 0, 0, w, h);
@@ -624,14 +630,35 @@ function renderPose(ctx, o) {
   S.centre = (pt, fr) => { const q = fr.a.A.j[0]; pt.cx = q[0]; pt.cz = q[2]; };
   // sockets bind on the neutral pose turned to show the card the way it is drawn now
   S.bindFrame = (kk, px, pt) => {
-    const v = px.view || 'side', c = px.c, sk = px.sk, mirLeft = sk.mirror !== (true !== cardLeft(c)), want = v === 'side' ? (px.mir === mirLeft ? 'left' : 'right') : v;
+    const v = px.view || 'side', c = px.c, sk = px.sk, mirLeft = sk.mirror !== (true !== cardLeft(c));
+    const want = v === 'side' ? (px.mir === mirLeft ? 'left' : 'right') : v === 'threequarter' ? (RP.lat < 0 ? 'tqL' : 'tqR') : v;
     const id = want + '|' + Math.round(pt.yaw);
-    if (!RP.bind[id]) { const d = { front: pt.toward, back: pt.toward.map(x => -x), right: pt.right, left: pt.right.map(x => -x) }[want], t = Math.atan2(d[0], d[2]);
+    if (!RP.bind[id]) { const tq = s => pt.toward.map((x, i) => (x + s * pt.right[i]) / Math.SQRT2);
+      const d = { front: pt.toward, back: pt.toward.map(x => -x), right: pt.right, left: pt.right.map(x => -x), tqR: tq(1), tqL: tq(-1) }[want], t = Math.atan2(d[0], d[2]);
       const jj = nj.map(q => rotYv(q, t)), f = rotYv([0, 0, 1], t); RP.bind[id] = frameOf(jj, { fwd: f, hfwd: f, pfwd: f }, { views: { body: v, head: v } }); }
     return RP.bind[id];
   };
+  // the head is a painted card: it is drawn in the picture plane at full size, so a head bowed toward (or away from) the camera is
+  // turned into the plane about the neck, keeping its lean across the screen, and held within the neck's reach of the torso
+  { const nb = j[ji.neckBase], uh = v3(nb, j[ji.headTop]), L = len3(uh), tw = port.toward, along = dot3(uh, tw) / (L || 1);
+    if (Math.abs(along) > .45) { const inPl = nrm3(uh.map((x, i) => x - along * L * tw[i])), ut = nrm3(v3(j[ji.spineMid], nb)), w = Math.min(1, len3(uh.map((x, i) => x - along * L * tw[i])) / L / .45);
+      const tgt = nrm3(inPl.map((x, i) => x * w + ut[i] * (1 - w)));
+      for (const n of ['headBase', 'head', 'headTop', 'nose']) { const r = rotAB3(nrm3(uh), tgt, v3(nb, j[ji[n]])); j[ji[n]] = nb.map((x, i) => x + r[i]); }
+      warnings.push(`head: bowed ${(Math.asin(Math.min(1, Math.abs(along))) * 180 / Math.PI) | 0} deg toward the camera; turned into the picture plane (a painted head cannot foreshorten)`); }
+    const F0 = facings(j), cn = clampNeck(j, F0.fwd, F0.hfwd, o.neckDeg ?? (Math.abs(along) > .45 ? 20 : 40)); j = cn.j; }
+  // a painted head is drawn nearly upright on its collar: across the screen it leans at most headLeanDeg off the torso (front, back, 3/4)
+  if (view !== 'side') { const lim = (o.headLeanDeg ?? 15) * Math.PI / 180, up = [0, 1, 0], nb = j[ji.neckBase];
+    const sa = v => Math.atan2(dot3(v, port.right), dot3(v, up)), dt = sa(v3(j[ji.spineMid], nb)), dh = sa(v3(nb, j[ji.headTop]));
+    let df = Math.atan2(Math.sin(dh - dt), Math.cos(dh - dt));
+    if (Math.abs(df) > lim) { const th = (Math.abs(df) - lim) * Math.sign(df), ax = port.toward, c = Math.cos(th), sn = Math.sin(th);
+      const R = v => { const d = dot3(ax, v), x = cross3(ax, v); return [0, 1, 2].map(i => v[i] * c + x[i] * sn + ax[i] * d * (1 - c)); };
+      const test = R(v3(nb, j[ji.headTop])), sgn = Math.abs(Math.atan2(Math.sin(sa(test) - dt), Math.cos(sa(test) - dt))) < Math.abs(df) ? 1 : -1;
+      const R2 = v => { const t2 = th * sgn, c2 = Math.cos(t2), s2 = Math.sin(t2), d = dot3(ax, v), x = cross3(ax, v); return [0, 1, 2].map(i => v[i] * c2 + x[i] * s2 + ax[i] * d * (1 - c2)); };
+      for (const n of ['headBase', 'head', 'headTop', 'nose']) { const r = R2(v3(nb, j[ji[n]])); j[ji[n]] = nb.map((x, i) => x + r[i]); }
+      warnings.push(`head: leaned ${(Math.abs(df) * 180 / Math.PI) | 0} deg off the torso across the screen; held to ${(lim * 180 / Math.PI) | 0}`); } }
   const F = facings(j), lat = Math.sign(dot3(F.pfwd, port.right)) || ((o.facing || 'right') === 'left' ? -1 : 1);
   const a = { j, ...F, views: { body: view, head: view }, lat: o.facing ? (o.facing === 'left' ? -1 : 1) : lat, hands: o.handStates || {}, bend: {}, sx: {}, states: {} };
+  RP.lat = a.lat;
   // per segment: how much of its true length the view shows (the joint atlas verdict), and what the puppet does about it
   const fr = { a: { A: a } }; port.cx = j[0][0]; port.cz = j[0][2];
   const jj = joints(fr, 'A'), pj = jj.map(q => port.p(q)), report = {};
@@ -639,7 +666,8 @@ function renderPose(ctx, o) {
     const sg = SEG[kk], sk = S.skin[kk]; if (!sg || !sk) continue;
     const L3 = len3(v3(jj[ji[sg.from]], jj[ji[sg.to]])), r = L3 ? hyp(pj[ji[sg.from]], pj[ji[sg.to]]) / (L3 * k) : 1;
     let method = 'rotate';
-    if (!LIMB.test(kk)) method = /^(hand|foot)_/.test(kk) ? (r >= .55 ? 'rigid card (own size)' : 'rigid card (own size), end-on: the view\'s ' + view + ' card') : 'body card (' + view + ')';
+    if (!LIMB.test(kk)) { method = /^(hand|foot)_/.test(kk) ? (r >= .55 ? 'rigid card (own size)' : 'rigid card (own size), end-on: the view\'s ' + view + ' card') : 'body card (' + view + ')';
+      if ((kk === 'torso' || kk === 'pelvis') && r < .88) { a.sx[kk] = Math.max(r, .88); method += ` shortened x${a.sx[kk].toFixed(2)}`; } }
     else if (r < .88) {
       const bent = sk.states?.bent?.[view] && S.byId[sk.states.bent[view]], endon = sk.states?.endon?.[view] && S.byId[sk.states.endon[view]];
       if (r < .55 && endon) { a.states[kk] = 'endon'; method = 'dedicated end-on card'; }
