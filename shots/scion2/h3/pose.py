@@ -1,31 +1,30 @@
-"""Pose the H3 rig toward a target painting's Pose Lab markers.
+"""Pose an H3 rig toward a target painting's Pose Lab markers (round 2).
 
-Directions and lengths are measured marker-to-marker on the target and on the master
-(the same detector made both), so each bone gets: absolute rotation from the master's
-bone direction to the target's, and a squash along its axis for foreshortening (clamped).
-Hand angle, wrist bend and head yaw are not in the markers; they are animator keys in
-keys.json (per target, written by eye, documented there).
+Per target, keys.json picks the view rig (front / q3r), the replacement head and hands,
+and sets what the markers cannot give (wrist turn, head tilt).  Bone directions come from
+marker-to-marker vectors measured on the target and on that rig's master, so each bone
+gets: an absolute rotation and a clamped squash along its axis for foreshortening.
+Leave-one-family-out is asserted for the master, the head and every hand.
 """
 import json, math, os, sys
 import numpy as np, cv2
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import rig
+import rig, lib, specs
 
 HERE = rig.HERE
 ROOT = rig.ROOT
 MK = rig.load_markers()
-MASTER = MK[rig.MASTER_ID]['markers']
-MASTER_FAMILY = rig.MASTER_ID.split('/')[0]
-KEYS = json.load(open(os.path.join(HERE, 'keys.json'))) if os.path.exists(os.path.join(HERE, 'keys.json')) else {}
+KEYS = json.load(open(os.path.join(HERE, 'keys.json')))
+TS = json.load(open(os.path.join(ROOT, 'shots/scion2/test_set.json')))
+
+
+def fam(tid):
+    return tid.split('/')[0]
 
 
 def P2(m, k):
     return np.array(m[k][:2], float)
-
-
-def mid(m, a, b):
-    return (P2(m, a) + P2(m, b)) / 2
 
 
 def ang(v):
@@ -40,15 +39,32 @@ def clamp(x, lo, hi):
     return max(lo, min(hi, x))
 
 
-def solve(tid, keys=None):
-    t = MK[tid]
-    m = t['markers']; r = MASTER
+_RIGS, _LIB = {}, None
+
+
+def get_rig(view):
+    if view not in _RIGS:
+        _RIGS[view] = rig.Rig(view)
+    return _RIGS[view]
+
+
+def get_lib():
+    global _LIB
+    if _LIB is None:
+        _LIB = lib.Lib()
+    return _LIB
+
+
+def solve(tid, keys=None, markers=None):
     keys = dict(KEYS.get(tid, {}), **(keys or {}))
-    log = []
-    hip_t, hip_r = mid(m, 'hipR', 'hipL'), mid(r, 'hipR', 'hipL')
+    view = keys.get('view', 'front')
+    mid = specs.MASTERS[view][0]
+    m = markers or MK[tid]['markers']
+    r = MK[mid]['markers']
+    mid_t = (P2(m, 'hipR') + P2(m, 'hipL')) / 2; mid_r = (P2(r, 'hipR') + P2(r, 'hipL')) / 2
     L = lambda mm, a, b: np.linalg.norm(P2(mm, a) - P2(mm, b))
     rat = {
-        'torso': np.linalg.norm(P2(m, 'neck') - hip_t) / np.linalg.norm(P2(r, 'neck') - hip_r),
+        'torso': np.linalg.norm(P2(m, 'neck') - mid_t) / np.linalg.norm(P2(r, 'neck') - mid_r),
         'legs': max(L(m, 'hipR', 'kneeR') + L(m, 'kneeR', 'ankleR'), L(m, 'hipL', 'kneeL') + L(m, 'kneeL', 'ankleL')) /
                 ((L(r, 'hipR', 'kneeR') + L(r, 'kneeR', 'ankleR') + L(r, 'hipL', 'kneeL') + L(r, 'kneeL', 'ankleL')) / 2),
         'shoulders': L(m, 'shoulderR', 'shoulderL') / L(r, 'shoulderR', 'shoulderL'),
@@ -56,13 +72,14 @@ def solve(tid, keys=None):
                 ((L(r, 'shoulderR', 'elbowR') + L(r, 'elbowR', 'wristR') + L(r, 'shoulderL', 'elbowL') + L(r, 'elbowL', 'wristL')) / 2),
     }
     s = float(np.median(list(rat.values()))) * keys.get('scale', 1.0)
-
-    sp_t = P2(m, 'neck') - hip_t; sp_r = P2(r, 'neck') - hip_r
+    sp_t = P2(m, 'neck') - mid_t; sp_r = P2(r, 'neck') - mid_r
     spine = wrap(ang(sp_t) - ang(sp_r))
-    # beyond 35 deg the whole figure turns (lying, falling); the rest is the chest's lean
-    rr = spine - clamp(spine, math.radians(-35), math.radians(35)) if keys.get('root_turn', True) else 0.0
+    rr = spine - clamp(spine, math.radians(-35), math.radians(35))
+    over = keys.get('bones', {})
 
-    def d_ang(a, b):  # absolute rotation that takes master bone a->b to target bone a->b
+    def d_ang(a, b, bone=None):
+        if bone in over:
+            return math.radians(over[bone])
         return wrap(ang(P2(m, b) - P2(m, a)) - ang(P2(r, b) - P2(r, a)) - rr)
 
     def d_len(a, b, lo=0.62, hi=1.15):
@@ -74,62 +91,69 @@ def solve(tid, keys=None):
     P['chest'] = clamp(spine - rr, math.radians(-35), math.radians(35))
     P['torso_len'] = clamp(np.linalg.norm(sp_t) / (s * np.linalg.norm(sp_r)), 0.8, 1.1)
     P['shw'] = clamp(rat['shoulders'] / s, 0.72, 1.08)
-    # The 'head' marker sits on the face side in 3/4 views, so it cannot give the tilt;
-    # the head follows the chest, plus an animator key (degrees) set by eye.
-    P['head'] = math.radians(keys.get('head', 0.0))
+    P['head'] = math.radians(keys.get('head_tilt', 0.0))
     for S in 'RL':
-        P['uarm' + S] = d_ang('shoulder' + S, 'elbow' + S)
+        P['uarm' + S] = d_ang('shoulder' + S, 'elbow' + S, 'uarm' + S)
         P['luarm' + S] = d_len('shoulder' + S, 'elbow' + S)
-        P['farm' + S] = d_ang('elbow' + S, 'wrist' + S)
-        P['lfarm' + S] = d_len('elbow' + S, 'wrist' + S)
+        P['farm' + S] = d_ang('elbow' + S, 'wrist' + S, 'farm' + S)
+        P['lfarm' + S] = d_len('elbow' + S, 'wrist' + S, 0.62, 1.25)
         P['hand' + S] = P['farm' + S] + math.radians(keys.get('wrist' + S, 0.0))
-        P['thigh' + S] = d_ang('hip' + S, 'knee' + S)
+        P['thigh' + S] = d_ang('hip' + S, 'knee' + S, 'thigh' + S)
         P['lthigh' + S] = d_len('hip' + S, 'knee' + S, 0.7, 1.12)
-        P['shin' + S] = d_ang('knee' + S, 'ankle' + S)
+        P['shin' + S] = d_ang('knee' + S, 'ankle' + S, 'shin' + S)
         P['lshin' + S] = d_len('knee' + S, 'ankle' + S, 0.7, 1.12)
         toe = m.get('toe' + S)
-        if toe and toe[4] >= 0.5 and keys.get('foot_from_toe', True):
+        if toe and toe[4] >= 0.5:
             P['foot' + S] = clamp(d_ang('ankle' + S, 'toe' + S), math.radians(-35), math.radians(35))
         else:
             P['foot' + S] = 0.0
         P['foot' + S] += math.radians(keys.get('foot' + S, 0.0))
-        for b in ('uarm', 'farm', 'thigh', 'shin'):
-            pass
-    # elbow / knee bend amounts (for the record)
-    bends = {S: (math.degrees(wrap(P['farm' + S] - P['uarm' + S])), math.degrees(wrap(P['shin' + S] - P['thigh' + S]))) for S in 'RL'}
+    for k, v in keys.get('len', {}).items():
+        P[k] = v
+    for k, v in keys.get('add', {}).items():   # relative corrections (deg) set by eye
+        P[k] += math.radians(v)
+    for k, v in keys.get('set', {}).items():   # absolute params (deg) set by eye
+        P[k] = math.radians(v)
+    for S in 'RL':
+        if 'hand' + S not in keys.get('set', {}):
+            P['hand' + S] = P['farm' + S] + math.radians(keys.get('wrist' + S, 0.0))
     c_, s_ = math.cos(rr), math.sin(rr)
     G = np.array([[s * c_, -s * s_, 0], [s * s_, s * c_, 0]], float)
-    G[:, 2] = hip_t - G[:, :2] @ rig.J['midhip']
-    if rr:
-        log.append(f'whole figure turned {math.degrees(rr):.0f} deg')
-    return P, G, (t['w'], t['h']), {'scale': s, 'ratios': rat, 'bends_deg': bends, 'log': log,
-                                     'head_yaw': keys.get('yaw', 0.0), 'hands': keys.get('hands', {})}
+    Rg = get_rig(view)
+    if 'place' in keys:   # [scale, x, y]: where the markers are unusable (cropped paintings)
+        s = keys['place'][0]; G = np.array([[s, 0, 0], [0, s, 0]], float); mid_t = np.array(keys['place'][1:], float)
+    G[:, 2] = mid_t + np.array(keys.get('offset', (0, 0))) - G[:, :2] @ Rg.J['midhip']
+    opts = {'head': keys.get('head'), 'hands': keys.get('hands', {}), 'hand_rot': keys.get('hand_rot', {}),
+            'head_scale': keys.get('head_scale', 1.0), 'hand_scale': keys.get('hand_scale', 1.0),
+            'head_off': keys.get('head_off', (0, 0))}
+    return P, G, view, opts, {'scale': s, 'ratios': {k: round(float(v), 3) for k, v in rat.items()}, 'turn_deg': math.degrees(rr)}
 
 
-_R = None
+def check_families(tid, view, opts):
+    f = fam(tid)
+    used = [specs.MASTERS[view][0]]
+    L = get_lib()
+    h = opts.get('head')
+    if h:
+        used.append(L.meta['heads'][h if isinstance(h, str) else h[0]]['src'])
+    for side, hs in opts.get('hands', {}).items():
+        if hs and hs not in ('none', 'cuff'):
+            used.append(L.meta['hands'][hs if isinstance(hs, str) else hs[0]]['src'])
+    bad = [u for u in used if fam(u) == f]
+    assert not bad, f'leave-one-family-out violated for {tid}: {bad}'
+    return used
 
 
-def get_rig():
-    global _R
-    if _R is None:
-        _R = rig.Rig()
-    return _R
-
-
-def render_target(tid, keys=None, pad=0):
-    P, G, size, info = solve(tid, keys)
-    R = get_rig()
-    W, H = size
-    G2 = G.copy(); G2[:, 2] += pad
-    img, jp = R.render(P, G2, (W + 2 * pad, H + 2 * pad), head_yaw=info['head_yaw'], hands=info['hands'])
+def render_target(tid, keys=None, ss=2):
+    P, G, view, opts, info = solve(tid, keys)
+    info['sources'] = check_families(tid, view, opts)
+    t = MK[tid]
+    img, jp = get_rig(view).render(P, G, (t['w'], t['h']), ss=ss, opts=opts, lib=get_lib())
     return img, info, P
 
 
 def painting(tid):
-    im = cv2.imread(os.path.join(ROOT, 'shots/kits/cut', tid + '.webp'), cv2.IMREAD_UNCHANGED)
-    if im.shape[2] == 3:
-        im = np.dstack([im, np.full(im.shape[:2], 255, np.uint8)])
-    return im
+    return rig.read_rgba(os.path.join(rig.CUT, tid + '.webp'))
 
 
 def on_bg(rgba, bg=(236, 236, 236)):
@@ -137,73 +161,44 @@ def on_bg(rgba, bg=(236, 236, 236)):
     return (rgba[..., :3] * a + np.array(bg) * (1 - a)).astype(np.uint8)
 
 
-def sheet(rows, path, H=520, label=True):
-    """rows: list of (title, painting rgba, ours rgba) -> side by side at the same height."""
+def sheet(rows, path, H=440):
     tiles = []
     for title, a, b in rows:
-        pair = []
-        for im in (a, b):
-            ys, xs = np.nonzero(im[..., 3] > 10)
-            # same height: both crops are scaled so the canvas height maps to H
-            c = on_bg(im)
-            s = H / im.shape[0]
-            pair.append(cv2.resize(c, (max(1, int(im.shape[1] * s)), H), interpolation=cv2.INTER_AREA))
+        pair = [cv2.resize(on_bg(im), (max(1, int(im.shape[1] * H / im.shape[0])), H), interpolation=cv2.INTER_AREA) for im in (a, b)]
         t = np.hstack([pair[0], np.full((H, 6, 3), 255, np.uint8), pair[1]])
-        if t.shape[1] > 2300:   # very wide paintings (lying): both shrink together, still the same height
+        if t.shape[1] > 2300:
             k = 2300 / t.shape[1]
             t = cv2.resize(t, (2300, int(H * k)), interpolation=cv2.INTER_AREA)
             t = cv2.copyMakeBorder(t, 0, H - t.shape[0], 0, 0, cv2.BORDER_CONSTANT, value=(255, 255, 255))
         t = cv2.copyMakeBorder(t, 26, 0, 0, 0, cv2.BORDER_CONSTANT, value=(255, 255, 255))
-        if label:
-            cv2.putText(t, title[:60], (4, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+        cv2.putText(t, title[:60], (4, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
         tiles.append(t)
-    rows_img = []; row = []; w = 0; MAXW = 2400
+    rows_img, row, w = [], [], 0
     for t in tiles:
-        if row and w + t.shape[1] > MAXW:
-            rows_img.append(row); row = []; w = 0
+        if row and w + t.shape[1] > 2400:
+            rows_img.append(row); row, w = [], 0
         row.append(t); w += t.shape[1] + 12
     rows_img.append(row)
-    out = []
-    for rr in rows_img:
-        im = np.hstack(sum([[t, np.full((t.shape[0], 12, 3), 255, np.uint8)] for t in rr], []))
-        im = cv2.copyMakeBorder(im, 0, 12, 0, 0, cv2.BORDER_CONSTANT, value=(255, 255, 255))
-        out.append(im)
+    out = [cv2.copyMakeBorder(np.hstack(sum([[t, np.full((t.shape[0], 12, 3), 255, np.uint8)] for t in rr], [])), 0, 12, 0, 0,
+                              cv2.BORDER_CONSTANT, value=(255, 255, 255)) for rr in rows_img]
     W = max(o.shape[1] for o in out)
-    out = [cv2.copyMakeBorder(o, 0, 0, 0, W - o.shape[1], cv2.BORDER_CONSTANT, value=(255, 255, 255)) for o in out]
-    img = np.vstack(out)
-    ys, xs = np.nonzero(img.min(2) < 250)
-    img = img[:ys.max() + 14, :xs.max() + 14]
+    img = np.vstack([cv2.copyMakeBorder(o, 0, 0, 0, W - o.shape[1], cv2.BORDER_CONSTANT, value=(255, 255, 255)) for o in out])
     cv2.imwrite(path, img, [cv2.IMWRITE_JPEG_QUALITY, 88])
 
 
-def fam(tid):
-    return tid.split('/')[0]
-
-
 if __name__ == '__main__':
-    mode = sys.argv[1] if len(sys.argv) > 1 else 'kill'
-    TS = json.load(open(os.path.join(ROOT, 'shots/scion2/test_set.json')))
-    GAPS = json.load(open(os.path.join(HERE, 'gaps.json')))['cannot_attempt'] if os.path.exists(os.path.join(HERE, 'gaps.json')) else {}
-    if mode == 'forced':   # what the front rig does when made to try a gap pose (evidence, not output)
-        ids = list(GAPS)
-        od = os.path.join(HERE, 'gaps', 'forced')
-    elif mode == 'kill':
-        ids = ['poet.07.main-poses/push-two-sides-apart', 'poet.04.main-poses/04-6-rise-flex-reflect',
-               'poet.08.main-poses/03-gentle-slow-bent-knee-dance-alone']
-        od = os.path.join(HERE, 'kill')
-    else:
-        ids = sys.argv[2:] or [p['id'] for p in TS['poses'] if p['id'] not in GAPS]
-        od = os.path.join(HERE, 'out')
-    os.makedirs(od, exist_ok=True)
-    rows = []; infos = {}
+    ids = sys.argv[1:] or [p['id'] for p in TS['poses']]
+    gaps = json.load(open(os.path.join(HERE, 'gaps.json')))['cannot_attempt'] if os.path.exists(os.path.join(HERE, 'gaps.json')) else {}
+    od = os.path.join(HERE, 'out'); os.makedirs(od, exist_ok=True)
+    rows, infos = [], {}
     for tid in ids:
-        assert fam(tid) != MASTER_FAMILY, 'leave-one-family-out violated'
+        if tid in gaps:
+            continue
         img, info, P = render_target(tid)
-        name = tid.replace('/', '__')
-        cv2.imwrite(os.path.join(od, name + '.png'), img)
+        cv2.imwrite(os.path.join(od, tid.replace('/', '__') + '.png'), img)
         rows.append((tid, painting(tid), img))
-        infos[tid] = {'scale': info['scale'], 'bends_deg': info['bends_deg'], 'log': info['log'],
-                      'params_deg': {k: (round(math.degrees(v), 1) if k[0] not in 'l' and k not in ('hipw', 'shw', 'torso_len') else round(v, 3)) for k, v in P.items()}}
-        print(tid, info['bends_deg'], info['log'])
-    sheet(rows, os.path.join(od, 'sheet.jpg' if len(sys.argv) <= 2 else 'sheet_partial.jpg'), H=420)
-    json.dump(infos, open(os.path.join(od, 'poses.json'), 'w'), indent=1)
+        infos[tid] = dict(info, keys=KEYS.get(tid, {}))
+        print(tid, info['scale'], info['sources'])
+    sheet(rows, os.path.join(od, 'sheet.jpg' if len(sys.argv) == 1 else 'sheet_partial.jpg'))
+    if len(sys.argv) == 1:
+        json.dump(infos, open(os.path.join(od, 'poses.json'), 'w'), indent=1)
