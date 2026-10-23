@@ -313,4 +313,7 @@ VIEW_RIGS = {'front': ('front', False), '3qR': ('q3r', False), '3qL': ('q3r', Tr
              'profL': ('q3r', True), 'back': ('front', False), 'back3qR': ('q3r', False), 'back3qL': ('q3r', True)}
 UNREACHED = {'fall': 1, 'ride': 1}
 COSTUME_PROPS = {'track-disc': [['emblem04', 'torso']]}
-KEYS = {}
+KEYS = {
+    # the painting's own head cut takes the other man's hand on his shoulder: use the falter head
+    'poet.09.main-poses/falter-at-shoulder-contact-2': {'head': ['poet.09.main-poses/falter-at-shoulder-contact#head', False]},
+}

@@ -225,7 +225,7 @@ def pose_from_markers(char, tid, keys=None, markers=None):
     hands = choose_hands(char, tid, sm, keys, mirror)
     props = []
     c = catalog(char).get(tid, {})
-    for pid, after in getattr(spec, 'COSTUME_PROPS', {}).get(c.get('costume'), []):
+    for pid, after in ([] if keys.get('no_costume_props') else getattr(spec, 'COSTUME_PROPS', {}).get(c.get('costume'), [])):
         props.append([pid, after])
     props += keys.get('props', [])
     flags = list(spec.painting_flags(tid, catalog(char))) if hasattr(spec, 'painting_flags') else []
