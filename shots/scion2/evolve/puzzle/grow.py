@@ -237,6 +237,7 @@ class Grower:
                 vals[ly, lx] = (win * m).sum((1, 2))
             fi, j = np.unravel_index(int(np.argmax(vals)), vals.shape)
             g = vals[fi, j]
+            loc = (int(L[fi, j, 0]), int(L[fi, j, 1]))
             fi = int(fmap[fi])
             if g < 0:
                 continue
@@ -245,7 +246,6 @@ class Grower:
             par = self.pieces[self.V[st.placed[st.free[fi][0]]['vi']]['pi']]['id']
             val += SNAP_B * self.area + self.prior.get((par, pid), 0) * .5 * SNAP_B * self.area
             # extra snap / stud bonus
-            loc = (int(L[fi, j, 0]), int(L[fi, j, 1]))
             bw = v['b'] + loc
             for jj, p in enumerate(bw):
                 if jj == j:
