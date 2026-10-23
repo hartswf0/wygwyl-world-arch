@@ -46,6 +46,34 @@ def cropped(img):
     a = np.asarray(Image.open(os.path.join(SHOTS, img)).convert('RGBA'))[..., 3] > 128
     return a[:, 0].mean() > .25 or a[:, -1].mean() > .25 or a[0, :].mean() > .25
 
+def clean_card(card, painted, s_px, own=None):
+    """a clean cut-out edge for a harvested limb: holes closed and filled (the occluding limb or prop inpainted from the limb's
+    own cloth), the torn outline smoothed (blurred and re-thresholded, never past the painted figure except to close a hole),
+    and a 1.5 px feathered edge. Returns the card and the share of its area that had to be filled."""
+    sel = card[..., 3] > 100; h, w = sel.shape
+    if sel.sum() < 20: return card, 0.0
+    pad = 6; P = lambda a: np.pad(a, pad)
+    m = P(sel).astype(np.uint8); pm = P(painted)
+    r = max(2, int(round(2.0 * s_px)))                         # close gaps narrower than ~4 cm
+    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
+    closed = cv2.morphologyEx(m, cv2.MORPH_CLOSE, k)
+    ff = closed.copy(); fm = np.zeros((ff.shape[0] + 2, ff.shape[1] + 2), np.uint8); cv2.floodFill(ff, fm, (0, 0), 2)
+    filled = (closed > 0) | (ff == 0)                           # interior holes become part of the limb
+    sm = cv2.GaussianBlur(filled.astype(np.float32), (0, 0), max(1.5, 1.0 * s_px)) > .5
+    holes = filled & ~(m > 0)
+    final = sm & ((pm & filled) | holes | (m > 0))
+    fin_n = n_ = cv2.connectedComponentsWithStats(final.astype(np.uint8), connectivity=8)
+    if fin_n[0] > 2: final = fin_n[1] == (1 + int(np.argmax(fin_n[2][1:, cv2.CC_STAT_AREA])))
+    rgb = np.pad(card[..., :3], ((pad, pad), (pad, pad), (0, 0)))
+    known_own = P(own) if own is not None else (m > 0)
+    fill = final & ~known_own                                   # holes, and another limb's paint inside this limb's outline
+    if fill.any():
+        rgb = cv2.inpaint(rgb, fill.astype(np.uint8) * 255, 5, cv2.INPAINT_TELEA)
+    a = cv2.GaussianBlur(final.astype(np.float32), (0, 0), .75) * 255
+    a[~cv2.dilate(final.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)] = 0
+    out = np.dstack([rgb, np.clip(a, 0, 255).astype(np.uint8)])[pad:pad + h, pad:pad + w]
+    return out, float(fill.sum() / max(1, final.sum()))
+
 def lab_mean(rgb, m):
     if m.sum() < 5: return None
     L = cv2.cvtColor(rgb[None, m].astype(np.uint8), cv2.COLOR_RGB2LAB)[0].astype(float).mean(0)
@@ -129,6 +157,20 @@ def harvest():
                     qi = (int(round(q[1])), int(round(q[0])))
                     if not (0 <= qi[0] < Hh and 0 <= qi[1] < Ww): why.append(f'{nm} joint off the painting')
                 if not sel.any(): continue
+                sel_own = sel.copy()
+                if part in ('upper_arm', 'forearm', 'thigh', 'shin') and sel.sum() > 60:
+                    # a clean trouser / sleeve: the painted pixels inside a tapered capsule round the bone, its half-width at each end
+                    # measured from the limb's own pixels; painted pixels of another limb inside it are filled later (occlusion)
+                    A_, B_ = pt[a], pt[b]; v_ = B_ - A_; L_ = float(v_ @ v_) or 1.0
+                    tt_ = ((P2 - A_) @ v_) / L_; dd_ = np.abs(((P2 - A_) @ np.array([-v_[1], v_[0]])) / math.sqrt(L_))
+                    own = owner == i; wa = dd_[own & (tt_ > .05) & (tt_ < .4)]; wb = dd_[own & (tt_ > .6) & (tt_ < .95)]
+                    if len(wa) > 10 and len(wb) > 10:
+                        ha, hb = np.percentile(wa, 92), np.percentile(wb, 92)
+                        hw = ha + (hb - ha) * np.clip(tt_, 0, 1)
+                        cap_ = (tt_ > -.1) & (tt_ < 1.02) & (dd_ <= hw)
+                        rootcap = np.linalg.norm(P2 - A_, axis=1) <= ha                # the round end over the brad
+                        sel = (cap_ | rootcap) & (np.linalg.norm(P2 - B_, axis=1) > 0) & (owner != -1)
+                        sel &= ~((tt_ > 1.02) & ~rootcap)
                 xs_, ys_ = P2[sel, 0].astype(int), P2[sel, 1].astype(int)
                 x0, x1, y0, y1 = max(0, xs_.min() - 2), min(Ww, xs_.max() + 3), max(0, ys_.min() - 2), min(Hh, ys_.max() + 3)
                 card = np.zeros((y1 - y0, x1 - x0, 4), np.uint8); card[ys_ - y0, xs_ - x0] = im[ys_, xs_]
@@ -139,6 +181,14 @@ def harvest():
                     qx, qy = int(round(q[0] - x0)), int(round(q[1] - y0))
                     if not (0 <= qy < dil.shape[0] and 0 <= qx < dil.shape[1] and dil[qy, qx]) and part not in ('hand', 'head'): why.append(f'{nm} joint is not on the painted limb')
                 if part == 'foot' and dep[b] - dep[a] < -12 and VIEW(psi) == 'front': why.append('boot seen from behind in a front view')
+                # the paint that belongs to this limb's own chain (itself, its parent, its child: the same trouser or sleeve) is kept;
+                # paint of any other part inside the outline, and holes, are an occluder and get filled
+                chain_ids = {i} | {j for j, sg in enumerate(SEGS) if sg[1] == sd and ((sg[0] == par) or (sg[6] == part))}
+                if par == 'torso': chain_ids |= {idx[('torso', None)]}
+                oo = sel & np.isin(owner, list(chain_ids))
+                ownl = np.zeros(card.shape[:2], bool); ownl[P2[oo, 1].astype(int) - y0, P2[oo, 0].astype(int) - x0] = True
+                card, occl = clean_card(card, im[y0:y1, x0:x1, 3] > 100, s_px, ownl)
+                if part not in ('torso', 'head') and occl > .18: why.append(f'{occl:.0%} of the limb is hidden in the painting (another limb or a prop): filled by inpainting would be invented')
                 fpath = os.path.join(OUTC, sheet, pose, part + (f'-{sd.lower()}' if sd else '') + '.webp')
                 Image.fromarray(card).save(fpath, lossless=True)
                 rgb = im[..., :3]; m2 = np.zeros(mask.shape, bool); m2[ys_, xs_] = True
@@ -167,6 +217,9 @@ def harvest():
                             'source': t['id'], 'source_img': t['img'], 'psi': psi, 'facing': 'right' if 0 < psi % 360 < 180 else 'left' if psi % 180 else ('camera' if psi % 360 == 0 else 'away'),
                             'dir_cam': dir_cam, 'ratio': round(L2 / L3, 3) if L3 else 1.0, 'flex': flex, 'solve_iou': sol.get('iou'),
                             'bad': bool(why), 'why': why})
+    lib.append({'id': 'harvest._blank', 'img': os.path.relpath(os.path.join(OUTC, '_blank.webp'), SKIN), 'w': 8, 'h': 8, 'slot': 'hand', 'side': None, 'view': 'front',
+                'state': 'pocket', 'character': CH, 'costume': C.get('costume'), 'px_per_cm': 1.0, 'A': [4, 0], 'B': [4, 8], 'pts': 'blank', 'q': 'A', 'brads': [],
+                'label': 'a hand in a pocket: nothing drawn (the sleeve ends at the pocket)', 'source': None, 'ratio': 1.0, 'bad': False, 'why': [], 'dir_cam': None})
     json.dump({'about': __doc__.split('\n\n')[0] + ' See shots/skinlab/production/recognition/harvest.py. Cards marked bad stay listed (never deleted).',
                'skipped': skipped, 'sets': sets, 'prop_boxes': boxes, 'cards': lib}, open(os.path.join(SKIN, 'library_harvest.json'), 'w'), indent=1)
     return lib, skipped

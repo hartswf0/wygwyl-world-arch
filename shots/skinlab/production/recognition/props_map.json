@@ -1,5 +1,5 @@
 {
- "about": "agent-vision mapping (Builder A, by looking at each painting): which of the KIT's own prop cards (shots/kits/cut/*props*) each painted pose holds or uses. Placement uses only the layout of the painting (where its unclaimed pieces sit, library_harvest.json prop_boxes) or the puppet's own hand / pelvis; no pixel of the target painting is drawn. place: box = fitted into the painting's largest prop box (bottom-aligned), hand = at the holding hand's tip at size_cm, seat = a chair under the pelvis. Poses whose prop has no kit card draw nothing (listed in none). Box props are drawn at their real size (size_cm along dim), standing on the floor, centred on the painting's prop box.",
+ "about": "agent-vision mapping (Builder A, by looking at each painting): which of the KIT's own prop cards (shots/kits/cut/*props*) each painted pose holds or uses. Placement uses only the layout of the painting (where its unclaimed pieces sit, library_harvest.json prop_boxes) or the puppet's own hand / pelvis; no pixel of the target painting is drawn. place: box = fitted into the painting's largest prop box (bottom-aligned), hand = at the holding hand's tip at size_cm, seat = a chair under the pelvis. Poses whose prop has no kit card draw nothing (listed in none). Box props are drawn at their real size (size_cm along dim), standing on the floor, centred on the painting's prop box. place bike: the kit motorcycle at real size on the floor, moved along the floor so its seat sits under his hips (ride), its handlebar grip under his hand (bars) or its tank under his hand (tank).",
  "poses": {
   "poet.10.main-poses/q1-approach-bike": [
    {
@@ -15,12 +15,24 @@
   "poet.10.main-poses/tank": [
    {
     "card": "11.props.parked-motorcycle/part-1",
-    "place": "box",
-    "behind": true,
-    "flip": "auto",
-    "note": "parked motorcycle, side view",
+    "place": "bike",
+    "mode": "tank",
     "size_cm": 205,
-    "dim": "w"
+    "dim": "w",
+    "anchors": {
+     "seat": [
+      240,
+      88
+     ],
+     "bars": [
+      560,
+      28
+     ],
+     "tank": [
+      420,
+      45
+     ]
+    }
    }
   ],
   "poet.10.main-poses/03-coil-to-mount": [
@@ -37,56 +49,116 @@
   "poet.10.main-poses/q5-left-hand-in": [
    {
     "card": "11.props.parked-motorcycle/part-1",
-    "place": "box",
-    "behind": true,
-    "flip": "auto",
-    "note": "parked motorcycle, side view",
+    "place": "bike",
+    "mode": "bars",
     "size_cm": 205,
-    "dim": "w"
+    "dim": "w",
+    "anchors": {
+     "seat": [
+      240,
+      88
+     ],
+     "bars": [
+      560,
+      28
+     ],
+     "tank": [
+      420,
+      45
+     ]
+    }
    }
   ],
   "poet.10.main-poses/in-wind": [
    {
     "card": "11.props.parked-motorcycle/part-1",
-    "place": "box",
-    "behind": true,
-    "flip": "auto",
-    "note": "parked motorcycle, side view",
+    "place": "bike",
+    "mode": "ride",
     "size_cm": 205,
-    "dim": "w"
+    "dim": "w",
+    "anchors": {
+     "seat": [
+      240,
+      88
+     ],
+     "bars": [
+      560,
+      28
+     ],
+     "tank": [
+      420,
+      45
+     ]
+    }
    }
   ],
   "poet.10.main-poses/pockets": [
    {
     "card": "11.props.parked-motorcycle/part-1",
-    "place": "box",
-    "behind": true,
-    "flip": "auto",
-    "note": "parked motorcycle, side view",
+    "place": "bike",
+    "mode": "ride",
     "size_cm": 205,
-    "dim": "w"
+    "dim": "w",
+    "anchors": {
+     "seat": [
+      240,
+      88
+     ],
+     "bars": [
+      560,
+      28
+     ],
+     "tank": [
+      420,
+      45
+     ]
+    }
    }
   ],
   "poet.10.main-poses/q5-left-hand": [
    {
     "card": "11.props.parked-motorcycle/part-1",
-    "place": "box",
-    "behind": true,
-    "flip": "auto",
-    "note": "parked motorcycle, side view",
+    "place": "bike",
+    "mode": "bars",
     "size_cm": 205,
-    "dim": "w"
+    "dim": "w",
+    "anchors": {
+     "seat": [
+      240,
+      88
+     ],
+     "bars": [
+      560,
+      28
+     ],
+     "tank": [
+      420,
+      45
+     ]
+    }
    }
   ],
   "poet.10.main-poses/part-14": [
    {
     "card": "11.props.parked-motorcycle/part-1",
-    "place": "box",
-    "behind": true,
-    "flip": "auto",
-    "note": "parked motorcycle, side view",
+    "place": "bike",
+    "mode": "bars",
     "size_cm": 205,
-    "dim": "w"
+    "dim": "w",
+    "anchors": {
+     "seat": [
+      240,
+      88
+     ],
+     "bars": [
+      560,
+      28
+     ],
+     "tank": [
+      420,
+      45
+     ]
+    }
    }
   ],
   "poet.05.main-poses/q1-cup-the-star": [
@@ -100,7 +172,8 @@
    {
     "card": "05.props.star-names/star-orb-white-gold",
     "place": "hands",
-    "size_cm": 22
+    "size_cm": 22,
+    "above": true
    }
   ],
   "poet.06.main-poses/through-06-party-door": [
@@ -139,7 +212,8 @@
     "card": "09.props.phones-chair/a-payphone",
     "place": "hand",
     "size_cm": 22,
-    "axis": "up"
+    "axis": "up",
+    "hand_to": "ear"
    }
   ],
   "poet.09.main-poses/part-14": [
@@ -189,16 +263,16 @@
   ],
   "poet.13.main-poses/02-cafe": [
    {
-    "card": "13.props.cafe/7-espresso-cup-table",
-    "place": "seat",
-    "size_cm": 88
+    "card": "13.props.cafe/8cm",
+    "place": "hand",
+    "size_cm": 11
    }
   ],
   "poet.13.main-poses/part-2": [
    {
-    "card": "13.props.cafe/7-espresso-cup-table",
-    "place": "seat",
-    "size_cm": 88
+    "card": "13.props.cafe/8cm",
+    "place": "hand",
+    "size_cm": 11
    }
   ],
   "poet.13.main-poses/05-becoming-arms": [
@@ -233,13 +307,41 @@
     "size_cm": 75,
     "dim": "h"
    }
+  ],
+  "poet.07.main-poses/pluck-the-daisy": [
+   {
+    "card": "daisy",
+    "place": "hand",
+    "size_cm": 30,
+    "compose": {
+     "stem": "07.props.mic-daisy-rings/b2-stem",
+     "petal": "07.props.mic-daisy-rings/petals",
+     "centre": "07.props.mic-daisy-rings/b1-yellow",
+     "petals": 11,
+     "head_cm": 8
+    }
+   }
   ]
  },
  "none": {
-  "poet.07.main-poses/pluck-the-daisy": "no daisy card whole (the kit daisy is 14 loose parts)",
-  "poet.13.main-poses/02-cafe": "no espresso-cup card (the cafe sheet's cup labels point at chairs); the chair is drawn",
   "poet.08.main-poses/o06-threequarter-ledge-sit-back-seated-with-hand": "no ledge/stone card",
   "poet.13.main-poses/03-letter-fire-crouch": "the letter cards are text plates",
-  "poet.11.main-poses/01-wall-rear-three-quarter-touch": "no wall card"
- }
+  "poet.11.main-poses/01-wall-rear-three-quarter-touch": "no wall card",
+  "poet.13.main-poses/part-2": "no chair in the painting: chair removed (blind test 3); the cup is drawn"
+ },
+ "hands": {
+  "poet.12.main-poses/02": {
+   "L": "grip",
+   "R": "grip"
+  },
+  "poet.05.main-poses/06-walk-to-the-gate-2": {
+   "L": "pocket",
+   "R": "pocket"
+  },
+  "poet.10.main-poses/pockets": {
+   "L": "pocket",
+   "R": "pocket"
+  }
+ },
+ "hands_about": "agent-vision, per painting: fists (grip), hands in pockets (pocket: no hand card); a hand holding a kit prop is set to grip automatically; hand_to: ear moves that wrist to the ear before rendering (the painting puts the handset at the ear; the solve had it at the chest)"
 }

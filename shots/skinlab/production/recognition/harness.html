@@ -55,13 +55,29 @@ async function setPieceUNUSED(ctx, set, kU, offX, offY) {   // the painting's pr
 const PIMG = {};
 const propImg = id => PIMG[id] || (PIMG[id] = loadImg('/shots/kits/cut/' + id + '.webp'));
 function drawAt(ctx, im, cx, cy, w, h, flip) { ctx.save(); ctx.translate(cx, cy); if (flip) ctx.scale(-1, 1); ctx.drawImage(im, -w / 2, -h / 2, w, h); ctx.restore(); }
+// the kit's daisy is cut as loose parts (stem, petals, centre): assembled here, the stem standing up out of the hand
+async function drawDaisy(ctx, pr, at, k) {
+  const C_ = pr.compose, stem = await propImg(C_.stem), pet = await propImg(C_.petal), cen = await propImg(C_.centre); if (!stem || !pet || !cen) return;
+  const sh = pr.size_cm * k, sw = sh * stem.width / stem.height, head = [at[0], at[1] - sh * .92], R = C_.head_cm * k / 2;
+  ctx.drawImage(stem, at[0] - sw / 2, at[1] - sh, sw, sh);
+  for (let i = 0; i < C_.petals; i++) { ctx.save(); ctx.translate(head[0], head[1]); ctx.rotate(i * 2 * Math.PI / C_.petals); const pw = R * .55, ph = R * 1.05; ctx.drawImage(pet, -pw / 2, -ph, pw, ph); ctx.restore(); }
+  const cr = R * .42; ctx.drawImage(cen, head[0] - cr, head[1] - cr, 2 * cr, 2 * cr);
+}
 async function drawProps(ctx, list, phase, g) {
   const drawn = [];
   for (const pr of list || []) {
-    const behind = pr.place === 'box' || pr.place === 'seat' || pr.place === 'stand';
+    const behind = pr.place === 'box' || pr.place === 'seat' || pr.place === 'stand' || pr.place === 'bike';
+    if ((phase === 'behind') !== behind) continue;
+    if (pr.card === 'daisy') { const h = g.hand(pr.hand); if (!h) continue; await drawDaisy(ctx, pr, h.mid, g.k); drawn.push('daisy (kit parts, hand)'); continue; }
     if ((phase === 'behind') !== behind) continue;
     const im = await propImg(pr.card); if (!im) continue;
     const ar = im.width / im.height;
+    if (pr.place === 'bike') {   // real size, wheels on the floor, slid along the floor so its seat / bars / tank sits under the hips or the hand
+      const sc = pr.size_cm * g.k / im.width, ww = im.width * sc, hh = im.height * sc, an = pr.anchors[pr.mode === 'ride' ? 'seat' : pr.mode];
+      const tx = pr.mode === 'ride' ? g.pelvis[0] : (g.hand(pr.hand) || { mid: g.pelvis }).mid[0], flip = !!pr.flip;
+      const cx = tx - (an[0] - im.width / 2) * sc * (flip ? -1 : 1);
+      drawAt(ctx, im, cx, g.floorY - hh / 2, ww, hh, flip); drawn.push(pr.card + ' (bike: ' + pr.mode + ')'); continue;
+    }
     if (pr.place === 'box') {
       const bx = (g.boxes || []).slice().sort((a, b) => b.area_share - a.area_share)[0]; if (!bx) continue;
       const [x, y, w, h] = bx.box.map(v => v * g.kU), X = x + g.offX, Y = y + g.offY;
@@ -79,6 +95,7 @@ async function drawProps(ctx, list, phase, g) {
       if (pr.place === 'hands') { const a = g.hand('L'), b = g.hand('R'); if (!a || !b) continue; c = [(a.mid[0] + b.mid[0]) / 2, (a.mid[1] + b.mid[1]) / 2]; }
       else { const h = g.hand(pr.hand); if (!h) continue; c = h.mid; }
       const hh = pr.size_cm * g.k * (ar < 1 ? 1 : 1 / ar), ww = hh * ar;
+      if (pr.above) c = [c[0], c[1] - hh / 2 - 3 * g.k];   // resting on top of the raised hands, not in front of the face
       drawAt(ctx, im, c[0], c[1], ww, hh, false); drawn.push(pr.card + ' (' + pr.place + ')');
     }
   }
@@ -110,6 +127,19 @@ function pickChains(H, jo, port, view, ratios) {
     if (best) picks.push(best);
   }
   return picks;
+}
+// move one wrist (and its hand) to the ear and re-bend the elbow with two-bone IK (Pose Lab body frame: X his left, Y down, Z forward);
+// the hand is the one the painting shows nearer the head (its labelled wrist markers)
+function handToEar(J, S, t) {
+  const M = t.markers || {}, hd = M.head || M.chin; let s = 'R';
+  if (hd && M.wristL && M.wristR) s = Math.hypot(M.wristL[0] - hd[0], M.wristL[1] - hd[1]) < Math.hypot(M.wristR[0] - hd[0], M.wristR[1] - hd[1]) ? 'L' : 'R';
+  const sub = (a, b) => a.map((v, i) => v - b[i]), add = (a, b) => a.map((v, i) => v + b[i]), mul = (a, k) => a.map(v => v * k), nrm = a => { const l = Math.hypot(...a) || 1; return a.map(v => v / l); };
+  const lat = nrm(sub(J['sh' + s], J['sh' + (s === 'L' ? 'R' : 'L')])), up = nrm(sub(J.top, J.neck));
+  const ear = add(J.headC, mul(lat, 8)), W = add(add(ear, mul(up, -7)), mul(lat, 3)), Sh = J['sh' + s];
+  const l1 = S['uarm' + s], l2 = S['farm' + s], d = sub(W, Sh), L = Math.min(l1 + l2 - .5, Math.hypot(...d)), u = nrm(d);
+  const a = (l1 * l1 - l2 * l2 + L * L) / (2 * L), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
+  let pole = nrm(add(mul(lat, 1), [0, 1, 0])); pole = nrm(sub(pole, mul(u, pole.reduce((x, v, i) => x + v * u[i], 0))));   // the elbow out and down
+  J['el' + s] = add(add(Sh, mul(u, a)), mul(pole, h)); J['wr' + s] = add(Sh, mul(u, L)); J['tip' + s] = add(J['wr' + s], mul(up, S['hand' + s] || 19));
 }
 function handFrom(segs, geo, kU, offX, offY) {
   const hseg = s => segs.find(x => x.k === 'hand_' + s);
@@ -150,10 +180,13 @@ async function run(ch, file, U, opts) {
       const cv = document.createElement('canvas'); cv.width = FW; cv.height = FH; const ctx = cv.getContext('2d');
       // the Pose Lab fk() result goes to renderPose as is (its fromPoseLab converts it: head matrix, pelvis height); jo is the same
       // conversion, for choosing chains and placing props
-      const J = PC.fk(D.skeleton, PC.PN.map(n => sol.params[n] ?? 0)), jo = P.fromPoseLab(J), args = { contract: C, joints3d: J, port, psi: sol.psi, ground: false, handStates: {} };
+      const J = PC.fk(D.skeleton, PC.PN.map(n => sol.params[n] ?? 0));
+      const props = (PM.poses || {})[t.id], hands = { ...((PM.hands || {})[t.id] || {}) };
+      for (const pr of props || []) if (pr.hand_to === 'ear') handToEar(J, D.skeleton, t);   // the painting holds the handset at the ear
+      const jo = P.fromPoseLab(J), args = { contract: C, joints3d: J, port, psi: sol.psi, ground: false, handStates: hands };
       const dry = P.renderPose(null, args), view = dry.view, ratios = Object.fromEntries((dry.cards || []).map(c => [c.part, c.projRatio]));
       // harvested chains (leave one painted pose and its family out), forced through the contract's own card slots for this call
-      const H = harvest && harvest.filter(c => family(c.source) !== family(t.id));
+      const H = harvest && harvest.filter(c => c.source && family(c.source) !== family(t.id));
       const picks = H ? pickChains(H, jo, port, view, ratios) : [], saved = {};
       for (const pk of picks) for (const g of pk.got) {
         const sk = P.S.skin[g.k]; if (!sk) continue; saved[g.k] ||= { cards: { ...sk.cards }, states: sk.states };
@@ -164,10 +197,13 @@ async function run(ch, file, U, opts) {
       }
       for (const id of new Set(picks.flatMap(pk => pk.got.map(g => g.c.id)))) await new Promise(r => { const im = P.img(P.S.byId[id]); if (im.complete && im.naturalWidth) r(); else { im.onload = im.onerror = r; setTimeout(r, 4000); } });
       // props: the kit's cards, placed by the painting's layout and the puppet's own hands and pelvis
-      const props = (PM.poses || {})[t.id], pel = port.p(jo.pelvis);
+      const pel = port.p(jo.pelvis);
       const geo = { kU, offX, offY, k: port.k, facing: sol.psi % 180 === 0 ? 'camera' : (((sol.psi % 360) + 360) % 360 < 180 ? 'right' : 'left'), pelvis: pel, floorY: t.floor * kU + offY,
         boxes: (HV?.prop_boxes || []).filter(b => b.source === t.id), hand: null };
       geo.hand = handFrom(dry.segments || [], geo, kU, offX, offY);
+      for (const pr of props || []) if (pr.place === 'hands') { hands.L ||= 'grip'; hands.R ||= 'grip'; }   // a hand that holds a kit prop grips it
+        else if (pr.place === 'hand' && pr.card !== 'daisy') { const h = geo.hand(pr.hand); if (h) hands[h.side] ||= 'grip'; }
+        else if (pr.card === 'daisy') { const h = geo.hand(pr.hand); if (h) hands[h.side] ||= 'grip'; }
       const behind = await drawProps(ctx, props, 'behind', geo);
       const r = P.renderPose(ctx, args);
       for (const [k, v] of Object.entries(saved)) { P.S.skin[k].cards = v.cards; P.S.skin[k].states = v.states; }
@@ -181,7 +217,7 @@ async function run(ch, file, U, opts) {
       const sh = s => ({ ...s, P: [s.P[0] - crop[0], s.P[1] - crop[1]], Q: [s.Q[0] - crop[0], s.Q[1] - crop[1]], end: [s.end[0] - crop[0], s.end[1] - crop[1]] });
       const psi = sol.psi;
       out.push({ ...base, view: PC.viewKey(psi), psi, facing: psi % 180 === 0 ? (Math.abs(psi) === 180 ? 'away' : 'camera') : ((psi % 360) + 360) % 360 < 180 ? 'right' : 'left',
-        solve_iou: sol.iou, solve_err_cm: sol.mean_err_cm, poses_dir: posesDir, resolved: sol.resolved ?? null, via: 'PuppetCore.renderPose', props: behind.concat(front),
+        solve_iou: sol.iou, solve_err_cm: sol.mean_err_cm, poses_dir: posesDir, hand_states: hands, resolved: sol.resolved ?? null, via: 'PuppetCore.renderPose', props: behind.concat(front),
         chains: picks.map(pk => ({ source: pk.src, parts: pk.got.map(g => g.k + ':' + Math.round(g.cos * 100) + '%') })),
         frame: { kU, paintX: offX - crop[0], paintY: offY - crop[1], w: o.width, h: o.height }, puppet_bbox: bb && [bb[0] - crop[0], bb[1] - crop[1], bb[2] - crop[0], bb[3] - crop[1]],
         segments: (r.segments || []).map(sh), cards: r.cards, warnings: r.warnings, png: o.toDataURL('image/png') });
