@@ -1,9 +1,14 @@
 """Data for the Skin Lab: the Crash Lab trials and the card library per bone.
 
-    python3 shots/skinlab/build.py      # -> shots/skinlab/trials.json, shots/skinlab/library.json
+    python3 shots/skinlab/build.py          # -> shots/skinlab/trials.json, shots/skinlab/library.json
+    python3 shots/skinlab/build.py --bank   # only the compact bank and trials.json (library.json untouched)
 
 bank/T*.json  a compact copy of the bank for the page (the bank itself is not committed): per frame per actor
               the 26 joints as one flat list of integers in half-centimetres, and the three facing vectors.
+              Trials with props (the suitcase in T009, the phone in T025, ...) also carry 'props': per prop its type
+              and size, and per frame [x, y, z] in half-cm, [rx, ry, rz] in degrees and who holds it (an index into
+              'held': 0 = nobody, else e.g. 'A.R' actor A's right hand, 'A.earL'), delta-coded over frames like the joints.
+              A new key: pages that read only 'a' see the bank as before.
 trials.json   the Bolas Crash Lab bank (shots/arena/bolas/bank/T*.json: 3D joints in cm, y up, per frame,
               per actor), listed with title, category, length and actors; the page loads a trial on demand.
 library.json  every body card that can skin a bone: its slot (torso, head, upper_arm, forearm, hand, thigh,
@@ -43,6 +48,28 @@ def compact(j):
             flat += cur if prev is None else [c - p for c, p in zip(cur, prev)]
             prev = cur
         out['a'][a['id']] = flat
+    names = []
+    for fr in j['frames']:
+        for k in (fr.get('p') or {}):
+            if k not in names:
+                names.append(k)
+    if names:
+        out['props'] = {}
+        for k in names:
+            first = next(fr['p'][k] for fr in j['frames'] if k in (fr.get('p') or {}))
+            held = [None]
+            prev, flat = None, []
+            for fr in j['frames']:
+                q = (fr.get('p') or {}).get(k) or {}
+                h = q.get('held')
+                if h not in held:
+                    held.append(h)
+                pos, r = q.get('pos') or [0, 0, 0], q.get('rot') or [0, 0, 0]
+                cur = [int(round(c * 2)) for c in pos] + [int(round(c)) for c in r] + [held.index(h) if q else -1]
+                flat += cur if prev is None else [c - p for c, p in zip(cur, prev)]
+                prev = cur
+            out['props'][k] = {'type': first.get('type'), 'size': first.get('size'), 'held': held, 'per_frame': 7,
+                               'units': 'pos half-cm (x, y up, z), rot degrees, held index (-1 = absent), delta-coded over frames', 'f': flat}
     return out
 
 
@@ -235,6 +262,12 @@ def library():
 
 
 def main():
+    import sys
+    if '--bank' in sys.argv:
+        T = trials()
+        json.dump(T, open(os.path.join(HERE, 'trials.json'), 'w'))
+        print(len(T), 'trials; bank rebuilt;', sum(1 for f in glob.glob(os.path.join(HERE, 'bank', 'T*.json')) if '"props"' in open(f).read()), 'with props')
+        return
     T, L = trials(), library()
     json.dump(T, open(os.path.join(HERE, 'trials.json'), 'w'))
     json.dump(L, open(os.path.join(HERE, 'library.json'), 'w'))
