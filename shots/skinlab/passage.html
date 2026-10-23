@@ -272,7 +272,9 @@ function drawCord(a, b, sag, wpx, id) {   // the coiled cord: slices of the cord
 }
 
 // the ear on the holding side, on screen: the head centre carried 7 cm to that side (in the head's own frame)
-function earPx(fr, cam, side) {
+function earPx(fr, cam, side, sol) {
+  const hx = sol?.X?.head, e = hx && S.fix[hx.c.id]?.ears?.[side];
+  if (e) return P.fwd(hx, e);   // the contract's ear site on the head card
   const a = fr.a.A, b = headBasis({ j: a.j, hfwd: a.hfwd }), sg = side === 'L' ? 1 : -1;
   return cam.p([0, 1, 2].map(c => b.o[c] + b.s[c] * 7 * sg + (c === 1 ? 1 : 0)));
 }
@@ -303,7 +305,7 @@ function render(f) {
     const hx = sol.X['hand_' + E.edl.props.handset.hand], grip = handPoint(hx, .42, 0), head = sol.pj[ji.head];
     // the handset lies along the face from ear to mouth when it is up; hanging, it hangs; between, it turns with the hand
     // the handset stays in the hand (its grip on the hand's hold point); lifted, its earpiece turns to the ear
-    const ear = earPx(fr, cam, E.edl.props.handset.hand), d = [ear[0] - grip[0], ear[1] - grip[1]];
+    const ear = earPx(fr, cam, E.edl.props.handset.hand, sol), d = [ear[0] - grip[0], ear[1] - grip[1]];
     const up = clamp(1 - (Math.hypot(d[0], d[1]) / port.k - 12) / 25, 0, 1);
     const ang = lerp(0, Math.atan2(d[0], -d[1]), smooth(up));
     handsetCard = cardAt(E.edl.props.handset.part, E.edl.props.handset.w_cm, E.edl.props.handset.h_cm, port.k, E.edl.props.handset.grip, grip, ang);
@@ -373,7 +375,7 @@ function measureFrame(f, fr, sol, port, cam, hc) {
     out.feet[s] = { a: [a[0] / port.k, a[1] / port.k], b: [b[0] / port.k, b[1] / port.k], low: Math.min(fr.a.A.j[ji['heel' + s]][1], fr.a.A.j[ji['ball' + s]][1], fr.a.A.j[ji['toe' + s]][1]) }; }
   const hx = sol.X['hand_' + E.edl.props.handset.hand];
   if (hx) { const gp = handPoint(hx, .42, 0); out.hand = [gp[0] / port.k, gp[1] / port.k]; }
-  if (hc) { const e = hc.pt(...E.edl.props.handset.ear), head = earPx(fr, cam, E.edl.props.handset.hand); out.ear = Math.hypot(e[0] - head[0], e[1] - head[1]) / port.k; out.handsetGrip = [hc.at[0] / port.k, hc.at[1] / port.k]; out.handsetUp = hc.up ?? 0; }
+  if (hc) { const e = hc.pt(...E.edl.props.handset.ear), head = earPx(fr, cam, E.edl.props.handset.hand, sol); out.ear = Math.hypot(e[0] - head[0], e[1] - head[1]) / port.k; out.handsetGrip = [hc.at[0] / port.k, hc.at[1] / port.k]; out.handsetUp = hc.up ?? 0; }
   out.k = port.k;
   return out;
 }
@@ -422,6 +424,11 @@ function propTracks() {
     const gs = seg.grab_src;
     if (!grabbed && (gs != null ? (seg.name === 'reach' || seg.grab_src != null) && fr.sf >= gs : pt && pt.held && /^A\.[LR]$/.test(pt.held))) { grabbed = true; E.grabFrame = f; }
     out.handset = grabbed ? 'hand' : 'hook';
+    // a hand grips while it holds something (the case by its handle, the handset), else it is open
+    const hands = { ...(seg.hands_open ? {} : {}) };
+    if (out.case?.held) hands[out.case.held.slice(-1)] = 'grip';
+    if (grabbed) hands[E.edl.props.handset.hand] = 'grip';
+    fr.a.A.hands = hands;
     E.props.push(out);
   }
 }
@@ -526,7 +533,7 @@ async function boot() {
   P.measureActor(E.trials.T025.frames[0]);   // vitruvian: K from S.H and S.rec; custom/cards: the contract's K
   if (E.preset !== 'vitruvian') S.K = { ...E.contractK };
   E.K = { ...S.K }; E.target = Object.fromEntries(P.GROUPS.map(gk => [gk, S.rec[gk] * (E.K[gk] ?? 1)]));
-  const srcs = Object.values(S.skin).flatMap(sk => Object.values(sk.cards)).map(id => S.byId[id]).filter(Boolean);
+  const srcs = Object.values(S.skin).flatMap(sk => [...Object.values(sk.cards), ...Object.values(sk.states || {}).flatMap(o => Object.values(o))]).map(id => S.byId[id]).filter(Boolean);
   await Promise.all(srcs.filter(c => !c.gen).map(c => waitImg(P.img(c))));
   const torsoSrc = S.lib.filter(c => c.character === c.character && !c.gen && (c.slot === 'torso' || c.slot === 'pelvis') && c.character === 'poet').slice(0, 40);
   await Promise.all(torsoSrc.map(c => waitImg(P.img(c))));

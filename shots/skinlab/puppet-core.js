@@ -157,8 +157,9 @@ function centre(port, fr) {
 // shows, so a swap lands where the host says: hysteresis, planted feet), a.lat = ±1 (which way a side figure faces, one sign for every
 // card, head included) and a.hands = {L: 'grip', R: 'open'} (a hand state: limbs.hand_L.states[state] = {side, front, back}).
 function cardsOf(k, sk, a) {
-  const m = k.match(/^(hand|mitt)_([LR])$/), st = m && a.hands?.[m[2]];
-  return st && sk.states?.[st] ? { ...sk.cards, ...sk.states[st] } : sk.cards;
+  const m = k.match(/^(hand|mitt)_([LR])$/); if (!m || !sk.states) return sk.cards;
+  const st = a.hands?.[m[2]] || 'open';
+  return sk.states[st] ? { ...sk.cards, ...sk.states[st] } : sk.cards;
 }
 function active(k, sk, a, port) {
   const f = a[SEG[k].face] || a.fwd, dot = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
@@ -191,6 +192,8 @@ function scaleOf(k, c, sk, j, pj, port, puppet) {
 // otherwise read off the parent card at the bind frame (and snapped to the nearest real brad on it)
 function socket(k, px, port, puppet) {
   const sg = SEG[k], ps = SEG[px.k];
+  const site = S.fix[px.c.id]?.sockets?.[sg.g];   // the contract names where this child hangs on that card (a drawn armhole)
+  if (site) return { p: fwd(px, site), how: 'site' };
   if (ps.to === sg.from) return { p: fwd(px, px.B), how: 'chain' };
   if (ps.from === sg.from) return { p: fwd(px, px.A), how: 'root' };
   const key = [port.label, Math.round(port.yaw), port.k, px.c.id, px.sk.mode, px.sk.scale, px.sk.swap, px.mir, k, S.bindF, puppet, S.actor, S.pv].join('|');
@@ -248,12 +251,15 @@ function solve(fr, port, style = S.style, puppet = S.puppet) {
   const order = Object.values(X).sort((a, b) => rank(a) - rank(b) || a.d - b.d);
   return { X, pj, j, near, view, order };
 }
+// fix[id].erase = [[x0,y0,x1,y1],...]: card-px rectangles made transparent (printed sheet labels);
 // fix[id].trim = px: erode the card's alpha by that many px (a white cut fringe goes); done once per card on a canvas
 const TRIM = {};
 function trimmed(c) {
-  const r = Math.round(S.fix[c.id]?.trim || 0), im = img(c); if (!r || !im.complete || !im.naturalWidth) return im;
+  const f = S.fix[c.id] || {}, r = Math.round(f.trim || 0), im = img(c); if ((!r && !f.erase) || !im.complete || !im.naturalWidth) return im;
   if (TRIM[c.id]) return TRIM[c.id];
   const w = im.naturalWidth || im.width, h = im.naturalHeight || im.height, o = P.canvas(w, h), g = o.getContext('2d'); g.drawImage(im, 0, 0);
+  for (const [x0, y0, x1, y1] of f.erase || []) g.clearRect(x0, y0, x1 - x0, y1 - y0);
+  if (!r) { o.complete = true; o.naturalWidth = w; return TRIM[c.id] = o; }
   let d; try { d = g.getImageData(0, 0, w, h); } catch { return im; }
   const A = new Uint8Array(w * h); for (let i = 0; i < A.length; i++) A[i] = d.data[i * 4 + 3];
   const B = new Uint8Array(w * h);
