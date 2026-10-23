@@ -38,10 +38,6 @@ def excluded(c, tid, all_targets):
     return None
 
 
-def _noop():
-    pass
-
-
 @functools.lru_cache(maxsize=3000)
 def card_pixels(cid, img, erase):
     im = C.read_bgra(img).astype(np.float32)
@@ -69,7 +65,7 @@ card_pixels.offsets = {}
 
 
 def pieces_for(char, costume, tid):
-    allt = set(AS.all_targets(char).keys())
+    allt = set(AS.all_targets(char).keys() if char in AS.MARKER_FILES else ()) | set(AS.all_targets(char, costume).keys())
     out, gone = [], []
     for c in library.cards(char, costume):
         why = excluded(c, tid, allt)

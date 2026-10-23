@@ -41,6 +41,7 @@ PIECE_C, SNAP_C, STUD_C = .006, .004, .003
 SNAP_B, STUD_B = .004, .003          # bonus (share of figure) used while ranking attachments
 OVL = .12
 MAXSTEPS = 45
+CUT_SHARE = .001          # settle: a piece overflowing more than this share of the figure loses its subtree
 ANG = 30                 # degrees between growth variants (the settle refines by 3 and 6)
 KS = (.9, 1.1)           # uniform scales of the growth variants (x target px/cm / card px/cm)
 SUBSET = .35             # share of the pieces tried at one growth step (seeded by the program prefix: deterministic)
@@ -99,10 +100,17 @@ class State:
 
 
 class Grower:
-    def __init__(self, char, costume, tid, seed=0, prior=None):
-        self.t = t = FL.target(char, costume, tid)
-        self.pieces, _ = PC.pieces_for(char, costume, tid)
-        self.V = build(self.pieces, t)
+    def __init__(self, char, costume, tid, seed=0, prior=None, ctx=None):
+        if ctx is not None:
+            self.t = t = ctx['t']
+            self.pieces = ctx['pieces']
+            if 'V_grow' not in ctx:
+                ctx['V_grow'] = build(self.pieces, t)
+            self.V = ctx['V_grow']
+        else:
+            self.t = t = FL.target(char, costume, tid)
+            self.pieces, _ = PC.pieces_for(char, costume, tid)
+            self.V = build(self.pieces, t)
         self.shape = t['inside_w'].shape
         self.area = float(t['inside_w'].sum())
         self.lam = FL.LAMBDA_SHARE * self.area
@@ -371,11 +379,14 @@ def settle(G, st, deadline, on_tick=None):
     tick = 0
     for rnd in range(3):
         improved = False
-        for i in range(1, len(st.placed)):
+        for i in range(0, len(st.placed)):
             if time.time() > deadline:
                 break
             p = st.placed[i]
-            piv = (G.pieces[G.V[st.placed[p['parent']]['vi']]['pi']]['brads'][p['pb']] @ Ms[p['parent']][:, :2].T + Ms[p['parent']][:, 2])
+            if p['parent'] is None:          # the seed turns about its own centre
+                piv = Ms[0][:, :2] @ (np.array(G.pieces[G.V[p['vi']]['pi']]['px'].shape[1::-1]) / 2.) + Ms[0][:, 2]
+            else:
+                piv = (G.pieces[G.V[st.placed[p['parent']]['vi']]['pi']]['brads'][p['pb']] @ Ms[p['parent']][:, :2].T + Ms[p['parent']][:, 2])
             sub = subtree(ch, i)
             for da, ds in ((3, 1), (-3, 1), (6, 1), (-6, 1), (0, 1.04), (0, .96)):
                 a = math.radians(da)
@@ -388,7 +399,7 @@ def settle(G, st, deadline, on_tick=None):
                 for k in sub:
                     m2[k] = cv2.warpAffine(px[k][..., 3], Ms2[k], (W, H), flags=cv2.INTER_LINEAR) > 128
                 c2, o2 = evalm(m2)
-                if o2 <= over and c2 > cov:
+                if c2 - 50 * o2 > cov - 50 * over:
                     Ms, masks, cov, over, improved = Ms2, m2, c2, o2, True
                     tick += 1
                     if on_tick:
@@ -401,7 +412,7 @@ def settle(G, st, deadline, on_tick=None):
     for i in sorted(range(1, len(st.placed)), key=lambda i: -len(subtree(ch, i))):
         if i not in alive:
             continue
-        if (masks[i] & ~fd & ~ign).any():
+        if (masks[i] & ~fd & ~ign).sum() > CUT_SHARE * fig.sum():
             for k in subtree(ch, i):
                 alive.discard(k)
     if 0 in alive and (masks[0] & ~fd & ~ign).any():

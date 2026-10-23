@@ -266,12 +266,15 @@ def stats(masks, t):
 
 
 # ------------------------------------------------------------------ the fill
-def fill(char, costume, tid, mode='blind', zones=None, on_step=None, budget_s=420, seed=0):
+def fill(char, costume, tid, mode='blind', zones=None, on_step=None, budget_s=420, seed=0, ctx=None):
     rng = random.Random(seed)
     t0 = time.time()
-    t = target(char, costume, tid)
-    pieces, gone = PC.pieces_for(char, costume, tid)
-    V = build_variants(pieces, t)
+    if ctx is not None:
+        t, pieces, V, gone = ctx['t'], ctx['pieces'], ctx['V_fill'], []
+    else:
+        t = target(char, costume, tid)
+        pieces, gone = PC.pieces_for(char, costume, tid)
+        V = build_variants(pieces, t)
     shape = t['inside_w'].shape
     lam = LAMBDA_SHARE * t['inside_w'].sum()
     Zw = zone_map(t, shape) if mode == 'prior' else None
@@ -289,7 +292,7 @@ def fill(char, costume, tid, mode='blind', zones=None, on_step=None, budget_s=42
         SZ = None
         if mode == 'prior':
             unc = t['inside_w'] & (cov <= 0)
-            SZ = {z: S + PRIOR_B * (unc & (Zw == ZONES.index(z))) for z in ZONES}
+            SZ = {z: (S + PRIOR_B * (unc & (Zw == ZONES.index(z)))).astype(np.float32) for z in ZONES}
         net, vi, loc = best_of(V, range(len(V)) if idx is None else idx, S, lam, SZ, vz)
         if vi is not None and SZ is not None:       # report the blind gain
             m = V[vi]['m']

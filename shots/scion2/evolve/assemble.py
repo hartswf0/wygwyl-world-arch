@@ -56,9 +56,12 @@ def wrap(a):
     return (a + math.pi) % (2 * math.pi) - math.pi
 
 
-def all_targets(char):
+def all_targets(char, costume=None):
+    """{painting id: Pose Lab target} for a character (+ costume: shots/rig/poses_v2 then poses/<char>__<costume>.json)"""
     out = {}
-    for f in reversed(MARKER_FILES[char]):
+    files = MARKER_FILES[char] if (costume is None or (char, costume) in (('poet', 'red_black_sunglasses'), ('ex', 'ex_jacket'))) \
+        else ['shots/rig/poses_v2/%s__%s.json' % (char, costume), 'shots/rig/poses/%s__%s.json' % (char, costume)]
+    for f in reversed(files):
         p = os.path.join(ROOT, f)
         if os.path.exists(p):
             out.update({t['id']: t for t in json.load(open(p))['targets']})
@@ -66,7 +69,7 @@ def all_targets(char):
 
 
 def target(char, costume, tid):
-    T = all_targets(char)[tid]
+    T = all_targets(char, costume)[tid]
     m = T['markers']
     pts = {k: P2(m, k) for k in m if isinstance(m[k], list)}
     pts['midhip'] = (pts['hipL'] + pts['hipR']) / 2
