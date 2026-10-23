@@ -44,22 +44,54 @@ def opts_for(ctx, extra=None):
     return o
 
 
-def run(target, seed, key, extra=None):
+def run(target, seed, key, extra=None, search=0):
     if key not in target:
         target[key] = GR.Grower(target['char'], target['costume'], target['id'], seed=seed, ctx=target, opts=opts_for(target, extra))
     g = target[key]
     best = None
+    isl = []
     for s in g.seeds(_g.SEEDS):
         st, prog = g.decode((s[1], s[2]), [])
         f = g.fitness(st)[0]
+        isl.append([f, (s[1], s[2]), prog, st])
         if best is None or f > best[0]:
             best = (f, st, prog)
+    if search and isl:                                  # (1+1) evolution of the growth program, as grow_search
+        import random
+        rng, t0, tries = random.Random(seed), time.time(), 0
+        while time.time() - t0 < search:
+            I = isl[tries % len(isl)]
+            tries += 1
+            if not I[2]:
+                continue
+            k = rng.randrange(len(I[2]))
+            st, used = g.decode(I[1], I[2][:k] + [rng.choice([1, 1, 2, 3, 4])])
+            f = g.fitness(st)[0]
+            if f > I[0]:
+                I[0], I[2], I[3] = f, used, st
+        b = max(isl, key=lambda x: x[0])
+        best = (b[0], b[3], b[2])
     if best is None:
         return {'pieces': [], 'edges': [], 'info': {'error': 'no seed fits'}}
     st = best[1]
     forced = None
-    if g.heads and not any(g.V[p['vi']]['pi'] in g.heads for p in st.placed):
-        st2, ch = g.force(st, g.heads)                 # one head, even if it does not pay for itself in coverage
+    def head_cover(st):
+        import numpy as np
+        c = np.zeros(g.shape, bool)
+        for p in st.placed:
+            v = g.V[p['vi']]
+            if v['pi'] in g.heads:
+                h_, w_ = v['m'].shape
+                c[p['loc'][1]:p['loc'][1] + h_, p['loc'][0]:p['loc'][0] + w_] |= v['m'] > 0
+        return (c & g.head_region).sum() / max(g.head_region.sum(), 1)
+    need = not any(g.V[p['vi']]['pi'] in g.heads for p in st.placed)
+    if g.opts.get('head_fit') and not need:
+        need = head_cover(st) < .5
+    if g.heads and need:
+        if g.opts.get('head_fit'):            # the head slot is free again: other head pieces are not removed (a known gap)
+            g.opts['max_heads'] = 2
+        st2, ch = g.force(st, g.heads, g.head_region if g.opts.get('head_fit') else None)   # one head, even if it does not pay
+        g.opts['max_heads'] = BASE['max_heads']
         if ch is not None:
             st, forced = st2, g.pieces[g.V[ch[1]]['pi']]['id']
     Ms, masks, alive = GR.settle(g, st, time.time() + 60)

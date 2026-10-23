@@ -91,6 +91,28 @@ def build(pieces, t, appear=False):
     return V
 
 
+def extremity_map(inside, q):
+    """cells whose geodesic distance (inside the figure) from the figure's deepest cell is in the top (1 - q) share:
+    hands, feet, the head top -- the ends of the body"""
+    from collections import deque
+    dt = cv2.distanceTransform(inside.astype(np.uint8), cv2.DIST_L2, 3)
+    y0, x0 = np.unravel_index(int(np.argmax(dt)), dt.shape)
+    D = np.full(inside.shape, -1, np.int32)
+    D[y0, x0] = 0
+    dq = deque([(y0, x0)])
+    H, W = inside.shape
+    while dq:
+        y, x = dq.popleft()
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            yy, xx = y + dy, x + dx
+            if 0 <= yy < H and 0 <= xx < W and inside[yy, xx] and D[yy, xx] < 0:
+                D[yy, xx] = D[y, x] + 1
+                dq.append((yy, xx))
+    thr = np.percentile(D[D >= 0], 100 * q)
+    ex = D >= thr
+    return cv2.dilate(ex.astype(np.uint8), np.ones((5, 5), np.uint8)) > 0
+
+
 def to_lab(bgr):
     return cv2.cvtColor(np.clip(bgr, 0, 255).astype(np.uint8), cv2.COLOR_BGR2LAB).astype(np.float32) * [100 / 255., 1, 1] - [0, 128, 128]
 
@@ -150,6 +172,10 @@ class Grower:
             self.ref_lab = np.pad(to_lab(col), ((0, self.PAD), (0, self.PAD), (0, 0)))
         yy, xx = np.mgrid[0:self.shape[0], 0:self.shape[1]]
         self.yy, self.xx = yy, xx
+        if self.opts.get('ends_extremity'):
+            self.extremity = extremity_map(t['inside_w'], self.opts['ends_extremity'])
+        hm = t['markers']['head'] * t['r']
+        self.head_region = ((xx - hm[0]) ** 2 + (yy - hm[1]) ** 2 <= (13 * u) ** 2) & t['inside_w']
 
     # score map: +1 uncovered figure, -OVL covered (0 near a free brad), -BIG outside
     def score(self, st):
@@ -165,6 +191,8 @@ class Grower:
                 near |= (self.xx - p[0]) ** 2 + (self.yy - p[1]) ** 2 <= self.pivot_r ** 2
             S[cov & near] = 0.
         S[self.t['outside_w']] = -FL.BIG
+        if getattr(self, '_region', None) is not None:          # force(): only this region pays
+            S = np.where(self._region, S, np.minimum(S, 0)).astype(np.float32)
         return S
 
     def seeds(self, n):
@@ -234,6 +262,9 @@ class Grower:
         x0 = np.clip(Fi0[:, 0] - rr, 0, Ws); x1 = np.clip(Fi0[:, 0] + rr + 1, 0, Ws)
         y0 = np.clip(Fi0[:, 1] - rr, 0, Hs); y1 = np.clip(Fi0[:, 1] + rr + 1, 0, Hs)
         live = (I0[y1, x1] - I0[y0, x1] - I0[y1, x0] + I0[y0, x0]) > 0
+        if st.ends and self.opts.get('ends_extremity'):
+            ex = self.extremity
+            live &= ex[np.clip(Fi0[:, 1], 0, Hs - 1), np.clip(Fi0[:, 0], 0, Ws - 1)]
         if not live.any():
             return []
         fmap = np.nonzero(live)[0]
@@ -322,7 +353,8 @@ class Grower:
                 h_, w_ = v['m'].shape
                 win = S[loc[1]:loc[1] + h_, loc[0]:loc[0] + w_]
                 dE = np.linalg.norm(self.ref_lab[loc[1]:loc[1] + h_, loc[0]:loc[0] + w_] - v['lab'].astype(np.float32), axis=-1)
-                wgt = -.3 + 1.3 * np.clip(1 - dE / 30., 0, 1)
+                fl = self.opts.get('appear_floor', -.3)
+                wgt = fl + (1 - fl) * np.clip(1 - dE / 30., 0, 1)
                 ga = float((np.where(win > 0, win * wgt, win) * v['m']).sum())
                 out.append((val - g + ga, vi, loc, fi, j, ga))
             return sorted(out, key=lambda x: -x[0])[:TOPK]
@@ -376,14 +408,15 @@ class Grower:
                 self.cache[key + tuple(used)] = st.copy()
         return st, used
 
-    def force(self, st, pis):
-        """attach the best piece from pis (e.g. a head) at any free brad, even if it does not pay the piece cost"""
+    def force(self, st, pis, region=None):
+        """attach the best piece from pis (e.g. a head) at any free brad, even if it does not pay the piece cost;
+        region: only uncovered cells there count"""
         a0, lam0 = self.allowed, self.lam
-        self.allowed, self.lam = set(pis), 0.
+        self.allowed, self.lam, self._region = set(pis), 0., region
         try:
             C = [c for c in self.candidates(st, ('force',)) if c[5] > 0]
         finally:
-            self.allowed, self.lam = a0, lam0
+            self.allowed, self.lam, self._region = a0, lam0, None
         if not C:
             return st, None
         val, vi, loc, fi, j, g = C[0]
