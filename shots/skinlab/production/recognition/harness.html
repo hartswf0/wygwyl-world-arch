@@ -237,7 +237,7 @@ async function run(ch, file, U, opts) {
             if (VG(c.view) !== VG(hv) && !(hv === 'side' && c.view === 'profile')) continue;
             const cs = cosv(c.dir_cam, want); if (cs >= .8) cands.push([cs, c]); }
           // a head the painting's own frame cut through (half a face) is no head: skip it for the next closest
-          for (const [, c] of cands.sort((a, b) => b[0] - a[0])) if (!(await cutSides({ img: c.img.replace(/^\.\.\//, '') }, .8)).length) { pick = c; break; } }   // feathered harvest edges: a looser ratio (.8)
+          for (const [, c] of cands.sort((a, b) => b[0] - a[0])) if (!(await cutSides({ img: c.img.replace(/^\.\.\//, '') }, .8)).length) { pick = c; break; } }   // a looser ratio (.8): the harvest outline is smoothed
         if (pick && c0) {
           if (!P.S.byId[pick.id]) { P.S.lib.push(pick); P.S.byId[pick.id] = pick; }
           if (pick.facing && !pick.faces) pick.faces = pick.facing === 'left' ? 'L' : 'R';
