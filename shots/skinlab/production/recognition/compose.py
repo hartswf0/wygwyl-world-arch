@@ -101,8 +101,8 @@ def compose(ch):
         b = Image.new('RGB', (pup.width + 40, H + 40), BG); b.paste(pup, (20, 20)); b.save(os.path.join(out, 'blind', tok + '.jpg'), quality=80)
         key['blind'][tok + '.jpg'] = {'painting': n, 'id': r['id']}; key['paintings'][str(n)] = r['id']
         fl = flags_of(r, costume)
-        hv = [f"{s['k']}<-{s['card'].split('/')[1]}" for s in r['segments'] if 'harvest' in (s.get('card') or '')]
-        summary.append({'n': n, 'id': r['id'], 'rendered': True, 'harvested': hv, 'props': r.get('props') or [], 'chains': r.get('chains') or [], 'warnings': r.get('warnings', [])[:6], 'view': r['view'], 'facing': r['facing'], 'via': r['via'], 'atlas': cnt,
+        hv = [f"{s['k']}<-{s['card'].split('/')[1]}" for s in r['segments'] if 'harvest.' in (s.get('card') or '') and '/' in s['card']]
+        summary.append({'n': n, 'id': r['id'], 'rendered': True, 'hand_states': r.get('hand_states') or {}, 'harvested': hv, 'props': r.get('props') or [], 'chains': r.get('chains') or [], 'warnings': r.get('warnings', [])[:6], 'view': r['view'], 'facing': r['facing'], 'via': r['via'], 'atlas': cnt,
                         'max_miss_cm': max([s.get('miss_cm') or 0 for s in r['segments']] or [0]), 'flags': fl, 'pair': f"{ch}/pairs/{n:02d}_{r['safe']}.jpg"})
     # numbered paintings (numbers follow the shuffle, so the contact sheet gives no order away)
     cw, chh, cols = 220, 330, 8; cells = sorted(ok, key=lambda r: num[r['id']])
@@ -166,7 +166,23 @@ def blind2(ch, keyfile, name='blind2'):
     json.dump(key, open(os.path.join(out, name + '_key.json'), 'w'), indent=1)
     print(name, len(ids), 'renders')
 
+def blind4(ch, keyfile, outdir='/tmp/claude-0/blind4', keyout='/tmp/claude-0/-home-user/f7ade34c-fa5f-538f-b092-e7629f2f6294/scratchpad/blind4_key.json'):
+    """a fresh blind set OUTSIDE the repo: the same poses as an earlier test, a new shuffle, names e01..eNN; the key goes to a
+    scratch path, never into the repo or the blind folder. Run only when the orchestrator says so (renders must be current)."""
+    rd = os.path.join(HERE, ch, 'renders'); K1 = json.load(open(keyfile)); os.makedirs(outdir, exist_ok=True)
+    for f in os.listdir(outdir): os.remove(os.path.join(outdir, f))
+    ids = [v['id'] for v in K1.values()]; random.Random(os.urandom(16)).shuffle(ids)
+    key = {'about': 'BLIND KEY (blind4): not for critics. file -> painting number on paintings_contact.jpg and pose id.', 'files': {}}
+    S = {p['id']: p for p in json.load(open(os.path.join(HERE, ch, 'summary.json')))['poses']}
+    for i, pid in enumerate(ids):
+        im = on_bg(Image.open(os.path.join(rd, pid.replace('/', '__') + '.png')).convert('RGBA')); im = fit(im, H / im.height)
+        b = Image.new('RGB', (im.width + 40, H + 40), BG); b.paste(im, (20, 20)); name = 'e%02d.jpg' % (i + 1)
+        b.save(os.path.join(outdir, name), quality=82); key['files'][name] = {'painting': S[pid].get('n'), 'id': pid}
+    json.dump(key, open(keyout, 'w'), indent=1)
+    print('blind4', len(ids), 'renders ->', outdir, '; key ->', keyout)
+
 if __name__ == '__main__':
     if '--index' in sys.argv: index()
+    elif '--blind4' in sys.argv: blind4(sys.argv[1], sys.argv[sys.argv.index('--blind4') + 1])   # e.g. poet --blind4 results/blind1_key.json
     elif '--blind2' in sys.argv: blind2(sys.argv[1], sys.argv[sys.argv.index('--blind2') + 1], sys.argv[sys.argv.index('--name') + 1] if '--name' in sys.argv else 'blind2')
     else: compose(sys.argv[1])
