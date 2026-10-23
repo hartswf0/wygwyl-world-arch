@@ -156,12 +156,14 @@ def cut_auto(char, tid, t, catalog, index):
     h = rel @ ax
     nrm = np.array([-ax[1], ax[0]])
     perp = rel @ nrm - float((ch - n_) @ nrm)          # across the head, centred on the chin
-    s0 = 0.20 * T
     # a head-shaped window: wide at the skull, narrowing to the neck so no shoulder/collar is taken
-    half = np.clip(0.18 * T + (h - s0) * 0.9, 0.18 * T, 0.42 * T)
+    # (max half-width, height, widening, seat above the neck), in torso lengths
+    hw = getattr(core.char_module(char), 'HEAD_WIN', (0.42, 0.85, 0.9, 0.20))
+    s0 = hw[3] * T
+    half = np.clip(0.18 * T + (h - s0) * hw[2], 0.18 * T, hw[0] * T)
     b_, g_, r_ = [im[..., i].astype(int) for i in range(3)]
     gold = (r_ > 140) & (g_ > 95) & (b_ < 130) & (r_ - b_ > 60)
-    zone = (h > s0) & (h < s0 + 0.85 * T) & (np.abs(perp) < half) & fig
+    zone = (h > s0) & (h < s0 + hw[1] * T) & (np.abs(perp) < half) & fig
     zone &= ~cv2.dilate(handmask.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
     n, lab, st, _ = cv2.connectedComponentsWithStats(zone.astype(np.uint8))
     if n > 1:

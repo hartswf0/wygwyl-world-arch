@@ -67,7 +67,7 @@ def find_brads(rgb, fig, T):
 
 
 def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True, tip_len=0.22, open_torso=0.0, hand_skin=False, split_legs=False,
-               erase_emblem=True):
+               erase_emblem=True, head_win=(0.42, 0.85, 0.9, 0.20), limb_r=(0.16, 0.17)):
     """plain_fn(rgb, fig) -> mask of plain cloth to fill hidden areas from (default: the poet's black fabric);
     tip_len: hand length beyond the wrist, in torso lengths (bare, long-fingered hands need more);
     open_torso: if > 0, the torso mask is opened with a disc of that many torso lengths and keeps
@@ -78,7 +78,11 @@ def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True, t
     far leg and the seat, its top fading into the seat, so a stride that differs from the master's
     does not smear the cloth between the thighs;
     erase_emblem: erase a saturated-blue disc (the poet.04 chest emblem) from the master; off for a
-    character painted blue all over (the soul)"""
+    character painted blue all over (the soul);
+    head_win: (max half-width, height, widening per px, seat above the neck) of the head window, in torso
+    lengths (a child's head is bigger);
+    limb_r: (arm, leg) half-widths in torso lengths that a limb mask may take round its bones (a child's
+    limbs are thick against his short torso)"""
     H, W = a.shape
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     fig = a > 0.5
@@ -122,7 +126,7 @@ def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True, t
             facing = 1.0 if ch[0] >= J['neck'][0] else -1.0
             J['to' + S] = J['an' + S] + 0.3 * T * np.array([facing, 0.0]) + 0.05 * T * sh
     # ---------------------------------------------------------------- part masks
-    rA, rL = 0.16 * T, 0.17 * T
+    rA, rL = limb_r[0] * T, limb_r[1] * T
     dArm = {S: np.minimum.reduce([seg_d(xx, yy, J['sh' + S], J['el' + S]), seg_d(xx, yy, J['el' + S], J['wr' + S]),
                                   seg_d(xx, yy, J['wr' + S], J['tip' + S])]) for S in 'RL'}
     dLeg = {S: np.minimum.reduce([seg_d(xx, yy, J['hip' + S], J['kn' + S]), seg_d(xx, yy, J['kn' + S], J['an' + S]),
@@ -138,9 +142,9 @@ def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True, t
     rel_h = (xx - J['neck'][0]) * ax[0] + (yy - J['neck'][1]) * ax[1]
     nrm = np.array([-ax[1], ax[0]])
     perp = (xx - J['neck'][0]) * nrm[0] + (yy - J['neck'][1]) * nrm[1] - float((ch - J['neck']) @ nrm)
-    s0 = 0.20 * T
-    half = np.clip(0.18 * T + (rel_h - s0) * 0.9, 0.18 * T, 0.42 * T)
-    head = fig & (rel_h > s0) & (rel_h < s0 + 0.85 * T) & (np.abs(perp) < half)
+    s0 = head_win[3] * T
+    half = np.clip(0.18 * T + (rel_h - s0) * head_win[2], 0.18 * T, head_win[0] * T)
+    head = fig & (rel_h > s0) & (rel_h < s0 + head_win[1] * T) & (np.abs(perp) < half)
     arm = {}
     for S in 'RL':
         other = 'L' if S == 'R' else 'R'
