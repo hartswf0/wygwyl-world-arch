@@ -38,6 +38,9 @@
        rescale?,               // card scales, sockets and width matches are fixed by the first pose drawn with a contract; true re-fits them to this skeleton
        cardView?, ground?      // force the card view; ground (default true without a port) puts his lowest foot point on the floor
      })
+     PuppetCore.adjustJoints(args) -> {adjusted, named (= joints3d), j, tips, yaw, moves, warnings}: the joints renderPose will draw,
+       after every joint move (head into the picture plane, neck, hand at the head with the elbow re-solved): pick cards from these;
+       passing the result back as joints3d draws it as is
      -> { cards: [{part, card, view, role, mirrored, projRatio, verdict, method, gap_cm, miss_cm}],
           segments: [{k, role, card, view, want, mirrored, miss_cm, ratio, atlas, drawn, P, Q, end}],   // the same, in the harness's shape
           sol, warnings: [string], view, yaw, px_per_cm, bbox }
@@ -346,6 +349,15 @@ function trimmed(c) {
   if (fl) { o = flared(c, o, fl); o.complete = true; o.naturalWidth = o.width; }
   return TRIM[c.id] = o;
 }
+// a card's opaque bounding box [x0, y0, x1, y1] in card px (cached)
+const ABOX = {};
+function alphaBox(c) {
+  if (ABOX[c.id] !== undefined) return ABOX[c.id];
+  const im = img(c); if (!im.complete || !im.naturalWidth) return null;
+  const w = c.w, h = c.h, o = P.canvas(w, h), g = o.getContext('2d'); g.drawImage(im, 0, 0, w, h); let d; try { d = g.getImageData(0, 0, w, h).data; } catch { return ABOX[c.id] = null; }
+  let x0 = w, y0 = h, x1 = 0, y1 = 0; for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) if (d[(y * w + x) * 4 + 3] > 100) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return ABOX[c.id] = x1 > x0 ? [x0, y0, x1, y1] : null;
+}
 // a card's painted width (px) across its A->B axis at fraction u from A (alpha scan both ways from the axis)
 const WIDTHS = {};
 function widthAt(c, u) {
@@ -632,6 +644,7 @@ function applyContract(c) {
   S.skin = {}; for (const [k, l] of Object.entries(c.limbs || {})) S.skin[k] = { ...newSkin(), ...l, cards: { ...(l.cards || {}) } };
   const st = c.stack || {}; S.stack = Object.fromEntries(VIEWS.map(v => [v, (st[v]?.length ? st[v] : v === 'threequarter' && st.front?.length ? st.front : STACK0).slice()]));
   S.K = {}; S.sock = {}; S.cardPpc = null; S.pv++;
+  RP.base = Object.fromEntries(Object.entries(S.skin).map(([k, sk]) => [k, { ...sk.cards }]));   // the contract's own cards: the scale reference
 }
 const loaded = im => new Promise(r => { if (!im || im.complete && im.naturalWidth) return r(); const t = setTimeout(r, 15000); im.addEventListener?.('load', () => { clearTimeout(t); r(); }); im.addEventListener?.('error', () => { clearTimeout(t); r(); }); });
 // prepare({contract, library, imgBase}) → Promise: indexes the library, applies the contract, loads every card it names, builds code cards
@@ -753,6 +766,64 @@ function paintedHead(o) {
 }
 const VERDICT = r => r >= .88 ? 'rotate' : r >= .55 ? 'replace/shorten' : 'dedicated/restage';
 const LIMB = /^(upper_arm|forearm|thigh|shin)_[LR]$/;
+
+// adjustJoints(joints3d, o): every move this renderer makes to the joints themselves, before any card is chosen, so a host that picks
+// cards (harvested chains) from joints picks them from the moved ones. Takes what renderPose takes (named joints, a Pose Lab fk()
+// result, a frame record {j}; and o.port | o.psi | o.view+o.facing; o.target; o.ground; o.neckDeg; o.headLeanDeg; o.paintedHeadDeg).
+// Call adjustJoints(joints3d, opts) or adjustJoints(renderPoseArgs). Returns {adjusted: true, j: [26 Bolas joints, cm, x his left,
+// y up, z forward], tips: {L, R} | null, named = joints3d: {name: [x,y,z]} (also tipL/tipR), yaw, moves: [what moved and why], warnings}. Pass the result back as renderPose's joints3d: it is used as is.
+// The moves: a head bowed toward the camera turned into the picture plane; the neck clamp; without a painted head axis, the head's
+// lean across the screen held to headLeanDeg; the hand bent at most 80 deg off the forearm; a hand the painting holds at the head
+// brought to it, the elbow re-solved in 3D with the arm's own bone lengths (so the arm cards reach the moved hand).
+function adjustJoints(joints3d, o) {
+  if (o === undefined && joints3d && joints3d.joints3d !== undefined) { o = joints3d; joints3d = o.joints3d; }   // also adjustJoints(renderPoseArgs)
+  o = o || {}; const warnings = [], moves = [];
+  let src = joints3d || {}, tips = null;
+  let j;
+  if (Array.isArray(src.j)) j = src.j.map((q, i) => q ? q.slice() : (warnings.push('missing joint ' + J[i]), [0, 0, 0])).slice(0, 26);   // a frame record {j: 26 Bolas joints}
+  else { if (src.shL || src.knL) src = fromPoseLab(src); j = jointArray(src, warnings); if (src.tipL && src.tipR) tips = { L: src.tipL.slice(), R: src.tipR.slice() }; }
+  if (o.ground ?? !o.port) { const lo = Math.min(...FEET.map(i => j[i][1])); j = j.map(q => [q[0], q[1] - lo, q[2]]); if (tips) for (const s of 'LR') tips[s][1] -= lo; }
+  const yaw = o.port ? Math.atan2(-o.port.right[2], o.port.right[0]) * 180 / Math.PI : yawOf(o), view = o.cardView || cardViewOf(yaw), cy = Math.cos(yaw * Math.PI / 180), sy = Math.sin(yaw * Math.PI / 180);
+  const port = { toward: [sy, 0, cy], right: [cy, 0, -sy] };
+  // the head is a painted card: it is drawn in the picture plane at full size, so a head bowed toward (or away from) the camera is
+  // turned into the plane about the neck, keeping its lean across the screen, and held within the neck's reach of the torso
+  { const nb = j[ji.neckBase], uh = v3(nb, j[ji.headTop]), L = len3(uh), tw = port.toward, along = dot3(uh, tw) / (L || 1);
+    if (Math.abs(along) > .45) { const inPl = nrm3(uh.map((x, i) => x - along * L * tw[i])), ut = nrm3(v3(j[ji.spineMid], nb)), w = Math.min(1, len3(uh.map((x, i) => x - along * L * tw[i])) / L / .45);
+      const tgt = nrm3(inPl.map((x, i) => x * w + ut[i] * (1 - w)));
+      for (const n of ['headBase', 'head', 'headTop', 'nose']) { const r = rotAB3(nrm3(uh), tgt, v3(nb, j[ji[n]])); j[ji[n]] = nb.map((x, i) => x + r[i]); }
+      moves.push(`head: bowed ${(Math.asin(Math.min(1, Math.abs(along))) * 180 / Math.PI) | 0} deg toward the camera; turned into the picture plane (a painted head cannot foreshorten)`); }
+    const F0 = facings(j), cn = clampNeck(j, F0.fwd, F0.hfwd, o.neckDeg ?? (Math.abs(along) > .45 ? 20 : 40)); j = cn.j; }
+  // a painted head is drawn nearly upright on its collar: across the screen it leans at most headLeanDeg off the torso (front, back, 3/4)
+  if (view !== 'side' && paintedHead(o) == null) { const lim = (o.headLeanDeg ?? 60) * Math.PI / 180, up = [0, 1, 0], nb = j[ji.neckBase];
+    const sa = v => Math.atan2(dot3(v, port.right), dot3(v, up)), dt = sa(v3(j[ji.spineMid], nb)), dh = sa(v3(nb, j[ji.headTop]));
+    let df = Math.atan2(Math.sin(dh - dt), Math.cos(dh - dt));
+    if (Math.abs(df) > lim) { const th = (Math.abs(df) - lim) * Math.sign(df), ax = port.toward, c = Math.cos(th), sn = Math.sin(th);
+      const R = v => { const d = dot3(ax, v), x = cross3(ax, v); return [0, 1, 2].map(i => v[i] * c + x[i] * sn + ax[i] * d * (1 - c)); };
+      const test = R(v3(nb, j[ji.headTop])), sgn = Math.abs(Math.atan2(Math.sin(sa(test) - dt), Math.cos(sa(test) - dt))) < Math.abs(df) ? 1 : -1;
+      const R2 = v => { const t2 = th * sgn, c2 = Math.cos(t2), s2 = Math.sin(t2), d = dot3(ax, v), x = cross3(ax, v); return [0, 1, 2].map(i => v[i] * c2 + x[i] * s2 + ax[i] * d * (1 - c2)); };
+      for (const n of ['headBase', 'head', 'headTop', 'nose']) { const r = R2(v3(nb, j[ji[n]])); j[ji[n]] = nb.map((x, i) => x + r[i]); }
+      moves.push(`head: leaned ${(Math.abs(df) * 180 / Math.PI) | 0} deg off the torso across the screen; held to ${(lim * 180 / Math.PI) | 0}`); } }
+  if (tips) {   // the hand follows the solve's wrist, bent at most 80 deg off the forearm (a cut-out wrist past 90 reads as broken)
+    for (const s of 'LR') { const w = j[ji['wrist' + s]], fa = nrm3(v3(j[ji['elbow' + s]], w)), h = v3(w, tips[s]), hl = len3(h) || 1, c = dot3(fa, h) / hl;
+      if (c < Math.cos(80 * Math.PI / 180)) { const t = nrm3(h.map((x, i) => x / hl - c * fa[i])), m = 80 * Math.PI / 180, d = fa.map((x, i) => (x * Math.cos(m) + t[i] * Math.sin(m)) * hl);
+        tips[s] = w.map((x, i) => x + d[i]); moves.push(`hand_${s}: wrist bend held to 80 deg`); } } }
+  // a hand the painting puts at the head (its wrist within 1.6 neck->head lengths of the head marker, between the neck and the top of
+  // the head, raised from an elbow below the shoulder) is brought to the drawn head, the elbow re-solved with the arm's own lengths
+  { const mk = o.target?.markers, ok = n => mk?.[n] && (mk[n][4] ?? 1) >= .4;
+    if (ok('neck') && ok('head')) { const nh = Math.hypot(mk.head[0] - mk.neck[0], mk.head[1] - mk.neck[1]), hc = j[ji.head];
+      for (const sd of ['L', 'R']) { if (!ok('wrist' + sd) || !ok('elbow' + sd) || !ok('shoulder' + sd) || Math.hypot(mk['wrist' + sd][0] - mk.head[0], mk['wrist' + sd][1] - mk.head[1]) > 1.6 * nh) continue;
+        const wy = mk['wrist' + sd][1]; if (!(wy > mk.head[1] && wy < mk.neck[1] && mk['elbow' + sd][1] > mk['shoulder' + sd][1] + .2 * nh)) continue;
+        const sh = j[ji['shoulder' + sd]], el = j[ji['elbow' + sd]], w = j[ji['wrist' + sd]], l1 = len3(v3(sh, el)), l2 = len3(v3(el, w));
+        const d = v3(hc, w), dl = len3(d), want = 20; if (dl <= want || dl > 70) continue;
+        let nw = hc.map((v, i) => v + d[i] / dl * want); const sw = v3(sh, nw), swl = len3(sw);
+        if (swl > l1 + l2 - .5) nw = sh.map((v, i) => v + sw[i] / swl * (l1 + l2 - .5));   // within the arm's reach
+        const D = len3(v3(sh, nw)), u = nrm3(v3(sh, nw)), a1 = Math.acos(Math.max(-1, Math.min(1, (l1 * l1 + D * D - l2 * l2) / (2 * l1 * D))));
+        const pole = v3(sh, el), pp = nrm3(pole.map((x, i) => x - dot3(pole, u) * u[i])), ne = sh.map((v, i) => v + (u[i] * Math.cos(a1) + pp[i] * Math.sin(a1)) * l1);   // the elbow keeps its side
+        const mv = v3(w, nw); j[ji['elbow' + sd]] = ne; j[ji['wrist' + sd]] = nw; if (tips?.[sd]) tips[sd] = tips[sd].map((v, i) => v + mv[i]);
+        moves.push(`hand_${sd}: brought ${(dl - want).toFixed(0)} cm to the head, elbow re-solved (the painting holds the hand there)`); } } }
+  const named = Object.fromEntries(J.map((n, i) => [n, j[i].slice()])); if (tips) { named.tipL = tips.L.slice(); named.tipR = tips.R.slice(); }
+  return { adjusted: true, j, tips, named, joints3d: named, yaw, moves, warnings: warnings.concat(moves) };
+}
 function renderPose(ctx, o) {
   const warnings = [];
   if (o.contract && o.contract !== RP.contract) {   // not prepared for this contract: apply it now (images the host has not loaded yet draw blank)
@@ -760,12 +831,9 @@ function renderPose(ctx, o) {
     applyContract(o.contract); rebuildGen(S.skin); RP.contract = o.contract; RP.ready = true; RP.key = null; RP.bind = {};
   }
   if (!RP.ready) return { cards: [], segments: [], warnings: ['no contract: pass o.contract or await PuppetCore.prepare({contract, library})'] };
-  let src = o.joints3d || {}, tips = null;
-  let j;
-  if (Array.isArray(src.j)) j = src.j.map((q, i) => q ? q.slice() : (warnings.push('missing joint ' + J[i]), [0, 0, 0])).slice(0, 26);   // a frame record {j: 26 Bolas joints}
-  else { if (src.shL || src.knL) src = fromPoseLab(src); j = jointArray(src, warnings); if (src.tipL && src.tipR) tips = { L: src.tipL.slice(), R: src.tipR.slice() }; }
-  if (o.ground ?? !o.port) { const lo = Math.min(...FEET.map(i => j[i][1])); j = j.map(q => [q[0], q[1] - lo, q[2]]); if (tips) for (const s of 'LR') tips[s][1] -= lo; }
-  const yaw = o.port ? Math.atan2(-o.port.right[2], o.port.right[0]) * 180 / Math.PI : yawOf(o), view = o.cardView || cardViewOf(yaw), cy = Math.cos(yaw * Math.PI / 180), sy = Math.sin(yaw * Math.PI / 180);
+  const AJ = o.joints3d?.adjusted ? o.joints3d : adjustJoints(o.joints3d, o);   // every joint move happens before any card is chosen
+  let j = AJ.j.map(q => q.slice()); const tips = AJ.tips ? { L: AJ.tips.L.slice(), R: AJ.tips.R.slice() } : null; warnings.push(...AJ.warnings);
+  const yaw = AJ.yaw, view = o.cardView || cardViewOf(yaw), cy = Math.cos(yaw * Math.PI / 180), sy = Math.sin(yaw * Math.PI / 180);
   // the skeleton's own bone lengths fix the card scales and the bind pose (recomputed only when they change); heads drawn at the
   // painted canon (o.headScale, default 1.05: top of hair to chin is 0.152 of his height in 7 standing paintings; 0.145 at 1.0)
   const hs = o.headScale ?? 1.05, nj = neutralOf(j), key = nj.map(q => q.map(v => Math.round(v)).join(',')).join(';') + '|' + hs + '|' + (o.headCm || '');
@@ -774,7 +842,7 @@ function renderPose(ctx, o) {
     const nfr = frameOf(nj, { fwd: [0, 0, 1], hfwd: [0, 0, 1], pfwd: [0, 0, 1] }), njj = joints(nfr, 'A'), drop = njj[ji.waist][1] - (njj[ji.hipL][1] + njj[ji.hipR][1]) / 2;
     for (const id of Object.values(S.skin.pelvis?.cards || {})) { const mm = id.match(/^gen\.(.+)\/built-seat-side$/); if (!mm || Math.abs((RP.seatDrop ?? 7) - drop) < .5 && S.byId[id]) continue;
       S.lib = S.lib.filter(c => c.id !== id); delete S.byId[id]; delete IMG[id]; delete TRIM[id]; buildSeat(mm[1], S.fix[id]?.from, { ...(S.fix[id] || {}), hip_cm: drop }); RP.seatDrop = drop; }
-    RP.hips = {}; if (o.builtHips !== false && S.skin.pelvis) { const ch = (S.skin.pelvis.cards.side || '').match(/^gen\.(.+)\//)?.[1] || 'puppet', hh = len3(v3(njj[ji.hipL], njj[ji.hipR])) / 2;
+    RP.hips = {}; if (o.builtHips === true && S.skin.pelvis) { const ch = (S.skin.pelvis.cards.side || '').match(/^gen\.(.+)\//)?.[1] || 'puppet', hh = len3(v3(njj[ji.hipL], njj[ji.hipR])) / 2;
       const front = S.skin.pelvis.cards.front, rear = Object.values(S.fix).find(f => f.from && /seat/.test(f.from))?.from || S.skin.pelvis.cards.back;
       for (const v of ['front', 'back']) RP.hips[v] = buildHips(ch, v, v === 'back' ? rear : front, { drop, hh, rebuild: true }).id; }
     const r = rigidScalesFor(nj, o.headCm); for (const id of Object.values(S.skin.head?.cards || {})) if (r.ppc[id]) r.ppc[id] /= hs;
@@ -804,24 +872,6 @@ function renderPose(ctx, o) {
       const jj = nj.map(q => rotYv(q, t)), f = rotYv([0, 0, 1], t); RP.bind[id] = frameOf(jj, { fwd: f, hfwd: f, pfwd: f }, { views: { body: v, head: v } }); }
     return RP.bind[id];
   };
-  // the head is a painted card: it is drawn in the picture plane at full size, so a head bowed toward (or away from) the camera is
-  // turned into the plane about the neck, keeping its lean across the screen, and held within the neck's reach of the torso
-  { const nb = j[ji.neckBase], uh = v3(nb, j[ji.headTop]), L = len3(uh), tw = port.toward, along = dot3(uh, tw) / (L || 1);
-    if (Math.abs(along) > .45) { const inPl = nrm3(uh.map((x, i) => x - along * L * tw[i])), ut = nrm3(v3(j[ji.spineMid], nb)), w = Math.min(1, len3(uh.map((x, i) => x - along * L * tw[i])) / L / .45);
-      const tgt = nrm3(inPl.map((x, i) => x * w + ut[i] * (1 - w)));
-      for (const n of ['headBase', 'head', 'headTop', 'nose']) { const r = rotAB3(nrm3(uh), tgt, v3(nb, j[ji[n]])); j[ji[n]] = nb.map((x, i) => x + r[i]); }
-      warnings.push(`head: bowed ${(Math.asin(Math.min(1, Math.abs(along))) * 180 / Math.PI) | 0} deg toward the camera; turned into the picture plane (a painted head cannot foreshorten)`); }
-    const F0 = facings(j), cn = clampNeck(j, F0.fwd, F0.hfwd, o.neckDeg ?? (Math.abs(along) > .45 ? 20 : 40)); j = cn.j; }
-  // a painted head is drawn nearly upright on its collar: across the screen it leans at most headLeanDeg off the torso (front, back, 3/4)
-  if (view !== 'side' && paintedHead(o) == null) { const lim = (o.headLeanDeg ?? 60) * Math.PI / 180, up = [0, 1, 0], nb = j[ji.neckBase];
-    const sa = v => Math.atan2(dot3(v, port.right), dot3(v, up)), dt = sa(v3(j[ji.spineMid], nb)), dh = sa(v3(nb, j[ji.headTop]));
-    let df = Math.atan2(Math.sin(dh - dt), Math.cos(dh - dt));
-    if (Math.abs(df) > lim) { const th = (Math.abs(df) - lim) * Math.sign(df), ax = port.toward, c = Math.cos(th), sn = Math.sin(th);
-      const R = v => { const d = dot3(ax, v), x = cross3(ax, v); return [0, 1, 2].map(i => v[i] * c + x[i] * sn + ax[i] * d * (1 - c)); };
-      const test = R(v3(nb, j[ji.headTop])), sgn = Math.abs(Math.atan2(Math.sin(sa(test) - dt), Math.cos(sa(test) - dt))) < Math.abs(df) ? 1 : -1;
-      const R2 = v => { const t2 = th * sgn, c2 = Math.cos(t2), s2 = Math.sin(t2), d = dot3(ax, v), x = cross3(ax, v); return [0, 1, 2].map(i => v[i] * c2 + x[i] * s2 + ax[i] * d * (1 - c2)); };
-      for (const n of ['headBase', 'head', 'headTop', 'nose']) { const r = R2(v3(nb, j[ji[n]])); j[ji[n]] = nb.map((x, i) => x + r[i]); }
-      warnings.push(`head: leaned ${(Math.abs(df) * 180 / Math.PI) | 0} deg off the torso across the screen; held to ${(lim * 180 / Math.PI) | 0}`); } }
   const F = facings(j), lat = Math.sign(dot3(F.pfwd, port.right)) || ((o.facing || 'right') === 'left' ? -1 : 1);
   // the head follows the body's view; only a head turned more than 80 deg off the body (and not bowed to the floor) takes another (three-quarter if the contract
   // has a non-profile one, else profile); a three-quarter body whose contract head for that view is a profile card keeps a front head
@@ -833,20 +883,7 @@ function renderPose(ctx, o) {
     if (headView !== view) warnings.push(`head: ${headView} card on a ${view} body (head turned ${dyaw | 0} deg off the body)`); }
   const a = { j, ...F, views: { body: view, head: headView }, torsoLim: o.torsoLimDeg ?? 50, headLim: o.headLeanDeg ?? 60, headRef: paintedHead(o), lat: o.facing ? (o.facing === 'left' ? -1 : 1) : lat, hands: o.handStates || {}, bend: {}, sx: {}, states: {} };
   RP.lat = a.lat;
-  if (tips) {   // the hand follows the solve's wrist, bent at most 80 deg off the forearm (a cut-out wrist past 90 reads as broken)
-    a.tips = {}; for (const s of 'LR') { const w = j[ji['wrist' + s]], fa = nrm3(v3(j[ji['elbow' + s]], w)), h = v3(w, tips[s]), hl = len3(h) || 1, c = dot3(fa, h) / hl;
-      let d = h; if (c < Math.cos(80 * Math.PI / 180)) { const t = nrm3(h.map((x, i) => x / hl - c * fa[i])), m = 80 * Math.PI / 180; d = fa.map((x, i) => (x * Math.cos(m) + t[i] * Math.sin(m)) * hl); }
-      a.tips[s] = w.map((x, i) => x + d[i]); } }
-  // a hand the painting puts at the head (its wrist within 1.6 neck->head lengths of the head marker, between the neck and the top of
-  // the head, raised from an elbow below the shoulder) reaches the drawn head:
-  // the wrist (and the fingertips with it) moves toward the head until the hand's fingers lie on it; the arm's two-card IK follows
-  { const mk = o.target?.markers, ok = n => mk?.[n] && (mk[n][4] ?? 1) >= .4;
-    if (ok('neck') && ok('head')) { const nh = Math.hypot(mk.head[0] - mk.neck[0], mk.head[1] - mk.neck[1]), hc = j[ji.head];
-      for (const sd of ['L', 'R']) { if (!ok('wrist' + sd) || !ok('elbow' + sd) || !ok('shoulder' + sd) || Math.hypot(mk['wrist' + sd][0] - mk.head[0], mk['wrist' + sd][1] - mk.head[1]) > 1.6 * nh) continue;
-        const wy = mk['wrist' + sd][1]; if (!(wy > mk.head[1] && wy < mk.neck[1] && mk['elbow' + sd][1] > mk['shoulder' + sd][1] + .2 * nh)) continue;   // a forearm raised from a low elbow to a hand between the neck and the top of the head (not arms up beside it)
-        const w = j[ji['wrist' + sd]], d = v3(hc, w), dl = len3(d), want = 20; if (dl <= want || dl > 70) continue;
-        const nw = hc.map((v, i) => v + d[i] / dl * want), mv = v3(w, nw); j[ji['wrist' + sd]] = nw; if (a.tips?.[sd]) a.tips[sd] = a.tips[sd].map((v, i) => v + mv[i]);
-        warnings.push(`hand_${sd}: brought ${(dl - want).toFixed(0)} cm to the head, as the painting holds it there`); } } }
+  if (tips) a.tips = tips;
   a.noik = {}; a.cardIds = {}; a.minLen = { shin_L: o.minShin ?? .88, shin_R: o.minShin ?? .88 };
   // the pelvis card: built trouser top in front/back/three-quarter; a seated or kneeling three-quarter figure takes the profile seat (its seat mass shows)
   { const hipFlex = s => { const sp = nrm3(v3(j[0], j[ji.spineMid])), th = nrm3(v3(j[ji['hip' + s]], j[ji['knee' + s]])); return Math.acos(Math.max(-1, Math.min(1, -dot3(sp, th)))) * 180 / Math.PI; };
@@ -904,12 +941,30 @@ function renderPose(ctx, o) {
       const mk = o.target?.markers, okm = n => mk?.[n] && (mk[n][4] ?? 1) >= .4, under9 = x => { const sd = x.k.slice(-1); return okm('neck') && okm('head') && okm('wrist' + sd) && mk['wrist' + sd][1] >= mk.neck[1] - .05 * Math.hypot(mk.head[0] - mk.neck[0], mk.head[1] - mk.neck[1]); };
       if (H) for (const x of sol.order.slice()) { if (!/_hand$/.test(x.role) || (x.d >= H.d - 2 && !under9(x))) continue; const hp = fwd(H, [(H.A[0] + H.B[0]) / 2, (H.A[1] + H.B[1]) / 2]), r = H.lab * H.s * .6;
         if (Math.hypot(x.P[0] - hp[0], x.P[1] - hp[1]) < r && sol.order.indexOf(x) > sol.order.indexOf(H)) { sol.order.splice(sol.order.indexOf(x), 1); sol.order.splice(sol.order.indexOf(H), 0, x); } } } }
+  // hard overlaps at the knee: the thigh (the parent) is drawn right after its shin, so the thigh's own painted end lies crisply over
+  // the shin's root, as paper overlaps (no redrawn disc, no feathering)
+  if (o.overlapKnees !== false) for (const sd of ['L', 'R']) { const th = sol.X['thigh_' + sd], sh = sol.X['shin_' + sd]; if (!th || !sh) continue;
+    const it = sol.order.indexOf(th), is = sol.order.indexOf(sh); if (it < 0 || is < 0 || it > is) continue; sol.order.splice(it, 1); sol.order.splice(sol.order.indexOf(sh) + 1, 0, th); }
+  // one true scale per figure: no two boots, and no replacement limb card against the contract's, may differ by more than 10%;
+  // a harvested boot is brought to the other boot's length; anything still off is a SCALE INVARIANT warning (the gate fails on it)
+  { const cmLen = x => { const b = alphaBox(x.c); return b ? Math.max(b[2] - b[0], b[3] - b[1]) * x.s * (x.sx || 1) / port.k : null; };
+    const fl = sol.X.foot_L, fr_ = sol.X.foot_R;
+    if (fl && fr_) { let a1 = cmLen(fl), a2 = cmLen(fr_);
+      if (a1 && a2 && Math.max(a1, a2) / Math.min(a1, a2) > 1.1) { const h = /^harvest\./.test(fl.c.id) ? fl : /^harvest\./.test(fr_.c.id) ? fr_ : null;
+        if (h) { const ref = h === fl ? a2 : a1, cur = h === fl ? a1 : a2; h.s *= ref / cur; warnings.push(`boot scale: ${h.k} (harvested) brought from ${cur.toFixed(0)} to ${ref.toFixed(0)} cm long, the other boot's size`); a1 = cmLen(fl); a2 = cmLen(fr_); }
+        if (Math.max(a1, a2) / Math.min(a1, a2) > 1.1) warnings.push(`SCALE INVARIANT: boots ${a1.toFixed(0)} and ${a2.toFixed(0)} cm long (more than 10% apart)`); } }
+    // a limb card other than the contract's own (a harvested or replacement card) is drawn at the contract card's true scale: its
+    // width across the limb within 10% of the contract card's (same part, same view)
+    for (const x of Object.values(sol.X)) { if (!LIMB.test(x.k) && !/^(hand|foot)_/.test(x.k)) continue; const base = S.byId[RP.base?.[x.k]?.[x.view]]; if (!base || base.id === x.c.id || /^foot_/.test(x.k)) continue;
+      const wb = widthAt(base, .5), wx = widthAt(x.c, .5); if (!wb || !wx || !S.cardPpc[base.id]) continue;
+      const fl = S.fix[base.id]?.flare || S.autoFlare?.[base.id], cb = wb * (fl ? (fl[0] + fl[1]) / 2 : 1) / S.cardPpc[base.id], cx = wx * x.s / port.k;
+      if (Math.max(cb, cx) / Math.min(cb, cx) > 1.1) {   // brought to the contract's width by a width-only flare (its length still meets the joints)
+        const q0 = S.autoFlare?.[x.c.id]?.[0] ?? 1, q = Math.max(.5, Math.min(2, cb / cx)), after = cx * q;
+        if (Math.abs(q - q0) > .01) { S.autoFlare = S.autoFlare || {}; S.autoFlare[x.c.id] = [q, q]; delete TRIM[x.c.id]; }
+        if (Math.max(cb, after) / Math.min(cb, after) > 1.1) warnings.push(`SCALE INVARIANT: ${x.k} drawn ${after.toFixed(1)} cm wide, the contract's ${x.view} card is ${cb.toFixed(1)} cm (more than 10% apart)`);
+        else warnings.push(`width matched: ${x.k} (${x.c.id.split('/').slice(-2).join('/')}) ${cx.toFixed(1)} -> ${cb.toFixed(1)} cm, the contract card's width`); } } }
   if (ctx) {
     for (const x of sol.order) drawCard(ctx, x, 1);
-    // knee sleeves: the thigh's end redrawn over the shin's root inside a disc at the knee, so no seam, gap or hole shows at the joint
-    if (o.sleeves !== false) for (const sd of ['L', 'R']) { const th = sol.X['thigh_' + sd], sh = sol.X['shin_' + sd]; if (!th || !sh || sol.order.indexOf(sh) < sol.order.indexOf(th)) continue;
-      const wpx = widthAt(th.c, .9); if (!wpx) continue; const fl = S.fix[th.c.id]?.flare || S.autoFlare?.[th.c.id], r = .55 * wpx * (fl ? fl[1] : 1) * th.s, kn = sh.P;
-      ctx.save(); ctx.beginPath(); ctx.arc(kn[0], kn[1], r, 0, Math.PI * 2); ctx.clip(); drawCard(ctx, th, 1); ctx.restore(); }
   }
   S.farShade = prevShade;
   const cards = sol.order.map(x => ({ part: x.k, card: x.c.id, view: x.view, role: x.role, mirrored: !!x.mir, ...(report[x.k] || {}), gap_cm: +x.gap.toFixed(1), miss_cm: +x.miss.toFixed(1) }));
@@ -921,7 +976,7 @@ function renderPose(ctx, o) {
   if (a.lenNote) warnings.push(...a.lenNote.map(k => `${k}: replacement card stretched to 88% of the shin's true length`));
   return { cards, segments, sol, warnings, view, yaw, px_per_cm: k, bbox: (() => { const xs = sol.order.flatMap(x => [x.P[0]]), ys = sol.order.flatMap(x => [x.P[1]]); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; })() };
 }
-Object.assign(P, { renderPose, prepare, applyContract, fromPoseLab, neutralOf, yawOf, cardViewOf, rigidScalesFor });
+Object.assign(P, { renderPose, adjustJoints, prepare, applyContract, fromPoseLab, neutralOf, yawOf, cardViewOf, rigidScalesFor });
 
 Object.assign(P, { ppcOf, cardsOf, trimmed, holdPoint, clampNeck, S, J, ji, HAND_CM, TOPO, PAR, GRP, GROUPS, VIT, FEET, measure, retarget, joints, SEG, LR, STYLES, STACK0, ARMS, VIEWS, VIEWOF, viewOf, OTHER, STICK,
   NAME, NOT, nameOK, human, painted, IMG, img, AB, pts, cardLeft, index, v3, len3, hyp, rot, makePort, centre, active, mk, fwd, inv, scaleOf, socket, ik2, roleOf, solve,
