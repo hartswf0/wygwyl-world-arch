@@ -13,14 +13,18 @@ and brads stay as painted and nothing is swapped between cards.  On top of the a
            that side's hand part, so it rides the wrist instead of the torso
   fill   : seed points in holes the background removal punched into the figure (the painting's own
            colours are intact under them: only the alpha is restored)
-  cut    : polygons of non-figure paint removed from the card (a floor shadow, a caption)
+  cut    : polygons of non-figure paint removed from the card (a floor shadow, a caption, a set piece;
+           cut_keeps_skin: a hand resting on it stays)
+  bits   : keep painted pieces off the main figure (drops of water); off by default, so motion echoes
+           painted beside a dancer are dropped
+  whole_head : without a head polygon, the head is every painted pixel above the neck near the chin
 setup(globals(), ...) fills a character module's MASTERS, KEYS, catalog and the rest from a table.
 """
 import json, math, os
 import numpy as np, cv2
 
 from .. import auto, core
-from .ancestor_robe__indigo_gold import own_paint
+from .ancestor_robe__indigo_gold import own_paint, whole_head
 
 DEPTH = {'pelvis': 0, 'chest': 0, 'thighR': 1, 'thighL': 1, 'shinR': 2, 'shinL': 2, 'footR': 3, 'footL': 3,
          'uarmR': 1, 'farmR': 2, 'handR': 3, 'uarmL': 1, 'farmL': 2, 'handL': 3, 'head': 0}
@@ -156,6 +160,10 @@ def build_card(rgb, a, m, card, plain_fn, auto_opts, border):
                 L['edgeok'] = np.ones(a.shape, np.float32)
             else:
                 L['alpha'] = np.where(hm, 0, L['alpha']).astype(np.float32)
+    elif card.get('whole_head'):
+        # no polygon: every painted pixel above the neck, near the chin and on no arm is the head (big
+        # hair the automatic window would cut)
+        S = whole_head(S, rgb, m, below=card.get('head_below', 0.0))
     if card.get('wings'):
         armpix = np.zeros(fig.shape, bool)
         for L in S['layers']:
@@ -187,7 +195,7 @@ def build_card(rgb, a, m, card, plain_fn, auto_opts, border):
         a = np.where(pm, 0, a)
     # separate painted pieces off the main figure (drops of water; the robe below a basin that was cut
     # out) go to the legs layer when they lie below the hips, else to the torso
-    bits = (a > 0.5) & ~fig
+    bits = (a > 0.5) & ~fig if card.get('bits') else np.zeros(fig.shape, bool)
     if bits.any():
         n, lab = cv2.connectedComponents(bits.astype(np.uint8))
         hip_y = S['joints']['midhip'][1]

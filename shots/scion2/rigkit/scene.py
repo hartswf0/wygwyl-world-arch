@@ -385,17 +385,18 @@ def todo_box(c, z, cx, cy):
     w = 0.3 * h
     x = z * (p['x'] - cx) + W / 2
     y1 = z * (p['foot'] - cy) + H / 2
-    lay = np.zeros((H, W, 4), np.float32)
     m = np.zeros((H, W), np.uint8)
     hx, hr = int(x), int(0.075 * h)
     cv2.circle(m, (hx, int(y1 - h + hr)), hr, 255, -1, cv2.LINE_AA)
     cv2.rectangle(m, (int(x - w / 2), int(y1 - h + 2.1 * hr)), (int(x + w / 2), int(y1)), 255, -1)
-    a = m.astype(np.float32) * 0.55
-    lay[..., :3] = 128 * a[..., None] / 255.
-    lay[..., 3] = a
+    t = np.zeros((H, W), np.uint8)
     for i, txt in enumerate(['TODO', c['who'], 'not rigged']):
-        cv2.putText(lay, txt, (int(x - w / 2) + 4, int(y1 - h / 2) + 22 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
-                    (255, 255, 255, 255), 1, cv2.LINE_AA)
+        cv2.putText(t, txt, (int(x - w / 2) + 4, int(y1 - h / 2) + 22 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 255, 1, cv2.LINE_AA)
+    a = m.astype(np.float32) * 0.55 / 255.
+    tt = t.astype(np.float32) / 255.
+    lay = np.zeros((H, W, 4), np.float32)
+    lay[..., :3] = (128 * a * (1 - tt) + 255 * tt)[..., None]          # premultiplied
+    lay[..., 3] = 255 * np.maximum(a, tt)
     return lay
 
 

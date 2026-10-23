@@ -105,6 +105,11 @@ def very_dark(rgb, t=58):
     return np.asarray(rgb).max(-1) < t
 
 
+def denim(rgb):
+    b, g, r = [rgb[..., i].astype(np.float32) for i in range(3)]
+    return (b > r + 25) & (b > 70)
+
+
 def warm(rgb):
     """a wooden cane, a brass handle: warm saturated pixels"""
     b, g, r = [rgb[..., i].astype(np.float32) for i in range(3)]
@@ -149,12 +154,27 @@ def seg_dist_map(shape, pts):
     return d
 
 
+def seat_head(seat, chin=None):
+    """a head polygon from its seat line alone: everything above the seat polyline (its ends carried out
+    sideways); hand_head keeps only painted pixels on no arm"""
+    (x0, y0), (x1, y1) = seat[0], seat[-1]
+    return [(x0 - 400, y0)] + list(seat) + [(x1 + 400, y1), (x1 + 400, -400), (x0 - 400, -400)]
+
+
 def hand_head(S, rgb, poly, seat, band=5):
     """the head layer is the hand-cut head; the other layers lose it, except a band of `band` px above
     the seat line kept by the torso (under the head, so a turned head shows cloth, not a hole).  No paper
     edge along the seat."""
     fig = S['fig']
     hm = poly_mask(fig.shape, poly) & fig
+    arms = np.zeros(fig.shape, bool)
+    for L in S['layers']:
+        if L['name'].startswith('arm'):
+            arms |= L['alpha'] > 0.5
+    hm &= ~arms
+    n, lab, st, _ = cv2.connectedComponentsWithStats(hm.astype(np.uint8))
+    if n > 2:
+        hm = lab == 1 + np.argmax(st[1:, cv2.CC_STAT_AREA])
     ds = seg_dist_map(fig.shape, seat)
     for L in S['layers']:
         if L.get('is_head'):
@@ -230,9 +250,12 @@ def fill_under_arms(S, rgb, k=0.2):
     after = S['layers'][S['layers'].index(tor) + 1:]
     for L in after:
         if L['name'].startswith('arm'):
-            under |= (L['alpha'] > 0.5) & hull & ~own
+            under |= (L['alpha'] > 0.5) & (hull | own)
+    under = cv2.dilate(under.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0
+    under &= hull | own
     if under.any():
-        tor['rgb'] = auto.inpaint(np.asarray(tor['rgb'], np.float32), under, own & S['fig'])
+        # also where the torso already had them (own_paint gave it the painted arm): re-filled from cloth
+        tor['rgb'] = auto.inpaint(np.asarray(tor['rgb'], np.float32), under, own & S['fig'] & ~under)
         tor['alpha'] = np.where(under, 1.0, tor['alpha']).astype(np.float32)
     return S
 
@@ -275,8 +298,8 @@ def builder(char, pid, cut=(), keep=None, head=None, seat=None, give_=(), far_hi
             S = arms_in_front(S)
         if fill_arms:
             S = fill_under_arms(S, rgb, fill_arms)
-        if head is not None:
-            S = hand_head(S, rgb, head, seat)
+        if head is not None or seat is not None:
+            S = hand_head(S, rgb, head if head is not None else seat_head(seat), seat)
         if post:
             S = post(S, rgb, a, m)
         S = torso_scraps(lost_to_torso(S), rgb)
