@@ -202,7 +202,7 @@ async function run(ch, file, U, opts) {
       const props = ((PM.poses || {})[t.id] || null)?.map(pr => ({ ...pr })), hands = { ...((PM.hands || {})[t.id] || {}) };
       // the painting holds the handset at the ear, the cup at the mouth; the prop goes in the hand that was raised
       for (const pr of props || []) if (pr.hand_to) pr.hand ||= handToEar(J, D.skeleton, t, pr.hand_to);
-      const jo = P.fromPoseLab(J), args = { contract: C, joints3d: J, port, psi: sol.psi, ground: false, handStates: hands };
+      const jo = P.fromPoseLab(J), args = { contract: C, joints3d: J, port, psi: sol.psi, ground: false, handStates: hands, target: t };   // target: the painting decides head lean and hand-at-head (renderPose round 9)
       const dry = P.renderPose(null, args), view = dry.view, ratios = Object.fromEntries((dry.cards || []).map(c => [c.part, c.projRatio]));
       // harvested chains (leave one painted pose and its family out), forced through the contract's own card slots for this call
       const H = harvest && harvest.filter(c => c.source && family(c.source) !== family(t.id));
