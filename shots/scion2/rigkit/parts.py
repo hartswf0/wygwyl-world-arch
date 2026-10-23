@@ -227,7 +227,10 @@ def cut_curated(char, pid, c, index, MK):
     if 'raw_fn' in c:
         # pixels painted without a paper edge (drops of water): kept with their own alpha and given no
         # paper edge (c['raw_fn'](rgba) -> mask; default off)
-        raw = c['raw_fn'](im) & mask
+        poly = np.zeros((H, W), np.uint8)
+        cv2.fillPoly(poly, [np.array(c['poly'], np.int32)], 1)
+        raw = c['raw_fn'](im) & (poly > 0) & (im[..., 3] > 0)
+        mask = mask | raw
         seat_ok = seat_ok & ~(cv2.dilate(raw.astype(np.uint8), np.ones((7, 7), np.uint8)) > 0)
     return _save(char, pid, im, mask, seat_ok, meta, index, raw=raw)
 

@@ -84,16 +84,17 @@ def outline_regions(rgb, fig, tan_d=35):
     return reg, lab
 
 
-def wing_mask(rgb, fig, seeds, reach=2.5):
-    """the wings: outline regions holding a seed, their own outline (outline pixels within reach of
-    them and nearer to them than to any other region) and any small region they enclose"""
+def wing_mask(rgb, fig, seeds, reach=1e9, not_=None):
+    """the wings: outline regions holding a seed, their own outline (outline pixels nearer to them
+    than to any other region, and not in not_: the arms' and hands' own pixels) and any small region
+    they enclose"""
     reg, lab = outline_regions(rgb, fig)
     ids = {int(lab[int(y), int(x)]) for (x, y) in seeds} - {0}
     W = np.isin(lab, list(ids))
     other = reg & ~W
     dW = cv2.distanceTransform((~W).astype(np.uint8), cv2.DIST_L2, 5)
     dO = cv2.distanceTransform((~other).astype(np.uint8), cv2.DIST_L2, 5)
-    wing = W | (fig & ~reg & (dW <= reach) & (dW <= dO))
+    wing = W | (fig & ~reg & (dW <= reach) & (dW <= dO) & (True if not_ is None else ~not_))
     # enclosed bits (feather spots, a speck of shading) belong to the wing
     ff = np.pad(wing.astype(np.uint8), 1)
     cv2.floodFill(ff, np.zeros((ff.shape[0] + 2, ff.shape[1] + 2), np.uint8), (0, 0), 1)
@@ -105,7 +106,7 @@ def water(rgba_or_rgb, alpha, polys):
     """painted water inside the polygons: blue strokes and the pale highlights they enclose (drawn
     without a paper edge)"""
     b, r = rgba_or_rgb[..., 0].astype(np.float32), rgba_or_rgb[..., 2].astype(np.float32)
-    blue = cv2.dilate(((b - r > 20) & (alpha > 0.05)).astype(np.uint8), np.ones((5, 5), np.uint8))
+    blue = cv2.dilate(((b - r > 20) & (alpha > 0.05)).astype(np.uint8), np.ones((9, 9), np.uint8))
     ff = np.pad(blue, 1)
     cv2.floodFill(ff, np.zeros((ff.shape[0] + 2, ff.shape[1] + 2), np.uint8), (0, 0), 1)
     blue = (blue > 0) | (ff == 0)[1:-1, 1:-1]
@@ -128,9 +129,10 @@ def build_card(rgb, a, m, card, plain_fn, auto_opts, border):
     if card.get('cut'):
         a = np.where(poly_mask(a.shape, card['cut']), 0, a)
     pr = card.get('prop')
-    if pr:
-        a = np.where(poly_mask(a.shape, [pr['poly']]), 0, a)
-    S = auto.build_auto(rgb, a, m, plain_fn=plain_fn, erase_emblem=False, **dict(auto_opts, **card.get('auto', {})))
+    opts = dict(auto_opts, **card.get('auto', {}))
+    if card.get('head'):
+        opts['head_win'] = (0.01, 0.01, 0.0, 9.0)     # no automatic head window: the polygon is the head
+    S = auto.build_auto(rgb, a, m, plain_fn=plain_fn, erase_emblem=False, **opts)
     S['border'] = border
     S['brads'] = []          # brads stay painted: each card is its own master
     S = own_paint(S, rgb)
@@ -145,7 +147,11 @@ def build_card(rgb, a, m, card, plain_fn, auto_opts, border):
             else:
                 L['alpha'] = np.where(hm, 0, L['alpha']).astype(np.float32)
     if card.get('wings'):
-        wm = wing_mask(rgb, fig, card['wings'])
+        armpix = np.zeros(fig.shape, bool)
+        for L in S['layers']:
+            if L['name'].startswith('arm'):
+                armpix |= L['alpha'] > 0.5
+        wm = wing_mask(rgb, fig, card['wings'], not_=armpix)
         if card.get('head'):
             wm &= ~poly_mask(a.shape, [card['head']])
         for L in S['layers']:
@@ -153,13 +159,35 @@ def build_card(rgb, a, m, card, plain_fn, auto_opts, border):
         S['layers'].insert(0, dict(name='wings', rgb=rgb.copy(), alpha=wm.astype(np.float32), edgeok=np.ones(a.shape, np.float32),
                                    bones={'chest': [('neck', 'midhip')]}, tau=1.0))
     S = lost_to_torso(S)
-    # separate painted pieces (drops of water off the main figure) go to the torso layer
-    bits = (a > 0.5) & ~fig
-    if bits.any():
+    if pr:
+        # the held object leaves the body layers (it is that hand's part); the torso is filled in under
+        # it from its own plain cloth, so the robe shows when the object moves away
+        pm = poly_mask(a.shape, [pr['poly']]) & (a > 0.05)
+        J = S['joints']
+        q = np.array([J['shR'], J['shL'], J['hipL'], J['hipR']], np.float32)
+        quad = poly_mask(a.shape, [q.mean(0) + (q - q.mean(0)) * 1.12])
         for L in S['layers']:
             if L['bones'] == 'torso':
-                L['alpha'] = np.where(bits, 1.0, L['alpha']).astype(np.float32)
-                L['rgb'] = np.where(bits[..., None], rgb, L['rgb'])
+                L['alpha'] = np.where(pm & ~quad, 0, L['alpha']).astype(np.float32)
+                hole = pm & (L['alpha'] > 0.5)
+                known = (L['alpha'] > 0.5) & ~pm & plain_fn(rgb, fig)
+                L['rgb'] = auto.inpaint(L['rgb'], hole, known)
+            L['alpha'] = np.where(pm & ~((L['bones'] == 'torso') & (L['alpha'] > 0.5)), 0, L['alpha']).astype(np.float32)
+        S['prop_hole'] = pm
+        a = np.where(pm, 0, a)
+    # separate painted pieces off the main figure (drops of water; the robe below a basin that was cut
+    # out) go to the legs layer when they lie below the hips, else to the torso
+    bits = (a > 0.5) & ~fig
+    if bits.any():
+        n, lab = cv2.connectedComponents(bits.astype(np.uint8))
+        hip_y = S['joints']['midhip'][1]
+        for i in range(1, n):
+            comp = lab == i
+            to = 'legs' if np.nonzero(comp)[0].mean() > hip_y else 'torso'
+            for L in S['layers']:
+                if L['name'] == to:
+                    L['alpha'] = np.where(comp, 1.0, L['alpha']).astype(np.float32)
+                    L['rgb'] = np.where(comp[..., None], rgb, L['rgb'])
         S['fig'] = fig | bits
     if card.get('water'):
         # water painted over the body: its own alpha, no paper edge (the strip and the edge classes
@@ -168,6 +196,11 @@ def build_card(rgb, a, m, card, plain_fn, auto_opts, border):
         for L in S['layers']:
             L['edgeok'] = np.where(cv2.dilate(wt.astype(np.uint8), np.ones((7, 7), np.uint8)) > 0, 0, L['edgeok']).astype(np.float32)
         S['fig'] = S['fig'] | (cv2.dilate(wt.astype(np.uint8), np.ones((9, 9), np.uint8)) > 0)
+    if pr:
+        # no paper edge where the body was cut round the held object (the object covers it)
+        near = cv2.dilate(poly_mask(a.shape, [pr['poly']]).astype(np.uint8), np.ones((9, 9), np.uint8)) > 0
+        for L in S['layers']:
+            L['edgeok'] = np.where(near, 0, L['edgeok']).astype(np.float32)
     if pr and pr.get('front'):
         # the arm carrying the prop is drawn last (the prop is placed just under it), so the object
         # held out in front of the body stays in front of it
@@ -225,6 +258,10 @@ def setup(ns, cards, plain_fn, auto_opts, view_rigs=None, border=2.5, posture_ri
                                             attrs={'shape': pr.get('what', 'prop')})
             if pr.get('water'):
                 ns['CURATED_PARTS'][pid]['raw_fn'] = (lambda polys: lambda im: water(im, im[..., 3] / 255., polys))(pr['water'])
+            if pr.get('raw_all'):
+                # the whole object keeps its painted alpha and edge (it was painted without a paper edge
+                # of its own where it lies over the body)
+                ns['CURATED_PARTS'][pid]['raw_fn'] = lambda im: im[..., 3] > 0
             keys['hands'] = {pr['side']: [pid, False]}
         keys.update(c.get('keys', {}))
         ns['KEYS'][c['id']] = keys
