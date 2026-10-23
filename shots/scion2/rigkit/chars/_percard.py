@@ -101,16 +101,39 @@ def torso_scraps(S, rgb):
     return S
 
 
-def give(S, rgb, name, poly):
-    """painted pixels inside poly belong to layer `name` only"""
+def warm(rgb):
+    """a wooden cane, a brass handle: warm saturated pixels"""
+    b, g, r = [rgb[..., i].astype(np.float32) for i in range(3)]
+    return (r - b > 35) & (r > 60)
+
+
+def give(S, rgb, name, poly, pred=None, fill=None):
+    """painted pixels inside poly (and pred(rgb), if given) belong to layer `name` only.  fill: the name
+    of a layer that lay under them (a coat under a cane): it keeps them, inpainted from its own pixels
+    around, where they are inside its closed outline"""
     m = poly_mask(S['fig'].shape, poly) & S['fig']
+    if pred is not None:
+        m &= pred(rgb)
+        m = cv2.morphologyEx(m.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8)) > 0
+        m = (cv2.dilate(m.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0) & poly_mask(S['fig'].shape, poly) & S['fig']
+    if fill:
+        for L in S['layers']:
+            if L['name'] == fill:
+                own = (L['alpha'] > 0.5) & ~m
+                hull = cv2.morphologyEx(own.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((25, 25), np.uint8)) > 0
+                under = m & hull
+                L['rgb'] = auto.inpaint(np.asarray(L['rgb'], np.float32), under, own & S['fig'])
+                L['alpha'] = np.where(under, 1.0, np.where(m, 0, L['alpha'])).astype(np.float32)
+                L['edgeok'] = np.where(under, 0.0, L['edgeok']).astype(np.float32)
+                L['_keep'] = under
     for L in S['layers']:
         if L['name'] == name:
             L['alpha'] = np.maximum(L['alpha'], m.astype(np.float32))
             L['rgb'] = np.where(m[..., None], rgb, L['rgb'])
             L['edgeok'] = np.where(m, 1.0, L['edgeok']).astype(np.float32)
-        else:
+        elif L['name'] != fill:
             L['alpha'] = np.where(m, 0, L['alpha']).astype(np.float32)
+        L.pop('_keep', None)
     return S
 
 
@@ -168,8 +191,42 @@ def far_arm_hidden(S, rgb, far, keep=None):
     return lost_to_torso(S)
 
 
+def fill_under_arms(S, rgb, k=0.2):
+    """arm pixels lying inside the torso's closed outline: the torso keeps them too, inpainted from its
+    own cloth round them (an arm moved off the coat shows coat, not a hole)"""
+    tor = [L for L in S['layers'] if L['bones'] == 'torso'][0]
+    own = tor['alpha'] > 0.5
+    if k == 'hull':     # the torso's convex hull (an arm hanging beside a coat: the coat's side runs behind it)
+        ys, xs = np.nonzero(own)
+        hull = np.zeros(own.shape, np.uint8)
+        cv2.fillConvexPoly(hull, cv2.convexHull(np.stack([xs, ys], 1).astype(np.int32)), 1)
+        hull = hull > 0
+    else:
+        r = int(k * S['T']) | 1
+        hull = cv2.morphologyEx(own.astype(np.uint8), cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (r, r))) > 0
+    under = np.zeros(own.shape, bool)
+    for L in S['layers']:
+        if L['name'].startswith('arm'):
+            under |= (L['alpha'] > 0.5) & hull & ~own
+    if under.any():
+        tor['rgb'] = auto.inpaint(np.asarray(tor['rgb'], np.float32), under, own & S['fig'])
+        tor['alpha'] = np.where(under, 1.0, tor['alpha']).astype(np.float32)
+    return S
+
+
+def prop_bone(S, side, end):
+    """a long prop held in the hand (a cane): its far end is a joint on the hand bone, so the whole prop is
+    skinned rigidly to the hand instead of half to the forearm"""
+    S['joints'] = dict(S['joints'], **{'prop' + side: tuple(float(v) for v in end)})
+    for L in S['layers']:
+        if L['name'] == 'arm' + side:
+            L['bones'] = dict(L['bones'])
+            L['bones']['hand' + side] = list(L['bones']['hand' + side]) + [('wr' + side, 'prop' + side)]
+    return S
+
+
 def builder(char, pid, cut=(), keep=None, head=None, seat=None, give_=(), far_hidden=None, far_keep=None, plain=None,
-            opts=None, border=None, post=None):
+            opts=None, border=None, post=None, prop_ends=None, fill_arms=None):
     def fn(rgb, a):
         a = a.copy()
         if keep is not None:
@@ -184,8 +241,12 @@ def builder(char, pid, cut=(), keep=None, head=None, seat=None, give_=(), far_hi
         S = own_paint(S, rgb)
         if far_hidden:
             S = far_arm_hidden(S, rgb, far_hidden, far_keep)
-        for name, poly in give_:
-            S = give(S, rgb, name, poly)
+        for g in give_:
+            S = give(S, rgb, *g)
+        for side, end in (prop_ends or {}).items():
+            S = prop_bone(S, side, end)
+        if fill_arms:
+            S = fill_under_arms(S, rgb, fill_arms)
         if head is not None:
             S = hand_head(S, rgb, head, seat)
         if post:

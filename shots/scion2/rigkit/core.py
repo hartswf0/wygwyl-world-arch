@@ -322,7 +322,8 @@ class Rig:
         A = self.transforms(P)
         pts = np.vstack([self.deform(n, A) for n in self.order]) @ G[:, :2].T + G[:, 2]
         sc = math.sqrt(abs(np.linalg.det(G[:, :2])))
-        mg = int(70 * sc) + 8
+        # margin round the body mesh for parts reaching beyond it (a module may widen it: RENDER_MARGIN)
+        mg = int(getattr(self.specs, 'RENDER_MARGIN', 70) * sc) + 8
         x0 = max(0, int(pts[:, 0].min()) - mg); y0 = max(0, int(pts[:, 1].min()) - mg)
         x1 = min(Wo, int(pts[:, 0].max()) + mg); y1 = min(Ho, int(pts[:, 1].max()) + mg)
         out = np.zeros((Ho, Wo, 4), np.uint8)
@@ -421,11 +422,15 @@ class Rig:
                 acc[cy0:cy1, cx0:cx1] = over(acc[cy0:cy1, cx0:cx1], so)
         out = cv2.resize(acc, (Wo, Ho), interpolation=cv2.INTER_AREA)
         # drop detached specks (stray texels from a part's margin): keep components >= 2% of the figure
+        # (a character module may set SPECK_MIN_PX: keep components of at least that many px instead,
+        # for figures painted with small separate pieces such as drops of water; default off)
         n, lab, st, _ = cv2.connectedComponentsWithStats((out[..., 3] > 20).astype(np.uint8))
         if n > 2:
             big = st[1:, cv2.CC_STAT_AREA].max()
+            min_px = getattr(self.specs, 'SPECK_MIN_PX', None)
+            lim = 0.02 * big if min_px is None else min_px
             for i in range(1, n):
-                if st[i, cv2.CC_STAT_AREA] < 0.02 * big:
+                if st[i, cv2.CC_STAT_AREA] < lim:
                     out[lab == i] = 0
         a = out[..., 3:]
         rgb = np.where(a > 0, out[..., :3] / np.maximum(a, 1e-3) * 255., 0)

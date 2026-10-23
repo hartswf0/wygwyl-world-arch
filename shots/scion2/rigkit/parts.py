@@ -67,15 +67,19 @@ def fill_holes(m):
     return (m | (1 - ff)) > 0
 
 
-def _save(char, pid, im, mask, seat_ok, meta, index):
-    """crop to mask, strip the painting's soft edge, write rgba + edge-class map"""
+def _save(char, pid, im, mask, seat_ok, meta, index, raw=None):
+    """crop to mask, strip the painting's soft edge, write rgba + edge-class map (raw: pixels kept with
+    their painted alpha, unstripped -- default none)"""
     ys, xs = np.nonzero(mask)
     if len(ys) < 30:
         return False
     x0, y0, x1, y1 = max(xs.min() - 3, 0), max(ys.min() - 3, 0), min(xs.max() + 4, im.shape[1]), min(ys.max() + 4, im.shape[0])
     fig = im[..., 3] > 127
     border = getattr(core.char_module(char), 'PART_BORDER', 3.0)   # the painting's own paper edge width, stripped
-    al = core.strip_edge(mask.astype(np.float32) * (im[..., 3] / 255.), fig, border)[y0:y1, x0:x1]
+    al = core.strip_edge(mask.astype(np.float32) * (im[..., 3] / 255.), fig, border)
+    if raw is not None:
+        al = np.where(raw & mask, im[..., 3] / 255., al)
+    al = al[y0:y1, x0:x1]
     crop = im[y0:y1, x0:x1].astype(np.float32).copy()
     crop[..., 3] = al * 255
     T = meta.get('torso', 100.0)
@@ -219,7 +223,13 @@ def cut_curated(char, pid, c, index, MK):
         meta.update(neck=list(c['neck']), axis=c.get('axis', -math.pi / 2))
     else:
         meta.update(anchor=list(c['anchor']), angle=c.get('angle', -math.pi / 2), bone=c.get('bone', 'chest'))
-    return _save(char, pid, im, mask, seat_ok, meta, index)
+    raw = None
+    if 'raw_fn' in c:
+        # pixels painted without a paper edge (drops of water): kept with their own alpha and given no
+        # paper edge (c['raw_fn'](rgba) -> mask; default off)
+        raw = c['raw_fn'](im) & mask
+        seat_ok = seat_ok & ~(cv2.dilate(raw.astype(np.uint8), np.ones((7, 7), np.uint8)) > 0)
+    return _save(char, pid, im, mask, seat_ok, meta, index, raw=raw)
 
 
 def build_parts(char, only=None):

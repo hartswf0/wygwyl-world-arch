@@ -74,9 +74,10 @@ def ik(hip, ank, L1, L2, sign):
 
 
 class Stage:
-    def __init__(self, char, size=(1600, 900), floor=0.955):
+    def __init__(self, char, size=(1600, 900), floor=0.955, torso_px=None, floor_px=None):
         self.char, self.W, self.H = char, size[0], size[1]
-        self.floor = floor * size[1]
+        self.floor = floor * size[1] if floor_px is None else float(floor_px)
+        self.torso_px = torso_px or world_T()      # on-screen torso length (scene.py sets it from px/cm)
 
     def key_pose(self, k, view=None, mirror=None):
         """solve key k (optionally forced into another rig) and place it on the stage"""
@@ -87,7 +88,7 @@ class Stage:
         R = posing.rig(self.char, pose['view'])
         Gk = np.array(pose['G'])
         T_rig = np.linalg.norm(np.array(R.J.get('mkneck', R.J['neck'])) - R.J['midhip'])
-        s = world_T() / T_rig
+        s = self.torso_px / T_rig
         rot = math.atan2(Gk[1, 0], Gk[0, 0])
         c, si = math.cos(rot), math.sin(rot)
         G = np.array([[s * c, -s * si, 0], [s * si, s * c, 0]])
@@ -108,9 +109,10 @@ class Stage:
         return img
 
 
-def plan(char, keys, duration, size=(1600, 900)):
-    """frame list: each frame = (rig key index, P, G, pose-with-opts) as plain data"""
-    st = Stage(char, size)
+def plan(char, keys, duration, size=(1600, 900), stage=None):
+    """frame list: each frame = (rig key index, P, G, pose-with-opts) as plain data.
+    stage: an optional Stage (scene.py passes one per character: its floor line and px/cm)"""
+    st = stage or Stage(char, size)
     n = int(round(duration * FPS))
     frames = [None] * n
     solved = [st.key_pose(k) for k in keys]
@@ -180,7 +182,7 @@ def plan(char, keys, duration, size=(1600, 900)):
                         a, b = win[S]; t = smooth((f - a) / max(1, b - a))
                         aw = ankA[S] * (1 - t) + ankB[S] * t
                         if a < f < b:
-                            aw = aw + np.array([0, -0.12 * world_T() * math.sin(math.pi * (f - a) / (b - a))])
+                            aw = aw + np.array([0, -0.12 * st.torso_px * math.sin(math.pi * (f - a) / (b - a))])
                     else:
                         aw = ankB[S] if f >= L else ankA[S] * (1 - uc) + ankB[S] * uc
                         aw = ankA[S] if f < L else ankB[S]
