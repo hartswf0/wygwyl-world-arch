@@ -337,7 +337,11 @@ class Rig:
         hard = (al > 0.5).astype(np.uint8)
         if not hard.any():
             return None
-        wb, wt = EDGE_W[0] * sc_o, EDGE_W[1] * sc_o
+        # a character module may set EDGE = (inner BGR, outer BGR, (inner w, outer w)) for cards whose
+        # paper edge is not the brown/tan one (the pale-blue soul); default: the module constants
+        eb, et, ew = getattr(self.specs, 'EDGE', (EDGE_BROWN, EDGE_TAN, EDGE_W))
+        eb, et = np.asarray(eb, np.float32), np.asarray(et, np.float32)
+        wb, wt = ew[0] * sc_o, ew[1] * sc_o
         d = cv2.distanceTransform(1 - hard, cv2.DIST_L2, 5)
         r = int(math.ceil(wb + wt)) + 1
         k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
@@ -346,7 +350,7 @@ class Rig:
         Eo = np.clip(e1 + e2 * (1 - bg_a), 0, 1)
         a_out = np.clip(wb + wt - d + 0.5, 0, 1) * (d > 0) * Eo
         tmix = np.clip(d - wb + 0.5, 0, 1)[..., None]
-        col = EDGE_BROWN * (1 - tmix) + EDGE_TAN * tmix
+        col = eb * (1 - tmix) + et * tmix
         ring = np.dstack([col * a_out[..., None], a_out * 255])
         return ring.astype(np.float32)
 

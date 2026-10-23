@@ -74,7 +74,8 @@ def _save(char, pid, im, mask, seat_ok, meta, index):
         return False
     x0, y0, x1, y1 = max(xs.min() - 3, 0), max(ys.min() - 3, 0), min(xs.max() + 4, im.shape[1]), min(ys.max() + 4, im.shape[0])
     fig = im[..., 3] > 127
-    al = core.strip_edge(mask.astype(np.float32) * (im[..., 3] / 255.), fig, 3.0)[y0:y1, x0:x1]
+    border = getattr(core.char_module(char), 'PART_BORDER', 3.0)   # the painting's own paper edge width, stripped
+    al = core.strip_edge(mask.astype(np.float32) * (im[..., 3] / 255.), fig, border)[y0:y1, x0:x1]
     crop = im[y0:y1, x0:x1].astype(np.float32).copy()
     crop[..., 3] = al * 255
     T = meta.get('torso', 100.0)

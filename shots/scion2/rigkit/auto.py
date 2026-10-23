@@ -66,7 +66,8 @@ def find_brads(rgb, fig, T):
     return out
 
 
-def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True, tip_len=0.22, open_torso=0.0, hand_skin=False, split_legs=False):
+def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True, tip_len=0.22, open_torso=0.0, hand_skin=False, split_legs=False,
+               erase_emblem=True):
     """plain_fn(rgb, fig) -> mask of plain cloth to fill hidden areas from (default: the poet's black fabric);
     tip_len: hand length beyond the wrist, in torso lengths (bare, long-fingered hands need more);
     open_torso: if > 0, the torso mask is opened with a disc of that many torso lengths and keeps
@@ -75,7 +76,9 @@ def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True, t
     wider than an arm's width);
     split_legs: the near leg (his right when he faces screen right) is its own layer in front of the
     far leg and the seat, its top fading into the seat, so a stride that differs from the master's
-    does not smear the cloth between the thighs"""
+    does not smear the cloth between the thighs;
+    erase_emblem: erase a saturated-blue disc (the poet.04 chest emblem) from the master; off for a
+    character painted blue all over (the soul)"""
     H, W = a.shape
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     fig = a > 0.5
@@ -85,7 +88,7 @@ def build_auto(rgb, a, markers, cls=None, plain_fn=None, torso_over_legs=True, t
     # a costume emblem painted on the master (the poet.04 chest disc) is erased: it is a part
     b_, g_, r_ = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     blue = (b_ > 140) & (b_ > r_ + 60) & fig
-    if blue.sum() > 20:
+    if erase_emblem and blue.sum() > 20:
         ys, xs = np.nonzero(blue)
         cx, cy = xs.mean(), ys.mean()
         rr = 1.9 * math.sqrt(blue.sum() / math.pi) + 3
