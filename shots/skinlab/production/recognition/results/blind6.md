@@ -16,7 +16,7 @@
 - This is the first break of the plateau. The fair 20 rose from 11 to 14 after three flat tests, and no previously recognised pose was lost: the gate held.
 - New: left-then-right-1, rise-flex-reflect (regained), walk-to-the-gate-2, and gentle-slow-bent-knee-dance (regained).
 - **Caveat:** 4 of the 19 were picked at low confidence: walk-to-the-gate-2, left-then-right-1, cafe-sit and the slow dance. Some low-confidence right picks are lucky guesses, so treat the gain as about +2 to +4, not +4 for sure.
-- Of the 30 poses, 22 have now been recognised at least once.
+- Of the 30 poses, 20 have been recognised at least once in tests 3–6 (21 counting falter-at-shoulder-contact from an earlier test). An earlier count of 22 was my error.
 
 **What changed in round 10:**
 - The knee disc and built hip piece were removed.
