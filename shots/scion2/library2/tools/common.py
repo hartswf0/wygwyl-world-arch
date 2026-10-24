@@ -20,7 +20,7 @@ CANON_PPC = 10.0          # canonical pixels per centimetre, every character, ev
 GRID = {
     'head':      {'canvas': (512, 512), 'pivot': (256, 448), 'axis': (0, -1), 'pivot_name': 'neck',     'tip_name': 'crown'},
     'hand':      {'canvas': (384, 384), 'pivot': (192, 72),  'axis': (0, 1),  'pivot_name': 'wrist',    'tip_name': 'knuckles'},
-    'foot':      {'canvas': (512, 384), 'pivot': (256, 96),  'axis': None,    'pivot_name': 'ankle',    'tip_name': 'toe'},
+    'foot':      {'canvas': (768, 448), 'pivot': (384, 112),  'axis': None,    'pivot_name': 'ankle',    'tip_name': 'toe'},
     'upper_arm': {'canvas': (256, 512), 'pivot': (128, 64),  'axis': (0, 1),  'pivot_name': 'shoulder', 'tip_name': 'elbow'},
     'forearm':   {'canvas': (256, 512), 'pivot': (128, 64),  'axis': (0, 1),  'pivot_name': 'elbow',    'tip_name': 'wrist'},
     'thigh':     {'canvas': (320, 640), 'pivot': (160, 80),  'axis': (0, 1),  'pivot_name': 'hip',      'tip_name': 'knee'},
@@ -268,31 +268,40 @@ def sheet(tiles, out, cols=6, title=None):
     return paths
 
 
-def cut_bottom_caption(rgba, below_y, max_frac=0.14):
-    """Printed captions ('HEAD') fused to the bottom edge of a card: from the bottom up, rows whose opaque pixels are
-    mostly dark ink are caption rows. Only rows below below_y are considered. Returns (rgba, removed or None)."""
+def cut_bottom_caption(rgba, below_y, max_frac=0.14, narrow_rule=False):
+    """Printed captions ('HEAD', 'TORSO') fused to the bottom edge of a card. From the bottom up, a band of rows that
+    are (a) mostly dark ink and narrower than 60 % of the part, or (b) with narrow_rule, a label block narrower than
+    30 % of the part that ends in an abrupt step to >50 % width (not a rounded corner). Only rows below below_y.
+    Returns (rgba, removed or None)."""
     a = rgba[..., 3] > 128
     V = cv2.cvtColor(rgba[..., :3], cv2.COLOR_RGB2HSV)[..., 2]
     ys = np.where(a.any(1))[0]
     if not len(ys):
         return rgba, None
+    span = np.where(a.any(0))[0]
+    full = max(1, span[-1] - span[0])
     y = int(ys[-1])
-    top_cap = None
-    gap = 0
+    top_cap, nrows, stop_w, bw = None, 0, 0, []
     while y > below_y:
         row = a[y]
-        n = row.sum()
-        if n == 0:
-            gap += 1
-        else:
+        if row.sum():
+            xs = np.where(row)[0]
+            w = xs[-1] - xs[0]
             dark = (V[y][row] < 95).mean()
-            if dark > 0.3:
+            gappy = row[xs[0]:xs[-1] + 1].mean() < 0.75
+            if (dark > 0.3 and w < 0.6 * full and (gappy or not narrow_rule)) or (narrow_rule and w < 0.3 * full):
                 top_cap = y
-                gap = 0
+                nrows += 1
+                bw.append(w)
             else:
+                stop_w = w
                 break
         y -= 1
-    if top_cap is None:
+    if top_cap is None or nrows < 4:
+        return rgba, None
+    if narrow_rule and nrows < 10 and not (V[top_cap:ys[-1] + 1][a[top_cap:ys[-1] + 1]] < 95).mean() > 0.3:
+        return rgba, None
+    if narrow_rule and np.percentile(bw, 90) > 1.6 * max(1, np.percentile(bw, 10)) and stop_w < 0.5 * full:
         return rgba, None
     if (ys[-1] - top_cap) > max_frac * (ys[-1] - ys[0]):
         return rgba, None

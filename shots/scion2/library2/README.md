@@ -28,7 +28,7 @@ Status: poet heads are done. Hands, feet, limbs/torso/pelvis, the head builder a
 |---|---|---|---|
 | head | 512×512 | neck (256,448) | neck→crown points **up** |
 | hand | 384×384 | wrist (192,72) | wrist→knuckles points **down** |
-| foot | 512×384 | ankle (256,96) | sole horizontal, sole down; toe direction = facing |
+| foot | 768×448 | ankle (384,112) | sole horizontal, sole down; toe direction = facing |
 | upper_arm / forearm | 256×512 | shoulder / elbow (128,64) | points down |
 | thigh / shin | 320×640 | hip / knee (160,80) | points down |
 | torso | 768×768 | waist (384,640) | waist→neck points up |

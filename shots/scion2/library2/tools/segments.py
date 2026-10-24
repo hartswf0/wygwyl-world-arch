@@ -15,6 +15,8 @@ import index as IX
 VIEWMAP = {'threequarter': 'three-quarter', 'profile': 'side', 'threequarter_back': 'three-quarter-back'}
 BONES = {
     'torso': [('pivot', 'neck'), ('shoulder_l', 'shoulder_r'), ('neck', 'shoulder_l'), ('neck', 'shoulder_r')],
+    'upper_arm': [('pivot', 'elbow')], 'forearm': [('pivot', 'wrist')], 'thigh': [('pivot', 'knee')], 'shin': [('pivot', 'ankle')],
+    'pelvis': [('pivot', 'hip_mid')],
 }
 
 
@@ -163,13 +165,74 @@ def classify_torso(c, rgba, m, kp):
     return out, zo
 
 
+def limb_points(c, rgba, m, fx, part):
+    """proximal pivot and distal tip: the brass brads nearest the card's A (proximal) and B (distal) points"""
+    tipk = C.GRID[part]['tip_name']
+    bl = brass_blobs(rgba)
+    src = {}
+    A, B = np.array(c['A'], float), np.array(c['B'], float)
+    L = float(np.linalg.norm(B - A)) or 1.0
+    kp = {}
+    for k, ref in (('pivot', A), (tipk, B)):
+        near = [b for b in bl if np.linalg.norm(np.array(b['c']) - ref) < 0.3 * L]
+        if k in fx:
+            kp[k], src[k] = list(map(float, fx[k])), 'fixes.json'
+        elif near:
+            b = min(near, key=lambda b: np.linalg.norm(np.array(b['c']) - ref))
+            kp[k], src[k] = b['c'], 'brass brad nearest the library %s point' % ('A' if k == 'pivot' else 'B')
+        else:
+            kp[k], src[k] = list(map(float, ref)), 'library %s point' % ('A' if k == 'pivot' else 'B')
+    if 'pivot' in fx and tipk in fx:
+        pass
+    return kp, src, bl
+
+
+def classify_limb(c, rgba, m, kp, part):
+    import re
+    lab = C.labels().get(c['id'], {})
+    nm = c['id'].split('/')[-1].lower()
+    out = {}
+    libv = VIEWMAP.get(c.get('view'), c.get('view'))
+    if libv:
+        out['view'] = (libv, 0.75, 'library.view (sheet caption)')
+    elif lab.get('view'):
+        out['view'] = (lab['view'], 0.75, 'labels.json (agent-vision)')
+    else:
+        out['view'] = ('unknown', 0.2, 'limbs: not determined from pixels')
+    if 'left' in lab:
+        out['facing'] = ('screen-left' if lab['left'] else 'screen-right', 0.8, 'labels.json (agent-vision)')
+    else:
+        out['facing'] = ('unknown', 0.2, 'not determined')
+    if re.search(r'(^|[-_ .])(l|left)($|[-_ .])|-l-|left', nm):
+        out['side'] = ('left', 0.75, 'card name')
+    elif re.search(r'(^|[-_ .])(r|right)($|[-_ .])|-r-|right', nm):
+        out['side'] = ('right', 0.75, 'card name')
+    else:
+        out['side'] = ('unknown', 0.2, 'not in the name')
+    hsv = cv2.cvtColor(rgba[..., :3], cv2.COLOR_RGB2HSV)
+    V, S = hsv[..., 2], hsv[..., 1]
+    dark = float(((V < 60) & m).sum() / max(1, m.sum()))
+    white = float(((S < 40) & (V > 170) & m).sum() / max(1, m.sum()))
+    st = 'empty_sleeve' if 'empty' in nm else 'wrist_socket' if 'socket' in nm else 'sleeved' if dark > 0.35 else 'white_sleeve' if white > 0.35 else 'bare_skin'
+    out['state'] = (st, 0.7, 'card name / pixel: %.0f%% dark cloth, %.0f%% white cloth' % (100 * dark, 100 * white))
+    return out, None
+
+
 def process(c, part, fx):
     rgba, removed = C.keep_main(C.load_rgba(c))
     m = C.mask_of(rgba)
     flags = ['cleaned'] if removed else []
-    kp, src, bl = torso_points(c, rgba, m, fx)
-    cls, zo = classify_torso(c, rgba, m, kp)
-    for k in ('view', 'facing', 'state'):
+    tipk = TIPK(part)
+    if part == 'torso':
+        kp, src, bl = torso_points(c, rgba, m, fx)
+        rgba, cap = C.cut_bottom_caption(rgba, max(kp['pivot'][1], kp['neck'][1]) + 0.01 * m.shape[0], narrow_rule=True)
+        if cap:
+            removed.append(cap); flags += ['cleaned', 'caption_removed']; m = C.mask_of(rgba)
+        cls, zo = classify_torso(c, rgba, m, kp)
+    else:
+        kp, src, bl = limb_points(c, rgba, m, fx, part)
+        cls, zo = classify_limb(c, rgba, m, kp, part)
+    for k in ('view', 'facing', 'state', 'side'):
         if k in fx:
             cls[k] = (fx[k], 0.95, 'fixes.json (agent-vision, card looked at)')
     if 'state' not in cls:
@@ -177,13 +240,13 @@ def process(c, part, fx):
         holes = 'hollow' in c['id']
         cls['state'] = ('hollow_chest' if holes else 'jacket' if c.get('costume') == 'red_black_sunglasses' else 'tshirt', 0.6, 'costume / card name')
     g = C.GRID[part]
-    axis = np.array(kp['neck']) - np.array(kp['pivot'])
+    axis = np.array(kp[tipk]) - np.array(kp['pivot'])
     rot = float(fx.get('rot', C.rot_to(axis, g['axis'])))
-    D = math.dist(kp['pivot'], kp['neck'])
+    D = math.dist(kp['pivot'], kp[tipk])
     Lcm = KIT_LEN.get((c['character'], part))
     if Lcm:
         s = Lcm * C.CANON_PPC / max(5.0, D)
-        ssrc = 'waist->neck pivot = %.1f cm (median kit length for %s %s)' % (Lcm, c['character'], part)
+        ssrc = 'pivot->%s = %.1f cm (median kit length for %s %s)' % (tipk, Lcm, c['character'], part)
     else:
         ppc = c.get('px_per_cm') or 10.0
         s, ssrc = C.CANON_PPC / ppc, 'library sheet px_per_cm %.3f' % ppc
@@ -192,15 +255,23 @@ def process(c, part, fx):
     M = C.similarity(kp['pivot'], g['pivot'], rot, s)
     can = C.warp(rgba, M, g['canvas'])
     kc = {k: C.apply(M, v) for k, v in kp.items()}
-    wd = widths_along(m, kp['pivot'], kp['neck'], (0.02, 0.5, 0.97))
-    widths = {'waist': round(wd[0] * s, 1), 'mid': round(wd[1] * s, 1), 'neck': round(wd[2] * s, 1)}
+    wd = widths_along(m, kp['pivot'], kp[tipk], (0.02, 0.5, 0.97))
+    widths = {G_NAMES(part)[0]: round(wd[0] * s, 1), 'mid': round(wd[1] * s, 1), G_NAMES(part)[1]: round(wd[2] * s, 1)}
     if 'shoulder_l' in kp and 'shoulder_r' in kp:
         widths['shoulder_span'] = round(math.dist(kp['shoulder_l'], kp['shoulder_r']) * s, 1)
     flags += fx.get('flags', [])
     if max(m.shape) < 180:
         flags.append('low_res')
-    if 'brass' not in src.get('neck', ''):
+    if part == 'torso' and 'brass' not in src.get('neck', ''):
         flags.append('neck_pivot_estimated')
+    if part != 'torso':
+        for k in ('pivot', tipk):
+            if 'brass' not in src.get(k, ''):
+                flags.append('%s_pivot_estimated' % ('proximal' if k == 'pivot' else 'distal'))
+        # contamination hint: more brass brads along the bone than its two ends (two segments on one card)
+        mids = [b for b in bl if min(math.dist(b['c'], kp['pivot']), math.dist(b['c'], kp[tipk])) > 0.2 * D and b['r'] > 0.5 * max(x['r'] for x in bl)]
+        if mids:
+            flags.append('extra_brads_mid_segment')
     return dict(rgba=can, M=M, kp=kp, kc=kc, cls=cls, px={'zip_offset': None if zo is None else round(zo, 3), 'brads_found': len(bl)},
                 flags=sorted(set(flags)), removed=removed, scale=s, rot=rot, psrc='; '.join('%s: %s' % kv for kv in src.items()),
                 ssrc=ssrc, widths=widths)
@@ -219,6 +290,8 @@ def candidates(ch, part):
 
 
 KIT_LEN = {}
+TIPK = lambda part: 'neck' if part == 'torso' else C.GRID[part]['tip_name']
+G_NAMES = lambda part: ('waist', 'neck') if part == 'torso' else (C.GRID[part]['pivot_name'], C.GRID[part]['tip_name'])
 
 
 def kit_length(ch, part):
@@ -231,9 +304,13 @@ def kit_length(ch, part):
         if fx.get('reject') or not c.get('px_per_cm'):
             continue
         rgba, _ = C.keep_main(C.load_rgba(c))
-        kp, src, _ = torso_points(c, rgba, C.mask_of(rgba), fx)
-        if 'brass' in src.get('pivot', '') and 'brass' in src.get('neck', ''):
-            L.append(math.dist(kp['pivot'], kp['neck']) / c['px_per_cm'])
+        tipk = TIPK(part)
+        if part == 'torso':
+            kp, src, _ = torso_points(c, rgba, C.mask_of(rgba), fx)
+        else:
+            kp, src, _ = limb_points(c, rgba, C.mask_of(rgba), fx, part)
+        if 'brass' in src.get('pivot', '') and 'brass' in src.get(tipk, ''):
+            L.append(math.dist(kp['pivot'], kp[tipk]) / c['px_per_cm'])
     return float(np.median(L)) if len(L) >= 3 else None
 
 
@@ -245,8 +322,11 @@ def run(ch, part):
     for c in candidates(ch, part):
         fx = fxs.get(c['id'], {})
         lab = C.labels().get(c['id'], {})
-        if fx.get('reject') or lab.get('bad'):
-            why = fx.get('reject') or lab.get('note', 'bad')
+        nbr = len(brass_blobs(C.load_rgba(c))) if part != 'torso' else 0
+        if fx.get('part') == part and c['slot'] != part:
+            fx = {k: v for k, v in fx.items() if k != 'reject'}      # re-filed INTO this part type: the reject was for its old slot
+        if fx.get('reject') or lab.get('bad') or nbr >= 5:
+            why = fx.get('reject') or (lab.get('note', 'bad') if lab.get('bad') else 'whole figure or multi-part card (%d brads), not one %s' % (nbr, part))
             recs.append(IX.reject_record(c, part, why, fx.get('refile')))
             bad.append(IX.reject_tile(C.load_rgba(c), c, why))
             continue
@@ -260,8 +340,8 @@ def run(ch, part):
         cl = rec['classes']
         lines = [c['id'].split('/')[-1][:40] + '  ' + c['id'].split('.')[1],
                  '%s  %s  (%.2f/%.2f)' % (cl['view']['value'], cl['facing']['value'], cl['view']['conf'], cl['facing']['conf']),
-                 '%s  rot %+.0f  x%.2f' % (cl['state']['value'], r['rot'], r['scale']),
-                 'neck w %.0f  waist w %.0f px' % (r['widths']['neck'], r['widths']['waist']),
+                 '%s %s rot %+.0f x%.2f' % (cl['state']['value'], cl.get('side', {}).get('value', ''), r['rot'], r['scale']),
+                 '%s' % '  '.join('%s %.0f' % kv for kv in r['widths'].items() if kv[0] != 'shoulder_span'),
                  ','.join(rec['flags'])[:44]]
         tiles.append((cl['view']['value'], IX.tile(r['rgba'], part, rec['keypoints']['canonical'], BONES.get(part, []), lines)))
     order = {'front': 0, 'three-quarter': 1, 'side': 2, 'three-quarter-back': 3, 'back': 4}
