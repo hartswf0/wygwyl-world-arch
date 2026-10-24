@@ -51,7 +51,8 @@ def run(r, parent, child, joint, genes):
     s = seam.score(rgba, r['pm'], r['cm'], r['pivot'], -r['axis_p'], r['axis_c'], over='A' if genes.get('on_top') == 'parent' else 'B',
                    featuresA=None, featuresB=feats,
                    facingA=(parent.get('view'), parent.get('facing')) if parent.get('view') else None,   # unknown view: not tested
-                   facingB=(child.get('view'), child.get('facing')) if child.get('view') else None, joint=jn)
+                   facingB=(child.get('view'), child.get('facing')) if child.get('view') else None, joint=jn,
+                   tol={'exp_warn': .03, 'exp_fail': .08})        # round 02: visible tabs / tongues are defects (critic)
     verdict, why0 = s['verdict'], list(s.get('why') or [])
     # lab-side test (seam.py has no such term yet): a trim leaves a straight scissor cut that shows -- the child's
     # pixels along the removed region, outside the parent (+2 px), longer than 1 cm
@@ -63,6 +64,25 @@ def run(r, parent, child, joint, genes):
         if vis > 1.0 * CN.RS * 2:
             why0 = ['trim_cut'] + why0
             verdict = 'MUTILATED'
+    # round 02 (critic, joint round 01): pivot registration -- the child's brad ON the parent's grommet (< 0.3 cm),
+    # and no half-grommet peeking out from under the child
+    if r.get('grommet') is not None:
+        g = r['grommet']
+        if r.get('child_brad') is not None:
+            dreg = float(np.linalg.norm(r['child_brad'] - g)) / CN.RS
+            s['register_cm'] = round(dreg, 2)
+            if dreg > .3:
+                why0 = ['register'] + why0
+                verdict = 'MUTILATED'
+        if genes.get('seam') != 'brad':
+            H, W = r['cm'].shape
+            yy, xx = np.mgrid[0:H, 0:W]
+            disc = (xx - g[0]) ** 2 + (yy - g[1]) ** 2 <= (1.0 * CN.RS) ** 2
+            cov = float((disc & r['cm']).sum() / max(disc.sum(), 1)) if genes.get('on_top') != 'parent' else 0.
+            s['grommet_covered'] = round(cov, 2)
+            if .15 < cov < .85:
+                why0 = ['half_grommet'] + why0
+                verdict = 'MUTILATED'
     s['verdict'], s['why'] = verdict, why0
     grade = {'CLEAN': 'green', 'WARN': 'amber', 'MUTILATED': 'red'}[s['verdict']]
     tests = {k: (round(float(v), 3) if isinstance(v, (int, float, np.floating)) else v) for k, v in s.items() if k in

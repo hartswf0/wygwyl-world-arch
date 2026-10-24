@@ -20,6 +20,27 @@ sys.path.insert(0, os.path.abspath(os.path.join(HERE, '..', '..')))
 from evolve.joints import parts as PT, connect as CN, qa as QA  # noqa: E402
 
 ANGLES = [-60, -30, 0, 30, 60, 90]
+# round 02: sweep only inside each joint's anatomical range (outside it is not applicable, not a failure)
+ROM = {'neck': [-35, -17, 0, 17, 35], 'wrist': [-70, -35, 0, 35, 70], 'ankle': [-30, -15, 0, 20, 45],
+       'elbow': [0, 40, 80, 120, 150], 'knee': [0, 40, 80, 120, 150], 'shoulder': [-60, -30, 0, 30, 60, 90], 'hip': [-30, 0, 30, 60, 90]}
+import re
+MISFILE = {'torso': r'pelvis|hip|connect|seat|thigh|leg', 'forearm': r'hand|palm|fist|grip', 'shin': r'thigh',
+           'upper_arm': r'hand|palm|fist', 'thigh': r'shin|foot|boot'}
+FACE_OK = {'painted_face'}
+
+
+def usable(p, joint):
+    """round 02 gates (critic): misfiled parts out (a hand filed as a forearm, a pelvis connector as a torso), front-ish
+    heads must carry a painted face, back heads must be backs of heads"""
+    nm = p['src_card'].split('/')[-1].lower()
+    if p['part'] in MISFILE and re.search(MISFILE[p['part']], nm) and not re.search(p['part'].replace('_', '.?'), nm):
+        return False
+    if p['part'] == 'head':
+        st = p.get('state')
+        if p.get('view') in ('back',):
+            return st == 'back_of_head'
+        return st in FACE_OK
+    return True
 PAIRS = 36
 JOINTS = ['neck', 'shoulder', 'elbow', 'wrist', 'hip', 'knee', 'ankle']
 CHAR, COSTUME = 'poet', 'red_black_sunglasses'
@@ -31,6 +52,9 @@ METHODS0 = {
     # library2 QA's first finding: the parent's tab (the torso's neck tab and eyelet) over the child
     'tab_trim_under': {'pivot': 'kp', 'overlap': 1.5, 'on_top': 'child', 'trim': 'none', 'width': 'none', 'seam': 'brad', 'facing': True,
                        'parent_tab': .5},
+    'register': {'pivot': 'register', 'overlap': 0., 'on_top': 'child', 'trim': 'none', 'width': 'uniform', 'seam': 'brad', 'facing': True,
+                 'parent_tab': .5, 'tab_shape': 'round'},
+    'register_under': {'pivot': 'register', 'overlap': 0., 'on_top': 'parent', 'trim': 'none', 'width': 'uniform', 'seam': 'brad', 'facing': True},
     'tab_trim_over': {'pivot': 'kp', 'overlap': 1.0, 'on_top': 'parent', 'trim': 'contour', 'width': 'none', 'seam': 'none', 'facing': True,
                       'parent_tab': 0.},
 }
@@ -50,8 +74,8 @@ def view_ok(a, b):
 
 def pairs(joint, seed=0):
     pp, cp = CN.J[joint][0], CN.J[joint][1]
-    P = [p for p in PT.parts(CHAR, None) if p['part'] == pp and (p['costume'] == COSTUME or p['part'] == 'head')]
-    C = [p for p in PT.parts(CHAR, None) if p['part'] == cp and (p['costume'] == COSTUME or p['part'] == 'head')]
+    P = [p for p in PT.parts(CHAR, None) if p['part'] == pp and (p['costume'] == COSTUME or p['part'] == 'head') and usable(p, joint)]
+    C = [p for p in PT.parts(CHAR, None) if p['part'] == cp and (p['costume'] == COSTUME or p['part'] == 'head') and usable(p, joint)]
     out = []
     for a in P:
         for b in C:
@@ -83,7 +107,7 @@ def evaluate(joint, rnd):
     PR = pairs(joint)
     res = {m: [] for m in M}
     for a, b, sp in PR:
-        for ang in ANGLES:
+        for ang in ROM.get(joint, ANGLES):
             for m, g in M.items():
                 try:
                     r = CN.connect(a, b, joint, ang, g)
@@ -147,7 +171,8 @@ def cell(a, b, joint, ang, g, size=150):
 
 def sheet(joint, mname, g, PR, od, rnd, sm, rows=10):
     cs = 158
-    W = 260 + len(ANGLES) * cs
+    AN = ROM.get(joint, ANGLES)
+    W = 260 + len(AN) * cs
     out = Image.new('RGB', (W, 70 + rows * (cs + 22)), (255, 255, 255))
     d = ImageDraw.Draw(out)
     d.text((10, 8), 'JOINT %s  ·  method "%s"  ·  round %02d' % (joint.upper(), mname, rnd), fill=(28, 32, 38), font=FB)
@@ -158,7 +183,7 @@ def sheet(joint, mname, g, PR, od, rnd, sm, rows=10):
     for a, b, sp in PR[:rows]:
         d.text((6, y + 30), '%s\n+ %s\n(%s, %s / %s)' % (a['src_card'].split('/')[-1][:30], b['src_card'].split('/')[-1][:30], sp,
                                                          a['view'] or '?', b['view'] or '?'), fill=(60, 60, 60), font=FS)
-        for i, ang in enumerate(ANGLES):
+        for i, ang in enumerate(AN):
             c, q = cell(a, b, joint, ang, g)
             if c:
                 out.paste(c, (250 + i * cs, y))
@@ -197,7 +222,7 @@ def critic_pack(rnd, results, seed=0):
         best = results[j][0]
         PR = pairs(j)
         a, b, sp = rng.choice(PR)
-        picks.append((j, best, a, b, rng.choice(ANGLES)))
+        picks.append((j, best, a, b, rng.choice(ROM.get(j, ANGLES))))
     rng.shuffle(picks)
     for i, (j, best, a, b, ang) in enumerate(picks, 1):
         g = load_methods(j)[best]

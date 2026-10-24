@@ -13,6 +13,7 @@ pose; the child is turned by `angle` degrees about the joint (its rest direction
 
 Genes (a method is a dict of them):
   pivot      'kp' (the part's canonical pivot) | 'brad' (the child's brad nearest its pivot, if within 3 cm) |
+             'register' (the child's brad placed exactly on the parent's grommet at the joint, when both exist) |
              'midline' (the pivot moved onto the alpha's centre line, across the axis)
   overlap    cm the child's pivot is pushed back past the joint into the parent (0 = pivot on the joint point)
   on_top     'child' | 'parent'
@@ -145,6 +146,19 @@ def connect(parent, child, joint, angle, genes, side=None):
     P = cv2.warpAffine(pimg, Mp, (Wc, Hc), flags=cv2.INTER_AREA, borderValue=0)
     J_r = pa * k + off
     target = J_r - genes.get('overlap', 0.) * RS * cdir      # pushed back into the parent along the child's direction
+    # the parent's grommet at this joint (its brad nearest the joint, within 3 cm), in render px
+    grom = None
+    if len(parent['brads']):
+        d = np.linalg.norm(parent['brads'] - pa, axis=1)
+        if d.min() < 30:
+            grom = parent['brads'][int(np.argmin(d))] * k + off
+    cbrad = None
+    if len(child['brads']):
+        d = np.linalg.norm(child['brads'] - child['pivot'], axis=1)
+        if d.min() < 30:
+            cbrad = child['brads'][int(np.argmin(d))]
+    if genes.get('pivot') == 'register' and grom is not None and cbrad is not None:
+        piv_c, target = cbrad, grom              # the child's brad goes exactly onto the parent's grommet
     c, s_ = math.cos(rot), math.sin(rot)
     R = np.array([[c, -s_], [s_, c]]) * k * sc
     if mir:
@@ -155,6 +169,9 @@ def connect(parent, child, joint, angle, genes, side=None):
         # the parent's tab / collar beyond the joint (towards the child) is cut tab cm past the joint line
         yy, xx = np.mgrid[0:Hc, 0:Wc]
         beyond = ((xx - J_r[0]) * cdir[0] + (yy - J_r[1]) * cdir[1]) > genes['parent_tab'] * RS
+        # never beyond the joint region (round 01 critic: a diagonal cut took the torso's shoulder off)
+        wcn = width_across(child['img'][..., 3], piv_c, np.array(caxis, float)) * k * sc
+        beyond &= (xx - J_r[0]) ** 2 + (yy - J_r[1]) ** 2 <= (max(wcn, 3 * RS) * 1.0) ** 2
         if genes.get('tab_shape') == 'round':
             # a rounded collar lip instead of a straight cut: keep the parent's tab inside a half-disc as wide as the
             # child's neck at the pivot
@@ -167,6 +184,7 @@ def connect(parent, child, joint, angle, genes, side=None):
     if genes.get('trim') == 'contour':
         yy, xx = np.mgrid[0:Hc, 0:Wc]
         behind = ((xx - J_r[0]) * cdir[0] + (yy - J_r[1]) * cdir[1]) < 0
+        behind &= (xx - J_r[0]) ** 2 + (yy - J_r[1]) ** 2 <= (8 * RS) ** 2     # the child's own joint end only
         pd = cv2.dilate(pm.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(RS) | 1, int(RS) | 1))) > 0
         cut = behind & ~pd & (C[..., 3] > 128)
         C[..., 3][cut] = 0
@@ -186,4 +204,5 @@ def connect(parent, child, joint, angle, genes, side=None):
         if 0 <= x0 and 0 <= y0 and x0 + d <= Wc and y0 + d <= Hc:
             img[y0:y0 + d, x0:x0 + d] = over(img[y0:y0 + d, x0:x0 + d], spr)
     return {'img': img, 'pm': pm, 'cm': cm, 'pivot': J_r, 'axis_c': cdir, 'axis_p': np.array(pax, float),
-            'Mc': Mc, 'Mp': Mp, 'scale': sc, 'mirror': mir, 'trim_cut': trim_cut}
+            'Mc': Mc, 'Mp': Mp, 'scale': sc, 'mirror': mir, 'trim_cut': trim_cut, 'grommet': grom,
+            'child_brad': (Mc[:, :2] @ cbrad + Mc[:, 2]) if cbrad is not None else None}

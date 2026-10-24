@@ -34,6 +34,11 @@ JOINTS = {
     'head': dict(joint='neck', parent='torso', parent_kp='neck', over='parent', match='view'),
     'hand': dict(joint='wrist', parent='forearm', parent_kp='tip', over='child', match='side'),
     'foot': dict(joint='ankle', parent='shin', parent_kp='tip', over='parent', match='side'),
+    'forearm': dict(joint='elbow', parent='upper_arm', parent_kp='tip', over='child', match='side'),
+    'shin': dict(joint='knee', parent='thigh', parent_kp='tip', over='child', match='side'),
+    'upper_arm': dict(joint='shoulder', parent='torso', parent_kp='side_shoulder', over='child', match='view'),
+    'thigh': dict(joint='hip', parent='pelvis', parent_kp='side_hip', over='parent', match='side'),
+    'pelvis': dict(joint='waist', parent='torso', parent_kp='pivot', over='parent', match='view'),
 }
 FAM = {'front': 'F', 'three-quarter': 'Q', 'side': 'S', 'three-quarter-back': 'QB', 'back': 'B', 'top': 'T'}
 OUT = os.path.join(HERE, 'results')
@@ -86,6 +91,25 @@ def neighbours(child, parents, k=3, match='view'):
 _BR = {}
 
 
+def resolve_kp(name, child, parent):
+    """side_shoulder / side_hip: the parent's screen-left/right socket that his left/right limb attaches to
+    (front view: his left = screen-right; back view: his left = screen-left; side views: the single near socket)"""
+    if name not in ('side_shoulder', 'side_hip'):
+        return name
+    base = 'shoulder' if name == 'side_shoulder' else 'hip'
+    kp = parent['keypoints']['canonical']
+    sd = (child['classes'].get('side') or {}).get('value')
+    v = parent['classes']['view']['value']
+    if base == 'shoulder' and 'shoulder' in kp and not ('shoulder_l' in kp and 'shoulder_r' in kp):
+        return 'shoulder'
+    flip = v in ('back', 'three-quarter-back')
+    if sd == 'left':
+        return base + ('_l' if flip else '_r')
+    if sd == 'right':
+        return base + ('_r' if flip else '_l')
+    return base + '_r'
+
+
 def joint_brad(rec, pt, r_cm=1.5, kp_name=None):
     """the brad/grommet the part brings to this joint: the keypoint itself when it was placed on a detected brad,
     else the centre of the brass blob nearest pt on the canonical image (within r_cm), else None"""
@@ -110,7 +134,9 @@ def compose(parent, child, theta, jcfg):
     pad = 320
     Hh, Ww = P.shape[0] + 2 * pad, P.shape[1] + 2 * pad
     kp = parent['keypoints']['canonical']
-    jk = jcfg['parent_kp']
+    jk = resolve_kp(jcfg['parent_kp'], child, parent)
+    if jk not in kp:
+        return None
     J = np.array(kp[jk], float) + pad
     Mp = np.array([[1, 0, pad], [0, 1, pad]], float)
     Pw = cv2.warpAffine(P, Mp, (Ww, Hh), flags=cv2.INTER_NEAREST)
@@ -173,7 +199,10 @@ def run_pair(child, parent, jcfg):
 def _sweep(child, parent, jcfg, angles):
     res = {}
     for th in angles:
-        comp, mC, mP, J, axc, axp, feats, over_child, Cw, Pw, bradC, bradP = compose(parent, child, th, jcfg)
+        got = compose(parent, child, th, jcfg)
+        if got is None:
+            continue
+        comp, mC, mP, J, axc, axp, feats, over_child, Cw, Pw, bradC, bradP = got
         # score inside a window around the joint (faster; the seam is local)
         x0, y0 = max(0, int(J[0]) - 360), max(0, int(J[1]) - 400)
         sl = (slice(y0, y0 + 760), slice(x0, x0 + 720))
