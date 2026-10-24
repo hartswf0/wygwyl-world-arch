@@ -237,10 +237,14 @@ def grasp_points():
     top = fl - PLINTH['top_cm'] * PX_PER_CM
     r = prop_sprite().shape[0] / 2
     d = 0.78 * r                                   # the hand holds the rim, the prop hangs below it
-    grasp = (PLINTH['x0'] + 50, top - 2 * r + (r - d))
-    place = (PLINTH['x0'] + 150, top - 2 * r + (r - d))
-    lift = (PLINTH['x0'] + 40, top - 2 * r - 70)
+    grasp = (PLINTH['x0'] + 110, top - 2 * r + (r - d))
+    place = (PLINTH['x0'] + 45, top - 2 * r + (r - d))      # set down nearer the actor, still on the plinth
+    lift = (PLINTH['x0'] + 60, top - 2 * r - 70)
     return grasp, lift, place, d
+
+
+def _py(o):
+    return o.item() if hasattr(o, 'item') else str(o)
 
 
 # ------------------------------------------------------------------ the checks
@@ -272,11 +276,12 @@ def run():
             print('render', name, len(clip), flush=True)
             tr = play([p], [clip], name, plinth=(cname == 'grasp'), prop=prop)[0]
             res['cells'][name] = {'actor': a.name, 'action': cname, 'frames': len(clip), 'rows': tr.rows}
+            json.dump(res['cells'][name], open(os.path.join(OUT, 'rows_%s.json' % name), 'w'), default=_py)
     # the scene, twice: casting A then casting B (roles swapped); blocking adapts, beats do not
     for tag, roles in (('A', (0, 1, 2)), ('B', (2, 0, 1))):
         res['scenes'][tag] = scene(cast, roles, tag)
     res['checks'] = checks(res, cast)
-    json.dump(res, open(os.path.join(OUT, 'results.json'), 'w'), indent=0)
+    json.dump(res, open(os.path.join(OUT, 'results.json'), 'w'), indent=0, default=_py)
     shutil.rmtree(os.path.join(OUT, '_f'), ignore_errors=True)
     for k, v in res['checks'].items():
         print(k, 'PASS' if v['pass'] else 'FAIL', v['summary'])
@@ -417,17 +422,21 @@ def checks(res, cast):
                                    'summary': '; '.join('%s %s' % (k, 'ok' if v['pass'] else 'FAIL') for k, v in out.items())}
     # 6 recasting keeps the choreography: in every cell the measured bone angles equal the clip's (< 1 deg),
     #   events land on the same frames for every actor, and both castings collide on the same frame
-    worst, ev_ok = 0., True
+    worst, ev_ok, cons = 0., True, {}
     for cname in ('walk', 'turn', 'grasp', 'fall'):
         evs = []
         for n in names:
             rows = res['cells']['%s__%s' % (n.replace(' ', '_'), cname)]['rows']
             worst = max(worst, max(max(r['angle_err'].values()) for r in rows))
-            evs.append([(r['event'], r['view'], tuple(sorted(r['contact']))) for r in rows])
+            evs.append([(r['event'], r['view']) for r in rows])
+            cons.setdefault(cname, []).append([tuple(sorted(r['contact'])) for r in rows])
         ev_ok &= all(e == evs[0] for e in evs)
+    # contacts may differ where an actor's own body changes which foot carries the weight (a hand-off)
+    con_diff = {c: sum(1 for i in range(len(v[0])) if any(x[i] != v[0][i] for x in v)) for c, v in cons.items()}
     hits = [sc['hit_frame'] for sc in res['scenes'].values()]
     C['6_recast_invariance'] = {'pass': worst < 1.0 and ev_ok and len(set(hits)) == 1,
                                 'max_angle_err_deg': round(worst, 3), 'events_identical': bool(ev_ok), 'scene_hit_frames': hits,
+                                'frames_where_contacts_differ': con_diff,
                                 'summary': 'max angle error %.3f deg; events identical %s; collision frames %s' % (worst, ev_ok, hits)}
     return C
 

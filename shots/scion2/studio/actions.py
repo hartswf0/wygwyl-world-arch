@@ -105,7 +105,7 @@ def grasp_release(grasp_pt, lift_pt, place_pt, S='L'):
         for i in range(n):
             u = ease((i + 1) / n)
             b = dict(STAND['q3r']); b['chest'] += -3 * (name in ('reach', 'take', 'place', 'release'))
-            f = frame('q3r', b, 'footR', {'hand' + S: -10 * (name != 'return')},
+            f = frame('q3r', b, 'footR', {},
                       contact={'footR': True, 'footL': True, 'hand' + S: 'prop' if held in ('take', 'hold') else None},
                       event=name)
             f['ik'] = {S: {'from': a, 'to': b_, 'u': u}}
