@@ -48,8 +48,15 @@ def idx():
     return C.load_json(os.path.join(C.LIB2, 'index.json'))['parts']
 
 
+_IM = {}
+
+
 def canon(rec):
-    return np.array(Image.open(os.path.join(C.LIB2, rec['image'])).convert('RGBA'))
+    if rec['image'] not in _IM:
+        if len(_IM) > 400:
+            _IM.clear()
+        _IM[rec['image']] = np.array(Image.open(os.path.join(C.LIB2, rec['image'])).convert('RGBA'))
+    return _IM[rec['image']]
 
 
 def neighbours(child, parents, k=3, match='view'):
@@ -137,8 +144,13 @@ def compose(parent, child, theta, jcfg):
     jk = resolve_kp(jcfg['parent_kp'], child, parent)
     if jk not in kp:
         return None
-    J = np.array(kp[jk], float) + pad
-    Mp = np.array([[1, 0, pad], [0, 1, pad]], float)
+    # render only a window around the joint (the seam is local): 720 x 760 with the joint at (360, 400)
+    Jp = np.array(kp[jk], float)
+    off = np.array([360.0, 400.0]) - Jp
+    Ww, Hh = 720, 760
+    pad = 0
+    J = np.array([360.0, 400.0])
+    Mp = np.array([[1, 0, off[0]], [0, 1, off[1]]], float)
     Pw = cv2.warpAffine(P, Mp, (Ww, Hh), flags=cv2.INTER_NEAREST)
     gpiv = C.GRID[child['part']]['pivot']
     Mc = C.similarity(gpiv, J, theta, 1.0)
@@ -156,7 +168,7 @@ def compose(parent, child, theta, jcfg):
     ax = np.array(C.GRID[child['part']]['axis'] or (0, 1), float)
     t = math.radians(theta)
     axc = np.array([ax[0] * math.cos(t) + ax[1] * math.sin(t), -ax[0] * math.sin(t) + ax[1] * math.cos(t)])
-    pp = np.array(kp['pivot'], float) + pad
+    pp = np.array(kp['pivot'], float) + off
     axp = (pp - J) / (np.linalg.norm(pp - J) or 1)
     # features of the child that must stay visible (heads: the face oval between eye line and chin)
     feats = []
@@ -173,7 +185,7 @@ def compose(parent, child, theta, jcfg):
     bc = joint_brad(child, gpiv, kp_name='pivot')
     bp = joint_brad(parent, kp[jk], kp_name=jk)
     bradC = None if bc is None else C.apply(Mc, bc)
-    bradP = None if bp is None else [bp[0] + pad, bp[1] + pad]
+    bradP = None if bp is None else [bp[0] + off[0], bp[1] + off[1]]
     return comp, mC, mP, J, axc, axp, feats, over_child, Cw, Pw, bradC, bradP
 
 
@@ -206,14 +218,6 @@ def _sweep(child, parent, jcfg, angles):
         if got is None:
             continue
         comp, mC, mP, J, axc, axp, feats, over_child, Cw, Pw, bradC, bradP = got
-        # score inside a window around the joint (faster; the seam is local)
-        x0, y0 = max(0, int(J[0]) - 360), max(0, int(J[1]) - 400)
-        sl = (slice(y0, y0 + 760), slice(x0, x0 + 720))
-        comp, mC, mP, Cw, Pw = comp[sl], mC[sl], mP[sl], Cw[sl], Pw[sl]
-        feats = [f[sl] for f in feats]
-        J = np.array(J) - [x0, y0]
-        sh = lambda b: None if b is None else [b[0] - x0, b[1] - y0]
-        bradC, bradP = sh(bradC), sh(bradP)
         r = seam.score(comp, mC, mP, J, axc, axp, over='A' if over_child else 'B', featuresA=feats, featuresB=None,
                        facingA=(child['classes']['view']['value'], child['classes']['facing']['value']) if jcfg.get('match') == 'view' else None,
                        facingB=(parent['classes']['view']['value'], parent['classes']['facing']['value']) if jcfg.get('match') == 'view' else None,
