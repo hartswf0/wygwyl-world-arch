@@ -231,6 +231,9 @@ def process(c, part, fx):
         cls, zo = classify_torso(c, rgba, m, kp)
     else:
         kp, src, bl = limb_points(c, rgba, m, fx, part)
+        rgba, cap = C.cut_bottom_caption(rgba, max(kp['pivot'][1], kp[tipk][1]) + 0.01 * m.shape[0], narrow_rule=True)
+        if cap:
+            removed.append(cap); flags += ['cleaned', 'caption_removed']; m = C.mask_of(rgba)
         cls, zo = classify_limb(c, rgba, m, kp, part)
     for k in ('view', 'facing', 'state', 'side'):
         if k in fx:

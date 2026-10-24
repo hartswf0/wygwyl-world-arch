@@ -106,8 +106,7 @@ def auto_classify(c, px):
         out['facing'] = ('camera' if v == 'front' else 'away', 0.8, 'follows view')
     else:
         f = 'screen-right' if dx > 0 else 'screen-left'
-        if v == 'three-quarter-back':
-            f = 'screen-left' if dx > 0 else 'screen-right'     # light (neck/ear) shows on the side it turns from
+        # three-quarter-back: the jaw/cheek skin shows on the side the face is turned to (same sign as the 3/4 front)
         out['facing'] = (f, min(0.95, 0.5 + abs(dx) * 2), 'pixel: skin centroid is %s of hair centroid (dx=%.2f)' % ('right' if dx > 0 else 'left', dx))
     if v in ('back', 'three-quarter-back'):
         st = ('back_of_head', 0.85, 'view')
@@ -156,6 +155,10 @@ def process(c, fx, s_override=None):
     for k in ('view', 'facing', 'state'):
         if k in fx:
             cls[k] = (fx[k], 0.95, 'fixes.json (agent-vision, card looked at)')
+    if cls['view'][0] in ('three-quarter', 'three-quarter-back', 'side') and cls['facing'][0] in ('camera', 'away') and 'facing' not in fx:
+        dx = px['skin_vs_hair_dx']
+        cls['facing'] = ('screen-right' if dx > 0 else 'screen-left', min(0.95, 0.5 + abs(dx) * 2),
+                         'pixel: skin centroid is %s of hair centroid (dx=%.2f)' % ('right' if dx > 0 else 'left', dx))
     view, facing = cls['view'][0], cls['facing'][0]
     kp = {}
     kp['pivot'] = pivot
@@ -223,6 +226,8 @@ def process(c, fx, s_override=None):
               'neck_min': round(g['neck_w'] * s, 1), 'chin_row': round(float(R[int(cy)] - L[int(cy)]) * s, 1)}
     if fx.get('flags'):
         flags += fx['flags']
+    if view in ('back', 'three-quarter-back') and 'chin' not in fx:
+        flags.append('chin_estimated_from_outline')
     st = cls['state'][0]
     flags.append({'painted_face': 'painted', 'blank_face_plate': 'blank', 'back_of_head': 'back', 'bare_backing_plate': 'blank'}.get(st, st))
     if max(H, W) < 180:
@@ -267,6 +272,8 @@ def run(ch):
                 rp = process(p, fxs.get(p['id'], {}))
                 if rp['sheet_measurable']:
                     ss.append(rp['s_own'])
+            if not ss:      # no member with a visible chin (all back views): the sheet still shares one scale
+                ss = [r['s_own']] + [process(p, fxs.get(p['id'], {}))['s_own'] for p in peers]
             if ss:
                 med = float(np.median(ss))
                 r = process(c, fx, (med, 'shared by the %d heads of sheet %s (median of %d measured crown->chin; this card alone: x%.2f)'

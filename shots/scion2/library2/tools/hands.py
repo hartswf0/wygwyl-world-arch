@@ -129,7 +129,15 @@ def process(c, fx, s_sheet):
     hsv = cv2.cvtColor(can[..., :3], cv2.COLOR_RGB2HSV)
     body = mc.copy(); body[:int(P[1] + 0.15 * L)] = False
     hh, ss, vv = hsv[..., 0].astype(int), hsv[..., 1].astype(int), hsv[..., 2].astype(int)
-    nonskin = body & (((ss < 45) & (vv > 150)) | (vv < 45) | ((hh > 35) & (hh < 100) & (ss > 60)))
+    white = body & (ss < 45) & (vv > 150)
+    green = body & (hh > 35) & (hh < 100) & (ss > 60)
+    dk = (body & (vv < 35)).astype(np.uint8)
+    n_, lab_, st_, _ = cv2.connectedComponentsWithStats(cv2.morphologyEx(dk, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8)), 8)
+    big_dark = np.zeros_like(body)
+    for i_ in range(1, n_):
+        if st_[i_, 4] > 0.04 * body.sum():
+            big_dark |= lab_ == i_
+    nonskin = white | green | big_dark
     prop_frac = float(nonskin.sum() / max(1, body.sum()))
     pm = re.search(PROPS, nm)
     if prop_frac > 0.12:
