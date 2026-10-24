@@ -53,9 +53,11 @@ terms):
   cloth or brass) outside the under part, / seam_w^2. It uses the exposed thresholds.
 - angle + ROM: outside ROM[joint] the verdict is 'N/A' (out_of_rom) and nothing is judged.
 """
-import math
+import math, os, sys
 import numpy as np
 import cv2
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import detect as DT  # noqa: E402
 
 # per joint tolerances; the joint lab may override any of these
 TOL = {
@@ -345,10 +347,47 @@ def score(render_rgba, maskA, maskB, pivot, axisA, axisB, over='A', featuresA=No
         bad.append('tab_visible')
     elif tab_vis is not None and tab_vis > T['exp_warn']:
         why.append('tab_visible')
+    # ---- round 04: detectors that measure the DRAWN result (qa/detect.py), validated against the blind critic's
+    # named defects (qa/validation/report.json). They replace the old tab_visible / light_rim / grommet_peek /
+    # colour_jump verdict terms (still reported above, as diagnostics).
+    for t in ('tab_visible', 'light_rim', 'grommet_peek', 'colour_jump', 'registration'):
+        if t in why:
+            why.remove(t)
+        if t in bad:
+            bad.remove(t)
+    if layerA is not None and layerB is not None:
+        comp = render_rgba[..., :3]
+        if render_rgba.shape[-1] == 4:
+            al = render_rgba[..., 3:] / 255.0
+            comp = (render_rgba[..., :3] * al + 245 * (1 - al)).astype(np.uint8)
+        overp = 'child' if over == 'A' else 'parent'     # convention here: A = child, B = parent (pairs.py)
+        mC_, mP_ = maskA, maskB
+        tab_cm2, tspot = DT.tab_visible(comp, mP_, mC_, P, uB, uA, overp, px_per_cm)
+        rim2, rspot = DT.light_rim(comp, mP_, mC_, P, overp, px_per_cm)
+        g = DT.grommet(comp, layerB, layerA, P, px_per_cm)
+        col = DT.colour_mismatch(comp, mP_, mC_, P, overp, px_per_cm)
+        r.update(tab_cm2=round(tab_cm2, 2), light_rim2=round(rim2, 3), registration2_cm=g['registration_cm'], crescent_cm=g['crescent_cm'],
+                 bare_brad=g['bare_brad'], grommet_peek2=g['peek_frac'], colour_dE2=None if col is None else round(col, 1))
+        if tab_cm2 > T.get('tab_cm2', 9.2):
+            why.append('tab_visible')
+        if rim2 > T.get('rim2', 0.055):
+            why.append('light_rim')
+        reg = g['registration_cm'] or 0.0
+        if reg > T.get('reg2_fail', 1.0) or g['bare_brad']:
+            bad.append('registration')
+        elif g['crescent_cm'] > T.get('crescent', 0.74) or g['peek_frac'] is not None:
+            why.append('grommet')
+        if col is not None and col > T.get('colour2', 15.0):
+            why.append('colour_jump')
+        r['spot'] = None
+        for nm, sp in (('tab_visible', tspot), ('light_rim', rspot), ('grommet', g['spot']), ('registration', g['spot'])):
+            if nm in why + bad and sp:
+                r['spot'] = sp
+                break
     r['why'] = bad + why
     r['verdict'] = 'MUTILATED' if bad else 'WARN' if why else 'CLEAN'
     # where to circle on a sheet: centroid of the worst failing region
-    spot = None
+    spot = r.get('spot')
     for nm, msk in (('gap', gap), ('exposed_A', expA), ('exposed_B', expB)):
         if nm in r['why'] and msk.sum():
             ys_, xs_ = np.nonzero(msk)
