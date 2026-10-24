@@ -52,6 +52,18 @@ def run(r, parent, child, joint, genes):
                    featuresA=None, featuresB=feats,
                    facingA=(parent.get('view'), parent.get('facing')) if parent.get('view') else None,   # unknown view: not tested
                    facingB=(child.get('view'), child.get('facing')) if child.get('view') else None, joint=jn)
+    verdict, why0 = s['verdict'], list(s.get('why') or [])
+    # lab-side test (seam.py has no such term yet): a trim leaves a straight scissor cut that shows -- the child's
+    # pixels along the removed region, outside the parent (+2 px), longer than 1 cm
+    if r.get('trim_cut') is not None and r['trim_cut'].any():
+        edge = cv2.dilate(r['trim_cut'].astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool) & r['cm']
+        pd = cv2.dilate(r['pm'].astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool)
+        vis = int((edge & ~pd).sum())
+        s['trim_cut_px'] = vis
+        if vis > 1.0 * CN.RS * 2:
+            why0 = ['trim_cut'] + why0
+            verdict = 'MUTILATED'
+    s['verdict'], s['why'] = verdict, why0
     grade = {'CLEAN': 'green', 'WARN': 'amber', 'MUTILATED': 'red'}[s['verdict']]
     tests = {k: (round(float(v), 3) if isinstance(v, (int, float, np.floating)) else v) for k, v in s.items() if k in
              ('gap_frac', 'width_ratio', 'exposed_A_frac', 'exposed_B_frac', 'covered', 'colour_dE', 'facing_ok')}

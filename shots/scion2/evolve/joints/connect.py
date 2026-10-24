@@ -154,13 +154,17 @@ def connect(parent, child, joint, angle, genes, side=None):
         beyond = ((xx - J_r[0]) * cdir[0] + (yy - J_r[1]) * cdir[1]) > genes['parent_tab'] * RS
         P[..., 3][beyond] = 0
     pm, cm = P[..., 3] > 128, C[..., 3] > 128
+    trim_cut = None
     if genes.get('trim') == 'contour':
         yy, xx = np.mgrid[0:Hc, 0:Wc]
         behind = ((xx - J_r[0]) * cdir[0] + (yy - J_r[1]) * cdir[1]) < 0
         pd = cv2.dilate(pm.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(RS) | 1, int(RS) | 1))) > 0
-        cut = behind & ~pd
+        cut = behind & ~pd & (C[..., 3] > 128)
         C[..., 3][cut] = 0
         cm = C[..., 3] > 128
+        trim_cut = cut
+    else:
+        trim_cut = None
     if genes.get('on_top', 'child') == 'child':
         img = over(P, C)
     else:
@@ -173,4 +177,4 @@ def connect(parent, child, joint, angle, genes, side=None):
         if 0 <= x0 and 0 <= y0 and x0 + d <= Wc and y0 + d <= Hc:
             img[y0:y0 + d, x0:x0 + d] = over(img[y0:y0 + d, x0:x0 + d], spr)
     return {'img': img, 'pm': pm, 'cm': cm, 'pivot': J_r, 'axis_c': cdir, 'axis_p': np.array(pax, float),
-            'Mc': Mc, 'Mp': Mp, 'scale': sc, 'mirror': mir}
+            'Mc': Mc, 'Mp': Mp, 'scale': sc, 'mirror': mir, 'trim_cut': trim_cut}
