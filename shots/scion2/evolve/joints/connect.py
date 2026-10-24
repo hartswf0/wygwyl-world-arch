@@ -20,7 +20,7 @@ Genes (a method is a dict of them):
   trim       'none' | 'contour' (the child's end behind the joint is cut away where it leaves the parent's outline)
   width      'none' | 'uniform' (child uniformly scaled 0.85-1.15 so its width at the pivot matches the parent's at
              the joint)
-  seam       'none' | 'brad' (a brass brad drawn on top at the joint)
+  seam       'none' | 'brad' (a brass brad drawn on top at the joint; brad_r its radius in cm, default 1.1)
   facing     True = mirror the child when its facing (screen-left / right) is the opposite of the parent's
   parent_tab None | cm: the parent's tab / collar / cuff beyond the joint line (towards the child) is cut that far
              past the joint (library2 QA: the torso's neck tab over the chin is the main neck failure)
@@ -198,8 +198,10 @@ def connect(parent, child, joint, angle, genes, side=None):
     else:
         img = over(C, P)
     if genes.get('seam') == 'brad':
-        r = 1.1 * RS
+        r = genes.get('brad_r', 1.1) * RS
         spr = brad_sprite(r)
+        if genes.get('pivot') == 'register' and grom is not None:
+            J_r = grom                            # the brad is drawn on the registered grommet
         d = spr.shape[0]
         x0, y0 = int(round(J_r[0] - d / 2)), int(round(J_r[1] - d / 2))
         if 0 <= x0 and 0 <= y0 and x0 + d <= Wc and y0 + d <= Hc:
