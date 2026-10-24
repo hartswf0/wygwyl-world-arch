@@ -5,6 +5,8 @@ from PIL import Image, ImageDraw
 import common as C
 
 INDEX = os.path.join(C.LIB2, 'index.json')
+# characters whose sheets an agent has looked at card by card (fixes.json); every other character is automatic only
+REVIEWED = {'poet', 'ex'}
 
 
 def _cls(cls):
@@ -30,7 +32,7 @@ def part_record(c, part, r, ppc):
         'pivot_source': r['psrc'],
         'classes': _cls(r['cls']),
         'pixel_tests': r.get('px'),
-        'flags': r['flags'],
+        'flags': sorted(set(r['flags'] + ([] if c['character'] in REVIEWED else ['auto_only']))),
         'removed_components': r.get('removed', []),
     }
 

@@ -252,7 +252,10 @@ def run(ch, part):
         else:
             for nb_key in list(PJ['pairs'].get(kid['key'], {})):
                 PJ['pairs'][kid['key']].pop(nb_key)
+        if g['verdict'] != 'fail':
+            entry['view_probe'] = view_probe(kid, pars_ok, jcfg)
         results[kid['key']] = entry
+        row_image.probe = {kid['key']: entry.get('view_probe')}
         rows.append(row_image(kid, g, strip, {k: ('head' if J['joint'] == 'neck' else part) if v.get('over') == 'child' else J['parent'] for k, v in entry['pairs'].items()}))
     worst.sort(key=lambda t: -t[0])
     with open(os.path.join(OUT, '%s_%s.json' % (ch, part)), 'w') as f:
@@ -266,6 +269,38 @@ def run(ch, part):
     return counts, sheets
 
 
+def view_probe(kid, parents, jcfg):
+    """view assumptions: attach the part to one neighbour of EACH view family (front, 3/4, side, back), facing
+    ignored, at -30/0/+30, and report which families it joins cleanly. A part that is clean only with a family
+    other than its tag, or with none, is flagged."""
+    fams = {}
+    for p in parents:
+        v = p['classes']['view']['value']
+        f = {'three-quarter-back': 'back'}.get(v, v)
+        if f in ('front', 'three-quarter', 'side', 'back') and (f not in fams or p['classes']['view']['conf'] > fams[f]['classes']['view']['conf']):
+            fams[f] = p
+    out = {}
+    for f, p in fams.items():
+        j2 = dict(jcfg)
+        best = None
+        for over in ('parent', 'child'):
+            j2['over'] = over
+            rs = _sweep(kid, p, j2, [-30, 0, 30])
+            n = sum(1 for a in rs if rs[a][0]['verdict'] == 'CLEAN')
+            if best is None or n > best[0]:
+                best = (n, over, {a: rs[a][0]['verdict'] for a in rs})
+        out[f] = {'neighbour': p['key'], 'clean_of_3': best[0], 'over': best[1], 'verdicts': best[2]}
+    tag = kid['classes']['view']['value']
+    tagf = {'three-quarter-back': 'back', 'edge': 'side'}.get(tag, tag)
+    good = sorted(f for f, r in out.items() if r['clean_of_3'] >= 2)
+    note = 'joins cleanly with: %s' % (', '.join(good) or 'none')
+    if tagf in out and tagf not in good and good:
+        note += '; TAG CONTRADICTS: tagged %s but only clean with %s' % (tag, ', '.join(good))
+    elif len(good) == 1:
+        note += '; works with one view family only'
+    return {'families': out, 'clean_with': good, 'note': note}
+
+
 def rebuild_pairs():
     """pairs.json is derived from every results/<char>_<part>.json (so parallel runs never clobber each other)"""
     PJ = {'about': 'compatibility matrix: child part key -> neighbour key -> clean_range / usable_range (deg, ccw +, '
@@ -277,6 +312,8 @@ def rebuild_pairs():
         R = C.load_json(os.path.join(OUT, fn))
         for key, e in R['parts'].items():
             PJ['gates'][key] = e['gates']['verdict']
+            if e.get('view_probe'):
+                PJ.setdefault('view_probe', {})[key] = {'clean_with': e['view_probe']['clean_with'], 'note': e['view_probe']['note']}
             for nb, p in e['pairs'].items():
                 PJ['pairs'].setdefault(key, {})[nb] = {'joint': p['joint'], 'over': p.get('over'), 'clean_range': p['clean_range'], 'usable_range': p['usable_range'],
                                                        'failures': {a: r['why'] for a, r in p['scores'].items() if r['verdict'] != 'CLEAN'}}
@@ -309,9 +346,13 @@ def row_image(kid, g, strip, strip_over=None):
     if not strip:
         d.text((8 + T + 10, 60), 'excluded from pairing (gate fail)' if g['verdict'] == 'fail' else 'no compatible neighbour', fill=(200, 0, 0), font=fb)
     y = 22 + nstrip * hrow + 4
+    vp = getattr(row_image, 'probe', {}).get(kid['key'])
     for k in ('cutoff', 'contamination', 'connection', 'view'):
         t = g[k]
-        d.text((8, y), '%-13s %-4s %s' % (k, t['result'].upper(), (t['why'] or '')[:150]),
+        why_txt = (t['why'] or '')
+        if k == 'view' and vp:
+            why_txt = (why_txt + '; ' if why_txt else '') + 'probe: ' + vp['note']
+        d.text((8, y), '%-13s %-4s %s' % (k, t['result'].upper(), why_txt[:170]),
                fill=COLV[{'pass': 'CLEAN', 'warn': 'WARN', 'fail': 'MUTILATED'}[t['result']]] if t['result'] != 'pass' else (60, 60, 60), font=f)
         y += 16
     d.line([(0, H - 1), (W, H - 1)], fill=(150, 150, 150), width=2)

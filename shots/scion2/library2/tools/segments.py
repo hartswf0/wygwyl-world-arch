@@ -16,7 +16,7 @@ VIEWMAP = {'threequarter': 'three-quarter', 'profile': 'side', 'threequarter_bac
 BONES = {
     'torso': [('pivot', 'neck'), ('shoulder_l', 'shoulder_r'), ('neck', 'shoulder_l'), ('neck', 'shoulder_r')],
     'upper_arm': [('pivot', 'elbow')], 'forearm': [('pivot', 'wrist')], 'thigh': [('pivot', 'knee')], 'shin': [('pivot', 'ankle')],
-    'pelvis': [('pivot', 'hip_mid')],
+    'pelvis': [('pivot', 'hip_mid'), ('hip_l', 'hip_r')],
 }
 
 
@@ -187,6 +187,44 @@ def limb_points(c, rgba, m, fx, part):
     return kp, src, bl
 
 
+def pelvis_points(c, rgba, m, fx):
+    """waist brad (the one nearest the outline's centre-line) + the two hip brads; hip_mid between them"""
+    bl = brass_blobs(rgba)
+    big = [b for b in bl if b['r'] >= 0.5 * max([x['r'] for x in bl] or [1])]
+    ys, xs = np.nonzero(m)
+    cx, cy = (xs.min() + xs.max()) / 2, ys.mean()
+    hgt = ys.max() - ys.min()
+    src, kp = {}, {}
+    if len(big) >= 3:
+        w = min(big, key=lambda b: abs(b['c'][0] - cx) - 0.01 * b['r'])
+        rest = [b for b in big if b is not w]
+        pair = max(((a, b) for i, a in enumerate(rest) for b in rest[i + 1:]), key=lambda ab: math.dist(ab[0]['c'], ab[1]['c']))
+        hl, hr = sorted(pair, key=lambda b: b['c'][0])
+        kp = {'pivot': w['c'], 'hip_l': hl['c'], 'hip_r': hr['c']}
+        mid = [(hl['c'][0] + hr['c'][0]) / 2, (hl['c'][1] + hr['c'][1]) / 2]
+        src = {'pivot': 'brass brad (waist, nearest the centre-line)', 'hip_l': 'brass brad', 'hip_r': 'brass brad'}
+        if math.dist(mid, w['c']) < 0.15 * hgt:
+            # three brads in a row (a waist strip): the bone runs from the waist toward the outline's mass
+            d = np.array([cx, cy]) - np.array(w['c'])
+            d = d / (np.linalg.norm(d) or 1)
+            mid = list(np.array(w['c']) + d * 0.3 * hgt) if np.linalg.norm(d) else [w['c'][0], w['c'][1] + 0.3 * hgt]
+            src['hip_mid'] = 'estimated: brads in a row'
+        else:
+            src['hip_mid'] = 'midpoint of the hip brads'
+        kp['hip_mid'] = list(map(float, mid))
+    elif len(big) == 2:
+        a, b = sorted(big, key=lambda b: b['c'][1])
+        kp = {'pivot': a['c'], 'hip_mid': b['c']}
+        src = {'pivot': 'brass brad (upper)', 'hip_mid': 'brass brad (lower)'}
+    else:
+        kp = {'pivot': list(map(float, c['A'])), 'hip_mid': list(map(float, c['B']))}
+        src = {'pivot': 'library A point', 'hip_mid': 'library B point'}
+    for k in ('pivot', 'hip_mid', 'hip_l', 'hip_r'):
+        if k in fx:
+            kp[k], src[k] = list(map(float, fx[k])), 'fixes.json'
+    return kp, src, bl
+
+
 def classify_limb(c, rgba, m, kp, part):
     import re
     lab = C.labels().get(c['id'], {})
@@ -229,6 +267,13 @@ def process(c, part, fx):
         if cap:
             removed.append(cap); flags += ['cleaned', 'caption_removed']; m = C.mask_of(rgba)
         cls, zo = classify_torso(c, rgba, m, kp)
+    elif part == 'pelvis':
+        kp, src, bl = pelvis_points(c, rgba, m, fx)
+        cls, zo = classify_limb(c, rgba, m, kp, part)
+        cls['state'] = ('connector_plate' if 'connector' in c['id'] else 'hip_bridge' if 'bridge' in c['id'] else 'waist_link' if 'link' in c['id'] else cls['state'][0],
+                        0.7, 'card name')
+        if 'estimated' in src.get('hip_mid', ''):
+            flags.append('brads_in_a_row')
     else:
         kp, src, bl = limb_points(c, rgba, m, fx, part)
         rgba, cap = C.cut_bottom_caption(rgba, max(kp['pivot'][1], kp[tipk][1]) + 0.01 * m.shape[0], narrow_rule=True)
@@ -267,7 +312,9 @@ def process(c, part, fx):
         flags.append('low_res')
     if part == 'torso' and 'brass' not in src.get('neck', ''):
         flags.append('neck_pivot_estimated')
-    if part != 'torso':
+    if part == 'pelvis' and 'hip_l' in kp and 'hip_r' in kp:
+        widths['hip_span'] = round(math.dist(kp['hip_l'], kp['hip_r']) * s, 1)
+    if part not in ('torso', 'pelvis'):
         for k in ('pivot', tipk):
             if 'brass' not in src.get(k, ''):
                 flags.append('%s_pivot_estimated' % ('proximal' if k == 'pivot' else 'distal'))
@@ -310,9 +357,13 @@ def kit_length(ch, part):
         tipk = TIPK(part)
         if part == 'torso':
             kp, src, _ = torso_points(c, rgba, C.mask_of(rgba), fx)
+        elif part == 'pelvis':
+            kp, src, _ = pelvis_points(c, rgba, C.mask_of(rgba), fx)
+            if 'midpoint' not in src.get('hip_mid', ''):
+                continue
         else:
             kp, src, _ = limb_points(c, rgba, C.mask_of(rgba), fx, part)
-        if 'brass' in src.get('pivot', '') and 'brass' in src.get(tipk, ''):
+        if 'brass' in src.get('pivot', '') and ('brass' in src.get(tipk, '') or 'midpoint' in src.get(tipk, '')):
             L.append(math.dist(kp['pivot'], kp[tipk]) / c['px_per_cm'])
     return float(np.median(L)) if len(L) >= 3 else None
 
@@ -325,7 +376,7 @@ def run(ch, part):
     for c in candidates(ch, part):
         fx = fxs.get(c['id'], {})
         lab = C.labels().get(c['id'], {})
-        nbr = len(brass_blobs(C.load_rgba(c))) if part != 'torso' else 0
+        nbr = len(brass_blobs(C.load_rgba(c))) if part not in ('torso', 'pelvis') else 0
         if fx.get('part') == part and c['slot'] != part:
             fx = {k: v for k, v in fx.items() if k != 'reject'}      # re-filed INTO this part type: the reject was for its old slot
         if fx.get('reject') or lab.get('bad') or nbr >= 5:
