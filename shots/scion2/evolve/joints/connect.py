@@ -20,7 +20,9 @@ Genes (a method is a dict of them):
   trim       'none' | 'contour' (the child's end behind the joint is cut away where it leaves the parent's outline)
   width      'none' | 'uniform' (child uniformly scaled 0.85-1.15 so its width at the pivot matches the parent's at
              the joint)
-  seam       'none' | 'brad' (a brass brad drawn on top at the joint; brad_r its radius in cm, default 1.1)
+  seam       'none' | 'brad' (a brass brad drawn on the parent's painted grommet, centred, at least its painted radius;
+             none where the parent has no grommet; brad_r the minimum radius in cm, default 1.1)
+  rim_trim   True (default): the over part's paper-edge band inside the under part, near the joint, is removed
   facing     True = mirror the child when its facing (screen-left / right) is the opposite of the parent's
   align      True = align the parts' actual keypoint axes at 0 degrees (round 04), else the grid's nominal axes
   parent_tab None | cm: the parent's tab / collar / cuff beyond the joint line (towards the child) is cut that far
@@ -85,6 +87,28 @@ def child_pivot(child, genes):
         if len(xs):
             piv = np.array([(xs.min() + xs.max()) / 2., piv[1]])
     return piv
+
+
+def grommet_radius(img, c, max_r=40):
+    """painted radius (canonical px) of the brass grommet ring round c: the farthest brass pixel connected to it"""
+    x0, y0 = int(max(0, c[0] - max_r)), int(max(0, c[1] - max_r))
+    patch = img[y0:int(c[1] + max_r), x0:int(c[0] + max_r)]
+    if patch.size == 0:
+        return None
+    hsv = cv2.cvtColor(patch[..., :3].astype(np.uint8), cv2.COLOR_BGR2HSV)
+    gold = ((hsv[..., 0] >= 12) & (hsv[..., 0] <= 34) & (hsv[..., 1] > 80) & (hsv[..., 2] > 110) & (patch[..., 3] > 128)).astype(np.uint8)
+    n, lab, st, _ = cv2.connectedComponentsWithStats(gold)
+    if n < 2:
+        return None
+    cx, cy = c[0] - x0, c[1] - y0
+    yy, xx = np.mgrid[0:gold.shape[0], 0:gold.shape[1]]
+    best = None
+    for i in range(1, n):
+        m = lab == i
+        d = np.hypot(xx[m] - cx, yy[m] - cy)
+        if d.min() < 12 and (best is None or d.max() > best):
+            best = float(d.max())
+    return best
 
 
 def brad_sprite(r):
@@ -216,20 +240,35 @@ def connect(parent, child, joint, angle, genes, side=None):
     else:
         trim_cut = None
     top = genes.get('on_top', 'child')
+    if joint == 'neck' and (child.get('view') or '').startswith(('back', 'three-quarter-back')):
+        top = 'view'                           # round 05 (critic r04): back views always put the collar over the head's tab
     if top == 'view':                          # back views: the parent (collar) over the child's tab; else the child over
         top = 'parent' if (child.get('view') or '').startswith(('back', 'three-quarter-back')) else 'child'
+    if genes.get('rim_trim', True):
+        # round 05 (critic: white / tan rims at cuffs and collars): the over part's painted paper-edge band (0.35 cm)
+        # where it lies inside the under part, within the joint disk, is removed so the under part shows through
+        Ov, Un = (C, P) if top == 'child' else (P, C)
+        ov_a = (Ov[..., 3] > 128).astype(np.uint8)
+        dist = cv2.distanceTransform(ov_a, cv2.DIST_L2, 3)
+        yy2, xx2 = np.mgrid[0:Hc, 0:Wc]
+        disk = (xx2 - J_r[0]) ** 2 + (yy2 - J_r[1]) ** 2 <= (6 * RS) ** 2
+        rim = (dist > 0) & (dist <= .35 * RS) & (Un[..., 3] > 128) & disk
+        Ov[..., 3][rim] = 0
     if top == 'child':
         img = over(P, C)
     else:
         img = over(C, P)
     brad_mask = None
-    if genes.get('seam') == 'brad':
-        r = genes.get('brad_r', 1.1) * RS
+    if genes.get('seam') == 'brad' and grom is not None:
+        # round 05 (critic r04): a brad only where the parent has a painted grommet, centred on it, at least as large
+        # as its painted ring (no bare brads on throats or boot shafts, no crescents)
+        gr = grommet_radius(parent['img'], (grom - off) / k)
+        r = max(genes.get('brad_r', 1.1) * RS, (gr * k + 1) if gr else 0)
         spr = brad_sprite(r)
-        if genes.get('pivot') == 'register' and grom is not None:
-            J_r = grom                            # the brad is drawn on the registered grommet
+        J_draw = grom
+    if genes.get('seam') == 'brad' and grom is not None:
         d = spr.shape[0]
-        x0, y0 = int(round(J_r[0] - d / 2)), int(round(J_r[1] - d / 2))
+        x0, y0 = int(round(J_draw[0] - (d - 1) / 2)), int(round(J_draw[1] - (d - 1) / 2))
         if 0 <= x0 and 0 <= y0 and x0 + d <= Wc and y0 + d <= Hc:
             img[y0:y0 + d, x0:x0 + d] = over(img[y0:y0 + d, x0:x0 + d], spr)
             brad_mask = np.zeros((Hc, Wc), bool)

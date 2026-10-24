@@ -79,6 +79,31 @@ def view_ok(a, b):
     return a is None or b is None or a == b
 
 
+_CL = {}
+
+
+def cloth_lab(p):
+    """median CIE-Lab of a part's non-skin paint (its cloth / leather), cached"""
+    if p['key'] not in _CL:
+        a = p['img']
+        m = a[..., 3] > 200
+        lab = cv2.cvtColor(a[..., :3], cv2.COLOR_BGR2LAB).astype(np.float32)[m] * [100 / 255., 1, 1] - [0, 128, 128]
+        skin = (lab[:, 0] > 25) & (lab[:, 0] < 75) & (lab[:, 1] > 8) & (lab[:, 2] > 12)
+        cl = lab[~skin]
+        _CL[p['key']] = (np.median(cl, 0), float(len(cl) / max(len(lab), 1))) if len(cl) > 50 else (None, 0.)
+    return _CL[p['key']]
+
+
+def cloth_match(a, b, tol=25.):
+    """round 05 (critic r04: a pale grey sleeve on a black-jacket hand): when both parts carry cloth (>10% non-skin),
+    their cloth colours must be within dE tol"""
+    ca, fa = cloth_lab(a)
+    cb, fb = cloth_lab(b)
+    if ca is None or cb is None or fa < .1 or fb < .1:
+        return True
+    return float(np.linalg.norm(ca - cb)) <= tol
+
+
 def sheet_of(p):
     return p['src_card'].split('/')[0]
 
@@ -126,6 +151,8 @@ def pairs(joint, seed=0):
                 r_ = wb / wa
                 if not (lo / 1.15 <= r_ <= hi / .85):
                     continue
+            if not cloth_match(a, b):
+                continue
             cross.append((a, b))
     rng = random.Random(seed)
     rng.shuffle(native); rng.shuffle(cross)
