@@ -73,7 +73,8 @@ def run(r, parent, child, joint, genes, angle=None):
         grade = 'red'
     tests = {k: (round(float(v), 3) if isinstance(v, (int, float, np.floating)) else v) for k, v in s.items() if k in
              ('gap_frac', 'width_ratio', 'exposed_A_frac', 'exposed_B_frac', 'covered', 'colour_dE', 'facing_ok',
-              'registration_cm', 'grommet_peek', 'tab_visible_frac', 'trim_cut')}
+              'registration_cm', 'grommet_peek', 'tab_visible_frac', 'trim_cut', 'tab_cm2', 'light_rim2', 'registration2_cm',
+              'crescent_cm', 'bare_brad', 'colour_dE2')}
     why = s.get('why') or []
     if isinstance(why, str):
         why = [why]

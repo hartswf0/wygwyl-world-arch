@@ -36,7 +36,7 @@ def _read(p):
 
 
 _GC = {}
-GATE_CACHE = os.path.join(HERE, 'gate_cache.json')
+GATE_CACHE = os.path.join(HERE, 'gate_cache_b0707fa.json')   # library2 b0707fa: new skin-tone gate; qa/results predate it
 
 
 def gate_fail(rec):
@@ -47,7 +47,7 @@ def gate_fail(rec):
         if os.path.exists(GATE_CACHE):
             _GC.update(json.load(open(GATE_CACHE)))
         import glob
-        for f in glob.glob(os.path.join(LIB2, 'qa', 'results', '*.json')):
+        for f in ([] if os.path.basename(GATE_CACHE) != 'gate_cache.json' else glob.glob(os.path.join(LIB2, 'qa', 'results', '*.json'))):
             try:
                 for k, v in json.load(open(f)).get('parts', {}).items():
                     g = v.get('gates') or {}

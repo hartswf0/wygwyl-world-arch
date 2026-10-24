@@ -34,7 +34,8 @@ def rom_angles(joint):
 # misfiles reported to library2 (excluded until it re-gates them): a thigh filed as a torso, a foot and a forearm as shins
 EXCLUDE = {'poet.red_black_sunglasses.replacements.deep_crouch__left-thigh-2-eyelets', 'poet.04.action.red_black_sunglasses.parts.01__foot-l-foot-r',
            'poet.01.action.black_tshirt.parts.02__farm-r-2',
-           'poet.red_black_sunglasses.replacements.back_lying__left-thigh',   # round 05 critic: a thigh filed as a torso
+           # (library2 b0707fa confirmed back_lying__left-thigh as a real jacket torso: off the list; lying torsos stay out of
+           #  front / back packs instead)
            # round 06: the file name names another part than the slot it is filed in (suspected; reported to library2)
            'poet.red_black_sunglasses.body.back__poet-black-upper-arm-l', 'poet.04.action.red_black_sunglasses.parts.01__thigh-r-shin-l',
            'poet.14.action.red_black_sunglasses.parts.01__thigh-l', 'poet.14.action.red_black_sunglasses.parts.01__thigh-r',

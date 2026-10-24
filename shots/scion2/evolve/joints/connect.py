@@ -111,6 +111,39 @@ def grommet_radius(img, c, max_r=40):
     return best
 
 
+def round_end(U, c, width, xx, yy, rng=None):
+    """round 07 (critic r06: background wedges in the crook of large bends): complete the under piece U (render BGRA,
+    in place) to a disc centred on the pivot c, radius half its width at the pivot, the way a cut-out puppet's limb end
+    is cut round about its brad. The new paper is painted from U's own pixels: its cloth (sampled > 0.8 cm inside its
+    outline, within 5 cm of the pivot) inside, its edge rim (sampled <= 0.45 cm from its outline) in the outer 0.45 cm"""
+    if width < 4:
+        return 0
+    rng = rng or np.random.default_rng(0)
+    r = width / 2.
+    d2 = (xx - c[0]) ** 2 + (yy - c[1]) ** 2
+    um = U[..., 3] > 128
+    new = (d2 <= r * r) & ~um
+    if not new.any():
+        return 0
+    dist_in = cv2.distanceTransform(um.astype(np.uint8), cv2.DIST_L2, 3)
+    near = d2 <= (5 * RS) ** 2
+    cloth = U[..., :3][um & near & (dist_in > .8 * RS)]
+    rimpx = U[..., :3][um & near & (dist_in > 0) & (dist_in <= .45 * RS)]
+    if len(cloth) < 10:
+        return 0
+    if len(rimpx) < 10:
+        rimpx = cloth
+    edge = new & (d2 >= (r - .45 * RS) ** 2)
+    inner = new & ~edge
+    U[..., :3][inner] = cloth[rng.integers(0, len(cloth), int(inner.sum()))]
+    U[..., :3][edge] = rimpx[rng.integers(0, len(rimpx), int(edge.sum()))]
+    # soften the sampled noise into a paint texture
+    bl = cv2.GaussianBlur(U[..., :3], (5, 5), 0)
+    U[..., :3][new] = bl[new]
+    U[..., 3][new] = 255
+    return int(new.sum())
+
+
 def tab_reach(part, g, axis, max_px=70):
     """how far (canonical px) a part's painted paper tab reaches from its grommet g towards the part's body (against
     axis): the first sharp darkening (tan paper -> skin / hair) at least 1.2 cm from the grommet, else 0.8 cm"""
@@ -289,6 +322,9 @@ def connect(parent, child, joint, angle, genes, side=None):
             top = other
     Ov, Un = (C, P) if top == 'child' else (P, C)
     yy2, xx2 = np.mgrid[0:Hc, 0:Wc]
+    if genes.get('round_end') and joint in ('elbow', 'knee'):
+        round_end(Un, target, (width_across(parent['img'][..., 3], pa, np.array(pax, float)) * k) if top == 'child' else
+                  (width_across(child['img'][..., 3], piv_c, np.array(caxis, float)) * k * sc), xx2, yy2)
     side = (xx2 - target[0]) * cdir[0] + (yy2 - target[1]) * cdir[1]          # > 0: the child's side of the joint
     disk = (xx2 - target[0]) ** 2 + (yy2 - target[1]) ** 2 <= (8 * RS) ** 2
     if genes.get('side_trim', True):
@@ -302,9 +338,11 @@ def connect(parent, child, joint, angle, genes, side=None):
         # the under piece is trimmed only at the extremity joints (hand ears, boot / collar tabs); at the cloth
         # joints its end is the paper showing inside the bend and trimming it leaves a background notch
         cut_under = joint in ('wrist', 'ankle', 'neck')
-        if top == 'parent' or cut_under:        # the parent's paper beyond the joint, outside the child
+        # round 07 (critic r06: a notch at the top of the shoulder): only at the extremity joints; at cloth joints the
+        # over piece's rounded end is part of the puppet and cutting it left notches
+        if cut_under:                           # the parent's paper beyond the joint, outside the child
             P[..., 3][(side > 0) & disk & pm_ & ~cmd] = 0
-        if top == 'child' or cut_under:         # the child's paper behind the joint, outside the parent
+        if cut_under:                           # the child's paper behind the joint, outside the parent
             C[..., 3][(side < 0) & disk & cm_ & ~pmd] = 0
     if neck_back and top == 'parent' and grom is not None:
         # 3b. the torso's neck tab above the collar edge is cut (the tab and the neck stub round it, 0.75 x the neck width either side; not the shoulders)
@@ -333,6 +371,9 @@ def connect(parent, child, joint, angle, genes, side=None):
         ov_a = (Ov[..., 3] > 128).astype(np.uint8)
         dist = cv2.distanceTransform(ov_a, cv2.DIST_L2, 3)
         rim = (dist > 0) & (dist <= .45 * RS) & (Un[..., 3] > 128)
+        # round 07 (critic r06: a dotted light halo along the over piece's edge): its soft fringe (alpha <= 128,
+        # outside the mask the band is measured from) lying over the under piece goes too
+        rim |= (Ov[..., 3] > 0) & (Ov[..., 3] <= 128) & (Un[..., 3] > 128)
         Ov[..., 3][rim] = 0
     pm, cm = P[..., 3] > 128, C[..., 3] > 128
     # 2. both pieces must be visible: the under piece's share of its own area left uncovered
@@ -345,5 +386,6 @@ def connect(parent, child, joint, angle, genes, side=None):
     brad_mask = None
     return {'img': img, 'pm': pm, 'cm': cm, 'pivot': J_r, 'axis_c': cdir, 'axis_p': np.array(pax, float),
             'Mc': Mc, 'Mp': Mp, 'scale': sc, 'mirror': mir, 'trim_cut': trim_cut, 'grommet': grom, 'P': P, 'C': C, 'on_top': top,
-            'origP': P0m, 'origC': C0m, 'brad_mask': brad_mask, 'vis_under': vis,
+            'origP': P0m, 'origC': C0m, 'brad_mask': brad_mask, 'vis_under': vis, 'target': np.asarray(target, float),
+            'joint_w': width_across(parent['img'][..., 3], pa - 20 * np.array(pax, float), np.array(pax, float)) * k,
             'child_brad': (Mc[:, :2] @ cbrad + Mc[:, 2]) if cbrad is not None else None}
