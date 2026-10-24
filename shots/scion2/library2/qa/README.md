@@ -58,6 +58,45 @@ r = score(render_rgba, maskA, maskB, pivot, axisA, axisB, over='A'|'B',
 
 The joint lab can pass `tol=` to tune them. Changing a default here changes every verdict.
 
+## Round 04: detectors of the drawn result (`detect.py`), validated against the blind critic
+The joint lab found that the earlier tab_visible / light_rim / grommet_peek / colour_jump terms were about 0 on
+renders where the critic named those defects. They are replaced in `seam.score` by detectors that measure the
+composite. They run when the layers are passed, and the old values stay as diagnostics.
+- **tab_cm2:** the visible area (cm²) of each part's pixels beyond the joint, on the other part's side, within
+  6 cm: an overlap tab, tongue, lobe or cuff end that shows. It warns above 9.2.
+- **light_rim2:** the fraction of light, low-saturation pixels (V > 170, S < 60) in a 0.5 cm band on both sides of
+  the seam contour (the over part's outline lying on the under part). The band stays 0.25 cm inside the figure. It
+  warns above 0.055.
+- **Registration on the composite:**
+  - `registration2_cm`: from the brad (sprite, or the part's own painted brad) to the nearest painted ring, using
+    bbox centres, because a lit ring's colour mask is lopsided.
+  - `crescent_cm`: the thickest band of ring brass still visible outside the brad.
+  - `bare_brad`: a brad with no ring within 1 cm. It fails.
+  - `grommet_peek2`: a ring 15–85 % visible, not concentric with the other part's ring. It warns.
+  - A crescent above 0.74 cm warns, and a registration above 1 cm fails.
+- **colour_dE2:** colour compared material to material (skin against skin, cloth/leather against cloth/leather),
+  so black sleeves against black trousers, or a sleeve against a hand, are not counted. It warns above 15.
+
+Validation: `validation/validate_critic.py` writes `validation/report.json`. It uses the 48 critic-judged renders
+of joint-lab rounds 01–04, with the critic's named defects hand-read into `validation/critic_labels.json`. The fit
+uses rounds 01–03, and R04 is held out. Round 01 renders carry no part layers, so the grommet test uses rounds
+02–04 only.
+
+| term | train P / R | R04 test P / R | all P / R |
+|---|---|---|---|
+| tab_visible | 0.55 / 1.00 | 0.50 / 1.00 | 0.53 / 1.00 |
+| light_rim | 0.50 / 0.57 | 0.62 / 1.00 | 0.56 / 0.75 |
+| grommet | 0.67 / 1.00 | 0.60 / 0.38 | 0.65 / 0.69 |
+| colour_jump | 0.10 / 0.50 | – (1 label) | 0.08 / 0.33 |
+
+The overall verdict does not reproduce the critic's CLEAN/MUTILATED call. The critic's CLEAN sheets still name
+tabs, rims and grommets (CLEAN is a severity judgement), so "no term fires" calls 0 of the 9 critic-CLEAN sheets
+clean. Agreement (0.81 overall, 0.75 on R04) equals the always-MUTILATED baseline.
+- The terms are useful as **named-defect detectors**: tab has high recall, rim and grommet are moderate, and
+  colour is weak (only 3 labels).
+- They are not a calibrated clean/mutilated classifier.
+- The tab precision of about 0.5 partly reflects the critic not naming every visible tab.
+
 ## gates.py: per-part tests
 Each test returns `{result: pass|warn|fail, evidence, why}`. The overall `verdict` is the worst of the four.
 - **cutoff**
@@ -65,6 +104,9 @@ Each test returns `{result: pass|warn|fail, evidence, why}`. The overall `verdic
   - Long straight outline segments (scissor cuts) run away from the connection end.
   - The part is short against the canonical size, e.g. crown→chin under 0.82× of height/8.
 - **contamination**
+  - Hands: a skin-tone gate. The dominant paint is compared with the character's head skin (median Lab of the
+    skin-coloured pixels on its front, three-quarter and side heads). Above ΔE 20 it fails, unless fixes.json
+    sets `glove_confirmed`. This catches the pale grey reserve hands.
   - Heads: the outline widens below the chin (shoulders or collar attached); the chin→pivot distance is over 14 cm
     (the pivot sits mid-neck); dark cloth sits in the neck zone.
   - Hands and feet: wrist, sleeve or shin material is present. These tests are added with their part types.

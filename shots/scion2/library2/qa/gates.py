@@ -164,6 +164,46 @@ def _cloth(can, zone):
     return float((zone & (V < 55)).sum() / max(1, zone.sum())), float((zone & (S < 40) & (V > 170)).sum() / max(1, zone.sum()))
 
 
+_SKIN = {}
+
+
+def skin_ref(ch):
+    """the character's skin colour: median Lab of skin-coloured pixels on its front/three-quarter heads that are
+    painted or blank plates (the face plates are painted skin), excluding composed heads"""
+    if ch not in _SKIN:
+        idx = C.load_json(os.path.join(C.LIB2, 'index.json'))['parts']
+        px = []
+        for r in idx.values():
+            if r['character'] != ch or r['part'] != 'head' or r['status'] != 'ok' or 'composed' in r.get('flags', []):
+                continue
+            if r['classes']['view']['value'] not in ('front', 'three-quarter', 'side') or 'pale_skin_off_palette' in r['flags']:
+                continue
+            im = load_canon(r)
+            hsv = cv2.cvtColor(im[..., :3], cv2.COLOR_RGB2HSV).astype(int)
+            m = (im[..., 3] > 200) & (hsv[..., 0] >= 4) & (hsv[..., 0] <= 25) & (hsv[..., 1] >= 60) & (hsv[..., 2] >= 70)
+            lab = cv2.cvtColor(im[..., :3], cv2.COLOR_RGB2LAB).astype(float)[m]
+            if len(lab):
+                px.append(np.median(lab, 0))
+        _SKIN[ch] = np.median(px, 0) if px else None
+    return _SKIN[ch]
+
+
+def skin_delta(rec, can):
+    """delta-E (CIE76, L* in 0..100) between the part's dominant paint (opaque, not brass, not dark outline) and the
+    character's head skin"""
+    ref = skin_ref(rec['character'])
+    if ref is None:
+        return None
+    hsv = cv2.cvtColor(can[..., :3], cv2.COLOR_RGB2HSV).astype(int)
+    m = (can[..., 3] > 200) & (hsv[..., 2] > 60) & ~((hsv[..., 0] >= 17) & (hsv[..., 0] <= 32) & (hsv[..., 1] >= 90))
+    if m.sum() < 50:
+        return None
+    lab = cv2.cvtColor(can[..., :3], cv2.COLOR_RGB2LAB).astype(float)
+    a, b = np.median(lab[m], 0), ref
+    sc = np.array([100 / 255.0, 1, 1])
+    return float(np.linalg.norm((a - b) * sc))
+
+
 def gate_hand(rec):
     c = card_of(rec)
     rgba = C.load_rgba(c)
@@ -196,12 +236,17 @@ def gate_hand(rec):
         r = 'warn'; why.append('%.0f%% dark pixels in the hand' % (100 * dark))
     if 'prop' in rec['flags']:
         r = worst(r, 'warn'); why.append('holds a painted prop (%s)' % st)
-    if 'pale_skin_off_palette' in rec['flags']:
+    sd = skin_delta(rec, can)
+    glove = C.fixes().get(rec['source_card'], {}).get('glove_confirmed')
+    if sd is not None and sd > 20 and not glove:
+        r = 'fail'; why.append('skin tone %.0f dE from the character head skin (pale/grey: unpainted under-layer or another character; not a confirmed glove)' % sd)
+    elif 'pale_skin_off_palette' in rec['flags'] and not glove:
         r = worst(r, 'warn'); why.append('pale skin, off the poet palette')
     pc = kc.get('palm_centre')
     if pc and (pc[1] - P[1]) > 0.62 * rec['widths_px']['length']:
         r = worst(r, 'warn'); why.append('palm centre far from the wrist pivot: a long wrist/forearm stub')
-    out['contamination'] = _res(r, {'dark_cloth': round(dark, 3), 'white_cloth': round(white, 3), 'prop_frac': (rec.get('pixel_tests') or {}).get('prop_frac')}, '; '.join(why))
+    out['contamination'] = _res(r, {'dark_cloth': round(dark, 3), 'white_cloth': round(white, 3), 'prop_frac': (rec.get('pixel_tests') or {}).get('prop_frac'),
+                                    'skin_dE_vs_head': None if sd is None else round(sd, 1)}, '; '.join(why))
     # connection
     r, why = 'pass', []
     if 'brass' not in rec.get('pivot_source', ''):

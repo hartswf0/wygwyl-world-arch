@@ -181,6 +181,16 @@ def compose(parent, child, theta, jcfg):
         cv2.ellipse(f, (int(ctr[0]), int(ctr[1])), (int(0.75 * ry), int(ry)), 0, 0, 360, 1, -1)
         f = cv2.warpAffine(f, Mc, (Ww, Hh), flags=cv2.INTER_NEAREST).astype(bool) & mC
         feats.append(f)
+    # hands: the palm and fingers (beyond 45 % of the hand length from the wrist pivot) must not be covered by the
+    # forearm (a cuff end or brad over the knuckles is a mid-hand landing, not a wrist)
+    if child['part'] == 'hand':
+        L = (child.get('widths_px') or {}).get('length') or 200
+        f = np.zeros(Cc.shape[:2], np.uint8)
+        piv = np.array(gpiv, float)
+        yy, xx = np.mgrid[0:f.shape[0], 0:f.shape[1]]
+        f[((xx - piv[0]) ** 2 + (yy - piv[1]) ** 2) > (0.45 * L) ** 2] = 1
+        f = cv2.warpAffine(f, Mc, (Ww, Hh), flags=cv2.INTER_NEAREST).astype(bool) & mC
+        feats.append(f)
     # the brads each part brings to this joint (canonical brass blobs near the joint keypoints), in world px
     bc = joint_brad(child, gpiv, kp_name='pivot')
     bp = joint_brad(parent, kp[jk], kp_name=jk)
