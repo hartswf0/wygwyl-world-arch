@@ -20,6 +20,7 @@ import numpy as np, cv2
 
 from . import connect as CN
 
+VIS_MIN = .40          # round 06 (critic r05): each piece keeps at least 40% of its own area visible
 TH = {'gap': .04, 'width': .30, 'exposed': .30, 'covered': .15, 'colour': 25., 'facing': .5}
 
 
@@ -67,6 +68,9 @@ def run(r, parent, child, joint, genes, angle=None):
     if s['verdict'] == 'N/A':
         return None
     grade = {'CLEAN': 'green', 'WARN': 'amber', 'MUTILATED': 'red'}[s['verdict']]
+    hidden = r.get('vis_under') is not None and r['vis_under'] < VIS_MIN     # round 06: the under piece mostly hidden
+    if hidden:
+        grade = 'red'
     tests = {k: (round(float(v), 3) if isinstance(v, (int, float, np.floating)) else v) for k, v in s.items() if k in
              ('gap_frac', 'width_ratio', 'exposed_A_frac', 'exposed_B_frac', 'covered', 'colour_dE', 'facing_ok',
               'registration_cm', 'grommet_peek', 'tab_visible_frac', 'trim_cut')}
@@ -74,7 +78,11 @@ def run(r, parent, child, joint, genes, angle=None):
     if isinstance(why, str):
         why = [why]
     seam_w = float(s.get('seam_w', 40))
-    return {'tests': tests, 'fails': [str(w).split(' ')[0].split(':')[0] for w in why] if grade != 'green' else [],
+    tests['vis_under'] = round(float(r.get('vis_under') or 1.), 3)
+    fails = [str(w).split(' ')[0].split(':')[0] for w in why] if s['verdict'] != 'CLEAN' else []
+    if hidden:
+        fails = ['hidden'] + fails
+    return {'tests': tests, 'fails': fails,
             'grade': grade, 'band_r': max(.9 * seam_w, 3 * CN.RS), 'verdict': s['verdict'], 'spot': s.get('spot')}
 
 

@@ -20,8 +20,8 @@ Genes (a method is a dict of them):
   trim       'none' | 'contour' (the child's end behind the joint is cut away where it leaves the parent's outline)
   width      'none' | 'uniform' (child uniformly scaled 0.85-1.15 so its width at the pivot matches the parent's at
              the joint)
-  seam       'none' | 'brad' (a brass brad drawn on the parent's painted grommet, centred, at least its painted radius;
-             none where the parent has no grommet; brad_r the minimum radius in cm, default 1.1)
+  seam       ignored from round 06: no brad sprite is drawn (the critic read it as a bare brad); the top piece's own
+             painted grommet is the fastener (grommet_rule, side_trim: see the round 06 block in connect())
   rim_trim   True (default): the over part's paper-edge band inside the under part, near the joint, is removed
   facing     True = mirror the child when its facing (screen-left / right) is the opposite of the parent's
   align      True = align the parts' actual keypoint axes at 0 degrees (round 04), else the grid's nominal axes
@@ -109,6 +109,25 @@ def grommet_radius(img, c, max_r=40):
         if d.min() < 12 and (best is None or d.max() > best):
             best = float(d.max())
     return best
+
+
+def tab_reach(part, g, axis, max_px=70):
+    """how far (canonical px) a part's painted paper tab reaches from its grommet g towards the part's body (against
+    axis): the first sharp darkening (tan paper -> skin / hair) at least 1.2 cm from the grommet, else 0.8 cm"""
+    img = part['img'].astype(np.float32)
+    u = np.asarray(axis, float)                 # the child axis points away from the joint, into the body
+    n = np.array([-u[1], u[0]])
+    lum = []
+    for t in range(0, max_px):
+        q = [np.asarray(g, float) + t * u + s * n for s in (-6, -3, 3, 6)]
+        v = [img[int(y), int(x), :3].mean() for x, y in q if 0 <= int(x) < img.shape[1] and 0 <= int(y) < img.shape[0] and img[int(y), int(x), 3] > 128]
+        lum.append(np.mean(v) if v else np.nan)
+    lum = np.array(lum)
+    ref = np.nanmedian(lum[12:24]) if np.isfinite(lum[12:24]).any() else np.nan
+    for t in range(12, max_px - 3):
+        if np.isfinite(ref) and np.nanmean(lum[t:t + 3]) < ref - 35:
+            return float(t)
+    return 8.
 
 
 def brad_sprite(r):
@@ -204,6 +223,19 @@ def connect(parent, child, joint, angle, genes, side=None):
             cbrad = child['brads'][int(np.argmin(d))]
     if genes.get('pivot') == 'register' and grom is not None and cbrad is not None:
         piv_c, target = cbrad, grom              # the child's brad goes exactly onto the parent's grommet
+    neck_back = joint == 'neck' and (child.get('view') or '').startswith(('back', 'three-quarter-back')) and genes.get('side_trim', True)
+    r_g = None
+    torso_reach = 0.
+    if neck_back:
+        # round 06 (critic r05: tan neck tabs on back views): the torso's neck grommet sits on the collar edge, and the
+        # head's painted nape tab reaches tab_reach above the head's grommet; the head is lowered by that much so its
+        # tab and grommet go under the collar (the collar is on top in back views)
+        gr0 = grommet_radius(parent['img'], (grom - off) / k) if grom is not None else None
+        r_g = (gr0 * k if gr0 else .8 * RS) + .2 * RS
+        # the torso's own neck tab: its tan paper runs from the grommet down to the collar edge (torso_reach); that tab
+        # is cut (below) and the head lowered by both reaches
+        torso_reach = tab_reach(parent, (grom - off) / k, (0, 1)) * k if grom is not None else 0.
+        target = np.asarray(target, float) - torso_reach * cdir - (tab_reach(child, cbrad if cbrad is not None else piv_c, caxis) * k + .9 * RS) * cdir
     c, s_ = math.cos(rot), math.sin(rot)
     R = np.array([[c, -s_], [s_, c]]) * k * sc
     if mir:
@@ -244,36 +276,74 @@ def connect(parent, child, joint, angle, genes, side=None):
         top = 'view'                           # round 05 (critic r04): back views always put the collar over the head's tab
     if top == 'view':                          # back views: the parent (collar) over the child's tab; else the child over
         top = 'parent' if (child.get('view') or '').startswith(('back', 'three-quarter-back')) else 'child'
+    # ---- round 06 (critic r05) ------------------------------------------------------------------------------
+    # 1. no drawn brad sprite, ever. The fastener is the TOP piece's own painted grommet, registered over the under
+    #    piece's grommet. If the top piece has no grommet at this joint, flip the z-order when the other piece has
+    #    one, else the pair is rejected for this method (None). The neck has no fastener in this art and is exempt.
+    if genes.get('grommet_rule', True) and joint != 'neck':
+        has = {'child': cbrad is not None, 'parent': grom is not None}
+        if not has[top]:
+            other = 'parent' if top == 'child' else 'child'
+            if not has[other]:
+                return None
+            top = other
+    Ov, Un = (C, P) if top == 'child' else (P, C)
+    yy2, xx2 = np.mgrid[0:Hc, 0:Wc]
+    side = (xx2 - target[0]) * cdir[0] + (yy2 - target[1]) * cdir[1]          # > 0: the child's side of the joint
+    disk = (xx2 - target[0]) ** 2 + (yy2 - target[1]) ** 2 <= (8 * RS) ** 2
+    if genes.get('side_trim', True):
+        # 3a. connector tabs: each piece's paper on the OTHER piece's side of the joint line, near the joint, that is
+        #     not inside the other piece's silhouette is a tab / ear and is removed (the under piece strictly; the over
+        #     piece with 0.2 cm of tolerance so its own painted grommet ring stays whole)
+        pm_, cm_ = P[..., 3] > 128, C[..., 3] > 128
+        tol = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(.4 * RS) | 1, int(.4 * RS) | 1))
+        cmd = cv2.dilate(cm_.astype(np.uint8), tol) > 0 if top == 'parent' else cm_
+        pmd = cv2.dilate(pm_.astype(np.uint8), tol) > 0 if top == 'child' else pm_
+        # the under piece is trimmed only at the extremity joints (hand ears, boot / collar tabs); at the cloth
+        # joints its end is the paper showing inside the bend and trimming it leaves a background notch
+        cut_under = joint in ('wrist', 'ankle', 'neck')
+        if top == 'parent' or cut_under:        # the parent's paper beyond the joint, outside the child
+            P[..., 3][(side > 0) & disk & pm_ & ~cmd] = 0
+        if top == 'child' or cut_under:         # the child's paper behind the joint, outside the parent
+            C[..., 3][(side < 0) & disk & cm_ & ~pmd] = 0
+    if neck_back and top == 'parent' and grom is not None:
+        # 3b. the torso's neck tab above the collar edge is cut (the tab and the neck stub round it, 0.75 x the neck width either side; not the shoulders)
+        # in the torso's own frame (its up = screen up), not the tilted head's
+        side0 = -(yy2 - grom[1])
+        lat = np.abs(xx2 - grom[0])
+        wcn = width_across(child['img'][..., 3], piv_c, np.array(caxis, float)) * k * sc
+        band = lat <= max(.75 * wcn, 1.5 * RS)
+        P[..., 3][(side0 > -torso_reach + .1 * RS) & (side0 < 4 * RS) & band] = 0
+        # the torso card's notches round its old neck stub, now open below the new collar line, are closed and
+        # painted from the collar round them
+        zone = (side0 <= -torso_reach + .1 * RS) & (side0 > -torso_reach - 8 * RS) & (lat <= 1.3 * max(.75 * wcn, 1.5 * RS))
+        pa_ = P[..., 3] > 128
+        # a transparent pixel there with torso paper both to its left and to its right on its row is a notch
+        cl = np.cumsum(pa_, axis=1)
+        left = cl > 0
+        right = (cl[:, -1:] - cl) > 0
+        holes = zone & ~pa_ & left & right
+        if holes.any():
+            bgr = np.clip(P[..., :3], 0, 255).astype(np.uint8)
+            P[..., :3] = cv2.inpaint(bgr, holes.astype(np.uint8), 5, cv2.INPAINT_TELEA).astype(np.float32)
+            P[..., 3][holes] = 255
     if genes.get('rim_trim', True):
-        # round 05 (critic: white / tan rims at cuffs and collars): the over part's painted paper-edge band (0.35 cm)
-        # where it lies inside the under part, within the joint disk, is removed so the under part shows through
-        Ov, Un = (C, P) if top == 'child' else (P, C)
+        # 3c. the over piece's painted rim (leopard / tan paper edge, 0.45 cm) wherever it lies over the under piece,
+        #     along the whole overlap (round 05 trimmed only within 6 cm of the joint)
         ov_a = (Ov[..., 3] > 128).astype(np.uint8)
         dist = cv2.distanceTransform(ov_a, cv2.DIST_L2, 3)
-        yy2, xx2 = np.mgrid[0:Hc, 0:Wc]
-        disk = (xx2 - J_r[0]) ** 2 + (yy2 - J_r[1]) ** 2 <= (6 * RS) ** 2
-        rim = (dist > 0) & (dist <= .35 * RS) & (Un[..., 3] > 128) & disk
+        rim = (dist > 0) & (dist <= .45 * RS) & (Un[..., 3] > 128)
         Ov[..., 3][rim] = 0
+    pm, cm = P[..., 3] > 128, C[..., 3] > 128
+    # 2. both pieces must be visible: the under piece's share of its own area left uncovered
+    un, ov = (Un[..., 3] > 128), (Ov[..., 3] > 128)
+    vis = float((un & ~ov).sum()) / max(1, un.sum())
     if top == 'child':
         img = over(P, C)
     else:
         img = over(C, P)
     brad_mask = None
-    if genes.get('seam') == 'brad' and grom is not None:
-        # round 05 (critic r04): a brad only where the parent has a painted grommet, centred on it, at least as large
-        # as its painted ring (no bare brads on throats or boot shafts, no crescents)
-        gr = grommet_radius(parent['img'], (grom - off) / k)
-        r = max(genes.get('brad_r', 1.1) * RS, (gr * k + 1) if gr else 0)
-        spr = brad_sprite(r)
-        J_draw = grom
-    if genes.get('seam') == 'brad' and grom is not None:
-        d = spr.shape[0]
-        x0, y0 = int(round(J_draw[0] - (d - 1) / 2)), int(round(J_draw[1] - (d - 1) / 2))
-        if 0 <= x0 and 0 <= y0 and x0 + d <= Wc and y0 + d <= Hc:
-            img[y0:y0 + d, x0:x0 + d] = over(img[y0:y0 + d, x0:x0 + d], spr)
-            brad_mask = np.zeros((Hc, Wc), bool)
-            brad_mask[y0:y0 + d, x0:x0 + d] = spr[..., 3] > 128
     return {'img': img, 'pm': pm, 'cm': cm, 'pivot': J_r, 'axis_c': cdir, 'axis_p': np.array(pax, float),
             'Mc': Mc, 'Mp': Mp, 'scale': sc, 'mirror': mir, 'trim_cut': trim_cut, 'grommet': grom, 'P': P, 'C': C, 'on_top': top,
-            'origP': P0m, 'origC': C0m, 'brad_mask': brad_mask,
+            'origP': P0m, 'origC': C0m, 'brad_mask': brad_mask, 'vis_under': vis,
             'child_brad': (Mc[:, :2] @ cbrad + Mc[:, 2]) if cbrad is not None else None}
