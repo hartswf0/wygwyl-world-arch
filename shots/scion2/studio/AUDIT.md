@@ -48,8 +48,22 @@ Code is in `studio/exposure.py`; the proof is in `studio/proof03.py`.
 
 Recast: identical beats on identical frames in both castings (**measured**). Every frame is an intact painting; no pixel of any drawing is bent (**structural**).
 
-### Critic
-See `proof03/critic.md`. It is a blind A/B of this method against proof01's bent rigs, by a fresh critic who first looked at the paintings.
+### Critic (blind A/B against proof01's bent rigs; full text in `proof03/critic.md`)
+**The exposure sheet is stronger: 5.5/10 against 3.5/10.**
+- **Exposure sheet:** every frame stays on-model, and the spin reads as a full 360° turn.
+- **Bent rigs:**
+  - the gown turns into a garbled drawing for about 3 seconds;
+  - a foreign hook-shaped piece hangs on the man in the pinstripe suit;
+  - the walk is a crouched shuffle.
+
+The exposure sheet's largest gap:
+1. **The walk** is one frozen stride sliding across the floor, because only one clean walk drawing exists.
+2. **Beat changes** are one-frame pops.
+
+The repair condition: the leading boot alternates at least every 0.5 s, planted boots stay within ±3 px, and each beat change has at least 2 in-between frames with nothing broken.
+
+**Next steps:**
+- **Walk:** commission the 3/4 walk cycle, which is the real fix. As a stopgap, test a bend limited to each drawing's own neighbourhood (at most 15°, toward the next drawing's pose) for 2-frame in-betweens. Judge that stopgap by the same blind critic.
 
 ## Coverage and commissions
 `studio/coverage.json` lists each character's clean drawings by view and posture. The gaps that block the poems:

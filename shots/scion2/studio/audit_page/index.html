@@ -1,0 +1,122 @@
+<title>WYGWYL Swarm Audit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an audit memo. Verdict first, then the two methods side by side as playing clips, then the assumptions ledger and the coverage table. */
+:root { --paper:#eceeea; --sheet:#f8f9f6; --ink:#1c1f24; --muted:#5d636b; --rule:#cfd3cc; --brass:#a87a1f; --pass:#2f7d4f; --pass-soft:#dcefe2; --fail:#b3362c; --fail-soft:#f6dcd8;
+  --display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif; --body:"Atkinson Hyperlegible",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper:#14161a; --sheet:#1d2025; --ink:#e9ebe6; --muted:#a2a8ae; --rule:#343840; --brass:#d8ab4f; --pass:#6cc28f; --pass-soft:#1c3326; --fail:#ec7a6e; --fail-soft:#3d201d; color-scheme:dark } }
+:root[data-theme="dark"] { --paper:#14161a; --sheet:#1d2025; --ink:#e9ebe6; --muted:#a2a8ae; --rule:#343840; --brass:#d8ab4f; --pass:#6cc28f; --pass-soft:#1c3326; --fail:#ec7a6e; --fail-soft:#3d201d; color-scheme:dark }
+body { background:var(--paper); color:var(--ink); font-family:var(--body); font-size:15px; line-height:1.55; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:20px 48px; }
+.wrap { max-width:1180px; margin:0 auto; display:grid; gap:30px; }
+h1,h2,h3 { font-family:var(--display); font-weight:700; margin:0; text-wrap:balance; letter-spacing:-0.01em; }
+h1 { font-size:clamp(28px,4vw,40px); line-height:1.08; } h2 { font-size:22px; } h3 { font-size:17px; font-weight:500; }
+.eyebrow { font-family:var(--mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+p { margin:0; max-width:72ch; } .mut { color:var(--muted); font-size:.9em; }
+header { display:grid; gap:10px; }
+.lede { font-size:17px; }
+.duo { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+@media (max-width:820px){ .duo { grid-template-columns:1fr; } }
+.card { background:var(--sheet); border:1px solid var(--rule); border-radius:6px; overflow:hidden; display:grid; min-width:0; }
+.card video { width:100%; aspect-ratio:16/9; max-width:100%; display:block; background:var(--paper); }
+.card .meta { padding:10px 12px 12px; display:grid; gap:6px; }
+.score { font-family:var(--display); font-size:28px; line-height:1; }
+.pill { font-family:var(--mono); font-size:11px; padding:1px 8px; border-radius:99px; justify-self:start; letter-spacing:.06em; }
+.pill.pass { background:var(--pass-soft); color:var(--pass); } .pill.fail { background:var(--fail-soft); color:var(--fail); }
+.card.win { border-left:5px solid var(--pass); } .card.lose { border-left:5px solid var(--fail); }
+ul { margin:0; padding-left:1.1em; display:grid; gap:4px; max-width:72ch; }
+.scroll { overflow-x:auto; }
+table { border-collapse:collapse; font-size:14px; min-width:760px; }
+th,td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--rule); vertical-align:top; }
+th { font-family:var(--mono); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:500; }
+td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+.bad { color:var(--fail); }
+.steps { display:grid; gap:8px; counter-reset:s; max-width:75ch; }
+.steps > div { display:grid; grid-template-columns:2.2em 1fr; gap:6px; }
+.steps > div::before { counter-increment:s; content:counter(s); font-family:var(--display); font-size:20px; color:var(--brass); }
+.metrics { display:flex; flex-wrap:wrap; gap:6px 18px; font-family:var(--mono); font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+</style>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Audit · checked against the 54 animation swarms</span>
+    <h1>Why we kept choosing odd pieces</h1>
+    <p class="lede">Every method we built filled a gap in the drawings with the nearest wrong thing. The rig bent a painting of the poet approaching a motorbike into a walk. The parts lab glued cards from different sheets together. The pose selector reached for a drawing with a table baked into it. The swarms agree: when a pose isn't in the drawing, swap to a drawing that has it. If no drawing has it, commission one.</p>
+  </header>
+
+  <section class="duo" aria-label="The two methods, judged blind">
+    <div class="card win">
+      <video src="spin_A.mp4" poster="spin_A.jpg" muted loop playsinline autoplay preload="metadata"></video>
+      <div class="meta">
+        <span class="pill pass">STRONGER · 5.5 / 10</span>
+        <h3>Exposure sheet: whole paintings, swapped on beats</h3>
+        <p class="mut">The couple's spin is one sheet written in views (3/4, profile, 3/4-back, back, then the far side mirrored). It is resolved from each dancer's own paintings. No pixel of any drawing is bent.</p>
+        <div class="metrics"><span>floor ≤ 1 px</span><span>jump at swaps 0.0 cm</span><span>recast: identical beats</span></div>
+      </div>
+    </div>
+    <div class="card lose">
+      <video src="scene_A.mp4" poster="scene_A.jpg" muted loop playsinline autoplay preload="metadata"></video>
+      <div class="meta">
+        <span class="pill fail">WEAKER · 3.5 / 10</span>
+        <h3>Bent rigs: one painting per view, deformed to every pose</h3>
+        <p class="mut">Proof 01 passed all six geometry checks. Judged by eye, the gown garbles for about 3 seconds, a hook-shaped piece that isn't in any painting hangs on the man in the pinstripe suit, and the walk is a crouched shuffle.</p>
+        <div class="metrics"><span>6/6 geometry checks</span><span>drawing integrity lost</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-label="The poet's beats">
+    <video src="poet_beats.mp4" poster="poet_beats.jpg" muted loop playsinline autoplay preload="metadata"></video>
+    <div class="meta">
+      <h3>The poet acts in five of his own paintings</h3>
+      <p class="mut">Walk in, point, recoil, turn to us, open arms. The critic's largest gap is here: the walk is one frozen stride sliding across the floor, because only one clean walk drawing exists, and each beat change is a one-frame pop.</p>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:12px">
+    <h2>The critic's repair condition</h2>
+    <p>This came from a fresh critic who looked at the paintings first, then judged both methods blind. The exposure sheet passes when:</p>
+    <ul>
+      <li>the leading boot alternates at least every 0.5 s in the walk;</li>
+      <li>planted boots stay within ±3 px;</li>
+      <li>every beat change has at least 2 in-between frames with no broken limbs;</li>
+      <li>drawing integrity stays where it is now.</li>
+    </ul>
+    <p class="mut">The real fix for the walk is to commission a 3/4 walk cycle (four drawings). The stopgap to test is bending each drawing by at most 15°, only near its own pose, toward the next one, for those 2-frame in-betweens. The same blind critic would judge it.</p>
+  </section>
+
+  <section style="display:grid;gap:12px">
+    <h2>The simple method</h2>
+    <div class="steps">
+      <div><p><strong>Vocabulary.</strong> Each actor's clean paintings: one costume, a full figure, no scenery in the cutout. Each is tagged by view and posture.</p></div>
+      <div><p><strong>Sheet.</strong> A list of beats. Each beat names a painting, how long it holds, how far the body travels, and whether it lands with a settle.</p></div>
+      <div><p><strong>Placement.</strong> One size per actor, the lowest painted pixel on the floor, and the body centre carried across swaps so nothing jumps.</p></div>
+      <div><p><strong>Turns are rings of views.</strong> A missing view holds the previous drawing, so any cast member plays the same beats.</p></div>
+      <div><p><strong>Gaps are commissions.</strong> A beat no clean drawing covers is reported as a drawing to make, never filled with the nearest wrong one.</p></div>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:12px">
+    <h2>Assumptions we made, and what the swarms say</h2>
+    <div class="scroll"><table>
+      <tr><th>Assumption</th><th>Swarm against it</th><th>Evidence</th><th>Now</th></tr>
+      <tr><td>One painting per view can be bent into every pose</td><td>ARAP and Moho repair rules, Cartoon Saloon, Multiview Turn Lab</td><td>The gown garbles. The poet's walk is bent from a motorbike-approach painting.</td><td>Swap drawings; bend only near a drawing's own pose</td></tr>
+      <tr><td>Parts from different sheets can build new bodies</td><td>Cartoon Saloon, Max Ernst, Gilliam</td><td>8 critic rounds, at best 5 of 12 joints passed, and no full body was made</td><td>Stopped</td></tr>
+      <tr><td>An actor is whoever has a rig</td><td>Pose2Pose: "request new artwork"</td><td>The dancers were cast to walk, grasp and fall</td><td>Cast by coverage</td></tr>
+      <tr><td>The cutout is the figure</td><td>GrabCut and SAM: separate the subject from its accessories</td><td>38 of the poet's 90 cutouts include props or scenery</td><td>Filtered; recut the props as separate layers</td></tr>
+      <tr><td>Proxy scores mean quality</td><td>Doctrine 9 and 14</td><td>seam.py agreed with the critic 8% of the time; critic v1 failed the paintings themselves</td><td>Critic anchored on the paintings, with hidden controls</td></tr>
+      <tr><td>The floor is a line</td><td>Multiplane and Occlusion swarms</td><td>In 3/4 the far foot sits 12–30 px higher; feet slid 4–28 cm</td><td>Each foot at its own depth</td></tr>
+      <tr><td>Generate the motion, then find drawings for it</td><td>Exposure sheets, Dynamic Pose Selection</td><td>108 of 132 frames had no clean drawing</td><td>Write beats in terms of the drawings that exist</td></tr>
+      <tr><td>Every character's drawings are labelled</td><td>Provenance, SAM</td><td>6 characters have no view labels, so they can't be used</td><td>Label views first</td></tr>
+    </table></div>
+  </section>
+
+  <section style="display:grid;gap:12px">
+    <h2>What each actor can perform</h2>
+    <p class="mut">Clean drawings per character in its most common costume. "Props" counts cutouts with props or scenery baked in; those are excluded from the clean count.</p>
+    <div class="scroll"><table>
+      <tr><th>Character</th><th class="num">Paintings</th><th class="num">Clean</th><th class="num">Props</th><th>Views</th><th>Postures</th></tr>
+      <tr><td>ancestor elder <span class="mut">white_silver</span></td><td class="num">1</td><td class="num">0</td><td class="num">1</td><td><span class="bad">no view labels</span></td><td>—</td></tr><tr><td>ancestor robe <span class="mut">robe</span></td><td class="num">5</td><td class="num">0</td><td class="num">0</td><td><span class="bad">no view labels</span></td><td>—</td></tr><tr><td>angel <span class="mut">robe</span></td><td class="num">6</td><td class="num">0</td><td class="num">0</td><td><span class="bad">no view labels</span></td><td>—</td></tr><tr><td>brother 1 <span class="mut">hoodie</span></td><td class="num">2</td><td class="num">1</td><td class="num">0</td><td>back3q 1</td><td>stand 1</td></tr><tr><td>citizen 1 <span class="mut">wrap_suit</span></td><td class="num">7</td><td class="num">0</td><td class="num">0</td><td><span class="bad">no view labels</span></td><td>—</td></tr><tr><td>couple 1 a <span class="mut">cream_shirt</span></td><td class="num">3</td><td class="num">3</td><td class="num">0</td><td>prof 2, front 1</td><td>sit 2, walk 1</td></tr><tr><td>dj cyber <span class="mut">cyber</span></td><td class="num">6</td><td class="num">0</td><td class="num">0</td><td><span class="bad">no view labels</span></td><td>—</td></tr><tr><td>ex <span class="mut">ex</span></td><td class="num">16</td><td class="num">15</td><td class="num">0</td><td>back 10, back3q 5</td><td>stand 3, lean 1, fall 2, sit 1, fly 1, dance 1, walk 5, crouch 1</td></tr><tr><td>father 02 <span class="mut">quilted_jacket</span></td><td class="num">2</td><td class="num">2</td><td class="num">0</td><td>prof 2</td><td>sit 2</td></tr><tr><td>father elder <span class="mut">overcoat</span></td><td class="num">2</td><td class="num">2</td><td class="num">0</td><td>q3 1, prof 1</td><td>walk 1, stand 1</td></tr><tr><td>friend 1 <span class="mut">navy</span></td><td class="num">2</td><td class="num">1</td><td class="num">0</td><td>front 1</td><td>stand 1</td></tr><tr><td>mother <span class="mut">cardigan</span></td><td class="num">3</td><td class="num">2</td><td class="num">0</td><td>prof 1, front 1</td><td>sit 2</td></tr><tr><td>party guest <span class="mut">guest</span></td><td class="num">6</td><td class="num">5</td><td class="num">0</td><td>q3 1, front 3, back 1</td><td>sit 1, stand 3, walk 1</td></tr><tr><td>poet <span class="mut">tshirt</span></td><td class="num">16</td><td class="num">9</td><td class="num">7</td><td>q3 8, back 1</td><td>fall 3, walk 4, lie 1, run 1</td></tr><tr><td>poet <span class="mut">track</span></td><td class="num">90</td><td class="num">21</td><td class="num">38</td><td>prof 3, front 12, q3 6</td><td>lie 2, stand 13, walk 2, dance 1, lunge 3</td></tr><tr><td>poet soul <span class="mut">soul</span></td><td class="num">6</td><td class="num">6</td><td class="num">0</td><td>q3 2, front 3, back3q 1</td><td>stand 4, kneel 1, sit 1</td></tr><tr><td>traveler 1 <span class="mut">greatcoat</span></td><td class="num">11</td><td class="num">0</td><td class="num">0</td><td><span class="bad">no view labels</span></td><td>—</td></tr><tr><td>vintage man <span class="mut">suit</span></td><td class="num">8</td><td class="num">6</td><td class="num">0</td><td>front 1, prof 1, q3 1, back3q 1, back 2</td><td>stand 2, dance 4</td></tr><tr><td>vintage woman <span class="mut">gown</span></td><td class="num">8</td><td class="num">7</td><td class="num">0</td><td>prof 1, q3 1, back3q 2, back 3</td><td>dance 6, stand 1</td></tr><tr><td>young poet <span class="mut">child</span></td><td class="num">2</td><td class="num">2</td><td class="num">0</td><td>q3 1, prof 1</td><td>lean 2</td></tr><tr><td>young poet <span class="mut">pajamas</span></td><td class="num">4</td><td class="num">2</td><td class="num">0</td><td>prof 1, q3 1</td><td>stand 1, throw 1</td></tr>
+    </table></div>
+    <p class="mut">To commission: a 3/4 walk cycle, a neutral 3/4 stand and back views for the poet; a front dance pose and a 3/4 walk pair for each dancer. The ex is only ever seen from behind, which is the design, not a gap.</p>
+  </section>
+</div>
