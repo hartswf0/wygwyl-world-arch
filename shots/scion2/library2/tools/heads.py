@@ -4,7 +4,7 @@
 
 Writes library2/<char>/head/*.png, merges records into library2/index.json, sheets into library2/sheets/.
 Head grid: 512x512 canvas, neck pivot at (256,448), head 'up' (neck->crown) = canvas up, CANON_PPC px/cm with the
-crown->chin height scaled to the character's head height (height/7.75).
+crown->chin height scaled to the character's head height (height/8, Vitruvian canon).
 """
 import math, os, sys
 import numpy as np, cv2
@@ -206,11 +206,11 @@ def process(c, fx, s_override=None):
     t = math.radians(yaw)
     face_dir3 = [round(math.sin(t), 3), 0.0, round(math.cos(t), 3)]
     # transform: card upright (rotation from fixes only), scale crown->chin to the character's head height
-    head_cm = C.height_cm(c['character']) / 7.75
+    head_cm = C.height_cm(c['character']) / 8.0
     rot = float(fx.get('rot', 0.0))
     s = head_cm * C.CANON_PPC / max(8.0, hh)
     s_own = s
-    ssrc = 'own crown->chin = %.1f cm (height/7.75)' % head_cm
+    ssrc = 'own crown->chin = %.1f cm (height/8, Vitruvian canon)' % head_cm
     if fx.get('scale'):
         s, ssrc = float(fx['scale']), 'fixes.json'
     elif s_override:
