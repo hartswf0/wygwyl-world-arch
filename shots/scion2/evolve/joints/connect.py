@@ -144,6 +144,46 @@ def round_end(U, c, width, xx, yy, rng=None):
     return int(new.sum())
 
 
+def rim_colour(L, m):
+    """the median colour of a piece's painted rim band (its outer 0.45 cm)"""
+    d = cv2.distanceTransform(m.astype(np.uint8), cv2.DIST_L2, 3)
+    band = m & (d > 0) & (d <= .45 * RS)
+    if band.sum() < 10:
+        return np.array([60., 90., 130.], np.float32)
+    return np.median(L[..., :3][band], axis=0).astype(np.float32)
+
+
+def rim_cuts(L, orig, w_cm=.6):
+    """repaint a w_cm paper rim, in the piece's own rim colour, along the contour where its paper was cut away
+    (orig: its paper before any cut; in place)"""
+    F = L[..., 3] > 128
+    removed = orig & ~F
+    if removed.sum() < 4:
+        return
+    w = w_cm * RS
+    din = cv2.distanceTransform(F.astype(np.uint8), cv2.DIST_L2, 3)
+    nearcut = cv2.distanceTransform((~removed).astype(np.uint8), cv2.DIST_L2, 3) <= w + 1.5
+    edge = F & (din <= w) & nearcut
+    if edge.any():
+        col = rim_colour(L, orig & F & ~edge)
+        L[..., :3][edge] = col
+
+
+def fill_holes(img, max_cm2=3.):
+    """critic v2 (defect 7): background seen through a painted grommet's hole where nothing lies below is filled with
+    the dark hole colour the references show (enclosed background specks under max_cm2)"""
+    bg = (img[..., 3] <= 128).astype(np.uint8)
+    n, lab, st, _ = cv2.connectedComponentsWithStats(bg, connectivity=4)
+    H, W = bg.shape
+    for i in range(1, n):
+        x, y, w, h, a = st[i]
+        if x == 0 or y == 0 or x + w >= W or y + h >= H or a > max_cm2 * RS * RS:
+            continue
+        m = lab == i
+        img[..., :3][m] = (22., 28., 38.)
+        img[..., 3][m] = 255
+
+
 def drop_islands(L, frac=.02):
     """removes the alpha islands of a render layer smaller than frac of its paper (in place)"""
     m = (L[..., 3] > 128).astype(np.uint8)
@@ -301,10 +341,11 @@ def connect(parent, child, joint, angle, genes, side=None):
             cbrad = child['brads'][int(np.argmin(d))]
     if genes.get('pivot') == 'register' and grom is not None and cbrad is not None:
         piv_c, target = cbrad, grom              # the child's brad goes exactly onto the parent's grommet
-    # round 08 (critic r07 s02: the hand card's square dark tab sits between sleeve and hand): with the hand on top, the
+    # round 08 (critic r07 s02: the hand card's square dark tab sits between sleeve and hand; r08 draft: the boot's tan
+    # tab above the boot top, the same at the ankle): with the hand / boot on top, the
     # hand's tab (from its grommet to the first sharp change of paint towards the fingers) is cut from the card, and
     # the hand moved back so its skin starts 0.3 cm inside the cuff's end; no fastener shows at this wrist
-    hand_over = joint == 'wrist' and genes.get('on_top', 'child') == 'child' and genes.get('hand_tab_cut', True) and cbrad is not None
+    hand_over = joint in ('wrist', 'ankle') and genes.get('on_top', 'child') == 'child' and genes.get('hand_tab_cut', True) and cbrad is not None
     hand_cut = None
     if hand_over:
         reach = tab_edge(child, cbrad, caxis)
@@ -312,8 +353,14 @@ def connect(parent, child, joint, angle, genes, side=None):
         proj = (xs_ - cbrad[0]) * caxis[0] + (ys_ - cbrad[1]) * caxis[1]
         reach += 8.                            # past the tab's own painted rim (about 0.6 cm)
         hand_cut = proj < reach
-        cuff = cuff_reach(parent, (grom - off) / k, pax) if grom is not None else 0.
-        shift = reach * k * sc - cuff * k + .3 * RS
+        if joint == 'wrist':
+            # the hand's skin starts 0.3 cm inside the cuff's end
+            cuff = cuff_reach(parent, (grom - off) / k, pax) if grom is not None else 0.
+            shift = reach * k * sc - cuff * k + .3 * RS
+        else:
+            # the boot shaft's top goes 0.3 cm above the shin's hem, so the shin's own tab and grommet are inside it
+            hem = tab_edge(parent, (grom - off) / k, -np.array(pax, float)) if grom is not None else 0.
+            shift = reach * k * sc + hem * k + 1.0 * RS          # + the grommet ring, so none of it peeks out
         if shift > 0:
             target = np.asarray(target, float) - shift * cdir
     neck_back = joint == 'neck' and (child.get('view') or '').startswith(('back', 'three-quarter-back')) and genes.get('side_trim', True)
@@ -435,7 +482,9 @@ def connect(parent, child, joint, angle, genes, side=None):
         #     along the whole overlap (round 05 trimmed only within 6 cm of the joint)
         ov_a = (Ov[..., 3] > 128).astype(np.uint8)
         dist = cv2.distanceTransform(ov_a, cv2.DIST_L2, 3)
-        rim = (dist > 0) & (dist <= .45 * RS) & (Un[..., 3] > 128)
+        # round 08 (critic v2: every edge in the references carries its paper rim): the over piece keeps its painted
+        # rim band unless the method asks for rim_band; only the soft fringe goes
+        rim = (dist > 0) & (dist <= .45 * RS) & (Un[..., 3] > 128) if genes.get('rim_band') else np.zeros_like(ov_a, bool)
         # round 07 (critic r06: a dotted light halo along the over piece's edge): its soft fringe (alpha <= 128,
         # outside the mask the band is measured from) lying over the under piece goes too
         rim |= (Ov[..., 3] > 0) & (Ov[..., 3] <= 128) & (Un[..., 3] > 128)
@@ -443,6 +492,21 @@ def connect(parent, child, joint, angle, genes, side=None):
     # round 08 (critic r07: beard / ear slivers beside back necks): alpha islands under 2% of a piece are removed
     for L_ in (P, C):
         drop_islands(L_)
+    # round 08 (critic v2, defect 9): the under piece's own pale fringe / white band near the joint goes too
+    near = (xx2 - target[0]) ** 2 + (yy2 - target[1]) ** 2 <= (8 * RS) ** 2
+    ua = Un[..., 3]
+    Un[..., 3][near & (ua > 0) & (ua <= 128)] = 0
+    # round 08 (critic v2, defect 8): a 0.6 cm paper rim, in the piece's own rim colour, along every contour a cut made
+    origC_full = C0m
+    if hand_over:
+        origC_full = cv2.warpAffine(child['img'][..., 3].astype(np.float32), Mc, (Wc, Hc), flags=cv2.INTER_LINEAR, borderValue=0) > 128
+    for L_, O_ in ((P, P0m), (C, origC_full)):
+        rim_cuts(L_, O_)
+    whiten = Un[..., :3].mean(-1) > 185
+    ub = (Un[..., 3] > 128).astype(np.uint8)
+    edge_u = (cv2.distanceTransform(ub, cv2.DIST_L2, 3) <= .3 * RS) & (ub > 0) & near & whiten
+    if edge_u.any():
+        Un[..., :3][edge_u] = rim_colour(Un, Un[..., 3] > 128)
     pm, cm = P[..., 3] > 128, C[..., 3] > 128
     # 2. both pieces must be visible: the under piece's share of its own area left uncovered
     un, ov = (Un[..., 3] > 128), (Ov[..., 3] > 128)
@@ -451,6 +515,7 @@ def connect(parent, child, joint, angle, genes, side=None):
         img = over(P, C)
     else:
         img = over(C, P)
+    fill_holes(img)
     brad_mask = None
     return {'img': img, 'pm': pm, 'cm': cm, 'pivot': J_r, 'axis_c': cdir, 'axis_p': np.array(pax, float),
             'Mc': Mc, 'Mp': Mp, 'scale': sc, 'mirror': mir, 'trim_cut': trim_cut, 'grommet': grom, 'P': P, 'C': C, 'on_top': top,

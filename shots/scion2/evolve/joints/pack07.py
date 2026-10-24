@@ -1,6 +1,7 @@
 """Round 07 / 08 blind critic pack: 12 joint renders + 4 controls, shuffled into 16 sheets.
 
-Round 08 (critic r07): angles capped at 120 deg (elbow, knee) and +-20 deg (back necks); rom.sweep now needs the
+Round 08 (critic r07 and critic v2): controls cut only by the field edge; ankle pairs with the boot shaft within 15% of
+the shin's width; angles capped at 120 deg (elbow, knee) and +-20 deg (back necks); rom.sweep now needs the
 union connected through the pivot disc; elbow / knee pairs must carry the piping across (piping.match, mirroring the
 child when that fixes it); new controls (shoulder, wrist, hip, and an elbow again from another painting).
 
@@ -40,6 +41,8 @@ CONTROLS8 = [('shoulder', 'poet.11.main-poses/02-front-guide-stone', 'shoulderL'
              ('hip', 'poet.08.main-poses/03-gentle-slow-bent-knee-dance-alone', 'hipL', ('kneeL', 8), ('groin', 10)),
              ('elbow', 'poet.04.main-poses/04-4-empty-cuffs', 'elbowL', ('shoulderL', 6), ('wristL', 6))]
 CAP = {'elbow': (0, 120), 'knee': (0, 120)}
+ROUND = [7]
+ANKLE_W = .15
 
 
 def pack_ok(j, a, b):
@@ -50,6 +53,14 @@ def pack_ok(j, a, b):
             return False
     if any(t in name(a) for t in ('connector', 'connecter')):
         return False
+    if j == 'ankle' and ROUND[0] >= 8:
+        # critic v2 (defect 10): the boot shaft's width within 15% of the shin's end
+        pa = CN.anchor(a, 'ankle', b.get('side'))
+        if pa is not None:
+            ws = CN.width_across(a['img'][..., 3], pa - 20 * np.array([0, 1.]), np.array([0, 1.]))
+            wb = CN.width_across(b['img'][..., 3], np.asarray(b['pivot'], float) + 20 * np.array([0, 1.]), np.array([0, 1.]))
+            if ws > 5 and wb > 5 and abs(wb / ws - 1) > ANKLE_W:
+                return False
     # the jacket is black: pale (unpainted / white reserve) cloth cards are a different costume whatever their label
     for p in (a, b):
         if p['part'] in ('torso', 'upper_arm', 'forearm', 'thigh', 'shin', 'pelvis') and pale(p):
@@ -104,6 +115,9 @@ def render_control(tid, joint_m, segs, T):
     H, W = im.shape[:2]
     yy, xx = np.mgrid[0:H, 0:W]
     keep = np.zeros((H, W), bool)
+    if ROUND[0] >= 8:
+        segs = []                               # critic v2: controls are cut only by the field edge, never by a mask
+        keep[:] = True
     for mk, r_cm in segs:
         if mk.startswith('@ext:'):              # past the joint, continuing the line from another marker (no hand marker)
             frm, cm_ = mk[5:].split(':')
@@ -119,6 +133,7 @@ def render_control(tid, joint_m, segs, T):
 
 def main():
     rnd = int(sys.argv[1]) if len(sys.argv) > 1 else 7
+    ROUND[0] = rnd
     od = os.path.join(HERE, 'round%02d' % rnd)
     os.makedirs(os.path.join(od, 'critic'), exist_ok=True)
     rng = random.Random(rnd)
