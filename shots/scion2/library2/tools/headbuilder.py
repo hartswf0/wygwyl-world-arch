@@ -12,8 +12,9 @@ A feature layout is defined on the canonical head grid of each blank plate, from
   - face.front: eye pair 0.56 H, mouth 0.56 H.
   - face.profile: eye 0.31 H, mouth 0.385 H.
   - Brows take the eye-pair width.
-The feature pixels are only scaled and placed, never repainted (their brass eyelets are cut out so they do not read
-as pivot holes on the face). The poet kit has no nose card, so front composites
+The feature pixels are only scaled and placed, never repainted. Each feature card is trimmed to its painted
+feature (the pixels that differ from the plate's own skin, away from the plate rim) with a feathered alpha edge,
+so the plate outline does not show, and its brass eyelets are cut out. The poet kit has no nose card, so front composites
 of blank plates have no nose; they are flagged no_nose_card.
 Composed heads go into index.json as part 'head' with the flag 'composed' and a 'composed_from' list. They share the
 source plate's pivot, transform and keypoints. The sheet is sheets/<char>_head_composed_NN.jpg.
@@ -75,7 +76,7 @@ def feature_only(rgba, de=14.0):
     lab[..., 0] *= 100 / 255.0
     lab[..., 1:] -= 128
     w = max(rgba.shape[:2])
-    inner = cv2.erode(a.astype(np.uint8), np.ones((max(3, int(0.06 * w)) | 1,) * 2, np.uint8)).astype(bool)
+    inner = cv2.erode(a.astype(np.uint8), np.ones((max(3, int(0.11 * w)) | 1,) * 2, np.uint8)).astype(bool)
     base = np.median(lab[inner], 0) if inner.sum() > 20 else np.median(lab[a], 0)
     d = np.linalg.norm(lab - base, axis=2)
     f = (d > de) & inner

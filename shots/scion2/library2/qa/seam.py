@@ -21,8 +21,9 @@ terms):
 - gap_px, gap_frac: background enclosed between the parts at the joint (the closing of the union minus the union,
   inside the joint disk), as a fraction of seam_w^2.
 - width_A, width_B, width_ratio: each part's own cross-section width at the joint (measured across its axis at
-  0.1 seam_w inside it); ratio = width_B / width_A. A width step is the ratio leaving the joint's tolerance (neck:
-  the collar/neck end of the torso (B) may be 0.9-2.4x the head's neck (A)).
+  0.1 seam_w inside it); width_ratio = width_B / width_A. The step test is ORDER-FREE: width_step_ratio =
+  larger / smaller is compared with TOL[joint]['ratio'] (warn) and ['ratio_fail'] (fail), given as (1, max). Neck:
+  a collar may be up to 2.4x the neck before it warns, 3.2x before it fails.
 - gap ignores holes painted inside one part (eyelet holes, a hollow chest).
 - exposed_A_frac, exposed_B_frac: pixels of a part lying beyond the joint (on the other part's side, i.e. its
   overlap tab or cut end) and outside the other part's silhouette. These are cut edges or tabs showing; fraction of
@@ -44,8 +45,10 @@ terms):
   this should stay 0 for library parts.
 - registration_cm: the distance between the child's brad and the parent's grommet. It needs bradA/bradB, and
   warns above 0.3 cm and fails above 0.6 cm.
-- grommet_peek: the visible fraction of the under part's brass inside the joint disk. It needs the layers.
-  Between 8 % and 92 % visible (a half grommet peeking out) it warns.
+- grommet_peek: the under part's grommet at this joint (its brass component nearest the pivot, as its painted
+  ring) and the fraction of that ring still brass in the FINAL composite outside the over part. A brad drawn over
+  it is part of the over part's mask and hides it. Between 8 % and 92 % visible (a half grommet) it warns. It needs
+  the layers.
 - tab_visible_frac: the over part's beyond-joint pixels that are tab material (light cardboard or skin, not dark
   cloth or brass) outside the under part, / seam_w^2. It uses the exposed thresholds.
 - angle + ROM: outside ROM[joint] the verdict is 'N/A' (out_of_rom) and nothing is judged.
@@ -57,18 +60,18 @@ import cv2
 # per joint tolerances; the joint lab may override any of these
 TOL = {
     'generic': dict(gap_warn=0.01, gap_fail=0.04, exp_warn=0.06, exp_fail=0.18, cov_warn=0.08, cov_fail=0.25,
-                    ratio=(0.6, 1.67), ratio_fail=(0.4, 2.5), dE_warn=None),
+                    ratio=(1.0, 1.67), ratio_fail=(1.0, 2.5), dE_warn=None),
     # neck: a neck going into a collar is expected to step out (collar wider than neck)
     'neck': dict(gap_warn=0.01, gap_fail=0.04, exp_warn=0.06, exp_fail=0.18, cov_warn=0.08, cov_fail=0.25,
-                 ratio=(0.9, 2.4), ratio_fail=(0.7, 3.2), dE_warn=None),
+                 ratio=(1.0, 2.4), ratio_fail=(1.0, 3.2), dE_warn=None),
     'wrist': dict(gap_warn=0.01, gap_fail=0.04, exp_warn=0.06, exp_fail=0.18, cov_warn=0.1, cov_fail=0.3,
-                  ratio=(0.5, 2.0), ratio_fail=(0.3, 3.0), dE_warn=None),
+                  ratio=(1.0, 2.0), ratio_fail=(1.0, 3.0), dE_warn=None),
     'ankle': dict(gap_warn=0.01, gap_fail=0.04, exp_warn=0.06, exp_fail=0.18, cov_warn=0.1, cov_fail=0.3,
-                  ratio=(0.5, 2.5), ratio_fail=(0.3, 4.0), dE_warn=None),
+                  ratio=(1.0, 2.5), ratio_fail=(1.0, 4.0), dE_warn=None),
     'elbow': dict(gap_warn=0.01, gap_fail=0.04, exp_warn=0.06, exp_fail=0.18, cov_warn=0.1, cov_fail=0.3,
-                  ratio=(0.7, 1.43), ratio_fail=(0.5, 2.0), dE_warn=18),
+                  ratio=(1.0, 1.43), ratio_fail=(1.0, 2.0), dE_warn=18),
     'knee': dict(gap_warn=0.01, gap_fail=0.04, exp_warn=0.06, exp_fail=0.18, cov_warn=0.1, cov_fail=0.3,
-                 ratio=(0.7, 1.43), ratio_fail=(0.5, 2.0), dE_warn=18),
+                 ratio=(1.0, 1.43), ratio_fail=(1.0, 2.0), dE_warn=18),
 }
 
 
@@ -260,10 +263,20 @@ def score(render_rgba, maskA, maskB, pivot, axisA, axisB, over='A', featuresA=No
     over_mask_ = maskA if over == 'A' else maskB
     under_layer = layerB if over == 'A' else layerA
     if under_layer is not None:
-        bm = brass_mask(under_layer) & disk
-        if bm.sum() > 15:
-            vis = float((bm & ~over_mask_).sum() / bm.sum())
-            peek = round(vis, 3)
+        # the under part's grommet AT this joint: the brass component of its layer nearest the pivot, as its own
+        # painted ring (filled disc of the component's radius). Peek = brass still visible in the FINAL composite
+        # inside that ring, outside the over part (a brad drawn over it is part of the over part's mask).
+        bm = (brass_mask(under_layer) & disk).astype(np.uint8)
+        n_, lab_, st_, cen_ = cv2.connectedComponentsWithStats(bm, 8)
+        if n_ > 1:
+            i_ = 1 + int(np.argmin([np.hypot(cen_[i][0] - P[0], cen_[i][1] - P[1]) for i in range(1, n_)]))
+            if st_[i_, 4] > 15:
+                rr = 0.5 * max(st_[i_, 2], st_[i_, 3])
+                ring = np.zeros_like(bm)
+                cv2.circle(ring, (int(round(cen_[i_][0])), int(round(cen_[i_][1]))), int(round(rr)), 1, -1)
+                ring = ring.astype(bool) & (lab_ == i_)
+                vis = ring & brass_mask(render_rgba) & ~over_mask_
+                peek = round(float(vis.sum() / max(1, ring.sum())), 3)
     # visible connector tab: the over part's beyond-joint pixels outside the under part that are tab material
     # (light cardboard / skin, not dark cloth)
     over_layer = layerA if over == 'A' else layerB
@@ -305,7 +318,9 @@ def score(render_rgba, maskA, maskB, pivot, axisA, axisB, over='A', featuresA=No
         bad.append('covered')
     elif covered > T['cov_warn']:
         why.append('covered')
-    rt = r['width_ratio']
+    # the step is order-free: the larger joint end over the smaller (callers pass child/parent in either order)
+    rt = None if (r['width_ratio'] is None or r['width_ratio'] <= 0) else max(r['width_ratio'], 1.0 / r['width_ratio'])
+    r['width_step_ratio'] = None if rt is None else round(rt, 3)
     if rt is None or not (T['ratio_fail'][0] <= rt <= T['ratio_fail'][1]):
         bad.append('width_step')
     elif not (T['ratio'][0] <= rt <= T['ratio'][1]):

@@ -38,6 +38,16 @@ Status:
 - `qa/`: gates, `seam.py` (the joint fitness), `pairs.py` (pairwise joint sweeps) and `pairs.json` (the
   compatibility matrix).
 
+## Defringe
+Every canonical image is defringed: each semi-transparent edge pixel takes the colour of the nearest solid pixel,
+so the light card-background fringe cannot show as a white halo over a dark partner. Alpha and solid pixels are
+unchanged (`defringed: true` in index.json).
+
+## Native sets
+`source_set` in index.json gives the source sheet, the costume, his left/right (`side_in_set`) and `sheet_mates`,
+the other parts cut on the same sheet, grouped by part type. The kit's tabs were sized for their sheet-mates, so
+these are the native pairs.
+
 ## The grid
 - The scale is `CANON_PPC` = **10 px per cm** for every character and every part. A head 24 cm tall is 240 px.
 - Card to canonical: `canonical = M · [x, y, 1]`, where `M = transform.matrix_card_to_canonical` (2×3). `M` is a
@@ -136,8 +146,9 @@ Grid lines on the sheets are every 5 cm (50 px). They are aligned to the pivot, 
    - the brows sit at eye − 0.085·H;
    - the lips sit at eye + 0.55·(chin − eye).
 2. Plate widths are fractions of H, measured where a head and its features were cut on the same sheet.
-3. The feature pixels are only scaled and placed. Their brass eyelets are cut out (made transparent) so they do
-   not read as pivot holes.
+3. The feature pixels are only scaled and placed. Each feature card is trimmed to its painted feature with a
+   feathered alpha edge, so the plate outline does not show, and its brass eyelets are cut out. Only alpha changes.
+   The profile composites are rougher than the front ones (patches near the eye).
 4. The records are part `head`, with:
    - the flag `composed`;
    - `classes.expression`;
