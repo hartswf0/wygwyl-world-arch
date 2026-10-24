@@ -25,7 +25,7 @@ def part_record(c, part, r, ppc):
         'transform': {'matrix_card_to_canonical': [[round(float(x), 6) for x in row] for row in M],
                       'rotation_deg_ccw': round(r['rot'], 2), 'scale': round(float(r['scale']), 5),
                       'canonical_px_per_cm': ppc, 'card_px_per_cm_est': round(float(r['scale']) and ppc / float(r['scale']), 3),
-                      'library_px_per_cm': c.get('px_per_cm')},
+                      'library_px_per_cm': c.get('px_per_cm'), 'scale_source': r.get('ssrc')},
         'keypoints': {'canonical': r['kc'], 'card': {k: [round(float(v[0]), 1), round(float(v[1]), 1)] for k, v in r['kp'].items() if v is not None}},
         'pivot_source': r['psrc'],
         'classes': _cls(r['cls']),

@@ -266,3 +266,36 @@ def sheet(tiles, out, cols=6, title=None):
         S.save(p, quality=88)
         paths.append(p)
     return paths
+
+
+def cut_bottom_caption(rgba, below_y, max_frac=0.14):
+    """Printed captions ('HEAD') fused to the bottom edge of a card: from the bottom up, rows whose opaque pixels are
+    mostly dark ink are caption rows. Only rows below below_y are considered. Returns (rgba, removed or None)."""
+    a = rgba[..., 3] > 128
+    V = cv2.cvtColor(rgba[..., :3], cv2.COLOR_RGB2HSV)[..., 2]
+    ys = np.where(a.any(1))[0]
+    if not len(ys):
+        return rgba, None
+    y = int(ys[-1])
+    top_cap = None
+    gap = 0
+    while y > below_y:
+        row = a[y]
+        n = row.sum()
+        if n == 0:
+            gap += 1
+        else:
+            dark = (V[y][row] < 95).mean()
+            if dark > 0.3:
+                top_cap = y
+                gap = 0
+            else:
+                break
+        y -= 1
+    if top_cap is None:
+        return rgba, None
+    if (ys[-1] - top_cap) > max_frac * (ys[-1] - ys[0]):
+        return rgba, None
+    out = rgba.copy()
+    out[top_cap - 1:, :, 3] = 0
+    return out, dict(kind='caption', bbox=[0, int(top_cap), int(rgba.shape[1]), int(ys[-1] - top_cap + 1)], area=int(a[top_cap:].sum()))

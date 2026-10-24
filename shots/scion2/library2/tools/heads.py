@@ -124,7 +124,7 @@ def auto_classify(c, px):
     return out
 
 
-def process(c, fx):
+def process(c, fx, s_override=None):
     rgba0 = C.load_rgba(c)
     rgba, removed = C.keep_main(rgba0)
     m = C.mask_of(rgba)
@@ -146,6 +146,10 @@ def process(c, fx):
     else:
         ys = np.where(m.any(1))[0]
         pivot, psrc = [W / 2, float(ys[-1]) - 0.05 * H], 'bottom centre'
+    rgba, cap = C.cut_bottom_caption(rgba, pivot[1] + 0.02 * H)
+    if cap:
+        removed.append(cap); flags += ['cleaned', 'caption_removed']
+        m = C.mask_of(rgba)
     g = geometry(m, pivot)
     px = pixel_tests(rgba, m, g)
     cls = auto_classify(c, px)
@@ -205,6 +209,12 @@ def process(c, fx):
     head_cm = C.height_cm(c['character']) / 7.75
     rot = float(fx.get('rot', 0.0))
     s = head_cm * C.CANON_PPC / max(8.0, hh)
+    s_own = s
+    ssrc = 'own crown->chin = %.1f cm (height/7.75)' % head_cm
+    if fx.get('scale'):
+        s, ssrc = float(fx['scale']), 'fixes.json'
+    elif s_override:
+        s, ssrc = s_override
     M = C.similarity(kp['pivot'], G['pivot'], rot, s)
     can = C.warp(rgba, M, G['canvas'])
     kc = {k: C.apply(M, v) for k, v in kp.items() if v is not None}
@@ -218,7 +228,7 @@ def process(c, fx):
     if max(H, W) < 180:
         flags.append('low_res')
     return dict(rgba=can, M=M, kp=kp, kc=kc, cls=cls, px=px, flags=sorted(set(flags)), removed=removed, scale=s,
-                rot=rot, psrc=psrc, face_dir3=face_dir3, widths=widths, yaw=yaw)
+                rot=rot, psrc=psrc, s_own=s_own, ssrc=ssrc, sheet_measurable=(view in ('front', 'three-quarter', 'side') and 'chin_estimated_from_ear_line' not in flags and 'chin' in fx or view == 'front'), face_dir3=face_dir3, widths=widths, yaw=yaw)
 
 
 def candidates(ch):
@@ -248,6 +258,19 @@ def run(ch):
             bad_tiles.append(IX.reject_tile(rgba, c, why))
             continue
         r = process(c, fx)
+        sk = c['id'].split('/')[0]
+        peers = [p for p in candidates(ch) if p['id'].split('/')[0] == sk and p['id'] != c['id'] and not fxs.get(p['id'], {}).get('reject')
+                 and not fxs.get(p['id'], {}).get('part')]
+        if peers:
+            ss = [r['s_own']] if r['sheet_measurable'] else []
+            for p in peers:
+                rp = process(p, fxs.get(p['id'], {}))
+                if rp['sheet_measurable']:
+                    ss.append(rp['s_own'])
+            if ss:
+                med = float(np.median(ss))
+                r = process(c, fx, (med, 'shared by the %d heads of sheet %s (median of %d measured crown->chin; this card alone: x%.2f)'
+                                    % (len(peers) + 1, sk, len(ss), r['s_own'] / med)))
         rec = IX.part_record(c, PART, r, C.CANON_PPC)
         rec['face_dir'] = {'yaw_deg': r['yaw'], 'vec3': r['face_dir3'],
                            'about': 'nose direction: x screen-right, y down (0 = level), z toward camera; yaw about the head up axis'}
