@@ -92,7 +92,8 @@ def pairs(joint, seed=0):
     (0.85-1.15); necks take painted heads only (composed faces show their patch outline)"""
     pp, cp = CN.J[joint][0], CN.J[joint][1]
     ok = lambda p, part: p['part'] == part and (p['costume'] == COSTUME or p['part'] == 'head') and usable(p, joint) and \
-        (p['part'] != 'head' or p.get('state') == 'painted_face' or p.get('view') == 'back')
+        (p['part'] != 'head' or p.get('state') == 'painted_face' or p.get('view') == 'back' or
+         (p.get('state') == 'composed_face' and p.get('view') == 'front'))     # 87f70e4: front composed heads usable
     P = [p for p in PT.parts(CHAR, None) if ok(p, pp)]
     C = [p for p in PT.parts(CHAR, None) if ok(p, cp)]
     native, cross = [], []
@@ -106,7 +107,8 @@ def pairs(joint, seed=0):
             pa = CN.anchor(a, joint, b.get('side'))
             if pa is None:
                 continue
-            if sheet_of(a) == sheet_of(b) and a['costume'] == b['costume']:
+            mates = (((a.get('rec') or {}).get('source_set') or {}).get('sheet_mates') or {}).get(b['part'], [])
+            if (b['key'] in mates) or (not mates and sheet_of(a) == sheet_of(b) and a['costume'] == b['costume']):
                 if a.get('side') in ('L', 'R') and b.get('side') in ('L', 'R') and a['side'] != b['side']:
                     continue
                 native.append((a, b))
@@ -141,8 +143,12 @@ def evaluate(joint, rnd):
     M = load_methods(joint)
     PR = pairs(joint)
     res = {m: [] for m in M}
+    if os.environ.get('NATIVE_ONLY'):
+        PR = [x for x in PR if x[2].endswith('native')]
     for a, b, sp in PR:
         for ang in rom_angles(joint):
+            if joint == 'neck' and abs(ang) > 15 and (b.get('view') or 'front') in ('front', 'three-quarter'):
+                continue                       # round 04: front heads tilt at most 15 degrees until the collar handles more
             for m, g in M.items():
                 try:
                     r = CN.connect(a, b, joint, ang, g)

@@ -22,6 +22,7 @@ Genes (a method is a dict of them):
              the joint)
   seam       'none' | 'brad' (a brass brad drawn on top at the joint; brad_r its radius in cm, default 1.1)
   facing     True = mirror the child when its facing (screen-left / right) is the opposite of the parent's
+  align      True = align the parts' actual keypoint axes at 0 degrees (round 04), else the grid's nominal axes
   parent_tab None | cm: the parent's tab / collar / cuff beyond the joint line (towards the child) is cut that far
              past the joint (library2 QA: the torso's neck tab over the chin is the main neck failure)
   tab_shape  'line' (straight cut) | 'round' (keep a rounded lip as wide as the child's neck: no straight collar edge)
@@ -123,6 +124,25 @@ def connect(parent, child, joint, angle, genes, side=None):
     # child transform: rotate its primary axis onto base, then by angle, about its pivot
     piv_c = child_pivot(child, genes)
     caxis = {'head': (0, -1), 'torso': (0, -1), 'hand': (0, 1), 'upper_arm': (0, 1), 'forearm': (0, 1), 'thigh': (0, 1), 'shin': (0, 1), 'foot': (0, 1)}[child['part']]
+    if genes.get('align') and base is not None:
+        # round 04 (critic: hands hung sideways): use each part's ACTUAL bone axis from its keypoints, not the grid's
+        # nominal one -- the parent's pivot -> joint, the child's pivot -> distal keypoint -- aligned at 0 degrees
+        pk, ck = parent['kp'], child['kp']
+        if parent['part'] not in ('torso', 'pelvis'):
+            v = pa - np.asarray(pk['pivot'], float)
+            if np.linalg.norm(v) > 20:
+                base = v / np.linalg.norm(v)
+        dist = {'hand': ('knuckle_l', 'knuckle_r'), 'head': ('crown',), 'forearm': ('wrist', 'tip'), 'shin': ('ankle', 'tip'),
+                'upper_arm': ('elbow', 'tip'), 'thigh': ('knee', 'tip'), 'torso': ('neck',)}.get(child['part'], ())
+        q = [np.asarray(ck[k], float) for k in dist if k in ck]
+        if child['part'] == 'hand' and len(q) == 2:
+            q = [(q[0] + q[1]) / 2]
+        elif q:
+            q = q[:1]
+        if q:
+            v = q[0] - np.asarray(child['pivot'], float)
+            if np.linalg.norm(v) > 20:
+                caxis = tuple(v / np.linalg.norm(v))
     if base is None:
         rot = math.radians(angle) * .5                  # a foot only tilts (half the sweep) about the ankle
         cdir = np.array([0, 1.])
@@ -166,6 +186,8 @@ def connect(parent, child, joint, angle, genes, side=None):
         R = R @ np.array([[-1, 0], [0, 1.]])
     Mc = np.hstack([R, (target - R @ piv_c)[:, None]])
     C = cv2.warpAffine(child['img'].astype(np.float32), Mc, (Wc, Hc), flags=cv2.INTER_LINEAR, borderValue=0)
+    P0m = P[..., 3] > 128
+    C0m = C[..., 3] > 128
     if genes.get('parent_tab') is not None:
         # the parent's tab / collar beyond the joint (towards the child) is cut tab cm past the joint line
         yy, xx = np.mgrid[0:Hc, 0:Wc]
@@ -200,6 +222,7 @@ def connect(parent, child, joint, angle, genes, side=None):
         img = over(P, C)
     else:
         img = over(C, P)
+    brad_mask = None
     if genes.get('seam') == 'brad':
         r = genes.get('brad_r', 1.1) * RS
         spr = brad_sprite(r)
@@ -209,6 +232,9 @@ def connect(parent, child, joint, angle, genes, side=None):
         x0, y0 = int(round(J_r[0] - d / 2)), int(round(J_r[1] - d / 2))
         if 0 <= x0 and 0 <= y0 and x0 + d <= Wc and y0 + d <= Hc:
             img[y0:y0 + d, x0:x0 + d] = over(img[y0:y0 + d, x0:x0 + d], spr)
+            brad_mask = np.zeros((Hc, Wc), bool)
+            brad_mask[y0:y0 + d, x0:x0 + d] = spr[..., 3] > 128
     return {'img': img, 'pm': pm, 'cm': cm, 'pivot': J_r, 'axis_c': cdir, 'axis_p': np.array(pax, float),
             'Mc': Mc, 'Mp': Mp, 'scale': sc, 'mirror': mir, 'trim_cut': trim_cut, 'grommet': grom, 'P': P, 'C': C, 'on_top': top,
+            'origP': P0m, 'origC': C0m, 'brad_mask': brad_mask,
             'child_brad': (Mc[:, :2] @ cbrad + Mc[:, 2]) if cbrad is not None else None}

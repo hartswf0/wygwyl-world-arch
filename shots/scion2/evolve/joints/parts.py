@@ -101,7 +101,7 @@ def from_lib2(rec):
     img = _read(os.path.join(LIB2, rec['image']))
     if img is None:
         return None
-    img = defringe(img)
+    # library2's canonical images are defringed at source now (87f70e4); defringe() is kept for on-the-fly parts
     kp = {k: np.asarray(v, float) for k, v in rec['keypoints']['canonical'].items()}
     c = rec.get('classes', {})
     M = np.asarray(rec['transform']['matrix_card_to_canonical'], float)

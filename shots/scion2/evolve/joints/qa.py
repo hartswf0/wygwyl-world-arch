@@ -50,7 +50,14 @@ def run(r, parent, child, joint, genes, angle=None):
     lay = lambda L: np.dstack([L[..., [2, 1, 0]], L[..., 3]]).astype(np.uint8)
     jn = joint if joint in seam.ROM else 'generic'
     # library2 QA round 02: ROM, layers, brad registration, grommet peek, visible tab, trim cut are all seam.py terms now
-    s = seam.score(rgba, r['pm'], r['cm'], r['pivot'], -r['axis_p'], r['axis_c'], over='A' if r.get('on_top', genes.get('on_top')) == 'parent' else 'B',
+    overA = r.get('on_top', genes.get('on_top')) == 'parent'
+    mA, mB = r['pm'].copy(), r['cm'].copy()
+    if r.get('brad_mask') is not None:           # seam.py (87f70e4): the brad sprite belongs to the over part's mask
+        if overA:
+            mA |= r['brad_mask']
+        else:
+            mB |= r['brad_mask']
+    s = seam.score(rgba, mA, mB, r['pivot'], -r['axis_p'], r['axis_c'], over='A' if overA else 'B', origA=r.get('origP'), origB=r.get('origC'),
                    featuresA=None, featuresB=feats,
                    facingA=(parent.get('view'), parent.get('facing')) if parent.get('view') and parent.get('facing') else None,
                    facingB=(child.get('view'), child.get('facing')) if child.get('view') and child.get('facing') else None,
