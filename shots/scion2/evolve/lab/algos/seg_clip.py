@@ -10,10 +10,10 @@ Score = z(CLIP region-card) + 1.5 IoU(card placed on the bone, region) - gate pe
 (a brad within 25% of the card's length from its proximal end, and its distal end for arm and leg segments); top 40
 by CLIP are placed.
 Placement: card anchors (cards.prep: limb A/B, torso waist->neck, head neck->crown) onto the bone, uniform scale
-0.85-1.3 x canonical, mirror and reversed anchors tried. Joints: parents first, each child is turned and moved so its
-brad nearest the joint sits on the parent's brad nearest the joint and its far end points along its bone (an edge);
-a joint where a card has no brad within 14 cm of it stays unjoined (reported; snapping at any distance collapsed
-the body).
+0.85-1.3 x canonical, mirror and reversed anchors tried; each card's proximal end is pinned on its skeleton joint.
+Joints are the skeleton's joints: a child and its parent are joined where both cover the joint (brads, when two lie
+within 4 cm there, are aligned and become the edge). Brad-only joining (14 cm) left ~11 components; brad snapping at
+any distance collapsed the body (31% coverage) -- both tried and replaced.
 No pocket fill (fewest pieces: one card per part)."""
 import numpy as np, cv2
 
@@ -130,31 +130,40 @@ def choose(ctx, t, part, idx, ref_e, k=1, region=None):
 
 
 def snap(ctx, chosen, t):
-    """chain re-placement: each child (parents first) is turned and moved so that its brad nearest the joint sits on the
-    parent's brad nearest the joint, and its far end points at the end of its region's bone. Every joint with a brad
-    within 14 cm of the joint on both cards is an edge."""
+    """joints are the skeleton's joints (the coordinator's note, round 03): every card's proximal end is already pinned on
+    its joint marker by place_M, so a child and its parent meet at that joint. Where both cards carry a brad within
+    4 cm of each other near the joint, the child is nudged so the brads coincide (fine alignment, edge on the brads);
+    otherwise the edge is the skeleton joint itself (brad index -1), counted when both cards cover the joint
+    (within 5 cm of it; 8 cm where a limb meets the torso)."""
     edges = []
     B = ctx['seg']['B']
+    W, H = t['size']
     order = ['torso', 'head', 'uarmL', 'uarmR', 'thighL', 'thighR', 'farmL', 'farmR', 'shinL', 'shinR', 'handL', 'handR', 'footL', 'footR']
+    yy, xx = np.mgrid[0:H, 0:W]
     for p in order:
         if p not in chosen or p == 'torso' or PARENT[p] not in chosen:
             continue
-        J, end = B[p]
+        J = B[p][0]
         pc, cc = chosen[PARENT[p]], chosen[p]
         bp = ctx['pieces'][pc['pi']]['brads'] @ pc['M'][:, :2].T + pc['M'][:, 2]
         bc = ctx['pieces'][cc['pi']]['brads'] @ cc['M'][:, :2].T + cc['M'][:, 2]
-        dp, dc = np.linalg.norm(bp - J, axis=1), np.linalg.norm(bc - J, axis=1)
-        if dp.min() > 14 * t['s'] or dc.min() > 14 * t['s']:
-            continue                    # always snapping (any distance) collapsed the body: tried, 31% coverage
-        ip, ic = int(np.argmin(dp)), int(np.argmin(dc))
-        piv, cb = bp[ip], bc[ic]
-        inf = ctx['seg']['info'][cc['pi']]
-        ends = [cc['M'][:, :2] @ inf['A'] + cc['M'][:, 2], cc['M'][:, :2] @ inf['B'] + cc['M'][:, 2]]
-        far = max(ends, key=lambda q: np.linalg.norm(q - cb))
-        ang = np.arctan2(*(end - piv)[::-1]) - np.arctan2(*(far - cb)[::-1])
-        R = np.array([[np.cos(ang), -np.sin(ang)], [np.sin(ang), np.cos(ang)]])
-        cc['M'] = np.hstack([R @ cc['M'][:, :2], (R @ (cc['M'][:, 2] - cb) + piv)[:, None]])
-        edges.append((PARENT[p], ip, p, ic))
+        near = lambda b_: np.linalg.norm(b_ - J, axis=1) < 10 * t['s'] if len(b_) else np.zeros(0, bool)
+        np_, nc_ = near(bp), near(bc)
+        if np_.any() and nc_.any():
+            Dm = np.linalg.norm(bp[:, None] - bc[None], axis=2) + np.where(np_[:, None] & nc_[None], 0, 1e9)
+            ip, ic = np.unravel_index(int(np.argmin(Dm)), Dm.shape)
+            if Dm[ip, ic] <= 4 * t['s']:
+                d = bp[ip] - bc[ic]
+                for q in subtree(p):
+                    if q in chosen:
+                        chosen[q]['M'] = chosen[q]['M'].copy(); chosen[q]['M'][:, 2] += d
+                edges.append((PARENT[p], int(ip), p, int(ic)))
+                continue
+        r_ = 8 if PARENT[p] == 'torso' else 5          # the torso card is narrower than the shoulders / hips it meets
+        disc = (xx - J[0]) ** 2 + (yy - J[1]) ** 2 <= (r_ * t['s']) ** 2
+        cover = [(cv2.warpAffine(ctx['pieces'][x['pi']]['px'][..., 3], x['M'], (W, H)) > 128)[disc].any() for x in (pc, cc)]
+        if all(cover):
+            edges.append((PARENT[p], -1, p, -1))
     return edges
 
 

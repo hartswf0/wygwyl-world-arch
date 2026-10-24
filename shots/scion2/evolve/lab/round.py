@@ -77,6 +77,8 @@ def piece_map(ctx, asm, ms):
         bw.append(b @ M[:, :2].T + M[:, 2] if len(b) else np.zeros((0, 2)))
     used = set()
     for i, bi, j, bj in asm.get('edges', []):
+        if bi < 0 or bj < 0:                  # a skeleton-joint edge (seg_clip): no brads to draw between
+            continue
         a_, b_ = bw[i][bi], bw[j][bj]
         cv2.line(pm, tuple(int(v) for v in a_), tuple(int(v) for v in b_), (0, 160, 0), 2)
         cv2.circle(pm, tuple(int(v) for v in a_), 3, (0, 170, 0), -1)
