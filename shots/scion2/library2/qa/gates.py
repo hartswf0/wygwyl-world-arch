@@ -241,9 +241,10 @@ def gate_foot(rec):
     L = rec['widths_px']['length'] / C.CANON_PPC
     side = rec['classes']['view']['value'] in ('side', 'three-quarter')
     bc = _common_cut(rec, rgba, kcard['pivot'])
+    bc.pop('bottom', None)      # a flat sole on a tightly cut card's bottom edge is the sole, not a cut
     r, why = 'pass', []
     if bc:
-        r = 'fail' if max(bc.values()) > 0.2 * max(rgba.shape[:2]) else 'warn'; why.append('alpha runs along the card border: %s px' % bc)
+        r = 'fail' if max(bc.values()) > 0.35 * max(rgba.shape[:2]) else 'warn'; why.append('alpha runs along the card border: %s px' % bc)
     edge = mc[:, 0].any() or mc[:, -1].any() or mc[-1].any()
     if edge:
         r = worst(r, 'warn'); why.append('the foot reaches the canonical canvas edge')
@@ -379,7 +380,8 @@ def gate_identity(rec):
     if np_ and np_ != p:
         votes.append('name'); why.append('the card name says %s' % np_); other = np_
     top = max(zs, key=zs.get) if zs else None
-    if zs and top != p and zs[top] > 0.4 and zs.get(p, 0) < 0.25:
+    clip_min = 0.6 if p in ('hand', 'foot') else 0.4      # cut-out hands with tabs read as forearms at ~0.5
+    if zs and top != p and zs[top] > clip_min and zs.get(p, 0) < 0.25:
         votes.append('clip'); why.append('CLIP reads %s (%.2f) over %s (%.2f)' % (top, zs[top], p, zs.get(p, 0))); other = other or top
     canon = None
     try:
@@ -398,6 +400,8 @@ def gate_identity(rec):
         if cf:
             lr = L / cf
         cand = other if other in seg else None
+        if p in ('hand', 'foot'):
+            cand = None       # the card length includes the wrist/ankle tab: only an absurd length counts here
         if cf and cand and (seg.get(cand) or {}).get('canon'):
             co = seg[cand]['canon']
             if abs(math.log(L / co)) + 0.15 < abs(math.log(L / cf)):
@@ -408,11 +412,18 @@ def gate_identity(rec):
         k = rec['keypoints']['canonical']
         v = rec['classes']['view']['value']
         has_sh = ('shoulder' in k) if v == 'side' else ('shoulder_l' in k and 'shoulder_r' in k)
-        if not has_sh and not ('shoulder_l' in k or 'shoulder_r' in k or 'shoulder' in k):
-            votes.append('structure'); votes.append('structure'); why.append('no shoulder sockets found (not a torso shape)')
+        no_sh = not ('shoulder_l' in k or 'shoulder_r' in k or 'shoulder' in k)
+        clip_torso = bool(zs) and max(zs, key=zs.get) == 'torso'
+        if no_sh and not clip_torso:
+            votes.append('structure'); votes.append('structure'); why.append('no shoulder sockets and CLIP does not read a torso')
+        elif no_sh:
+            why.append('no shoulder brads (sleeveless card: arm sockets are the armholes, not located)')
         elif not has_sh:
             votes.append('structure'); why.append('shoulder line incomplete for a %s view' % v)
     r = 'fail' if len(votes) >= 2 else 'warn' if votes else 'pass'
+    conf = C.fixes().get(rec['source_card'], {}).get('identity_confirmed')
+    if conf:
+        r = 'pass'; why = ['confirmed by eye (fixes.json): ' + conf] + why
     return _res(r, {'clip': zs, 'name_part': np_, 'raw_length_cm': None if L is None else round(L, 1), 'length_ratio_raw': None if lr is None else round(lr, 2),
                     'votes': votes, 'refile_as': other if r == 'fail' else None}, '; '.join(why))
 
