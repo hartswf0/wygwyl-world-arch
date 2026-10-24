@@ -1,4 +1,8 @@
-"""Round 07 blind critic pack: 12 joint renders + 4 controls, shuffled into 16 sheets.
+"""Round 07 / 08 blind critic pack: 12 joint renders + 4 controls, shuffled into 16 sheets.
+
+Round 08 (critic r07): angles capped at 120 deg (elbow, knee) and +-20 deg (back necks); rom.sweep now needs the
+union connected through the pivot disc; elbow / knee pairs must carry the piping across (piping.match, mirroring the
+child when that fixes it); new controls (shoulder, wrist, hip, and an elbow again from another painting).
 
 Joints (critic r06 fixes): hip 1, neck 2, shoulder 2, wrist 1, ankle 2, elbow 2, knee 2. Elbows and knees use the
 round_end variant (register_round). Each pair's clean ROM is measured first (rom.sweep: no background in the crook,
@@ -18,7 +22,7 @@ and enlarged to 480 px, on the same 245 grey. The key (critic_key.json, outside 
 import json, math, os, random, sys
 import numpy as np, cv2
 from PIL import Image
-from evolve.joints import connect as CN, lab as L, qa as QA, rom as ROM
+from evolve.joints import connect as CN, lab as L, qa as QA, rom as ROM, piping as PI
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SHOTS = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
@@ -27,10 +31,15 @@ MIX = [('hip', ['register_align']), ('neck', ['register']), ('neck', ['register'
        ('wrist', ['register_align', 'register_under_align']), ('ankle', ['boot_over_align']), ('ankle', ['boot_over_align']),
        ('elbow', ['register_round']), ('elbow', ['register_round']), ('knee', ['register_round']), ('knee', ['register_round'])]
 BAD_TORSO = ('lie', 'lying', 'fall', 'profile', 'connector', 'connecter', 'seat', 'reach')
-CONTROLS = [('neck', 'poet.11.main-poses/01-wall-rear-three-quarter-touch', 'neck', ('head', 25), ('groin', 30)),
+CONTROLS7 = [('neck', 'poet.11.main-poses/01-wall-rear-three-quarter-touch', 'neck', ('head', 25), ('groin', 30)),
             ('elbow', 'poet.11.main-poses/05-read-water-reathe-1', 'elbowL', ('shoulderL', 6), ('wristL', 6)),
             ('knee', 'poet.04.main-poses/04-2-kneel-hollow', 'kneeR', ('hipR', 8), ('ankleR', 7)),
             ('ankle', 'poet.12.main-poses/02', 'ankleL', ('kneeL', 7), ('toeL', 9))]
+CONTROLS8 = [('shoulder', 'poet.11.main-poses/02-front-guide-stone', 'shoulderL', ('elbowL', 6), ('hipL', 12)),
+             ('wrist', 'poet.13.main-poses/06-refocus', 'wristR', ('elbowR', 5), ('@ext:elbowR:11', 6)),
+             ('hip', 'poet.08.main-poses/03-gentle-slow-bent-knee-dance-alone', 'hipL', ('kneeL', 8), ('groin', 10)),
+             ('elbow', 'poet.04.main-poses/04-4-empty-cuffs', 'elbowL', ('shoulderL', 6), ('wristL', 6))]
+CAP = {'elbow': (0, 120), 'knee': (0, 120)}
 
 
 def pack_ok(j, a, b):
@@ -96,7 +105,13 @@ def render_control(tid, joint_m, segs, T):
     yy, xx = np.mgrid[0:H, 0:W]
     keep = np.zeros((H, W), bool)
     for mk, r_cm in segs:
-        keep |= seg_dist(xx, yy, J, m[mk][:2]) <= r_cm * sc
+        if mk.startswith('@ext:'):              # past the joint, continuing the line from another marker (no hand marker)
+            frm, cm_ = mk[5:].split(':')
+            v = np.asarray(J, float) - np.asarray(m[frm][:2], float)
+            end = np.asarray(J, float) + v / max(1e-6, np.linalg.norm(v)) * float(cm_) * sc
+        else:
+            end = m[mk][:2]
+        keep |= seg_dist(xx, yy, J, end) <= r_cm * sc
     al = im[..., 3:] / 255. * keep[..., None]
     o = (im[..., :3] * al + 245 * (1 - al)).astype(np.uint8)
     return finish(o, J, sc), {'target': tid, 'marker': joint_m, 'px_per_cm': round(sc, 3)}
@@ -117,33 +132,43 @@ def main():
                 continue
             best = None
             for m in ms:
-                res = ROM.sweep(a, b, j, M[m])
+                g = M[m]
+                if rnd >= 8 and j in ('elbow', 'knee'):
+                    ok, g, offs = PI.match(a, b, j, g)
+                    if not ok:
+                        continue
+                res = ROM.sweep(a, b, j, g)
                 rr = ROM.run_range(res, 'ok')
                 if rr is None:
                     continue
-                angs = [x for x in sorted(res) if rr[0] <= x <= rr[1]]
+                lo, hi = CAP.get(j, (-999, 999)) if rnd >= 8 else (-999, 999)
+                if rnd >= 8 and j == 'neck':
+                    lo, hi = (-20, 20) if (b.get('view') or '').startswith('back') else (-15, 15)   # faces tilt at most 15
+                angs = [x for x in sorted(res) if rr[0] <= x <= rr[1] and lo <= x <= hi]
+                if not angs:
+                    continue
                 bends = [x for x in angs if x != 0] or angs
                 ang = rng.choice(bends)
-                r = CN.connect(a, b, j, ang, M[m])
+                r = CN.connect(a, b, j, ang, g)
                 if r is None:
                     continue
-                q = QA.run(r, a, b, j, M[m], ang)
+                q = QA.run(r, a, b, j, g, ang)
                 fails = (q or {}).get('fails', [])
                 cost = (10 if 'covered' in fails else 0) + float((q or {}).get('tests', {}).get('tab_cm2') or 0) / 10.
                 if best is None or cost < best[0]:
-                    best = (cost, m, ang, r, q, rr)
+                    best = (cost, m, ang, r, q, rr, bool(g.get('mirror')))
             if best is None:
                 continue
-            cost, m, ang, r, q, rr = best
+            cost, m, ang, r, q, rr, mirrored = best
             used.add((a['key'], b['key']))
             romtab.append({'joint': j, 'method': m, 'parent': a['key'], 'child': b['key'], 'clean_rom': rr, 'angle': ang})
             sheets.append((render_joint(r), {'kind': 'joint', 'joint': j, 'method': m, 'parent': a['key'], 'child': b['key'], 'angle': ang,
-                                             'clean_rom': rr, 'on_top': r['on_top'], 'vis_under': round(r['vis_under'], 3),
+                                             'clean_rom': rr, 'mirrored_for_piping': mirrored, 'on_top': r['on_top'], 'vis_under': round(r['vis_under'], 3),
                                              'seam': None if q is None else {'grade': q['grade'], 'fails': q['fails'],
                                                                              'tab_cm2': q['tests'].get('tab_cm2'), 'light_rim2': q['tests'].get('light_rim2')}}))
             break
     T = {t['id']: t for t in json.load(open(os.path.join(SHOTS, 'rig', 'poses_v2', 'poet__red_black_sunglasses.json')))['targets']}
-    for j, tid, jm, s1, s2 in CONTROLS:
+    for j, tid, jm, s1, s2 in (CONTROLS8 if rnd >= 8 else CONTROLS7):
         im, info = render_control(tid, jm, [s1, s2], T)
         sheets.append((im, dict(kind='CONTROL (unaltered painting)', joint=j, **info)))
     rng.shuffle(sheets)

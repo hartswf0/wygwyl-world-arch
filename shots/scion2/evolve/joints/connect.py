@@ -144,6 +144,49 @@ def round_end(U, c, width, xx, yy, rng=None):
     return int(new.sum())
 
 
+def drop_islands(L, frac=.02):
+    """removes the alpha islands of a render layer smaller than frac of its paper (in place)"""
+    m = (L[..., 3] > 128).astype(np.uint8)
+    n, lab, st, _ = cv2.connectedComponentsWithStats(m, connectivity=8)
+    if n <= 2:
+        return
+    tot = st[1:, cv2.CC_STAT_AREA].sum()
+    small = [i for i in range(1, n) if st[i, cv2.CC_STAT_AREA] < frac * tot]
+    if small:
+        L[..., 3][np.isin(lab, small)] = 0
+        L[..., 3][(L[..., 3] <= 128) & (cv2.dilate(np.isin(lab, small).astype(np.uint8), np.ones((3, 3), np.uint8)) > 0)] = 0
+
+
+def tab_edge(part, g, axis, max_px=90):
+    """canonical px from a grommet g along axis to the first sharp change of paint (|dlum| > 35 against the tab's
+    own colour just past the grommet ring), at least 1 cm out; 1.5 cm if none"""
+    img = part['img'].astype(np.float32)
+    u = np.asarray(axis, float)
+    n = np.array([-u[1], u[0]])
+    lum = []
+    for t in range(0, max_px):
+        q = [np.asarray(g, float) + t * u + s * n for s in (-6, -3, 3, 6)]
+        v = [img[int(y), int(x), :3].mean() for x, y in q if 0 <= int(x) < img.shape[1] and 0 <= int(y) < img.shape[0] and img[int(y), int(x), 3] > 128]
+        lum.append(np.mean(v) if v else np.nan)
+    lum = np.array(lum)
+    ref = np.nanmedian(lum[9:13]) if np.isfinite(lum[9:13]).any() else np.nan
+    for t in range(10, max_px - 3):
+        if np.isfinite(ref) and abs(np.nanmean(lum[t:t + 3]) - ref) > 35:
+            return float(t)
+    return 15.
+
+
+def cuff_reach(part, g, axis, max_px=120):
+    """canonical px from a grommet g along axis to the end of the part's paper"""
+    a = part['img'][..., 3]
+    u = np.asarray(axis, float)
+    for t in range(max_px):
+        x, y = np.asarray(g, float) + t * u
+        if not (0 <= int(x) < a.shape[1] and 0 <= int(y) < a.shape[0]) or a[int(y), int(x)] <= 128:
+            return float(t)
+    return float(max_px)
+
+
 def tab_reach(part, g, axis, max_px=70):
     """how far (canonical px) a part's painted paper tab reaches from its grommet g towards the part's body (against
     axis): the first sharp darkening (tan paper -> skin / hair) at least 1.2 cm from the grommet, else 0.8 cm"""
@@ -236,6 +279,8 @@ def connect(parent, child, joint, angle, genes, side=None):
     mir = False
     if genes.get('facing') and child.get('facing') in ('screen-left', 'screen-right') and parent.get('facing') in ('screen-left', 'screen-right'):
         mir = child['facing'] != parent['facing']
+    if genes.get('mirror'):                   # round 08: mirrored to carry the piping across (piping.py)
+        mir = not mir
     # canvas: parent centred
     Hc, Wc = int(parent['img'].shape[0] * k + 260 * k * 2), int(parent['img'].shape[1] * k + 260 * k * 2)
     off = np.array([260 * k, 260 * k])
@@ -256,6 +301,21 @@ def connect(parent, child, joint, angle, genes, side=None):
             cbrad = child['brads'][int(np.argmin(d))]
     if genes.get('pivot') == 'register' and grom is not None and cbrad is not None:
         piv_c, target = cbrad, grom              # the child's brad goes exactly onto the parent's grommet
+    # round 08 (critic r07 s02: the hand card's square dark tab sits between sleeve and hand): with the hand on top, the
+    # hand's tab (from its grommet to the first sharp change of paint towards the fingers) is cut from the card, and
+    # the hand moved back so its skin starts 0.3 cm inside the cuff's end; no fastener shows at this wrist
+    hand_over = joint == 'wrist' and genes.get('on_top', 'child') == 'child' and genes.get('hand_tab_cut', True) and cbrad is not None
+    hand_cut = None
+    if hand_over:
+        reach = tab_edge(child, cbrad, caxis)
+        ys_, xs_ = np.mgrid[0:child['img'].shape[0], 0:child['img'].shape[1]]
+        proj = (xs_ - cbrad[0]) * caxis[0] + (ys_ - cbrad[1]) * caxis[1]
+        reach += 8.                            # past the tab's own painted rim (about 0.6 cm)
+        hand_cut = proj < reach
+        cuff = cuff_reach(parent, (grom - off) / k, pax) if grom is not None else 0.
+        shift = reach * k * sc - cuff * k + .3 * RS
+        if shift > 0:
+            target = np.asarray(target, float) - shift * cdir
     neck_back = joint == 'neck' and (child.get('view') or '').startswith(('back', 'three-quarter-back')) and genes.get('side_trim', True)
     r_g = None
     torso_reach = 0.
@@ -274,7 +334,12 @@ def connect(parent, child, joint, angle, genes, side=None):
     if mir:
         R = R @ np.array([[-1, 0], [0, 1.]])
     Mc = np.hstack([R, (target - R @ piv_c)[:, None]])
-    C = cv2.warpAffine(child['img'].astype(np.float32), Mc, (Wc, Hc), flags=cv2.INTER_LINEAR, borderValue=0)
+    cimg = child['img'].astype(np.float32)
+    if hand_over:
+        # (the cut and the shift were set before the child transform, below)
+        cimg = cimg.copy()
+        cimg[..., 3][hand_cut] = 0
+    C = cv2.warpAffine(cimg, Mc, (Wc, Hc), flags=cv2.INTER_LINEAR, borderValue=0)
     P0m = P[..., 3] > 128
     C0m = C[..., 3] > 128
     if genes.get('parent_tab') is not None:
@@ -313,7 +378,7 @@ def connect(parent, child, joint, angle, genes, side=None):
     # 1. no drawn brad sprite, ever. The fastener is the TOP piece's own painted grommet, registered over the under
     #    piece's grommet. If the top piece has no grommet at this joint, flip the z-order when the other piece has
     #    one, else the pair is rejected for this method (None). The neck has no fastener in this art and is exempt.
-    if genes.get('grommet_rule', True) and joint != 'neck':
+    if genes.get('grommet_rule', True) and joint != 'neck' and not hand_over:
         has = {'child': cbrad is not None, 'parent': grom is not None}
         if not has[top]:
             other = 'parent' if top == 'child' else 'child'
@@ -340,7 +405,7 @@ def connect(parent, child, joint, angle, genes, side=None):
         cut_under = joint in ('wrist', 'ankle', 'neck')
         # round 07 (critic r06: a notch at the top of the shoulder): only at the extremity joints; at cloth joints the
         # over piece's rounded end is part of the puppet and cutting it left notches
-        if cut_under:                           # the parent's paper beyond the joint, outside the child
+        if cut_under and not hand_over:         # the parent's paper beyond the joint, outside the child
             P[..., 3][(side > 0) & disk & pm_ & ~cmd] = 0
         if cut_under:                           # the child's paper behind the joint, outside the parent
             C[..., 3][(side < 0) & disk & cm_ & ~pmd] = 0
@@ -375,6 +440,9 @@ def connect(parent, child, joint, angle, genes, side=None):
         # outside the mask the band is measured from) lying over the under piece goes too
         rim |= (Ov[..., 3] > 0) & (Ov[..., 3] <= 128) & (Un[..., 3] > 128)
         Ov[..., 3][rim] = 0
+    # round 08 (critic r07: beard / ear slivers beside back necks): alpha islands under 2% of a piece are removed
+    for L_ in (P, C):
+        drop_islands(L_)
     pm, cm = P[..., 3] > 128, C[..., 3] > 128
     # 2. both pieces must be visible: the under piece's share of its own area left uncovered
     un, ov = (Un[..., 3] > 128), (Ov[..., 3] > 128)

@@ -10,7 +10,9 @@ background near the pivot:
             -- in cm2 (clean if <= 0.4 cm2)
   cut_bg    background within 1.2 x the joint width of the pivot where either card had paper before the method's
             cuts (tab / trim cuts that open a notch no piece covers), in cm2 (clean if <= 0.4 cm2)
-A pair-angle is clean ('ok') when core_bg and cut_bg are clean and the under piece keeps >= 40% visible (cut_bg is
+  connected the union's paper within 1.2 x the joint width of the pivot is one piece (8-connected; specks under
+            0.5% ignored) -- round 08, critic r07: an ankle and a hip whose pieces did not touch passed core_bg
+A pair-angle is clean ('ok') when connected, core_bg and cut_bg are clean and the under piece keeps >= 40% visible (cut_bg is
 not counted at neck, wrist and ankle, where the method removes tabs and ears on purpose).
 A pair's clean ROM is the run of clean angles containing the rest angle (the swept angle nearest 0).
 
@@ -41,13 +43,16 @@ def wedge(r, rc):
     disk = d2 <= (1.2 * w) ** 2
     pts = np.column_stack(np.nonzero(a & disk))[:, ::-1].astype(np.int32)
     if len(pts) < 3:
-        return 1., 99., 99.
+        return 1., 99., 99., False
     hull = np.zeros_like(a, np.uint8)
     cv2.fillConvexPoly(hull, cv2.convexHull(pts), 1)
     hb = float((hull.astype(bool) & ~a).sum()) / max(1, hull.sum())
     core = float(((d2 <= rc ** 2) & ~a).sum()) / CN.RS ** 2
     cut = float((disk & ~a & (r['origP'] | r['origC'])).sum()) / CN.RS ** 2
-    return hb, core, cut
+    u = (a & disk).astype(np.uint8)
+    n, lab, st, _ = cv2.connectedComponentsWithStats(u, connectivity=8)
+    big = [i for i in range(1, n) if st[i, cv2.CC_STAT_AREA] >= .005 * max(1, u.sum())]
+    return hb, core, cut, len(big) == 1
 
 
 def run_range(res, key):
@@ -76,11 +81,11 @@ def sweep(a, b, j, g, side=None):
         r = CN.connect(a, b, j, ang, g, side=side) if side else CN.connect(a, b, j, ang, g)
         if r is None:
             continue
-        hb, core, cut = wedge(r, rc)
-        res[ang] = {'hull_bg': round(hb, 4), 'core_cm2': round(core, 2), 'cut_cm2': round(cut, 2), 'cut_ok': bool(cut <= CORE_MAX), 'hull_ok': bool(hb <= h0 + HULL_MAX), 'core_ok': bool(core <= CORE_MAX),
+        hb, core, cut, conn = wedge(r, rc)
+        res[ang] = {'hull_bg': round(hb, 4), 'core_cm2': round(core, 2), 'cut_cm2': round(cut, 2), 'cut_ok': bool(cut <= CORE_MAX), 'connected': bool(conn), 'hull_ok': bool(hb <= h0 + HULL_MAX), 'core_ok': bool(core <= CORE_MAX),
                     'vis_ok': bool(r['vis_under'] >= .4)}
         # at the extremity joints the method cuts tabs and ears on purpose, so cut_bg is not counted there
-        res[ang]['ok'] = res[ang]['core_ok'] and (res[ang]['cut_ok'] or j in ('neck', 'wrist', 'ankle')) and res[ang]['vis_ok']
+        res[ang]['ok'] = res[ang]['connected'] and res[ang]['core_ok'] and (res[ang]['cut_ok'] or j in ('neck', 'wrist', 'ankle')) and res[ang]['vis_ok']
     return res
 
 
