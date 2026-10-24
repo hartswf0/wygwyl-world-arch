@@ -8,7 +8,7 @@ ankle, where the blind critic outranks the proxy and boot_over_align is used) jo
 weight is the clean span: the largest run of CLEAN angles round 0 inside the joint's range of motion (library2
 seam.ROM, 15 degree steps). Native pairs (sheet mates) are marked; they are tried first.
 Kit: slots torso, head, pelvis, upper_arm, forearm, hand, thigh, shin, foot (one card per slot, the same card both
-sides, mirrored for his left). Every joint must be CLEAN at neutral; score = sum over joints of clean span / ROM
+sides, mirrored for his left). A joint not CLEAN at neutral costs 2 points (kept, shown red); score = sum over joints of clean span / ROM
 span (bendability) + 0.15 per native edge - 1 per segment whose length, normalised by the kit's median ratio to
 canon (library2 canon.json), is off by more than 12%. Search: per torso candidate, the best head, arm chain, pelvis
 and leg chain (beam 3 each), combined and checked for proportion. Slots with no compatible part are reported as gaps.
@@ -156,7 +156,9 @@ def search(view, rnd):
         nat = native(a, b)
         graph.append({'joint': joint, 'parent': a['key'], 'child': b['key'], 'clean_at_0': bool(ok), 'clean_span_deg': sp, 'rom_deg': rom,
                       'native': nat, 'grades': {str(k): v for k, v in res.items()}})
-        return (sp / rom + (.15 if nat else 0.)) if ok else None
+        # a pair not CLEAN at neutral stays in the search with a 2-point penalty, so a kit always forms and its
+        # failing seams are shown (red) rather than leaving the slot empty
+        return sp / rom + (.15 if nat else 0.) - (0. if ok else 2.)
     kits = []
     for T in C['torso']:
         heads = sorted([(s, H) for H in C['head'] for s in [sc('neck', T, H)] if s is not None], key=lambda x: -x[0])[:3]
