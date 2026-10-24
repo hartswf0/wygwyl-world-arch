@@ -49,8 +49,9 @@ def run(r, parent, child, joint, genes):
     rgba = np.dstack([img[..., [2, 1, 0]], img[..., 3]]).astype(np.uint8)
     jn = joint if joint in ('neck', 'wrist', 'ankle', 'elbow', 'knee') else 'generic'
     s = seam.score(rgba, r['pm'], r['cm'], r['pivot'], -r['axis_p'], r['axis_c'], over='A' if genes.get('on_top') == 'parent' else 'B',
-                   featuresA=None, featuresB=feats, facingA=(parent.get('view'), parent.get('facing')),
-                   facingB=(child.get('view'), child.get('facing')), joint=jn)
+                   featuresA=None, featuresB=feats,
+                   facingA=(parent.get('view'), parent.get('facing')) if parent.get('view') else None,   # unknown view: not tested
+                   facingB=(child.get('view'), child.get('facing')) if child.get('view') else None, joint=jn)
     grade = {'CLEAN': 'green', 'WARN': 'amber', 'MUTILATED': 'red'}[s['verdict']]
     tests = {k: (round(float(v), 3) if isinstance(v, (int, float, np.floating)) else v) for k, v in s.items() if k in
              ('gap_frac', 'width_ratio', 'exposed_A_frac', 'exposed_B_frac', 'covered', 'colour_dE', 'facing_ok')}
