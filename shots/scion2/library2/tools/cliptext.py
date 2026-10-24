@@ -35,8 +35,11 @@ def zero_shot(card_id, classes):
         return None
     e = _s['E'][_s['row'][card_id]]
     names = list(classes)
-    T = np.stack([text([P + p for p in classes[n]]).mean(0) for n in names])
-    T /= np.linalg.norm(T, axis=1, keepdims=True)
+    ck = tuple((n, tuple(classes[n])) for n in names)
+    if ck not in _s.setdefault('T', {}):
+        T = np.stack([text([P + p for p in classes[n]]).mean(0) for n in names])
+        _s['T'][ck] = T / np.linalg.norm(T, axis=1, keepdims=True)
+    T = _s['T'][ck]
     z = 100 * T @ e
     p = np.exp(z - z.max()); p /= p.sum()
     return dict(zip(names, p.round(3).tolist()))

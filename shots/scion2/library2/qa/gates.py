@@ -327,26 +327,94 @@ def clip_part(card_id):
     return _ZS[card_id]
 
 
+NAME_PART = [('forearm', r'farm|fore-?arm|forearm'), ('upper_arm', r'uarm|upper-?arm|bicep'), ('thigh', r'thigh'),
+             ('shin', r'shin|calf'), ('foot', r'foot|boot|shoe|sneaker'), ('hand', r'hand|palm|fist'),
+             ('head', r'head|face'), ('torso', r'torso|chest|jacket|vest'), ('pelvis', r'pelvis|hip-bridge|hipcore|waist-link')]
+_SHEET_PPC = {}
+
+
+def name_part(card_id):
+    import re
+    n = card_id.split('/')[-1].lower()
+    hits = [p for p, pat in NAME_PART if re.search(pat, n)]
+    return hits[0] if len(hits) == 1 else None      # 'foot-l-foot-r' -> foot; 'hand-l-forearm' -> ambiguous
+
+
+def sheet_ppc(card_id):
+    """the cut sheet's scale: median library px_per_cm over every card of the sheet (all slots)"""
+    sk = card_id.split('/')[0]
+    if sk not in _SHEET_PPC:
+        v = [c['px_per_cm'] for c in C.cards() if c['id'].split('/')[0] == sk and c.get('px_per_cm')]
+        _SHEET_PPC[sk] = float(np.median(v)) if v else None
+    return _SHEET_PPC[sk]
+
+
+def raw_length_cm(rec):
+    """pivot->tip on the CARD, in cm at the sheet's scale (independent of the canonical normalisation)"""
+    kc = rec['keypoints']['card']
+    p = rec['part']
+    tip = {'upper_arm': 'elbow', 'forearm': 'wrist', 'thigh': 'knee', 'shin': 'ankle'}.get(p)
+    ppc = sheet_ppc(rec['source_card'])
+    if not ppc:
+        return None
+    if tip and kc.get(tip):
+        return math.dist(kc['pivot'], kc[tip]) / ppc
+    if p in ('hand', 'foot'):
+        L = (rec.get('widths_px') or {}).get('length')
+        s = rec['transform']['scale']
+        return L / s / ppc if L and s else None
+    return None
+
+
 def gate_identity(rec):
+    """is it actually this part? Three independent votes against the filing:
+    the card's own name naming another part (weak), CLIP zero-shot reading another part, and the raw card length
+    (at the sheet's scale) being closer to the canon of the named part than of the filed part.
+    Two votes -> fail, one -> warn. Torsos must also show a shoulder line and a neck/collar."""
     p = rec['part']
     zs = clip_part(rec['source_card'])
-    dev = rec.get('canon_deviation') or {}
-    lr = dev.get('length_ratio')
-    r, why = 'pass', []
-    if zs:
-        top = max(zs, key=zs.get)
-        if top != p and zs[top] > 0.45 and zs.get(p, 0) < 0.2:
-            r = 'warn'; why.append('CLIP reads %s (%.2f) over %s (%.2f)' % (top, zs[top], p, zs.get(p, 0)))
-    if lr and p in ('upper_arm', 'forearm', 'thigh', 'shin', 'hand', 'foot'):
-        st = (rec['classes'].get('state') or {}).get('value', '')
-        lo = 0.45 if p == 'hand' and st in ('fist', 'grip', 'pinch', 'claw', 'cupped') else 0.65
-        if lr < lo - 0.15 or lr > 1.75:
-            r = 'fail'; why.append('length %.2fx the canon %s' % (lr, p))
-        elif lr < lo or lr > 1.4:
-            r = worst(r, 'warn'); why.append('length %.2fx the canon %s' % (lr, p))
-        if why and r == 'warn' and zs and max(zs, key=zs.get) != p and zs[max(zs, key=zs.get)] > 0.45 and (lr < lo or lr > 1.4):
-            r = 'fail'; why.append('CLIP and length both disagree')
-    return _res(r, {'clip': zs, 'length_ratio': lr, 'canon_length_cm': dev.get('canon_length_cm')}, '; '.join(why))
+    np_ = name_part(rec['source_card'])
+    votes, why = [], []
+    other = None
+    if np_ and np_ != p:
+        votes.append('name'); why.append('the card name says %s' % np_); other = np_
+    top = max(zs, key=zs.get) if zs else None
+    if zs and top != p and zs[top] > 0.4 and zs.get(p, 0) < 0.25:
+        votes.append('clip'); why.append('CLIP reads %s (%.2f) over %s (%.2f)' % (top, zs[top], p, zs.get(p, 0))); other = other or top
+    canon = None
+    try:
+        if 'canon' not in _SHEET_PPC:
+            _SHEET_PPC['canon'] = C.load_json(os.path.join(C.LIB2, 'canon.json'))['characters']
+        cn = _SHEET_PPC['canon']
+        ck = '%s/%s' % (rec['character'], rec.get('costume'))
+        canon = cn.get(ck) or next((v for k, v in cn.items() if k.startswith(rec['character'] + '/') and 'error' not in v), None)
+    except Exception:
+        pass
+    L = raw_length_cm(rec) if p in ('upper_arm', 'forearm', 'thigh', 'shin', 'hand', 'foot') else None
+    lr = None
+    if L and canon:
+        seg = canon['segments_cm']
+        cf = (seg.get(p) or {}).get('canon')
+        if cf:
+            lr = L / cf
+        cand = other if other in seg else None
+        if cf and cand and (seg.get(cand) or {}).get('canon'):
+            co = seg[cand]['canon']
+            if abs(math.log(L / co)) + 0.15 < abs(math.log(L / cf)):
+                votes.append('length'); why.append('card length %.1f cm is closer to a %s (%.1f) than a %s (%.1f)' % (L, cand, co, p, cf))
+        if cf and (lr < 0.45 or lr > 2.2):
+            votes.append('length_absurd'); why.append('card length %.1f cm vs canon %s %.1f' % (L, p, cf))
+    if p == 'torso':
+        k = rec['keypoints']['canonical']
+        v = rec['classes']['view']['value']
+        has_sh = ('shoulder' in k) if v == 'side' else ('shoulder_l' in k and 'shoulder_r' in k)
+        if not has_sh and not ('shoulder_l' in k or 'shoulder_r' in k or 'shoulder' in k):
+            votes.append('structure'); votes.append('structure'); why.append('no shoulder sockets found (not a torso shape)')
+        elif not has_sh:
+            votes.append('structure'); why.append('shoulder line incomplete for a %s view' % v)
+    r = 'fail' if len(votes) >= 2 else 'warn' if votes else 'pass'
+    return _res(r, {'clip': zs, 'name_part': np_, 'raw_length_cm': None if L is None else round(L, 1), 'length_ratio_raw': None if lr is None else round(lr, 2),
+                    'votes': votes, 'refile_as': other if r == 'fail' else None}, '; '.join(why))
 
 
 def gate(rec):
