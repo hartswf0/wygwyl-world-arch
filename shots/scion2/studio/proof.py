@@ -312,7 +312,7 @@ def scene(cast, roles, tag):
         return st['pts'][:, 0].max() if facing == 'R' else st['pts'][:, 0].min()
     centre = STAGE['W'] / 2 + 60
     xa = 200 + (centre - front_after(A, 200, 'R'))
-    xb = 200 + (front_after(B, 200, 'L') - centre)
+    xb = 1080 + (centre - front_after(B, 1080, 'L'))      # x is the stage position for either facing
     pa, pb = Performer(A, STAGE, xa, 'R'), Performer(B, STAGE, xb, 'L')
     pc = Performer(C, STAGE, 150, 'R')
     fall = act.fall_recover()

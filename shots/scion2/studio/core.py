@@ -48,11 +48,15 @@ class Actor:
         self.height_cm = height_cm
         self.rigs = {v: posing.rig(char, v) for v in views}
         self.lib = posing.parts(char)
-        F = self.rigs['front'].J
-        H = np.linalg.norm(F['headtop'] - (F['anR'] + F['anL']) / 2)
-        self.ref_cm = height_cm * self.body_len(F) / H
-        self.scale = {v: self.ref_cm * PX_PER_CM / self.body_len(R.J) for v, R in self.rigs.items()}
         self.rest = {v: {b: ang(R.J[q] - R.J[p]) for b, (p, q) in BONES.items()} for v, R in self.rigs.items()}
+        # each view is scaled so the actor, standing in that view's stance, is height_cm tall (head top
+        # to lowest painted pixel): a view swap keeps the actor's apparent height
+        self.scale = {}
+        from studio.actions import STAND
+        for v in self.rigs:
+            self.scale[v] = 1.0
+            jp, pts = self.fk(v, self.params({'view': v, 'bones': STAND[v]}), self.G(v, (0., 0.)))
+            self.scale[v] = height_cm * PX_PER_CM / (pts[:, 1].max() - jp['headtop'][1])
 
     @staticmethod
     def body_len(J):
