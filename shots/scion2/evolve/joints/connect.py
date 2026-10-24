@@ -32,7 +32,8 @@ import numpy as np, cv2
 RS = 4.0                   # render px per cm
 J = {'neck': ('torso', 'head', 'neck', 'up'), 'shoulder': ('torso', 'upper_arm', 'shoulder', 'down'),
      'elbow': ('upper_arm', 'forearm', 'elbow', 'down'), 'wrist': ('forearm', 'hand', 'wrist', 'down'),
-     'hip': ('pelvis', 'thigh', 'hip', 'down'), 'knee': ('thigh', 'shin', 'knee', 'down'), 'ankle': ('shin', 'foot', 'ankle', 'foot')}
+     'hip': ('pelvis', 'thigh', 'hip', 'down'), 'knee': ('thigh', 'shin', 'knee', 'down'), 'ankle': ('shin', 'foot', 'ankle', 'foot'),
+     'waist': ('pelvis', 'torso', 'pivot', 'up')}
 CLOTH = {'shoulder', 'elbow', 'hip', 'knee'}
 
 
@@ -121,7 +122,7 @@ def connect(parent, child, joint, angle, genes, side=None):
         base = None
     # child transform: rotate its primary axis onto base, then by angle, about its pivot
     piv_c = child_pivot(child, genes)
-    caxis = {'head': (0, -1), 'hand': (0, 1), 'upper_arm': (0, 1), 'forearm': (0, 1), 'thigh': (0, 1), 'shin': (0, 1), 'foot': (0, 1)}[child['part']]
+    caxis = {'head': (0, -1), 'torso': (0, -1), 'hand': (0, 1), 'upper_arm': (0, 1), 'forearm': (0, 1), 'thigh': (0, 1), 'shin': (0, 1), 'foot': (0, 1)}[child['part']]
     if base is None:
         rot = math.radians(angle) * .5                  # a foot only tilts (half the sweep) about the ankle
         cdir = np.array([0, 1.])
