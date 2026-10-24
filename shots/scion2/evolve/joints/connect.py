@@ -23,6 +23,7 @@ Genes (a method is a dict of them):
   facing     True = mirror the child when its facing (screen-left / right) is the opposite of the parent's
   parent_tab None | cm: the parent's tab / collar / cuff beyond the joint line (towards the child) is cut that far
              past the joint (library2 QA: the torso's neck tab over the chin is the main neck failure)
+  tab_shape  'line' (straight cut) | 'round' (keep a rounded lip as wide as the child's neck: no straight collar edge)
 """
 import math
 import numpy as np, cv2
@@ -132,6 +133,8 @@ def connect(parent, child, joint, angle, genes, side=None):
         wp = width_across(parent['img'][..., 3], pa - 20 * np.array(pax, float), np.array(pax, float))
         if wc > 5 and wp > 5 and joint in CLOTH | {'wrist', 'ankle'}:
             sc = float(np.clip(wp / wc, .85, 1.15))
+        elif wc > 5 and wp > 5 and joint == 'neck':     # the neck fills the collar opening (collar ~1.3x the neck)
+            sc = float(np.clip(wp / (1.3 * wc), .85, 1.15))
     mir = False
     if genes.get('facing') and child.get('facing') in ('screen-left', 'screen-right') and parent.get('facing') in ('screen-left', 'screen-right'):
         mir = child['facing'] != parent['facing']
@@ -152,6 +155,12 @@ def connect(parent, child, joint, angle, genes, side=None):
         # the parent's tab / collar beyond the joint (towards the child) is cut tab cm past the joint line
         yy, xx = np.mgrid[0:Hc, 0:Wc]
         beyond = ((xx - J_r[0]) * cdir[0] + (yy - J_r[1]) * cdir[1]) > genes['parent_tab'] * RS
+        if genes.get('tab_shape') == 'round':
+            # a rounded collar lip instead of a straight cut: keep the parent's tab inside a half-disc as wide as the
+            # child's neck at the pivot
+            wn = width_across(child['img'][..., 3], piv_c, np.array(caxis, float)) * k * sc
+            lip = (xx - J_r[0]) ** 2 + (yy - J_r[1]) ** 2 <= (max(wn, 2 * RS) * .55) ** 2
+            beyond &= ~lip
         P[..., 3][beyond] = 0
     pm, cm = P[..., 3] > 128, C[..., 3] > 128
     trim_cut = None

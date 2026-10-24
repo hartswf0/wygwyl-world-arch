@@ -73,7 +73,7 @@ def load_methods(joint):
     M = dict(METHODS0)
     f = os.path.join(HERE, 'methods', joint + '.json')
     if os.path.exists(f):
-        M.update(json.load(open(f)))
+        M.update({k: {g: v for g, v in d.items() if not g.startswith('_')} for k, d in json.load(open(f)).items()})
     return M
 
 
