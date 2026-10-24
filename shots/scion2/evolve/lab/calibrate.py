@@ -52,13 +52,21 @@ def main():
         w = fit(Xs[m], y[m])
         loo.append(np.r_[Xs[i], 1] @ w)
     w = fit(Xs, y)
-    res = {'n_sheets': len(y), 'features': feats, 'weights_standardised': dict(zip(feats + ['intercept'], np.round(w, 3).tolist())),
+    res = {'n_sheets': len(y), 'features': feats, 'mean': X.mean(0).tolist(), 'std': (X.std(0) + 1e-9).tolist(), 'weights_standardised': dict(zip(feats + ['intercept'], np.round(w, 3).tolist())),
            'r_Q_vs_critic': float(np.corrcoef(q, y)[0, 1]) if len(y) > 2 else None,
            'r_fit_loo_vs_critic': float(np.corrcoef(loo, y)[0, 1]) if len(y) > 2 else None,
            'r_clip_vs_critic': float(np.corrcoef(X[:, feats.index('clip')], y)[0, 1]) if 'clip' in feats and len(y) > 2 else None,
            'sheets': [{'round': r[0], 'sheet': r[1], 'algo': r[2], 'target': r[3], 'critic': r[4], 'Q': round(r[5]['Q'], 3)} for r in R]}
     json.dump(res, open(os.path.join(HERE, 'calibration.json'), 'w'), indent=1)
-    print(json.dumps({k: v for k, v in res.items() if k != 'sheets'}, indent=1))
+    print(json.dumps({k: v for k, v in res.items() if k not in ('sheets', 'mean', 'std')}, indent=1))
+
+
+def predict(m, cal):
+    """the critic-calibrated proxy Qc for one target's metrics"""
+    f = dict(m, disconnected=float(m['components'] > 1))
+    x = (np.array([f[k] for k in cal['features']]) - cal['mean']) / np.array(cal['std'])
+    w = cal['weights_standardised']
+    return float(x @ np.array([w[k] for k in cal['features']]) + w['intercept'])
 
 
 if __name__ == '__main__':

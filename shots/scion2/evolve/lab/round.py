@@ -235,9 +235,20 @@ def main():
     t0 = time.time()
     R = run_set(BENCH['train'], algos, rnd)
     M = {a: means(R, a) for a in algos}
-    ranked = sorted([a for a in algos if M[a]], key=lambda a: -M[a]['Q'])
+    # ranking: the critic-calibrated proxy Qc when its leave-one-out correlation with the critic beats Q's (round 03)
+    cal_p = os.path.join(HERE, 'calibration.json')
+    cal = json.load(open(cal_p)) if os.path.exists(cal_p) else None
+    key = 'Q'
+    if cal and (cal.get('r_fit_loo_vs_critic') or 0) > (cal.get('r_Q_vs_critic') or 0):
+        from evolve.lab import calibrate as CB
+        for a in algos:
+            qs = [CB.predict(r['scores'], cal) for r in R if r['algo'] == a and 'scores' in r]
+            if M[a]:
+                M[a]['Qc'] = float(np.mean(qs))
+        key = 'Qc'
+    ranked = sorted([a for a in algos if M[a]], key=lambda a: -M[a][key])
     best = ranked[0]
-    summ = {'round': rnd, 'algos': algos, 'ranked_by_Q': ranked, 'means': M, 'minutes': round((time.time() - t0) / 60, 1),
+    summ = {'round': rnd, 'algos': algos, 'ranked_by': key, 'ranked': ranked, 'means': M, 'minutes': round((time.time() - t0) / 60, 1),
             'per_target': {e['id']: {a: next((r.get('scores') for r in R if r['algo'] == a and r['target'] == e['id']), None) for a in algos}
                            for e in BENCH['train']}}
     if held:
@@ -245,11 +256,12 @@ def main():
         summ['held_out'] = {'algo': best, 'train': M[best], 'held': means(RH, best),
                             'per_target': {r['target']: r.get('scores') for r in RH}}
     json.dump(summ, open(os.path.join(rd, 'summary.json'), 'w'), indent=1)
-    md = ['# Round %02d' % rnd, '', '| algo | Q | coverage | overflow | components (mean) | one component | pieces | snaps | CLIP |',
-          '|---|---|---|---|---|---|---|---|---|']
+    md = ['# Round %02d' % rnd, '', 'Ranked by %s%s.' % (key, ' (critic-calibrated proxy, calibration.json)' if key == 'Qc' else ''), '',
+          '| algo | Qc | Q | coverage | overflow | components (mean) | one component | pieces | snaps | CLIP |',
+          '|---|---|---|---|---|---|---|---|---|---|']
     for a in ranked:
         m = M[a]
-        md.append('| %s | %.3f | %.1f%% | %.2f%% | %.1f | %d/%d | %.1f | %.1f | %.3f |' % (a, m['Q'], 100 * m['coverage'], 100 * m['overflow'],
+        md.append('| %s | %s | %.3f | %.1f%% | %.2f%% | %.1f | %d/%d | %.1f | %.1f | %.3f |' % (a, '%.2f' % m['Qc'] if 'Qc' in m else '-', m['Q'], 100 * m['coverage'], 100 * m['overflow'],
                   m['components'], m['one_component'], m['n'], m['pieces'], m['snaps'], m['clip']))
     md += ['', '## per target (Q / coverage / components / CLIP)', '', '| target | ' + ' | '.join(ranked) + ' |', '|---|' + '---|' * len(ranked)]
     for e in BENCH['train']:
