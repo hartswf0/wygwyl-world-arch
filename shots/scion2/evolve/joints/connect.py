@@ -204,5 +204,5 @@ def connect(parent, child, joint, angle, genes, side=None):
         if 0 <= x0 and 0 <= y0 and x0 + d <= Wc and y0 + d <= Hc:
             img[y0:y0 + d, x0:x0 + d] = over(img[y0:y0 + d, x0:x0 + d], spr)
     return {'img': img, 'pm': pm, 'cm': cm, 'pivot': J_r, 'axis_c': cdir, 'axis_p': np.array(pax, float),
-            'Mc': Mc, 'Mp': Mp, 'scale': sc, 'mirror': mir, 'trim_cut': trim_cut, 'grommet': grom,
+            'Mc': Mc, 'Mp': Mp, 'scale': sc, 'mirror': mir, 'trim_cut': trim_cut, 'grommet': grom, 'P': P, 'C': C,
             'child_brad': (Mc[:, :2] @ cbrad + Mc[:, 2]) if cbrad is not None else None}

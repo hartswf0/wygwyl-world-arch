@@ -32,7 +32,7 @@ def part_record(c, part, r, ppc):
         'pivot_source': r['psrc'],
         'classes': _cls(r['cls']),
         'pixel_tests': r.get('px'),
-        'flags': sorted(set(r['flags'] + ([] if c['character'] in REVIEWED else ['auto_only']))),
+        'flags': sorted(set(r['flags'] + ([] if c['character'] in REVIEWED else ['auto_only']) + (['dissolve_fx_state'] if 'dissolve' in c['id'] else []))),
         'removed_components': r.get('removed', []),
     }
 

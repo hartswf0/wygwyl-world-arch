@@ -88,8 +88,12 @@ def torso_points(c, rgba, m, fx):
     if fx.get('pivot'):
         waist, src['pivot'] = fx['pivot'], 'fixes.json'
     elif lowb:
-        b = min(lowb, key=lambda b: abs(b['c'][0] - (xs[0] + xs[-1]) / 2) - 0.5 * b['c'][1])
-        waist, src['pivot'] = b['c'], 'brass brad at the waist'
+        b = min(lowb, key=lambda b: abs(b['c'][0] - (xs[0] + xs[-1]) / 2) - 0.1 * b['c'][1])
+        if abs(b['c'][0] - (xs[0] + xs[-1]) / 2) > 0.25 * (xs[-1] - xs[0]):      # only a hem-corner brad: not the waist
+            row = np.where(m[bot - 2])[0]
+            waist, src['pivot'] = [float(row.mean()), float(bot - 0.04 * hgt)], 'bottom centre of the outline (the low brads are at the hem corners)'
+        else:
+            waist, src['pivot'] = b['c'], 'brass brad at the waist'
     else:
         row = np.where(m[bot - 2])[0]
         waist, src['pivot'] = [float(row.mean()), float(bot - 0.04 * hgt)], 'bottom centre of the outline'
@@ -293,7 +297,9 @@ def process(c, part, fx):
     if 'state' not in cls:
         hsv = cv2.cvtColor(rgba[..., :3], cv2.COLOR_RGB2HSV)
         holes = 'hollow' in c['id']
-        cls['state'] = ('hollow_chest' if holes else 'jacket' if c.get('costume') == 'red_black_sunglasses' else 'tshirt', 0.6, 'costume / card name')
+        co = (c.get('costume') or '').lower()
+        cls['state'] = ('hollow_chest' if holes else 'jacket' if (co == 'red_black_sunglasses' or 'jacket' in co or 'suit' in co) else 'tshirt' if 'tshirt' in co else co or 'unknown',
+                        0.6, 'costume / card name')
     g = C.GRID[part]
     axis = np.array(kp[tipk]) - np.array(kp['pivot'])
     rot = float(fx.get('rot', C.rot_to(axis, g['axis'])))

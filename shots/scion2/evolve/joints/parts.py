@@ -35,14 +35,39 @@ def _read(p):
     return im
 
 
+_GC = {}
+GATE_CACHE = os.path.join(HERE, 'gate_cache.json')
+
+
 def gate_fail(rec):
-    """library2/qa/gates.py: a part whose gate verdict is FAIL is not paired (as library2's QA README says)"""
-    try:
-        sys.path.insert(0, os.path.join(LIB2, 'qa'))
-        import gates
-        return gates.gate(rec).get('verdict') == 'fail'
-    except Exception:
-        return False
+    """library2/qa/gates.py (round 02: cutoff, contamination, connection, view, identity): a part whose verdict is FAIL
+    is not paired. Verdicts come from library2/qa/results/<char>_<part>.json when library2 has run them, else gates.gate()
+    is run once and cached in joints/gate_cache.json (about 2 s a part)."""
+    if not _GC:
+        if os.path.exists(GATE_CACHE):
+            _GC.update(json.load(open(GATE_CACHE)))
+        import glob
+        for f in glob.glob(os.path.join(LIB2, 'qa', 'results', '*.json')):
+            try:
+                for k, v in json.load(open(f)).get('parts', {}).items():
+                    g = v.get('gates') or {}
+                    if g.get('verdict'):
+                        _GC[k] = g['verdict']
+            except Exception:
+                pass
+    k = rec['key']
+    if k not in _GC:
+        try:
+            sys.path.insert(0, os.path.join(LIB2, 'qa'))
+            import gates
+            g = gates.gate(rec)
+            _GC[k] = (g or {}).get('verdict', 'pass')
+        except Exception:
+            _GC[k] = 'pass'
+        tmp = GATE_CACHE + '.%d' % os.getpid()
+        json.dump(_GC, open(tmp, 'w'))
+        os.replace(tmp, GATE_CACHE)
+    return _GC[k] == 'fail'
 
 
 @functools.lru_cache(None)

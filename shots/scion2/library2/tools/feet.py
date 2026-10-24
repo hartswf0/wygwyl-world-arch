@@ -2,7 +2,7 @@
 
     python3 shots/scion2/library2/tools/feet.py poet
 
-Foot grid: a 768x448 canvas with the ankle pivot at (384,112). The rotation makes the sole line horizontal, with the
+Foot grid: a 768x512 canvas with the ankle pivot at (384,112). The rotation makes the sole line horizontal, with the
 sole down, so a foot stands on the grid. The toe points screen-right or screen-left, and that direction is the
 recorded facing. Scale is the median library px_per_cm of the cut sheet, the same rule as for hands.
 """
@@ -101,14 +101,14 @@ def process(c, fx, s_sheet):
     cls['side'] = (sd, 0.75, 'card name') if sd else ('unknown', 0.2, 'not in the name')
     upper = mc.copy(); upper[int(P[1]):] = False
     hgt = (bot - ys.min()) / max(1, lx.max() - lx.min())
-    lacey = 'sneaker' if hgt < 0.62 and cls['view'][0] == 'side' else 'chelsea_boot'
+    lacey = 'low_shoe' if hgt < 0.62 and cls['view'][0] == 'side' else 'high_top_or_boot'
     hsv = cv2.cvtColor(can[..., :3], cv2.COLOR_RGB2HSV)
     white = float(((hsv[..., 1] < 40) & (hsv[..., 2] > 170) & mc).sum() / max(1, mc.sum()))
     st = lacey + ('_white' if white > 0.3 else '')
     if re.search(r'heel-up|toe-up', nm):
         st += '_' + re.search(r'heel-up|toe-up', nm).group(0).replace('-', '_')
         flags.append('sole_visible')
-    cls['state'] = (st, 0.6, 'pixel: height/length %.2f (sneaker < 0.62), white %.0f%%; name' % (hgt, 100 * white))
+    cls['state'] = (st, 0.6, 'pixel: height/length %.2f (low shoe < 0.62, side views), white %.0f%%; name' % (hgt, 100 * white))
     for k in ('facing', 'side', 'state'):
         if k in fx:
             cls[k] = (fx[k], 0.95, 'fixes.json (agent-vision, card looked at)')
@@ -204,9 +204,13 @@ def run(ch):
                  ','.join(rec['flags'])[:44]]
         tiles.append((cl['view']['value'] + cl['facing']['value'], IX.tile(r['rgba'], PART, rec['keypoints']['canonical'], BONES, lines)))
     tiles.sort(key=lambda t: t[0])
+    ok = [r for r in recs if r['status'] == 'ok']
+    if ok and sum('off_palette_white' in r['flags'] for r in ok) > 0.5 * len(ok):
+        for r in ok:          # white is this character's costume, not an outlier
+            r['flags'] = [f for f in r['flags'] if f != 'off_palette_white']
     IX.merge(recs, ch, PART)
     sheets = C.sheet([t for _, t in tiles], os.path.join(C.LIB2, 'sheets', '%s_foot_%%02d.jpg' % ch), cols=6,
-                     title='%s feet on the foot grid (768x448, ankle pivot red cross at 384,112, sole horizontal; grid 5 cm; %g px/cm)' % (ch, C.CANON_PPC))
+                     title='%s feet on the foot grid (768x512, ankle pivot red cross at 384,112, sole horizontal; grid 5 cm; %g px/cm)' % (ch, C.CANON_PPC))
     sheets += C.sheet(bad, os.path.join(C.LIB2, 'sheets', '%s_foot_rejected_%%02d.jpg' % ch), cols=6, title='%s foot cards rejected (reason under each)' % ch)
     print('\n'.join(sheets))
 

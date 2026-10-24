@@ -73,25 +73,45 @@ Each test returns `{result: pass|warn|fail, evidence, why}`. The overall `verdic
   - No brad was found.
   - There is no overlap tab beyond the pivot.
   - The width at the pivot is recorded, so the neighbour can be matched.
+- **identity** (is it actually this part?):
+  - CLIP zero-shot reads the part from the card's cached embedding, over prompts for head, hand, forearm,
+    upper arm, thigh, shin, foot, torso, pelvis and feature.
+  - For limbs, hands and feet, the length is compared with the canon (`canon_deviation.length_ratio` from
+    ../canon.json).
+  - It fails when the length is under 0.5× or over 1.75× the canon, or when CLIP and the length both disagree.
+  - Compound cards (shin + boot, forearm + hand) are rejected in fixes.json, and two-brad-segment cards are
+    flagged `extra_brads_mid_segment`.
 - **view**: the view tag is checked against the pixel test (for heads, the skin/hair centroid offset and the dark
   face box).
 
 ## pairs.py: the sweep
 
 ```
-python3 shots/scion2/library2/qa/pairs.py poet head   # neck: head on torso
-python3 shots/scion2/library2/qa/pairs.py poet hand   # wrist: hand on forearm
-python3 shots/scion2/library2/qa/pairs.py poet foot   # ankle: foot on shin
+python3 shots/scion2/library2/qa/pairs.py poet head       # neck: head on torso (neck keypoint)
+python3 shots/scion2/library2/qa/pairs.py poet hand       # wrist: hand on forearm (wrist)
+python3 shots/scion2/library2/qa/pairs.py poet foot       # ankle: foot on shin (ankle)
+python3 shots/scion2/library2/qa/pairs.py poet forearm    # elbow: forearm on upper arm (elbow)
+python3 shots/scion2/library2/qa/pairs.py poet shin       # knee: shin on thigh (knee)
+python3 shots/scion2/library2/qa/pairs.py poet upper_arm  # shoulder: upper arm on torso (shoulder_l/r by his side and the torso view)
+python3 shots/scion2/library2/qa/pairs.py poet thigh      # hip: thigh on pelvis (hip_l/r)
+python3 shots/scion2/library2/qa/pairs.py poet pelvis     # waist: pelvis on torso (waist pivot)
+python3 shots/scion2/library2/qa/summary.py               # summary.json + sheets/summary.jpg
 ```
+
+The sweep covers only the joint's ROM (`seam.ROM`), in steps of 15°. A view probe also attaches each part to
+one neighbour of every view family at −30, 0 and +30. It records which families the part joins cleanly
+(`view_probe` in results and pairs.json) and flags a tag that contradicts the behaviour.
 
 1. Neighbours: up to 3 per part.
    - They must share the character, a compatible view family and a compatible facing.
    - They rank higher for the same costume, the same cut sheet, a brass-found joint and a neutral pose.
 2. Attaching: both parts are canonical, so the neutral pose is the child pivot on the parent's joint keypoint with
    zero rotation.
-3. The sweep runs from −60° to +90° in steps of 15°. A positive angle turns the child counter-clockwise on screen.
-4. Z-order follows the Skin Lab stack: torso over head, hand over forearm, shin over foot.
-5. Outputs:
+3. The sweep covers the joint ROM (seam.ROM) in steps of 15°. A positive angle turns the child counter-clockwise on screen. Angles outside the ROM are N/A.
+4. Z-order: the neutral pose is scored both ways (parent over child, child over parent) and the sweep uses the
+   better one, recorded as `over`. The Skin Lab stack is only the first guess.
+5. For hands, feet and limbs, neighbours are matched on his left/right side, not on view.
+6. Outputs:
    - `results/<char>_<part>.json`: the gates, plus every pair-angle score.
    - `pairs.json`: for each child → neighbour pair, `clean_range` and `usable_range` and the failures per angle.
      `clean_range` is the contiguous run of CLEAN steps around 0. `usable_range` is the same with CLEAN or WARN

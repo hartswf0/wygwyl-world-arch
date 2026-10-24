@@ -20,7 +20,7 @@ CANON_PPC = 10.0          # canonical pixels per centimetre, every character, ev
 GRID = {
     'head':      {'canvas': (512, 512), 'pivot': (256, 448), 'axis': (0, -1), 'pivot_name': 'neck',     'tip_name': 'crown'},
     'hand':      {'canvas': (384, 384), 'pivot': (192, 72),  'axis': (0, 1),  'pivot_name': 'wrist',    'tip_name': 'knuckles'},
-    'foot':      {'canvas': (768, 448), 'pivot': (384, 112),  'axis': None,    'pivot_name': 'ankle',    'tip_name': 'toe'},
+    'foot':      {'canvas': (768, 512), 'pivot': (384, 112),  'axis': None,    'pivot_name': 'ankle',    'tip_name': 'toe'},
     'upper_arm': {'canvas': (256, 512), 'pivot': (128, 64),  'axis': (0, 1),  'pivot_name': 'shoulder', 'tip_name': 'elbow'},
     'forearm':   {'canvas': (256, 512), 'pivot': (128, 64),  'axis': (0, 1),  'pivot_name': 'elbow',    'tip_name': 'wrist'},
     'thigh':     {'canvas': (320, 640), 'pivot': (160, 80),  'axis': (0, 1),  'pivot_name': 'hip',      'tip_name': 'knee'},
@@ -246,6 +246,9 @@ def draw_tile(rgba, part_type, kps, bones, label_lines, tile=256, dirs=(), bad=F
 
 
 def sheet(tiles, out, cols=6, title=None):
+    import glob
+    for old in glob.glob(out.replace('%02d', '[0-9][0-9]')):     # drop stale pages from an earlier, longer run
+        os.remove(old)
     if not tiles:
         return []
     th = max(t.height for t in tiles)

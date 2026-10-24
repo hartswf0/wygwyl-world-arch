@@ -27,7 +27,7 @@ def lab(bgr):
     return cv2.cvtColor(np.clip(bgr, 0, 255).astype(np.uint8).reshape(-1, 1, 3), cv2.COLOR_BGR2LAB).reshape(-1, 3).astype(np.float32) * [100 / 255., 1, 1] - [0, 128, 128]
 
 
-def run(r, parent, child, joint, genes):
+def run(r, parent, child, joint, genes, angle=None):
     """library2/qa/seam.score (the shared definition); the old local tests stay as run_local"""
     import os, sys
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'library2', 'qa')))
@@ -47,46 +47,22 @@ def run(r, parent, child, joint, genes):
         feats = [(xx >= x0) & (xx <= x1) & (yy >= y0) & (yy <= y1) & r['cm']]
     img = r['img']
     rgba = np.dstack([img[..., [2, 1, 0]], img[..., 3]]).astype(np.uint8)
-    jn = joint if joint in ('neck', 'wrist', 'ankle', 'elbow', 'knee') else 'generic'
+    lay = lambda L: np.dstack([L[..., [2, 1, 0]], L[..., 3]]).astype(np.uint8)
+    jn = joint if joint in seam.ROM else 'generic'
+    # library2 QA round 02: ROM, layers, brad registration, grommet peek, visible tab, trim cut are all seam.py terms now
     s = seam.score(rgba, r['pm'], r['cm'], r['pivot'], -r['axis_p'], r['axis_c'], over='A' if genes.get('on_top') == 'parent' else 'B',
                    featuresA=None, featuresB=feats,
-                   facingA=(parent.get('view'), parent.get('facing')) if parent.get('view') else None,   # unknown view: not tested
-                   facingB=(child.get('view'), child.get('facing')) if child.get('view') else None, joint=jn,
-                   tol={'exp_warn': .03, 'exp_fail': .08})        # round 02: visible tabs / tongues are defects (critic)
-    verdict, why0 = s['verdict'], list(s.get('why') or [])
-    # lab-side test (seam.py has no such term yet): a trim leaves a straight scissor cut that shows -- the child's
-    # pixels along the removed region, outside the parent (+2 px), longer than 1 cm
-    if r.get('trim_cut') is not None and r['trim_cut'].any():
-        edge = cv2.dilate(r['trim_cut'].astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool) & r['cm']
-        pd = cv2.dilate(r['pm'].astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool)
-        vis = int((edge & ~pd).sum())
-        s['trim_cut_px'] = vis
-        if vis > 1.0 * CN.RS * 2:
-            why0 = ['trim_cut'] + why0
-            verdict = 'MUTILATED'
-    # round 02 (critic, joint round 01): pivot registration -- the child's brad ON the parent's grommet (< 0.3 cm),
-    # and no half-grommet peeking out from under the child
-    if r.get('grommet') is not None:
-        g = r['grommet']
-        if r.get('child_brad') is not None:
-            dreg = float(np.linalg.norm(r['child_brad'] - g)) / CN.RS
-            s['register_cm'] = round(dreg, 2)
-            if dreg > .3:
-                why0 = ['register'] + why0
-                verdict = 'MUTILATED'
-        if genes.get('seam') != 'brad':
-            H, W = r['cm'].shape
-            yy, xx = np.mgrid[0:H, 0:W]
-            disc = (xx - g[0]) ** 2 + (yy - g[1]) ** 2 <= (1.0 * CN.RS) ** 2
-            cov = float((disc & r['cm']).sum() / max(disc.sum(), 1)) if genes.get('on_top') != 'parent' else 0.
-            s['grommet_covered'] = round(cov, 2)
-            if .15 < cov < .85:
-                why0 = ['half_grommet'] + why0
-                verdict = 'MUTILATED'
-    s['verdict'], s['why'] = verdict, why0
+                   facingA=(parent.get('view'), parent.get('facing')) if parent.get('view') and parent.get('facing') else None,
+                   facingB=(child.get('view'), child.get('facing')) if child.get('view') and child.get('facing') else None,
+                   joint=jn, angle=angle, layerA=lay(r['P']), layerB=lay(r['C']),
+                   bradA=None if r.get('grommet') is None else [float(v) for v in r['grommet']],
+                   bradB=None if r.get('child_brad') is None else [float(v) for v in r['child_brad']], px_per_cm=CN.RS)
+    if s['verdict'] == 'N/A':
+        return None
     grade = {'CLEAN': 'green', 'WARN': 'amber', 'MUTILATED': 'red'}[s['verdict']]
     tests = {k: (round(float(v), 3) if isinstance(v, (int, float, np.floating)) else v) for k, v in s.items() if k in
-             ('gap_frac', 'width_ratio', 'exposed_A_frac', 'exposed_B_frac', 'covered', 'colour_dE', 'facing_ok')}
+             ('gap_frac', 'width_ratio', 'exposed_A_frac', 'exposed_B_frac', 'covered', 'colour_dE', 'facing_ok',
+              'registration_cm', 'grommet_peek', 'tab_visible_frac', 'trim_cut')}
     why = s.get('why') or []
     if isinstance(why, str):
         why = [why]

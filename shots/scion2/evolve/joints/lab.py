@@ -20,21 +20,23 @@ sys.path.insert(0, os.path.abspath(os.path.join(HERE, '..', '..')))
 from evolve.joints import parts as PT, connect as CN, qa as QA  # noqa: E402
 
 ANGLES = [-60, -30, 0, 30, 60, 90]
-# round 02: sweep only inside each joint's anatomical range (outside it is not applicable, not a failure)
-ROM = {'neck': [-35, -17, 0, 17, 35], 'wrist': [-70, -35, 0, 35, 70], 'ankle': [-30, -15, 0, 20, 45],
-       'elbow': [0, 40, 80, 120, 150], 'knee': [0, 40, 80, 120, 150], 'shoulder': [-60, -30, 0, 30, 60, 90], 'hip': [-30, 0, 30, 60, 90]}
-import re
-MISFILE = {'torso': r'pelvis|hip|connect|seat|thigh|leg', 'forearm': r'hand|palm|fist|grip', 'shin': r'thigh',
-           'upper_arm': r'hand|palm|fist', 'thigh': r'shin|foot|boot'}
-FACE_OK = {'painted_face'}
+# round 02: sweep only inside each joint's anatomical range (library2 seam.ROM), in 15 degree steps
+def rom_angles(joint):
+    sys.path.insert(0, os.path.abspath(os.path.join(HERE, '..', '..', 'library2', 'qa')))
+    import seam
+    lo, hi = seam.ROM.get(joint, seam.ROM['generic'])
+    a = list(range(int(lo), int(hi) + 1, 15))
+    if a[-1] != hi:
+        a.append(int(hi))
+    return a
+
+
+FACE_OK = {'painted_face', 'composed_face', 'composed'}
 
 
 def usable(p, joint):
-    """round 02 gates (critic): misfiled parts out (a hand filed as a forearm, a pelvis connector as a torso), front-ish
-    heads must carry a painted face, back heads must be backs of heads"""
-    nm = p['src_card'].split('/')[-1].lower()
-    if p['part'] in MISFILE and re.search(MISFILE[p['part']], nm) and not re.search(p['part'].replace('_', '.?'), nm):
-        return False
+    """round 02 gates: library2's gates (identity: CLIP + canon length) already applied in parts.py; front-ish heads must
+    carry a painted face (or a composed one), back heads must be backs of heads"""
     if p['part'] == 'head':
         st = p.get('state')
         if p.get('view') in ('back',):
@@ -107,15 +109,17 @@ def evaluate(joint, rnd):
     PR = pairs(joint)
     res = {m: [] for m in M}
     for a, b, sp in PR:
-        for ang in ROM.get(joint, ANGLES):
+        for ang in rom_angles(joint):
             for m, g in M.items():
                 try:
                     r = CN.connect(a, b, joint, ang, g)
                     if r is None:
                         continue
-                    q = QA.run(r, a, b, joint, g)
+                    q = QA.run(r, a, b, joint, g, ang)
                 except Exception as e:
                     traceback.print_exc()
+                    continue
+                if q is None:                  # outside the joint's range: not applicable
                     continue
                 res[m].append({'parent': a['key'], 'child': b['key'], 'split': sp, 'angle': ang, **q})
     summ = {}
@@ -143,7 +147,9 @@ def cell(a, b, joint, ang, g, size=150):
     r = CN.connect(a, b, joint, ang, g)
     if r is None:
         return None, None
-    q = QA.run(r, a, b, joint, g)
+    q = QA.run(r, a, b, joint, g, ang)
+    if q is None:
+        return None, None
     img = r['img']
     al = img[..., 3:] / 255.
     o = (img[..., [2, 1, 0]] * al + 245 * (1 - al)).astype(np.uint8)
@@ -171,7 +177,7 @@ def cell(a, b, joint, ang, g, size=150):
 
 def sheet(joint, mname, g, PR, od, rnd, sm, rows=10):
     cs = 158
-    AN = ROM.get(joint, ANGLES)
+    AN = rom_angles(joint)
     W = 260 + len(AN) * cs
     out = Image.new('RGB', (W, 70 + rows * (cs + 22)), (255, 255, 255))
     d = ImageDraw.Draw(out)
@@ -222,7 +228,7 @@ def critic_pack(rnd, results, seed=0):
         best = results[j][0]
         PR = pairs(j)
         a, b, sp = rng.choice(PR)
-        picks.append((j, best, a, b, rng.choice(ROM.get(j, ANGLES))))
+        picks.append((j, best, a, b, rng.choice(rom_angles(j))))
     rng.shuffle(picks)
     for i, (j, best, a, b, ang) in enumerate(picks, 1):
         g = load_methods(j)[best]

@@ -186,7 +186,10 @@ def run_pair(child, parent, jcfg):
     best = None
     for over in (jcfg['over'], 'child' if jcfg['over'] == 'parent' else 'parent'):
         j2 = dict(jcfg, over=over)
-        r0 = _sweep(child, parent, j2, [0])[0][0]
+        sw = _sweep(child, parent, j2, [0])
+        if not sw:
+            return {}
+        r0 = sw[0][0]
         key = (VR.get(r0['verdict'], 3), len(r0['why']), r0.get('covered', 0))
         if best is None or key < best[0]:
             best = (key, j2)
@@ -295,6 +298,8 @@ def run(ch, part):
         if g['verdict'] != 'fail':
             for nb in neighbours(kid, pars_ok, match=J.get('match', 'view')):
                 res = run_pair(kid, nb, jcfg)
+                if not res:
+                    continue
                 sc = {a: r for a, (r, _, _) in res.items()}
                 cl, us = ranges(sc)
                 fails = {a: r['why'] for a, r in sc.items() if r['verdict'] != 'CLEAN'}
@@ -348,10 +353,13 @@ def view_probe(kid, parents, jcfg):
         for over in ('parent', 'child'):
             j2['over'] = over
             rs = _sweep(kid, p, j2, [-30, 0, 30])
+            if not rs:
+                continue
             n = sum(1 for a in rs if rs[a][0]['verdict'] in ('CLEAN', 'N/A'))
             if best is None or n > best[0]:
                 best = (n, over, {a: rs[a][0]['verdict'] for a in rs})
-        out[f] = {'neighbour': p['key'], 'clean_of_3': best[0], 'over': best[1], 'verdicts': best[2]}
+        if best:
+            out[f] = {'neighbour': p['key'], 'clean_of_3': best[0], 'over': best[1], 'verdicts': best[2]}
     tag = kid['classes']['view']['value']
     tagf = {'three-quarter-back': 'back', 'edge': 'side'}.get(tag, tag)
     good = sorted(f for f, r in out.items() if r['clean_of_3'] >= 2)
@@ -424,6 +432,9 @@ def row_image(kid, g, strip, strip_over=None):
 
 
 def stack(rows, pattern, title, per=6):
+    import glob
+    for old in glob.glob(pattern.replace('%02d', '[0-9][0-9]')):
+        os.remove(old)
     out = []
     for k in range(0, len(rows), per):
         ch = rows[k:k + per]
