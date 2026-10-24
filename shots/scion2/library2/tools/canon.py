@@ -198,6 +198,25 @@ def main():
                 dev['width_%s_ratio' % jn] = round(wd[wk] / C.CANON_PPC / cw['canon'], 3)
         rec['canon_deviation'] = dev
         n += 1
+    # native sets: the parts cut on the same sheet (the kit's tabs were sized for their sheet-mates)
+    by_sheet = {}
+    for k, rec in idx['parts'].items():
+        if rec.get('status') == 'ok' and 'composed' not in rec.get('flags', []):
+            by_sheet.setdefault(rec['source_card'].split('/')[0], []).append(k)
+    for k, rec in idx['parts'].items():
+        if rec.get('status') != 'ok':
+            continue
+        sh = rec['source_card'].split('/')[0]
+        ss = rec.setdefault('source_set', {})
+        ss['sheet'] = sh
+        ss['costume'] = rec.get('costume')
+        side = (rec['classes'].get('side') or {}).get('value')
+        ss['side_in_set'] = side if side in ('left', 'right') else None
+        mates = {}
+        for m in by_sheet.get(sh, []):
+            if m != k:
+                mates.setdefault(idx['parts'][m]['part'], []).append(m)
+        ss['sheet_mates'] = mates
     with open(os.path.join(C.LIB2, 'index.json'), 'w') as f:
         json.dump(idx, f, indent=1)
     print('canon for', len(canon['characters']), 'character/costumes; deviations on', n, 'parts')

@@ -34,6 +34,8 @@ def part_record(c, part, r, ppc):
         'pixel_tests': r.get('px'),
         'flags': sorted(set(r['flags'] + ([] if c['character'] in REVIEWED else ['auto_only']) + (['dissolve_fx_state'] if 'dissolve' in c['id'] else []))),
         'removed_components': r.get('removed', []),
+        'source_set': {'sheet': c['id'].split('/')[0], 'costume': c.get('costume')},     # sheet_mates: filled by canon.py
+        'defringed': True,
     }
 
 

@@ -163,8 +163,25 @@ def apply_vec(M, v):
     return [round(float(p[0] / n), 3), round(float(p[1] / n), 3)]
 
 
+def defringe(rgba, solid=250):
+    """colour decontamination: every semi-transparent pixel takes the colour of the nearest solid (alpha >= solid)
+    pixel, so the card-background fringe in the soft edge cannot show as a light halo over a dark partner. Alpha is
+    unchanged and solid pixels are untouched (no repainting of the painted part)."""
+    from scipy.ndimage import distance_transform_edt
+    a = rgba[..., 3]
+    solid_m = a >= solid
+    soft = (a > 0) & ~solid_m
+    if not soft.any() or not solid_m.any():
+        return rgba
+    _, (iy, ix) = distance_transform_edt(~solid_m, return_indices=True)
+    out = rgba.copy()
+    out[soft, :3] = rgba[iy[soft], ix[soft], :3]
+    return out
+
+
 def warp(rgba, M, size):
-    """premultiplied warp so edges do not pick up dark fringes"""
+    """premultiplied warp so edges do not pick up dark fringes; the source is defringed first"""
+    rgba = defringe(rgba)
     f = rgba.astype(np.float32)
     a = f[..., 3:4] / 255.0
     pm = np.concatenate([f[..., :3] * a, f[..., 3:4]], -1)

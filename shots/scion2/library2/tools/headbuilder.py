@@ -50,16 +50,47 @@ def card(ch, suffix):
 
 
 def plate(c):
-    """the cleaned feature plate; its brass eyelets are made transparent (the head plate shows through), so they do
-    not read as extra pivot holes on the face. No pixel is repainted."""
+    """the cleaned, defringed feature plate, cropped to the plate, with its brass eyelets cut out and then trimmed to
+    the painted feature with a feathered edge (feature_only): the plate's outline and card rim do not show on the
+    face. Only alpha changes; no pixel is repainted."""
     from brass import brass_blobs
     rgba, _ = C.keep_main(C.load_rgba(c))
-    rgba = rgba.copy()
+    rgba = C.defringe(rgba.copy())
     for b in brass_blobs(rgba):
         cv2.circle(rgba, (int(round(b['c'][0])), int(round(b['c'][1]))), int(round(b['r'] * 1.35 + 2)), (0, 0, 0, 0), -1)
     a = rgba[..., 3] > 40
     ys, xs = np.nonzero(a)
-    return rgba[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    rgba = rgba[ys.min():ys.max() + 1, xs.min():xs.max() + 1]      # plate bbox: widths below are plate widths
+    return feature_only(rgba)
+
+
+def feature_only(rgba, de=14.0):
+    """trim a feature plate to its painted feature: pixels that differ from the plate's own skin/card colour by more
+    than `de` (CIE76), away from the plate's cut rim, cleaned and grown a little, then feathered into the head plate.
+    Only alpha changes; the painted pixels are not touched."""
+    a = rgba[..., 3] > 128
+    if a.sum() < 50:
+        return rgba
+    lab = cv2.cvtColor(rgba[..., :3], cv2.COLOR_RGB2LAB).astype(np.float32)
+    lab[..., 0] *= 100 / 255.0
+    lab[..., 1:] -= 128
+    w = max(rgba.shape[:2])
+    inner = cv2.erode(a.astype(np.uint8), np.ones((max(3, int(0.06 * w)) | 1,) * 2, np.uint8)).astype(bool)
+    base = np.median(lab[inner], 0) if inner.sum() > 20 else np.median(lab[a], 0)
+    d = np.linalg.norm(lab - base, axis=2)
+    f = (d > de) & inner
+    f = cv2.morphologyEx(f.astype(np.uint8), cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+    n, lab_, st, _ = cv2.connectedComponentsWithStats(f, 8)
+    keep = np.zeros_like(f)
+    for i in range(1, n):
+        if st[i, 4] >= 0.002 * a.sum():
+            keep[lab_ == i] = 1
+    g = max(3, int(0.03 * w)) | 1
+    keep = cv2.dilate(keep, np.ones((g, g), np.uint8))
+    soft = cv2.GaussianBlur(keep.astype(np.float32), (0, 0), max(1.5, 0.02 * w))
+    out = rgba.copy()
+    out[..., 3] = (rgba[..., 3].astype(np.float32) * np.clip(soft * 1.4, 0, 1)).astype(np.uint8)
+    return out
 
 
 def place(base, pl, width_px, anchor_xy, anchor_frac, flip=False):

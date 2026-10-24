@@ -16,7 +16,7 @@ Genes (a method is a dict of them):
              'register' (the child's brad placed exactly on the parent's grommet at the joint, when both exist) |
              'midline' (the pivot moved onto the alpha's centre line, across the axis)
   overlap    cm the child's pivot is pushed back past the joint into the parent (0 = pivot on the joint point)
-  on_top     'child' | 'parent'
+  on_top     'child' | 'parent' | 'view' (parent on top for back views, child otherwise)
   trim       'none' | 'contour' (the child's end behind the joint is cut away where it leaves the parent's outline)
   width      'none' | 'uniform' (child uniformly scaled 0.85-1.15 so its width at the pivot matches the parent's at
              the joint)
@@ -193,7 +193,10 @@ def connect(parent, child, joint, angle, genes, side=None):
         trim_cut = cut
     else:
         trim_cut = None
-    if genes.get('on_top', 'child') == 'child':
+    top = genes.get('on_top', 'child')
+    if top == 'view':                          # back views: the parent (collar) over the child's tab; else the child over
+        top = 'parent' if (child.get('view') or '').startswith(('back', 'three-quarter-back')) else 'child'
+    if top == 'child':
         img = over(P, C)
     else:
         img = over(C, P)
@@ -207,5 +210,5 @@ def connect(parent, child, joint, angle, genes, side=None):
         if 0 <= x0 and 0 <= y0 and x0 + d <= Wc and y0 + d <= Hc:
             img[y0:y0 + d, x0:x0 + d] = over(img[y0:y0 + d, x0:x0 + d], spr)
     return {'img': img, 'pm': pm, 'cm': cm, 'pivot': J_r, 'axis_c': cdir, 'axis_p': np.array(pax, float),
-            'Mc': Mc, 'Mp': Mp, 'scale': sc, 'mirror': mir, 'trim_cut': trim_cut, 'grommet': grom, 'P': P, 'C': C,
+            'Mc': Mc, 'Mp': Mp, 'scale': sc, 'mirror': mir, 'trim_cut': trim_cut, 'grommet': grom, 'P': P, 'C': C, 'on_top': top,
             'child_brad': (Mc[:, :2] @ cbrad + Mc[:, 2]) if cbrad is not None else None}

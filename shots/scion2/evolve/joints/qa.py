@@ -50,7 +50,7 @@ def run(r, parent, child, joint, genes, angle=None):
     lay = lambda L: np.dstack([L[..., [2, 1, 0]], L[..., 3]]).astype(np.uint8)
     jn = joint if joint in seam.ROM else 'generic'
     # library2 QA round 02: ROM, layers, brad registration, grommet peek, visible tab, trim cut are all seam.py terms now
-    s = seam.score(rgba, r['pm'], r['cm'], r['pivot'], -r['axis_p'], r['axis_c'], over='A' if genes.get('on_top') == 'parent' else 'B',
+    s = seam.score(rgba, r['pm'], r['cm'], r['pivot'], -r['axis_p'], r['axis_c'], over='A' if r.get('on_top', genes.get('on_top')) == 'parent' else 'B',
                    featuresA=None, featuresB=feats,
                    facingA=(parent.get('view'), parent.get('facing')) if parent.get('view') and parent.get('facing') else None,
                    facingB=(child.get('view'), child.get('facing')) if child.get('view') and child.get('facing') else None,

@@ -32,8 +32,16 @@ terms):
 - colour_dE: CIE76 delta-E between the median colours on either side of the visible seam contour.
 - facing_ok: bool or None.
 - seam_w: the cross-section width used as the unit: the smaller of the two parts' widths at the pivot.
-- trim_cut: the longest straight run on the visible outline within 1.6 seam_w of the joint, / seam_w. A visible
-  scissor cut warns above 0.6 and fails above 1.0 (a run is straight within 0.6 px).
+- trim_cut: the longest NEW straight run on the visible outline near the joint, / seam_w. It warns above 0.6 and
+  fails above 1.0. A run counts when:
+  - it is straight within 0.6 px;
+  - its midpoint lies within 1 seam_w of the joint along the bone;
+  - less than 70 % of it lies on either part's own untrimmed outline (origA/origB, default = the masks). An edge
+    that was already on the painted card is never a trim cut.
+- light_rim: the fraction of the over part's soft edge, inside the joint disk, that is near-white (L* > 85) and more
+  than 60 L* lighter than the under part beneath it (a card-background halo; the kit's painted brown card edge does
+  not count). It warns above 0.25. Library images are defringed, so
+  this should stay 0 for library parts.
 - registration_cm: the distance between the child's brad and the parent's grommet. It needs bradA/bradB, and
   warns above 0.3 cm and fails above 0.6 cm.
 - grommet_peek: the visible fraction of the under part's brass inside the joint disk. It needs the layers.
@@ -128,8 +136,23 @@ def brass_mask(rgba):
     return (h >= 17) & (h <= 32) & (s_ >= 90) & (v >= 105) & (rgba[..., 3] > 128)
 
 
-def _straight_runs(mask, centre, radius, min_len):
-    """straight segments of the outline of mask within radius of centre (scissor cuts)"""
+def _on_outline(a, b, outline, tol=1.5):
+    """fraction of the segment a-b that lies on a given outline mask (within tol px)"""
+    if outline is None:
+        return 0.0
+    n = max(2, int(np.linalg.norm(b - a)))
+    H, W = outline.shape
+    hit = 0
+    for t in np.linspace(0, 1, n):
+        x, y = (a + (b - a) * t).round().astype(int)
+        if 0 <= x < W and 0 <= y < H and outline[y, x]:
+            hit += 1
+    return hit / n
+
+
+def _straight_runs(mask, centre, radius, min_len, axis=None, along=None):
+    """straight segments of the outline of mask within radius of centre (scissor cuts); with axis, only those whose
+    midpoint lies within `along` of the centre measured along the bone axis"""
     cs, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     out = []
     for c in cs:
@@ -140,17 +163,21 @@ def _straight_runs(mask, centre, radius, min_len):
             a, b = poly[i], poly[(i + 1) % len(poly)]
             L = float(np.linalg.norm(b - a))
             mid = (a + b) / 2
-            if L >= min_len and np.linalg.norm(mid - centre) <= radius:
-                out.append((a, b, L))
+            if L < min_len or np.linalg.norm(mid - centre) > radius:
+                continue
+            if axis is not None and along is not None and abs(float(np.dot(mid - centre, axis))) > along:
+                continue
+            out.append((a, b, L))
     return out
 
 
 def score(render_rgba, maskA, maskB, pivot, axisA, axisB, over='A', featuresA=None, featuresB=None,
           facingA=None, facingB=None, joint='generic', tol=None, angle=None, layerA=None, layerB=None,
-          bradA=None, bradB=None, px_per_cm=10.0):
+          bradA=None, bradB=None, px_per_cm=10.0, origA=None, origB=None):
     """see the module docstring. New (round 02): angle (deg, for the ROM table), layerA/layerB (each part's own RGBA
     as placed, for brass and tab tests), bradA/bradB (the brad / grommet centre each part brings to this joint,
-    render px; None if the part has none), px_per_cm (render scale)."""
+    render px; None if the part has none), px_per_cm (render scale), origA/origB (each part's UNTRIMMED silhouette
+    as placed: pass them when a joint method trims a part; when omitted the masks are taken as untrimmed)."""
     T = dict(TOL.get(joint, TOL['generic']))
     if tol:
         T.update(tol)
@@ -209,7 +236,17 @@ def score(render_rgba, maskA, maskB, pivot, axisA, axisB, over='A', featuresA=No
     fok = facing_compatible(facingA, facingB)
     s2 = seam_w * seam_w
     # trim cuts: long straight runs on the VISIBLE outline (the union) near the seam
-    runs = _straight_runs(U, P, 1.6 * seam_w, max(6.0, T.get('trim_min', 0.35) * seam_w))
+    # (a) only near the joint along the bone (a sleeve's long painted side well above the joint is not a cut);
+    # (b) only edges NEW to the part: a straight run lying on a part's own untrimmed card outline was painted that way
+    axis_mean = uA - uB
+    axis_mean = axis_mean / (np.linalg.norm(axis_mean) or 1)
+    runs = _straight_runs(U, P, 1.6 * seam_w, max(6.0, T.get('trim_min', 0.35) * seam_w), axis=axis_mean, along=1.0 * seam_w)
+    k3 = np.ones((3, 3), np.uint8)
+    edge = lambda m_: (m_ & ~cv2.erode(m_.astype(np.uint8), k3).astype(bool)) if m_ is not None else None
+    oA = edge(origA if origA is not None else maskA)
+    oB = edge(origB if origB is not None else maskB)
+    oAB = cv2.dilate((oA | oB).astype(np.uint8), k3).astype(bool)
+    runs = [(a, b, L) for a, b, L in runs if _on_outline(a, b, oAB) < 0.7]
     trim_len = max([L for _, _, L in runs] or [0.0])
     trim_spot = None
     if runs:
@@ -236,12 +273,22 @@ def score(render_rgba, maskA, maskB, pivot, axisA, axisB, over='A', featuresA=No
         hsv = cv2.cvtColor(over_layer[..., :3], cv2.COLOR_RGB2HSV)
         tabby = beyond_over & (hsv[..., 2] > 80) & ~brass_mask(over_layer)
         tab_vis = round(float(er(tabby).sum() / s2), 4)
+    # light rim: the over part's soft edge (semi-transparent pixels) inside the joint disk that is much lighter than
+    # what lies under it (card-background fringe over a dark partner)
+    rim = None
+    if over_layer is not None and under_layer is not None:
+        oa = over_layer[..., 3].astype(int)
+        band = (oa > 15) & (oa < 240) & disk & under_mask
+        if band.sum() > 20:
+            Lo = cv2.cvtColor(over_layer[..., :3], cv2.COLOR_RGB2LAB)[..., 0].astype(int)
+            Lu = cv2.cvtColor(under_layer[..., :3], cv2.COLOR_RGB2LAB)[..., 0].astype(int)
+            rim = round(float((((Lo - Lu) > 60 * 255 / 100) & (Lo > 85 * 255 / 100))[band].mean()), 3)     # cv2 L is 0..255
     r = dict(seam_w=round(seam_w, 1), gap_px=gap_px, gap_frac=round(gap_px / s2, 4), width_A=round(wA, 1), width_B=round(wB, 1),
              width_ratio=round(ratio, 3) if math.isfinite(ratio) else None,
              exposed_A_frac=round(expA_px / s2, 4), exposed_B_frac=round(expB_px / s2, 4), covered=round(covered, 3),
              colour_dE=None if dE is None else round(dE, 1), facing_ok=fok,
              trim_cut=round(trim_len / seam_w, 3), registration_cm=None if reg_cm is None else round(reg_cm, 2),
-             grommet_peek=peek, tab_visible_frac=tab_vis, angle=angle)
+             grommet_peek=peek, tab_visible_frac=tab_vis, light_rim=rim, angle=angle)
     why, bad = [], []
     if r['gap_frac'] > T['gap_fail']:
         bad.append('gap')
@@ -277,6 +324,8 @@ def score(render_rgba, maskA, maskB, pivot, axisA, axisB, over='A', featuresA=No
         why.append('registration')
     if peek is not None and 0.08 < peek < 0.92:
         why.append('grommet_peek')
+    if rim is not None and rim > 0.25:
+        why.append('light_rim')
     if tab_vis is not None and tab_vis > T['exp_fail']:
         bad.append('tab_visible')
     elif tab_vis is not None and tab_vis > T['exp_warn']:
