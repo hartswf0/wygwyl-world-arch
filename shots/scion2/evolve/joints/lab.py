@@ -31,12 +31,17 @@ def rom_angles(joint):
     return a
 
 
+# misfiles reported to library2 (excluded until it re-gates them): a thigh filed as a torso, a foot and a forearm as shins
+EXCLUDE = {'poet.red_black_sunglasses.replacements.deep_crouch__left-thigh-2-eyelets', 'poet.04.action.red_black_sunglasses.parts.01__foot-l-foot-r',
+           'poet.01.action.black_tshirt.parts.02__farm-r-2'}
 FACE_OK = {'painted_face', 'composed_face', 'composed'}
 
 
 def usable(p, joint):
     """round 02 gates: library2's gates (identity: CLIP + canon length) already applied in parts.py; front-ish heads must
     carry a painted face (or a composed one), back heads must be backs of heads"""
+    if p['key'].split('/')[-1] in EXCLUDE:
+        return False
     if p['part'] == 'head':
         st = p.get('state')
         if p.get('view') in ('back',):
