@@ -113,6 +113,15 @@ def keep_main(rgba, extra_keep=0.15):
     m = cv2.dilate(m, np.ones((5, 5), np.uint8))          # keep the soft fringe around the kept component
     out = rgba.copy()
     out[..., 3] = (out[..., 3] * m).astype(np.uint8)
+    # second pass, opaque core only: captions printed just under a part touch it through the soft fringe
+    lab2, comps2 = components(out[..., 3], thr=200)
+    if comps2:
+        mn = comps2[0]
+        for d in comps2[1:]:
+            if d['y'] > mn['y'] + 0.75 * mn['h'] and d['h'] < 0.15 * mn['h'] and d['area'] < 0.05 * mn['area']:
+                x, y, w, h = d['x'] - 2, d['y'] - 2, d['w'] + 4, d['h'] + 4
+                out[max(0, y):y + h, max(0, x):x + w, 3] = 0
+                removed.append(dict(kind='caption', bbox=[d['x'], d['y'], d['w'], d['h']], area=d['area']))
     return out, removed
 
 

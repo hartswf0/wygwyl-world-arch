@@ -16,7 +16,7 @@ import index as IX
 PART = 'head'
 G = C.GRID[PART]
 YAW = {'front': 0, 'three-quarter': 45, 'side': 90, 'three-quarter-back': 135, 'back': 180}
-BONES = [('pivot', 'chin'), ('chin', 'eye_line'), ('eye_line', 'crown'), ('ear_l', 'ear_r')]
+BONES = [('pivot', 'chin'), ('chin', 'eye_line'), ('eye_line', 'crown'), ('ear_l', 'ear_r'), ('eye_line', 'nose'), ('ear', 'eye_line')]
 
 
 def rows_profile(m):
@@ -192,7 +192,7 @@ def process(c, fx):
             kp['ear_l'] = ear_l
         else:
             kp['ear_r'] = ear_r
-    for k in ('ear_l', 'ear_r', 'nose'):
+    for k in ('ear_l', 'ear_r', 'nose', 'ear'):
         if k in fx:
             kp[k] = fx[k]
     # face direction (where the nose points): yaw about the head's up axis, +x = screen right, z = toward camera
