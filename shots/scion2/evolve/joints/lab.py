@@ -28,6 +28,11 @@ METHODS0 = {
     'rigkit': {'pivot': 'kp', 'overlap': 1.5, 'on_top': 'parent', 'trim': 'none', 'width': 'none', 'seam': 'brad', 'facing': True},
     'tuck_trim': {'pivot': 'kp', 'overlap': 2.5, 'on_top': 'parent', 'trim': 'contour', 'width': 'uniform', 'seam': 'brad', 'facing': True},
     'brad_pivot': {'pivot': 'brad', 'overlap': 1.5, 'on_top': 'child', 'trim': 'none', 'width': 'uniform', 'seam': 'brad', 'facing': True},
+    # library2 QA's first finding: the parent's tab (the torso's neck tab and eyelet) over the child
+    'tab_trim_under': {'pivot': 'kp', 'overlap': 1.5, 'on_top': 'child', 'trim': 'none', 'width': 'none', 'seam': 'brad', 'facing': True,
+                       'parent_tab': .5},
+    'tab_trim_over': {'pivot': 'kp', 'overlap': 1.0, 'on_top': 'parent', 'trim': 'contour', 'width': 'none', 'seam': 'none', 'facing': True,
+                      'parent_tab': 0.},
 }
 
 
@@ -126,7 +131,8 @@ def cell(a, b, joint, ang, g, size=150):
     im = Image.fromarray(o[y0:y1, x0:x1])
     d = ImageDraw.Draw(im)
     if q['fails']:
-        jx, jy, br = J[0] - x0, J[1] - y0, q['band_r']
+        sp = q.get('spot') or J
+        jx, jy, br = sp[0] - x0, sp[1] - y0, max(q['band_r'] * .5, 3 * CN.RS)
         d.ellipse([jx - br, jy - br, jx + br, jy + br], outline=(220, 30, 30), width=2)
     k = size / max(im.width, im.height)
     im = im.resize((max(1, int(im.width * k)), max(1, int(im.height * k))), Image.LANCZOS)

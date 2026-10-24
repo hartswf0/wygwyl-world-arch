@@ -1,4 +1,5 @@
-"""Seam tests for one connected pair (built to the definitions the coordinator relayed for library2/qa, which did not
+"""Seam tests for one connected pair. run() calls library2/qa/seam.score (the shared definition, ready in round 01);
+run_local() is the first version (built to the definitions the coordinator relayed for library2/qa, which did not
 exist yet when this was written: gap, width step, exposed cut edge, covered features, colour jump, wrong facing).
 All are measured in a band round the joint (radius = max(4 cm, 0.8 x the joint width)). A pair-angle is CLEAN when
 every test passes; amber = one test fails; red = two or more.
@@ -27,6 +28,41 @@ def lab(bgr):
 
 
 def run(r, parent, child, joint, genes):
+    """library2/qa/seam.score (the shared definition); the old local tests stay as run_local"""
+    import os, sys
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'library2', 'qa')))
+    import seam
+    feats = []
+    if child['part'] == 'head' and 'eye_line' in child['kp'] and 'chin' in child['kp']:
+        M = r['Mc']
+        kp = child['kp']
+        pts = [kp['eye_line'], kp['chin']] + [kp[k] for k in ('ear_l', 'ear_r') if k in kp]
+        P = np.array([M[:, :2] @ np.asarray(p, float) + M[:, 2] for p in pts])
+        H, W = r['cm'].shape
+        yy, xx = np.mgrid[0:H, 0:W]
+        x0, x1 = P[:, 0].min(), P[:, 0].max()
+        if x1 - x0 < 2 * CN.RS:
+            x0, x1 = P[0, 0] - 4 * CN.RS, P[0, 0] + 4 * CN.RS
+        y0, y1 = min(P[0, 1], P[1, 1]), max(P[0, 1], P[1, 1])
+        feats = [(xx >= x0) & (xx <= x1) & (yy >= y0) & (yy <= y1) & r['cm']]
+    img = r['img']
+    rgba = np.dstack([img[..., [2, 1, 0]], img[..., 3]]).astype(np.uint8)
+    jn = joint if joint in ('neck', 'wrist', 'ankle', 'elbow', 'knee') else 'generic'
+    s = seam.score(rgba, r['pm'], r['cm'], r['pivot'], -r['axis_p'], r['axis_c'], over='A' if genes.get('on_top') == 'parent' else 'B',
+                   featuresA=None, featuresB=feats, facingA=(parent.get('view'), parent.get('facing')),
+                   facingB=(child.get('view'), child.get('facing')), joint=jn)
+    grade = {'CLEAN': 'green', 'WARN': 'amber', 'MUTILATED': 'red'}[s['verdict']]
+    tests = {k: (round(float(v), 3) if isinstance(v, (int, float, np.floating)) else v) for k, v in s.items() if k in
+             ('gap_frac', 'width_ratio', 'exposed_A_frac', 'exposed_B_frac', 'covered', 'colour_dE', 'facing_ok')}
+    why = s.get('why') or []
+    if isinstance(why, str):
+        why = [why]
+    seam_w = float(s.get('seam_w', 40))
+    return {'tests': tests, 'fails': [str(w).split(' ')[0].split(':')[0] for w in why] if grade != 'green' else [],
+            'grade': grade, 'band_r': max(.9 * seam_w, 3 * CN.RS), 'verdict': s['verdict'], 'spot': s.get('spot')}
+
+
+def run_local(r, parent, child, joint, genes):
     RS = CN.RS
     pm, cm, J, uc, up = r['pm'], r['cm'], r['pivot'], r['axis_c'], r['axis_p']
     H, W = pm.shape

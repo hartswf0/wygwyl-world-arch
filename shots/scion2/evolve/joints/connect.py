@@ -21,14 +21,16 @@ Genes (a method is a dict of them):
              the joint)
   seam       'none' | 'brad' (a brass brad drawn on top at the joint)
   facing     True = mirror the child when its facing (screen-left / right) is the opposite of the parent's
+  parent_tab None | cm: the parent's tab / collar / cuff beyond the joint line (towards the child) is cut that far
+             past the joint (library2 QA: the torso's neck tab over the chin is the main neck failure)
 """
 import math
 import numpy as np, cv2
 
 RS = 4.0                   # render px per cm
 J = {'neck': ('torso', 'head', 'neck', 'up'), 'shoulder': ('torso', 'upper_arm', 'shoulder', 'down'),
-     'elbow': ('upper_arm', 'forearm', 'tip', 'down'), 'wrist': ('forearm', 'hand', 'tip', 'down'),
-     'hip': ('pelvis', 'thigh', 'hip', 'down'), 'knee': ('thigh', 'shin', 'tip', 'down'), 'ankle': ('shin', 'foot', 'tip', 'foot')}
+     'elbow': ('upper_arm', 'forearm', 'elbow', 'down'), 'wrist': ('forearm', 'hand', 'wrist', 'down'),
+     'hip': ('pelvis', 'thigh', 'hip', 'down'), 'knee': ('thigh', 'shin', 'knee', 'down'), 'ankle': ('shin', 'foot', 'ankle', 'foot')}
 CLOTH = {'shoulder', 'elbow', 'hip', 'knee'}
 
 
@@ -43,7 +45,10 @@ def anchor(parent, joint, side):
         if name == 'hip' and 'pivot' in kp:            # no hip points: 9 cm below the waist, 10 cm to the side
             return kp['pivot'] + [(-1 if s == 'L' else 1) * 100., 90.]
         return None
-    return np.asarray(kp[name], float) if name in kp else None
+    for k in (name, 'tip'):                 # library2 names the distal joint (wrist, ankle, ...); on-the-fly parts 'tip'
+        if k in kp:
+            return np.asarray(kp[k], float)
+    return None
 
 
 def width_across(alpha, p, u, max_px=400):
@@ -143,6 +148,11 @@ def connect(parent, child, joint, angle, genes, side=None):
         R = R @ np.array([[-1, 0], [0, 1.]])
     Mc = np.hstack([R, (target - R @ piv_c)[:, None]])
     C = cv2.warpAffine(child['img'].astype(np.float32), Mc, (Wc, Hc), flags=cv2.INTER_LINEAR, borderValue=0)
+    if genes.get('parent_tab') is not None:
+        # the parent's tab / collar beyond the joint (towards the child) is cut tab cm past the joint line
+        yy, xx = np.mgrid[0:Hc, 0:Wc]
+        beyond = ((xx - J_r[0]) * cdir[0] + (yy - J_r[1]) * cdir[1]) > genes['parent_tab'] * RS
+        P[..., 3][beyond] = 0
     pm, cm = P[..., 3] > 128, C[..., 3] > 128
     if genes.get('trim') == 'contour':
         yy, xx = np.mgrid[0:Hc, 0:Wc]

@@ -35,6 +35,16 @@ def _read(p):
     return im
 
 
+def gate_fail(rec):
+    """library2/qa/gates.py: a part whose gate verdict is FAIL is not paired (as library2's QA README says)"""
+    try:
+        sys.path.insert(0, os.path.join(LIB2, 'qa'))
+        import gates
+        return gates.gate(rec).get('verdict') == 'fail'
+    except Exception:
+        return False
+
+
 @functools.lru_cache(None)
 def lib2_index():
     p = os.path.join(LIB2, 'index.json')
@@ -52,9 +62,10 @@ def from_lib2(rec):
     br = np.asarray((lc or {}).get('brads') or [], float).reshape(-1, 2)
     brads = br @ M[:, :2].T + M[:, 2] if len(br) else np.zeros((0, 2))
     return {'key': rec['key'], 'part': rec['part'], 'source': 'library2', 'img': img, 'pivot': kp['pivot'], 'kp': kp,
-            'brads': brads, 'view': (c.get('view') or {}).get('value'), 'facing': (c.get('facing') or {}).get('value'),
+            'brads': brads, 'view': VIEW.get((c.get('view') or {}).get('value') or ''), 'facing': (c.get('facing') or {}).get('value'),
             'side': (c.get('side') or {}).get('value'), 'state': (c.get('state') or {}).get('value'),
-            'character': rec['character'], 'costume': rec['costume'], 'src_card': rec['source_card'], 'flags': rec.get('flags', [])}
+            'character': rec['character'], 'costume': rec['costume'], 'src_card': rec['source_card'], 'flags': rec.get('flags', []),
+            'rec': rec}
 
 
 def onfly(c, part, char, costume):
@@ -108,6 +119,8 @@ def parts(char, costume=None, part=None):
         if rec['status'] != 'ok' or rec['character'] != char or (part and rec['part'] != part):
             continue
         if costume and rec['costume'] != costume and rec['part'] != 'head':
+            continue
+        if gate_fail(rec):
             continue
         p = from_lib2(rec)
         if p:
