@@ -83,6 +83,26 @@ def neighbours(child, parents, k=3, match='view'):
     return [p for s, p in out[:k]]
 
 
+_BR = {}
+
+
+def joint_brad(rec, pt, r_cm=1.5, kp_name=None):
+    """the brad/grommet the part brings to this joint: the keypoint itself when it was placed on a detected brad,
+    else the centre of the brass blob nearest pt on the canonical image (within r_cm), else None"""
+    src = rec.get('pivot_source') or ''
+    if kp_name and kp_name in src and 'brass' in src.split(kp_name, 1)[1].split(';')[0]:
+        return list(pt)
+    if kp_name == 'pivot' and src.startswith('brass'):
+        return list(pt)
+    if rec['key'] not in _BR:
+        from brass import brass_blobs
+        _BR[rec['key']] = brass_blobs(canon(rec))
+    near = [b for b in _BR[rec['key']] if math.dist(b['c'], pt) <= r_cm * C.CANON_PPC + b['r']]
+    if not near:
+        return None
+    return min(near, key=lambda b: math.dist(b['c'], pt))['c']
+
+
 def compose(parent, child, theta, jcfg):
     """world frame = parent canonical canvas padded; child pivot on the parent's joint keypoint, rotated theta."""
     P = canon(parent)
@@ -123,7 +143,12 @@ def compose(parent, child, theta, jcfg):
         cv2.ellipse(f, (int(ctr[0]), int(ctr[1])), (int(0.75 * ry), int(ry)), 0, 0, 360, 1, -1)
         f = cv2.warpAffine(f, Mc, (Ww, Hh), flags=cv2.INTER_NEAREST).astype(bool) & mC
         feats.append(f)
-    return comp, mC, mP, J, axc, axp, feats, over_child
+    # the brads each part brings to this joint (canonical brass blobs near the joint keypoints), in world px
+    bc = joint_brad(child, gpiv, kp_name='pivot')
+    bp = joint_brad(parent, kp[jk], kp_name=jk)
+    bradC = None if bc is None else C.apply(Mc, bc)
+    bradP = None if bp is None else [bp[0] + pad, bp[1] + pad]
+    return comp, mC, mP, J, axc, axp, feats, over_child, Cw, Pw, bradC, bradP
 
 
 VR = {'CLEAN': 0, 'WARN': 1, 'MUTILATED': 2}
@@ -136,7 +161,7 @@ def run_pair(child, parent, jcfg):
     for over in (jcfg['over'], 'child' if jcfg['over'] == 'parent' else 'parent'):
         j2 = dict(jcfg, over=over)
         r0 = _sweep(child, parent, j2, [0])[0][0]
-        key = (VR[r0['verdict']], len(r0['why']), r0['covered'])
+        key = (VR.get(r0['verdict'], 3), len(r0['why']), r0.get('covered', 0))
         if best is None or key < best[0]:
             best = (key, j2)
     res = _sweep(child, parent, best[1], ANGLES)
@@ -148,17 +173,19 @@ def run_pair(child, parent, jcfg):
 def _sweep(child, parent, jcfg, angles):
     res = {}
     for th in angles:
-        comp, mC, mP, J, axc, axp, feats, over_child = compose(parent, child, th, jcfg)
+        comp, mC, mP, J, axc, axp, feats, over_child, Cw, Pw, bradC, bradP = compose(parent, child, th, jcfg)
         # score inside a window around the joint (faster; the seam is local)
         x0, y0 = max(0, int(J[0]) - 360), max(0, int(J[1]) - 400)
         sl = (slice(y0, y0 + 760), slice(x0, x0 + 720))
-        comp, mC, mP = comp[sl], mC[sl], mP[sl]
+        comp, mC, mP, Cw, Pw = comp[sl], mC[sl], mP[sl], Cw[sl], Pw[sl]
         feats = [f[sl] for f in feats]
         J = np.array(J) - [x0, y0]
+        sh = lambda b: None if b is None else [b[0] - x0, b[1] - y0]
+        bradC, bradP = sh(bradC), sh(bradP)
         r = seam.score(comp, mC, mP, J, axc, axp, over='A' if over_child else 'B', featuresA=feats, featuresB=None,
                        facingA=(child['classes']['view']['value'], child['classes']['facing']['value']) if jcfg.get('match') == 'view' else None,
                        facingB=(parent['classes']['view']['value'], parent['classes']['facing']['value']) if jcfg.get('match') == 'view' else None,
-                       joint=jcfg['joint'])
+                       joint=jcfg['joint'], angle=th, layerA=Cw, layerB=Pw, bradA=bradC, bradB=bradP, px_per_cm=C.CANON_PPC)
         # keep the composite only where a sheet needs it (memory)
         res[th] = (r, comp if th in SHOW else None, J)
     return res
@@ -180,7 +207,7 @@ def ranges(scores):
     return span(clean), span(usable)
 
 
-COLV = {'CLEAN': (40, 170, 60), 'WARN': (235, 160, 0), 'MUTILATED': (215, 30, 30)}
+COLV = {'CLEAN': (40, 170, 60), 'WARN': (235, 160, 0), 'MUTILATED': (215, 30, 30), 'N/A': (170, 170, 170)}
 
 
 TILE = {'up': 0.62}
@@ -194,9 +221,9 @@ def test_tile(comp, J, r, th, size=150, crop=520):
     im = bg.convert('RGB').resize((size, size), Image.LANCZOS)
     d = ImageDraw.Draw(im)
     s = size / crop
-    if r.get('spot') and r['verdict'] != 'CLEAN':
+    if r.get('spot') and r['verdict'] not in ('CLEAN', 'N/A'):
         sx, sy = (r['spot'][0] - x0) * s, (r['spot'][1] - y0) * s
-        rr = max(10, r['seam_w'] * s * 0.6)
+        rr = max(10, r.get('seam_w', 40) * s * 0.6)
         d.ellipse([sx - rr, sy - rr, sx + rr, sy + rr], outline=COLV[r['verdict']], width=2)
     col = COLV[r['verdict']]
     d.rectangle([0, 0, size - 1, size - 1], outline=col, width=4)
@@ -208,6 +235,12 @@ def test_tile(comp, J, r, th, size=150, crop=520):
 
 def run(ch, part):
     J = JOINTS[part]
+    global ANGLES, SHOW
+    ANGLES = [a for a in range(-180, 181, 15) if seam.in_rom(J['joint'], a) and -90 <= a <= 150]
+    if 0 not in ANGLES:
+        ANGLES = sorted(ANGLES + [0])
+    idxs = np.linspace(0, len(ANGLES) - 1, min(7, len(ANGLES))).round().astype(int)
+    SHOW = sorted(set([ANGLES[i] for i in idxs] + [0]))
     TILE['up'] = 0.62 if (C.GRID[part]['axis'] or (0, 1))[1] < 0 else 0.4
     P = idx()
     kids = [v for v in P.values() if v['character'] == ch and v['part'] == part and v['status'] == 'ok']
@@ -224,7 +257,7 @@ def run(ch, part):
     PJ = C.load_json(pj_path) if os.path.exists(pj_path) else {'about': 'compatibility matrix: child -> neighbour -> clean/usable angle ranges (deg, ccw +) and failures; produced by qa/pairs.py', 'pairs': {}}
     order = {'front': 0, 'three-quarter': 1, 'side': 2, 'three-quarter-back': 3, 'back': 4}
     kids.sort(key=lambda k: (order.get(k['classes']['view']['value'], 9), k['source_card']))
-    counts = {'parts': {'pass': 0, 'warn': 0, 'fail': 0}, 'pair_angles': {'CLEAN': 0, 'WARN': 0, 'MUTILATED': 0}, 'kinds': {}}
+    counts = {'parts': {'pass': 0, 'warn': 0, 'fail': 0}, 'pair_angles': {'CLEAN': 0, 'WARN': 0, 'MUTILATED': 0, 'N/A': 0}, 'kinds': {}}
     for kid in kids:
         g = gates.gate(kid)
         counts['parts'][g['verdict']] += 1
@@ -243,7 +276,7 @@ def run(ch, part):
                     counts['pair_angles'][r['verdict']] += 1
                     for w in r['why']:
                         counts['kinds'][w] = counts['kinds'].get(w, 0) + 1
-                    sev = len(r['why']) + (5 if r['verdict'] == 'MUTILATED' else 0)
+                    sev = 0 if r['verdict'] == 'N/A' else len(r['why']) + (5 if r['verdict'] == 'MUTILATED' else 0)
                     if sev and res[a][1] is not None:
                         worst.append((sev, kid, nb, a, r, test_tile(res[a][1], res[a][2], r, a, size=200)))
                 worst.sort(key=lambda t: -t[0])
@@ -286,7 +319,7 @@ def view_probe(kid, parents, jcfg):
         for over in ('parent', 'child'):
             j2['over'] = over
             rs = _sweep(kid, p, j2, [-30, 0, 30])
-            n = sum(1 for a in rs if rs[a][0]['verdict'] == 'CLEAN')
+            n = sum(1 for a in rs if rs[a][0]['verdict'] in ('CLEAN', 'N/A'))
             if best is None or n > best[0]:
                 best = (n, over, {a: rs[a][0]['verdict'] for a in rs})
         out[f] = {'neighbour': p['key'], 'clean_of_3': best[0], 'over': best[1], 'verdicts': best[2]}
@@ -327,9 +360,9 @@ def row_image(kid, g, strip, strip_over=None):
     head = C.draw_tile(canon(kid), kid['part'], kid['keypoints']['canonical'], [], [], tile=T)
     head = head.crop((0, 0, T, T))
     nstrip = max(1, len(strip))
-    W = 8 + T + 10 + 7 * (T + 4) + 8
+    W = 8 + T + 10 + max(7, len(SHOW)) * (T + 4) + 8
     hrow = T + 26
-    H = 22 + nstrip * hrow + 74
+    H = 22 + nstrip * hrow + 92
     im = Image.new('RGB', (W, H), (255, 255, 255))
     d = ImageDraw.Draw(im)
     f, fb = C.font(11), C.font(13)
@@ -347,8 +380,10 @@ def row_image(kid, g, strip, strip_over=None):
         d.text((8 + T + 10, 60), 'excluded from pairing (gate fail)' if g['verdict'] == 'fail' else 'no compatible neighbour', fill=(200, 0, 0), font=fb)
     y = 22 + nstrip * hrow + 4
     vp = getattr(row_image, 'probe', {}).get(kid['key'])
-    for k in ('cutoff', 'contamination', 'connection', 'view'):
-        t = g[k]
+    for k in ('cutoff', 'contamination', 'connection', 'view', 'identity'):
+        t = g.get(k)
+        if t is None:
+            continue
         why_txt = (t['why'] or '')
         if k == 'view' and vp:
             why_txt = (why_txt + '; ' if why_txt else '') + 'probe: ' + vp['note']

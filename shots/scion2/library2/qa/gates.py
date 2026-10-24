@@ -150,9 +150,6 @@ def gate_head(rec):
 GATES = {'head': gate_head}
 
 
-def gate(rec):
-    f = GATES.get(rec['part'])
-    return f(rec) if f else None
 
 
 def _common_cut(rec, rgba, pivot_card):
@@ -309,3 +306,57 @@ def gate_limb(rec):
 
 
 GATES.update({'hand': gate_hand, 'foot': gate_foot, 'forearm': gate_limb, 'shin': gate_limb, 'upper_arm': gate_limb, 'thigh': gate_limb})
+
+
+# ---------------------------------------------------------------- identity: is it actually this part?
+PART_PROMPTS = {'head': ['a head', 'the back of a head'], 'hand': ['a hand', 'a fist', 'a hand with fingers'],
+                'forearm': ['a forearm in a sleeve', 'a lower arm sleeve with a cuff'], 'upper_arm': ['an upper arm in a sleeve', 'a shoulder and upper arm'],
+                'thigh': ['a thigh in trousers', 'an upper leg'], 'shin': ['a lower leg in trousers', 'a shin'],
+                'foot': ['a shoe', 'a boot', 'a foot'], 'torso': ['a torso', 'a jacket body without sleeves', 'a vest'],
+                'pelvis': ['hips', 'a hip connector plate', 'shorts'], 'feature': ['an eye', 'a mouth', 'eyebrows']}
+_ZS = {}
+
+
+def clip_part(card_id):
+    if card_id not in _ZS:
+        try:
+            import cliptext
+            _ZS[card_id] = cliptext.zero_shot(card_id, PART_PROMPTS)
+        except Exception as e:      # CLIP weights missing: the identity test runs without it
+            _ZS[card_id] = None
+    return _ZS[card_id]
+
+
+def gate_identity(rec):
+    p = rec['part']
+    zs = clip_part(rec['source_card'])
+    dev = rec.get('canon_deviation') or {}
+    lr = dev.get('length_ratio')
+    r, why = 'pass', []
+    if zs:
+        top = max(zs, key=zs.get)
+        if top != p and zs[top] > 0.45 and zs.get(p, 0) < 0.2:
+            r = 'warn'; why.append('CLIP reads %s (%.2f) over %s (%.2f)' % (top, zs[top], p, zs.get(p, 0)))
+    if lr and p in ('upper_arm', 'forearm', 'thigh', 'shin', 'hand', 'foot'):
+        st = (rec['classes'].get('state') or {}).get('value', '')
+        lo = 0.45 if p == 'hand' and st in ('fist', 'grip', 'pinch', 'claw', 'cupped') else 0.65
+        if lr < lo - 0.15 or lr > 1.75:
+            r = 'fail'; why.append('length %.2fx the canon %s' % (lr, p))
+        elif lr < lo or lr > 1.4:
+            r = worst(r, 'warn'); why.append('length %.2fx the canon %s' % (lr, p))
+        if why and r == 'warn' and zs and max(zs, key=zs.get) != p and zs[max(zs, key=zs.get)] > 0.45 and (lr < lo or lr > 1.4):
+            r = 'fail'; why.append('CLIP and length both disagree')
+    return _res(r, {'clip': zs, 'length_ratio': lr, 'canon_length_cm': dev.get('canon_length_cm')}, '; '.join(why))
+
+
+def gate(rec):
+    f = GATES.get(rec['part'])
+    out = f(rec) if f else None
+    if out is not None:
+        out['identity'] = gate_identity(rec)
+        out['verdict'] = worst(*[out[k]['result'] for k in ('cutoff', 'contamination', 'connection', 'view', 'identity')])
+    return out
+
+
+GATES['torso'] = gate_limb
+GATES['pelvis'] = gate_limb

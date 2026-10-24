@@ -12,7 +12,8 @@ A feature layout is defined on the canonical head grid of each blank plate, from
   - face.front: eye pair 0.56 H, mouth 0.56 H.
   - face.profile: eye 0.31 H, mouth 0.385 H.
   - Brows take the eye-pair width.
-The feature pixels are only scaled and placed, never repainted. The poet kit has no nose card, so front composites
+The feature pixels are only scaled and placed, never repainted (their brass eyelets are cut out so they do not read
+as pivot holes on the face). The poet kit has no nose card, so front composites
 of blank plates have no nose; they are flagged no_nose_card.
 Composed heads go into index.json as part 'head' with the flag 'composed' and a 'composed_from' list. They share the
 source plate's pivot, transform and keypoints. The sheet is sheets/<char>_head_composed_NN.jpg.
@@ -49,7 +50,13 @@ def card(ch, suffix):
 
 
 def plate(c):
+    """the cleaned feature plate; its brass eyelets are made transparent (the head plate shows through), so they do
+    not read as extra pivot holes on the face. No pixel is repainted."""
+    from brass import brass_blobs
     rgba, _ = C.keep_main(C.load_rgba(c))
+    rgba = rgba.copy()
+    for b in brass_blobs(rgba):
+        cv2.circle(rgba, (int(round(b['c'][0])), int(round(b['c'][1]))), int(round(b['r'] * 1.35 + 2)), (0, 0, 0, 0), -1)
     a = rgba[..., 3] > 40
     ys, xs = np.nonzero(a)
     return rgba[ys.min():ys.max() + 1, xs.min():xs.max() + 1]

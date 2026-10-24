@@ -32,6 +32,15 @@ terms):
 - colour_dE: CIE76 delta-E between the median colours on either side of the visible seam contour.
 - facing_ok: bool or None.
 - seam_w: the cross-section width used as the unit: the smaller of the two parts' widths at the pivot.
+- trim_cut: the longest straight run on the visible outline within 1.6 seam_w of the joint, / seam_w. A visible
+  scissor cut warns above 0.6 and fails above 1.0 (a run is straight within 0.6 px).
+- registration_cm: the distance between the child's brad and the parent's grommet. It needs bradA/bradB, and
+  warns above 0.3 cm and fails above 0.6 cm.
+- grommet_peek: the visible fraction of the under part's brass inside the joint disk. It needs the layers.
+  Between 8 % and 92 % visible (a half grommet peeking out) it warns.
+- tab_visible_frac: the over part's beyond-joint pixels that are tab material (light cardboard or skin, not dark
+  cloth or brass) outside the under part, / seam_w^2. It uses the exposed thresholds.
+- angle + ROM: outside ROM[joint] the verdict is 'N/A' (out_of_rom) and nothing is judged.
 """
 import math
 import numpy as np
@@ -96,11 +105,57 @@ def facing_compatible(fa, fb):
     return True
 
 
+# range of motion per joint, degrees of the child's rotation away from the neutral (straight) pose, + = ccw on
+# screen. Angles outside it are not judged (verdict 'N/A'). Elbow/knee: 0..150 of flexion; flexion is taken as
+# either rotation direction because a profile limb can face either way.
+ROM = {'neck': (-35, 35), 'wrist': (-70, 70), 'ankle': (-30, 45), 'elbow': (0, 150), 'knee': (0, 150),
+       'shoulder': (-60, 180), 'hip': (-30, 125), 'waist': (-30, 90), 'generic': (-180, 180)}
+
+
+def in_rom(joint, angle):
+    if angle is None:
+        return True
+    lo, hi = ROM.get(joint, ROM['generic'])
+    if joint in ('elbow', 'knee'):
+        return lo <= abs(angle) <= hi
+    return lo <= angle <= hi
+
+
+def brass_mask(rgba):
+    """brass brads / grommets by colour (as tools/brass.py)"""
+    hsv = cv2.cvtColor(rgba[..., :3], cv2.COLOR_RGB2HSV)
+    h, s_, v = hsv[..., 0].astype(int), hsv[..., 1].astype(int), hsv[..., 2].astype(int)
+    return (h >= 17) & (h <= 32) & (s_ >= 90) & (v >= 105) & (rgba[..., 3] > 128)
+
+
+def _straight_runs(mask, centre, radius, min_len):
+    """straight segments of the outline of mask within radius of centre (scissor cuts)"""
+    cs, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    out = []
+    for c in cs:
+        if len(c) < 20:
+            continue
+        poly = cv2.approxPolyDP(c, 0.6, True)[:, 0, :].astype(float)
+        for i in range(len(poly)):
+            a, b = poly[i], poly[(i + 1) % len(poly)]
+            L = float(np.linalg.norm(b - a))
+            mid = (a + b) / 2
+            if L >= min_len and np.linalg.norm(mid - centre) <= radius:
+                out.append((a, b, L))
+    return out
+
+
 def score(render_rgba, maskA, maskB, pivot, axisA, axisB, over='A', featuresA=None, featuresB=None,
-          facingA=None, facingB=None, joint='generic', tol=None):
+          facingA=None, facingB=None, joint='generic', tol=None, angle=None, layerA=None, layerB=None,
+          bradA=None, bradB=None, px_per_cm=10.0):
+    """see the module docstring. New (round 02): angle (deg, for the ROM table), layerA/layerB (each part's own RGBA
+    as placed, for brass and tab tests), bradA/bradB (the brad / grommet centre each part brings to this joint,
+    render px; None if the part has none), px_per_cm (render scale)."""
     T = dict(TOL.get(joint, TOL['generic']))
     if tol:
         T.update(tol)
+    if not in_rom(joint, angle):
+        return {'verdict': 'N/A', 'why': ['out_of_rom'], 'angle': angle, 'rom': ROM.get(joint), 'spot': None}
     H, W = maskA.shape
     P = np.array(pivot, float)
     uA = np.array(axisA, float); uA /= (np.linalg.norm(uA) or 1)
@@ -153,10 +208,40 @@ def score(render_rgba, maskA, maskB, pivot, axisA, axisB, over='A', featuresA=No
         dE = float(np.linalg.norm(la - lb))
     fok = facing_compatible(facingA, facingB)
     s2 = seam_w * seam_w
+    # trim cuts: long straight runs on the VISIBLE outline (the union) near the seam
+    runs = _straight_runs(U, P, 1.6 * seam_w, max(6.0, T.get('trim_min', 0.35) * seam_w))
+    trim_len = max([L for _, _, L in runs] or [0.0])
+    trim_spot = None
+    if runs:
+        a, b, L = max(runs, key=lambda t: t[2])
+        trim_spot = [float((a[0] + b[0]) / 2), float((a[1] + b[1]) / 2)]
+    # brad-on-grommet registration and half-grommet peeking
+    reg_cm = None
+    if bradA is not None and bradB is not None:
+        reg_cm = float(np.linalg.norm(np.array(bradA, float) - np.array(bradB, float)) / px_per_cm)
+    peek = None
+    over_mask_ = maskA if over == 'A' else maskB
+    under_layer = layerB if over == 'A' else layerA
+    if under_layer is not None:
+        bm = brass_mask(under_layer) & disk
+        if bm.sum() > 15:
+            vis = float((bm & ~over_mask_).sum() / bm.sum())
+            peek = round(vis, 3)
+    # visible connector tab: the over part's beyond-joint pixels outside the under part that are tab material
+    # (light cardboard / skin, not dark cloth)
+    over_layer = layerA if over == 'A' else layerB
+    tab_vis = None
+    if over_layer is not None:
+        beyond_over = expA if over == 'A' else expB
+        hsv = cv2.cvtColor(over_layer[..., :3], cv2.COLOR_RGB2HSV)
+        tabby = beyond_over & (hsv[..., 2] > 80) & ~brass_mask(over_layer)
+        tab_vis = round(float(er(tabby).sum() / s2), 4)
     r = dict(seam_w=round(seam_w, 1), gap_px=gap_px, gap_frac=round(gap_px / s2, 4), width_A=round(wA, 1), width_B=round(wB, 1),
              width_ratio=round(ratio, 3) if math.isfinite(ratio) else None,
              exposed_A_frac=round(expA_px / s2, 4), exposed_B_frac=round(expB_px / s2, 4), covered=round(covered, 3),
-             colour_dE=None if dE is None else round(dE, 1), facing_ok=fok)
+             colour_dE=None if dE is None else round(dE, 1), facing_ok=fok,
+             trim_cut=round(trim_len / seam_w, 3), registration_cm=None if reg_cm is None else round(reg_cm, 2),
+             grommet_peek=peek, tab_visible_frac=tab_vis, angle=angle)
     why, bad = [], []
     if r['gap_frac'] > T['gap_fail']:
         bad.append('gap')
@@ -182,6 +267,20 @@ def score(render_rgba, maskA, maskB, pivot, axisA, axisB, over='A', featuresA=No
         why.append('colour_jump')
     if fok is False:
         bad.append('facing')
+    if r['trim_cut'] > T.get('trim_fail', 1.0):
+        bad.append('trim_cut')
+    elif r['trim_cut'] > T.get('trim_warn', 0.6):
+        why.append('trim_cut')
+    if reg_cm is not None and reg_cm > T.get('reg_fail', 0.6):
+        bad.append('registration')
+    elif reg_cm is not None and reg_cm > T.get('reg_warn', 0.3):
+        why.append('registration')
+    if peek is not None and 0.08 < peek < 0.92:
+        why.append('grommet_peek')
+    if tab_vis is not None and tab_vis > T['exp_fail']:
+        bad.append('tab_visible')
+    elif tab_vis is not None and tab_vis > T['exp_warn']:
+        why.append('tab_visible')
     r['why'] = bad + why
     r['verdict'] = 'MUTILATED' if bad else 'WARN' if why else 'CLEAN'
     # where to circle on a sheet: centroid of the worst failing region
@@ -191,5 +290,7 @@ def score(render_rgba, maskA, maskB, pivot, axisA, axisB, over='A', featuresA=No
             ys_, xs_ = np.nonzero(msk)
             spot = [float(xs_.mean()), float(ys_.mean())]
             break
+    if spot is None and 'trim_cut' in r['why']:
+        spot = trim_spot
     r['spot'] = spot or ([float(P[0]), float(P[1])] if r['why'] else None)
     return r

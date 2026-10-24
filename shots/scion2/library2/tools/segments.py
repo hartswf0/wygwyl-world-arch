@@ -235,12 +235,19 @@ def classify_limb(c, rgba, m, kp, part):
         out['view'] = (libv, 0.75, 'library.view (sheet caption)')
     elif lab.get('view'):
         out['view'] = (lab['view'], 0.75, 'labels.json (agent-vision)')
+    elif (c.get('clip') or {}).get('view_l'):
+        cv = c['clip']
+        out['view'] = (cv['view_l'], round(0.7 * cv.get('view_l_p', 0.5), 2), 'CLIP view classifier learnt on the labelled cards (view_l p=%.2f)' % cv.get('view_l_p', 0))
     else:
         out['view'] = ('unknown', 0.2, 'limbs: not determined from pixels')
     if 'left' in lab:
         out['facing'] = ('screen-left' if lab['left'] else 'screen-right', 0.8, 'labels.json (agent-vision)')
+    elif out['view'][0] == 'front':
+        out['facing'] = ('camera', 0.6, 'follows view')
+    elif out['view'][0] == 'back':
+        out['facing'] = ('away', 0.6, 'follows view')
     else:
-        out['facing'] = ('unknown', 0.2, 'not determined')
+        out['facing'] = ('unknown', 0.2, 'side-view limb: screen direction not determined')
     if re.search(r'(^|[-_ .])(l|left)($|[-_ .])|-l-|left', nm):
         out['side'] = ('left', 0.75, 'card name')
     elif re.search(r'(^|[-_ .])(r|right)($|[-_ .])|-r-|right', nm):
