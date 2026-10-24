@@ -74,25 +74,58 @@ def view_ok(a, b):
     return a is None or b is None or a == b
 
 
+def sheet_of(p):
+    return p['src_card'].split('/')[0]
+
+
+def width_at(p, where):
+    """canonical width (px) across the part's axis at its pivot ('pivot') or at a joint keypoint"""
+    ax = {'torso': (0, -1), 'pelvis': (0, 1), 'head': (0, -1)}.get(p['part'], (0, 1))
+    q = p['pivot'] if where == 'pivot' else np.asarray(p['kp'][where], float)
+    u = np.array(ax, float)
+    return CN.width_across(p['img'][..., 3], q - (12 * u if where != 'pivot' else -12 * u), u)
+
+
 def pairs(joint, seed=0):
+    """round 03: NATIVE pairs first (parent and child from the same source sheet / set: painted to join each other), then
+    cross-sheet pairs whose widths at the joint agree within the joint's tolerance after the allowed uniform scale
+    (0.85-1.15); necks take painted heads only (composed faces show their patch outline)"""
     pp, cp = CN.J[joint][0], CN.J[joint][1]
-    P = [p for p in PT.parts(CHAR, None) if p['part'] == pp and (p['costume'] == COSTUME or p['part'] == 'head') and usable(p, joint)]
-    C = [p for p in PT.parts(CHAR, None) if p['part'] == cp and (p['costume'] == COSTUME or p['part'] == 'head') and usable(p, joint)]
-    out = []
+    ok = lambda p, part: p['part'] == part and (p['costume'] == COSTUME or p['part'] == 'head') and usable(p, joint) and \
+        (p['part'] != 'head' or p.get('state') == 'painted_face' or p.get('view') == 'back')
+    P = [p for p in PT.parts(CHAR, None) if ok(p, pp)]
+    C = [p for p in PT.parts(CHAR, None) if ok(p, cp)]
+    native, cross = [], []
+    sys.path.insert(0, os.path.abspath(os.path.join(HERE, '..', '..', 'library2', 'qa')))
+    import seam
+    lo, hi = seam.TOL.get(joint, seam.TOL['generic'])['ratio']
     for a in P:
         for b in C:
             if not view_ok(a['view'], b['view']):
                 continue
-            if joint in ('shoulder', 'hip') and b.get('side') not in ('L', 'R', None):
+            pa = CN.anchor(a, joint, b.get('side'))
+            if pa is None:
                 continue
-            if CN.anchor(a, joint, b.get('side')) is None:
+            if sheet_of(a) == sheet_of(b) and a['costume'] == b['costume']:
+                if a.get('side') in ('L', 'R') and b.get('side') in ('L', 'R') and a['side'] != b['side']:
+                    continue
+                native.append((a, b))
                 continue
-            out.append((a, b))
+            name = CN.J[joint][2]
+            kpn = next((k for k in (name, name + '_r', name + '_l', 'tip') if k in a['kp']), None)
+            wa = width_at(a, kpn) if kpn else 0
+            wb = width_at(b, 'pivot')
+            if wa > 5 and wb > 5:
+                r_ = wb / wa
+                if not (lo / 1.15 <= r_ <= hi / .85):
+                    continue
+            cross.append((a, b))
     rng = random.Random(seed)
-    rng.shuffle(out)
-    out = out[:PAIRS]
+    rng.shuffle(native); rng.shuffle(cross)
+    native = native[:PAIRS // 2]
+    out = [(a, b, 'native') for a, b in native] + [(a, b, None) for a, b in cross[:PAIRS - len(native)]]
     split = lambda a, b: 'held' if int(hashlib.md5((a['key'] + b['key']).encode()).hexdigest(), 16) % 3 == 0 else 'train'
-    return [(a, b, split(a, b)) for a, b in out]
+    return [(a, b, split(a, b) + ('-native' if n else '')) for a, b, n in out]
 
 
 def load_methods(joint):
@@ -124,14 +157,16 @@ def evaluate(joint, rnd):
                 res[m].append({'parent': a['key'], 'child': b['key'], 'split': sp, 'angle': ang, **q})
     summ = {}
     for m, rs in res.items():
-        tr = [r for r in rs if r['split'] == 'train']
-        he = [r for r in rs if r['split'] == 'held']
+        tr = [r for r in rs if r['split'].startswith('train')]
+        he = [r for r in rs if r['split'].startswith('held')]
+        nat = [r for r in rs if r['split'].endswith('native')]
         fk = {}
         for r in tr:
             for f in r['fails']:
                 fk[f] = fk.get(f, 0) + 1
         summ[m] = {'train_clean': round(np.mean([r['grade'] == 'green' for r in tr]), 3) if tr else None,
                    'held_clean': round(np.mean([r['grade'] == 'green' for r in he]), 3) if he else None,
+                   'native_clean': round(np.mean([r['grade'] == 'green' for r in nat]), 3) if nat else None, 'n_native': len(nat),
                    'n_train': len(tr), 'n_held': len(he), 'fail_kinds_train': fk, 'genes': M[m]}
     best = max(summ, key=lambda m: summ[m]['train_clean'] or 0)
     od = os.path.join(HERE, 'round%02d' % rnd)
@@ -175,7 +210,8 @@ def cell(a, b, joint, ang, g, size=150):
     return c, q
 
 
-def sheet(joint, mname, g, PR, od, rnd, sm, rows=10):
+def sheet(joint, mname, g, PR, od, rnd, sm, rows=14):
+    PR = [x for x in PR if x[2].endswith('native')][:6] + [x for x in PR if not x[2].endswith('native')][:rows - 6]
     cs = 158
     AN = rom_angles(joint)
     W = 260 + len(AN) * cs
@@ -187,6 +223,7 @@ def sheet(joint, mname, g, PR, od, rnd, sm, rows=10):
     d.text((10, 48), 'green = clean, amber = one seam test fails, red = two or more; red circle = the failing seam', fill=(95, 101, 112), font=F)
     y = 70
     for a, b, sp in PR[:rows]:
+        d.text((6, y + 14), 'NATIVE (same sheet)' if sp.endswith('native') else 'cross-sheet', fill=(30, 110, 200) if sp.endswith('native') else (120, 120, 120), font=FS)
         d.text((6, y + 30), '%s\n+ %s\n(%s, %s / %s)' % (a['src_card'].split('/')[-1][:30], b['src_card'].split('/')[-1][:30], sp,
                                                          a['view'] or '?', b['view'] or '?'), fill=(60, 60, 60), font=FS)
         for i, ang in enumerate(AN):
@@ -254,14 +291,14 @@ def main():
     with Pool(2) as P:
         out = P.starmap(evaluate, [(j, rnd) for j in joints])
     results = {j: (best, summ) for j, best, summ in out}
-    md = ['# Joint lab round %02d' % rnd, '', '| joint | best method | clean TRAIN | clean HELD-OUT | pair-angles | top failing tests (best method) |',
-          '|---|---|---|---|---|---|']
+    md = ['# Joint lab round %02d' % rnd, '', '| joint | best method | clean TRAIN | clean HELD-OUT | clean NATIVE pairs | pair-angles | top failing tests (best method) |',
+          '|---|---|---|---|---|---|---|']
     for j in joints:
         best, summ = results[j]
         s = summ[best]
         fk = ', '.join('%s %d' % kv for kv in sorted(s['fail_kinds_train'].items(), key=lambda kv: -kv[1])[:4])
-        md.append('| %s | %s | %.0f%% | %s | %d | %s |' % (j, best, 100 * (s['train_clean'] or 0), '%.0f%%' % (100 * s['held_clean']) if s['held_clean'] is not None else '-',
-                                                       s['n_train'] + s['n_held'], fk))
+        md.append('| %s | %s | %.0f%% | %s | %s (%d) | %d | %s |' % (j, best, 100 * (s['train_clean'] or 0), '%.0f%%' % (100 * s['held_clean']) if s['held_clean'] is not None else '-',
+                  '%.0f%%' % (100 * s['native_clean']) if s.get('native_clean') is not None else '-', s.get('n_native', 0), s['n_train'] + s['n_held'], fk))
     md += ['', '## all methods (clean on TRAIN)', '', '| joint | ' + ' | '.join(sorted({m for j in joints for m in results[j][1]})) + ' |']
     ms = sorted({m for j in joints for m in results[j][1]})
     md.append('|---|' + '---|' * len(ms))

@@ -76,10 +76,32 @@ def lib2_index():
     return json.load(open(p))['parts'] if os.path.exists(p) else {}
 
 
+def defringe(img):
+    """round 03 (critic: white halos at the joins): the cut-out's light fringe -- light, low-saturation pixels within
+    0.3 cm of the outline -- takes the colour of the part's interior nearby, and the alpha is eroded 1 px"""
+    a = img[..., 3]
+    solid = (a > 250).astype(np.uint8)
+    inner = cv2.erode(solid, np.ones((7, 7), np.uint8))
+    if inner.sum() < 50:
+        return img
+    rgb = img[..., :3].astype(np.float32)
+    w = cv2.blur(inner.astype(np.float32), (15, 15))
+    avg = cv2.blur(rgb * inner[..., None], (15, 15)) / np.maximum(w[..., None], 1e-3)
+    band = (a > 0) & (inner == 0)
+    hsv = cv2.cvtColor(img[..., :3], cv2.COLOR_BGR2HSV)
+    light = (hsv[..., 2] > 170) & (hsv[..., 1] < 70)
+    fix = band & light & (w > .02)
+    out = img.copy()
+    out[..., :3][fix] = np.clip(avg[fix], 0, 255).astype(np.uint8)
+    out[..., 3] = cv2.erode(a, np.ones((3, 3), np.uint8))
+    return out
+
+
 def from_lib2(rec):
     img = _read(os.path.join(LIB2, rec['image']))
     if img is None:
         return None
+    img = defringe(img)
     kp = {k: np.asarray(v, float) for k, v in rec['keypoints']['canonical'].items()}
     c = rec.get('classes', {})
     M = np.asarray(rec['transform']['matrix_card_to_canonical'], float)
