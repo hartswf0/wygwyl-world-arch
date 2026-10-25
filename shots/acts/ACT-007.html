@@ -59,4 +59,292 @@ not restated beside it. A check that did not run says so; a blank is not a pass.
  <span><a href="ACT-006.html">&larr; ACT-006</a></span>
  <span><a href="ACT-008.html">ACT-008 &rarr;</a></span>
 </nav>
-</div></body></html>
+</div><!-- WY-MOBILE-FRIENDLY-START -->
+<style id="wy-mobile-friendly-css">
+@media (max-width: 960px) {
+  /* Allow natural vertical page scrolling on mobile/tablet except full-window WebGL canvases */
+  html:not(:has(canvas#gl)):not(:has(canvas#viewport)):not(:has(canvas#stage)),
+  body:not(:has(canvas#gl)):not(:has(canvas#viewport)):not(:has(canvas#stage)) {
+    height: auto !important;
+    min-height: 100dvh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Responsive Header & Navigation Bars */
+  .top-bar, header.suite-nav, .top-header, header.top, .hdr, #top {
+    height: auto !important;
+    min-height: 46px !important;
+    flex-wrap: wrap !important;
+    padding: 8px 10px !important;
+    gap: 6px 8px !important;
+  }
+  .brand, .suite-brand {
+    max-width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .brand-sub, .suite-brand small {
+    font-size: 10px !important;
+  }
+
+  /* Horizontal momentum scrolling for tab strips & nav links */
+  .nav-links, .suite-links, .mode-tabs, .center-tabs, .tabs, #topRight, .filter-bar, .cat-tabs, .angle-tabs {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding-bottom: 3px !important;
+    gap: 5px !important;
+  }
+  .nav-links::-webkit-scrollbar, .suite-links::-webkit-scrollbar,
+  .mode-tabs::-webkit-scrollbar, .center-tabs::-webkit-scrollbar,
+  .tabs::-webkit-scrollbar, #topRight::-webkit-scrollbar {
+    display: none !important;
+  }
+  .nav-link, .suite-link, .mode-tab, .c-tab, .tab, .chip {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    min-height: 34px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  /* Telemetry & Invariant Ribbons: 2-column or horizontal scroll instead of squished 6-column */
+  .telemetry-bar, .telemetry-ribbon, .causal-strip, .syzygy-grid, .pipeline-stepper {
+    height: auto !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+    padding: 6px 10px !important;
+  }
+  .t-pill, .inv-pill {
+    min-height: 28px !important;
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+  }
+
+  /* Collapse 2-column & 3-column desktop workspaces into a clean 1-column mobile stack */
+  .workspace, .app, #studioApp, #appLayout, .layout, .workbench-body,
+  .mixer-wrap, .two-col, .stage-wrap, .workbench, .overview, .cols,
+  .grid-2, .grid-3, .acts-grid, .lower-deck, #sheetBox, .char, .who {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+  body:has(.workspace) main,
+  body:has(aside) main {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+  }
+
+  /* Stage-First Ordering on Mobile: put center canvas/stage above left/right sidebars */
+  .workspace > .center-stage,
+  .workspace > .stage-col,
+  .workspace > .center-col,
+  .workspace > .stage-bay,
+  .workspace > main,
+  .app > main,
+  .layout > main,
+  #studioApp > main,
+  #appLayout > main,
+  #appLayout > .stage-col,
+  .workspace > div:nth-child(2):not(.panel) {
+    order: -1 !important;
+    min-height: 340px !important;
+  }
+
+  /* Make sidebars and panels scroll naturally without trapping height */
+  .panel, .panel-left, .panel-right, aside.list, aside.info, .sidebar, .left-col, .right-col {
+    max-height: 62dvh !important;
+    border-right: none !important;
+    border-left: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.12) !important;
+    width: 100% !important;
+  }
+
+  /* Responsive Canvases inside flex/grid panels */
+  .workspace canvas, .stage-wrap canvas, .workbench canvas, .mixer-wrap canvas,
+  main canvas:not(#gl):not(#viewport):not(#stage) {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Stage & Footer controls wrap cleanly */
+  .stage-footer, .transport-bar, .playback-bar, .stage-hdr, .stage-toolbar {
+    grid-template-columns: 1fr !important;
+    flex-wrap: wrap !important;
+    height: auto !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+  }
+
+  /* Full-screen canvas apps (stage.html, world.html, pointcloud.html) mobile adjustments */
+  #drawer {
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    top: auto !important;
+    bottom: 68px !important;
+    max-height: 58dvh !important;
+  }
+  #arrbar, #hud, #ensBar {
+    left: 8px !important;
+    right: 8px !important;
+    transform: none !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: 45dvh !important;
+    overflow-y: auto !important;
+  }
+  #bottom #hint {
+    display: none !important;
+  }
+
+  /* Mobile Panel Switcher Pill Bar */
+  #wy-mob-switcher {
+    display: flex !important;
+    gap: 6px;
+    padding: 6px 10px;
+    background: #0d1219;
+    border-bottom: 1px solid rgba(245, 198, 78, 0.35);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-shrink: 0;
+    z-index: 90;
+  }
+  #wy-mob-switcher button {
+    flex: 1 0 auto;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #e6edf5;
+    font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #wy-mob-switcher button.on {
+    background: #f5c64e;
+    color: #111518;
+    border-color: #f5c64e;
+  }
+  .wy-mob-hidden {
+    display: none !important;
+  }
+}
+
+@media (min-width: 961px) {
+  #wy-mob-switcher {
+    display: none !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .telemetry-bar, .telemetry-ribbon {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .cast-strip, .cycle-grid, .seam-loupes-grid, .swapper-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  #wy-index {
+    bottom: 68px !important;
+    left: 8px !important;
+    min-height: 32px !important;
+    padding: 0 10px !important;
+    font-size: 10.5px !important;
+  }
+}
+</style>
+<script id="wy-mobile-friendly-js">
+(function(){
+  function initMobileFriendly() {
+    // 1. Add Mobile Panel Switcher for 3-column / 2-column workspaces
+    var ws = document.querySelector('.workspace, .app, #studioApp, #appLayout, .layout');
+    if (ws && ws.children.length >= 2 && !document.getElementById('wy-mob-switcher')) {
+      var kids = Array.prototype.slice.call(ws.children).filter(function(el){
+        var tag = el.tagName.toLowerCase();
+        return tag !== 'script' && tag !== 'style';
+      });
+      if (kids.length >= 2 && kids.length <= 4) {
+        var bar = document.createElement('div');
+        bar.id = 'wy-mob-switcher';
+        var labels = kids.length === 3
+          ? ['☰ All Panels', '🎬 Stage View', '🎛️ Left Controls', '📊 Right Inspector']
+          : ['☰ All Panels', '🎬 Main View', '🎛️ Side Panel'];
+        var mapIdx = kids.length === 3 ? [-1, 1, 0, 2] : [-1, 0, 1];
+        // Check if first child is main/stage
+        if (kids.length === 2 && (kids[1].tagName === 'MAIN' || kids[1].querySelector('canvas'))) {
+          mapIdx = [-1, 1, 0];
+        }
+        labels.forEach(function(lbl, bIdx) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = lbl;
+          if (bIdx === 0) btn.classList.add('on');
+          btn.addEventListener('click', function() {
+            Array.prototype.forEach.call(bar.querySelectorAll('button'), function(b){ b.classList.remove('on'); });
+            btn.classList.add('on');
+            var target = mapIdx[bIdx];
+            kids.forEach(function(k, kIdx) {
+              if (target === -1 || kIdx === target) {
+                k.classList.remove('wy-mob-hidden');
+              } else {
+                k.classList.add('wy-mob-hidden');
+              }
+            });
+            window.dispatchEvent(new Event('resize'));
+          });
+          bar.appendChild(btn);
+        });
+        ws.parentNode.insertBefore(bar, ws);
+      }
+    }
+
+    // 2. Touch-to-Mouse synthetic bridge for interactive 2D canvases
+    var canvases = document.querySelectorAll('canvas:not(#gl):not(#viewport)');
+    Array.prototype.forEach.call(canvases, function(cv) {
+      if (cv.dataset.wyTouchBridged) return;
+      cv.dataset.wyTouchBridged = '1';
+      function dispatchMouse(type, touch) {
+        var evt = new MouseEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+          screenX: touch.screenX,
+          screenY: touch.screenY,
+          button: 0,
+          buttons: type === 'mouseup' ? 0 : 1
+        });
+        cv.dispatchEvent(evt);
+      }
+      cv.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1) {
+          dispatchMouse('mousedown', e.touches[0]);
+        }
+      }, { passive: true });
+      cv.addEventListener('touchmove', function(e) {
+        if (e.touches.length === 1) {
+          dispatchMouse('mousemove', e.touches[0]);
+        }
+      }, { passive: true });
+      cv.addEventListener('touchend', function(e) {
+        if (e.changedTouches.length > 0) {
+          dispatchMouse('mouseup', e.changedTouches[0]);
+        }
+      }, { passive: true });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMobileFriendly);
+  } else {
+    initMobileFriendly();
+  }
+})();
+</script>
+<!-- WY-MOBILE-FRIENDLY-END -->
+</body></html>
