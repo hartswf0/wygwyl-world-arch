@@ -1,0 +1,285 @@
+{
+  "total_tested_gate_archetypes": 10,
+  "cases": [
+    {
+      "id": "JOIN_01_MOTHER_WRIST_SLEEVE",
+      "title": "1. Forearm <-> Hand (Mother Cardigan Wrist)",
+      "pair_type": "Forearm Cuff <-> Hand",
+      "defect_code": "HAND_CONTAINS_FULL_FOREARM_SLEEVE",
+      "assumption_violated": "mother_cardigan/body.front.hand.L (70x219, h/w=3.13) includes an entire knit forearm sleeve! Joining it to farm.L creates a double-length 2-elbow monster arm.",
+      "fix_applied": "Replace uncut sleeve-hand with isolated hand (woman.teal_dress/body.front.hand.true.L) or crop sleeve above y=0.58; tuck wrist pin (0.50, 0.16) inside forearm cuff.",
+      "part_a_metrics": {
+        "w": 66,
+        "h": 208,
+        "aspect": 3.15,
+        "top_w": 65.0,
+        "mid_w": 60.0,
+        "bot_w": 55.0,
+        "axis_deg": 0.2,
+        "interior_hole_pct": 0.09
+      },
+      "part_b_metrics": {
+        "w": 58,
+        "h": 207,
+        "aspect": 3.57,
+        "top_w": 52.0,
+        "mid_w": 41.0,
+        "bot_w": 36.0,
+        "axis_deg": 2.5,
+        "interior_hole_pct": 0.0
+      }
+    },
+    {
+      "id": "JOIN_02_WEAVE_HORIZONTAL_HAND",
+      "title": "2. Forearm <-> Hand (90-Deg Sideways Assumption)",
+      "pair_type": "Forearm Cuff <-> Action Hand",
+      "defect_code": "HORIZONTAL_HAND_AXIS_89DEG_OFF",
+      "assumption_violated": "Weave & Action hands (hand.point 233x121, w>h) are painted HORIZONTALLY (wrist on left, fingers right). Attaching at top pin sticks the hand out 90 deg sideways!",
+      "fix_applied": "Auto-detect w > h*1.12 in clean_card_preserve_caps(auto_vertical_hand=True), rotate +90 deg CW so wrist aligns with vertical forearm bone axis.",
+      "part_a_metrics": {
+        "w": 74,
+        "h": 169,
+        "aspect": 2.28,
+        "top_w": 66.0,
+        "mid_w": 73.0,
+        "bot_w": 51.0,
+        "axis_deg": 3.5,
+        "interior_hole_pct": 0.0
+      },
+      "part_b_metrics": {
+        "w": 233,
+        "h": 121,
+        "aspect": 0.52,
+        "top_w": 150.5,
+        "mid_w": 177.5,
+        "bot_w": 140.5,
+        "axis_deg": 78.6,
+        "interior_hole_pct": 0.0
+      }
+    },
+    {
+      "id": "JOIN_03_PARTY_SHOE_HAS_SHIN",
+      "title": "3. Shin <-> Shoe (Party Oxford Has Half a Shin)",
+      "pair_type": "Shin Cuff <-> Shoe / Foot",
+      "defect_code": "FOOT_CARD_CONTAINS_LOWER_SHIN",
+      "assumption_violated": "party.vintage_party/body.front.foot.L (135x193, h/w=1.43) includes half a pinstripe trouser leg above the shoe! Joining to shin.L creates a double-cuff stacked shin.",
+      "fix_applied": "Trim upper trouser fragment (crop_top_frac=0.50) or use clean profile oxford (body.profile.foot.L) with ankle socket (0.30, 0.24) tucked behind shin cuff.",
+      "part_a_metrics": {
+        "w": 96,
+        "h": 310,
+        "aspect": 3.23,
+        "top_w": 95.0,
+        "mid_w": 75.0,
+        "bot_w": 78.0,
+        "axis_deg": 0.0,
+        "interior_hole_pct": 0.0
+      },
+      "part_b_metrics": {
+        "w": 123,
+        "h": 187,
+        "aspect": 1.52,
+        "top_w": 55.5,
+        "mid_w": 66.0,
+        "bot_w": 111.5,
+        "axis_deg": 14.9,
+        "interior_hole_pct": 0.0
+      }
+    },
+    {
+      "id": "JOIN_04_YP_PELVIS_WIDTH_EXPLOSION",
+      "title": "4. Torso <-> Pelvis (240% Waist Width Jump!)",
+      "pair_type": "Torso Waist <-> Pelvis Shorts",
+      "defect_code": "UNFOLDED_SHORTS_240PCT_WIDER_THAN_WAIST",
+      "assumption_violated": "young_poet.child_clothes/body.front.pelvis.denim.png (334x186, h/w=0.56) is 2.4x wider than the child torso waist, sticking out like giant wings on both sides!",
+      "fix_applied": "Flag width_step_err > 0.45 between torso bot_w and pelvis top_w; bind torso waist to fitted denim shorts (body.profile.pelvis.denim.true.png 166x291).",
+      "part_a_metrics": {
+        "w": 336,
+        "h": 369,
+        "aspect": 1.1,
+        "top_w": 313.0,
+        "mid_w": 282.0,
+        "bot_w": 280.0,
+        "axis_deg": 0.6,
+        "interior_hole_pct": 0.0
+      },
+      "part_b_metrics": {
+        "w": 334,
+        "h": 186,
+        "aspect": 0.56,
+        "top_w": 312.0,
+        "mid_w": 334.0,
+        "bot_w": 326.0,
+        "axis_deg": 90.0,
+        "interior_hole_pct": 0.0
+      }
+    },
+    {
+      "id": "JOIN_05_YP_FARM_IS_UARM",
+      "title": "5. Upper Arm <-> Forearm (Duplicate Striped Sleeve)",
+      "pair_type": "Upper Arm <-> Forearm (Elbow)",
+      "defect_code": "FOREARM_IS_DUPLICATE_STRIPED_UPPER_ARM",
+      "assumption_violated": "young_poet.child_clothes/body.front.farm.L (136x349) is a duplicate of the striped T-shirt upper arm! Joining uarm.L + farm.L creates two T-shirt sleeves stacked end-to-end.",
+      "fix_applied": "Detect striped fabric texture duplication on front.farm.L; bind uarm.L to true bare forearm (body.profile.farm.L) at elbow socket.",
+      "part_a_metrics": {
+        "w": 122,
+        "h": 337,
+        "aspect": 2.76,
+        "top_w": 106.5,
+        "mid_w": 104.5,
+        "bot_w": 80.5,
+        "axis_deg": 1.8,
+        "interior_hole_pct": 0.0
+      },
+      "part_b_metrics": {
+        "w": 124,
+        "h": 337,
+        "aspect": 2.72,
+        "top_w": 108.5,
+        "mid_w": 107.0,
+        "bot_w": 81.0,
+        "axis_deg": 1.1,
+        "interior_hole_pct": 0.04
+      }
+    },
+    {
+      "id": "JOIN_06_DJ_DIAGONAL_ELBOW",
+      "title": "6. Upper Arm <-> Forearm (Diagonal 36-Deg Card Skew)",
+      "pair_type": "Upper Arm <-> Forearm @ 45-Deg Bend",
+      "defect_code": "DIAGONAL_LIMB_AXIS_MISMATCH_36DEG",
+      "assumption_violated": "party.dj_cyber/body.front.uarm.L (176x248, axis=34.8 deg) & farm.L are cut diagonally at -36 deg! Rotating around top center swings the elbow completely off-socket.",
+      "fix_applied": "Replace diagonal front limb cards with straight vertical profile limbs (body.profile.uarm.L & farm.L, axis=1.8 deg) preserving full rounded elbow caps.",
+      "part_a_metrics": {
+        "w": 164,
+        "h": 236,
+        "aspect": 1.44,
+        "top_w": 91.5,
+        "mid_w": 114.0,
+        "bot_w": 103.5,
+        "axis_deg": 25.4,
+        "interior_hole_pct": 0.53
+      },
+      "part_b_metrics": {
+        "w": 117,
+        "h": 171,
+        "aspect": 1.46,
+        "top_w": 60.0,
+        "mid_w": 96.0,
+        "bot_w": 61.0,
+        "axis_deg": 27.7,
+        "interior_hole_pct": 1.06
+      }
+    },
+    {
+      "id": "JOIN_07_SIDE_TORSO_HOLLOW_ARMHOLE_AND_WIDE_PELVIS",
+      "title": "7. Side Torso <-> Wide Front Hip Bridge & Armhole",
+      "pair_type": "Side Profile Torso <-> Pelvis & Arm",
+      "defect_code": "HOLLOW_ARMHOLE_AND_FRONT_PELVIS_ON_SIDE_TORSO",
+      "assumption_violated": "Side torsos (body.profile.torso) have an 8.4% hollow armhole cutout, and pairing with wide front hip bridges (dj_cyber/body.profile.pelvis 234x182) sticks grommet ears out front & back!",
+      "fix_applied": "Fill interior armhole cutout with jacket gouache, pair with true narrow side pelvis (body.profile.pelvis.true 150x181), and mount near upper arm over shoulder socket.",
+      "part_a_metrics": {
+        "w": 299,
+        "h": 574,
+        "aspect": 1.92,
+        "top_w": 179.5,
+        "mid_w": 274.0,
+        "bot_w": 261.0,
+        "axis_deg": 1.7,
+        "interior_hole_pct": 0.03
+      },
+      "part_b_metrics": {
+        "w": 222,
+        "h": 170,
+        "aspect": 0.77,
+        "top_w": 18.5,
+        "mid_w": 149.0,
+        "bot_w": 216.0,
+        "axis_deg": 89.5,
+        "interior_hole_pct": 1.4
+      }
+    },
+    {
+      "id": "JOIN_08_PARTY_PELVIS_SADDLEBAGS",
+      "title": "8. Suit Torso <-> Pelvis (374x193 Saddlebag Flaps)",
+      "pair_type": "Front Torso <-> Pelvis / Thighs",
+      "defect_code": "WAIST_WIDTH_JUMP_215PCT_SADDLEBAG",
+      "assumption_violated": "party.vintage_party/body.front.pelvis (374x193, aspect=0.52) has two wide brown side-pouches sticking out 2.1x wider than the pinstripe suit waist!",
+      "fix_applied": "Flag width_step_err > 0.45 at waist join; replace wide front.pelvis with fitted pinstripe pelvis (body.profile.pelvis.png 164x194).",
+      "part_a_metrics": {
+        "w": 218,
+        "h": 279,
+        "aspect": 1.28,
+        "top_w": 166.0,
+        "mid_w": 184.0,
+        "bot_w": 170.0,
+        "axis_deg": 0.4,
+        "interior_hole_pct": 0.0
+      },
+      "part_b_metrics": {
+        "w": 176,
+        "h": 97,
+        "aspect": 0.55,
+        "top_w": 80.0,
+        "mid_w": 170.0,
+        "bot_w": 163.0,
+        "axis_deg": 89.1,
+        "interior_hole_pct": 0.0
+      }
+    },
+    {
+      "id": "JOIN_09_GUILLOTINED_ELBOW_NOTCH",
+      "title": "9. Upper Arm <-> Forearm (Guillotine Cutoff Notch)",
+      "pair_type": "Upper Arm <-> Forearm @ 55-Deg Bend",
+      "defect_code": "GUILLOTINED_CAP_CREATES_BEND_NOTCH",
+      "assumption_violated": "Chopping top/bottom 12% of limb cards (`arr[:11%]=0`) slices off the semicircular joint cap! When the elbow bends 55 deg, a sharp V-notch opens at the joint.",
+      "fix_applied": "Preserve 100% of rounded semicircular joint caps in clean_card_preserve_caps() and fill only the interior pinhole so bent joints roll smoothly.",
+      "part_a_metrics": {
+        "w": 99,
+        "h": 183,
+        "aspect": 1.85,
+        "top_w": 79.0,
+        "mid_w": 87.0,
+        "bot_w": 64.0,
+        "axis_deg": 10.7,
+        "interior_hole_pct": 0.0
+      },
+      "part_b_metrics": {
+        "w": 74,
+        "h": 169,
+        "aspect": 2.28,
+        "top_w": 66.0,
+        "mid_w": 73.0,
+        "bot_w": 51.0,
+        "axis_deg": 3.5,
+        "interior_hole_pct": 0.0
+      }
+    },
+    {
+      "id": "JOIN_10_HEAD_NECK_CUT_SLOT_AND_DOUBLE_MOUTH",
+      "title": "10. Torso Collar <-> Head (Eye-Slot & Double Mouth)",
+      "pair_type": "Torso Collar <-> Head Neck",
+      "defect_code": "CUT_SLOT_HEAD_AND_PASTED_MOUTH_COLLISION",
+      "assumption_violated": "party.vintage_party/head.front has a raw rectangular eye-slot hole cut out of the face, and pasting a front mouth onto a profile head creates two mouths!",
+      "fix_applied": "Classify heads honestly (Native Painted vs Modular vs Cut-Slot Defect); replace slotted head with clean native weave/painted head anchored at (0.50, 0.86).",
+      "part_a_metrics": {
+        "w": 218,
+        "h": 279,
+        "aspect": 1.28,
+        "top_w": 166.0,
+        "mid_w": 184.0,
+        "bot_w": 170.0,
+        "axis_deg": 0.4,
+        "interior_hole_pct": 0.0
+      },
+      "part_b_metrics": {
+        "w": 225,
+        "h": 322,
+        "aspect": 1.43,
+        "top_w": 167.0,
+        "mid_w": 220.0,
+        "bot_w": 130.5,
+        "axis_deg": 0.5,
+        "interior_hole_pct": 0.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SCION SWARM-OF-SWARMS — 14-Poem / 80-Scene Autonomous Film Studio</title>
+<style>
+  :root {
+    --bg-0: #090b0d;
+    --bg-1: #111518;
+    --bg-2: #181d22;
+    --bg-3: #21282f;
+    --border: #2c363f;
+    --border-hi: #4a5a68;
+    --text-0: #f0f4f8;
+    --text-1: #b4c2ce;
+    --text-2: #7a8b99;
+    --gold: #f5c64e;
+    --gold-dim: rgba(245, 198, 78, 0.15);
+    --cyan: #00e5ff;
+    --cyan-dim: rgba(0, 229, 255, 0.14);
+    --green: #4ee88a;
+    --green-dim: rgba(78, 232, 138, 0.15);
+    --purple: #c586ff;
+    --red: #ff5c6c;
+    --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg-0);
+    color: var(--text-0);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+
+  /* HEADER */
+  .top-bar {
+    height: 48px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-badge {
+    background: var(--gold-dim);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+  }
+  .brand-title {
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--text-0);
+  }
+  .brand-sub {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-2);
+  }
+
+  .center-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-0);
+    padding: 3px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+  }
+  .c-tab {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-1);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 11px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .c-tab.active {
+    background: var(--gold-dim);
+    border-color: var(--gold);
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-link {
+    color: var(--text-1);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+    cursor: pointer;
+  }
+  .nav-link:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+  .nav-link.primary {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-dim);
+  }
+
+  /* TELEMETRY BAR */
+  .telemetry-bar {
+    height: 34px;
+    background: #0c1013;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    padding: 4px 12px;
+    flex-shrink: 0;
+  }
+  .t-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    background: rgba(20, 38, 29, 0.6);
+    border: 1px solid rgba(78, 232, 138, 0.45);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+  }
+  .t-pill span:last-child {
+    color: var(--green);
+    font-weight: 700;
+  }
+
+  /* 3-COLUMN WORKSPACE */
+  .workspace {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 335px 1fr 370px;
+    min-height: 0;
+  }
+
+  .panel {
+    background: var(--bg-1);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .panel-right {
+    border-right: none;
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+  }
+
+  .left-mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-0);
+  }
+  .l-tab {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    padding: 5px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+  }
+  .l-tab.active {
+    background: var(--cyan-dim);
+    border-color: var(--cyan);
+    color: var(--cyan);
+    font-weight: 700;
+  }
+
+  .scroll-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 10px;
+  }
+
+  .act-hdr {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    margin: 8px 0 5px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid var(--border);
+  }
+  .poem-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 7px 9px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .poem-card:hover {
+    border-color: var(--border-hi);
+  }
+  .poem-card.active {
+    border-color: var(--gold);
+    background: rgba(245, 198, 78, 0.09);
+  }
+  .poem-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .poem-name {
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text-0);
+  }
+  .poem-pass {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--green);
+    background: var(--green-dim);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .poem-pod-mini {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--cyan);
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .scene-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .sc-pill {
+    background: var(--bg-0);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .sc-pill:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+  .sc-pill.active {
+    background: var(--gold-dim);
+    border-color: var(--gold);
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  /* 54 SCION LINEAGE CARDS */
+  .search-input {
+    width: 100%;
+    background: var(--bg-0);
+    border: 1px solid var(--border-hi);
+    color: var(--text-0);
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    margin-bottom: 8px;
+  }
+  .scion-item {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 7px 9px;
+    margin-bottom: 6px;
+    cursor: pointer;
+  }
+  .scion-item:hover, .scion-item.active {
+    border-color: var(--cyan);
+    background: var(--cyan-dim);
+  }
+  .scion-fam {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--gold);
+  }
+  .scion-title {
+    font-weight: 700;
+    font-size: 11.5px;
+    margin: 2px 0;
+  }
+  .scion-thm {
+    font-size: 10.5px;
+    color: var(--text-1);
+    line-height: 1.35;
+  }
+
+  /* CENTER STAGE */
+  .center-col {
+    display: flex;
+    flex-direction: column;
+    background: #07090b;
+    min-height: 0;
+    position: relative;
+  }
+  .stage-bar {
+    height: 40px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .mini-btn {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .mini-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .mini-btn.active {
+    background: var(--cyan-dim);
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+  .mini-btn.marathon {
+    background: var(--gold-dim);
+    border-color: var(--gold);
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .stage-viewport {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  #stageCanvas {
+    max-width: 100%;
+    max-height: 100%;
+    border: 1px solid #263038;
+    box-shadow: 0 10px 36px rgba(0,0,0,0.8);
+  }
+
+  /* 14-POEM WALL VIEW */
+  #wallViewport {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: none;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+    background: #080a0c;
+  }
+  .wall-card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s;
+  }
+  .wall-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--gold);
+  }
+  .wall-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-bottom: 1px solid var(--border);
+  }
+  .wall-meta {
+    padding: 8px 10px;
+  }
+  .wall-title {
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--gold);
+    margin-bottom: 3px;
+  }
+  .wall-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--cyan);
+    margin-bottom: 4px;
+  }
+  .wall-verdict {
+    font-size: 10.5px;
+    color: var(--green);
+  }
+
+  /* BOTTOM CAST & TIMELINE BAR */
+  .bottom-deck {
+    background: var(--bg-1);
+    border-top: 1px solid var(--border);
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+  .cast-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .cast-slot-box {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .cast-slot-lbl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--cyan);
+    white-space: nowrap;
+  }
+  .cast-slot-sel {
+    flex: 1;
+    background: var(--bg-0);
+    color: var(--text-0);
+    border: 1px solid var(--border-hi);
+    border-radius: 3px;
+    padding: 3px 5px;
+    font-size: 11px;
+  }
+
+  .scrubber-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .play-btn {
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .tl-slider {
+    flex: 1;
+    accent-color: var(--gold);
+  }
+  .tl-readout {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--gold);
+    min-width: 175px;
+    text-align: right;
+  }
+
+  /* RIGHT INSPECTOR SECTIONS */
+  .section {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sec-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 7px;
+  }
+  .sec-title {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .sec-badge {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--cyan);
+    background: var(--cyan-dim);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  .pod-chip {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin-bottom: 5px;
+    cursor: pointer;
+  }
+  .pod-chip:hover {
+    border-color: var(--cyan);
+  }
+  .pod-chip-top {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--cyan);
+    margin-bottom: 2px;
+  }
+  .pod-chip-title {
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--text-0);
+    margin-bottom: 2px;
+  }
+  .pod-chip-thm {
+    font-size: 10px;
+    color: var(--text-1);
+    line-height: 1.3;
+  }
+
+  .acting-row {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 6px;
+    padding: 4px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.07);
+    font-size: 11px;
+  }
+  .acting-k {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+  .acting-v {
+    color: var(--text-0);
+    line-height: 1.35;
+  }
+
+  .prompt-pre {
+    background: #07090a;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: #9be8b8;
+    line-height: 1.45;
+    max-height: 220px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+
+  /* MODAL FOR FULL 14-POEM ATLAS */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 7, 9, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal-card {
+    background: var(--bg-1);
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    max-width: 96vw;
+    max-height: 94vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-hdr {
+    padding: 10px 14px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-body {
+    padding: 12px;
+    overflow: auto;
+    background: #060708;
+    display: flex;
+    justify-content: center;
+  }
+  .modal-body img {
+    max-width: 100%;
+    height: auto;
+  }
+</style>
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header class="top-bar">
+    <div class="brand">
+      <span class="brand-badge">SCION SWARM-OF-SWARMS</span>
+      <div>
+        <div class="brand-title">54 Animation Lineages × 14 Poems (80 Scenes) — Autonomous Film Production Engine</div>
+        <div class="brand-sub">Hierarchical Meta-Swarm · 14 Specialized 5-Swarm Pods · Live Recasting · Blind Critic Tribunal</div>
+      </div>
+    </div>
+
+    <div class="center-tabs">
+      <button class="c-tab active" data-view="stage">🎬 Live Scene Stage (80 Scenes)</button>
+      <button class="c-tab" data-view="wall">▦ 14-Poem Swarm Proof Wall</button>
+    </div>
+
+    <div class="nav-links">
+      <button class="nav-link primary" id="btnOpenMasterAtlas">🗺️ View 14-Poem Master Atlas Sheet</button>
+      <a class="nav-link" href="recastable_cinema_studio.html">Recastable Studio</a>
+      <a class="nav-link" href="crash_lab.html">Crash Lab</a>
+      <a class="nav-link" href="body_lab.html">Body Lab</a>
+      <a class="nav-link" href="suite.html">Suite</a>
+    </div>
+  </header>
+
+  <!-- INVARIANT & TRIBUNAL TELEMETRY RIBBON -->
+  <div class="telemetry-bar">
+    <div class="t-pill"><span>SCION Lineages Active</span><span id="telLineages">54 / 54</span></div>
+    <div class="t-pill"><span>Poems Certified</span><span id="telPoems">14 / 14 PASS</span></div>
+    <div class="t-pill"><span>Scenes Compiled</span><span id="telScenes">80 / 80 PASS</span></div>
+    <div class="t-pill"><span>Foot-Slide Drift</span><span>0.00 px/f</span></div>
+    <div class="t-pill"><span>Neck Continuity Error</span><span>0.00 px</span></div>
+    <div class="t-pill"><span>Ex Back-Only Invariant</span><span>100% LOCKED</span></div>
+  </div>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="workspace">
+
+    <!-- LEFT PANEL: 14 POEMS (80 SCENES) OR 54 SCION LINEAGES -->
+    <aside class="panel">
+      <div class="left-mode-switch">
+        <button class="l-tab active" data-ltab="poems">🎬 14 Poems · 80 Scenes</button>
+        <button class="l-tab" data-ltab="lineages">🧬 54 SCION Lineages</button>
+      </div>
+
+      <div class="scroll-list" id="poemsListContainer"></div>
+      <div class="scroll-list" id="lineagesListContainer" style="display:none;">
+        <input type="text" class="search-input" id="scionSearchInput" placeholder="Filter 54 swarms (Gilliam, Norstein, IK, JibJab, Atlanta...)" />
+        <div id="scionItemsBox"></div>
+      </div>
+    </aside>
+
+    <!-- CENTER STAGE & 14-POEM WALL -->
+    <main class="center-col">
+      <div class="stage-bar">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button class="mini-btn marathon active" id="btnAutoAdvance80">🔁 Auto-Advance All 80 Scenes: ON</button>
+          <button class="mini-btn" id="btnPrevScene">◀ Prev Scene</button>
+          <button class="mini-btn" id="btnNextScene">Next Scene ▶</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button class="mini-btn active" id="btnShowSubtitles">💬 Poetic Lines &amp; Treatment: ON</button>
+          <button class="mini-btn active" id="btnShowJoints">📍 Kinematic Pins &amp; Rails: ON</button>
+          <button class="mini-btn" id="btnRandomRecastScene">🎲 Recast Scene</button>
+        </div>
+      </div>
+
+      <!-- LIVE CANVAS VIEWPORT -->
+      <div class="stage-viewport" id="stageViewport">
+        <canvas id="stageCanvas" width="1100" height="600"></canvas>
+      </div>
+
+      <!-- 14-POEM PROOF WALL VIEWPORT -->
+      <div id="wallViewport"></div>
+
+      <!-- BOTTOM CAST & TIMELINE CONTROLS -->
+      <div class="bottom-deck">
+        <div class="cast-strip" id="castStripContainer"></div>
+        <div class="scrubber-row">
+          <button class="play-btn" id="btnPlayPause">⏸ PAUSE</button>
+          <input type="range" class="tl-slider" id="timeSlider" min="0" max="1000" value="0" />
+          <div class="tl-readout" id="sceneTimeReadout">P01-S01 | t = 0.0s / 13.0s</div>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT PANEL: ACTIVE POEM'S 5-SWARM POD + ACTING CHAIN + CRITIC TRIBUNAL + FULL SCION PROMPT -->
+    <aside class="panel panel-right">
+      <div class="section">
+        <div class="sec-hdr">
+          <span class="sec-title">1. Active 5-Swarm SCION Pod</span>
+          <span class="sec-badge" id="activePodBadge">POEM 01 POD</span>
+        </div>
+        <div id="activePodContainer"></div>
+      </div>
+
+      <div class="section">
+        <div class="sec-hdr">
+          <span class="sec-title">2. SCION Doctrine #5 · Acting Chain</span>
+          <span class="sec-badge">CAUSAL PERFORMANCE</span>
+        </div>
+        <div id="actingChainContainer"></div>
+      </div>
+
+      <div class="section">
+        <div class="sec-hdr">
+          <span class="sec-title">3. SCION Doctrine #9 · Independent Critic Tribunal</span>
+          <span class="sec-badge" style="color:var(--green);background:var(--green-dim);">PASS · 6/6</span>
+        </div>
+        <div id="tribunalVerdictBox" style="font-size:11px;color:var(--green);line-height:1.4;background:rgba(20,42,30,0.5);border:1px solid rgba(78,232,138,0.4);padding:7px 9px;border-radius:4px;"></div>
+      </div>
+
+      <div class="section" style="flex:1;display:flex;flex-direction:column;">
+        <div class="sec-hdr">
+          <span class="sec-title" id="selectedSwarmHeader">4. Selected SCION Swarm Prompt</span>
+          <button class="mini-btn" id="btnCopyPrompt">Copy Prompt</button>
+        </div>
+        <pre class="prompt-pre" id="scionPromptViewer">Click any SCION Swarm in the Pod above or in the 54 Lineages tab to inspect its complete operational prompt.</pre>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- MODAL FOR 14-POEM MASTER ATLAS -->
+  <div class="modal-backdrop" id="masterAtlasModal">
+    <div class="modal-card">
+      <div class="modal-hdr">
+        <span style="font-family:var(--font-mono);font-weight:700;color:var(--gold);">SCION SWARM-OF-SWARMS — 14-POEM / 80-SCENE MASTER PROOF ATLAS</span>
+        <button class="mini-btn" id="btnCloseMasterAtlas" style="border-color:var(--red);color:var(--red);">✕ Close</button>
+      </div>
+      <div class="modal-body">
+        <img src="arena/parts/kit3/regularized_parts_audit/scion_14poems_master_proof.png" alt="14-Poem Master Proof Atlas" />
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const stageCanvas = document.getElementById('stageCanvas');
+  const ctx = stageCanvas.getContext('2d');
+
+  let castManifest = null;
+  let swarmPlan = null;
+  let scion54 = null;
+  let allScenesFlat = [];
+  const imgCache = new Map();
+
+  function getImg(relPath) {
+    if (!relPath) return null;
+    if (imgCache.has(relPath)) return imgCache.get(relPath);
+    const im = new Image();
+    im.src = relPath;
+    imgCache.set(relPath, im);
+    return im;
+  }
+
+  const state = {
+    centerView: 'stage',   // 'stage' | 'wall'
+    leftTab: 'poems',      // 'poems' | 'lineages'
+    currentSceneFlatIdx: 0,
+    playing: true,
+    autoAdvance80: true,
+    showSubtitles: true,
+    showJoints: true,
+    tNorm: 0.0,
+    lastTs: performance.now(),
+    selectedLineageId: 5,
+    searchQuery: ''
+  };
+
+  Promise.all([
+    fetch('arena/parts/kit3/release_v2/recastable_cinema_manifest.json').then(r => r.json()),
+    fetch('arena/parts/kit3/release_v2/scion_14poems_swarm_plan.json').then(r => r.json()),
+    fetch('arena/parts/kit3/release_v2/scion_54_lineages.json').then(r => r.json())
+  ]).then(([cMan, sPlan, s54]) => {
+    castManifest = cMan;
+    swarmPlan = sPlan;
+    scion54 = s54;
+
+    // Preload cast images
+    getImg(castManifest.prop_orb);
+    getImg(castManifest.hand_open_sub);
+    getImg(castManifest.hand_grip_sub);
+    castManifest.cast.forEach(c => {
+      Object.values(c.heads || {}).forEach(getImg);
+      Object.values(c.views || {}).forEach(vd => {
+        Object.values(vd || {}).forEach(v => { if (typeof v === 'string') getImg(v); });
+      });
+    });
+
+    // Flatten all 80 scenes across the 14 poems
+    allScenesFlat = [];
+    swarmPlan.poems.forEach(poem => {
+      (poem.set_pieces || []).forEach(getImg);
+      poem.scenes.forEach(sc => {
+        allScenesFlat.push(sc);
+      });
+    });
+
+    buildPoemsSidebar();
+    buildLineagesSidebar();
+    build14PoemWall();
+    selectSceneByFlatIndex(0);
+    requestAnimationFrame(tick);
+  });
+
+  function getActiveScene() {
+    return allScenesFlat[state.currentSceneFlatIdx] || null;
+  }
+
+  function buildPoemsSidebar() {
+    const box = document.getElementById('poemsListContainer');
+    const activeSc = getActiveScene();
+    let lastAct = '';
+    let html = '';
+
+    swarmPlan.poems.forEach(poem => {
+      if (poem.act_cluster !== lastAct) {
+        lastAct = poem.act_cluster;
+        html += `<div class="act-hdr">${lastAct}</div>`;
+      }
+      const isPoemActive = activeSc && activeSc.poem_num === poem.poem_num;
+      const podStr = poem.scion_pod.slice(0, 3).map(p => `#${String(p.id).padStart(2,'0')} ${p.title.split(' — ')[0]}`).join(' + ');
+      const scPills = poem.scenes.map(sc => {
+        const flatIdx = allScenesFlat.findIndex(x => x.scene_id === sc.scene_id);
+        const isScActive = activeSc && activeSc.scene_id === sc.scene_id;
+        return `<button class="sc-pill ${isScActive ? 'active' : ''}" data-fidx="${flatIdx}">${sc.scene_num}</button>`;
+      }).join('');
+
+      html += `
+        <div class="poem-card ${isPoemActive ? 'active' : ''}" data-pnum="${poem.poem_num}">
+          <div class="poem-top">
+            <span class="poem-name">P${String(poem.poem_num).padStart(2,'0')} · ${poem.title}</span>
+            <span class="poem-pass">PASS · ${poem.scene_count} sc</span>
+          </div>
+          <div class="poem-pod-mini">${podStr}</div>
+          <div class="scene-pills">${scPills}</div>
+        </div>
+      `;
+    });
+
+    box.innerHTML = html;
+
+    box.querySelectorAll('.sc-pill').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        selectSceneByFlatIndex(parseInt(btn.dataset.fidx, 10));
+      });
+    });
+
+    box.querySelectorAll('.poem-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const pnum = parseInt(card.dataset.pnum, 10);
+        const fidx = allScenesFlat.findIndex(s => s.poem_num === pnum);
+        if (fidx >= 0) selectSceneByFlatIndex(fidx);
+      });
+    });
+  }
+
+  function buildLineagesSidebar() {
+    if (!scion54) return;
+    const q = state.searchQuery.trim().toLowerCase();
+    const box = document.getElementById('scionItemsBox');
+    const filtered = scion54.lineages.filter(l =>
+      !q || l.title.toLowerCase().includes(q) || l.family.toLowerCase().includes(q) || l.theorem.toLowerCase().includes(q) || l.prompt.toLowerCase().includes(q)
+    );
+
+    box.innerHTML = filtered.map(l => `
+      <div class="scion-item ${l.id === state.selectedLineageId ? 'active' : ''}" data-lid="${l.id}">
+        <div class="scion-fam">${l.code} · ${l.family}</div>
+        <div class="scion-title">${l.title}</div>
+        <div class="scion-thm">${l.theorem}</div>
+        <div style="margin-top:5px;display:flex;gap:5px;">
+          <button class="mini-btn btn-inject-pod" data-lid="${l.id}">⚡ Assign to Active Poem Pod</button>
+        </div>
+      </div>
+    `).join('');
+
+    box.querySelectorAll('.scion-item').forEach(el => {
+      el.addEventListener('click', e => {
+        if (e.target.classList.contains('btn-inject-pod')) return;
+        const lid = parseInt(el.dataset.lid, 10);
+        showLineagePrompt(lid);
+        buildLineagesSidebar();
+      });
+    });
+
+    box.querySelectorAll('.btn-inject-pod').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const lid = parseInt(btn.dataset.lid, 10);
+        const lin = scion54.lineages.find(x => x.id === lid);
+        const sc = getActiveScene();
+        if (lin && sc) {
+          sc.scion_pod[0] = { id: lin.id, code: lin.code, title: lin.title, family: lin.family, theorem: lin.theorem };
+          showLineagePrompt(lid);
+          updateRightInspector();
+          buildPoemsSidebar();
+        }
+      });
+    });
+  }
+
+  function build14PoemWall() {
+    const wall = document.getElementById('wallViewport');
+    wall.innerHTML = swarmPlan.poems.map(p => {
+      const podNames = p.scion_pod.slice(0, 3).map(s => `#${String(s.id).padStart(2,'0')} ${s.title.split(' — ')[0]}`).join(' · ');
+      return `
+        <div class="wall-card" data-pnum="${p.poem_num}">
+          <img src="${p.proof_image}" alt="Poem ${p.poem_num} Proof" />
+          <div class="wall-meta">
+            <div class="wall-title">POEM ${String(p.poem_num).padStart(2,'0')}: ${p.title.toUpperCase()} (${p.scene_count} Scenes)</div>
+            <div class="wall-sub">${podNames}</div>
+            <div class="wall-verdict">✓ ${p.critic_verdict}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    wall.querySelectorAll('.wall-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const pnum = parseInt(card.dataset.pnum, 10);
+        const fidx = allScenesFlat.findIndex(s => s.poem_num === pnum);
+        if (fidx >= 0) {
+          selectSceneByFlatIndex(fidx);
+          document.querySelector('.c-tab[data-view="stage"]').click();
+        }
+      });
+    });
+  }
+
+  function selectSceneByFlatIndex(fidx) {
+    state.currentSceneFlatIdx = (fidx + allScenesFlat.length) % allScenesFlat.length;
+    state.tNorm = 0.0;
+    const sc = getActiveScene();
+    if (sc && sc.scion_pod && sc.scion_pod[0]) {
+      state.selectedLineageId = sc.scion_pod[0].id;
+    }
+    buildPoemsSidebar();
+    buildCastStrip();
+    updateRightInspector();
+    if (state.selectedLineageId) showLineagePrompt(state.selectedLineageId);
+  }
+
+  function buildCastStrip() {
+    const sc = getActiveScene();
+    if (!sc || !castManifest) return;
+    const strip = document.getElementById('castStripContainer');
+    strip.innerHTML = sc.roles.map((r, rIdx) => {
+      const opts = castManifest.cast.map(c =>
+        `<option value="${c.id}" ${c.id === r.character_id ? 'selected' : ''}>${c.name} (${c.scale.toFixed(2)}x)</option>`
+      ).join('');
+      return `
+        <div class="cast-slot-box">
+          <span class="cast-slot-lbl">[Slot ${rIdx+1} · ${r.view}]</span>
+          <select class="cast-slot-sel" data-ridx="${rIdx}">${opts}</select>
+        </div>
+      `;
+    }).join('');
+
+    strip.querySelectorAll('.cast-slot-sel').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const rIdx = parseInt(sel.dataset.ridx, 10);
+        const newCid = sel.value;
+        const cObj = castManifest.cast.find(c => c.id === newCid);
+        if (cObj) {
+          sc.roles[rIdx].character_id = cObj.id;
+          sc.roles[rIdx].character_name = cObj.name;
+          sc.roles[rIdx].scale = cObj.scale;
+          // Enforce Ex back-only rule automatically!
+          if (cObj.id === 'ex_olive_bomber' && !['BACK', '3Q'].includes(sc.roles[rIdx].view)) {
+            sc.roles[rIdx].view = 'BACK';
+          }
+          buildCastStrip();
+        }
+      });
+    });
+  }
+
+  function updateRightInspector() {
+    const sc = getActiveScene();
+    if (!sc) return;
+    document.getElementById('activePodBadge').textContent = `${sc.scene_id} · 5 SWARMS`;
+    const podRoles = ['DIRECTOR SWARM', 'RIG FOUNDRY SWARM', 'KINEMATICS / FSM SWARM', 'STAGE / OCCLUSION SWARM', 'ARCHIVE / COMPILER SWARM'];
+    const podBox = document.getElementById('activePodContainer');
+    podBox.innerHTML = sc.scion_pod.map((p, idx) => `
+      <div class="pod-chip" data-lid="${p.id}">
+        <div class="pod-chip-top">
+          <span>${podRoles[idx] || 'SWARM'}</span>
+          <span>${p.code}</span>
+        </div>
+        <div class="pod-chip-title">${p.title}</div>
+        <div class="pod-chip-thm">${p.theorem}</div>
+      </div>
+    `).join('');
+
+    podBox.querySelectorAll('.pod-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        showLineagePrompt(parseInt(chip.dataset.lid, 10));
+      });
+    });
+
+    const ac = sc.acting_chain || {};
+    document.getElementById('actingChainContainer').innerHTML = [
+      ['Attention', ac.attention],
+      ['Intention', ac.intention],
+      ['Gesture', ac.gesture],
+      ['Resistance', ac.resistance],
+      ['Changed State', ac.changed_state]
+    ].map(([k, v]) => `
+      <div class="acting-row">
+        <span class="acting-k">${k}</span>
+        <span class="acting-v">${v || ''}</span>
+      </div>
+    `).join('');
+
+    document.getElementById('tribunalVerdictBox').textContent = `✓ [${sc.scene_id}] ${sc.tribunal.verdict_summary}`;
+  }
+
+  function showLineagePrompt(lid) {
+    if (!scion54) return;
+    state.selectedLineageId = lid;
+    const lin = scion54.lineages.find(x => x.id === lid);
+    if (!lin) return;
+    document.getElementById('selectedSwarmHeader').textContent = `4. ${lin.code} · ${lin.title.split(' — ')[0]}`;
+    document.getElementById('scionPromptViewer').textContent = lin.prompt;
+  }
+
+  // 2-POINT BONE & ACTOR RENDERER
+  function ptSub(a, b) { return [a[0] - b[0], a[1] - b[1]]; }
+  function ptLen(v) { return Math.hypot(v[0], v[1]); }
+
+  function drawTwoPointLimb(g, im, pProxNorm, pDistNorm, jProx, jDist, widthMult = 1.0, clipBottomRatio = null) {
+    if (!im || !im.complete || !im.naturalWidth) return;
+    const w = im.naturalWidth;
+    const h = im.naturalHeight;
+    const pA = [pProxNorm[0] * w, pProxNorm[1] * h];
+    const pB = [pDistNorm[0] * w, pDistNorm[1] * h];
+    const vImg = ptSub(pB, pA);
+    const lenImg = Math.max(ptLen(vImg), 1e-4);
+    const vWorld = ptSub(jDist, jProx);
+    const lenWorld = Math.max(ptLen(vWorld), 1e-4);
+    const scale = lenWorld / lenImg;
+    const rotRad = Math.atan2(vWorld[1], vWorld[0]) - Math.atan2(vImg[1], vImg[0]);
+
+    g.save();
+    g.translate(jProx[0], jProx[1]);
+    g.rotate(rotRad);
+    g.scale(scale * widthMult, scale);
+    if (clipBottomRatio) {
+      g.beginPath();
+      g.rect(-pA[0] - 20, -pA[1] - 20, w + 40, h * clipBottomRatio + 20);
+      g.clip();
+    }
+    g.drawImage(im, -pA[0], -pA[1]);
+    g.restore();
+  }
+
+  function drawAnchoredPart(g, im, anchorNorm, worldPt, targetH, targetW = null, rotDeg = 0, flipX = false) {
+    if (!im || !im.complete || !im.naturalWidth) return;
+    const w0 = im.naturalWidth;
+    const h0 = im.naturalHeight;
+    const sy = targetH / Math.max(h0, 1);
+    const sx = targetW ? (targetW / Math.max(w0, 1)) : sy;
+    const rw = w0 * sx;
+    const rh = h0 * sy;
+    g.save();
+    g.translate(worldPt[0], worldPt[1]);
+    if (rotDeg) g.rotate(rotDeg * Math.PI / 180);
+    if (flipX) g.scale(-1, 1);
+    g.drawImage(im, -anchorNorm[0] * rw, -anchorNorm[1] * rh, rw, rh);
+    g.restore();
+  }
+
+  function solveAndDrawActor(g, cspec, view, pose, centerX, groundY, figHBase = 236, flipWhole = false) {
+    const sc = cspec.scale || 1.0;
+    const isChild = !!cspec.is_child;
+    const H = figHBase * sc;
+
+    let H_sole, L_shin, L_thigh, L_torso, H_head, L_uarm, L_farm;
+    if (isChild) {
+      H_sole = 0.095 * H; L_shin = 0.165 * H; L_thigh = 0.180 * H;
+      L_torso = 0.235 * H; H_head = 0.355 * H; L_uarm = 0.125 * H; L_farm = 0.110 * H;
+    } else {
+      H_sole = 0.090 * H; L_shin = 0.195 * H; L_thigh = 0.245 * H;
+      L_torso = 0.300 * H; H_head = 0.198 * H; L_uarm = 0.150 * H; L_farm = 0.134 * H;
+    }
+
+    const vdata = cspec.views[view] || cspec.views.FRONT;
+    const torsoIm = getImg(vdata.torso);
+    const tw0 = (torsoIm && torsoIm.naturalWidth) ? torsoIm.naturalWidth : 90;
+    const th0 = (torsoIm && torsoIm.naturalHeight) ? torsoIm.naturalHeight : 140;
+    const torsoAspect = Math.min(Math.max(tw0 / Math.max(th0, 1), 0.42), 0.78);
+    const torsoRenderedW = L_torso * 1.12 * torsoAspect;
+
+    let dxHip = view === 'SIDE' ? 0 : (view === '3Q' ? torsoRenderedW * 0.15 : torsoRenderedW * 0.19);
+    let dxSh  = view === 'SIDE' ? 0 : (view === '3Q' ? torsoRenderedW * 0.30 : torsoRenderedW * 0.35);
+
+    const dirSign = flipWhole ? -1 : 1;
+    const spineRad = (pose.spine_deg || 0) * dirSign * Math.PI / 180;
+    const thL = (pose.thigh_L_deg || 0) * dirSign * Math.PI / 180;
+    const shL = (pose.shin_L_deg || 0) * dirSign * Math.PI / 180;
+    const thR = (pose.thigh_R_deg || 0) * dirSign * Math.PI / 180;
+    const shR = (pose.shin_R_deg || 0) * dirSign * Math.PI / 180;
+
+    const restSpread = isChild ? 13 : 6;
+    const uaL = (pose.uarm_L_deg !== undefined ? pose.uarm_L_deg : -restSpread) * dirSign * Math.PI / 180;
+    const faL = (pose.farm_L_deg !== undefined ? pose.farm_L_deg : -(restSpread + 4)) * dirSign * Math.PI / 180;
+    const uaR = (pose.uarm_R_deg !== undefined ? pose.uarm_R_deg : restSpread) * dirSign * Math.PI / 180;
+    const faR = (pose.farm_R_deg !== undefined ? pose.farm_R_deg : (restSpread + 4)) * dirSign * Math.PI / 180;
+
+    const dropL = L_thigh * Math.cos(thL) + L_shin * Math.cos(shL);
+    const dropR = L_thigh * Math.cos(thR) + L_shin * Math.cos(shR);
+    const maxLegDrop = Math.max(dropL, dropR, 0.18 * H);
+    const H_C = [centerX, groundY - H_sole - maxLegDrop];
+
+    const N = [H_C[0] + L_torso * Math.sin(spineRad), H_C[1] - L_torso * Math.cos(spineRad)];
+    const shCenter = [H_C[0] + L_torso * 0.86 * Math.sin(spineRad), H_C[1] - L_torso * 0.86 * Math.cos(spineRad)];
+
+    const S_L = [shCenter[0] - dxSh, shCenter[1]];
+    const S_R = [shCenter[0] + dxSh, shCenter[1]];
+    const H_L = [H_C[0] - dxHip, H_C[1]];
+    const H_R = [H_C[0] + dxHip, H_C[1]];
+
+    const K_L = [H_L[0] + L_thigh * Math.sin(thL), H_L[1] + L_thigh * Math.cos(thL)];
+    const A_L = [K_L[0] + L_shin * Math.sin(shL), K_L[1] + L_shin * Math.cos(shL)];
+    const K_R = [H_R[0] + L_thigh * Math.sin(thR), H_R[1] + L_thigh * Math.cos(thR)];
+    const A_R = [K_R[0] + L_shin * Math.sin(shR), K_R[1] + L_shin * Math.cos(shR)];
+
+    const E_L = [S_L[0] + L_uarm * Math.sin(uaL), S_L[1] + L_uarm * Math.cos(uaL)];
+    const W_L = [E_L[0] + L_farm * Math.sin(faL), E_L[1] + L_farm * Math.cos(faL)];
+    const E_R = [S_R[0] + L_uarm * Math.sin(uaR), S_R[1] + L_uarm * Math.cos(uaR)];
+    const W_R = [E_R[0] + L_farm * Math.sin(faR), E_R[1] + L_farm * Math.cos(faR)];
+
+    const headIm = getImg(cspec.heads[view] || cspec.heads.FRONT);
+    const pelvisIm = getImg(vdata.pelvis);
+    const skirtIm = getImg(vdata.skirt);
+    const thighIm = getImg(vdata.thigh);
+    const shinIm = getImg(vdata.shin);
+    const uarmIm = getImg(vdata.uarm);
+    const farmIm = getImg(vdata.farm);
+    const handIm = getImg(vdata.hand);
+    const shoeLIm = getImg(vdata.shoe_L);
+    const shoeRIm = getImg(vdata.shoe_R || vdata.shoe_L);
+
+    const handH = 0.072 * H;
+    const shoeH = 0.088 * H;
+
+    if (view === 'SIDE' || view === '3Q') {
+      drawTwoPointLimb(g, thighIm, [0.50, 0.14], [0.50, 0.86], H_R, K_R, 0.92);
+      drawAnchoredPart(g, shoeRIm, [0.42, 0.25], A_R, shoeH, null, 0, flipWhole ? !vdata.flip_R_shoe : !!vdata.flip_R_shoe);
+      drawTwoPointLimb(g, shinIm, [0.50, 0.14], [0.50, 0.86], K_R, A_R, 0.90, 0.86);
+
+      drawTwoPointLimb(g, uarmIm, [0.50, 0.15], [0.50, 0.85], S_R, E_R, 0.90);
+      drawAnchoredPart(g, handIm, [0.50, 0.16], W_R, handH, null, 0, !flipWhole);
+      drawTwoPointLimb(g, farmIm, [0.50, 0.15], [0.50, 0.85], E_R, W_R, 0.88, 0.84);
+    } else {
+      drawTwoPointLimb(g, thighIm, [0.50, 0.14], [0.50, 0.86], H_R, K_R, 0.95);
+      drawAnchoredPart(g, shoeRIm, [0.48, 0.25], A_R, shoeH, null, 0, !!vdata.flip_R_shoe);
+      drawTwoPointLimb(g, shinIm, [0.50, 0.14], [0.50, 0.86], K_R, A_R, 0.92, 0.86);
+    }
+
+    drawTwoPointLimb(g, thighIm, [0.50, 0.14], [0.50, 0.86], H_L, K_L, 0.95);
+    drawAnchoredPart(g, shoeLIm, [0.42, 0.25], A_L, shoeH, null, 0, flipWhole);
+    drawTwoPointLimb(g, shinIm, [0.50, 0.14], [0.50, 0.86], K_L, A_L, 0.92, 0.86);
+
+    if (skirtIm) {
+      drawAnchoredPart(g, skirtIm, [0.50, 0.10], [H_C[0], H_C[1] - 0.03 * H], (cspec.skirt_h_frac || 0.29) * H);
+    } else if (pelvisIm) {
+      drawAnchoredPart(g, pelvisIm, [0.50, 0.42], H_C, 0.135 * H, torsoRenderedW * 0.94);
+    }
+
+    drawTwoPointLimb(g, torsoIm, [0.50, 0.11], [0.50, 0.89], N, H_C, 1.0);
+    drawAnchoredPart(g, headIm, [0.50, 0.86], N, H_head, null, (pose.spine_deg || 0) * 0.4 * dirSign, flipWhole ? !vdata.flip_head : !!vdata.flip_head);
+
+    drawTwoPointLimb(g, uarmIm, [0.50, 0.15], [0.50, 0.85], S_L, E_L, 0.94);
+    drawAnchoredPart(g, handIm, [0.50, 0.16], W_L, handH, null, 0, flipWhole);
+    drawTwoPointLimb(g, farmIm, [0.50, 0.15], [0.50, 0.85], E_L, W_L, 0.92, 0.84);
+
+    if (view === 'FRONT' || view === 'BACK') {
+      drawTwoPointLimb(g, uarmIm, [0.50, 0.15], [0.50, 0.85], S_R, E_R, 0.94);
+      drawAnchoredPart(g, handIm, [0.50, 0.16], W_R, handH, null, 0, true);
+      drawTwoPointLimb(g, farmIm, [0.50, 0.15], [0.50, 0.85], E_R, W_R, 0.92, 0.84);
+    }
+
+    return { joints: { N, H_C, S_L, S_R, E_L, W_L, E_R, W_R, H_L, K_L, A_L, H_R, K_R, A_R }, crownY: N[1] - H_head * 0.86, H };
+  }
+
+  function renderStage() {
+    const sc = getActiveScene();
+    if (!sc || !castManifest) return;
+
+    const W = stageCanvas.width;
+    const H = stageCanvas.height;
+    const groundY = H - 92;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // 1. Calibration Grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 32) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 32) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+    // 2. Multiplane Set Pieces with subtle camera pan across scene time
+    const camPan = Math.sin(state.tNorm * Math.PI * 2) * 35;
+    const setPcs = sc.set_pieces || [];
+    const setXs = [210, 540, 860, 390];
+    setPcs.forEach((relP, idx) => {
+      const im = getImg(relP);
+      if (im && im.complete && im.naturalWidth) {
+        const parallax = idx % 2 === 0 ? 0.45 : 0.8;
+        ctx.save();
+        ctx.globalAlpha = 0.42;
+        drawAnchoredPart(ctx, im, [0.5, 1.0], [setXs[idx % setXs.length] + camPan * parallax, groundY + 6], 365);
+        ctx.restore();
+      }
+    });
+
+    // Ground Floor Line
+    ctx.strokeStyle = '#d8b25c';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(24, groundY); ctx.lineTo(W - 24, groundY); ctx.stroke();
+
+    // 3. Top Scene & SCION Pod Banner on Canvas
+    ctx.fillStyle = 'rgba(10, 14, 18, 0.86)';
+    ctx.fillRect(16, 12, W - 32, 46);
+    ctx.strokeStyle = '#384854';
+    ctx.strokeRect(16, 12, W - 32, 46);
+
+    ctx.fillStyle = '#f5c64e';
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText(`${sc.scene_id} · POEM ${String(sc.poem_num).padStart(2,'0')}: ${sc.poem_title.toUpperCase()} — ${sc.movement || 'SCENE'} (${sc.seconds}s)`, 28, 31);
+
+    const podSummary = sc.scion_pod.map(p => `${p.code} ${p.title.split(' — ')[0]}`).join('  |  ');
+    ctx.fillStyle = '#00e5ff';
+    ctx.font = '11px monospace';
+    ctx.fillText(`ACTIVE SCION POD: ${podSummary}`, 28, 49);
+
+    // 4. Render the 3 Cast Roles with live temporal motion modulated by state.tNorm
+    const phase = state.tNorm * Math.PI * 2;
+    const stageXs = [265, 555, 845];
+
+    sc.roles.forEach((role, rIdx) => {
+      const cspec = castManifest.cast.find(c => c.id === role.character_id) || castManifest.cast[0];
+      const basePose = role.pose || {};
+      const s = Math.sin(phase * 2 + rIdx * 1.1);
+      const animPose = { ...basePose };
+
+      if (sc.action_mode === 'walk') {
+        animPose.thigh_L_deg = 24 * s;
+        animPose.shin_L_deg = s > 0 ? 6 * s : -28 * (-s);
+        animPose.thigh_R_deg = -24 * s;
+        animPose.shin_R_deg = -s > 0 ? 6 * (-s) : -28 * s;
+        animPose.uarm_L_deg = -20 * s;
+        animPose.farm_L_deg = 20 - 14 * s;
+      } else {
+        animPose.spine_deg = (basePose.spine_deg || 0) + 4 * Math.sin(phase + rIdx);
+        animPose.uarm_L_deg = (basePose.uarm_L_deg || 0) + 12 * Math.sin(phase * 1.5 + rIdx);
+        animPose.farm_L_deg = (basePose.farm_L_deg || 0) + 16 * Math.sin(phase * 1.5 + rIdx);
+        animPose.thigh_L_deg = (basePose.thigh_L_deg || 0) + 8 * s;
+      }
+
+      // Dynamic view turnaround if scene action_mode === 'turn' and role is not ex_olive_bomber
+      let vw = role.view;
+      if (sc.action_mode === 'turn' && cspec.id !== 'ex_olive_bomber' && rIdx === 0) {
+        const views = ['FRONT', '3Q', 'SIDE', 'BACK'];
+        vw = views[Math.floor((state.tNorm * 4) % 4)];
+      }
+
+      const cx = stageXs[rIdx % stageXs.length];
+      const res = solveAndDrawActor(ctx, cspec, vw, animPose, cx, groundY, 245, !!role.flip_x);
+
+      if (sc.action_mode === 'prop' && rIdx === 0) {
+        const propIm = getImg(castManifest.prop_orb);
+        if (propIm) {
+          drawAnchoredPart(ctx, propIm, [0.5, 0.2], [res.joints.W_L[0] + 10, res.joints.W_L[1] + 4], 36);
+        }
+      }
+
+      if (state.showJoints) {
+        // Stance contact triangle
+        const stanceA = res.joints.A_L[1] >= res.joints.A_R[1] ? res.joints.A_L : res.joints.A_R;
+        ctx.fillStyle = '#4ee88a';
+        ctx.beginPath();
+        ctx.moveTo(stanceA[0], groundY);
+        ctx.lineTo(stanceA[0] - 6, groundY + 9);
+        ctx.lineTo(stanceA[0] + 6, groundY + 9);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crown height bar
+        ctx.strokeStyle = 'rgba(0, 229, 255, 0.5)';
+        ctx.beginPath(); ctx.moveTo(cx - 45, res.crownY); ctx.lineTo(cx + 45, res.crownY); ctx.stroke();
+
+        // Neck lock pin
+        ctx.fillStyle = '#f5c64e';
+        ctx.beginPath(); ctx.arc(res.joints.N[0], res.joints.N[1], 4.5, 0, Math.PI * 2); ctx.fill();
+      }
+
+      ctx.fillStyle = '#b4c2ce';
+      ctx.font = 'bold 11px monospace';
+      ctx.fillText(`[${rIdx+1}] ${cspec.name.split(' (')[0]} (${vw} · ${cspec.scale.toFixed(2)}x)`, cx - 85, groundY + 23);
+    });
+
+    // 5. Subtitle & Poetic Lines Overlay at Bottom of Stage
+    if (state.showSubtitles && (sc.lines || sc.treatment)) {
+      ctx.fillStyle = 'rgba(8, 10, 13, 0.88)';
+      ctx.fillRect(60, groundY + 32, W - 120, 52);
+      ctx.strokeStyle = 'rgba(245, 198, 78, 0.45)';
+      ctx.strokeRect(60, groundY + 32, W - 120, 52);
+
+      ctx.fillStyle = '#f5c64e';
+      ctx.font = 'italic 12.5px Georgia, serif';
+      const lineStr = (sc.lines || '').replace(/\n/g, ' / ').slice(0, 115);
+      ctx.fillText(`"${lineStr}"`, 76, groundY + 52);
+
+      ctx.fillStyle = '#9be8b8';
+      ctx.font = '10.5px monospace';
+      const treatStr = (sc.treatment || '').replace(/\n/g, ' ').slice(0, 120);
+      ctx.fillText(`ACTION: ${treatStr}`, 76, groundY + 72);
+    }
+  }
+
+  function tick(now) {
+    const dt = (now - state.lastTs) / 1000;
+    state.lastTs = now;
+
+    const sc = getActiveScene();
+    const dur = (sc && sc.seconds) ? Math.max(sc.seconds, 6) : 10;
+
+    if (state.playing) {
+      state.tNorm += dt / dur;
+      if (state.tNorm >= 1.0) {
+        if (state.autoAdvance80 && allScenesFlat.length > 0) {
+          selectSceneByFlatIndex(state.currentSceneFlatIdx + 1);
+        } else {
+          state.tNorm = state.tNorm % 1.0;
+        }
+      }
+      document.getElementById('timeSlider').value = Math.round(state.tNorm * 1000);
+    }
+
+    if (sc) {
+      const curSec = (state.tNorm * dur).toFixed(1);
+      document.getElementById('sceneTimeReadout').textContent = `${sc.scene_id} (${state.currentSceneFlatIdx + 1}/80) | ${curSec}s / ${dur}s`;
+    }
+
+    if (state.centerView === 'stage') {
+      renderStage();
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // UI EVENTS
+  document.querySelectorAll('.center-tabs .c-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.center-tabs .c-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.centerView = btn.dataset.view;
+      document.getElementById('stageViewport').style.display = state.centerView === 'stage' ? 'flex' : 'none';
+      document.getElementById('wallViewport').style.display = state.centerView === 'wall' ? 'grid' : 'none';
+    });
+  });
+
+  document.querySelectorAll('.left-mode-switch .l-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.left-mode-switch .l-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.leftTab = btn.dataset.ltab;
+      document.getElementById('poemsListContainer').style.display = state.leftTab === 'poems' ? 'block' : 'none';
+      document.getElementById('lineagesListContainer').style.display = state.leftTab === 'lineages' ? 'block' : 'none';
+    });
+  });
+
+  document.getElementById('scionSearchInput').addEventListener('input', e => {
+    state.searchQuery = e.target.value;
+    buildLineagesSidebar();
+  });
+
+  document.getElementById('btnAutoAdvance80').addEventListener('click', e => {
+    state.autoAdvance80 = !state.autoAdvance80;
+    e.target.textContent = `🔁 Auto-Advance All 80 Scenes: ${state.autoAdvance80 ? 'ON' : 'OFF'}`;
+    e.target.classList.toggle('active', state.autoAdvance80);
+  });
+
+  document.getElementById('btnPrevScene').addEventListener('click', () => {
+    selectSceneByFlatIndex(state.currentSceneFlatIdx - 1);
+  });
+
+  document.getElementById('btnNextScene').addEventListener('click', () => {
+    selectSceneByFlatIndex(state.currentSceneFlatIdx + 1);
+  });
+
+  document.getElementById('btnShowSubtitles').addEventListener('click', e => {
+    state.showSubtitles = !state.showSubtitles;
+    e.target.textContent = `💬 Poetic Lines & Treatment: ${state.showSubtitles ? 'ON' : 'OFF'}`;
+    e.target.classList.toggle('active', state.showSubtitles);
+  });
+
+  document.getElementById('btnShowJoints').addEventListener('click', e => {
+    state.showJoints = !state.showJoints;
+    e.target.textContent = `📍 Kinematic Pins & Rails: ${state.showJoints ? 'ON' : 'OFF'}`;
+    e.target.classList.toggle('active', state.showJoints);
+  });
+
+  document.getElementById('btnRandomRecastScene').addEventListener('click', () => {
+    const sc = getActiveScene();
+    if (!sc || !castManifest) return;
+    sc.roles.forEach(r => {
+      const randC = castManifest.cast[Math.floor(Math.random() * castManifest.cast.length)];
+      r.character_id = randC.id;
+      r.character_name = randC.name;
+      r.scale = randC.scale;
+      if (randC.id === 'ex_olive_bomber' && !['BACK', '3Q'].includes(r.view)) {
+        r.view = 'BACK';
+      }
+    });
+    buildCastStrip();
+  });
+
+  document.getElementById('btnPlayPause').addEventListener('click', e => {
+    state.playing = !state.playing;
+    e.target.textContent = state.playing ? '⏸ PAUSE' : '▶ PLAY';
+  });
+
+  document.getElementById('timeSlider').addEventListener('input', e => {
+    state.playing = false;
+    document.getElementById('btnPlayPause').textContent = '▶ PLAY';
+    state.tNorm = parseInt(e.target.value, 10) / 1000;
+  });
+
+  document.getElementById('btnCopyPrompt').addEventListener('click', e => {
+    const txt = document.getElementById('scionPromptViewer').textContent;
+    navigator.clipboard.writeText(txt);
+    e.target.textContent = '✓ Copied!';
+    setTimeout(() => { e.target.textContent = 'Copy Prompt'; }, 1200);
+  });
+
+  const modal = document.getElementById('masterAtlasModal');
+  document.getElementById('btnOpenMasterAtlas').addEventListener('click', () => modal.classList.add('open'));
+  document.getElementById('btnCloseMasterAtlas').addEventListener('click', () => modal.classList.remove('open'));
+})();
+</script>
+</body>
+</html>

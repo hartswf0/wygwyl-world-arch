@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WYGWYL · The Cut-Out Suite — Fourteen Halfworlds, One Clock</title>
+<link rel="icon" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3f2ed;
+    --paper2: #e7e5dd;
+    --ink: #121212;
+    --ink2: #3a3a38;
+    --dim: #66645e;
+    --rule: #121212;
+    --soft: #dcdad0;
+    --red: #d91b1b;
+    --blue: #0044cc;
+    --gold: #c78d32;
+    --teal: #0f766e;
+    --obs: #7fd3c4;
+    --inv: #e7a35a;
+    --drw: #b9c46a;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --marker: 'Permanent Marker', cursive;
+  }
+  * { box-sizing: border-box; border-radius: 0 !important; margin: 0; padding: 0; }
+  html, body {
+    min-height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font: 12px/1.45 var(--mono);
+    letter-spacing: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  button, a { font: inherit; color: inherit; text-decoration: none; }
+  button, .btn {
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    padding: 5px 9px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 10.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  button:hover, .btn:hover, button.on, .btn.on {
+    background: var(--ink);
+    color: var(--paper);
+    outline: 0;
+  }
+  button.red, .btn.red { border-color: var(--red); color: var(--red); }
+  button.red:hover, .btn.red:hover, button.red.on, .btn.red.on { background: var(--red); color: #fff; }
+  button.blue, .btn.blue { border-color: var(--blue); color: var(--blue); }
+  button.blue:hover, .btn.blue:hover, button.blue.on, .btn.blue.on { background: var(--blue); color: #fff; }
+
+  /* ── Top Transport & Suite Navigation Header ── */
+  header {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    border-bottom: 2px solid var(--rule);
+    background: var(--paper);
+    padding: 7px 12px;
+  }
+  .brand { font-weight: 900; letter-spacing: .12em; white-space: nowrap; font-size: 13px; display: flex; align-items: center; gap: 7px; }
+  .dot { display: inline-block; width: 8px; height: 8px; background: var(--red); }
+  #play { width: 34px; height: 28px; display: grid; place-items: center; font-size: 14px; padding: 0; }
+  #title { font-weight: 800; letter-spacing: .06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; }
+  .tagline { color: var(--dim); font-size: 10.5px; letter-spacing: .08em; }
+  .sp { flex: 1; }
+  .time { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 800; font-size: 12.5px; padding: 3px 8px; background: var(--paper2); border: 1px solid var(--rule); }
+  .state { font-size: 10px; color: var(--dim); white-space: nowrap; }
+
+  /* ── Main Two-Column Suite Layout ── */
+  main {
+    display: grid;
+    grid-template-columns: minmax(0, 1.32fr) minmax(360px, 0.68fr);
+    min-height: calc(100svh - 46px);
+  }
+  #stageCol {
+    border-right: 2px solid var(--rule);
+    padding: 10px 12px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  #stageWrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 2px solid var(--rule);
+    background: #101216;
+    overflow: hidden;
+  }
+  #film {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  #hudOverlay {
+    position: absolute; left: 10px; top: 10px; right: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    pointer-events: none;
+  }
+  .hudBadge {
+    background: rgba(18, 18, 18, 0.86);
+    color: #f3f2ed;
+    border: 1px solid rgba(255,255,255,0.28);
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+  }
+  .hudBadge b { color: #ff8e72; }
+
+  /* ── Layer & Look Mode Bar Under Canvas ── */
+  .underBar {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .layerToggles { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .ltg {
+    font-size: 9.5px; padding: 3px 7px; border: 1px solid var(--rule); background: var(--paper2); cursor: pointer; font-weight: 700;
+  }
+  .ltg.on { background: var(--ink); color: var(--paper); }
+  .ltg.red.on { background: var(--red); border-color: var(--red); color: #fff; }
+
+  /* ── Master 24-Minute Suite Timeline Strip (#timeline) ── */
+  #timelineWrap { display: flex; flex-direction: column; gap: 3px; }
+  .tlLabel { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--dim); letter-spacing: .1em; text-transform: uppercase; }
+  #timeline {
+    position: relative;
+    height: 36px;
+    border: 1.5px solid var(--rule);
+    overflow: hidden;
+    cursor: crosshair;
+    background: #fff;
+  }
+  .fseg {
+    position: absolute; top: 0; bottom: 0;
+    border-right: 1px solid rgba(0,0,0,0.25);
+    font-size: 8.5px; font-weight: 800; color: var(--dim);
+    padding: 2px 3px; overflow: hidden; white-space: nowrap;
+  }
+  .fseg.on { background: rgba(217, 27, 27, 0.10); color: var(--red); }
+  .poemSeg { position: absolute; top: 16px; height: 9px; background: var(--ink); opacity: 0.85; }
+  .sceneSeg { position: absolute; top: 27px; height: 6px; background: var(--blue); opacity: 0.78; border-right: 1px solid #fff; }
+  #head { position: absolute; top: 0; bottom: 0; width: 2.5px; background: var(--red); z-index: 5; pointer-events: none; }
+
+  /* ── Weave-Style Scene Shot & Word Ribbon (#ribbon) + Vitality Graph (#graph) ── */
+  #ribbon {
+    position: relative;
+    height: 38px;
+    border: 1px solid var(--rule);
+    background: var(--paper2);
+    overflow: hidden;
+    cursor: pointer;
+  }
+  #ribbon .st {
+    position: absolute; top: 0; bottom: 0;
+    border-right: 1px solid rgba(0,0,0,0.35);
+    padding: 3px 5px;
+    font-size: 9.5px; font-weight: 700;
+    overflow: hidden; white-space: nowrap;
+  }
+  #ribbon .ph {
+    position: absolute; top: 0; bottom: 0; width: 2px;
+    background: var(--red); z-index: 4; pointer-events: none;
+  }
+  #graph {
+    width: 100%; height: 48px;
+    border: 1px solid var(--rule);
+    background: #151412;
+    display: block;
+  }
+
+  /* ── 14-Film Chapter Strip + Scene Selector Grid ── */
+  #chapters {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    border-top: 1.5px solid var(--rule);
+    border-left: 1.5px solid var(--rule);
+  }
+  .chapter {
+    display: grid;
+    grid-template-columns: 2.6ch minmax(0, 1fr);
+    gap: 4px;
+    text-align: left;
+    border: 0;
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+  .chapter b { color: var(--red); }
+  .chapter span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink2); font-weight: 600; }
+  .chapter.on { background: var(--ink); color: var(--paper); }
+  .chapter.on b { color: #ff8e72; }
+  .chapter.on span { color: var(--paper); }
+
+  #scenePills {
+    display: flex; gap: 5px; overflow-x: auto; padding: 4px 0;
+  }
+  .spill {
+    flex: 0 0 auto;
+    border: 1px solid var(--rule);
+    background: #fff;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 10px;
+  }
+  .spill b { color: var(--blue); margin-right: 5px; }
+  .spill.on { background: var(--red); border-color: var(--red); color: #fff; }
+  .spill.on b { color: #fff; }
+
+  /* ── Right Context & Cut-Out Solver Inspector (#context) ── */
+  #context {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100svh - 46px);
+    overflow-y: auto;
+  }
+  .panel {
+    border-bottom: 1px solid var(--rule);
+    padding: 9px 12px;
+  }
+  .panel h2 {
+    font-size: 10px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 3px;
+    margin-bottom: 7px;
+    color: var(--dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #voice {
+    font-size: 15.5px;
+    line-height: 1.3;
+    font-weight: 800;
+    color: var(--ink);
+  }
+  #screenText {
+    margin-top: 5px;
+    color: var(--red);
+    font-weight: 700;
+    font-size: 11px;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: 11ch minmax(0, 1fr);
+    gap: 3px 8px;
+    font-size: 11px;
+  }
+  dt { color: var(--dim); font-weight: 700; }
+  dd { margin: 0; overflow-wrap: anywhere; font-weight: 600; }
+
+  .kitStrip {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+    gap: 5px;
+  }
+  .kcell {
+    border: 1px solid var(--rule);
+    background: #fff;
+    padding: 3px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: center;
+  }
+  .kcell:hover { border-color: var(--red); background: #fff8f6; }
+  .kcell img {
+    width: 100%; height: 48px; object-fit: contain;
+    background: repeating-conic-gradient(#eeede8 0% 25%, #e2e0d8 0% 50%) 50% / 10px 10px;
+  }
+  .kcell span { font-size: 8.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+
+  .ledgerRow {
+    display: grid;
+    grid-template-columns: 82px 1fr;
+    gap: 6px;
+    padding: 4px 0;
+    border-bottom: 1px dashed rgba(0,0,0,0.2);
+    font-size: 10.5px;
+  }
+  .ltag {
+    font-size: 8.5px; font-weight: 800; padding: 2px 5px; text-align: center; align-self: start;
+    border: 1px solid var(--rule);
+  }
+  .ltag.obs { background: var(--obs); }
+  .ltag.inv { background: var(--inv); }
+  .ltag.drw { background: var(--drw); }
+
+  #poemLines { max-height: 22svh; overflow: auto; display: flex; flex-direction: column; gap: 2px; }
+  .line { padding: 4px 6px; color: var(--ink2); cursor: pointer; border-left: 2px solid transparent; font-size: 11px; }
+  .line b { display: block; color: var(--blue); font-size: 9.5px; }
+  .line.now { background: var(--ink); color: var(--paper); border-left-color: var(--red); }
+  .line.now b { color: #ff8e72; }
+
+  #code {
+    max-height: 18svh; overflow: auto; white-space: pre; font-size: 10px; line-height: 1.35;
+    background: #141413; color: #dcdad0; padding: 7px; border: 1px solid var(--rule);
+  }
+  .actions { display: flex; gap: 5px; flex-wrap: wrap; }
+
+  /* ── Cinema Mode ── */
+  body.cinema header, body.cinema #context, body.cinema .underBar, body.cinema #timelineWrap, body.cinema #ribbon, body.cinema #graph, body.cinema #chapters, body.cinema #scenePills {
+    display: none !important;
+  }
+  body.cinema main { display: block; background: #000; min-height: 100svh; }
+  body.cinema #stageCol { border: 0; padding: 0; min-height: 100svh; display: grid; place-items: center; }
+  body.cinema #stageWrap { border: 0; width: min(100vw, calc(100svh * 16 / 9)); }
+
+  @media (max-width: 960px) {
+    main { grid-template-columns: 1fr; }
+    #stageCol { border-right: 0; border-bottom: 2px solid var(--rule); }
+    #context { max-height: none; }
+    #chapters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="dot"></span>WYGWYL SUITE</div>
+  <button id="play" type="button" title="Play / Pause Suite (Space)">▶</button>
+  <button id="prevBtn" type="button" title="Previous Scene (←)">◀◀</button>
+  <button id="nextBtn" type="button" title="Next Scene (→)">▶▶</button>
+  <button id="sndBtn" type="button" class="red" title="Toggle 24-Minute Suite Soundtrack (M)">🔇 AUDIO OFF</button>
+  <div id="title">01 · OUT OF LIFE</div>
+  <span class="tagline">fourteen halfworlds · 80 cut-out scenes · 165 archive shots · one clock</span>
+  <span class="sp"></span>
+  <div class="time"><span id="clock">00:00.0</span> / <span id="dur">24:00.1</span></div>
+  <a class="btn red" href="assembly.html" title="Open 'Some Assembly Required' Prop Rigs, Portals, Water Worlds &amp; Action Toybox">ASSEMBLY ↗</a>
+  <a class="btn blue" id="openStageTop" href="stage.html">STAGE ↗</a>
+  <a class="btn" id="openCardsTop" href="cards.html">CARDS (6,265) ↗</a>
+  <a class="btn" href="body_lab.html">BODY LAB ↗</a>
+  <a class="btn" href="weave.html">WEAVE ↗</a>
+  <a class="btn" href="world.html">WORLD ↗</a>
+  <button id="cinemaBtn" type="button" title="Fullscreen Cinema Mode (F)">CINEMA</button>
+</header>
+
+<main>
+  <section id="stageCol">
+    <div id="stageWrap">
+      <canvas id="film" width="1600" height="900"></canvas>
+      <div id="hudOverlay">
+        <div class="hudBadge" id="hudLeft">P01-S01 · <b>01.1 THE SEARCH</b></div>
+        <div class="hudBadge" id="hudRight">SHOT <b>P01-001</b> · F<span id="frameNo">1</span></div>
+      </div>
+    </div>
+
+    <div class="underBar">
+      <div class="layerToggles">
+        <span style="font-size:9.5px;font-weight:800;color:var(--dim);margin-right:4px">COLLAGE LAYERS:</span>
+        <span class="ltg on" data-layer="world" title="P6 World / Poster Backdrop Plate">P6 WORLD PLATE</span>
+        <span class="ltg on" data-layer="archive" title="P5 Found-Footage / Prelinger Archive Quad-Warp & Sky Wipe">P5 ARCHIVE IN-WORLD</span>
+        <span class="ltg on" data-layer="arch" title="P4 Segmented Architectural Cut-Outs">P4 ARCHITECTURE</span>
+        <span class="ltg on" data-layer="props" title="P3 Scale-Calibrated Props & Supporting Cast">P3 PROPS &amp; CAST</span>
+        <span class="ltg on" data-layer="poet" title="P2 Hero Poet Cut-Out & 31-Part Brass-Pivot Rig">P2 HERO POET</span>
+        <span class="ltg on" data-layer="cel" title="Scion Keyframe Cel & Grease-Pencil Contour">SCION CEL</span>
+        <span class="ltg on" data-layer="fx" title="P1/P0 Painted FX, Torn Wipe & 16mm Grain">P1 FX &amp; GRAIN</span>
+      </div>
+      <div class="layerToggles">
+        <span class="ltg red on" id="toggleRigMode" title="Toggle Poet between 31-Part Brass-Pivot Articulated Rig and Poem Pose Cutout">POET: 31-PART RIG + POSE</span>
+        <span class="ltg on" id="togglePivots" title="Show Brass Pivot Sockets & Foot Contact Pins">⊕ PIVOTS &amp; PINS</span>
+      </div>
+    </div>
+
+    <div id="timelineWrap">
+      <div class="tlLabel">
+        <span>MASTER SUITE CLOCK (14 POEMS · 80 SCENES · 165 ARCHIVE SHOTS)</span>
+        <span id="state">READY</span>
+      </div>
+      <div id="timeline" title="Click or drag to scrub anywhere in the 24-minute suite">
+        <div id="head"></div>
+      </div>
+    </div>
+
+    <div id="ribbon" title="Active Poem Scene & Shot Ribbon — Click to seek"></div>
+    <canvas id="graph" width="1200" height="96" title="Kinematic Velocity & Scion Vitality Curve across active shot"></canvas>
+
+    <div id="scenePills"></div>
+    <div id="chapters"></div>
+  </section>
+
+  <aside id="context">
+    <div class="panel">
+      <h2><span>NOW SPEAKING · THE VERSE</span><span id="mWindow">00:00–02:03</span></h2>
+      <div id="voice">Loading suite…</div>
+      <div id="screenText">The whole cut-out suite plays from one clock.</div>
+    </div>
+
+    <div class="panel">
+      <h2><span>SCENE &amp; ARCHIVE REGISTRATION</span><span id="mShotId">P01-001</span></h2>
+      <dl>
+        <dt>Poem / Film</dt><dd id="mFilm">—</dd>
+        <dt>Scene</dt><dd id="mScene">—</dd>
+        <dt>Archive Plate</dt><dd id="mArchive">—</dd>
+        <dt>Camera / Set</dt><dd id="mCamera">—</dd>
+        <dt>Cast &amp; Props</dt><dd id="mCast">—</dd>
+      </dl>
+    </div>
+
+    <div class="panel">
+      <h2><span>ACTIVE CUT-OUT PIECES ON STAGE</span><span id="mPieceCount">0 PIECES</span></h2>
+      <div class="kitStrip" id="activePiecesGrid"></div>
+    </div>
+
+    <div class="panel">
+      <h2><span>EPISTEMIC LEDGER (ARCHIVE + CEL + CUT-OUT)</span><span>WEAVE LAW</span></h2>
+      <div id="ledgerBox">
+        <div class="ledgerRow"><span class="ltag obs">OBSERVED</span><span id="ledObs">Prelinger archive plate &amp; recorded poem voice window</span></div>
+        <div class="ledgerRow"><span class="ltag drw">DRAWN</span><span id="ledDrw">Hand-painted cardboard cut-out kit pieces &amp; brass pivot sockets</span></div>
+        <div class="ledgerRow"><span class="ltag inv">INVENTED</span><span id="ledInv">Multiplane depth staging (P6–P0) &amp; x-sheet foot-contact trajectory</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span>WORKBENCH SOLVERS</span><span>JUMP WITH SCENE CONTEXT</span></h2>
+      <div class="actions">
+        <a class="btn red" id="btnEditStage" href="stage.html">EDIT SCENE IN STAGE ↗</a>
+        <a class="btn blue" id="btnOpenCards" href="cards.html">SCENE IN CARD ATLAS ↗</a>
+        <a class="btn" id="btnBodyLab" href="body_lab.html">BODY LAB (HANDS/SHOES/HEADS) ↗</a>
+        <a class="btn" id="btnArenaActors" href="arena_actors.html">ACTING ARENA ↗</a>
+        <a class="btn" id="btnPoemKit" href="poems/kits/01.html">POEM KIT PAGE ↗</a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span>SCENES &amp; SHOTS IN THIS POEM</span><span id="mPoemShotsCount">—</span></h2>
+      <div id="poemLines"></div>
+    </div>
+
+    <div class="panel">
+      <h2><span>LIVE DISPLAY LIST (PYTHON/CANVAS OPS)</span><span id="mCmdCount">—</span></h2>
+      <div id="code">-</div>
+    </div>
+  </aside>
+</main>
+
+<audio id="audio" preload="metadata"></audio>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+const cv = $("film"), ctx = cv.getContext("2d");
+const gcv = $("graph"), gctx = gcv.getContext("2d");
+const audio = $("audio");
+
+let ATLAS = null;          // wygwyl_atlas_manifest.json
+let TIMELINE = null;       // suite_scion_timeline.json
+let COLLAGE_PLANS = null;  // scene_collage_plans.json (optional upgrade from Subagent 2)
+let CHAR_RIGS = null;      // character_rigs_library.json (optional upgrade from Subagent 1)
+
+const sceneById = new Map();
+const assetById = new Map();
+const tracksuitMap = new Map();
+const partMetaByFile = new Map();
+const collageBySceneId = new Map();
+
+let t = 29.8;              // Start right at Poem 01 opening verse ("What we've made...")
+let playing = false;
+let soundOn = false;
+let lastNow = performance.now();
+
+const layersOn = {
+  world: true,
+  archive: true,
+  arch: true,
+  props: true,
+  poet: true,
+  cel: true,
+  fx: true,
+};
+let useArticulatedPoet = true;
+let showPivots = true;
+
+/* ── Image Loader with Offscreen Sheet-Crop-and-Key Fallback ── */
+const imgCache = new Map();
+
+function cropAndKeyPartFromSheet(sheetImg, bbox) {
+  const [bx, by, bw, bh] = bbox;
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, bw);
+  c.height = Math.max(1, bh);
+  const cx = c.getContext("2d");
+  cx.drawImage(sheetImg, bx, by, bw, bh, 0, 0, bw, bh);
+  try {
+    const id = cx.getImageData(0, 0, bw, bh);
+    const d = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i], g = d[i + 1], b = d[i + 2];
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+      if (mx >= 236 && (mx - mn) <= 18) {
+        d[i + 3] = mx >= 244 ? 0 : Math.round(((244 - mx) / 8) * 255);
+      }
+    }
+    cx.putImageData(id, 0, 0);
+  } catch (_) {}
+  return c;
+}
+
+function loadImg(src, retries = 1) {
+  if (!src) return Promise.resolve(null);
+  const cleanSrc = src.replace(/^\.\//, "");
+  const full = src.startsWith("http") || src.startsWith("/") || src.startsWith("../") ? src : "./" + cleanSrc;
+  if (imgCache.has(full)) return imgCache.get(full);
+  const p = new Promise(resolve => {
+    const attempt = (left) => {
+      const im = new Image();
+      im.crossOrigin = "anonymous";
+      im.onload = () => resolve(im);
+      im.onerror = async () => {
+        if (left > 0) {
+          setTimeout(() => attempt(left - 1), 80);
+          return;
+        }
+        const meta = partMetaByFile.get(cleanSrc) || partMetaByFile.get(src);
+        if (meta && meta.sheet && meta.bbox) {
+          const shIm = await loadImg(meta.sheet, 2);
+          if (shIm) {
+            resolve(cropAndKeyPartFromSheet(shIm, meta.bbox));
+            return;
+          }
+        }
+        imgCache.delete(full);
+        resolve(null);
+      };
+      im.src = full;
+    };
+    attempt(retries);
+  });
+  imgCache.set(full, p);
+  return p;
+}
+
+window.addEventListener("error", async e => {
+  const tg = e.target;
+  if (!tg || tg.tagName !== "IMG" || tg.dataset.fallbackTried) return;
+  const rel = (tg.getAttribute("src") || "").replace(/^(\.\/|\.\.\/)/, "");
+  const meta = partMetaByFile.get(rel);
+  if (meta && meta.sheet && meta.bbox) {
+    tg.dataset.fallbackTried = "1";
+    const shIm = await loadImg(meta.sheet, 2);
+    if (shIm) {
+      const c = cropAndKeyPartFromSheet(shIm, meta.bbox);
+      tg.src = c.toDataURL("image/png");
+    }
+  }
+}, true);
+
+function fmt(sec) {
+  sec = Math.max(0, sec || 0);
+  const m = Math.floor(sec / 60);
+  const s = sec - m * 60;
+  return String(m).padStart(2, "0") + ":" + (s < 10 ? "0" : "") + s.toFixed(1);
+}
+
+/* ── Locate Active Film, Scene, and Scion/Archive Shot at Master Clock t ── */
+function locateAtTime(sec) {
+  const films = TIMELINE.films;
+  let fIdx = films.length - 1;
+  while (fIdx > 0 && sec < films[fIdx].container[0] - 0.001) fIdx--;
+  const film = films[fIdx];
+  const book = fIdx + 1;
+
+  // Locate Scion shot
+  const poemShots = TIMELINE.shots.filter(sh => sh.poem === book);
+  let scionShot = poemShots[0] || TIMELINE.shots[0];
+  for (const sh of poemShots) {
+    if (sec >= sh.t0 - 0.05 && sec <= sh.t1 + 0.05) {
+      scionShot = sh;
+      break;
+    }
+    if (sec >= sh.t0) scionShot = sh;
+  }
+
+  // Locate Scene in ATLAS.scenes for this book
+  const bookScenes = ATLAS.scenes.filter(s => s.book === book);
+  const [c0, c1] = film.container;
+  const uFilm = Math.max(0, Math.min(0.9999, (sec - c0) / Math.max(1, c1 - c0)));
+
+  // Calculate cumulative duration weights for bookScenes
+  const totalScSec = bookScenes.reduce((acc, s) => acc + (s.seconds || 12), 0) || 1;
+  let accum = 0;
+  let activeScene = bookScenes[0];
+  let sceneU = 0;
+  for (const sc of bookScenes) {
+    const w = (sc.seconds || 12) / totalScSec;
+    if (uFilm <= accum + w + 1e-5) {
+      activeScene = sc;
+      sceneU = Math.max(0, Math.min(1, (uFilm - accum) / Math.max(1e-5, w)));
+      break;
+    }
+    accum += w;
+  }
+
+  return { fIdx, film, book, activeScene, sceneU, scionShot, poemShots, bookScenes };
+}
+
+/* ── 31-Part Brass-Pivot Articulated Poet Renderer (Synced to Scion Trajectory & Action) ── */
+const REL_SCALE = {
+  "01_torso_front": 1.00,
+  "04_hip_bridge": 0.62,
+  "06_pelvis_front_cover": 0.66,
+  "07_upper_arm_L": 0.48,
+  "08_forearm_L": 0.44,
+  "15_hand_relaxed_L": 0.23,
+  "09_upper_arm_R": 0.48,
+  "10_forearm_R": 0.44,
+  "16_hand_relaxed_R": 0.23,
+  "11_thigh_L": 0.62,
+  "12_shin_L": 0.58,
+  "19_boot_front_L": 0.29,
+  "13_thigh_R": 0.62,
+  "14_shin_R": 0.58,
+  "20_boot_front_R": 0.29,
+  "21_head_front_blank": 0.66,
+  "22_eyes_open": 0.20,
+  "23_eyes_closed": 0.20,
+  "24_brows_rest": 0.21,
+  "25_brows_raised": 0.21,
+  "26_nose_front": 0.14,
+  "27_mouth_rest": 0.23,
+  "28_mouth_smile": 0.23,
+  "29_mouth_open_O": 0.23,
+  "30_mouth_open_A": 0.23,
+  "31_sunglasses_front": 0.26,
+};
+
+function toWorld(originX, originY, anchorPx, anchorPy, lx, ly, sc, angleDeg, syMult = 1.0, sxMult = 1.0) {
+  const dx = (lx - anchorPx) * sc * sxMult;
+  const dy = (ly - anchorPy) * sc * syMult;
+  const r = (angleDeg * Math.PI) / 180;
+  return {
+    x: originX + dx * Math.cos(r) - dy * Math.sin(r),
+    y: originY + dx * Math.sin(r) + dy * Math.cos(r)
+  };
+}
+
+async function preloadTracksuitRig() {
+  const ids = Object.keys(REL_SCALE);
+  for (let i = 0; i < ids.length; i += 4) {
+    const batch = ids.slice(i, i + 4);
+    await Promise.all(batch.map(async id => {
+      const tc = tracksuitMap.get(id);
+      if (tc && !tc._im) tc._im = await loadImg(tc.file);
+    }));
+  }
+}
+
+function drawTracksuitPoetSync(c, cx, footY, targetHeight, sec, book, actionText = "") {
+  const S = targetHeight / 3350;
+  const act = (actionText || "").toLowerCase();
+  const isWalk = /walk|step|run|cross|pace|enter|exit|follow|climb/.test(act);
+  const isRead = /read|page|book|letter|look/.test(act);
+  const isReach = /reach|point|raise|open|touch|hold/.test(act);
+  const isFall = /fall|drop|plunge|sink/.test(act);
+
+  const swing = isWalk ? Math.sin(sec * 5.2) * 22 : Math.sin(sec * 1.8) * 3;
+  const breath = Math.sin(sec * 2.4) * 3;
+
+  const torsoA = isFall ? 28 + Math.sin(sec * 3) * 8 : (isWalk ? 5 : 0);
+  const headA = isRead ? 12 : Math.sin(sec * 1.3) * 4;
+  const uarmLA = isRead ? 26 : (isReach ? -58 : -8 + swing * 0.8);
+  const farmLA = isRead ? 48 : (isReach ? -20 : 8 + Math.max(0, swing * 0.5));
+  const uarmRA = isRead ? -26 : (isReach ? 34 : 8 - swing * 0.8);
+  const farmRA = isRead ? -48 : (isReach ? 16 : -8 - Math.max(0, -swing * 0.5));
+  const thighLA = swing;
+  const shinLA = Math.max(0, -swing * 0.6);
+  const thighRA = -swing;
+  const shinRA = Math.max(0, swing * 0.6);
+
+  // 2.5D Fake-3D yaw & foreshortening parameters
+  const yawDeg = isWalk ? 16 : (isReach ? 18 : Math.sin(sec * 0.9) * 14);
+  const yawRad = (yawDeg * Math.PI) / 180;
+  const bodyScaleX = Math.max(0.85, Math.cos(yawRad * 0.55));
+  const limbForeshortenY = isReach ? 0.82 : (isRead ? 0.86 : 1.0);
+  const handPerspectiveBoost = isReach ? 1.14 : 1.0;
+
+  // Mouth phoneme animation when speaking verse
+  const mouths = ["27_mouth_rest", "29_mouth_open_O", "30_mouth_open_A", "28_mouth_smile"];
+  const mouthId = mouths[Math.floor(sec * 6.5) % mouths.length];
+  const eyesId = (Math.floor(sec * 2.5) % 11 === 0) ? "23_eyes_closed" : "22_eyes_open";
+  const browsId = isReach || isFall ? "25_brows_raised" : "24_brows_rest";
+  const wearGlasses = book >= 4;
+
+  function drawPinnedSync(compId, wx, wy, px, py, angleDeg, opts = {}) {
+    const comp = tracksuitMap.get(compId);
+    if (!comp) return;
+    const im = comp._im;
+    if (!im) return;
+    const sc = S * (REL_SCALE[compId] || 0.5) * (opts.scaleMult || 1.0);
+    const sxM = opts.sxMult || 1.0;
+    const syM = opts.syMult || 1.0;
+    const clipY0 = opts.clipY0 || 0;
+    const clipY1 = opts.clipY1 || im.height;
+
+    c.save();
+    c.translate(wx, wy);
+    c.rotate((angleDeg * Math.PI) / 180);
+    c.scale(sxM, syM);
+    if (clipY0 > 0 || clipY1 < im.height) {
+      c.beginPath();
+      c.rect(-px * sc - 20, (clipY0 - py) * sc, im.width * sc + 40, (clipY1 - clipY0) * sc);
+      c.clip();
+    }
+    c.shadowColor = "rgba(0,0,0,0.38)";
+    c.shadowBlur = 6;
+    c.shadowOffsetX = Math.sin(yawRad) * 3.5;
+    c.drawImage(im, -px * sc, -py * sc, im.width * sc, im.height * sc);
+    if (showPivots) {
+      c.strokeStyle = "#d91b1b";
+      c.lineWidth = 1.6;
+      for (const pv of (comp.pivots || [])) {
+        if (pv.y >= clipY0 && pv.y <= clipY1) {
+          c.beginPath();
+          c.arc((pv.x - px) * sc, (pv.y - py) * sc, Math.max(3.5, (pv.r || 24) * sc), 0, Math.PI * 2);
+          c.stroke();
+        }
+      }
+    }
+    c.restore();
+  }
+
+  const waistWorldX = cx;
+  const waistWorldY = footY - targetHeight * 0.50 + breath;
+  const scTorso = S * REL_SCALE["01_torso_front"];
+
+  const neckW = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 639.0, 118.0, scTorso, torsoA, 1.0, bodyScaleX);
+  const shRW  = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 300.4, 212.4, scTorso, torsoA, 1.0, bodyScaleX);
+  const shLW  = toWorld(waistWorldX, waistWorldY, 639.4, 1048.4, 979.8, 212.1, scTorso, torsoA, 1.0, bodyScaleX);
+
+  const hipA = torsoA * 0.4;
+  const scHip = S * REL_SCALE["04_hip_bridge"];
+  const hipRW = toWorld(waistWorldX, waistWorldY, 759.6, 192.2, 357.3, 791.2, scHip, hipA, 1.0, bodyScaleX);
+  const hipLW = toWorld(waistWorldX, waistWorldY, 759.6, 192.2, 1172.8, 791.3, scHip, hipA, 1.0, bodyScaleX);
+
+  drawPinnedSync("04_hip_bridge", waistWorldX, waistWorldY, 759.6, 192.2, hipA, { sxMult: bodyScaleX });
+
+  // Right Leg — ANKLE CUFF-TUCK: Boot drawn BEHIND shin cuff; shin bottom grommet tab clipped at y=1298!
+  const scThigh = S * REL_SCALE["13_thigh_R"];
+  const scShin  = S * REL_SCALE["14_shin_R"];
+  const kneeRW = toWorld(hipRW.x, hipRW.y, 511.8, 192.2, 514.4, 1342.4, scThigh, thighRA);
+  const ankRW  = toWorld(kneeRW.x, kneeRW.y, 507.4, 176.0, 519.9, 1255.0, scShin, shinRA);
+  drawPinnedSync("13_thigh_R", hipRW.x, hipRW.y, 511.8, 192.2, thighRA, { clipY1: 1380 });
+  drawPinnedSync("20_boot_front_R", ankRW.x, ankRW.y, 635.0, 360.0, shinRA * 0.25, { clipY0: 210 });
+  drawPinnedSync("14_shin_R", kneeRW.x, kneeRW.y, 507.4, 176.0, shinRA, { clipY1: 1298 });
+
+  // Left Leg — ANKLE CUFF-TUCK: Boot drawn BEHIND shin cuff; shin bottom grommet tab clipped at y=1295!
+  const kneeLW = toWorld(hipLW.x, hipLW.y, 511.0, 180.1, 509.8, 1344.4, scThigh, thighLA);
+  const ankLW  = toWorld(kneeLW.x, kneeLW.y, 511.1, 198.3, 512.3, 1250.0, scShin, shinLA);
+  drawPinnedSync("11_thigh_L", hipLW.x, hipLW.y, 511.0, 180.1, thighLA, { clipY1: 1380 });
+  drawPinnedSync("19_boot_front_L", ankLW.x, ankLW.y, 625.0, 360.0, shinLA * 0.25, { clipY0: 210 });
+  drawPinnedSync("12_shin_L", kneeLW.x, kneeLW.y, 511.1, 198.3, shinLA, { clipY1: 1295 });
+
+  drawPinnedSync("06_pelvis_front_cover", waistWorldX, waistWorldY, 727.3, 180.5, hipA, { sxMult: bodyScaleX });
+
+  // Right Arm — WRIST CUFF-TUCK: Hand drawn BEHIND forearm cuff; forearm bottom grommet tab clipped at y=1278!
+  const scUarm = S * REL_SCALE["09_upper_arm_R"];
+  const scFarm = S * REL_SCALE["10_forearm_R"];
+  const elbRW = toWorld(shRW.x, shRW.y, 504.0, 138.5, 534.0, 1350.0, scUarm, uarmRA);
+  const wriRW = toWorld(elbRW.x, elbRW.y, 513.8, 176.3, 510.7, 1225.0, scFarm, uarmRA + farmRA, limbForeshortenY);
+  drawPinnedSync("09_upper_arm_R", shRW.x, shRW.y, 504.0, 138.5, uarmRA, { clipY1: 1410 });
+  drawPinnedSync("16_hand_relaxed_R", wriRW.x, wriRW.y, 646.0, 325.0, uarmRA + farmRA, { clipY0: 220, scaleMult: handPerspectiveBoost });
+  drawPinnedSync("10_forearm_R", elbRW.x, elbRW.y, 513.8, 176.3, uarmRA + farmRA, { clipY1: 1278, syMult: limbForeshortenY });
+
+  // Torso Front + Head (NECK COLLAR-TUCK: Head neck base clipped at y=1185 and tucked under Torso front collar lip!)
+  drawPinnedSync("01_torso_front", waistWorldX, waistWorldY, 639.4, 1048.4, torsoA, { sxMult: bodyScaleX });
+
+  const scHead = S * REL_SCALE["21_head_front_blank"];
+  drawPinnedSync("21_head_front_blank", neckW.x, neckW.y, 558.0, 1145.0, headA, { clipY1: 1185, sxMult: Math.max(0.88, Math.cos(yawRad * 0.45)) });
+  drawPinnedSync("01_torso_front", waistWorldX, waistWorldY, 639.4, 1048.4, torsoA, { clipY0: 30, clipY1: 188, sxMult: bodyScaleX });
+
+  // 2.5D Cylindrical Parallax Facial Features
+  const faceShiftX = Math.sin(yawRad) * 74;
+  const noseShiftX = Math.sin(yawRad) * 98;
+  const glassShiftX = Math.sin(yawRad) * 108;
+  const faceScaleX = Math.max(0.82, Math.cos(yawRad * 0.55));
+
+  const browsW = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + faceShiftX, 505.0, scHead, headA);
+  const eyesW  = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + faceShiftX, 585.0, scHead, headA);
+  const noseW  = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + noseShiftX, 690.0, scHead, headA);
+  const mouthW = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + faceShiftX * 0.9, 865.0, scHead, headA);
+  const glassW = toWorld(neckW.x, neckW.y, 558.0, 1145.0, 577.0 + glassShiftX, 585.0, scHead, headA);
+
+  drawPinnedSync(eyesId, eyesW.x, eyesW.y, 1086, 362, headA, { sxMult: faceScaleX });
+  drawPinnedSync(browsId, browsW.x, browsW.y, 1085, 362, headA, { sxMult: faceScaleX });
+  drawPinnedSync("26_nose_front", noseW.x, noseW.y, 768, 512, headA, { sxMult: faceScaleX });
+  drawPinnedSync(mouthId, mouthW.x, mouthW.y, 887, 443, headA, { sxMult: faceScaleX });
+  if (wearGlasses) {
+    drawPinnedSync("31_sunglasses_front", glassW.x, glassW.y, 1086, 362, headA, { sxMult: faceScaleX });
+  }
+
+  // Left Arm — WRIST CUFF-TUCK: Hand drawn BEHIND forearm cuff; forearm bottom grommet tab clipped at y=1238!
+  const elbLW = toWorld(shLW.x, shLW.y, 507.7, 166.4, 493.6, 1335.0, scUarm, uarmLA);
+  const wriLW = toWorld(elbLW.x, elbLW.y, 512.0, 180.0, 510.5, 1195.0, scFarm, uarmLA + farmLA, limbForeshortenY);
+  drawPinnedSync("07_upper_arm_L", shLW.x, shLW.y, 507.7, 166.4, uarmLA, { clipY1: 1390 });
+  drawPinnedSync("15_hand_relaxed_L", wriLW.x, wriLW.y, 660.8, 315.0, uarmLA + farmLA, { clipY0: 215, scaleMult: handPerspectiveBoost });
+  drawPinnedSync("08_forearm_L", elbLW.x, elbLW.y, 512.0, 180.0, uarmLA + farmLA, { clipY1: 1238, syMult: limbForeshortenY });
+}
+
+/* ── Torn-Paper Sky / Window Wipe Helper (from Weave) ── */
+function clipTornPaperWipe(c, W, yBottom, seed = 7, jag = 22) {
+  c.beginPath();
+  c.moveTo(-100, -100);
+  c.lineTo(W + 100, -100);
+  let s = seed * 7919 + 13;
+  for (let px = W + 100; px >= -100; px -= 24) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    const yy = yBottom + ((s >> 8) % 1000) / 1000 * jag - jag / 2 + Math.sin(px * 0.012 + seed) * jag * 0.4;
+    c.lineTo(px, yy);
+  }
+  c.closePath();
+  c.clip();
+}
+
+/* ── Main Multiplane Collage Renderer ── */
+let activeRenderToken = 0;
+let lastUiSceneId = "";
+let lastUiShotId = "";
+
+async function renderSuiteFrame(forceUi = false) {
+  if (!ATLAS || !TIMELINE) return;
+  const myToken = ++activeRenderToken;
+
+  const loc = locateAtTime(t);
+  const { fIdx, film, book, activeScene, sceneU, scionShot } = loc;
+
+  // Compute local frame inside scionShot
+  const shotDur = Math.max(0.2, scionShot.t1 - scionShot.t0);
+  const shotU = Math.max(0, Math.min(0.999, (t - scionShot.t0) / shotDur));
+  const frameIdx = Math.max(0, Math.min((scionShot.frames || 1) - 1, Math.floor(shotU * (scionShot.frames || 1))));
+  const trajPt = (scionShot.traj && scionShot.traj[frameIdx]) || [0.42, 0.52, 0.42, 0.90, 1, 2.0];
+
+  // Gather stage layers (prefer upgraded COLLAGE_PLANS if available, else activeScene.stage_layers)
+  const upgradedPlan = collageBySceneId.get(activeScene.id);
+  const rawLayers = (upgradedPlan && upgradedPlan.stage_layers) ? upgradedPlan.stage_layers : (activeScene.stage_layers || []);
+  const sortedLayers = [...rawLayers].sort((a, b) => (b.z || 1) - (a.z || 1));
+
+  // Preload images for this frame before drawing onto canvas
+  const [posterIm, atlasIm, keyCelIm, ...layerIms] = await Promise.all([
+    layersOn.world ? loadImg(scionShot.poster) : Promise.resolve(null),
+    layersOn.archive ? loadImg(scionShot.atlas) : Promise.resolve(null),
+    (layersOn.cel && scionShot.key_cels && scionShot.key_cels.length)
+      ? loadImg(scionShot.key_cels[Math.min(scionShot.key_cels.length - 1, Math.floor(shotU * scionShot.key_cels.length))])
+      : Promise.resolve(null),
+    ...sortedLayers.map(l => loadImg(l.file))
+  ]);
+
+  if (myToken !== activeRenderToken) return;
+
+  const W = cv.width, H = cv.height;
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+  // Base stage paper/night backdrop
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, "#12161f");
+  bgGrad.addColorStop(0.68, "#1e222b");
+  bgGrad.addColorStop(0.69, "#1d1914");
+  bgGrad.addColorStop(1, "#0f0d0a");
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Camera subtle push/pan from scionShot.camera
+  const camPanX = Math.sin(t * 0.55) * 28;
+  const camZoom = 1.0 + Math.sin(t * 0.25) * 0.025;
+
+  const displayOps = [];
+  displayOps.push(`# FRAME F${frameIdx + 1}/${scionShot.frames} · CLOCK ${fmt(t)} · SCENE ${activeScene.id} · SHOT ${scionShot.id}`);
+
+  // ── PLANE P6: WORLD / POSTER PLATE ──
+  if (layersOn.world && posterIm) {
+    ctx.save();
+    ctx.globalAlpha = 0.52;
+    const s = Math.max(W / posterIm.width, H / posterIm.height) * camZoom;
+    const dw = posterIm.width * s, dh = posterIm.height * s;
+    ctx.drawImage(posterIm, (W - dw) / 2 + camPanX * 0.18, (H - dh) / 2, dw, dh);
+    ctx.restore();
+    displayOps.push(`op.world_plate("${scionShot.poster}", z=6.0, alpha=0.52)`);
+  }
+
+  // ── PLANE P5: PRELINGER ARCHIVE FILM IN-WORLD (Torn-Paper Sky Wipe + In-Room Screen/Window Aperture) ──
+  if (layersOn.archive && atlasIm) {
+    const cols = scionShot.atlas_cols || 16;
+    const cw = scionShot.atlas_w || 240;
+    const ch = scionShot.atlas_h || 135;
+    const col = frameIdx % cols;
+    const row = Math.floor(frameIdx / cols);
+    const sx = col * cw, sy = row * ch;
+
+    // 1) Upper Sky Torn-Paper Collage Wipe (Weave style)
+    ctx.save();
+    clipTornPaperWipe(ctx, W, H * 0.36, book * 13 + 5, 24);
+    ctx.globalAlpha = 0.62;
+    ctx.drawImage(atlasIm, sx, sy, cw, ch, -20 + camPanX * 0.25, -10, W + 40, H * 0.52);
+    ctx.restore();
+
+    // 2) In-World Window / Television Screen Frame on Right Midground
+    const winX = W * 0.56 + camPanX * 0.4, winY = H * 0.22, winW = W * 0.32, winH = H * 0.32;
+    ctx.save();
+    ctx.fillStyle = "#0b0a09";
+    ctx.fillRect(winX - 6, winY - 6, winW + 12, winH + 12);
+    ctx.strokeStyle = "#8c6d46";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(winX - 6, winY - 6, winW + 12, winH + 12);
+    ctx.globalAlpha = 0.92;
+    ctx.drawImage(atlasIm, sx, sy, cw, ch, winX, winY, winW, winH);
+    // Archive label tag on frame corner
+    ctx.fillStyle = "rgba(18,18,18,0.82)";
+    ctx.fillRect(winX + 6, winY + winH - 22, winW - 12, 18);
+    ctx.fillStyle = "#7fd3c4";
+    ctx.font = "700 10px 'JetBrains Mono', monospace";
+    ctx.fillText(`ARCHIVE (${scionShot.archive_year}): ${String(scionShot.archive_title).slice(0, 38)}`, winX + 12, winY + winH - 9);
+    ctx.restore();
+    displayOps.push(`op.archive_cell("${scionShot.atlas}", cell=[${col},${row}], frame=${frameIdx}, window_quad=[${Math.round(winX)},${Math.round(winY)},${Math.round(winW)},${Math.round(winH)}])`);
+  }
+
+  // Torn Cardboard Stage Floor Strip (from Weave PROC.ground)
+  ctx.save();
+  const floorY = H * 0.80;
+  const fg = ctx.createLinearGradient(0, floorY - 12, 0, H);
+  fg.addColorStop(0, "#3b3026");
+  fg.addColorStop(0.3, "#261e17");
+  fg.addColorStop(1, "#110d0a");
+  ctx.fillStyle = fg;
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (let x = 0; x <= W; x += 28) {
+    ctx.lineTo(x, floorY + Math.sin(x * 0.04 + book) * 4);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(215, 185, 140, 0.25)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+
+  // ── PLANES P5 -> P0: CUT-OUT KIT PIECES FROM v2.0-poem-kits ──
+  for (let i = 0; i < sortedLayers.length; i++) {
+    const l = sortedLayers[i];
+    const role = l.role || "";
+    if (role.startsWith("set_") && !layersOn.arch) continue;
+    if ((role === "prop" || role === "character_supporting") && !layersOn.props) continue;
+    if (role === "character_hero" && !layersOn.poet) continue;
+    if (role === "fx_overlay" && !layersOn.fx) continue;
+
+    const z = l.z || 1.0;
+    const parallax = camPanX / Math.max(0.35, z);
+
+    // Compute scale with automatic aspect-ratio & prop-size protection!
+    const im = layerIms[i];
+    let scale = l.scale || 0.45;
+    if (im && !upgradedPlan) {
+      const ar = im.width / Math.max(1, im.height);
+      if (role === "prop") {
+        // Prevent small/wide handheld props from scaling up to human height
+        scale = Math.min(scale, ar > 1.3 ? 0.20 : 0.28);
+      } else if (role.startsWith("character") && ar > 0.85) {
+        // Wide/crouched/falling pose aspect compensation
+        scale = scale * Math.max(0.52, Math.min(1.0, 0.72 / Math.sqrt(ar)));
+      }
+    }
+
+    let lx = l.x ?? 0.5;
+    let ly = l.y ?? 0.88;
+
+    // Sync Hero Poet X position subtly with the Scion xsheet foot trajectory!
+    if (l.instance === "actor_poet") {
+      const footX = trajPt[2] || lx;
+      lx = lx * 0.55 + footX * 0.45;
+      ly = 0.91;
+    }
+
+    const cx = lx * W + parallax;
+    const by = ly * H;
+    const targetH = H * scale;
+
+    if (l.instance === "actor_poet" && useArticulatedPoet) {
+      // Draw ground contact shadow + foot pin indicator
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,0.42)";
+      ctx.beginPath();
+      ctx.ellipse(cx, by - 4, targetH * 0.22, targetH * 0.038, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (showPivots && trajPt[4]) {
+        ctx.strokeStyle = "#9fe08a";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(cx - 10, by - 8, 20, 8);
+      }
+      ctx.restore();
+
+      drawTracksuitPoetSync(ctx, cx, by, targetH, t, book, l.action || activeScene.movement);
+      displayOps.push(`op.poet_rig_31(x=${lx.toFixed(2)}, y=${ly.toFixed(2)}, scale=${scale.toFixed(2)}, pin=${trajPt[4]})`);
+      continue;
+    }
+
+    if (!im) continue;
+    const ar = im.width / Math.max(1, im.height);
+    let dh = targetH, dw = dh * ar;
+    if (role === "set_backdrop") {
+      dw = Math.min(W * 0.92, dw * 1.15);
+      dh = dw / ar;
+    } else if (dw > W * 0.75) {
+      dw = W * 0.75;
+      dh = dw / ar;
+    }
+
+    const idBlob = `${l.part_id || ""} ${l.sheet_id || ""} ${l.label || ""} ${l.file || ""}`.toLowerCase();
+    const animRole = l.anim_role || (
+      /(car__p05|car__p06|bike-skeleton__p07|bike-skeleton__p08|bike-skeleton__p09|bike-skeleton__p10|wheel)/.test(idBlob) ? "wheel_spin" :
+      /04\.props\.heart/.test(idBlob) ? "heart_beat" :
+      /hourglass/.test(idBlob) ? "hourglass_sand" :
+      /(wave\.1|shore_night__p01)/.test(idBlob) ? "wave_far" :
+      /(wave\.2|shore_night__p02)/.test(idBlob) ? "wave_mid" :
+      /(wave\.3|shore_night__p03|wave|water)/.test(idBlob) ? "wave_near" :
+      /planet-boats/.test(idBlob) ? "boat_rock" :
+      /(angel\.wings|ravens-stumps__p01|ravens-stumps__p02|wing)/.test(idBlob) ? "wing_flap" :
+      /tambourine/.test(idBlob) ? "tambourine_arc" :
+      /(dj-decks__p04|dj-decks__p05|dj-decks__p06)/.test(idBlob) ? "turntable_spin" :
+      /speakers-vu/.test(idBlob) ? "speaker_pulse" :
+      /(lights-iris|ride-light|drowned-light|headlight)/.test(idBlob) ? "headlight_beam" :
+      /mirror-phone-rings/.test(idBlob) ? "phone_ring" :
+      /faith-blooms/.test(idBlob) ? "flower_bloom" : ""
+    );
+
+    let animDx = 0, animDy = 0, animRot = l.rot || 0, animScale = 1.0, animAlpha = 1.0;
+    if (animRole === "wheel_spin") {
+      animRot += t * 4.5;
+    } else if (animRole === "heart_beat") {
+      animScale = 1.0 + Math.pow(Math.max(0, Math.sin(t * 5.2)), 4) * 0.13 + Math.pow(Math.max(0, Math.sin(t * 5.2 - 0.85)), 6) * 0.07;
+    } else if (animRole === "hourglass_sand") {
+      animRot += Math.sin(t * 1.4) * 0.07;
+      animDy += Math.cos(t * 2.8) * 3;
+    } else if (animRole === "wave_far") {
+      animDx += Math.sin(t * 1.1 + 0.5) * 16;
+      animDy += Math.cos(t * 1.5) * 3.5;
+    } else if (animRole === "wave_mid") {
+      animDx += -Math.sin(t * 1.45 + 1.4) * 24;
+      animDy += Math.sin(t * 1.9 + 1.0) * 5;
+    } else if (animRole === "wave_near") {
+      animDx += Math.sin(t * 1.85 + 2.2) * 30;
+      animDy += Math.cos(t * 2.3 + 0.4) * 6.5;
+    } else if (animRole === "boat_rock") {
+      animRot += Math.sin(t * 1.6 + i) * 0.085;
+      animDy += Math.cos(t * 1.6 + i) * 6;
+      animDx += Math.sin(t * 0.8) * 10;
+    } else if (animRole === "wing_flap" || animRole === "wing_flap_L" || animRole === "wing_flap_R") {
+      const side = (animRole === "wing_flap_R" || (l.x ?? 0.5) > 0.5) ? -1 : 1;
+      animRot += side * Math.sin(t * 3.8 + i * 0.3) * 0.26;
+      animDy += Math.cos(t * 3.8) * 4;
+    } else if (animRole === "tambourine_arc") {
+      const cyc = (t * 0.55) % 1.0;
+      animDx += (cyc - 0.5) * 110;
+      animDy += -Math.sin(cyc * Math.PI) * 65;
+      animRot += t * 6.5;
+    } else if (animRole === "turntable_spin") {
+      animRot += t * 5.2;
+    } else if (animRole === "speaker_pulse") {
+      animScale = 1.0 + Math.pow(Math.abs(Math.sin(t * 6.28)), 3) * 0.085;
+    } else if (animRole === "headlight_beam" || animRole === "lamp_glow" || animRole === "portal_aperture") {
+      animAlpha = 0.78 + 0.22 * Math.sin(t * 3.4 + i);
+      animScale = 1.0 + 0.03 * Math.sin(t * 2.2);
+    } else if (animRole === "phone_ring") {
+      animScale = 1.0 + 0.12 * Math.abs(Math.sin(t * 9.0));
+      animRot += Math.sin(t * 22.0) * 0.06;
+    } else if (animRole === "flower_bloom") {
+      animScale = 0.92 + 0.12 * (0.5 + 0.5 * Math.sin(t * 1.8 + i));
+      animRot += Math.sin(t * 1.3 + i) * 0.05;
+    } else if (role.startsWith("character")) {
+      animDy += Math.sin(t * 2.8 + i) * 3;
+    }
+
+    dw *= animScale;
+    dh *= animScale;
+    const dx = cx + animDx - dw / 2;
+    const dy = by + animDy - dh;
+
+    ctx.save();
+    ctx.globalAlpha = Math.max(0.05, Math.min(1.0, (l.alpha ?? 1.0) * animAlpha));
+    ctx.shadowColor = "rgba(0,0,0,0.45)";
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetX = 4;
+    ctx.shadowOffsetY = 5;
+    const midX = dx + dw / 2, midY = dy + dh / 2;
+    ctx.translate(midX, midY);
+    if (l.flip) ctx.scale(-1, 1);
+    if (animRot) ctx.rotate(animRot);
+    ctx.drawImage(im, -dw / 2, -dh / 2, dw, dh);
+    ctx.restore();
+
+    if (showPivots && l.pivots && l.pivots.length) {
+      ctx.save();
+      const psx = dw / im.width, psy = dh / im.height;
+      ctx.strokeStyle = "#d91b1b";
+      ctx.lineWidth = 1.6;
+      for (const pv of l.pivots) {
+        ctx.beginPath();
+        ctx.arc(dx + pv.x * psx, dy + pv.y * psy, Math.max(4, (pv.r || 6) * Math.min(psx, psy)), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    displayOps.push(`op.cutout("${l.part_id}", plane="${l.plane}", z=${z}, anim="${animRole || 'static'}", box=[${Math.round(dx)},${Math.round(dy)},${Math.round(dw)},${Math.round(dh)}])`);
+  }
+
+  // ── SCION KEYFRAME CEL OVERLAY ──
+  if (layersOn.cel && keyCelIm) {
+    ctx.save();
+    ctx.globalAlpha = 0.34;
+    ctx.globalCompositeOperation = "screen";
+    ctx.drawImage(keyCelIm, 0, 0, W, H);
+    ctx.restore();
+    displayOps.push(`op.scion_cel("${scionShot.id}_K01.png", blend="screen", alpha=0.34)`);
+  }
+
+  // ── PLANE P0: HAND-LETTERED RANSOM / MARKER SUBTITLE & 16MM GRAIN ──
+  const activeLine = scionShot.line || activeScene.lines || "";
+  if (activeLine) {
+    const words = activeLine.split(/\s+/);
+    const wordCount = Math.max(1, Math.ceil(Math.min(1, shotU * 1.15) * words.length));
+    const spoken = words.slice(0, wordCount).join(" ").slice(0, 96);
+
+    ctx.save();
+    ctx.font = "26px 'Permanent Marker', cursive";
+    const tw = Math.min(W - 120, ctx.measureText(spoken).width + 36);
+    const bx = (W - tw) / 2, by = H - 56;
+    ctx.fillStyle = "rgba(14, 12, 10, 0.86)";
+    ctx.beginPath();
+    ctx.moveTo(bx - 8, by - 30);
+    ctx.lineTo(bx + tw + 10, by - 32);
+    ctx.lineTo(bx + tw + 6, by + 12);
+    ctx.lineTo(bx - 6, by + 14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#d91b1b";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = "#f5ebd6";
+    ctx.fillText(spoken, bx + 14, by);
+    ctx.restore();
+  }
+
+  ctx.restore();
+
+  // Update DOM HUD & Inspector
+  $("clock").textContent = fmt(t);
+  $("head").style.left = Math.max(0, Math.min(100, (t / TIMELINE.duration) * 100)) + "%";
+  $("hudLeft").innerHTML = `${activeScene.id} · <b>${activeScene.title}</b>`;
+  $("hudRight").innerHTML = `SHOT <b>${scionShot.id}</b> (${scionShot.name}) · F<span id="frameNo">${frameIdx + 1}</span>/${scionShot.frames}`;
+  $("code").textContent = displayOps.join("\n");
+  $("mCmdCount").textContent = `${displayOps.length} OPS`;
+
+  // Spoken word reveal in #voice
+  const fullLine = scionShot.line || activeScene.lines || activeScene.treatment || "";
+  const wList = fullLine.split(/\s+/);
+  const wTake = Math.max(1, Math.ceil(Math.min(1, shotU * 1.18) * wList.length));
+  $("voice").textContent = wList.slice(0, wTake).join(" ");
+  $("screenText").textContent = scionShot.what || activeScene.treatment || "Multiplane cut-out collage.";
+
+  drawVitalityGraph(scionShot, frameIdx);
+  updateRibbonPlayhead(loc);
+
+  if (forceUi || activeScene.id !== lastUiSceneId || scionShot.id !== lastUiShotId) {
+    lastUiSceneId = activeScene.id;
+    lastUiShotId = scionShot.id;
+    updateContextPanels(loc);
+  }
+}
+
+/* ── Kinematic Velocity & Vitality Graph (#graph) ── */
+function drawVitalityGraph(scionShot, curFrame) {
+  const W = gcv.width, H = gcv.height;
+  gctx.clearRect(0, 0, W, H);
+  gctx.fillStyle = "#141311";
+  gctx.fillRect(0, 0, W, H);
+
+  const traj = scionShot.traj || [];
+  if (!traj.length) return;
+
+  // Draw pinned contact bars at bottom
+  for (let i = 0; i < traj.length; i++) {
+    if (traj[i][4]) {
+      const x = (i / traj.length) * W;
+      gctx.fillStyle = "rgba(159, 224, 138, 0.28)";
+      gctx.fillRect(x, H - 14, Math.max(2, W / traj.length), 14);
+    }
+  }
+
+  // Draw velocity curve
+  gctx.strokeStyle = "#e7a35a";
+  gctx.lineWidth = 2;
+  gctx.beginPath();
+  for (let i = 0; i < traj.length; i++) {
+    const x = (i / Math.max(1, traj.length - 1)) * W;
+    const v = Math.min(14, traj[i][5] || 1);
+    const y = H - 16 - (v / 14) * (H - 24);
+    if (i === 0) gctx.moveTo(x, y);
+    else gctx.lineTo(x, y);
+  }
+  gctx.stroke();
+
+  // Playhead
+  const px = (curFrame / Math.max(1, traj.length - 1)) * W;
+  gctx.fillStyle = "#d91b1b";
+  gctx.fillRect(px - 1.5, 0, 3, H);
+}
+
+/* ── Update Right Sidebar & Ribbon when Scene/Shot Changes ── */
+function updateRibbonPlayhead(loc) {
+  const { film, scionShot } = loc;
+  const [c0, c1] = film.container;
+  const u = Math.max(0, Math.min(1, (t - c0) / Math.max(1, c1 - c0)));
+  const ph = $("ribbon").querySelector(".ph");
+  if (ph) ph.style.left = (u * 100) + "%";
+}
+
+function updateContextPanels(loc) {
+  const { fIdx, film, book, activeScene, scionShot, poemShots, bookScenes } = loc;
+
+  $("title").textContent = `${film.n} · ${film.title}`;
+  $("mWindow").textContent = `${fmt(film.container[0])}–${fmt(film.container[1])}`;
+  $("mShotId").textContent = `${scionShot.id} (${fmt(scionShot.t0)}–${fmt(scionShot.t1)})`;
+  $("mFilm").textContent = `Poem ${film.n} — ${film.title}`;
+  $("mScene").textContent = `${activeScene.id} · ${activeScene.title} (${activeScene.shot_count} shots)`;
+  $("mArchive").textContent = `${scionShot.archive_title} (${scionShot.archive_year}) · ${scionShot.frames}f @ ${scionShot.fps}fps`;
+  const camMove = (scionShot.camera && scionShot.camera.move) ? scionShot.camera.move.toUpperCase() : "MULTIPLANE";
+  $("mCamera").textContent = `${camMove} · Set: ${activeScene.set_id || "studio_stage"}`;
+
+  const layers = activeScene.stage_layers || [];
+  $("mCast").textContent = layers.map(l => l.label).slice(0, 6).join(" · ") || "Poet & Ensemble";
+  $("mPieceCount").textContent = `${layers.length} PIECES`;
+
+  // Epistemic ledger updates
+  $("ledObs").textContent = `Archive "${scionShot.archive_title}" (${scionShot.archive_year}) + recorded voiceover [${fmt(scionShot.t0)}–${fmt(scionShot.t1)}]`;
+  $("ledDrw").textContent = `${layers.length} cut-out RGBA pieces from Poem ${film.n} kits + 31-part brass-pivot Poet rig`;
+  $("ledInv").textContent = `Multiplane camera (${camMove}) + Scion x-sheet foot trajectory (${scionShot.frames} frames)`;
+
+  // Update workbench links with current scene context
+  $("openStageTop").href = `stage.html#${activeScene.id}`;
+  $("openCardsTop").href = `cards.html#${activeScene.id}`;
+  $("btnEditStage").href = `stage.html#${activeScene.id}`;
+  $("btnOpenCards").href = `cards.html#${activeScene.id}`;
+  $("btnPoemKit").href = `poems/kits/${film.n}.html`;
+
+  // Active cut-out pieces grid
+  const grid = $("activePiecesGrid");
+  grid.innerHTML = "";
+  for (const l of layers.slice(0, 10)) {
+    const cell = document.createElement("a");
+    cell.className = "kcell";
+    cell.href = `cards.html#${l.sheet_id}`;
+    cell.title = `${l.plane} · ${l.label} (${l.sheet_id})`;
+    cell.innerHTML = `<img src="${l.file}" alt="${l.label}"><span>${l.plane} · ${l.label}</span>`;
+    grid.appendChild(cell);
+  }
+
+  // Highlight active chapter button
+  document.querySelectorAll(".chapter").forEach(b => b.classList.toggle("on", +b.dataset.i === fIdx));
+  document.querySelectorAll(".fseg").forEach(s => s.classList.toggle("on", +s.dataset.i === fIdx));
+
+  // Rebuild scene pills for this book
+  const sp = $("scenePills");
+  sp.innerHTML = "";
+  const totalScSec = bookScenes.reduce((acc, s) => acc + (s.seconds || 12), 0) || 1;
+  let accum = 0;
+  for (const sc of bookScenes) {
+    const pill = document.createElement("div");
+    pill.className = "spill" + (sc.id === activeScene.id ? " on" : "");
+    pill.innerHTML = `<b>${sc.id}</b>${sc.movement || sc.title}`;
+    const targetSec = film.container[0] + (accum / totalScSec) * (film.container[1] - film.container[0]) + 0.05;
+    pill.onclick = () => seek(targetSec);
+    sp.appendChild(pill);
+    accum += (sc.seconds || 12);
+  }
+
+  // Rebuild Weave-style ribbon for current poem's Scion shots
+  const rib = $("ribbon");
+  rib.innerHTML = '<div class="ph"></div>';
+  const [c0, c1] = film.container;
+  const cDur = Math.max(1, c1 - c0);
+  const colors = ["#d9d3c7", "#e9d9a8", "#f0b9a4", "#e7a37c", "#b9cfa0", "#a9c9c9", "#b8b3d8"];
+  poemShots.forEach((sh, idx) => {
+    const st = document.createElement("div");
+    st.className = "st";
+    const leftPct = Math.max(0, ((sh.t0 - c0) / cDur) * 100);
+    const widthPct = Math.max(1.5, ((sh.t1 - sh.t0) / cDur) * 100);
+    st.style.left = leftPct + "%";
+    st.style.width = widthPct + "%";
+    st.style.background = sh.id === scionShot.id ? "#121212" : colors[idx % colors.length];
+    st.style.color = sh.id === scionShot.id ? "#f3f2ed" : "#121212";
+    st.textContent = `${sh.id.split("-")[1]} · ${sh.name}`;
+    st.onclick = e => { e.stopPropagation(); seek(sh.t0 + 0.05); };
+    rib.appendChild(st);
+  });
+
+  // Rebuild #poemLines list
+  $("mPoemShotsCount").textContent = `${poemShots.length} SHOTS`;
+  const pl = $("poemLines");
+  pl.innerHTML = "";
+  for (const sh of poemShots) {
+    const row = document.createElement("div");
+    row.className = "line" + (sh.id === scionShot.id ? " on now" : "");
+    row.innerHTML = `<b>${sh.id} · ${fmt(sh.t0)} · ${sh.name}</b>${sh.line || sh.what || "Instrumental / visual passage"}`;
+    row.onclick = () => seek(sh.t0 + 0.05);
+    pl.appendChild(row);
+  }
+}
+
+/* ── Master Timeline & Chapter Builders ── */
+function buildTimelineAndChapters() {
+  const tl = $("timeline");
+  const dur = TIMELINE.duration;
+  tl.innerHTML = '<div id="head"></div>';
+
+  TIMELINE.films.forEach((f, i) => {
+    const seg = document.createElement("div");
+    seg.className = "fseg";
+    seg.dataset.i = i;
+    seg.style.left = (f.container[0] / dur * 100) + "%";
+    seg.style.width = ((f.container[1] - f.container[0]) / dur * 100) + "%";
+    seg.textContent = f.n;
+    tl.appendChild(seg);
+
+    const pseg = document.createElement("div");
+    pseg.className = "poemSeg";
+    pseg.style.left = (f.poem[0] / dur * 100) + "%";
+    pseg.style.width = ((f.poem[1] - f.poem[0]) / dur * 100) + "%";
+    tl.appendChild(pseg);
+  });
+
+  // Add all 80 scenes as blue bars along bottom of timeline
+  TIMELINE.films.forEach((f, i) => {
+    const book = i + 1;
+    const bookScenes = ATLAS.scenes.filter(s => s.book === book);
+    const totalSc = bookScenes.reduce((a, s) => a + (s.seconds || 12), 0) || 1;
+    let accum = 0;
+    const [c0, c1] = f.container;
+    for (const sc of bookScenes) {
+      const s0 = c0 + (accum / totalSc) * (c1 - c0);
+      const sDur = ((sc.seconds || 12) / totalSc) * (c1 - c0);
+      const m = document.createElement("div");
+      m.className = "sceneSeg";
+      m.style.left = (s0 / dur * 100) + "%";
+      m.style.width = (sDur / dur * 100) + "%";
+      tl.appendChild(m);
+      accum += (sc.seconds || 12);
+    }
+  });
+
+  tl.addEventListener("pointerdown", e => {
+    const r = tl.getBoundingClientRect();
+    seek(((e.clientX - r.left) / r.width) * dur);
+  });
+
+  const chBox = $("chapters");
+  chBox.innerHTML = "";
+  TIMELINE.films.forEach((f, i) => {
+    const b = document.createElement("button");
+    b.className = "chapter";
+    b.type = "button";
+    b.dataset.i = i;
+    b.innerHTML = `<b>${f.n}</b><span>${f.title}</span>`;
+    b.onclick = () => seek(f.poem[0] + 0.05);
+    chBox.appendChild(b);
+  });
+}
+
+function seek(newT) {
+  t = Math.max(0, Math.min(TIMELINE.duration - 0.05, newT));
+  if (soundOn && !audio.paused) {
+    audio.currentTime = t;
+  }
+  renderSuiteFrame(true);
+}
+
+/* ── Controls & Audio Sync ── */
+$("play").onclick = () => {
+  playing = !playing;
+  $("play").textContent = playing ? "Ⅱ" : "▶";
+  lastNow = performance.now();
+  if (soundOn) {
+    if (playing) {
+      audio.currentTime = t;
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+  }
+};
+
+$("sndBtn").onclick = () => {
+  soundOn = !soundOn;
+  $("sndBtn").textContent = soundOn ? "🔊 AUDIO ON" : "🔇 AUDIO OFF";
+  $("sndBtn").classList.toggle("on", soundOn);
+  if (soundOn) {
+    audio.currentTime = t;
+    if (playing) audio.play().catch(() => {});
+  } else {
+    audio.pause();
+  }
+};
+
+$("prevBtn").onclick = () => {
+  const idx = TIMELINE.shots.findIndex(s => t >= s.t0 && t <= s.t1);
+  const target = TIMELINE.shots[Math.max(0, (idx > 0 ? idx - 1 : 0))];
+  if (target) seek(target.t0 + 0.05);
+};
+
+$("nextBtn").onclick = () => {
+  const idx = TIMELINE.shots.findIndex(s => t >= s.t0 && t <= s.t1);
+  const target = TIMELINE.shots[Math.min(TIMELINE.shots.length - 1, idx + 1)];
+  if (target) seek(target.t0 + 0.05);
+};
+
+$("cinemaBtn").onclick = () => document.body.classList.toggle("cinema");
+cv.ondblclick = () => document.body.classList.toggle("cinema");
+
+document.querySelectorAll("[data-layer]").forEach(btn => {
+  btn.onclick = () => {
+    const k = btn.dataset.layer;
+    layersOn[k] = !layersOn[k];
+    btn.classList.toggle("on", layersOn[k]);
+    renderSuiteFrame(false);
+  };
+});
+
+$("toggleRigMode").onclick = () => {
+  useArticulatedPoet = !useArticulatedPoet;
+  $("toggleRigMode").textContent = useArticulatedPoet ? "POET: 31-PART RIG + POSE" : "POET: POEM POSE CUTOUT";
+  $("toggleRigMode").classList.toggle("on", useArticulatedPoet);
+  renderSuiteFrame(false);
+};
+
+$("togglePivots").onclick = () => {
+  showPivots = !showPivots;
+  $("togglePivots").classList.toggle("on", showPivots);
+  renderSuiteFrame(false);
+};
+
+addEventListener("keydown", e => {
+  if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  if (e.code === "Space") { e.preventDefault(); $("play").click(); }
+  else if (e.key === "ArrowRight") $("nextBtn").click();
+  else if (e.key === "ArrowLeft") $("prevBtn").click();
+  else if (e.key === "f" || e.key === "F") $("cinemaBtn").click();
+  else if (e.key === "m" || e.key === "M") $("sndBtn").click();
+});
+
+function tick(now) {
+  const dt = Math.min(0.08, (now - lastNow) / 1000);
+  lastNow = now;
+  if (playing) {
+    if (soundOn && !audio.paused) {
+      if (Math.abs(audio.currentTime - t) > 0.25) {
+        audio.currentTime = t;
+      } else {
+        t = audio.currentTime;
+      }
+    } else {
+      t = (t + dt) % TIMELINE.duration;
+    }
+    renderSuiteFrame(false);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ── Boot & Harness Hook ── */
+async function fetchJsonWithFallback(relPath) {
+  let r = await fetch("./" + relPath);
+  if (!r.ok) r = await fetch("../" + relPath);
+  return r.ok ? r.json() : null;
+}
+
+async function boot() {
+  $("state").textContent = "LOADING ATLAS & TIMELINE…";
+  const [atlasData, timelineData, collageData, rigsData] = await Promise.all([
+    fetchJsonWithFallback("arena/parts/kit3/release_v2/wygwyl_atlas_manifest.json"),
+    fetchJsonWithFallback("arena/parts/kit3/release_v2/suite_scion_timeline.json"),
+    fetchJsonWithFallback("arena/parts/kit3/release_v2/scene_collage_plans.json").catch(() => null),
+    fetchJsonWithFallback("arena/parts/kit3/release_v2/character_rigs_library.json").catch(() => null),
+  ]);
+
+  ATLAS = atlasData;
+  TIMELINE = timelineData;
+  COLLAGE_PLANS = collageData;
+  CHAR_RIGS = rigsData;
+
+  for (const s of ATLAS.scenes) sceneById.set(s.id, s);
+  for (const a of ATLAS.assets) {
+    assetById.set(a.id, a);
+    for (const p of (a.parts || [])) {
+      if (p.file && (p.sheet_file || a.sheet_file) && p.bbox_sheet) {
+        partMetaByFile.set(p.file.replace(/^\.\//, ""), { sheet: p.sheet_file || a.sheet_file, bbox: p.bbox_sheet });
+      }
+    }
+  }
+  for (const tc of (ATLAS.tracksuitRig || [])) {
+    tracksuitMap.set(tc.comp_id, tc);
+  }
+  if (COLLAGE_PLANS && COLLAGE_PLANS.scenes) {
+    for (const sc of COLLAGE_PLANS.scenes) collageBySceneId.set(sc.id, sc);
+  }
+
+  audio.src = "./" + TIMELINE.audio;
+  $("dur").textContent = fmt(TIMELINE.duration);
+
+  buildTimelineAndChapters();
+
+  // Check URL ?start= or #hash
+  const params = new URLSearchParams(location.search);
+  const startParam = params.get("start") || params.get("f") || location.hash.slice(1);
+  if (startParam) {
+    const fMatch = TIMELINE.films.find(f => f.n === startParam || f.slug.startsWith(startParam));
+    const scMatch = sceneById.get(startParam.toUpperCase());
+    const shMatch = TIMELINE.shots.find(s => s.id === startParam.toUpperCase());
+    if (shMatch) t = shMatch.t0 + 0.05;
+    else if (scMatch) {
+      const f = TIMELINE.films[scMatch.book - 1];
+      t = f.poem[0] + 0.05;
+    } else if (fMatch) {
+      t = fMatch.poem[0] + 0.05;
+    }
+  }
+
+  $("state").textContent = `${TIMELINE.films.length} POEMS · ${ATLAS.scenes.length} SCENES · ${TIMELINE.shots.length} SHOTS READY`;
+  updateContextPanels(locateAtTime(t));
+  await renderSuiteFrame(true);
+  preloadTracksuitRig().then(() => renderSuiteFrame(false));
+
+  window.__hw = {
+    seek: (sec) => { seek(sec); },
+    renderAt: async (sec) => { playing = false; t = sec; await renderSuiteFrame(true); },
+    films: TIMELINE.films,
+    total: TIMELINE.duration,
+  };
+
+  requestAnimationFrame(tick);
+}
+
+boot();
+</script>
+</body>
+</html>

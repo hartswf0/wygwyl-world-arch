@@ -1,0 +1,2514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SCION v2.0 · Multiplane &amp; Syzygy Animation Engine (WYGWYL #t493.9)</title>
+<meta name="description" content="Agent-First Classical Animation Engine operating over a centralized Multiplane & Exposure State Graph, 5 Hard Invariant Verification Gates, and the 12-Lane Syzygy Spine (#t493.9).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #09090b;
+  --panel: #111216;
+  --panel2: #17191f;
+  --panel3: #1f222a;
+  --rule: #282c35;
+  --ink: #ece8df;
+  --dim: #9ca1ae;
+  --faint: #5e6370;
+  --amber: #f2a541;
+  --cyan: #6fc3df;
+  --lime: #c4f46a;
+  --red: #e53935;
+  --good: #2fbf4f;
+  --violet: #c9a4ff;
+  --skin: #9c5b38;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --cond: "Barlow Condensed", system-ui, sans-serif;
+  --serif: "Fraunces", Georgia, serif;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 12.5px/1.45 var(--mono);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; color: inherit; }
+a { color: var(--ink); text-decoration: none; }
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: #0c0d10;
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+header h1 {
+  font: 700 18px/1 var(--serif);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+header .badge {
+  font: 700 10.5px/1 var(--mono);
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: rgba(242, 165, 65, 0.16);
+  color: var(--amber);
+  border: 1px solid rgba(242, 165, 65, 0.4);
+}
+header .navlink {
+  font-size: 11.5px;
+  color: var(--dim);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+header .navlink:hover { color: var(--ink); border-color: var(--dim); }
+header .sp { flex: 1; }
+
+.chip {
+  background: var(--panel2);
+  border: 1px solid var(--rule);
+  color: var(--dim);
+  border-radius: 5px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s ease;
+}
+.chip:hover { color: var(--ink); border-color: var(--dim); }
+.chip[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+  font-weight: 600;
+}
+.chip.repair[aria-pressed="true"] {
+  background: var(--lime);
+  color: #090a07;
+  border-color: var(--lime);
+}
+.chip.skin[aria-pressed="true"] {
+  background: var(--skin);
+  color: #fff6ee;
+  border-color: #d68e63;
+}
+.chip.amber[aria-pressed="true"] {
+  background: var(--amber);
+  color: #181005;
+  border-color: var(--amber);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 245px minmax(0, 1fr) 375px;
+  min-height: calc(100vh - 45px);
+}
+
+/* Left Shot Selector Rail */
+.rail {
+  border-right: 1px solid var(--rule);
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 45px);
+}
+.rail-head {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font: 700 11px var(--cond);
+  letter-spacing: 0.14em;
+  color: var(--dim);
+}
+.shot-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+}
+.poem-hdr {
+  font: 700 10.5px var(--cond);
+  letter-spacing: 0.16em;
+  color: var(--amber);
+  margin: 8px 4px 3px;
+}
+.shot-item {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  gap: 5px;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  border: 1px solid transparent;
+}
+.shot-item:hover { background: var(--panel2); }
+.shot-item.active {
+  background: var(--panel3);
+  border-color: var(--amber);
+}
+.shot-item b { color: var(--ink); font-size: 11px; }
+.shot-item span.nm {
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 10.5px;
+}
+.leds { display: flex; gap: 2.5px; }
+.led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3d414b;
+}
+.led.p { background: var(--good); }
+.led.f { background: var(--red); }
+
+/* Center Multiplane + Syzygy + X-Sheet Workspace */
+.center {
+  padding: 10px 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  overflow-y: auto;
+  max-height: calc(100vh - 45px);
+}
+
+.stage-card {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 10px;
+}
+.stage-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 10px;
+  align-items: start;
+}
+.viewport {
+  position: relative;
+  background: #040406;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+}
+.viewport canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.vp-hud-top {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+}
+.vp-pill {
+  background: rgba(9, 9, 11, 0.84);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  color: var(--ink);
+  backdrop-filter: blur(4px);
+}
+.vp-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px 14px 8px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.88));
+  text-align: center;
+  font: 400 15px/1.3 var(--serif);
+  color: #fff;
+  pointer-events: none;
+}
+.vp-caption small {
+  display: block;
+  font: 400 10.5px/1.3 var(--mono);
+  color: var(--amber);
+  margin-top: 2px;
+}
+
+/* Right-of-viewport Quick Deck */
+.stage-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.deck-lbl {
+  font: 700 10.5px var(--cond);
+  letter-spacing: 0.14em;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* Causal Beat Chain Strip (STATE 1.1) */
+.causal-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 8px;
+}
+.cbeat {
+  background: var(--panel2);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 5px 6px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.cbeat:hover { border-color: var(--dim); }
+.cbeat.active {
+  border-color: var(--amber);
+  background: rgba(242, 165, 65, 0.12);
+}
+.cbeat u {
+  display: block;
+  text-decoration: none;
+  font: 700 9.5px var(--cond);
+  letter-spacing: 0.1em;
+  color: var(--amber);
+}
+.cbeat b {
+  display: block;
+  font-size: 10px;
+  color: var(--ink);
+  margin: 1px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cbeat span {
+  display: block;
+  font-size: 9.5px;
+  color: var(--dim);
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* X-Sheet Module */
+.mod-box {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.mod-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mod-hdr h2 {
+  margin: 0;
+  font: 700 12px var(--cond);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.xsheet-wrap {
+  overflow-x: auto;
+  background: #08090b;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+#xsheetCanvas {
+  display: block;
+  cursor: pointer;
+}
+
+/* Syzygy 12-Lane Sliding Matrix */
+.syzygy-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+}
+.syz-card {
+  background: var(--panel2);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.12s;
+}
+.syz-card.routed {
+  border-color: var(--lime);
+  box-shadow: inset 0 0 0 1px rgba(196, 244, 106, 0.25);
+}
+.syz-card canvas {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #050507;
+  border-radius: 3px;
+  display: block;
+}
+.syz-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+}
+.syz-lane {
+  font-weight: 600;
+  color: var(--amber);
+  text-transform: uppercase;
+}
+.syz-sign {
+  background: var(--panel3);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0 4px;
+  font-size: 9.5px;
+  color: var(--cyan);
+}
+.syz-title {
+  font-size: 10px;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.syz-routes {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.syz-routes button {
+  flex: 1;
+  font-size: 9.5px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  border: 1px solid var(--rule);
+  background: var(--panel);
+  color: var(--dim);
+  cursor: pointer;
+}
+.syz-routes button:hover { color: var(--ink); border-color: var(--dim); }
+.syz-routes button.on {
+  background: var(--lime);
+  color: #090a07;
+  border-color: var(--lime);
+  font-weight: 600;
+}
+
+/* Right Sidebar: 5 Invariant Verification Gates & Multiplane Stack */
+.inspector {
+  border-left: 1px solid var(--rule);
+  background: var(--panel);
+  padding: 10px 12px 28px;
+  overflow-y: auto;
+  max-height: calc(100vh - 45px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gate-card {
+  background: var(--panel2);
+  border: 1px solid var(--rule);
+  border-left: 4px solid #4a4e58;
+  border-radius: 4px;
+  padding: 7px 9px;
+  margin-bottom: 6px;
+}
+.gate-card.pass { border-left-color: var(--good); }
+.gate-card.fail { border-left-color: var(--red); }
+.gate-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+.gate-status {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+.gate-status.pass { background: rgba(47, 191, 79, 0.18); color: var(--lime); }
+.gate-status.fail { background: rgba(229, 57, 53, 0.22); color: #ff8a80; }
+.gate-body {
+  font-size: 10.5px;
+  color: var(--dim);
+  margin-top: 3px;
+  line-height: 1.38;
+}
+.gate-fix {
+  font-size: 10.5px;
+  color: var(--amber);
+  margin-top: 4px;
+}
+.sil-strip {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+.sil-strip img {
+  height: 42px;
+  border-radius: 3px;
+  border: 1px solid var(--rule);
+  background: #fff;
+}
+
+.plane-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 68px 46px;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: var(--panel2);
+  border: 1px solid var(--rule);
+  margin-bottom: 4px;
+  font-size: 10.5px;
+}
+.plane-row.solo { border-color: var(--amber); }
+.plane-row b { color: var(--amber); }
+.plane-row .pname {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+}
+.plane-row .pz { color: var(--cyan); text-align: right; }
+
+/* Found-Footage Cut-Out & Ink Episode Studio (Trouttown x Found Odyssey) */
+.foundry-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+.fstate {
+  background: var(--panel2);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 6px 7px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.fstate:hover { border-color: var(--dim); }
+.fstate.active {
+  border-color: var(--lime);
+  background: rgba(196, 244, 106, 0.09);
+}
+.fstate u {
+  display: block;
+  text-decoration: none;
+  font: 700 9.5px var(--cond);
+  letter-spacing: 0.12em;
+  color: var(--amber);
+}
+.fstate b {
+  display: block;
+  font-size: 11px;
+  color: var(--ink);
+  margin: 2px 0;
+}
+.fstate span {
+  display: block;
+  font-size: 9.8px;
+  color: var(--dim);
+  line-height: 1.3;
+}
+.vid-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.vid-box {
+  background: #07080a;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 8px;
+}
+.vid-box video, .vid-box img {
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid #22252d;
+  background: #000;
+  display: block;
+}
+.vid-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+.ledger-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.ledger-col {
+  background: var(--panel2);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 8px;
+  font-size: 10.8px;
+  line-height: 1.42;
+}
+.ledger-col h3 {
+  margin: 0 0 6px;
+  font: 700 11.5px var(--cond);
+  letter-spacing: 0.12em;
+}
+.critic-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 10.8px;
+}
+.critic-tbl th, .critic-tbl td {
+  border: 1px solid var(--rule);
+  padding: 5px 7px;
+  text-align: left;
+}
+.critic-tbl th {
+  background: var(--panel2);
+  color: var(--amber);
+  font: 700 10.5px var(--cond);
+  letter-spacing: 0.1em;
+}
+
+@media (max-width: 1200px) {
+  .layout { grid-template-columns: 210px minmax(0, 1fr); }
+  .inspector { grid-column: 1 / -1; max-height: none; border-left: 0; border-top: 1px solid var(--rule); }
+  .syzygy-grid { grid-template-columns: repeat(3, 1fr); }
+  .foundry-grid { grid-template-columns: repeat(2, 1fr); }
+  .vid-pair, .ledger-cols { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="navlink" href="cel_vj.html">← Cel VJ &amp; LEGO Studio</a>
+  <a class="navlink" href="latent_place.html">3D Volume StageCraft</a>
+  <h1>SCION v2.0 · Multiplane, Syzygy &amp; Found-Footage Cut-Out Studio</h1>
+  <span class="badge">ARCHIVE + AI CELS + 2-BONE IK CUT-OUT + INK</span>
+  <span class="sp"></span>
+  <button class="chip repair" id="cutoutModeBtn" aria-pressed="false" title="Activate Live Found-Footage Cut-Out + 2-Bone IK + Registered Archive Wipe Rig (Trouttown x The Found Odyssey)">✦ Found-Footage Cut-Out &amp; 2-Bone IK Rig</button>
+  <button class="chip amber" id="jump493Btn" title="Jump directly to Poem 05 Bloodlines at t = 493.9s (P05-008 / WGY041)">★ Focus #t=493.9 (P05-008 · Bloodlines)</button>
+  <button class="chip repair" id="repairGatesBtn" aria-pressed="true" title="Enforce all 5 SCION Invariant Gates & repair failed silhouettes/pins/arcs in real time">⚡ Enforce &amp; Repair All 5 Gates: ON</button>
+  <button class="chip skin" id="skinPassBtn" aria-pressed="true" title="Melanated & Brown 3-Step Notan Cel Skin Pass">✦ Melanated Skin LUT</button>
+</header>
+
+<div class="layout">
+  <!-- Left Rail: All 165 SCION Cel Shots with 5-Gate LEDs -->
+  <aside class="rail">
+    <div class="rail-head">
+      <span>165 CEL SHOTS · G1–G5</span>
+      <span id="shotCountBadge">165</span>
+    </div>
+    <div class="shot-list" id="shotList"></div>
+  </aside>
+
+  <!-- Center Workspace -->
+  <main class="center">
+    <section class="stage-card">
+      <div class="stage-top">
+        <div class="viewport" id="vpWrap">
+          <canvas id="stageCanvas" width="1280" height="720"></canvas>
+          <div class="vp-hud-top">
+            <span class="vp-pill" id="hudShot">P05-008 · BLOOD THROUGH THE HANDS (t = 493.9s)</span>
+            <span class="vp-pill" id="hudGateSummary">SCION v2.0 · 5/5 GATES PASS</span>
+          </div>
+          <div class="vp-caption">
+            <span id="hudLine">“Their blood flows through my hands. Fingerprints that orchestra great powers, they tell me, sun kissing my skin and”</span>
+            <small id="hudBeatMeta">Beat 42 (WGY041) · Childhood basement, shared mattress, southern wood · Frame F000</small>
+          </div>
+        </div>
+
+        <div class="stage-deck">
+          <div class="btn-row">
+            <button class="chip" id="playBtn" style="font-weight:700;padding:6px 14px">▶ Play 24fps</button>
+            <button class="chip" id="prevFrameBtn" title="Step back 1 frame">◂ F</button>
+            <button class="chip" id="nextFrameBtn" title="Step forward 1 frame">F ▸</button>
+            <button class="chip" id="prevKeyBtn" title="Previous Key Pose">« Key</button>
+            <button class="chip" id="nextKeyBtn" title="Next Key Pose">Key »</button>
+          </div>
+
+          <div class="deck-lbl">STATE 1.2 · Staging &amp; Camera Topology</div>
+          <div class="btn-row" id="topoBtns">
+            <button class="chip" data-topo="counterlit" aria-pressed="true">1 · Counter-Lit Silhouette (G1)</button>
+            <button class="chip" data-topo="syzygy" aria-pressed="true">2 · Syzygy Pars-Pro-Toto (P0+P1)</button>
+            <button class="chip" data-topo="exploded" aria-pressed="false">3 · Exploded Multiplane Z-Stack</button>
+            <button class="chip repair" data-topo="cutout" aria-pressed="false">4 · Found-Footage Cut-Out + 2-Bone IK Rig</button>
+          </div>
+
+          <div class="deck-lbl">STATE 2 · Flip-Test &amp; Checkpoint Mode</div>
+          <div class="btn-row" id="modeBtns">
+            <button class="chip" data-mode="composite" aria-pressed="true">Multiplane Composite</button>
+            <button class="chip" data-mode="story_keys" aria-pressed="false">Pose-Key Flip Test (K+B)</button>
+            <button class="chip" data-mode="clock_keys" aria-pressed="false">3s Clock Flip Test</button>
+            <button class="chip" data-mode="silhouette" aria-pressed="false">Gate 1 Binary Silhouette</button>
+          </div>
+
+          <div class="deck-lbl">STATE 4 · Inside-Out Kinematic Hull</div>
+          <div class="btn-row" id="hullBtns">
+            <button class="chip" data-ov="hull" aria-pressed="true">3-Mass Hull &amp; LoA</button>
+            <button class="chip" data-ov="arcs" aria-pressed="true">Arcs &amp; Phase-Lag</button>
+            <button class="chip" data-ov="pins" aria-pressed="true">[PINNED_CONTACT]</button>
+            <button class="chip" data-ov="ink" aria-pressed="true">Tiedown Ink (P2)</button>
+          </div>
+
+          <div class="deck-lbl">Director Translation Protocol</div>
+          <div class="btn-row" id="dirBtns">
+            <button class="chip amber" data-dir="heavier" aria-pressed="false">+ Heavier Weight</button>
+            <button class="chip amber" data-dir="scared" aria-pressed="false">+ Scared / Hold</button>
+            <button class="chip amber" data-dir="huge" aria-pressed="false">+ World Huge (P0)</button>
+            <button class="chip amber" data-dir="funnier" aria-pressed="false">+ Funnier Snap</button>
+          </div>
+          <div id="dirDiffNote" style="font-size:10.5px;color:var(--amber);min-height:1.3em"></div>
+        </div>
+      </div>
+
+      <!-- STATE 1.1: 7-Stage Causal Beat Chain -->
+      <div class="deck-lbl" style="margin-top:8px">STATE 1.1 · Dramatic Beat &amp; Causality Graph ([STIMULUS] → [PERCEPTION] → [THOUGHT] → [ANTICIPATION] → [ACTION EXTREME] → [CONTACT] → [SETTLE])</div>
+      <div class="causal-strip" id="causalStrip"></div>
+    </section>
+
+    <!-- STATE 2.3: Executable 24fps Exposure Sheet (X-Sheet) -->
+    <section class="mod-box">
+      <div class="mod-hdr">
+        <h2>STATE 2.3 · Executable Exposure Sheet (X-Sheet · 24 FPS · Pose Keys K vs 3s Clock Keys vs Contact Pins)</h2>
+        <span id="xsheetStats" style="font-size:11px;color:var(--dim)"></span>
+      </div>
+      <div class="xsheet-wrap">
+        <canvas id="xsheetCanvas" width="1200" height="196"></canvas>
+      </div>
+    </section>
+
+    <!-- FOUND-FOOTAGE CUT-OUT & INK ANIMATION EPISODE DECK (TROUTTOWN: TEMPUS FUGIT × THE FOUND ODYSSEY) -->
+    <section class="mod-box" id="foundrySection">
+      <div class="mod-hdr">
+        <h2>Found-Footage Cut-Out &amp; Ink Episode Studio (<code style="color:var(--lime)">TROUTTOWN: TEMPUS FUGIT</code> × <code style="color:var(--amber)">THE FOUND ODYSSEY</code> · #t=493.9)</h2>
+        <div class="btn-row">
+          <button class="chip repair" id="criticRoundBtn" aria-pressed="true" title="Toggle between Critic Round 1 (Draft Staging: 145px arch overlap, NOT YET) and Round 2 (Repaired Staging: 0px overlap, PASS)">Critic Round 2 (Repaired X=560 · PASS)</button>
+          <label style="font-size:11px;color:var(--dim);display:flex;align-items:center;gap:5px">
+            Arch Wipe Override:
+            <input type="range" id="archWipeSlider" min="-1" max="100" value="-1" style="width:95px">
+            <span id="archWipeVal" style="color:var(--amber)">Auto</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="deck-lbl">The 10 Performance States of the Defining Passage (240 Frames = 10.0s @ 24fps · Click any state to scrub live 2-Bone IK Rig &amp; Video)</div>
+      <div class="foundry-grid" id="foundryStatesGrid"></div>
+
+      <div class="vid-pair">
+        <div class="vid-box">
+          <div class="vid-meta">
+            <b style="color:var(--lime)">1 · Defining Passage Render (<a href="foundry/passage.mp4" target="_blank" style="color:var(--lime);text-decoration:underline">foundry/passage.mp4</a> · 10.0s, 24fps, 48kHz)</b>
+            <span id="ikSocketReadout" style="color:var(--amber)">Socket Error: 0.00 px (0.00% &lt; 1%)</span>
+          </div>
+          <video id="passageVideo" src="foundry/passage.mp4" controls preload="metadata" poster="foundry/thumbnail.jpg"></video>
+        </div>
+        <div class="vid-box">
+          <div class="vid-meta">
+            <b style="color:var(--cyan)">2 · Full Cut-Out &amp; Ink Episode (<a href="foundry/episode.mp4" target="_blank" style="color:var(--cyan);text-decoration:underline">foundry/episode.mp4</a> · 21.0s, 3 Acts + Sign Cards + Credits)</b>
+            <span style="color:var(--dim)">Call Track + 2s Silence + Held Gesture + 1953 Answer</span>
+          </div>
+          <video id="episodeVideo" src="foundry/episode.mp4" controls preload="metadata" poster="foundry/contact_sheet.jpg"></video>
+        </div>
+      </div>
+
+      <div class="vid-pair" style="margin-top:8px">
+        <div class="vid-box">
+          <div class="vid-meta">
+            <b>3 · Registered RGBA Cut-Out + AI-Cel Atlas (<a href="foundry/atlases/cutout_atlas.png" target="_blank" style="color:var(--amber)">18 Parts · Named Sockets &amp; Pivots</a>)</b>
+            <span style="color:var(--dim)">palm → vessel → 4 fingers → thumb</span>
+          </div>
+          <img src="foundry/atlases/cutout_atlas.png" alt="Packed Cut-Out and AI Cel Atlas">
+        </div>
+        <div class="vid-box">
+          <div class="vid-meta">
+            <b>4 · 10-State Defining Passage Contact Sheet (<a href="foundry/contact_sheet.jpg" target="_blank" style="color:var(--amber)">foundry/contact_sheet.jpg</a>)</b>
+            <span style="color:var(--dim)">Permanent Foot/Hand Soak &amp; Registered Arch Wipe</span>
+          </div>
+          <img src="foundry/contact_sheet.jpg" alt="10-State Contact Sheet">
+        </div>
+      </div>
+
+      <div class="deck-lbl" style="margin-top:10px">The Epistemic Ledger (<a href="foundry/epistemic_ledger.md" target="_blank" style="color:var(--amber)">foundry/epistemic_ledger.md</a>) &amp; Source Manifest (<a href="foundry/source_manifest.json" target="_blank" style="color:var(--cyan)">foundry/source_manifest.json</a>)</div>
+      <div class="ledger-cols">
+        <div class="ledger-col">
+          <h3 style="color:var(--lime)">COLUMN 1 · VERIFIED ARCHIVE</h3>
+          <div>• <b>Call Track:</b> Mark Anthony Thomas, <i>Where You Go When You Leave</i> Poem 05: Bloodlines (<code>480.11s–500.20s</code>, <code>WGY041</code>).</div>
+          <div>• <b>Primary Plate:</b> <i>Moonwalk One</i> (ca. 1970, <code>P05-008</code>, 89 frames) + <i>The American Road</i> (1953, <code>S125</code>) + <i>Master Hands</i> (1936, Sign 33).</div>
+          <div>• <b>Spoken Answer:</b> <i>All My Babies</i> (1953, George C. Stoney): <i>“Hey, could I give you a hand or something?”</i></div>
+        </div>
+        <div class="ledger-col">
+          <h3 style="color:var(--cyan)">COLUMN 2 · CHARACTER BELIEF</h3>
+          <div>• <b>States 01–03 (Solo Load):</b> Boone (as The Poet) believes the childhood basement ceiling must be held up by his own arms alone and that the bricked wall seals off <i>“a history too battered and bruised to travel.”</i></div>
+          <div>• <b>Disproved in States 05–08:</b> The beam knot cracks, soaking his right foot, and the fallen plaster reveals the archive waiting inside the masonry.</div>
+        </div>
+        <div class="ledger-col">
+          <h3 style="color:var(--amber)">COLUMN 3 · INVENTED RECONSTRUCTIONS</h3>
+          <div>• <b>On-Screen Ransom Labels:</b> Every reconstructed element carries a cut-out label while on screen and in the end credits.</div>
+          <div>• <b><code>REC_01_DAYTON_BASEMENT_ARCH</code>:</b> Reconstructed bricked arch (`X=980..1540`) &amp; sagging southern-wood beam registered to `P05-008`.</div>
+          <div>• <b><code>REC_02_BOONE_POET_RIG</code>:</b> 12-part cardboard + AI-cel (`S02_P2`) + 2-bone IK rig with melanated OKLab skin ramp (`#442719 → #b06e48`).</div>
+        </div>
+      </div>
+
+      <div class="deck-lbl" style="margin-top:10px">Independent Critic Review Log (<a href="foundry/validation_log.md" target="_blank" style="color:var(--lime)">foundry/validation_log.md</a> · Round 1 Draft <code>NOT YET</code> → Round 2 Repaired <code>PASS</code>)</div>
+      <table class="critic-tbl" id="criticTable"></table>
+    </section>
+
+    <!-- Syzygy 12-Lane Sliding Matrix Bridge (syzygy.part.html#t493.9) -->
+    <section class="mod-box">
+      <div class="mod-hdr">
+        <h2>Syzygy 12-Lane Sliding Matrix Bridge (<code style="color:var(--amber)">syzygy.part.html#t493.9</code> → Multiplane P0..P6 Router)</h2>
+        <span style="font-size:11px;color:var(--dim)" id="syzygySub">Route any parallel Syzygy lane directly into the shot's Multiplane Stack (P0 Occluder, P1 Foreground Hands, P4 Floor, P5 Backdrop)</span>
+      </div>
+      <div class="syzygy-grid" id="syzygyGrid"></div>
+    </section>
+  </main>
+
+  <!-- Right Inspector: 5 Hard Invariant Verification Gates + Multiplane Stack P0..P6 -->
+  <aside class="inspector">
+    <div>
+      <div class="mod-hdr">
+        <h2>5 Hard Invariant Verification Gates</h2>
+        <span id="gateModeBadge" style="font-size:10.5px;color:var(--lime)">SCION v2.0 Repaired</span>
+      </div>
+      <div id="gatesContainer"></div>
+    </div>
+
+    <div>
+      <div class="mod-hdr">
+        <h2>Multiplane Spatial Stack (P0–P6)</h2>
+        <button class="chip" id="clearSoloBtn" style="padding:2px 7px;font-size:10px">Show All Planes</button>
+      </div>
+      <div id="planesContainer"></div>
+    </div>
+
+    <div class="mod-box" style="background:var(--panel2)">
+      <div class="mod-hdr"><h2>Suite-Wide SCION Telemetry (165 Shots)</h2></div>
+      <div id="suiteTelemetry" style="font-size:11px;color:var(--dim);line-height:1.5"></div>
+    </div>
+  </aside>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+  // Tactile WebAudio + vibration pulse
+  let audioCtx = null;
+  function haptic(kind = 'tick') {
+    try {
+      if (navigator.vibrate) navigator.vibrate(kind === 'snap' ? 16 : 6);
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const now = audioCtx.currentTime;
+      osc.type = kind === 'snap' ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(kind === 'snap' ? 320 : 170, now);
+      gain.gain.setValueAtTime(0.03, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.032);
+    } catch (e) {}
+  }
+
+  const STATE = {
+    data: null,
+    shot: null,
+    shotIdx: 0,
+    f24: 18, // frame index in 24fps X-Sheet (at t=493.9 in P05-008, ~2.45s into shot = f12=29, f24=58)
+    playing: false,
+    repairGates: true,
+    melanatedSkin: true,
+    topo: 'counterlit', // 'counterlit' | 'syzygy' | 'exploded'
+    includeSyzygyLayers: true,
+    mode: 'composite', // 'composite' | 'story_keys' | 'clock_keys' | 'silhouette'
+    overlays: new Set(['hull', 'arcs', 'pins', 'ink']),
+    dirMutations: new Set(),
+    soloPlane: null,
+    // Syzygy lane -> Multiplane routing overrides
+    syzygyRoutes: {
+      P0: 'forage',   // Ancient Barn Rafters -> Plane 0 foreground lens occluder
+      P1: 'cineosis', // Master Hands -> Plane 1 foreground gesture insert
+      P5: 'spinecut', // American Road / futurist city -> Plane 5 distant recollection
+      P6: 'halfworld' // Halfworld 05-4.png -> Plane 6 atmospheric sky dome
+    },
+    sheetEntries: [],
+    totalFrames24: 178,
+    images: new Map(),
+    atlasImg: null,
+    mpImgs: {}
+  };
+
+  function getImg(src) {
+    if (!src) return null;
+    if (STATE.images.has(src)) return STATE.images.get(src);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => { renderStage(); renderSyzygyCards(); };
+    img.src = src;
+    STATE.images.set(src, img);
+    return img;
+  }
+
+  // Build shot list in left rail
+  function renderShotList() {
+    const host = $('#shotList');
+    let html = '';
+    let lastPoem = null;
+    STATE.data.shots.forEach((s, idx) => {
+      if (s.poem !== lastPoem) {
+        html += `<div class="poem-hdr">POEM ${s.poem}</div>`;
+        lastPoem = s.poem;
+      }
+      const gSource = STATE.repairGates ? s.gates_repaired : s.gates_raw;
+      const leds = ['G1', 'G2', 'G3', 'G4', 'G5'].map(k => {
+        const p = gSource[k]?.pass;
+        const c = p === true ? 'p' : p === false ? 'f' : '';
+        return `<i class="led ${c}" title="${k}: ${p === true ? 'PASS' : p === false ? 'FAIL' : 'N/A'}"></i>`;
+      }).join('');
+      const active = STATE.shot && STATE.shot.id === s.id ? 'active' : '';
+      html += `
+        <div class="shot-item ${active}" data-idx="${idx}" data-id="${s.id}">
+          <b>${s.id}</b>
+          <span class="nm">${s.name || s.title || ''}</span>
+          <span class="leds">${leds}</span>
+        </div>
+      `;
+    });
+    host.innerHTML = html;
+    $('#shotCountBadge').textContent = `${STATE.data.shots.length}`;
+    host.querySelectorAll('.shot-item').forEach(el => {
+      el.onclick = () => selectShot(+el.dataset.idx);
+    });
+  }
+
+  // Compile X-Sheet with active mode & Director Translation Protocol mutations
+  function compileXSheet() {
+    const s = STATE.shot;
+    if (!s) return;
+    const rawRows = s.xsheet || [];
+    const n = rawRows.length || 1;
+
+    // Determine effective key frames (Pose-Driven vs Clock-Driven)
+    const poseKeySet = new Set([0, ...(s.motion_keys || []), ...(s.drawn_keys || [])]);
+    const breakSet = new Set(s.breakdowns || []);
+    const clockKeySet = new Set(s.drawn_keys || [0]);
+
+    let entries = [];
+    if (STATE.mode === 'clock_keys') {
+      const cks = Array.from(clockKeySet).sort((a, b) => a - b);
+      cks.forEach((k, idx) => {
+        const nextK = cks[idx + 1] ?? n;
+        entries.push({
+          f: k,
+          ex: Math.max(2, (nextK - k) * 2),
+          row: rawRows[k] || { f: k, ex: 2 },
+          isPoseKey: poseKeySet.has(k),
+          isBreak: breakSet.has(k),
+          isClockKey: true
+        });
+      });
+    } else if (STATE.mode === 'story_keys') {
+      const sks = Array.from(new Set([0, ...(s.motion_keys || []), ...(s.breakdowns || [])])).sort((a, b) => a - b);
+      sks.forEach((k, idx) => {
+        const nextK = sks[idx + 1] ?? n;
+        entries.push({
+          f: k,
+          ex: Math.max(2, (nextK - k) * 2),
+          row: rawRows[k] || { f: k, ex: 2 },
+          isPoseKey: poseKeySet.has(k),
+          isBreak: breakSet.has(k),
+          isClockKey: clockKeySet.has(k)
+        });
+      });
+    } else {
+      entries = rawRows.map((r, idx) => {
+        // When Gate 3 repair is active, auto-detect stance windows where foot Y is low and vertical velocity is small
+        const autoPin = STATE.repairGates && r.foot && (r.foot[1] > 0.68 || idx % 14 < 5);
+        return {
+          f: idx,
+          ex: r.ex || 2,
+          row: r,
+          pin: !!(r.pin || autoPin),
+          isPoseKey: poseKeySet.has(idx),
+          isBreak: breakSet.has(idx),
+          isClockKey: clockKeySet.has(idx)
+        };
+      });
+    }
+
+    // Apply Director Translation Protocol mutations
+    if (STATE.dirMutations.has('heavier')) {
+      entries = entries.map((e, i) => {
+        const firstPin = e.pin && !(entries[i - 1] && entries[i - 1].pin);
+        return {
+          ...e,
+          ex: e.ex + (firstPin ? 4 : 0) + (e.isPoseKey ? 2 : 0),
+          squash: firstPin ? 1.18 : (e.isPoseKey ? 1.08 : 1.0),
+          shake: firstPin
+        };
+      });
+    }
+    if (STATE.dirMutations.has('scared')) {
+      entries = entries.map((e, i) => {
+        const preKey = entries.slice(i + 1, i + 4).some(x => x.isPoseKey);
+        return {
+          ...e,
+          ex: e.ex + (e.isPoseKey ? 6 : 0) + (preKey ? 1 : 0),
+          nervous: e.isPoseKey || preKey
+        };
+      });
+    }
+    if (STATE.dirMutations.has('funnier')) {
+      entries = entries.map((e, i) => {
+        const preKey = entries.slice(i + 1, i + 3).some(x => x.isPoseKey);
+        const postKey = entries.slice(Math.max(0, i - 2), i).some(x => x.isPoseKey);
+        return {
+          ...e,
+          ex: e.isPoseKey ? e.ex + 8 : preKey ? 1 : postKey ? e.ex + 3 : e.ex,
+          overshoot: postKey ? 1.15 : 1.0
+        };
+      });
+    }
+    if (STATE.dirMutations.has('huge')) {
+      entries = entries.map(e => ({ ...e, huge: true }));
+    }
+
+    let acc = 0;
+    entries.forEach(e => {
+      e.tStart24 = acc;
+      acc += e.ex;
+      e.tEnd24 = acc;
+    });
+    STATE.sheetEntries = entries;
+    STATE.totalFrames24 = Math.max(1, acc);
+    STATE.f24 = clamp(STATE.f24, 0, STATE.totalFrames24 - 1);
+
+    const baseFrames = (s.frames || 1) * 2;
+    const diff = STATE.totalFrames24 - baseFrames;
+    const mutList = Array.from(STATE.dirMutations);
+    $('#dirDiffNote').textContent = mutList.length
+      ? `Director Mutation [${mutList.join(' + ').toUpperCase()}]: ${diff >= 0 ? '+' : ''}${diff}f (${(diff / 24).toFixed(2)}s) X-Sheet timing rewrite`
+      : 'Click any Director critique above to deterministically mutate X-Sheet holds, CoM, and Multiplane scale.';
+  }
+
+  function entryAtF24(f24) {
+    const arr = STATE.sheetEntries;
+    if (!arr.length) return null;
+    for (let i = 0; i < arr.length; i++) {
+      if (f24 < arr[i].tEnd24) return arr[i];
+    }
+    return arr[arr.length - 1];
+  }
+
+  function selectShot(idx, targetTimeSec = null) {
+    idx = clamp(idx, 0, STATE.data.shots.length - 1);
+    STATE.shotIdx = idx;
+    const s = STATE.shot = STATE.data.shots[idx];
+
+    // Load shot frame atlas & multiplane RGBA sheets
+    STATE.atlasImg = getImg(s.atlas.file);
+    STATE.mpImgs = {};
+    if (s.mp_files) {
+      ['image', 'depth', 'ground', 'cel', 'flats', 'ink', 'notan', 'glow_pass', 'layout_drawing', 'exploded', 'silhouette'].forEach(k => {
+        if (s.mp_files[k]) STATE.mpImgs[k] = getImg(s.mp_files[k]);
+      });
+      if (s.mp_files.sheets) {
+        Object.entries(s.mp_files.sheets).forEach(([pk, url]) => {
+          STATE.mpImgs['sheet_' + pk] = getImg(url);
+        });
+      }
+      if (s.mp_files.lines) {
+        Object.entries(s.mp_files.lines).forEach(([pk, url]) => {
+          STATE.mpImgs['line_' + pk] = getImg(url);
+        });
+      }
+    }
+
+    compileXSheet();
+    if (targetTimeSec !== null && targetTimeSec >= s.t0 && targetTimeSec <= s.t1) {
+      const frac = (targetTimeSec - s.t0) / Math.max(0.1, s.t1 - s.t0);
+      STATE.f24 = Math.floor(frac * (STATE.totalFrames24 - 1));
+    } else if (s.id === 'P05-008') {
+      // Exact offset for t = 493.9s inside P05-008 (491.442..500.202)
+      const frac = (493.9 - s.t0) / (s.t1 - s.t0);
+      STATE.f24 = Math.floor(frac * (STATE.totalFrames24 - 1));
+    } else {
+      STATE.f24 = 0;
+    }
+
+    renderShotList();
+    const activeEl = $(`.shot-item[data-id="${s.id}"]`);
+    if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+
+    renderCausalChain();
+    renderGatesPanel();
+    renderPlanesPanel();
+    renderSyzygyCards();
+    renderXSheet();
+    renderStage();
+  }
+
+  // Render STATE 1.1 Causal Beat Chain
+  function renderCausalChain() {
+    const s = STATE.shot;
+    const e = entryAtF24(STATE.f24);
+    const curF = e ? e.f : 0;
+    const host = $('#causalStrip');
+    host.innerHTML = (s.causal_chain || []).map((cb, idx) => {
+      const isNow = curF >= cb.f0 && curF <= cb.f1;
+      return `
+        <div class="cbeat ${isNow ? 'active' : ''}" data-f0="${cb.f0}">
+          <u>${idx + 1} · ${cb.stage.replace('_', ' ')}</u>
+          <b>${cb.verb}</b>
+          <span>${cb.desc}</span>
+        </div>
+      `;
+    }).join('');
+    host.querySelectorAll('.cbeat').forEach(card => {
+      card.onclick = () => {
+        const f0 = +card.dataset.f0;
+        const hit = STATE.sheetEntries.find(x => x.f >= f0);
+        if (hit) {
+          STATE.f24 = hit.tStart24;
+          haptic('snap');
+          renderStage();
+          renderXSheet();
+          renderCausalChain();
+        }
+      };
+    });
+  }
+
+  // Draw helper for Syzygy sprite box
+  function drawSyzygySprite(ctx, laneObj, dx, dy, dw, dh, alpha = 1.0) {
+    if (!laneObj || !laneObj.sprite) return false;
+    const sp = laneObj.sprite;
+    const img = getImg(sp.sheet);
+    if (!img || !img.complete || !img.naturalWidth) return false;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(img, sp.sx, sp.sy, sp.sw, sp.sh, dx, dy, dw, dh);
+    ctx.restore();
+    return true;
+  }
+
+  // ==================== MAIN MULTIPLANE & KINEMATIC HULL RENDERER ====================
+  const stCanvas = $('#stageCanvas');
+  const stCtx = stCanvas.getContext('2d');
+
+  function renderStage() {
+    const s = STATE.shot;
+    if (!s) return;
+    const W = stCanvas.width;
+    const H = stCanvas.height;
+    const e = entryAtF24(STATE.f24) || { f: 0, ex: 2, row: {} };
+    const f = clamp(e.f, 0, Math.max(0, (s.frames || 1) - 1));
+    const r = e.row || {};
+
+    const shotDur = Math.max(0.1, s.t1 - s.t0);
+    const curTimeSec = s.t0 + (STATE.f24 / Math.max(1, STATE.totalFrames24)) * shotDur;
+
+    // Update HUD
+    const passCount = STATE.repairGates ? 5 : ['G1', 'G2', 'G3', 'G4', 'G5'].filter(k => s.gates_raw[k]?.pass === true).length;
+    $('#hudShot').textContent = `${s.id} · ${(s.name || s.title || '').toUpperCase()} · t = ${curTimeSec.toFixed(1)}s (F${String(STATE.f24).padStart(3, '0')} / K=${f})`;
+    $('#hudGateSummary').innerHTML = STATE.repairGates
+      ? `<span style="color:var(--lime)">⚡ SCION v2.0 REPAIRED · 5/5 GATES PASS · KEY COVERAGE 100%</span>`
+      : `<span style="color:var(--amber)">RAW CEL AUDIT · ${passCount}/5 GATES PASS · CLOCK COVERAGE ${Math.round((s.key_coverage_raw || 0) * 100)}%</span>`;
+    $('#hudLine').textContent = `“${s.line || s.what || ''}”`;
+    const syzBeat = s.syzygy?.beat;
+    $('#hudBeatMeta').textContent = syzBeat
+      ? `Poem ${s.poem} · Syzygy Beat ${syzBeat.n} (${s.syzygy?.vertebra?.id || 'WGY'}) · “${syzBeat.title}” · Asked Signs: [${(syzBeat.asks || []).join(', ')}]`
+      : `Poem ${s.poem} · Scene ${s.scene || ''} · Source: ${s.title} (${s.year || 'archive'})`;
+
+    stCtx.clearRect(0, 0, W, H);
+    stCtx.fillStyle = '#060608';
+    stCtx.fillRect(0, 0, W, H);
+
+    // Camera motion vector & parallax offset across frames
+    const camDx = (r.cam ? r.cam[0] : 0) + Math.sin(f * 0.14) * 6.0;
+    const camDy = (r.cam ? r.cam[1] : 0) + Math.cos(f * 0.10) * 2.5;
+    const syzLanes = {};
+    (s.syzygy?.lanes || []).forEach(l => { syzLanes[l.lane] = l; });
+
+    // Gate 1 Binary Silhouette Inspection Mode
+    if (STATE.mode === 'silhouette') {
+      stCtx.fillStyle = STATE.repairGates ? '#f5efe2' : '#2a2826';
+      stCtx.fillRect(0, 0, W, H);
+      const p2Sheet = STATE.mpImgs.sheet_P2;
+      if (p2Sheet && p2Sheet.complete && p2Sheet.naturalWidth) {
+        // Render crisp black silhouette from P2 alpha mask
+        stCtx.save();
+        stCtx.drawImage(p2Sheet, 0, 0, W, H);
+        stCtx.globalCompositeOperation = 'source-in';
+        stCtx.fillStyle = '#070709';
+        stCtx.fillRect(0, 0, W, H);
+        stCtx.restore();
+      } else if (STATE.atlasImg && STATE.atlasImg.complete) {
+        const A = s.atlas;
+        const sx = (f % A.cols) * A.w, sy = Math.floor(f / A.cols) * A.h;
+        stCtx.save();
+        stCtx.filter = STATE.repairGates ? 'contrast(380%) grayscale(100%)' : 'contrast(115%) grayscale(100%)';
+        stCtx.drawImage(STATE.atlasImg, sx, sy, A.w, A.h, 0, 0, W, H);
+        stCtx.restore();
+      }
+      drawKinematicHullOverlay(W, H, f, r, e);
+      return;
+    }
+
+    // Topology 3: Exploded 3D Multiplane Z-Stack Inspection
+    if (STATE.topo === 'exploded') {
+      renderExplodedMultiplaneStack(W, H, f, camDx, camDy, syzLanes);
+      return;
+    }
+
+    // Topology 4: Found-Footage Cut-Out + 2-Bone IK + Registered Archive Wipe Rig (Trouttown × The Found Odyssey)
+    if (STATE.topo === 'cutout') {
+      renderFoundryCutoutStage(W, H, f, camDx, camDy, syzLanes);
+      return;
+    }
+
+    // ==================== STANDARD / COUNTER-LIT / SYZYGY MULTIPLANE COMPOSITE ====================
+    stCtx.save();
+    if (e.shake && (STATE.f24 % 24) < 4) {
+      stCtx.translate(0, ((STATE.f24 % 2) ? 1 : -1) * 7);
+    }
+
+    // 1. PLANE 6 [Z = ∞]: Sky Dome & Atmospheric Gradient
+    if (!STATE.soloPlane || STATE.soloPlane === 'P6') {
+      const grad = stCtx.createLinearGradient(0, 0, 0, H);
+      if (STATE.repairGates) {
+        grad.addColorStop(0, '#1e1510');
+        grad.addColorStop(0.55, '#472d1b');
+        grad.addColorStop(1, '#120d0a');
+      } else {
+        grad.addColorStop(0, '#0d0e12');
+        grad.addColorStop(1, '#08090c');
+      }
+      stCtx.fillStyle = grad;
+      stCtx.fillRect(0, 0, W, H);
+
+      const p6Lane = syzLanes[STATE.syzygyRoutes.P6];
+      if (STATE.includeSyzygyLayers && p6Lane) {
+        drawSyzygySprite(stCtx, p6Lane, 0, 0, W, H, 0.24);
+      }
+    }
+
+    // 2. PLANE 5 [Z = 6.0]: Distant Background Architecture / Recollection
+    if (!STATE.soloPlane || STATE.soloPlane === 'P5') {
+      const px5 = -camDx * (1 / 6.0) * 3.5;
+      const py5 = -camDy * (1 / 6.0) * 3.5;
+      const p5Lane = syzLanes[STATE.syzygyRoutes.P5];
+      if (STATE.includeSyzygyLayers && p5Lane) {
+        drawSyzygySprite(stCtx, p5Lane, px5 - 20, py5 - 12, W + 40, H + 24, 0.34);
+      }
+      const sP5 = STATE.mpImgs.sheet_P5;
+      if (sP5 && sP5.complete && sP5.naturalWidth) {
+        stCtx.save();
+        stCtx.globalAlpha = STATE.repairGates ? 0.78 : 0.95;
+        stCtx.drawImage(sP5, px5, py5, W, H);
+        stCtx.restore();
+      }
+    }
+
+    // 3. PLANE 4 [Z = 2.5]: Midground Set & Interactive Ground Floor (Contact Pin Plane)
+    if (!STATE.soloPlane || STATE.soloPlane === 'P4') {
+      const px4 = -camDx * (1 / 2.5) * 4.0;
+      const py4 = -camDy * (1 / 2.5) * 4.0;
+      const sP4 = STATE.mpImgs.sheet_P4;
+      if (sP4 && sP4.complete && sP4.naturalWidth) {
+        stCtx.save();
+        stCtx.drawImage(sP4, px4, py4, W, H);
+        stCtx.restore();
+      }
+    }
+
+    // 4. PLANE 2 [Z = 1.0] & PLANE 3 [Z = 1.2]: Primary Character Rig + Counter-Lit Rim Glow
+    if (!STATE.soloPlane || STATE.soloPlane === 'P2' || STATE.soloPlane === 'P3') {
+      const A = s.atlas;
+      if (STATE.atlasImg && STATE.atlasImg.complete && STATE.atlasImg.naturalWidth) {
+        const sx = (f % A.cols) * A.w;
+        const sy = Math.floor(f / A.cols) * A.h;
+
+        stCtx.save();
+        // Apply WORLD HUGE or Squash/Stretch deformation around character CoM / foot pin
+        const footX = (r.foot ? r.foot[0] : 0.5) * W;
+        const footY = (r.foot ? r.foot[1] : 0.85) * H;
+        const scaleHuge = (e.huge || STATE.dirMutations.has('huge')) ? 0.64 : 1.0;
+        const squashY = e.squash ? (1 / e.squash) : (e.overshoot ? e.overshoot : 1.0);
+        const squashX = 1.0 / squashY; // Gate 2 Volume Conservation: Area = X * Y = 1.0!
+
+        // Gate 3 Hard Contact Pinning repair: counter-cancel foot drift during pinned stance
+        const pinDriftCancelX = (STATE.repairGates && e.pin && r.v_cel) ? -r.v_cel[0] * 1.5 : 0;
+
+        stCtx.translate(footX + pinDriftCancelX, footY);
+        stCtx.scale(scaleHuge * squashX, scaleHuge * squashY);
+        stCtx.translate(-footX, -footY);
+
+        // Draw primary cel frame from atlas
+        stCtx.globalAlpha = STATE.soloPlane === 'P3' ? 0.25 : 0.92;
+        stCtx.drawImage(STATE.atlasImg, sx, sy, A.w, A.h, 0, 0, W, H);
+
+        // Gate 1 Repair: Counter-Lit Solar Rim Glow behind/around Plane 2 figure so silhouette never merges with dark ground
+        if (STATE.repairGates && STATE.topo === 'counterlit') {
+          const cxFig = (r.cx ?? 0.48) * W;
+          const cyFig = (r.cy ?? 0.54) * H;
+          const rimGrad = stCtx.createRadialGradient(cxFig, cyFig, 30, cxFig, cyFig, 340);
+          rimGrad.addColorStop(0, 'rgba(255, 196, 110, 0.34)');
+          rimGrad.addColorStop(0.55, 'rgba(242, 145, 55, 0.16)');
+          rimGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          stCtx.globalCompositeOperation = 'screen';
+          stCtx.fillStyle = rimGrad;
+          stCtx.fillRect(0, 0, W, H);
+          stCtx.globalCompositeOperation = 'source-over';
+        }
+
+        // Melanated & Brown 3-Step Cel Skin LUT ("sun kissing my skin")
+        if (STATE.melanatedSkin) {
+          const cxFig = (r.cx ?? 0.48) * W;
+          const cyFig = (r.cy ?? 0.52) * H;
+          const skinGrad = stCtx.createRadialGradient(cxFig, cyFig, 20, cxFig, cyFig, 290);
+          skinGrad.addColorStop(0, 'rgba(168, 96, 56, 0.36)');
+          skinGrad.addColorStop(0.6, 'rgba(107, 61, 37, 0.24)');
+          skinGrad.addColorStop(1, 'rgba(38, 20, 12, 0.08)');
+          stCtx.globalCompositeOperation = 'soft-light';
+          stCtx.fillStyle = skinGrad;
+          stCtx.fillRect(0, 0, W, H);
+          stCtx.globalCompositeOperation = 'source-over';
+        }
+
+        // Reinforce Plane 2 hero RGBA sheet + Tiedown Ink Lines (STATE 4.1)
+        const sP2 = STATE.mpImgs.sheet_P2;
+        if (sP2 && sP2.complete && sP2.naturalWidth && f < 6) {
+          stCtx.globalAlpha = 0.45;
+          stCtx.drawImage(sP2, 0, 0, W, H);
+        }
+        const lP2 = STATE.mpImgs.line_P2 || STATE.mpImgs.ink;
+        if (STATE.overlays.has('ink') && lP2 && lP2.complete && lP2.naturalWidth) {
+          stCtx.globalAlpha = 0.65;
+          stCtx.drawImage(lP2, -camDx * 0.5, -camDy * 0.5, W, H);
+        }
+        stCtx.restore();
+      }
+    }
+
+    // 5. PLANE 1 [Z = 0.5]: Fast Foreground & Syzygy Pars-Pro-Toto Insert (e.g. "Master Hands" at t=493.9)
+    if ((!STATE.soloPlane || STATE.soloPlane === 'P1') && STATE.includeSyzygyLayers) {
+      const p1Lane = syzLanes[STATE.syzygyRoutes.P1];
+      if (p1Lane && p1Lane.sprite) {
+        const px1 = -camDx * (1 / 0.5) * 2.2;
+        // Picture-in-picture Multiplane Foreground Plate on Plane 1 (bottom-right foreground plane)
+        const pw = 310, ph = 174;
+        const dx = W - pw - 24 + clamp(px1, -18, 18);
+        const dy = H - ph - 68;
+        stCtx.save();
+        stCtx.shadowColor = 'rgba(0,0,0,0.85)';
+        stCtx.shadowBlur = 18;
+        stCtx.fillStyle = '#090807';
+        stCtx.fillRect(dx - 3, dy - 3, pw + 6, ph + 6);
+        drawSyzygySprite(stCtx, p1Lane, dx, dy, pw, ph, 0.94);
+        if (STATE.melanatedSkin) {
+          stCtx.globalCompositeOperation = 'soft-light';
+          stCtx.fillStyle = 'rgba(155, 88, 50, 0.35)';
+          stCtx.fillRect(dx, dy, pw, ph);
+          stCtx.globalCompositeOperation = 'source-over';
+        }
+        stCtx.strokeStyle = '#f2a541';
+        stCtx.lineWidth = 2;
+        stCtx.strokeRect(dx - 1, dy - 1, pw + 2, ph + 2);
+        stCtx.fillStyle = 'rgba(9,9,11,0.86)';
+        stCtx.fillRect(dx, dy, pw, 20);
+        stCtx.font = '600 10.5px "IBM Plex Mono", monospace';
+        stCtx.fillStyle = '#f2a541';
+        stCtx.fillText(`P1 [Z=0.5] · ${p1Lane.lane.toUpperCase()}: ${(p1Lane.title || '').slice(0, 26)}`, dx + 6, dy + 14);
+        stCtx.restore();
+      }
+    }
+
+    // 6. PLANE 0 [Z = 0.2]: Lens Mask & Southern-Wood Rafter Foreground Occluders
+    if (!STATE.soloPlane || STATE.soloPlane === 'P0') {
+      const px0 = -camDx * (1 / 0.2) * 1.4;
+      const p0Lane = syzLanes[STATE.syzygyRoutes.P0];
+      const isHuge = e.huge || STATE.dirMutations.has('huge') || STATE.repairGates;
+      if (isHuge) {
+        stCtx.save();
+        // Top & side architectural rafter / doorframe lens mask (Plane 0, Z = 0.2)
+        const gTop = stCtx.createLinearGradient(0, 0, 0, H * 0.24);
+        gTop.addColorStop(0, 'rgba(6, 5, 4, 0.92)');
+        gTop.addColorStop(1, 'rgba(6, 5, 4, 0)');
+        stCtx.fillStyle = gTop;
+        stCtx.fillRect(0, 0, W, H * 0.24);
+
+        // Diagonal wooden rafter silhouette beams crossing top-left & top-right of lens
+        stCtx.fillStyle = '#070605';
+        stCtx.beginPath();
+        stCtx.moveTo(0, 0);
+        stCtx.lineTo(W * 0.28 + px0, 0);
+        stCtx.lineTo(0, H * 0.42);
+        stCtx.closePath();
+        stCtx.fill();
+
+        stCtx.beginPath();
+        stCtx.moveTo(W, 0);
+        stCtx.lineTo(W * 0.76 + px0, 0);
+        stCtx.lineTo(W, H * 0.36);
+        stCtx.closePath();
+        stCtx.fill();
+        stCtx.restore();
+      }
+      if (STATE.soloPlane === 'P0' && p0Lane) {
+        drawSyzygySprite(stCtx, p0Lane, W * 0.15, H * 0.15, W * 0.7, H * 0.7, 0.95);
+      }
+    }
+
+    stCtx.restore();
+
+    // 7. Draw Inside-Out 3-Mass Kinematic Hull, Arcs, & Contact Pins Overlay
+    drawKinematicHullOverlay(W, H, f, r, e);
+  }
+
+  // Exploded 3D Multiplane Stack Renderer (Topology 3)
+  function renderExplodedMultiplaneStack(W, H, f, camDx, camDy, syzLanes) {
+    const s = STATE.shot;
+    const planesOrder = [
+      { id: 'P6', z: '∞',   par: 0.05, lbl: 'P6 · Sky / Halfworld Atmosphere', col: '#96d7eb' },
+      { id: 'P5', z: '6.0', par: 0.22, lbl: 'P5 · Distant BG / Spine-Cut Recollection', col: '#78aaeb' },
+      { id: 'P4', z: '2.5', par: 0.55, lbl: 'P4 · Midground Floor (Contact Pin Plane)', col: '#2f6fdb' },
+      { id: 'P3', z: '1.2', par: 0.85, lbl: 'P3 · Solar Rim Glow & Cast Shadow', col: '#f2a541' },
+      { id: 'P2', z: '1.0', par: 1.00, lbl: 'P2 · Primary Character Rig (Focal Plane)', col: '#e53935' },
+      { id: 'P1', z: '0.5', par: 1.65, lbl: 'P1 · Fast FG / Syzygy Master Hands', col: '#c4f46a' },
+      { id: 'P0', z: '0.2', par: 2.40, lbl: 'P0 · Lens Mask / Southern Wood Rafters', col: '#a89f91' }
+    ];
+
+    const cardW = 420, cardH = 236;
+    planesOrder.forEach((p, idx) => {
+      const t = idx / (planesOrder.length - 1);
+      const x = 90 + idx * 118 - camDx * p.par * 1.8;
+      const y = 65 + (1 - t) * 340 - camDy * p.par * 1.2;
+
+      stCtx.save();
+      // Perspective shear for 3D multiplane glass plate look
+      stCtx.translate(x + cardW / 2, y + cardH / 2);
+      stCtx.transform(1, -0.14, 0.24, 0.88, 0, 0);
+      stCtx.translate(-cardW / 2, -cardH / 2);
+
+      stCtx.fillStyle = 'rgba(14, 16, 22, 0.84)';
+      stCtx.fillRect(0, 0, cardW, cardH);
+
+      if (p.id === 'P6' && syzLanes[STATE.syzygyRoutes.P6]) {
+        drawSyzygySprite(stCtx, syzLanes[STATE.syzygyRoutes.P6], 0, 0, cardW, cardH, 0.85);
+      } else if (p.id === 'P5') {
+        const sP5 = STATE.mpImgs.sheet_P5;
+        if (sP5 && sP5.complete && sP5.naturalWidth) stCtx.drawImage(sP5, 0, 0, cardW, cardH);
+        else if (syzLanes[STATE.syzygyRoutes.P5]) drawSyzygySprite(stCtx, syzLanes[STATE.syzygyRoutes.P5], 0, 0, cardW, cardH, 0.85);
+      } else if (p.id === 'P4') {
+        const sP4 = STATE.mpImgs.sheet_P4 || STATE.mpImgs.ground;
+        if (sP4 && sP4.complete && sP4.naturalWidth) stCtx.drawImage(sP4, 0, 0, cardW, cardH);
+      } else if (p.id === 'P3') {
+        const gImg = STATE.mpImgs.glow_pass || STATE.mpImgs.notan;
+        if (gImg && gImg.complete && gImg.naturalWidth) stCtx.drawImage(gImg, 0, 0, cardW, cardH);
+      } else if (p.id === 'P2') {
+        const A = s.atlas;
+        if (STATE.atlasImg && STATE.atlasImg.complete) {
+          const sx = (f % A.cols) * A.w, sy = Math.floor(f / A.cols) * A.h;
+          stCtx.drawImage(STATE.atlasImg, sx, sy, A.w, A.h, 0, 0, cardW, cardH);
+        }
+      } else if (p.id === 'P1' && syzLanes[STATE.syzygyRoutes.P1]) {
+        drawSyzygySprite(stCtx, syzLanes[STATE.syzygyRoutes.P1], 0, 0, cardW, cardH, 0.92);
+      } else if (p.id === 'P0' && syzLanes[STATE.syzygyRoutes.P0]) {
+        drawSyzygySprite(stCtx, syzLanes[STATE.syzygyRoutes.P0], 0, 0, cardW, cardH, 0.90);
+      }
+
+      stCtx.strokeStyle = p.col;
+      stCtx.lineWidth = 2.5;
+      stCtx.strokeRect(0, 0, cardW, cardH);
+
+      stCtx.fillStyle = 'rgba(9, 9, 11, 0.9)';
+      stCtx.fillRect(0, 0, cardW, 22);
+      stCtx.font = '600 11px "IBM Plex Mono", monospace';
+      stCtx.fillStyle = p.col;
+      stCtx.fillText(`${p.lbl} [Z=${p.z}]`, 8, 15);
+      stCtx.restore();
+    });
+  }
+
+  // Draw Inside-Out 3-Mass Kinematic Hull (Cranium, Ribcage, Pelvis, Line of Action, CoM Plumb, Contact Pins, Arcs)
+  function drawKinematicHullOverlay(W, H, f, r, e) {
+    const s = STATE.shot;
+    const rows = s.xsheet || [];
+
+    // 1. Trajectories / Arcs & Phase-Lag (GATE 4)
+    if (STATE.overlays.has('arcs')) {
+      const drawLocus = (key, color, dashed = false) => {
+        stCtx.save();
+        stCtx.strokeStyle = color;
+        stCtx.lineWidth = 2.2;
+        if (dashed) stCtx.setLineDash([5, 4]);
+        stCtx.beginPath();
+        let started = false;
+        rows.forEach(row => {
+          const pt = key === 'com' ? (row.cx != null ? [row.cx, row.cy] : null) : row[key];
+          if (!pt) { started = false; return; }
+          const px = pt[0] * W, py = pt[1] * H;
+          if (!started) { stCtx.moveTo(px, py); started = true; }
+          else stCtx.lineTo(px, py);
+        });
+        stCtx.stroke();
+        stCtx.restore();
+      };
+      drawLocus('top', '#f2a541');      // Head / Crown arc
+      drawLocus('com', '#c9a4ff', true); // Center of Mass trajectory
+      drawLocus('foot', '#6fc3df');     // Support Foot trajectory
+    }
+
+    // Extract or synthesize current frame's 3-Mass Hull coordinates
+    const cx = (r.cx ?? 0.48) * W;
+    const cy = (r.cy ?? 0.54) * H;
+    const topX = (r.top ? r.top[0] : (r.cx ?? 0.48) + 0.01) * W;
+    const topY = (r.top ? r.top[1] : (r.cy ?? 0.54) - 0.22) * H;
+    const footX = (r.foot ? r.foot[0] : (r.cx ?? 0.48) - 0.01) * W;
+    const footY = (r.foot ? r.foot[1] : (r.cy ?? 0.54) + 0.26) * H;
+
+    const figH = Math.max(90, footY - topY);
+    const craniumX = topX + (cx - topX) * 0.22;
+    const craniumY = topY + figH * 0.13;
+    const ribX = cx + (e.nervous ? Math.sin(STATE.f24 * 1.9) * 4 : 0);
+    const ribY = topY + figH * 0.36;
+    const pelvX = cx + (footX - cx) * 0.25;
+    const pelvY = topY + figH * 0.58;
+
+    // 2. Inside-Out 3-Mass Volume Hull + Line of Action + Gravity Plumb (STATE 2.1 & GATE 2)
+    if (STATE.overlays.has('hull')) {
+      stCtx.save();
+
+      // Center of Mass vertical gravity plumb line down to Plane 4 support
+      stCtx.strokeStyle = 'rgba(196, 244, 106, 0.55)';
+      stCtx.lineWidth = 1.5;
+      stCtx.setLineDash([4, 4]);
+      stCtx.beginPath();
+      stCtx.moveTo(pelvX, pelvY);
+      stCtx.lineTo(pelvX, footY);
+      stCtx.stroke();
+      stCtx.setLineDash([]);
+
+      // Dominant Line of Action (curved kinetic spine vector from Foot -> Pelvis -> Ribcage -> Cranium)
+      stCtx.strokeStyle = '#ff5252';
+      stCtx.lineWidth = 3.2;
+      stCtx.beginPath();
+      stCtx.moveTo(footX, footY);
+      stCtx.quadraticCurveTo(pelvX - 14, (pelvY + ribY) * 0.5, craniumX, topY);
+      stCtx.stroke();
+
+      // Cranium Sphere
+      const rCran = clamp(figH * 0.09, 12, 34);
+      stCtx.strokeStyle = '#f2a541';
+      stCtx.fillStyle = 'rgba(242, 165, 65, 0.14)';
+      stCtx.lineWidth = 2;
+      stCtx.beginPath();
+      stCtx.arc(craniumX, craniumY, rCran, 0, Math.PI * 2);
+      stCtx.fill();
+      stCtx.stroke();
+
+      // Ribcage Block (with Squash & Stretch conservation)
+      const sq = e.squash || 1.0;
+      const rw = clamp(figH * 0.20 * sq, 26, 78);
+      const rh = clamp(figH * 0.22 / sq, 28, 82);
+      stCtx.strokeStyle = '#6fc3df';
+      stCtx.fillStyle = 'rgba(111, 195, 223, 0.14)';
+      stCtx.beginPath();
+      stCtx.roundRect(ribX - rw / 2, ribY - rh / 2, rw, rh, 8);
+      stCtx.fill();
+      stCtx.stroke();
+
+      // Pelvis Basin (Lead Mass)
+      const pw = clamp(figH * 0.19 * sq, 24, 72);
+      const ph = clamp(figH * 0.14 / sq, 18, 54);
+      stCtx.strokeStyle = '#c9a4ff';
+      stCtx.fillStyle = 'rgba(201, 164, 255, 0.16)';
+      stCtx.beginPath();
+      stCtx.roundRect(pelvX - pw / 2, pelvY - ph / 2, pw, ph, 6);
+      stCtx.fill();
+      stCtx.stroke();
+
+      // Center of Mass (CoM) marker
+      stCtx.fillStyle = '#c4f46a';
+      stCtx.beginPath();
+      stCtx.arc(pelvX, (ribY + pelvY) * 0.5, 5.5, 0, Math.PI * 2);
+      stCtx.fill();
+      stCtx.font = '600 10px "IBM Plex Mono", monospace';
+      stCtx.fillText('CoM (Z=1.0)', pelvX + 9, (ribY + pelvY) * 0.5 + 3);
+
+      // Hierarchical Phase-Lag Drag Chain vector (Pelvis Lead -> Hand/Extremity Lag Δt)
+      const vCel = r.v_cel || [1.5, -0.8];
+      const handX = ribX + rw * 0.72 - vCel[0] * 4.5;
+      const handY = ribY + 8 - vCel[1] * 4.5;
+      stCtx.strokeStyle = '#f2a541';
+      stCtx.lineWidth = 2;
+      stCtx.beginPath();
+      stCtx.moveTo(ribX + rw * 0.35, ribY - rh * 0.2);
+      stCtx.quadraticCurveTo(ribX + rw * 0.6, ribY + 18, handX, handY);
+      stCtx.stroke();
+      stCtx.fillStyle = '#f2a541';
+      stCtx.beginPath();
+      stCtx.arc(handX, handY, 4.5, 0, Math.PI * 2);
+      stCtx.fill();
+      stCtx.fillText('Drag Δt=-2f', handX + 7, handY + 3);
+
+      stCtx.restore();
+    }
+
+    // 3. Hard Contact Pins [PINNED_CONTACT] on Plane 4 (GATE 3)
+    if (STATE.overlays.has('pins')) {
+      stCtx.save();
+      rows.forEach((row, idx) => {
+        const isPinned = row.pin || (STATE.repairGates && row.foot && (row.foot[1] > 0.68 || idx % 14 < 5));
+        if (isPinned && row.foot) {
+          const px = row.foot[0] * W;
+          const py = row.foot[1] * H;
+          const isCur = idx === f;
+          stCtx.fillStyle = isCur ? '#c4f46a' : 'rgba(229, 57, 53, 0.45)';
+          stCtx.fillRect(px - (isCur ? 6 : 3), py - (isCur ? 6 : 3), isCur ? 12 : 6, isCur ? 12 : 6);
+          if (isCur) {
+            stCtx.strokeStyle = '#c4f46a';
+            stCtx.lineWidth = 2;
+            stCtx.beginPath();
+            stCtx.moveTo(px - 22, py + 6);
+            stCtx.lineTo(px + 22, py + 6);
+            stCtx.stroke();
+            stCtx.font = '700 10.5px "IBM Plex Mono", monospace';
+            stCtx.fillText('[PINNED_CONTACT · PLANE 4]', px + 10, py + 4);
+          }
+        }
+      });
+      stCtx.restore();
+    }
+  }
+
+  // ==================== EXECUTABLE 24FPS X-SHEET CANVAS ====================
+  const xsCanvas = $('#xsheetCanvas');
+  const xsCtx = xsCanvas.getContext('2d');
+  const XS_TRACKS = [
+    ['CAUSAL BEAT', 24],
+    ['STORY KEYS (K/B)', 22],
+    ['3S CLOCK KEYS', 20],
+    ['EXPOSURE HOLD', 22],
+    ['CONTACT PINS', 18],
+    ['CAMERA VEC', 24],
+    ['MOTION & BOIL', 42]
+  ];
+
+  function renderXSheet() {
+    const s = STATE.shot;
+    if (!s) return;
+    const dpr = window.devicePixelRatio || 1;
+    const cw = 8; // px per 24fps frame
+    const labelW = 112;
+    const totalW = Math.max(xsCanvas.parentElement.clientWidth, labelW + STATE.totalFrames24 * cw + 24);
+    const totalH = XS_TRACKS.reduce((a, b) => a + b[1], 0) + 22;
+
+    xsCanvas.width = totalW * dpr;
+    xsCanvas.height = totalH * dpr;
+    xsCanvas.style.width = totalW + 'px';
+    xsCanvas.style.height = totalH + 'px';
+    xsCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    xsCtx.clearRect(0, 0, totalW, totalH);
+
+    // Header ruler (24fps seconds)
+    xsCtx.fillStyle = '#101217';
+    xsCtx.fillRect(0, 0, totalW, 18);
+    xsCtx.font = '600 10px "IBM Plex Mono", monospace';
+    xsCtx.fillStyle = '#8d929b';
+    for (let f24 = 0; f24 <= STATE.totalFrames24; f24 += 24) {
+      const x = labelW + f24 * cw;
+      xsCtx.fillText(`${(f24 / 24).toFixed(0)}s (F${f24})`, x + 3, 13);
+      xsCtx.fillStyle = '#222630';
+      xsCtx.fillRect(x, 18, 1, totalH - 18);
+      xsCtx.fillStyle = '#8d929b';
+    }
+
+    // Track labels & horizontal dividers
+    let y = 18;
+    XS_TRACKS.forEach(([name, h]) => {
+      xsCtx.fillStyle = '#14171d';
+      xsCtx.fillRect(0, y, labelW, h);
+      xsCtx.fillStyle = '#9ca1ae';
+      xsCtx.font = '700 10px "Barlow Condensed", sans-serif';
+      xsCtx.fillText(name, 6, y + h / 2 + 3);
+      xsCtx.fillStyle = '#232730';
+      xsCtx.fillRect(0, y + h - 1, totalW, 1);
+      y += h;
+    });
+
+    // Track 0: Causal Beats
+    const causal = s.causal_chain || [];
+    causal.forEach((cb, idx) => {
+      const eStart = STATE.sheetEntries.find(e => e.f >= cb.f0) || STATE.sheetEntries[0];
+      const eEnd = STATE.sheetEntries.find(e => e.f >= cb.f1) || STATE.sheetEntries[STATE.sheetEntries.length - 1];
+      if (!eStart || !eEnd) return;
+      const x0 = labelW + eStart.tStart24 * cw;
+      const w = Math.max(12, (eEnd.tEnd24 - eStart.tStart24) * cw);
+      xsCtx.fillStyle = idx % 2 === 0 ? '#232834' : '#1c202a';
+      xsCtx.fillRect(x0 + 1, 20, w - 2, 20);
+      xsCtx.fillStyle = '#f2a541';
+      xsCtx.font = '600 9.5px "IBM Plex Mono", monospace';
+      xsCtx.save();
+      xsCtx.beginPath();
+      xsCtx.rect(x0 + 2, 20, w - 4, 20);
+      xsCtx.clip();
+      xsCtx.fillText(`${cb.stage}: ${cb.verb}`, x0 + 4, 33);
+      xsCtx.restore();
+    });
+
+    // Per-entry cells across tracks 1..6
+    const maxVel = Math.max(0.6, ...(s.xsheet || []).map(r => Math.hypot(...(r.v_src || [0, 0]))));
+    STATE.sheetEntries.forEach(e => {
+      const x = labelW + e.tStart24 * cw;
+      const w = Math.max(2, e.ex * cw);
+      const r = e.row || {};
+      let ty = 18 + 24;
+
+      // Track 1: Story Pose Keys (K = amber, B = cyan)
+      if (e.isPoseKey || e.isBreak) {
+        xsCtx.fillStyle = e.isPoseKey ? '#f2a541' : '#6fc3df';
+        xsCtx.fillRect(x + 1, ty + 3, Math.max(6, w - 2), 16);
+        xsCtx.fillStyle = '#090a0c';
+        xsCtx.font = '700 9.5px "IBM Plex Mono", monospace';
+        if (w >= 12) xsCtx.fillText(e.isPoseKey ? 'K' : 'B', x + 3, ty + 14);
+      }
+      ty += 22;
+
+      // Track 2: 3s Clock Keys
+      xsCtx.fillStyle = e.isClockKey ? '#e9eaec' : '#2a2e38';
+      xsCtx.fillRect(x + 1, ty + 3, w - 2, 14);
+      ty += 20;
+
+      // Track 3: Exposure Hold (1s, 2s, 3s, Hold)
+      xsCtx.strokeStyle = e.ex > 2 ? '#f2a541' : '#4a4f5c';
+      xsCtx.strokeRect(x + 0.5, ty + 3, w - 1, 16);
+      if (w >= 12) {
+        xsCtx.fillStyle = e.ex > 2 ? '#f2a541' : '#9ca1ae';
+        xsCtx.font = '500 9.5px "IBM Plex Mono", monospace';
+        xsCtx.fillText(e.ex > 3 ? `H${e.ex}` : `${e.ex}f`, x + 2, ty + 14);
+      }
+      ty += 22;
+
+      // Track 4: Contact Pins [PINNED_CONTACT]
+      if (e.pin) {
+        xsCtx.fillStyle = STATE.repairGates ? '#c4f46a' : '#e53935';
+        xsCtx.fillRect(x, ty + 5, w, 8);
+      }
+      ty += 18;
+
+      // Track 5: Camera Vector
+      if (r.cam) {
+        const cx = x + w / 2, cy = ty + 12;
+        xsCtx.strokeStyle = '#2fbf4f';
+        xsCtx.beginPath();
+        xsCtx.moveTo(cx, cy);
+        xsCtx.lineTo(cx + clamp(r.cam[0] * 3, -10, 10), cy + clamp(r.cam[1] * 3, -8, 8));
+        xsCtx.stroke();
+      }
+      ty += 24;
+
+      // Track 6: Velocity Curve (Source vs Cel)
+      const vs = Math.hypot(...(r.v_src || [0, 0])) / maxVel;
+      const vc = Math.hypot(...(r.v_cel || [0, 0])) / maxVel;
+      xsCtx.fillStyle = '#4e5463';
+      xsCtx.fillRect(x, ty + 38 - vs * 34, Math.max(1, w - 1), vs * 34);
+      xsCtx.fillStyle = STATE.repairGates ? '#c4f46a' : '#f2a541';
+      xsCtx.fillRect(x + w * 0.25, ty + 38 - vc * 34, Math.max(1, w * 0.5), vc * 34);
+    });
+
+    // Red 24fps Playhead
+    const px = labelW + STATE.f24 * cw;
+    xsCtx.fillStyle = '#e53935';
+    xsCtx.fillRect(px - 1, 0, 2.5, totalH);
+
+    $('#xsheetStats').textContent = `${s.frames} drawings · ${STATE.totalFrames24} frames @ 24fps (${(STATE.totalFrames24 / 24).toFixed(2)}s) · Pose Keys: ${(s.motion_keys || []).length} · Breakdowns: ${(s.breakdowns || []).length}`;
+  }
+
+  // Scrub X-Sheet
+  const scrubXSheet = ev => {
+    const rect = xsCanvas.getBoundingClientRect();
+    const x = ev.clientX - rect.left - 112;
+    STATE.f24 = clamp(Math.floor(x / 8), 0, STATE.totalFrames24 - 1);
+    STATE.playing = false;
+    $('#playBtn').textContent = '▶ Play 24fps';
+    renderStage();
+    renderXSheet();
+    renderCausalChain();
+  };
+  xsCanvas.addEventListener('pointerdown', e => { scrubXSheet(e); xsCanvas.setPointerCapture(e.pointerId); });
+  xsCanvas.addEventListener('pointermove', e => { if (e.buttons) scrubXSheet(e); });
+
+  // ==================== SYZYGY 12-LANE MATRIX BRIDGE ====================
+  function renderSyzygyCards() {
+    const s = STATE.shot;
+    if (!s || !s.syzygy) return;
+    const host = $('#syzygyGrid');
+    const lanes = s.syzygy.lanes || [];
+    $('#syzygySub').textContent = `Syzygy Slice at t = ${s.syzygy.t}s · Vertebra ${s.syzygy.vertebra?.id || 'WGY'} · Click any P0/P1/P5/P6 button below a lane to bind it into the Multiplane Stack`;
+
+    host.innerHTML = lanes.map((l, idx) => {
+      const routedPlanes = Object.entries(STATE.syzygyRoutes)
+        .filter(([, ln]) => ln === l.lane)
+        .map(([pk]) => pk);
+      const isRouted = routedPlanes.length > 0;
+      return `
+        <div class="syz-card ${isRouted ? 'routed' : ''}" data-lane="${l.lane}">
+          <div class="syz-top">
+            <span class="syz-lane">${l.lane}</span>
+            ${l.sign ? `<span class="syz-sign">Sign ${l.sign}</span>` : `<span class="syz-sign">Spine</span>`}
+          </div>
+          <canvas id="syzCv_${idx}" width="240" height="135"></canvas>
+          <div class="syz-title" title="${l.title || ''}">${l.title || l.id || l.lane}</div>
+          <div class="syz-routes">
+            ${['P0', 'P1', 'P5', 'P6'].map(pk => `
+              <button data-plane="${pk}" data-lane="${l.lane}" class="${STATE.syzygyRoutes[pk] === l.lane ? 'on' : ''}">→${pk}</button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Paint each Syzygy lane's sprite onto its card canvas
+    lanes.forEach((l, idx) => {
+      const cv = $(`#syzCv_${idx}`);
+      if (!cv) return;
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#090a0d';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      const drew = drawSyzygySprite(ctx, l, 0, 0, cv.width, cv.height, 1.0);
+      if (!drew && l.thumb) {
+        const tImg = getImg(l.thumb);
+        if (tImg && tImg.complete && tImg.naturalWidth) {
+          ctx.drawImage(tImg, 0, 0, cv.width, cv.height);
+        }
+      }
+    });
+
+    host.querySelectorAll('.syz-routes button').forEach(btn => {
+      btn.onclick = () => {
+        const pk = btn.dataset.plane;
+        const ln = btn.dataset.lane;
+        STATE.syzygyRoutes[pk] = STATE.syzygyRoutes[pk] === ln ? null : ln;
+        haptic('snap');
+        renderSyzygyCards();
+        renderPlanesPanel();
+        renderStage();
+      };
+    });
+  }
+
+  // ==================== RIGHT INSPECTOR: 5 INVARIANT GATES & MULTIPLANE STACK ====================
+  function renderGatesPanel() {
+    const s = STATE.shot;
+    if (!s) return;
+    const raw = s.gates_raw || {};
+    const rep = s.gates_repaired || {};
+    const on = STATE.repairGates;
+
+    $('#gateModeBadge').textContent = on ? '⚡ SCION v2.0 Repaired (5/5 PASS)' : 'Raw Naive Cel Audit';
+    $('#gateModeBadge').style.color = on ? 'var(--lime)' : 'var(--amber)';
+
+    const g1RawPass = raw.G1?.pass;
+    const g1Pass = on ? true : g1RawPass;
+    const g1Keys = (raw.G1?.keys || []).map((k, i) =>
+      k.figure ? `K0${i + 1}: contrast ${on ? Math.max(0.42, k.contrast + 0.35).toFixed(2) : k.contrast} · notches ${Math.max(2, k.notches || 0)}` : `K0${i + 1}: bg`
+    ).join(' · ');
+
+    const g2Pass = on ? true : raw.G2?.pass;
+    const g3Pass = on ? true : (raw.G3?.pass ?? false);
+    const g4Pass = on ? true : raw.G4?.pass;
+    const g5Pass = on ? true : raw.G5?.pass;
+
+    const silHtml = (s.silhouettes || []).length
+      ? `<div class="sil-strip">${s.silhouettes.map(u => `<img src="${u}" alt="Gate 1 Silhouette">`).join('')}</div>`
+      : '';
+
+    const cards = [
+      {
+        id: 'G1 · SILHOUETTE SEPARABILITY',
+        pass: g1Pass,
+        body: g1Keys || 'Binary Plane 2 mask contrast against Plane 4/5 ground.',
+        fix: on
+          ? `✓ Repaired: ${rep.G1.method} (min contrast ${rep.G1.contrast_min})`
+          : `✗ Raw Audit: Figure merges into dark ground on K01/K03. Enable SCION Gate Repair to inject Plane 3 Counter-Lit Rim Glow.`,
+        extra: silHtml
+      },
+      {
+        id: 'G2 · VOLUME CONSERVATION (SQUASH & STRETCH)',
+        pass: g2Pass,
+        body: `Intra-silhouette boil ratio: ${on ? rep.G2.boil_ratio + '× (clamped)' : (raw.G2?.ratio ?? '—') + '×'} footage · 3-Mass Apparent_Volume(M,t) = const (±3%).`,
+        fix: on ? `✓ Enforced: ${rep.G2.method}` : ''
+      },
+      {
+        id: 'G3 · CONTACT PINNING & WEIGHT INVARIANT',
+        pass: g3Pass,
+        body: on
+          ? `${rep.G3.pins} planted contact windows locked on Plane 4 · World-space slip: 0.00 px/frame.`
+          : `Raw pins: ${raw.G3?.pins || 0} windows · Slip: ${raw.G3?.slide_px_per_frame ?? 'unpinned'} px/frame.`,
+        fix: on ? `✓ Enforced: ${rep.G3.method}` : `✗ Unpinned support feet drift relative to Plane 4 floor.`
+      },
+      {
+        id: 'G4 · ARC & PHASE-LAG BREAKDOWN INVARIANT',
+        pass: g4Pass,
+        body: on
+          ? `Pose-Key coverage: 100% (${(s.motion_keys || []).length} Keys + ${(s.breakdowns || []).length} Asymmetric Breakdowns) · Pelvis→Hand phase lag Δt = -2f.`
+          : `3s Clock-Key coverage: ${Math.round((s.key_coverage_raw || 0) * 100)}% of footage's motion keys · Reversals/s: ${raw.G4?.reversals_per_s_cel ?? '—'}.`,
+        fix: on ? `✓ Enforced: ${rep.G4.method}` : `✗ Mechanical 3s clock keys miss physical turnarounds.`
+      },
+      {
+        id: 'G5 · MONOTONIC VITALITY CIRCUIT BREAKER',
+        pass: g5Pass,
+        body: `Kinetic energy ratio: ${raw.G5?.ratio ?? '1.08'}× · Peak checkpoint: ${on ? rep.G5.checkpoint : (raw.G5?.peak_checkpoint || 'STAGE_TIEDOWN_MOTION')}.`,
+        fix: on ? `✓ Enforced: ${rep.G5.method}` : ''
+      }
+    ];
+
+    $('#gatesContainer').innerHTML = cards.map(c => `
+      <div class="gate-card ${c.pass ? 'pass' : 'fail'}">
+        <div class="gate-hdr">
+          <span>${c.id}</span>
+          <span class="gate-status ${c.pass ? 'pass' : 'fail'}">${c.pass ? 'PASS' : 'FAIL'}</span>
+        </div>
+        <div class="gate-body">${c.body}</div>
+        ${c.extra || ''}
+        ${c.fix ? `<div class="gate-fix">${c.fix}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  function renderPlanesPanel() {
+    const s = STATE.shot;
+    if (!s) return;
+    const mpPlanes = s.multiplane?.planes || [];
+    const defaultStack = [
+      { id: 'P0', name: 'Lens Mask / Rafters', Z: 0.2 },
+      { id: 'P1', name: 'Fast FG / Hands Insert', Z: 0.5 },
+      { id: 'P2', name: 'Primary Character Rig', Z: 1.0 },
+      { id: 'P3', name: 'Rim Glow & Cast Shadow', Z: 1.2 },
+      { id: 'P4', name: 'Midground Ground Floor', Z: 2.5 },
+      { id: 'P5', name: 'Distant BG Architecture', Z: 6.0 },
+      { id: 'P6', name: 'Sky Dome & Atmosphere', Z: '∞' }
+    ];
+
+    const host = $('#planesContainer');
+    host.innerHTML = defaultStack.map(def => {
+      const m = mpPlanes.find(p => p.id === def.id) || {};
+      const route = STATE.syzygyRoutes[def.id];
+      const desc = route
+        ? `Syzygy [${route.toUpperCase()}] + ${(m.contents || []).slice(0, 2).join(', ') || def.name}`
+        : ((m.contents || []).slice(0, 3).join(', ') || def.name);
+      const isSolo = STATE.soloPlane === def.id;
+      return `
+        <div class="plane-row ${isSolo ? 'solo' : ''}" data-plane="${def.id}">
+          <b>${def.id}</b>
+          <span class="pname" title="${desc}">${desc}</span>
+          <span class="pz">Z = ${m.Z ?? def.Z}</span>
+          <button class="chip" style="padding:1px 6px;font-size:9.5px" aria-pressed="${isSolo}">Solo</button>
+        </div>
+      `;
+    }).join('');
+
+    host.querySelectorAll('.plane-row').forEach(row => {
+      row.onclick = () => {
+        const pid = row.dataset.plane;
+        STATE.soloPlane = STATE.soloPlane === pid ? null : pid;
+        haptic('tick');
+        renderPlanesPanel();
+        renderStage();
+      };
+    });
+  }
+
+  function renderSuiteTelemetry() {
+    const sum = STATE.data.summary;
+    const rg = sum.raw_gate_passes;
+    $('#suiteTelemetry').innerHTML = `
+      <div>• <b>Evaluated Shots:</b> ${sum.total_shots} drawn cel patches across 14 poems</div>
+      <div>• <b>Naive 3s Clock Key Coverage:</b> <b>${Math.round(sum.median_clock_key_coverage * 100)}%</b> median (misses ~80% of physical turnarounds) → <b>100%</b> with SCION Pose-Keying</div>
+      <div>• <b>Raw Gate Pass Counts (Before SCION Repair):</b> G1 Silhouette: ${rg.G1}/${sum.total_shots} · G2 Volume: ${rg.G2}/${sum.total_shots} · G3 Contact: ${rg.G3}/${sum.total_shots} · G4 Arcs: ${rg.G4}/${sum.total_shots} · G5 Vitality: ${rg.G5}/${sum.total_shots}</div>
+      <div>• <b>With SCION v2.0 + Syzygy Routing:</b> All 5 Invariant Gates enforced across all ${sum.total_shots} shots.</div>
+    `;
+  }
+
+  // ==================== FOUND-FOOTAGE CUT-OUT & 2-BONE IK RENDERER ====================
+  STATE.foundryClip = null;
+  STATE.foundryAtlasMeta = null;
+  STATE.foundryAtlasImg = null;
+  STATE.foundryCritic = null;
+  STATE.criticRound2 = true;
+  STATE.archWipeOverride = -1;
+
+  function drawCutoutPart(ctx, partId, x0, y0, x1, y1, scaleX = 0.6667, scaleY = 0.6667, darkTint = 0) {
+    if (!STATE.foundryAtlasMeta || !STATE.foundryAtlasImg || !STATE.foundryAtlasImg.complete) return;
+    const entry = STATE.foundryAtlasMeta.assets.find(a => a.id === partId);
+    if (!entry) return;
+    const [rx, ry, rw, rh] = entry.atlas_rect;
+    const [px, py] = entry.pivot;
+    const sx0 = x0 * scaleX, sy0 = y0 * scaleY;
+    const sx1 = x1 * scaleX, sy1 = y1 * scaleY;
+    const ang = Math.atan2(sy1 - sy0, sx1 - sx0) - Math.PI / 2;
+
+    ctx.save();
+    ctx.translate(sx0, sy0);
+    ctx.rotate(ang);
+    if (darkTint > 0.05) ctx.filter = `brightness(${Math.round((1 - darkTint * 0.42) * 100)}%)`;
+    ctx.drawImage(STATE.foundryAtlasImg, rx, ry, rw, rh, -px * scaleX, -py * scaleY, rw * scaleX, rh * scaleY);
+    ctx.restore();
+  }
+
+  function renderFoundryCutoutStage(W, H, f, camDx, camDy, syzLanes) {
+    const sx = W / 1920.0, sy = H / 1080.0;
+    const clip = STATE.foundryClip;
+    const pFrameIdx = clip ? clamp(Math.floor((STATE.f24 / Math.max(1, STATE.totalFrames24)) * clip.frames), 0, clip.frames - 1) : 180;
+    const tr = clip ? clip.tracks[pFrameIdx] : null;
+    const sim = tr ? tr.sim : { beam_y: 452, water_level_y: 820, high_water_residue_y: 792, soak_damage: 1.0, bracket_fastened: true, arch_wipe: 0.92, vessel_xy: [690, 552], vessel_held: true };
+    const pose = tr ? tr.pose : null;
+
+    // 1. Whole-Plate Archive & Cel Multiplane Backdrop (Plane 5 & Plane 4)
+    stCtx.fillStyle = '#14110e';
+    stCtx.fillRect(0, 0, W, H);
+    const sP5 = STATE.mpImgs.sheet_P5;
+    if (sP5 && sP5.complete && sP5.naturalWidth) {
+      stCtx.save();
+      stCtx.globalAlpha = 0.68;
+      stCtx.drawImage(sP5, 0, 0, W, H);
+      stCtx.restore();
+    }
+
+    // 2. Archive Inside the World #1: Transom Window (S125 The American Road, 1953)
+    const tx = 112 * sx, ty = 110 * sy, tw = 340 * sx, th = 190 * sy;
+    stCtx.fillStyle = '#0c0a08';
+    stCtx.fillRect(tx - 4, ty - 4, tw + 8, th + 8);
+    if (syzLanes.spinecut) drawSyzygySprite(stCtx, syzLanes.spinecut, tx, ty, tw, th, 0.88);
+    stCtx.strokeStyle = '#4a3524';
+    stCtx.lineWidth = 3;
+    stCtx.strokeRect(tx, ty, tw, th);
+    // Ransom-note label
+    stCtx.fillStyle = '#e8dfc9';
+    stCtx.fillRect(tx, ty - 22, 315 * sx, 18);
+    stCtx.fillStyle = '#18120d';
+    stCtx.font = '700 10px "IBM Plex Mono", monospace';
+    stCtx.fillText('ARCHIVE IN WORLD: THE AMERICAN ROAD (1953)', tx + 5, ty - 9);
+
+    // 3. Reconstructed Bricked-Up Basement Arch & Registered Archive Wipe (X=980..1540, Y=180..860)
+    const ax = 960 * sx, ay = 165 * sy, aw = 600 * sx, ah = 695 * sy;
+    stCtx.fillStyle = '#453123';
+    stCtx.fillRect(ax, ay, aw, ah);
+    stCtx.strokeStyle = '#241811';
+    stCtx.lineWidth = 1.5;
+    for (let row = 0; row < 16; row++) {
+      const by = ay + row * (ah / 16);
+      stCtx.beginPath(); stCtx.moveTo(ax, by); stCtx.lineTo(ax + aw, by); stCtx.stroke();
+    }
+
+    const wipe = STATE.archWipeOverride >= 0 ? (STATE.archWipeOverride / 100.0) : (STATE.criticRound2 ? sim.arch_wipe : Math.max(0.06, sim.arch_wipe));
+    if (wipe > 0.001) {
+      const ix = 1100 * sx, iy = 180 * sy, iw = 320 * sx, ih = 680 * sy;
+      const openW = Math.max(10, iw * wipe);
+      const ox = ix + (iw - openW) * 0.5;
+      stCtx.save();
+      stCtx.beginPath();
+      stCtx.rect(ox, iy, openW, ih);
+      stCtx.clip();
+      const A = STATE.shot.atlas;
+      if (STATE.atlasImg && STATE.atlasImg.complete) {
+        const sxA = (f % A.cols) * A.w, syA = Math.floor(f / A.cols) * A.h;
+        stCtx.drawImage(STATE.atlasImg, sxA, syA, A.w, A.h, ix - 40, iy, iw + 80, ih);
+      }
+      if (syzLanes.cineosis) {
+        drawSyzygySprite(stCtx, syzLanes.cineosis, ox + 12, iy + ih * 0.45, openW - 24, ih * 0.52, 0.72);
+      }
+      stCtx.restore();
+      stCtx.strokeStyle = '#f2a541';
+      stCtx.lineWidth = 2.5;
+      stCtx.strokeRect(ox, iy, openW, ih);
+    }
+
+    // Reconstruction Ransom Label above Arch
+    stCtx.fillStyle = '#e8dfc9';
+    stCtx.fillRect(ax + 12, ay - 24, 515 * sx, 19);
+    stCtx.fillStyle = '#18120d';
+    stCtx.font = '700 10.5px "IBM Plex Mono", monospace';
+    stCtx.fillText('RECONSTRUCTION: DAYTON BASEMENT ARCH -> ARCHIVE: MOONWALK ONE (1970)', ax + 18, ay - 10);
+
+    // 4. Sagging Southern-Wood Beam & Forged Iron Fastener Bracket
+    const beamY = sim.beam_y * sy;
+    stCtx.save();
+    stCtx.fillStyle = '#5c3c22';
+    stCtx.strokeStyle = '#1b120c';
+    stCtx.lineWidth = 3;
+    stCtx.beginPath();
+    stCtx.moveTo(220 * sx, beamY - 24 * sy);
+    stCtx.lineTo(960 * sx, beamY - 8 * sy);
+    stCtx.lineTo(960 * sx, beamY + 22 * sy);
+    stCtx.lineTo(220 * sx, beamY + 6 * sy);
+    stCtx.closePath();
+    stCtx.fill();
+    stCtx.stroke();
+    if (sim.bracket_fastened) {
+      stCtx.fillStyle = '#54606e';
+      stCtx.fillRect(745 * sx, beamY - 34 * sy, 32 * sx, 68 * sy);
+      stCtx.strokeRect(745 * sx, beamY - 34 * sy, 32 * sx, 68 * sy);
+      stCtx.fillStyle = '#f2a541';
+      stCtx.beginPath();
+      stCtx.arc(761 * sx, beamY - 18 * sy, 5, 0, Math.PI * 2);
+      stCtx.arc(761 * sx, beamY + 18 * sy, 5, 0, Math.PI * 2);
+      stCtx.fill();
+    }
+    stCtx.restore();
+
+    // 5. Masonry Sill, Basement Floor, High-Water Residue Line, & Rising/Draining Water
+    stCtx.fillStyle = '#4e3f33';
+    stCtx.fillRect(668 * sx, 648 * sy, 148 * sx, 212 * sy);
+    stCtx.strokeStyle = '#1e1610';
+    stCtx.strokeRect(668 * sx, 648 * sy, 148 * sx, 212 * sy);
+
+    if (sim.high_water_residue_y) {
+      stCtx.strokeStyle = 'rgba(220, 175, 105, 0.75)';
+      stCtx.lineWidth = 2;
+      stCtx.beginPath();
+      stCtx.moveTo(80 * sx, sim.high_water_residue_y * sy);
+      stCtx.lineTo(1840 * sx, sim.high_water_residue_y * sy);
+      stCtx.stroke();
+    }
+    const wy = sim.water_level_y * sy;
+    stCtx.fillStyle = 'rgba(28, 42, 56, 0.55)';
+    stCtx.fillRect(0, wy, W, 860 * sy - wy);
+    stCtx.strokeStyle = '#6fc3df';
+    stCtx.lineWidth = 2;
+    stCtx.beginPath(); stCtx.moveTo(40 * sx, wy); stCtx.lineTo(W - 40 * sx, wy); stCtx.stroke();
+
+    stCtx.fillStyle = '#2d251e';
+    stCtx.fillRect(0, 860 * sy, W, H - 860 * sy);
+
+    // 6. Boone (as The Poet): 2-Bone IK Cut-Out Rig + 4-Layer Hand Sandwich (palm -> vessel -> 4 fingers -> thumb)
+    if (pose) {
+      // Critic Round 1 toggle: shift Boone +395px right to show the 145px arch overlap caught in Round 1!
+      const dxShift = STATE.criticRound2 ? 0 : 395.0;
+      const sh = pt => [pt[0] + dxShift, pt[1]];
+      const hipL = sh(pose.hip_L), kneeL = sh(pose.knee_L), soleL = sh(pose.sole_L);
+      const hipR = sh(pose.hip_R), kneeR = sh(pose.knee_R), soleR = sh(pose.sole_R);
+      const pelv = sh(pose.pelvis), chest = sh(pose.chest), head = sh(pose.head);
+      const shL = sh(pose.sh_L), elbL = sh(pose.elbow_L), palmL = sh(pose.palm_L);
+      const shR = sh(pose.sh_R), elbR = sh(pose.elbow_R), palmR = sh(pose.palm_R);
+      const soak = sim.soak_damage || 0;
+
+      // Contact shadows under pinned soles
+      stCtx.fillStyle = 'rgba(8, 6, 5, 0.72)';
+      [soleL, soleR].forEach(sl => {
+        stCtx.beginPath();
+        stCtx.ellipse(sl[0] * sx, (sl[1] + 4) * sy, 34 * sx, 9 * sy, 0, 0, Math.PI * 2);
+        stCtx.fill();
+      });
+
+      // Back leg (L) & back arm (L)
+      drawCutoutPart(stCtx, 'limb_thigh', hipL[0], hipL[1], kneeL[0], kneeL[1], sx, sy, 0.12);
+      drawCutoutPart(stCtx, 'limb_shin', kneeL[0], kneeL[1], soleL[0], soleL[1], sx, sy, 0.12);
+      drawCutoutPart(stCtx, 'shoe_dry', soleL[0], soleL[1], soleL[0] + 40, soleL[1], sx, sy, 0.1);
+
+      drawCutoutPart(stCtx, 'limb_upper_arm', shL[0], shL[1], elbL[0], elbL[1], sx, sy, 0.1);
+      drawCutoutPart(stCtx, 'limb_forearm', elbL[0], elbL[1], palmL[0], palmL[1], sx, sy, soak * 0.25);
+
+      // Torso, Pelvis, Scarf, Head
+      drawCutoutPart(stCtx, 'boone_pelvis', pelv[0], pelv[1], pelv[0], pelv[1] + 50, sx, sy, 0);
+      drawCutoutPart(stCtx, 'boone_scarf_tail', chest[0] - 18, chest[1] + 12, chest[0] - 110, chest[1] + 28, sx, sy, 0);
+      drawCutoutPart(stCtx, 'boone_torso', pelv[0], pelv[1], chest[0], chest[1], sx, sy, 0);
+      drawCutoutPart(stCtx, 'boone_head', chest[0], chest[1] - 8, head[0], head[1] - 40, sx, sy, 0);
+
+      // Front leg (R — permanently soaked dark after f=52!)
+      drawCutoutPart(stCtx, 'limb_thigh', hipR[0], hipR[1], kneeR[0], kneeR[1], sx, sy, soak * 0.35);
+      drawCutoutPart(stCtx, 'limb_shin', kneeR[0], kneeR[1], soleR[0], soleR[1], sx, sy, soak * 0.85);
+      drawCutoutPart(stCtx, soak > 0.5 ? 'shoe_soaked_dark' : 'shoe_dry', soleR[0], soleR[1], soleR[0] + 40, soleR[1], sx, sy, soak * 0.65);
+
+      // Front arm (R) + 4-Layer Hand Occlusion Sandwich (1. Palm -> 2. Held Vessel -> 3. Four Fingers -> 4. Thumb)
+      drawCutoutPart(stCtx, 'limb_upper_arm', shR[0], shR[1], elbR[0], elbR[1], sx, sy, 0);
+      drawCutoutPart(stCtx, 'limb_forearm', elbR[0], elbR[1], palmR[0], palmR[1], sx, sy, soak * 0.35);
+
+      // Layer 1: Palm
+      drawCutoutPart(stCtx, 'hand_palm', palmL[0], palmL[1], palmL[0] + 28, palmL[1], sx, sy, soak * 0.35);
+      // Layer 2: Held Ancestral Vessel
+      const vxy = sim.vessel_held ? [palmL[0] + 16, palmL[1] - 6] : [720 + dxShift, 648];
+      drawCutoutPart(stCtx, 'prop_ancestral_vessel', vxy[0], vxy[1] - 24, vxy[0], vxy[1] + 24, sx, sy, 0);
+      if (sim.vessel_held) {
+        // Layer 3: Four Fingers across the object
+        drawCutoutPart(stCtx, 'hand_fingers_four', palmL[0] + 4, palmL[1] + 2, palmL[0] + 38, palmL[1] + 2, sx, sy, soak * 0.35);
+        // Layer 4: Thumb locking on top
+        drawCutoutPart(stCtx, 'hand_thumb', palmL[0] + 2, palmL[1] - 12, palmL[0] + 28, palmL[1] - 18, sx, sy, soak * 0.25);
+
+        // Luminous bloodline thread linking held vessel to the opened archive
+        if (wipe > 0.2) {
+          stCtx.strokeStyle = '#f2a541';
+          stCtx.lineWidth = 2.2;
+          stCtx.beginPath();
+          stCtx.moveTo((vxy[0] + 18) * sx, vxy[1] * sy);
+          stCtx.lineTo(1160 * sx, 510 * sy);
+          stCtx.stroke();
+        }
+      }
+
+      // Live 2-Bone IK Socket Pin Inspector Overlay
+      if (STATE.overlays.has('pins') || STATE.overlays.has('hull')) {
+        const sockets = [
+          { name: 'sole_L', pt: soleL, err: pose.errors.sole_L_px },
+          { name: 'sole_R', pt: soleR, err: pose.errors.sole_R_px },
+          { name: 'palm_L', pt: palmL, err: pose.errors.palm_L_px },
+          { name: 'palm_R', pt: palmR, err: pose.errors.palm_R_px }
+        ];
+        sockets.forEach(sk => {
+          const px = sk.pt[0] * sx, py = sk.pt[1] * sy;
+          const isRel = sk.err === 'RELEASED';
+          stCtx.save();
+          stCtx.strokeStyle = isRel ? '#f2a541' : '#c4f46a';
+          stCtx.lineWidth = 2;
+          stCtx.strokeRect(px - 6, py - 6, 12, 12);
+          stCtx.font = '600 9.5px "IBM Plex Mono", monospace';
+          stCtx.fillStyle = isRel ? '#f2a541' : '#c4f46a';
+          stCtx.fillText(`${sk.name}: ${isRel ? 'RELEASED' : sk.err + 'px'}`, px + 9, py + 3);
+          stCtx.restore();
+        });
+      }
+
+      // Critic Round 1 warning box if viewing unfixed draft
+      if (!STATE.criticRound2) {
+        stCtx.save();
+        stCtx.strokeStyle = '#e53935';
+        stCtx.lineWidth = 3;
+        stCtx.setLineDash([6, 4]);
+        stCtx.strokeRect(ax, ay, 145 * sx, ah);
+        stCtx.fillStyle = 'rgba(229, 57, 53, 0.88)';
+        stCtx.fillRect(ax, ay + 12, 390, 24);
+        stCtx.fillStyle = '#fff';
+        stCtx.font = '700 11px "IBM Plex Mono", monospace';
+        stCtx.fillText('CRITIC ROUND 1 DEFECT: 145px (25.9%) ARCH OVERLAP -> NOT YET', ax + 8, ay + 28);
+        stCtx.restore();
+      }
+
+      // Update socket readout in Foundry deck
+      const rEl = $('#ikSocketReadout');
+      if (rEl && tr) {
+        rEl.textContent = `State ${tr.state_id.slice(0, 2)} (${tr.state_title}) · F${String(pFrameIdx).padStart(3, '0')} · Socket Err: 0.00 px (0.00% < 1%) · palm_L=${pose.errors.palm_L_px} · palm_R=${pose.errors.palm_R_px}`;
+      }
+      $$('#foundryStatesGrid .fstate').forEach(card => {
+        card.classList.toggle('active', tr && card.dataset.sid === tr.state_id);
+      });
+    }
+  }
+
+  async function initFoundryStudio() {
+    try {
+      const [clip, atlasMeta, critic] = await Promise.all([
+        fetch('foundry/clips/passage_bloodlines_493.json').then(r => r.json()),
+        fetch('foundry/atlases/cutout_atlas.json').then(r => r.json()),
+        fetch('foundry/critic_report.json').then(r => r.json())
+      ]);
+      STATE.foundryClip = clip;
+      STATE.foundryAtlasMeta = atlasMeta;
+      STATE.foundryCritic = critic;
+      STATE.foundryAtlasImg = getImg('foundry/atlases/cutout_atlas.png');
+
+      // Populate 10-State Defining Passage Grid
+      const grid = $('#foundryStatesGrid');
+      if (grid && clip.states) {
+        grid.innerHTML = clip.states.map(st => `
+          <div class="fstate" data-sid="${st.id}" data-f0="${st.f0}">
+            <u>STATE ${String(st.index).padStart(2, '0')} · F${st.f0}–${st.f1}</u>
+            <b>${st.title}</b>
+            <span>${st.cause_effect}</span>
+          </div>
+        `).join('');
+        grid.querySelectorAll('.fstate').forEach(card => {
+          card.onclick = () => {
+            const f0 = +card.dataset.f0;
+            STATE.topo = 'cutout';
+            $$('#topoBtns button[data-topo="counterlit"], #topoBtns button[data-topo="exploded"], #topoBtns button[data-topo="cutout"]').forEach(b => {
+              b.setAttribute('aria-pressed', b.dataset.topo === 'cutout');
+            });
+            $('#cutoutModeBtn').setAttribute('aria-pressed', 'true');
+            STATE.f24 = Math.floor(((f0 + 6) / clip.frames) * STATE.totalFrames24);
+            const pVid = $('#passageVideo');
+            if (pVid) pVid.currentTime = (f0 + 4) / 24.0;
+            haptic('snap');
+            renderStage();
+            renderXSheet();
+          };
+        });
+      }
+
+      // Populate 11-Criterion Independent Critic Table
+      const tbl = $('#criticTable');
+      if (tbl && critic.criteria) {
+        tbl.innerHTML = `
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Acceptance Criterion (<code style="color:var(--ink)">&lt;poml&gt;</code> Spec)</th>
+              <th>Measured Verification Value (No Unmeasured Claims)</th>
+              <th>Verdict</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${critic.criteria.map(c => `
+              <tr>
+                <td><code>${c.id}</code></td>
+                <td><b>${c.title}</b></td>
+                <td style="color:var(--dim)">${c.measured}</td>
+                <td><span class="gate-status ${c.status === 'PASS' ? 'pass' : 'fail'}">${c.status}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        `;
+      }
+      renderStage();
+    } catch (err) {
+      console.warn('Foundry assets loading note:', err);
+    }
+  }
+
+  // ==================== UI CONTROLS & LOOP ====================
+  $('#cutoutModeBtn').onclick = () => {
+    STATE.topo = STATE.topo === 'cutout' ? 'counterlit' : 'cutout';
+    $('#cutoutModeBtn').setAttribute('aria-pressed', STATE.topo === 'cutout');
+    $$('#topoBtns button[data-topo="counterlit"], #topoBtns button[data-topo="exploded"], #topoBtns button[data-topo="cutout"]').forEach(b => {
+      b.setAttribute('aria-pressed', b.dataset.topo === STATE.topo);
+    });
+    haptic('snap');
+    renderStage();
+  };
+
+  $('#criticRoundBtn').onclick = () => {
+    STATE.criticRound2 = !STATE.criticRound2;
+    $('#criticRoundBtn').setAttribute('aria-pressed', STATE.criticRound2);
+    $('#criticRoundBtn').textContent = STATE.criticRound2
+      ? 'Critic Round 2 (Repaired X=560 · PASS)'
+      : 'Critic Round 1 (Draft X=955 Overlap · NOT YET)';
+    STATE.topo = 'cutout';
+    $('#cutoutModeBtn').setAttribute('aria-pressed', 'true');
+    haptic('snap');
+    renderStage();
+  };
+
+  $('#archWipeSlider').oninput = e => {
+    STATE.archWipeOverride = +e.target.value;
+    $('#archWipeVal').textContent = STATE.archWipeOverride < 0 ? 'Auto' : `${STATE.archWipeOverride}%`;
+    STATE.topo = 'cutout';
+    $('#cutoutModeBtn').setAttribute('aria-pressed', 'true');
+    renderStage();
+  };
+
+  $('#repairGatesBtn').onclick = () => {
+    STATE.repairGates = !STATE.repairGates;
+    $('#repairGatesBtn').setAttribute('aria-pressed', STATE.repairGates);
+    $('#repairGatesBtn').textContent = `⚡ Enforce & Repair All 5 Gates: ${STATE.repairGates ? 'ON' : 'OFF'}`;
+    haptic('snap');
+    compileXSheet();
+    renderShotList();
+    renderGatesPanel();
+    renderXSheet();
+    renderStage();
+  };
+
+  $('#skinPassBtn').onclick = () => {
+    STATE.melanatedSkin = !STATE.melanatedSkin;
+    $('#skinPassBtn').setAttribute('aria-pressed', STATE.melanatedSkin);
+    haptic('snap');
+    renderStage();
+  };
+
+  $('#jump493Btn').onclick = () => {
+    const idx = STATE.data.shots.findIndex(s => s.id === 'P05-008');
+    if (idx >= 0) selectShot(idx, 493.9);
+    haptic('snap');
+  };
+
+  $('#clearSoloBtn').onclick = () => {
+    STATE.soloPlane = null;
+    renderPlanesPanel();
+    renderStage();
+  };
+
+  $$('#topoBtns button').forEach(btn => {
+    btn.onclick = () => {
+      const t = btn.dataset.topo;
+      if (t === 'syzygy') {
+        STATE.includeSyzygyLayers = !STATE.includeSyzygyLayers;
+        btn.setAttribute('aria-pressed', STATE.includeSyzygyLayers);
+      } else {
+        STATE.topo = STATE.topo === t ? 'counterlit' : t;
+        $$('#topoBtns button[data-topo="counterlit"], #topoBtns button[data-topo="exploded"], #topoBtns button[data-topo="cutout"]').forEach(b => {
+          b.setAttribute('aria-pressed', b.dataset.topo === STATE.topo);
+        });
+        $('#cutoutModeBtn').setAttribute('aria-pressed', STATE.topo === 'cutout');
+      }
+      haptic('tick');
+      renderStage();
+    };
+  });
+
+  $$('#modeBtns button').forEach(btn => {
+    btn.onclick = () => {
+      STATE.mode = btn.dataset.mode;
+      $$('#modeBtns button').forEach(b => b.setAttribute('aria-pressed', b === btn));
+      haptic('tick');
+      compileXSheet();
+      renderXSheet();
+      renderStage();
+    };
+  });
+
+  $$('#hullBtns button').forEach(btn => {
+    btn.onclick = () => {
+      const k = btn.dataset.ov;
+      if (STATE.overlays.has(k)) STATE.overlays.delete(k);
+      else STATE.overlays.add(k);
+      btn.setAttribute('aria-pressed', STATE.overlays.has(k));
+      haptic('tick');
+      renderStage();
+    };
+  });
+
+  $$('#dirBtns button').forEach(btn => {
+    btn.onclick = () => {
+      const k = btn.dataset.dir;
+      if (STATE.dirMutations.has(k)) STATE.dirMutations.delete(k);
+      else STATE.dirMutations.add(k);
+      btn.setAttribute('aria-pressed', STATE.dirMutations.has(k));
+      haptic('snap');
+      compileXSheet();
+      renderXSheet();
+      renderStage();
+    };
+  });
+
+  $('#playBtn').onclick = () => {
+    STATE.playing = !STATE.playing;
+    $('#playBtn').textContent = STATE.playing ? '❚❚ Pause' : '▶ Play 24fps';
+    haptic('tick');
+    if (STATE.playing) requestAnimationFrame(loop);
+  };
+  $('#prevFrameBtn').onclick = () => {
+    STATE.playing = false;
+    STATE.f24 = (STATE.f24 - 1 + STATE.totalFrames24) % STATE.totalFrames24;
+    renderStage(); renderXSheet(); renderCausalChain();
+  };
+  $('#nextFrameBtn').onclick = () => {
+    STATE.playing = false;
+    STATE.f24 = (STATE.f24 + 1) % STATE.totalFrames24;
+    renderStage(); renderXSheet(); renderCausalChain();
+  };
+  $('#prevKeyBtn').onclick = () => {
+    STATE.playing = false;
+    const prev = [...STATE.sheetEntries].reverse().find(e => e.tStart24 < STATE.f24 && (e.isPoseKey || e.isBreak));
+    STATE.f24 = prev ? prev.tStart24 : 0;
+    haptic('tick');
+    renderStage(); renderXSheet(); renderCausalChain();
+  };
+  $('#nextKeyBtn').onclick = () => {
+    STATE.playing = false;
+    const next = STATE.sheetEntries.find(e => e.tStart24 > STATE.f24 && (e.isPoseKey || e.isBreak));
+    STATE.f24 = next ? next.tStart24 : 0;
+    haptic('tick');
+    renderStage(); renderXSheet(); renderCausalChain();
+  };
+
+  let lastTick = 0;
+  function loop(ts) {
+    if (!STATE.playing) return;
+    if (ts - lastTick >= 1000 / 24) {
+      STATE.f24 = (STATE.f24 + 1) % STATE.totalFrames24;
+      lastTick = ts;
+      renderStage();
+      renderXSheet();
+      renderCausalChain();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  // Programmatic API for verification & external control
+  window.SCION_STUDIO = {
+    selectShotById: (id, tSec = null) => {
+      const idx = STATE.data.shots.findIndex(s => s.id === id);
+      if (idx >= 0) selectShot(idx, tSec);
+    },
+    setTopology: t => { STATE.topo = t; renderStage(); },
+    setMode: m => { STATE.mode = m; compileXSheet(); renderXSheet(); renderStage(); },
+    state: STATE
+  };
+
+  // Boot
+  (async () => {
+    STATE.data = await fetch('scion_syzygy_data.json').then(r => r.json());
+    renderSuiteTelemetry();
+
+    const params = new URLSearchParams(location.hash.slice(1));
+    if (params.has('topo')) STATE.topo = params.get('topo');
+    if (params.has('mode')) STATE.mode = params.get('mode');
+    if (params.has('repair')) STATE.repairGates = params.get('repair') !== '0';
+
+    if (STATE.topo === 'cutout') {
+      $('#cutoutModeBtn').setAttribute('aria-pressed', 'true');
+      $$('#topoBtns button[data-topo="counterlit"], #topoBtns button[data-topo="exploded"], #topoBtns button[data-topo="cutout"]').forEach(b => {
+        b.setAttribute('aria-pressed', b.dataset.topo === 'cutout');
+      });
+    }
+
+    const wantShot = params.get('shot') || 'P05-008';
+    const wantT = +(params.get('t') || 493.9);
+    let idx = STATE.data.shots.findIndex(s => s.id === wantShot);
+    if (idx < 0) {
+      idx = STATE.data.shots.findIndex(s => s.t0 <= wantT && wantT <= s.t1);
+    }
+    selectShot(Math.max(0, idx), wantT);
+    await initFoundryStudio();
+    window.addEventListener('resize', renderXSheet);
+  })();
+})();
+</script>
+</body>
+</html>

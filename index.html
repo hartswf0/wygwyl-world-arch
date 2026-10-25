@@ -43,27 +43,63 @@ button{font:inherit;color:inherit;touch-action:manipulation}
 .cam .lyr.ready{opacity:1}
 
 /* ---------- hero ---------- */
-#hero{position:relative;height:calc(var(--vh) + 40px);min-height:620px;isolation:isolate}
+#hero{position:relative;min-height:calc(var(--vh) + 40px);height:auto;isolation:isolate;padding:calc(62px + var(--safe-t)) 0 48px}
 #hero .stage{background-image:url(landing/cortex/poster.webp)}
 #hero .scrim{position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(90deg,rgba(8,11,22,.94) 0%,rgba(8,11,22,.80) 28%,rgba(8,11,22,.25) 52%,transparent 70%),
-             linear-gradient(0deg,rgba(8,11,22,.55),transparent 28%)}
-#hero .ui{position:relative;z-index:2;height:var(--vh);min-height:620px;display:flex;flex-direction:column;justify-content:center;padding:0 clamp(18px,5vw,64px);max-width:560px}
-h1{margin:0;font:300 clamp(40px,7.4vw,84px)/1 var(--sans);letter-spacing:.34em;text-indent:.34em;text-indent:0;color:#fff6df;text-shadow:0 2px 30px rgba(0,0,0,.4)}
-.tag{margin:12px 0 0;font:500 12px var(--mono);letter-spacing:.34em;text-transform:uppercase;color:#aab6d8}
-.lede{margin:22px 0 26px;max-width:34ch;color:#d8d9e3;font-size:17px}
-.tools{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+  background:linear-gradient(90deg,rgba(8,11,22,.95) 0%,rgba(8,11,22,.86) 45%,rgba(8,11,22,.68) 78%,rgba(8,11,22,.52) 100%),
+             linear-gradient(0deg,rgba(8,11,22,.85),transparent 28%)}
+#hero .ui{position:relative;z-index:2;min-height:calc(var(--vh) - 80px);display:flex;flex-direction:column;justify-content:center;padding:0 clamp(18px,4vw,56px);max-width:1360px;margin:0 auto}
+h1{margin:0;font:300 clamp(40px,6.4vw,76px)/1 var(--sans);letter-spacing:.34em;text-indent:0;color:#fff6df;text-shadow:0 2px 30px rgba(0,0,0,.4)}
+.tag{margin:10px 0 0;font:500 12px var(--mono);letter-spacing:.3em;text-transform:uppercase;color:#aab6d8}
+.lede{margin:14px 0 20px;max-width:68ch;color:#d8d9e3;font-size:16px}
+.tools{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:6px 16px;border-top:1px solid var(--line);padding-top:10px}
 .tools li{border-bottom:1px solid var(--line)}
-.tools a{display:grid;grid-template-columns:minmax(98px,auto) 1fr auto;align-items:baseline;gap:16px;min-height:46px;padding:9px 4px;text-decoration:none;transition:background .15s,padding .15s}
-.tools b{font:500 clamp(20px,2.2vw,24px)/1.1 var(--sans);color:#fff6df}
-.tools span{font:400 13px var(--mono);color:#a9b4d4;letter-spacing:.01em}
+.tools a{display:grid;grid-template-columns:minmax(110px,auto) 1fr auto;align-items:baseline;gap:10px;min-height:42px;padding:7px 6px;text-decoration:none;transition:background .15s,padding .15s;border-radius:6px}
+.tools b{font:500 16.5px/1.15 var(--sans);color:#fff6df}
+.tools span{font:400 11.5px var(--mono);color:#a9b4d4;letter-spacing:.01em}
 .tools i{font-style:normal;color:var(--amber);transition:transform .15s}
-.tools a:hover,.tools a:focus-visible{background:rgba(244,238,221,.06);padding-left:10px}
+.tools a:hover,.tools a:focus-visible{background:rgba(244,238,221,.08);padding-left:10px}
 .tools a:hover i{transform:translateX(4px)}
+.tools a.featured{background:rgba(242,165,65,.11);border:1px solid rgba(242,165,65,.42)}
+.tools a.featured b{color:var(--amber)}
 .cue{display:inline-flex;align-items:center;gap:8px;margin-top:18px;min-height:44px;font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#c9d0e6;text-decoration:none}
 .cue::after{content:'↓';color:var(--amber);animation:nudge 1.8s ease-in-out infinite}
 @keyframes nudge{50%{transform:translateY(4px)}}
 @media (prefers-reduced-motion:reduce){.cue::after{animation:none}}
+
+/* ---------- experiments & visual proof hub ---------- */
+#experiments{position:relative;background:linear-gradient(180deg,#090c17 0%,#0d1324 100%);padding:clamp(42px,6vw,76px) clamp(14px,4vw,48px);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.exp-in{max-width:1320px;margin:0 auto}
+.exp-hdr{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px}
+.exp-kick{font:500 12px var(--mono);letter-spacing:.28em;text-transform:uppercase;color:var(--amber);margin:0 0 6px}
+.exp-hdr h2{margin:0;font:300 clamp(28px,4.2vw,46px)/1.08 var(--sans);color:#fff6df}
+.exp-hdr p{margin:6px 0 0;color:#b9c2de;max-width:66ch;font-size:15px}
+.exp-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px}
+.exp-tab{background:rgba(244,238,221,.05);border:1px solid var(--line);color:#c9d0e6;font:500 12px var(--mono);padding:7px 13px;border-radius:999px;cursor:pointer;transition:.15s}
+.exp-tab:hover{border-color:var(--amber);color:#fff6df}
+.exp-tab.on{background:var(--amber);color:#1a1206;border-color:var(--amber);font-weight:600}
+.exp-search{flex:1;min-width:220px;max-width:360px;background:rgba(8,11,20,.85);border:1px solid var(--line);color:#fff6df;font:400 13px var(--mono);padding:7px 14px;border-radius:999px}
+.exp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:14px}
+.exp-card{background:rgba(16,22,38,.82);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:transform .15s,border-color .15s}
+.exp-card:hover{transform:translateY(-2px);border-color:var(--amber)}
+.exp-thumb{position:relative;aspect-ratio:16/10;background:#070910;overflow:hidden;border-bottom:1px solid var(--line);cursor:pointer}
+.exp-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s}
+.exp-card:hover .exp-thumb img{transform:scale(1.03)}
+.exp-badge{position:absolute;top:8px;left:8px;background:rgba(10,13,24,.88);border:1px solid var(--amber);color:var(--amber);font:600 10px var(--mono);padding:3px 8px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase}
+.exp-body{padding:12px 14px;display:flex;flex-direction:column;flex:1;gap:6px}
+.exp-body h3{margin:0;font:500 17px/1.2 var(--sans);color:#fff6df}
+.exp-body p{margin:0;font:400 12.5px/1.45 var(--sans);color:#b9c2de;flex:1}
+.exp-actions{display:flex;gap:8px;margin-top:8px}
+.exp-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 12px;border-radius:8px;font:500 11.5px var(--mono);text-decoration:none;border:1px solid var(--amber);background:rgba(242,165,65,.14);color:#fff6df;cursor:pointer;transition:.15s}
+.exp-btn:hover{background:var(--amber);color:#1a1206}
+.exp-btn.sec{border-color:var(--line);background:rgba(244,238,221,.05);color:#c9d0e6}
+.exp-btn.sec:hover{border-color:#fff6df;color:#fff6df;background:rgba(244,238,221,.12)}
+.exp-modal{position:fixed;inset:0;z-index:99;background:rgba(5,7,14,.92);display:none;align-items:center;justify-content:center;padding:20px}
+.exp-modal.on{display:flex}
+.exp-modal-box{background:#0d1222;border:1px solid var(--amber);border-radius:14px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+.exp-modal-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);font:500 13px var(--mono);color:var(--amber)}
+.exp-modal-body{padding:12px;overflow:auto;display:flex;justify-content:center;background:#06080f}
+.exp-modal-body img{max-width:100%;max-height:82vh;height:auto;display:block}
 
 /* ---------- watch: the film ---------- */
 .play{display:inline-flex;align-items:center;gap:12px;align-self:flex-start;margin-top:20px;min-height:52px;padding:0 22px 0 16px;border-radius:999px;background:var(--amber);color:#1a1206;text-decoration:none;font:600 15px var(--sans);box-shadow:0 8px 30px rgba(242,165,65,.28);transition:transform .15s}
@@ -140,7 +176,7 @@ h1{margin:0;font:300 clamp(40px,7.4vw,84px)/1 var(--sans);letter-spacing:.34em;t
 /* ---------- ending ---------- */
 #end{position:relative;padding:72px clamp(18px,5vw,64px) calc(var(--dock-h) + 80px + var(--safe-b));background:#0a0d18}
 #end h2{margin:0 0 18px;font:300 clamp(26px,4vw,40px) var(--sans);letter-spacing:.04em}
-#end .tools{max-width:620px}
+#end .tools{max-width:1280px}
 #end .meta{margin-top:34px;display:flex;flex-wrap:wrap;gap:6px 22px;font:500 12px var(--mono);letter-spacing:.06em;color:var(--mute)}
 #end .meta a{display:inline-flex;min-height:40px;align-items:center}
 
@@ -158,17 +194,17 @@ h1{margin:0;font:300 clamp(40px,7.4vw,84px)/1 var(--sans);letter-spacing:.34em;t
 .d-cur b{display:block;font:500 18px/1.1 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff6df}
 .d-open{padding:0 18px;gap:8px;text-decoration:none;font:600 15px var(--sans);background:var(--acc)!important;color:#0a0d18!important;border-color:var(--acc)!important}
 .d-open[aria-disabled=true]{opacity:.5;pointer-events:none}
-.d-chips{display:none;gap:4px;flex:1;min-width:0;overflow:hidden}
-.d-chips button{flex:1 1 0;min-width:0;padding:0 6px;font:500 12px var(--sans);white-space:nowrap}
+.d-chips{display:none;gap:4px;flex:1;min-width:0;overflow-x:auto}
+.d-chips button{flex:0 0 auto;min-width:0;padding:0 8px;font:500 11.5px var(--sans);white-space:nowrap}
 .d-chips button.on{background:rgba(244,238,221,.16);border-color:var(--acc);color:#fff6df}
-@media (min-width:980px){.d-chips{display:flex}.d-cur,.d-prev,.d-next{display:none!important}.dock{width:min(calc(100vw - 40px),1040px)}}
+@media (min-width:980px){.d-chips{display:flex}.d-cur,.d-prev,.d-next{display:none!important}.dock{width:min(calc(100vw - 40px),1140px)}}
 
 /* sheet: every tool, one tap, thumb-reachable */
 .sheet{position:fixed;inset:0;z-index:60;visibility:hidden}
 .sheet.on{visibility:visible}
 .sheet .bd{position:absolute;inset:0;background:rgba(5,7,12,.7);opacity:0;transition:opacity .25s}
 .sheet.on .bd{opacity:1}
-.sheet .pn{position:absolute;left:50%;bottom:0;width:min(100%,760px);max-height:86vh;max-height:86dvh;overflow:auto;transform:translate(-50%,100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);
+.sheet .pn{position:absolute;left:50%;bottom:0;width:min(100%,920px);max-height:86vh;max-height:86dvh;overflow:auto;transform:translate(-50%,100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);
   background:#0d1222;border:1px solid var(--line);border-radius:22px 22px 0 0;padding:10px 14px calc(16px + var(--safe-b))}
 .sheet.on .pn{transform:translate(-50%,0)}
 .grab{width:44px;height:4px;border-radius:4px;background:var(--line);margin:2px auto 10px}
@@ -178,7 +214,7 @@ h1{margin:0;font:300 clamp(40px,7.4vw,84px)/1 var(--sans);letter-spacing:.34em;t
 @media (min-width:640px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .tile{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:104px;padding:10px 12px;border-radius:14px;overflow:hidden;text-decoration:none;border:1px solid var(--line);background:#111 center/cover no-repeat;isolation:isolate}
 .tile::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(0deg,rgba(8,11,22,.92),rgba(8,11,22,.1) 70%)}
-.tile b{font:500 17px/1.1 var(--sans);color:#fff6df}.tile span{font:400 11px/1.3 var(--mono);color:#b9c2de}
+.tile b{font:500 16px/1.1 var(--sans);color:#fff6df}.tile span{font:400 11px/1.3 var(--mono);color:#b9c2de}
 .tile:hover,.tile:focus-visible{border-color:var(--amber)}
 .tile.cur{border-color:var(--acc)}
 
@@ -193,14 +229,14 @@ h1{margin:0;font:300 clamp(40px,7.4vw,84px)/1 var(--sans);letter-spacing:.34em;t
   .tools{display:grid;grid-template-columns:1fr 1fr;column-gap:10px;border-top:0}
   .tools li{border-top:1px solid var(--line);border-bottom:0}
   .tools a{grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:0 6px;min-height:54px;padding:8px 2px;align-items:center}
-  .tools b{font-size:19px}
-  .tools span{grid-column:1;font-size:11px;line-height:1.25;margin-top:1px}
+  .tools b{font-size:16px}
+  .tools span{grid-column:1;font-size:10.5px;line-height:1.25;margin-top:1px}
   .tools i{grid-row:1/3;grid-column:2}
   .cue{margin-top:6px}
   .chap{height:calc(var(--vh) * 1.5)}
   .chap .scrim{background:linear-gradient(0deg,rgba(8,11,22,.92) 0%,rgba(8,11,22,.55) 38%,transparent 66%)}
   .card{right:14px;left:14px;bottom:calc(var(--dock-h) + 22px + var(--safe-b))}
-  .card .go{display:none}                    /* the dock's Open is the single primary action on touch */
+  .card .go{display:none}
   .card .n{font-size:72px}
   .credit{left:14px;right:auto;text-align:left;top:calc(54px + var(--safe-t))}
   .mark .repo{font-size:11px}
@@ -215,47 +251,100 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
 <body>
 
 <header class="mark">
-  <span></span>
+  <a class="repo" href="#experiments" style="color:var(--amber);opacity:1">★ All 66 Experiments &amp; Proof Sheets ↓</a>
   <a class="repo" href="https://github.com/hartswf0/wygwyl-world-arch">Repository <span aria-hidden="true">↗</span></a>
 </header>
 
 <main id="top">
-  <!-- 1 · the eight tools, immediately -->
+  <!-- 1 · ALL TOOLS & STUDIOS -->
   <section id="hero" aria-labelledby="h1">
     <div class="stage" data-key="cortex" data-role="hero" aria-hidden="true"></div>
     <div class="scrim"></div>
     <div class="ui">
       <h1 id="h1">WYGWYL</h1>
-      <p class="tag">Atlantis Urbanism</p>
-      <p class="lede">81 stills, redrawn as layered cartoons and set in motion. Open a tool.</p>
+      <p class="tag">Atlantis Urbanism · Recastable Cinema &amp; SCION Swarm Studio</p>
+      <p class="lede">81 stills, 14 poems (80 scenes), 9 calibrated 4-angle character rigs, 3,997 CLIP-indexed parts, and 54 SCION animation swarms. Open any studio or experiment below:</p>
       <nav aria-label="Tools">
         <ol class="tools" id="tools">
+          <!-- FLAGSHIP NEW STUDIOS & SWARMS -->
+          <li><a class="featured" href="shots/scion_swarm_of_swarms.html" data-key="scionswarm" data-shot="cortex"><b>SCION Swarm-of-Swarms</b><span>54 lineages × 14 poems (80 scenes)</span><i aria-hidden="true">→</i></a></li>
+          <li><a class="featured" href="shots/recastable_cinema_studio.html" data-key="recastable" data-shot="commons"><b>Recastable Cinema Studio</b><span>JibJab × Gilliam × Harmony 6/6 proof</span><i aria-hidden="true">→</i></a></li>
+          <li><a class="featured" href="shots/crash_lab.html" data-key="crashlab" data-shot="arcade"><b>Crash Lab &amp; CAPTCHA</b><span>360° ROM, 9-rig checks &amp; Centaur repairs</span><i aria-hidden="true">→</i></a></li>
+          <li><a class="featured" href="shots/body_lab.html" data-key="bodylab" data-shot="temple"><b>Body Lab &amp; CLIP Search</b><span>3,997 parts, shoe/hand wall &amp; 2.5D rig</span><i aria-hidden="true">→</i></a></li>
+          <li><a class="featured" href="shots/arena_actors.html" data-key="arenaactors" data-shot="overseer"><b>Character Acting Arena</b><span>8 solved rigs, cuff-tuck &amp; scale solver</span><i aria-hidden="true">→</i></a></li>
+          <li><a class="featured" href="shots/pose_face_100x.html" data-key="pose100x" data-shot="moon"><b>100× Pose &amp; Face Lab</b><span>100× character poses &amp; modular faces</span><i aria-hidden="true">→</i></a></li>
+          <li><a class="featured" href="shots/range_rigger.html" data-key="rangerigger" data-shot="haze"><b>Range Rigger</b><span>2-point grommet calibration &amp; ROM lab</span><i aria-hidden="true">→</i></a></li>
+          <li><a class="featured" href="shots/assembly.html" data-key="assembly" data-shot="cenotaph"><b>Assembly Workbench</b><span>Interactive character &amp; set assembler</span><i aria-hidden="true">→</i></a></li>
+          <li><a class="featured" href="shots/stage.html" data-key="multiplanestage" data-shot="hive"><b>Multiplane Stage</b><span>80-scene collage &amp; depth plane stage</span><i aria-hidden="true">→</i></a></li>
+          <li><a class="featured" href="shots/suite.html" data-key="suiteplayer" data-shot="commons"><b>14-Poem Suite Player</b><span>24-minute master audio &amp; scene suite</span><i aria-hidden="true">→</i></a></li>
+          <li><a class="featured" href="shots/cards.html" data-key="cards" data-shot="commons"><b>Periodic Atlas &amp; Cards</b><span>Every scene, character, prop &amp; set</span><i aria-hidden="true">→</i></a></li>
+          <li><a class="featured" href="shots/production.html" data-key="production" data-shot="commons"><b>Production Bible</b><span>All 14 poem design kits &amp; dossiers</span><i aria-hidden="true">→</i></a></li>
+          <!-- CORE SUITE & WORLD TOOLS -->
           <li><a href="shots/film.html"       data-key="film"       data-shot="haze"><b>Film</b><span>Compare film cuts</span><i aria-hidden="true">→</i></a></li>
           <li><a href="shots/reel.html"       data-key="reels"      data-shot="moon"><b>Reels</b><span>Watch a poem sequence</span><i aria-hidden="true">→</i></a></li>
           <li><a href="shots/world.html"      data-key="world"      data-shot="temple"><b>World</b><span>Walk through shot dioramas</span><i aria-hidden="true">→</i></a></li>
           <li><a href="shots/map.html"        data-key="map"        data-shot="overseer"><b>Map</b><span>Locate shots in the city</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="_city/index.html"      data-key="guide"      data-shot="hive"><b>World guide</b><span>Read the districts</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="_city/index.html"      data-key="guide"      data-shot="hive"><b>World Guide</b><span>Read the districts</span><i aria-hidden="true">→</i></a></li>
           <li><a href="shots/index.html"      data-key="shotlab"    data-shot="arcade"><b>Shot Lab</b><span>Inspect a shot and its layers</span><i aria-hidden="true">→</i></a></li>
           <li><a href="shots/storyboard.html" data-key="storyboard" data-shot="cenotaph"><b>Storyboard</b><span>Inspect scene staging</span><i aria-hidden="true">→</i></a></li>
           <li><a href="shots/studio.html"     data-key="studio"     data-shot="commons"><b>Studio</b><span>Inspect animation</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="shots/pointcloud.html" data-key="pointcloud" data-shot="arcade"><b>3D Points & Splats</b><span>Metric depth point clouds & Gaussians</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="shots/animate.html" data-key="animator" data-shot="commons"><b>Animator</b><span>Live cartoon action &amp; cues</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="shots/scion.html" data-key="scion" data-shot="commons"><b>SCION</b><span>Direct the cel: beats, X-sheet, gates</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="shots/weave.html" data-key="weave" data-shot="commons"><b>WEAVE</b><span>Archive, cel and AI in one registered shot</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="shots/arena.html" data-key="arena" data-shot="commons"><b>Acting Arena</b><span>Cut-out rig takes, checked and kept</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="shots/acts.html" data-key="acts" data-shot="commons"><b>Acts Compendium</b><span>All 32 challenges, contact sheets &amp; dossiers</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="shots/arena/gallery.html" data-key="gallery" data-shot="commons"><b>Rig Gallery</b><span>Side-by-side pose &amp; piece disassembly audit</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="shots/arena/puppet/scion.html" data-key="cineosis" data-shot="commons"><b>Cineosis Takes</b><span>Fifty vignettes on the card rig, gated</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="shots/kit3.html" data-key="kit3" data-shot="commons"><b>Puppet Kit 3</b><span>One image + one prompt per parts sheet</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="shots/kits.html" data-key="kits2" data-shot="commons"><b>Character Kits v2</b><span>Every character, every poem: sheets to generate</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="shots/cards.html" data-key="cards" data-shot="commons" style="border-color:var(--amber)"><b>Periodic Atlas &amp; Stage</b><span>Every scene, character, prop &amp; set in a periodic table</span><i aria-hidden="true">→</i></a></li>
-          <li><a href="shots/production.html" data-key="production" data-shot="commons" style="border-color:var(--amber)"><b>Production Bible</b><span>All 14 poem design kits, props, sets &amp; archive references</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/pointcloud.html" data-key="pointcloud" data-shot="arcade"><b>3D Points &amp; Splats</b><span>Metric depth point clouds &amp; Gaussians</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/animate.html"    data-key="animator"   data-shot="commons"><b>Animator</b><span>Live cartoon action &amp; cues</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/scion.html"      data-key="scion"      data-shot="commons"><b>SCION Cel Director</b><span>Direct the cel: beats, X-sheet, gates</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/scion_studio.html" data-key="scionstudio" data-shot="commons"><b>SCION Studio</b><span>Extended SCION scene &amp; cineosis lab</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/weave.html"      data-key="weave"      data-shot="commons"><b>WEAVE</b><span>Archive, cel and AI in one shot</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/arena.html"      data-key="arena"      data-shot="commons"><b>Acting Arena (Bolas)</b><span>Cut-out rig takes, checked and kept</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/acts.html"       data-key="acts"       data-shot="commons"><b>Acts Compendium</b><span>All 32 challenges &amp; contact sheets</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/arena/gallery.html" data-key="gallery" data-shot="commons"><b>Rig Gallery</b><span>Side-by-side pose &amp; piece audit</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/arena/puppet/scion.html" data-key="cineosis" data-shot="commons"><b>Cineosis Takes</b><span>Fifty vignettes on the card rig</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/kit3.html"       data-key="kit3"       data-shot="commons"><b>Puppet Kit 3</b><span>One image + prompt per parts sheet</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/kits.html"       data-key="kits2"      data-shot="commons"><b>Character Kits v2</b><span>Every character, every poem sheets</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/faces.html"      data-key="faces"      data-shot="commons"><b>Character Faces</b><span>All heads, eyes, brows &amp; expressions</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/butcher_proof.html" data-key="butcher" data-shot="commons"><b>Butcher Cut Proof</b><span>Sheet segmentation &amp; cut verification</span><i aria-hidden="true">→</i></a></li>
+          <li><a href="shots/poems/index.html" data-key="poemsidx"  data-shot="commons"><b>14 Poems Index</b><span>Breakdowns &amp; kits for Poems 01–14</span><i aria-hidden="true">→</i></a></li>
         </ol>
       </nav>
-      <a class="play" id="playCta" href="#watch"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Watch the film <small>14 poems · 3:12</small></a>
-      <a class="cue" href="#watch">Or scroll</a>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:18px">
+        <a class="play" id="playCta" href="#watch" style="margin-top:0"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Watch the film <small>14 poems · 3:12</small></a>
+        <a class="play" href="#experiments" style="margin-top:0;background:rgba(242,165,65,.16);color:#fff6df;border:1px solid var(--amber)">🧪 Browse All 66 Experiments &amp; Proof Sheets ↓</a>
+      </div>
     </div>
   </section>
+
+  <!-- 1a · COMPLETE EXPERIMENTS, STUDIOS & VISUAL PROOF ATLASES HUB -->
+  <section id="experiments" aria-labelledby="exph">
+    <div class="exp-in">
+      <div class="exp-hdr">
+        <div>
+          <p class="exp-kick">Complete Laboratory &amp; Proof Index</p>
+          <h2 id="exph">Every Experiment, Studio &amp; Visual Proof Sheet</h2>
+          <p>One-click access to all interactive studios, 54 SCION swarm operators, anatomical body &amp; crash labs, step-by-step calibration sheets, and all 14 poem proof frames.</p>
+        </div>
+      </div>
+      <div class="exp-controls" id="expControls">
+        <button class="exp-tab on" data-cat="all">All Experiments (66)</button>
+        <button class="exp-tab" data-cat="flagship">1. Flagship Studios &amp; Swarms</button>
+        <button class="exp-tab" data-cat="rigging">2. Anatomy, Rigging &amp; Crash Labs</button>
+        <button class="exp-tab" data-cat="proofs">3. Step-by-Step Visual Proof Sheets (18)</button>
+        <button class="exp-tab" data-cat="poems">4. 14 Poem Proofs &amp; Breakdowns (14)</button>
+        <button class="exp-tab" data-cat="world">5. World, Archive &amp; Cel Tools</button>
+        <input type="search" class="exp-search" id="expSearch" placeholder="Search studios, proofs, poems, CLIP, IK..." aria-label="Search experiments">
+      </div>
+      <div class="exp-grid" id="expGrid"></div>
+    </div>
+  </section>
+
+  <div class="exp-modal" id="expModal" role="dialog" aria-modal="true" aria-label="Proof Sheet Viewer">
+    <div class="exp-modal-box">
+      <div class="exp-modal-hdr">
+        <span id="expModalTitle">Visual Proof Sheet</span>
+        <button type="button" class="exp-btn sec" id="expModalClose">✕ Close</button>
+      </div>
+      <div class="exp-modal-body">
+        <img id="expModalImg" src="" alt="Visual Proof Preview">
+      </div>
+    </div>
+  </div>
 
   <!-- 1b · the film: 14 poem films as one feature -->
   <section id="watch" aria-labelledby="wh">
@@ -389,23 +478,40 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
 
   /* ---------- copy for each chapter (what the tool is for; no claims about state it does not keep) ---------- */
   var COPY = {
-    film:       ['Cut it, then cut it again.', 'Compare film cuts assembled from the same set of shots.'],
-    reels:      ['A poem, as a sequence.', 'Watch a poem sequence: one reel per poem, each shot a camera move over layered drawings.'],
-    world:      ['Walk into the picture.', 'Shot dioramas you can walk through, across twelve districts.'],
-    map:        ['Find where it happens.', 'Locate shots in the city.'],
-    guide:      ['Twelve districts.', 'Read the districts, their palettes and their stills.'],
-    shotlab:    ['Under the picture.', 'Inspect a shot and its layers: camera, segments and depth.'],
-    storyboard: ['Stage the scene.', 'Inspect scene staging, shot by shot.'],
-    studio:     ['Draw it through time.', 'Inspect animation: keys, exposures, and the camera moving over layers.'],
-    pointcloud: ['3D depth & Gaussians.', 'Metric depth point clouds, interactive camera recovery and 3D Gaussian splat reconstructions.'],
-    animator:   ['Set the cel in motion.', 'Live cartoon action, physics easing curves and interactive camera cues.'],
-    scion:      ['Direct the cel.', 'Direct the cel: beats, exposure sheets, and five quality gates checked on every frame.'],
-    weave:      ['Archive, cel and AI.', 'One registered scene: archive objects, AI sets and cut-out puppets unified in code.'],
-    arena:      ['The Acting Arena.', 'Cut-out rig takes, 32 Bolas physical challenges and automated Crash Lab checks.'],
-    cineosis:   ['Cineosis takes.', 'Fifty Bolas vignettes on the card rig: beat chains, three stagings, five gates, every take as video.'],
-    kits2:      ['Character Kits v2.', 'The cast of every poem and the Crash Lab dummies, each as sheets to generate: one image and one prompt per sheet.'],
-    poems:      ['Poem production design.', 'Each poem read whole against our footage: its best stills, every character in costume, hero props in every state, places as multiplane layers, and the kits to generate.'],
-    kit3:       ['Puppet Kit 3.', 'One image and one prompt per parts sheet: every hand, eye and mouth a plug-in, the poison parts kept out.']
+    scionswarm:     ['Swarm-of-Swarms across all 14 poems.', '80 multiplane scenes × 54 SCION formal lineages × 10 canonical cast members × 6 actions, compiled into a 4-tier architecture (Meta-Swarm → 14 Poem Swarms → 80 Scene Swarms → 6 Specialist Micro-Swarms).'],
+    recastable:     ['Cast anyone into any performance.', 'JibJab replaceable casting + Terry Gilliam collage logic + 5-gate anatomical certification. Swap any actor into any action across any multiplane set without remaking the film.'],
+    crashlab:       ['Multi-rig crash certification & centaur CAPTCHAs.', '20 range-of-motion & acting arena tests, 9 character rigs, 360° orbit inspection, interactive puppet builder, and 12 rapid-fire puppet repair CAPTCHAs with an in-browser least-squares solver trainer.'],
+    bodylab:        ['Every hand, shoe, head, eye & limb at true scale.', '3,997 purified anatomical parts with 512-D OpenCLIP visual search, contact-sheet wall view, 2D embedding map, cuff-tuck wrist/ankle seam loupe, and live mannequin workbench.'],
+    arenaactors:    ['Eight canonical rigs moving across the floor.', 'Compare naive bounding-box scaling against solved anatomical & aspect-compensated scaling (7.5H adult vs 5.2H child) with cuff-tuck wrist/ankle joins and 2.5D turn parallax.'],
+    pose100x:       ['100+ character poses & 100+ facial states.', 'Every pose in the repository normalized on a unified anatomical grid alongside a 100+ facial expression synthesizer (head bases, eyes, brows, mouths, noses, and sunglasses).'],
+    rangerigger:    ['Range-of-motion calibration & IK/FK rigger.', 'Interactive joint limit calibration, bone-span stretch verification, and exportable rig JSONs across the cast.'],
+    assembly:       ['Snap cut-out pieces onto brass pivots.', 'Interactive puppet assembly workbench for testing joint sockets, z-order layering, and custom character combinations.'],
+    multiplanestage:['Stage all 80 scenes across 14 poems.', '6-plane parallax staging with physically calibrated prop/figure scales, torn-paper archive apertures, and audio-synced camera moves.'],
+    suiteplayer:    ['The 24-minute master film suite.', 'Continuous playback across all 14 poems (1,440 seconds) with synchronized poem stanzas, scene transitions, and multiplane camera choreography.'],
+    cards:          ['6,265 cut pieces across 365 sheets.', 'The complete periodic table of cut-out parts, props, architectural fragments, and character components across the 14 poems.'],
+    production:     ['Master production control & scene status.', 'Bird’s-eye production matrix tracking assets, rigs, multiplane sets, and readiness across all 14 poems.'],
+    scionstudio:    ['SCION Studio · Cel & gate director.', 'Inspect and direct cel takes, exposure sheets, and automated quality gates across the suite.'],
+    faces:          ['Character faces & expression catalog.', 'Browse and combine isolated heads, eyes, eyebrows, mouths, noses, and eyewear across every character group.'],
+    butcher:        ['Sheet segmenter & alpha extractor.', 'Inspect raw Midjourney character and prop sheets, bounding boxes, alpha mattes, and cut-piece segmentation.'],
+    poemsidx:       ['Poem dossiers, stanzas & visual refs.', 'Deep-dive dossiers for Poems 01–14: stanza breakdowns, color scripts, reference stills, and kit inventories.'],
+    kits:           ['Legacy character & prop kits.', 'First-generation modular cut-out packs and component manifests.'],
+    film:           ['Cut it, then cut it again.', 'Compare film cuts assembled from the same set of shots.'],
+    reels:          ['A poem, as a sequence.', 'Watch a poem sequence: one reel per poem, each shot a camera move over layered drawings.'],
+    world:          ['Walk into the picture.', 'Shot dioramas you can walk through, across twelve districts.'],
+    map:            ['Find where it happens.', 'Locate shots in the city.'],
+    guide:          ['Twelve districts.', 'Read the districts, their palettes and their stills.'],
+    shotlab:        ['Under the picture.', 'Inspect a shot and its layers: camera, segments and depth.'],
+    storyboard:     ['Stage the scene.', 'Inspect scene staging, shot by shot.'],
+    studio:         ['Draw it through time.', 'Inspect animation: keys, exposures, and the camera moving over layers.'],
+    pointcloud:     ['3D depth & Gaussians.', 'Metric depth point clouds, interactive camera recovery and 3D Gaussian splat reconstructions.'],
+    animator:       ['Set the cel in motion.', 'Live cartoon action, physics easing curves and interactive camera cues.'],
+    scion:          ['Direct the cel.', 'Direct the cel: beats, exposure sheets, and five quality gates checked on every frame.'],
+    weave:          ['Archive, cel and AI.', 'One registered scene: archive objects, AI sets and cut-out puppets unified in code.'],
+    arena:          ['The Acting Arena.', 'Cut-out rig takes, 32 Bolas physical challenges and automated Crash Lab checks.'],
+    cineosis:       ['Cineosis takes.', 'Fifty Bolas vignettes on the card rig: beat chains, three stagings, five gates, every take as video.'],
+    kits2:          ['Character Kits v2.', 'The cast of every poem and the Crash Lab dummies, each as sheets to generate: one image and one prompt per sheet.'],
+    poems:          ['Poem production design.', 'Each poem read whole against our footage: its best stills, every character in costume, hero props in every state, places as multiplane layers, and the kits to generate.'],
+    kit3:           ['Puppet Kit 3.', 'One image and one prompt per parts sheet: every hand, eye and mouth a plug-in, the poison parts kept out.']
   };
 
   /* ---------- multiplane stage ---------- */
@@ -595,6 +701,184 @@ noscript .nojs{position:relative;z-index:5;padding:20px;color:var(--mute)}
     else if (e.key === 'o' && active >= 0) location.href = TOOLS[active].href;
     else if (e.key === 'g') openSheet();
   });
+
+  /* ---------- Master Experiments, Studios & Visual Proof Atlas (#experiments) ---------- */
+  var AUDIT_DIR = 'shots/arena/parts/kit3/regularized_parts_audit/';
+  var EXPERIMENTS = [
+    // 1. Flagship Studios & Swarms (12)
+    { id: 'exp-01', cat: 'flagship', badge: 'SWARM ENGINE · NEW', badgeCls: 'new', title: 'SCION Swarm-of-Swarms (14 Poems × 80 Scenes)', sub: '4-tier swarm architecture orchestrating 54 SCION formal lineages, 10 canonical cast members, and 5-gate certification across all 80 scenes.', href: 'shots/scion_swarm_of_swarms.html', img: AUDIT_DIR + 'scion_14poems_master_proof.png', meta: ['54 Lineages', '80 Scenes', '400/400 Gates'] },
+    { id: 'exp-02', cat: 'flagship', badge: 'RECASTABLE ENGINE · NEW', badgeCls: 'new', title: 'The Recastable Cinema Studio', sub: 'JibJab replaceable casting + Terry Gilliam collage logic. Swap any of the 10 canonical actors into any action across any multiplane set.', href: 'shots/recastable_cinema_studio.html', img: AUDIT_DIR + 'recastable_cinema_first_proof.png', meta: ['1 Scene · 3 Actors · 6 Actions', 'Live Recasting', 'JSON Compiler'] },
+    { id: 'exp-03', cat: 'flagship', badge: 'MULTIPLANE STAGE', badgeCls: '', title: 'Multiplane Stage & Scene Composer', sub: 'Interactive 6-plane parallax stage across all 80 scenes in Poems 01–14 with solved prop/figure scales and archive apertures.', href: 'shots/stage.html', img: AUDIT_DIR + 'poem_proofs/P01_proof.png', meta: ['80 Scenes', '6 Depth Planes', 'Scale-Calibrated'] },
+    { id: 'exp-04', cat: 'flagship', badge: 'MASTER SUITE', badgeCls: '', title: '24-Minute 14-Poem Suite Player', sub: 'Continuous 1,440-second master film suite playing all 14 poems end-to-end with synchronized stanzas and multiplane camera choreography.', href: 'shots/suite.html', img: AUDIT_DIR + 'poem_proofs/P04_proof.png', meta: ['14 Poems', '24m 00s Clock', 'Auto-Transition'] },
+    { id: 'exp-05', cat: 'flagship', badge: 'PERIODIC TABLE', badgeCls: '', title: 'Periodic Table & 6,265-Piece Card Atlas', sub: 'Browse, filter, and inspect all 6,265 cut pieces across 365 sheets and 14 poems with bounding boxes and semantic classes.', href: 'shots/cards.html', img: AUDIT_DIR + 'poem_proofs/P06_proof.png', meta: ['6,265 Pieces', '365 Sheets', '14 Poems'] },
+    { id: 'exp-06', cat: 'flagship', badge: 'PRODUCTION MATRIX', badgeCls: '', title: 'Production Matrix & Scene Readiness', sub: 'Master production control tracking character kits, multiplane sets, audio windows, and shot readiness across the 14 poems.', href: 'shots/production.html', img: AUDIT_DIR + 'poem_proofs/P08_proof.png', meta: ['14 Poems', 'Asset Matrix', 'Status Ledger'] },
+    { id: 'exp-07', cat: 'flagship', badge: 'SCION DIRECTOR', badgeCls: '', title: 'SCION Director (Main Gate & Beat Inspector)', sub: 'Direct cel beats, exposure sheets, and five automated quality gates checked on every frame.', href: 'shots/scion.html', img: AUDIT_DIR + 'poem_proofs/P07_proof.png', meta: ['Exposure Sheets', '5 Quality Gates', 'Beat Director'] },
+    { id: 'exp-08', cat: 'flagship', badge: 'SCION STUDIO', badgeCls: '', title: 'SCION Studio (Interactive Cel Workspace)', sub: 'Interactive workspace for inspecting SCION takes, gate metrics, and multi-layer cel staging.', href: 'shots/scion_studio.html', img: AUDIT_DIR + 'poem_proofs/P09_proof.png', meta: ['SCION Sub-App', 'Gate Telemetry', 'Cel Takes'] },
+    { id: 'exp-09', cat: 'flagship', badge: 'THE WEAVE', badgeCls: '', title: 'The Weave (Archive, Cel & Cut-Out Synthesis)', sub: 'Registered multiplane scenes uniting Prelinger/archive footage, painted gouache sets, and articulated cut-out puppets.', href: 'shots/weave.html', img: AUDIT_DIR + 'poem_proofs/P05_proof.png', meta: ['Archive Plates', 'Torn-Paper Masks', 'Puppet Sync'] },
+    { id: 'exp-10', cat: 'flagship', badge: 'CINEOSIS', badgeCls: '', title: 'Cineosis (50 Bolas Vignettes)', sub: 'Fifty Bolas vignettes on the card rig: beat chains, three camera stagings, five quality gates, and video takes.', href: 'shots/arena/puppet/scion.html', img: AUDIT_DIR + 'poem_proofs/P10_proof.png', meta: ['50 Vignettes', '3 Stagings Each', 'Gate Ledger'] },
+    { id: 'exp-11', cat: 'flagship', badge: 'FILM CUTS', badgeCls: '', title: 'WYGWYL Film Editor & Cut Comparator', sub: 'Compare editorial cuts assembled from the same library of Atlantis shots.', href: 'shots/film.html', img: AUDIT_DIR + 'poem_proofs/P12_proof.png', meta: ['Editorial Cuts', 'Timeline', 'Shot Compare'] },
+    { id: 'exp-12', cat: 'flagship', badge: 'POEM REELS', badgeCls: '', title: 'Poem Reels (14 Sequential Reels)', sub: 'Watch each poem as an animated camera reel over layered drawings.', href: 'shots/reel.html', img: AUDIT_DIR + 'poem_proofs/P14_proof.png', meta: ['14 Reels', 'Camera Pan/Zoom', 'Poem Audio'] },
+
+    // 2. Rigging, Anatomy & Crash Labs (12)
+    { id: 'exp-13', cat: 'rigging', badge: 'CRASH LAB · NEW', badgeCls: 'new', title: 'Crash Lab, 360° Range-Test & Centaur CAPTCHAs', sub: '20 ROM & acting arena crash tests across 9 rigs, interactive IK/FK puppet builder, normalized part swapper, and 12 repair CAPTCHAs.', href: 'shots/crash_lab.html', img: AUDIT_DIR + 'step3_bendability_rom_matrix.png', meta: ['20 Crash Tests', '12 CAPTCHAs', 'In-Browser Trainer'] },
+    { id: 'exp-14', cat: 'rigging', badge: 'BODY LAB + CLIP · NEW', badgeCls: 'new', title: 'Anatomical Body Lab & 512-D CLIP Search', sub: 'See all 338 shoes, 377 hands, 761 heads, 317 eyes, and 1,047 limbs at unified scale with OpenCLIP semantic search and cuff-tuck seam loupe.', href: 'shots/body_lab.html', img: AUDIT_DIR + 'pass1_regularized_hands_grid.png', meta: ['3,997 Parts', 'OpenCLIP ViT-B-32', 'Seam Loupe'] },
+    { id: 'exp-15', cat: 'rigging', badge: 'ACTING ARENA · NEW', badgeCls: 'new', title: 'Character Acting Arena & Proportion Solver', sub: '8 canonical rigs moving across the stage floor with foot-contact pins, cuff-tuck wrist/ankle joins, and 2.5D turn parallax.', href: 'shots/arena_actors.html', img: AUDIT_DIR + 'step4_consistent_movement_and_ensembles.png', meta: ['8 Canonical Rigs', '7.5H vs 5.2H Scale', '2.5D Parallax'] },
+    { id: 'exp-16', cat: 'rigging', badge: '100× ATLAS · NEW', badgeCls: 'new', title: '100× Character Poses & 100× Facial Expressions Lab', sub: 'Interactive synthesizer for 100+ character poses across all 14 poems and 100+ modular facial expressions.', href: 'shots/pose_face_100x.html', img: AUDIT_DIR + '100x_characters_poses_atlas.png', meta: ['100+ Poses', '100+ Faces', 'Live Combiner'] },
+    { id: 'exp-17', cat: 'rigging', badge: 'RANGE RIGGER · NEW', badgeCls: 'new', title: 'Range-of-Motion Calibrator & IK/FK Rigger', sub: 'Calibrate joint angular limits, test bone-span stretch tolerances, and export rig configurations.', href: 'shots/range_rigger.html', img: AUDIT_DIR + 'step1_ideal_body_vs_master.png', meta: ['ROM Sweep', 'IK/FK Solver', 'Pivot Editor'] },
+    { id: 'exp-18', cat: 'rigging', badge: 'ASSEMBLY WORKBENCH', badgeCls: '', title: 'Puppet Assembly & Brass-Pivot Workbench', sub: 'Assemble cut-out components onto brass grommet sockets and inspect layer ordering.', href: 'shots/assembly.html', img: AUDIT_DIR + 'pairwise_join_audit.png', meta: ['Brass Pivots', 'Z-Order Stack', 'Part Swapper'] },
+    { id: 'exp-19', cat: 'rigging', badge: 'FACES CATALOG', badgeCls: '', title: 'Character Faces & Expression Catalog', sub: 'Dedicated browser for character heads, eyes, eyebrows, mouths, noses, and sunglasses.', href: 'shots/faces.html', img: AUDIT_DIR + '100x_faces_atlas.png', meta: ['Heads & Profiles', 'Eyes & Brows', 'Phoneme Mouths'] },
+    { id: 'exp-20', cat: 'rigging', badge: 'SHEET BUTCHER', badgeCls: '', title: 'Sheet Butcher & Alpha Matte Inspector', sub: 'Inspect raw Midjourney character and prop sheets, cut boundaries, and extracted alpha pieces.', href: 'shots/butcher_proof.html', img: AUDIT_DIR + 'main_poses_sheets.png', meta: ['Sheet Cutter', 'Alpha Mattes', 'BBox Inspector'] },
+    { id: 'exp-21', cat: 'rigging', badge: 'ARENA 32', badgeCls: '', title: 'The Acting Arena (32 Bolas Challenges)', sub: 'Original 32 Bolas physical acting challenges and automated Crash Lab checks.', href: 'shots/arena.html', img: AUDIT_DIR + 'action_poses_audit.png', meta: ['32 Challenges', 'Bolas Skeleton', 'Take Browser'] },
+    { id: 'exp-22', cat: 'rigging', badge: 'PUPPET KIT 3', badgeCls: '', title: 'Puppet Kit 3 (Plug-In Parts & Poison Filter)', sub: 'Modular parts sheets where every hand, eye, and mouth is a plug-in and fused/mutilated parts are filtered out.', href: 'shots/kit3.html', img: AUDIT_DIR + 'pass3_regularized_heads_grid.png', meta: ['Kit 3 Spec', 'Poison Filter', 'Prompt Sheets'] },
+    { id: 'exp-23', cat: 'rigging', badge: 'ACTING ACTS', badgeCls: '', title: 'Acting Acts & Take Gallery', sub: 'Browse physical acting challenges and recorded multi-angle rig takes.', href: 'shots/acts.html', img: AUDIT_DIR + 'pass4_four_angle_bodies_grid.png', meta: ['Acting Takes', 'Bolas Rig', 'Gallery'] },
+    { id: 'exp-24', cat: 'rigging', badge: 'CHARACTER KITS v2', badgeCls: '', title: 'Character Kits (Pack Explorer & Cast Sheets)', sub: 'Character and prop kit packs including the 31-part Poet Tracksuit rig and cast sheets.', href: 'shots/kits.html', img: AUDIT_DIR + 'limbs_views_audit.png', meta: ['31-Part Tracksuit', 'Poem Packs', 'Manifests'] },
+
+    // 3. Visual Proof & Calibration Sheets (18)
+    { id: 'exp-25', cat: 'proofs', badge: 'PROOF SHEET · 01', badgeCls: 'proof', title: 'SCION 14-Poem Master Swarm Proof Sheet', sub: 'High-resolution contact sheet of all 14 poems staged by the 6 specialist micro-swarms with 400/400 gate verification.', href: AUDIT_DIR + 'scion_14poems_master_proof.png', img: AUDIT_DIR + 'scion_14poems_master_proof.png', isProof: true, meta: ['2660×2130 PNG', '14 Poems', '400/400 Gates'] },
+    { id: 'exp-26', cat: 'proofs', badge: 'PROOF SHEET · 02', badgeCls: 'proof', title: 'Recastable Cinema First Proof (1 Scene · 3 Actors · 6 Actions)', sub: '3×6 matrix proving that Poet Tracksuit, Woman in Brocade, and EX in Olive Bomber execute the exact same 6 actions on the same set.', href: AUDIT_DIR + 'recastable_cinema_first_proof.png', img: AUDIT_DIR + 'recastable_cinema_first_proof.png', isProof: true, meta: ['18 Cells', '3 Actors × 6 Actions', '5/5 Gates'] },
+    { id: 'exp-27', cat: 'proofs', badge: 'PROOF SHEET · 03', badgeCls: 'proof', title: 'Step 1 · Ideal Body vs. Master Sheet Reference', sub: 'Side-by-side anatomical comparison of the assembled 31-part Poet rig against the painted master turnaround sheet.', href: AUDIT_DIR + 'step1_ideal_body_vs_master.png', img: AUDIT_DIR + 'step1_ideal_body_vs_master.png', isProof: true, meta: ['7.5-Head Grid', 'Cuff-Tuck Joins', 'Master Compare'] },
+    { id: 'exp-28', cat: 'proofs', badge: 'PROOF SHEET · 04', badgeCls: 'proof', title: 'Step 2 · Compatible 4-Angle Bodies (10 Canonical Cast)', sub: 'All 10 canonical cast members regularized across Front, 3/4, Side Profile, and Back views with zero front-torso-in-profile cheating.', href: AUDIT_DIR + 'step2_compatible_4angle_bodies.png', img: AUDIT_DIR + 'step2_compatible_4angle_bodies.png', isProof: true, meta: ['10 Characters', '4 Angles Each', '40 Body Rigs'] },
+    { id: 'exp-29', cat: 'proofs', badge: 'PROOF SHEET · 05', badgeCls: 'proof', title: 'Step 3 · Bendability & Range-of-Motion Matrix', sub: '8 canonical rigs tested across 7 progressive kinematic articulations (Neutral, Walk, High Step, Deep Squat, Reach, Bow, Waltz).', href: AUDIT_DIR + 'step3_bendability_rom_matrix.png', img: AUDIT_DIR + 'step3_bendability_rom_matrix.png', isProof: true, meta: ['8 Rigs × 7 Poses', '56 Articulations', 'Zero Joint Tear'] },
+    { id: 'exp-30', cat: 'proofs', badge: 'PROOF SHEET · 06', badgeCls: 'proof', title: 'Step 4 · Consistent Movement Strips & Growing Ensembles', sub: '8-frame walk cycle filmstrip plus Solo → Duet → Trio → Full 7-Character Ensemble staged in multiplane perspective.', href: AUDIT_DIR + 'step4_consistent_movement_and_ensembles.png', img: AUDIT_DIR + 'step4_consistent_movement_and_ensembles.png', isProof: true, meta: ['8-Frame Walk', '1→2→3→7 Ensemble', 'Horizon Scale'] },
+    { id: 'exp-31', cat: 'proofs', badge: 'PROOF SHEET · 07', badgeCls: 'proof', title: 'Pass 1 · Regularized Hands Grid & Wrist Sub-Skeleton', sub: 'Isolated hands across all characters normalized on a unified grid with wrist pivot sockets and 5-ray finger orientation vectors.', href: AUDIT_DIR + 'pass1_regularized_hands_grid.png', img: AUDIT_DIR + 'pass1_regularized_hands_grid.png', isProof: true, meta: ['All Hands', 'Wrist Sockets', 'Mutilation Quarantine'] },
+    { id: 'exp-32', cat: 'proofs', badge: 'PROOF SHEET · 08', badgeCls: 'proof', title: 'Pass 2 · Regularized Shoes & Feet Grid', sub: 'All boots, sneakers, dress shoes, heels, and bare feet aligned to the ground contact line with ankle and toe-break pivots.', href: AUDIT_DIR + 'pass2_regularized_shoes_grid.png', img: AUDIT_DIR + 'pass2_regularized_shoes_grid.png', isProof: true, meta: ['All Footwear', 'Ankle + Toe Pivots', 'Ground Line'] },
+    { id: 'exp-33', cat: 'proofs', badge: 'PROOF SHEET · 09', badgeCls: 'proof', title: 'Pass 3 · Regularized Heads & Modular Facial Parts', sub: 'Cleanly cut heads, blank head bases, eyes, brows, mouths, and sunglasses with C7 neck pivots and facial anchor sockets.', href: AUDIT_DIR + 'pass3_regularized_heads_grid.png', img: AUDIT_DIR + 'pass3_regularized_heads_grid.png', isProof: true, meta: ['Heads & Bases', 'Modular Features', 'Neck Pivots'] },
+    { id: 'exp-34', cat: 'proofs', badge: 'PROOF SHEET · 10', badgeCls: 'proof', title: 'Pass 4 · Four-Angle Body Ensembles Grid', sub: 'Full-body assembly audit across Front, 3/4, Side Profile, and Back angles verifying view-angle tag consistency.', href: AUDIT_DIR + 'pass4_four_angle_bodies_grid.png', img: AUDIT_DIR + 'pass4_four_angle_bodies_grid.png', isProof: true, meta: ['Front / 3Q / Side / Back', 'View Consistency', 'Socket Map'] },
+    { id: 'exp-35', cat: 'proofs', badge: 'PROOF SHEET · 11', badgeCls: 'proof', title: 'Pairwise Anatomical Join Audit (Mutilated vs. Clean)', sub: 'Direct side-by-side test of every adjacent body join (Forearm↔Hand, Shin↔Shoe, Torso↔Head, Torso↔UpperArm, Pelvis↔Thigh).', href: AUDIT_DIR + 'pairwise_join_audit.png', img: AUDIT_DIR + 'pairwise_join_audit.png', isProof: true, meta: ['5 Adjacent Joins', 'Broken vs Solved', 'Cuff-Tuck Proof'] },
+    { id: 'exp-36', cat: 'proofs', badge: 'PROOF SHEET · 12', badgeCls: 'proof', title: 'Bottom-Up Evolution of Movement & Ensembles', sub: 'Early-stage progression from isolated regularized limbs to walking figures and multi-character scene staging.', href: AUDIT_DIR + 'bottom_up_movement_and_ensembles.png', img: AUDIT_DIR + 'bottom_up_movement_and_ensembles.png', isProof: true, meta: ['Bottom-Up Evolution', 'Locomotion Strip', 'Ensemble Stage'] },
+    { id: 'exp-37', cat: 'proofs', badge: 'PROOF SHEET · 13', badgeCls: 'proof', title: '100× Characters & Poses Master Atlas', sub: '100+ character poses across all 14 poems rendered on a single comparative contact sheet.', href: AUDIT_DIR + '100x_characters_poses_atlas.png', img: AUDIT_DIR + '100x_characters_poses_atlas.png', isProof: true, meta: ['100+ Poses', 'All 14 Poems', 'Comparative Scale'] },
+    { id: 'exp-38', cat: 'proofs', badge: 'PROOF SHEET · 14', badgeCls: 'proof', title: '100× Modular Faces & Expressions Master Atlas', sub: '100+ synthesized and extracted facial expressions across Poet, Woman, Vintage Party, Mother, and Club cast.', href: AUDIT_DIR + '100x_faces_atlas.png', img: AUDIT_DIR + '100x_faces_atlas.png', isProof: true, meta: ['100+ Faces', 'Phonemes & Brows', 'Angle Variants'] },
+    { id: 'exp-39', cat: 'proofs', badge: 'PROOF SHEET · 15', badgeCls: 'proof', title: 'Action Poses & Replacement Cut-Outs Audit', sub: 'Audit of dedicated action replacement drawings (crouch, floor recovery, motorcycle, waltz, reach).', href: AUDIT_DIR + 'action_poses_audit.png', img: AUDIT_DIR + 'action_poses_audit.png', isProof: true, meta: ['Action Packs', 'Aspect Compensation', 'Weave Cycles'] },
+    { id: 'exp-40', cat: 'proofs', badge: 'PROOF SHEET · 16', badgeCls: 'proof', title: 'Main Character Turnaround & Pose Sheets Audit', sub: 'Inspection of raw character turnaround sheets and segmentation boxes across the cast.', href: AUDIT_DIR + 'main_poses_sheets.png', img: AUDIT_DIR + 'main_poses_sheets.png', isProof: true, meta: ['Turnaround Sheets', 'Cut Boundaries', 'Cast Reference'] },
+    { id: 'exp-41', cat: 'proofs', badge: 'PROOF SHEET · 17', badgeCls: 'proof', title: 'Side / Front / Back Torso & Body Orientation Audit', sub: 'Diagnostic sheet exposing where front torsos were previously reused in side profile and how true profile/back torsos solve it.', href: AUDIT_DIR + 'side_front_back_audit.png', img: AUDIT_DIR + 'side_front_back_audit.png', isProof: true, meta: ['Orientation Audit', 'Profile vs Front', 'EX Back-View Rule'] },
+    { id: 'exp-42', cat: 'proofs', badge: 'PROOF SHEET · 18', badgeCls: 'proof', title: 'Limbs & Extremities Multi-Angle Audit', sub: 'Detailed inspection of upper arms, forearms, thighs, shins, hands, and boots across view angles.', href: AUDIT_DIR + 'limbs_views_audit.png', img: AUDIT_DIR + 'limbs_views_audit.png', isProof: true, meta: ['Upper/Lower Limbs', 'Grommet Tabs', 'Cuff Clipping'] },
+
+    // 4. 14 Poem Proof Frames & Production Breakdowns (14)
+    { id: 'exp-43', cat: 'poems', badge: 'POEM 01 · 5 SCENES', badgeCls: 'poem', title: 'P01 · A Walk Along the Merchandise', sub: 'Staged multiplane proof & production dossier for Poem 01 (Poet Black T-Shirt, Woman in Brocade, EX in Olive Bomber).', href: 'shots/scion_swarm_of_swarms.html#P01', img: AUDIT_DIR + 'poem_proofs/P01_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P01_proof.png', meta: ['5 Scenes', '25/25 Gates', 'Dossier: shots/poems/01.html'] },
+    { id: 'exp-44', cat: 'poems', badge: 'POEM 02 · 6 SCENES', badgeCls: 'poem', title: 'P02 · The Receipts of the Empire', sub: 'Staged multiplane proof & production dossier for Poem 02 (Vintage Party Gentleman, Poet Tracksuit, Woman in Brocade).', href: 'shots/scion_swarm_of_swarms.html#P02', img: AUDIT_DIR + 'poem_proofs/P02_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P02_proof.png', meta: ['6 Scenes', '30/30 Gates', 'Dossier: shots/poems/02.html'] },
+    { id: 'exp-45', cat: 'poems', badge: 'POEM 03 · 5 SCENES', badgeCls: 'poem', title: 'P03 · Back of the Olive Bomber', sub: 'Staged multiplane proof & production dossier for Poem 03 (EX strict back/3Q-back invariant, Poet Black T-Shirt).', href: 'shots/scion_swarm_of_swarms.html#P03', img: AUDIT_DIR + 'poem_proofs/P03_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P03_proof.png', meta: ['5 Scenes', '25/25 Gates', 'Dossier: shots/poems/03.html'] },
+    { id: 'exp-46', cat: 'poems', badge: 'POEM 04 · 6 SCENES', badgeCls: 'poem', title: 'P04 · Put Your Hands on the Ledge', sub: 'Staged multiplane proof & production dossier for Poem 04 (31-part Poet Tracksuit rig, Woman in Brocade, Ledge reach).', href: 'shots/scion_swarm_of_swarms.html#P04', img: AUDIT_DIR + 'poem_proofs/P04_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P04_proof.png', meta: ['6 Scenes', '30/30 Gates', 'Dossier: shots/poems/04.html'] },
+    { id: 'exp-47', cat: 'poems', badge: 'POEM 05 · 6 SCENES', badgeCls: 'poem', title: 'P05 · Kitchen Table & The Child Traveler', sub: 'Staged multiplane proof & production dossier for Poem 05 (Mother in Cardigan, Young Poet 5.2H child scale, Poet Tracksuit).', href: 'shots/scion_swarm_of_swarms.html#P05', img: AUDIT_DIR + 'poem_proofs/P05_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P05_proof.png', meta: ['6 Scenes', '30/30 Gates', 'Dossier: shots/poems/05.html'] },
+    { id: 'exp-48', cat: 'poems', badge: 'POEM 06 · 6 SCENES', badgeCls: 'poem', title: 'P06 · Ghost Child in the Flooded Arcade', sub: 'Staged multiplane proof & production dossier for Poem 06 (Young Poet Child 0.68× scale, Woman in Teal Dress, Poet Tracksuit).', href: 'shots/scion_swarm_of_swarms.html#P06', img: AUDIT_DIR + 'poem_proofs/P06_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P06_proof.png', meta: ['6 Scenes', '30/30 Gates', 'Dossier: shots/poems/06.html'] },
+    { id: 'exp-49', cat: 'poems', badge: 'POEM 07 · 6 SCENES', badgeCls: 'poem', title: 'P07 · Neon Turntable & The Subterranean Club', sub: 'Staged multiplane proof & production dossier for Poem 07 (Poet Tracksuit, Woman in Brocade, EX in Olive Bomber).', href: 'shots/scion_swarm_of_swarms.html#P07', img: AUDIT_DIR + 'poem_proofs/P07_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P07_proof.png', meta: ['6 Scenes', '30/30 Gates', 'Dossier: shots/poems/07.html'] },
+    { id: 'exp-50', cat: 'poems', badge: 'POEM 08 · 6 SCENES', badgeCls: 'poem', title: 'P08 · Waltz of the Sunken Ballroom', sub: 'Staged multiplane proof & production dossier for Poem 08 (Vintage Party Gentleman & Gown Woman waltz hold, Poet Tracksuit).', href: 'shots/scion_swarm_of_swarms.html#P08', img: AUDIT_DIR + 'poem_proofs/P08_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P08_proof.png', meta: ['6 Scenes', '30/30 Gates', 'Dossier: shots/poems/08.html'] },
+    { id: 'exp-51', cat: 'poems', badge: 'POEM 09 · 6 SCENES', badgeCls: 'poem', title: 'P09 · Ancestors on the Viaduct Stairs', sub: 'Staged multiplane proof & production dossier for Poem 09 (Mother in Cardigan, Young Poet Child, Poet Tracksuit).', href: 'shots/scion_swarm_of_swarms.html#P09', img: AUDIT_DIR + 'poem_proofs/P09_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P09_proof.png', meta: ['6 Scenes', '30/30 Gates', 'Dossier: shots/poems/09.html'] },
+    { id: 'exp-52', cat: 'poems', badge: 'POEM 10 · 6 SCENES', badgeCls: 'poem', title: 'P10 · The Golden Gown & The Floodgates', sub: 'Staged multiplane proof & production dossier for Poem 10 (Woman in Gold/Brocade Gown, Vintage Party Couple, Poet Tracksuit).', href: 'shots/scion_swarm_of_swarms.html#P10', img: AUDIT_DIR + 'poem_proofs/P10_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P10_proof.png', meta: ['6 Scenes', '30/30 Gates', 'Dossier: shots/poems/10.html'] },
+    { id: 'exp-53', cat: 'poems', badge: 'POEM 11 · 5 SCENES', badgeCls: 'poem', title: 'P11 · Letters Burned in the Brazier', sub: 'Staged multiplane proof & production dossier for Poem 11 (Mother in Cardigan, Poet Tracksuit, Woman in Brocade).', href: 'shots/scion_swarm_of_swarms.html#P11', img: AUDIT_DIR + 'poem_proofs/P11_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P11_proof.png', meta: ['5 Scenes', '25/25 Gates', 'Dossier: shots/poems/11.html'] },
+    { id: 'exp-54', cat: 'poems', badge: 'POEM 12 · 6 SCENES', badgeCls: 'poem', title: 'P12 · Departure at the Ferry Terminal', sub: 'Staged multiplane proof & production dossier for Poem 12 (EX in Olive Bomber back view, Poet Tracksuit, Woman in Teal).', href: 'shots/scion_swarm_of_swarms.html#P12', img: AUDIT_DIR + 'poem_proofs/P12_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P12_proof.png', meta: ['6 Scenes', '30/30 Gates', 'Dossier: shots/poems/12.html'] },
+    { id: 'exp-55', cat: 'poems', badge: 'POEM 13 · 5 SCENES', badgeCls: 'poem', title: 'P13 · Choir of the Twelve Districts', sub: 'Staged multiplane proof & production dossier for Poem 13 (Full ensemble staging across the sunken amphitheater).', href: 'shots/scion_swarm_of_swarms.html#P13', img: AUDIT_DIR + 'poem_proofs/P13_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P13_proof.png', meta: ['5 Scenes', '25/25 Gates', 'Dossier: shots/poems/13.html'] },
+    { id: 'exp-56', cat: 'poems', badge: 'POEM 14 · 6 SCENES', badgeCls: 'poem', title: 'P14 · Wish You Could Were You Here (Finale)', sub: 'Staged multiplane proof & production dossier for Poem 14 (Full cast finale convergence across all 6 depth planes).', href: 'shots/scion_swarm_of_swarms.html#P14', img: AUDIT_DIR + 'poem_proofs/P14_proof.png', isProof: false, proofImg: AUDIT_DIR + 'poem_proofs/P14_proof.png', meta: ['6 Scenes', '30/30 Gates', 'Dossier: shots/poems/14.html'] },
+
+    // 5. World, 3D & Cel Tools (10)
+    { id: 'exp-57', cat: 'world', badge: '3D DIORAMAS', badgeCls: '', title: 'Atlantis World (Walkable 3D Shot Dioramas)', sub: 'Walk inside layered shot dioramas across twelve districts of Atlantis.', href: 'shots/world.html', img: 'landing/arcade/poster.webp', meta: ['12 Districts', 'First-Person Walk', 'Parallax Depth'] },
+    { id: 'exp-58', cat: 'world', badge: 'CITY MAP', badgeCls: '', title: 'Atlantis Interactive City Map', sub: 'Locate every Midjourney frame and poem setting across the twelve districts.', href: 'shots/map.html', img: 'landing/commons/poster.webp', meta: ['Spatial Index', 'District Filters', 'Shot Pins'] },
+    { id: 'exp-59', cat: 'world', badge: 'FIELD GUIDE', badgeCls: '', title: 'Twelve Districts Field Guide', sub: 'Architectural lore, color palettes, and reference stills for all twelve districts.', href: '_city/index.html', img: 'landing/cenotaph/poster.webp', meta: ['12 Districts', 'Color Palettes', 'Architecture'] },
+    { id: 'exp-60', cat: 'world', badge: 'SHOT LAB', badgeCls: '', title: 'Shot Lab (Segments, Camera & Depth Inspector)', sub: 'Inspect individual frames: semantic segments, inferred camera frustum, Notan, and depth planes.', href: 'shots/index.html', img: 'landing/cortex/poster.webp', meta: ['Cartoon Cel', 'Plane Map', 'Squint Ladder'] },
+    { id: 'exp-61', cat: 'world', badge: 'STORYBOARD', badgeCls: '', title: 'Scene Storyboard & Shot Sequencer', sub: 'Inspect scene staging, shot sequence order, and continuity.', href: 'shots/storyboard.html', img: 'landing/haze/poster.webp', meta: ['Shot Sequence', 'Continuity', 'Scene Beats'] },
+    { id: 'exp-62', cat: 'world', badge: 'MULTIPLANE STUDIO', badgeCls: '', title: 'Multiplane Studio (Keys, Exposures & Camera)', sub: 'Author keyframe camera paths and exposure sheets over separated depth planes.', href: 'shots/studio.html', img: 'landing/hive/poster.webp', meta: ['Camera Curves', 'Exposure Sheet', 'Layer Parallax'] },
+    { id: 'exp-63', cat: 'world', badge: '3D POINT CLOUDS', badgeCls: '', title: 'Metric Depth Point Clouds & 3D Gaussians', sub: 'Interactive 3D point clouds, metric depth recovery, and Gaussian splat reconstructions.', href: 'shots/pointcloud.html', img: 'landing/moon/poster.webp', meta: ['WebGL 3D', 'Metric Depth', 'Orbit Camera'] },
+    { id: 'exp-64', cat: 'world', badge: 'CEL ANIMATOR', badgeCls: '', title: 'Cel Animator (Physics Easing & Camera Cues)', sub: 'Live cartoon action, spring/bezier easing curves, and interactive camera cues.', href: 'shots/animate.html', img: 'landing/overseer/poster.webp', meta: ['Physics Easing', 'Camera Cues', 'Cel Action'] },
+    { id: 'exp-65', cat: 'world', badge: 'ARENA GALLERY', badgeCls: '', title: 'Acting Arena Gallery & Proof Wall', sub: 'Visual gallery of Acting Arena takes, reference bodies, and multi-angle tests.', href: 'shots/arena/gallery.html', img: 'landing/temple/poster.webp', meta: ['Arena Gallery', 'Reference Bodies', 'Take Wall'] },
+    { id: 'exp-66', cat: 'world', badge: 'POEM DOSSIERS', badgeCls: '', title: 'Poem Production Design & Dossiers (01–14)', sub: 'Direct index into `shots/poems/01.html` through `14.html` with stanza-by-stanza breakdowns, props, and kits.', href: 'shots/poems/index.html', img: 'landing/arcade/poster.webp', meta: ['Poems 01–14', 'Stanza Scripts', 'Ref Stills'] }
+  ];
+
+  var expGrid = $('#expGrid'), expSearch = $('#expSearch'), expModal = $('#expModal');
+  var expModalImg = $('#expModalImg'), expModalTitle = $('#expModalTitle'), expModalSub = $('#expModalSub'), expModalOpen = $('#expModalOpen');
+  var activeExpCat = 'all', expQuery = '';
+
+  function openExpModal(item) {
+    if (!expModal) return;
+    var imgUrl = item.proofImg || item.img;
+    expModalImg.src = imgUrl;
+    expModalTitle.textContent = item.title;
+    expModalSub.textContent = item.sub;
+    expModalOpen.href = item.href;
+    expModalOpen.textContent = item.isProof ? 'Open Full-Res PNG ↗' : 'Launch Interactive Studio →';
+    expModal.classList.add('on');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeExpModal() {
+    if (!expModal) return;
+    expModal.classList.remove('on');
+    document.body.style.overflow = '';
+  }
+  if ($('#expModalClose')) $('#expModalClose').onclick = closeExpModal;
+  if (expModal) expModal.addEventListener('click', function (e) { if (e.target === expModal) closeExpModal(); });
+
+  function renderExperiments() {
+    if (!expGrid) return;
+    var q = expQuery.trim().toLowerCase();
+    var list = EXPERIMENTS.filter(function (it) {
+      if (activeExpCat !== 'all' && it.cat !== activeExpCat) return false;
+      if (!q) return true;
+      var hay = (it.title + ' ' + it.sub + ' ' + it.badge + ' ' + (it.meta || []).join(' ')).toLowerCase();
+      return hay.indexOf(q) !== -1;
+    });
+    expGrid.innerHTML = list.map(function (it, idx) {
+      var bCls = it.badgeCls ? ' ' + it.badgeCls : '';
+      var metaHtml = (it.meta || []).map(function (m) { return '<span>' + m + '</span>'; }).join('');
+      var actionLabel = it.isProof ? 'Inspect Proof Sheet ⤢' : 'Open Studio →';
+      var dossierBtn = '';
+      if (it.cat === 'poems') {
+        var pNum = it.id.replace('exp-', '') - 42;
+        var pad = String(pNum).padStart(2, '0');
+        dossierBtn = ' · <span class="exp-preview-link" data-proof="' + idx + '" style="color:#2ad4c0;text-decoration:underline;cursor:pointer">Preview Proof ⤢</span> · <span class="exp-dossier-link" data-href="shots/poems/' + pad + '.html" style="color:#e9ecf3;text-decoration:underline;cursor:pointer">Dossier →</span>';
+      } else if (!it.isProof && it.img && it.img.indexOf('regularized_parts_audit') !== -1) {
+        dossierBtn = ' · <span class="exp-preview-link" data-proof="' + idx + '" style="color:#2ad4c0;text-decoration:underline;cursor:pointer">Preview Proof ⤢</span>';
+      }
+      return '<a class="exp-card" href="' + it.href + '" data-idx="' + idx + '" data-isproof="' + (it.isProof ? '1' : '0') + '">' +
+        '<div class="exp-thumb">' +
+          '<img src="' + it.img + '" alt="' + it.title.replace(/"/g, '&quot;') + '" loading="lazy" decoding="async">' +
+          '<span class="exp-badge' + bCls + '">' + it.badge + '</span>' +
+        '</div>' +
+        '<div class="exp-body">' +
+          '<h3 class="exp-title">' + it.title + '</h3>' +
+          '<p class="exp-desc">' + it.sub + '</p>' +
+          '<div class="exp-meta">' + metaHtml + '</div>' +
+          '<div class="exp-cta">' + actionLabel + dossierBtn + '</div>' +
+        '</div>' +
+      '</a>';
+    }).join('');
+
+    $$('.exp-card', expGrid).forEach(function (card) {
+      var idx = +card.dataset.idx;
+      var item = list[idx];
+      card.addEventListener('click', function (e) {
+        var prev = e.target.closest('.exp-preview-link');
+        var doss = e.target.closest('.exp-dossier-link');
+        if (prev) {
+          e.preventDefault();
+          openExpModal(item);
+          return;
+        }
+        if (doss) {
+          e.preventDefault();
+          location.href = doss.dataset.href;
+          return;
+        }
+        if (item.isProof) {
+          e.preventDefault();
+          openExpModal(item);
+        }
+      });
+    });
+  }
+
+  $$('#expControls .exp-tab').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      $$('#expControls .exp-tab').forEach(function (b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+      activeExpCat = btn.dataset.cat || 'all';
+      renderExperiments();
+    });
+  });
+  if (expSearch) {
+    expSearch.addEventListener('input', function () {
+      expQuery = expSearch.value || '';
+      renderExperiments();
+    });
+  }
+  renderExperiments();
 
   // deep link: return to the same chapter
   if (location.hash) { var h = TOOLS.filter(function (t) { return '#' + t.key === location.hash; })[0]; if (h) { var el = document.getElementById(h.key); if (el) { document.documentElement.style.scrollBehavior = 'auto'; el.scrollIntoView(); document.documentElement.style.scrollBehavior = ''; } } }

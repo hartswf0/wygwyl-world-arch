@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>THE RECASTABLE CINEMA ENGINE — Programmable Puppet-Film Studio</title>
+<style>
+  :root {
+    --bg-0: #0c0d0e;
+    --bg-1: #131618;
+    --bg-2: #1a1e21;
+    --bg-3: #23292d;
+    --border: #2e373c;
+    --border-hi: #485860;
+    --text-0: #f2f5f7;
+    --text-1: #b8c4cb;
+    --text-2: #7d8d97;
+    --gold: #f5c64e;
+    --gold-dim: rgba(245, 198, 78, 0.16);
+    --cyan: #00e5ff;
+    --cyan-dim: rgba(0, 229, 255, 0.15);
+    --green: #4ee88a;
+    --green-dim: rgba(78, 232, 138, 0.15);
+    --amber: #ff9e44;
+    --red: #ff5c6c;
+    --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg-0);
+    color: var(--text-0);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+
+  /* TOP SUITE BAR */
+  .top-bar {
+    height: 46px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-badge {
+    background: var(--gold-dim);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+  }
+  .brand-title {
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    color: var(--text-0);
+  }
+  .brand-sub {
+    color: var(--text-2);
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+
+  .mode-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-0);
+    padding: 3px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+  }
+  .mode-tab {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-1);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  .mode-tab:hover {
+    color: var(--text-0);
+    background: var(--bg-2);
+  }
+  .mode-tab.active {
+    background: var(--gold-dim);
+    border-color: var(--gold);
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  .suite-links {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .suite-link {
+    color: var(--text-1);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+  }
+  .suite-link:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+  .suite-link.primary {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-dim);
+  }
+
+  /* 6-VALIDATION INVARIANT TELEMETRY RIBBON */
+  .telemetry-ribbon {
+    height: 36px;
+    background: #0f1315;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    padding: 4px 12px;
+    flex-shrink: 0;
+  }
+  .inv-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    background: rgba(24, 42, 32, 0.55);
+    border: 1px solid rgba(78, 232, 138, 0.45);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .inv-pill:hover {
+    border-color: var(--gold);
+    background: rgba(245, 198, 78, 0.14);
+  }
+  .inv-pill .inv-name {
+    color: var(--text-0);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .inv-pill .inv-val {
+    color: var(--green);
+    font-weight: 700;
+    margin-left: 6px;
+    flex-shrink: 0;
+  }
+
+  /* MAIN 3-COLUMN WORKSPACE */
+  .workspace {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 310px 1fr 340px;
+    min-height: 0;
+  }
+
+  .panel {
+    background: var(--bg-1);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .panel-right {
+    border-right: none;
+    border-left: 1px solid var(--border);
+  }
+  .section {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+  .section-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--cyan);
+    background: var(--cyan-dim);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* CAST ROLE CARDS */
+  .role-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px;
+    margin-bottom: 8px;
+    transition: border-color 0.12s;
+  }
+  .role-card.selected {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.25);
+  }
+  .role-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .role-label {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--cyan);
+  }
+  .role-scale-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--green);
+    background: var(--green-dim);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .role-select {
+    width: 100%;
+    background: var(--bg-0);
+    color: var(--text-0);
+    border: 1px solid var(--border-hi);
+    border-radius: 4px;
+    padding: 5px 7px;
+    font-family: var(--font-sans);
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    cursor: pointer;
+  }
+  .role-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .mini-btn {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 3px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .mini-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .mini-btn.active {
+    background: var(--cyan-dim);
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+
+  .preset-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .btn-block {
+    background: var(--bg-3);
+    border: 1px solid var(--border-hi);
+    color: var(--text-0);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+  }
+  .btn-block:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .btn-block.gold {
+    background: var(--gold-dim);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* 6 ACTIONS GRID */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  .action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    color: var(--text-0);
+    padding: 7px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 11.5px;
+    transition: all 0.12s;
+  }
+  .action-btn:hover {
+    border-color: var(--gold);
+  }
+  .action-btn.active {
+    background: var(--gold-dim);
+    border-color: var(--gold);
+    color: var(--gold);
+    font-weight: 600;
+  }
+  .action-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-2);
+  }
+  .action-btn.active .action-tag {
+    color: var(--gold);
+  }
+
+  /* CENTER STAGE AREA */
+  .stage-col {
+    display: flex;
+    flex-direction: column;
+    background: #090a0b;
+    min-height: 0;
+    position: relative;
+  }
+  .stage-toolbar {
+    height: 40px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .zoom-pills, .overlay-pills {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .canvas-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 40%, #1a2024 0%, #090b0d 100%);
+  }
+  #stageCanvas {
+    max-width: 100%;
+    max-height: 100%;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75);
+    border: 1px solid #2b343a;
+    cursor: grab;
+  }
+  #stageCanvas:active {
+    cursor: grabbing;
+  }
+
+  /* TIMELINE SCRUBBER */
+  .timeline-bar {
+    height: 78px;
+    background: var(--bg-1);
+    border-top: 1px solid var(--border);
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .tl-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .play-btn {
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .tl-slider {
+    flex: 1;
+    accent-color: var(--gold);
+    cursor: pointer;
+  }
+  .tl-readout {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--gold);
+    min-width: 135px;
+    text-align: right;
+  }
+  .tl-segments {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+  }
+  .tl-seg {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 3px 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-1);
+    cursor: pointer;
+    text-align: center;
+  }
+  .tl-seg:hover, .tl-seg.active {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    background: var(--cyan-dim);
+  }
+
+  /* RIGHT INSPECTOR: SEMANTIC LOUPE & SYMBOLIC SCENE GRAPH */
+  .loupe-box {
+    background: #0b0d0e;
+    border: 1px solid var(--border-hi);
+    border-radius: 5px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px;
+  }
+  #loupeCanvas {
+    width: 100%;
+    height: 175px;
+    background: #101315;
+    border-radius: 3px;
+    border: 1px solid #263036;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-1);
+  }
+  .slider-row input[type="range"] {
+    width: 135px;
+    accent-color: var(--cyan);
+  }
+  .code-box {
+    background: #0a0c0d;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: #9be8b8;
+    line-height: 1.42;
+    max-height: 230px;
+    overflow-y: auto;
+    white-space: pre;
+  }
+
+  /* MODAL FOR PROOF SHEETS */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 7, 9, 0.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    padding: 24px;
+  }
+  .modal-backdrop.open {
+    display: flex;
+  }
+  .modal-card {
+    background: var(--bg-1);
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    max-width: 95vw;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-hdr {
+    padding: 10px 16px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .modal-body {
+    padding: 12px;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    background: #08090a;
+  }
+  .modal-body img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header class="top-bar">
+    <div class="brand">
+      <span class="brand-badge">RECASTABLE CINEMA ENGINE</span>
+      <div>
+        <div class="brand-title">JibJab × Gilliam × Harmony — Programmable Puppet-Film Studio</div>
+        <div class="brand-sub">One Scene · Three Actors · Six Validated Actions · Separation of Identity, Anatomy &amp; Performance</div>
+      </div>
+    </div>
+
+    <div class="mode-tabs" id="prodModeTabs">
+      <button class="mode-tab" data-mode="plate">🎬 1. PERFORMANCE PLATE</button>
+      <button class="mode-tab active" data-mode="puppet">🪡 2. ARTICULATED PUPPET</button>
+      <button class="mode-tab" data-mode="interactive">🎮 3. INTERACTIVE ACTOR</button>
+    </div>
+
+    <div class="suite-links">
+      <button class="suite-link primary" id="btnOpenProofModal">📜 View 6/6 Proof &amp; Calibration Sheets</button>
+      <a class="suite-link" href="crash_lab.html">Crash Lab</a>
+      <a class="suite-link" href="body_lab.html">Body Lab</a>
+      <a class="suite-link" href="arena_actors.html">Acting Arena</a>
+      <a class="suite-link" href="stage.html">Stage</a>
+    </div>
+  </header>
+
+  <!-- 6-VALIDATION LIVE TELEMETRY RIBBON (Principle 1: Surface the Invisible) -->
+  <div class="telemetry-ribbon">
+    <div class="inv-pill" data-action="walk" title="Click to inspect Validation 1: Distinct Proportions">
+      <span class="inv-name">✓ V1 · Proportions</span>
+      <span class="inv-val" id="telV1">1.00x / 0.96x / 0.70x</span>
+    </div>
+    <div class="inv-pill" data-action="walk" title="Click to inspect Validation 2: Walk Without Foot Sliding">
+      <span class="inv-name">✓ V2 · Foot Slip</span>
+      <span class="inv-val" id="telV2">0.00 px/f</span>
+    </div>
+    <div class="inv-pill" data-action="turn" title="Click to inspect Validation 3: Multiview Turn Continuity">
+      <span class="inv-name">✓ V3 · Neck Lock</span>
+      <span class="inv-val" id="telV3">0.00 px err</span>
+    </div>
+    <div class="inv-pill" data-action="prop" title="Click to inspect Validation 4: Prop Grasp & Release">
+      <span class="inv-name">✓ V4 · Prop Socket</span>
+      <span class="inv-val" id="telV4">LOCKED</span>
+    </div>
+    <div class="inv-pill" data-action="fall" title="Click to inspect Validation 5: Collide, Fall & Recover">
+      <span class="inv-name">✓ V5 · Fall/Recover</span>
+      <span class="inv-val" id="telV5">GROUNDED</span>
+    </div>
+    <div class="inv-pill" data-action="suite" title="Click to toggle Cast Preset A/B and verify Recasting Invariance">
+      <span class="inv-name">✓ V6 · Recast Drift</span>
+      <span class="inv-val" id="telV6">0.00 rad (100%)</span>
+    </div>
+  </div>
+
+  <!-- MAIN 3-COLUMN STUDIO -->
+  <div class="workspace">
+
+    <!-- LEFT PANEL: CASTING SLOTS + 6 ACTIONS + MULTIPLANE SET -->
+    <aside class="panel">
+      <div class="section">
+        <div class="section-hdr">
+          <span class="section-title">1. Live Role Casting (3 Slots × 9 Actors)</span>
+          <span class="section-badge" id="castPresetBadge">CAST A</span>
+        </div>
+        <div id="roleCardsContainer"></div>
+
+        <div class="preset-row">
+          <button class="btn-block gold" id="btnSwapCastAB">⇄ Toggle Cast A / B</button>
+          <button class="btn-block" id="btnRandomCast">🎲 Randomize Cast</button>
+        </div>
+        <div class="preset-row">
+          <button class="btn-block" id="btnGhostCompare">👻 Recast Ghost: OFF</button>
+          <button class="btn-block" id="btnSplitAB">◫ Split A/B Stage: OFF</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-hdr">
+          <span class="section-title">2. Performance Library (6 Proof Actions)</span>
+          <span class="section-badge">SHARED MOTIONCLIP</span>
+        </div>
+        <div class="actions-grid" id="actionButtons">
+          <button class="action-btn active" data-action="suite">
+            <span>🎬 0. Full 6-Action Proof Sequence</span>
+            <span class="action-tag">ALL 6</span>
+          </button>
+          <button class="action-btn" data-action="walk">
+            <span>🚶 1. Retargeted Walk (Zero Foot Slip)</span>
+            <span class="action-tag">V1 + V2</span>
+          </button>
+          <button class="action-btn" data-action="turn">
+            <span>🔄 2. Multiview Turn (FRONT→3Q→SIDE→BACK)</span>
+            <span class="action-tag">V3 NECK</span>
+          </button>
+          <button class="action-btn" data-action="prop">
+            <span>🏮 3. Prop Grasp, Pass &amp; Release</span>
+            <span class="action-tag">V4 PROP</span>
+          </button>
+          <button class="action-btn" data-action="fall">
+            <span>💥 4. Collide, Grounded Fall &amp; Recover</span>
+            <span class="action-tag">V5 FSM</span>
+          </button>
+          <button class="action-btn" data-action="waltz">
+            <span>💃 5. Ensemble Waltz &amp; Recast Sync</span>
+            <span class="action-tag">V6 SYNC</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-hdr">
+          <span class="section-title">3. Multiplane Set Environment</span>
+          <span class="section-badge">PARALLAX Z</span>
+        </div>
+        <select id="setSelect" class="role-select"></select>
+        <div class="slider-row">
+          <span>Camera Pan X</span>
+          <input type="range" id="camPanSlider" min="-180" max="180" value="0" />
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER STAGE COLUMN -->
+    <main class="stage-col">
+      <div class="stage-toolbar">
+        <div class="zoom-pills">
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-2);margin-right:4px;">SEMANTIC ZOOM:</span>
+          <button class="mini-btn active" data-zoom="stage">Z1 · Stage Composite</button>
+          <button class="mini-btn" data-zoom="skeleton">Z2 · Kinematic &amp; Contact Graph</button>
+          <button class="mini-btn" data-zoom="joints">Z3 · Grommet &amp; Seam X-Ray</button>
+        </div>
+
+        <div class="overlay-pills">
+          <button class="mini-btn active" id="btnTogglePins">📍 Joint Pins: ON</button>
+          <button class="mini-btn active" id="btnToggleRails">📐 Neck &amp; Ground Rails: ON</button>
+          <button class="mini-btn active" id="btnToggleCuffTuck">🪡 Cuff-Over-Extremity: ON</button>
+        </div>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="stageCanvas" width="1120" height="620"></canvas>
+      </div>
+
+      <!-- TIMELINE & KEYFRAME BAR -->
+      <div class="timeline-bar">
+        <div class="tl-controls">
+          <button class="play-btn" id="btnPlayPause">⏸ PAUSE</button>
+          <input type="range" class="tl-slider" id="timeSlider" min="0" max="1000" value="0" />
+          <div class="tl-readout" id="timeReadout">t = 0.00s | F000</div>
+        </div>
+        <div class="tl-segments">
+          <div class="tl-seg" data-jump="0.05">[0.0–0.2] 1. Walk No-Slip</div>
+          <div class="tl-seg" data-jump="0.25">[0.2–0.4] 2. 4-Angle Turn</div>
+          <div class="tl-seg" data-jump="0.45">[0.4–0.6] 3. Prop Grasp/Pass</div>
+          <div class="tl-seg" data-jump="0.65">[0.6–0.85] 4. Collide &amp; Recover</div>
+          <div class="tl-seg" data-jump="0.88">[0.85–1.0] 5. Recast Finale</div>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT PANEL: SEMANTIC LOUPE + DIRECT JOINT POSE + LIVE SCENE GRAPH JSON -->
+    <aside class="panel panel-right">
+      <div class="section">
+        <div class="section-hdr">
+          <span class="section-title">Semantic Joint Loupe (3× Magnification)</span>
+          <select id="loupeTargetSelect" class="mini-btn" style="background:var(--bg-0);color:var(--cyan);">
+            <option value="N">Neck Collar Socket (N)</option>
+            <option value="W_L">Left Wrist &amp; Hand Cuff (W_L)</option>
+            <option value="A_L">Left Ankle &amp; Shoe Ground Pin (A_L)</option>
+            <option value="H_C">Pelvis &amp; Hip Core (H_C)</option>
+          </select>
+        </div>
+        <div class="loupe-box">
+          <canvas id="loupeCanvas" width="310" height="175"></canvas>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-hdr">
+          <span class="section-title">Direct Manipulation Pose Offsets (Active Role)</span>
+          <button class="mini-btn" id="btnResetPose">Reset Offsets</button>
+        </div>
+        <div class="slider-row">
+          <span>Spine Pitch (°)</span>
+          <input type="range" class="pose-slider" data-k="spine_deg" min="-45" max="60" value="0" />
+        </div>
+        <div class="slider-row">
+          <span>Head Nod (°)</span>
+          <input type="range" class="pose-slider" data-k="head_deg" min="-35" max="35" value="0" />
+        </div>
+        <div class="slider-row">
+          <span>Lead Shoulder (°)</span>
+          <input type="range" class="pose-slider" data-k="uarm_L_deg" min="-90" max="110" value="0" />
+        </div>
+        <div class="slider-row">
+          <span>Lead Elbow (°)</span>
+          <input type="range" class="pose-slider" data-k="farm_L_deg" min="-90" max="135" value="0" />
+        </div>
+        <div class="slider-row">
+          <span>Lead Hip (°)</span>
+          <input type="range" class="pose-slider" data-k="thigh_L_deg" min="-60" max="110" value="0" />
+        </div>
+        <div class="slider-row">
+          <span>Lead Knee (°)</span>
+          <input type="range" class="pose-slider" data-k="shin_L_deg" min="-105" max="20" value="0" />
+        </div>
+      </div>
+
+      <div class="section" style="flex:1;display:flex;flex-direction:column;">
+        <div class="section-hdr">
+          <span class="section-title">Symbolic Scene &amp; Performance Spec</span>
+          <span class="section-badge">BIDIRECTIONAL</span>
+        </div>
+        <div class="code-box" id="symbolicSpecBox">Loading manifest...</div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- MODAL FOR VIEWING THE 5 GENERATED CALIBRATION & FIRST-PROOF SHEETS -->
+  <div class="modal-backdrop" id="proofModal">
+    <div class="modal-card">
+      <div class="modal-hdr">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="brand-badge">EXECUTABLE PROOF ATLAS</span>
+          <button class="mini-btn active proof-sheet-tab" data-img="arena/parts/kit3/regularized_parts_audit/recastable_cinema_first_proof.png">1. First Proof (6/6 Validations)</button>
+          <button class="mini-btn proof-sheet-tab" data-img="arena/parts/kit3/regularized_parts_audit/step1_ideal_body_vs_master.png">2. Step 1: Ideal Body vs Master</button>
+          <button class="mini-btn proof-sheet-tab" data-img="arena/parts/kit3/regularized_parts_audit/step2_compatible_4angle_bodies.png">3. Step 2: 4-Angle Turnaround</button>
+          <button class="mini-btn proof-sheet-tab" data-img="arena/parts/kit3/regularized_parts_audit/step3_bendability_rom_matrix.png">4. Step 3: Bendability ROM</button>
+          <button class="mini-btn proof-sheet-tab" data-img="arena/parts/kit3/regularized_parts_audit/step4_consistent_movement_and_ensembles.png">5. Step 4: Movement &amp; Ensembles</button>
+        </div>
+        <button class="mini-btn" id="btnCloseProofModal" style="border-color:var(--red);color:var(--red);">✕ Close</button>
+      </div>
+      <div class="modal-body">
+        <img id="proofModalImg" src="arena/parts/kit3/regularized_parts_audit/recastable_cinema_first_proof.png" alt="Recastable Cinema First Proof" />
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const stageCanvas = document.getElementById('stageCanvas');
+  const ctx = stageCanvas.getContext('2d');
+  const loupeCanvas = document.getElementById('loupeCanvas');
+  const lctx = loupeCanvas.getContext('2d');
+
+  let manifest = null;
+  const imgCache = new Map();
+
+  function getImg(relPath) {
+    if (!relPath) return null;
+    if (imgCache.has(relPath)) return imgCache.get(relPath);
+    const im = new Image();
+    im.src = relPath;
+    imgCache.set(relPath, im);
+    return im;
+  }
+
+  // STUDIO STATE
+  const state = {
+    prodMode: 'puppet',      // 'plate' | 'puppet' | 'interactive'
+    zoomMode: 'stage',       // 'stage' | 'skeleton' | 'joints'
+    action: 'suite',         // 'suite' | 'walk' | 'turn' | 'prop' | 'fall' | 'waltz'
+    playing: true,
+    tNorm: 0.0,              // [0..1] across 12-second master loop
+    lastTs: performance.now(),
+    selectedRoleIdx: 0,
+    castPreset: 'A',
+    showGhostRecast: false,
+    splitStageAB: false,
+    showPins: true,
+    showRails: true,
+    cuffTuck: true,
+    setIndex: 0,
+    camPanX: 0,
+    loupeJoint: 'N',
+    dragInfo: null,
+    // 3 Role Slots in the Scene
+    roles: [
+      { slotId: 'ROLE_A_LEAD', label: 'Slot 1 · Lead Actor', castIdx: 0, ghostCastIdx: 5, baseX: 300, viewOverride: null, handMode: 'auto', offsets: { spine_deg: 0, head_deg: 0, uarm_L_deg: 0, farm_L_deg: 0, thigh_L_deg: 0, shin_L_deg: 0 } },
+      { slotId: 'ROLE_B_PARTNER', label: 'Slot 2 · Partner Actor', castIdx: 2, ghostCastIdx: 6, baseX: 580, viewOverride: null, handMode: 'auto', offsets: { spine_deg: 0, head_deg: 0, uarm_L_deg: 0, farm_L_deg: 0, thigh_L_deg: 0, shin_L_deg: 0 } },
+      { slotId: 'ROLE_C_SUPPORT', label: 'Slot 3 · Child / Support', castIdx: 8, ghostCastIdx: 3, baseX: 835, viewOverride: null, handMode: 'auto', offsets: { spine_deg: 0, head_deg: 0, uarm_L_deg: 0, farm_L_deg: 0, thigh_L_deg: 0, shin_L_deg: 0 } }
+    ],
+    propManualPos: null,
+    lastRenderedRoles: []
+  };
+
+  const CAST_PRESETS = {
+    A: [0, 2, 8], // Poet Tracksuit, Woman/Muse, Young Poet (Age 6)
+    B: [5, 6, 3]  // Party Gentleman, Party Woman Gown, The Mother
+  };
+
+  // Load Manifest & Preload All Clean Studio Parts
+  fetch('arena/parts/kit3/release_v2/recastable_cinema_manifest.json')
+    .then(r => r.json())
+    .then(data => {
+      manifest = data;
+      getImg(manifest.prop_orb);
+      getImg(manifest.hand_open_sub);
+      getImg(manifest.hand_grip_sub);
+      manifest.cast.forEach(c => {
+        Object.values(c.heads || {}).forEach(getImg);
+        Object.values(c.views || {}).forEach(vd => {
+          Object.values(vd || {}).forEach(v => {
+            if (typeof v === 'string') getImg(v);
+          });
+        });
+      });
+      manifest.sets.forEach(s => (s.pieces || []).forEach(getImg));
+      buildUI();
+      requestAnimationFrame(tick);
+    });
+
+  function buildUI() {
+    // Populate Set Selector
+    const setSel = document.getElementById('setSelect');
+    setSel.innerHTML = manifest.sets.map((s, idx) => `<option value="${idx}">${s.name}</option>`).join('');
+    setSel.addEventListener('change', e => {
+      state.setIndex = parseInt(e.target.value, 10) || 0;
+    });
+
+    renderRoleCards();
+  }
+
+  function renderRoleCards() {
+    if (!manifest) return;
+    const container = document.getElementById('roleCardsContainer');
+    container.innerHTML = state.roles.map((r, rIdx) => {
+      const actor = manifest.cast[r.castIdx];
+      const morphLabel = actor.is_child ? `${actor.scale.toFixed(2)}x · 3.5H Child` : `${actor.scale.toFixed(2)}x · 7.5H Adult`;
+      const optionsHtml = manifest.cast.map((c, cIdx) =>
+        `<option value="${cIdx}" ${cIdx === r.castIdx ? 'selected' : ''}>${c.name} (${c.scale.toFixed(2)}x)</option>`
+      ).join('');
+      const views = ['AUTO', 'FRONT', '3Q', 'SIDE', 'BACK'];
+      const curV = r.viewOverride || 'AUTO';
+      const viewBtns = views.map(v =>
+        `<button class="mini-btn role-view-btn ${curV === v ? 'active' : ''}" data-ridx="${rIdx}" data-view="${v}">${v}</button>`
+      ).join('');
+
+      return `
+        <div class="role-card ${state.selectedRoleIdx === rIdx ? 'selected' : ''}" data-ridx="${rIdx}">
+          <div class="role-top">
+            <span class="role-label">${r.label}</span>
+            <span class="role-scale-tag">${morphLabel}</span>
+          </div>
+          <select class="role-select" data-ridx="${rIdx}">
+            ${optionsHtml}
+          </select>
+          <div class="role-controls">
+            ${viewBtns}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.role-card').forEach(card => {
+      card.addEventListener('click', e => {
+        if (e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') return;
+        state.selectedRoleIdx = parseInt(card.dataset.ridx, 10);
+        syncPoseSlidersToRole();
+        renderRoleCards();
+      });
+    });
+
+    container.querySelectorAll('.role-select').forEach(sel => {
+      sel.addEventListener('change', e => {
+        const rIdx = parseInt(sel.dataset.ridx, 10);
+        state.roles[rIdx].castIdx = parseInt(e.target.value, 10);
+        state.selectedRoleIdx = rIdx;
+        renderRoleCards();
+      });
+    });
+
+    container.querySelectorAll('.role-view-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const rIdx = parseInt(btn.dataset.ridx, 10);
+        const vw = btn.dataset.view;
+        state.roles[rIdx].viewOverride = vw === 'AUTO' ? null : vw;
+        renderRoleCards();
+      });
+    });
+  }
+
+  function syncPoseSlidersToRole() {
+    const r = state.roles[state.selectedRoleIdx];
+    document.querySelectorAll('.pose-slider').forEach(sl => {
+      const k = sl.dataset.k;
+      sl.value = r.offsets[k] || 0;
+    });
+  }
+
+  // MATHEMATICAL KINEMATIC & 2-POINT BONE SOLVER (Matches build_step_by_step_ideal_bodies.py)
+  function ptSub(a, b) { return [a[0] - b[0], a[1] - b[1]]; }
+  function ptLen(v) { return Math.hypot(v[0], v[1]); }
+
+  function drawTwoPointLimb(g, im, pProxNorm, pDistNorm, jProx, jDist, widthMult = 1.0, clipBottomRatio = null) {
+    if (!im || !im.complete || !im.naturalWidth) return;
+    const w = im.naturalWidth;
+    const h = im.naturalHeight;
+    const pA = [pProxNorm[0] * w, pProxNorm[1] * h];
+    const pB = [pDistNorm[0] * w, pDistNorm[1] * h];
+    const vImg = ptSub(pB, pA);
+    const lenImg = Math.max(ptLen(vImg), 1e-4);
+
+    const vWorld = ptSub(jDist, jProx);
+    const lenWorld = Math.max(ptLen(vWorld), 1e-4);
+
+    const scale = lenWorld / lenImg;
+    const angImg = Math.atan2(vImg[1], vImg[0]);
+    const angWorld = Math.atan2(vWorld[1], vWorld[0]);
+    const rotRad = angWorld - angImg;
+
+    g.save();
+    g.translate(jProx[0], jProx[1]);
+    g.rotate(rotRad);
+    g.scale(scale * widthMult, scale);
+    if (clipBottomRatio && state.cuffTuck) {
+      g.beginPath();
+      g.rect(-pA[0] - 20, -pA[1] - 20, w + 40, h * clipBottomRatio + 20);
+      g.clip();
+    }
+    g.drawImage(im, -pA[0], -pA[1]);
+    g.restore();
+  }
+
+  function drawAnchoredPart(g, im, anchorNorm, worldPt, targetH, targetW = null, rotDeg = 0, flipX = false) {
+    if (!im || !im.complete || !im.naturalWidth) return [0, 0];
+    const w0 = im.naturalWidth;
+    const h0 = im.naturalHeight;
+    const sy = targetH / Math.max(h0, 1);
+    const sx = targetW ? (targetW / Math.max(w0, 1)) : sy;
+    const rw = w0 * sx;
+    const rh = h0 * sy;
+
+    g.save();
+    g.translate(worldPt[0], worldPt[1]);
+    if (rotDeg) g.rotate(rotDeg * Math.PI / 180);
+    if (flipX) g.scale(-1, 1);
+    g.drawImage(im, -anchorNorm[0] * rw, -anchorNorm[1] * rh, rw, rh);
+    g.restore();
+    return [rw, rh];
+  }
+
+  // Solve joints & render a character in any of the 4 angles + pose
+  function solveAndDrawActor(g, cspec, view, pose, centerX, groundY, figHBase = 236, alpha = 1.0) {
+    const sc = cspec.scale || 1.0;
+    const isChild = !!cspec.is_child;
+    const H = figHBase * sc;
+
+    let H_sole, L_shin, L_thigh, L_torso, H_head, L_uarm, L_farm;
+    if (isChild) {
+      H_sole  = 0.095 * H;
+      L_shin  = 0.165 * H;
+      L_thigh = 0.180 * H;
+      L_torso = 0.235 * H;
+      H_head  = 0.355 * H;
+      L_uarm  = 0.125 * H;
+      L_farm  = 0.110 * H;
+    } else {
+      H_sole  = 0.090 * H;
+      L_shin  = 0.195 * H;
+      L_thigh = 0.245 * H;
+      L_torso = 0.300 * H;
+      H_head  = 0.198 * H;
+      L_uarm  = 0.150 * H;
+      L_farm  = 0.134 * H;
+    }
+
+    const vdata = cspec.views[view] || cspec.views.FRONT;
+    const torsoIm = getImg(vdata.torso);
+    const tw0 = (torsoIm && torsoIm.naturalWidth) ? torsoIm.naturalWidth : 90;
+    const th0 = (torsoIm && torsoIm.naturalHeight) ? torsoIm.naturalHeight : 140;
+    const torsoAspect = Math.min(Math.max(tw0 / Math.max(th0, 1), 0.42), 0.78);
+    const torsoRenderedH = L_torso * 1.12;
+    const torsoRenderedW = torsoRenderedH * torsoAspect;
+
+    let dxHip, dxSh;
+    if (view === 'SIDE') {
+      dxHip = 0;
+      dxSh = 0;
+    } else if (view === '3Q') {
+      dxHip = torsoRenderedW * 0.15;
+      dxSh = torsoRenderedW * 0.30;
+    } else {
+      dxHip = torsoRenderedW * 0.19;
+      dxSh = torsoRenderedW * 0.35;
+    }
+
+    const spineRad = (pose.spine_deg || 0) * Math.PI / 180;
+    const thL = (pose.thigh_L_deg || 0) * Math.PI / 180;
+    const shL = (pose.shin_L_deg || 0) * Math.PI / 180;
+    const thR = (pose.thigh_R_deg || 0) * Math.PI / 180;
+    const shR = (pose.shin_R_deg || 0) * Math.PI / 180;
+
+    const restSpread = isChild ? 13 : 6;
+    const uaL = ((pose.uarm_L_deg !== undefined ? pose.uarm_L_deg : -restSpread)) * Math.PI / 180;
+    const faL = ((pose.farm_L_deg !== undefined ? pose.farm_L_deg : -(restSpread + 4))) * Math.PI / 180;
+    const uaR = ((pose.uarm_R_deg !== undefined ? pose.uarm_R_deg : restSpread)) * Math.PI / 180;
+    const faR = ((pose.farm_R_deg !== undefined ? pose.farm_R_deg : (restSpread + 4))) * Math.PI / 180;
+
+    const dropL = L_thigh * Math.cos(thL) + L_shin * Math.cos(shL);
+    const dropR = L_thigh * Math.cos(thR) + L_shin * Math.cos(shR);
+    const maxLegDrop = Math.max(dropL, dropR, 0.18 * H);
+    const hipY = groundY - H_sole - maxLegDrop + (pose.hip_y_offset || 0);
+    const H_C = [centerX + (pose.root_dx || 0), hipY];
+
+    const N = [
+      H_C[0] + L_torso * Math.sin(spineRad),
+      H_C[1] - L_torso * Math.cos(spineRad)
+    ];
+    const shCenter = [
+      H_C[0] + L_torso * 0.86 * Math.sin(spineRad),
+      H_C[1] - L_torso * 0.86 * Math.cos(spineRad)
+    ];
+
+    const S_L = [shCenter[0] - dxSh, shCenter[1]];
+    const S_R = [shCenter[0] + dxSh, shCenter[1]];
+    const H_L = [H_C[0] - dxHip, H_C[1]];
+    const H_R = [H_C[0] + dxHip, H_C[1]];
+
+    const K_L = [H_L[0] + L_thigh * Math.sin(thL), H_L[1] + L_thigh * Math.cos(thL)];
+    const A_L = [K_L[0] + L_shin * Math.sin(shL), K_L[1] + L_shin * Math.cos(shL)];
+    const K_R = [H_R[0] + L_thigh * Math.sin(thR), H_R[1] + L_thigh * Math.cos(thR)];
+    const A_R = [K_R[0] + L_shin * Math.sin(shR), K_R[1] + L_shin * Math.cos(shR)];
+
+    const E_L = [S_L[0] + L_uarm * Math.sin(uaL), S_L[1] + L_uarm * Math.cos(uaL)];
+    const W_L = [E_L[0] + L_farm * Math.sin(faL), E_L[1] + L_farm * Math.cos(faL)];
+    const E_R = [S_R[0] + L_uarm * Math.sin(uaR), S_R[1] + L_uarm * Math.cos(uaR)];
+    const W_R = [E_R[0] + L_farm * Math.sin(faR), E_R[1] + L_farm * Math.cos(faR)];
+
+    const headIm = getImg(cspec.heads[view] || cspec.heads.FRONT);
+    const pelvisIm = getImg(vdata.pelvis);
+    const skirtIm = getImg(vdata.skirt);
+    const thighIm = getImg(vdata.thigh);
+    const shinIm = getImg(vdata.shin);
+    const uarmIm = getImg(vdata.uarm);
+    const farmIm = getImg(vdata.farm);
+    const handIm = pose.hand_L_override || getImg(vdata.hand);
+    const shoeLIm = getImg(vdata.shoe_L);
+    const shoeRIm = getImg(vdata.shoe_R || vdata.shoe_L);
+
+    const handH = 0.072 * H;
+    const shoeH = 0.088 * H;
+
+    g.save();
+    g.globalAlpha = alpha;
+
+    if (state.zoomMode !== 'skeleton') {
+      // 1. Far limbs (R in SIDE/3Q)
+      if (view === 'SIDE' || view === '3Q') {
+        if (view === '3Q' || Math.abs(thR - thL) > 0.08) {
+          drawTwoPointLimb(g, thighIm, [0.50, 0.14], [0.50, 0.86], H_R, K_R, 0.92);
+          drawTwoPointLimb(g, shinIm, [0.50, 0.14], [0.50, 0.86], K_R, A_R, 0.90, 0.86);
+          drawAnchoredPart(g, shoeRIm, [0.42, 0.25], A_R, shoeH, null, pose.foot_R_deg || 0, !!vdata.flip_R_shoe);
+        }
+        if (view === '3Q' || pose.show_far_arm_in_side) {
+          drawTwoPointLimb(g, uarmIm, [0.50, 0.15], [0.50, 0.85], S_R, E_R, 0.90);
+          drawAnchoredPart(g, handIm, [0.50, 0.16], W_R, handH, null, (pose.farm_R_deg || 0), true);
+          drawTwoPointLimb(g, farmIm, [0.50, 0.15], [0.50, 0.85], E_R, W_R, 0.88, 0.84);
+        }
+      }
+
+      // 2. Near Legs
+      if (view !== 'SIDE') {
+        if (view !== '3Q') {
+          drawTwoPointLimb(g, thighIm, [0.50, 0.14], [0.50, 0.86], H_R, K_R, 0.95);
+          drawAnchoredPart(g, shoeRIm, [0.48, 0.25], A_R, shoeH, null, pose.foot_R_deg || 0, !!vdata.flip_R_shoe);
+          drawTwoPointLimb(g, shinIm, [0.50, 0.14], [0.50, 0.86], K_R, A_R, 0.92, 0.86);
+        }
+        drawTwoPointLimb(g, thighIm, [0.50, 0.14], [0.50, 0.86], H_L, K_L, 0.95);
+        drawAnchoredPart(g, shoeLIm, [0.48, 0.25], A_L, shoeH, null, pose.foot_L_deg || 0, false);
+        drawTwoPointLimb(g, shinIm, [0.50, 0.14], [0.50, 0.86], K_L, A_L, 0.92, 0.86);
+      } else {
+        drawTwoPointLimb(g, thighIm, [0.50, 0.14], [0.50, 0.86], H_L, K_L, 0.95);
+        drawAnchoredPart(g, shoeLIm, [0.38, 0.25], A_L, shoeH, null, pose.foot_L_deg || 0, false);
+        drawTwoPointLimb(g, shinIm, [0.50, 0.14], [0.50, 0.86], K_L, A_L, 0.92, 0.86);
+      }
+
+      // 3. Pelvis / Skirt
+      if (skirtIm) {
+        const skH = (cspec.skirt_h_frac || 0.29) * H;
+        drawAnchoredPart(g, skirtIm, [0.50, 0.10], [H_C[0], H_C[1] - 0.03 * H], skH, null, (pose.spine_deg || 0) * 0.35);
+      } else if (pelvisIm) {
+        drawAnchoredPart(g, pelvisIm, [0.50, 0.42], H_C, 0.135 * H, torsoRenderedW * 0.94, (pose.spine_deg || 0) * 0.5);
+      }
+
+      // 4. Torso
+      drawTwoPointLimb(g, torsoIm, [0.50, 0.11], [0.50, 0.89], N, H_C, 1.0);
+
+      // 5. Head (Neck tucked into collar when cuffTuck is ON)
+      const headRot = (pose.spine_deg || 0) * 0.6 + (pose.head_deg || 0);
+      drawAnchoredPart(g, headIm, [0.50, 0.86], N, H_head, null, headRot, !!vdata.flip_head);
+
+      // 6. Front/Near Arms (Cuff-over-Hand ordering when state.cuffTuck is ON)
+      if (view === 'FRONT' || view === 'BACK') {
+        drawTwoPointLimb(g, uarmIm, [0.50, 0.15], [0.50, 0.85], S_L, E_L, 0.92);
+        if (state.cuffTuck) {
+          drawAnchoredPart(g, handIm, [0.50, 0.16], W_L, handH, null, (pose.farm_L_deg || 0), false);
+          drawTwoPointLimb(g, farmIm, [0.50, 0.15], [0.50, 0.85], E_L, W_L, 0.90, 0.84);
+        } else {
+          drawTwoPointLimb(g, farmIm, [0.50, 0.15], [0.50, 0.85], E_L, W_L, 0.90, null);
+          drawAnchoredPart(g, handIm, [0.50, 0.05], W_L, handH * 1.25, null, (pose.farm_L_deg || 0), false);
+        }
+
+        drawTwoPointLimb(g, uarmIm, [0.50, 0.15], [0.50, 0.85], S_R, E_R, 0.92);
+        if (state.cuffTuck) {
+          drawAnchoredPart(g, handIm, [0.50, 0.16], W_R, handH, null, (pose.farm_R_deg || 0), true);
+          drawTwoPointLimb(g, farmIm, [0.50, 0.15], [0.50, 0.85], E_R, W_R, 0.90, 0.84);
+        } else {
+          drawTwoPointLimb(g, farmIm, [0.50, 0.15], [0.50, 0.85], E_R, W_R, 0.90, null);
+          drawAnchoredPart(g, handIm, [0.50, 0.05], W_R, handH * 1.25, null, (pose.farm_R_deg || 0), true);
+        }
+      } else {
+        drawTwoPointLimb(g, uarmIm, [0.50, 0.15], [0.50, 0.85], S_L, E_L, 0.94);
+        if (state.cuffTuck) {
+          drawAnchoredPart(g, handIm, [0.50, 0.16], W_L, handH, null, (pose.farm_L_deg || 0), false);
+          drawTwoPointLimb(g, farmIm, [0.50, 0.15], [0.50, 0.85], E_L, W_L, 0.92, 0.84);
+        } else {
+          drawTwoPointLimb(g, farmIm, [0.50, 0.15], [0.50, 0.85], E_L, W_L, 0.92, null);
+          drawAnchoredPart(g, handIm, [0.50, 0.05], W_L, handH * 1.25, null, (pose.farm_L_deg || 0), false);
+        }
+      }
+    }
+
+    g.restore();
+
+    const joints = { N, H_C, S_L, S_R, E_L, W_L, E_R, W_R, H_L, K_L, A_L, H_R, K_R, A_R };
+    const crownY = N[1] - H_head * 0.86;
+    return { joints, crownY, H };
+  }
+
+  // CHOREOGRAPHY GENERATOR FOR ALL 6 ACTIONS
+  function computeRoleChoreography(roleIdx, actionName, tNorm) {
+    // Sub-segment mapping if in 'suite' mode
+    let subAct = actionName;
+    let u = tNorm;
+    if (actionName === 'suite') {
+      if (tNorm < 0.20) { subAct = 'walk'; u = tNorm / 0.20; }
+      else if (tNorm < 0.40) { subAct = 'turn'; u = (tNorm - 0.20) / 0.20; }
+      else if (tNorm < 0.60) { subAct = 'prop'; u = (tNorm - 0.40) / 0.20; }
+      else if (tNorm < 0.82) { subAct = 'fall'; u = (tNorm - 0.60) / 0.22; }
+      else { subAct = 'waltz'; u = (tNorm - 0.82) / 0.18; }
+    }
+
+    const phase = u * Math.PI * 2;
+    const s = Math.sin(phase * 2 + roleIdx * 0.9);
+    const c = Math.cos(phase * 2 + roleIdx * 0.9);
+
+    let view = 'FRONT';
+    let pose = {
+      spine_deg: 0, head_deg: 0,
+      thigh_L_deg: 0, shin_L_deg: 0, foot_L_deg: 0,
+      thigh_R_deg: 0, shin_R_deg: 0, foot_R_deg: 0,
+      uarm_L_deg: -8, farm_L_deg: -12,
+      uarm_R_deg: 8, farm_R_deg: 12,
+      show_far_arm_in_side: true,
+      root_dx: 0
+    };
+    let stateLabel = 'IDLE';
+
+    if (subAct === 'walk') {
+      view = 'SIDE';
+      stateLabel = s >= 0 ? 'WALK_STRIKE_L' : 'WALK_PASS_R';
+      pose.spine_deg = 6 + 2 * Math.abs(s);
+      pose.thigh_L_deg = 26 * s;
+      pose.shin_L_deg = s > 0 ? 6 * s : -32 * (-s);
+      pose.foot_L_deg = 10 * s;
+      pose.thigh_R_deg = -26 * s;
+      pose.shin_R_deg = -s > 0 ? 6 * (-s) : -32 * s;
+      pose.foot_R_deg = -10 * s;
+      pose.uarm_L_deg = -22 * s;
+      pose.farm_L_deg = 18 - 14 * s;
+      pose.uarm_R_deg = 22 * s;
+      pose.farm_R_deg = 18 + 14 * s;
+    } else if (subAct === 'turn') {
+      const angles = ['FRONT', '3Q', 'SIDE', 'BACK'];
+      const aIdx = Math.floor((u * 4) % 4);
+      view = angles[aIdx];
+      stateLabel = `TURN_${view}`;
+      pose.spine_deg = 3 * Math.sin(phase);
+      pose.uarm_L_deg = view === 'SIDE' || view === '3Q' ? 16 : -10;
+      pose.farm_L_deg = view === 'SIDE' || view === '3Q' ? 36 : -14;
+      pose.uarm_R_deg = 10;
+      pose.farm_R_deg = 16;
+    } else if (subAct === 'prop') {
+      view = 'SIDE';
+      stateLabel = u < 0.33 ? 'PROP_REACH' : (u < 0.72 ? 'PROP_CARRY_PASS' : 'PROP_RELEASE');
+      const reachAmt = Math.sin(u * Math.PI);
+      pose.spine_deg = 8 + 6 * (1 - reachAmt);
+      pose.thigh_L_deg = 14;
+      pose.shin_L_deg = 2;
+      pose.thigh_R_deg = -12;
+      pose.shin_R_deg = -16;
+      pose.uarm_L_deg = 38 + 24 * reachAmt;
+      pose.farm_L_deg = 78 + 32 * reachAmt;
+      pose.hand_L_override = (u >= 0.25 && u <= 0.75) ? getImg(manifest?.hand_grip_sub) : getImg(manifest?.hand_open_sub);
+    } else if (subAct === 'fall') {
+      view = 'SIDE';
+      if (roleIdx === 0 || actionName === 'fall') {
+        if (u < 0.20) {
+          stateLabel = '1_COLLISION_RECOIL';
+          pose.spine_deg = -18; pose.thigh_L_deg = 24; pose.shin_L_deg = -12;
+          pose.thigh_R_deg = -18; pose.shin_R_deg = -28;
+          pose.uarm_L_deg = -45; pose.farm_L_deg = -15; pose.head_deg = -16;
+        } else if (u < 0.42) {
+          stateLabel = '2_STUMBLE_DROP';
+          pose.spine_deg = 36; pose.thigh_L_deg = 64; pose.shin_L_deg = -42;
+          pose.thigh_R_deg = 18; pose.shin_R_deg = -78; pose.foot_R_deg = -65;
+          pose.uarm_L_deg = 52; pose.farm_L_deg = 72; pose.head_deg = 14;
+        } else if (u < 0.64) {
+          stateLabel = '3_FLOOR_COLLAPSE';
+          pose.spine_deg = 54; pose.thigh_L_deg = 92; pose.shin_L_deg = -68;
+          pose.thigh_R_deg = 48; pose.shin_R_deg = -88; pose.foot_R_deg = -80;
+          pose.uarm_L_deg = 38; pose.farm_L_deg = 44; pose.head_deg = 18;
+          pose.hand_L_override = getImg(manifest?.hand_open_sub);
+        } else if (u < 0.84) {
+          stateLabel = '4_CROUCH_GATHER';
+          pose.spine_deg = 32; pose.thigh_L_deg = 104; pose.shin_L_deg = -38;
+          pose.thigh_R_deg = 92; pose.shin_R_deg = -48;
+          pose.uarm_L_deg = 46; pose.farm_L_deg = 86; pose.head_deg = -10;
+        } else {
+          stateLabel = '5_LUNGE_RECOVERY';
+          pose.spine_deg = 10; pose.thigh_L_deg = 72; pose.shin_L_deg = -4;
+          pose.thigh_R_deg = 20; pose.shin_R_deg = -78; pose.foot_R_deg = -68;
+          pose.uarm_L_deg = 26; pose.farm_L_deg = 64; pose.head_deg = -6;
+        }
+      } else {
+        view = '3Q';
+        stateLabel = 'WITNESS_REACT';
+        pose.spine_deg = -6 * Math.sin(phase);
+        pose.uarm_L_deg = 28; pose.farm_L_deg = 68;
+      }
+    } else if (subAct === 'waltz') {
+      view = roleIdx === 1 ? 'FRONT' : '3Q';
+      stateLabel = 'ENSEMBLE_WALTZ_SYNC';
+      pose.spine_deg = 6 * Math.sin(phase);
+      pose.thigh_L_deg = 18 * Math.sin(phase);
+      pose.shin_L_deg = -10 * Math.abs(Math.cos(phase));
+      pose.thigh_R_deg = -18 * Math.sin(phase);
+      pose.shin_R_deg = -10 * Math.abs(Math.sin(phase));
+      pose.uarm_L_deg = 34 + 12 * Math.sin(phase);
+      pose.farm_L_deg = 78 + 14 * Math.cos(phase);
+      pose.uarm_R_deg = -24;
+      pose.farm_R_deg = -48;
+    }
+
+    return { view, pose, subAct, stateLabel, u };
+  }
+
+  function renderFrame() {
+    if (!manifest) return;
+    const W = stageCanvas.width;
+    const H = stageCanvas.height;
+    const groundY = H - 72;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // 1. Calibration Stage Grid
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 32) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 32) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    // 2. Multiplane Set Pieces (when in Z1 Stage mode)
+    const activeSet = manifest.sets[state.setIndex] || manifest.sets[0];
+    if (state.zoomMode === 'stage' && activeSet) {
+      const pcs = activeSet.pieces || [];
+      const positions = [160, 430, 710, 960];
+      pcs.forEach((relP, idx) => {
+        const im = getImg(relP);
+        if (im && im.complete && im.naturalWidth) {
+          const parallax = (idx % 2 === 0) ? 0.35 : 0.65;
+          const px = positions[idx % positions.length] + state.camPanX * parallax;
+          ctx.save();
+          ctx.globalAlpha = 0.36;
+          drawAnchoredPart(ctx, im, [0.5, 1.0], [px, groundY + 6], 340);
+          ctx.restore();
+        }
+      });
+    }
+
+    // 3. Production Mode 1: Performance Plate Lattice (if active)
+    if (state.prodMode === 'plate') {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0, 229, 255, 0.28)';
+      ctx.setLineDash([5, 5]);
+      state.roles.forEach((r, idx) => {
+        ctx.strokeRect(r.baseX - 95, groundY - 265, 190, 265);
+        ctx.fillStyle = 'rgba(0, 229, 255, 0.85)';
+        ctx.font = '10px monospace';
+        ctx.fillText(`TRACKED PLATE DRIVER #0${idx + 1}`, r.baseX - 82, groundY - 272);
+      });
+      ctx.restore();
+    }
+
+    // Ground Floor Support Line
+    ctx.strokeStyle = '#d8b25c';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(20, groundY);
+    ctx.lineTo(W - 20, groundY);
+    ctx.stroke();
+
+    // Render all 3 Actor Role Slots
+    const renderedRoles = [];
+    const neckPts = [];
+
+    state.roles.forEach((role, rIdx) => {
+      const choreo = computeRoleChoreography(rIdx, state.action, state.tNorm);
+      const view = role.viewOverride || choreo.view;
+      const mergedPose = { ...choreo.pose };
+      Object.keys(role.offsets).forEach(k => {
+        mergedPose[k] = (mergedPose[k] || 0) + (role.offsets[k] || 0);
+      });
+
+      const actorSpec = manifest.cast[role.castIdx];
+      const ghostSpec = manifest.cast[role.ghostCastIdx];
+
+      // Optional Split-Stage A/B or Ghost Recast Overlay (Principle 2: Overcome Cognitive Limits)
+      if (state.showGhostRecast && ghostSpec) {
+        solveAndDrawActor(ctx, ghostSpec, view, mergedPose, role.baseX + 18, groundY, 240, 0.35);
+      }
+
+      const drawX = state.splitStageAB ? (120 + rIdx * 165) : role.baseX;
+      const res = solveAndDrawActor(ctx, actorSpec, view, mergedPose, drawX, groundY, state.splitStageAB ? 205 : 244, 1.0);
+
+      if (state.splitStageAB && ghostSpec) {
+        const recastX = W / 2 + 110 + rIdx * 165;
+        solveAndDrawActor(ctx, ghostSpec, view, mergedPose, recastX, groundY, 205, 1.0);
+      }
+
+      renderedRoles.push({ role, rIdx, actorSpec, view, pose: mergedPose, joints: res.joints, crownY: res.crownY, H: res.H, stateLabel: choreo.stateLabel, subAct: choreo.subAct, u: choreo.u, drawX });
+      neckPts.push(res.joints.N);
+    });
+
+    state.lastRenderedRoles = renderedRoles;
+
+    // Split Stage Divider if active
+    if (state.splitStageAB) {
+      ctx.save();
+      ctx.strokeStyle = '#f5c64e';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(W / 2, 10);
+      ctx.lineTo(W / 2, groundY + 40);
+      ctx.stroke();
+      ctx.fillStyle = '#4ee88a';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText('CAST PRESET A (Original Identity)', 32, 28);
+      ctx.fillStyle = '#f5c64e';
+      ctx.fillText('CAST PRESET B (Recast Ensemble — Identical MotionClip!)', W / 2 + 24, 28);
+      ctx.restore();
+    }
+
+    // 4. Shared Prop Interaction (Validation 4: Grasp, Pass & Release)
+    const propIm = getImg(manifest.prop_orb);
+    const lead = renderedRoles[0];
+    if (propIm && lead) {
+      let propPos = [lead.drawX + 85, groundY - 95];
+      let propStateText = 'WORLD_PEDESTAL';
+
+      if (state.propManualPos) {
+        propPos = state.propManualPos;
+        // Check proximity to any actor's W_L hand socket
+        for (const rr of renderedRoles) {
+          const d = ptLen(ptSub(propPos, rr.joints.W_L));
+          if (d < 42) {
+            propPos = [rr.joints.W_L[0] + 12, rr.joints.W_L[1] + 4];
+            propStateText = `LOCKED -> ${rr.actorSpec.id}.W_L`;
+            break;
+          }
+        }
+      } else if (lead.subAct === 'prop') {
+        const u = lead.u;
+        if (u < 0.25) {
+          propPos = [lead.joints.W_L[0] + 28, lead.joints.W_L[1] + 12];
+          propStateText = 'PEDESTAL (Reaching)';
+        } else if (u < 0.55) {
+          propPos = [lead.joints.W_L[0] + 12, lead.joints.W_L[1] + 4];
+          propStateText = `GRASPED -> ${lead.actorSpec.id}.W_L`;
+        } else if (u < 0.80 && renderedRoles[1]) {
+          propPos = [renderedRoles[1].joints.W_L[0] + 12, renderedRoles[1].joints.W_L[1] + 4];
+          propStateText = `PASSED -> ${renderedRoles[1].actorSpec.id}.W_L`;
+        } else if (renderedRoles[2]) {
+          propPos = [renderedRoles[2].joints.W_L[0] + 22, renderedRoles[2].joints.W_L[1] + 10];
+          propStateText = 'RELEASED -> Pedestal';
+        }
+      }
+
+      if (lead.subAct === 'prop' || state.propManualPos || state.action === 'prop') {
+        drawAnchoredPart(ctx, propIm, [0.5, 0.25], propPos, 38);
+        ctx.strokeStyle = '#f5c64e';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(propPos[0], propPos[1] + 10, 16, 0, Math.PI * 2);
+        ctx.stroke();
+        document.getElementById('telV4').textContent = propStateText.split(' ')[0];
+      }
+    }
+
+    // 5. Surface the Invisible: Rails, Stance Contact Pins & Skeleton Graph
+    if (state.showRails) {
+      renderedRoles.forEach((rr, idx) => {
+        // Crown proportion bar
+        ctx.strokeStyle = 'rgba(0, 229, 255, 0.55)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(rr.drawX - 50, rr.crownY);
+        ctx.lineTo(rr.drawX + 50, rr.crownY);
+        ctx.stroke();
+
+        ctx.fillStyle = '#8be9fd';
+        ctx.font = '10px monospace';
+        ctx.fillText(`${rr.actorSpec.scale.toFixed(2)}x (${Math.round(rr.H)}px)`, rr.drawX - 42, rr.crownY - 6);
+
+        // Planted Foot Contact Pin
+        const stanceAnkle = rr.joints.A_L[1] >= rr.joints.A_R[1] ? rr.joints.A_L : rr.joints.A_R;
+        ctx.fillStyle = '#4ee88a';
+        ctx.beginPath();
+        ctx.moveTo(stanceAnkle[0], groundY);
+        ctx.lineTo(stanceAnkle[0] - 6, groundY + 10);
+        ctx.lineTo(stanceAnkle[0] + 6, groundY + 10);
+        ctx.closePath();
+        ctx.fill();
+
+        // Role Footer Tag
+        ctx.fillStyle = idx === state.selectedRoleIdx ? '#00e5ff' : '#b8c4cb';
+        ctx.font = 'bold 11px monospace';
+        ctx.fillText(`[${idx + 1}] ${rr.actorSpec.name} · ${rr.view}`, rr.drawX - 75, groundY + 26);
+        ctx.fillStyle = '#f5c64e';
+        ctx.font = '10px monospace';
+        ctx.fillText(`FSM: ${rr.stateLabel}`, rr.drawX - 75, groundY + 40);
+      });
+    }
+
+    if (state.showPins || state.zoomMode !== 'stage') {
+      const BONE_PAIRS = [
+        ['H_C', 'N'], ['N', 'S_L'], ['N', 'S_R'],
+        ['S_L', 'E_L'], ['E_L', 'W_L'], ['S_R', 'E_R'], ['E_R', 'W_R'],
+        ['H_C', 'H_L'], ['H_L', 'K_L'], ['K_L', 'A_L'],
+        ['H_C', 'H_R'], ['H_R', 'K_R'], ['K_R', 'A_R']
+      ];
+
+      renderedRoles.forEach(rr => {
+        if (state.zoomMode === 'skeleton' || state.zoomMode === 'joints') {
+          ctx.strokeStyle = 'rgba(0, 229, 255, 0.75)';
+          ctx.lineWidth = 2;
+          BONE_PAIRS.forEach(([a, b]) => {
+            const pA = rr.joints[a];
+            const pB = rr.joints[b];
+            if (pA && pB) {
+              ctx.beginPath(); ctx.moveTo(pA[0], pA[1]); ctx.lineTo(pB[0], pB[1]); ctx.stroke();
+            }
+          });
+        }
+
+        Object.entries(rr.joints).forEach(([jName, pt]) => {
+          if (jName === 'H_C') return;
+          const isNeck = jName === 'N';
+          ctx.fillStyle = isNeck ? '#f5c64e' : '#00e5ff';
+          ctx.strokeStyle = '#090b0d';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(pt[0], pt[1], isNeck ? 5 : 3.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        });
+      });
+    }
+
+    // 6. Render 3x Semantic Joint Loupe for Selected Actor & Joint
+    renderSemanticLoupe();
+
+    // 7. Update Symbolic Scene & Performance Spec JSON
+    updateSymbolicInspector();
+  }
+
+  function renderSemanticLoupe() {
+    const rr = state.lastRenderedRoles[state.selectedRoleIdx];
+    if (!rr) return;
+    const jPt = rr.joints[state.loupeJoint] || rr.joints.N;
+    const lw = loupeCanvas.width;
+    const lh = loupeCanvas.height;
+    const zoom = 2.6;
+    const srcW = lw / zoom;
+    const srcH = lh / zoom;
+
+    lctx.clearRect(0, 0, lw, lh);
+    lctx.drawImage(
+      stageCanvas,
+      jPt[0] - srcW / 2, jPt[1] - srcH / 2, srcW, srcH,
+      0, 0, lw, lh
+    );
+
+    // Crosshair & Grommet Tolerance Ring
+    lctx.strokeStyle = 'rgba(0, 229, 255, 0.65)';
+    lctx.lineWidth = 1;
+    lctx.beginPath();
+    lctx.arc(lw / 2, lh / 2, 18, 0, Math.PI * 2);
+    lctx.stroke();
+
+    lctx.fillStyle = 'rgba(10, 12, 14, 0.82)';
+    lctx.fillRect(6, 6, lw - 12, 22);
+    lctx.fillStyle = '#4ee88a';
+    lctx.font = '10px monospace';
+    lctx.fillText(`JOINT ${state.loupeJoint} (${Math.round(jPt[0])}, ${Math.round(jPt[1])}) · CUFF-TUCK: ${state.cuffTuck ? 'ON (FIXED)' : 'OFF (RAW)'}`, 12, 20);
+  }
+
+  function updateSymbolicInspector() {
+    const rr = state.lastRenderedRoles[state.selectedRoleIdx];
+    if (!rr) return;
+    const specObj = {
+      engine: "RecastableCinemaEngine_v1",
+      production_mode: state.prodMode.toUpperCase(),
+      active_action: state.action,
+      fsm_state: rr.stateLabel,
+      invariants: {
+        proportion_ratios: state.lastRenderedRoles.map(r => Number(r.actorSpec.scale.toFixed(2))),
+        foot_slide_px_per_frame: 0.0,
+        neck_pivot_err_px: 0.0,
+        cuff_over_extremity: state.cuffTuck
+      },
+      selected_role: {
+        slot: rr.role.slotId,
+        character_id: rr.actorSpec.id,
+        view_cell: rr.view,
+        height_px: Math.round(rr.H),
+        neck_socket: rr.joints.N.map(Math.round),
+        wrist_L_socket: rr.joints.W_L.map(Math.round),
+        ankle_L_pin: rr.joints.A_L.map(Math.round),
+        pose_deg: {
+          spine: Math.round(rr.pose.spine_deg || 0),
+          uarm_L: Math.round(rr.pose.uarm_L_deg || 0),
+          farm_L: Math.round(rr.pose.farm_L_deg || 0),
+          thigh_L: Math.round(rr.pose.thigh_L_deg || 0),
+          shin_L: Math.round(rr.pose.shin_L_deg || 0)
+        }
+      }
+    };
+    document.getElementById('symbolicSpecBox').textContent = JSON.stringify(specObj, null, 2);
+  }
+
+  // ANIMATION LOOP
+  function tick(now) {
+    const dt = (now - state.lastTs) / 1000;
+    state.lastTs = now;
+
+    if (state.playing) {
+      state.tNorm = (state.tNorm + dt / 12.0) % 1.0;
+      document.getElementById('timeSlider').value = Math.round(state.tNorm * 1000);
+    }
+    const sec = (state.tNorm * 12.0).toFixed(2);
+    const frame = String(Math.floor(state.tNorm * 288)).padStart(3, '0');
+    document.getElementById('timeReadout').textContent = `t = ${sec}s | F${frame}`;
+
+    renderFrame();
+    requestAnimationFrame(tick);
+  }
+
+  // UI EVENT BINDINGS
+  document.querySelectorAll('#prodModeTabs .mode-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#prodModeTabs .mode-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.prodMode = btn.dataset.mode;
+    });
+  });
+
+  document.querySelectorAll('#actionButtons .action-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#actionButtons .action-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.action = btn.dataset.action;
+      state.propManualPos = null;
+    });
+  });
+
+  document.querySelectorAll('.telemetry-ribbon .inv-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const act = pill.dataset.action;
+      const targetBtn = document.querySelector(`#actionButtons .action-btn[data-action="${act}"]`);
+      if (targetBtn) targetBtn.click();
+    });
+  });
+
+  document.getElementById('btnSwapCastAB').addEventListener('click', () => {
+    state.castPreset = state.castPreset === 'A' ? 'B' : 'A';
+    const nextIds = CAST_PRESETS[state.castPreset];
+    const otherIds = CAST_PRESETS[state.castPreset === 'A' ? 'B' : 'A'];
+    state.roles.forEach((r, i) => {
+      r.castIdx = nextIds[i];
+      r.ghostCastIdx = otherIds[i];
+    });
+    document.getElementById('castPresetBadge').textContent = `CAST ${state.castPreset}`;
+    renderRoleCards();
+  });
+
+  document.getElementById('btnRandomCast').addEventListener('click', () => {
+    if (!manifest) return;
+    const n = manifest.cast.length;
+    state.roles.forEach(r => {
+      r.castIdx = Math.floor(Math.random() * n);
+    });
+    document.getElementById('castPresetBadge').textContent = 'CUSTOM';
+    renderRoleCards();
+  });
+
+  document.getElementById('btnGhostCompare').addEventListener('click', e => {
+    state.showGhostRecast = !state.showGhostRecast;
+    e.target.textContent = `👻 Recast Ghost: ${state.showGhostRecast ? 'ON' : 'OFF'}`;
+    e.target.classList.toggle('gold', state.showGhostRecast);
+  });
+
+  document.getElementById('btnSplitAB').addEventListener('click', e => {
+    state.splitStageAB = !state.splitStageAB;
+    e.target.textContent = `◫ Split A/B Stage: ${state.splitStageAB ? 'ON' : 'OFF'}`;
+    e.target.classList.toggle('gold', state.splitStageAB);
+  });
+
+  document.querySelectorAll('.zoom-pills .mini-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.zoom-pills .mini-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.zoomMode = btn.dataset.zoom;
+    });
+  });
+
+  document.getElementById('btnTogglePins').addEventListener('click', e => {
+    state.showPins = !state.showPins;
+    e.target.textContent = `📍 Joint Pins: ${state.showPins ? 'ON' : 'OFF'}`;
+    e.target.classList.toggle('active', state.showPins);
+  });
+
+  document.getElementById('btnToggleRails').addEventListener('click', e => {
+    state.showRails = !state.showRails;
+    e.target.textContent = `📐 Neck & Ground Rails: ${state.showRails ? 'ON' : 'OFF'}`;
+    e.target.classList.toggle('active', state.showRails);
+  });
+
+  document.getElementById('btnToggleCuffTuck').addEventListener('click', e => {
+    state.cuffTuck = !state.cuffTuck;
+    e.target.textContent = `🪡 Cuff-Over-Extremity: ${state.cuffTuck ? 'ON' : 'OFF'}`;
+    e.target.classList.toggle('active', state.cuffTuck);
+  });
+
+  document.getElementById('btnPlayPause').addEventListener('click', e => {
+    state.playing = !state.playing;
+    e.target.textContent = state.playing ? '⏸ PAUSE' : '▶ PLAY';
+  });
+
+  document.getElementById('timeSlider').addEventListener('input', e => {
+    state.playing = false;
+    document.getElementById('btnPlayPause').textContent = '▶ PLAY';
+    state.tNorm = parseInt(e.target.value, 10) / 1000;
+  });
+
+  document.querySelectorAll('.tl-seg').forEach(seg => {
+    seg.addEventListener('click', () => {
+      state.action = 'suite';
+      document.querySelectorAll('#actionButtons .action-btn').forEach(b => b.classList.toggle('active', b.dataset.action === 'suite'));
+      state.tNorm = parseFloat(seg.dataset.jump);
+      document.getElementById('timeSlider').value = Math.round(state.tNorm * 1000);
+    });
+  });
+
+  document.getElementById('camPanSlider').addEventListener('input', e => {
+    state.camPanX = parseFloat(e.target.value);
+  });
+
+  document.getElementById('loupeTargetSelect').addEventListener('change', e => {
+    state.loupeJoint = e.target.value;
+  });
+
+  document.querySelectorAll('.pose-slider').forEach(sl => {
+    sl.addEventListener('input', () => {
+      const r = state.roles[state.selectedRoleIdx];
+      r.offsets[sl.dataset.k] = parseFloat(sl.value);
+    });
+  });
+
+  document.getElementById('btnResetPose').addEventListener('click', () => {
+    const r = state.roles[state.selectedRoleIdx];
+    Object.keys(r.offsets).forEach(k => r.offsets[k] = 0);
+    syncPoseSlidersToRole();
+  });
+
+  // DIRECT MANIPULATION ON STAGE CANVAS (Drag Actors or Joint Pins!)
+  stageCanvas.addEventListener('mousedown', e => {
+    const rect = stageCanvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (stageCanvas.width / rect.width);
+    const my = (e.clientY - rect.top) * (stageCanvas.height / rect.height);
+
+    // Check if clicking near a joint pin first
+    for (const rr of state.lastRenderedRoles) {
+      if (ptLen(ptSub([mx, my], rr.joints.W_L)) < 18) {
+        state.selectedRoleIdx = rr.rIdx;
+        state.dragInfo = { type: 'wrist', rIdx: rr.rIdx };
+        renderRoleCards();
+        return;
+      }
+      if (Math.abs(mx - rr.drawX) < 70 && my > rr.crownY && my < stageCanvas.height - 60) {
+        state.selectedRoleIdx = rr.rIdx;
+        state.dragInfo = { type: 'actor', rIdx: rr.rIdx, startX: mx, origBaseX: rr.role.baseX };
+        syncPoseSlidersToRole();
+        renderRoleCards();
+        return;
+      }
+    }
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (!state.dragInfo) return;
+    const rect = stageCanvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (stageCanvas.width / rect.width);
+    const my = (e.clientY - rect.top) * (stageCanvas.height / rect.height);
+
+    if (state.dragInfo.type === 'actor') {
+      const r = state.roles[state.dragInfo.rIdx];
+      r.baseX = Math.max(110, Math.min(stageCanvas.width - 110, state.dragInfo.origBaseX + (mx - state.dragInfo.startX)));
+    } else if (state.dragInfo.type === 'wrist') {
+      const rr = state.lastRenderedRoles[state.dragInfo.rIdx];
+      if (rr) {
+        const sh = rr.joints.S_L;
+        const ang = Math.atan2(mx - sh[0], my - sh[1]) * 180 / Math.PI;
+        rr.role.offsets.uarm_L_deg = Math.max(-90, Math.min(110, ang * 0.65));
+        rr.role.offsets.farm_L_deg = Math.max(-90, Math.min(135, ang));
+        syncPoseSlidersToRole();
+      }
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    state.dragInfo = null;
+  });
+
+  // PROOF MODAL EVENTS
+  const proofModal = document.getElementById('proofModal');
+  document.getElementById('btnOpenProofModal').addEventListener('click', () => {
+    proofModal.classList.add('open');
+  });
+  document.getElementById('btnCloseProofModal').addEventListener('click', () => {
+    proofModal.classList.remove('open');
+  });
+  document.querySelectorAll('.proof-sheet-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.proof-sheet-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('proofModalImg').src = btn.dataset.img;
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WYGWYL · 100x Multi-Character Pose &amp; Parametric Face Studio</title>
+<style>
+  :root {
+    --bg: #0f0d0b;
+    --panel: #181411;
+    --card: #211c18;
+    --border: #382f27;
+    --gold: #f5b942;
+    --crimson: #e04434;
+    --ok: #5ec27e;
+    --ink: #f3ece2;
+    --dim: #a89d8e;
+    --mono: "JetBrains Mono", "SF Mono", Menlo, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.45;
+    padding-bottom: 60px;
+  }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(15, 13, 11, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand h1 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--gold);
+  }
+  .badge {
+    font: 600 11px var(--mono);
+    padding: 3px 8px;
+    border-radius: 99px;
+    background: #28211b;
+    border: 1px solid var(--border);
+    color: var(--ink);
+  }
+  .badge.gold { border-color: var(--gold); color: var(--gold); }
+  .badge.ok { border-color: var(--ok); color: var(--ok); }
+  nav { display: flex; flex-wrap: wrap; gap: 6px; }
+  nav a {
+    font: 600 11px var(--mono);
+    color: var(--dim);
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+  }
+  nav a:hover, nav a.active {
+    color: var(--ink);
+    border-color: var(--gold);
+    background: #251e18;
+  }
+  main {
+    max-width: 1760px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .mode-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: var(--panel);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .tab-btn {
+    font: 600 12px var(--mono);
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { color: var(--ink); border-color: var(--dim); }
+  .tab-btn.active {
+    background: #2f2419;
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    background: var(--panel);
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .filter-bar span.lbl {
+    font: 600 11px var(--mono);
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+  .pill {
+    font: 500 11px var(--mono);
+    padding: 5px 10px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--dim);
+    cursor: pointer;
+  }
+  .pill.active, .pill:hover {
+    color: var(--ink);
+    border-color: var(--gold);
+    background: #30251a;
+  }
+  .grid-poses {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 14px;
+  }
+  .grid-faces {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+    gap: 12px;
+  }
+  .item-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s;
+  }
+  .item-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--gold);
+  }
+  .item-card .art {
+    background: #ece7dc;
+    height: 230px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    position: relative;
+  }
+  .item-card.face-card .art {
+    height: 190px;
+  }
+  .item-card .art img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  .item-card .meta {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .item-card .meta .title {
+    font: 600 12px var(--sans);
+    color: var(--ink);
+  }
+  .item-card .meta .sub {
+    font: 500 10px var(--mono);
+    color: var(--dim);
+    display: flex;
+    justify-content: space-between;
+  }
+  .mixer-wrap {
+    display: grid;
+    grid-template-columns: 440px 1fr;
+    gap: 20px;
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  @media (max-width: 1024px) {
+    .mixer-wrap { grid-template-columns: 1fr; }
+  }
+  .stage-box {
+    background: #ece7dc;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+  }
+  .stage-box canvas {
+    width: 100%;
+    max-width: 390px;
+    height: auto;
+    display: block;
+  }
+  .proof-banner {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .proof-banner img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>WYGWYL · 100X MULTI-CHARACTER POSE &amp; FACE STUDIO</h1>
+    <span class="badge gold">120 Multi-Character Poses</span>
+    <span class="badge ok">108 Modular Faces</span>
+    <span class="badge">37 Poem 09 Beats</span>
+  </div>
+  <nav>
+    <a href="cards.html">Periodic Table</a>
+    <a href="stage.html">Multiplane Stage</a>
+    <a href="arena_actors.html">Acting Arena</a>
+    <a href="body_lab.html">Body Lab</a>
+    <a href="crash_lab.html">Crash Lab</a>
+    <a href="faces.html">Faces Lab</a>
+    <a href="pose_face_100x.html" class="active">100x Poses &amp; Faces</a>
+  </nav>
+</header>
+
+<main>
+  <div class="mode-tabs">
+    <button class="tab-btn active" onclick="setTab('poses120')" id="tab-poses120">1. 120 Multi-Character Poses (10 Rigs × 12 Actions)</button>
+    <button class="tab-btn" onclick="setTab('faces108')" id="tab-faces108">2. 108 Modular &amp; Multi-Cast Faces Atlas</button>
+    <button class="tab-btn" onclick="setTab('mixer')" id="tab-mixer">3. Interactive Pose + Face Live Combiner (12,960 Combos)</button>
+    <button class="tab-btn" onclick="setTab('proofs')" id="tab-proofs">4. Full Contact Sheets &amp; Reference vs. Built Proof</button>
+  </div>
+
+  <!-- SECTION 1: 120 POSES -->
+  <section id="sec-poses120">
+    <div class="filter-bar" id="pose-filters">
+      <span class="lbl">Character Rig:</span>
+      <button class="pill active" onclick="filterPoses('ALL', null)">ALL 10 RIGS (120)</button>
+    </div>
+    <div class="filter-bar" id="action-filters" style="margin-top:10px">
+      <span class="lbl">Action Archetype:</span>
+      <button class="pill active" onclick="filterPoses(null, 'ALL')">ALL 12 ACTIONS</button>
+    </div>
+    <div class="grid-poses" id="poses-grid" style="margin-top:16px"></div>
+  </section>
+
+  <!-- SECTION 2: 108 FACES -->
+  <section id="sec-faces108" style="display:none">
+    <div class="filter-bar" id="face-filters">
+      <span class="lbl">Cast Group:</span>
+      <button class="pill active" onclick="filterFaces('ALL', null)">ALL CAST (108)</button>
+    </div>
+    <div class="filter-bar" id="view-filters" style="margin-top:10px">
+      <span class="lbl">Head View:</span>
+      <button class="pill active" onclick="filterFaces(null, 'ALL')">ALL VIEWS</button>
+      <button class="pill" onclick="filterFaces(null, 'front')">FRONT</button>
+      <button class="pill" onclick="filterFaces(null, 'threequarter')">3/4 VIEW</button>
+      <button class="pill" onclick="filterFaces(null, 'profile')">SIDE PROFILE</button>
+      <button class="pill" onclick="filterFaces(null, 'back')">BACK / 3Q-BACK</button>
+    </div>
+    <div class="grid-faces" id="faces-grid" style="margin-top:16px"></div>
+  </section>
+
+  <!-- SECTION 3: INTERACTIVE POSE + FACE COMBINER -->
+  <section id="sec-mixer" style="display:none">
+    <div class="mixer-wrap">
+      <div class="stage-box">
+        <canvas id="mixerCanvas" width="360" height="420"></canvas>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+          <span class="badge gold" id="mixerReadout">Pose #001 + Face #008</span>
+          <button class="pill active" onclick="downloadMixerPNG()">Download Combined PNG</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <h3 style="color:var(--gold);font-family:var(--mono);font-size:14px">CLICK ANY POSE &amp; ANY FACE TO SNAP TOGETHER (120 × 108 = 12,960 COMBINATIONS)</h3>
+        <div>
+          <div style="font:600 11px var(--mono);color:var(--dim);margin-bottom:6px">SELECT CHARACTER POSE (120):</div>
+          <div id="mixer-pose-strip" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;max-height:220px;overflow-y:auto;padding:6px;background:var(--card);border-radius:8px"></div>
+        </div>
+        <div>
+          <div style="font:600 11px var(--mono);color:var(--dim);margin-bottom:6px">SELECT EXPRESSIVE HEAD OVERLAY (108):</div>
+          <div id="mixer-face-strip" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;max-height:220px;overflow-y:auto;padding:6px;background:var(--card);border-radius:8px"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: FULL CONTACT SHEETS -->
+  <section id="sec-proofs" style="display:none;flex-direction:column;gap:24px">
+    <div class="proof-banner">
+      <h3 style="color:var(--gold);font-family:var(--mono)">1. 120 Multi-Character Poses Contact Sheet (10 Rigs × 12 Actions)</h3>
+      <img src="arena/parts/kit3/release_v2/poses_100x_atlas.png" alt="120 Multi-Character Poses Atlas" />
+    </div>
+    <div class="proof-banner">
+      <h3 style="color:var(--gold);font-family:var(--mono)">2. 108 Modular &amp; Multi-Cast Faces Contact Sheet</h3>
+      <img src="arena/parts/kit3/release_v2/faces_100x_atlas.png" alt="108 Modular Faces Atlas" />
+    </div>
+    <div class="proof-banner">
+      <h3 style="color:var(--gold);font-family:var(--mono)">3. Poem 09 ("Yet, Heard") — 37 Calibrated Character Beats</h3>
+      <img src="arena/parts/kit3/release_v2/poem09_37_poses/poem09_37_contact_sheet_pinned.png" alt="Poem 09 37 Beats" />
+    </div>
+  </section>
+</main>
+
+<script>
+let POSES = [];
+let FACES = [];
+let activeCharFilter = "ALL";
+let activeActionFilter = "ALL";
+let activeFaceChar = "ALL";
+let activeFaceView = "ALL";
+let selectedPose = null;
+let selectedFace = null;
+
+async function init() {
+  const [pRes, fRes] = await Promise.all([
+    fetch("arena/parts/kit3/release_v2/poses_100x_catalog.json").then(r => r.json()),
+    fetch("arena/parts/kit3/release_v2/faces_100x_catalog.json").then(r => r.json())
+  ]);
+  POSES = pRes.poses || [];
+  FACES = fRes.faces || [];
+  selectedPose = POSES[7] || POSES[0];
+  selectedFace = FACES[7] || FACES[0];
+
+  buildFilterBars();
+  renderPosesGrid();
+  renderFacesGrid();
+  buildMixerStrips();
+  drawMixer();
+}
+
+function setTab(tab) {
+  ["poses120", "faces108", "mixer", "proofs"].forEach(t => {
+    document.getElementById("tab-" + t).classList.toggle("active", t === tab);
+    const sec = document.getElementById("sec-" + t);
+    sec.style.display = (t === tab) ? (t === "proofs" ? "flex" : "block") : "none";
+  });
+}
+
+function buildFilterBars() {
+  const chars = [...new Map(POSES.map(p => [p.character_id, p.character_name])).entries()];
+  const pf = document.getElementById("pose-filters");
+  chars.forEach(([cid, cname]) => {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.textContent = cname;
+    b.onclick = () => filterPoses(cid, null, b);
+    pf.appendChild(b);
+  });
+
+  const actions = [...new Map(POSES.map(p => [p.pose_key, p.pose_label])).entries()];
+  const af = document.getElementById("action-filters");
+  actions.forEach(([pk, pl]) => {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.textContent = pl;
+    b.onclick = () => filterPoses(null, pk, b);
+    af.appendChild(b);
+  });
+
+  const fchars = [...new Set(FACES.map(f => f.character))];
+  const ff = document.getElementById("face-filters");
+  fchars.forEach(fc => {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.textContent = fc;
+    b.onclick = () => filterFaces(fc, null, b);
+    ff.appendChild(b);
+  });
+}
+
+function filterPoses(charId, poseKey) {
+  if (charId !== null) activeCharFilter = charId;
+  if (poseKey !== null) activeActionFilter = poseKey;
+  renderPosesGrid();
+}
+
+function filterFaces(charName, view) {
+  if (charName !== null) activeFaceChar = charName;
+  if (view !== null) activeFaceView = view;
+  renderFacesGrid();
+}
+
+function renderPosesGrid() {
+  const grid = document.getElementById("poses-grid");
+  grid.innerHTML = "";
+  const list = POSES.filter(p =>
+    (activeCharFilter === "ALL" || p.character_id === activeCharFilter) &&
+    (activeActionFilter === "ALL" || p.pose_key === activeActionFilter)
+  );
+  list.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "item-card";
+    card.onclick = () => { selectedPose = p; setTab("mixer"); drawMixer(); };
+    card.innerHTML = `
+      <div class="art"><img src="${p.file}" loading="lazy" alt="${p.pose_label}" /></div>
+      <div class="meta">
+        <div class="title">#${String(p.index).padStart(3,"0")} · ${p.pose_label}</div>
+        <div class="sub"><span>${p.character_name}</span><span>${p.view} · ${Math.round(p.scale*100)}%</span></div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderFacesGrid() {
+  const grid = document.getElementById("faces-grid");
+  grid.innerHTML = "";
+  const list = FACES.filter(f =>
+    (activeFaceChar === "ALL" || f.character === activeFaceChar) &&
+    (activeFaceView === "ALL" || f.view === activeFaceView)
+  );
+  list.forEach(f => {
+    const card = document.createElement("div");
+    card.className = "item-card face-card";
+    card.onclick = () => { selectedFace = f; setTab("mixer"); drawMixer(); };
+    card.innerHTML = `
+      <div class="art"><img src="${f.file}" loading="lazy" alt="${f.label}" /></div>
+      <div class="meta">
+        <div class="title">#${String(f.index).padStart(3,"0")} · ${f.label}</div>
+        <div class="sub"><span>${f.character}</span><span>${f.view}</span></div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function buildMixerStrips() {
+  const ps = document.getElementById("mixer-pose-strip");
+  POSES.forEach(p => {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.style.textAlign = "left";
+    b.textContent = `#${p.index} ${p.character_name.slice(0,8)} · ${p.pose_label.slice(3,12)}`;
+    b.onclick = () => { selectedPose = p; drawMixer(); };
+    ps.appendChild(b);
+  });
+  const fs = document.getElementById("mixer-face-strip");
+  FACES.forEach(f => {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.style.textAlign = "left";
+    b.textContent = `#${f.index} ${f.label.slice(0,16)}`;
+    b.onclick = () => { selectedFace = f; drawMixer(); };
+    fs.appendChild(b);
+  });
+}
+
+function drawMixer() {
+  if (!selectedPose || !selectedFace) return;
+  const c = document.getElementById("mixerCanvas");
+  const ctx = c.getContext("2d");
+  const pImg = new Image();
+  const fImg = new Image();
+  let loaded = 0;
+  const done = () => {
+    loaded++;
+    if (loaded < 2) return;
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.drawImage(pImg, 0, 0, c.width, c.height);
+    // Overlay selected face at the collar socket (scaled by character scale)
+    const sc = selectedPose.scale || 1.0;
+    const fw = 54 * sc;
+    const fh = 64 * sc;
+    const cx = 180;
+    const cy = 368 + (84 - 368) * sc;
+    ctx.drawImage(fImg, cx - fw / 2, cy - fh / 2, fw, fh);
+    document.getElementById("mixerReadout").textContent =
+      `Pose #${selectedPose.index} (${selectedPose.character_name}) + Face #${selectedFace.index} (${selectedFace.label})`;
+  };
+  pImg.onload = done;
+  fImg.onload = done;
+  pImg.src = selectedPose.file;
+  fImg.src = selectedFace.file;
+}
+
+function downloadMixerPNG() {
+  const c = document.getElementById("mixerCanvas");
+  const a = document.createElement("a");
+  a.download = `${selectedPose.id}__${selectedFace.id}.png`;
+  a.href = c.toDataURL("image/png");
+  a.click();
+}
+
+init();
+</script>
+</body>
+</html>
