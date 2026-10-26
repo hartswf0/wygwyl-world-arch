@@ -36,6 +36,8 @@ a{color:#8fb8ff}
 .lv .thumb-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#0f1319;overflow:hidden}
 .lv img{width:100%;height:100%;object-fit:cover;display:block}
 .lv .arc-pill{position:absolute;left:8px;bottom:8px;right:8px;background:#0b0d10d8;border:1px solid #ffffff24;border-radius:6px;padding:3px 7px;font-family:var(--mono);font-size:.64rem;color:#e8ecf1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(4px)}
+.lv .seven-dots{position:absolute;top:8px;right:8px;display:flex;gap:3px;background:#0b0d10cc;padding:3px 6px;border-radius:999px;border:1px solid #ffffff22}
+.lv .seven-dots i{width:7px;height:7px;border-radius:50%;display:block}
 .lv .body{padding:10px 12px 12px;display:grid;gap:4px;flex:1}
 .lv b{font-family:var(--display);font-size:1.02rem;color:#fff}
 .lv .theme{color:#cbd5e1;font-size:.78rem;line-height:1.35}
@@ -45,38 +47,46 @@ a{color:#8fb8ff}
 /* Stage */
 #stage{position:fixed;inset:0;display:none;touch-action:none;user-select:none;-webkit-user-select:none;background:#07080b}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
-.top{position:absolute;left:0;right:0;top:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:max(8px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 6px max(10px,env(safe-area-inset-left,0px));pointer-events:none;background:linear-gradient(#000d,#0000);z-index:16}
+.top{position:absolute;left:0;right:0;top:0;display:flex;flex-wrap:wrap;gap:5px;align-items:center;padding:max(6px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 4px max(10px,env(safe-area-inset-left,0px));pointer-events:none;background:linear-gradient(#000e,#0000);z-index:16}
 .top>*{pointer-events:auto}
-.btn{background:#141920e6;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:.78rem;cursor:pointer;min-height:36px;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.btn{background:#141920e6;border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:.75rem;cursor:pointer;min-height:33px;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
 .btn:hover{border-color:#526077}
 .btn.on{background:var(--brass-soft);border-color:var(--brass);color:#fff}
 .btn.cue-btn{background:#1d2b28f2;border-color:var(--cyan);color:#d8fff6;font-weight:600}
-#ttl{flex:1;min-width:120px;font-family:var(--display);font-size:.9rem;line-height:1.15;text-shadow:0 1px 4px #000}
-#score{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--brass);text-shadow:0 1px 4px #000;white-space:nowrap;padding:4px 10px;border-radius:999px;background:#141920cc;border:1px solid var(--line)}
+#ttl{flex:1;min-width:110px;font-family:var(--display);font-size:.88rem;line-height:1.15;text-shadow:0 1px 4px #000}
+#score{font-family:var(--mono);font-size:.74rem;font-weight:700;color:var(--brass);text-shadow:0 1px 4px #000;white-space:nowrap;padding:4px 9px;border-radius:999px;background:#141920cc;border:1px solid var(--line)}
 
 /* Scene & Emotional Arc Timeline Bar */
-#arcBar{position:absolute;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));top:calc(max(8px,env(safe-area-inset-top,0px)) + 42px);display:flex;gap:4px;z-index:15;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+#arcBar{position:absolute;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));top:calc(max(6px,env(safe-area-inset-top,0px)) + 37px);display:flex;gap:4px;z-index:15;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 #arcBar::-webkit-scrollbar{display:none}
-.sc-step{flex:1 0 auto;min-width:95px;background:#10141bd9;border:1px solid #2a313c;border-radius:7px;padding:4px 8px;cursor:pointer;text-align:left;transition:all .15s}
+.sc-step{flex:1 0 auto;min-width:95px;background:#10141bd9;border:1px solid #2a313c;border-radius:7px;padding:3px 8px;cursor:pointer;text-align:left;transition:all .15s}
 .sc-step:hover{border-color:var(--brass)}
 .sc-step.active{background:#241f16eb;border-color:var(--brass)}
 .sc-step.done{border-color:#3a5046}
-.sc-step small{display:block;font-family:var(--mono);font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.sc-step b{display:block;font-size:.71rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e8ecf1}
+.sc-step small{display:block;font-family:var(--mono);font-size:.57rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.sc-step b{display:block;font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e8ecf1}
+
+/* 7-Layer Color-Coded Worldbuilding Ribbon */
+#planeRibbon{position:absolute;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));top:calc(max(6px,env(safe-area-inset-top,0px)) + 74px);display:flex;gap:4px;align-items:center;z-index:15;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+#planeRibbon::-webkit-scrollbar{display:none}
+.p-chip{flex:0 0 auto;background:#0e1218e6;border:1px solid #2a313c;border-radius:999px;padding:3px 9px;font-family:var(--mono);font-size:.62rem;color:#cbd5e1;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .14s}
+.p-chip i{width:8px;height:8px;border-radius:50%;display:inline-block;box-shadow:0 0 6px currentColor}
+.p-chip:hover{border-color:#64748b;color:#fff}
+.p-chip.on{background:#1c2432f5;color:#fff;font-weight:700;box-shadow:0 0 10px rgba(255,255,255,.12)}
 
 /* Emotional & Architectural Station Banner */
-#emoHud{position:absolute;left:max(12px,env(safe-area-inset-left,0px));pointer-events:none;z-index:11;background:#0b0d10d9;border:1px solid var(--line);border-radius:10px;padding:7px 11px;backdrop-filter:blur(6px);max-width:410px}
-#emoHud .emo-kicker{font-family:var(--mono);font-size:.63rem;letter-spacing:.05em;text-transform:uppercase;color:var(--brass)}
-#emoHud .emo-title{font-family:var(--display);font-size:.9rem;color:#fff;margin:2px 0}
-#emoHud .emo-sub{font-size:.72rem;color:#cbd5e1;line-height:1.3}
+#emoHud{position:absolute;left:max(12px,env(safe-area-inset-left,0px));pointer-events:none;z-index:11;background:#0b0d10d9;border:1px solid var(--line);border-radius:10px;padding:7px 11px;backdrop-filter:blur(6px);max-width:420px}
+#emoHud .emo-kicker{font-family:var(--mono);font-size:.62rem;letter-spacing:.05em;text-transform:uppercase;color:var(--brass)}
+#emoHud .emo-title{font-family:var(--display);font-size:.88rem;color:#fff;margin:2px 0}
+#emoHud .emo-sub{font-size:.71rem;color:#cbd5e1;line-height:1.3}
 
 /* Subtitle & Meaning */
-#sub{position:absolute;left:0;right:0;pointer-events:none;padding:0 max(16px,env(safe-area-inset-left,0px));text-align:center;font-family:var(--display);font-size:clamp(1.02rem,3.4vw,1.4rem);line-height:1.32;text-shadow:0 2px 10px #000,0 0 4px #000;color:#ffffff80;z-index:11}
+#sub{position:absolute;left:0;right:0;pointer-events:none;padding:0 max(16px,env(safe-area-inset-left,0px));text-align:center;font-family:var(--display);font-size:clamp(1.0rem,3.2vw,1.35rem);line-height:1.3;text-shadow:0 2px 10px #000,0 0 4px #000;color:#ffffff80;z-index:11}
 #sub span{transition:color .12s,text-shadow .12s}
 #sub span.on{color:#fff;text-shadow:0 0 14px rgba(216,171,79,.55),0 2px 6px #000}
-#subCue{font-family:var(--mono);font-size:.72rem;color:var(--cyan);margin-top:4px;letter-spacing:.03em}
+#subCue{font-family:var(--mono);font-size:.7rem;color:var(--cyan);margin-top:3px;letter-spacing:.03em}
 
-#pad{position:absolute;left:0;right:0;top:88px;bottom:calc(72px + env(safe-area-inset-bottom,0px));touch-action:none;z-index:8}
+#pad{position:absolute;left:0;right:0;top:106px;bottom:calc(72px + env(safe-area-inset-bottom,0px));touch-action:none;z-index:8}
 #knob{position:absolute;width:80px;height:80px;margin:-40px 0 0 -40px;border-radius:50%;border:2px solid #ffffff55;background:#ffffff14;display:none;pointer-events:none}
 #knob i{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#ffffff66}
 
@@ -84,24 +94,38 @@ a{color:#8fb8ff}
 #acts::-webkit-scrollbar{display:none}
 #acts .btn{flex:0 0 auto;min-height:40px;padding:7px 13px;white-space:nowrap;font-size:.78rem}
 
-/* Live Stage Assembler Drawer */
-#asmPanel{position:absolute;right:12px;top:92px;bottom:68px;width:330px;max-width:calc(100vw - 24px);background:#10151df2;border:1px solid var(--brass);border-radius:12px;display:none;flex-direction:column;z-index:22;backdrop-filter:blur(10px);box-shadow:0 12px 36px rgba(0,0,0,.65);overflow:hidden}
+/* Handmade 7-Layer World Authoring Workbench Drawer */
+#asmPanel{position:absolute;right:10px;top:104px;bottom:64px;width:380px;max-width:calc(100vw - 20px);background:#0f141cf5;border:1px solid var(--brass);border-radius:12px;display:none;flex-direction:column;z-index:22;backdrop-filter:blur(12px);box-shadow:0 14px 40px rgba(0,0,0,.75);overflow:hidden}
 #asmPanel.open{display:flex}
-.asm-head{padding:9px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:#171d27}
-.asm-head b{font-family:var(--display);font-size:.86rem;color:var(--brass)}
-.asm-sec{padding:9px 11px;border-bottom:1px solid var(--line);font-size:.74rem;display:grid;gap:6px}
+.asm-head{padding:8px 11px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:#161c26}
+.asm-head b{font-family:var(--display);font-size:.84rem;color:var(--brass)}
+.asm-sec{padding:7px 10px;border-bottom:1px solid var(--line);font-size:.71rem;display:grid;gap:5px}
 .asm-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
-.asm-row label{color:var(--muted);font-family:var(--mono);font-size:.66rem}
-.asm-btn{background:#1b222e;border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:.7rem;cursor:pointer}
+.asm-row label{color:var(--muted);font-family:var(--mono);font-size:.63rem;min-width:42px}
+.asm-row input[type=range]{flex:1;accent-color:var(--brass);height:14px}
+.asm-btn{background:#1b222e;border:1px solid var(--line);border-radius:6px;padding:3px 7px;font-size:.67rem;cursor:pointer;font-family:var(--mono)}
 .asm-btn:hover{border-color:var(--brass)}
-.asm-btn.on{background:var(--brass-soft);border-color:var(--brass);color:#fff}
-.asm-list{flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(2,1fr);gap:7px;align-content:start}
-.asm-card{background:#151b24;border:1px solid var(--line);border-radius:8px;padding:6px;cursor:pointer;display:flex;flex-direction:column;gap:4px;text-align:left;transition:border-color .15s}
+.asm-btn.on{background:var(--brass-soft);border-color:var(--brass);color:#fff;font-weight:700}
+.plane-tree{max-height:122px;overflow-y:auto;display:grid;gap:3px;padding:4px;background:#0a0d12;border:1px solid #1f2632;border-radius:7px}
+.pt-row{display:flex;align-items:center;gap:5px;padding:3px 6px;border-radius:5px;background:#121721;border-left:3px solid #6ea0e1;cursor:pointer;font-size:.64rem}
+.pt-row:hover{background:#192130}
+.pt-row.sel{background:#252015;outline:1px solid var(--brass)}
+.pt-row .pt-tag{font-family:var(--mono);font-weight:700;font-size:.6rem;min-width:24px}
+.pt-row .pt-lbl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e2e8f0}
+.pt-row .pt-z{font-family:var(--mono);font-size:.58rem;color:var(--muted)}
+.bd-box{max-height:110px;overflow-y:auto;display:grid;gap:2px;padding:4px;background:#090c10;border:1px solid #1f2632;border-radius:7px;font-family:var(--mono);font-size:.58rem}
+.bd-line{display:flex;gap:5px;align-items:baseline;padding:2px 4px;border-left:3px solid #78c3dc;background:#10151d;border-radius:3px}
+.bd-line b{min-width:48px;color:#fff}
+.bd-line span{color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.bd-line em{color:var(--muted);font-style:normal}
+.asm-list{flex:1;overflow-y:auto;padding:7px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px;align-content:start}
+.asm-card{background:#151b24;border:1px solid var(--line);border-radius:8px;padding:5px;cursor:pointer;display:flex;flex-direction:column;gap:3px;text-align:left;transition:border-color .15s}
 .asm-card:hover{border-color:var(--brass)}
-.asm-card .th{width:100%;height:68px;background:#0b0e13;border-radius:5px;display:grid;place-items:center;overflow:hidden}
-.asm-card img{max-width:94%;max-height:64px;object-fit:contain}
-.asm-card span{font-size:.66rem;color:#dde4ee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.asm-card small{font-family:var(--mono);font-size:.58rem;color:var(--muted)}
+.asm-card .th{width:100%;height:62px;background:#0b0e13;border-radius:5px;display:grid;place-items:center;overflow:hidden;position:relative}
+.asm-card .th .p-dot{position:absolute;top:4px;left:4px;font-family:var(--mono);font-size:.54rem;font-weight:700;padding:1px 5px;border-radius:4px;color:#07080b}
+.asm-card img{max-width:94%;max-height:58px;object-fit:contain}
+.asm-card span{font-size:.64rem;color:#dde4ee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.asm-card small{font-family:var(--mono);font-size:.56rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .veil{position:absolute;inset:0;display:none;place-items:center;background:#0b0d10e6;padding:20px;text-align:center;z-index:30;backdrop-filter:blur(8px)}
 .veil .box{max-width:540px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;display:grid;gap:12px;justify-items:center}
@@ -116,24 +140,25 @@ a{color:#8fb8ff}
   #emoHud{max-width:255px;padding:5px 8px}
   #emoHud .emo-title{font-size:.8rem}
   #emoHud .emo-sub{display:none}
-  #asmPanel{width:285px;top:88px}
+  #asmPanel{width:305px;top:102px}
 }
 </style></head><body>
 
 <section id="shelf">
   <nav class="suite-nav" aria-label="Suite Navigation">
     <a href="../../index.html">← WYGWYL World-Arch Hub</a>
-    <a href="levels.html" class="on">🎮 Play 14-Poem Multiplane Levels</a>
+    <a href="levels.html" class="on">🎮 Play 14-Poem 7-Layer Cel Worlds</a>
     <a href="index.html">🕹️ 37-Character Play Sandbox</a>
     <a href="../stage.html">🏛️ Multiplane Stage Director</a>
+    <a href="../world.html">🌐 Atlantis 7-Plane World</a>
     <a href="../scion_swarm_of_swarms.html">🐝 SCION Swarm-of-Swarms</a>
     <a href="../recastable_cinema_studio.html">🎬 Recastable Studio</a>
     <a href="../crash_lab.html">🛡️ Crash Lab & CAPTCHA</a>
     <a href="../body_lab.html">🧬 CLIP Body Lab</a>
   </nav>
   <header>
-    <h1>WYGWYL · 14 Multiplane Playable Poems & Stage Assembler</h1>
-    <p>Every scene is built from <b>true multiplane cut-out architecture (`P6..P1`)</b>: painted Atlantis world plates, horizon skies & seas, architectural portals, windows, fire escapes, temples, and reactive stage stations. Walk from structure to structure as the poem is read aloud to <b>inhabit each station's emotional posture</b> and bring the set pieces to life—or click <b>🛠️ Assemble Stage</b> inside any poem to move, scale, or add cut-out assets live.</p>
+    <h1>WYGWYL · 14 Handmade 7-Layer Cel-Shaded Worlds & Authoring Studio</h1>
+    <p>Every single frame (`01.0`..`14.6`) is handmade <b>7 layers deep (`P6` Sky Cyan → `P5` Vista Periwinkle → `P4` Arch Cobalt → `P3` Props Amber → `P2` Hero Crimson → `P1` FG FX Sienna → `P0` Proscenium Mask Slate)</b> with cel-shaded gouache flats, depth-weighted ink contours (`INK_W`), and frame-specific semantic decomposition. Walk from structure to structure to inhabit each poem's stations—or open <b>🛠️ 7-Layer World Author</b> to inspect, color-code, solo planes, scale, and author the world live.</p>
   </header>
   <div class="grid" id="lv"></div>
 </section>
@@ -143,13 +168,21 @@ a{color:#8fb8ff}
   <div class="top">
     <button class="btn" id="back">‹ 14 Poems</button>
     <div id="ttl"></div>
+    <select class="btn" id="celModeSelect" title="Switch Cel-Shading, 7-Layer Color-Coding & Exploded Stack Signal">
+      <option value="cel_wash">🎨 Cel Wash + Ink (7L)</option>
+      <option value="color_coded">🌈 Color-Coded 7-Layer Pieces</option>
+      <option value="layout_ink">✒️ Layout Blueprint + Ink</option>
+      <option value="exploded_7">📐 3D 7-Layer Exploded Stack</option>
+      <option value="painted">🖼️ Painted Gouache</option>
+    </select>
     <button class="btn" id="rigModeBtn" title="Toggle between 31-Part Brass-Pivot Articulated Tracksuit Rig and Painted Cut-Out Rig">🦿 Rig: 31-Part</button>
     <button class="btn" id="castBtn" title="Switch playable character from this poem's cast">⇄ Cast</button>
-    <button class="btn" id="asmToggleBtn" title="Inspect, drag, scale, or add multiplane cut-out structures & props on stage">🛠️ Assemble Stage</button>
+    <button class="btn" id="asmToggleBtn" title="Open Handmade 7-Layer World Authoring Workbench">🛠️ 7-Layer Author</button>
     <div id="score"></div>
     <button class="btn" id="pause">Pause</button>
   </div>
   <div id="arcBar" aria-label="Scene & Emotional Arc Progression"></div>
+  <div id="planeRibbon" aria-label="7-Layer Color-Coded Worldbuilding Ribbon"></div>
   <div id="emoHud">
     <div class="emo-kicker" id="emoKicker">STAGE STATION & REGISTER</div>
     <div class="emo-title" id="emoTitle">Searching & Yearning</div>
@@ -159,54 +192,82 @@ a{color:#8fb8ff}
   <div id="pad"><div id="knob"><i></i></div></div>
   <div id="acts"></div>
 
-  <!-- Live Multiplane Stage Assembler Workbench -->
-  <aside id="asmPanel" aria-label="Stage Asset Assembler">
+  <!-- Handmade 7-Layer World Authoring Workbench -->
+  <aside id="asmPanel" aria-label="Handmade 7-Layer World Authoring Workbench">
     <div class="asm-head">
-      <b>🛠️ Stage Structure & Prop Assembler</b>
-      <button class="asm-btn" id="asmCloseBtn">✕</button>
+      <b>🛠️ Handmade 7-Layer World Author (`P6→P0`)</b>
+      <div class="asm-row">
+        <button class="asm-btn" id="asmExportJsonBtn" title="Export this scene's handmade 7-layer JSON">💾 JSON</button>
+        <button class="asm-btn" id="asmCopyPyBtn" title="Copy Python L(...) 7-layer spec for build_custom_90_scenes.py">📋 Py</button>
+        <button class="asm-btn" id="asmCloseBtn">✕</button>
+      </div>
+    </div>
+    <div class="asm-sec">
+      <div class="asm-row">
+        <label>Cel/Ink:</label>
+        <input id="celStrengthSlider" type="range" min="0" max="100" value="78">
+        <label>7L Tint:</label>
+        <input id="colorTintSlider" type="range" min="0" max="100" value="22">
+      </div>
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--brass)" id="frameShotHeader">Frame 7-Layer Semantic & Depth Blueprint</div>
+      <div class="bd-box" id="frameBreakdownBox"></div>
     </div>
     <div class="asm-sec" id="asmInspector">
-      <div style="color:var(--muted)">Click any architectural structure or prop on stage to drag, scale, flip, or change its depth plane.</div>
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--cyan)">Active Frame 7-Layer Stack (Click piece on stage or row below):</div>
+      <div class="plane-tree" id="sceneLayerTree"></div>
       <div id="asmSelectedTitle" style="font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">No piece selected</div>
       <div class="asm-row">
-        <label>Scale:</label>
-        <button class="asm-btn" id="asmScaleDown">− 10%</button>
-        <button class="asm-btn" id="asmScaleUp">+ 10%</button>
-        <button class="asm-btn" id="asmFlipBtn">↔ Flip</button>
-        <button class="asm-btn" id="asmDelBtn" style="color:var(--bad)">🗑 Delete</button>
+        <label>Plane:</label>
+        <button class="asm-btn" data-plane="P6" style="border-left:3px solid #78c3dc">P6</button>
+        <button class="asm-btn" data-plane="P5" style="border-left:3px solid #6ea0e1">P5</button>
+        <button class="asm-btn" data-plane="P4" style="border-left:3px solid #2d69d2">P4</button>
+        <button class="asm-btn" data-plane="P3" style="border-left:3px solid #eb8c1e">P3</button>
+        <button class="asm-btn" data-plane="P2" style="border-left:3px solid #cd282d">P2</button>
+        <button class="asm-btn" data-plane="P1" style="border-left:3px solid #c49a6c">P1</button>
+        <button class="asm-btn" data-plane="P0" style="border-left:3px solid #9aa0ab">P0</button>
       </div>
       <div class="asm-row">
-        <label>Plane:</label>
-        <button class="asm-btn" data-plane="P5">P5 Horizon</button>
-        <button class="asm-btn" data-plane="P4">P4 Arch</button>
-        <button class="asm-btn" data-plane="P3">P3 Prop</button>
-        <button class="asm-btn" data-plane="P1">P1 Fore</button>
+        <label>Scale:</label>
+        <input id="asmScaleSlider" type="range" min="6" max="95" value="38">
+        <button class="asm-btn" id="asmScaleDown">−</button>
+        <button class="asm-btn" id="asmScaleUp">+</button>
+        <button class="asm-btn" id="asmFlipBtn">↔ Flip</button>
+        <button class="asm-btn" id="asmDelBtn" style="color:var(--bad)">🗑</button>
+      </div>
+      <div class="asm-row">
+        <label>Z / α:</label>
+        <input id="asmZSlider" type="range" min="20" max="620" value="240" title="Metric Stage Z-Depth (0.20 .. 6.20)">
+        <input id="asmAlphaSlider" type="range" min="15" max="100" value="98" title="Layer Opacity">
       </div>
       <div class="asm-row">
         <label>Anim:</label>
         <select id="asmAnimSelect" class="asm-btn" style="flex:1">
           <option value="static">static (grounded)</option>
           <option value="portal_aperture">portal_aperture (breathing arch)</option>
+          <option value="portal_other_world">portal_other_world (inner vista)</option>
           <option value="portal_tv_flicker">portal_tv_flicker (screen pulse)</option>
           <option value="lamp_glow">lamp_glow (warm light pulse)</option>
+          <option value="sun_pulse">sun_pulse (celestial aura)</option>
           <option value="wheel_spin">wheel_spin (rotating wheel/reel)</option>
           <option value="heart_beat">heart_beat (pulsing heart)</option>
-          <option value="turntable_spin">turntable_spin (vinyl platter)</option>
+          <option value="turntable_spin">turntable_spin (vinyl/galaxy spin)</option>
           <option value="speaker_pulse">speaker_pulse (bass cabinet)</option>
+          <option value="wave_near">wave_near (foreground swell)</option>
           <option value="wave_mid">wave_mid (ocean swell)</option>
           <option value="boat_rock">boat_rock (pitching hull/sail)</option>
           <option value="hourglass_sand">hourglass_sand (streaming sand)</option>
           <option value="flower_bloom">flower_bloom (swaying bloom)</option>
           <option value="wing_flap_L">wing_flap_L (feathered wing)</option>
           <option value="headlight_beam">headlight_beam (sweeping cone)</option>
-          <option value="phone_ring">phone_ring (acoustic wave)</option>
+          <option value="cloud_drift_L">cloud_drift_L (drifting mist/haze)</option>
+          <option value="proscenium_mask">proscenium_mask (camera repoussoir)</option>
         </select>
-        <button class="asm-btn" id="asmResetSceneBtn" title="Restore default curated structures for this scene">↺ Reset</button>
+        <button class="asm-btn" id="asmResetSceneBtn" title="Restore handmade 7-layer spec for this scene">↺ Reset</button>
       </div>
     </div>
     <div class="asm-sec">
       <div class="asm-row">
-        <input id="asmSearch" type="search" placeholder="Search 450+ structures, windows, props…" style="flex:1;background:#0b0e13;border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:.72rem">
+        <input id="asmSearch" type="search" placeholder="Search 1,766 color-coded 7L pieces & world sheets…" style="flex:1;background:#0b0e13;border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:.68rem">
         <select id="asmPoemFilter" class="asm-btn">
           <option value="cur">This Poem</option>
           <option value="all">All 14 Poems</option>
@@ -214,9 +275,10 @@ a{color:#8fb8ff}
       </div>
       <div class="asm-row" id="asmCatRow">
         <button class="asm-btn on" data-cat="all">All</button>
-        <button class="asm-btn" data-cat="architecture">🏛️ Architecture</button>
-        <button class="asm-btn" data-cat="props_furniture">🪑 Props & Vehicles</button>
-        <button class="asm-btn" data-cat="atmosphere_fx">✨ FX & Sky</button>
+        <button class="asm-btn" data-cat="architecture">🏛️ Arch</button>
+        <button class="asm-btn" data-cat="props_furniture">🪑 Props</button>
+        <button class="asm-btn" data-cat="atmosphere_fx">✨ FX/Sky</button>
+        <button class="asm-btn" data-cat="world_sheets">🌐 World 7L</button>
       </div>
     </div>
     <div class="asm-list" id="asmCatalogGrid"></div>
@@ -231,7 +293,7 @@ a{color:#8fb8ff}
         <button class="btn on" id="go">▶ Begin the Reading & Journey</button>
         <button class="btn" id="who"></button>
       </div>
-      <small style="color:var(--muted)">Controls: Drag or <b>← / →</b> (<b>A / D</b>) to walk between architectural stations · Stand at the illuminated station or press <b>Space / E</b> to embody the line & animate the station · Click <b>🛠️ Assemble Stage</b> anytime to edit or add set pieces.</small>
+      <small style="color:var(--muted)">Controls: Drag or <b>← / →</b> (<b>A / D</b>) to walk across the 7-layer stage · Stand at the illuminated station or press <b>Space / E</b> to embody the line · Click any <b>P6..P0</b> pill in the 7-Layer Ribbon to solo a depth plane · Open <b>🛠️ 7-Layer Author</b> to inspect or customize the world.</small>
     </div>
   </div>
 
@@ -274,8 +336,24 @@ const ARC_SUMMARY = {
   "14": { arc: "Taken by Haze → Vintage Waltz → Genesis", desc: "Rise above the Whole Atlantis Harbor into the Weightless Void, unspool the Nine-Frame Memory Reel, and step through the Panelled Vintage Doorway." }
 };
 
-const PARALLAX_BY_PLANE = { P6: 0.22, P5: 0.45, P4: 0.72, P3: 0.92, P2: 1.00, P1: 1.18 };
-const Z_BY_PLANE = { P5: 3.60, P4: 2.42, P3: 1.40, P1: 0.48 };
+// Seven-Layer Multiplane Architecture (P6 → P0) Color-Coding & Cel-Shading Law
+const SEVEN_PLANES = {
+  P6: { idx: 0, name: "P6 · Sky & Cosmos",       short: "SKY/COSMOS", hex: "#78c3dc", rgb: [120, 195, 220], z: 6.00, parallax: 0.18, inkW: 0.5, haze: 0.65, palK: 3 },
+  P5: { idx: 1, name: "P5 · Far Horizon",        short: "HORIZON",    hex: "#6ea0e1", rgb: [110, 160, 225], z: 3.80, parallax: 0.38, inkW: 0.8, haze: 0.45, palK: 4 },
+  P4: { idx: 2, name: "P4 · Midground Arch",     short: "ARCH/WALLS", hex: "#2d69d2", rgb: [45,  105, 210], z: 2.42, parallax: 0.66, inkW: 1.3, haze: 0.25, palK: 5 },
+  P3: { idx: 3, name: "P3 · Stage Set & Props",  short: "SET/PROPS",  hex: "#eb8c1e", rgb: [235, 140, 30],  z: 1.40, parallax: 0.88, inkW: 1.9, haze: 0.10, palK: 6 },
+  P2: { idx: 4, name: "P2 · Focal Cast & Hero",  short: "FOCAL/CAST", hex: "#cd282d", rgb: [205, 40,  45],  z: 1.00, parallax: 1.00, inkW: 2.6, haze: 0.00, palK: 8 },
+  P1: { idx: 5, name: "P1 · Near Foreground",    short: "NEAR FG",    hex: "#c49a6c", rgb: [196, 154, 108], z: 0.52, parallax: 1.18, inkW: 2.2, haze: 0.05, palK: 5 },
+  P0: { idx: 6, name: "P0 · Proscenium Frame",   short: "PROSCENIUM", hex: "#9aa0ab", rgb: [154, 160, 171], z: 0.24, parallax: 1.34, inkW: 2.8, haze: 0.12, palK: 4 }
+};
+const PLANE_ORDER_BACK_TO_FRONT = ['P6', 'P5', 'P4', 'P3', 'P2', 'P1', 'P0'];
+const PARALLAX_BY_PLANE = { P6: 0.18, P5: 0.38, P4: 0.66, P3: 0.88, P2: 1.00, P1: 1.18, P0: 1.34 };
+const Z_BY_PLANE = { P6: 6.00, P5: 3.80, P4: 2.42, P3: 1.40, P2: 1.00, P1: 0.52, P0: 0.24 };
+
+let celRenderMode = 'cel_wash'; // 'cel_wash' | 'color_coded' | 'layout_ink' | 'exploded_7' | 'painted'
+let soloPlane = 'ALL';          // 'ALL' | 'P6'..'P0'
+let celStrength = 0.72;
+let colorTintStrength = 0.28;
 
 let CHARS = [], INDEX = [], CATALOG = [], L = null, actor = null, scenes = [], sceneImgs = [], audio = null, castIdx = 0;
 let counterpart = null;
@@ -290,17 +368,106 @@ let wordEchoes = [];
 let particles = [];
 const keys = {};
 
-// Image Cache for Multiplane Cut-Outs & 31-Part Poet Rig
+// Image Cache for Multiplane Cut-Outs, Cel Passes & 31-Part Poet Rig
 const imgCache = new Map();
 function getCachedImg(url){
   if (!url) return null;
   if (imgCache.has(url)) return imgCache.get(url);
-  const rec = { img: null, ok: false };
+  const rec = { img: null, ok: false, url };
   imgCache.set(url, rec);
   const im = new Image();
+  im.crossOrigin = 'anonymous';
   im.onload = () => { rec.img = im; rec.ok = true; };
   im.src = url;
   return rec;
+}
+
+// Offscreen Cel-Shaded & Color-Coded Cutout Cache
+const celPieceCache = new Map();
+function getCelPieceCanvas(im, planeKey, celStr, tintStr, mode){
+  const pSpec = SEVEN_PLANES[planeKey] || SEVEN_PLANES.P3;
+  const qCel = Math.round(celStr * 10);
+  const qTint = Math.round(tintStr * 10);
+  const key = `${im.src}|${planeKey}|${qCel}|${qTint}|${mode}`;
+  if (celPieceCache.has(key)) return celPieceCache.get(key);
+
+  const iw = im.naturalWidth || 240;
+  const ih = im.naturalHeight || 240;
+  // Cap offscreen buffer at max 360px on longest side for fast 60fps rendering
+  const maxDim = 360;
+  const scale = Math.min(1, maxDim / Math.max(1, iw, ih));
+  const cw = Math.max(16, Math.round(iw * scale));
+  const ch = Math.max(16, Math.round(ih * scale));
+
+  const off = document.createElement('canvas');
+  off.width = cw + 8;
+  off.height = ch + 8;
+  const octx = off.getContext('2d');
+  const pad = 4;
+
+  // 1. Draw subtle outer ink contour ring scaled by plane inkW (thicker in P2/P3, hairline in P6/P5)
+  const inkPx = Math.max(0.6, pSpec.inkW * (0.45 + celStr * 0.75));
+  if (celStr > 0.08 || mode === 'layout_ink' || mode === 'color_coded'){
+    const sil = document.createElement('canvas');
+    sil.width = cw; sil.height = ch;
+    const sctx = sil.getContext('2d');
+    sctx.drawImage(im, 0, 0, cw, ch);
+    sctx.globalCompositeOperation = 'source-in';
+    sctx.fillStyle = mode === 'color_coded' ? pSpec.hex : '#13161f';
+    sctx.fillRect(0, 0, cw, ch);
+
+    octx.save();
+    octx.globalAlpha = mode === 'layout_ink' ? 0.96 : Math.min(0.95, 0.35 + celStr * 0.6);
+    const dirs = [[-1,0],[1,0],[0,-1],[0,1],[-0.7,-0.7],[0.7,-0.7],[-0.7,0.7],[0.7,0.7]];
+    for (let d = 0; d < dirs.length; d++){
+      octx.drawImage(sil, pad + dirs[d][0] * inkPx, pad + dirs[d][1] * inkPx);
+    }
+    octx.restore();
+  }
+
+  // 2. Draw main cutout body with cel posterization / contrast & atmospheric depth haze
+  const body = document.createElement('canvas');
+  body.width = cw; body.height = ch;
+  const bctx = body.getContext('2d');
+
+  if (mode === 'layout_ink'){
+    bctx.filter = `grayscale(85%) contrast(155%) brightness(106%)`;
+  } else if (celStr > 0.05){
+    const cPct = Math.round(100 + celStr * 38);
+    const sPct = Math.round(100 + (1 - pSpec.haze) * celStr * 24 - pSpec.haze * 22);
+    const bPct = Math.round(100 + (pSpec.idx <= 1 ? 6 : 0));
+    bctx.filter = `contrast(${cPct}%) saturate(${sPct}%) brightness(${bPct}%)`;
+  }
+  bctx.drawImage(im, 0, 0, cw, ch);
+  bctx.filter = 'none';
+
+  // 3. Apply atmospheric haze (far planes P6/P5) OR plane color-code tinting
+  const effTint = mode === 'color_coded' ? Math.max(0.58, tintStr) : (mode === 'layout_ink' ? 0.24 : tintStr);
+  if (effTint > 0.02 || pSpec.haze > 0.08){
+    bctx.save();
+    bctx.globalCompositeOperation = 'source-atop';
+    // Atmospheric depth haze toward crisp slate-cyan on distant planes
+    if (pSpec.haze > 0.08 && mode !== 'color_coded'){
+      bctx.fillStyle = `rgba(28, 42, 66, ${(pSpec.haze * 0.42 * celStr).toFixed(3)})`;
+      bctx.fillRect(0, 0, cw, ch);
+    }
+    // Seven-layer color-code tint
+    if (effTint > 0.02){
+      const [r, g, b] = pSpec.rgb;
+      bctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${(effTint * 0.65).toFixed(3)})`;
+      bctx.fillRect(0, 0, cw, ch);
+    }
+    bctx.restore();
+  }
+
+  octx.drawImage(body, pad, pad);
+
+  if (celPieceCache.size > 420){
+    const firstKey = celPieceCache.keys().next().value;
+    celPieceCache.delete(firstKey);
+  }
+  celPieceCache.set(key, off);
+  return off;
 }
 
 // 31-Part Brass-Pivot Tracksuit Poet Rig
@@ -321,8 +488,10 @@ function preloadPoet31(){
 let asmMode = false;
 let selectedLayer = null;
 let draggingLayer = null;
-let dragOffset = { dx: 0, dy: 0 };
+let scalingLayer = null;
+let dragOffset = { dx: 0, dy: 0, startScale: 0.35, startY: 0 };
 let asmCategory = 'all';
+let asmPlaneFilter = 'ALL';
 
 function resize(){
   DPR = Math.min(2, devicePixelRatio||1);
@@ -341,12 +510,12 @@ function buildShelf(){
     const best = store.get('wy.best.'+p.num);
     const meta = ARC_SUMMARY[p.num] || { arc: 'Emotional Journey', desc: '' };
     b.innerHTML =
-      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}?v=3"><span class="arc-pill">${meta.arc}</span></div>` +
+      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}?v=4"><span class="arc-pill">${meta.arc}</span></div>` +
       `<div class="body"><b></b><div class="theme"></div><small></small><div class="best"></div></div>`;
     b.querySelector('b').textContent = `${p.num} · ${p.title}`;
     b.querySelector('.theme').textContent = meta.desc;
-    b.querySelector('small').textContent = `${Math.round(p.duration)}s · ${p.scenes} multiplane scenes · ${p.lines} station lines`;
-    b.querySelector('.best').textContent = best ? (`★ Best resonance: ${best}/${p.lines} stations inhabited`) : 'Enter multiplane poem →';
+    b.querySelector('small').textContent = `${Math.round(p.duration)}s · ${p.scenes} handmade 7-layer scenes · ${p.lines} station lines`;
+    b.querySelector('.best').textContent = best ? (`★ Best resonance: ${best}/${p.lines} stations inhabited`) : 'Enter 7-layer cel poem →';
     b.addEventListener('click', ()=>openLevel(p.num));
     g.append(b);
   });
@@ -366,25 +535,68 @@ async function getOrLoadActorByKey(charKey){
   return rec;
 }
 
+/* ---------- 7-Plane Ribbon Builder ---------- */
+function buildPlaneRibbon(sc){
+  const rib = $('planeRibbon');
+  if (!rib) return;
+  rib.innerHTML = '';
+  const mLayers = (sc && sc.multiplane_layers) ? sc.multiplane_layers : [];
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'plane-pill' + (soloPlane === 'ALL' ? ' on' : '');
+  allBtn.innerHTML = `<span>ALL 7</span><span class="cnt">${mLayers.length}</span>`;
+  allBtn.title = 'Show all 7 multiplane depth layers (P6 → P0)';
+  allBtn.addEventListener('click', () => {
+    soloPlane = 'ALL';
+    buildPlaneRibbon(scenes[cur.i]);
+    renderSceneLayerTree();
+  });
+  rib.append(allBtn);
+
+  PLANE_ORDER_BACK_TO_FRONT.forEach(pKey => {
+    const spec = SEVEN_PLANES[pKey];
+    const cnt = mLayers.filter(l => (l.plane || 'P3') === pKey).length;
+    const btn = document.createElement('button');
+    btn.className = 'plane-pill' + (soloPlane === pKey ? ' on' : '');
+    btn.innerHTML =
+      `<span class="sw" style="background:${spec.hex}"></span>` +
+      `<span>${pKey}</span>` +
+      `<span class="cnt">${cnt}</span>`;
+    btn.title = `${spec.name} (Z=${spec.z}m, Ink=${spec.inkW}px) — Click to solo/inspect ${pKey}`;
+    btn.addEventListener('click', () => {
+      soloPlane = (soloPlane === pKey) ? 'ALL' : pKey;
+      buildPlaneRibbon(scenes[cur.i]);
+      renderSceneLayerTree();
+    });
+    rib.append(btn);
+  });
+}
+
 /* ---------- Opening a Level ---------- */
 async function openLevel(num){
   $('shelf').style.display = 'none';
   $('stage').style.display = 'block';
   resize();
   preloadPoet31();
-  // Poems 01-03 feature Poet in Black T-Shirt / Young Poet Pajamas painted cutouts; Poems 04-14 feature Tracksuit Poet
   use31PartRig = parseInt(num, 10) >= 4;
-  L = await (await fetch(`levels/${num}/level.json?v=3`)).json();
+  L = await (await fetch(`levels/${num}/level.json?v=4`)).json();
   scenes = L.scenes;
 
-  // Restore any user-saved custom stage assemblies from localStorage (v3) & preload all multiplane cut-out assets
+  // Restore any user-saved custom 7-layer stage assemblies from localStorage (v4) & preload all cut-out + cel assets
   scenes.forEach((sc, idx) => {
     sc._defaultLayers = JSON.parse(JSON.stringify(sc.multiplane_layers || []));
-    const saved = store.get(`wy.stage.v3.${num}.${idx}`);
+    const saved = store.get(`wy.stage.v4.${num}.${idx}`);
     if (saved){
       try { sc.multiplane_layers = JSON.parse(saved); } catch(e){}
     }
     if (sc.backdrop_file) getCachedImg(sc.backdrop_file);
+    if (sc.cel_passes){
+      if (sc.cel_passes.cel_file) getCachedImg(sc.cel_passes.cel_file);
+      if (sc.cel_passes.ink_file) getCachedImg(sc.cel_passes.ink_file);
+      if (sc.cel_passes.layout_file) getCachedImg(sc.cel_passes.layout_file);
+      if (sc.cel_passes.planes_map_file) getCachedImg(sc.cel_passes.planes_map_file);
+      if (sc.cel_passes.exploded_file) getCachedImg(sc.cel_passes.exploded_file);
+    }
     (sc.multiplane_layers || []).forEach(lyr => getCachedImg(lyr.file));
   });
 
@@ -413,6 +625,7 @@ async function openLevel(num){
   stationBoost = {};
   wordEchoes = [];
   selectedLayer = null;
+  soloPlane = 'ALL';
   initParticles();
 
   if (audio){ audio.pause(); audio = null; }
@@ -423,13 +636,16 @@ async function openLevel(num){
   const arcMeta = ARC_SUMMARY[num] || { arc: 'Emotional Arc', desc: '' };
   $('ttl').textContent = `${L.num} · ${L.title}`;
   $('stt').textContent = `${L.num} · ${L.title}`;
-  $('stn').textContent = `${Math.round(L.duration)}s · ${scenes.length} multiplane architectural scenes · ${total} station lines`;
-  $('stArc').innerHTML = `<b>Architectural & Emotional Journey (${arcMeta.arc}):</b><br>${arcMeta.desc}`;
+  $('stn').textContent = `${Math.round(L.duration)}s · ${scenes.length} handmade 7-layer scenes (P6→P0) · ${total} station lines`;
+  $('stArc').innerHTML = `<b>Handmade 7-Layer Architectural & Emotional Journey (${arcMeta.arc}):</b><br>${arcMeta.desc}`;
   $('start').style.display = 'grid';
   $('end').style.display = 'none';
   buildArcBar();
+  buildPlaneRibbon(scenes[0]);
   updateScore();
   renderAsmCatalog();
+  renderSceneLayerTree();
+  renderFrameBreakdown(scenes[0]);
 
   actor.x = scenes[0]?.lines?.[0]?.mx || 280;
   actor.dir = 1;
@@ -502,11 +718,11 @@ function buildArcBar(){
   bar.innerHTML = '';
   scenes.forEach((sc, idx) => {
     const btn = document.createElement('button');
-    btn.className = 'sc-step';
+    btn.className = 'sc-step' + (idx === cur.i ? ' active' : '');
     btn.dataset.idx = idx;
     const emo = sc.emotion || 'searching';
     const layerCount = (sc.multiplane_layers || []).length;
-    btn.innerHTML = `<small>${sc.key} · ${emo} · ${layerCount} pcs</small><b>${sc.name}</b>`;
+    btn.innerHTML = `<small>${sc.key} · ${emo} · 7L/${layerCount}p</small><b>${sc.name}</b>`;
     btn.addEventListener('click', () => {
       if (audio){
         audio.currentTime = sc.t0 + 0.05;
@@ -590,7 +806,6 @@ function drawPoet31Rig(g, state, cx, fy, scalePx, ts){
   const legAmp = moving ? 0.44 : 0.03;
   const armAmp = moving ? 0.36 : 0.05;
 
-  // Emotional posture overrides for the 31-part rig
   let torsoLean = (state.lean_deg || 0) * Math.PI / 180;
   let sinkY = (state.crouch_offset_cm || 0) * scalePx * 0.7 - (state.y || 0) * scalePx;
   let armRaiseL = 0, armRaiseR = 0, kneeBend = 0, headPitch = 0;
@@ -646,15 +861,12 @@ function drawPoet31Rig(g, state, cx, fy, scalePx, ts){
     g.save();
     g.translate(sx, sy);
     g.rotate(uAng);
-    // Upper segment
     drawPiece(uFile, 0, 0, uw, uh, 0, 0.5, 0.14, 0.88);
-    // Elbow / Knee joint
     g.translate(0, uh * 0.74);
     g.rotate(lAng);
-    // Cuff-Tuck: Draw Hand / Boot BEHIND the forearm / shin ribbed cuff so zero grommet tabs show!
+    // Cuff-Tuck: Draw Hand / Boot BEHIND the forearm / shin ribbed cuff
     const wristOrAnkleY = lh * (isLeg ? 0.76 : 0.74);
     drawPiece(eFile, 0, wristOrAnkleY, ew, eh, 0, 0.5, 0.26, 1.0);
-    // Forearm / Shin clipped cleanly at the ribbed cuff lip
     drawPiece(lFile, 0, 0, lw, lh, 0, 0.5, 0.13, isLeg ? 0.84 : 0.81);
     g.restore();
   }
@@ -664,20 +876,17 @@ function drawPoet31Rig(g, state, cx, fy, scalePx, ts){
     '13_thigh_R.png', '14_shin_R.png', '20_boot_front_R.png',
     18 * u, hipY, -walkSwing - kneeBend * 0.6, Math.max(0, walkSwing * 0.45) + kneeBend, true
   );
-
   // 2. Back Arm (Right)
   drawLimbChain(
     '09_upper_arm_R.png', '10_forearm_R.png', '16_hand_relaxed_R.png',
     38 * u, shY, armSwing + armRaiseR + torsoLean, -0.22 + armRaiseR * 0.4, false
   );
-
   // 3. Pelvis & Torso + Head (with Neck tucked inside collar)
   g.save();
   g.translate(0, hipY);
   g.rotate(torsoLean);
   drawPiece('05_pelvis_front.png', 0, 12 * u, 118 * u, 88 * u, 0, 0.5, 0.5, 1.0);
 
-  // Head & Face tucked behind torso collar
   const neckY = -172 * u;
   g.save();
   g.translate(0, neckY);
@@ -690,7 +899,6 @@ function drawPoet31Rig(g, state, cx, fy, scalePx, ts){
   drawPiece('31_sunglasses_front.png', 2 * u, -54 * u, 68 * u, 26 * u, 0, 0.5, 0.5, 1.0);
   g.restore();
 
-  // Torso drawn over the lower neck edge (Cuff-Tuck Collar!)
   drawPiece('01_torso_front.png', 0, -88 * u, 146 * u, 204 * u, 0, 0.5, 0.5, 1.0);
   g.restore();
 
@@ -699,7 +907,6 @@ function drawPoet31Rig(g, state, cx, fy, scalePx, ts){
     '11_thigh_L.png', '12_shin_L.png', '19_boot_front_L.png',
     -18 * u, hipY, walkSwing - kneeBend * 0.6, Math.max(0, -walkSwing * 0.45) + kneeBend, true
   );
-
   // 5. Front Arm (Left)
   drawLimbChain(
     '07_upper_arm_L.png', '08_forearm_L.png', '15_hand_relaxed_L.png',
@@ -727,6 +934,9 @@ function frame(ts){
     subKey = '';
     selectedLayer = null;
     updateAsmInspector();
+    buildPlaneRibbon(sc);
+    renderSceneLayerTree();
+    renderFrameBreakdown(sc);
     document.querySelectorAll('#arcBar .sc-step').forEach((el, idx) => {
       el.classList.toggle('active', idx === k);
       el.classList.toggle('done', idx < k);
@@ -749,12 +959,10 @@ function frame(ts){
   const state = actor.ctrl.step(dt, eff, ts);
   actor.x = Math.max(60, Math.min(fw - 60, actor.x));
 
-  // Decay station boosts smoothly
   for (const sid in stationBoost){
     stationBoost[sid] = Math.max(0, stationBoost[sid] - dt * 0.45);
   }
 
-  // Find active or upcoming line
   activeLine = null;
   for (let j = 0; j < sc.lines.length; j++){
     const ln = sc.lines[j];
@@ -764,21 +972,20 @@ function frame(ts){
     }
   }
 
-  // Update Emotional & Architectural Station HUD
   if (activeLine){
     const emoMod = Anim2.EMOTION_MODS[activeLine.emotion] || Anim2.EMOTION_MODS.searching;
     const stName = activeLine.station_label || sc.name;
-    $('emoKicker').textContent = `📍 STATION: ${stName.toUpperCase()}`;
+    $('emoKicker').textContent = `📍 STATION: ${stName.toUpperCase()} · FRAME ${sc.frame_id || sc.key}`;
     $('emoTitle').textContent = `${activeLine.emotion_label || emoMod.label}`;
-    $('emoSub').textContent = `Walk to "${stName}" (${Math.round(activeLine.mx)}px) or press Space to embody & animate the station.`;
+    $('emoSub').textContent = `Walk to "${stName}" (${Math.round(activeLine.mx)}px) or press Space to embody & animate the 7-layer station.`;
     const eb = $('embodyBtn');
     if (eb) eb.textContent = `★ Embody @ ${stName.slice(0, 18)} (Space)`;
   } else if (sc){
     const emoMod = Anim2.EMOTION_MODS[sc.emotion] || Anim2.EMOTION_MODS.searching;
     const stList = (sc.stations || []).map(s => s.title).join(' → ');
-    $('emoKicker').textContent = `${sc.key} · ${sc.name.toUpperCase()}`;
+    $('emoKicker').textContent = `${sc.key} · ${sc.name.toUpperCase()} · 7 LAYERS (P6→P0)`;
     $('emoTitle').textContent = emoMod.label;
-    $('emoSub').textContent = stList ? `Stage Stations: ${stList}` : `Move between the architectural stations as the reading unfolds.`;
+    $('emoSub').textContent = stList ? `Stage Stations: ${stList}` : `Move between the handmade 7-layer stations as the reading unfolds.`;
   }
 
   const focusRadius = 110 * sc.ppc;
@@ -880,29 +1087,34 @@ function stepCounterpart(dt, k, sc, ts){
   }
 }
 
-/* ---------- Multiplane Cut-Out Layer Renderer (P5, P4, P3, P1) ---------- */
+/* ---------- 7-Plane Cut-Out & Cel-Shaded Layer Renderer (P6 → P0) ---------- */
 function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
+  if (lyr.hidden) return;
+  const plane = lyr.plane || 'P3';
+  const pSpec = SEVEN_PLANES[plane] || SEVEN_PLANES.P3;
+
+  // If a single plane is soloed on the ribbon, dim non-soloed planes to 14%
+  const soloDim = (soloPlane !== 'ALL' && soloPlane !== plane) ? 0.14 : 1.0;
+
   const rec = getCachedImg(lyr.file);
   if (!rec || !rec.ok) return;
   const im = rec.img;
   const iw = im.naturalWidth || lyr.width || 240;
   const ih = im.naturalHeight || lyr.height || 240;
 
-  const plane = lyr.plane || 'P3';
-  const pFactor = PARALLAX_BY_PLANE[plane] !== undefined ? PARALLAX_BY_PLANE[plane] : 0.90;
+  const pFactor = PARALLAX_BY_PLANE[plane] !== undefined ? PARALLAX_BY_PLANE[plane] : 0.88;
   const boost = (lyr.station_id && stationBoost[lyr.station_id]) ? stationBoost[lyr.station_id] : 0;
   const tSec = ts / 1000;
   const speedMult = 1 + boost * 1.4;
 
-  // Base stage coordinates in 1280x720 level space
-  let baseX = (lyr.x || 0.5) * fw;
-  let baseY = (lyr.y || 0.86) * fh;
+  let baseX = (lyr.x !== undefined ? lyr.x : 0.5) * fw;
+  let baseY = (lyr.y !== undefined ? lyr.y : 0.86) * fh;
   let rot = 0;
   let scMult = 1 + boost * 0.05;
-  let alpha = (lyr.alpha !== undefined ? lyr.alpha : 0.98);
+  let alpha = (lyr.alpha !== undefined ? lyr.alpha : 0.98) * soloDim;
   const anim = lyr.anim_role || 'static';
 
-  // Procedural multiplane animations matching stage.html + interactive station boost
+  // Procedural multiplane animations across all 7 planes
   if (anim === 'wheel_spin' || anim === 'turntable_spin'){
     rot = tSec * (anim === 'turntable_spin' ? 3.2 : 2.6) * speedMult;
   } else if (anim === 'car_chassis'){
@@ -910,8 +1122,8 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
   } else if (anim === 'bike_chassis'){
     baseY += Math.sin(tSec * 9.0) * 1.4;
     rot = Math.sin(tSec * 2.2) * 0.012;
-  } else if (anim === 'heart_beat'){
-    scMult *= 1 + (0.09 + boost * 0.12) * Math.pow(Math.max(0, Math.sin(tSec * 3.8 * speedMult)), 3);
+  } else if (anim === 'heart_beat' || anim === 'focal_emblem'){
+    scMult *= 1 + (0.06 + boost * 0.12) * Math.pow(Math.max(0, Math.sin(tSec * 3.6 * speedMult)), 3);
   } else if (anim === 'speaker_pulse' || anim === 'dj_console'){
     scMult *= 1 + (0.035 + boost * 0.06) * Math.abs(Math.sin(tSec * 6.2));
   } else if (anim === 'wave_far'){
@@ -920,9 +1132,9 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
   } else if (anim === 'wave_mid'){
     baseX += Math.cos(tSec * 1.45) * 20;
     baseY += Math.sin(tSec * 1.2) * 5;
-  } else if (anim === 'wave_near'){
-    baseX += Math.sin(tSec * 1.9) * 26;
-    baseY += Math.cos(tSec * 1.5) * 6;
+  } else if (anim === 'wave_near' || anim === 'fg_occluder'){
+    baseX += Math.sin(tSec * 1.7) * 18;
+    baseY += Math.cos(tSec * 1.4) * 4;
   } else if (anim === 'boat_rock'){
     rot = Math.sin(tSec * 1.4) * (0.045 + boost * 0.04);
     baseY += Math.cos(tSec * 1.7) * 5;
@@ -936,16 +1148,19 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
   } else if (anim === 'flower_bloom'){
     rot = Math.sin(tSec * 1.6) * 0.04;
     scMult *= 1 + 0.03 * Math.sin(tSec * 2.0);
-  } else if (anim === 'chandelier_sway' || anim === 'curtain_sway_L' || anim === 'curtain_sway_R'){
-    rot = Math.sin(tSec * 1.3) * 0.035;
+  } else if (anim === 'chandelier_sway' || anim === 'curtain_sway_L' || anim === 'curtain_sway_R' || anim === 'proscenium_border'){
+    rot = Math.sin(tSec * 1.1) * 0.022;
   } else if (anim === 'hourglass_sand'){
-    alpha = 0.78 + 0.22 * Math.sin(tSec * 5.0);
+    alpha *= (0.78 + 0.22 * Math.sin(tSec * 5.0));
   } else if (anim === 'lamp_glow' || anim === 'portal_tv_flicker' || anim === 'sun_pulse' || anim === 'coffee_steam'){
     scMult *= 1 + (0.02 + boost * 0.05) * Math.sin(tSec * 3.2);
   } else if (anim === 'phone_ring'){
     scMult *= 1 + 0.09 * Math.sin(tSec * 8.0);
-  } else if (anim === 'cloud_drift_L'){
-    baseX += Math.sin(tSec * 0.45) * 24;
+  } else if (anim === 'cloud_drift_L' || anim === 'sky_drift'){
+    baseX += Math.sin(tSec * 0.42) * 26;
+    baseY += Math.cos(tSec * 0.35) * 4;
+  } else if (anim === 'horizon_sway'){
+    baseX += Math.cos(tSec * 0.55) * 10;
   }
 
   // Poem 11 ("The temple builds itself"): courses, columns & pediment descend into place!
@@ -954,17 +1169,14 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
     baseY -= (1 - buildProg) * 90;
   }
 
-  // Compute screen-space size with stage scale `s`
-  const rawH = Math.max(28, Math.min(fh * 0.78, fh * (lyr.scale || 0.35) * scMult));
+  const rawH = Math.max(28, Math.min(fh * 0.82, fh * (lyr.scale || 0.35) * scMult));
   const rawW = Math.max(28, rawH * (iw / Math.max(1, ih)));
   const drawH = rawH * s;
   const drawW = rawW * s;
 
-  // Apply multiplane camera parallax around stage center
   const screenX = offX + (baseX - camDelta * pFactor) * s;
   const screenY = y0 + baseY * s;
 
-  // Store screen bbox on layer for interactive Stage Assembler clicking & dragging
   lyr._HitBox = {
     cx: screenX,
     by: screenY,
@@ -976,39 +1188,150 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
   };
 
   ctx.save();
-  ctx.globalAlpha = Math.max(0.05, Math.min(1, alpha));
+  ctx.globalAlpha = Math.max(0.04, Math.min(1, alpha));
   ctx.translate(screenX, screenY - drawH * 0.5);
   if (lyr.flip) ctx.scale(-1, 1);
   if (rot) ctx.rotate(rot);
 
-  // Subtle paper cut-out drop shadow + warm station boost aura
-  if (boost > 0.05){
-    ctx.shadowColor = 'rgba(216,171,79,0.75)';
+  // Drop shadow / color-coded aura
+  if (celRenderMode === 'color_coded' || soloPlane === plane){
+    ctx.shadowColor = pSpec.hex;
+    ctx.shadowBlur = (soloPlane === plane ? 16 : 9) * s;
+  } else if (boost > 0.05){
+    ctx.shadowColor = 'rgba(216,171,79,0.82)';
     ctx.shadowBlur = (10 + boost * 16) * s;
   } else {
-    ctx.shadowColor = 'rgba(0,0,0,0.52)';
-    ctx.shadowBlur = 6 * s;
-    ctx.shadowOffsetY = 3 * s;
+    ctx.shadowColor = 'rgba(0,0,0,0.56)';
+    ctx.shadowBlur = (4 + pSpec.inkW * 1.5) * s;
+    ctx.shadowOffsetY = 2.5 * s;
   }
 
-  ctx.drawImage(im, -drawW * 0.5, -drawH * 0.5, drawW, drawH);
+  if (celRenderMode === 'painted' && celStrength < 0.1 && colorTintStrength < 0.05){
+    ctx.drawImage(im, -drawW * 0.5, -drawH * 0.5, drawW, drawH);
+  } else {
+    const celCan = getCelPieceCanvas(im, plane, celStrength, colorTintStrength, celRenderMode);
+    ctx.drawImage(celCan, -drawW * 0.5, -drawH * 0.5, drawW, drawH);
+  }
   ctx.restore();
 
-  // If Stage Assembler mode is open, draw piece frame & handle
-  if (asmMode){
+  // Draw color-coded plane badge & bounding box when in `color_coded` mode, `soloPlane === plane`, or `asmMode`
+  const showOverlay = asmMode || celRenderMode === 'color_coded' || (soloPlane !== 'ALL' && soloPlane === plane);
+  if (showOverlay){
     const isSel = selectedLayer === lyr;
     ctx.save();
-    ctx.strokeStyle = isSel ? '#4de2c2' : 'rgba(216,171,79,0.55)';
-    ctx.lineWidth = isSel ? 2.2 : 1.2;
-    if (!isSel) ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = isSel ? '#4de2c2' : pSpec.hex;
+    ctx.lineWidth = isSel ? 2.5 : (celRenderMode === 'color_coded' ? 1.8 : 1.3);
+    if (!isSel && celRenderMode !== 'color_coded') ctx.setLineDash([4, 3]);
     ctx.strokeRect(screenX - drawW / 2, screenY - drawH, drawW, drawH);
-    ctx.fillStyle = isSel ? '#4de2c2' : 'rgba(15,19,25,0.85)';
-    ctx.fillRect(screenX - drawW / 2, screenY - drawH - 16, Math.min(drawW, 135), 16);
-    ctx.fillStyle = isSel ? '#07080b' : '#e8ecf1';
-    ctx.font = '600 10px "JetBrains Mono", monospace';
-    ctx.fillText(`${plane} · ${(lyr.label || lyr.part_id).slice(0, 16)}`, screenX - drawW / 2 + 4, screenY - drawH - 4);
+
+    // Top-left color-coded plane tag
+    const tagText = `${plane} (Z=${Number(lyr.z || pSpec.z).toFixed(1)}m) · ${(lyr.label || lyr.part_id).slice(0, 18)}`;
+    ctx.font = '700 10px "JetBrains Mono", monospace';
+    const tw = Math.min(drawW + 24, ctx.measureText(tagText).width + 10);
+    ctx.fillStyle = isSel ? '#4de2c2' : pSpec.hex;
+    ctx.fillRect(screenX - drawW / 2, screenY - drawH - 16, tw, 16);
+    ctx.fillStyle = '#07080b';
+    ctx.fillText(tagText, screenX - drawW / 2 + 4, screenY - drawH - 4);
+
+    // Bottom-right resize handle in asmMode when selected
+    if (asmMode && isSel){
+      ctx.fillStyle = '#4de2c2';
+      ctx.fillRect(screenX + drawW / 2 - 7, screenY - 7, 14, 14);
+      ctx.strokeStyle = '#07080b';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(screenX + drawW / 2 - 7, screenY - 7, 14, 14);
+    }
     ctx.restore();
   }
+}
+
+/* ---------- Interactive 7-Layer Exploded Isometric Stack View ---------- */
+function drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts){
+  const mLayers = sc.multiplane_layers || [];
+  const stageW = Math.min(W, fw * s);
+  const cx = offX + stageW * 0.5;
+
+  // Draw exploded reference plate on the left 34% if loaded, and live 7-plane stack on the right 66%
+  const expRec = sc.cel_passes && sc.cel_passes.exploded_file ? getCachedImg(sc.cel_passes.exploded_file) : null;
+  if (expRec && expRec.ok){
+    ctx.save();
+    ctx.globalAlpha = 0.32;
+    ctx.drawImage(expRec.img, offX + 12, y0 + 12, stageW * 0.36, stageH - 24);
+    ctx.restore();
+  }
+
+  // Draw 7 horizontal depth decks from P6 (top/far) to P0 (bottom/near)
+  const deckW = stageW * 0.72;
+  const deckH = stageH * 0.115;
+
+  PLANE_ORDER_BACK_TO_FRONT.forEach((pKey, idx) => {
+    const spec = SEVEN_PLANES[pKey];
+    const isSolo = soloPlane === 'ALL' || soloPlane === pKey;
+    const deckY = y0 + 24 + idx * ((stageH - 48) / 6.6);
+    const deckX = cx - deckW * 0.46 + (idx - 3) * 14 * s;
+
+    ctx.save();
+    ctx.globalAlpha = isSolo ? 0.95 : 0.22;
+
+    // Skewed perspective card deck for this depth plane
+    ctx.beginPath();
+    ctx.moveTo(deckX + 24 * s, deckY);
+    ctx.lineTo(deckX + deckW, deckY);
+    ctx.lineTo(deckX + deckW - 24 * s, deckY + deckH);
+    ctx.lineTo(deckX, deckY + deckH);
+    ctx.closePath();
+    ctx.fillStyle = `rgba(${spec.rgb[0]}, ${spec.rgb[1]}, ${spec.rgb[2]}, 0.14)`;
+    ctx.fill();
+    ctx.lineWidth = soloPlane === pKey ? 2.6 : 1.5;
+    ctx.strokeStyle = spec.hex;
+    ctx.stroke();
+
+    // Plane header badge on left edge of deck
+    ctx.fillStyle = spec.hex;
+    ctx.fillRect(deckX - 4, deckY + 4, 158 * s, 18 * s);
+    ctx.fillStyle = '#07080b';
+    ctx.font = `700 ${Math.max(9, Math.round(10.5 * s))}px "JetBrains Mono", monospace`;
+    ctx.fillText(`${spec.name} · Z=${spec.z}m`, deckX + 4, deckY + 16 * s);
+
+    // Draw all handmade cutouts belonging to this plane along its deck
+    const pLayers = mLayers.filter(l => (l.plane || 'P3') === pKey && !l.hidden);
+    pLayers.forEach((lyr, li) => {
+      const rec = getCachedImg(lyr.file);
+      if (!rec || !rec.ok) return;
+      const im = rec.img;
+      const iw = im.naturalWidth || 200, ih = im.naturalHeight || 200;
+      const th = deckH * 0.92;
+      const tw = Math.min(deckW * 0.28, th * (iw / Math.max(1, ih)));
+      const lx = deckX + 175 * s + (lyr.x || ((li + 1) / (pLayers.length + 1))) * (deckW - 220 * s);
+      const ly = deckY + deckH * 0.92;
+
+      lyr._HitBox = {
+        cx: lx, by: ly, x0: lx - tw / 2, y0: ly - th, w: tw, h: th,
+        fw, fh, offX, stageY0: y0, s, camDelta: 0, pFactor: 1
+      };
+
+      const celCan = getCelPieceCanvas(im, pKey, celStrength, Math.max(0.35, colorTintStrength), 'color_coded');
+      ctx.drawImage(celCan, lx - tw * 0.5, ly - th, tw, th);
+      ctx.strokeStyle = spec.hex;
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(lx - tw * 0.5, ly - th, tw, th);
+
+      ctx.fillStyle = '#e8ecf1';
+      ctx.font = `600 ${Math.max(8, Math.round(9.5 * s))}px "JetBrains Mono", monospace`;
+      ctx.fillText((lyr.label || lyr.part_id).slice(0, 18), lx - tw * 0.5, ly + 10 * s);
+    });
+
+    // Frame breakdown metric on right edge of deck
+    const bd = sc.cel_passes && sc.cel_passes.seven_layer_breakdown && sc.cel_passes.seven_layer_breakdown[pKey];
+    if (bd){
+      ctx.textAlign = 'right';
+      ctx.fillStyle = spec.hex;
+      ctx.font = `600 ${Math.max(8, Math.round(9.5 * s))}px "JetBrains Mono", monospace`;
+      ctx.fillText(`Frame ${bd.frame_area_pct}% · Ink ${spec.inkW}px · Pal ${spec.palK}`, deckX + deckW - 28 * s, deckY + 16 * s);
+    }
+
+    ctx.restore();
+  });
 }
 
 /* ---------- Main Multiplane Stage Render Loop ---------- */
@@ -1020,8 +1343,8 @@ function draw(sc, k, t, state, ts, dt){
 
   const fw = L.frame[0], fh = L.frame[1];
   const land = W > H * 1.15;
-  const y0 = 84;
-  const stageH = land ? H - y0 - 70 : Math.min(H * 0.70, H - y0 - 125);
+  const y0 = 114;
+  const stageH = land ? H - y0 - 66 : Math.min(H * 0.68, H - y0 - 120);
   const s = stageH / fh;
   const vw = W / s;
 
@@ -1031,7 +1354,6 @@ function draw(sc, k, t, state, ts, dt){
   camLeft += (vw >= fw ? (0 - camLeft) : (target - camLeft)) * 0.12;
   const offX = vw >= fw ? (W - fw*s)/2 : 0;
   const left = vw >= fw ? 0 : camLeft;
-  const img = sceneImgs[k];
   const fy = y0 + sc.floor * s;
   const px = x => offX + (x - left) * s;
 
@@ -1040,53 +1362,91 @@ function draw(sc, k, t, state, ts, dt){
   ctx.rect(offX, y0, Math.min(W, fw*s), stageH);
   ctx.clip();
 
-  // 1. PLANE P6: Clean Painted Atlantis World Backdrop
-  if (img){
-    const sat = Math.round(68 + sceneResonance * 46);
-    const bri = Math.round(80 + sceneResonance * 24);
+  // Special Mode: Exploded 7-Layer Multiplane Isometric Stack
+  if (celRenderMode === 'exploded_7'){
+    drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts);
+    ctx.restore();
+    return;
+  }
+
+  // 1. BASE PLATE: Choose between Cel-Wash Plate (`cel.png`), Layout & Ink (`layout.png`), 7-Plane Map (`planes_map.png`), or Painted Backdrop (`clean.png`)
+  let baseImg = sceneImgs[k];
+  if (sc.cel_passes){
+    if (celRenderMode === 'cel_wash' && sc.cel_passes.cel_file){
+      const cRec = getCachedImg(sc.cel_passes.cel_file);
+      if (cRec && cRec.ok) baseImg = cRec.img;
+    } else if (celRenderMode === 'layout_ink' && sc.cel_passes.layout_file){
+      const lRec = getCachedImg(sc.cel_passes.layout_file);
+      if (lRec && lRec.ok) baseImg = lRec.img;
+    } else if (celRenderMode === 'color_coded' && sc.cel_passes.planes_map_file){
+      const pRec = getCachedImg(sc.cel_passes.planes_map_file);
+      if (pRec && pRec.ok) baseImg = pRec.img;
+    }
+  }
+
+  if (baseImg){
+    const sat = celRenderMode === 'layout_ink' ? 35 : Math.round(72 + sceneResonance * 42);
+    const bri = celRenderMode === 'color_coded' ? 68 : Math.round(82 + sceneResonance * 22);
     ctx.save();
     ctx.filter = `saturate(${sat}%) brightness(${bri}%)`;
     const p6Shift = left * PARALLAX_BY_PLANE.P6 * s;
-    ctx.drawImage(img, offX - p6Shift, y0, fw * s, fh * s);
+    ctx.drawImage(baseImg, offX - p6Shift, y0, fw * s, fh * s);
     ctx.restore();
   }
 
-  // 2. Grounded Architectural Proscenium Stage Floor Deck (below fy)
+  // Optional Subtle Ink Contour Overlay from `ink.png` when celStrength > 0.45
+  if (celRenderMode === 'cel_wash' && celStrength > 0.45 && sc.cel_passes && sc.cel_passes.ink_file){
+    const iRec = getCachedImg(sc.cel_passes.ink_file);
+    if (iRec && iRec.ok){
+      ctx.save();
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.globalAlpha = Math.min(0.45, (celStrength - 0.35) * 0.55);
+      const p6Shift = left * PARALLAX_BY_PLANE.P6 * s;
+      ctx.drawImage(iRec.img, offX - p6Shift, y0, fw * s, fh * s);
+      ctx.restore();
+    }
+  }
+
+  const mLayers = sc.multiplane_layers || [];
+
+  // 2. PLANE P6: Handmade Sky, Celestial Canopy & Atmospheric Aperture Cut-Outs (Z = 6.0m, #78c3dc)
+  for (let i = 0; i < mLayers.length; i++){
+    if (mLayers[i].plane === 'P6') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
+  }
+
+  // 3. PLANE P5: Handmade Distant Horizon & Skyline Cut-Outs (Z = 3.8m, #6ea0e1)
+  for (let i = 0; i < mLayers.length; i++){
+    if (mLayers[i].plane === 'P5') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
+  }
+
+  // 4. Grounded Architectural Proscenium Stage Floor Deck (below fy)
   const emoColor = (state.emotion_mod && state.emotion_mod.color) || [216, 171, 79];
   const [er, eg, eb] = emoColor;
   const floorGrad = ctx.createLinearGradient(0, fy - 12 * s, 0, y0 + stageH);
   floorGrad.addColorStop(0, `rgba(${er},${eg},${eb},0)`);
-  floorGrad.addColorStop(0.14, `rgba(12,15,22,0.72)`);
-  floorGrad.addColorStop(1, `rgba(7,9,14,0.92)`);
+  floorGrad.addColorStop(0.14, `rgba(12,15,22,0.68)`);
+  floorGrad.addColorStop(1, `rgba(7,9,14,0.90)`);
   ctx.fillStyle = floorGrad;
   ctx.fillRect(offX, fy - 12 * s, Math.min(W, fw * s), y0 + stageH - (fy - 12 * s));
 
-  // Subtle stage floor horizon beam
-  ctx.strokeStyle = `rgba(${er},${eg},${eb},${0.35 + sceneResonance * 0.35})`;
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = celRenderMode === 'color_coded' ? '#eb8c1e' : `rgba(${er},${eg},${eb},${0.35 + sceneResonance * 0.35})`;
+  ctx.lineWidth = 1.6;
   ctx.beginPath();
   ctx.moveTo(offX, fy);
   ctx.lineTo(offX + fw * s, fy);
   ctx.stroke();
 
-  // 3. PLANE P5 & P4: Horizon Elements & Architectural Structures / Portals / Windows
-  const mLayers = sc.multiplane_layers || [];
+  // 5. PLANE P4: Handmade Midground Architecture, Walls, Portals & Bridges (Z = 2.42m, #2d69d2)
   for (let i = 0; i < mLayers.length; i++){
-    const lyr = mLayers[i];
-    if (lyr.plane === 'P5' || lyr.plane === 'P4'){
-      drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, left, ts, k);
-    }
+    if (mLayers[i].plane === 'P4') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
   }
 
-  // 4. PLANE P3: Grounded Furniture, Vehicles & Reactive Station Props
+  // 6. PLANE P3: Handmade Grounded Stage Set, Vehicles & Station Props (Z = 1.40m, #eb8c1e)
   for (let i = 0; i < mLayers.length; i++){
-    const lyr = mLayers[i];
-    if (lyr.plane === 'P3' || (!lyr.plane)){
-      drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, left, ts, k);
-    }
+    if (mLayers[i].plane === 'P3' || !mLayers[i].plane) drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
   }
 
-  // 5. Stage Station Footlights & Architectural Plaques for Poem Lines
+  // 7. Stage Station Footlights & Architectural Plaques for Poem Lines
   sc.lines.forEach((ln, j) => {
     const st = stats[k][j];
     const vis = (t >= ln.t - 3.2 && t <= ln.e + 0.45) || (st.done && ts - st.shown < 950);
@@ -1098,7 +1458,6 @@ function draw(sc, k, t, state, ts, dt){
     const col = st.done ? (st.ok ? '108,194,143' : '236,122,110') : lMod.color.join(',');
     const pulse = active ? 0.62 + 0.25 * Math.sin(ts / 160) : 0.28 + 0.1 * Math.sin(ts / 320);
 
-    // Floor footlight pool
     ctx.save();
     ctx.translate(x, fy);
     ctx.scale(1, 0.23);
@@ -1111,14 +1470,12 @@ function draw(sc, k, t, state, ts, dt){
     ctx.stroke();
     ctx.restore();
 
-    // Vertical stage station light column
     const pillar = ctx.createLinearGradient(0, fy - 195 * s, 0, fy);
     pillar.addColorStop(0, `rgba(${col},0)`);
     pillar.addColorStop(1, `rgba(${col},${pulse * 0.38})`);
     ctx.fillStyle = pillar;
     ctx.fillRect(x - r * 0.24, fy - 195 * s, r * 0.48, 195 * s);
 
-    // Architectural Station Plaque + Emotional Cue above the station
     if (active || (!st.done && t >= ln.t - 2.2)){
       const stTitle = (ln.station_label || 'STAGE STATION').toUpperCase();
       const emoTitle = (ln.emotion_label || 'STAND HERE').toUpperCase();
@@ -1144,7 +1501,7 @@ function draw(sc, k, t, state, ts, dt){
     }
   });
 
-  // 6. Living Atmospheric Particles
+  // 8. Living Atmospheric Particles
   ctx.save();
   particles.forEach(p => {
     p.x = (p.x + p.vx * dt + fw) % fw;
@@ -1156,14 +1513,21 @@ function draw(sc, k, t, state, ts, dt){
   });
   ctx.restore();
 
-  // 7. PLANE P2: Dramatic Counterpart & Playable Actor
+  // 9. PLANE P2: Handmade Focal Cutouts + Dramatic Counterpart + Playable Actor (Z = 1.00m, #cd282d)
+  for (let i = 0; i < mLayers.length; i++){
+    if (mLayers[i].plane === 'P2') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
+  }
+
+  const p2SoloDim = (soloPlane !== 'ALL' && soloPlane !== 'P2') ? 0.18 : 1.0;
+
   if (counterpart && counterpart.alpha > 0.02){
     const cp = counterpart;
     const cpState = cp.actor.ctrl.step(0, 0, ts);
     const cpY = fy + (cp.yOffset || (cp.isSoul ? -85 : 0)) * s + (cp.isSoul ? Math.sin(ts / 550) * 14 * s : 0);
     ctx.save();
-    ctx.globalAlpha = cp.alpha;
+    ctx.globalAlpha = cp.alpha * p2SoloDim;
     if (cp.isSoul) ctx.filter = 'drop-shadow(0 0 14px rgba(108,218,195,0.65))';
+    else if (celRenderMode === 'color_coded') ctx.filter = 'drop-shadow(0 0 6px #cd282d)';
     cp.actor.draw(ctx, cpState, px(cp.actor.x), cpY, sc.ppc * s, ts);
     ctx.restore();
   }
@@ -1181,22 +1545,40 @@ function draw(sc, k, t, state, ts, dt){
   ctx.fillRect(px(actor.x) - auraR, fy - auraR, auraR * 2, auraR * 2);
   ctx.restore();
 
-  // Draw Playable Actor (31-Part Brass-Pivot Tracksuit Rig OR Coherent Painted Cut-Out)
+  // Draw Playable Actor on P2
+  ctx.save();
+  ctx.globalAlpha = p2SoloDim;
+  if (celRenderMode === 'color_coded' || soloPlane === 'P2'){
+    ctx.shadowColor = '#cd282d';
+    ctx.shadowBlur = 10 * s;
+  }
   if (actor.isPoet && use31PartRig){
     drawPoet31Rig(ctx, state, px(actor.x), fy, sc.ppc * s, ts);
   } else {
     actor.draw(ctx, state, px(actor.x), fy, sc.ppc * s, ts);
   }
+  ctx.restore();
 
-  // 8. PLANE P1: Foreground Waves, Headlight Cones & Crepuscular Light Rays
+  // 10. PLANE P1: Handmade Foreground Occluders, Waves, Headlight Cones & Rays (Z = 0.52m, #c49a6c)
   for (let i = 0; i < mLayers.length; i++){
-    const lyr = mLayers[i];
-    if (lyr.plane === 'P1'){
-      drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, left, ts, k);
-    }
+    if (mLayers[i].plane === 'P1') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
   }
 
-  // 9. Rising Poetic Word Echoes
+  // 11. PLANE P0: Handmade Proscenium Frame, Torn-Kraft Border & Screen-Space Vignette (Z = 0.24m, #9aa0ab)
+  for (let i = 0; i < mLayers.length; i++){
+    if (mLayers[i].plane === 'P0') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
+  }
+
+  // Subtle P0 Proscenium Arch Inner Matte Frame
+  if (soloPlane === 'ALL' || soloPlane === 'P0'){
+    ctx.save();
+    ctx.strokeStyle = (celRenderMode === 'color_coded' || soloPlane === 'P0') ? '#9aa0ab' : 'rgba(154,160,171,0.28)';
+    ctx.lineWidth = (celRenderMode === 'color_coded' || soloPlane === 'P0') ? 3.5 : 1.5;
+    ctx.strokeRect(offX + 2, y0 + 2, Math.min(W, fw * s) - 4, stageH - 4);
+    ctx.restore();
+  }
+
+  // 12. Rising Poetic Word Echoes
   for (let i = wordEchoes.length - 1; i >= 0; i--){
     const we = wordEchoes[i];
     we.yOffset -= 26 * dt;
@@ -1219,7 +1601,7 @@ function draw(sc, k, t, state, ts, dt){
     ctx.fillRect(0,0,W,H);
   }
 
-  // 10. Spoken Line Subtitle & Station Note
+  // 13. Spoken Line Subtitle & Station Note
   let line = null;
   for (const ln of sc.lines) if (t >= ln.t - 0.15 && t <= ln.e + 0.6) line = ln;
   const sub = $('sub');
@@ -1252,7 +1634,7 @@ function draw(sc, k, t, state, ts, dt){
   }
 }
 
-/* ---------- Live Multiplane Stage Assembler Workbench ---------- */
+/* ---------- Handmade 7-Layer World Authoring Workbench ---------- */
 function saveCurrentSceneAssembly(){
   if (!L || cur.i < 0 || !scenes[cur.i]) return;
   const sc = scenes[cur.i];
@@ -1261,46 +1643,166 @@ function saveCurrentSceneAssembly(){
     delete copy._HitBox;
     return copy;
   });
-  store.set(`wy.stage.v3.${L.num}.${cur.i}`, JSON.stringify(clean));
+  store.set(`wy.stage.v4.${L.num}.${cur.i}`, JSON.stringify(clean));
+}
+
+function renderFrameBreakdown(scOpt){
+  const box = $('frameBreakdownBox');
+  if (!box) return;
+  const sc = scOpt || (scenes && scenes[Math.max(0, cur.i)]);
+  if (!sc || !sc.cel_passes || !sc.cel_passes.seven_layer_breakdown){
+    box.innerHTML = '';
+    return;
+  }
+  const bd = sc.cel_passes.seven_layer_breakdown;
+  let html = `<b>FRAME ${sc.frame_id || sc.key} · HANDMADE 7-LAYER BREAKDOWN</b>`;
+  PLANE_ORDER_BACK_TO_FRONT.forEach(pKey => {
+    const info = bd[pKey];
+    const spec = SEVEN_PLANES[pKey];
+    if (!info || !spec) return;
+    const cuts = (info.handmade_cutouts || []).join(', ');
+    html += `<div class="bd-row" title="${cuts}">` +
+      `<span class="sw" style="background:${spec.hex}"></span>` +
+      `<b>${pKey}</b>` +
+      `<span class="sem">${cuts || info.frame_semantics}</span>` +
+      `<span>${info.z_median_m}m · ${info.frame_area_pct}%</span>` +
+      `</div>`;
+  });
+  box.innerHTML = html;
+}
+
+function renderSceneLayerTree(){
+  const tree = $('sceneLayerTree');
+  if (!tree || !scenes || cur.i < 0 || !scenes[cur.i]) return;
+  const sc = scenes[cur.i];
+  const mLayers = sc.multiplane_layers || [];
+  tree.innerHTML = '';
+
+  // Sort display by P6 → P0 so the 7-layer stack is crystal clear
+  const indexed = mLayers.map((lyr, i) => ({ lyr, i }));
+  indexed.sort((a, b) => {
+    const pa = SEVEN_PLANES[a.lyr.plane || 'P3']?.idx ?? 3;
+    const pb = SEVEN_PLANES[b.lyr.plane || 'P3']?.idx ?? 3;
+    if (pa !== pb) return pa - pb;
+    return (b.lyr.z || 1.4) - (a.lyr.z || 1.4);
+  });
+
+  indexed.forEach(({ lyr }) => {
+    const plane = lyr.plane || 'P3';
+    const spec = SEVEN_PLANES[plane] || SEVEN_PLANES.P3;
+    const row = document.createElement('div');
+    row.className = 'layer-item' + (selectedLayer === lyr ? ' sel' : '');
+    row.innerHTML =
+      `<span class="p-dot" style="background:${spec.hex}"></span>` +
+      `<span class="p-tag" style="color:${spec.hex}">${plane}</span>` +
+      `<span class="l-name">${lyr.label || lyr.part_id}</span>` +
+      `<span class="l-meta">Z:${Number(lyr.z || spec.z).toFixed(1)} · ${(Number(lyr.scale || 0.35)*100).toFixed(0)}%</span>` +
+      `<button class="vis-btn" title="Toggle piece visibility">${lyr.hidden ? '🚫' : '👁'}</button>`;
+    row.addEventListener('click', (ev) => {
+      if (ev.target.classList.contains('vis-btn')) return;
+      selectedLayer = lyr;
+      updateAsmInspector();
+      renderSceneLayerTree();
+    });
+    row.querySelector('.vis-btn').addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      lyr.hidden = !lyr.hidden;
+      saveCurrentSceneAssembly();
+      renderSceneLayerTree();
+    });
+    tree.append(row);
+  });
 }
 
 function updateAsmInspector(){
   const titleEl = $('asmSelectedTitle');
   const animSel = $('asmAnimSelect');
+  const scSlider = $('asmScaleSlider');
+  const zSlider = $('asmZSlider');
+  const aSlider = $('asmAlphaSlider');
+
   if (!selectedLayer){
-    titleEl.textContent = 'No piece selected (click any structure on stage)';
+    titleEl.textContent = 'Click any piece on stage or in the 7-Layer Stack above';
     document.querySelectorAll('#asmInspector [data-plane]').forEach(b => b.classList.remove('on'));
     return;
   }
-  titleEl.textContent = `${selectedLayer.plane || 'P3'} · ${selectedLayer.label || selectedLayer.part_id} (scale ${Number(selectedLayer.scale || 0.35).toFixed(2)})`;
+  const plane = selectedLayer.plane || 'P3';
+  const spec = SEVEN_PLANES[plane] || SEVEN_PLANES.P3;
+  const scVal = Number(selectedLayer.scale || 0.35);
+  const zVal = Number(selectedLayer.z !== undefined ? selectedLayer.z : spec.z);
+  const aVal = Number(selectedLayer.alpha !== undefined ? selectedLayer.alpha : 0.98);
+
+  titleEl.innerHTML = `<span style="color:${spec.hex}">${plane}</span> · ${selectedLayer.label || selectedLayer.part_id} <span style="color:var(--muted)">(${selectedLayer.sheet_id || ''})</span>`;
   animSel.value = selectedLayer.anim_role || 'static';
+
+  if (scSlider){ scSlider.value = scVal; $('asmScaleVal').textContent = scVal.toFixed(2); }
+  if (zSlider){ zSlider.value = zVal; $('asmZVal').textContent = zVal.toFixed(2) + 'm'; }
+  if (aSlider){ aSlider.value = aVal; $('asmAlphaVal').textContent = Math.round(aVal * 100) + '%'; }
+
   document.querySelectorAll('#asmInspector [data-plane]').forEach(b => {
-    b.classList.toggle('on', b.dataset.plane === (selectedLayer.plane || 'P3'));
+    b.classList.toggle('on', b.dataset.plane === plane);
   });
 }
 
 function renderAsmCatalog(){
   const grid = $('asmCatalogGrid');
-  if (!grid || !CATALOG.length) return;
+  if (!grid) return;
   const q = ($('asmSearch').value || '').trim().toLowerCase();
   const pFilter = $('asmPoemFilter').value;
   const curPoemNum = L ? parseInt(L.num, 10) : 0;
+  const sc = (scenes && cur.i >= 0) ? scenes[cur.i] : null;
 
+  grid.innerHTML = '';
+
+  // Special tab: `world_sheets` shows this scene's cel/ink/layout/exploded plates + poem kit sheets
+  if (asmCategory === 'world_sheets' && sc && sc.cel_passes){
+    const cp = sc.cel_passes;
+    const plates = [
+      { label: `${sc.key} Cel-Shaded Wash Plate`, plane: 'P6', file: cp.cel_file, sheet_id: `${sc.frame_id}.cel` },
+      { label: `${sc.key} Ink Contour Pass`, plane: 'P1', file: cp.ink_file, sheet_id: `${sc.frame_id}.ink` },
+      { label: `${sc.key} Layout & Value Key`, plane: 'P5', file: cp.layout_file, sheet_id: `${sc.frame_id}.layout` },
+      { label: `${sc.key} 7-Plane Color Map`, plane: 'P4', file: cp.planes_map_file, sheet_id: `${sc.frame_id}.planes_map` },
+      { label: `${sc.key} Exploded 7-Layer Stack`, plane: 'P3', file: cp.exploded_file, sheet_id: `${sc.frame_id}.exploded` }
+    ];
+    (cp.world_sheets || []).forEach(ws => {
+      plates.push({ label: ws.title || ws.id, plane: ws.kind === 'architecture' ? 'P4' : 'P5', file: ws.file, sheet_id: ws.id });
+    });
+    plates.filter(p => p.file).forEach(item => {
+      const spec = SEVEN_PLANES[item.plane] || SEVEN_PLANES.P5;
+      const btn = document.createElement('button');
+      btn.className = 'asm-card';
+      btn.innerHTML =
+        `<div class="th"><span class="p-badge" style="background:${spec.hex}">${item.plane}</span><img loading="lazy" alt="" src="${item.file}"></div>` +
+        `<span>${item.label}</span>` +
+        `<small>${item.sheet_id}</small>`;
+      btn.addEventListener('click', () => addCatalogItemToStage({
+        part_id: 'plate', sheet_id: item.sheet_id, label: item.label,
+        plane: item.plane, z: spec.z, default_scale: 0.56, width: 640, height: 360,
+        anim_role: 'horizon_sway', file: item.file
+      }));
+      grid.append(btn);
+    });
+    return;
+  }
+
+  if (!CATALOG.length) return;
   const filtered = CATALOG.filter(item => {
     if (pFilter === 'cur' && curPoemNum && item.poem !== curPoemNum) return false;
     if (asmCategory !== 'all' && item.category !== asmCategory) return false;
+    if (asmPlaneFilter !== 'ALL' && (item.plane || 'P3') !== asmPlaneFilter) return false;
     if (q && !(item.label.toLowerCase().includes(q) || item.sheet_id.toLowerCase().includes(q) || item.part_id.toLowerCase().includes(q))) return false;
     return true;
-  }).slice(0, 80);
+  }).slice(0, 90);
 
-  grid.innerHTML = '';
   filtered.forEach(item => {
+    const pKey = item.plane || 'P3';
+    const spec = SEVEN_PLANES[pKey] || SEVEN_PLANES.P3;
     const btn = document.createElement('button');
     btn.className = 'asm-card';
     btn.innerHTML =
-      `<div class="th"><img loading="lazy" alt="" src="${item.file}"></div>` +
+      `<div class="th"><span class="p-badge" style="background:${spec.hex}">${pKey}</span><img loading="lazy" alt="" src="${item.file}"></div>` +
       `<span>${item.label}</span>` +
-      `<small>${item.plane} · ${item.sheet_id}</small>`;
+      `<small>${pKey} (Z=${spec.z}m) · ${item.sheet_id}</small>`;
     btn.addEventListener('click', () => addCatalogItemToStage(item));
     grid.append(btn);
   });
@@ -1310,6 +1812,10 @@ function addCatalogItemToStage(item){
   if (!L || cur.i < 0 || !scenes[cur.i]) return;
   const sc = scenes[cur.i];
   const fw = L.frame[0];
+  const pKey = (soloPlane !== 'ALL') ? soloPlane : (item.plane || 'P4');
+  const spec = SEVEN_PLANES[pKey] || SEVEN_PLANES.P4;
+  const defaultYByPlane = { P6: 0.28, P5: 0.44, P4: 0.72, P3: 0.88, P2: 0.90, P1: 0.95, P0: 0.52 };
+
   const newLayer = {
     id: `custom_${Date.now()}`,
     part_id: item.part_id,
@@ -1317,16 +1823,21 @@ function addCatalogItemToStage(item){
     label: item.label,
     station_id: '',
     station_title: item.label,
-    plane: item.plane || 'P4',
-    z: item.z || 2.4,
+    plane: pKey,
+    depth_index: spec.idx,
+    color_code: spec.hex,
+    ink_weight: spec.inkW,
+    haze_mix: spec.haze,
+    pal_k: spec.palK,
+    z: item.z || spec.z,
     x: Number((actor ? actor.x / fw : 0.5).toFixed(3)),
-    y: item.plane === 'P5' ? 0.34 : 0.86,
+    y: defaultYByPlane[pKey] || 0.86,
     scale: item.default_scale || 0.42,
     width: item.width || 240,
     height: item.height || 240,
-    role: 'custom_assembled',
+    role: 'handmade_7layer_cutout',
     anim_role: item.anim_role || 'portal_aperture',
-    alpha: 0.98,
+    alpha: pKey === 'P0' ? 0.68 : 0.98,
     file: item.file
   };
   getCachedImg(newLayer.file);
@@ -1335,6 +1846,8 @@ function addCatalogItemToStage(item){
   selectedLayer = newLayer;
   updateAsmInspector();
   saveCurrentSceneAssembly();
+  buildPlaneRibbon(sc);
+  renderSceneLayerTree();
   buildArcBar();
 }
 
@@ -1344,7 +1857,7 @@ function finish(){
   const pct = total ? score / total : 0;
   const stars = pct >= 0.75 ? 3 : pct >= 0.45 ? 2 : 1;
   $('stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
-  $('endn').textContent = `You inhabited ${score} of ${total} architectural stage stations (${Math.round(pct*100)}% resonance).`;
+  $('endn').textContent = `You inhabited ${score} of ${total} handmade 7-layer stage stations (${Math.round(pct*100)}% resonance).`;
   const arcMeta = ARC_SUMMARY[L.num] || { arc: 'Completed', desc: '' };
   $('endArc').innerHTML = `<b>Transformation Completed (${arcMeta.arc}):</b><br>${arcMeta.desc}`;
 
@@ -1382,11 +1895,24 @@ $('rigModeBtn').addEventListener('click', ()=>{
   use31PartRig = !use31PartRig;
   updateRigButtonLabel();
 });
+$('celModeSelect').addEventListener('change', e => {
+  celRenderMode = e.target.value;
+});
+$('celStrengthSlider').addEventListener('input', e => {
+  celStrength = parseFloat(e.target.value);
+  $('celStrengthVal').textContent = Math.round(celStrength * 100) + '%';
+});
+$('colorTintSlider').addEventListener('input', e => {
+  colorTintStrength = parseFloat(e.target.value);
+  $('colorTintVal').textContent = Math.round(colorTintStrength * 100) + '%';
+});
 $('asmToggleBtn').addEventListener('click', ()=>{
   asmMode = !asmMode;
   $('asmToggleBtn').classList.toggle('on', asmMode);
   $('asmPanel').classList.toggle('open', asmMode);
   $('pad').style.pointerEvents = asmMode ? 'none' : 'auto';
+  renderFrameBreakdown(scenes[cur.i]);
+  renderSceneLayerTree();
   renderAsmCatalog();
   updateAsmInspector();
 });
@@ -1400,17 +1926,53 @@ $('asmScaleDown').addEventListener('click', ()=>{
   if (!selectedLayer) return;
   selectedLayer.scale = Number(Math.max(0.06, (selectedLayer.scale || 0.35) * 0.9).toFixed(4));
   updateAsmInspector();
+  renderSceneLayerTree();
   saveCurrentSceneAssembly();
 });
 $('asmScaleUp').addEventListener('click', ()=>{
   if (!selectedLayer) return;
-  selectedLayer.scale = Number(Math.min(0.95, (selectedLayer.scale || 0.35) * 1.1).toFixed(4));
+  selectedLayer.scale = Number(Math.min(1.05, (selectedLayer.scale || 0.35) * 1.1).toFixed(4));
   updateAsmInspector();
+  renderSceneLayerTree();
+  saveCurrentSceneAssembly();
+});
+$('asmScaleSlider').addEventListener('input', e => {
+  if (!selectedLayer) return;
+  selectedLayer.scale = Number(parseFloat(e.target.value).toFixed(3));
+  $('asmScaleVal').textContent = selectedLayer.scale.toFixed(2);
+  renderSceneLayerTree();
+  saveCurrentSceneAssembly();
+});
+$('asmZSlider').addEventListener('input', e => {
+  if (!selectedLayer || !scenes[cur.i]) return;
+  selectedLayer.z = Number(parseFloat(e.target.value).toFixed(2));
+  $('asmZVal').textContent = selectedLayer.z.toFixed(2) + 'm';
+  scenes[cur.i].multiplane_layers.sort((a, b) => (b.z || 1.4) - (a.z || 1.4));
+  renderSceneLayerTree();
+  saveCurrentSceneAssembly();
+});
+$('asmAlphaSlider').addEventListener('input', e => {
+  if (!selectedLayer) return;
+  selectedLayer.alpha = Number(parseFloat(e.target.value).toFixed(2));
+  $('asmAlphaVal').textContent = Math.round(selectedLayer.alpha * 100) + '%';
   saveCurrentSceneAssembly();
 });
 $('asmFlipBtn').addEventListener('click', ()=>{
   if (!selectedLayer) return;
   selectedLayer.flip = !selectedLayer.flip;
+  saveCurrentSceneAssembly();
+});
+$('asmDupBtn').addEventListener('click', ()=>{
+  if (!selectedLayer || !scenes[cur.i]) return;
+  const copy = JSON.parse(JSON.stringify(selectedLayer));
+  delete copy._HitBox;
+  copy.id = `dup_${Date.now()}`;
+  copy.x = Number(Math.min(0.94, (copy.x || 0.5) + 0.06).toFixed(3));
+  scenes[cur.i].multiplane_layers.push(copy);
+  selectedLayer = copy;
+  updateAsmInspector();
+  buildPlaneRibbon(scenes[cur.i]);
+  renderSceneLayerTree();
   saveCurrentSceneAssembly();
 });
 $('asmDelBtn').addEventListener('click', ()=>{
@@ -1421,15 +1983,26 @@ $('asmDelBtn').addEventListener('click', ()=>{
   selectedLayer = null;
   updateAsmInspector();
   saveCurrentSceneAssembly();
+  buildPlaneRibbon(scenes[cur.i]);
+  renderSceneLayerTree();
   buildArcBar();
 });
 document.querySelectorAll('#asmInspector [data-plane]').forEach(btn => {
   btn.addEventListener('click', () => {
     if (!selectedLayer || !scenes[cur.i]) return;
-    selectedLayer.plane = btn.dataset.plane;
-    selectedLayer.z = Z_BY_PLANE[btn.dataset.plane] || 1.4;
+    const pKey = btn.dataset.plane;
+    const spec = SEVEN_PLANES[pKey] || SEVEN_PLANES.P3;
+    selectedLayer.plane = pKey;
+    selectedLayer.depth_index = spec.idx;
+    selectedLayer.color_code = spec.hex;
+    selectedLayer.ink_weight = spec.inkW;
+    selectedLayer.haze_mix = spec.haze;
+    selectedLayer.pal_k = spec.palK;
+    selectedLayer.z = spec.z;
     scenes[cur.i].multiplane_layers.sort((a, b) => (b.z || 1.4) - (a.z || 1.4));
     updateAsmInspector();
+    buildPlaneRibbon(scenes[cur.i]);
+    renderSceneLayerTree();
     saveCurrentSceneAssembly();
   });
 });
@@ -1442,10 +2015,47 @@ $('asmResetSceneBtn').addEventListener('click', () => {
   if (!L || cur.i < 0 || !scenes[cur.i]) return;
   const sc = scenes[cur.i];
   sc.multiplane_layers = JSON.parse(JSON.stringify(sc._defaultLayers || []));
-  store.del(`wy.stage.v3.${L.num}.${cur.i}`);
+  store.del(`wy.stage.v4.${L.num}.${cur.i}`);
   selectedLayer = null;
   updateAsmInspector();
+  buildPlaneRibbon(sc);
+  renderSceneLayerTree();
   buildArcBar();
+});
+$('asmExportJsonBtn').addEventListener('click', () => {
+  if (!L || cur.i < 0 || !scenes[cur.i]) return;
+  const sc = scenes[cur.i];
+  const clean = (sc.multiplane_layers || []).map(l => {
+    const c = Object.assign({}, l);
+    delete c._HitBox;
+    return c;
+  });
+  const payload = {
+    scene_key: sc.key,
+    frame_id: sc.frame_id,
+    name: sc.name,
+    emotion: sc.emotion,
+    seven_layer_breakdown: sc.cel_passes ? sc.cel_passes.seven_layer_breakdown : {},
+    multiplane_layers: clean
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `scene_${sc.key.replace('.','_')}_7layer_world.json`;
+  a.click();
+});
+$('asmCopyPyBtn').addEventListener('click', () => {
+  if (!L || cur.i < 0 || !scenes[cur.i]) return;
+  const sc = scenes[cur.i];
+  const lines = (sc.multiplane_layers || []).map(l =>
+    `            ("${l.sheet_id}", "${l.part_id}", "${l.label}", "${l.plane || 'P3'}", ${Number(l.x||0.5).toFixed(2)}, ${Number(l.y||0.86).toFixed(2)}, ${Number(l.scale||0.35).toFixed(2)}, "${l.anim_role||'static'}"),`
+  );
+  const pySpec = `    "${sc.key}": {\n        "layers": [\n${lines.join('\n')}\n        ]\n    },`;
+  navigator.clipboard?.writeText(pySpec);
+  const btn = $('asmCopyPyBtn');
+  const orig = btn.textContent;
+  btn.textContent = '✓ Copied Py!';
+  setTimeout(() => { btn.textContent = orig; }, 1400);
 });
 $('asmSearch').addEventListener('input', renderAsmCatalog);
 $('asmPoemFilter').addEventListener('change', renderAsmCatalog);
@@ -1457,24 +2067,43 @@ document.querySelectorAll('#asmCatRow [data-cat]').forEach(btn => {
   });
 });
 
-// Canvas pointer hit-testing for dragging & scaling pieces when `asmMode` is active
+// Canvas pointer hit-testing for dragging & corner-scaling pieces when `asmMode` is active
 cv.addEventListener('pointerdown', e => {
   if (!asmMode || !scenes[cur.i]) return;
   const rect = cv.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
   const mLayers = scenes[cur.i].multiplane_layers || [];
-  // Hit-test front-to-back (reverse order)
+
+  // Check if clicking the bottom-right resize handle of currently selected layer
+  if (selectedLayer && selectedLayer._HitBox){
+    const hb = selectedLayer._HitBox;
+    const hx = hb.x0 + hb.w;
+    const hy = hb.y0 + hb.h;
+    if (Math.abs(mx - hx) <= 12 && Math.abs(my - hy) <= 12){
+      scalingLayer = selectedLayer;
+      dragOffset.startScale = selectedLayer.scale || 0.35;
+      dragOffset.startY = my;
+      cv.setPointerCapture(e.pointerId);
+      return;
+    }
+  }
+
+  // Hit-test front-to-back (P0 -> P6)
   let hit = null;
   for (let i = mLayers.length - 1; i >= 0; i--){
-    const hb = mLayers[i]._HitBox;
+    const lyr = mLayers[i];
+    if (lyr.hidden) continue;
+    if (soloPlane !== 'ALL' && (lyr.plane || 'P3') !== soloPlane) continue;
+    const hb = lyr._HitBox;
     if (hb && mx >= hb.x0 && mx <= hb.x0 + hb.w && my >= hb.y0 && my <= hb.y0 + hb.h){
-      hit = mLayers[i];
+      hit = lyr;
       break;
     }
   }
   selectedLayer = hit;
   updateAsmInspector();
+  renderSceneLayerTree();
   if (hit && hit._HitBox){
     draggingLayer = hit;
     dragOffset.dx = mx - hit._HitBox.cx;
@@ -1483,21 +2112,33 @@ cv.addEventListener('pointerdown', e => {
   }
 });
 cv.addEventListener('pointermove', e => {
-  if (!asmMode || !draggingLayer || !draggingLayer._HitBox) return;
+  if (!asmMode) return;
   const rect = cv.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
+
+  if (scalingLayer){
+    const dy = dragOffset.startY - my;
+    const factor = Math.max(0.25, Math.min(2.8, 1 + dy / 160));
+    scalingLayer.scale = Number(Math.max(0.06, Math.min(1.05, dragOffset.startScale * factor)).toFixed(3));
+    updateAsmInspector();
+    return;
+  }
+
+  if (!draggingLayer || !draggingLayer._HitBox) return;
   const hb = draggingLayer._HitBox;
   const newScreenCx = mx - dragOffset.dx;
   const newScreenBy = my - dragOffset.dy;
   const newBaseX = (newScreenCx - hb.offX) / hb.s + hb.camDelta * hb.pFactor;
   const newBaseY = (newScreenBy - hb.stageY0) / hb.s;
-  draggingLayer.x = Number(Math.max(0.05, Math.min(0.95, newBaseX / hb.fw)).toFixed(3));
-  draggingLayer.y = Number(Math.max(0.15, Math.min(0.96, newBaseY / hb.fh)).toFixed(3));
+  draggingLayer.x = Number(Math.max(0.03, Math.min(0.97, newBaseX / hb.fw)).toFixed(3));
+  draggingLayer.y = Number(Math.max(0.10, Math.min(0.98, newBaseY / hb.fh)).toFixed(3));
 });
 cv.addEventListener('pointerup', () => {
-  if (draggingLayer){
+  if (draggingLayer || scalingLayer){
     draggingLayer = null;
+    scalingLayer = null;
+    renderSceneLayerTree();
     saveCurrentSceneAssembly();
   }
 });
@@ -1568,9 +2209,9 @@ document.addEventListener('gesturestart', e=>e.preventDefault());
 (async function(){
   try {
     const [dataRes, idxRes, catRes] = await Promise.all([
-      fetch('data.json?v=3'),
-      fetch('levels/index.json?v=3'),
-      fetch('level_assets_catalog.json?v=3').catch(() => null)
+      fetch('data.json?v=4'),
+      fetch('levels/index.json?v=4'),
+      fetch('level_assets_catalog.json?v=4').catch(() => null)
     ]);
     CHARS = (await dataRes.json()).characters;
     INDEX = await idxRes.json();
