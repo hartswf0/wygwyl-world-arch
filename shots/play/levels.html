@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0b0d10">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<title>WYGWYL Levels · Playable 14-Poem Multi-Engine Game Studio</title>
+<style>
+:root{
+  --bg:#0b0d10; --panel:#141920; --panel2:#1b222c; --line:#2a313c; --ink:#e8ecf1;
+  --muted:#9aa4b2; --brass:#d8ab4f; --brass-soft:#3a3020; --teal:#4ee88a; --cyan:#00e5ff; --rose:#ff6b8b;
+  --display:"Bricolage Grotesque","Outfit",system-ui,sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono","JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);overscroll-behavior:none}
+button{font:inherit;color:inherit;touch-action:manipulation}
+a{color:#8fb8ff;text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* SHELF VIEW */
+#shelf{min-height:100dvh;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(40px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+header{max-width:1120px;margin:0 auto 16px}
+.suite-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.suite-links{display:flex;flex-wrap:wrap;gap:6px}
+.s-pill{font:500 11.5px var(--mono);padding:5px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--ink);text-decoration:none}
+.s-pill:hover,.s-pill.gold{border-color:var(--brass);color:var(--brass);text-decoration:none}
+h1{font-family:var(--display);font-size:clamp(1.5rem,3.5vw,2.1rem);margin:.2rem 0}
+p{color:var(--muted);margin:0 0 .5rem;max-width:72ch;line-height:1.45;font-size:.94rem}
+
+.cert-banner{max-width:1120px;margin:0 auto 16px;background:linear-gradient(135deg,#131b24,#19231f);border:1px solid rgba(78,232,138,.4);border-radius:12px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.cert-stats{display:flex;flex-wrap:wrap;gap:8px}
+.c-stat{font:600 11px var(--mono);padding:4px 9px;border-radius:6px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);color:var(--ink)}
+.c-stat b{color:var(--teal)}
+
+.grid{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.lv{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-align:left;padding:0;cursor:pointer;display:flex;flex-direction:column;min-width:0;transition:transform .14s,border-color .14s}
+.lv:hover{transform:translateY(-2px);border-color:var(--brass)}
+.lv:focus-visible,.btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.lv .thumb-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#0f1319;overflow:hidden}
+.lv img{width:100%;height:100%;object-fit:cover;display:block}
+.lv .p-badge{position:absolute;top:7px;left:7px;font:600 10px var(--mono);background:rgba(11,13,16,.88);border:1px solid var(--brass);color:var(--brass);padding:2px 7px;border-radius:999px}
+.lv .body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px;flex:1}
+.lv b{font-family:var(--display);font-size:1.04rem;color:#fff}
+.lv small{color:var(--muted);font-size:.78rem;line-height:1.35}
+.lv .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.lv .tag{font:500 10px var(--mono);padding:2px 6px;border-radius:4px;background:var(--panel2);color:#b9c4d4}
+.lv .best{color:var(--teal);font:600 11px var(--mono);margin-top:4px}
+
+/* STAGE VIEW */
+#stage{position:fixed;inset:0;display:none;touch-action:none;user-select:none;-webkit-user-select:none;background:#07080b;z-index:50}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.top{position:absolute;left:0;right:0;top:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:max(8px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 8px max(10px,env(safe-area-inset-left,0px));pointer-events:none;background:linear-gradient(#000c,#0000);z-index:5}
+.top>*{pointer-events:auto}
+.btn{background:#141920eb;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:.82rem;cursor:pointer;min-height:36px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn:hover{border-color:var(--brass)}
+.btn.on{background:var(--brass-soft);border-color:var(--brass);color:#fff}
+.btn.pose-hi{background:rgba(216,171,79,.28);border-color:var(--brass);color:#ffe7a0;box-shadow:0 0 14px rgba(216,171,79,.45);animation:pulseBtn .9s infinite alternate}
+@keyframes pulseBtn{to{transform:scale(1.05)}}
+#ttl{flex:1;min-width:120px;font-family:var(--display);font-size:.86rem;line-height:1.15;text-shadow:0 1px 4px #000}
+#scoreHud{display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:.76rem;background:rgba(14,18,24,.85);border:1px solid var(--line);padding:5px 10px;border-radius:999px}
+#scoreHud b{color:var(--brass)}
+#scoreHud .orb-c{color:var(--cyan)}
+#scoreHud .pose-c{color:var(--teal)}
+
+#scn{position:absolute;left:max(12px,env(safe-area-inset-left,0px));color:#ffffffcc;font:600 .74rem var(--mono);text-shadow:0 1px 4px #000;pointer-events:none;z-index:4}
+#telem{position:absolute;right:max(12px,env(safe-area-inset-right,0px));color:#9be7ff;font:500 .7rem var(--mono);text-shadow:0 1px 4px #000;pointer-events:none;z-index:4;text-align:right;background:rgba(8,11,16,.65);padding:4px 8px;border-radius:6px;border:1px solid rgba(0,229,255,.25)}
+
+#sub{position:absolute;left:0;right:0;pointer-events:none;padding:0 max(14px,env(safe-area-inset-left,0px));text-align:center;font-family:var(--display);font-size:clamp(1rem,3.8vw,1.42rem);line-height:1.3;text-shadow:0 2px 8px #000,0 0 4px #000;color:#ffffff80;z-index:4}
+#sub span{transition:color .08s,transform .08s;display:inline-block;margin-right:.22em}
+#sub span.on{color:#fff}
+#sub span.caught{color:var(--brass);text-shadow:0 0 10px rgba(216,171,79,.7)}
+
+#pad{position:absolute;left:0;right:0;top:56px;bottom:calc(74px + env(safe-area-inset-bottom,0px));touch-action:none;z-index:3}
+#knob{position:absolute;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;border:2px solid #ffffff55;background:#ffffff14;display:none;pointer-events:none}
+#knob i{position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:#ffffff66}
+
+#acts{position:absolute;left:0;right:0;bottom:0;display:flex;gap:7px;align-items:center;overflow-x:auto;padding:10px max(10px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));background:linear-gradient(0deg,#0b0d10f5,#0b0d10b8 70%,#0b0d1000);scrollbar-width:none;z-index:5}
+#acts::-webkit-scrollbar{display:none}
+#acts .btn{flex:0 0 auto;min-height:44px;padding:8px 14px;white-space:nowrap}
+
+.veil{position:absolute;inset:0;display:none;place-items:center;background:#0b0d10e6;padding:16px;text-align:center;z-index:20;overflow-y:auto}
+.veil .box{max-width:560px;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;display:grid;gap:12px;justify-items:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.veil h2{font-family:var(--display);margin:0;font-size:1.5rem}
+.veil .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.stars{font-size:2.1rem;letter-spacing:.2em;color:var(--brass)}
+.breakdown{width:100%;max-height:42dvh;overflow-y:auto;text-align:left;background:#0c1015;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.82rem;display:grid;gap:6px}
+.bd-line{display:flex;justify-content:space-between;gap:8px;padding:4px 6px;border-radius:6px;background:rgba(255,255,255,.03)}
+.bd-line.ok{border-left:3px solid var(--teal);background:rgba(78,232,138,.07)}
+.bd-line.miss{border-left:3px solid var(--rose);opacity:.75}
+.bd-words{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.bd-w{font:500 10px var(--mono);padding:1px 5px;border-radius:4px;background:rgba(255,255,255,.06);color:var(--muted)}
+.bd-w.ok{background:rgba(0,229,255,.16);color:var(--cyan);border:1px solid rgba(0,229,255,.35)}
+
+/* MODAL FOR 37-CHAR NUMERIC CERTIFICATION */
+#certModal{position:fixed;inset:0;background:rgba(6,8,12,.9);z-index:90;display:none;align-items:center;justify-content:center;padding:14px}
+#certModal.on{display:flex}
+.cert-box{background:var(--panel);border:1px solid var(--brass);border-radius:14px;max-width:960px;width:100%;max-height:88dvh;display:flex;flex-direction:column;overflow:hidden}
+.cert-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);font:600 13px var(--mono);color:var(--brass)}
+.cert-body{padding:12px 16px;overflow-y:auto;font:400 11.5px var(--mono)}
+.cert-table{width:100%;border-collapse:collapse}
+.cert-table th,.cert-table td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+.cert-table th{color:var(--brass);position:sticky;top:0;background:var(--panel)}
+</style>
+</head>
+<body>
+
+<section id="shelf">
+  <header>
+    <div class="suite-bar">
+      <div class="suite-links">
+        <a class="s-pill gold" href="../../index.html#experiments">← Main Index &amp; All 66 Experiments</a>
+        <a class="s-pill" href="index.html">🎭 37-Character Play Sandbox</a>
+        <a class="s-pill" href="../scion_swarm_of_swarms.html">🐝 SCION Swarm-of-Swarms</a>
+        <a class="s-pill" href="../recastable_cinema_studio.html">🎬 Recastable Studio</a>
+        <a class="s-pill" href="../crash_lab.html">🛡️ Crash Lab &amp; CAPTCHA</a>
+        <a class="s-pill" href="../body_lab.html">🦴 Body Lab + CLIP</a>
+        <a class="s-pill" href="../stage.html">🏛️ Multiplane Stage</a>
+      </div>
+      <button class="s-pill gold" id="openCertBtn" style="cursor:pointer">✓ 37/37 Anim2 Numeric Report</button>
+    </div>
+    <h1>WYGWYL Playable Poem Levels · Multi-Engine Edition</h1>
+    <p>Each poem is a playable level clocked to her spoken reading. Move left/right (Arrow keys, <code>A/D</code>, or drag on stage), <b>Jump</b> (<code>Space</code> / <code>W</code> / <code>↑</code> / upward flick) to catch aerial <b>Word-Orbs</b>, and trigger <b>Action Poses</b> (<code>E</code> or tap the highlighted pose button) inside glowing stanza markers. Switch live between <b>Hybrid 4-Pose + Scissor</b>, <b>Anim2 Stride-Locked</b>, and <b>15-Bone Cut-Out IK Rig</b>.</p>
+  </header>
+
+  <div class="cert-banner">
+    <div>
+      <strong style="font-family:var(--display);font-size:.98rem;color:#fff">Upgraded Anim2 + 15-Bone Cut-Out Engine Active</strong>
+      <div style="font-size:.8rem;color:var(--muted);margin-top:2px">Solves static gliding across all 37 characters with side-on stride selection, velocity-locked foot cadence, split-body leg scissor, jump physics, word-orbs, and action pose prompts.</div>
+    </div>
+    <div class="cert-stats">
+      <span class="c-stat">Stepping Cast: <b>37 / 37 (0 Gliding)</b></span>
+      <span class="c-stat">Side-On Strides: <b>37 / 37</b></span>
+      <span class="c-stat">Stride Sync: <b>&lt; 0.2% Slip</b></span>
+      <span class="c-stat">Engines: <b>4-Pose · Scissor · 15-Bone IK</b></span>
+    </div>
+  </div>
+
+  <div class="grid" id="lv"></div>
+</section>
+
+<section id="stage">
+  <canvas id="cv"></canvas>
+  <div class="top">
+    <button class="btn" id="back">‹ Poems</button>
+    <div id="ttl"></div>
+    <div id="scoreHud">
+      <span>Lines: <b id="scoreLines">0/0</b></span>
+      <span class="orb-c">Words: <b id="scoreOrbs">0/0</b></span>
+      <span class="pose-c">Poses: <b id="scorePoses">0</b></span>
+    </div>
+    <button class="btn" id="castSwapBtn" title="Recast / Swap playable character mid-level (Tab)">⇄ Cast</button>
+    <button class="btn on" id="engBtn" title="Switch animation engine mode">⚡ Engine: Hybrid</button>
+    <button class="btn" id="ikBtn" title="Toggle Bolas 2-Bone IK &amp; Pivot Telemetry Overlay">⊕ IK</button>
+    <button class="btn" id="pause">Pause</button>
+  </div>
+  <div id="scn"></div>
+  <div id="telem"></div>
+  <div id="sub"></div>
+  <div id="pad"><div id="knob"><i></i></div></div>
+  <div id="acts"></div>
+
+  <div class="veil" id="start">
+    <div class="box">
+      <h2 id="stt"></h2>
+      <p id="stn"></p>
+      <div class="row">
+        <button class="btn on" id="go" style="font-weight:700;padding:10px 20px">▶ Start the reading</button>
+        <button class="btn" id="who"></button>
+      </div>
+      <small style="color:var(--muted);font-family:var(--mono);font-size:.75rem">Controls: A/D or ←/→ Walk · Space/W/↑ or Swipe Up to Jump for High Word-Orbs · E or Tap Gold Pose Button on Action Beats · Tab to Recast</small>
+    </div>
+  </div>
+
+  <div class="veil" id="end">
+    <div class="box">
+      <h2>The poem ends</h2>
+      <div class="stars" id="stars"></div>
+      <p id="endn" style="margin:0"></p>
+      <div class="breakdown" id="endBreakdown"></div>
+      <div class="row">
+        <button class="btn on" id="again">Play again</button>
+        <button class="btn" id="next">Next poem →</button>
+        <button class="btn" id="home">All 14 Poems</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="certModal" role="dialog" aria-modal="true" aria-label="37-Character Numeric Animation Report">
+  <div class="cert-box">
+    <div class="cert-hdr">
+      <span>37-Character Anim2 Numeric Certification Report (`anim2_certification_report.json`)</span>
+      <button class="btn" id="closeCertBtn">✕ Close</button>
+    </div>
+    <div class="cert-body" id="certTableWrap">Loading report…</div>
+  </div>
+</div>
+
+<script src="anim2.js"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+
+let CHARS = [], INDEX = [], CRASH_RIGS = {}, CERT_REPORT = null;
+let L = null, actor = null, npcs = [], scenes = [], sceneImgs = [], audio = null, castIdx = 0;
+let W = 0, H = 0, DPR = 1;
+const cv = $('cv'), ctx = cv.getContext('2d');
+let move = 0, lastT = 0, running = false, paused = false, ended = false, started = false;
+let cur = { i: -1, fade: 0 }, stats = [], wordOrbs = [], particles = [], floatTexts = [];
+let score = 0, total = 0, orbsCaught = 0, orbsTotal = 0, posesCaught = 0;
+let camLeft = 0, subKey = '', showIKOverlay = false;
+const ENGINE_MODES = ['hybrid', 'pose_v2', 'rig_15bone'];
+const ENGINE_LABELS = { hybrid: '⚡ Engine: Hybrid', pose_v2: '🎨 Engine: Anim2 4-Pose', rig_15bone: '🦴 Engine: 15-Bone IK' };
+let engineIdx = 0;
+const keys = {};
+
+function resize(){
+  DPR = Math.min(2, devicePixelRatio || 1);
+  W = cv.clientWidth;
+  H = cv.clientHeight;
+  cv.width = Math.round(W * DPR);
+  cv.height = Math.round(H * DPR);
+}
+addEventListener('resize', resize);
+
+/* ---------- Action-Cue Detector & Word-Orb Generator ---------- */
+const ACTION_KEYWORDS = [
+  { re: /\b(fall|falling|fell|trip|stumble|drop|slip|sink|drown)\b/i, cls: 'fall', label: 'FALL' },
+  { re: /\b(dance|dancing|party|waltz|spin|music|club|rhythm|beat)\b/i, cls: 'dance', label: 'DANCE' },
+  { re: /\b(sit|sitting|seated|chair|table|bench|pause|wait|rest)\b/i, cls: 'sit', label: 'SIT' },
+  { re: /\b(kneel|kneeling|pray|prayer|beneath|pit|quicksands|ground|hollow)\b/i, cls: 'kneel', label: 'KNEEL' },
+  { re: /\b(crouch|crouching|hidden|hide|low|duck|shadow|corner)\b/i, cls: 'crouch', label: 'CROUCH' },
+  { re: /\b(reach|reaching|hand|hands|touch|hold|find|offer|thread|open|escape|follow)\b/i, cls: 'reach', label: 'REACH' }
+];
+const HIGH_WORD_RE = /\b(fire|escapes?|falling|fly|flying|float|sky|stars?|moon|high|up|leap|dream|above|heaven|wings?|top|jump|light|lights|cloud|air|sun|tower|roof|bridge|birds?|angels?)\b/i;
+const STOP_WORDS = new Set(['a','an','the','of','to','in','on','at','by','for','with','from','as','is','was','are','be','or','and','that','this','it','its']);
+
+function detectLineAction(text){
+  for (const item of ACTION_KEYWORDS){
+    if (item.re.test(text)) return item;
+  }
+  return null;
+}
+
+function buildLevelEnrichments(level){
+  wordOrbs = [];
+  orbsTotal = 0;
+  orbsCaught = 0;
+  posesCaught = 0;
+
+  level.scenes.forEach((sc, sIdx) => {
+    let prevX = 320;
+    const scOrbs = [];
+    sc.lines.forEach((ln, lIdx) => {
+      const act = detectLineAction(ln.text || '');
+      ln.actionPrompt = act; // { cls, label } or null
+      const wStart = ln.w0, wEnd = ln.w1;
+      const lineWords = [];
+      for (let w = wStart; w <= wEnd; w++){
+        if (level.words[w]) lineWords.push({ idx: w, text: level.words[w][0], t0: level.words[w][1], t1: level.words[w][2] });
+      }
+      // Pick up to 3 meaningful words per line to become collectible Word-Orbs
+      const cands = lineWords.filter(w => {
+        const clean = w.text.replace(/[^a-zA-Z]/g, '').toLowerCase();
+        return clean.length >= 4 && !STOP_WORDS.has(clean);
+      });
+      const chosen = (cands.length ? cands : lineWords).slice(0, 3);
+      chosen.forEach((cw, cIdx) => {
+        const frac = (cIdx + 1) / (chosen.length + 1);
+        const ox = Math.round(prevX + (ln.mx - prevX) * frac);
+        const isHigh = HIGH_WORD_RE.test(cw.text) || (cIdx === 1 && chosen.length >= 2 && ((lIdx + sIdx) % 2 === 0));
+        // Height in cm above floor: 16cm (chest height) or 42cm (jump height!)
+        const hCm = isHigh ? 42 : 16;
+        scOrbs.push({
+          wIdx: cw.idx,
+          lineIdx: lIdx,
+          word: cw.text.replace(/[.,;!?"]+$/g, ''),
+          t0: cw.t0,
+          t1: cw.t1,
+          lineT0: ln.t,
+          lineT1: ln.e,
+          x: Math.max(110, Math.min(level.frame[0] - 110, ox)),
+          hCm,
+          isHigh,
+          caught: false
+        });
+        orbsTotal++;
+      });
+      prevX = ln.mx;
+    });
+    wordOrbs.push(scOrbs);
+  });
+}
+
+/* ---------- Shelf ---------- */
+function buildShelf(){
+  const g = $('lv');
+  g.innerHTML = '';
+  INDEX.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'lv';
+    const best = store.get('wy.best.' + p.num);
+    const bestOrbs = store.get('wy.orbs.' + p.num);
+    b.innerHTML = `
+      <div class="thumb-wrap">
+        <img loading="lazy" alt="" src="levels/${p.thumb}">
+        <span class="p-badge">POEM ${p.num}</span>
+      </div>
+      <div class="body">
+        <b></b>
+        <small class="meta"></small>
+        <div class="tags">
+          <span class="tag">${p.scenes} scenes</span>
+          <span class="tag">${p.lines} lines</span>
+          <span class="tag">${p.cast} cast rigs</span>
+          <span class="tag">Word-Orbs + Jumps</span>
+        </div>
+        <div class="best"></div>
+      </div>`;
+    b.querySelector('b').textContent = p.num + ' · ' + p.title;
+    b.querySelector('.meta').textContent = `${Math.round(p.duration)}s spoken reading · Multiplane stage & action prompts`;
+    b.querySelector('.best').textContent = best ? (`★ Best: ${best} lines` + (bestOrbs ? ` · ${bestOrbs} words` : '')) : '▶ Click to play level';
+    b.addEventListener('click', () => openLevel(p.num));
+    g.append(b);
+  });
+}
+
+/* ---------- Load 15-Bone Rig Images for a Character ---------- */
+async function loadRigForChar(ch){
+  const rigId = ch.rig_id || 'poet_tracksuit_31';
+  const spec = CRASH_RIGS[rigId];
+  if (!spec || !spec.slots) return { spec: null, imgs: {} };
+  const imgs = {};
+  const entries = Object.entries(spec.slots);
+  await Promise.all(entries.map(async ([slotName, slotData]) => {
+    if (slotData && slotData.file){
+      const im = await WY.loadImg('../' + slotData.file);
+      if (im) imgs[slotName] = im;
+    }
+  }));
+  return { spec, imgs };
+}
+
+/* ---------- Opening a Level ---------- */
+async function openLevel(num){
+  $('shelf').style.display = 'none';
+  $('stage').style.display = 'block';
+  resize();
+  L = await (await fetch(`levels/${num}/level.json`)).json();
+  scenes = L.scenes;
+  buildLevelEnrichments(L);
+  sceneImgs = await Promise.all(scenes.map(s => WY.loadImg(`levels/${num}/${s.img}`)));
+  const pref = L.cast.findIndex(c => c.key === 'poet/red_black_sunglasses');
+  castIdx = pref >= 0 ? pref : 0;
+  await setActor(castIdx);
+  await setupSceneNPCs();
+
+  stats = scenes.map(s => s.lines.map(() => ({ inT: 0, done: false, ok: false, poseBonus: false, shown: -1e9 })));
+  total = scenes.reduce((n, s) => n + s.lines.length, 0);
+  score = 0; orbsCaught = 0; posesCaught = 0;
+  ended = false; started = false; paused = false; cur = { i: -1, fade: 0 };
+  particles = []; floatTexts = [];
+
+  if (audio){ audio.pause(); audio = null; }
+  audio = new Audio(`levels/${num}/${L.audio}`);
+  audio.preload = 'auto';
+  audio.addEventListener('ended', finish);
+
+  $('ttl').textContent = `${L.num} · ${L.title}`;
+  $('stt').textContent = `${L.num} · ${L.title}`;
+  $('stn').textContent = `${Math.round(L.duration)}s spoken reading · ${scenes.length} scenes · ${total} lines · ${orbsTotal} word-orbs.`;
+  $('start').style.display = 'grid';
+  $('end').style.display = 'none';
+  updateScore();
+  actor.x = 300; actor.dir = 1; camLeft = 0;
+  lastT = performance.now();
+  running = true;
+  requestAnimationFrame(frame);
+}
+
+async function setActor(i){
+  const pool = (L && L.cast && L.cast.length) ? L.cast : CHARS;
+  castIdx = (i + pool.length) % pool.length;
+  const c = pool[castIdx];
+  const ch = CHARS.find(x => x.key === c.key) || CHARS[0];
+  const imgs = await Promise.all(ch.draws.map(d => WY.loadImg(`assets/${ch.dir}/${d.f}`)));
+  const rigData = await loadRigForChar(ch);
+  const keepX = actor ? actor.x : 300, keepDir = actor ? actor.dir : 1;
+  actor = new WY.Actor(ch, imgs, rigData.spec, rigData.imgs);
+  actor.x = keepX;
+  actor.dir = keepDir;
+  actor.engineMode = ENGINE_MODES[engineIdx];
+  const shortName = ch.name.replace(/\s*\(.*$/, '');
+  $('who').textContent = 'Play as: ' + shortName + ' (Tap to change)';
+  $('castSwapBtn').textContent = '⇄ ' + shortName;
+  buildButtons();
+}
+
+async function setupSceneNPCs(){
+  npcs = [];
+  if (!L || !L.cast) return;
+  for (let i = 0; i < L.cast.length; i++){
+    if (i === castIdx) continue;
+    const c = L.cast[i];
+    const ch = CHARS.find(x => x.key === c.key);
+    if (!ch) continue;
+    const imgs = await Promise.all(ch.draws.map(d => WY.loadImg(`assets/${ch.dir}/${d.f}`)));
+    const npc = new WY.Actor(ch, imgs);
+    npc.x = 520 + i * 190;
+    npc.dir = i % 2 === 0 ? -1 : 1;
+    if (npc.P.poses.length) npc.set({ kind: 'pose', p: npc.P.poses[0], cls: npc.P.poses[0].cls });
+    npcs.push(npc);
+  }
+}
+
+function buildButtons(){
+  const box = $('acts');
+  box.innerHTML = '';
+  actor.buttons().forEach(b => {
+    const e = document.createElement('button');
+    e.className = 'btn';
+    if (b.cls) e.dataset.cls = b.cls;
+    e.textContent = b.label;
+    e.addEventListener('pointerdown', ev => { ev.preventDefault(); b.fn(); });
+    box.append(e);
+  });
+}
+
+function now_t(){ return audio ? audio.currentTime : 0; }
+function sceneAt(t){ let k = 0; for (let i = 0; i < scenes.length; i++) if (t >= scenes[i].t0) k = i; return k; }
+function updateScore(){
+  $('scoreLines').textContent = `${score}/${total}`;
+  $('scoreOrbs').textContent = `${orbsCaught}/${orbsTotal}`;
+  $('scorePoses').textContent = `${posesCaught}`;
+}
+
+function spawnBurst(x, y, col, label){
+  for (let i = 0; i < 12; i++){
+    const a = (Math.PI * 2 * i) / 12 + Math.random() * 0.3;
+    const sp = 40 + Math.random() * 90;
+    particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 30, life: 0.55, maxLife: 0.55, col });
+  }
+  if (label){
+    floatTexts.push({ x, y: y - 14, text: label, col, life: 0.95, maxLife: 0.95 });
+  }
+}
+
+/* ---------- Main Game Loop ---------- */
+function frame(ts){
+  if (!running) return;
+  const dt = Math.min(0.05, (ts - lastT) / 1000);
+  lastT = ts;
+  const t = now_t(), live = started && !paused && !ended;
+  const k = sceneAt(t);
+  if (k !== cur.i){
+    cur = { i: k, fade: 1 };
+    $('scn').textContent = `Scene ${k + 1}/${scenes.length} · ${scenes[k].name}`;
+    subKey = '';
+  }
+  cur.fade = Math.max(0, cur.fade - dt * 3);
+  const sc = scenes[k], fw = L.frame[0];
+
+  // Input & Stride-Locked Physics
+  const kx = (keys.ArrowRight || keys.d || keys.D ? 1 : 0) - (keys.ArrowLeft || keys.a || keys.A ? 1 : 0);
+  const m = kx !== 0 ? kx : move;
+  const eff = Math.abs(m) < 0.14 ? 0 : m;
+  actor.stepPhysics(dt, eff, sc.ppc, fw, ts);
+
+  // Speaking pulse when a word is actively spoken
+  actor.speaking = live && sc.lines.some(ln => t >= ln.t && t <= ln.e);
+
+  // Check active line & highlight matching Pose Prompt button
+  let activePromptCls = null;
+  const near = lx => Math.abs(actor.x - lx) < 95 * sc.ppc;
+  sc.lines.forEach((ln, j) => {
+    const st = stats[k][j];
+    const inWindow = live && !st.done && t >= ln.t && t <= ln.e;
+    if (inWindow && ln.actionPrompt){
+      activePromptCls = ln.actionPrompt.cls;
+    }
+    if (inWindow && near(ln.mx)){
+      st.inT += dt;
+      // Check if player triggered the prompted pose!
+      if (ln.actionPrompt && !st.poseBonus){
+        const curCls = actor.anim.cls || (actor.anim.p && actor.anim.p.cls);
+        if (curCls === ln.actionPrompt.cls || keys.e || keys.E){
+          if (keys.e || keys.E) actor.triggerPoseByCls(ln.actionPrompt.cls, ts);
+          st.poseBonus = true;
+          st.inT += 0.45; // helps secure line catch
+          posesCaught++;
+          updateScore();
+          spawnBurst(actor.x, sc.floor - 70, '#4ee88a', `⚡ ${ln.actionPrompt.label} +2!`);
+        }
+      }
+    }
+    if (live && !st.done && t > ln.e){
+      st.done = true;
+      st.ok = st.inT >= 0.38 * Math.max(0.4, ln.e - ln.t);
+      st.shown = ts;
+      if (st.ok){
+        score++;
+        updateScore();
+        spawnBurst(ln.mx, sc.floor - 40, '#d8ab4f', '✓ LINE CAUGHT');
+      }
+    }
+  });
+
+  // Highlight active Pose Prompt button in #acts
+  Array.from($('acts').children).forEach(btn => {
+    btn.classList.toggle('pose-hi', !!(activePromptCls && btn.dataset.cls === activePromptCls));
+  });
+
+  // Word-Orbs collision check
+  const scOrbs = wordOrbs[k] || [];
+  scOrbs.forEach(orb => {
+    if (orb.caught) return;
+    const vis = t >= orb.lineT0 - 2.4 && t <= orb.lineT1 + 0.8;
+    if (!vis) return;
+    const dxCm = Math.abs(actor.x - orb.x) / Math.max(0.5, sc.ppc);
+    // Player spans ~0..115cm when grounded, or airY..airY+115cm when jumping
+    const charBottomCm = actor.airY;
+    const charTopCm = actor.airY + (actor.ch.height_cm || 170) * 0.62;
+    const heightOk = orb.isHigh ? (actor.airY >= 14 || (orb.hCm >= charBottomCm - 10 && orb.hCm <= charTopCm)) : (dxCm < 36);
+    if (dxCm < 34 && heightOk){
+      orb.caught = true;
+      orbsCaught++;
+      updateScore();
+      spawnBurst(orb.x, sc.floor - orb.hCm * sc.ppc, '#00e5ff', `+ "${orb.word}"`);
+    }
+  });
+
+  // Update particles & floating texts
+  particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 180 * dt; p.life -= dt; });
+  particles = particles.filter(p => p.life > 0);
+  floatTexts.forEach(f => { f.y -= 32 * dt; f.life -= dt; });
+  floatTexts = floatTexts.filter(f => f.life > 0);
+
+  // Close earlier scenes' unfinished lines
+  for (let i = 0; i < k; i++){
+    stats[i].forEach(st => {
+      if (!st.done){ st.done = true; st.ok = false; st.shown = ts; }
+    });
+  }
+
+  draw(sc, k, t, eff, ts);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- Stage Renderer ---------- */
+function draw(sc, k, t, moving, ts){
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#07080b';
+  ctx.fillRect(0, 0, W, H);
+
+  const fw = L.frame[0], fh = L.frame[1];
+  const land = W > H * 1.15;
+  const stageH = land ? H - 52 - 72 : Math.min(H * 0.74, H - 62 - 125);
+  const s = stageH / fh, y0 = 52, vw = W / s;
+  $('scn').style.top = (y0 + stageH - 22) + 'px';
+  $('telem').style.top = (y0 + 8) + 'px';
+
+  const target = Math.max(0, Math.min(fw - vw, actor.x - vw / 2));
+  camLeft += (vw >= fw ? (0 - camLeft) : (target - camLeft)) * 0.12;
+  const offX = vw >= fw ? (W - fw * s) / 2 : 0;
+  const left = vw >= fw ? 0 : camLeft;
+  const img = sceneImgs[k];
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(offX, y0, Math.min(W, fw * s), stageH);
+  ctx.clip();
+
+  // Multiplane Parallax Backdrop + Main Scene Plate
+  if (img){
+    // Distant atmospheric parallax layer
+    ctx.save();
+    ctx.globalAlpha = 0.32;
+    ctx.filter = 'blur(4px) brightness(0.7)';
+    ctx.drawImage(img, offX - left * s * 0.45 - 20, y0 - 10, fw * s * 1.04, fh * s * 1.04);
+    ctx.restore();
+    // Main registered scene plate
+    ctx.drawImage(img, offX - left * s, y0, fw * s, fh * s);
+  }
+
+  const fy = y0 + sc.floor * s;
+  const px = x => offX + (x - left) * s;
+
+  // Ensemble NPCs on stage (slightly behind main actor plane)
+  npcs.forEach((npc, nIdx) => {
+    const npcPick = npc.pick(ts + nIdx * 310, false);
+    ctx.save();
+    ctx.globalAlpha = 0.86;
+    npc.draw(ctx, npcPick, px(npc.x), fy - 6 * s, sc.ppc * s * 0.92, ts, false);
+    ctx.restore();
+  });
+
+  // Warm theatrical footlight pool under player
+  const pool = ctx.createRadialGradient(px(actor.x), fy - 4, 4, px(actor.x), fy - 4, 135 * sc.ppc * s);
+  pool.addColorStop(0, 'rgba(255,240,200,.32)');
+  pool.addColorStop(1, 'rgba(255,240,200,0)');
+  ctx.save();
+  ctx.translate(0, fy - 4);
+  ctx.scale(1, 0.22);
+  ctx.translate(0, -(fy - 4));
+  ctx.fillStyle = pool;
+  ctx.fillRect(px(actor.x) - 320, fy - 320, 640, 640);
+  ctx.restore();
+
+  // Line Markers & Action Pose Prompt Rings
+  sc.lines.forEach((ln, j) => {
+    const st = stats[k][j];
+    const vis = (t >= ln.t - 2.6 && t <= ln.e + 0.4) || (st.done && ts - st.shown < 900);
+    if (!vis) return;
+    const active = t >= ln.t && t <= ln.e;
+    const x = px(ln.mx), r = 90 * sc.ppc * s;
+    const col = st.done ? (st.ok ? '78,232,138' : '255,107,139') : '216,171,79';
+    const pulse = active ? 0.55 + 0.25 * Math.sin(ts / 140) : 0.28 + 0.12 * Math.sin(ts / 300);
+
+    ctx.save();
+    ctx.translate(x, fy);
+    ctx.scale(1, 0.24);
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${col},${pulse * 0.45})`;
+    ctx.fill();
+    ctx.lineWidth = 4 / 0.24 * 0.6;
+    ctx.strokeStyle = `rgba(${col},${Math.min(1, pulse + 0.25)})`;
+    ctx.stroke();
+    ctx.restore();
+
+    const g = ctx.createLinearGradient(0, fy - 170 * s, 0, fy);
+    g.addColorStop(0, `rgba(${col},0)`);
+    g.addColorStop(1, `rgba(${col},${pulse * 0.5})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r * 0.18, fy - 160 * s, r * 0.36, 160 * s);
+
+    // Pose Prompt Badge above marker
+    if (ln.actionPrompt && !st.done){
+      const py = fy - 135 * s + Math.sin(ts / 180) * 4;
+      ctx.save();
+      ctx.font = `700 ${Math.max(10, Math.round(11 * s))}px "IBM Plex Mono", monospace`;
+      const txt = st.poseBonus ? `✓ ${ln.actionPrompt.label} BONUS!` : `⚡ POSE: ${ln.actionPrompt.label} [E]`;
+      const tw = ctx.measureText(txt).width + 14;
+      ctx.fillStyle = st.poseBonus ? 'rgba(20,52,36,0.92)' : 'rgba(42,32,14,0.92)';
+      ctx.strokeStyle = st.poseBonus ? '#4ee88a' : '#d8ab4f';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(x - tw / 2, py - 12, tw, 22, 11);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = st.poseBonus ? '#4ee88a' : '#ffe699';
+      ctx.textAlign = 'center';
+      ctx.fillText(txt, x, py + 3);
+      ctx.restore();
+    }
+
+    if (active){
+      const frac = Math.min(1, st.inT / Math.max(0.4, (ln.e - ln.t) * 0.38));
+      ctx.fillStyle = `rgba(${col},.92)`;
+      ctx.fillRect(x - r * 0.6, fy + 10 * s, r * 1.2 * frac, 5);
+      ctx.strokeStyle = 'rgba(255,255,255,.4)';
+      ctx.strokeRect(x - r * 0.6, fy + 10 * s, r * 1.2, 5);
+    }
+  });
+
+  // Collectible Word-Orbs (Ground & High Jump Orbs)
+  const scOrbs = wordOrbs[k] || [];
+  scOrbs.forEach(orb => {
+    if (orb.caught) return;
+    const vis = t >= orb.lineT0 - 2.4 && t <= orb.lineT1 + 0.6;
+    if (!vis) return;
+    const speakingNow = t >= orb.t0 - 0.15 && t <= orb.t1 + 0.25;
+    const ox = px(orb.x);
+    const oy = fy - orb.hCm * sc.ppc * s + Math.sin(ts / 220 + orb.wIdx) * 4;
+    const rad = (speakingNow ? 16 : 12) * Math.max(0.75, Math.min(1.2, s));
+
+    // If High Jump Orb, draw a subtle glowing aerial step/chevron guide
+    if (orb.isHigh){
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0, 229, 255, 0.35)';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(ox, fy);
+      ctx.lineTo(ox, oy + rad);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.save();
+    const grad = ctx.createRadialGradient(ox, oy, 2, ox, oy, rad * 1.7);
+    if (orb.isHigh){
+      grad.addColorStop(0, 'rgba(255, 245, 180, 0.98)');
+      grad.addColorStop(0.5, 'rgba(0, 229, 255, 0.75)');
+      grad.addColorStop(1, 'rgba(0, 229, 255, 0)');
+    } else {
+      grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+      grad.addColorStop(0.55, 'rgba(216, 171, 79, 0.75)');
+      grad.addColorStop(1, 'rgba(216, 171, 79, 0)');
+    }
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(ox, oy, rad * 1.7, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = `600 ${Math.max(10, Math.round(11 * s))}px "IBM Plex Mono", monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = orb.isHigh ? '#9be7ff' : '#fff3cc';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 4;
+    ctx.fillText((orb.isHigh ? '▲ ' : '') + orb.word, ox, oy - rad - 4);
+    ctx.restore();
+  });
+
+  // Draw Player Character
+  const c = actor.pick(ts, moving !== 0);
+  actor.draw(ctx, c, px(actor.x), fy, sc.ppc * s, ts, showIKOverlay);
+
+  // Particles & Floating Score Callouts
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+    ctx.fillStyle = p.col;
+    ctx.beginPath();
+    ctx.arc(px(p.x), y0 + p.y * s, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+  floatTexts.forEach(f => {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, f.life / f.maxLife);
+    ctx.font = '700 12px "IBM Plex Mono", monospace';
+    ctx.fillStyle = f.col;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 4;
+    ctx.fillText(f.text, px(f.x), y0 + f.y * s);
+    ctx.restore();
+  });
+
+  ctx.restore();
+
+  if (cur.fade > 0){
+    ctx.fillStyle = `rgba(7,8,11,${cur.fade})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Live Animation Telemetry Badge
+  const pWalk = actor.P.walk;
+  $('telem').innerHTML = `${actor.ch.key} · <b>${pWalk.mode}</b> · stride <b>${pWalk.stride_cm}cm</b><br>phase: <b>${c.phase}</b> · view: <b>${c.d.view}</b> · scissor: <b>${(c.scissor||0).toFixed(2)}</b>` + (actor.airY > 0.5 ? ` · air: <b>${Math.round(actor.airY)}cm</b>` : '');
+
+  // Subtitle with caught word highlights
+  let line = null;
+  for (const ln of sc.lines) if (t >= ln.t - 0.15 && t <= ln.e + 0.6) line = ln;
+  const sub = $('sub');
+  sub.style.top = (land ? y0 + stageH - 64 : y0 + stageH + 8) + 'px';
+  const key = line ? sc.key + '|' + line.t : '';
+  if (key !== subKey){
+    subKey = key;
+    sub.innerHTML = '';
+    if (line){
+      for (let w = line.w0; w <= line.w1; w++){
+        const sp = document.createElement('span');
+        sp.textContent = L.words[w][0] + ' ';
+        sp.dataset.s = L.words[w][1];
+        sp.dataset.widx = w;
+        sub.append(sp);
+      }
+    }
+  }
+  const caughtSet = new Set((wordOrbs[k] || []).filter(o => o.caught).map(o => o.wIdx));
+  for (const sp of sub.children){
+    sp.classList.toggle('on', t >= parseFloat(sp.dataset.s));
+    sp.classList.toggle('caught', caughtSet.has(parseInt(sp.dataset.widx, 10)));
+  }
+}
+
+/* ---------- Finish & Score Breakdown ---------- */
+function finish(){
+  ended = true;
+  started = false;
+  const pct = total ? (score + orbsCaught * 0.25 + posesCaught * 0.5) / total : 0;
+  const stars = pct >= 0.8 ? 3 : pct >= 0.45 ? 2 : 1;
+  $('stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+  $('endn').textContent = `Lines Caught: ${score}/${total} · Word-Orbs Caught: ${orbsCaught}/${orbsTotal} · Action Poses Nailed: ${posesCaught}`;
+
+  const b = parseInt(store.get('wy.best.' + L.num) || '0', 10);
+  if (score > b) store.set('wy.best.' + L.num, String(score));
+  const bo = parseInt(store.get('wy.orbs.' + L.num) || '0', 10);
+  if (orbsCaught > bo) store.set('wy.orbs.' + L.num, String(orbsCaught));
+
+  // Build line-by-line & word-orb breakdown
+  const bd = $('endBreakdown');
+  bd.innerHTML = '';
+  scenes.forEach((sc, sIdx) => {
+    sc.lines.forEach((ln, lIdx) => {
+      const st = stats[sIdx][lIdx];
+      const lOrbs = (wordOrbs[sIdx] || []).filter(o => o.lineIdx === lIdx);
+      const row = document.createElement('div');
+      row.className = 'bd-line ' + (st.ok ? 'ok' : 'miss');
+      const orbsHtml = lOrbs.map(o => `<span class="bd-w ${o.caught ? 'ok' : ''}">${o.caught ? '✓' : '○'} ${o.word}</span>`).join('');
+      const poseTag = ln.actionPrompt ? `<span class="bd-w ${st.poseBonus ? 'ok' : ''}">⚡ ${ln.actionPrompt.label}</span>` : '';
+      row.innerHTML = `
+        <div>
+          <div style="color:#fff;font-weight:500">${ln.text}</div>
+          <div class="bd-words">${orbsHtml}${poseTag}</div>
+        </div>
+        <div style="font-family:var(--mono);font-size:.75rem;white-space:nowrap;color:${st.ok ? '#4ee88a' : '#ff6b8b'}">${st.ok ? '✓ CAUGHT' : 'MISSED'}</div>
+      `;
+      bd.append(row);
+    });
+  });
+
+  $('end').style.display = 'grid';
+}
+
+/* ---------- UI & Controls ---------- */
+$('go').addEventListener('click', () => {
+  $('start').style.display = 'none';
+  started = true;
+  audio.currentTime = 0;
+  audio.play().catch(() => {
+    $('stn').textContent = 'Tap Start again to enable audio playback.';
+    $('start').style.display = 'grid';
+    started = false;
+  });
+});
+$('who').addEventListener('click', () => setActor(castIdx + 1));
+$('castSwapBtn').addEventListener('click', () => setActor(castIdx + 1));
+$('engBtn').addEventListener('click', () => {
+  engineIdx = (engineIdx + 1) % ENGINE_MODES.length;
+  const mode = ENGINE_MODES[engineIdx];
+  if (actor) actor.engineMode = mode;
+  $('engBtn').textContent = ENGINE_LABELS[mode];
+});
+$('ikBtn').addEventListener('click', () => {
+  showIKOverlay = !showIKOverlay;
+  $('ikBtn').classList.toggle('on', showIKOverlay);
+});
+$('pause').addEventListener('click', () => {
+  if (ended || (!started && !paused)) return;
+  paused = !paused;
+  $('pause').textContent = paused ? 'Resume' : 'Pause';
+  if (paused) audio.pause(); else audio.play();
+});
+$('back').addEventListener('click', () => {
+  running = false;
+  if (audio) audio.pause();
+  $('stage').style.display = 'none';
+  $('shelf').style.display = 'block';
+  buildShelf();
+});
+$('home').addEventListener('click', () => $('back').click());
+$('again').addEventListener('click', () => { running = false; openLevel(L.num); });
+$('next').addEventListener('click', () => {
+  const i = INDEX.findIndex(p => p.num === L.num);
+  running = false;
+  openLevel(INDEX[(i + 1) % INDEX.length].num);
+});
+
+// Touch Pad: horizontal drag = walk, upward flick = Jump!
+const pad = $('pad'), knob = $('knob');
+let padId = null, ox = 0, oy = 0, jumpedThisDrag = false;
+pad.addEventListener('pointerdown', e => {
+  padId = e.pointerId;
+  pad.setPointerCapture(e.pointerId);
+  const r = pad.getBoundingClientRect();
+  ox = e.clientX; oy = e.clientY; jumpedThisDrag = false;
+  knob.style.display = 'block';
+  knob.style.left = (e.clientX - r.left) + 'px';
+  knob.style.top = (e.clientY - r.top) + 'px';
+});
+pad.addEventListener('pointermove', e => {
+  if (e.pointerId !== padId) return;
+  const dx = e.clientX - ox, dy = e.clientY - oy;
+  move = Math.max(-1, Math.min(1, dx / 52));
+  if (dy < -42 && !jumpedThisDrag && actor){
+    actor.jump();
+    jumpedThisDrag = true;
+  }
+  knob.firstElementChild.style.transform = `translate(${Math.max(-38, Math.min(38, dx))}px, ${Math.max(-38, Math.min(38, dy))}px)`;
+});
+const endPad = e => {
+  if (e.pointerId !== padId) return;
+  padId = null; move = 0;
+  knob.style.display = 'none';
+  knob.firstElementChild.style.transform = '';
+};
+pad.addEventListener('pointerup', endPad);
+pad.addEventListener('pointercancel', endPad);
+
+addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if ((e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') && running && actor){
+    e.preventDefault();
+    actor.jump();
+  }
+  if (e.key === 'Tab' && running){
+    e.preventDefault();
+    setActor(castIdx + 1);
+  }
+});
+addEventListener('keyup', e => { keys[e.key] = false; });
+document.addEventListener('gesturestart', e => e.preventDefault());
+
+// 37-Character Certification Modal
+$('openCertBtn').addEventListener('click', () => { $('certModal').classList.add('on'); });
+$('closeCertBtn').addEventListener('click', () => { $('certModal').classList.remove('on'); });
+$('certModal').addEventListener('click', e => { if (e.target === $('certModal')) $('certModal').classList.remove('on'); });
+
+function renderCertModal(){
+  if (!CERT_REPORT) return;
+  const rows = CERT_REPORT.characters.map((c, idx) => `
+    <tr>
+      <td>${idx + 1}</td>
+      <td><b style="color:#fff">${c.key}</b><br><span style="color:var(--muted)">rig: ${c.rig_id}</span></td>
+      <td><span style="color:${c.walk_mode === 'step_4pose' ? '#4ee88a' : '#00e5ff'}">${c.walk_mode}</span></td>
+      <td>${c.stride_cm} cm</td>
+      <td>${c.contactA.f} (${c.contactA.view}, L:${c.contactA.lead}) → ${c.passA.f} → ${c.contactB.f} (${c.contactB.view}, L:${c.contactB.lead})</td>
+      <td>[${c.scissor_range[0]}, +${c.scissor_range[1]}]</td>
+      <td>${c.max_jump_cm} cm / ${c.landing_squash_x}×</td>
+      <td style="color:#4ee88a;font-weight:700">✓ PASS</td>
+    </tr>
+  `).join('');
+  $('certTableWrap').innerHTML = `
+    <table class="cert-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Character &amp; 15-Bone Rig</th><th>Walk Mode</th><th>Stride</th><th>4-Pose Cycle (ContactA → PassA → ContactB)</th><th>Scissor</th><th>Jump / Squash</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+(async function(){
+  try {
+    const [dataRes, idxRes] = await Promise.all([
+      fetch('data.json').then(r => r.json()),
+      fetch('levels/index.json').then(r => r.json())
+    ]);
+    CHARS = dataRes.characters;
+    INDEX = idxRes;
+    try {
+      const crashRes = await fetch('../arena/parts/kit3/release_v2/crash_lab_catalog.json').then(r => r.json());
+      (crashRes.rigs || []).forEach(r => { CRASH_RIGS[r.id] = r; });
+    } catch(e){}
+    try {
+      CERT_REPORT = await fetch('anim2_certification_report.json').then(r => r.json());
+      renderCertModal();
+    } catch(e){}
+    buildShelf();
+    const q = new URLSearchParams(location.search).get('p');
+    if (q) openLevel(q);
+  } catch(e){
+    document.querySelector('#shelf header p').textContent = 'The level data did not load: ' + e.message;
+  }
+})();
+</script>
+</body>
+</html>
