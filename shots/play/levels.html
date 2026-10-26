@@ -341,7 +341,7 @@ function buildShelf(){
     const best = store.get('wy.best.'+p.num);
     const meta = ARC_SUMMARY[p.num] || { arc: 'Emotional Journey', desc: '' };
     b.innerHTML =
-      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}?v=2"><span class="arc-pill">${meta.arc}</span></div>` +
+      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}?v=3"><span class="arc-pill">${meta.arc}</span></div>` +
       `<div class="body"><b></b><div class="theme"></div><small></small><div class="best"></div></div>`;
     b.querySelector('b').textContent = `${p.num} · ${p.title}`;
     b.querySelector('.theme').textContent = meta.desc;
@@ -352,19 +352,35 @@ function buildShelf(){
   });
 }
 
+let castActorsByKey = new Map();
+
+async function getOrLoadActorByKey(charKey){
+  if (!charKey) return null;
+  if (castActorsByKey.has(charKey)) return castActorsByKey.get(charKey);
+  const ch = CHARS.find(x => x.key === charKey);
+  if (!ch) return null;
+  const imgs = await Promise.all(ch.draws.map(d => Anim2.loadImg(`assets/${ch.dir}/${d.f}`)));
+  const act = new Anim2.Actor(ch, imgs);
+  const rec = { ch, actor: act };
+  castActorsByKey.set(charKey, rec);
+  return rec;
+}
+
 /* ---------- Opening a Level ---------- */
 async function openLevel(num){
   $('shelf').style.display = 'none';
   $('stage').style.display = 'block';
   resize();
   preloadPoet31();
-  L = await (await fetch(`levels/${num}/level.json?v=2`)).json();
+  // Poems 01-03 feature Poet in Black T-Shirt / Young Poet Pajamas painted cutouts; Poems 04-14 feature Tracksuit Poet
+  use31PartRig = parseInt(num, 10) >= 4;
+  L = await (await fetch(`levels/${num}/level.json?v=3`)).json();
   scenes = L.scenes;
 
-  // Restore any user-saved custom stage assemblies from localStorage & preload all multiplane cut-out assets
+  // Restore any user-saved custom stage assemblies from localStorage (v3) & preload all multiplane cut-out assets
   scenes.forEach((sc, idx) => {
     sc._defaultLayers = JSON.parse(JSON.stringify(sc.multiplane_layers || []));
-    const saved = store.get(`wy.stage.${num}.${idx}`);
+    const saved = store.get(`wy.stage.v3.${num}.${idx}`);
     if (saved){
       try { sc.multiplane_layers = JSON.parse(saved); } catch(e){}
     }
@@ -375,10 +391,19 @@ async function openLevel(num){
   // Load clean backdrop plates
   sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(s.backdrop_file || `levels/${num}/${s.img}`)));
 
+  // Preload all cast & counterpart characters referenced by this poem's scenes
+  castActorsByKey.clear();
+  const neededKeys = new Set((L.cast || []).map(c => c.key));
+  scenes.forEach(sc => {
+    if (sc.counterpart && sc.counterpart.key) neededKeys.add(sc.counterpart.key);
+    if (sc.preferred_actor) neededKeys.add(sc.preferred_actor);
+  });
+  await Promise.all(Array.from(neededKeys).map(k => getOrLoadActorByKey(k)));
+
   const pref = L.cast.findIndex(c => c.key.startsWith('poet/'));
   castIdx = pref >= 0 ? pref : 0;
   await setActor(castIdx);
-  await setupCounterpart();
+  await setupCounterpart(scenes[0]);
 
   stats = scenes.map(s => s.lines.map(() => ({ inT: 0, done: false, ok: false, shown: -1e9, embodied: false })));
   total = scenes.reduce((n,s) => n + s.lines.length, 0);
@@ -408,6 +433,10 @@ async function openLevel(num){
 
   actor.x = scenes[0]?.lines?.[0]?.mx || 280;
   actor.dir = 1;
+  if (scenes[0]){
+    const initCue = scenes[0].initial_cue || scenes[0].lines?.[0]?.posture_cue || 'walk_stride_R';
+    actor.ctrl.embodyCue(initCue, scenes[0].emotion, performance.now());
+  }
   camLeft = 0;
   lastT = performance.now();
   running = true;
@@ -441,24 +470,30 @@ function updateRigButtonLabel(){
   }
 }
 
-async function setupCounterpart(){
-  counterpart = null;
-  if (!L || !L.cast || L.cast.length < 2) return;
-  const otherSpec = L.cast.find((c, idx) => idx !== castIdx);
-  if (!otherSpec) return;
-  const ch = CHARS.find(x => x.key === otherSpec.key);
-  if (!ch) return;
-  const imgs = await Promise.all(ch.draws.map(d => Anim2.loadImg(`assets/${ch.dir}/${d.f}`)));
-  const act = new Anim2.Actor(ch, imgs);
-  act.x = 920;
-  act.dir = -1;
+async function setupCounterpart(scOpt){
+  const sc = scOpt || (scenes && scenes[Math.max(0, cur.i)]);
+  if (!sc || !sc.counterpart || !sc.counterpart.key){
+    counterpart = null;
+    return;
+  }
+  const cpSpec = sc.counterpart;
+  const rec = await getOrLoadActorByKey(cpSpec.key);
+  if (!rec){
+    counterpart = null;
+    return;
+  }
+  const act = rec.actor;
+  act.x = cpSpec.x !== undefined ? cpSpec.x : 920;
+  act.dir = cpSpec.dir !== undefined ? cpSpec.dir : -1;
+  act.ctrl.embodyCue(cpSpec.cue || 'idle', sc.emotion || 'searching', performance.now());
   counterpart = {
-    key: ch.key,
-    name: ch.name,
+    key: rec.ch.key,
+    name: rec.ch.name,
     actor: act,
-    isSoul: ch.key === 'poet_soul/soul',
-    isEx: ch.key === 'ex/ex_jacket',
-    alpha: 1.0
+    isSoul: rec.ch.key === 'poet_soul/soul',
+    isEx: rec.ch.key === 'ex/ex_jacket',
+    yOffset: cpSpec.y_offset || 0,
+    alpha: 0.96
   };
 }
 
@@ -696,7 +731,13 @@ function frame(ts){
       el.classList.toggle('active', idx === k);
       el.classList.toggle('done', idx < k);
     });
-    if (sc && sc.emotion) actor.ctrl.setEmotion(sc.emotion);
+    if (sc){
+      if (sc.emotion) actor.ctrl.setEmotion(sc.emotion);
+      const initCue = sc.initial_cue || sc.lines?.[0]?.posture_cue || 'walk_stride_R';
+      actor.ctrl.embodyCue(initCue, sc.emotion || 'searching', ts);
+      highlightActiveButton(initCue);
+      setupCounterpart(sc);
+    }
   }
   cur.fade = Math.max(0, cur.fade - dt * 2.8);
 
@@ -814,7 +855,7 @@ function stepCounterpart(dt, k, sc, ts){
 
   if (cp.isSoul){
     const separated = k <= 3;
-    cp.alpha = separated ? 0.78 : Math.max(0, cp.alpha - dt * 0.8);
+    cp.alpha = separated ? 0.82 : Math.max(0, cp.alpha - dt * 0.8);
     cpAct.x += (actor.x + (separated ? 65 * Math.sin(ts / 900) : 0) - cpAct.x) * Math.min(1, dt * 3);
     cpAct.dir = actor.dir;
     cpAct.ctrl.embodyCue(separated ? 'kneel_2' : 'idle', 'ecstasy', ts);
@@ -830,12 +871,11 @@ function stepCounterpart(dt, k, sc, ts){
     } else if (L.num === '09' && k >= 5){
       cp.alpha = Math.max(0.08, cp.alpha - dt * 0.25);
     } else {
-      cp.alpha = 0.92;
+      cp.alpha = 0.94;
     }
     cpAct.ctrl.step(dt, moveAway, ts);
     cpAct.x = Math.max(120, Math.min(L.frame[0] - 120, cpAct.x));
   } else {
-    cpAct.dir = actor.x < cpAct.x ? -1 : 1;
     cpAct.ctrl.step(dt, 0, ts);
   }
 }
@@ -865,6 +905,11 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
   // Procedural multiplane animations matching stage.html + interactive station boost
   if (anim === 'wheel_spin' || anim === 'turntable_spin'){
     rot = tSec * (anim === 'turntable_spin' ? 3.2 : 2.6) * speedMult;
+  } else if (anim === 'car_chassis'){
+    baseY += Math.sin(tSec * 5.5) * 1.2;
+  } else if (anim === 'bike_chassis'){
+    baseY += Math.sin(tSec * 9.0) * 1.4;
+    rot = Math.sin(tSec * 2.2) * 0.012;
   } else if (anim === 'heart_beat'){
     scMult *= 1 + (0.09 + boost * 0.12) * Math.pow(Math.max(0, Math.sin(tSec * 3.8 * speedMult)), 3);
   } else if (anim === 'speaker_pulse' || anim === 'dj_console'){
@@ -895,7 +940,7 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
     rot = Math.sin(tSec * 1.3) * 0.035;
   } else if (anim === 'hourglass_sand'){
     alpha = 0.78 + 0.22 * Math.sin(tSec * 5.0);
-  } else if (anim === 'lamp_glow' || anim === 'portal_tv_flicker' || anim === 'sun_pulse'){
+  } else if (anim === 'lamp_glow' || anim === 'portal_tv_flicker' || anim === 'sun_pulse' || anim === 'coffee_steam'){
     scMult *= 1 + (0.02 + boost * 0.05) * Math.sin(tSec * 3.2);
   } else if (anim === 'phone_ring'){
     scMult *= 1 + 0.09 * Math.sin(tSec * 8.0);
@@ -903,10 +948,10 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
     baseX += Math.sin(tSec * 0.45) * 24;
   }
 
-  // Poem 11 Scene 2 ("The temple builds itself"): courses, columns, beams & finial descend into place!
-  if (L && L.num === '11' && k === 2 && lyr.sheet_id && lyr.sheet_id.includes('temple.arrival')){
-    const buildProg = Math.min(1, 0.35 + sceneResonance * 0.65);
-    baseY -= (1 - buildProg) * 120;
+  // Poem 11 ("The temple builds itself"): courses, columns & pediment descend into place!
+  if (L && L.num === '11' && scenes[k]?.key === '11.2' && lyr.sheet_id && lyr.sheet_id.includes('temple.states')){
+    const buildProg = Math.min(1, 0.45 + sceneResonance * 0.55);
+    baseY -= (1 - buildProg) * 90;
   }
 
   // Compute screen-space size with stage scale `s`
@@ -1115,7 +1160,7 @@ function draw(sc, k, t, state, ts, dt){
   if (counterpart && counterpart.alpha > 0.02){
     const cp = counterpart;
     const cpState = cp.actor.ctrl.step(0, 0, ts);
-    const cpY = cp.isSoul ? (fy - 85 * s + Math.sin(ts / 550) * 14 * s) : fy;
+    const cpY = fy + (cp.yOffset || (cp.isSoul ? -85 : 0)) * s + (cp.isSoul ? Math.sin(ts / 550) * 14 * s : 0);
     ctx.save();
     ctx.globalAlpha = cp.alpha;
     if (cp.isSoul) ctx.filter = 'drop-shadow(0 0 14px rgba(108,218,195,0.65))';
@@ -1216,7 +1261,7 @@ function saveCurrentSceneAssembly(){
     delete copy._HitBox;
     return copy;
   });
-  store.set(`wy.stage.${L.num}.${cur.i}`, JSON.stringify(clean));
+  store.set(`wy.stage.v3.${L.num}.${cur.i}`, JSON.stringify(clean));
 }
 
 function updateAsmInspector(){
@@ -1331,8 +1376,8 @@ $('go').addEventListener('click', ()=>{
     started = false;
   });
 });
-$('who').addEventListener('click', async ()=>{ await setActor(castIdx+1); await setupCounterpart(); });
-$('castBtn').addEventListener('click', async ()=>{ await setActor(castIdx+1); await setupCounterpart(); });
+$('who').addEventListener('click', async ()=>{ await setActor(castIdx+1); await setupCounterpart(scenes[cur.i]); });
+$('castBtn').addEventListener('click', async ()=>{ await setActor(castIdx+1); await setupCounterpart(scenes[cur.i]); });
 $('rigModeBtn').addEventListener('click', ()=>{
   use31PartRig = !use31PartRig;
   updateRigButtonLabel();
@@ -1397,7 +1442,7 @@ $('asmResetSceneBtn').addEventListener('click', () => {
   if (!L || cur.i < 0 || !scenes[cur.i]) return;
   const sc = scenes[cur.i];
   sc.multiplane_layers = JSON.parse(JSON.stringify(sc._defaultLayers || []));
-  store.del(`wy.stage.${L.num}.${cur.i}`);
+  store.del(`wy.stage.v3.${L.num}.${cur.i}`);
   selectedLayer = null;
   updateAsmInspector();
   buildArcBar();
@@ -1523,9 +1568,9 @@ document.addEventListener('gesturestart', e=>e.preventDefault());
 (async function(){
   try {
     const [dataRes, idxRes, catRes] = await Promise.all([
-      fetch('data.json?v=2'),
-      fetch('levels/index.json?v=2'),
-      fetch('level_assets_catalog.json?v=2').catch(() => null)
+      fetch('data.json?v=3'),
+      fetch('levels/index.json?v=3'),
+      fetch('level_assets_catalog.json?v=3').catch(() => null)
     ]);
     CHARS = (await dataRes.json()).characters;
     INDEX = await idxRes.json();
