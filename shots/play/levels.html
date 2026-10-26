@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0b0d10">
 <link rel="icon" href="data:,">
-<title>WYGWYL Levels · 14 Playable Poems — Meaning, Emotion & Transformation</title>
+<title>WYGWYL Levels · 14 Multiplane Playable Poems & Stage Assembler</title>
 <style>
 :root{
   --bg:#0b0d10; --panel:#141920; --line:#2a313c; --ink:#e8ecf1; --muted:#9aa4b2;
@@ -17,19 +17,19 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);overscroll-behavior:none}
 body{overflow:hidden}
-button,select{font:inherit;color:inherit}
+button,select,input{font:inherit;color:inherit}
 
 /* Shelf */
 #shelf{position:fixed;inset:0;overflow-y:auto;padding:max(14px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(28px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));-webkit-overflow-scrolling:touch}
-.suite-nav{max-width:1100px;margin:0 auto 14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.suite-nav{max-width:1140px;margin:0 auto 14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--line)}
 .suite-nav a{color:var(--muted);text-decoration:none;font-size:.76rem;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:#11161d;transition:all .15s}
 .suite-nav a:hover,.suite-nav a.on{color:var(--ink);border-color:var(--brass);background:var(--brass-soft)}
-header{max-width:1100px;margin:0 auto 16px}
+header{max-width:1140px;margin:0 auto 16px}
 h1{font-family:var(--display);font-size:1.75rem;margin:.15rem 0}
-p{color:var(--muted);margin:0 0 .45rem;max-width:72ch;line-height:1.45;font-size:.92rem}
+p{color:var(--muted);margin:0 0 .45rem;max-width:78ch;line-height:1.45;font-size:.92rem}
 a{color:#8fb8ff}
 
-.grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.grid{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 .lv{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-align:left;padding:0;cursor:pointer;display:flex;flex-direction:column;min-width:0;transition:border-color .15s,transform .15s}
 .lv:hover{border-color:var(--brass);transform:translateY(-2px)}
 .lv:focus-visible,.btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
@@ -45,47 +45,66 @@ a{color:#8fb8ff}
 /* Stage */
 #stage{position:fixed;inset:0;display:none;touch-action:none;user-select:none;-webkit-user-select:none;background:#07080b}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
-.top{position:absolute;left:0;right:0;top:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:max(8px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 6px max(10px,env(safe-area-inset-left,0px));pointer-events:none;background:linear-gradient(#000d,#0000);z-index:12}
+.top{position:absolute;left:0;right:0;top:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:max(8px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 6px max(10px,env(safe-area-inset-left,0px));pointer-events:none;background:linear-gradient(#000d,#0000);z-index:16}
 .top>*{pointer-events:auto}
-.btn{background:#141920e6;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:.82rem;cursor:pointer;min-height:38px;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.btn{background:#141920e6;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:.78rem;cursor:pointer;min-height:36px;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
 .btn:hover{border-color:#526077}
 .btn.on{background:var(--brass-soft);border-color:var(--brass);color:#fff}
 .btn.cue-btn{background:#1d2b28f2;border-color:var(--cyan);color:#d8fff6;font-weight:600}
 #ttl{flex:1;min-width:120px;font-family:var(--display);font-size:.9rem;line-height:1.15;text-shadow:0 1px 4px #000}
-#score{font-family:var(--mono);font-size:.82rem;font-weight:700;color:var(--brass);text-shadow:0 1px 4px #000;white-space:nowrap;padding:4px 10px;border-radius:999px;background:#141920cc;border:1px solid var(--line)}
+#score{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--brass);text-shadow:0 1px 4px #000;white-space:nowrap;padding:4px 10px;border-radius:999px;background:#141920cc;border:1px solid var(--line)}
 
 /* Scene & Emotional Arc Timeline Bar */
-#arcBar{position:absolute;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));top:calc(max(8px,env(safe-area-inset-top,0px)) + 44px);display:flex;gap:4px;z-index:11;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+#arcBar{position:absolute;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));top:calc(max(8px,env(safe-area-inset-top,0px)) + 42px);display:flex;gap:4px;z-index:15;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 #arcBar::-webkit-scrollbar{display:none}
-.sc-step{flex:1 0 auto;min-width:90px;background:#10141bd9;border:1px solid #2a313c;border-radius:7px;padding:4px 8px;cursor:pointer;text-align:left;transition:all .15s}
+.sc-step{flex:1 0 auto;min-width:95px;background:#10141bd9;border:1px solid #2a313c;border-radius:7px;padding:4px 8px;cursor:pointer;text-align:left;transition:all .15s}
 .sc-step:hover{border-color:var(--brass)}
 .sc-step.active{background:#241f16eb;border-color:var(--brass)}
 .sc-step.done{border-color:#3a5046}
-.sc-step small{display:block;font-family:var(--mono);font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.sc-step b{display:block;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e8ecf1}
+.sc-step small{display:block;font-family:var(--mono);font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.sc-step b{display:block;font-size:.71rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e8ecf1}
 
-/* Emotional State Banner */
-#emoHud{position:absolute;left:max(12px,env(safe-area-inset-left,0px));pointer-events:none;z-index:10;background:#0b0d10cc;border:1px solid var(--line);border-radius:10px;padding:7px 11px;backdrop-filter:blur(6px);max-width:390px}
-#emoHud .emo-kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:var(--brass)}
-#emoHud .emo-title{font-family:var(--display);font-size:.92rem;color:#fff;margin:1px 0}
-#emoHud .emo-sub{font-size:.73rem;color:var(--muted);line-height:1.3}
+/* Emotional & Architectural Station Banner */
+#emoHud{position:absolute;left:max(12px,env(safe-area-inset-left,0px));pointer-events:none;z-index:11;background:#0b0d10d9;border:1px solid var(--line);border-radius:10px;padding:7px 11px;backdrop-filter:blur(6px);max-width:410px}
+#emoHud .emo-kicker{font-family:var(--mono);font-size:.63rem;letter-spacing:.05em;text-transform:uppercase;color:var(--brass)}
+#emoHud .emo-title{font-family:var(--display);font-size:.9rem;color:#fff;margin:2px 0}
+#emoHud .emo-sub{font-size:.72rem;color:#cbd5e1;line-height:1.3}
 
 /* Subtitle & Meaning */
-#sub{position:absolute;left:0;right:0;pointer-events:none;padding:0 max(16px,env(safe-area-inset-left,0px));text-align:center;font-family:var(--display);font-size:clamp(1.05rem,3.6vw,1.45rem);line-height:1.32;text-shadow:0 2px 10px #000,0 0 4px #000;color:#ffffff80;z-index:10}
+#sub{position:absolute;left:0;right:0;pointer-events:none;padding:0 max(16px,env(safe-area-inset-left,0px));text-align:center;font-family:var(--display);font-size:clamp(1.02rem,3.4vw,1.4rem);line-height:1.32;text-shadow:0 2px 10px #000,0 0 4px #000;color:#ffffff80;z-index:11}
 #sub span{transition:color .12s,text-shadow .12s}
 #sub span.on{color:#fff;text-shadow:0 0 14px rgba(216,171,79,.55),0 2px 6px #000}
-#subCue{font-family:var(--mono);font-size:.73rem;color:var(--cyan);margin-top:4px;letter-spacing:.03em}
+#subCue{font-family:var(--mono);font-size:.72rem;color:var(--cyan);margin-top:4px;letter-spacing:.03em}
 
 #pad{position:absolute;left:0;right:0;top:88px;bottom:calc(72px + env(safe-area-inset-bottom,0px));touch-action:none;z-index:8}
 #knob{position:absolute;width:80px;height:80px;margin:-40px 0 0 -40px;border-radius:50%;border:2px solid #ffffff55;background:#ffffff14;display:none;pointer-events:none}
 #knob i{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#ffffff66}
 
-#acts{position:absolute;left:0;right:0;bottom:0;display:flex;gap:7px;align-items:center;overflow-x:auto;padding:9px max(10px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));background:linear-gradient(0deg,#0b0d10f5,#0b0d10cc 72%,#0b0d1000);scrollbar-width:none;z-index:12}
+#acts{position:absolute;left:0;right:0;bottom:0;display:flex;gap:7px;align-items:center;overflow-x:auto;padding:9px max(10px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));background:linear-gradient(0deg,#0b0d10f5,#0b0d10cc 72%,#0b0d1000);scrollbar-width:none;z-index:15}
 #acts::-webkit-scrollbar{display:none}
-#acts .btn{flex:0 0 auto;min-height:42px;padding:8px 14px;white-space:nowrap;font-size:.8rem}
+#acts .btn{flex:0 0 auto;min-height:40px;padding:7px 13px;white-space:nowrap;font-size:.78rem}
+
+/* Live Stage Assembler Drawer */
+#asmPanel{position:absolute;right:12px;top:92px;bottom:68px;width:330px;max-width:calc(100vw - 24px);background:#10151df2;border:1px solid var(--brass);border-radius:12px;display:none;flex-direction:column;z-index:22;backdrop-filter:blur(10px);box-shadow:0 12px 36px rgba(0,0,0,.65);overflow:hidden}
+#asmPanel.open{display:flex}
+.asm-head{padding:9px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:#171d27}
+.asm-head b{font-family:var(--display);font-size:.86rem;color:var(--brass)}
+.asm-sec{padding:9px 11px;border-bottom:1px solid var(--line);font-size:.74rem;display:grid;gap:6px}
+.asm-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.asm-row label{color:var(--muted);font-family:var(--mono);font-size:.66rem}
+.asm-btn{background:#1b222e;border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:.7rem;cursor:pointer}
+.asm-btn:hover{border-color:var(--brass)}
+.asm-btn.on{background:var(--brass-soft);border-color:var(--brass);color:#fff}
+.asm-list{flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(2,1fr);gap:7px;align-content:start}
+.asm-card{background:#151b24;border:1px solid var(--line);border-radius:8px;padding:6px;cursor:pointer;display:flex;flex-direction:column;gap:4px;text-align:left;transition:border-color .15s}
+.asm-card:hover{border-color:var(--brass)}
+.asm-card .th{width:100%;height:68px;background:#0b0e13;border-radius:5px;display:grid;place-items:center;overflow:hidden}
+.asm-card img{max-width:94%;max-height:64px;object-fit:contain}
+.asm-card span{font-size:.66rem;color:#dde4ee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.asm-card small{font-family:var(--mono);font-size:.58rem;color:var(--muted)}
 
 .veil{position:absolute;inset:0;display:none;place-items:center;background:#0b0d10e6;padding:20px;text-align:center;z-index:30;backdrop-filter:blur(8px)}
-.veil .box{max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;display:grid;gap:12px;justify-items:center}
+.veil .box{max-width:540px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;display:grid;gap:12px;justify-items:center}
 .veil h2{font-family:var(--display);margin:0;font-size:1.55rem}
 .veil .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .stars{font-size:2rem;letter-spacing:.2em;color:var(--brass)}
@@ -93,26 +112,28 @@ a{color:#8fb8ff}
 .word-cloud{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-height:150px;overflow-y:auto;padding:8px;background:#0f1319;border-radius:8px;border:1px solid var(--line);width:100%}
 .word-chip{font-family:var(--mono);font-size:.7rem;padding:2px 7px;border-radius:999px;background:#1b2430;color:#9aa4b2}
 .word-chip.caught{background:#1e3a2f;color:#8ce9b0;border:1px solid #2f684e}
-@media (max-width:640px){
-  #emoHud{max-width:260px;padding:5px 8px}
+@media (max-width:680px){
+  #emoHud{max-width:255px;padding:5px 8px}
   #emoHud .emo-title{font-size:.8rem}
   #emoHud .emo-sub{display:none}
+  #asmPanel{width:285px;top:88px}
 }
 </style></head><body>
 
 <section id="shelf">
   <nav class="suite-nav" aria-label="Suite Navigation">
     <a href="../../index.html">← WYGWYL World-Arch Hub</a>
-    <a href="levels.html" class="on">🎮 Play 14-Poem Levels</a>
+    <a href="levels.html" class="on">🎮 Play 14-Poem Multiplane Levels</a>
     <a href="index.html">🕹️ 37-Character Play Sandbox</a>
+    <a href="../stage.html">🏛️ Multiplane Stage Director</a>
     <a href="../scion_swarm_of_swarms.html">🐝 SCION Swarm-of-Swarms</a>
     <a href="../recastable_cinema_studio.html">🎬 Recastable Studio</a>
     <a href="../crash_lab.html">🛡️ Crash Lab & CAPTCHA</a>
     <a href="../body_lab.html">🧬 CLIP Body Lab</a>
   </nav>
   <header>
-    <h1>WYGWYL · 14 Playable Poems — Meaning, Emotion & Transformation</h1>
-    <p>Each poem is a lived emotional arc. As the poem is read aloud, walk into the glowing stage focus for each stanza line to <b>inhabit its emotional posture</b> and awaken the painting from memory-shadow into living color. Zero random animation shuffling: every movement, posture, and counterpart on stage responds to what the poem means.</p>
+    <h1>WYGWYL · 14 Multiplane Playable Poems & Stage Assembler</h1>
+    <p>Every scene is built from <b>true multiplane cut-out architecture (`P6..P1`)</b>: painted Atlantis world plates, horizon skies & seas, architectural portals, windows, fire escapes, temples, and reactive stage stations. Walk from structure to structure as the poem is read aloud to <b>inhabit each station's emotional posture</b> and bring the set pieces to life—or click <b>🛠️ Assemble Stage</b> inside any poem to move, scale, or add cut-out assets live.</p>
   </header>
   <div class="grid" id="lv"></div>
 </section>
@@ -122,19 +143,84 @@ a{color:#8fb8ff}
   <div class="top">
     <button class="btn" id="back">‹ 14 Poems</button>
     <div id="ttl"></div>
+    <button class="btn" id="rigModeBtn" title="Toggle between 31-Part Brass-Pivot Articulated Tracksuit Rig and Painted Cut-Out Rig">🦿 Rig: 31-Part</button>
     <button class="btn" id="castBtn" title="Switch playable character from this poem's cast">⇄ Cast</button>
+    <button class="btn" id="asmToggleBtn" title="Inspect, drag, scale, or add multiplane cut-out structures & props on stage">🛠️ Assemble Stage</button>
     <div id="score"></div>
     <button class="btn" id="pause">Pause</button>
   </div>
   <div id="arcBar" aria-label="Scene & Emotional Arc Progression"></div>
   <div id="emoHud">
-    <div class="emo-kicker" id="emoKicker">EMOTIONAL REGISTER</div>
+    <div class="emo-kicker" id="emoKicker">STAGE STATION & REGISTER</div>
     <div class="emo-title" id="emoTitle">Searching & Yearning</div>
-    <div class="emo-sub" id="emoSub">Walk into the warm focus pool to embody each spoken line.</div>
+    <div class="emo-sub" id="emoSub">Walk to the highlighted architectural station to embody each spoken line.</div>
   </div>
   <div id="sub"></div>
   <div id="pad"><div id="knob"><i></i></div></div>
   <div id="acts"></div>
+
+  <!-- Live Multiplane Stage Assembler Workbench -->
+  <aside id="asmPanel" aria-label="Stage Asset Assembler">
+    <div class="asm-head">
+      <b>🛠️ Stage Structure & Prop Assembler</b>
+      <button class="asm-btn" id="asmCloseBtn">✕</button>
+    </div>
+    <div class="asm-sec" id="asmInspector">
+      <div style="color:var(--muted)">Click any architectural structure or prop on stage to drag, scale, flip, or change its depth plane.</div>
+      <div id="asmSelectedTitle" style="font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">No piece selected</div>
+      <div class="asm-row">
+        <label>Scale:</label>
+        <button class="asm-btn" id="asmScaleDown">− 10%</button>
+        <button class="asm-btn" id="asmScaleUp">+ 10%</button>
+        <button class="asm-btn" id="asmFlipBtn">↔ Flip</button>
+        <button class="asm-btn" id="asmDelBtn" style="color:var(--bad)">🗑 Delete</button>
+      </div>
+      <div class="asm-row">
+        <label>Plane:</label>
+        <button class="asm-btn" data-plane="P5">P5 Horizon</button>
+        <button class="asm-btn" data-plane="P4">P4 Arch</button>
+        <button class="asm-btn" data-plane="P3">P3 Prop</button>
+        <button class="asm-btn" data-plane="P1">P1 Fore</button>
+      </div>
+      <div class="asm-row">
+        <label>Anim:</label>
+        <select id="asmAnimSelect" class="asm-btn" style="flex:1">
+          <option value="static">static (grounded)</option>
+          <option value="portal_aperture">portal_aperture (breathing arch)</option>
+          <option value="portal_tv_flicker">portal_tv_flicker (screen pulse)</option>
+          <option value="lamp_glow">lamp_glow (warm light pulse)</option>
+          <option value="wheel_spin">wheel_spin (rotating wheel/reel)</option>
+          <option value="heart_beat">heart_beat (pulsing heart)</option>
+          <option value="turntable_spin">turntable_spin (vinyl platter)</option>
+          <option value="speaker_pulse">speaker_pulse (bass cabinet)</option>
+          <option value="wave_mid">wave_mid (ocean swell)</option>
+          <option value="boat_rock">boat_rock (pitching hull/sail)</option>
+          <option value="hourglass_sand">hourglass_sand (streaming sand)</option>
+          <option value="flower_bloom">flower_bloom (swaying bloom)</option>
+          <option value="wing_flap_L">wing_flap_L (feathered wing)</option>
+          <option value="headlight_beam">headlight_beam (sweeping cone)</option>
+          <option value="phone_ring">phone_ring (acoustic wave)</option>
+        </select>
+        <button class="asm-btn" id="asmResetSceneBtn" title="Restore default curated structures for this scene">↺ Reset</button>
+      </div>
+    </div>
+    <div class="asm-sec">
+      <div class="asm-row">
+        <input id="asmSearch" type="search" placeholder="Search 450+ structures, windows, props…" style="flex:1;background:#0b0e13;border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:.72rem">
+        <select id="asmPoemFilter" class="asm-btn">
+          <option value="cur">This Poem</option>
+          <option value="all">All 14 Poems</option>
+        </select>
+      </div>
+      <div class="asm-row" id="asmCatRow">
+        <button class="asm-btn on" data-cat="all">All</button>
+        <button class="asm-btn" data-cat="architecture">🏛️ Architecture</button>
+        <button class="asm-btn" data-cat="props_furniture">🪑 Props & Vehicles</button>
+        <button class="asm-btn" data-cat="atmosphere_fx">✨ FX & Sky</button>
+      </div>
+    </div>
+    <div class="asm-list" id="asmCatalogGrid"></div>
+  </aside>
 
   <div class="veil" id="start">
     <div class="box">
@@ -145,7 +231,7 @@ a{color:#8fb8ff}
         <button class="btn on" id="go">▶ Begin the Reading & Journey</button>
         <button class="btn" id="who"></button>
       </div>
-      <small style="color:var(--muted)">Controls: Drag or <b>← / →</b> (<b>A / D</b>) to walk · Stand in the glowing focus or press <b>Space / E</b> to embody the line's emotion · Click any scene pill at the top to jump across scenes.</small>
+      <small style="color:var(--muted)">Controls: Drag or <b>← / →</b> (<b>A / D</b>) to walk between architectural stations · Stand at the illuminated station or press <b>Space / E</b> to embody the line & animate the station · Click <b>🛠️ Assemble Stage</b> anytime to edit or add set pieces.</small>
     </div>
   </div>
 
@@ -169,36 +255,74 @@ a{color:#8fb8ff}
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
-const store = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} } };
+const store = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }, del(k){ try{ localStorage.removeItem(k); }catch(e){} } };
 
 const ARC_SUMMARY = {
-  "01": { arc: "Memory → Vertigo → Freefall", desc: "From reading the manuscript at the desk, to stumbling off the fire escape, to falling through the floor of tainted love." },
-  "02": { arc: "Vertigo → Childhood Memory → Grief", desc: "Falling with headlights off, confronting the Ghost Child and arguing parents in the car, and hurling the tambourine." },
-  "03": { arc: "Grief → Storm → Departure", desc: "An engagement broken in an empty temple as the storm sweeps every gift onto the shore." },
-  "04": { arc: "Hollow Heart → Searching → Resolution", desc: "Waking washed ashore with a hollow chest, climbing the night trail, and placing hands on the stone ledge." },
-  "05": { arc: "Stillness → Ancestral Memory → Awe", desc: "Descending into the southern-pine basement of memory, holding universes in your palms, and naming the stars." },
-  "06": { arc: "Awe → Heart-Scan → Sanctuary", desc: "The Light Gates open as Atlantis rises from the water, welcoming travelers by candlelight." },
-  "07": { arc: "Club Ecstasy → Haunted Mesh → Chin High", desc: "Eyes wide shut at the DJ booth, wedding bands in the speaker mesh, then walking through rain with chin high." },
-  "08": { arc: "Out-of-Body Release → Baptism → Reunion", desc: "The soul escapes the dancer's body on the floor, floats over Atlantis for an ice-water baptism, and returns." },
-  "09": { arc: "Pursuit → Mother's Call → Letting Go", desc: "Following the EX to the suitcases at the phone booth, calling Mother, and watching the EX dissolve into haze." },
-  "10": { arc: "Midnight Loneliness → Magic Ride → Dawn", desc: "Mounting the motorcycle under a streetlamp and riding out of Atlantis onto the mountain road at first light." },
-  "11": { arc: "Chilly Shore → Self-Building Nave → Peace", desc: "Shivering on the morning shore as the temple builds itself course by course into a heart at peace." },
-  "12": { arc: "Echoing Halls → Brotherhood Chain → Home", desc: "Decades later, locking arms in the brotherhood chain as recollections bring everyone home." },
-  "13": { arc: "Corner Cafe → Poppies → Promise", desc: "Waiting to be noticed at a corner cafe table, walking past younger selves, and harvesting poppies by the harbor." },
-  "14": { arc: "Taken by Haze → Vintage Waltz → Genesis", desc: "Floating in the black void before stepping through the vintage ballroom door into the final waltz." }
+  "01": { arc: "Memory → Vertigo → Freefall", desc: "Walk from the Bedroom Dresser & TV Portal to the High-Rise Sash Window and Steel Fire Escape, then through the Vintage Ballroom Trapdoor." },
+  "02": { arc: "Vertigo → Childhood Memory → Grief", desc: "Journey from the Night Highway Eye Aperture to the 1990s Living Room Window, confronting the Family Sedan and hurling the Tambourine." },
+  "03": { arc: "Grief → Storm → Departure", desc: "Move from the Gothic Rose Window through the Empty Chapel Nave and Wedding Gifts Table out to the Shattered Tambourine on the Shore." },
+  "04": { arc: "Hollow Heart → Searching → Resolution", desc: "Wake by the Driftwood Shore & Ravens, cup the Beating Poet Heart with Jointed Weave Hands, and climb the Stone Viaduct Incline to the Night Garden." },
+  "05": { arc: "Stillness → Ancestral Memory → Awe", desc: "Cross the Celestial Globe Floor into the Southern-Pine Basement Window Well, cup Galaxies in your Palms, and open the Winged Marble Gate." },
+  "06": { arc: "Awe → Heart-Scan → Sanctuary", desc: "Follow Comets down the Yellow-Brick Causeway as Atlantis rises, offer the Golden Coin at the Heart-Scan Booth, and enter the Crystal Tree Sanctuary." },
+  "07": { arc: "Club Ecstasy → Haunted Mesh → Chin High", desc: "Move between the Pulsing Speaker Stacks, DJ Booth Turntables, Projected Vineyard Wall, and Club Bar before walking out Chin High into the Rain." },
+  "08": { arc: "Out-of-Body Release → Baptism → Reunion", desc: "Rise from the Rooftop Club Marquee over Aerial Atlantis to the Equator Plain, receive the Angels' Ice-Water Basin Baptism, and reunite." },
+  "09": { arc: "Pursuit → Mother's Call → Letting Go", desc: "Follow the EX along the Club Sidewalk to the Suitcases at the Harbor Phone Booth, call Mother's Living Room, and walk the East Quay." },
+  "10": { arc: "Midnight Loneliness → Magic Ride → Dawn", desc: "Step into the Streetlamp Shadowpool, mount the Cafe Motorcycle with spinning wheels & headlight cone, and ride out to the Mountain Road at Dawn." },
+  "11": { arc: "Chilly Shore → Self-Building Nave → Peace", desc: "Climb the Wet Shore Steps as the White Marble Temple builds its Courses, Columns, Beams & Finial before you, then cross the Calm Morning Sea." },
+  "12": { arc: "Echoing Halls → Brotherhood Chain → Home", desc: "Gather at the White Temple Porch, witness the Burning Hourglasses & Archival Group Photo, and lock arms in the Brotherhood Chain on the Dusk Terrace." },
+  "13": { arc: "Corner Cafe → Poppies → Promise", desc: "Wait by the Harbor Cafe Bistro Table & Espresso Cup, watch Sailboats & Planetary Orbits, harvest Golden Poppies, and look up to the Distant Window." },
+  "14": { arc: "Taken by Haze → Vintage Waltz → Genesis", desc: "Rise above the Whole Atlantis Harbor into the Weightless Void, unspool the Nine-Frame Memory Reel, and step through the Panelled Vintage Doorway." }
 };
 
-let CHARS = [], INDEX = [], L = null, actor = null, scenes = [], sceneImgs = [], audio = null, castIdx = 0;
-let counterpart = null; // Secondary dramatic figure (EX, Soul double, Vintage partner, Ghost child, etc.)
+const PARALLAX_BY_PLANE = { P6: 0.22, P5: 0.45, P4: 0.72, P3: 0.92, P2: 1.00, P1: 1.18 };
+const Z_BY_PLANE = { P5: 3.60, P4: 2.42, P3: 1.40, P1: 0.48 };
+
+let CHARS = [], INDEX = [], CATALOG = [], L = null, actor = null, scenes = [], sceneImgs = [], audio = null, castIdx = 0;
+let counterpart = null;
 let W=0, H=0, DPR=1;
 const cv = $('cv'), ctx = cv.getContext('2d');
 let move = 0, lastT = 0, running = false, paused = false, ended = false, started = false;
 let cur = {i:-1, fade:0}, stats = [], score = 0, total = 0, camLeft = 0, subKey = '';
 let activeLine = null;
-let sceneResonance = 0.25; // 0..1: awakens scene saturation, light pool, and typographic echoes
-let wordEchoes = [];       // Floating typographic words rising from inhabited lines
-let particles = [];        // Atmospheric particles driven by line emotion
+let sceneResonance = 0.28;
+let stationBoost = {}; // station_id -> 0..1 kinetic boost when player inhabits that station
+let wordEchoes = [];
+let particles = [];
 const keys = {};
+
+// Image Cache for Multiplane Cut-Outs & 31-Part Poet Rig
+const imgCache = new Map();
+function getCachedImg(url){
+  if (!url) return null;
+  if (imgCache.has(url)) return imgCache.get(url);
+  const rec = { img: null, ok: false };
+  imgCache.set(url, rec);
+  const im = new Image();
+  im.onload = () => { rec.img = im; rec.ok = true; };
+  im.src = url;
+  return rec;
+}
+
+// 31-Part Brass-Pivot Tracksuit Poet Rig
+let use31PartRig = true;
+const POET_31_BASE = '../kits/packs/poet_tracksuit_v1/01_COMPONENTS/';
+const POET_31_FILES = [
+  '01_torso_front.png','05_pelvis_front.png','07_upper_arm_L.png','08_forearm_L.png',
+  '09_upper_arm_R.png','10_forearm_R.png','11_thigh_L.png','12_shin_L.png',
+  '13_thigh_R.png','14_shin_R.png','15_hand_relaxed_L.png','16_hand_relaxed_R.png',
+  '19_boot_front_L.png','20_boot_front_R.png','21_head_front_blank.png',
+  '25_eyes_open.png','27_brows_rest.png','29_nose_front.png','30_mouth_rest.png','31_sunglasses_front.png'
+];
+function preloadPoet31(){
+  POET_31_FILES.forEach(f => getCachedImg(POET_31_BASE + f));
+}
+
+// Stage Assembler State
+let asmMode = false;
+let selectedLayer = null;
+let draggingLayer = null;
+let dragOffset = { dx: 0, dy: 0 };
+let asmCategory = 'all';
 
 function resize(){
   DPR = Math.min(2, devicePixelRatio||1);
@@ -217,12 +341,12 @@ function buildShelf(){
     const best = store.get('wy.best.'+p.num);
     const meta = ARC_SUMMARY[p.num] || { arc: 'Emotional Journey', desc: '' };
     b.innerHTML =
-      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}"><span class="arc-pill">${meta.arc}</span></div>` +
+      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}?v=2"><span class="arc-pill">${meta.arc}</span></div>` +
       `<div class="body"><b></b><div class="theme"></div><small></small><div class="best"></div></div>`;
     b.querySelector('b').textContent = `${p.num} · ${p.title}`;
     b.querySelector('.theme').textContent = meta.desc;
-    b.querySelector('small').textContent = `${Math.round(p.duration)}s · ${p.scenes} scenes · ${p.lines} stanza lines · ${p.cast} playable cast`;
-    b.querySelector('.best').textContent = best ? (`★ Best resonance: ${best}/${p.lines} lines inhabited`) : 'Click to enter poem →';
+    b.querySelector('small').textContent = `${Math.round(p.duration)}s · ${p.scenes} multiplane scenes · ${p.lines} station lines`;
+    b.querySelector('.best').textContent = best ? (`★ Best resonance: ${best}/${p.lines} stations inhabited`) : 'Enter multiplane poem →';
     b.addEventListener('click', ()=>openLevel(p.num));
     g.append(b);
   });
@@ -233,11 +357,24 @@ async function openLevel(num){
   $('shelf').style.display = 'none';
   $('stage').style.display = 'block';
   resize();
-  L = await (await fetch(`levels/${num}/level.json`)).json();
+  preloadPoet31();
+  L = await (await fetch(`levels/${num}/level.json?v=2`)).json();
   scenes = L.scenes;
-  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(`levels/${num}/${s.img}`)));
 
-  // Pick lead character (Poet in Poems 01-14, or first in cast)
+  // Restore any user-saved custom stage assemblies from localStorage & preload all multiplane cut-out assets
+  scenes.forEach((sc, idx) => {
+    sc._defaultLayers = JSON.parse(JSON.stringify(sc.multiplane_layers || []));
+    const saved = store.get(`wy.stage.${num}.${idx}`);
+    if (saved){
+      try { sc.multiplane_layers = JSON.parse(saved); } catch(e){}
+    }
+    if (sc.backdrop_file) getCachedImg(sc.backdrop_file);
+    (sc.multiplane_layers || []).forEach(lyr => getCachedImg(lyr.file));
+  });
+
+  // Load clean backdrop plates
+  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(s.backdrop_file || `levels/${num}/${s.img}`)));
+
   const pref = L.cast.findIndex(c => c.key.startsWith('poet/'));
   castIdx = pref >= 0 ? pref : 0;
   await setActor(castIdx);
@@ -247,8 +384,10 @@ async function openLevel(num){
   total = scenes.reduce((n,s) => n + s.lines.length, 0);
   score = 0; ended = false; started = false; paused = false;
   cur = { i: -1, fade: 0 };
-  sceneResonance = 0.25;
+  sceneResonance = 0.30;
+  stationBoost = {};
   wordEchoes = [];
+  selectedLayer = null;
   initParticles();
 
   if (audio){ audio.pause(); audio = null; }
@@ -259,14 +398,17 @@ async function openLevel(num){
   const arcMeta = ARC_SUMMARY[num] || { arc: 'Emotional Arc', desc: '' };
   $('ttl').textContent = `${L.num} · ${L.title}`;
   $('stt').textContent = `${L.num} · ${L.title}`;
-  $('stn').textContent = `${Math.round(L.duration)} seconds · ${scenes.length} painted scenes · ${total} spoken lines`;
-  $('stArc').innerHTML = `<b>Emotional Arc (${arcMeta.arc}):</b><br>${arcMeta.desc}`;
+  $('stn').textContent = `${Math.round(L.duration)}s · ${scenes.length} multiplane architectural scenes · ${total} station lines`;
+  $('stArc').innerHTML = `<b>Architectural & Emotional Journey (${arcMeta.arc}):</b><br>${arcMeta.desc}`;
   $('start').style.display = 'grid';
   $('end').style.display = 'none';
   buildArcBar();
   updateScore();
+  renderAsmCatalog();
 
-  actor.x = 300; actor.dir = 1; camLeft = 0;
+  actor.x = scenes[0]?.lines?.[0]?.mx || 280;
+  actor.dir = 1;
+  camLeft = 0;
   lastT = performance.now();
   running = true;
   requestAnimationFrame(frame);
@@ -277,26 +419,38 @@ async function setActor(i){
   const c = L.cast[castIdx];
   const ch = CHARS.find(x => x.key === c.key) || CHARS[0];
   const imgs = await Promise.all(ch.draws.map(d => Anim2.loadImg(`assets/${ch.dir}/${d.f}`)));
-  const keepX = actor ? actor.x : 300, keepDir = actor ? actor.dir : 1;
+  const keepX = actor ? actor.x : 280, keepDir = actor ? actor.dir : 1;
   actor = new Anim2.Actor(ch, imgs);
   actor.x = keepX; actor.dir = keepDir;
+  actor.isPoet = ch.key.startsWith('poet/');
   const shortName = ch.name.replace(/\s*\(.*$/,'');
   $('who').textContent = `Play as: ${ch.name}`;
   $('castBtn').textContent = `⇄ ${shortName}`;
+  updateRigButtonLabel();
   buildButtons();
+}
+
+function updateRigButtonLabel(){
+  const btn = $('rigModeBtn');
+  if (!actor || !actor.isPoet){
+    btn.textContent = '🎨 Rig: Painted';
+    btn.classList.remove('on');
+  } else {
+    btn.textContent = use31PartRig ? '🦿 Rig: 31-Part' : '🎨 Rig: Painted';
+    btn.classList.toggle('on', use31PartRig);
+  }
 }
 
 async function setupCounterpart(){
   counterpart = null;
   if (!L || !L.cast || L.cast.length < 2) return;
-  // Choose dramatic counterpart (e.g., poet_soul in Poem 08, ex/ex_jacket in 01/03/07/09, vintage partner in 01/14, ancestor in 05)
   const otherSpec = L.cast.find((c, idx) => idx !== castIdx);
   if (!otherSpec) return;
   const ch = CHARS.find(x => x.key === otherSpec.key);
   if (!ch) return;
   const imgs = await Promise.all(ch.draws.map(d => Anim2.loadImg(`assets/${ch.dir}/${d.f}`)));
   const act = new Anim2.Actor(ch, imgs);
-  act.x = 880;
+  act.x = 920;
   act.dir = -1;
   counterpart = {
     key: ch.key,
@@ -316,7 +470,8 @@ function buildArcBar(){
     btn.className = 'sc-step';
     btn.dataset.idx = idx;
     const emo = sc.emotion || 'searching';
-    btn.innerHTML = `<small>${sc.key} · ${emo}</small><b>${sc.name}</b>`;
+    const layerCount = (sc.multiplane_layers || []).length;
+    btn.innerHTML = `<small>${sc.key} · ${emo} · ${layerCount} pcs</small><b>${sc.name}</b>`;
     btn.addEventListener('click', () => {
       if (audio){
         audio.currentTime = sc.t0 + 0.05;
@@ -330,18 +485,16 @@ function buildArcBar(){
 function buildButtons(){
   const box = $('acts');
   box.innerHTML = '';
-  // 1. Primary contextual "Embody Current Line" button
   const cueBtn = document.createElement('button');
   cueBtn.className = 'btn cue-btn';
   cueBtn.id = 'embodyBtn';
-  cueBtn.textContent = '★ Embody Line (Space)';
+  cueBtn.textContent = '★ Embody Station (Space)';
   cueBtn.addEventListener('pointerdown', ev => {
     ev.preventDefault();
     embodyActiveLine();
   });
   box.append(cueBtn);
 
-  // 2. Character's intentional emotional postures (never shuffling!)
   actor.buttons().forEach(b => {
     const e = document.createElement('button');
     e.className = 'btn';
@@ -365,10 +518,13 @@ function highlightActiveButton(activeKey){
 function embodyActiveLine(){
   if (!actor) return;
   const now = performance.now();
-  if (activeLine && activeLine.posture_cue){
-    actor.ctrl.embodyCue(activeLine.posture_cue, activeLine.emotion, now);
+  if (activeLine){
+    actor.ctrl.embodyCue(activeLine.posture_cue || 'stand', activeLine.emotion, now);
     highlightActiveButton(activeLine.posture_cue);
     sceneResonance = Math.min(1, sceneResonance + 0.18);
+    if (activeLine.station_id){
+      stationBoost[activeLine.station_id] = 1.0;
+    }
   } else {
     actor.ctrl.jump(now);
   }
@@ -379,13 +535,143 @@ function initParticles(){
   for (let i = 0; i < 36; i++){
     particles.push({
       x: Math.random() * 1280,
-      y: Math.random() * 720,
-      vx: (Math.random() - 0.5) * 18,
-      vy: -10 - Math.random() * 24,
-      r: 1.5 + Math.random() * 2.5,
-      a: 0.25 + Math.random() * 0.55
+      y: Math.random() * 600,
+      vx: (Math.random() - 0.5) * 16,
+      vy: -8 - Math.random() * 20,
+      r: 1.4 + Math.random() * 2.2,
+      a: 0.22 + Math.random() * 0.5
     });
   }
+}
+
+/* ---------- 31-Part Brass-Pivot Articulated Tracksuit Poet Renderer ---------- */
+function drawPoet31Rig(g, state, cx, fy, scalePx, ts){
+  const tSec = ts / 1000;
+  const targetH = 172 * scalePx;
+  const u = targetH / 560;
+  const moving = state.mode === 'walk';
+  const emo = state.emotion || 'searching';
+  const freq = moving ? 7.5 : 1.8;
+  const legAmp = moving ? 0.44 : 0.03;
+  const armAmp = moving ? 0.36 : 0.05;
+
+  // Emotional posture overrides for the 31-part rig
+  let torsoLean = (state.lean_deg || 0) * Math.PI / 180;
+  let sinkY = (state.crouch_offset_cm || 0) * scalePx * 0.7 - (state.y || 0) * scalePx;
+  let armRaiseL = 0, armRaiseR = 0, kneeBend = 0, headPitch = 0;
+
+  if (emo === 'vertigo' || emo === 'grief'){
+    torsoLean += 0.12;
+    headPitch = 0.14;
+  } else if (emo === 'awe' || emo === 'ecstasy'){
+    armRaiseL = -0.65;
+    armRaiseR = 0.65;
+    headPitch = -0.10;
+  } else if (emo === 'searching' || emo === 'revelation'){
+    armRaiseR = -0.52;
+  } else if (emo === 'resolution' || emo === 'waltz'){
+    armRaiseL = -0.35;
+    armRaiseR = 0.35;
+  }
+  if (state.crouch_offset_cm > 8){
+    kneeBend = 0.45;
+  }
+
+  const walkSwing = Math.sin(tSec * freq) * legAmp;
+  const armSwing = Math.sin(tSec * freq) * armAmp;
+  const bob = moving ? Math.abs(Math.cos(tSec * freq)) * 5 * u : Math.sin(tSec * 2.2) * 2.5 * u;
+
+  g.save();
+  g.translate(cx, fy + sinkY - bob);
+  if (state.dir < 0) g.scale(-1, 1);
+
+  const hipY = -255 * u;
+  const shY = -415 * u;
+
+  function drawPiece(file, x, y, w, h, rot, ax, ay, clipH){
+    const rec = getCachedImg(POET_31_BASE + file);
+    if (!rec || !rec.ok) return;
+    g.save();
+    g.translate(x, y);
+    if (rot) g.rotate(rot);
+    if (clipH && clipH < 1){
+      g.beginPath();
+      g.rect(-w * ax - 4, -h * ay - 4, w + 8, h * clipH + 4);
+      g.clip();
+    }
+    g.drawImage(rec.img, -w * ax, -h * ay, w, h);
+    g.restore();
+  }
+
+  function drawLimbChain(uFile, lFile, eFile, sx, sy, uAng, lAng, isLeg){
+    const uw = (isLeg ? 68 : 56) * u, uh = (isLeg ? 148 : 126) * u;
+    const lw = (isLeg ? 58 : 48) * u, lh = (isLeg ? 142 : 118) * u;
+    const ew = (isLeg ? 66 : 44) * u, eh = (isLeg ? 54 : 44) * u;
+
+    g.save();
+    g.translate(sx, sy);
+    g.rotate(uAng);
+    // Upper segment
+    drawPiece(uFile, 0, 0, uw, uh, 0, 0.5, 0.14, 0.88);
+    // Elbow / Knee joint
+    g.translate(0, uh * 0.74);
+    g.rotate(lAng);
+    // Cuff-Tuck: Draw Hand / Boot BEHIND the forearm / shin ribbed cuff so zero grommet tabs show!
+    const wristOrAnkleY = lh * (isLeg ? 0.76 : 0.74);
+    drawPiece(eFile, 0, wristOrAnkleY, ew, eh, 0, 0.5, 0.26, 1.0);
+    // Forearm / Shin clipped cleanly at the ribbed cuff lip
+    drawPiece(lFile, 0, 0, lw, lh, 0, 0.5, 0.13, isLeg ? 0.84 : 0.81);
+    g.restore();
+  }
+
+  // 1. Back Leg (Right)
+  drawLimbChain(
+    '13_thigh_R.png', '14_shin_R.png', '20_boot_front_R.png',
+    18 * u, hipY, -walkSwing - kneeBend * 0.6, Math.max(0, walkSwing * 0.45) + kneeBend, true
+  );
+
+  // 2. Back Arm (Right)
+  drawLimbChain(
+    '09_upper_arm_R.png', '10_forearm_R.png', '16_hand_relaxed_R.png',
+    38 * u, shY, armSwing + armRaiseR + torsoLean, -0.22 + armRaiseR * 0.4, false
+  );
+
+  // 3. Pelvis & Torso + Head (with Neck tucked inside collar)
+  g.save();
+  g.translate(0, hipY);
+  g.rotate(torsoLean);
+  drawPiece('05_pelvis_front.png', 0, 12 * u, 118 * u, 88 * u, 0, 0.5, 0.5, 1.0);
+
+  // Head & Face tucked behind torso collar
+  const neckY = -172 * u;
+  g.save();
+  g.translate(0, neckY);
+  g.rotate(headPitch + Math.sin(tSec * 1.6) * 0.04);
+  drawPiece('21_head_front_blank.png', 0, -48 * u, 108 * u, 128 * u, 0, 0.5, 0.5, 0.89);
+  drawPiece('25_eyes_open.png', 0, -54 * u, 54 * u, 22 * u, 0, 0.5, 0.5, 1.0);
+  drawPiece('27_brows_rest.png', 0, -68 * u, 58 * u, 18 * u, 0, 0.5, 0.5, 1.0);
+  drawPiece('29_nose_front.png', 2 * u, -44 * u, 22 * u, 28 * u, 0, 0.5, 0.5, 1.0);
+  drawPiece('30_mouth_rest.png', 0, -24 * u, 34 * u, 18 * u, 0, 0.5, 0.5, 1.0);
+  drawPiece('31_sunglasses_front.png', 2 * u, -54 * u, 68 * u, 26 * u, 0, 0.5, 0.5, 1.0);
+  g.restore();
+
+  // Torso drawn over the lower neck edge (Cuff-Tuck Collar!)
+  drawPiece('01_torso_front.png', 0, -88 * u, 146 * u, 204 * u, 0, 0.5, 0.5, 1.0);
+  g.restore();
+
+  // 4. Front Leg (Left)
+  drawLimbChain(
+    '11_thigh_L.png', '12_shin_L.png', '19_boot_front_L.png',
+    -18 * u, hipY, walkSwing - kneeBend * 0.6, Math.max(0, -walkSwing * 0.45) + kneeBend, true
+  );
+
+  // 5. Front Arm (Left)
+  drawLimbChain(
+    '07_upper_arm_L.png', '08_forearm_L.png', '15_hand_relaxed_L.png',
+    -38 * u, shY, -armSwing + armRaiseL + torsoLean, -0.22 + armRaiseL * 0.4, false
+  );
+
+  g.restore();
 }
 
 /* ---------- The Reading Clock & Emotional Simulation ---------- */
@@ -404,7 +690,8 @@ function frame(ts){
   if (k !== cur.i){
     cur = { i: k, fade: 1 };
     subKey = '';
-    // Update scene timeline highlight & initial scene emotion
+    selectedLayer = null;
+    updateAsmInspector();
     document.querySelectorAll('#arcBar .sc-step').forEach((el, idx) => {
       el.classList.toggle('active', idx === k);
       el.classList.toggle('done', idx < k);
@@ -418,37 +705,42 @@ function frame(ts){
   const m = kx !== 0 ? kx : move;
   const eff = Math.abs(m) < 0.12 ? 0 : m;
 
-  // Step character physics via Anim2 Controller
   const state = actor.ctrl.step(dt, eff, ts);
-  actor.x = Math.max(45, Math.min(fw - 45, actor.x));
+  actor.x = Math.max(60, Math.min(fw - 60, actor.x));
+
+  // Decay station boosts smoothly
+  for (const sid in stationBoost){
+    stationBoost[sid] = Math.max(0, stationBoost[sid] - dt * 0.45);
+  }
 
   // Find active or upcoming line
   activeLine = null;
   for (let j = 0; j < sc.lines.length; j++){
     const ln = sc.lines[j];
-    if (t >= ln.t - 0.3 && t <= ln.e + 0.45){
+    if (t >= ln.t - 0.35 && t <= ln.e + 0.45){
       activeLine = ln;
       break;
     }
   }
 
-  // Update Emotional HUD & Contextual Embody Button
+  // Update Emotional & Architectural Station HUD
   if (activeLine){
     const emoMod = Anim2.EMOTION_MODS[activeLine.emotion] || Anim2.EMOTION_MODS.searching;
-    $('emoKicker').textContent = `${sc.key} · ${sc.name.toUpperCase()}`;
+    const stName = activeLine.station_label || sc.name;
+    $('emoKicker').textContent = `📍 STATION: ${stName.toUpperCase()}`;
     $('emoTitle').textContent = `${activeLine.emotion_label || emoMod.label}`;
-    $('emoSub').textContent = `Stand in the focus pool (${Math.round(activeLine.mx)}px) or press Space to embody "${activeLine.posture_cue || 'presence'}".`;
+    $('emoSub').textContent = `Walk to "${stName}" (${Math.round(activeLine.mx)}px) or press Space to embody & animate the station.`;
     const eb = $('embodyBtn');
-    if (eb) eb.textContent = `★ Embody: ${activeLine.emotion_label || 'Line'} (Space)`;
+    if (eb) eb.textContent = `★ Embody @ ${stName.slice(0, 18)} (Space)`;
   } else if (sc){
     const emoMod = Anim2.EMOTION_MODS[sc.emotion] || Anim2.EMOTION_MODS.searching;
+    const stList = (sc.stations || []).map(s => s.title).join(' → ');
     $('emoKicker').textContent = `${sc.key} · ${sc.name.toUpperCase()}`;
     $('emoTitle').textContent = emoMod.label;
-    $('emoSub').textContent = `Move toward the next glowing stanza mark as the reading continues.`;
+    $('emoSub').textContent = stList ? `Stage Stations: ${stList}` : `Move between the architectural stations as the reading unfolds.`;
   }
 
-  // Evaluate line inhabitation & automatic emotional posture embodiment when inside the focus pool
-  const focusRadius = 105 * sc.ppc;
+  const focusRadius = 110 * sc.ppc;
   let insideAnyActive = false;
 
   sc.lines.forEach((ln, j) => {
@@ -459,7 +751,7 @@ function frame(ts){
       if (dist < focusRadius){
         insideAnyActive = true;
         st.inT += dt;
-        // When standing still inside the line's focus pool, naturally embody the line's emotional posture!
+        if (ln.station_id) stationBoost[ln.station_id] = Math.min(1, (stationBoost[ln.station_id] || 0) + dt * 2.2);
         if (eff === 0 && !st.embodied){
           st.embodied = true;
           actor.ctrl.embodyCue(ln.posture_cue, ln.emotion, ts);
@@ -469,35 +761,31 @@ function frame(ts){
     }
     if (live && !st.done && t > ln.e){
       st.done = true;
-      st.ok = st.inT >= 0.35 * Math.max(0.4, ln.e - ln.t);
+      st.ok = st.inT >= 0.32 * Math.max(0.4, ln.e - ln.t);
       st.shown = ts;
       if (st.ok){
         score++;
         updateScore();
         sceneResonance = Math.min(1, sceneResonance + 0.14);
-        // Spawn luminous word echoes from the caught line
+        if (ln.station_id) stationBoost[ln.station_id] = 1.0;
         spawnWordEchoes(ln);
       }
     }
   });
 
-  // Gradual resonance adjustment
   if (insideAnyActive){
     sceneResonance = Math.min(1.0, sceneResonance + dt * 0.22);
   } else if (live){
-    sceneResonance = Math.max(0.22, sceneResonance - dt * 0.04);
+    sceneResonance = Math.max(0.28, sceneResonance - dt * 0.03);
   }
 
-  // Close earlier scenes' lines
   for (let i = 0; i < k; i++){
     stats[i].forEach(st => {
       if (!st.done){ st.done = true; st.ok = false; st.shown = ts; }
     });
   }
 
-  // Step dramatic counterpart (Soul double, EX in Olive Bomber, Vintage Partner, etc.)
   stepCounterpart(dt, k, sc, ts);
-
   draw(sc, k, t, state, ts, dt);
   requestAnimationFrame(frame);
 }
@@ -513,9 +801,8 @@ function spawnWordEchoes(ln){
     wordEchoes.push({
       text: word,
       x: ln.mx + (i - 1) * 55,
-      yOffset: -40 - i * 22,
-      alpha: 1.0,
-      emotion: ln.emotion || 'searching'
+      yOffset: -45 - i * 22,
+      alpha: 1.0
     });
   });
 }
@@ -526,25 +813,21 @@ function stepCounterpart(dt, k, sc, ts){
   const cpAct = cp.actor;
 
   if (cp.isSoul){
-    // Poem 08: Soul leaves the dancer's body in scenes 0..3 and reunites in scene 4!
     const separated = k <= 3;
     cp.alpha = separated ? 0.78 : Math.max(0, cp.alpha - dt * 0.8);
-    cpAct.x += (actor.x + (separated ? 60 * Math.sin(ts / 900) : 0) - cpAct.x) * Math.min(1, dt * 3);
+    cpAct.x += (actor.x + (separated ? 65 * Math.sin(ts / 900) : 0) - cpAct.x) * Math.min(1, dt * 3);
     cpAct.dir = actor.dir;
     cpAct.ctrl.embodyCue(separated ? 'kneel_2' : 'idle', 'ecstasy', ts);
   } else if (cp.isEx){
-    // EX in Olive Bomber: always keeps back turned; walks away when approached; turns to haze at end of Poem 09
     const dist = cpAct.x - actor.x;
     let moveAway = 0;
     if (Math.abs(dist) < 160){
       moveAway = dist >= 0 ? 0.65 : -0.65;
     }
     if (L.num === '09' && k === 2){
-      // Scene 09.2: Suitcases at the phone booth
       cpAct.ctrl.embodyCue('suitcase', 'departure', ts);
       moveAway = 0;
     } else if (L.num === '09' && k >= 5){
-      // Scene 09.5: The EX turns to haze
       cp.alpha = Math.max(0.08, cp.alpha - dt * 0.25);
     } else {
       cp.alpha = 0.92;
@@ -552,12 +835,138 @@ function stepCounterpart(dt, k, sc, ts){
     cpAct.ctrl.step(dt, moveAway, ts);
     cpAct.x = Math.max(120, Math.min(L.frame[0] - 120, cpAct.x));
   } else {
-    // Supporting cast (Vintage partner, Mother, Ancestor, Brother): gentle presence facing the player
     cpAct.dir = actor.x < cpAct.x ? -1 : 1;
     cpAct.ctrl.step(dt, 0, ts);
   }
 }
 
+/* ---------- Multiplane Cut-Out Layer Renderer (P5, P4, P3, P1) ---------- */
+function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
+  const rec = getCachedImg(lyr.file);
+  if (!rec || !rec.ok) return;
+  const im = rec.img;
+  const iw = im.naturalWidth || lyr.width || 240;
+  const ih = im.naturalHeight || lyr.height || 240;
+
+  const plane = lyr.plane || 'P3';
+  const pFactor = PARALLAX_BY_PLANE[plane] !== undefined ? PARALLAX_BY_PLANE[plane] : 0.90;
+  const boost = (lyr.station_id && stationBoost[lyr.station_id]) ? stationBoost[lyr.station_id] : 0;
+  const tSec = ts / 1000;
+  const speedMult = 1 + boost * 1.4;
+
+  // Base stage coordinates in 1280x720 level space
+  let baseX = (lyr.x || 0.5) * fw;
+  let baseY = (lyr.y || 0.86) * fh;
+  let rot = 0;
+  let scMult = 1 + boost * 0.05;
+  let alpha = (lyr.alpha !== undefined ? lyr.alpha : 0.98);
+  const anim = lyr.anim_role || 'static';
+
+  // Procedural multiplane animations matching stage.html + interactive station boost
+  if (anim === 'wheel_spin' || anim === 'turntable_spin'){
+    rot = tSec * (anim === 'turntable_spin' ? 3.2 : 2.6) * speedMult;
+  } else if (anim === 'heart_beat'){
+    scMult *= 1 + (0.09 + boost * 0.12) * Math.pow(Math.max(0, Math.sin(tSec * 3.8 * speedMult)), 3);
+  } else if (anim === 'speaker_pulse' || anim === 'dj_console'){
+    scMult *= 1 + (0.035 + boost * 0.06) * Math.abs(Math.sin(tSec * 6.2));
+  } else if (anim === 'wave_far'){
+    baseX += Math.sin(tSec * 1.1) * 14;
+    baseY += Math.cos(tSec * 0.9) * 3;
+  } else if (anim === 'wave_mid'){
+    baseX += Math.cos(tSec * 1.45) * 20;
+    baseY += Math.sin(tSec * 1.2) * 5;
+  } else if (anim === 'wave_near'){
+    baseX += Math.sin(tSec * 1.9) * 26;
+    baseY += Math.cos(tSec * 1.5) * 6;
+  } else if (anim === 'boat_rock'){
+    rot = Math.sin(tSec * 1.4) * (0.045 + boost * 0.04);
+    baseY += Math.cos(tSec * 1.7) * 5;
+  } else if (anim === 'wing_flap_L'){
+    rot = Math.sin(tSec * 2.5 * speedMult) * 0.11;
+  } else if (anim === 'wing_flap_R'){
+    rot = -Math.sin(tSec * 2.5 * speedMult) * 0.11;
+  } else if (anim === 'tambourine_arc'){
+    baseY += Math.sin(tSec * 2.3) * 12;
+    rot = tSec * 1.9;
+  } else if (anim === 'flower_bloom'){
+    rot = Math.sin(tSec * 1.6) * 0.04;
+    scMult *= 1 + 0.03 * Math.sin(tSec * 2.0);
+  } else if (anim === 'chandelier_sway' || anim === 'curtain_sway_L' || anim === 'curtain_sway_R'){
+    rot = Math.sin(tSec * 1.3) * 0.035;
+  } else if (anim === 'hourglass_sand'){
+    alpha = 0.78 + 0.22 * Math.sin(tSec * 5.0);
+  } else if (anim === 'lamp_glow' || anim === 'portal_tv_flicker' || anim === 'sun_pulse'){
+    scMult *= 1 + (0.02 + boost * 0.05) * Math.sin(tSec * 3.2);
+  } else if (anim === 'phone_ring'){
+    scMult *= 1 + 0.09 * Math.sin(tSec * 8.0);
+  } else if (anim === 'cloud_drift_L'){
+    baseX += Math.sin(tSec * 0.45) * 24;
+  }
+
+  // Poem 11 Scene 2 ("The temple builds itself"): courses, columns, beams & finial descend into place!
+  if (L && L.num === '11' && k === 2 && lyr.sheet_id && lyr.sheet_id.includes('temple.arrival')){
+    const buildProg = Math.min(1, 0.35 + sceneResonance * 0.65);
+    baseY -= (1 - buildProg) * 120;
+  }
+
+  // Compute screen-space size with stage scale `s`
+  const rawH = Math.max(28, Math.min(fh * 0.78, fh * (lyr.scale || 0.35) * scMult));
+  const rawW = Math.max(28, rawH * (iw / Math.max(1, ih)));
+  const drawH = rawH * s;
+  const drawW = rawW * s;
+
+  // Apply multiplane camera parallax around stage center
+  const screenX = offX + (baseX - camDelta * pFactor) * s;
+  const screenY = y0 + baseY * s;
+
+  // Store screen bbox on layer for interactive Stage Assembler clicking & dragging
+  lyr._HitBox = {
+    cx: screenX,
+    by: screenY,
+    x0: screenX - drawW / 2,
+    y0: screenY - drawH,
+    w: drawW,
+    h: drawH,
+    fw, fh, offX, stageY0: y0, s, camDelta, pFactor
+  };
+
+  ctx.save();
+  ctx.globalAlpha = Math.max(0.05, Math.min(1, alpha));
+  ctx.translate(screenX, screenY - drawH * 0.5);
+  if (lyr.flip) ctx.scale(-1, 1);
+  if (rot) ctx.rotate(rot);
+
+  // Subtle paper cut-out drop shadow + warm station boost aura
+  if (boost > 0.05){
+    ctx.shadowColor = 'rgba(216,171,79,0.75)';
+    ctx.shadowBlur = (10 + boost * 16) * s;
+  } else {
+    ctx.shadowColor = 'rgba(0,0,0,0.52)';
+    ctx.shadowBlur = 6 * s;
+    ctx.shadowOffsetY = 3 * s;
+  }
+
+  ctx.drawImage(im, -drawW * 0.5, -drawH * 0.5, drawW, drawH);
+  ctx.restore();
+
+  // If Stage Assembler mode is open, draw piece frame & handle
+  if (asmMode){
+    const isSel = selectedLayer === lyr;
+    ctx.save();
+    ctx.strokeStyle = isSel ? '#4de2c2' : 'rgba(216,171,79,0.55)';
+    ctx.lineWidth = isSel ? 2.2 : 1.2;
+    if (!isSel) ctx.setLineDash([4, 4]);
+    ctx.strokeRect(screenX - drawW / 2, screenY - drawH, drawW, drawH);
+    ctx.fillStyle = isSel ? '#4de2c2' : 'rgba(15,19,25,0.85)';
+    ctx.fillRect(screenX - drawW / 2, screenY - drawH - 16, Math.min(drawW, 135), 16);
+    ctx.fillStyle = isSel ? '#07080b' : '#e8ecf1';
+    ctx.font = '600 10px "JetBrains Mono", monospace';
+    ctx.fillText(`${plane} · ${(lyr.label || lyr.part_id).slice(0, 16)}`, screenX - drawW / 2 + 4, screenY - drawH - 4);
+    ctx.restore();
+  }
+}
+
+/* ---------- Main Multiplane Stage Render Loop ---------- */
 function draw(sc, k, t, state, ts, dt){
   ctx.setTransform(DPR,0,0,DPR,0,0);
   ctx.clearRect(0,0,W,H);
@@ -586,104 +995,123 @@ function draw(sc, k, t, state, ts, dt){
   ctx.rect(offX, y0, Math.min(W, fw*s), stageH);
   ctx.clip();
 
-  // 1. Background Painting with Emotional Awakening (desaturated shadow -> living color as you inhabit lines)
+  // 1. PLANE P6: Clean Painted Atlantis World Backdrop
   if (img){
-    const sat = Math.round(52 + sceneResonance * 62);
-    const bri = Math.round(74 + sceneResonance * 28);
+    const sat = Math.round(68 + sceneResonance * 46);
+    const bri = Math.round(80 + sceneResonance * 24);
     ctx.save();
     ctx.filter = `saturate(${sat}%) brightness(${bri}%)`;
-    ctx.drawImage(img, offX - left*s, y0, fw*s, fh*s);
+    const p6Shift = left * PARALLAX_BY_PLANE.P6 * s;
+    ctx.drawImage(img, offX - p6Shift, y0, fw * s, fh * s);
     ctx.restore();
   }
 
-  // 2. Emotional Atmosphere Tint & Living Particles
+  // 2. Grounded Architectural Proscenium Stage Floor Deck (below fy)
   const emoColor = (state.emotion_mod && state.emotion_mod.color) || [216, 171, 79];
   const [er, eg, eb] = emoColor;
-  const atmoGrad = ctx.createLinearGradient(0, y0, 0, y0 + stageH);
-  atmoGrad.addColorStop(0, `rgba(${er},${eg},${eb},${0.04 + sceneResonance * 0.10})`);
-  atmoGrad.addColorStop(1, `rgba(${er},${eg},${eb},${0.10 + sceneResonance * 0.18})`);
-  ctx.fillStyle = atmoGrad;
-  ctx.fillRect(offX, y0, Math.min(W, fw*s), stageH);
+  const floorGrad = ctx.createLinearGradient(0, fy - 12 * s, 0, y0 + stageH);
+  floorGrad.addColorStop(0, `rgba(${er},${eg},${eb},0)`);
+  floorGrad.addColorStop(0.14, `rgba(12,15,22,0.72)`);
+  floorGrad.addColorStop(1, `rgba(7,9,14,0.92)`);
+  ctx.fillStyle = floorGrad;
+  ctx.fillRect(offX, fy - 12 * s, Math.min(W, fw * s), y0 + stageH - (fy - 12 * s));
 
-  // Update & draw emotional particles (stars, embers, rain, petals, haze)
+  // Subtle stage floor horizon beam
+  ctx.strokeStyle = `rgba(${er},${eg},${eb},${0.35 + sceneResonance * 0.35})`;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(offX, fy);
+  ctx.lineTo(offX + fw * s, fy);
+  ctx.stroke();
+
+  // 3. PLANE P5 & P4: Horizon Elements & Architectural Structures / Portals / Windows
+  const mLayers = sc.multiplane_layers || [];
+  for (let i = 0; i < mLayers.length; i++){
+    const lyr = mLayers[i];
+    if (lyr.plane === 'P5' || lyr.plane === 'P4'){
+      drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, left, ts, k);
+    }
+  }
+
+  // 4. PLANE P3: Grounded Furniture, Vehicles & Reactive Station Props
+  for (let i = 0; i < mLayers.length; i++){
+    const lyr = mLayers[i];
+    if (lyr.plane === 'P3' || (!lyr.plane)){
+      drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, left, ts, k);
+    }
+  }
+
+  // 5. Stage Station Footlights & Architectural Plaques for Poem Lines
+  sc.lines.forEach((ln, j) => {
+    const st = stats[k][j];
+    const vis = (t >= ln.t - 3.2 && t <= ln.e + 0.45) || (st.done && ts - st.shown < 950);
+    if (!vis) return;
+    const active = t >= ln.t && t <= ln.e;
+    const x = px(ln.mx);
+    const r = 90 * sc.ppc * s;
+    const lMod = Anim2.EMOTION_MODS[ln.emotion] || Anim2.EMOTION_MODS.searching;
+    const col = st.done ? (st.ok ? '108,194,143' : '236,122,110') : lMod.color.join(',');
+    const pulse = active ? 0.62 + 0.25 * Math.sin(ts / 160) : 0.28 + 0.1 * Math.sin(ts / 320);
+
+    // Floor footlight pool
+    ctx.save();
+    ctx.translate(x, fy);
+    ctx.scale(1, 0.23);
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${col},${pulse * 0.44})`;
+    ctx.fill();
+    ctx.lineWidth = 3.2;
+    ctx.strokeStyle = `rgba(${col},${Math.min(1, pulse + 0.30)})`;
+    ctx.stroke();
+    ctx.restore();
+
+    // Vertical stage station light column
+    const pillar = ctx.createLinearGradient(0, fy - 195 * s, 0, fy);
+    pillar.addColorStop(0, `rgba(${col},0)`);
+    pillar.addColorStop(1, `rgba(${col},${pulse * 0.38})`);
+    ctx.fillStyle = pillar;
+    ctx.fillRect(x - r * 0.24, fy - 195 * s, r * 0.48, 195 * s);
+
+    // Architectural Station Plaque + Emotional Cue above the station
+    if (active || (!st.done && t >= ln.t - 2.2)){
+      const stTitle = (ln.station_label || 'STAGE STATION').toUpperCase();
+      const emoTitle = (ln.emotion_label || 'STAND HERE').toUpperCase();
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.shadowColor = '#000';
+      ctx.shadowBlur = 6;
+      ctx.font = `700 ${Math.max(10, Math.round(11 * s))}px "JetBrains Mono", monospace`;
+      ctx.fillStyle = '#fff';
+      ctx.fillText(`📍 ${stTitle}`, x, fy - 178 * s);
+      ctx.font = `600 ${Math.max(10, Math.round(11.5 * s))}px "JetBrains Mono", monospace`;
+      ctx.fillStyle = `rgba(${col},0.98)`;
+      ctx.fillText(`★ ${emoTitle}`, x, fy - 161 * s);
+      ctx.restore();
+    }
+
+    if (active){
+      const frac = Math.min(1, st.inT / Math.max(0.4, (ln.e - ln.t) * 0.32));
+      ctx.fillStyle = `rgba(${col},.94)`;
+      ctx.fillRect(x - r * 0.55, fy + 9 * s, r * 1.1 * frac, 5);
+      ctx.strokeStyle = 'rgba(255,255,255,.35)';
+      ctx.strokeRect(x - r * 0.55, fy + 9 * s, r * 1.1, 5);
+    }
+  });
+
+  // 6. Living Atmospheric Particles
   ctx.save();
   particles.forEach(p => {
     p.x = (p.x + p.vx * dt + fw) % fw;
     p.y = (p.y + p.vy * dt + fh) % fh;
-    ctx.fillStyle = `rgba(${er},${eg},${eb},${p.a * (0.4 + sceneResonance * 0.6)})`;
+    ctx.fillStyle = `rgba(${er},${eg},${eb},${p.a * (0.35 + sceneResonance * 0.55)})`;
     ctx.beginPath();
     ctx.arc(px(p.x), y0 + p.y * s, p.r * s, 0, Math.PI * 2);
     ctx.fill();
   });
   ctx.restore();
 
-  // 3. Stage Focus Pools for Poem Lines (Where Meaning Lives in the Scene)
-  sc.lines.forEach((ln, j) => {
-    const st = stats[k][j];
-    const vis = (t >= ln.t - 2.8 && t <= ln.e + 0.4) || (st.done && ts - st.shown < 950);
-    if (!vis) return;
-    const active = t >= ln.t && t <= ln.e;
-    const x = px(ln.mx);
-    const r = 92 * sc.ppc * s;
-    const lMod = Anim2.EMOTION_MODS[ln.emotion] || Anim2.EMOTION_MODS.searching;
-    const col = st.done ? (st.ok ? '108,194,143' : '236,122,110') : lMod.color.join(',');
-    const pulse = active ? 0.6 + 0.25 * Math.sin(ts / 160) : 0.3 + 0.1 * Math.sin(ts / 320);
-
-    // Floor ellipse
-    ctx.save();
-    ctx.translate(x, fy);
-    ctx.scale(1, 0.24);
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(${col},${pulse * 0.42})`;
-    ctx.fill();
-    ctx.lineWidth = 3.5;
-    ctx.strokeStyle = `rgba(${col},${Math.min(1, pulse + 0.28)})`;
-    ctx.stroke();
-    ctx.restore();
-
-    // Vertical light pillar
-    const pillar = ctx.createLinearGradient(0, fy - 180 * s, 0, fy);
-    pillar.addColorStop(0, `rgba(${col},0)`);
-    pillar.addColorStop(1, `rgba(${col},${pulse * 0.42})`);
-    ctx.fillStyle = pillar;
-    ctx.fillRect(x - r * 0.22, fy - 180 * s, r * 0.44, 180 * s);
-
-    // Posture & Emotion Cue Label above the light pool
-    if (active || (!st.done && t >= ln.t - 1.8)){
-      ctx.save();
-      ctx.font = `600 ${Math.max(11, Math.round(12 * s))}px "JetBrains Mono", monospace`;
-      ctx.textAlign = 'center';
-      ctx.fillStyle = `rgba(${col},0.95)`;
-      ctx.shadowColor = '#000';
-      ctx.shadowBlur = 6;
-      ctx.fillText((ln.emotion_label || 'STAND HERE').toUpperCase(), x, fy - 155 * s);
-      ctx.restore();
-    }
-
-    if (active){
-      const frac = Math.min(1, st.inT / Math.max(0.4, (ln.e - ln.t) * 0.35));
-      ctx.fillStyle = `rgba(${col},.92)`;
-      ctx.fillRect(x - r * 0.55, fy + 10 * s, r * 1.1 * frac, 5);
-      ctx.strokeStyle = 'rgba(255,255,255,.35)';
-      ctx.strokeRect(x - r * 0.55, fy + 10 * s, r * 1.1, 5);
-    }
-  });
-
-  // 4. Player Character Aura Pool
-  const auraR = (120 + sceneResonance * 85) * sc.ppc * s;
-  const pool = ctx.createRadialGradient(px(actor.x), fy - 4, 4, px(actor.x), fy - 4, auraR);
-  pool.addColorStop(0, `rgba(${er},${eg},${eb},${0.26 + sceneResonance * 0.22})`);
-  pool.addColorStop(1, `rgba(${er},${eg},${eb},0)`);
-  ctx.save();
-  ctx.translate(0, fy - 4);
-  ctx.scale(1, 0.24);
-  ctx.translate(0, -(fy - 4));
-  ctx.fillStyle = pool;
-  ctx.fillRect(px(actor.x) - auraR, fy - auraR, auraR * 2, auraR * 2);
-  ctx.restore();
-
-  // 5. Draw Dramatic Counterpart (EX, Floating Soul Double, Vintage Partner, etc.)
+  // 7. PLANE P2: Dramatic Counterpart & Playable Actor
   if (counterpart && counterpart.alpha > 0.02){
     const cp = counterpart;
     const cpState = cp.actor.ctrl.step(0, 0, ts);
@@ -695,10 +1123,35 @@ function draw(sc, k, t, state, ts, dt){
     ctx.restore();
   }
 
-  // 6. Draw Player Character
-  actor.draw(ctx, state, px(actor.x), fy, sc.ppc * s, ts);
+  // Player Footlight Aura
+  const auraR = (115 + sceneResonance * 80) * sc.ppc * s;
+  const pool = ctx.createRadialGradient(px(actor.x), fy - 4, 4, px(actor.x), fy - 4, auraR);
+  pool.addColorStop(0, `rgba(${er},${eg},${eb},${0.26 + sceneResonance * 0.22})`);
+  pool.addColorStop(1, `rgba(${er},${eg},${eb},0)`);
+  ctx.save();
+  ctx.translate(0, fy - 4);
+  ctx.scale(1, 0.24);
+  ctx.translate(0, -(fy - 4));
+  ctx.fillStyle = pool;
+  ctx.fillRect(px(actor.x) - auraR, fy - auraR, auraR * 2, auraR * 2);
+  ctx.restore();
 
-  // 7. Draw Rising Poetic Word Echoes
+  // Draw Playable Actor (31-Part Brass-Pivot Tracksuit Rig OR Coherent Painted Cut-Out)
+  if (actor.isPoet && use31PartRig){
+    drawPoet31Rig(ctx, state, px(actor.x), fy, sc.ppc * s, ts);
+  } else {
+    actor.draw(ctx, state, px(actor.x), fy, sc.ppc * s, ts);
+  }
+
+  // 8. PLANE P1: Foreground Waves, Headlight Cones & Crepuscular Light Rays
+  for (let i = 0; i < mLayers.length; i++){
+    const lyr = mLayers[i];
+    if (lyr.plane === 'P1'){
+      drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, left, ts, k);
+    }
+  }
+
+  // 9. Rising Poetic Word Echoes
   for (let i = wordEchoes.length - 1; i >= 0; i--){
     const we = wordEchoes[i];
     we.yOffset -= 26 * dt;
@@ -710,7 +1163,7 @@ function draw(sc, k, t, state, ts, dt){
     ctx.fillStyle = `rgba(255,244,214,${we.alpha})`;
     ctx.shadowColor = '#000';
     ctx.shadowBlur = 8;
-    ctx.fillText(we.text, px(we.x), fy - 110 * s + we.yOffset * s);
+    ctx.fillText(we.text, px(we.x), fy - 115 * s + we.yOffset * s);
     ctx.restore();
   }
 
@@ -721,7 +1174,7 @@ function draw(sc, k, t, state, ts, dt){
     ctx.fillRect(0,0,W,H);
   }
 
-  // 8. Spoken Line Subtitle & Emotional Posture Note
+  // 10. Spoken Line Subtitle & Station Note
   let line = null;
   for (const ln of sc.lines) if (t >= ln.t - 0.15 && t <= ln.e + 0.6) line = ln;
   const sub = $('sub');
@@ -742,7 +1195,7 @@ function draw(sc, k, t, state, ts, dt){
       sub.append(lineDiv);
       const cueDiv = document.createElement('div');
       cueDiv.id = 'subCue';
-      cueDiv.textContent = `${line.emotion_label || 'Inhabit the Line'} · Posture: ${state.pose_label}`;
+      cueDiv.textContent = `📍 ${line.station_label || sc.name} · ${line.emotion_label || 'Inhabit'} · Posture: ${state.pose_label}`;
       sub.append(cueDiv);
     }
   }
@@ -750,8 +1203,94 @@ function draw(sc, k, t, state, ts, dt){
   wordSpans.forEach(sp => sp.classList.toggle('on', t >= parseFloat(sp.dataset.s)));
   const cueEl = $('subCue');
   if (cueEl && line){
-    cueEl.textContent = `${line.emotion_label || 'Inhabit the Line'} · Active Posture: ${state.pose_label}`;
+    cueEl.textContent = `📍 ${line.station_label || sc.name} · ${line.emotion_label || 'Inhabit'} · Active Posture: ${state.pose_label}`;
   }
+}
+
+/* ---------- Live Multiplane Stage Assembler Workbench ---------- */
+function saveCurrentSceneAssembly(){
+  if (!L || cur.i < 0 || !scenes[cur.i]) return;
+  const sc = scenes[cur.i];
+  const clean = (sc.multiplane_layers || []).map(l => {
+    const copy = Object.assign({}, l);
+    delete copy._HitBox;
+    return copy;
+  });
+  store.set(`wy.stage.${L.num}.${cur.i}`, JSON.stringify(clean));
+}
+
+function updateAsmInspector(){
+  const titleEl = $('asmSelectedTitle');
+  const animSel = $('asmAnimSelect');
+  if (!selectedLayer){
+    titleEl.textContent = 'No piece selected (click any structure on stage)';
+    document.querySelectorAll('#asmInspector [data-plane]').forEach(b => b.classList.remove('on'));
+    return;
+  }
+  titleEl.textContent = `${selectedLayer.plane || 'P3'} · ${selectedLayer.label || selectedLayer.part_id} (scale ${Number(selectedLayer.scale || 0.35).toFixed(2)})`;
+  animSel.value = selectedLayer.anim_role || 'static';
+  document.querySelectorAll('#asmInspector [data-plane]').forEach(b => {
+    b.classList.toggle('on', b.dataset.plane === (selectedLayer.plane || 'P3'));
+  });
+}
+
+function renderAsmCatalog(){
+  const grid = $('asmCatalogGrid');
+  if (!grid || !CATALOG.length) return;
+  const q = ($('asmSearch').value || '').trim().toLowerCase();
+  const pFilter = $('asmPoemFilter').value;
+  const curPoemNum = L ? parseInt(L.num, 10) : 0;
+
+  const filtered = CATALOG.filter(item => {
+    if (pFilter === 'cur' && curPoemNum && item.poem !== curPoemNum) return false;
+    if (asmCategory !== 'all' && item.category !== asmCategory) return false;
+    if (q && !(item.label.toLowerCase().includes(q) || item.sheet_id.toLowerCase().includes(q) || item.part_id.toLowerCase().includes(q))) return false;
+    return true;
+  }).slice(0, 80);
+
+  grid.innerHTML = '';
+  filtered.forEach(item => {
+    const btn = document.createElement('button');
+    btn.className = 'asm-card';
+    btn.innerHTML =
+      `<div class="th"><img loading="lazy" alt="" src="${item.file}"></div>` +
+      `<span>${item.label}</span>` +
+      `<small>${item.plane} · ${item.sheet_id}</small>`;
+    btn.addEventListener('click', () => addCatalogItemToStage(item));
+    grid.append(btn);
+  });
+}
+
+function addCatalogItemToStage(item){
+  if (!L || cur.i < 0 || !scenes[cur.i]) return;
+  const sc = scenes[cur.i];
+  const fw = L.frame[0];
+  const newLayer = {
+    id: `custom_${Date.now()}`,
+    part_id: item.part_id,
+    sheet_id: item.sheet_id,
+    label: item.label,
+    station_id: '',
+    station_title: item.label,
+    plane: item.plane || 'P4',
+    z: item.z || 2.4,
+    x: Number((actor ? actor.x / fw : 0.5).toFixed(3)),
+    y: item.plane === 'P5' ? 0.34 : 0.86,
+    scale: item.default_scale || 0.42,
+    width: item.width || 240,
+    height: item.height || 240,
+    role: 'custom_assembled',
+    anim_role: item.anim_role || 'portal_aperture',
+    alpha: 0.98,
+    file: item.file
+  };
+  getCachedImg(newLayer.file);
+  sc.multiplane_layers.push(newLayer);
+  sc.multiplane_layers.sort((a, b) => (b.z || 1.4) - (a.z || 1.4));
+  selectedLayer = newLayer;
+  updateAsmInspector();
+  saveCurrentSceneAssembly();
+  buildArcBar();
 }
 
 /* ---------- Finish ---------- */
@@ -760,11 +1299,10 @@ function finish(){
   const pct = total ? score / total : 0;
   const stars = pct >= 0.75 ? 3 : pct >= 0.45 ? 2 : 1;
   $('stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
-  $('endn').textContent = `You inhabited ${score} of ${total} stanza lines (${Math.round(pct*100)}% emotional resonance).`;
+  $('endn').textContent = `You inhabited ${score} of ${total} architectural stage stations (${Math.round(pct*100)}% resonance).`;
   const arcMeta = ARC_SUMMARY[L.num] || { arc: 'Completed', desc: '' };
   $('endArc').innerHTML = `<b>Transformation Completed (${arcMeta.arc}):</b><br>${arcMeta.desc}`;
 
-  // Build word transcript breakdown
   const wc = $('endWords');
   wc.innerHTML = '';
   scenes.forEach((sc, si) => {
@@ -772,7 +1310,7 @@ function finish(){
       const ok = stats[si][li]?.ok;
       const chip = document.createElement('span');
       chip.className = 'word-chip' + (ok ? ' caught' : '');
-      chip.textContent = ln.text.slice(0, 38) + (ln.text.length > 38 ? '…' : '');
+      chip.textContent = `${ln.station_label ? ln.station_label + ': ' : ''}${ln.text.slice(0, 32)}…`;
       wc.append(chip);
     });
   });
@@ -795,6 +1333,130 @@ $('go').addEventListener('click', ()=>{
 });
 $('who').addEventListener('click', async ()=>{ await setActor(castIdx+1); await setupCounterpart(); });
 $('castBtn').addEventListener('click', async ()=>{ await setActor(castIdx+1); await setupCounterpart(); });
+$('rigModeBtn').addEventListener('click', ()=>{
+  use31PartRig = !use31PartRig;
+  updateRigButtonLabel();
+});
+$('asmToggleBtn').addEventListener('click', ()=>{
+  asmMode = !asmMode;
+  $('asmToggleBtn').classList.toggle('on', asmMode);
+  $('asmPanel').classList.toggle('open', asmMode);
+  $('pad').style.pointerEvents = asmMode ? 'none' : 'auto';
+  renderAsmCatalog();
+  updateAsmInspector();
+});
+$('asmCloseBtn').addEventListener('click', ()=>{
+  asmMode = false;
+  $('asmToggleBtn').classList.remove('on');
+  $('asmPanel').classList.remove('open');
+  $('pad').style.pointerEvents = 'auto';
+});
+$('asmScaleDown').addEventListener('click', ()=>{
+  if (!selectedLayer) return;
+  selectedLayer.scale = Number(Math.max(0.06, (selectedLayer.scale || 0.35) * 0.9).toFixed(4));
+  updateAsmInspector();
+  saveCurrentSceneAssembly();
+});
+$('asmScaleUp').addEventListener('click', ()=>{
+  if (!selectedLayer) return;
+  selectedLayer.scale = Number(Math.min(0.95, (selectedLayer.scale || 0.35) * 1.1).toFixed(4));
+  updateAsmInspector();
+  saveCurrentSceneAssembly();
+});
+$('asmFlipBtn').addEventListener('click', ()=>{
+  if (!selectedLayer) return;
+  selectedLayer.flip = !selectedLayer.flip;
+  saveCurrentSceneAssembly();
+});
+$('asmDelBtn').addEventListener('click', ()=>{
+  if (!selectedLayer || !scenes[cur.i]) return;
+  const arr = scenes[cur.i].multiplane_layers;
+  const idx = arr.indexOf(selectedLayer);
+  if (idx >= 0) arr.splice(idx, 1);
+  selectedLayer = null;
+  updateAsmInspector();
+  saveCurrentSceneAssembly();
+  buildArcBar();
+});
+document.querySelectorAll('#asmInspector [data-plane]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!selectedLayer || !scenes[cur.i]) return;
+    selectedLayer.plane = btn.dataset.plane;
+    selectedLayer.z = Z_BY_PLANE[btn.dataset.plane] || 1.4;
+    scenes[cur.i].multiplane_layers.sort((a, b) => (b.z || 1.4) - (a.z || 1.4));
+    updateAsmInspector();
+    saveCurrentSceneAssembly();
+  });
+});
+$('asmAnimSelect').addEventListener('change', e => {
+  if (!selectedLayer) return;
+  selectedLayer.anim_role = e.target.value;
+  saveCurrentSceneAssembly();
+});
+$('asmResetSceneBtn').addEventListener('click', () => {
+  if (!L || cur.i < 0 || !scenes[cur.i]) return;
+  const sc = scenes[cur.i];
+  sc.multiplane_layers = JSON.parse(JSON.stringify(sc._defaultLayers || []));
+  store.del(`wy.stage.${L.num}.${cur.i}`);
+  selectedLayer = null;
+  updateAsmInspector();
+  buildArcBar();
+});
+$('asmSearch').addEventListener('input', renderAsmCatalog);
+$('asmPoemFilter').addEventListener('change', renderAsmCatalog);
+document.querySelectorAll('#asmCatRow [data-cat]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    asmCategory = btn.dataset.cat;
+    document.querySelectorAll('#asmCatRow [data-cat]').forEach(b => b.classList.toggle('on', b === btn));
+    renderAsmCatalog();
+  });
+});
+
+// Canvas pointer hit-testing for dragging & scaling pieces when `asmMode` is active
+cv.addEventListener('pointerdown', e => {
+  if (!asmMode || !scenes[cur.i]) return;
+  const rect = cv.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const mLayers = scenes[cur.i].multiplane_layers || [];
+  // Hit-test front-to-back (reverse order)
+  let hit = null;
+  for (let i = mLayers.length - 1; i >= 0; i--){
+    const hb = mLayers[i]._HitBox;
+    if (hb && mx >= hb.x0 && mx <= hb.x0 + hb.w && my >= hb.y0 && my <= hb.y0 + hb.h){
+      hit = mLayers[i];
+      break;
+    }
+  }
+  selectedLayer = hit;
+  updateAsmInspector();
+  if (hit && hit._HitBox){
+    draggingLayer = hit;
+    dragOffset.dx = mx - hit._HitBox.cx;
+    dragOffset.dy = my - hit._HitBox.by;
+    cv.setPointerCapture(e.pointerId);
+  }
+});
+cv.addEventListener('pointermove', e => {
+  if (!asmMode || !draggingLayer || !draggingLayer._HitBox) return;
+  const rect = cv.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const hb = draggingLayer._HitBox;
+  const newScreenCx = mx - dragOffset.dx;
+  const newScreenBy = my - dragOffset.dy;
+  const newBaseX = (newScreenCx - hb.offX) / hb.s + hb.camDelta * hb.pFactor;
+  const newBaseY = (newScreenBy - hb.stageY0) / hb.s;
+  draggingLayer.x = Number(Math.max(0.05, Math.min(0.95, newBaseX / hb.fw)).toFixed(3));
+  draggingLayer.y = Number(Math.max(0.15, Math.min(0.96, newBaseY / hb.fh)).toFixed(3));
+});
+cv.addEventListener('pointerup', () => {
+  if (draggingLayer){
+    draggingLayer = null;
+    saveCurrentSceneAssembly();
+  }
+});
+
 $('pause').addEventListener('click', ()=>{
   if (ended || (!started && !paused)) return;
   paused = !paused;
@@ -819,6 +1481,7 @@ $('next').addEventListener('click', ()=>{
 const pad = $('pad'), knob = $('knob');
 let padId = null, ox = 0, oy = 0, actedThisGesture = false;
 pad.addEventListener('pointerdown', e=>{
+  if (asmMode) return;
   padId = e.pointerId;
   pad.setPointerCapture(e.pointerId);
   const r = pad.getBoundingClientRect();
@@ -847,6 +1510,7 @@ pad.addEventListener('pointerup', endPad);
 pad.addEventListener('pointercancel', endPad);
 
 addEventListener('keydown', e=>{
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
   keys[e.key] = true;
   if ((e.key === ' ' || e.key === 'e' || e.key === 'E' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') && running){
     e.preventDefault();
@@ -858,8 +1522,16 @@ document.addEventListener('gesturestart', e=>e.preventDefault());
 
 (async function(){
   try {
-    CHARS = (await (await fetch('data.json')).json()).characters;
-    INDEX = await (await fetch('levels/index.json')).json();
+    const [dataRes, idxRes, catRes] = await Promise.all([
+      fetch('data.json?v=2'),
+      fetch('levels/index.json?v=2'),
+      fetch('level_assets_catalog.json?v=2').catch(() => null)
+    ]);
+    CHARS = (await dataRes.json()).characters;
+    INDEX = await idxRes.json();
+    if (catRes && catRes.ok){
+      CATALOG = (await catRes.json()).items || [];
+    }
     buildShelf();
     const q = new URLSearchParams(location.search).get('p');
     if (q) openLevel(q.padStart(2, '0'));
