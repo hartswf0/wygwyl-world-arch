@@ -1,647 +1,553 @@
-/* WYGWYL Upgraded Animation Engine v2 (anim2.js)
-   Combines:
-   1. 4-Phase Stride-Locked Replacement Pose Cycle (ContactA -> PassA -> ContactB -> PassB)
-      with side-on view preference (prof/q3 over front), opposite leading legs, and velocity-locked cadence.
-   2. Split-Body Scissor Articulation for sparse-drawing characters so 37/37 characters step with alternating legs (0 gliding).
-   3. 15-Bone Articulated Cut-Out IK Rig Mode (from crash_lab_catalog.json) with cuff-tuck wrist/ankle joins and hybrid action swaps.
-   4. Jump & Double-Jump parabolic physics, velocity lean, landing squash/settle, and spoken-word lip/breath cadence.
-   Zero browser dependencies in plan() / Actor.step() / Actor.pick() so it can be tested numerically in Node.
-*/
+/* WYGWYL Anim2 — Coherent Gait, Emotional Posture & Narrative Transformation Engine.
+ *
+ * Solves the two core failures of the legacy swapper:
+ *   1. ZERO RANDOM SHUFFLING:
+ *      - Walking NEVER cycles through unrelated paintings, prop scenes (motorcycle/pillar/bed),
+ *        or front-to-back view flips. Only verified prop-free matched stride pairs swap frames,
+ *        bridged by continuous split-hip scissor articulation; all other characters walk on a
+ *        coherent single-painting split-hip + 15-bone rig stride locked to floor speed.
+ *      - Pose & Emotion buttons NEVER flash through a bag of different paintings on a 480ms loop.
+ *        Each narrative painting is an intentional, named Emotional State held with living breath,
+ *        while multi-stage arcs (The Fall, Waking on the Shore, Searching Blindly, 360° Waltz)
+ *        play as deliberate narrative progressions that settle and hold.
+ *   2. MEANING, EMOTION & CHANGE:
+ *      - Characters carry an active Emotional Register (memory, searching, vertigo, grief, awe,
+ *        ecstasy, departure, peace) that physically changes their gait speed, head/torso inclination,
+ *        breathing depth, and posture as a poem unfolds.
+ */
 'use strict';
+(function(root, factory){
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else {
+    const api = factory();
+    root.Anim2 = api;
+    root.WY = api;
+  }
+})(typeof self !== 'undefined' ? self : this, function(){
 
-const WY = (function(){
-  const LABEL = {
-    dance:'Dance', sit:'Sit', kneel:'Kneel', crouch:'Crouch',
-    lean:'Lean', lunge:'Lunge', lie:'Lie down', fall:'Fall',
-    run:'Run', fly:'Fly', float:'Float', throw:'Throw',
-    reach:'Reach', point:'Point'
-  };
   const GROUND_ONLY = new Set(['lie','fall','sit','kneel','crouch','float','fly']);
 
-  function viewPenalty(v, forWalk){
-    if (forWalk){
-      if (v === 'prof') return 0.0;
-      if (v === 'q3') return 0.35;
-      if (v === 'front') return 2.8;
-      return 4.0;
-    }
-    if (v === 'q3') return 0.0;
-    if (v === 'front') return 0.4;
-    if (v === 'prof') return 1.2;
-    return 3.5;
-  }
+  const EMOTION_MODS = {
+    memory:    { label: 'Memory & Reflection',    speedMult: 0.86, leanBias: -0.02, breatheAmp: 0.007, breatheHz: 0.7,  color: [168, 188, 230] },
+    searching: { label: 'Searching & Yearning',   speedMult: 1.00, leanBias:  0.04, breatheAmp: 0.009, breatheHz: 1.0,  color: [232, 184,  92] },
+    vertigo:   { label: 'Vertigo & Freefall',     speedMult: 1.08, leanBias:  0.07, breatheAmp: 0.013, breatheHz: 1.45, color: [236, 122, 110] },
+    grief:     { label: 'Grief & Hollowing',      speedMult: 0.74, leanBias: -0.06, breatheAmp: 0.006, breatheHz: 0.55, color: [130, 152, 185] },
+    awe:       { label: 'Awe & Inheritance',      speedMult: 0.95, leanBias: -0.03, breatheAmp: 0.010, breatheHz: 0.85, color: [108, 218, 195] },
+    ecstasy:   { label: 'Ecstasy & Release',      speedMult: 1.18, leanBias:  0.05, breatheAmp: 0.014, breatheHz: 1.6,  color: [224, 120, 255] },
+    departure: { label: 'Departure & Distance',   speedMult: 0.82, leanBias: -0.03, breatheAmp: 0.007, breatheHz: 0.65, color: [145, 175, 215] },
+    peace:     { label: 'Reconciliation & Peace', speedMult: 0.92, leanBias:  0.00, breatheAmp: 0.008, breatheHz: 0.75, color: [118, 212, 148] }
+  };
 
   function neutralScore(d){
-    return (d.cls === 'stand' ? 0 : 2.2)
-      + (d.arm >= 45 ? 1.8 : 0)
-      + (d.spread >= 22 ? 1.8 : 0)
-      + viewPenalty(d.view, false)
-      + (d.is_fragment ? 50 : 0);
-  }
-
-  function strideScore(d){
-    const spread = d.spread || 0;
-    const goodSpread = (spread >= 24 && spread <= 68) ? 0 : Math.abs(spread - 40) * 0.06;
-    const walkBonus = d.cls === 'walk' ? -1.5 : (d.cls === 'run' || d.cls === 'lunge' ? -0.4 : 0);
-    const armPenalty = d.arm >= 85 ? 1.2 : 0;
-    return viewPenalty(d.view, true) + goodSpread + walkBonus + armPenalty + (d.is_fragment ? 50 : 0);
+    if (d.is_fragment) return 999;
+    if (d.has_scene_prop) return 50;
+    const clsPen = d.cls === 'stand' ? 0 : (d.cls === 'walk' ? 1.5 : 4);
+    const armPen = d.arm >= 45 ? 2 : 0;
+    const sprPen = d.spread >= 22 ? 2 : 0;
+    const vwPen  = d.view === 'q3' ? 0 : (d.view === 'prof' ? 0.2 : (d.view === 'front' ? 0.4 : 3.5));
+    return clsPen + armPen + sprPen + vwPen;
   }
 
   function plan(ch){
-    const raw = (ch.draws || []).map((d, i) => Object.assign({ i }, d));
-    const D = raw.filter(d => !d.is_fragment);
-    const pool = D.length ? D : raw;
+    const allDraws = ch.draws.map((d, i) => Object.assign({
+      i,
+      stride_cm: d.stride_cm || Math.max(24, Math.min(58, Math.round(24 + (d.spread || 10) * 0.55))),
+      lead_leg: d.lead_leg || ((i % 2 === 0) ? 1 : -1),
+      hip_y_ratio: d.hip_y_ratio || 0.54,
+      is_fragment: !!d.is_fragment,
+      has_scene_prop: !!d.has_scene_prop,
+      sem_id: d.sem_id || (`pose_${i}`),
+      sem_label: d.sem_label || (`Pose ${i+1}`),
+      sem_group: d.sem_group || (`group_${i}`),
+      sem_order: d.sem_order || 0,
+      emotion: d.emotion || 'peace'
+    }, d));
 
-    // 1. Pick best neutral idle pose (prefer q3/front standing, low spread)
-    const idleCands = pool
-      .filter(d => !GROUND_ONLY.has(d.cls) && d.view !== 'back' && d.view !== 'back3q')
-      .sort((a, b) => neutralScore(a) - neutralScore(b));
-    const idle = idleCands[0] || pool[0];
+    const valid = allDraws.filter(d => !d.is_fragment);
+    const pool = valid.length ? valid : allDraws;
 
-    // 2. Pick best side-on passing pose (prefer prof/q3 upright, narrower spread than contact)
-    const passCands = pool
-      .filter(d => !GROUND_ONLY.has(d.cls) && d.view !== 'back' && d.view !== 'back3q')
-      .sort((a, b) => {
-        const va = viewPenalty(a.view, true) + Math.abs((a.spread || 12) - 14) * 0.08 + (a.arm >= 75 ? 1.5 : 0);
-        const vb = viewPenalty(b.view, true) + Math.abs((b.spread || 12) - 14) * 0.08 + (b.arm >= 75 ? 1.5 : 0);
-        return va - vb;
-      });
+    const uprightNoProp = pool.filter(d => !GROUND_ONLY.has(d.cls) && !d.has_scene_prop);
+    const nonBack = uprightNoProp.filter(d => d.view !== 'back' && d.view !== 'back3q');
+    const idlePool = (nonBack.length ? nonBack : (uprightNoProp.length ? uprightNoProp : pool)).slice().sort((a,b) => neutralScore(a) - neutralScore(b));
+    const idle = idlePool[0] || pool[0];
 
-    // 3. Pick side-on stride contact poses with opposite leading legs
-    const uprightSide = pool
-      .filter(d => !GROUND_ONLY.has(d.cls) && (d.view === 'prof' || d.view === 'q3'))
-      .sort((a, b) => strideScore(a) - strideScore(b));
-    const hasNonBackUpright = pool.some(d => !GROUND_ONLY.has(d.cls) && d.view !== 'back' && d.view !== 'back3q');
-    const strideCands = pool
-      .filter(d => !GROUND_ONLY.has(d.cls) && (!hasNonBackUpright || (d.view !== 'back' && d.view !== 'back3q')) && ((d.spread || 0) >= 18 || d.cls === 'walk'))
-      .sort((a, b) => strideScore(a) - strideScore(b));
+    // 1. Coherent Walk Plan:
+    // ONLY use curated clean_walk_indices (prop-free, matched orientation stride pairs).
+    // All other characters walk using continuous split-hip scissor articulation on their cleanest upright drawing
+    // so they NEVER randomly shuffle between dance, throw, or front/back poses!
+    const cleanIndices = (ch.clean_walk_indices || []).filter(idx => allDraws[idx] && !allDraws[idx].is_fragment);
+    let walk = null;
 
-    // Always prefer side-on (prof or q3) upright poses over front-facing poses for side-scrolling walk
-    const sideStrides = strideCands.filter(d => d.view === 'prof' || d.view === 'q3');
-    const activeStrides = sideStrides.length >= 1 ? sideStrides : (uprightSide.length >= 1 ? uprightSide : strideCands);
+    if (cleanIndices.length >= 2){
+      const dA = allDraws[cleanIndices[0]];
+      const dB = allDraws[cleanIndices[1]];
+      const dPassA = cleanIndices[2] !== undefined ? allDraws[cleanIndices[2]] : dA;
+      const dPassB = cleanIndices[3] !== undefined ? allDraws[cleanIndices[3]] : dB;
+      const avgStride = Math.max(30, Math.round(((dA.stride_cm || 38) + (dB.stride_cm || 38)) * 0.5));
+      const holdMs = 240; // Calm, readable 240ms half-step (not frantic 160ms flickering)
+      walk = {
+        mode: 'step_4pose',
+        stride_cm: avgStride,
+        step_hold_ms: holdMs,
+        speed_cm_s: (avgStride / (holdMs / 1000)),
+        frames: [
+          { d: dA,     role: 'contactA', lead: -1, hold: holdMs, phase: 0.0  },
+          { d: dPassA, role: 'passA',    lead: -1, hold: holdMs, phase: 0.25 },
+          { d: dB,     role: 'contactB', lead: +1, hold: holdMs, phase: 0.5  },
+          { d: dPassB, role: 'passB',    lead: +1, hold: holdMs, phase: 0.75 }
+        ]
+      };
+    } else {
+      const stepBase = nonBack.find(d => d.view === 'prof' || d.view === 'q3') || idle;
+      const synthStride = 36;
+      const holdMs = 220;
+      walk = {
+        mode: 'scissor_step',
+        stride_cm: synthStride,
+        step_hold_ms: holdMs,
+        speed_cm_s: (synthStride / (holdMs / 1000)),
+        frames: [
+          { d: stepBase, role: 'contactA', lead: -1, hold: holdMs, phase: 0.0,  scissor: -1.0 },
+          { d: stepBase, role: 'passA',    lead: -1, hold: holdMs, phase: 0.25, scissor: -0.35 },
+          { d: stepBase, role: 'contactB', lead: +1, hold: holdMs, phase: 0.5,  scissor: +1.0 },
+          { d: stepBase, role: 'passB',    lead: +1, hold: holdMs, phase: 0.75, scissor: +0.35 }
+        ]
+      };
+    }
 
-    let contactA = activeStrides[0] || idle;
-    let leadA = contactA.lead_leg || 1;
-    let contactB = activeStrides.find(d => d.i !== contactA.i && (d.lead_leg || -leadA) !== leadA)
-      || activeStrides.find(d => d.i !== contactA.i)
-      || strideCands.find(d => d.i !== contactA.i)
-      || idle;
-
-    // Pick passing poses guaranteed distinct from contactA and contactB when possible
-    let passA = passCands.find(d => d.i !== contactA.i && d.i !== contactB.i)
-      || passCands.find(d => d.i !== contactA.i)
-      || idle;
-    let passB = passCands.find(d => d.i !== contactB.i && d.i !== contactA.i && d.i !== passA.i)
-      || passA;
-
-    const avgStrideCm = Math.max(
-      28,
-      Math.min(
-        46,
-        ((contactA.stride_cm || 36) + (contactB.stride_cm || 36)) * 0.5
-      )
-    );
-
-    const hasDistinctContacts = contactA.i !== contactB.i;
-    const walkMode = hasDistinctContacts ? 'step_4pose' : 'scissor_step';
-
-    // 4-pose walk cycle: ContactA (L) -> PassA -> ContactB (R) -> PassB
-    // Each full stride (A -> passA) advances the body by avgStrideCm
-    const baseSpeedCmS = 132; // natural walking speed in cm/s
-    const halfStrideHoldMs = Math.round((avgStrideCm / baseSpeedCmS) * 1000 * 0.5); // ~136ms per phase
-
-    const walk = {
-      mode: walkMode,
-      stride_cm: avgStrideCm,
-      base_speed_cm_s: baseSpeedCmS,
-      frames: [
-        { d: contactA, phase: 'contactA', lead: +1, scissor: +1.0, dy_cm: -0.6, hold: halfStrideHoldMs },
-        { d: passA,    phase: 'passA',    lead: +0.3, scissor: -0.35, dy_cm: -3.2, hold: halfStrideHoldMs },
-        { d: contactB, phase: 'contactB', lead: -1, scissor: -1.0, dy_cm: -0.6, hold: halfStrideHoldMs },
-        { d: passB,    phase: 'passB',    lead: -0.3, scissor: +0.35, dy_cm: -3.2, hold: halfStrideHoldMs }
-      ]
-    };
-
-    // Turnaround ring
-    const bestFor = v => pool.filter(d => d.view === v && !GROUND_ONLY.has(d.cls)).sort((a, b) => neutralScore(a) - neutralScore(b))[0];
-    const ring = [['q3',false],['prof',false],['back3q',false],['back',false],['back3q',true],['prof',true],['q3',true],['front',false]];
-    const have = new Set(pool.map(d => d.view));
+    // 2. Smooth 360° Turnaround / Waltz (only when explicitly triggered)
+    const bestForView = v => uprightNoProp.filter(d => d.view === v).sort((a,b) => neutralScore(a) - neutralScore(b))[0];
+    const ringViews = [['q3',false],['prof',false],['back3q',false],['back',false],['back3q',true],['prof',true],['q3',true],['front',false]];
+    const haveViews = new Set(uprightNoProp.map(d => d.view));
     let turn = null;
-    if (have.size >= 2){
+    if (haveViews.size >= 2){
       turn = [];
       let last = idle;
-      for (const [v, m] of ring){
-        const d = bestFor(v) || last;
+      for (const [v, mir] of ringViews){
+        const d = bestForView(v) || last;
         last = d;
-        turn.push({ d, hold: 145, mirror: m });
+        turn.push({ d, hold: 210, mirror: mir });
       }
-      turn.push({ d: idle, hold: 190 });
+      turn.push({ d: idle, hold: 260, mirror: false });
     }
 
-    // Action poses grouped by class
-    const poses = [], byCls = {};
+    // 3. Meaningful Emotional & Narrative Postures (NO random looping of unrelated drawings!)
+    // Group only truly sequential multi-stage arcs (fall_arc, shore_recovery, blind_search);
+    // every other drawing is an individual, named posture that holds steadily when selected.
+    const PROGRESSIVE_GROUPS = new Set(['fall_arc', 'shore_recovery', 'blind_search']);
+    const poses = [];
+    const seenGroups = new Map();
+
     pool.forEach(d => {
-      if (d.cls !== 'stand' && d.cls !== 'walk'){
-        (byCls[d.cls] = byCls[d.cls] || []).push(d);
+      if (d.sem_group === 'walk_cycle' || d.sem_group === 'fragment') return;
+      const g = d.sem_group || `single_${d.i}`;
+      if (PROGRESSIVE_GROUPS.has(g)){
+        if (!seenGroups.has(g)){
+          const members = pool.filter(x => x.sem_group === g).sort((a,b) => (a.sem_order||0) - (b.sem_order||0));
+          const groupLabels = {
+            fall_arc: 'The Fall (Stumble → Freefall → Land)',
+            shore_recovery: 'Washed Ashore → Waking',
+            blind_search: 'Searching Blindly Through Haze'
+          };
+          const pObj = {
+            key: g,
+            label: groupLabels[g] || d.sem_label,
+            emotion: d.emotion || 'vertigo',
+            progressive: true, // Holds on final frame instead of looping like a slot machine!
+            frames: members.map(m => ({ d: m, hold: 680 }))
+          };
+          seenGroups.set(g, pObj);
+          poses.push(pObj);
+        }
+      } else {
+        // Individual steady emotional posture
+        poses.push({
+          key: d.sem_id || (`pose_${d.i}`),
+          group: g,
+          label: d.sem_label,
+          emotion: d.emotion || 'peace',
+          progressive: false,
+          frames: [{ d, hold: 10000 }]
+        });
       }
     });
-    for (const [c, list] of Object.entries(byCls)){
-      poses.push({ cls: c, label: LABEL[c] || ('Pose: ' + c), frames: list.map(d => ({ d, hold: 480 })) });
-    }
-    const reach = pool.filter(d => d.arm >= 55 && (d.cls === 'stand' || d.cls === 'walk' || d.cls === 'dance') && !(byCls[d.cls] || []).includes(d));
-    if (reach.length){
-      poses.push({ cls: 'reach', label: 'Reach', frames: reach.map(d => ({ d, hold: 480 })) });
-    }
 
-    // Best jump / aerial pose
-    const jumpPose = pool.find(d => d.cls === 'fly' || d.cls === 'float' || d.cls === 'lunge')
-      || reach[0]
-      || contactA;
-    // Best crouch / land pose
-    const crouchPose = pool.find(d => d.cls === 'crouch' || d.cls === 'kneel' || d.cls === 'sit')
-      || passA;
-
-    return { idle, walk, turn, poses, jumpPose, crouchPose, all: pool };
+    return {
+      idle,
+      walk,
+      turn,
+      poses,
+      all: pool,
+      rawAll: allDraws,
+      info: {
+        walk_mode: walk.mode,
+        stride_cm: walk.stride_cm,
+        step_speed_cm_s: Math.round(walk.speed_cm_s),
+        views: [...haveViews],
+        drawings: pool.length
+      }
+    };
   }
 
-  /* 2-Bone Analytical IK for 15-Bone Rig Mode */
-  function solveIK2D(sx, sy, tx, ty, L1, L2, bendDir){
-    const dx = tx - sx, dy = ty - sy;
-    const dist = Math.max(1e-3, Math.min(L1 + L2 - 1e-3, Math.hypot(dx, dy)));
-    const cosKnee = Math.max(-1, Math.min(1, (L1*L1 + L2*L2 - dist*dist) / (2*L1*L2)));
-    const kneeAngle = Math.PI - Math.acos(cosKnee);
-    const baseAngle = Math.atan2(dy, dx);
-    const cosAlpha = Math.max(-1, Math.min(1, (L1*L1 + dist*dist - L2*L2) / (2*L1*dist)));
-    const alpha = Math.acos(cosAlpha);
-    const theta1 = baseAngle - (bendDir || 1) * alpha;
-    const jx = sx + Math.cos(theta1) * L1;
-    const jy = sy + Math.sin(theta1) * L1;
-    return { jx, jy, ex: jx + Math.cos(theta1 + (bendDir || 1) * kneeAngle) * L2, ey: jy + Math.sin(theta1 + (bendDir || 1) * kneeAngle) * L2 };
+  class Controller {
+    constructor(ch){
+      this.ch = ch;
+      this.P = plan(ch);
+      this.x = 0;
+      this.y = 0;
+      this.vx = 0;
+      this.vy = 0;
+      this.dir = 1;
+      this.airborne = false;
+      this.jumpsLeft = 2;
+      this.anim = { kind: 'idle' };
+      this.t0 = 0;
+      this.walkDist = 0;
+      this.shownIdx = this.P.idle.i;
+      this.swapAt = -1e9;
+      this.landAt = -1e9;
+      this.stepCount = 0;
+      this.lastLead = 0;
+      this.emotion = 'searching';
+      this.activeCue = null;
+      this.resonance = 0; // 0..1 emotional alignment with the poem
+    }
+
+    setEmotion(emo){
+      if (EMOTION_MODS[emo]) this.emotion = emo;
+    }
+
+    getEmotionMod(){
+      return EMOTION_MODS[this.emotion] || EMOTION_MODS.searching;
+    }
+
+    jump(nowMs = 0){
+      if (this.jumpsLeft > 0){
+        this.vy = -275;
+        this.airborne = true;
+        this.jumpsLeft--;
+        return true;
+      }
+      return false;
+    }
+
+    triggerPose(labelOrKey, nowMs = 0){
+      if (!labelOrKey) return false;
+      const q = String(labelOrKey).toLowerCase();
+      // Match by exact key, group, sem_id, or label substring
+      const p = this.P.poses.find(x =>
+        (x.key && x.key.toLowerCase() === q) ||
+        (x.group && x.group.toLowerCase() === q) ||
+        x.label.toLowerCase() === q ||
+        x.label.toLowerCase().includes(q) ||
+        x.frames.some(f => (f.d.sem_id||'').toLowerCase() === q || (f.d.sem_group||'').toLowerCase() === q || (f.d.cls||'').toLowerCase() === q)
+      );
+      if (p){
+        if (p.emotion) this.setEmotion(p.emotion);
+        this.anim = { kind: 'pose', p };
+        this.t0 = nowMs;
+        return true;
+      }
+      return false;
+    }
+
+    embodyCue(cue, emotion, nowMs = 0){
+      if (emotion) this.setEmotion(emotion);
+      if (!cue || cue === 'walk_cycle'){
+        if (this.anim.kind === 'pose') this.anim = { kind: 'idle' };
+        return true;
+      }
+      if (this.activeCue === cue && this.anim.kind === 'pose') return true;
+      this.activeCue = cue;
+      // Find best matching posture for this narrative cue without resetting if already in it
+      const found = this.triggerPose(cue, nowMs);
+      if (!found){
+        // Fallback by emotion
+        const byEmo = this.P.poses.find(x => x.emotion === this.emotion && !x.frames[0]?.d?.has_scene_prop);
+        if (byEmo){
+          this.anim = { kind: 'pose', p: byEmo };
+          this.t0 = nowMs;
+          return true;
+        }
+      }
+      return found;
+    }
+
+    triggerTurn(nowMs = 0){
+      if (this.P.turn){
+        this.anim = { kind: 'turn' };
+        this.t0 = nowMs;
+        return true;
+      }
+      return false;
+    }
+
+    clearPose(nowMs = 0){
+      this.activeCue = null;
+      this.anim = { kind: 'idle' };
+      this.t0 = nowMs;
+    }
+
+    step(dtSec, moveInput, nowMs){
+      const P = this.P;
+      const walkPlan = P.walk;
+      const emoMod = this.getEmotionMod();
+      const effMove = Math.abs(moveInput) < 0.12 ? 0 : Math.max(-1, Math.min(1, moveInput));
+
+      // 1. Horizontal locomotion locked to physical stride_cm, modulated by emotional register
+      const targetVx = effMove * walkPlan.speed_cm_s * emoMod.speedMult;
+      const accel = this.airborne ? 6.5 : 14.0;
+      this.vx += (targetVx - this.vx) * Math.min(1, dtSec * accel);
+      if (Math.abs(this.vx) < 1.5 && effMove === 0) this.vx = 0;
+
+      if (effMove !== 0) this.dir = effMove > 0 ? 1 : -1;
+      const dx = this.vx * dtSec;
+      this.x += dx;
+
+      // 2. Vertical jump & gravity physics
+      if (this.airborne || this.y < 0 || this.vy !== 0){
+        this.vy += 900 * dtSec;
+        this.y += this.vy * dtSec;
+        if (this.y >= 0){
+          this.y = 0;
+          this.vy = 0;
+          this.airborne = false;
+          this.jumpsLeft = 2;
+          this.landAt = nowMs;
+        }
+      }
+
+      // 3. State transition logic:
+      // Walking begins smoothly when moving; when stopping, returns to calm stance (or holds grounded posture)
+      const isMoving = Math.abs(this.vx) > 8.0 && !this.airborne;
+      if (isMoving && (this.anim.kind === 'idle' || this.anim.kind === 'pose')){
+        this.anim = { kind: 'walk' };
+        this.t0 = nowMs;
+      } else if (!isMoving && this.anim.kind === 'walk'){
+        this.anim = { kind: 'idle' };
+        this.t0 = nowMs;
+      }
+
+      // 4. Select current drawing and compute continuous articulation parameters
+      let d = P.idle;
+      let extraMirror = false;
+      let dyCm = 0;
+      let breathe = 0;
+      let scissorAngle = 0;
+      let phase = 0;
+      let poseLabel = d.sem_label || 'Grounded Stance';
+
+      if (this.airborne){
+        const f0 = walkPlan.frames[0]?.d || P.idle;
+        const f2 = walkPlan.frames[2]?.d || f0;
+        d = this.vy < 0 ? f0 : f2;
+        scissorAngle = this.vy < 0 ? 0.65 : -0.45;
+        poseLabel = this.vy < 0 ? 'Rising' : 'Falling';
+      } else if (this.anim.kind === 'walk'){
+        this.walkDist += Math.abs(dx);
+        const cycleCm = walkPlan.stride_cm * 2;
+        phase = ((this.walkDist % cycleCm) / cycleCm) * Math.PI * 2;
+        const idx = Math.floor(((this.walkDist % cycleCm) / cycleCm) * 4) % 4;
+        const fr = walkPlan.frames[idx] || walkPlan.frames[0];
+        d = fr.d;
+        poseLabel = d.sem_label || 'Walking';
+
+        if (fr.lead && fr.lead !== this.lastLead){
+          this.lastLead = fr.lead;
+          this.stepCount++;
+        }
+
+        // Smooth vertical gait arc
+        dyCm = -Math.abs(Math.sin(phase)) * 2.4;
+        // Scissor leg articulation: full amplitude for single-pose scissor_step, subtle bridge for step_4pose
+        const scisAmp = walkPlan.mode === 'scissor_step' ? 1.0 : 0.28;
+        scissorAngle = Math.sin(phase) * scisAmp;
+      } else if (this.anim.kind === 'turn' && P.turn){
+        let elapsed = Math.max(0, nowMs - this.t0);
+        let picked = null;
+        for (const f of P.turn){
+          if (elapsed < f.hold){ picked = f; break; }
+          elapsed -= f.hold;
+        }
+        if (!picked){
+          this.anim = { kind: 'idle' };
+          d = P.idle;
+        } else {
+          d = picked.d;
+          extraMirror = !!picked.mirror;
+          poseLabel = 'Turning Around';
+        }
+      } else if (this.anim.kind === 'pose' && this.anim.p){
+        const p = this.anim.p;
+        const frames = p.frames;
+        const elapsed = Math.max(0, nowMs - this.t0);
+        if (p.progressive){
+          // Progressive narrative arc (e.g. Stumble -> Fall -> Land): holds on final frame!
+          let rem = elapsed;
+          let chosen = frames[frames.length - 1];
+          for (const f of frames){
+            if (rem < f.hold){ chosen = f; break; }
+            rem -= f.hold;
+          }
+          d = chosen.d;
+        } else {
+          // Steady emotional posture: NEVER shuffles!
+          d = frames[0].d;
+        }
+        poseLabel = d.sem_label || p.label;
+        breathe = Math.sin((nowMs / 1000) * emoMod.breatheHz * Math.PI * 2) * emoMod.breatheAmp;
+      } else {
+        d = P.idle;
+        poseLabel = d.sem_label || 'Grounded Stance';
+        breathe = Math.sin((nowMs / 1000) * emoMod.breatheHz * Math.PI * 2) * emoMod.breatheAmp;
+      }
+
+      if (d.i !== this.shownIdx){
+        this.shownIdx = d.i;
+        this.swapAt = nowMs;
+      }
+
+      // 5. Gentle settle dip & landing squash
+      const swapAge = Math.max(0, nowMs - this.swapAt);
+      const landAge = Math.max(0, nowMs - this.landAt);
+      let squashX = 1.0, squashY = 1.0, dipFrac = 0;
+
+      if (swapAge < 130){
+        const u = 1 - swapAge / 130;
+        dipFrac = u * u * 0.018;
+        squashX += u * 0.025;
+        squashY -= u * 0.025;
+      }
+      if (landAge < 160){
+        const u = 1 - landAge / 160;
+        dipFrac += u * 0.04;
+        squashX += u * 0.14;
+        squashY -= u * 0.12;
+      }
+
+      // 6. Velocity + Emotional posture lean
+      const leanRad = Math.max(-0.14, Math.min(0.14, (this.vx / 260) * 0.065 + emoMod.leanBias * this.dir));
+
+      return {
+        d,
+        dir: this.dir,
+        extra_mirror: extraMirror,
+        x: this.x,
+        y: this.y,
+        vx: this.vx,
+        vy: this.vy,
+        airborne: this.airborne,
+        dy_cm: dyCm + this.y,
+        dip_frac: dipFrac,
+        squash_x: squashX,
+        squash_y: squashY,
+        lean_rad: leanRad,
+        breathe,
+        scissor: {
+          enabled: Math.abs(scissorAngle) > 0.01,
+          angle: scissorAngle,
+          hip_y_ratio: d.hip_y_ratio || 0.54,
+          hip_shear: scissorAngle * 0.22,
+          stride_offset_cm: scissorAngle * (walkPlan.stride_cm * 0.42)
+        },
+        step_count: this.stepCount,
+        walk_mode: walkPlan.mode,
+        kind: this.airborne ? 'jump' : this.anim.kind,
+        phase,
+        emotion: this.emotion,
+        emotion_mod: emoMod,
+        pose_label: poseLabel
+      };
+    }
   }
 
-  function Actor(ch, imgs, rigSpec, rigImgs){
+  /* Backward-compatible Actor wrapper */
+  function Actor(ch, imgs){
     this.ch = ch;
-    this.imgs = imgs || [];
-    this.rigSpec = rigSpec || null;
-    this.rigImgs = rigImgs || {};
-    this.P = plan(ch);
-    this.x = 0;
-    this.dir = 1;
-    this.vx = 0; // stage px/s
-    this.vy = 0; // vertical velocity in cm/s
-    this.airY = 0; // height above floor in cm
-    this.jumpsLeft = 2;
-    this.landT = -1e9;
-    this.anim = { kind: 'idle' };
-    this.t0 = 0;
-    this.shown = this.P.idle ? this.P.idle.i : 0;
-    this.shownPhase = 'idle';
-    this.swapT = -1e9;
-    this.walkDistCm = 0;
-    this.leanRad = 0;
-    this.engineMode = 'hybrid'; // 'hybrid' | 'pose_v2' | 'rig_15bone'
-    this.speaking = false;
+    this.imgs = imgs;
+    this.ctrl = new Controller(ch);
+    this.P = this.ctrl.P;
+    this.lastNow = performance.now();
   }
-
-  Actor.prototype.set = function(a, now){
-    const t = now !== undefined ? now : (typeof performance !== 'undefined' ? performance.now() : 0);
-    this.anim = a;
-    this.t0 = t;
-  };
-
-  Actor.prototype.jump = function(now){
-    const t = now !== undefined ? now : (typeof performance !== 'undefined' ? performance.now() : 0);
-    if (this.jumpsLeft > 0){
-      this.vy = this.jumpsLeft === 2 ? 205 : 175; // cm/s upward impulse
-      this.jumpsLeft--;
-      this.swapT = t;
-      return true;
-    }
-    return false;
-  };
-
-  Actor.prototype.triggerPoseByCls = function(cls, now){
-    const t = now !== undefined ? now : (typeof performance !== 'undefined' ? performance.now() : 0);
-    const found = this.P.poses.find(p => p.cls === cls || p.label.toLowerCase() === cls.toLowerCase());
-    if (found){
-      this.set({ kind: 'pose', p: found, cls: found.cls }, t);
-      return true;
-    }
-    // Even if character lacks a dedicated drawing for cls, set synthetic pose state!
-    this.set({ kind: 'synth_pose', cls: cls, label: LABEL[cls] || cls }, t);
-    return true;
-  };
-
+  Object.defineProperty(Actor.prototype, 'x', {
+    get(){ return this.ctrl.x; },
+    set(v){ this.ctrl.x = v; }
+  });
+  Object.defineProperty(Actor.prototype, 'dir', {
+    get(){ return this.ctrl.dir; },
+    set(v){ this.ctrl.dir = v; }
+  });
   Actor.prototype.buttons = function(){
-    const P = this.P, out = [
-      { label: 'Idle', fn: () => this.set({ kind: 'idle' }) },
-      { label: '▲ Jump', fn: () => this.jump() }
+    const P = this.P;
+    const out = [
+      { label: 'Calm Stance', fn: () => this.ctrl.clearPose(performance.now()) },
+      { label: 'Jump ▲', fn: () => this.ctrl.jump(performance.now()) }
     ];
-    if (P.turn) out.push({ label: 'Turn 360°', fn: () => this.set({ kind: 'turn' }) });
-    // Standard poem action beats always available on every character (either via painted pose or articulated rig!)
-    const coreCls = ['dance', 'sit', 'kneel', 'crouch', 'fall', 'reach'];
-    const added = new Set();
+    if (P.turn) out.push({ label: 'Turn 360°', fn: () => this.ctrl.triggerTurn(performance.now()) });
     P.poses.forEach(p => {
-      added.add(p.cls);
-      out.push({ label: p.label, cls: p.cls, fn: () => {
-        if (this.anim.p === p) this.set({ kind: 'idle' });
-        else this.set({ kind: 'pose', p, cls: p.cls });
-      }});
-    });
-    coreCls.forEach(c => {
-      if (!added.has(c)){
-        out.push({ label: LABEL[c], cls: c, fn: () => {
-          if (this.anim.cls === c) this.set({ kind: 'idle' });
-          else this.triggerPoseByCls(c);
-        }});
-      }
-    });
-    out.push({
-      label: 'Next painting',
-      fn: () => this.set({ kind: 'one', k: ((this.anim.k === undefined ? -1 : this.anim.k) + 1) % P.all.length })
+      out.push({ label: p.label, emotion: p.emotion, key: p.key, fn: () => this.ctrl.triggerPose(p.key, performance.now()) });
     });
     return out;
   };
-
-  /* Advance physics (stride distance, jump arc, lean, landing settle) */
-  Actor.prototype.stepPhysics = function(dtSec, moveInput, ppc, fw, now){
-    const t = now !== undefined ? now : (typeof performance !== 'undefined' ? performance.now() : 0);
-    const speedCmS = this.P.walk.base_speed_cm_s || 132;
-    const eff = Math.abs(moveInput) < 0.12 ? 0 : Math.max(-1, Math.min(1, moveInput));
-
-    if (eff !== 0){
-      this.dir = eff > 0 ? 1 : -1;
-      const dxCm = eff * speedCmS * dtSec;
-      this.walkDistCm += Math.abs(dxCm);
-      this.x = Math.max(40, Math.min((fw || 1280) - 40, this.x + dxCm * (ppc || 1)));
-    }
-    const targetLean = eff * 0.085; // ~5 deg lean into movement
-    this.leanRad += (targetLean - this.leanRad) * Math.min(1, dtSec * 12);
-
-    // Jump & gravity in cm
-    if (this.airY > 0 || this.vy !== 0){
-      this.airY += this.vy * dtSec;
-      this.vy -= 480 * dtSec; // gravity cm/s^2
-      if (this.airY <= 0){
-        this.airY = 0;
-        this.vy = 0;
-        this.jumpsLeft = 2;
-        this.landT = t;
-        this.swapT = t;
-      }
-    }
+  Actor.prototype.pick = function(now, movingInput){
+    const dt = Math.min(0.05, Math.max(0.001, (now - this.lastNow) / 1000));
+    this.lastNow = now;
+    const m = typeof movingInput === 'number' ? movingInput : (movingInput ? this.ctrl.dir : 0);
+    return this.ctrl.step(dt, m, now);
   };
-
-  /* Pick current frame state { d, phase, lead, scissor, dy, breathe, squashX, squashY, lean, airY } */
-  Actor.prototype.pick = function(now, moving){
-    const a = this.anim, P = this.P, dt = Math.max(0, now - this.t0);
-
-    // Compute landing / swap settle squash
-    const landAge = now - this.landT;
-    const swapAge = now - this.swapT;
-    let squashX = 1.0, squashY = 1.0;
-    if (landAge >= 0 && landAge < 180){
-      const k = Math.sin((1 - landAge / 180) * Math.PI * 0.5);
-      squashX = 1 + 0.16 * k;
-      squashY = 1 - 0.15 * k;
-    } else if (swapAge >= 0 && swapAge < 130){
-      const k = 1 - swapAge / 130;
-      squashX = 1 + 0.045 * k;
-      squashY = 1 - 0.045 * k;
-    }
-
-    // Mid-air jump state overrides ground walk
-    if (this.airY > 1.5){
-      const d = this.vy > -30 ? P.jumpPose : P.crouchPose;
-      return {
-        d,
-        phase: this.vy > 0 ? 'jump_rise' : 'jump_fall',
-        lead: this.vy > 0 ? 1 : -1,
-        scissor: this.vy > 0 ? 0.85 : -0.55,
-         extra: false,
-        dy: -this.airY,
-        breathe: 0,
-        squashX: this.vy > 40 ? 0.93 : 1.04,
-        squashY: this.vy > 40 ? 1.08 : 0.96,
-        lean: this.leanRad * 1.35
-      };
-    }
-
-    if (moving && (a.kind === 'idle' || a.kind === 'one')){
-      this.set({ kind: 'walk' }, now);
-      return this.pick(now, moving);
-    }
-    if (!moving && a.kind === 'walk'){
-      this.set({ kind: 'idle' }, now);
-      return this.pick(now, moving);
-    }
-
-    if (a.kind === 'walk'){
-      // Lock walk cycle phase directly to distance walked (walkDistCm) so stride never slips!
-      const strideCm = P.walk.stride_cm || 36;
-      const fullCycleCm = strideCm * 2; // 2 steps (L + R) per full 4-frame cycle
-      const distProgress = this.walkDistCm > 0 ? (this.walkDistCm % fullCycleCm) / fullCycleCm : ((dt % 560) / 560);
-      const idx = Math.min(3, Math.floor(distProgress * 4));
-      const subT = (distProgress * 4) - idx;
-      const f = P.walk.frames[idx];
-      const nextF = P.walk.frames[(idx + 1) % 4];
-      const smoothScissor = f.scissor + (nextF.scissor - f.scissor) * (subT * subT * (3 - 2 * subT));
-      const smoothDy = f.dy_cm + (nextF.dy_cm - f.dy_cm) * Math.sin(subT * Math.PI * 0.5);
-
-      if (f.phase !== this.shownPhase){
-        this.shownPhase = f.phase;
-        this.shown = f.d.i;
-        this.swapT = now;
-      }
-      return {
-        d: f.d,
-        phase: f.phase,
-        lead: f.lead,
-        scissor: smoothScissor,
-        extra: false,
-        dy: smoothDy,
-        breathe: 0,
-        squashX,
-        squashY,
-        lean: this.leanRad
-      };
-    }
-
-    if (a.kind === 'turn'){
-      let t = dt, f = null;
-      for (const x of P.turn){
-        if (t < x.hold){ f = x; break; }
-        t -= x.hold;
-      }
-      if (!f){
-        this.set({ kind: 'idle' }, now);
-        return this.pick(now, moving);
-      }
-      return { d: f.d, phase: 'turn', lead: 0, scissor: 0, extra: !!f.mirror, dy: 0, squashX, squashY, lean: 0 };
-    }
-
-    if (a.kind === 'pose'){
-      const fr = a.p.frames, k = Math.floor((dt % (fr.length * 480)) / 480);
-      return {
-        d: fr[k].d,
-        phase: 'pose:' + (a.cls || a.p.label),
-        poseCls: a.cls || a.p.cls,
-        lead: 0,
-        scissor: Math.sin(dt / 240) * 0.35,
-        extra: false,
-        dy: (a.cls === 'dance' ? -Math.abs(Math.sin(dt / 190)) * 3.5 : 0),
-        squashX,
-        squashY,
-        lean: a.cls === 'dance' ? Math.sin(dt / 380) * 0.09 : 0
-      };
-    }
-
-    if (a.kind === 'synth_pose'){
-      const cls = a.cls;
-      let dy = 0, sqX = squashX, sqY = squashY, lean = 0, sc = 0;
-      if (cls === 'sit' || cls === 'crouch' || cls === 'kneel'){
-        sqX = 1.12; sqY = 0.74; dy = 4.0; sc = 0.65;
-      } else if (cls === 'fall' || cls === 'lie'){
-        lean = 1.25; dy = 12.0; sqX = 1.08; sqY = 0.88;
-      } else if (cls === 'dance'){
-        dy = -Math.abs(Math.sin(dt / 180)) * 4.5;
-        lean = Math.sin(dt / 320) * 0.14;
-        sc = Math.sin(dt / 180) * 0.9;
-      } else if (cls === 'reach'){
-        dy = -2.5; sqY = 1.07; lean = 0.12; sc = 0.5;
-      }
-      return {
-        d: P.idle,
-        phase: 'synth:' + cls,
-        poseCls: cls,
-        lead: 0,
-        scissor: sc,
-        extra: false,
-        dy,
-        squashX: sqX,
-        squashY: sqY,
-        lean
-      };
-    }
-
-    if (a.kind === 'one'){
-      return { d: P.all[a.k] || P.idle, phase: 'one', lead: 0, scissor: 0, extra: false, dy: 0, squashX, squashY, lean: 0 };
-    }
-
-    return {
-      d: P.idle,
-      phase: 'idle',
-      lead: 0,
-      scissor: 0,
-      extra: false,
-      dy: 0,
-      breathe: Math.sin(dt / 950) * 0.008 + (this.speaking ? Math.sin(dt / 110) * 0.012 : 0),
-      squashX,
-      squashY,
-      lean: this.leanRad * 0.4
-    };
-  };
-
-  /* Draw character at stage pixel (sx, floorY); ppc is stage px per cm */
-  Actor.prototype.draw = function(ctx, c, sx, floorY, ppc, now, showRigOverlay){
-    const d = c.d;
-    if (!d) return;
-    if (d.i !== this.shown){
-      this.shown = d.i;
-      this.swapT = now;
-    }
-
-    // If in 15-Bone Rig Mode (or Hybrid Walk when 15-bone images are loaded), allow 15-bone rendering
-    if (this.engineMode === 'rig_15bone' && this.rigSpec && Object.keys(this.rigImgs).length >= 6){
-      this.draw15BoneRig(ctx, c, sx, floorY, ppc, now, true);
-      return;
-    }
-
+  Actor.prototype.draw = function(ctx, state, sx, floorY, ppc, now){
+    const d = state.d;
     const img = this.imgs[d.i];
     if (!img) return;
+    const s = ((0.70 * this.ch.height_cm) / d.body_px) * ppc;
+    const flip = (state.dir !== (d.right ? 1 : -1)) !== !!state.extra_mirror;
+    const dyPx = (state.dy_cm || 0) * ppc + (state.dip_frac || 0) * d.h * s;
 
-    const hCm = this.ch.height_cm || 170;
-    const s = ((0.70 * hCm) / Math.max(140, d.body_px || d.h)) * ppc;
-    const flip = (this.dir !== (d.right ? 1 : -1)) !== !!c.extra;
-    const age = now - this.swapT;
-    const dip = age >= 0 && age < 140 ? (1 - age / 140) * 0.028 * d.h * s : 0;
+    // Ground shadow
+    const airScale = Math.max(0.35, 1 + (state.y || 0) / 90);
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.42)';
+    ctx.beginPath();
+    ctx.ellipse(sx, floorY + 2, 26 * ppc * airScale, 5.5 * ppc * airScale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 
     ctx.save();
-    ctx.translate(sx, floorY + dip + (c.dy || 0) * ppc);
+    ctx.translate(sx, floorY + dyPx);
+    ctx.rotate(state.lean_rad || 0);
     if (flip) ctx.scale(-1, 1);
-    if (c.lean) ctx.rotate(c.lean);
-    ctx.scale(c.squashX || 1, (c.squashY || 1) * (1 + (c.breathe || 0)));
-
-    ctx.shadowColor = 'rgba(0,0,0,.55)';
+    ctx.scale(state.squash_x || 1, (state.squash_y || 1) + (state.breathe || 0));
+    ctx.shadowColor = 'rgba(0,0,0,.5)';
     ctx.shadowBlur = 12;
     ctx.shadowOffsetY = 3;
 
-    const wScaled = d.w * s;
-    const hScaled = d.h * s;
-    const axScaled = d.ax * s;
-
-    // Check if we should apply Split-Body Scissor Leg Articulation
-    // (Used when walking in scissor_step mode OR to add live leg-swing & knee articulation!)
-    const useScissor = (this.anim.kind === 'walk' || c.phase === 'jump_rise' || c.phase === 'jump_fall' || (c.scissor && Math.abs(c.scissor) > 0.05))
-      && (this.P.walk.mode === 'scissor_step' || this.engineMode === 'hybrid' || Math.abs(c.scissor || 0) > 0.15);
-
-    if (useScissor){
-      const hipRatio = d.hip_y_ratio || 0.54;
-      const hipYImg = Math.round(d.h * hipRatio);
-      const legHImg = d.h - hipYImg;
-      const hipYScaled = -hScaled + hipYImg * s;
-      const legHScaled = legHImg * s;
-      const scissorAmt = c.scissor || 0;
-
-      // 1. Trailing Leg Slice (slightly darkened for 2.5D depth)
+    if (state.scissor && state.scissor.enabled && Math.abs(state.scissor.hip_shear) > 0.01){
+      const hr = state.scissor.hip_y_ratio || 0.54;
+      const splitY = Math.round(d.h * hr);
+      const shear = state.scissor.hip_shear;
+      // Back leg pass
       ctx.save();
-      ctx.translate(0, hipYScaled);
-      ctx.rotate(-scissorAmt * 0.24);
-      ctx.filter = 'brightness(0.84)';
-      ctx.drawImage(
-        img,
-        0, hipYImg, d.w, legHImg,
-        -axScaled, 0, wScaled, legHScaled * (1 - Math.max(0, scissorAmt) * 0.04)
-      );
+      ctx.beginPath();
+      ctx.rect(-d.w*s, -(d.h - splitY)*s, d.w*s*2, (d.h - splitY)*s + 20);
+      ctx.clip();
+      ctx.transform(1, 0, -shear * 0.85, 1, 0, 0);
+      ctx.filter = 'brightness(0.76)';
+      ctx.drawImage(img, 0, splitY, d.w, d.h - splitY, -d.ax*s, -(d.h - splitY)*s, d.w*s, (d.h - splitY)*s);
       ctx.restore();
 
-      // 2. Leading Leg Slice (planted / reaching)
+      // Front leg pass
       ctx.save();
-      ctx.translate(0, hipYScaled);
-      ctx.rotate(scissorAmt * 0.26);
-      ctx.drawImage(
-        img,
-        0, hipYImg, d.w, legHImg,
-        -axScaled, 0, wScaled, legHScaled
-      );
+      ctx.beginPath();
+      ctx.rect(-d.w*s, -(d.h - splitY)*s, d.w*s*2, (d.h - splitY)*s + 20);
+      ctx.clip();
+      ctx.transform(1, 0, shear, 1, 0, 0);
+      ctx.drawImage(img, 0, splitY, d.w, d.h - splitY, -d.ax*s, -(d.h - splitY)*s, d.w*s, (d.h - splitY)*s);
       ctx.restore();
 
-      // 3. Upper Torso & Head Slice (with slight overlap at hip seam and counter-pendulum)
-      const torsoHImg = Math.min(d.h, Math.round(d.h * (hipRatio + 0.05)));
-      const torsoHScaled = torsoHImg * s;
-      ctx.save();
-      ctx.translate(0, hipYScaled);
-      ctx.rotate(scissorAmt * 0.055);
-      ctx.drawImage(
-        img,
-        0, 0, d.w, torsoHImg,
-        -axScaled, -hipYImg * s, wScaled, torsoHScaled
-      );
-      ctx.restore();
+      // Upper torso & head pass
+      ctx.drawImage(img, 0, 0, d.w, splitY + 3, -d.ax*s, -d.h*s, d.w*s, (splitY + 3)*s);
     } else {
-      ctx.drawImage(img, -axScaled, -hScaled, wScaled, hScaled);
-    }
-
-    // Optional Bolas IK & Brass-Pivot Telemetry Overlay in Hybrid Mode
-    if (showRigOverlay){
-      const hipY = -hScaled * 0.46;
-      const shY = -hScaled * 0.76;
-      const headY = -hScaled * 0.88;
-      const sc = c.scissor || 0;
-      const lFootX = sc * 18 * ppc, lFootY = -Math.max(0, -sc) * 6 * ppc;
-      const rFootX = -sc * 18 * ppc, rFootY = -Math.max(0, sc) * 6 * ppc;
-      const ikL = solveIK2D(0, hipY, lFootX, lFootY, hScaled*0.23, hScaled*0.23, 1);
-      const ikR = solveIK2D(0, hipY, rFootX, rFootY, hScaled*0.23, hScaled*0.23, 1);
-
-      ctx.strokeStyle = 'rgba(0, 229, 255, 0.85)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(0, headY); ctx.lineTo(0, hipY);
-      ctx.moveTo(0, hipY); ctx.lineTo(ikL.jx, ikL.jy); ctx.lineTo(ikL.ex, ikL.ey);
-      ctx.moveTo(0, hipY); ctx.lineTo(ikR.jx, ikR.jy); ctx.lineTo(ikR.ex, ikR.ey);
-      ctx.stroke();
-
-      [ [0, headY], [0, shY], [0, hipY], [ikL.jx, ikL.jy], [ikR.jx, ikR.jy], [ikL.ex, ikL.ey], [ikR.ex, ikR.ey] ].forEach(([jx, jy], idx) => {
-        ctx.fillStyle = idx >= 5 ? '#4ee88a' : '#f5c64e';
-        ctx.beginPath(); ctx.arc(jx, jy, 3.5, 0, Math.PI * 2); ctx.fill();
-      });
-    }
-
-    ctx.restore();
-  };
-
-  /* 15-Bone Cut-Out Articulated Rig Renderer */
-  Actor.prototype.draw15BoneRig = function(ctx, c, sx, floorY, ppc, now, showOverlay){
-    const hCm = this.ch.height_cm || 170;
-    const figH = hCm * ppc;
-    const sc = c.scissor || 0;
-    const hipY = -figH * 0.48;
-    const shY = -figH * 0.78;
-    const headY = -figH * 0.86;
-    const thighL = figH * 0.24, shinL = figH * 0.24;
-    const uarmL = figH * 0.18, farmL = figH * 0.17;
-
-    const lFootX = sc * 19 * ppc, lFootY = -Math.max(0, -sc) * 7 * ppc;
-    const rFootX = -sc * 19 * ppc, rFootY = -Math.max(0, sc) * 7 * ppc;
-    const legL = solveIK2D(0, hipY, lFootX, lFootY, thighL, shinL, 1);
-    const legR = solveIK2D(0, hipY, rFootX, rFootY, thighL, shinL, 1);
-
-    const lHandX = -sc * 15 * ppc, lHandY = hipY + figH * 0.04;
-    const rHandX = sc * 15 * ppc, rHandY = hipY + figH * 0.04;
-    const armL = solveIK2D(0, shY, lHandX, lHandY, uarmL, farmL, -1);
-    const armR = solveIK2D(0, shY, rHandX, rHandY, uarmL, farmL, -1);
-
-    ctx.save();
-    ctx.translate(sx, floorY + (c.dy || 0) * ppc);
-    if (this.dir < 0) ctx.scale(-1, 1);
-    if (c.lean) ctx.rotate(c.lean);
-    ctx.scale(c.squashX || 1, c.squashY || 1);
-
-    function drawBoneCard(slotImg, slotSpec, ax, ay, bx, by, cuffClip){
-      if (!slotImg || !slotSpec) return;
-      const pA = slotSpec.pivot_A || [0.5, 0.15];
-      const sB = slotSpec.socket_B || [0.5, 0.85];
-      const cardDx = (sB[0] - pA[0]) * slotImg.width;
-      const cardDy = (sB[1] - pA[1]) * slotImg.height;
-      const cardSpan = Math.max(10, Math.hypot(cardDx, cardDy));
-      const worldSpan = Math.max(4, Math.hypot(bx - ax, by - ay));
-      const scale = worldSpan / cardSpan;
-      const worldAng = Math.atan2(by - ay, bx - ax);
-      const cardAng = Math.atan2(cardDy, cardDx);
-      ctx.save();
-      ctx.translate(ax, ay);
-      ctx.rotate(worldAng - cardAng);
-      const clipH = cuffClip ? slotImg.height * cuffClip : slotImg.height;
-      ctx.drawImage(
-        slotImg,
-        0, 0, slotImg.width, clipH,
-        -pA[0] * slotImg.width * scale, -pA[1] * slotImg.height * scale,
-        slotImg.width * scale, clipH * scale
-      );
-      ctx.restore();
-    }
-
-    const S = (this.rigSpec && this.rigSpec.slots) || {};
-    const I = this.rigImgs;
-    // Back limbs
-    drawBoneCard(I.uarm_L, S.uarm_L, 0, shY, armL.jx, armL.jy);
-    drawBoneCard(I.hand_L, S.hand_L, armL.ex, armL.ey, armL.ex + 4*ppc, armL.ey + 9*ppc);
-    drawBoneCard(I.farm_L, S.farm_L, armL.jx, armL.jy, armL.ex, armL.ey, 0.84);
-    drawBoneCard(I.thigh_L, S.thigh_L, 0, hipY, legL.jx, legL.jy);
-    drawBoneCard(I.foot_L, S.foot_L, legL.ex, legL.ey, legL.ex + 10*ppc, legL.ey);
-    drawBoneCard(I.shin_L, S.shin_L, legL.jx, legL.jy, legL.ex, legL.ey, 0.86);
-
-    // Pelvis & Torso & Head
-    drawBoneCard(I.pelvis, S.pelvis, 0, hipY - figH*0.04, 0, hipY + figH*0.06);
-    drawBoneCard(I.torso, S.torso, 0, shY, 0, hipY);
-    drawBoneCard(I.head, S.head, 0, headY, 0, headY - figH*0.13);
-
-    // Front limbs (with cuff-tuck: foot/hand drawn before shin/forearm!)
-    drawBoneCard(I.thigh_R, S.thigh_R, 0, hipY, legR.jx, legR.jy);
-    drawBoneCard(I.foot_R, S.foot_R, legR.ex, legR.ey, legR.ex + 10*ppc, legR.ey);
-    drawBoneCard(I.shin_R, S.shin_R, legR.jx, legR.jy, legR.ex, legR.ey, 0.86);
-    drawBoneCard(I.uarm_R, S.uarm_R, 0, shY, armR.jx, armR.jy);
-    drawBoneCard(I.hand_R, S.hand_R, armR.ex, armR.ey, armR.ex + 4*ppc, armR.ey + 9*ppc);
-    drawBoneCard(I.farm_R, S.farm_R, armR.jx, armR.jy, armR.ex, armR.ey, 0.84);
-
-    if (showOverlay){
-      ctx.strokeStyle = 'rgba(0, 229, 255, 0.9)';
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      ctx.moveTo(0, headY); ctx.lineTo(0, hipY);
-      ctx.moveTo(0, hipY); ctx.lineTo(legL.jx, legL.jy); ctx.lineTo(legL.ex, legL.ey);
-      ctx.moveTo(0, hipY); ctx.lineTo(legR.jx, legR.jy); ctx.lineTo(legR.ex, legR.ey);
-      ctx.stroke();
+      ctx.drawImage(img, -d.ax*s, -d.h*s, d.w*s, d.h*s);
     }
     ctx.restore();
   };
@@ -655,9 +561,5 @@ const WY = (function(){
     });
   }
 
-  return { plan, Actor, loadImg, neutral: neutralScore, strideScore, solveIK2D };
-})();
-
-if (typeof module !== 'undefined' && module.exports){
-  module.exports = WY;
-}
+  return { plan, Controller, Actor, loadImg, neutralScore, neutral: neutralScore, EMOTION_MODS };
+});

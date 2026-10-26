@@ -1,164 +1,137 @@
 <!doctype html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0b0d10">
-<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
-<title>WYGWYL Levels · Playable 14-Poem Multi-Engine Game Studio</title>
+<link rel="icon" href="data:,">
+<title>WYGWYL Levels · 14 Playable Poems — Meaning, Emotion & Transformation</title>
 <style>
 :root{
-  --bg:#0b0d10; --panel:#141920; --panel2:#1b222c; --line:#2a313c; --ink:#e8ecf1;
-  --muted:#9aa4b2; --brass:#d8ab4f; --brass-soft:#3a3020; --teal:#4ee88a; --cyan:#00e5ff; --rose:#ff6b8b;
-  --display:"Bricolage Grotesque","Outfit",system-ui,sans-serif;
+  --bg:#0b0d10; --panel:#141920; --line:#2a313c; --ink:#e8ecf1; --muted:#9aa4b2;
+  --brass:#d8ab4f; --brass-soft:#3a3020; --cyan:#4de2c2; --ok:#6cc28f; --bad:#ec7a6e;
+  --display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;
   --body:system-ui,-apple-system,"Segoe UI",sans-serif;
-  --mono:"IBM Plex Mono","JetBrains Mono",ui-monospace,monospace;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);overscroll-behavior:none}
-button{font:inherit;color:inherit;touch-action:manipulation}
-a{color:#8fb8ff;text-decoration:none}
-a:hover{text-decoration:underline}
+body{overflow:hidden}
+button,select{font:inherit;color:inherit}
 
-/* SHELF VIEW */
-#shelf{min-height:100dvh;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(40px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-header{max-width:1120px;margin:0 auto 16px}
-.suite-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--line)}
-.suite-links{display:flex;flex-wrap:wrap;gap:6px}
-.s-pill{font:500 11.5px var(--mono);padding:5px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--ink);text-decoration:none}
-.s-pill:hover,.s-pill.gold{border-color:var(--brass);color:var(--brass);text-decoration:none}
-h1{font-family:var(--display);font-size:clamp(1.5rem,3.5vw,2.1rem);margin:.2rem 0}
-p{color:var(--muted);margin:0 0 .5rem;max-width:72ch;line-height:1.45;font-size:.94rem}
+/* Shelf */
+#shelf{position:fixed;inset:0;overflow-y:auto;padding:max(14px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(28px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));-webkit-overflow-scrolling:touch}
+.suite-nav{max-width:1100px;margin:0 auto 14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.suite-nav a{color:var(--muted);text-decoration:none;font-size:.76rem;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:#11161d;transition:all .15s}
+.suite-nav a:hover,.suite-nav a.on{color:var(--ink);border-color:var(--brass);background:var(--brass-soft)}
+header{max-width:1100px;margin:0 auto 16px}
+h1{font-family:var(--display);font-size:1.75rem;margin:.15rem 0}
+p{color:var(--muted);margin:0 0 .45rem;max-width:72ch;line-height:1.45;font-size:.92rem}
+a{color:#8fb8ff}
 
-.cert-banner{max-width:1120px;margin:0 auto 16px;background:linear-gradient(135deg,#131b24,#19231f);border:1px solid rgba(78,232,138,.4);border-radius:12px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
-.cert-stats{display:flex;flex-wrap:wrap;gap:8px}
-.c-stat{font:600 11px var(--mono);padding:4px 9px;border-radius:6px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);color:var(--ink)}
-.c-stat b{color:var(--teal)}
-
-.grid{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
-.lv{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-align:left;padding:0;cursor:pointer;display:flex;flex-direction:column;min-width:0;transition:transform .14s,border-color .14s}
-.lv:hover{transform:translateY(-2px);border-color:var(--brass)}
+.grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.lv{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-align:left;padding:0;cursor:pointer;display:flex;flex-direction:column;min-width:0;transition:border-color .15s,transform .15s}
+.lv:hover{border-color:var(--brass);transform:translateY(-2px)}
 .lv:focus-visible,.btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .lv .thumb-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#0f1319;overflow:hidden}
 .lv img{width:100%;height:100%;object-fit:cover;display:block}
-.lv .p-badge{position:absolute;top:7px;left:7px;font:600 10px var(--mono);background:rgba(11,13,16,.88);border:1px solid var(--brass);color:var(--brass);padding:2px 7px;border-radius:999px}
-.lv .body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px;flex:1}
-.lv b{font-family:var(--display);font-size:1.04rem;color:#fff}
-.lv small{color:var(--muted);font-size:.78rem;line-height:1.35}
-.lv .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
-.lv .tag{font:500 10px var(--mono);padding:2px 6px;border-radius:4px;background:var(--panel2);color:#b9c4d4}
-.lv .best{color:var(--teal);font:600 11px var(--mono);margin-top:4px}
+.lv .arc-pill{position:absolute;left:8px;bottom:8px;right:8px;background:#0b0d10d8;border:1px solid #ffffff24;border-radius:6px;padding:3px 7px;font-family:var(--mono);font-size:.64rem;color:#e8ecf1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(4px)}
+.lv .body{padding:10px 12px 12px;display:grid;gap:4px;flex:1}
+.lv b{font-family:var(--display);font-size:1.02rem;color:#fff}
+.lv .theme{color:#cbd5e1;font-size:.78rem;line-height:1.35}
+.lv small{color:var(--muted);font-size:.73rem;line-height:1.3}
+.lv .best{color:var(--brass);font-family:var(--mono);font-size:.72rem;margin-top:2px}
 
-/* STAGE VIEW */
-#stage{position:fixed;inset:0;display:none;touch-action:none;user-select:none;-webkit-user-select:none;background:#07080b;z-index:50}
+/* Stage */
+#stage{position:fixed;inset:0;display:none;touch-action:none;user-select:none;-webkit-user-select:none;background:#07080b}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
-.top{position:absolute;left:0;right:0;top:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:max(8px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 8px max(10px,env(safe-area-inset-left,0px));pointer-events:none;background:linear-gradient(#000c,#0000);z-index:5}
+.top{position:absolute;left:0;right:0;top:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:max(8px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 6px max(10px,env(safe-area-inset-left,0px));pointer-events:none;background:linear-gradient(#000d,#0000);z-index:12}
 .top>*{pointer-events:auto}
-.btn{background:#141920eb;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:.82rem;cursor:pointer;min-height:36px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
-.btn:hover{border-color:var(--brass)}
+.btn{background:#141920e6;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:.82rem;cursor:pointer;min-height:38px;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.btn:hover{border-color:#526077}
 .btn.on{background:var(--brass-soft);border-color:var(--brass);color:#fff}
-.btn.pose-hi{background:rgba(216,171,79,.28);border-color:var(--brass);color:#ffe7a0;box-shadow:0 0 14px rgba(216,171,79,.45);animation:pulseBtn .9s infinite alternate}
-@keyframes pulseBtn{to{transform:scale(1.05)}}
-#ttl{flex:1;min-width:120px;font-family:var(--display);font-size:.86rem;line-height:1.15;text-shadow:0 1px 4px #000}
-#scoreHud{display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:.76rem;background:rgba(14,18,24,.85);border:1px solid var(--line);padding:5px 10px;border-radius:999px}
-#scoreHud b{color:var(--brass)}
-#scoreHud .orb-c{color:var(--cyan)}
-#scoreHud .pose-c{color:var(--teal)}
+.btn.cue-btn{background:#1d2b28f2;border-color:var(--cyan);color:#d8fff6;font-weight:600}
+#ttl{flex:1;min-width:120px;font-family:var(--display);font-size:.9rem;line-height:1.15;text-shadow:0 1px 4px #000}
+#score{font-family:var(--mono);font-size:.82rem;font-weight:700;color:var(--brass);text-shadow:0 1px 4px #000;white-space:nowrap;padding:4px 10px;border-radius:999px;background:#141920cc;border:1px solid var(--line)}
 
-#scn{position:absolute;left:max(12px,env(safe-area-inset-left,0px));color:#ffffffcc;font:600 .74rem var(--mono);text-shadow:0 1px 4px #000;pointer-events:none;z-index:4}
-#telem{position:absolute;right:max(12px,env(safe-area-inset-right,0px));color:#9be7ff;font:500 .7rem var(--mono);text-shadow:0 1px 4px #000;pointer-events:none;z-index:4;text-align:right;background:rgba(8,11,16,.65);padding:4px 8px;border-radius:6px;border:1px solid rgba(0,229,255,.25)}
+/* Scene & Emotional Arc Timeline Bar */
+#arcBar{position:absolute;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));top:calc(max(8px,env(safe-area-inset-top,0px)) + 44px);display:flex;gap:4px;z-index:11;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+#arcBar::-webkit-scrollbar{display:none}
+.sc-step{flex:1 0 auto;min-width:90px;background:#10141bd9;border:1px solid #2a313c;border-radius:7px;padding:4px 8px;cursor:pointer;text-align:left;transition:all .15s}
+.sc-step:hover{border-color:var(--brass)}
+.sc-step.active{background:#241f16eb;border-color:var(--brass)}
+.sc-step.done{border-color:#3a5046}
+.sc-step small{display:block;font-family:var(--mono);font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.sc-step b{display:block;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e8ecf1}
 
-#sub{position:absolute;left:0;right:0;pointer-events:none;padding:0 max(14px,env(safe-area-inset-left,0px));text-align:center;font-family:var(--display);font-size:clamp(1rem,3.8vw,1.42rem);line-height:1.3;text-shadow:0 2px 8px #000,0 0 4px #000;color:#ffffff80;z-index:4}
-#sub span{transition:color .08s,transform .08s;display:inline-block;margin-right:.22em}
-#sub span.on{color:#fff}
-#sub span.caught{color:var(--brass);text-shadow:0 0 10px rgba(216,171,79,.7)}
+/* Emotional State Banner */
+#emoHud{position:absolute;left:max(12px,env(safe-area-inset-left,0px));pointer-events:none;z-index:10;background:#0b0d10cc;border:1px solid var(--line);border-radius:10px;padding:7px 11px;backdrop-filter:blur(6px);max-width:390px}
+#emoHud .emo-kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:var(--brass)}
+#emoHud .emo-title{font-family:var(--display);font-size:.92rem;color:#fff;margin:1px 0}
+#emoHud .emo-sub{font-size:.73rem;color:var(--muted);line-height:1.3}
 
-#pad{position:absolute;left:0;right:0;top:56px;bottom:calc(74px + env(safe-area-inset-bottom,0px));touch-action:none;z-index:3}
-#knob{position:absolute;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;border:2px solid #ffffff55;background:#ffffff14;display:none;pointer-events:none}
-#knob i{position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:#ffffff66}
+/* Subtitle & Meaning */
+#sub{position:absolute;left:0;right:0;pointer-events:none;padding:0 max(16px,env(safe-area-inset-left,0px));text-align:center;font-family:var(--display);font-size:clamp(1.05rem,3.6vw,1.45rem);line-height:1.32;text-shadow:0 2px 10px #000,0 0 4px #000;color:#ffffff80;z-index:10}
+#sub span{transition:color .12s,text-shadow .12s}
+#sub span.on{color:#fff;text-shadow:0 0 14px rgba(216,171,79,.55),0 2px 6px #000}
+#subCue{font-family:var(--mono);font-size:.73rem;color:var(--cyan);margin-top:4px;letter-spacing:.03em}
 
-#acts{position:absolute;left:0;right:0;bottom:0;display:flex;gap:7px;align-items:center;overflow-x:auto;padding:10px max(10px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));background:linear-gradient(0deg,#0b0d10f5,#0b0d10b8 70%,#0b0d1000);scrollbar-width:none;z-index:5}
+#pad{position:absolute;left:0;right:0;top:88px;bottom:calc(72px + env(safe-area-inset-bottom,0px));touch-action:none;z-index:8}
+#knob{position:absolute;width:80px;height:80px;margin:-40px 0 0 -40px;border-radius:50%;border:2px solid #ffffff55;background:#ffffff14;display:none;pointer-events:none}
+#knob i{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#ffffff66}
+
+#acts{position:absolute;left:0;right:0;bottom:0;display:flex;gap:7px;align-items:center;overflow-x:auto;padding:9px max(10px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));background:linear-gradient(0deg,#0b0d10f5,#0b0d10cc 72%,#0b0d1000);scrollbar-width:none;z-index:12}
 #acts::-webkit-scrollbar{display:none}
-#acts .btn{flex:0 0 auto;min-height:44px;padding:8px 14px;white-space:nowrap}
+#acts .btn{flex:0 0 auto;min-height:42px;padding:8px 14px;white-space:nowrap;font-size:.8rem}
 
-.veil{position:absolute;inset:0;display:none;place-items:center;background:#0b0d10e6;padding:16px;text-align:center;z-index:20;overflow-y:auto}
-.veil .box{max-width:560px;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;display:grid;gap:12px;justify-items:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.veil h2{font-family:var(--display);margin:0;font-size:1.5rem}
+.veil{position:absolute;inset:0;display:none;place-items:center;background:#0b0d10e6;padding:20px;text-align:center;z-index:30;backdrop-filter:blur(8px)}
+.veil .box{max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;display:grid;gap:12px;justify-items:center}
+.veil h2{font-family:var(--display);margin:0;font-size:1.55rem}
 .veil .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.stars{font-size:2.1rem;letter-spacing:.2em;color:var(--brass)}
-.breakdown{width:100%;max-height:42dvh;overflow-y:auto;text-align:left;background:#0c1015;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.82rem;display:grid;gap:6px}
-.bd-line{display:flex;justify-content:space-between;gap:8px;padding:4px 6px;border-radius:6px;background:rgba(255,255,255,.03)}
-.bd-line.ok{border-left:3px solid var(--teal);background:rgba(78,232,138,.07)}
-.bd-line.miss{border-left:3px solid var(--rose);opacity:.75}
-.bd-words{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
-.bd-w{font:500 10px var(--mono);padding:1px 5px;border-radius:4px;background:rgba(255,255,255,.06);color:var(--muted)}
-.bd-w.ok{background:rgba(0,229,255,.16);color:var(--cyan);border:1px solid rgba(0,229,255,.35)}
-
-/* MODAL FOR 37-CHAR NUMERIC CERTIFICATION */
-#certModal{position:fixed;inset:0;background:rgba(6,8,12,.9);z-index:90;display:none;align-items:center;justify-content:center;padding:14px}
-#certModal.on{display:flex}
-.cert-box{background:var(--panel);border:1px solid var(--brass);border-radius:14px;max-width:960px;width:100%;max-height:88dvh;display:flex;flex-direction:column;overflow:hidden}
-.cert-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);font:600 13px var(--mono);color:var(--brass)}
-.cert-body{padding:12px 16px;overflow-y:auto;font:400 11.5px var(--mono)}
-.cert-table{width:100%;border-collapse:collapse}
-.cert-table th,.cert-table td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
-.cert-table th{color:var(--brass);position:sticky;top:0;background:var(--panel)}
-</style>
-</head>
-<body>
+.stars{font-size:2rem;letter-spacing:.2em;color:var(--brass)}
+.arc-box{background:#0f1319;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.82rem;color:#cbd5e1;line-height:1.45;text-align:left;width:100%}
+.word-cloud{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-height:150px;overflow-y:auto;padding:8px;background:#0f1319;border-radius:8px;border:1px solid var(--line);width:100%}
+.word-chip{font-family:var(--mono);font-size:.7rem;padding:2px 7px;border-radius:999px;background:#1b2430;color:#9aa4b2}
+.word-chip.caught{background:#1e3a2f;color:#8ce9b0;border:1px solid #2f684e}
+@media (max-width:640px){
+  #emoHud{max-width:260px;padding:5px 8px}
+  #emoHud .emo-title{font-size:.8rem}
+  #emoHud .emo-sub{display:none}
+}
+</style></head><body>
 
 <section id="shelf">
+  <nav class="suite-nav" aria-label="Suite Navigation">
+    <a href="../../index.html">← WYGWYL World-Arch Hub</a>
+    <a href="levels.html" class="on">🎮 Play 14-Poem Levels</a>
+    <a href="index.html">🕹️ 37-Character Play Sandbox</a>
+    <a href="../scion_swarm_of_swarms.html">🐝 SCION Swarm-of-Swarms</a>
+    <a href="../recastable_cinema_studio.html">🎬 Recastable Studio</a>
+    <a href="../crash_lab.html">🛡️ Crash Lab & CAPTCHA</a>
+    <a href="../body_lab.html">🧬 CLIP Body Lab</a>
+  </nav>
   <header>
-    <div class="suite-bar">
-      <div class="suite-links">
-        <a class="s-pill gold" href="../../index.html#experiments">← Main Index &amp; All 66 Experiments</a>
-        <a class="s-pill" href="index.html">🎭 37-Character Play Sandbox</a>
-        <a class="s-pill" href="../scion_swarm_of_swarms.html">🐝 SCION Swarm-of-Swarms</a>
-        <a class="s-pill" href="../recastable_cinema_studio.html">🎬 Recastable Studio</a>
-        <a class="s-pill" href="../crash_lab.html">🛡️ Crash Lab &amp; CAPTCHA</a>
-        <a class="s-pill" href="../body_lab.html">🦴 Body Lab + CLIP</a>
-        <a class="s-pill" href="../stage.html">🏛️ Multiplane Stage</a>
-      </div>
-      <button class="s-pill gold" id="openCertBtn" style="cursor:pointer">✓ 37/37 Anim2 Numeric Report</button>
-    </div>
-    <h1>WYGWYL Playable Poem Levels · Multi-Engine Edition</h1>
-    <p>Each poem is a playable level clocked to her spoken reading. Move left/right (Arrow keys, <code>A/D</code>, or drag on stage), <b>Jump</b> (<code>Space</code> / <code>W</code> / <code>↑</code> / upward flick) to catch aerial <b>Word-Orbs</b>, and trigger <b>Action Poses</b> (<code>E</code> or tap the highlighted pose button) inside glowing stanza markers. Switch live between <b>Hybrid 4-Pose + Scissor</b>, <b>Anim2 Stride-Locked</b>, and <b>15-Bone Cut-Out IK Rig</b>.</p>
+    <h1>WYGWYL · 14 Playable Poems — Meaning, Emotion & Transformation</h1>
+    <p>Each poem is a lived emotional arc. As the poem is read aloud, walk into the glowing stage focus for each stanza line to <b>inhabit its emotional posture</b> and awaken the painting from memory-shadow into living color. Zero random animation shuffling: every movement, posture, and counterpart on stage responds to what the poem means.</p>
   </header>
-
-  <div class="cert-banner">
-    <div>
-      <strong style="font-family:var(--display);font-size:.98rem;color:#fff">Upgraded Anim2 + 15-Bone Cut-Out Engine Active</strong>
-      <div style="font-size:.8rem;color:var(--muted);margin-top:2px">Solves static gliding across all 37 characters with side-on stride selection, velocity-locked foot cadence, split-body leg scissor, jump physics, word-orbs, and action pose prompts.</div>
-    </div>
-    <div class="cert-stats">
-      <span class="c-stat">Stepping Cast: <b>37 / 37 (0 Gliding)</b></span>
-      <span class="c-stat">Side-On Strides: <b>37 / 37</b></span>
-      <span class="c-stat">Stride Sync: <b>&lt; 0.2% Slip</b></span>
-      <span class="c-stat">Engines: <b>4-Pose · Scissor · 15-Bone IK</b></span>
-    </div>
-  </div>
-
   <div class="grid" id="lv"></div>
 </section>
 
 <section id="stage">
   <canvas id="cv"></canvas>
   <div class="top">
-    <button class="btn" id="back">‹ Poems</button>
+    <button class="btn" id="back">‹ 14 Poems</button>
     <div id="ttl"></div>
-    <div id="scoreHud">
-      <span>Lines: <b id="scoreLines">0/0</b></span>
-      <span class="orb-c">Words: <b id="scoreOrbs">0/0</b></span>
-      <span class="pose-c">Poses: <b id="scorePoses">0</b></span>
-    </div>
-    <button class="btn" id="castSwapBtn" title="Recast / Swap playable character mid-level (Tab)">⇄ Cast</button>
-    <button class="btn on" id="engBtn" title="Switch animation engine mode">⚡ Engine: Hybrid</button>
-    <button class="btn" id="ikBtn" title="Toggle Bolas 2-Bone IK &amp; Pivot Telemetry Overlay">⊕ IK</button>
+    <button class="btn" id="castBtn" title="Switch playable character from this poem's cast">⇄ Cast</button>
+    <div id="score"></div>
     <button class="btn" id="pause">Pause</button>
   </div>
-  <div id="scn"></div>
-  <div id="telem"></div>
+  <div id="arcBar" aria-label="Scene & Emotional Arc Progression"></div>
+  <div id="emoHud">
+    <div class="emo-kicker" id="emoKicker">EMOTIONAL REGISTER</div>
+    <div class="emo-title" id="emoTitle">Searching & Yearning</div>
+    <div class="emo-sub" id="emoSub">Walk into the warm focus pool to embody each spoken line.</div>
+  </div>
   <div id="sub"></div>
   <div id="pad"><div id="knob"><i></i></div></div>
   <div id="acts"></div>
@@ -166,187 +139,93 @@ p{color:var(--muted);margin:0 0 .5rem;max-width:72ch;line-height:1.45;font-size:
   <div class="veil" id="start">
     <div class="box">
       <h2 id="stt"></h2>
-      <p id="stn"></p>
+      <p id="stn" style="margin:0"></p>
+      <div class="arc-box" id="stArc"></div>
       <div class="row">
-        <button class="btn on" id="go" style="font-weight:700;padding:10px 20px">▶ Start the reading</button>
+        <button class="btn on" id="go">▶ Begin the Reading & Journey</button>
         <button class="btn" id="who"></button>
       </div>
-      <small style="color:var(--muted);font-family:var(--mono);font-size:.75rem">Controls: A/D or ←/→ Walk · Space/W/↑ or Swipe Up to Jump for High Word-Orbs · E or Tap Gold Pose Button on Action Beats · Tab to Recast</small>
+      <small style="color:var(--muted)">Controls: Drag or <b>← / →</b> (<b>A / D</b>) to walk · Stand in the glowing focus or press <b>Space / E</b> to embody the line's emotion · Click any scene pill at the top to jump across scenes.</small>
     </div>
   </div>
 
   <div class="veil" id="end">
     <div class="box">
-      <h2>The poem ends</h2>
+      <h2>The Poem Completes Its Arc</h2>
       <div class="stars" id="stars"></div>
       <p id="endn" style="margin:0"></p>
-      <div class="breakdown" id="endBreakdown"></div>
+      <div class="arc-box" id="endArc"></div>
+      <div class="word-cloud" id="endWords"></div>
       <div class="row">
-        <button class="btn on" id="again">Play again</button>
-        <button class="btn" id="next">Next poem →</button>
+        <button class="btn on" id="again">↻ Experience Again</button>
+        <button class="btn" id="next">Next Poem →</button>
         <button class="btn" id="home">All 14 Poems</button>
       </div>
     </div>
   </div>
 </section>
 
-<div id="certModal" role="dialog" aria-modal="true" aria-label="37-Character Numeric Animation Report">
-  <div class="cert-box">
-    <div class="cert-hdr">
-      <span>37-Character Anim2 Numeric Certification Report (`anim2_certification_report.json`)</span>
-      <button class="btn" id="closeCertBtn">✕ Close</button>
-    </div>
-    <div class="cert-body" id="certTableWrap">Loading report…</div>
-  </div>
-</div>
-
 <script src="anim2.js"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
-const store = {
-  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
-  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+const store = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} } };
+
+const ARC_SUMMARY = {
+  "01": { arc: "Memory → Vertigo → Freefall", desc: "From reading the manuscript at the desk, to stumbling off the fire escape, to falling through the floor of tainted love." },
+  "02": { arc: "Vertigo → Childhood Memory → Grief", desc: "Falling with headlights off, confronting the Ghost Child and arguing parents in the car, and hurling the tambourine." },
+  "03": { arc: "Grief → Storm → Departure", desc: "An engagement broken in an empty temple as the storm sweeps every gift onto the shore." },
+  "04": { arc: "Hollow Heart → Searching → Resolution", desc: "Waking washed ashore with a hollow chest, climbing the night trail, and placing hands on the stone ledge." },
+  "05": { arc: "Stillness → Ancestral Memory → Awe", desc: "Descending into the southern-pine basement of memory, holding universes in your palms, and naming the stars." },
+  "06": { arc: "Awe → Heart-Scan → Sanctuary", desc: "The Light Gates open as Atlantis rises from the water, welcoming travelers by candlelight." },
+  "07": { arc: "Club Ecstasy → Haunted Mesh → Chin High", desc: "Eyes wide shut at the DJ booth, wedding bands in the speaker mesh, then walking through rain with chin high." },
+  "08": { arc: "Out-of-Body Release → Baptism → Reunion", desc: "The soul escapes the dancer's body on the floor, floats over Atlantis for an ice-water baptism, and returns." },
+  "09": { arc: "Pursuit → Mother's Call → Letting Go", desc: "Following the EX to the suitcases at the phone booth, calling Mother, and watching the EX dissolve into haze." },
+  "10": { arc: "Midnight Loneliness → Magic Ride → Dawn", desc: "Mounting the motorcycle under a streetlamp and riding out of Atlantis onto the mountain road at first light." },
+  "11": { arc: "Chilly Shore → Self-Building Nave → Peace", desc: "Shivering on the morning shore as the temple builds itself course by course into a heart at peace." },
+  "12": { arc: "Echoing Halls → Brotherhood Chain → Home", desc: "Decades later, locking arms in the brotherhood chain as recollections bring everyone home." },
+  "13": { arc: "Corner Cafe → Poppies → Promise", desc: "Waiting to be noticed at a corner cafe table, walking past younger selves, and harvesting poppies by the harbor." },
+  "14": { arc: "Taken by Haze → Vintage Waltz → Genesis", desc: "Floating in the black void before stepping through the vintage ballroom door into the final waltz." }
 };
 
-let CHARS = [], INDEX = [], CRASH_RIGS = {}, CERT_REPORT = null;
-let L = null, actor = null, npcs = [], scenes = [], sceneImgs = [], audio = null, castIdx = 0;
-let W = 0, H = 0, DPR = 1;
+let CHARS = [], INDEX = [], L = null, actor = null, scenes = [], sceneImgs = [], audio = null, castIdx = 0;
+let counterpart = null; // Secondary dramatic figure (EX, Soul double, Vintage partner, Ghost child, etc.)
+let W=0, H=0, DPR=1;
 const cv = $('cv'), ctx = cv.getContext('2d');
 let move = 0, lastT = 0, running = false, paused = false, ended = false, started = false;
-let cur = { i: -1, fade: 0 }, stats = [], wordOrbs = [], particles = [], floatTexts = [];
-let score = 0, total = 0, orbsCaught = 0, orbsTotal = 0, posesCaught = 0;
-let camLeft = 0, subKey = '', showIKOverlay = false;
-const ENGINE_MODES = ['hybrid', 'pose_v2', 'rig_15bone'];
-const ENGINE_LABELS = { hybrid: '⚡ Engine: Hybrid', pose_v2: '🎨 Engine: Anim2 4-Pose', rig_15bone: '🦴 Engine: 15-Bone IK' };
-let engineIdx = 0;
+let cur = {i:-1, fade:0}, stats = [], score = 0, total = 0, camLeft = 0, subKey = '';
+let activeLine = null;
+let sceneResonance = 0.25; // 0..1: awakens scene saturation, light pool, and typographic echoes
+let wordEchoes = [];       // Floating typographic words rising from inhabited lines
+let particles = [];        // Atmospheric particles driven by line emotion
 const keys = {};
 
 function resize(){
-  DPR = Math.min(2, devicePixelRatio || 1);
-  W = cv.clientWidth;
-  H = cv.clientHeight;
-  cv.width = Math.round(W * DPR);
-  cv.height = Math.round(H * DPR);
+  DPR = Math.min(2, devicePixelRatio||1);
+  W = cv.clientWidth; H = cv.clientHeight;
+  cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
 }
 addEventListener('resize', resize);
-
-/* ---------- Action-Cue Detector & Word-Orb Generator ---------- */
-const ACTION_KEYWORDS = [
-  { re: /\b(fall|falling|fell|trip|stumble|drop|slip|sink|drown)\b/i, cls: 'fall', label: 'FALL' },
-  { re: /\b(dance|dancing|party|waltz|spin|music|club|rhythm|beat)\b/i, cls: 'dance', label: 'DANCE' },
-  { re: /\b(sit|sitting|seated|chair|table|bench|pause|wait|rest)\b/i, cls: 'sit', label: 'SIT' },
-  { re: /\b(kneel|kneeling|pray|prayer|beneath|pit|quicksands|ground|hollow)\b/i, cls: 'kneel', label: 'KNEEL' },
-  { re: /\b(crouch|crouching|hidden|hide|low|duck|shadow|corner)\b/i, cls: 'crouch', label: 'CROUCH' },
-  { re: /\b(reach|reaching|hand|hands|touch|hold|find|offer|thread|open|escape|follow)\b/i, cls: 'reach', label: 'REACH' }
-];
-const HIGH_WORD_RE = /\b(fire|escapes?|falling|fly|flying|float|sky|stars?|moon|high|up|leap|dream|above|heaven|wings?|top|jump|light|lights|cloud|air|sun|tower|roof|bridge|birds?|angels?)\b/i;
-const STOP_WORDS = new Set(['a','an','the','of','to','in','on','at','by','for','with','from','as','is','was','are','be','or','and','that','this','it','its']);
-
-function detectLineAction(text){
-  for (const item of ACTION_KEYWORDS){
-    if (item.re.test(text)) return item;
-  }
-  return null;
-}
-
-function buildLevelEnrichments(level){
-  wordOrbs = [];
-  orbsTotal = 0;
-  orbsCaught = 0;
-  posesCaught = 0;
-
-  level.scenes.forEach((sc, sIdx) => {
-    let prevX = 320;
-    const scOrbs = [];
-    sc.lines.forEach((ln, lIdx) => {
-      const act = detectLineAction(ln.text || '');
-      ln.actionPrompt = act; // { cls, label } or null
-      const wStart = ln.w0, wEnd = ln.w1;
-      const lineWords = [];
-      for (let w = wStart; w <= wEnd; w++){
-        if (level.words[w]) lineWords.push({ idx: w, text: level.words[w][0], t0: level.words[w][1], t1: level.words[w][2] });
-      }
-      // Pick up to 3 meaningful words per line to become collectible Word-Orbs
-      const cands = lineWords.filter(w => {
-        const clean = w.text.replace(/[^a-zA-Z]/g, '').toLowerCase();
-        return clean.length >= 4 && !STOP_WORDS.has(clean);
-      });
-      const chosen = (cands.length ? cands : lineWords).slice(0, 3);
-      chosen.forEach((cw, cIdx) => {
-        const frac = (cIdx + 1) / (chosen.length + 1);
-        const ox = Math.round(prevX + (ln.mx - prevX) * frac);
-        const isHigh = HIGH_WORD_RE.test(cw.text) || (cIdx === 1 && chosen.length >= 2 && ((lIdx + sIdx) % 2 === 0));
-        // Height in cm above floor: 16cm (chest height) or 42cm (jump height!)
-        const hCm = isHigh ? 42 : 16;
-        scOrbs.push({
-          wIdx: cw.idx,
-          lineIdx: lIdx,
-          word: cw.text.replace(/[.,;!?"]+$/g, ''),
-          t0: cw.t0,
-          t1: cw.t1,
-          lineT0: ln.t,
-          lineT1: ln.e,
-          x: Math.max(110, Math.min(level.frame[0] - 110, ox)),
-          hCm,
-          isHigh,
-          caught: false
-        });
-        orbsTotal++;
-      });
-      prevX = ln.mx;
-    });
-    wordOrbs.push(scOrbs);
-  });
-}
 
 /* ---------- Shelf ---------- */
 function buildShelf(){
   const g = $('lv');
   g.innerHTML = '';
-  INDEX.forEach(p => {
+  INDEX.forEach(p=>{
     const b = document.createElement('button');
     b.className = 'lv';
-    const best = store.get('wy.best.' + p.num);
-    const bestOrbs = store.get('wy.orbs.' + p.num);
-    b.innerHTML = `
-      <div class="thumb-wrap">
-        <img loading="lazy" alt="" src="levels/${p.thumb}">
-        <span class="p-badge">POEM ${p.num}</span>
-      </div>
-      <div class="body">
-        <b></b>
-        <small class="meta"></small>
-        <div class="tags">
-          <span class="tag">${p.scenes} scenes</span>
-          <span class="tag">${p.lines} lines</span>
-          <span class="tag">${p.cast} cast rigs</span>
-          <span class="tag">Word-Orbs + Jumps</span>
-        </div>
-        <div class="best"></div>
-      </div>`;
-    b.querySelector('b').textContent = p.num + ' · ' + p.title;
-    b.querySelector('.meta').textContent = `${Math.round(p.duration)}s spoken reading · Multiplane stage & action prompts`;
-    b.querySelector('.best').textContent = best ? (`★ Best: ${best} lines` + (bestOrbs ? ` · ${bestOrbs} words` : '')) : '▶ Click to play level';
-    b.addEventListener('click', () => openLevel(p.num));
+    const best = store.get('wy.best.'+p.num);
+    const meta = ARC_SUMMARY[p.num] || { arc: 'Emotional Journey', desc: '' };
+    b.innerHTML =
+      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}"><span class="arc-pill">${meta.arc}</span></div>` +
+      `<div class="body"><b></b><div class="theme"></div><small></small><div class="best"></div></div>`;
+    b.querySelector('b').textContent = `${p.num} · ${p.title}`;
+    b.querySelector('.theme').textContent = meta.desc;
+    b.querySelector('small').textContent = `${Math.round(p.duration)}s · ${p.scenes} scenes · ${p.lines} stanza lines · ${p.cast} playable cast`;
+    b.querySelector('.best').textContent = best ? (`★ Best resonance: ${best}/${p.lines} lines inhabited`) : 'Click to enter poem →';
+    b.addEventListener('click', ()=>openLevel(p.num));
     g.append(b);
   });
-}
-
-/* ---------- Load 15-Bone Rig Images for a Character ---------- */
-async function loadRigForChar(ch){
-  const rigId = ch.rig_id || 'poet_tracksuit_31';
-  const spec = CRASH_RIGS[rigId];
-  if (!spec || !spec.slots) return { spec: null, imgs: {} };
-  const imgs = {};
-  const entries = Object.entries(spec.slots);
-  await Promise.all(entries.map(async ([slotName, slotData]) => {
-    if (slotData && slotData.file){
-      const im = await WY.loadImg('../' + slotData.file);
-      if (im) imgs[slotName] = im;
-    }
-  }));
-  return { spec, imgs };
 }
 
 /* ---------- Opening a Level ---------- */
@@ -356,30 +235,37 @@ async function openLevel(num){
   resize();
   L = await (await fetch(`levels/${num}/level.json`)).json();
   scenes = L.scenes;
-  buildLevelEnrichments(L);
-  sceneImgs = await Promise.all(scenes.map(s => WY.loadImg(`levels/${num}/${s.img}`)));
-  const pref = L.cast.findIndex(c => c.key === 'poet/red_black_sunglasses');
+  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(`levels/${num}/${s.img}`)));
+
+  // Pick lead character (Poet in Poems 01-14, or first in cast)
+  const pref = L.cast.findIndex(c => c.key.startsWith('poet/'));
   castIdx = pref >= 0 ? pref : 0;
   await setActor(castIdx);
-  await setupSceneNPCs();
+  await setupCounterpart();
 
-  stats = scenes.map(s => s.lines.map(() => ({ inT: 0, done: false, ok: false, poseBonus: false, shown: -1e9 })));
-  total = scenes.reduce((n, s) => n + s.lines.length, 0);
-  score = 0; orbsCaught = 0; posesCaught = 0;
-  ended = false; started = false; paused = false; cur = { i: -1, fade: 0 };
-  particles = []; floatTexts = [];
+  stats = scenes.map(s => s.lines.map(() => ({ inT: 0, done: false, ok: false, shown: -1e9, embodied: false })));
+  total = scenes.reduce((n,s) => n + s.lines.length, 0);
+  score = 0; ended = false; started = false; paused = false;
+  cur = { i: -1, fade: 0 };
+  sceneResonance = 0.25;
+  wordEchoes = [];
+  initParticles();
 
   if (audio){ audio.pause(); audio = null; }
   audio = new Audio(`levels/${num}/${L.audio}`);
   audio.preload = 'auto';
   audio.addEventListener('ended', finish);
 
+  const arcMeta = ARC_SUMMARY[num] || { arc: 'Emotional Arc', desc: '' };
   $('ttl').textContent = `${L.num} · ${L.title}`;
   $('stt').textContent = `${L.num} · ${L.title}`;
-  $('stn').textContent = `${Math.round(L.duration)}s spoken reading · ${scenes.length} scenes · ${total} lines · ${orbsTotal} word-orbs.`;
+  $('stn').textContent = `${Math.round(L.duration)} seconds · ${scenes.length} painted scenes · ${total} spoken lines`;
+  $('stArc').innerHTML = `<b>Emotional Arc (${arcMeta.arc}):</b><br>${arcMeta.desc}`;
   $('start').style.display = 'grid';
   $('end').style.display = 'none';
+  buildArcBar();
   updateScore();
+
   actor.x = 300; actor.dir = 1; camLeft = 0;
   lastT = performance.now();
   running = true;
@@ -387,508 +273,571 @@ async function openLevel(num){
 }
 
 async function setActor(i){
-  const pool = (L && L.cast && L.cast.length) ? L.cast : CHARS;
-  castIdx = (i + pool.length) % pool.length;
-  const c = pool[castIdx];
+  castIdx = (i + L.cast.length) % L.cast.length;
+  const c = L.cast[castIdx];
   const ch = CHARS.find(x => x.key === c.key) || CHARS[0];
-  const imgs = await Promise.all(ch.draws.map(d => WY.loadImg(`assets/${ch.dir}/${d.f}`)));
-  const rigData = await loadRigForChar(ch);
+  const imgs = await Promise.all(ch.draws.map(d => Anim2.loadImg(`assets/${ch.dir}/${d.f}`)));
   const keepX = actor ? actor.x : 300, keepDir = actor ? actor.dir : 1;
-  actor = new WY.Actor(ch, imgs, rigData.spec, rigData.imgs);
-  actor.x = keepX;
-  actor.dir = keepDir;
-  actor.engineMode = ENGINE_MODES[engineIdx];
-  const shortName = ch.name.replace(/\s*\(.*$/, '');
-  $('who').textContent = 'Play as: ' + shortName + ' (Tap to change)';
-  $('castSwapBtn').textContent = '⇄ ' + shortName;
+  actor = new Anim2.Actor(ch, imgs);
+  actor.x = keepX; actor.dir = keepDir;
+  const shortName = ch.name.replace(/\s*\(.*$/,'');
+  $('who').textContent = `Play as: ${ch.name}`;
+  $('castBtn').textContent = `⇄ ${shortName}`;
   buildButtons();
 }
 
-async function setupSceneNPCs(){
-  npcs = [];
-  if (!L || !L.cast) return;
-  for (let i = 0; i < L.cast.length; i++){
-    if (i === castIdx) continue;
-    const c = L.cast[i];
-    const ch = CHARS.find(x => x.key === c.key);
-    if (!ch) continue;
-    const imgs = await Promise.all(ch.draws.map(d => WY.loadImg(`assets/${ch.dir}/${d.f}`)));
-    const npc = new WY.Actor(ch, imgs);
-    npc.x = 520 + i * 190;
-    npc.dir = i % 2 === 0 ? -1 : 1;
-    if (npc.P.poses.length) npc.set({ kind: 'pose', p: npc.P.poses[0], cls: npc.P.poses[0].cls });
-    npcs.push(npc);
-  }
+async function setupCounterpart(){
+  counterpart = null;
+  if (!L || !L.cast || L.cast.length < 2) return;
+  // Choose dramatic counterpart (e.g., poet_soul in Poem 08, ex/ex_jacket in 01/03/07/09, vintage partner in 01/14, ancestor in 05)
+  const otherSpec = L.cast.find((c, idx) => idx !== castIdx);
+  if (!otherSpec) return;
+  const ch = CHARS.find(x => x.key === otherSpec.key);
+  if (!ch) return;
+  const imgs = await Promise.all(ch.draws.map(d => Anim2.loadImg(`assets/${ch.dir}/${d.f}`)));
+  const act = new Anim2.Actor(ch, imgs);
+  act.x = 880;
+  act.dir = -1;
+  counterpart = {
+    key: ch.key,
+    name: ch.name,
+    actor: act,
+    isSoul: ch.key === 'poet_soul/soul',
+    isEx: ch.key === 'ex/ex_jacket',
+    alpha: 1.0
+  };
+}
+
+function buildArcBar(){
+  const bar = $('arcBar');
+  bar.innerHTML = '';
+  scenes.forEach((sc, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'sc-step';
+    btn.dataset.idx = idx;
+    const emo = sc.emotion || 'searching';
+    btn.innerHTML = `<small>${sc.key} · ${emo}</small><b>${sc.name}</b>`;
+    btn.addEventListener('click', () => {
+      if (audio){
+        audio.currentTime = sc.t0 + 0.05;
+        if (!started){ $('go').click(); }
+      }
+    });
+    bar.append(btn);
+  });
 }
 
 function buildButtons(){
   const box = $('acts');
   box.innerHTML = '';
+  // 1. Primary contextual "Embody Current Line" button
+  const cueBtn = document.createElement('button');
+  cueBtn.className = 'btn cue-btn';
+  cueBtn.id = 'embodyBtn';
+  cueBtn.textContent = '★ Embody Line (Space)';
+  cueBtn.addEventListener('pointerdown', ev => {
+    ev.preventDefault();
+    embodyActiveLine();
+  });
+  box.append(cueBtn);
+
+  // 2. Character's intentional emotional postures (never shuffling!)
   actor.buttons().forEach(b => {
     const e = document.createElement('button');
     e.className = 'btn';
-    if (b.cls) e.dataset.cls = b.cls;
+    e.dataset.key = b.key || b.label;
     e.textContent = b.label;
-    e.addEventListener('pointerdown', ev => { ev.preventDefault(); b.fn(); });
+    e.addEventListener('pointerdown', ev => {
+      ev.preventDefault();
+      b.fn();
+      highlightActiveButton(b.key || b.label);
+    });
     box.append(e);
   });
 }
 
+function highlightActiveButton(activeKey){
+  document.querySelectorAll('#acts .btn:not(.cue-btn)').forEach(btn => {
+    btn.classList.toggle('on', btn.dataset.key === activeKey);
+  });
+}
+
+function embodyActiveLine(){
+  if (!actor) return;
+  const now = performance.now();
+  if (activeLine && activeLine.posture_cue){
+    actor.ctrl.embodyCue(activeLine.posture_cue, activeLine.emotion, now);
+    highlightActiveButton(activeLine.posture_cue);
+    sceneResonance = Math.min(1, sceneResonance + 0.18);
+  } else {
+    actor.ctrl.jump(now);
+  }
+}
+
+function initParticles(){
+  particles = [];
+  for (let i = 0; i < 36; i++){
+    particles.push({
+      x: Math.random() * 1280,
+      y: Math.random() * 720,
+      vx: (Math.random() - 0.5) * 18,
+      vy: -10 - Math.random() * 24,
+      r: 1.5 + Math.random() * 2.5,
+      a: 0.25 + Math.random() * 0.55
+    });
+  }
+}
+
+/* ---------- The Reading Clock & Emotional Simulation ---------- */
 function now_t(){ return audio ? audio.currentTime : 0; }
-function sceneAt(t){ let k = 0; for (let i = 0; i < scenes.length; i++) if (t >= scenes[i].t0) k = i; return k; }
-function updateScore(){
-  $('scoreLines').textContent = `${score}/${total}`;
-  $('scoreOrbs').textContent = `${orbsCaught}/${orbsTotal}`;
-  $('scorePoses').textContent = `${posesCaught}`;
-}
+function sceneAt(t){ let k = 0; for (let i=0;i<scenes.length;i++) if (t >= scenes[i].t0) k = i; return k; }
+function updateScore(){ $('score').textContent = `Resonance: ${score}/${total}`; }
 
-function spawnBurst(x, y, col, label){
-  for (let i = 0; i < 12; i++){
-    const a = (Math.PI * 2 * i) / 12 + Math.random() * 0.3;
-    const sp = 40 + Math.random() * 90;
-    particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 30, life: 0.55, maxLife: 0.55, col });
-  }
-  if (label){
-    floatTexts.push({ x, y: y - 14, text: label, col, life: 0.95, maxLife: 0.95 });
-  }
-}
-
-/* ---------- Main Game Loop ---------- */
 function frame(ts){
   if (!running) return;
-  const dt = Math.min(0.05, (ts - lastT) / 1000);
+  const dt = Math.min(0.05, Math.max(0.001, (ts - lastT)/1000));
   lastT = ts;
   const t = now_t(), live = started && !paused && !ended;
   const k = sceneAt(t);
+  const sc = scenes[k];
+
   if (k !== cur.i){
     cur = { i: k, fade: 1 };
-    $('scn').textContent = `Scene ${k + 1}/${scenes.length} · ${scenes[k].name}`;
     subKey = '';
+    // Update scene timeline highlight & initial scene emotion
+    document.querySelectorAll('#arcBar .sc-step').forEach((el, idx) => {
+      el.classList.toggle('active', idx === k);
+      el.classList.toggle('done', idx < k);
+    });
+    if (sc && sc.emotion) actor.ctrl.setEmotion(sc.emotion);
   }
-  cur.fade = Math.max(0, cur.fade - dt * 3);
-  const sc = scenes[k], fw = L.frame[0];
+  cur.fade = Math.max(0, cur.fade - dt * 2.8);
 
-  // Input & Stride-Locked Physics
-  const kx = (keys.ArrowRight || keys.d || keys.D ? 1 : 0) - (keys.ArrowLeft || keys.a || keys.A ? 1 : 0);
+  const fw = L.frame[0];
+  const kx = (keys.ArrowRight||keys.d||keys.D?1:0) - (keys.ArrowLeft||keys.a||keys.A?1:0);
   const m = kx !== 0 ? kx : move;
-  const eff = Math.abs(m) < 0.14 ? 0 : m;
-  actor.stepPhysics(dt, eff, sc.ppc, fw, ts);
+  const eff = Math.abs(m) < 0.12 ? 0 : m;
 
-  // Speaking pulse when a word is actively spoken
-  actor.speaking = live && sc.lines.some(ln => t >= ln.t && t <= ln.e);
+  // Step character physics via Anim2 Controller
+  const state = actor.ctrl.step(dt, eff, ts);
+  actor.x = Math.max(45, Math.min(fw - 45, actor.x));
 
-  // Check active line & highlight matching Pose Prompt button
-  let activePromptCls = null;
-  const near = lx => Math.abs(actor.x - lx) < 95 * sc.ppc;
+  // Find active or upcoming line
+  activeLine = null;
+  for (let j = 0; j < sc.lines.length; j++){
+    const ln = sc.lines[j];
+    if (t >= ln.t - 0.3 && t <= ln.e + 0.45){
+      activeLine = ln;
+      break;
+    }
+  }
+
+  // Update Emotional HUD & Contextual Embody Button
+  if (activeLine){
+    const emoMod = Anim2.EMOTION_MODS[activeLine.emotion] || Anim2.EMOTION_MODS.searching;
+    $('emoKicker').textContent = `${sc.key} · ${sc.name.toUpperCase()}`;
+    $('emoTitle').textContent = `${activeLine.emotion_label || emoMod.label}`;
+    $('emoSub').textContent = `Stand in the focus pool (${Math.round(activeLine.mx)}px) or press Space to embody "${activeLine.posture_cue || 'presence'}".`;
+    const eb = $('embodyBtn');
+    if (eb) eb.textContent = `★ Embody: ${activeLine.emotion_label || 'Line'} (Space)`;
+  } else if (sc){
+    const emoMod = Anim2.EMOTION_MODS[sc.emotion] || Anim2.EMOTION_MODS.searching;
+    $('emoKicker').textContent = `${sc.key} · ${sc.name.toUpperCase()}`;
+    $('emoTitle').textContent = emoMod.label;
+    $('emoSub').textContent = `Move toward the next glowing stanza mark as the reading continues.`;
+  }
+
+  // Evaluate line inhabitation & automatic emotional posture embodiment when inside the focus pool
+  const focusRadius = 105 * sc.ppc;
+  let insideAnyActive = false;
+
   sc.lines.forEach((ln, j) => {
     const st = stats[k][j];
-    const inWindow = live && !st.done && t >= ln.t && t <= ln.e;
-    if (inWindow && ln.actionPrompt){
-      activePromptCls = ln.actionPrompt.cls;
-    }
-    if (inWindow && near(ln.mx)){
-      st.inT += dt;
-      // Check if player triggered the prompted pose!
-      if (ln.actionPrompt && !st.poseBonus){
-        const curCls = actor.anim.cls || (actor.anim.p && actor.anim.p.cls);
-        if (curCls === ln.actionPrompt.cls || keys.e || keys.E){
-          if (keys.e || keys.E) actor.triggerPoseByCls(ln.actionPrompt.cls, ts);
-          st.poseBonus = true;
-          st.inT += 0.45; // helps secure line catch
-          posesCaught++;
-          updateScore();
-          spawnBurst(actor.x, sc.floor - 70, '#4ee88a', `⚡ ${ln.actionPrompt.label} +2!`);
+    const isLineNow = live && !st.done && t >= ln.t && t <= ln.e;
+    if (isLineNow){
+      const dist = Math.abs(actor.x - ln.mx);
+      if (dist < focusRadius){
+        insideAnyActive = true;
+        st.inT += dt;
+        // When standing still inside the line's focus pool, naturally embody the line's emotional posture!
+        if (eff === 0 && !st.embodied){
+          st.embodied = true;
+          actor.ctrl.embodyCue(ln.posture_cue, ln.emotion, ts);
+          highlightActiveButton(ln.posture_cue);
         }
       }
     }
     if (live && !st.done && t > ln.e){
       st.done = true;
-      st.ok = st.inT >= 0.38 * Math.max(0.4, ln.e - ln.t);
+      st.ok = st.inT >= 0.35 * Math.max(0.4, ln.e - ln.t);
       st.shown = ts;
       if (st.ok){
         score++;
         updateScore();
-        spawnBurst(ln.mx, sc.floor - 40, '#d8ab4f', '✓ LINE CAUGHT');
+        sceneResonance = Math.min(1, sceneResonance + 0.14);
+        // Spawn luminous word echoes from the caught line
+        spawnWordEchoes(ln);
       }
     }
   });
 
-  // Highlight active Pose Prompt button in #acts
-  Array.from($('acts').children).forEach(btn => {
-    btn.classList.toggle('pose-hi', !!(activePromptCls && btn.dataset.cls === activePromptCls));
-  });
+  // Gradual resonance adjustment
+  if (insideAnyActive){
+    sceneResonance = Math.min(1.0, sceneResonance + dt * 0.22);
+  } else if (live){
+    sceneResonance = Math.max(0.22, sceneResonance - dt * 0.04);
+  }
 
-  // Word-Orbs collision check
-  const scOrbs = wordOrbs[k] || [];
-  scOrbs.forEach(orb => {
-    if (orb.caught) return;
-    const vis = t >= orb.lineT0 - 2.4 && t <= orb.lineT1 + 0.8;
-    if (!vis) return;
-    const dxCm = Math.abs(actor.x - orb.x) / Math.max(0.5, sc.ppc);
-    // Player spans ~0..115cm when grounded, or airY..airY+115cm when jumping
-    const charBottomCm = actor.airY;
-    const charTopCm = actor.airY + (actor.ch.height_cm || 170) * 0.62;
-    const heightOk = orb.isHigh ? (actor.airY >= 14 || (orb.hCm >= charBottomCm - 10 && orb.hCm <= charTopCm)) : (dxCm < 36);
-    if (dxCm < 34 && heightOk){
-      orb.caught = true;
-      orbsCaught++;
-      updateScore();
-      spawnBurst(orb.x, sc.floor - orb.hCm * sc.ppc, '#00e5ff', `+ "${orb.word}"`);
-    }
-  });
-
-  // Update particles & floating texts
-  particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 180 * dt; p.life -= dt; });
-  particles = particles.filter(p => p.life > 0);
-  floatTexts.forEach(f => { f.y -= 32 * dt; f.life -= dt; });
-  floatTexts = floatTexts.filter(f => f.life > 0);
-
-  // Close earlier scenes' unfinished lines
+  // Close earlier scenes' lines
   for (let i = 0; i < k; i++){
     stats[i].forEach(st => {
       if (!st.done){ st.done = true; st.ok = false; st.shown = ts; }
     });
   }
 
-  draw(sc, k, t, eff, ts);
+  // Step dramatic counterpart (Soul double, EX in Olive Bomber, Vintage Partner, etc.)
+  stepCounterpart(dt, k, sc, ts);
+
+  draw(sc, k, t, state, ts, dt);
   requestAnimationFrame(frame);
 }
 
-/* ---------- Stage Renderer ---------- */
-function draw(sc, k, t, moving, ts){
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  ctx.clearRect(0, 0, W, H);
+function spawnWordEchoes(ln){
+  if (!L || !L.words) return;
+  const words = [];
+  for (let w = ln.w0; w <= ln.w1; w++){
+    if (L.words[w] && L.words[w][0].length >= 4) words.push(L.words[w][0]);
+  }
+  const picks = words.slice(0, 3);
+  picks.forEach((word, i) => {
+    wordEchoes.push({
+      text: word,
+      x: ln.mx + (i - 1) * 55,
+      yOffset: -40 - i * 22,
+      alpha: 1.0,
+      emotion: ln.emotion || 'searching'
+    });
+  });
+}
+
+function stepCounterpart(dt, k, sc, ts){
+  if (!counterpart || !actor) return;
+  const cp = counterpart;
+  const cpAct = cp.actor;
+
+  if (cp.isSoul){
+    // Poem 08: Soul leaves the dancer's body in scenes 0..3 and reunites in scene 4!
+    const separated = k <= 3;
+    cp.alpha = separated ? 0.78 : Math.max(0, cp.alpha - dt * 0.8);
+    cpAct.x += (actor.x + (separated ? 60 * Math.sin(ts / 900) : 0) - cpAct.x) * Math.min(1, dt * 3);
+    cpAct.dir = actor.dir;
+    cpAct.ctrl.embodyCue(separated ? 'kneel_2' : 'idle', 'ecstasy', ts);
+  } else if (cp.isEx){
+    // EX in Olive Bomber: always keeps back turned; walks away when approached; turns to haze at end of Poem 09
+    const dist = cpAct.x - actor.x;
+    let moveAway = 0;
+    if (Math.abs(dist) < 160){
+      moveAway = dist >= 0 ? 0.65 : -0.65;
+    }
+    if (L.num === '09' && k === 2){
+      // Scene 09.2: Suitcases at the phone booth
+      cpAct.ctrl.embodyCue('suitcase', 'departure', ts);
+      moveAway = 0;
+    } else if (L.num === '09' && k >= 5){
+      // Scene 09.5: The EX turns to haze
+      cp.alpha = Math.max(0.08, cp.alpha - dt * 0.25);
+    } else {
+      cp.alpha = 0.92;
+    }
+    cpAct.ctrl.step(dt, moveAway, ts);
+    cpAct.x = Math.max(120, Math.min(L.frame[0] - 120, cpAct.x));
+  } else {
+    // Supporting cast (Vintage partner, Mother, Ancestor, Brother): gentle presence facing the player
+    cpAct.dir = actor.x < cpAct.x ? -1 : 1;
+    cpAct.ctrl.step(dt, 0, ts);
+  }
+}
+
+function draw(sc, k, t, state, ts, dt){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.clearRect(0,0,W,H);
   ctx.fillStyle = '#07080b';
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(0,0,W,H);
 
   const fw = L.frame[0], fh = L.frame[1];
   const land = W > H * 1.15;
-  const stageH = land ? H - 52 - 72 : Math.min(H * 0.74, H - 62 - 125);
-  const s = stageH / fh, y0 = 52, vw = W / s;
-  $('scn').style.top = (y0 + stageH - 22) + 'px';
-  $('telem').style.top = (y0 + 8) + 'px';
+  const y0 = 84;
+  const stageH = land ? H - y0 - 70 : Math.min(H * 0.70, H - y0 - 125);
+  const s = stageH / fh;
+  const vw = W / s;
 
-  const target = Math.max(0, Math.min(fw - vw, actor.x - vw / 2));
+  $('emoHud').style.top = (y0 + 10) + 'px';
+
+  const target = Math.max(0, Math.min(fw - vw, actor.x - vw/2));
   camLeft += (vw >= fw ? (0 - camLeft) : (target - camLeft)) * 0.12;
-  const offX = vw >= fw ? (W - fw * s) / 2 : 0;
+  const offX = vw >= fw ? (W - fw*s)/2 : 0;
   const left = vw >= fw ? 0 : camLeft;
   const img = sceneImgs[k];
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(offX, y0, Math.min(W, fw * s), stageH);
-  ctx.clip();
-
-  // Multiplane Parallax Backdrop + Main Scene Plate
-  if (img){
-    // Distant atmospheric parallax layer
-    ctx.save();
-    ctx.globalAlpha = 0.32;
-    ctx.filter = 'blur(4px) brightness(0.7)';
-    ctx.drawImage(img, offX - left * s * 0.45 - 20, y0 - 10, fw * s * 1.04, fh * s * 1.04);
-    ctx.restore();
-    // Main registered scene plate
-    ctx.drawImage(img, offX - left * s, y0, fw * s, fh * s);
-  }
-
   const fy = y0 + sc.floor * s;
   const px = x => offX + (x - left) * s;
 
-  // Ensemble NPCs on stage (slightly behind main actor plane)
-  npcs.forEach((npc, nIdx) => {
-    const npcPick = npc.pick(ts + nIdx * 310, false);
-    ctx.save();
-    ctx.globalAlpha = 0.86;
-    npc.draw(ctx, npcPick, px(npc.x), fy - 6 * s, sc.ppc * s * 0.92, ts, false);
-    ctx.restore();
-  });
-
-  // Warm theatrical footlight pool under player
-  const pool = ctx.createRadialGradient(px(actor.x), fy - 4, 4, px(actor.x), fy - 4, 135 * sc.ppc * s);
-  pool.addColorStop(0, 'rgba(255,240,200,.32)');
-  pool.addColorStop(1, 'rgba(255,240,200,0)');
   ctx.save();
-  ctx.translate(0, fy - 4);
-  ctx.scale(1, 0.22);
-  ctx.translate(0, -(fy - 4));
-  ctx.fillStyle = pool;
-  ctx.fillRect(px(actor.x) - 320, fy - 320, 640, 640);
+  ctx.beginPath();
+  ctx.rect(offX, y0, Math.min(W, fw*s), stageH);
+  ctx.clip();
+
+  // 1. Background Painting with Emotional Awakening (desaturated shadow -> living color as you inhabit lines)
+  if (img){
+    const sat = Math.round(52 + sceneResonance * 62);
+    const bri = Math.round(74 + sceneResonance * 28);
+    ctx.save();
+    ctx.filter = `saturate(${sat}%) brightness(${bri}%)`;
+    ctx.drawImage(img, offX - left*s, y0, fw*s, fh*s);
+    ctx.restore();
+  }
+
+  // 2. Emotional Atmosphere Tint & Living Particles
+  const emoColor = (state.emotion_mod && state.emotion_mod.color) || [216, 171, 79];
+  const [er, eg, eb] = emoColor;
+  const atmoGrad = ctx.createLinearGradient(0, y0, 0, y0 + stageH);
+  atmoGrad.addColorStop(0, `rgba(${er},${eg},${eb},${0.04 + sceneResonance * 0.10})`);
+  atmoGrad.addColorStop(1, `rgba(${er},${eg},${eb},${0.10 + sceneResonance * 0.18})`);
+  ctx.fillStyle = atmoGrad;
+  ctx.fillRect(offX, y0, Math.min(W, fw*s), stageH);
+
+  // Update & draw emotional particles (stars, embers, rain, petals, haze)
+  ctx.save();
+  particles.forEach(p => {
+    p.x = (p.x + p.vx * dt + fw) % fw;
+    p.y = (p.y + p.vy * dt + fh) % fh;
+    ctx.fillStyle = `rgba(${er},${eg},${eb},${p.a * (0.4 + sceneResonance * 0.6)})`;
+    ctx.beginPath();
+    ctx.arc(px(p.x), y0 + p.y * s, p.r * s, 0, Math.PI * 2);
+    ctx.fill();
+  });
   ctx.restore();
 
-  // Line Markers & Action Pose Prompt Rings
+  // 3. Stage Focus Pools for Poem Lines (Where Meaning Lives in the Scene)
   sc.lines.forEach((ln, j) => {
     const st = stats[k][j];
-    const vis = (t >= ln.t - 2.6 && t <= ln.e + 0.4) || (st.done && ts - st.shown < 900);
+    const vis = (t >= ln.t - 2.8 && t <= ln.e + 0.4) || (st.done && ts - st.shown < 950);
     if (!vis) return;
     const active = t >= ln.t && t <= ln.e;
-    const x = px(ln.mx), r = 90 * sc.ppc * s;
-    const col = st.done ? (st.ok ? '78,232,138' : '255,107,139') : '216,171,79';
-    const pulse = active ? 0.55 + 0.25 * Math.sin(ts / 140) : 0.28 + 0.12 * Math.sin(ts / 300);
+    const x = px(ln.mx);
+    const r = 92 * sc.ppc * s;
+    const lMod = Anim2.EMOTION_MODS[ln.emotion] || Anim2.EMOTION_MODS.searching;
+    const col = st.done ? (st.ok ? '108,194,143' : '236,122,110') : lMod.color.join(',');
+    const pulse = active ? 0.6 + 0.25 * Math.sin(ts / 160) : 0.3 + 0.1 * Math.sin(ts / 320);
 
+    // Floor ellipse
     ctx.save();
     ctx.translate(x, fy);
     ctx.scale(1, 0.24);
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(${col},${pulse * 0.45})`;
+    ctx.fillStyle = `rgba(${col},${pulse * 0.42})`;
     ctx.fill();
-    ctx.lineWidth = 4 / 0.24 * 0.6;
-    ctx.strokeStyle = `rgba(${col},${Math.min(1, pulse + 0.25)})`;
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = `rgba(${col},${Math.min(1, pulse + 0.28)})`;
     ctx.stroke();
     ctx.restore();
 
-    const g = ctx.createLinearGradient(0, fy - 170 * s, 0, fy);
-    g.addColorStop(0, `rgba(${col},0)`);
-    g.addColorStop(1, `rgba(${col},${pulse * 0.5})`);
-    ctx.fillStyle = g;
-    ctx.fillRect(x - r * 0.18, fy - 160 * s, r * 0.36, 160 * s);
+    // Vertical light pillar
+    const pillar = ctx.createLinearGradient(0, fy - 180 * s, 0, fy);
+    pillar.addColorStop(0, `rgba(${col},0)`);
+    pillar.addColorStop(1, `rgba(${col},${pulse * 0.42})`);
+    ctx.fillStyle = pillar;
+    ctx.fillRect(x - r * 0.22, fy - 180 * s, r * 0.44, 180 * s);
 
-    // Pose Prompt Badge above marker
-    if (ln.actionPrompt && !st.done){
-      const py = fy - 135 * s + Math.sin(ts / 180) * 4;
+    // Posture & Emotion Cue Label above the light pool
+    if (active || (!st.done && t >= ln.t - 1.8)){
       ctx.save();
-      ctx.font = `700 ${Math.max(10, Math.round(11 * s))}px "IBM Plex Mono", monospace`;
-      const txt = st.poseBonus ? `✓ ${ln.actionPrompt.label} BONUS!` : `⚡ POSE: ${ln.actionPrompt.label} [E]`;
-      const tw = ctx.measureText(txt).width + 14;
-      ctx.fillStyle = st.poseBonus ? 'rgba(20,52,36,0.92)' : 'rgba(42,32,14,0.92)';
-      ctx.strokeStyle = st.poseBonus ? '#4ee88a' : '#d8ab4f';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.roundRect(x - tw / 2, py - 12, tw, 22, 11);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = st.poseBonus ? '#4ee88a' : '#ffe699';
+      ctx.font = `600 ${Math.max(11, Math.round(12 * s))}px "JetBrains Mono", monospace`;
       ctx.textAlign = 'center';
-      ctx.fillText(txt, x, py + 3);
+      ctx.fillStyle = `rgba(${col},0.95)`;
+      ctx.shadowColor = '#000';
+      ctx.shadowBlur = 6;
+      ctx.fillText((ln.emotion_label || 'STAND HERE').toUpperCase(), x, fy - 155 * s);
       ctx.restore();
     }
 
     if (active){
-      const frac = Math.min(1, st.inT / Math.max(0.4, (ln.e - ln.t) * 0.38));
+      const frac = Math.min(1, st.inT / Math.max(0.4, (ln.e - ln.t) * 0.35));
       ctx.fillStyle = `rgba(${col},.92)`;
-      ctx.fillRect(x - r * 0.6, fy + 10 * s, r * 1.2 * frac, 5);
-      ctx.strokeStyle = 'rgba(255,255,255,.4)';
-      ctx.strokeRect(x - r * 0.6, fy + 10 * s, r * 1.2, 5);
+      ctx.fillRect(x - r * 0.55, fy + 10 * s, r * 1.1 * frac, 5);
+      ctx.strokeStyle = 'rgba(255,255,255,.35)';
+      ctx.strokeRect(x - r * 0.55, fy + 10 * s, r * 1.1, 5);
     }
   });
 
-  // Collectible Word-Orbs (Ground & High Jump Orbs)
-  const scOrbs = wordOrbs[k] || [];
-  scOrbs.forEach(orb => {
-    if (orb.caught) return;
-    const vis = t >= orb.lineT0 - 2.4 && t <= orb.lineT1 + 0.6;
-    if (!vis) return;
-    const speakingNow = t >= orb.t0 - 0.15 && t <= orb.t1 + 0.25;
-    const ox = px(orb.x);
-    const oy = fy - orb.hCm * sc.ppc * s + Math.sin(ts / 220 + orb.wIdx) * 4;
-    const rad = (speakingNow ? 16 : 12) * Math.max(0.75, Math.min(1.2, s));
+  // 4. Player Character Aura Pool
+  const auraR = (120 + sceneResonance * 85) * sc.ppc * s;
+  const pool = ctx.createRadialGradient(px(actor.x), fy - 4, 4, px(actor.x), fy - 4, auraR);
+  pool.addColorStop(0, `rgba(${er},${eg},${eb},${0.26 + sceneResonance * 0.22})`);
+  pool.addColorStop(1, `rgba(${er},${eg},${eb},0)`);
+  ctx.save();
+  ctx.translate(0, fy - 4);
+  ctx.scale(1, 0.24);
+  ctx.translate(0, -(fy - 4));
+  ctx.fillStyle = pool;
+  ctx.fillRect(px(actor.x) - auraR, fy - auraR, auraR * 2, auraR * 2);
+  ctx.restore();
 
-    // If High Jump Orb, draw a subtle glowing aerial step/chevron guide
-    if (orb.isHigh){
-      ctx.save();
-      ctx.strokeStyle = 'rgba(0, 229, 255, 0.35)';
-      ctx.setLineDash([3, 3]);
-      ctx.beginPath();
-      ctx.moveTo(ox, fy);
-      ctx.lineTo(ox, oy + rad);
-      ctx.stroke();
-      ctx.restore();
-    }
-
+  // 5. Draw Dramatic Counterpart (EX, Floating Soul Double, Vintage Partner, etc.)
+  if (counterpart && counterpart.alpha > 0.02){
+    const cp = counterpart;
+    const cpState = cp.actor.ctrl.step(0, 0, ts);
+    const cpY = cp.isSoul ? (fy - 85 * s + Math.sin(ts / 550) * 14 * s) : fy;
     ctx.save();
-    const grad = ctx.createRadialGradient(ox, oy, 2, ox, oy, rad * 1.7);
-    if (orb.isHigh){
-      grad.addColorStop(0, 'rgba(255, 245, 180, 0.98)');
-      grad.addColorStop(0.5, 'rgba(0, 229, 255, 0.75)');
-      grad.addColorStop(1, 'rgba(0, 229, 255, 0)');
-    } else {
-      grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-      grad.addColorStop(0.55, 'rgba(216, 171, 79, 0.75)');
-      grad.addColorStop(1, 'rgba(216, 171, 79, 0)');
-    }
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(ox, oy, rad * 1.7, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.globalAlpha = cp.alpha;
+    if (cp.isSoul) ctx.filter = 'drop-shadow(0 0 14px rgba(108,218,195,0.65))';
+    cp.actor.draw(ctx, cpState, px(cp.actor.x), cpY, sc.ppc * s, ts);
+    ctx.restore();
+  }
 
-    ctx.font = `600 ${Math.max(10, Math.round(11 * s))}px "IBM Plex Mono", monospace`;
+  // 6. Draw Player Character
+  actor.draw(ctx, state, px(actor.x), fy, sc.ppc * s, ts);
+
+  // 7. Draw Rising Poetic Word Echoes
+  for (let i = wordEchoes.length - 1; i >= 0; i--){
+    const we = wordEchoes[i];
+    we.yOffset -= 26 * dt;
+    we.alpha -= 0.28 * dt;
+    if (we.alpha <= 0){ wordEchoes.splice(i, 1); continue; }
+    ctx.save();
+    ctx.font = `600 ${Math.max(13, Math.round(16 * s))}px "Bricolage Grotesque", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillStyle = orb.isHigh ? '#9be7ff' : '#fff3cc';
+    ctx.fillStyle = `rgba(255,244,214,${we.alpha})`;
     ctx.shadowColor = '#000';
-    ctx.shadowBlur = 4;
-    ctx.fillText((orb.isHigh ? '▲ ' : '') + orb.word, ox, oy - rad - 4);
+    ctx.shadowBlur = 8;
+    ctx.fillText(we.text, px(we.x), fy - 110 * s + we.yOffset * s);
     ctx.restore();
-  });
-
-  // Draw Player Character
-  const c = actor.pick(ts, moving !== 0);
-  actor.draw(ctx, c, px(actor.x), fy, sc.ppc * s, ts, showIKOverlay);
-
-  // Particles & Floating Score Callouts
-  particles.forEach(p => {
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
-    ctx.fillStyle = p.col;
-    ctx.beginPath();
-    ctx.arc(px(p.x), y0 + p.y * s, 3.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  });
-  floatTexts.forEach(f => {
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, f.life / f.maxLife);
-    ctx.font = '700 12px "IBM Plex Mono", monospace';
-    ctx.fillStyle = f.col;
-    ctx.textAlign = 'center';
-    ctx.shadowColor = '#000';
-    ctx.shadowBlur = 4;
-    ctx.fillText(f.text, px(f.x), y0 + f.y * s);
-    ctx.restore();
-  });
+  }
 
   ctx.restore();
 
   if (cur.fade > 0){
     ctx.fillStyle = `rgba(7,8,11,${cur.fade})`;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0,0,W,H);
   }
 
-  // Live Animation Telemetry Badge
-  const pWalk = actor.P.walk;
-  $('telem').innerHTML = `${actor.ch.key} · <b>${pWalk.mode}</b> · stride <b>${pWalk.stride_cm}cm</b><br>phase: <b>${c.phase}</b> · view: <b>${c.d.view}</b> · scissor: <b>${(c.scissor||0).toFixed(2)}</b>` + (actor.airY > 0.5 ? ` · air: <b>${Math.round(actor.airY)}cm</b>` : '');
-
-  // Subtitle with caught word highlights
+  // 8. Spoken Line Subtitle & Emotional Posture Note
   let line = null;
   for (const ln of sc.lines) if (t >= ln.t - 0.15 && t <= ln.e + 0.6) line = ln;
   const sub = $('sub');
-  sub.style.top = (land ? y0 + stageH - 64 : y0 + stageH + 8) + 'px';
+  sub.style.top = (land ? y0 + stageH - 72 : y0 + stageH + 8) + 'px';
   const key = line ? sc.key + '|' + line.t : '';
   if (key !== subKey){
     subKey = key;
     sub.innerHTML = '';
     if (line){
+      const lineDiv = document.createElement('div');
       for (let w = line.w0; w <= line.w1; w++){
+        if (!L.words[w]) continue;
         const sp = document.createElement('span');
         sp.textContent = L.words[w][0] + ' ';
         sp.dataset.s = L.words[w][1];
-        sp.dataset.widx = w;
-        sub.append(sp);
+        lineDiv.append(sp);
       }
+      sub.append(lineDiv);
+      const cueDiv = document.createElement('div');
+      cueDiv.id = 'subCue';
+      cueDiv.textContent = `${line.emotion_label || 'Inhabit the Line'} · Posture: ${state.pose_label}`;
+      sub.append(cueDiv);
     }
   }
-  const caughtSet = new Set((wordOrbs[k] || []).filter(o => o.caught).map(o => o.wIdx));
-  for (const sp of sub.children){
-    sp.classList.toggle('on', t >= parseFloat(sp.dataset.s));
-    sp.classList.toggle('caught', caughtSet.has(parseInt(sp.dataset.widx, 10)));
+  const wordSpans = sub.querySelectorAll('span[data-s]');
+  wordSpans.forEach(sp => sp.classList.toggle('on', t >= parseFloat(sp.dataset.s)));
+  const cueEl = $('subCue');
+  if (cueEl && line){
+    cueEl.textContent = `${line.emotion_label || 'Inhabit the Line'} · Active Posture: ${state.pose_label}`;
   }
 }
 
-/* ---------- Finish & Score Breakdown ---------- */
+/* ---------- Finish ---------- */
 function finish(){
-  ended = true;
-  started = false;
-  const pct = total ? (score + orbsCaught * 0.25 + posesCaught * 0.5) / total : 0;
-  const stars = pct >= 0.8 ? 3 : pct >= 0.45 ? 2 : 1;
+  ended = true; started = false;
+  const pct = total ? score / total : 0;
+  const stars = pct >= 0.75 ? 3 : pct >= 0.45 ? 2 : 1;
   $('stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
-  $('endn').textContent = `Lines Caught: ${score}/${total} · Word-Orbs Caught: ${orbsCaught}/${orbsTotal} · Action Poses Nailed: ${posesCaught}`;
+  $('endn').textContent = `You inhabited ${score} of ${total} stanza lines (${Math.round(pct*100)}% emotional resonance).`;
+  const arcMeta = ARC_SUMMARY[L.num] || { arc: 'Completed', desc: '' };
+  $('endArc').innerHTML = `<b>Transformation Completed (${arcMeta.arc}):</b><br>${arcMeta.desc}`;
 
-  const b = parseInt(store.get('wy.best.' + L.num) || '0', 10);
-  if (score > b) store.set('wy.best.' + L.num, String(score));
-  const bo = parseInt(store.get('wy.orbs.' + L.num) || '0', 10);
-  if (orbsCaught > bo) store.set('wy.orbs.' + L.num, String(orbsCaught));
-
-  // Build line-by-line & word-orb breakdown
-  const bd = $('endBreakdown');
-  bd.innerHTML = '';
-  scenes.forEach((sc, sIdx) => {
-    sc.lines.forEach((ln, lIdx) => {
-      const st = stats[sIdx][lIdx];
-      const lOrbs = (wordOrbs[sIdx] || []).filter(o => o.lineIdx === lIdx);
-      const row = document.createElement('div');
-      row.className = 'bd-line ' + (st.ok ? 'ok' : 'miss');
-      const orbsHtml = lOrbs.map(o => `<span class="bd-w ${o.caught ? 'ok' : ''}">${o.caught ? '✓' : '○'} ${o.word}</span>`).join('');
-      const poseTag = ln.actionPrompt ? `<span class="bd-w ${st.poseBonus ? 'ok' : ''}">⚡ ${ln.actionPrompt.label}</span>` : '';
-      row.innerHTML = `
-        <div>
-          <div style="color:#fff;font-weight:500">${ln.text}</div>
-          <div class="bd-words">${orbsHtml}${poseTag}</div>
-        </div>
-        <div style="font-family:var(--mono);font-size:.75rem;white-space:nowrap;color:${st.ok ? '#4ee88a' : '#ff6b8b'}">${st.ok ? '✓ CAUGHT' : 'MISSED'}</div>
-      `;
-      bd.append(row);
+  // Build word transcript breakdown
+  const wc = $('endWords');
+  wc.innerHTML = '';
+  scenes.forEach((sc, si) => {
+    sc.lines.forEach((ln, li) => {
+      const ok = stats[si][li]?.ok;
+      const chip = document.createElement('span');
+      chip.className = 'word-chip' + (ok ? ' caught' : '');
+      chip.textContent = ln.text.slice(0, 38) + (ln.text.length > 38 ? '…' : '');
+      wc.append(chip);
     });
   });
 
+  const b = parseInt(store.get('wy.best.'+L.num) || '0', 10);
+  if (score > b) store.set('wy.best.'+L.num, String(score));
   $('end').style.display = 'grid';
 }
 
-/* ---------- UI & Controls ---------- */
-$('go').addEventListener('click', () => {
+/* ---------- UI & Input ---------- */
+$('go').addEventListener('click', ()=>{
   $('start').style.display = 'none';
   started = true;
   audio.currentTime = 0;
-  audio.play().catch(() => {
-    $('stn').textContent = 'Tap Start again to enable audio playback.';
+  audio.play().catch(()=>{
+    $('stn').textContent = 'Tap Begin again to start audio playback.';
     $('start').style.display = 'grid';
     started = false;
   });
 });
-$('who').addEventListener('click', () => setActor(castIdx + 1));
-$('castSwapBtn').addEventListener('click', () => setActor(castIdx + 1));
-$('engBtn').addEventListener('click', () => {
-  engineIdx = (engineIdx + 1) % ENGINE_MODES.length;
-  const mode = ENGINE_MODES[engineIdx];
-  if (actor) actor.engineMode = mode;
-  $('engBtn').textContent = ENGINE_LABELS[mode];
-});
-$('ikBtn').addEventListener('click', () => {
-  showIKOverlay = !showIKOverlay;
-  $('ikBtn').classList.toggle('on', showIKOverlay);
-});
-$('pause').addEventListener('click', () => {
+$('who').addEventListener('click', async ()=>{ await setActor(castIdx+1); await setupCounterpart(); });
+$('castBtn').addEventListener('click', async ()=>{ await setActor(castIdx+1); await setupCounterpart(); });
+$('pause').addEventListener('click', ()=>{
   if (ended || (!started && !paused)) return;
   paused = !paused;
   $('pause').textContent = paused ? 'Resume' : 'Pause';
   if (paused) audio.pause(); else audio.play();
 });
-$('back').addEventListener('click', () => {
+$('back').addEventListener('click', ()=>{
   running = false;
   if (audio) audio.pause();
   $('stage').style.display = 'none';
   $('shelf').style.display = 'block';
   buildShelf();
 });
-$('home').addEventListener('click', () => $('back').click());
-$('again').addEventListener('click', () => { running = false; openLevel(L.num); });
-$('next').addEventListener('click', () => {
+$('home').addEventListener('click', ()=>$('back').click());
+$('again').addEventListener('click', ()=>{ running = false; openLevel(L.num); });
+$('next').addEventListener('click', ()=>{
   const i = INDEX.findIndex(p => p.num === L.num);
   running = false;
-  openLevel(INDEX[(i + 1) % INDEX.length].num);
+  openLevel(INDEX[(i+1) % INDEX.length].num);
 });
 
-// Touch Pad: horizontal drag = walk, upward flick = Jump!
 const pad = $('pad'), knob = $('knob');
-let padId = null, ox = 0, oy = 0, jumpedThisDrag = false;
-pad.addEventListener('pointerdown', e => {
+let padId = null, ox = 0, oy = 0, actedThisGesture = false;
+pad.addEventListener('pointerdown', e=>{
   padId = e.pointerId;
   pad.setPointerCapture(e.pointerId);
   const r = pad.getBoundingClientRect();
-  ox = e.clientX; oy = e.clientY; jumpedThisDrag = false;
+  ox = e.clientX; oy = e.clientY; actedThisGesture = false;
   knob.style.display = 'block';
   knob.style.left = (e.clientX - r.left) + 'px';
-  knob.style.top = (e.clientY - r.top) + 'px';
+  knob.style.top  = (e.clientY - r.top) + 'px';
 });
-pad.addEventListener('pointermove', e => {
+pad.addEventListener('pointermove', e=>{
   if (e.pointerId !== padId) return;
   const dx = e.clientX - ox, dy = e.clientY - oy;
-  move = Math.max(-1, Math.min(1, dx / 52));
-  if (dy < -42 && !jumpedThisDrag && actor){
-    actor.jump();
-    jumpedThisDrag = true;
+  move = Math.max(-1, Math.min(1, dx / 55));
+  if (dy < -42 && !actedThisGesture){
+    actedThisGesture = true;
+    embodyActiveLine();
   }
-  knob.firstElementChild.style.transform = `translate(${Math.max(-38, Math.min(38, dx))}px, ${Math.max(-38, Math.min(38, dy))}px)`;
+  knob.firstElementChild.style.transform = `translate(${Math.max(-38,Math.min(38,dx))}px, ${Math.max(-38,Math.min(38,dy))}px)`;
 });
-const endPad = e => {
+const endPad = e=>{
   if (e.pointerId !== padId) return;
   padId = null; move = 0;
   knob.style.display = 'none';
@@ -897,74 +846,26 @@ const endPad = e => {
 pad.addEventListener('pointerup', endPad);
 pad.addEventListener('pointercancel', endPad);
 
-addEventListener('keydown', e => {
+addEventListener('keydown', e=>{
   keys[e.key] = true;
-  if ((e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') && running && actor){
+  if ((e.key === ' ' || e.key === 'e' || e.key === 'E' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') && running){
     e.preventDefault();
-    actor.jump();
-  }
-  if (e.key === 'Tab' && running){
-    e.preventDefault();
-    setActor(castIdx + 1);
+    embodyActiveLine();
   }
 });
-addEventListener('keyup', e => { keys[e.key] = false; });
-document.addEventListener('gesturestart', e => e.preventDefault());
-
-// 37-Character Certification Modal
-$('openCertBtn').addEventListener('click', () => { $('certModal').classList.add('on'); });
-$('closeCertBtn').addEventListener('click', () => { $('certModal').classList.remove('on'); });
-$('certModal').addEventListener('click', e => { if (e.target === $('certModal')) $('certModal').classList.remove('on'); });
-
-function renderCertModal(){
-  if (!CERT_REPORT) return;
-  const rows = CERT_REPORT.characters.map((c, idx) => `
-    <tr>
-      <td>${idx + 1}</td>
-      <td><b style="color:#fff">${c.key}</b><br><span style="color:var(--muted)">rig: ${c.rig_id}</span></td>
-      <td><span style="color:${c.walk_mode === 'step_4pose' ? '#4ee88a' : '#00e5ff'}">${c.walk_mode}</span></td>
-      <td>${c.stride_cm} cm</td>
-      <td>${c.contactA.f} (${c.contactA.view}, L:${c.contactA.lead}) → ${c.passA.f} → ${c.contactB.f} (${c.contactB.view}, L:${c.contactB.lead})</td>
-      <td>[${c.scissor_range[0]}, +${c.scissor_range[1]}]</td>
-      <td>${c.max_jump_cm} cm / ${c.landing_squash_x}×</td>
-      <td style="color:#4ee88a;font-weight:700">✓ PASS</td>
-    </tr>
-  `).join('');
-  $('certTableWrap').innerHTML = `
-    <table class="cert-table">
-      <thead>
-        <tr>
-          <th>#</th><th>Character &amp; 15-Bone Rig</th><th>Walk Mode</th><th>Stride</th><th>4-Pose Cycle (ContactA → PassA → ContactB)</th><th>Scissor</th><th>Jump / Squash</th><th>Status</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-}
+addEventListener('keyup', e=>{ keys[e.key] = false; });
+document.addEventListener('gesturestart', e=>e.preventDefault());
 
 (async function(){
   try {
-    const [dataRes, idxRes] = await Promise.all([
-      fetch('data.json').then(r => r.json()),
-      fetch('levels/index.json').then(r => r.json())
-    ]);
-    CHARS = dataRes.characters;
-    INDEX = idxRes;
-    try {
-      const crashRes = await fetch('../arena/parts/kit3/release_v2/crash_lab_catalog.json').then(r => r.json());
-      (crashRes.rigs || []).forEach(r => { CRASH_RIGS[r.id] = r; });
-    } catch(e){}
-    try {
-      CERT_REPORT = await fetch('anim2_certification_report.json').then(r => r.json());
-      renderCertModal();
-    } catch(e){}
+    CHARS = (await (await fetch('data.json')).json()).characters;
+    INDEX = await (await fetch('levels/index.json')).json();
     buildShelf();
     const q = new URLSearchParams(location.search).get('p');
-    if (q) openLevel(q);
+    if (q) openLevel(q.padStart(2, '0'));
   } catch(e){
     document.querySelector('#shelf header p').textContent = 'The level data did not load: ' + e.message;
   }
 })();
 </script>
-</body>
-</html>
+</body></html>
