@@ -382,13 +382,30 @@ function getCachedImg(url){
   return rec;
 }
 
+// Aspect-Aware Span Scaling Law (matches `compute_piece_stage_dims` in `build_custom_90_scenes.py` 1:1)
+function computePieceStageDims(pw, ph, sc, plane, fw, fh){
+  const ar = pw / Math.max(1, ph);
+  let targetH = Math.max(24, Math.min(fh * 0.78, fh * sc));
+  let targetW = Math.max(24, targetH * ar);
+  if (ar > 2.2 && targetW > fw * 0.85){
+    const spanCap = fw * 0.85;
+    targetW = Math.min(fw * 1.04, spanCap + (targetW - spanCap) * 0.18);
+    targetH = Math.max(18, targetW / ar);
+  } else if ((plane === 'P6' || plane === 'P5') && ar > 4.5 && targetW < fw * 0.68){
+    targetW = fw * 0.68;
+    targetH = Math.max(18, targetW / ar);
+  }
+  return { rawW: targetW, rawH: targetH };
+}
+
 // Offscreen Cel-Shaded & Color-Coded Cutout Cache
 const celPieceCache = new Map();
-function getCelPieceCanvas(im, planeKey, celStr, tintStr, mode){
+function getCelPieceCanvas(im, planeKey, celStr, tintStr, mode, stageHazeRgb){
   const pSpec = SEVEN_PLANES[planeKey] || SEVEN_PLANES.P3;
   const qCel = Math.round(celStr * 10);
   const qTint = Math.round(tintStr * 10);
-  const key = `${im.src}|${planeKey}|${qCel}|${qTint}|${mode}`;
+  const hz = Array.isArray(stageHazeRgb) && stageHazeRgb.length === 3 ? stageHazeRgb : [28, 42, 66];
+  const key = `${im.src}|${planeKey}|${qCel}|${qTint}|${mode}|${hz[0]},${hz[1]},${hz[2]}`;
   if (celPieceCache.has(key)) return celPieceCache.get(key);
 
   const iw = im.naturalWidth || 240;
@@ -441,14 +458,14 @@ function getCelPieceCanvas(im, planeKey, celStr, tintStr, mode){
   bctx.drawImage(im, 0, 0, cw, ch);
   bctx.filter = 'none';
 
-  // 3. Apply atmospheric haze (far planes P6/P5) OR plane color-code tinting
+  // 3. Apply frame-specific atmospheric haze (far planes P6/P5/P4) OR plane color-code tinting
   const effTint = mode === 'color_coded' ? Math.max(0.58, tintStr) : (mode === 'layout_ink' ? 0.24 : tintStr);
   if (effTint > 0.02 || pSpec.haze > 0.08){
     bctx.save();
     bctx.globalCompositeOperation = 'source-atop';
-    // Atmospheric depth haze toward crisp slate-cyan on distant planes
+    // Atmospheric depth haze toward the frame's measured stage_haze_rgb on distant planes
     if (pSpec.haze > 0.08 && mode !== 'color_coded'){
-      bctx.fillStyle = `rgba(28, 42, 66, ${(pSpec.haze * 0.42 * celStr).toFixed(3)})`;
+      bctx.fillStyle = `rgba(${hz[0]}, ${hz[1]}, ${hz[2]}, ${(pSpec.haze * 0.45 * celStr).toFixed(3)})`;
       bctx.fillRect(0, 0, cw, ch);
     }
     // Seven-layer color-code tint
@@ -510,7 +527,7 @@ function buildShelf(){
     const best = store.get('wy.best.'+p.num);
     const meta = ARC_SUMMARY[p.num] || { arc: 'Emotional Journey', desc: '' };
     b.innerHTML =
-      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}?v=4"><span class="arc-pill">${meta.arc}</span></div>` +
+      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}?v=5"><span class="arc-pill">${meta.arc}</span></div>` +
       `<div class="body"><b></b><div class="theme"></div><small></small><div class="best"></div></div>`;
     b.querySelector('b').textContent = `${p.num} · ${p.title}`;
     b.querySelector('.theme').textContent = meta.desc;
@@ -579,13 +596,13 @@ async function openLevel(num){
   resize();
   preloadPoet31();
   use31PartRig = parseInt(num, 10) >= 4;
-  L = await (await fetch(`levels/${num}/level.json?v=4`)).json();
+  L = await (await fetch(`levels/${num}/level.json?v=5`)).json();
   scenes = L.scenes;
 
-  // Restore any user-saved custom 7-layer stage assemblies from localStorage (v4) & preload all cut-out + cel assets
+  // Restore any user-saved custom 7-layer stage assemblies from localStorage (v5) & preload all cut-out + cel assets
   scenes.forEach((sc, idx) => {
     sc._defaultLayers = JSON.parse(JSON.stringify(sc.multiplane_layers || []));
-    const saved = store.get(`wy.stage.v4.${num}.${idx}`);
+    const saved = store.get(`wy.stage.v5.${num}.${idx}`);
     if (saved){
       try { sc.multiplane_layers = JSON.parse(saved); } catch(e){}
     }
@@ -601,7 +618,7 @@ async function openLevel(num){
   });
 
   // Load clean backdrop plates
-  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(s.backdrop_file || `levels/${num}/${s.img}`)));
+  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(s.backdrop_file || `levels/${num}/${s.img}?v=5`)));
 
   // Preload all cast & counterpart characters referenced by this poem's scenes
   castActorsByKey.clear();
@@ -1169,8 +1186,7 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
     baseY -= (1 - buildProg) * 90;
   }
 
-  const rawH = Math.max(28, Math.min(fh * 0.82, fh * (lyr.scale || 0.35) * scMult));
-  const rawW = Math.max(28, rawH * (iw / Math.max(1, ih)));
+  const { rawW, rawH } = computePieceStageDims(iw, ih, (lyr.scale || 0.35) * scMult, plane, fw, fh);
   const drawH = rawH * s;
   const drawW = rawW * s;
 
@@ -1206,10 +1222,12 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
     ctx.shadowOffsetY = 2.5 * s;
   }
 
+  const scObj = scenes && scenes[k];
+  const stageHaze = scObj?.cel_passes?.perspective?.stage_haze_rgb;
   if (celRenderMode === 'painted' && celStrength < 0.1 && colorTintStrength < 0.05){
     ctx.drawImage(im, -drawW * 0.5, -drawH * 0.5, drawW, drawH);
   } else {
-    const celCan = getCelPieceCanvas(im, plane, celStrength, colorTintStrength, celRenderMode);
+    const celCan = getCelPieceCanvas(im, plane, celStrength, colorTintStrength, celRenderMode, stageHaze);
     ctx.drawImage(celCan, -drawW * 0.5, -drawH * 0.5, drawW, drawH);
   }
   ctx.restore();
@@ -1250,6 +1268,7 @@ function drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts){
   const mLayers = sc.multiplane_layers || [];
   const stageW = Math.min(W, fw * s);
   const cx = offX + stageW * 0.5;
+  const stageHaze = sc?.cel_passes?.perspective?.stage_haze_rgb;
 
   // Draw exploded reference plate on the left 34% if loaded, and live 7-plane stack on the right 66%
   const expRec = sc.cel_passes && sc.cel_passes.exploded_file ? getCachedImg(sc.cel_passes.exploded_file) : null;
@@ -1310,7 +1329,7 @@ function drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts){
         fw, fh, offX, stageY0: y0, s, camDelta: 0, pFactor: 1
       };
 
-      const celCan = getCelPieceCanvas(im, pKey, celStrength, Math.max(0.35, colorTintStrength), 'color_coded');
+      const celCan = getCelPieceCanvas(im, pKey, celStrength, Math.max(0.35, colorTintStrength), 'color_coded', stageHaze);
       ctx.drawImage(celCan, lx - tw * 0.5, ly - th, tw, th);
       ctx.strokeStyle = spec.hex;
       ctx.lineWidth = 1.2;
@@ -1322,7 +1341,8 @@ function drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts){
     });
 
     // Frame breakdown metric on right edge of deck
-    const bd = sc.cel_passes && sc.cel_passes.seven_layer_breakdown && sc.cel_passes.seven_layer_breakdown[pKey];
+    const rawBd = sc.cel_passes && sc.cel_passes.seven_layer_breakdown;
+    const bd = Array.isArray(rawBd) ? rawBd.find(x => x.plane === pKey) : (rawBd && rawBd[pKey]);
     if (bd){
       ctx.textAlign = 'right';
       ctx.fillStyle = spec.hex;
@@ -1417,6 +1437,36 @@ function draw(sc, k, t, state, ts, dt){
   // 3. PLANE P5: Handmade Distant Horizon & Skyline Cut-Outs (Z = 3.8m, #6ea0e1)
   for (let i = 0; i < mLayers.length; i++){
     if (mLayers[i].plane === 'P5') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
+  }
+
+  // 3b. 3D Perspective Horizon & Vanishing Point Overlay (in `layout_ink` or `asmMode`)
+  const persp = sc?.cel_passes?.perspective;
+  if (persp && (celRenderMode === 'layout_ink' || asmMode)){
+    const hNorm = persp.horizon_norm || [[0, 0.56], [1, 0.56]];
+    const vpNorm = persp.vp_norm || [0.5, 0.56];
+    const hx0 = offX + hNorm[0][0] * fw * s;
+    const hy0 = y0 + hNorm[0][1] * fh * s;
+    const hx1 = offX + hNorm[1][0] * fw * s;
+    const hy1 = y0 + hNorm[1][1] * fh * s;
+    const vpx = offX + vpNorm[0] * fw * s;
+    const vpy = y0 + vpNorm[1] * fh * s;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(77, 226, 194, 0.65)';
+    ctx.lineWidth = 1.4;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(hx0, hy0);
+    ctx.lineTo(hx1, hy1);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(vpx, vpy, 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(77, 226, 194, 0.9)';
+    ctx.font = '700 9.5px "JetBrains Mono", monospace';
+    ctx.fillText(`3D HORIZON · VP(${Math.round(vpNorm[0]*100)}%, ${Math.round(vpNorm[1]*100)}%)`, Math.max(offX + 12, Math.min(offX + fw*s - 180, vpx + 10)), vpy - 6);
+    ctx.restore();
   }
 
   // 4. Grounded Architectural Proscenium Stage Floor Deck (below fy)
@@ -1643,7 +1693,7 @@ function saveCurrentSceneAssembly(){
     delete copy._HitBox;
     return copy;
   });
-  store.set(`wy.stage.v4.${L.num}.${cur.i}`, JSON.stringify(clean));
+  store.set(`wy.stage.v5.${L.num}.${cur.i}`, JSON.stringify(clean));
 }
 
 function renderFrameBreakdown(scOpt){
@@ -1654,17 +1704,21 @@ function renderFrameBreakdown(scOpt){
     box.innerHTML = '';
     return;
   }
-  const bd = sc.cel_passes.seven_layer_breakdown;
-  let html = `<b>FRAME ${sc.frame_id || sc.key} · HANDMADE 7-LAYER BREAKDOWN</b>`;
+  const rawBd = sc.cel_passes.seven_layer_breakdown;
+  const persp = sc.cel_passes.perspective;
+  const hz = persp && persp.stage_haze_rgb ? persp.stage_haze_rgb : [24, 30, 44];
+  const vp = persp && persp.vp_norm ? `${Math.round(persp.vp_norm[0]*100)}%,${Math.round(persp.vp_norm[1]*100)}%` : '50%,56%';
+  let html = `<b>FRAME ${sc.cel_passes.world_key || sc.key} · 7-LAYER ARCHITECTURE & VP(${vp}) <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgb(${hz[0]},${hz[1]},${hz[2]});vertical-align:middle;margin-left:4px" title="Measured Frame Atmospheric Haze RGB"></span></b>`;
   PLANE_ORDER_BACK_TO_FRONT.forEach(pKey => {
-    const info = bd[pKey];
+    const info = Array.isArray(rawBd) ? rawBd.find(x => x.plane === pKey) : rawBd[pKey];
     const spec = SEVEN_PLANES[pKey];
     if (!info || !spec) return;
     const cuts = (info.handmade_cutouts || []).join(', ');
+    const semStr = Array.isArray(info.frame_semantics) ? info.frame_semantics.join(', ') : (info.frame_semantics || '');
     html += `<div class="bd-row" title="${cuts}">` +
       `<span class="sw" style="background:${spec.hex}"></span>` +
       `<b>${pKey}</b>` +
-      `<span class="sem">${cuts || info.frame_semantics}</span>` +
+      `<span class="sem">${cuts || semStr}</span>` +
       `<span>${info.z_median_m}m · ${info.frame_area_pct}%</span>` +
       `</div>`;
   });
@@ -2015,6 +2069,7 @@ $('asmResetSceneBtn').addEventListener('click', () => {
   if (!L || cur.i < 0 || !scenes[cur.i]) return;
   const sc = scenes[cur.i];
   sc.multiplane_layers = JSON.parse(JSON.stringify(sc._defaultLayers || []));
+  store.del(`wy.stage.v5.${L.num}.${cur.i}`);
   store.del(`wy.stage.v4.${L.num}.${cur.i}`);
   selectedLayer = null;
   updateAsmInspector();

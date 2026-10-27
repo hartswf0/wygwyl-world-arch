@@ -113,14 +113,14 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "reading_pages",
         "counterpart": None,
         "layers": [
-            L("01.fx.haze-words__p01", "Distant Orange-Haze Sky Band Outside Window", "P6", 6.00, 0.78, 0.24, 0.16, "cloud_drift_L", None, False, 0.86),
-            L("01.hero.severn__p02", "Distant Severn Brick Tenement Across Alley", "P5", 3.85, 0.80, 0.62, 0.26, "static", None, False, 0.80),
-            L("01.props.room__p19", "Bedroom Baseboard & Floor Molding", "P4", 2.60, 0.50, 0.89, 0.16, "static", None),
+            L("01.hero.severn__p15", "Nocturnal Sky Backing Outside Bedroom Window", "P6", 6.00, 0.78, 0.30, 0.22, "cloud_drift_L", None, False, 0.88),
+            L("01.hero.severn__p02", "Distant Severn Brick Tenement Across Alley", "P5", 3.85, 0.80, 0.62, 0.28, "static", None, False, 0.84),
+            L("01.props.room__p19", "Bedroom Baseboard & Dark Television Screen", "P4", 2.60, 0.50, 0.88, 0.24, "static", None),
             L("01.props.window__p01", "Closed High-Rise Sash Window", "P4", 2.40, 0.80, 0.85, 0.50, "portal_aperture", "High-Rise Sash Window"),
             L("01.props.room__p01", "Three-Drawer Wooden Bedroom Dresser", "P3", 1.44, 0.20, 0.88, 0.34, "drawer_slide", "Wooden Bedroom Dresser"),
             L("01.props.room__p18", "Flickering Bedroom Television & Stand", "P3", 1.42, 0.48, 0.88, 0.32, "portal_tv_flicker", "Flickering TV Stand"),
             L("01.props.handheld__p04", "Open Poetry Manuscript Sheaf on Floor", "P2", 1.04, 0.34, 0.90, 0.18, "static", None),
-            L("01.fx.haze-words__p05", "Foreground Drifting Pre-Language Haze", "P1", 0.54, 0.84, 0.93, 0.16, "cloud_drift_L", None, False, 0.78),
+            L("01.fx.haze-words__p01", "Foreground Drifting Blue Vape Haze", "P1", 0.54, 0.82, 0.92, 0.16, "cloud_drift_L", None, False, 0.76),
             L("01.props.window__p04", "Proscenium Bedroom Window Mullion Frame", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
         ],
     },
@@ -130,13 +130,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "walk_stride_L",
         "counterpart": None,
         "layers": [
-            L("01.fx.haze-words__p06", "Upper Ozone Dome Amber Sky Haze", "P6", 6.00, 0.52, 0.22, 0.16, "cloud_drift_L", None, False, 0.86),
-            L("01.hero.catwalk__p03", "Distant Suspended Catwalk Girder", "P5", 3.85, 0.78, 0.54, 0.18, "static", None, False, 0.80),
+            L("01.fx.haze-words__p05", "Upper Ozone Dome Amber Sky Glow", "P6", 6.00, 0.52, 0.24, 0.18, "cloud_drift_L", None, False, 0.86),
+            L("01.hero.catwalk__p03", "Distant Suspended Catwalk Girder", "P5", 3.85, 0.78, 0.54, 0.22, "static", None, False, 0.82),
             L("01.props.window__p01", "Amber-Lit Apartment Sash Window", "P4", 2.42, 0.52, 0.84, 0.52, "portal_aperture", "Haze at the Window"),
             L("01.props.window__p13", "Iron Fire-Escape Balcony Landing", "P4", 2.36, 0.82, 0.86, 0.32, "fire_escape_landing", "Fire-Escape Landing"),
             L("01.props.room__p14", "Wide Bedroom Chest of Open Drawers", "P3", 1.45, 0.21, 0.88, 0.28, "drawer_slide", "Hallway & Drawers"),
             L("01.props.room__p03", "Pulled-Out Wooden Drawer on Focal Floor", "P2", 1.04, 0.34, 0.90, 0.14, "drawer_slide", None),
-            L("01.fx.haze-words__p08", "Drifting Amber Haze Plume Across Lens", "P1", 0.52, 0.56, 0.54, 0.18, "cloud_drift_L", None, False, 0.80),
+            L("01.fx.haze-words__p06", "Drifting Pre-Language Vape Haze Plume", "P1", 0.52, 0.56, 0.56, 0.18, "cloud_drift_L", None, False, 0.78),
             L("01.hero.severnescape__p01", "Proscenium Brick Window-Jamb Frame", "P0", 0.25, 0.96, 0.95, 0.38, "proscenium_mask", None, True, 0.85),
         ],
     },
@@ -147,13 +147,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "counterpart": {"key": "ex/ex_jacket", "x": 1020, "dir": 1, "cue": "walk_away"},
         "layers": [
             L("04.fx.moon-reach__p01", "High-Altitude Night Moon Above the Drop", "P6", 6.00, 0.82, 0.24, 0.18, "lamp_glow", None, False, 0.88),
-            L("01.set.city_fall_void__p03", "Distant Nocturnal Skyscraper Tower", "P5", 3.85, 0.34, 0.68, 0.32, "static", None, False, 0.80),
+            L("01.set.city_fall_void__p03", "Distant Nocturnal Skyscraper Tower", "P5", 3.85, 0.34, 0.68, 0.36, "static", None, False, 0.82),
             L("01.props.window__p01", "Open Apartment Sash Window", "P4", 2.46, 0.18, 0.85, 0.44, "portal_aperture", "Open Sash Window"),
             L("01.props.window__p13", "Iron Fire-Escape Balcony & Rail", "P4", 2.38, 0.48, 0.86, 0.36, "fire_escape_landing", "Iron Fire Escape"),
             L("01.hero.severn__p11", "Zig-Zag Iron Fire-Escape Stairs", "P4", 2.34, 0.78, 0.86, 0.42, "fire_escape_landing", "Edge of the Drop"),
             L("01.hero.severn__p12", "Lower Iron Landing Grate Over the Drop", "P3", 1.42, 0.64, 0.89, 0.22, "static", None),
-            L("01.fx.haze-words__p09", "Tripped Spoken-Word Banner at the Ledge", "P2", 1.04, 0.36, 0.88, 0.16, "cloud_drift_L", None),
-            L("01.fx.haze-words__p07", "Fast Foreground Metallic Wind Plume", "P1", 0.54, 0.84, 0.92, 0.16, "cloud_drift_L", None, False, 0.78),
+            L("01.props.handheld__p07", "Crumpled Poem Page Caught on the Ledge", "P2", 1.04, 0.36, 0.88, 0.16, "tambourine_arc", None),
+            L("01.fx.haze-words__p07", "Fast Foreground Amber Light-Leak Streak", "P1", 0.54, 0.84, 0.92, 0.16, "cloud_drift_L", None, False, 0.78),
             L("01.hero.severnescape__p02", "Proscenium Vertical Iron Escape Ladder", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
         ],
     },
@@ -163,15 +163,15 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "fall_invert",
         "counterpart": {"key": "ex/ex_jacket", "x": 980, "dir": 1, "cue": "fall_back", "y_offset": -75},
         "layers": [
-            L("01.fx.haze-words__p26", "Vertigo Sky Canopy Above Ankhu Spires", "P6", 6.00, 0.50, 0.20, 0.16, "cloud_drift_L", None, False, 0.86),
-            L("01.set.city_fall_void__p04", "Deep Obsidian Spire Horizon Shaft", "P5", 3.85, 0.34, 0.68, 0.34, "static", None, False, 0.80),
-            L("01.set.city_fall_void__p01", "Vertical Skyscraper Canyon Left", "P4", 2.52, 0.18, 0.86, 0.56, "portal_other_world", "Tower Canyon Wall"),
-            L("01.set.city_fall_void__p02", "Vertical Skyscraper Canyon Right", "P4", 2.50, 0.82, 0.86, 0.56, "portal_other_world", None),
-            L("01.fx.haze-words__p05", "Tumbling Haze Cloud in Void", "P3", 1.40, 0.50, 0.58, 0.24, "cloud_drift_L", "The Vertical Freefall"),
+            L("01.hero.severn__p15", "Vertigo Night Sky Above the Spire Canyon", "P6", 6.00, 0.50, 0.22, 0.22, "cloud_drift_L", None, False, 0.88),
+            L("01.set.city_fall_void__p04", "Deep Obsidian Spire Horizon Shaft", "P5", 3.85, 0.34, 0.68, 0.40, "static", None, False, 0.82),
+            L("01.set.city_fall_void__p01", "Vertical Skyscraper Canyon Left", "P4", 2.52, 0.18, 0.86, 0.58, "portal_other_world", "Tower Canyon Wall"),
+            L("01.set.city_fall_void__p02", "Vertical Skyscraper Canyon Right", "P4", 2.50, 0.82, 0.86, 0.58, "portal_other_world", None),
+            L("01.fx.haze-words__p09", "Plum & Amber Freefall Light Leak", "P3", 1.40, 0.50, 0.58, 0.22, "cloud_drift_L", "The Vertical Freefall"),
             L("01.props.chandeliers__p10", "Ballroom Chandelier Rising Below", "P3", 1.44, 0.78, 0.42, 0.22, "chandelier_sway", "Skylight Above Ballroom"),
             L("01.props.handheld__p07", "Tumbling Manuscript Pages in Freefall", "P2", 1.04, 0.36, 0.64, 0.18, "tambourine_arc", None),
-            L("01.fx.haze-words__p02", "Vertical Streaking Wind-Blur Column", "P1", 0.52, 0.12, 0.72, 0.28, "cloud_drift_L", None, False, 0.78),
-            L("01.set.city_fall_void__p05", "Proscenium Shadow Tower Repoussoir", "P0", 0.25, 0.96, 0.95, 0.38, "proscenium_mask", None, True, 0.85),
+            L("01.fx.haze-words__p02", "Vertical Streaking Tower Motion-Blur", "P1", 0.52, 0.12, 0.72, 0.32, "cloud_drift_L", None, False, 0.80),
+            L("01.set.city_fall_void__p05", "Proscenium Shadow Tower Repoussoir", "P0", 0.25, 0.96, 0.95, 0.42, "proscenium_mask", None, True, 0.85),
         ],
     },
     "01.4": {
@@ -181,13 +181,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "counterpart": {"key": "vintage_woman/gown", "x": 920, "dir": -1, "cue": "waltz"},
         "layers": [
             L("01.props.chandeliers__p02", "Vaulted Skylight Chandelier Canopy", "P6", 6.00, 0.50, 0.28, 0.26, "chandelier_sway", None, False, 0.86),
-            L("14.set.vintage_party__p01", "Distant 1940s Wood-Panelled Gallery", "P5", 3.85, 0.50, 0.66, 0.22, "static", None, False, 0.80),
+            L("14.set.vintage_party__p01", "Distant 1940s Wood-Panelled Ceiling Gallery", "P5", 3.85, 0.50, 0.24, 0.22, "static", None, False, 0.84),
             L("14.set.vintage_party__p03", "Grand Ballroom Timber Archway", "P4", 2.42, 0.52, 0.86, 0.50, "portal_other_world", "Vintage Waltz Floor"),
             L("01.props.chandeliers__p10", "Crystal Ballroom Chandelier West", "P3", 1.48, 0.24, 0.34, 0.22, "chandelier_sway", "Crystal Chandelier Hall"),
             L("01.props.chandeliers__p11", "Crystal Ballroom Chandelier East", "P3", 1.48, 0.78, 0.34, 0.22, "chandelier_sway", "Ballroom Bandstand"),
-            L("14.props.party__p03", "Ballroom Cabaret Table on Waltz Floor", "P2", 1.05, 0.16, 0.89, 0.22, "lamp_glow", None),
-            L("01.props.chandeliers__p27", "Foreground Crystal Sconce Glint", "P1", 0.54, 0.86, 0.42, 0.18, "lamp_glow", None, False, 0.82),
-            L("14.set.vintage_party__p02", "Proscenium Panelled Ballroom Pilaster", "P0", 0.25, 0.04, 0.95, 0.36, "proscenium_mask", None, False, 0.85),
+            L("14.props.party__p03", "Brass Gramophone Horn on Waltz Floor", "P2", 1.05, 0.16, 0.89, 0.22, "lamp_glow", None),
+            L("01.props.chandeliers__p27", "Foreground Crystal Chandelier Glint", "P1", 0.54, 0.86, 0.42, 0.18, "lamp_glow", None, False, 0.82),
+            L("14.set.vintage_party__p02", "Proscenium Panelled Ballroom Wall", "P0", 0.25, 0.04, 0.95, 0.36, "proscenium_mask", None, False, 0.85),
         ],
     },
     "01.5": {
@@ -196,14 +196,14 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "fall_midair",
         "counterpart": {"key": "ex/ex_jacket", "x": 960, "dir": 1, "cue": "walk_away"},
         "layers": [
-            L("01.props.chandeliers__p03", "Dimmed Overhead Ballroom Chandelier Rose", "P6", 6.00, 0.50, 0.24, 0.20, "chandelier_sway", None, False, 0.86),
-            L("01.set.city_fall_void__p06", "Deep Vertical Elevator Shaft Beyond Floor", "P5", 3.85, 0.78, 0.68, 0.32, "static", None, False, 0.80),
+            L("01.props.chandeliers__p03", "Dimmed Overhead Ballroom Chandelier Arm", "P6", 6.00, 0.50, 0.24, 0.20, "chandelier_sway", None, False, 0.86),
+            L("01.set.city_fall_void__p06", "Deep Vertical Elevator Shaft Beyond Floor", "P5", 3.85, 0.78, 0.68, 0.36, "static", None, False, 0.82),
             L("14.set.vintage_party__p03", "Ballroom Threshold Archway", "P4", 2.46, 0.20, 0.86, 0.48, "portal_aperture", "Ballroom Colonnade"),
             L("01.props.trapdoor__p12", "Open Floor Trapdoor Into the Abyss", "P3", 1.36, 0.52, 0.90, 0.28, "portal_aperture", "Hole in the Floor"),
-            L("01.props.trapdoor__p11", "Shattered Trapdoor Timber Frame", "P3", 1.34, 0.80, 0.89, 0.24, "drawer_slide", "Rim of the Void"),
-            L("01.props.trapdoor__p02", "Splintered Floorboard Rim Under Poet", "P2", 1.04, 0.36, 0.90, 0.22, "static", None),
-            L("01.fx.haze-words__p08", "Rising Abyss Dust & Word Plume", "P1", 0.54, 0.64, 0.93, 0.18, "cloud_drift_L", None, False, 0.80),
-            L("01.props.trapdoor__p01", "Proscenium Abyss Shaft Shadow Frame", "P0", 0.25, 0.96, 0.95, 0.36, "proscenium_mask", None, True, 0.85),
+            L("01.props.trapdoor__p11", "Half-Open Trapdoor Timber Frame", "P3", 1.34, 0.80, 0.89, 0.24, "drawer_slide", "Rim of the Void"),
+            L("01.props.trapdoor__p02", "Splintered Trapdoor Leaf Under Poet", "P2", 1.04, 0.36, 0.90, 0.22, "static", None),
+            L("01.fx.haze-words__p08", "Rising Abyss Vape Mist Plume", "P1", 0.54, 0.64, 0.93, 0.16, "cloud_drift_L", None, False, 0.78),
+            L("01.props.trapdoor__p01", "Proscenium Floor Slab Aperture Frame", "P0", 0.25, 0.96, 0.95, 0.36, "proscenium_mask", None, True, 0.85),
         ],
     },
 
@@ -217,14 +217,14 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "counterpart": {"key": "ex/ex_jacket", "x": 1000, "dir": 1, "cue": "fall_back", "y_offset": -68},
         "layers": [
             L("02.set.overseer_skyline__p01", "Distant Nocturnal Overseer Cloud Canopy", "P6", 6.00, 0.50, 0.24, 0.18, "cloud_drift_L", None, False, 0.86),
-            L("02.set.overseer_skyline__p02", "Far City Tower Silhouette in Darkness", "P5", 3.85, 0.34, 0.66, 0.28, "static", None, False, 0.80),
+            L("02.set.overseer_skyline__p02", "Far City Tower Silhouette in Darkness", "P5", 3.85, 0.34, 0.66, 0.32, "static", None, False, 0.82),
             L("02.set.black_void__p01", "Inward-Caving Dark Wall Left", "P4", 2.48, 0.18, 0.88, 0.58, "portal_other_world", "Walls Caving Inward"),
             L("02.set.black_void__p02", "Inward-Caving Dark Wall Right", "P4", 2.48, 0.82, 0.88, 0.58, "portal_other_world", "The Silent Scream"),
             L("02.hero.drowned-light__p07", "Submerged Corridor Light Shaft", "P3", 1.40, 0.50, 0.82, 0.28, "lamp_glow", None),
-            L("02.props.mirror-phone-rings__p14", "Silent Scream Acoustic Wave Ring", "P2", 1.04, 0.36, 0.68, 0.18, "phone_ring", None),
+            L("02.props.mirror-phone-rings__p14", "Standing Mirror Reflection in Void", "P2", 1.04, 0.36, 0.78, 0.22, "phone_ring", None),
             L("02.fx.lights-iris__p01", "Sweeping White Headlight Beam", "P1", 0.48, 0.48, 0.56, 0.18, "headlight_beam", "Falling With Headlights Off"),
             L("02.fx.lights-iris__p02", "Flashing Amber Hazard Beam", "P1", 0.46, 0.56, 0.72, 0.18, "headlight_beam", None),
-            L("02.hero.drowned-light__p06", "Proscenium Dark Void Pillar Frame", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
+            L("02.hero.drowned-light__p06", "Proscenium Dark Void Glass Panel", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
         ],
     },
     "02.1": {
@@ -234,14 +234,17 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "counterpart": None,
         "layers": [
             L("02.fx.lights-iris__p06", "1:08 AM Ceiling Iris Glare Ring", "P6", 6.00, 0.78, 0.24, 0.18, "lamp_glow", None, False, 0.86),
-            L("02.set.eye_macro.road__p01", "Memory Highway Horizon Beyond the Eye", "P5", 3.85, 0.78, 0.58, 0.20, "static", None, False, 0.80),
-            L("02.set.bedroom_night__p03", "Standing Bedroom Mirror Glass", "P4", 2.42, 0.52, 0.85, 0.44, "portal_other_world", None),
-            L("02.set.bedroom_night__p02", "Standing Bedroom Mirror Frame (1:08 AM)", "P4", 2.40, 0.52, 0.86, 0.46, "portal_aperture", "The Midnight Mirror"),
-            L("02.props.poet-eye-aperture__p12", "Dilating Poet Eye Opening to Past", "P4", 2.44, 0.80, 0.66, 0.24, "portal_aperture", "Dilating Eye Aperture"),
-            L("02.set.bedroom_night__p08", "Unmade Midnight Bed & Blanket", "P3", 1.44, 0.22, 0.88, 0.24, "lamp_base", "Midnight Bed"),
-            L("02.props.mirror-phone-rings__p06", "Glowing Smartphone Emergency Call", "P2", 1.04, 0.36, 0.82, 0.16, "phone_ring", None),
-            L("02.props.mirror-phone-rings__p10", "Foreground Emergency Ring Pulse", "P1", 0.54, 0.36, 0.92, 0.14, "phone_ring", None, False, 0.82),
-            L("02.props.mirror-phone-rings__p01", "Proscenium Bedroom Doorway Shadow Frame", "P0", 0.25, 0.96, 0.95, 0.38, "proscenium_mask", None, True, 0.85),
+            L("02.set.eye_macro.road__p01", "Memory Highway Horizon Beyond the Eye", "P5", 3.88, 0.76, 0.56, 0.20, "static", None, False, 0.82),
+            L("02.set.bedroom_night__p01", "Midnight Bedroom Plain Backwall", "P5", 3.80, 0.30, 0.78, 0.32, "static", None, False, 0.86),
+            L("02.set.bedroom_night__p03", "Standing Bedroom Mirror Glass Insert", "P4", 2.44, 0.54, 0.85, 0.44, "portal_other_world", None),
+            L("02.set.bedroom_night__p02", "Standing Bedroom Mirror Frame (1:08 AM)", "P4", 2.40, 0.54, 0.86, 0.46, "portal_aperture", "The Midnight Mirror"),
+            L("02.props.poet-eye-aperture__p12", "Dilating Poet Eye Opening to Past", "P4", 2.46, 0.82, 0.66, 0.24, "portal_aperture", "Dilating Eye Aperture"),
+            L("02.set.bedroom_night__p05", "Dark Wooden Bed Headboard", "P3", 1.48, 0.24, 0.78, 0.18, "static", None),
+            L("02.set.bedroom_night__p04", "Low Wooden Bed Platform Frame", "P3", 1.46, 0.24, 0.88, 0.18, "lamp_base", "Midnight Bed"),
+            L("02.set.bedroom_night__p08", "Rumpled Dark-Blue Midnight Blanket", "P3", 1.42, 0.25, 0.86, 0.20, "lamp_base", None),
+            L("02.props.mirror-phone-rings__p06", "Glowing Smartphone Emergency Call", "P2", 1.04, 0.38, 0.84, 0.16, "phone_ring", None),
+            L("02.props.mirror-phone-rings__p10", "Foreground Phone Base & Ring Pulse", "P1", 0.54, 0.38, 0.92, 0.14, "phone_ring", None, False, 0.82),
+            L("02.props.mirror-phone-rings__p01", "Proscenium Tall Mirror Frame Edge", "P0", 0.25, 0.96, 0.95, 0.38, "proscenium_mask", None, True, 0.85),
         ],
     },
     "02.2": {
@@ -251,13 +254,17 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "preferred_actor": "young_poet/pajamas_winter",
         "counterpart": None,
         "layers": [
-            L("04.fx.moon-reach__p01", "Winter Moon Above the 1990s Driveway", "P6", 6.00, 0.82, 0.24, 0.18, "lamp_glow", None, False, 0.86),
-            L("02.set.driveway_road_night__p01", "Distant Wet Asphalt Driveway Curb", "P5", 3.85, 0.68, 0.72, 0.18, "static", None, False, 0.80),
-            L("02.props.window__p22", "1990s Living Room Window & Curtains", "P4", 2.44, 0.44, 0.78, 0.30, "portal_aperture", "Childhood Window View"),
-            L("02.set.living_room_1990s__p04", "1990s Floral Living Room Sofa", "P3", 1.46, 0.20, 0.87, 0.24, "lamp_base", "Living Room Sofa"),
-            *car_ensemble(cx=0.72, floor_y=0.87, car_scale=0.25, station_title="Family Sedan Pulling Up", with_parents=False),
-            L("02.set.living_room_1990s__p05", "Living Room Table Lamp by the Window", "P2", 1.04, 0.34, 0.89, 0.18, "lamp_glow", None),
-            L("02.fx.lights-iris__p01", "Headlight Glare Across Ceiling", "P1", 0.46, 0.52, 0.42, 0.16, "headlight_beam", None),
+            L("04.fx.moon-reach__p01", "Winter Moon Above the 1990s Driveway", "P6", 6.00, 0.82, 0.22, 0.18, "lamp_glow", None, False, 0.86),
+            L("02.set.living_room_1990s__p11", "Suburban Driveway View Outside Window", "P5", 3.88, 0.32, 0.68, 0.24, "static", None, False, 0.88),
+            L("02.set.driveway_road_night__p01", "Distant Wet Asphalt Driveway Sky", "P5", 3.82, 0.74, 0.54, 0.18, "static", None, False, 0.82),
+            L("02.set.living_room_1990s__p01", "1990s Living Room Window Wall (Transparent Aperture)", "P4", 2.48, 0.32, 0.82, 0.38, "portal_aperture", "Childhood Window View"),
+            L("02.set.living_room_1990s__p05", "Left Floral Window Curtain", "P4", 2.44, 0.18, 0.70, 0.26, "curtain_sway_L", None),
+            L("02.set.living_room_1990s__p07", "Right Floral Window Curtain", "P4", 2.44, 0.46, 0.70, 0.26, "curtain_sway_R", None),
+            L("02.set.living_room_1990s__p04", "1990s Floral Living Room Sofa", "P3", 1.46, 0.26, 0.87, 0.24, "lamp_base", "Living Room Sofa"),
+            *car_ensemble(cx=0.74, floor_y=0.87, car_scale=0.25, station_title="Family Sedan Pulling Up", with_parents=False),
+            L("02.set.living_room_1990s__p08", "Turned Brass Table-Lamp Base", "P2", 1.06, 0.50, 0.88, 0.22, "lamp_base", None),
+            L("02.set.living_room_1990s__p09", "Pleated Table-Lamp Shade", "P2", 1.04, 0.50, 0.72, 0.14, "lamp_glow", None),
+            L("02.fx.lights-iris__p01", "Headlight Glare Sweeping Across Ceiling", "P1", 0.46, 0.54, 0.42, 0.16, "headlight_beam", None),
             L("02.props.window__p01", "Proscenium Drawn Living-Room Drape", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
         ],
     },
@@ -269,13 +276,14 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "counterpart": {"key": "ghost_child/ghost_nightclothes", "x": 330, "dir": 1, "cue": "idle"},
         "layers": [
             L("02.hero.drowned-light__p01", "Shadowed Ceiling Moulding & Cold Draft", "P6", 6.00, 0.50, 0.20, 0.16, "static", None, False, 0.86),
-            L("02.set.overseer_skyline__p03", "Distant Winter Trees Beyond the Frost", "P5", 3.85, 0.52, 0.62, 0.26, "static", None, False, 0.80),
-            L("02.hero.childhouse__p01", "Childhood Doorway & Pencil Notches", "P4", 2.44, 0.22, 0.86, 0.46, "portal_aperture", "Doorpost Height Marks"),
-            L("02.props.window__p22", "Frost-Rimed Living Room Window", "P4", 2.42, 0.52, 0.78, 0.30, "portal_aperture", "Frost at the Window"),
+            L("02.set.overseer_skyline__p03", "Distant Winter Tower Beyond the Frost", "P5", 3.85, 0.52, 0.62, 0.28, "static", None, False, 0.80),
+            L("02.set.living_room_1990s__p02", "1990s Hallway Back Wall & Open Doorway", "P4", 2.48, 0.24, 0.84, 0.38, "portal_aperture", None),
+            L("02.set.living_room_1990s__p03", "Childhood Doorpost With 7 Pencil Height Marks", "P4", 2.44, 0.35, 0.84, 0.38, "portal_aperture", "Doorpost Height Marks"),
+            L("02.props.window__p22", "Frost-Rimed Living Room Window", "P4", 2.42, 0.56, 0.78, 0.30, "portal_aperture", "Frost at the Window"),
             L("02.set.living_room_1990s__p04", "1990s Floral Living Room Sofa", "P3", 1.46, 0.80, 0.87, 0.24, "lamp_base", None),
-            L("02.props.tambourine__p08", "Ghost Child's Wooden Tambourine", "P2", 1.05, 0.74, 0.74, 0.15, "tambourine_arc", "The Ghost's Tambourine"),
+            L("02.props.tambourine__p08", "Ghost Child's Wooden Tambourine Jingle", "P2", 1.05, 0.74, 0.74, 0.15, "tambourine_arc", "The Ghost's Tambourine"),
             L("02.fx.lights-iris__p07", "Warm Heavy Breath Frost Halo", "P1", 0.54, 0.36, 0.64, 0.16, "cloud_drift_L", None, False, 0.78),
-            L("02.hero.childhouse__p07", "Proscenium Notched Doorframe Post", "P0", 0.25, 0.96, 0.95, 0.40, "proscenium_mask", None, True, 0.85),
+            L("02.hero.childhouse__p07", "Proscenium Brick Rowhouse Jamb", "P0", 0.25, 0.96, 0.95, 0.40, "proscenium_mask", None, True, 0.85),
         ],
     },
     "02.4": {
@@ -285,13 +293,14 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "preferred_actor": "young_poet/pajamas_winter",
         "counterpart": None,
         "layers": [
-            L("02.props.blinds-height__p22", "Raised Venetian Window Valance Overhead", "P6", 6.00, 0.50, 0.20, 0.14, "static", None, False, 0.88),
-            L("02.set.driveway_road_night__p03", "Distant Driveway Trees & Streetlight", "P5", 3.85, 0.78, 0.66, 0.20, "static", None, False, 0.80),
-            L("02.props.window__p22", "Living Room Window & Floral Curtains", "P4", 2.44, 0.22, 0.78, 0.30, "curtain_sway_L", "Raised Window Blinds"),
-            *car_ensemble(cx=0.58, floor_y=0.87, car_scale=0.27, station_title="Parents Arguing in the Car", with_parents=True),
-            L("02.set.living_room_1990s__p06", "Childhood Armchair Watching the Window", "P2", 1.05, 0.16, 0.90, 0.20, "static", None),
+            L("02.props.blinds-height__p22", "Raised Venetian Window Top Rail Overhead", "P6", 6.00, 0.26, 0.22, 0.14, "static", None, False, 0.88),
+            L("02.set.driveway_road_night__p03", "Distant Winding Driveway Road Curve", "P5", 3.85, 0.72, 0.68, 0.22, "static", None, False, 0.82),
+            L("02.set.living_room_1990s__p01", "Living Room Window Wall Looking Out", "P4", 2.48, 0.24, 0.82, 0.36, "portal_aperture", None),
+            L("02.set.living_room_1990s__p06", "Slatted Venetian Window Blinds", "P4", 2.44, 0.24, 0.68, 0.24, "curtain_sway_L", "Raised Window Blinds"),
+            *car_ensemble(cx=0.62, floor_y=0.87, car_scale=0.27, station_title="Parents Arguing in the Car", with_parents=True),
+            L("02.set.living_room_1990s__p04", "Childhood Floral Sofa by the Window", "P2", 1.05, 0.20, 0.89, 0.20, "static", None),
             L("02.fx.lights-iris__p02", "Flashing Amber Hazard Wash", "P1", 0.46, 0.82, 0.80, 0.18, "headlight_beam", "Flashing Hazard Lights"),
-            L("02.props.blinds-height__p08", "Proscenium Vertical Blind Cord & Jamb", "P0", 0.25, 0.04, 0.95, 0.40, "proscenium_mask", None, False, 0.85),
+            L("02.props.blinds-height__p08", "Proscenium Notched Height-Mark Doorpost", "P0", 0.25, 0.04, 0.95, 0.40, "proscenium_mask", None, False, 0.85),
         ],
     },
     "02.5": {
@@ -301,13 +310,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "preferred_actor": "young_poet/pajamas_winter",
         "counterpart": {"key": "ghost_child/ghost_nightclothes", "x": 240, "dir": 1, "cue": "idle"},
         "layers": [
-            L("02.fx.lights-iris__p04", "Shattered Night Sky Glare Outside", "P6", 6.00, 0.78, 0.26, 0.20, "lamp_glow", None, False, 0.86),
-            L("02.set.overseer_skyline__p06", "Distant Roofline Beyond the Broken Pane", "P5", 3.85, 0.76, 0.62, 0.18, "static", None, False, 0.80),
+            L("02.fx.lights-iris__p04", "Fractured Night Sky Glare Outside", "P6", 6.00, 0.78, 0.26, 0.20, "lamp_glow", None, False, 0.86),
+            L("02.set.overseer_skyline__p06", "Distant Palace Silhouette Beyond the Pane", "P5", 3.85, 0.74, 0.62, 0.20, "static", None, False, 0.82),
             L("02.props.window__p21", "Cracked Living Room Window & Drapes", "P4", 2.44, 0.22, 0.78, 0.30, "portal_aperture", "Living Room Window"),
             L("02.hero.childhouse__p11", "Shattering Glass Window Pane", "P4", 2.40, 0.78, 0.78, 0.44, "portal_aperture", "Shattering Window Glass"),
             L("02.hero.childhouse__p15", "Forking Glass Hole Into the Night", "P3", 1.38, 0.78, 0.78, 0.38, "portal_other_world", None),
             L("02.props.tambourine__p08", "Wooden Tambourine Hurling Outward", "P2", 1.04, 0.52, 0.56, 0.16, "tambourine_arc", "Tambourine in Flight"),
-            L("02.props.tambourine__p11", "Flying Glass Shards & Brass Jingles", "P1", 0.52, 0.66, 0.62, 0.18, "tambourine_arc", None, False, 0.84),
+            L("02.props.tambourine__p11", "Spinning Tambourine Blur Disc & Shards", "P1", 0.52, 0.66, 0.62, 0.18, "tambourine_arc", None, False, 0.84),
             L("02.props.window__p03", "Proscenium Torn Curtain & Window Frame", "P0", 0.25, 0.96, 0.95, 0.38, "proscenium_mask", None, True, 0.85),
         ],
     },
@@ -567,14 +576,14 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "kneel_hollow",
         "counterpart": None,
         "layers": [
-            L("05.set.humid_basement__p04", "Exposed Southern-Pine Ceiling Joists", "P6", 6.00, 0.50, 0.20, 0.16, "static", None, False, 0.88),
-            L("05.set.humid_basement__p01", "Humid Basement Concrete Back Wall", "P5", 3.85, 0.50, 0.66, 0.24, "static", None, False, 0.80),
-            L("05.set.humid_basement__p05", "Riveted Iron Basement Grate Window", "P4", 2.44, 0.22, 0.68, 0.26, "portal_aperture", "Basement Window Well"),
-            L("05.props.staff-mattress-emblem__p05", "Southern-Pine Quilted Basement Mattress", "P3", 1.42, 0.52, 0.88, 0.30, "lamp_base", "Southern-Pine Mattress"),
-            L("05.props.staff-mattress-emblem__p02", "Brass Basement Lantern", "P3", 1.38, 0.76, 0.86, 0.32, "lamp_glow", "Basement Timber Stairs"),
+            L("05.set.humid_basement__p04", "Exposed Southern-Pine Ceiling Joist", "P6", 6.00, 0.50, 0.18, 0.16, "static", None, False, 0.88),
+            L("05.set.humid_basement__p02", "Cold-Blue Night Window-Well Backing", "P5", 3.85, 0.64, 0.62, 0.24, "static", None, False, 0.88),
+            L("05.set.humid_basement__p01", "Damp Grey Cinderblock Wall & Window-Well Aperture", "P4", 2.44, 0.46, 0.72, 0.34, "portal_aperture", "Basement Window Well"),
+            L("05.props.staff-mattress-emblem__p05", "Southern-Pine Quilted Basement Mattress", "P3", 1.42, 0.48, 0.88, 0.30, "lamp_base", "Southern-Pine Mattress"),
+            L("05.props.staff-mattress-emblem__p02", "Brass Basement Lantern", "P3", 1.38, 0.74, 0.86, 0.32, "lamp_glow", "Basement Timber Stairs"),
             L("05.props.staff-mattress-emblem__p01", "Carved Wooden Ancestor Staff by Mattress", "P2", 1.04, 0.84, 0.88, 0.42, "static", None),
-            L("05.props.staff-mattress-emblem__p04", "Foreground Warm Lantern Glow Cone", "P1", 0.54, 0.76, 0.93, 0.18, "lamp_glow", None, False, 0.80),
-            L("05.set.humid_basement__p02", "Proscenium Basement Timber Stair Post", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
+            L("05.props.staff-mattress-emblem__p04", "Foreground Warm Lantern Glow Cone", "P1", 0.54, 0.74, 0.93, 0.18, "lamp_glow", None, False, 0.80),
+            L("05.set.humid_basement__p05", "Proscenium Perforated Iron Joist Plate", "P0", 0.25, 0.04, 0.95, 0.34, "proscenium_mask", None, False, 0.85),
         ],
     },
     "05.3": {
@@ -637,7 +646,7 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
             L("06.fx.comet__p01", "Distant Golden Comet Crown in Canopy", "P6", 6.00, 0.24, 0.20, 0.16, "tambourine_arc", None, False, 0.84),
             L("06.set.atlantis_waterfront.skyline__p12", "Distant Domed Sanctuary of Atlantis", "P5", 3.80, 0.76, 0.80, 0.36, "portal_aperture", None, False, 0.90),
             L("05.set.winged_marble_gate__p03", "Winged Marble Evolution Gate", "P4", 2.44, 0.22, 0.86, 0.50, "portal_aperture", "The Light Gates Open"),
-            L("06.set.crystal_tree_hall__p08", "Illuminated Atlantis Crystal Arch", "P4", 2.40, 0.52, 0.86, 0.46, "portal_aperture", "Marble Stones & Hymns"),
+            L("06.set.crystal_tree_hall__p13", "Illuminated Atlantis Crystal Arch", "P4", 2.40, 0.52, 0.86, 0.44, "portal_aperture", "Marble Stones & Hymns"),
             L("06.props.lantern-candle-guitar__p15", "NEXT GATES Sanctuary Signpost", "P3", 1.38, 0.80, 0.86, 0.30, "lamp_glow", "Next Gates Signpost"),
             L("06.props.coin-booth__p04", "Glowing Sanctuary Admission Crest", "P2", 1.04, 0.36, 0.88, 0.18, "sun_pulse", None),
             L("06.props.lantern-candle-guitar__p11", "Foreground Sanctuary Brass Lantern", "P1", 0.55, 0.14, 0.92, 0.18, "lamp_glow", None, False, 0.84),
@@ -652,8 +661,9 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "layers": [
             L("06.fx.comet__p01", "Swirling Golden Comet Sphere in Zenith", "P6", 6.00, 0.22, 0.24, 0.20, "tambourine_arc", "Yellow-Brick Causeway", False, 0.88),
             L("06.fx.comet__p07", "Streaking Golden Comet Tail Across Vista", "P5", 3.75, 0.50, 0.28, 0.16, "headlight_beam", "Following the Comets", False, 0.90),
-            L("06.set.atlantis_waterfront.skyline__p12", "Rising Domed Cathedral of Atlantis", "P4", 2.46, 0.78, 0.86, 0.50, "portal_aperture", "Atlantis Horizon Ahead"),
-            L("06.props.lantern-candle-guitar__p15", "Causeway Milestone Signpost", "P3", 1.40, 0.24, 0.87, 0.26, "lamp_glow", None),
+            L("06.set.atlantis_waterfront.skyline__p12", "Rising Domed Cathedral of Atlantis", "P4", 2.46, 0.78, 0.84, 0.46, "portal_aperture", "Atlantis Horizon Ahead"),
+            L("06.set.causeway_road__p03", "Yellow-Brick Causeway Perspective Road", "P3", 1.44, 0.50, 0.92, 0.28, "static", None, False, 0.92),
+            L("06.props.lantern-candle-guitar__p15", "Causeway Milestone Signpost", "P3", 1.40, 0.22, 0.87, 0.26, "lamp_glow", None),
             L("06.props.lantern-candle-guitar__p11", "Traveler's Brass Causeway Candle", "P2", 1.04, 0.62, 0.89, 0.16, "lamp_glow", None),
             L("06.fx.comet__p07", "Foreground Golden Causeway Dust Trail", "P1", 0.54, 0.48, 0.93, 0.14, "headlight_beam", None, False, 0.76),
             L("06.set.atlantis_plaza__p09", "Proscenium Terracotta Causeway Arch", "P0", 0.25, 0.96, 0.95, 0.36, "proscenium_mask", None, True, 0.84),
@@ -682,12 +692,12 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "idle_hand_chest",
         "counterpart": {"key": "child_traveler/atlantis", "x": 920, "dir": -1, "cue": "idle"},
         "layers": [
-            L("06.fx.comet__p01", "Canopy Skylight Orb Over Jungle Hall", "P6", 6.00, 0.78, 0.20, 0.16, "sun_pulse", None, False, 0.84),
-            L("06.set.crystal_tree_hall__p08", "Distant Crystal Tree Vault", "P5", 3.80, 0.34, 0.82, 0.36, "portal_inner_world", None, False, 0.90),
-            L("06.set.crystal_tree_hall__p01", "Golden Jungle Interface Banyan Tree", "P4", 2.44, 0.20, 0.86, 0.46, "flower_bloom", "Jungle Interface Pact"),
+            L("06.set.crystal_tree_hall__p07", "Luminous Blue Crystal Tree Canopy Left", "P6", 6.00, 0.22, 0.26, 0.24, "sun_pulse", None, False, 0.88),
+            L("06.set.crystal_tree_hall__p13", "Distant Arched Crystal Hall Opening", "P5", 3.80, 0.52, 0.78, 0.34, "portal_inner_world", None, False, 0.90),
+            L("06.set.crystal_tree_hall__p01", "Golden Jungle Interface Banyan Trunk", "P4", 2.44, 0.22, 0.86, 0.46, "flower_bloom", "Jungle Interface Pact"),
             L("06.props.coin-booth__p01", "Arched Wooden Heart-Scan Booth", "P3", 1.42, 0.52, 0.87, 0.42, "lamp_glow", "Heart-Scan Admission Booth"),
             L("06.props.coin-booth__p04", "Luminous Cyan Heart-Scan Portal", "P2", 1.04, 0.76, 0.80, 0.24, "sun_pulse", "Relearned Currency"),
-            L("06.props.lantern-candle-guitar__p11", "Foreground Heart-Booth Votive Candle", "P1", 0.54, 0.18, 0.92, 0.18, "lamp_glow", None, False, 0.84),
+            L("06.set.crystal_tree_hall__p14", "Foreground Hanging Sanctuary Vine Fringe", "P1", 0.54, 0.50, 0.22, 0.18, "curtain_sway_L", None, False, 0.84),
             L("06.set.narrow_streets__p03", "Proscenium Banyan Root & Stone Frame", "P0", 0.25, 0.96, 0.95, 0.38, "proscenium_mask", None, True, 0.85),
         ],
     },
@@ -697,10 +707,10 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "open_arms_wide",
         "counterpart": {"key": "elder_1/atlantis", "x": 940, "dir": -1, "cue": "idle"},
         "layers": [
-            L("06.fx.comet__p01", "Sanctuary Ocular Sky Dome Glow", "P6", 6.00, 0.50, 0.18, 0.16, "sun_pulse", None, False, 0.84),
+            L("06.set.crystal_tree_hall__p08", "Sanctuary Crystal Canopy Vault Overhead", "P6", 6.00, 0.50, 0.22, 0.22, "sun_pulse", None, False, 0.86),
             L("06.set.atlantis_waterfront.skyline__p13", "Distant Twin-Spire Plaza Backdrop", "P5", 3.80, 0.36, 0.80, 0.34, "portal_aperture", None, False, 0.90),
             L("06.set.atlantis_plaza__p09", "West Terracotta Plaza Arcade", "P4", 2.44, 0.20, 0.86, 0.44, "portal_aperture", "West Plaza Arcade"),
-            L("06.set.crystal_tree_hall__p08", "Grand Crystal Tree Sanctuary Hall", "P4", 2.40, 0.52, 0.86, 0.48, "portal_inner_world", "City Center Sanctuary"),
+            L("06.set.crystal_tree_hall__p13", "Grand Crystal Tree Sanctuary Arch", "P4", 2.40, 0.52, 0.86, 0.46, "portal_inner_world", "City Center Sanctuary"),
             L("06.set.atlantis_plaza__p10", "East Terracotta Plaza Arcade", "P4", 2.44, 0.82, 0.86, 0.44, "portal_aperture", "East Plaza Colonnade"),
             L("06.props.lantern-candle-guitar__p15", "Central Plaza Sanctuary Signpost", "P3", 1.40, 0.34, 0.87, 0.26, "lamp_glow", None),
             L("06.props.coin-booth__p04", "Elder's Crystal Sanctuary Emblem", "P2", 1.04, 0.66, 0.88, 0.18, "sun_pulse", None),
@@ -753,7 +763,7 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "layers": [
             L("07.props.projection__p10", "Club Ceiling Strobe & Vineyard Wash", "P6", 6.00, 0.50, 0.26, 0.24, "portal_other_world", None, False, 0.84),
             L("07.props.bar-handheld__p01", "Distant Illuminated Club Back-Bar", "P5", 3.80, 0.34, 0.78, 0.24, "lamp_glow", None, False, 0.90),
-            L("07.hero.house__p03", "Club Hall Rear Acoustic Wall", "P4", 2.42, 0.68, 0.85, 0.36, "portal_aperture", None),
+            L("07.hero.house__p04", "Corrugated Club Hall Acoustic Wall", "P4", 2.42, 0.68, 0.85, 0.36, "portal_aperture", None),
             L("07.props.speakers-vu__p01", "Tall Dual-Driver Bass Speaker Left", "P3", 1.46, 0.20, 0.87, 0.42, "speaker_pulse", "Left Bass Speaker Stack"),
             L("07.props.dj-decks__p03", "Wooden DJ Booth Front Counter", "P3", 1.42, 0.50, 0.88, 0.24, "dj_console", "DJ Turn Me Up Booth"),
             L("07.props.speakers-vu__p02", "Tall Dual-Driver Bass Speaker Right", "P3", 1.46, 0.80, 0.87, 0.42, "speaker_pulse", "Right Bass Speaker Stack"),
@@ -770,7 +780,7 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "layers": [
             L("06.hero.house__p10", "Overhead House-Party String Lights", "P6", 6.00, 0.50, 0.24, 0.16, "lamp_glow", None, False, 0.86),
             L("07.props.bar-handheld__p01", "Recessed Party Bar Bottle Rack", "P5", 3.78, 0.34, 0.78, 0.24, "lamp_glow", None, False, 0.90),
-            L("07.hero.house__p03", "House Party Timber Wall & Door", "P4", 2.42, 0.66, 0.86, 0.38, "portal_aperture", None),
+            L("07.hero.house__p05", "House Party Projection Wall & Picture Window", "P4", 2.42, 0.66, 0.84, 0.36, "portal_aperture", None),
             L("07.hero.house.furniture__p03", "House Party Lounge Sofa", "P3", 1.45, 0.20, 0.87, 0.28, "lamp_base", "House Party Lounge"),
             L("07.props.dj-decks__p02", "Spinning Turntable Platter Deck", "P3", 1.40, 0.78, 0.86, 0.28, "dj_console", "Turntable Platter Deck"),
             L("07.props.mic-daisy-rings__p01", "Chrome Vocal Microphone on Stand", "P2", 1.04, 0.50, 0.88, 0.34, "speaker_pulse", "Eyes Wide Shut at the Mic"),
@@ -786,7 +796,7 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "layers": [
             L("07.props.projection__p11", "High Projected Golden Rings Halo", "P6", 6.00, 0.50, 0.24, 0.22, "sun_pulse", None, False, 0.82),
             L("07.props.projection__p10", "Projected Sun-Soaked Vineyard Rows", "P5", 3.80, 0.52, 0.78, 0.34, "portal_other_world", "Sun-Soaked Vineyard Projection", False, 0.92),
-            L("07.hero.house__p03", "Shadowed Club Acoustic Wall", "P4", 2.42, 0.52, 0.86, 0.38, "portal_aperture", None),
+            L("07.hero.house__p04", "Shadowed Club Acoustic Wall Panel", "P4", 2.42, 0.52, 0.85, 0.36, "portal_aperture", None),
             L("07.props.speakers-vu__p15", "Woven Speaker Mesh Grille Left", "P3", 1.44, 0.22, 0.86, 0.32, "speaker_pulse", "Ghosts in the Speaker Mesh"),
             L("07.props.speakers-vu__p16", "Woven Speaker Mesh Grille Right", "P3", 1.44, 0.80, 0.86, 0.32, "speaker_pulse", "Resonant Mesh Cabinet"),
             L("07.props.mic-daisy-rings__p09", "Memory Daisy Between the Speakers", "P2", 1.04, 0.62, 0.88, 0.22, "flower_bloom", None),
@@ -819,11 +829,11 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "layers": [
             L("07.props.projection__p11", "Diverging Golden Wedding Bands in Sky", "P6", 6.00, 0.26, 0.32, 0.28, "sun_pulse", "Diverging Wedding Bands", False, 0.88),
             L("07.props.projection__p12", "Projected Shared Home Boxed in Field", "P5", 3.80, 0.52, 0.78, 0.34, "portal_tv_flicker", "The Boxed Home Projection", False, 0.92),
-            L("07.hero.house__p03", "Shadowed House Interior Doorway", "P4", 2.40, 0.80, 0.86, 0.44, "portal_aperture", "Threshold of the Room"),
+            L("07.hero.house__p05", "Shadowed House Interior Projection Wall", "P4", 2.40, 0.80, 0.85, 0.38, "portal_aperture", "Threshold of the Room"),
             L("07.hero.house.furniture__p03", "Empty Shared Living-Room Sofa", "P3", 1.42, 0.22, 0.87, 0.26, "lamp_base", None),
             L("07.props.mic-daisy-rings__p09", "Dropped Daisy on the Carpet", "P2", 1.04, 0.62, 0.89, 0.22, "flower_bloom", None),
             L("07.fx.party-haze__p01", "Parting Memory Haze Across Threshold", "P1", 0.54, 0.48, 0.88, 0.16, "cloud_drift_L", None, False, 0.76),
-            L("07.hero.house__p05", "Proscenium Doorframe Jamb", "P0", 0.25, 0.04, 0.95, 0.36, "proscenium_mask", None, False, 0.85),
+            L("07.hero.house__p04", "Proscenium Corrugated Doorframe Jamb", "P0", 0.25, 0.04, 0.95, 0.36, "proscenium_mask", None, False, 0.85),
         ],
     },
     "07.5": {
@@ -839,7 +849,7 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
             L("07.props.dj-decks__p03", "Silent Empty DJ Counter", "P3", 1.42, 0.34, 0.88, 0.22, "dj_console", None),
             L("07.props.mic-daisy-rings__p09", "Plucked Eleven-Year Daisy Stem", "P2", 1.04, 0.52, 0.87, 0.28, "flower_bloom", "Eleven Years in Daisy Petals"),
             L("07.fx.party-haze__p01", "Closing-Time Bar Smoke Drift", "P1", 0.54, 0.68, 0.88, 0.16, "cloud_drift_L", None, False, 0.76),
-            L("07.hero.house__p03", "Proscenium Bar Exit Jamb", "P0", 0.25, 0.96, 0.95, 0.36, "proscenium_mask", None, True, 0.85),
+            L("07.hero.house__p04", "Proscenium Bar Exit Wall Jamb", "P0", 0.25, 0.96, 0.95, 0.36, "proscenium_mask", None, True, 0.85),
         ],
     },
     "07.6": {
@@ -868,9 +878,9 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "counterpart": {"key": "poet_soul/soul", "x": 620, "dir": 1, "cue": "kneel_2", "y_offset": -85},
         "layers": [
             L("08.props.moons-laundry__p01", "High Equator Moon Above Club Roof", "P6", 6.00, 0.78, 0.22, 0.18, "planet_orbit", None, False, 0.86),
-            L("08.set.rooftop_club__p06", "Distant Rooftop Radio Towers & Skyline", "P5", 3.80, 0.50, 0.84, 0.18, "static", None, False, 0.90),
-            L("08.hero.marquee__p16", "Glowing NEW SINGLE Club Marquee", "P4", 2.44, 0.24, 0.85, 0.42, "lamp_glow", "NEW SINGLE Club Marquee"),
-            L("08.set.rooftop_club__p04", "Pulsing Rooftop Light Tower", "P4", 2.38, 0.52, 0.86, 0.42, "speaker_pulse", "Soul Leaves the Dancer"),
+            L("08.set.rooftop_club__p06", "Far Mountain Range Beyond Rooftop Club", "P5", 3.80, 0.50, 0.76, 0.18, "static", None, False, 0.90),
+            L("08.hero.marquee__p01", "Glowing NEW SINGLE Theatre Stone Facade", "P4", 2.46, 0.24, 0.85, 0.38, "lamp_glow", "NEW SINGLE Club Marquee"),
+            L("08.set.rooftop_club__p04", "Pulsing Rooftop Strobe Tower", "P4", 2.38, 0.52, 0.86, 0.42, "speaker_pulse", "Soul Leaves the Dancer"),
             L("08.props.basins__p01", "Rooftop Terrace Ice-Water Basin", "P3", 1.40, 0.82, 0.88, 0.22, "wave_mid", None),
             L("08.cast.angel.wings__p03", "Luminous Outspread Soul Wings", "P2", 1.04, 0.58, 0.64, 0.24, "wing_flap_L", None),
             L("08.fx.soul-weather__p01", "Ascending Luminous Soul Current", "P1", 0.46, 0.76, 0.58, 0.24, "sun_pulse", "Ascending Soul Vapor", False, 0.86),
@@ -1004,7 +1014,7 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
             L("09.props.suitcases-notice__p19", "2nd Gate (01/12/14) Iron Signpost", "P3", 1.38, 0.80, 0.86, 0.36, "lamp_glow", "2nd Gate Notice Sign"),
             L("09.props.suitcases-notice__p04", "Packed Brown Leather Suitcase on Curb", "P2", 1.04, 0.28, 0.89, 0.20, "drawer_slide", "Suitcases on the Curb"),
             L("09.fx.call-abyss__p01", "Faint Ringing Echo from the Booth", "P1", 0.52, 0.52, 0.62, 0.14, "phone_ring", None, False, 0.80),
-            L("09.set.harbor_path_east__p02", "Proscenium Pier Watchhouse Jamb", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
+            L("09.set.atlantis_club_sidewalk__p04", "Proscenium Pier Lantern Post", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
         ],
     },
     "09.3": {
@@ -1014,12 +1024,12 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "counterpart": {"key": "mother/poem09", "x": 920, "dir": -1, "cue": "idle"},
         "layers": [
             L("09.props.moon-sun__p01", "Shared Moon Spanning the Abyss", "P6", 6.00, 0.50, 0.20, 0.16, "sun_pulse", None, False, 0.86),
-            L("09.set.atlantis_harbor_street__p08", "Distant Harbor Abyss Skyline", "P5", 3.80, 0.46, 0.82, 0.34, "portal_aperture", None, False, 0.88),
-            L("09.set.mother_living_room__p07", "Mother's Framed Living Room Wall", "P4", 2.46, 0.78, 0.74, 0.34, "lamp_glow", "Mother's Living Room"),
+            L("09.set.mother_living_room__p01", "Mother's Living Room Back Wall & Window Opening", "P5", 3.80, 0.76, 0.78, 0.32, "portal_aperture", None, False, 0.90),
+            L("09.set.mother_living_room__p02", "Mother's Framed Living Room Window", "P4", 2.46, 0.76, 0.66, 0.26, "lamp_glow", "Mother's Living Room"),
             L("09.props.phonebooth__p15", "Open Harbor Phone Booth & Handset", "P3", 1.44, 0.22, 0.87, 0.42, "booth_frame", "Calling From the Booth"),
             L("09.props.phones-chair__p07", "Mother's Floral Armchair", "P2", 1.04, 0.78, 0.88, 0.28, "lamp_base", "Mother's Armchair"),
             L("09.fx.call-abyss__p01", "Voice Waveform Across the Abyss", "P1", 0.48, 0.50, 0.56, 0.16, "phone_ring", "Speaking Across the Abyss", False, 0.88),
-            L("09.set.atlantis_club_sidewalk__p04", "Proscenium Harbor Phone-Line Pole", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
+            L("09.set.mother_living_room__p06", "Proscenium Living-Room Corner Wall", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
         ],
     },
     "09.4": {
@@ -1029,8 +1039,8 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "counterpart": {"key": "father_elder/poem09", "x": 860, "dir": -1, "cue": "idle"},
         "layers": [
             L("09.props.moon-sun__p01", "Late Moon Over Inner Harbor", "P6", 6.00, 0.76, 0.22, 0.18, "sun_pulse", None, False, 0.88),
-            L("09.set.atlantis_harbor_street__p08", "Distant Inner-Harbor Shipway", "P5", 3.80, 0.36, 0.84, 0.34, "portal_aperture", None, False, 0.90),
-            L("09.set.harbor_path_east__p02", "Warm Inner-Harbor Watchhouse Window", "P4", 2.44, 0.20, 0.84, 0.42, "portal_aperture", "Inner Harbor Watchhouse"),
+            L("09.set.atlantis_harbor_street__p05", "Distant Inner-Harbor Shed & Shipway", "P5", 3.80, 0.36, 0.80, 0.20, "portal_aperture", None, False, 0.90),
+            L("09.set.atlantis_club_sidewalk__p06", "Warm Inner-Harbor Timber Shopfront", "P4", 2.44, 0.20, 0.85, 0.38, "portal_aperture", "Inner Harbor Watchhouse"),
             L("09.set.atlantis_club_sidewalk__p04", "East Quay Lantern Post", "P4", 2.40, 0.50, 0.86, 0.44, "lamp_glow", "Father & Son Harbor Walk"),
             L("13.props.planet-boats__p18", "Moored Wooden Harbor Sailboat", "P3", 1.42, 0.78, 0.86, 0.28, "boat_rock", "Inner Harbor Mooring"),
             L("09.props.suitcases-notice__p05", "Father's Weathered Harbor Valise", "P2", 1.04, 0.64, 0.89, 0.18, "drawer_slide", None),
@@ -1050,7 +1060,7 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
             L("09.props.phonebooth__p14", "Silent Glass Booth in the Fog", "P3", 1.42, 0.66, 0.87, 0.36, "booth_frame", None),
             L("09.props.suitcases-notice__p05", "Single Suitcase Left on the Pier", "P2", 1.04, 0.48, 0.89, 0.20, "drawer_slide", "Yet Broken, Yet Heard"),
             L("09.fx.call-abyss__p19", "Parting Mist as the EX Dissolves", "P1", 0.46, 0.78, 0.68, 0.22, "cloud_drift_L", "The EX Turns to Haze", False, 0.86),
-            L("09.set.harbor_path_east__p02", "Proscenium Pier Timber Frame", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
+            L("09.set.atlantis_harbor_street__p10", "Proscenium Quay Town Lamp Post", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
         ],
     },
 
@@ -1142,12 +1152,12 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "counterpart": None,
         "layers": [
             L("11.fx.light__p01", "First Amber Dawn Cresting the Ridge", "P6", 6.00, 0.52, 0.24, 0.20, "sun_pulse", None, False, 0.90),
-            L("10.set.mountain_road__p04", "Far Mountain Range at Daybreak", "P5", 3.80, 0.48, 0.82, 0.18, "water_backing", None, False, 0.90),
-            L("10.set.mountain_road__p03", "Winding Mountain Highway Switchback", "P4", 2.44, 0.22, 0.86, 0.34, "fire_escape_landing", "Mountain Road Switchback"),
+            L("10.set.mountain_road__p04", "Far Mountain Range at Daybreak (Back Ridge)", "P5", 3.80, 0.48, 0.76, 0.18, "water_backing", None, False, 0.90),
+            L("10.set.mountain_road__p05", "Near Darker Mountain Ridge (Front Layer)", "P4", 2.44, 0.48, 0.82, 0.18, "fire_escape_landing", "Mountain Road Switchback"),
             L("10.props.tree-dawn-sign__p01", "Solitary Crest Tree at First Light", "P4", 2.38, 0.78, 0.86, 0.48, "flower_bloom", "First Light on the Ridge"),
-            L("11.props.parked-motorcycle__p01", "Idling Motorcycle on the Overlook", "P3", 1.40, 0.32, 0.88, 0.28, "bike_chassis", None),
-            L("10.props.tree-dawn-sign__p02", "88 NEW DAWN km Roadside Signpost", "P2", 1.04, 0.50, 0.87, 0.30, "lamp_glow", "88 NEW DAWN km Sign"),
-            L("10.fx.ride-light__p22", "Golden Daybreak Glare Across Road", "P1", 0.52, 0.64, 0.88, 0.14, "headlight_beam", None, False, 0.78),
+            L("11.props.parked-motorcycle__p01", "Idling Motorcycle on the Overlook", "P3", 1.40, 0.30, 0.88, 0.28, "bike_chassis", None),
+            L("10.props.tree-dawn-sign__p02", "88 NEW DAWN km Roadside Signpost", "P2", 1.04, 0.52, 0.87, 0.30, "lamp_glow", "88 NEW DAWN km Sign"),
+            L("10.set.mountain_road__p09", "Foreground Left Rocky Highway Shoulder", "P1", 0.52, 0.14, 0.94, 0.22, "static", None, False, 0.86),
             L("10.props.tree-dawn-sign__p01", "Proscenium Ridge Pine Bough", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
         ],
     },
@@ -1292,14 +1302,15 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "still_sentinel",
         "counterpart": None,
         "layers": [
-            L("12.props.niche-porch__p15", "Dim Sanctuary Vault Lamp", "P6", 6.00, 0.50, 0.24, 0.18, "lamp_glow", None, False, 0.82),
-            L("12.set.temple_backroom__p02", "Upper Stone Staircase in Shadow", "P5", 3.80, 0.52, 0.84, 0.38, "portal_inner_world", "Empty Rooms of Afterlife", False, 0.92),
-            L("12.set.temple_backroom__p01", "Stone Afterlife Chamber Doorway", "P4", 2.44, 0.22, 0.86, 0.42, "portal_aperture", "Afterlife Chamber Door"),
+            L("12.set.temple_backroom__p09", "Sagging Overhead Backroom Bulb Wire", "P6", 6.00, 0.50, 0.22, 0.16, "lamp_glow", None, False, 0.86),
+            L("12.set.temple_backroom__p03", "Warm Doorway Light Insert Beyond Threshold", "P5", 3.86, 0.36, 0.80, 0.34, "lamp_glow", None, False, 0.90),
+            L("12.set.temple_backroom__p02", "Upper Stone Staircase Flight in Shadow", "P5", 3.80, 0.52, 0.82, 0.36, "portal_inner_world", "Empty Rooms of Afterlife", False, 0.92),
+            L("12.set.temple_backroom__p01", "Stone Backroom Wall & Open Doorway Aperture", "P4", 2.44, 0.32, 0.84, 0.38, "portal_aperture", "Afterlife Chamber Door"),
             L("12.props.niche-porch__p01", "Arched Stone Sanctuary Niche", "P4", 2.42, 0.80, 0.86, 0.44, "lamp_glow", "Silent Wall Niche"),
             L("12.set.temple_backroom__p06", "Silent Empty Chamber Chair", "P3", 1.40, 0.36, 0.88, 0.26, "lamp_base", None),
             L("12.props.hand-hourglass__p05", "Still Hourglass in the Niche", "P2", 1.04, 0.66, 0.87, 0.22, "hourglass_sand", None),
             L("12.props.niche-porch__p15", "Foreground Chamber Votive Pendant", "P1", 0.54, 0.16, 0.44, 0.20, "lamp_glow", None, False, 0.82),
-            L("12.set.temple_backroom__p01", "Proscenium Stone Chamber Arch", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
+            L("12.set.temple_hall__p04", "Proscenium Stone Chamber Pilaster", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
         ],
     },
     "12.3": {
@@ -1565,13 +1576,15 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "waltz",
         "counterpart": {"key": "vintage_woman/gown", "x": 760, "dir": -1, "cue": "waltz"},
         "layers": [
-            L("01.props.chandeliers__p10", "Grand Crystal Ballroom Chandelier", "P6", 6.00, 0.50, 0.24, 0.22, "chandelier_sway", None, False, 0.90),
-            L("14.set.vintage_party__p01", "1940s Wood-Panelled Ballroom Wall", "P5", 3.80, 0.50, 0.86, 0.34, "static", None, False, 0.92),
-            L("14.set.vintage_party__p03", "1940s Grand Ballroom Archway", "P4", 2.42, 0.52, 0.86, 0.50, "portal_other_world", "The Dance at the Vintage Party"),
-            L("14.props.party__p19", "Warm Ballroom Festoon String Lights", "P3", 1.48, 0.24, 0.34, 0.22, "lamp_glow", "Under the Ballroom Lights"),
-            L("14.props.party__p01", "Draped Ballroom Refreshment Table", "P3", 1.42, 0.20, 0.88, 0.26, "lamp_glow", None),
+            L("14.set.vintage_party__p01", "1940s Ballroom Coffered Ceiling Panel", "P6", 6.04, 0.50, 0.22, 0.20, "static", None, False, 0.92),
+            L("01.props.chandeliers__p10", "Grand Crystal Ballroom Chandelier", "P6", 6.00, 0.50, 0.28, 0.22, "chandelier_sway", None, False, 0.92),
+            L("14.set.vintage_party__p02", "1940s Wood-Panelled Ballroom Back Wall", "P5", 3.80, 0.50, 0.78, 0.36, "static", None, False, 0.92),
+            L("14.set.vintage_party__p04", "Gleaming Hardwood Ballroom Dance Floor", "P4", 2.44, 0.50, 0.92, 0.22, "static", None),
+            L("14.set.vintage_party__p03", "1940s Grand Ballroom Archway", "P4", 2.40, 0.52, 0.86, 0.50, "portal_other_world", "The Dance at the Vintage Party"),
+            L("14.props.party__p19", "Warm Ballroom Festoon String Lights", "P3", 1.48, 0.50, 0.32, 0.22, "lamp_glow", "Under the Ballroom Lights"),
+            L("14.props.party__p01", "Draped Ballroom Refreshment Table", "P3", 1.42, 0.24, 0.88, 0.26, "lamp_glow", None),
             L("14.props.party__p20", "Brass Horn Table Gramophone", "P2", 1.04, 0.80, 0.87, 0.28, "turntable_spin", "Gramophone Waltz"),
-            L("14.props.party__p19", "Foreground Festoon Bulb Canopy", "P1", 0.54, 0.78, 0.28, 0.18, "lamp_glow", None, False, 0.84),
+            L("14.props.party__p19", "Foreground Festoon Bulb Canopy", "P1", 0.54, 0.78, 0.26, 0.18, "lamp_glow", None, False, 0.84),
             L("14.set.vintage_party__p03", "Proscenium Ballroom Pilaster", "P0", 0.25, 0.96, 0.95, 0.38, "proscenium_mask", None, True, 0.85),
         ],
     },
@@ -1582,7 +1595,7 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "counterpart": {"key": "vintage_man/suit", "x": 920, "dir": -1, "cue": "idle"},
         "layers": [
             L("04.fx.moon-reach__p01", "Quiet Pre-Dawn Moon Returning to Genesis", "P6", 6.00, 0.80, 0.22, 0.18, "sun_pulse", None, False, 0.88),
-            L("14.set.vintage_party__p01", "Receding 1940s Ballroom Paneling", "P5", 3.80, 0.36, 0.84, 0.32, "static", None, False, 0.90),
+            L("14.set.vintage_party__p02", "Receding 1940s Ballroom Panelled Wall", "P5", 3.80, 0.34, 0.80, 0.34, "static", None, False, 0.90),
             L("14.props.door__p02", "Closing Panelled Vintage Door", "P4", 2.40, 0.52, 0.86, 0.50, "portal_aperture", "The Vintage Door Closes"),
             L("01.props.window__p01", "Quiet Bedroom Sash Window at Dawn", "P4", 2.44, 0.80, 0.85, 0.48, "portal_aperture", "Genesis · Back to Poem 01"),
             L("14.props.party__p01", "Draped Ballroom Champagne Table", "P3", 1.44, 0.22, 0.88, 0.30, "lamp_glow", "Into the Ballroom Crowd"),
@@ -1684,6 +1697,82 @@ SEVEN_PLANES: Dict[str, Dict[str, Any]] = {
         "pal_k": 3,
     },
 }
+
+
+def compute_piece_stage_dims(
+    pw: int,
+    ph: int,
+    sc: float,
+    plane: str,
+    W: int = 1280,
+    H: int = 720,
+) -> Tuple[int, int]:
+    """
+    Aspect-Aware Span Scaling Law (shared 1:1 with `shots/play/levels.html`):
+      - Preserves 100% native aspect ratio (`target_w / target_h == pw / ph`, zero distortion).
+      - For wide architectural/sky/floor cutouts (`ar = pw / ph > 2.2`) whose pure height-based
+        width (`H * sc * ar`) would exceed `85%` of the stage width, smoothly damps width into
+        `[0.85 * W .. 1.04 * W]` and derives `target_h = round(target_w / ar)`.
+      - For ultra-wide distant horizon/sky strips (`plane in ('P6', 'P5') and ar > 4.5`) given
+        small `sc`, ensures they span at least `68%` of stage width.
+    """
+    ar = float(pw) / float(max(1, ph))
+    target_h = max(24, min(int(H * 0.78), int(round(H * sc))))
+    target_w = max(24, int(round(target_h * ar)))
+
+    if ar > 2.2 and target_w > int(W * 0.85):
+        span_cap = int(W * 0.85)
+        damped_w = int(round(span_cap + (target_w - span_cap) * 0.18))
+        target_w = min(int(W * 1.04), damped_w)
+        target_h = max(18, int(round(target_w / ar)))
+    elif plane in ("P6", "P5") and ar > 4.5 and target_w < int(W * 0.68):
+        target_w = int(W * 0.68)
+        target_h = max(18, int(round(target_w / ar)))
+
+    return target_w, target_h
+
+
+def load_frame_perspective_signals(fid: str) -> Dict[str, Any]:
+    """
+    Reads 3D perspective & atmosphere signals (`horizon`, `vp`, `haze_rgb`, `scale_ladder`)
+    from `shots/out/<fid>/cartoon/signals.json` if available.
+    """
+    default_sig = {
+        "horizon_norm": [[0.0, 0.56], [1.0, 0.56]],
+        "vp_norm": [0.50, 0.56],
+        "haze_rgb": [24, 30, 44],
+        "stage_haze_rgb": [24, 30, 44],
+        "scale_ladder": {},
+    }
+    if not fid:
+        return default_sig
+    sig_path = SHOTS_DIR / "out" / fid / "cartoon" / "signals.json"
+    if not sig_path.exists():
+        return default_sig
+    try:
+        d = json.loads(sig_path.read_text())
+        raw_h = d.get("horizon") or [[0.0, 456.0], [1456.0, 456.0]]
+        raw_vp = d.get("vp") or [728.0, 456.0]
+        raw_haze = d.get("haze_rgb") or [24, 30, 44]
+        # Blend 48% frame haze with 52% nocturnal gouache stage tone so bright frames stay cohesive
+        sh_r = int(round(raw_haze[0] * 0.48 + 24 * 0.52))
+        sh_g = int(round(raw_haze[1] * 0.48 + 30 * 0.52))
+        sh_b = int(round(raw_haze[2] * 0.48 + 44 * 0.52))
+        return {
+            "horizon_norm": [
+                [round(float(raw_h[0][0]) / 1456.0, 4), round(float(raw_h[0][1]) / 816.0, 4)],
+                [round(float(raw_h[1][0]) / 1456.0, 4), round(float(raw_h[1][1]) / 816.0, 4)],
+            ],
+            "vp_norm": [
+                round(max(-0.5, min(1.5, float(raw_vp[0]) / 1456.0)), 4),
+                round(max(0.10, min(0.92, float(raw_vp[1]) / 816.0)), 4),
+            ],
+            "haze_rgb": [int(raw_haze[0]), int(raw_haze[1]), int(raw_haze[2])],
+            "stage_haze_rgb": [sh_r, sh_g, sh_b],
+            "scale_ladder": d.get("scale_ladder") or {},
+        }
+    except Exception:
+        return default_sig
 
 
 def verify_handmade_seven_layers_for_scene(skey: str, base_layers: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -1859,12 +1948,14 @@ def render_clean_scene_plate(
     floor_y: int,
     layers: List[Dict[str, Any]],
     district_glow: List[Any],
+    haze_rgb: Tuple[int, int, int] = (24, 30, 44),
     return_pil: bool = False,
 ) -> Optional[Image.Image]:
     """
     Renders a 7-layer cel-shaded 1280x720 WebP scene plate combining:
       - The painted backdrop blended with the world cel-wash (`cel.webp`) and ink pass (`ink.webp`),
-      - All 7 multiplane cutout layers (`P6`..`P0`) cel-shaded & plane-inked (`INK_W`).
+      - All 7 multiplane cutout layers (`P6`..`P0`) cel-shaded & plane-inked (`INK_W`)
+        with Aspect-Aware Span Scaling (`compute_piece_stage_dims`).
     """
     W, H = 1280, 720
     if backdrop_path.exists():
@@ -1872,7 +1963,7 @@ def render_clean_scene_plate(
     else:
         bg = Image.new("RGBA", (W, H), (14, 18, 26, 255))
 
-    # Blend 55% cel-wash plate if available so the backdrop has authentic cel gouache flats
+    # Blend 52% cel-wash plate if available so the backdrop has authentic cel gouache flats
     if cel_path and cel_path.exists():
         try:
             cel_bg = Image.open(cel_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
@@ -1945,15 +2036,15 @@ def render_clean_scene_plate(
         if pw <= 1 or ph <= 1:
             continue
         sc = float(lyr.get("scale", 0.35))
-        target_h = max(24, min(int(H * 0.78), int(round(H * sc))))
-        target_w = max(24, int(round(target_h * (pw / float(ph)))))
+        plane_id = str(lyr.get("plane", "P3"))
+        target_w, target_h = compute_piece_stage_dims(pw, ph, sc, plane_id, W, H)
 
         p_resized = p_img.resize((target_w, target_h), Image.Resampling.LANCZOS)
         if lyr.get("flip"):
             p_resized = p_resized.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
 
         # Apply cel-shading + plane-weighted ink contour + subtle color-code rim
-        p_cel = cel_shade_and_ink_cutout(p_resized, lyr.get("plane", "P3"), haze_rgb=(20, 26, 38))
+        p_cel = cel_shade_and_ink_cutout(p_resized, plane_id, haze_rgb=haze_rgb)
         alpha_mult = float(lyr.get("alpha", 0.98))
         if alpha_mult < 0.99:
             r_c, g_c, b_c, a_c = p_cel.split()
@@ -2057,6 +2148,8 @@ def main() -> None:
             wk = backdrop_shots_rel.split("/")[1]
             wshot = world_by_k.get(wk, {})
             fid = wshot.get("id", "")
+            persp = load_frame_perspective_signals(fid)
+            stage_haze_tuple = tuple(persp["stage_haze_rgb"])
 
             # Resolve cel, ink, layout_sheet, planes_gs, notan, exploded, and world 7-plane sheets
             cel_rel = f"world/{wk}/cel.webp"
@@ -2093,6 +2186,7 @@ def main() -> None:
                 "planes_map_file": f"../{planes_gs_rel}" if planes_gs_rel and (SHOTS_DIR / planes_gs_rel).exists() else "",
                 "notan_file": f"../{notan_rel}" if notan_rel and (SHOTS_DIR / notan_rel).exists() else "",
                 "exploded_file": f"../{exploded_rel}" if exploded_rel and (SHOTS_DIR / exploded_rel).exists() else "",
+                "perspective": persp,
                 "world_sheets": world_sheets,
                 "seven_layer_breakdown": compute_frame_seven_layer_breakdown(fid, skey, enriched_specs),
             }
@@ -2199,6 +2293,7 @@ def main() -> None:
                 floor_y=sc["floor"],
                 layers=combined_layers,
                 district_glow=sc.get("palette_glow", ["#d8ab4f"]),
+                haze_rgb=stage_haze_tuple,
                 return_pil=True,
             )
 
