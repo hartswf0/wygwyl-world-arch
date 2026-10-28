@@ -1871,19 +1871,227 @@ def compute_frame_seven_layer_breakdown(
     return breakdown
 
 
-def cel_shade_and_ink_cutout(
+SCENE_CURATED_PROP_OVERRIDES: Dict[str, List[Dict[str, Any]]] = {
+    "01.5": [
+        L("01.props.trapdoor__p12", "Open Floor Trapdoor Into the Abyss", "P3", 1.38, 0.52, 0.89, 0.22, "portal_aperture", "Hole in the Floor"),
+        L("14.props.party__p03", "Brass Gramophone by the Threshold", "P2", 1.04, 0.22, 0.88, 0.18, "lamp_glow", "Rim of the Void"),
+    ],
+    "02.4": [
+        L("02.props.car__p01", "1990s Family Sedan Body", "P3", 1.40, 0.62, 0.86, 0.23, "car_chassis", "Parents Arguing in the Car"),
+        L("02.props.car__p05", "Sedan Front Tire & Rim", "P3", 1.38, round(0.62 - 0.585 * 0.23, 4), 0.87, round(0.45 * 0.23, 4), "wheel_spin", None),
+        L("02.props.car__p06", "Sedan Rear Tire & Rim", "P3", 1.38, round(0.62 + 0.456 * 0.23, 4), 0.87, round(0.45 * 0.23, 4), "wheel_spin", None),
+    ],
+    "04.0": [
+        L("04.props.word-shore__p22", "Rusted Shore Lantern in the Ash", "P3", 1.40, 0.26, 0.88, 0.20, "lamp_glow", "Broken Pieces on Sand"),
+        L("04.set.shore_night__p06", "Charred Wildfire Driftwood Stump", "P3", 1.42, 0.78, 0.88, 0.20, "static", "Charred Stump & Raven"),
+        L("04.props.ravens-stumps__p03", "Perched Black Raven on Stump", "P2", 1.04, 0.78, 0.74, 0.16, "wing_flap_L", None),
+    ],
+    "04.1": [
+        L("04.props.word-shore__p23", "Still Wrought-Iron Shore Lantern", "P3", 1.42, 0.48, 0.87, 0.20, "static", "The Muted Waves"),
+        L("04.props.ravens-stumps__p04", "Silent Watching Raven on the Sand", "P2", 1.04, 0.80, 0.88, 0.16, "static", None),
+    ],
+    "04.2": [
+        L("04.props.word-shore__p22", "Weathered Shore Relic Lantern", "P3", 1.42, 0.24, 0.88, 0.20, "drawer_slide", "Folded Whispers"),
+        L("04.props.heart__p10", "Throbbing Poet Heart on Stand", "P2", 1.04, 0.52, 0.88, 0.22, "heart_beat", "The Heart on the Sand"),
+    ],
+    "05.1": [
+        L("05.props.galaxy-universe__p17", "Golden Constellation Pedestal", "P3", 1.40, 0.34, 0.88, 0.20, "planet_orbit", "Naming My Own Stars"),
+        L("05.props.staff-mattress-emblem__p07", "Radiant Star Crest Medallion", "P2", 1.04, 0.72, 0.86, 0.18, "sun_pulse", "The Waiting Past"),
+    ],
+    "05.4": [
+        L("05.props.staff-mattress-emblem__p02", "Brass Watchtower Sanctuary Lantern", "P3", 1.38, 0.28, 0.88, 0.20, "lamp_glow", "Blood Through the Hands"),
+        L("05.props.staff-mattress-emblem__p07", "Radiant Solar Crest Medallion", "P2", 1.04, 0.64, 0.87, 0.18, "sun_pulse", "Fingerprints of Power"),
+    ],
+    "05.5": [
+        L("05.props.staff-mattress-emblem__p02", "Threshold Sanctuary Brass Lantern", "P3", 1.40, 0.30, 0.88, 0.20, "lamp_glow", "West Winged Pillar"),
+        L("05.props.staff-mattress-emblem__p07", "Resonant Baritone Seal on Threshold", "P2", 1.04, 0.68, 0.88, 0.18, "sun_pulse", "Threshold of Atlantis"),
+    ],
+    "06.0": [
+        L("06.props.lantern-candle-guitar__p15", "NEXT GATES Sanctuary Signpost", "P3", 1.38, 0.76, 0.87, 0.22, "lamp_glow", "Next Gates Signpost"),
+        L("06.props.lantern-candle-guitar__p11", "Sanctuary Brass Votive Lantern", "P2", 1.04, 0.28, 0.88, 0.17, "lamp_glow", "The Light Gates Open"),
+    ],
+    "06.2": [
+        L("06.props.lantern-candle-guitar__p15", "Waterfront Colonnade Signpost", "P3", 1.40, 0.26, 0.87, 0.21, "lamp_glow", "Waterfront Colonnade"),
+        L("06.props.lantern-candle-guitar__p11", "Harbor Quayside Brass Lantern", "P2", 1.04, 0.72, 0.88, 0.17, "lamp_glow", "Here We Are All One"),
+    ],
+    "06.3": [
+        L("06.props.coin-booth__p01", "Arched Wooden Heart-Scan Booth", "P3", 1.42, 0.52, 0.87, 0.24, "lamp_glow", "Heart-Scan Admission Booth"),
+        L("06.props.lantern-candle-guitar__p11", "Jungle Sanctuary Brass Lantern", "P2", 1.04, 0.24, 0.88, 0.17, "lamp_glow", "Relearned Currency"),
+    ],
+    "06.4": [
+        L("06.props.lantern-candle-guitar__p15", "Central Plaza Sanctuary Signpost", "P3", 1.40, 0.30, 0.87, 0.21, "lamp_glow", "City Center Sanctuary"),
+        L("06.props.lantern-candle-guitar__p14", "Plaza Musician's Acoustic Guitar", "P2", 1.04, 0.70, 0.88, 0.18, "lamp_glow", "East Plaza Colonnade"),
+    ],
+    "08.0": [
+        L("07.props.speakers-vu__p15", "Rooftop Monitor Speaker Cabinet", "P3", 1.40, 0.24, 0.88, 0.20, "speaker_pulse", "NEW SINGLE Club Marquee"),
+        L("07.props.dj-decks__p03", "Rooftop Terrace DJ Console", "P2", 1.04, 0.72, 0.88, 0.19, "dj_console", "Soul Leaves the Dancer"),
+    ],
+    "08.1": [
+        L("07.props.dj-decks__p01", "Late-Night Club DJ Console", "P3", 1.40, 0.52, 0.87, 0.20, "dj_console", "Last One to Leave"),
+        L("07.props.speakers-vu__p15", "Club Dancefloor Bass Monitor", "P2", 1.04, 0.22, 0.88, 0.19, "speaker_pulse", "Strangers Collide on Floor"),
+    ],
+    "08.2": [
+        L("04.props.word-shore__p23", "Equator Wind Wrought-Iron Lantern", "P3", 1.42, 0.28, 0.88, 0.19, "lamp_glow", "Open Field at the Equator"),
+        L("06.props.lantern-candle-guitar__p11", "Equator Votive Candle", "P2", 1.04, 0.74, 0.88, 0.16, "lamp_glow", "Moons of the Equator"),
+    ],
+    "08.3": [
+        L("11.props.inlays-lantern__p15", "Sanctuary Baptism Brass Lantern", "P3", 1.42, 0.26, 0.88, 0.19, "lamp_glow", "Salted Ice-Water Basin"),
+        L("04.props.word-shore__p23", "Choir Colonnade Iron Lantern", "P2", 1.04, 0.72, 0.88, 0.19, "lamp_glow", "Angels' Ice-Water Baptism"),
+    ],
+    "08.4": [
+        L("04.props.word-shore__p23", "Still Terrace Iron Lantern at Dawn", "P3", 1.42, 0.76, 0.88, 0.19, "lamp_glow", "Terrace Recovery Basin"),
+        L("06.props.lantern-candle-guitar__p11", "Clear Morning Votive Candle", "P2", 1.04, 0.28, 0.88, 0.16, "lamp_glow", "Soul Returns to the Body"),
+    ],
+    "08.5": [
+        L("04.props.word-shore__p23", "Dawn Terrace Parapet Lantern", "P3", 1.40, 0.76, 0.88, 0.19, "lamp_glow", "Rooftop Parapet"),
+        L("06.props.lantern-candle-guitar__p11", "Morning Parapet Brass Candle", "P2", 1.04, 0.28, 0.88, 0.16, "lamp_glow", "Mountains From the Rooftop"),
+    ],
+    "10.0": [
+        L("11.props.parked-motorcycle__p01", "Parked Cafe Racer Motorcycle", "P3", 1.38, 0.56, 0.87, 0.24, "bike_chassis", "The Parked Motorcycle"),
+    ],
+    "10.1": [
+        L("11.props.parked-motorcycle__p01", "Ignited Cafe Racer Motorcycle", "P3", 1.38, 0.54, 0.87, 0.25, "bike_chassis", "Mounting the Machine"),
+    ],
+    "10.4": [
+        L("10.props.bike-skeleton__p17", "Highway Motorcycle Heading Out", "P3", 1.38, 0.50, 0.87, 0.24, "bike_chassis", "Out of Atlantis"),
+    ],
+    "11.1": [
+        L("11.props.inlays-lantern__p15", "Morning Sanctuary Brass Lantern", "P3", 1.40, 0.26, 0.88, 0.19, "lamp_glow", "Remnants in the Sunlight"),
+        L("11.props.journal__p11", "Cornerstone Leather Journal", "P2", 1.04, 0.68, 0.89, 0.17, "drawer_slide", "First Courses of Stone"),
+    ],
+    "11.2": [
+        L("11.props.inlays-lantern__p15", "Golden Temple Dedication Lantern", "P3", 1.40, 0.30, 0.88, 0.20, "lamp_glow", "The Temple Builds Itself"),
+        L("11.props.journal__p11", "Architect's Open Sanctuary Ledger", "P2", 1.04, 0.72, 0.89, 0.17, "lamp_glow", "Crowning the White Roof"),
+    ],
+    "11.3": [
+        L("11.props.inlays-lantern__p15", "Sanctuary Nave Brass Lantern", "P3", 1.38, 0.32, 0.88, 0.20, "lamp_glow", "Choir Chords in the Nave"),
+        L("11.props.journal__p11", "Hymnal & Journal on Marble Plinth", "P2", 1.04, 0.68, 0.88, 0.18, "lamp_glow", "New White Temple Nave"),
+    ],
+    "12.0": [
+        L("12.set.temple_backroom__p06", "Carved Wooden Welcome Chair", "P3", 1.42, 0.28, 0.88, 0.22, "lamp_base", "Temple Porch Entrance"),
+        L("12.props.hand-hourglass__p05", "Sanctuary Welcome Hourglass", "P2", 1.04, 0.68, 0.88, 0.19, "hourglass_sand", "Welcome Home in the Hall"),
+    ],
+    "12.3": [
+        L("12.props.hand-hourglass__p05", "Glass Hourglass of Burning Sand", "P3", 1.38, 0.28, 0.88, 0.20, "hourglass_sand", "Glasses of Burning Sand"),
+        L("12.props.last-hourglass__p23", "Burning Wooden Hourglass Frame", "P2", 1.04, 0.64, 0.88, 0.22, "hourglass_sand", "The Burning Hourglasses"),
+    ],
+    "12.4": [
+        L("12.set.temple_backroom__p06", "Elder's Carved Grove Bench", "P3", 1.40, 0.32, 0.88, 0.22, "lamp_base", "Western Forest Edge"),
+        L("13.props.harvest__p04", "Grove Wildflower Bouquet", "P2", 1.04, 0.68, 0.89, 0.18, "flower_bloom", "Every Living Tree"),
+    ],
+    "12.5": [
+        L("12.set.temple_backroom__p06", "Terrace Gathering Seat", "P3", 1.40, 0.30, 0.88, 0.22, "lamp_base", "Shore Terrace Canopy"),
+        L("04.props.heart__p01", "Resonant Brotherhood Heart Emblem", "P2", 1.04, 0.66, 0.86, 0.19, "heart_beat", "The Brotherhood Chain"),
+    ],
+    "12.6": [
+        L("13.props.harvest__p01", "Meadow Dusk Wildflowers", "P3", 1.40, 0.26, 0.89, 0.18, "flower_bloom", "Football in the Meadow"),
+        L("12.props.reunion__p01", "Spiraling Leather Football", "P2", 1.04, 0.56, 0.68, 0.15, "tambourine_arc", "Spiraling Pass at Dusk"),
+    ],
+    "14.1": [
+        L("14.props.door__p02", "Closed Freestanding Vintage Door", "P3", 1.42, 0.76, 0.87, 0.28, "portal_aperture", "Distant Door in the Void"),
+        L("14.props.reel__p05", "Starburst Key of Answers", "P2", 1.04, 0.44, 0.82, 0.16, "sun_pulse", "Sharpened Key of Answers"),
+    ],
+    "14.2": [
+        L("14.props.party__p20", "Brass Horn Table Gramophone", "P3", 1.40, 0.26, 0.88, 0.21, "turntable_spin", "Highs of Life Memory"),
+        L("11.props.journal__p11", "Open Life-Reel Journal", "P2", 1.04, 0.68, 0.89, 0.18, "lamp_glow", "Love & Loss Endured"),
+    ],
+    "14.3": [
+        L("14.props.door__p11", "Freestanding Vintage Door Ajar", "P3", 1.40, 0.76, 0.87, 0.28, "portal_aperture", "Battle Scars & Wisdom"),
+        L("11.props.journal__p11", "Unspooled Journal Pages", "P2", 1.04, 0.34, 0.89, 0.18, "lamp_glow", "Unspooling the Reel"),
+    ],
+    "14.5": [
+        L("14.props.party__p05", "Golden Ballroom Champagne Chalice", "P3", 1.42, 0.26, 0.88, 0.16, "lamp_glow", "Under the Ballroom Lights"),
+        L("14.props.party__p20", "Brass Horn Table Gramophone", "P2", 1.04, 0.78, 0.88, 0.22, "turntable_spin", "Gramophone Waltz"),
+    ],
+    "14.6": [
+        L("14.props.party__p20", "Brass Horn Table Gramophone", "P3", 1.44, 0.22, 0.88, 0.20, "lamp_glow", "Into the Ballroom Crowd"),
+        L("01.props.room__p18", "Genesis Bedroom Television & Stand", "P2", 1.04, 0.66, 0.89, 0.20, "portal_tv_flicker", "Genesis · Back to Poem 01"),
+    ],
+}
+
+
+def curate_scene_props(skey: str, raw_layers: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Filters out un-integrated environmental clutter stickers (walls, sky/water strips,
+    checkerboard FX cards, duplicate buildings/temples, and corner pillar stumps) and
+    returns only 1 to 3 self-contained, grounded physical story props on P3/P2 with
+    calibrated architectural scales (`0.14..0.26`).
+    """
+    if skey in SCENE_CURATED_PROP_OVERRIDES:
+        return [dict(x) for x in SCENE_CURATED_PROP_OVERRIDES[skey]]
+
+    curated: List[Dict[str, Any]] = []
+    for lyr in raw_layers:
+        pid = lyr["part_id"]
+        pl = lyr["plane"]
+        if pl not in ("P3", "P2"):
+            continue
+        if any(bad in pid for bad in (".set.", ".fx.", ".hero.", "temple.states", "temple.whole")):
+            continue
+        item = dict(lyr)
+        # Upgrade open empty suitcase shell (p04) to closed vintage brown leather suitcase (p05)
+        if pid == "09.props.suitcases-notice__p04":
+            pid = "09.props.suitcases-notice__p05"
+            item["part_id"] = pid
+        sc = float(item.get("scale", 0.22))
+        # Calibrate prop scale so no cutout overwhelms the background architecture
+        if "car__p01" in pid:
+            sc = min(0.23, sc)
+            item["y"] = 0.86
+        elif "car__p05" in pid or "car__p06" in pid:
+            sc = min(round(0.45 * 0.23, 4), sc)
+            item["y"] = 0.87
+        elif any(k in pid for k in ("motorcycle", "bike-skeleton", "phonebooth", "coin-booth", "door")):
+            sc = min(0.26, max(0.18, sc * 0.76))
+            item["y"] = max(0.86, float(item.get("y", 0.87)))
+        elif "chandeliers" in pid:
+            sc = min(0.20, sc)
+        elif "tambourine" in pid and skey in ("02.5", "03.0"):
+            sc = min(0.15, sc)
+        elif "cafe__p07" in pid:
+            sc = 0.09
+        else:
+            sc = min(0.22, max(0.14, sc * 0.78))
+            if float(item.get("y", 0.87)) > 0.55:
+                item["y"] = max(0.86, min(0.90, float(item.get("y", 0.88))))
+        item["scale"] = round(sc, 4)
+        curated.append(item)
+
+    # Fix car wheel positions if car__p01 was rescaled to 0.23
+    cars = [c for c in curated if "car__p01" in c["part_id"]]
+    if cars:
+        c_cx = float(cars[0]["x"])
+        c_sc = float(cars[0]["scale"])
+        for c in curated:
+            if "car__p05" in c["part_id"]:
+                c["x"] = round(c_cx - 0.585 * c_sc, 4)
+                c["scale"] = round(0.45 * c_sc, 4)
+            elif "car__p06" in c["part_id"]:
+                c["x"] = round(c_cx + 0.456 * c_sc, 4)
+                c["scale"] = round(0.45 * c_sc, 4)
+        return curated[:4]
+
+    return curated[:3]
+
+
+def clean_and_integrate_cutout(
     p_img: Image.Image,
+    bg_crop: Image.Image,
     plane_id: str,
     haze_rgb: Tuple[int, int, int] = (24, 30, 44),
 ) -> Image.Image:
     """
-    Applies the `shots/cartoon.py` cel-shading & plane-weighted ink contour law
-    to an RGBA cutout piece:
-      - Quantizes interior RGB into cel flat steps
-      - Mixes atmospheric depth haze proportional to `SEVEN_PLANES[plane_id]['haze_mix']`
-      - Strokes the outer silhouette and interior edges with `INK_W` thickness
-      - Adds a subtle plane-color-coded rim highlight (`PCOL`)
+    Integrates a cut-out prop seamlessly into the local background environment:
+      1. Strips the outer tan Kraft-paper die-cut margin (`#b5986e`) & matte fringe
+         within `dt <= 10px` of the silhouette edge and feathers the alpha boundary.
+      2. Transfers Luminance (`50% L`) and Chrominance (`70% A/B`) in CIE-LAB space
+         from `bg_crop` (Reinhard color transfer) so the prop inherits the exact shadow
+         key and color temperature of the background behind it.
+      3. Quantizes into soft cel-gouache steps, mixes depth-plane atmospheric haze,
+         adds a bottom `18%` ground ambient-occlusion gradient, and strokes a subtle
+         1px dark contour blended with the local background tone (zero neon sticker rim).
     """
+    import cv2
     import numpy as np
 
     arr = np.array(p_img.convert("RGBA"), dtype=np.float32)
@@ -1893,50 +2101,72 @@ def cel_shade_and_ink_cutout(
     if not mask.any():
         return p_img
 
+    # 1. Strip outer tan Kraft cardboard margin & white/grey border fringe
+    u8_mask = mask.astype(np.uint8)
+    dt = cv2.distanceTransform(u8_mask, cv2.DIST_L2, 5)
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    max_c = np.maximum(np.maximum(r, g), b)
+    min_c = np.minimum(np.minimum(r, g), b)
+    sat = max_c - min_c
+    lum = 0.299 * r + 0.587 * g + 0.114 * b
+
+    kraft_rim = (dt <= 10.0) & (
+        ((r >= g - 6) & (g >= b - 10) & (lum > 82) & (sat < 102))
+        | ((lum > 165) & (sat < 48))
+    )
+    clean_mask = mask & (~kraft_rim)
+    if clean_mask.sum() > 64:
+        mask = clean_mask
+        u8_mask = mask.astype(np.uint8)
+        dt = cv2.distanceTransform(u8_mask, cv2.DIST_L2, 5)
+
+    alpha_clean = np.where(mask, alpha, 0.0)
+    alpha_soft = cv2.GaussianBlur(alpha_clean, (3, 3), 0.85)
+    alpha_out = np.where(mask, np.minimum(alpha_clean, np.clip(dt * 88.0, 0, 255)), alpha_soft * 0.30)
+
+    # 2. Reinhard CIE-LAB color & luminance harmonization to local `bg_crop`
+    bg_arr = np.array(bg_crop.resize((p_img.width, p_img.height), Image.Resampling.BILINEAR).convert("RGB"), dtype=np.uint8)
+    fg_u8 = np.clip(rgb, 0, 255).astype(np.uint8)
+
+    fg_lab = cv2.cvtColor(fg_u8, cv2.COLOR_RGB2LAB).astype(np.float32)
+    bg_lab = cv2.cvtColor(bg_arr, cv2.COLOR_RGB2LAB).astype(np.float32)
+
+    valid = mask
+    if valid.sum() > 25:
+        for ch_i, blend_w in ((0, 0.50), (1, 0.70), (2, 0.70)):
+            f_vals = fg_lab[..., ch_i][valid]
+            b_vals = bg_lab[..., ch_i]
+            f_mean, f_std = float(f_vals.mean()), max(4.0, float(f_vals.std()))
+            b_mean, b_std = float(b_vals.mean()), max(4.0, float(b_vals.std()))
+            t_std = f_std * (1.0 - blend_w * 0.52) + b_std * (blend_w * 0.52)
+            t_mean = f_mean * (1.0 - blend_w) + b_mean * blend_w
+            fg_lab[..., ch_i] = np.clip((fg_lab[..., ch_i] - f_mean) * (t_std / f_std) + t_mean, 0, 255)
+
+    harm_rgb = cv2.cvtColor(fg_lab.astype(np.uint8), cv2.COLOR_LAB2RGB).astype(np.float32)
+
+    # 3. Soft gouache cel quantization + atmospheric depth haze
+    step = 14.0
+    cel_rgb = 0.52 * harm_rgb + 0.48 * (np.round(harm_rgb / step) * step)
     pmeta = SEVEN_PLANES.get(plane_id, SEVEN_PLANES["P3"])
-    haze_mix = float(pmeta["haze_mix"])
-    pcol = np.array(pmeta["rgb"], dtype=np.float32)
+    haze_mix = max(0.10, float(pmeta["haze_mix"]) + 0.06)
     haze = np.array(haze_rgb, dtype=np.float32)
+    cel_rgb = cel_rgb * (1.0 - haze_mix) + haze * haze_mix
 
-    # 1. Posterize RGB into clean cel-shaded steps (smooth + quantize)
-    step = 22.0 if pmeta["pal_k"] <= 2 else (16.0 if pmeta["pal_k"] == 3 else 12.0)
-    cel_rgb = np.round(rgb / step) * step
-    cel_rgb = 0.38 * rgb + 0.62 * cel_rgb
+    # 4. Ground ambient occlusion gradient on bottom 18% of prop
+    h_px = cel_rgb.shape[0]
+    v_grad = np.linspace(1.0, 0.80, h_px, dtype=np.float32)[:, None, None]
+    cel_rgb = cel_rgb * v_grad
 
-    # Boost saturation on Hero (P2) & Props (P3); push toward atmospheric haze on far planes (P4..P6)
-    if plane_id in ("P2", "P3"):
-        lum = cel_rgb.mean(axis=-1, keepdims=True)
-        cel_rgb = np.clip(lum + (cel_rgb - lum) * 1.18, 0, 255)
-    if haze_mix > 0.0:
-        cel_rgb = cel_rgb * (1.0 - haze_mix) + haze * haze_mix
+    # 5. Subtle 1px dark contour blended with local background (zero neon rim)
+    outline = (dt > 0.0) & (dt <= 1.55)
+    bg_mean_rgb = bg_arr.reshape(-1, 3).mean(axis=0)
+    ink_col = np.array([14.0, 12.0, 18.0], dtype=np.float32) * 0.74 + bg_mean_rgb * 0.26
+    cel_rgb[outline] = cel_rgb[outline] * 0.32 + ink_col * 0.68
 
-    # 2. Subtle plane-color-coded rim tint on upper-left boundary pixels
-    eroded = np.zeros_like(mask)
-    eroded[2:, 2:] = mask[:-2, :-2]
-    rim_mask = mask & (~eroded)
-    cel_rgb[rim_mask] = cel_rgb[rim_mask] * 0.55 + pcol * 0.45
-
-    # 3. Plane-weighted outer ink contour (`INK_W`)
-    ink_w = float(pmeta["ink_weight"])
-    if ink_w > 0.3:
-        pad = max(1, int(round(ink_w * 0.65)))
-        dil = mask.copy()
-        for dy in range(-pad, pad + 1):
-            for dx in range(-pad, pad + 1):
-                if dx == 0 and dy == 0:
-                    continue
-                y0_s = max(0, -dy); y1_s = mask.shape[0] - max(0, dy)
-                x0_s = max(0, -dx); x1_s = mask.shape[1] - max(0, dx)
-                y0_d = max(0, dy);  y1_d = mask.shape[0] - max(0, -dy)
-                x0_d = max(0, dx);  x1_d = mask.shape[1] - max(0, -dx)
-                dil[y0_d:y1_d, x0_d:x1_d] |= mask[y0_s:y1_s, x0_s:x1_s]
-        outer_line = dil & (~mask)
-        # Dark ink with subtle plane-color tint
-        ink_rgb = np.array([16.0, 14.0, 22.0], dtype=np.float32) * 0.82 + pcol * 0.18
-        cel_rgb[outer_line] = ink_rgb
-        alpha = np.where(outer_line, 235.0, alpha)
-
-    out_arr = np.dstack([np.clip(cel_rgb, 0, 255).astype(np.uint8), np.clip(alpha, 0, 255).astype(np.uint8)])
+    out_arr = np.dstack([
+        np.clip(cel_rgb, 0, 255).astype(np.uint8),
+        np.clip(alpha_out, 0, 255).astype(np.uint8),
+    ])
     return Image.fromarray(out_arr, mode="RGBA")
 
 
@@ -1949,13 +2179,14 @@ def render_clean_scene_plate(
     layers: List[Dict[str, Any]],
     district_glow: List[Any],
     haze_rgb: Tuple[int, int, int] = (24, 30, 44),
+    props_out_dir: Optional[pathlib.Path] = None,
+    num_str: str = "01",
     return_pil: bool = False,
 ) -> Optional[Image.Image]:
     """
-    Renders a 7-layer cel-shaded 1280x720 WebP scene plate combining:
-      - The painted backdrop blended with the world cel-wash (`cel.webp`) and ink pass (`ink.webp`),
-      - All 7 multiplane cutout layers (`P6`..`P0`) cel-shaded & plane-inked (`INK_W`)
-        with Aspect-Aware Span Scaling (`compute_piece_stage_dims`).
+    Renders a unified, integrated 1280x720 WebP scene plate (`out_webp`) and a clean
+    prop-free environment plate (`<stem>_env.webp`) for `levels.html`, while saving
+    each curated prop's Kraft-stripped, CIE-LAB harmonized RGBA sprite to `props_out_dir`.
     """
     W, H = 1280, 720
     if backdrop_path.exists():
@@ -1963,66 +2194,55 @@ def render_clean_scene_plate(
     else:
         bg = Image.new("RGBA", (W, H), (14, 18, 26, 255))
 
-    # Blend 52% cel-wash plate if available so the backdrop has authentic cel gouache flats
+    # Blend 68% cel-wash plate (`cel.webp`) with 32% painted backdrop (`backdrop.webp`)
     if cel_path and cel_path.exists():
         try:
             cel_bg = Image.open(cel_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
-            bg = Image.blend(bg, cel_bg, alpha=0.52)
+            bg = Image.blend(bg, cel_bg, alpha=0.68)
         except Exception:
             pass
 
-    bg_rgb = ImageEnhance.Contrast(bg.convert("RGB")).enhance(1.06)
-    canvas = bg_rgb.convert("RGBA")
+    canvas = ImageEnhance.Contrast(bg.convert("RGB")).enhance(1.04).convert("RGBA")
 
-    # Overlay subtle world ink contour pass (`ink.webp`) at 28% opacity
-    if ink_path and ink_path.exists():
-        try:
-            ink_im = Image.open(ink_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
-            r_ch, g_ch, b_ch, a_ch = ink_im.split()
-            a_ch = a_ch.point(lambda a: int(a * 0.28))
-            ink_dark = Image.merge("RGBA", (
-                Image.new("L", (W, H), 14),
-                Image.new("L", (W, H), 12),
-                Image.new("L", (W, H), 20),
-                a_ch,
-            ))
-            canvas = Image.alpha_composite(canvas, ink_dark)
-        except Exception:
-            pass
-
+    # Subtle stage floor grounding gradient (no hard grid lines)
     fy = max(480, min(660, int(floor_y)))
     overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     odraw = ImageDraw.Draw(overlay)
-
-    r_g, g_g, b_g = 216, 171, 79
-    if district_glow:
-        first_c = district_glow[0]
-        if isinstance(first_c, str) and first_c.startswith("#") and len(first_c) >= 7:
-            r_g = int(first_c[1:3], 16)
-            g_g = int(first_c[3:5], 16)
-            b_g = int(first_c[5:7], 16)
-        elif len(district_glow) >= 3 and all(isinstance(x, (int, float)) for x in district_glow[:3]):
-            r_g, g_g, b_g = int(district_glow[0]), int(district_glow[1]), int(district_glow[2])
-
-    for y in range(fy - 18, H):
-        if y < fy:
-            t = (y - (fy - 18)) / 18.0
-            alpha = int(38 * (t ** 2))
-            odraw.line([(0, y), (W, y)], fill=(r_g, g_g, b_g, alpha))
-        else:
-            t = (y - fy) / max(1.0, float(H - fy))
-            dark_a = int(115 + 95 * math.sqrt(t))
-            odraw.line([(0, y), (W, y)], fill=(10, 13, 18, dark_a))
-
-    odraw.line([(0, fy), (W, fy)], fill=(r_g, g_g, b_g, 110), width=2)
-    for px_frac in (0.15, 0.32, 0.50, 0.68, 0.85):
-        top_x = int(W * px_frac)
-        bot_x = int(W * 0.5 + (top_x - W * 0.5) * 1.35)
-        odraw.line([(top_x, fy), (bot_x, H)], fill=(255, 255, 255, 18), width=1)
-
+    for y in range(fy, H):
+        t = (y - fy) / max(1.0, float(H - fy))
+        dark_a = int(32 * math.sqrt(t))
+        odraw.line([(0, y), (W, y)], fill=(8, 10, 15, dark_a))
     canvas = Image.alpha_composite(canvas, overlay)
 
-    draw_layers = sorted(layers, key=lambda item: float(item.get("z", 1.4)), reverse=True)
+    # Save clean environment plate (`<stem>_env.webp` with ink pass) for `levels.html` live stage
+    env_canvas = canvas.copy()
+    if ink_path and ink_path.exists():
+        try:
+            ink_im = Image.open(ink_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
+            _, _, _, a_ch = ink_im.split()
+            a_env = a_ch.point(lambda a: int(a * 0.28))
+            ink_env = Image.merge("RGBA", (
+                Image.new("L", (W, H), 14),
+                Image.new("L", (W, H), 12),
+                Image.new("L", (W, H), 20),
+                a_env,
+            ))
+            env_canvas = Image.alpha_composite(env_canvas, ink_env)
+        except Exception:
+            pass
+    out_webp.parent.mkdir(parents=True, exist_ok=True)
+    env_webp = out_webp.parent / f"{out_webp.stem}_env.webp"
+    env_canvas.convert("RGB").save(env_webp, "WEBP", quality=86, method=4)
+
+    if props_out_dir is not None:
+        props_out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Composite only the curated interactive story props (`not is_world_sheet`)
+    draw_layers = sorted(
+        [l for l in layers if not l.get("is_world_sheet")],
+        key=lambda item: float(item.get("z", 1.4)),
+        reverse=True,
+    )
     for lyr in draw_layers:
         part_rel = lyr.get("shots_file", "")
         p_path = SHOTS_DIR / part_rel
@@ -2035,7 +2255,7 @@ def render_clean_scene_plate(
         pw, ph = p_img.size
         if pw <= 1 or ph <= 1:
             continue
-        sc = float(lyr.get("scale", 0.35))
+        sc = float(lyr.get("scale", 0.20))
         plane_id = str(lyr.get("plane", "P3"))
         target_w, target_h = compute_piece_stage_dims(pw, ph, sc, plane_id, W, H)
 
@@ -2043,30 +2263,60 @@ def render_clean_scene_plate(
         if lyr.get("flip"):
             p_resized = p_resized.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
 
-        # Apply cel-shading + plane-weighted ink contour + subtle color-code rim
-        p_cel = cel_shade_and_ink_cutout(p_resized, plane_id, haze_rgb=haze_rgb)
-        alpha_mult = float(lyr.get("alpha", 0.98))
+        cx = int(round(float(lyr.get("x", 0.5)) * W))
+        by = int(round(float(lyr.get("y", 0.87)) * H))
+        dx = cx - target_w // 2
+        dy = by - target_h
+
+        cx0 = max(0, min(W - 16, dx))
+        cy0 = max(0, min(H - 16, dy))
+        cx1 = max(cx0 + 16, min(W, dx + target_w))
+        cy1 = max(cy0 + 16, min(H, dy + target_h))
+        bg_crop = canvas.crop((cx0, cy0, cx1, cy1))
+
+        p_cel = clean_and_integrate_cutout(p_resized, bg_crop, plane_id, haze_rgb=haze_rgb)
+
+        # Save the Kraft-stripped, CIE-LAB harmonized RGBA prop sprite for `levels.html`
+        if props_out_dir is not None:
+            prop_fname = f"{lyr['id']}.webp"
+            prop_path = props_out_dir / prop_fname
+            p_cel.save(prop_path, "WEBP", quality=90, method=4)
+            lyr["file"] = f"levels/{num_str}/props/{prop_fname}"
+
+        alpha_mult = float(lyr.get("alpha", 0.96))
         if alpha_mult < 0.99:
             r_c, g_c, b_c, a_c = p_cel.split()
             a_c = a_c.point(lambda a: int(a * alpha_mult))
             p_cel = Image.merge("RGBA", (r_c, g_c, b_c, a_c))
 
-        cx = int(round(float(lyr.get("x", 0.5)) * W))
-        by = int(round(float(lyr.get("y", 0.85)) * H))
-        dx = cx - target_w // 2
-        dy = by - target_h
+        # Grounded elliptical floor contact shadow (skip for ceiling-hung chandeliers)
+        if float(lyr.get("y", 0.87)) >= 0.55:
+            sh_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            sdraw = ImageDraw.Draw(sh_layer)
+            rx = int(target_w * 0.42)
+            ry = max(5, int(target_h * 0.075))
+            sdraw.ellipse([cx - rx, by - ry, cx + rx, by + ry], fill=(6, 8, 12, 118))
+            sh_layer = sh_layer.filter(ImageFilter.GaussianBlur(radius=6))
+            canvas = Image.alpha_composite(canvas, sh_layer)
 
-        shadow = p_cel.split()[3].point(lambda a: int(a * 0.42))
-        shadow_rgba = Image.merge("RGBA", (
-            Image.new("L", (target_w, target_h), 6),
-            Image.new("L", (target_w, target_h), 8),
-            Image.new("L", (target_w, target_h), 12),
-            shadow,
-        )).filter(ImageFilter.GaussianBlur(radius=4))
-        canvas.alpha_composite(shadow_rgba, dest=(dx + 4, dy + 6))
         canvas.alpha_composite(p_cel, dest=(dx, dy))
 
-    out_webp.parent.mkdir(parents=True, exist_ok=True)
+    # Unified top world ink pass (`ink.webp`) tying the environment and props together
+    if ink_path and ink_path.exists():
+        try:
+            ink_im = Image.open(ink_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
+            _, _, _, a_ch = ink_im.split()
+            a_top = a_ch.point(lambda a: int(a * 0.30))
+            ink_dark = Image.merge("RGBA", (
+                Image.new("L", (W, H), 14),
+                Image.new("L", (W, H), 12),
+                Image.new("L", (W, H), 20),
+                a_top,
+            ))
+            canvas = Image.alpha_composite(canvas, ink_dark)
+        except Exception:
+            pass
+
     rgb = canvas.convert("RGB")
     rgb.save(out_webp, "WEBP", quality=88, method=4)
     if return_pil:
@@ -2129,7 +2379,7 @@ def main() -> None:
     total_layers = 0
     scenes_with_all_7 = 0
 
-    print("[2/5] Building 7-layer cel-shaded & color-coded level.json files for all 14 poems...")
+    print("[2/5] Building 7-layer cel-shaded & CIE-LAB integrated level.json files for all 14 poems...")
     for poem_num in range(1, 15):
         num_str = f"{poem_num:02d}"
         lv_path = LEVELS_DIR / num_str / "level.json"
@@ -2165,6 +2415,7 @@ def main() -> None:
                 pmeta = SEVEN_PLANES.get(w_p, SEVEN_PLANES["P4"])
                 world_sheets.append({
                     "file": f"../{wsh['lo']}",
+                    "shots_file": wsh["lo"],
                     "plane": w_p,
                     "depth_index": pmeta["depth_index"],
                     "color_code": pmeta["color_code"],
@@ -2174,24 +2425,51 @@ def main() -> None:
                     "sway": bool(wsh.get("sway", False)),
                 })
 
-            enriched_specs = verify_handmade_seven_layers_for_scene(skey, spec["layers"])
+            raw_specs = verify_handmade_seven_layers_for_scene(skey, spec["layers"])
+            curated_prop_specs = curate_scene_props(skey, raw_specs)
             combined_layers: List[Dict[str, Any]] = []
             stations: List[Dict[str, Any]] = []
-            sc["cel_passes"] = {
-                "world_key": wk,
-                "shot_id": fid,
-                "cel_file": f"../{cel_rel}" if (SHOTS_DIR / cel_rel).exists() else "",
-                "ink_file": f"../{ink_rel}" if (SHOTS_DIR / ink_rel).exists() else "",
-                "layout_file": f"../{layout_rel}" if layout_rel and (SHOTS_DIR / layout_rel).exists() else "",
-                "planes_map_file": f"../{planes_gs_rel}" if planes_gs_rel and (SHOTS_DIR / planes_gs_rel).exists() else "",
-                "notan_file": f"../{notan_rel}" if notan_rel and (SHOTS_DIR / notan_rel).exists() else "",
-                "exploded_file": f"../{exploded_rel}" if exploded_rel and (SHOTS_DIR / exploded_rel).exists() else "",
-                "perspective": persp,
-                "world_sheets": world_sheets,
-                "seven_layer_breakdown": compute_frame_seven_layer_breakdown(fid, skey, enriched_specs),
-            }
 
-            for e_idx, lspec in enumerate(enriched_specs):
+            # 1. Populate native pixel-registered environmental planes (P6, P5, P4, P1, P0)
+            # from the shot's own `world/<wk>/S*_P*.webp` multiplane sheets (zero sticker soup!)
+            covered_env_planes = set()
+            for w_idx, wsh in enumerate(world_sheets):
+                w_p = wsh["plane"]
+                if w_p in ("P3", "P2") and any(p["plane"] == w_p for p in curated_prop_specs):
+                    continue
+                pmeta = SEVEN_PLANES.get(w_p, SEVEN_PLANES["P4"])
+                covered_env_planes.add(w_p)
+                combined_layers.append({
+                    "id": f"lyr_{skey.replace('.', '_')}_ws_{w_idx}_{w_p}",
+                    "part_id": f"world.{wk}.{w_p}.{w_idx}",
+                    "sheet_id": f"world.{wk}",
+                    "label": f"{wshot.get('title', sc['name'])} · {wsh['label']} ({w_p})",
+                    "station_id": "",
+                    "station_title": f"{wsh['label']} ({w_p})",
+                    "plane": w_p,
+                    "depth_index": pmeta["depth_index"],
+                    "plane_name": pmeta["name"],
+                    "color_code": pmeta["color_code"],
+                    "ink_weight": pmeta["ink_weight"],
+                    "haze_mix": pmeta["haze_mix"],
+                    "pal_k": pmeta["pal_k"],
+                    "z": wsh["z"],
+                    "x": 0.50,
+                    "y": 1.00,
+                    "scale": 1.00,
+                    "width": 1280,
+                    "height": 720,
+                    "role": "world_plane",
+                    "anim_role": "wave_near" if wsh["water"] else ("flower_bloom" if wsh["sway"] else "static"),
+                    "flip": False,
+                    "alpha": 0.98,
+                    "is_world_sheet": True,
+                    "file": wsh["file"],
+                    "shots_file": wsh["shots_file"],
+                })
+
+            # 2. Add the 1 to 3 curated, grounded interactive story props on P3 / P2
+            for e_idx, lspec in enumerate(curated_prop_specs):
                 pid = lspec["part_id"]
                 pt = parts_by_id[pid]
                 shots_file = pt["file"]
@@ -2200,6 +2478,7 @@ def main() -> None:
                 station_id = f"st_{skey.replace('.', '_')}_{e_idx}" if st_title else ""
                 plane_id = lspec["plane"]
                 pmeta = SEVEN_PLANES.get(plane_id, SEVEN_PLANES["P3"])
+                covered_env_planes.add(plane_id)
 
                 lyr_obj = {
                     "id": f"lyr_{skey.replace('.', '_')}_{e_idx}_{pid.split('__')[-1]}",
@@ -2221,18 +2500,11 @@ def main() -> None:
                     "scale": round(float(lspec["scale"]), 4),
                     "width": int(pt.get("width", 240)),
                     "height": int(pt.get("height", 240)),
-                    "role": (
-                        "sky_canopy" if plane_id == "P6" else
-                        "station_horizon" if plane_id == "P5" else
-                        "station_arch" if plane_id == "P4" else
-                        "focal_cast" if plane_id == "P2" else
-                        "fg_fx" if plane_id == "P1" else
-                        "proscenium_mask" if plane_id == "P0" else
-                        "station_prop"
-                    ),
+                    "role": "focal_cast" if plane_id == "P2" else "station_prop",
                     "anim_role": lspec.get("anim_role", "static"),
                     "flip": bool(lspec.get("flip", False)),
-                    "alpha": round(float(lspec.get("alpha", 0.98)), 3),
+                    "alpha": round(float(lspec.get("alpha", 0.96)), 3),
+                    "is_world_sheet": False,
                     "file": play_file,
                     "shots_file": shots_file,
                 }
@@ -2251,6 +2523,78 @@ def main() -> None:
                         "y": round(float(lspec["y"]), 3),
                         "anim_role": lspec.get("anim_role", "static"),
                     })
+
+            # Ensure all 7 planes (P6..P0) have a registered layer entry
+            for env_p in ("P6", "P5", "P4", "P3", "P2", "P1", "P0"):
+                if env_p not in covered_env_planes:
+                    pmeta = SEVEN_PLANES[env_p]
+                    raw_match = next((r for r in raw_specs if r["plane"] == env_p), None)
+                    env_label = raw_match["label"] if raw_match else f"{sc['name']} · {pmeta['short']}"
+                    combined_layers.append({
+                        "id": f"lyr_{skey.replace('.', '_')}_env_{env_p}",
+                        "part_id": f"world.{wk}.{env_p}",
+                        "sheet_id": f"world.{wk}",
+                        "label": env_label,
+                        "station_id": "",
+                        "station_title": env_label,
+                        "plane": env_p,
+                        "depth_index": pmeta["depth_index"],
+                        "plane_name": pmeta["name"],
+                        "color_code": pmeta["color_code"],
+                        "ink_weight": pmeta["ink_weight"],
+                        "haze_mix": pmeta["haze_mix"],
+                        "pal_k": pmeta["pal_k"],
+                        "z": pmeta["z"],
+                        "x": 0.50,
+                        "y": 1.00,
+                        "scale": 1.00,
+                        "width": 1280,
+                        "height": 720,
+                        "role": "world_plane",
+                        "anim_role": "static",
+                        "flip": False,
+                        "alpha": 0.98,
+                        "is_world_sheet": True,
+                        "file": f"../{cel_rel}" if (SHOTS_DIR / cel_rel).exists() else backdrop_play_rel,
+                        "shots_file": cel_rel if (SHOTS_DIR / cel_rel).exists() else backdrop_shots_rel,
+                    })
+
+            # Supplement stations with architectural landmarks from raw_specs so every scene has 3 stations
+            if len(stations) < 3:
+                for r_idx, rspec in enumerate(raw_specs):
+                    r_title = rspec.get("station_title")
+                    if not r_title or any(s["title"] == r_title for s in stations):
+                        continue
+                    r_plane = rspec["plane"]
+                    pmeta = SEVEN_PLANES.get(r_plane, SEVEN_PLANES["P4"])
+                    stations.append({
+                        "id": f"st_{skey.replace('.', '_')}_arch_{r_idx}",
+                        "title": r_title,
+                        "part_label": rspec["label"],
+                        "part_id": rspec["part_id"],
+                        "plane": r_plane,
+                        "color_code": pmeta["color_code"],
+                        "x": round(float(rspec["x"]), 3),
+                        "mx": round(float(rspec["x"]) * fw, 1),
+                        "y": round(float(rspec["y"]), 3),
+                        "anim_role": rspec.get("anim_role", "static"),
+                    })
+                    if len(stations) >= 3:
+                        break
+
+            sc["cel_passes"] = {
+                "world_key": wk,
+                "shot_id": fid,
+                "cel_file": f"../{cel_rel}" if (SHOTS_DIR / cel_rel).exists() else "",
+                "ink_file": f"../{ink_rel}" if (SHOTS_DIR / ink_rel).exists() else "",
+                "layout_file": f"../{layout_rel}" if layout_rel and (SHOTS_DIR / layout_rel).exists() else "",
+                "planes_map_file": f"../{planes_gs_rel}" if planes_gs_rel and (SHOTS_DIR / planes_gs_rel).exists() else "",
+                "notan_file": f"../{notan_rel}" if notan_rel and (SHOTS_DIR / notan_rel).exists() else "",
+                "exploded_file": f"../{exploded_rel}" if exploded_rel and (SHOTS_DIR / exploded_rel).exists() else "",
+                "perspective": persp,
+                "world_sheets": [{k: v for k, v in ws.items() if k != "shots_file"} for ws in world_sheets],
+                "seven_layer_breakdown": compute_frame_seven_layer_breakdown(fid, skey, combined_layers),
+            }
 
             combined_layers.sort(key=lambda item: float(item.get("z", 1.4)), reverse=True)
             total_layers += len(combined_layers)
@@ -2273,8 +2617,25 @@ def main() -> None:
             if spec.get("initial_cue") and sc.get("lines"):
                 sc["lines"][0]["posture_cue"] = spec["initial_cue"]
 
+            out_webp = LEVELS_DIR / num_str / sc["img"]
+            props_dir = LEVELS_DIR / num_str / "props"
+            pil_plate = render_clean_scene_plate(
+                out_webp=out_webp,
+                backdrop_path=SHOTS_DIR / backdrop_shots_rel,
+                cel_path=SHOTS_DIR / cel_rel,
+                ink_path=SHOTS_DIR / ink_rel,
+                floor_y=int(spec.get("floor", 614)),
+                layers=combined_layers,
+                district_glow=sc.get("palette_glow", ["#d8ab4f"]),
+                haze_rgb=stage_haze_tuple,
+                props_out_dir=props_dir,
+                num_str=num_str,
+                return_pil=True,
+            )
+
             sc["floor"] = int(spec.get("floor", 614))
             sc["backdrop_file"] = backdrop_play_rel
+            sc["env_img"] = f"{out_webp.stem}_env.webp"
             sc["initial_cue"] = spec.get("initial_cue", "walk_stride_R")
             sc["preferred_actor"] = spec.get("preferred_actor")
             sc["counterpart"] = spec.get("counterpart")
@@ -2283,19 +2644,6 @@ def main() -> None:
                 {k: v for k, v in lyr.items() if k != "shots_file"}
                 for lyr in combined_layers
             ]
-
-            out_webp = LEVELS_DIR / num_str / sc["img"]
-            pil_plate = render_clean_scene_plate(
-                out_webp=out_webp,
-                backdrop_path=SHOTS_DIR / backdrop_shots_rel,
-                cel_path=SHOTS_DIR / cel_rel,
-                ink_path=SHOTS_DIR / ink_rel,
-                floor_y=sc["floor"],
-                layers=combined_layers,
-                district_glow=sc.get("palette_glow", ["#d8ab4f"]),
-                haze_rgb=stage_haze_tuple,
-                return_pil=True,
-            )
 
             if pil_plate is not None:
                 thumb = pil_plate.resize((420, 236), Image.Resampling.LANCZOS)

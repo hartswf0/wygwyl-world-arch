@@ -207,7 +207,7 @@ a{color:#8fb8ff}
         <label>Cel/Ink:</label>
         <input id="celStrengthSlider" type="range" min="0" max="100" value="78">
         <label>7L Tint:</label>
-        <input id="colorTintSlider" type="range" min="0" max="100" value="22">
+        <input id="colorTintSlider" type="range" min="0" max="100" value="0">
       </div>
       <div style="font-family:var(--mono);font-size:.6rem;color:var(--brass)" id="frameShotHeader">Frame 7-Layer Semantic & Depth Blueprint</div>
       <div class="bd-box" id="frameBreakdownBox"></div>
@@ -353,7 +353,7 @@ const Z_BY_PLANE = { P6: 6.00, P5: 3.80, P4: 2.42, P3: 1.40, P2: 1.00, P1: 0.52,
 let celRenderMode = 'cel_wash'; // 'cel_wash' | 'color_coded' | 'layout_ink' | 'exploded_7' | 'painted'
 let soloPlane = 'ALL';          // 'ALL' | 'P6'..'P0'
 let celStrength = 0.72;
-let colorTintStrength = 0.28;
+let colorTintStrength = 0.0;
 
 let CHARS = [], INDEX = [], CATALOG = [], L = null, actor = null, scenes = [], sceneImgs = [], audio = null, castIdx = 0;
 let counterpart = null;
@@ -527,7 +527,7 @@ function buildShelf(){
     const best = store.get('wy.best.'+p.num);
     const meta = ARC_SUMMARY[p.num] || { arc: 'Emotional Journey', desc: '' };
     b.innerHTML =
-      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}?v=5"><span class="arc-pill">${meta.arc}</span></div>` +
+      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}?v=6"><span class="arc-pill">${meta.arc}</span></div>` +
       `<div class="body"><b></b><div class="theme"></div><small></small><div class="best"></div></div>`;
     b.querySelector('b').textContent = `${p.num} · ${p.title}`;
     b.querySelector('.theme').textContent = meta.desc;
@@ -596,13 +596,13 @@ async function openLevel(num){
   resize();
   preloadPoet31();
   use31PartRig = parseInt(num, 10) >= 4;
-  L = await (await fetch(`levels/${num}/level.json?v=5`)).json();
+  L = await (await fetch(`levels/${num}/level.json?v=6`)).json();
   scenes = L.scenes;
 
-  // Restore any user-saved custom 7-layer stage assemblies from localStorage (v5) & preload all cut-out + cel assets
+  // Restore any user-saved custom 7-layer stage assemblies from localStorage (v6) & preload all cut-out + cel assets
   scenes.forEach((sc, idx) => {
     sc._defaultLayers = JSON.parse(JSON.stringify(sc.multiplane_layers || []));
-    const saved = store.get(`wy.stage.v5.${num}.${idx}`);
+    const saved = store.get(`wy.stage.v6.${num}.${idx}`);
     if (saved){
       try { sc.multiplane_layers = JSON.parse(saved); } catch(e){}
     }
@@ -617,8 +617,8 @@ async function openLevel(num){
     (sc.multiplane_layers || []).forEach(lyr => getCachedImg(lyr.file));
   });
 
-  // Load clean backdrop plates
-  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(s.backdrop_file || `levels/${num}/${s.img}?v=5`)));
+  // Load unified prop-free environment plates (`s<idx>_env.webp` = 68% cel + 32% backdrop + 28% ink)
+  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(s.env_img ? `levels/${num}/${s.env_img}?v=6` : (s.backdrop_file || `levels/${num}/${s.img}?v=6`))));
 
   // Preload all cast & counterpart characters referenced by this poem's scenes
   castActorsByKey.clear();
@@ -1113,6 +1113,44 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
   // If a single plane is soloed on the ribbon, dim non-soloed planes to 14%
   const soloDim = (soloPlane !== 'ALL' && soloPlane !== plane) ? 0.14 : 1.0;
 
+  // Native pixel-registered full-frame multiplane sheets (`world/<wk>/S*_P*.webp` + `cel.webp`):
+  // - Background planes (P6..P2) are already part of `baseImg` (`s<idx>_env.webp`), so skip re-drawing
+  //   unless the user is soloing that plane or inspecting in `color_coded` mode.
+  // - Foreground planes (P1, P0) with decomposed transparent sheets (`/S`) draw full-frame IN FRONT
+  //   of the playable Actor (P2) so the Actor walks behind foreground columns/arches/waves cleanly!
+  if (lyr.is_world_sheet){
+    const isDecompFg = (plane === 'P1' || plane === 'P0') && lyr.file && lyr.file.includes('/S');
+    const isInspect = (soloPlane === plane) || (celRenderMode === 'color_coded');
+    if (!isDecompFg && !isInspect) return;
+
+    const rec = getCachedImg(lyr.file);
+    if (!rec || !rec.ok) return;
+    const im = rec.img;
+    const p6Shift = camDelta * PARALLAX_BY_PLANE.P6 * s;
+    const rx = offX - p6Shift;
+    const ry = y0;
+    const rw = fw * s;
+    const rh = fh * s;
+
+    lyr._HitBox = {
+      cx: rx + rw * 0.5, by: ry + rh, x0: rx, y0: ry, w: rw, h: rh,
+      fw, fh, offX, stageY0: y0, s, camDelta, pFactor: PARALLAX_BY_PLANE.P6
+    };
+
+    ctx.save();
+    ctx.globalAlpha = Math.max(0.06, Math.min(1, (isInspect ? 0.94 : (lyr.alpha || 0.92)) * soloDim));
+    if (isDecompFg && !isInspect){
+      ctx.drawImage(im, rx, ry, rw, rh);
+    } else if (isInspect){
+      ctx.drawImage(im, rx, ry, rw, rh);
+      ctx.strokeStyle = pSpec.hex;
+      ctx.lineWidth = 2.0;
+      ctx.strokeRect(rx + 2, ry + 2, rw - 4, rh - 4);
+    }
+    ctx.restore();
+    return;
+  }
+
   const rec = getCachedImg(lyr.file);
   if (!rec || !rec.ok) return;
   const im = rec.img;
@@ -1203,28 +1241,37 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
     fw, fh, offX, stageY0: y0, s, camDelta, pFactor
   };
 
+  // Grounded elliptical floor contact shadow for floor-seated props (no floating wall drop-shadow)
+  if (baseY >= fh * 0.55 && celRenderMode !== 'color_coded' && soloPlane !== plane){
+    ctx.save();
+    ctx.globalAlpha = Math.max(0.04, Math.min(0.46, alpha * 0.42));
+    ctx.fillStyle = '#05070b';
+    ctx.beginPath();
+    ctx.ellipse(screenX, screenY - 2 * s, drawW * 0.40, Math.max(3.5 * s, drawH * 0.065), 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   ctx.save();
   ctx.globalAlpha = Math.max(0.04, Math.min(1, alpha));
   ctx.translate(screenX, screenY - drawH * 0.5);
   if (lyr.flip) ctx.scale(-1, 1);
   if (rot) ctx.rotate(rot);
 
-  // Drop shadow / color-coded aura
+  // Color-coded aura or active station resonance glow
   if (celRenderMode === 'color_coded' || soloPlane === plane){
     ctx.shadowColor = pSpec.hex;
     ctx.shadowBlur = (soloPlane === plane ? 16 : 9) * s;
   } else if (boost > 0.05){
     ctx.shadowColor = 'rgba(216,171,79,0.82)';
     ctx.shadowBlur = (10 + boost * 16) * s;
-  } else {
-    ctx.shadowColor = 'rgba(0,0,0,0.56)';
-    ctx.shadowBlur = (4 + pSpec.inkW * 1.5) * s;
-    ctx.shadowOffsetY = 2.5 * s;
   }
 
   const scObj = scenes && scenes[k];
   const stageHaze = scObj?.cel_passes?.perspective?.stage_haze_rgb;
-  if (celRenderMode === 'painted' && celStrength < 0.1 && colorTintStrength < 0.05){
+  const isPreHarmonizedProp = lyr.file && lyr.file.includes('/props/');
+  if ((isPreHarmonizedProp && (celRenderMode === 'cel_wash' || celRenderMode === 'painted') && colorTintStrength < 0.02) ||
+      (celRenderMode === 'painted' && celStrength < 0.1 && colorTintStrength < 0.05)){
     ctx.drawImage(im, -drawW * 0.5, -drawH * 0.5, drawW, drawH);
   } else {
     const celCan = getCelPieceCanvas(im, plane, celStrength, colorTintStrength, celRenderMode, stageHaze);
@@ -1389,12 +1436,13 @@ function draw(sc, k, t, state, ts, dt){
     return;
   }
 
-  // 1. BASE PLATE: Choose between Cel-Wash Plate (`cel.png`), Layout & Ink (`layout.png`), 7-Plane Map (`planes_map.png`), or Painted Backdrop (`clean.png`)
+  // 1. BASE PLATE: Default (`cel_wash` / `painted`) uses the unified prop-free environment plate (`s<idx>_env.webp`),
+  //    or switches to `layout_file` / `planes_map_file` for diagnostic modes
   let baseImg = sceneImgs[k];
   if (sc.cel_passes){
-    if (celRenderMode === 'cel_wash' && sc.cel_passes.cel_file){
-      const cRec = getCachedImg(sc.cel_passes.cel_file);
-      if (cRec && cRec.ok) baseImg = cRec.img;
+    if (celRenderMode === 'painted' && sc.backdrop_file){
+      const bRec = getCachedImg(sc.backdrop_file);
+      if (bRec && bRec.ok) baseImg = bRec.img;
     } else if (celRenderMode === 'layout_ink' && sc.cel_passes.layout_file){
       const lRec = getCachedImg(sc.cel_passes.layout_file);
       if (lRec && lRec.ok) baseImg = lRec.img;
@@ -1405,8 +1453,8 @@ function draw(sc, k, t, state, ts, dt){
   }
 
   if (baseImg){
-    const sat = celRenderMode === 'layout_ink' ? 35 : Math.round(72 + sceneResonance * 42);
-    const bri = celRenderMode === 'color_coded' ? 68 : Math.round(82 + sceneResonance * 22);
+    const sat = celRenderMode === 'layout_ink' ? 35 : Math.round(86 + sceneResonance * 24);
+    const bri = celRenderMode === 'color_coded' ? 68 : Math.round(90 + sceneResonance * 14);
     ctx.save();
     ctx.filter = `saturate(${sat}%) brightness(${bri}%)`;
     const p6Shift = left * PARALLAX_BY_PLANE.P6 * s;
@@ -1414,13 +1462,13 @@ function draw(sc, k, t, state, ts, dt){
     ctx.restore();
   }
 
-  // Optional Subtle Ink Contour Overlay from `ink.png` when celStrength > 0.45
-  if (celRenderMode === 'cel_wash' && celStrength > 0.45 && sc.cel_passes && sc.cel_passes.ink_file){
+  // Optional extra ink contour boost from `ink.webp` when celStrength > 0.80
+  if (celRenderMode === 'cel_wash' && celStrength > 0.80 && sc.cel_passes && sc.cel_passes.ink_file){
     const iRec = getCachedImg(sc.cel_passes.ink_file);
     if (iRec && iRec.ok){
       ctx.save();
       ctx.globalCompositeOperation = 'multiply';
-      ctx.globalAlpha = Math.min(0.45, (celStrength - 0.35) * 0.55);
+      ctx.globalAlpha = Math.min(0.28, (celStrength - 0.75) * 0.80);
       const p6Shift = left * PARALLAX_BY_PLANE.P6 * s;
       ctx.drawImage(iRec.img, offX - p6Shift, y0, fw * s, fh * s);
       ctx.restore();
@@ -1693,7 +1741,7 @@ function saveCurrentSceneAssembly(){
     delete copy._HitBox;
     return copy;
   });
-  store.set(`wy.stage.v5.${L.num}.${cur.i}`, JSON.stringify(clean));
+  store.set(`wy.stage.v6.${L.num}.${cur.i}`, JSON.stringify(clean));
 }
 
 function renderFrameBreakdown(scOpt){
@@ -2069,6 +2117,7 @@ $('asmResetSceneBtn').addEventListener('click', () => {
   if (!L || cur.i < 0 || !scenes[cur.i]) return;
   const sc = scenes[cur.i];
   sc.multiplane_layers = JSON.parse(JSON.stringify(sc._defaultLayers || []));
+  store.del(`wy.stage.v6.${L.num}.${cur.i}`);
   store.del(`wy.stage.v5.${L.num}.${cur.i}`);
   store.del(`wy.stage.v4.${L.num}.${cur.i}`);
   selectedLayer = null;
@@ -2264,9 +2313,9 @@ document.addEventListener('gesturestart', e=>e.preventDefault());
 (async function(){
   try {
     const [dataRes, idxRes, catRes] = await Promise.all([
-      fetch('data.json?v=4'),
-      fetch('levels/index.json?v=4'),
-      fetch('level_assets_catalog.json?v=4').catch(() => null)
+      fetch('data.json?v=6'),
+      fetch('levels/index.json?v=6'),
+      fetch('level_assets_catalog.json?v=6').catch(() => null)
     ]);
     CHARS = (await dataRes.json()).characters;
     INDEX = await idxRes.json();
