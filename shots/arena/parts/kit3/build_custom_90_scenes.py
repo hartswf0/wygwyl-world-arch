@@ -19,9 +19,22 @@ from __future__ import annotations
 import json
 import math
 import pathlib
+import sys
 from typing import Any, Dict, List, Optional, Tuple
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from lego_set_extensions import (
+    W_FRAME,
+    W_EXT,
+    W_MOD,
+    HYPERFLAT_FLOOR_Y,
+    HYPERFLAT_HORIZON_Y,
+    get_scene_lego_extension,
+)
+
+H_HEADROOM = 160
+H_EXT = 720 + H_HEADROOM  # 880 px (160px upper gable headroom + 720px frame height)
 
 SHOTS_DIR = pathlib.Path(__file__).resolve().parents[3]
 PLAY_DIR = SHOTS_DIR / "play"
@@ -30,6 +43,7 @@ RELEASE_DIR = SHOTS_DIR / "arena" / "parts" / "kit3" / "release_v2"
 MANIFEST_PATH = RELEASE_DIR / "wygwyl_atlas_manifest.json"
 CATALOG_OUT_PATH = PLAY_DIR / "level_assets_catalog.json"
 SCRATCH_DIR = pathlib.Path("/Users/gaia/.gemini/antigravity/brain/f76dabc9-fb98-42f7-bec0-54be580e5584/scratch")
+
 
 
 def L(
@@ -1697,17 +1711,42 @@ def compute_piece_stage_dims(
     plane: str,
     W: int = 1280,
     H: int = 720,
+    is_set_extension: bool = False,
+    lego_role: str = "",
 ) -> Tuple[int, int]:
     """
     Aspect-Aware Span Scaling Law (shared 1:1 with `shots/play/levels.html`):
-      - Preserves 100% native aspect ratio (`target_w / target_h == pw / ph`, zero distortion).
-      - For wide architectural/sky/floor cutouts (`ar = pw / ph > 2.2`) whose pure height-based
-        width (`H * sc * ar`) would exceed `85%` of the stage width, smoothly damps width into
-        `[0.85 * W .. 1.04 * W]` and derives `target_h = round(target_w / ar)`.
-      - For ultra-wide distant horizon/sky strips (`plane in ('P6', 'P5') and ar > 4.5`) given
-        small `sc`, ensures they span at least `68%` of stage width.
+      - For in-frame props (`is_set_extension=False`), preserves 100% native aspect ratio
+        (`target_w / target_h == pw / ph`) and damps overly wide spans above `0.85 * W`.
+      - For Outside-the-Frame Lego Set Extensions (`is_set_extension=True`):
+        * `wall_with_door_hole` / `wall_bay`: Full-frame height (`target_h = round(H * sc)` = `660..720px`)
+          so the wall's top & bottom align flush with the `1280x720` frame, spanning up to `1180px` wide
+          (with any left overlap `x < 1280` tucked behind the `1280x720` frame!).
+        * `gable_portal_cap`: Allows `sc > 1.0` (`target_h` up to `860px`) so the doorway arch frames
+          the doorway hole and the stone/timber gable roof rises into the `160px` upper headroom above `y = 0`!
+        * `boulevard_tree`: Full boulevard canopy height (`target_h` up to `640px`).
     """
     ar = float(pw) / float(max(1, ph))
+    if is_set_extension:
+        if lego_role in ("wall_with_door_hole", "wall_bay"):
+            target_h = max(240, min(int(H * 1.02), int(round(H * sc))))
+            eff_ar = min(1.68, max(0.85, ar * 0.62 if ar > 1.85 else ar))
+            target_w = max(360, min(1180, int(round(target_h * eff_ar))))
+            return target_w, target_h
+        if lego_role == "gable_portal_cap":
+            target_h = max(280, min(int(H * 1.24), int(round(H * sc))))
+            eff_ar = min(0.88, max(0.48, ar * 0.68 if ar > 1.05 else ar))
+            target_w = max(240, min(680, int(round(target_h * eff_ar))))
+            return target_w, target_h
+        if lego_role == "boulevard_tree":
+            target_h = max(180, min(int(H * 0.92), int(round(H * sc))))
+            eff_ar = min(0.85, max(0.38, ar))
+            target_w = max(120, min(480, int(round(target_h * eff_ar))))
+            return target_w, target_h
+        target_h = max(28, min(int(H * 0.90), int(round(H * sc))))
+        target_w = max(28, min(780, int(round(target_h * ar))))
+        return target_w, target_h
+
     target_h = max(24, min(int(H * 0.78), int(round(H * sc))))
     target_w = max(24, int(round(target_h * ar)))
 
@@ -1721,6 +1760,7 @@ def compute_piece_stage_dims(
         target_h = max(18, int(round(target_w / ar)))
 
     return target_w, target_h
+
 
 
 def load_frame_perspective_signals(fid: str) -> Dict[str, Any]:
@@ -2794,74 +2834,100 @@ def curate_scene_props(
     parts_by_id: Optional[Dict[str, Dict[str, Any]]] = None,
 ) -> List[Dict[str, Any]]:
     """
-    Returns each scene's bespoke, multi-layer composition of verified freestanding
-    sculptural pieces across `P6`, `P5`, `P4`, `P3`, `P2`, `P1`, with every piece
-    standardized in physical scale (`canon_h_m` × `stage_px_per_meter`) while keeping
-    multi-part ensembles (`car_ensemble` sedan + tires + cabin parents) pixel-locked!
+    Returns each scene's composition combining:
+      1. At most 1–2 subtle, scale-calibrated floor props inside the `1280x720` cel frame
+         (`x in [0.12 .. 0.88]`, or the locked 4-piece `car_ensemble` when present), keeping
+         the painted cel interior uncluttered.
+      2. The 4–10 Modular Outside-the-Frame Lego Set-Extension pieces (`x in [1.00 .. 1.58]`,
+         `is_set_extension=True`) from `get_scene_lego_extension(skey)` that fill the `760px`
+         inter-scene hole and bridge into the next scene on the continuous poem tape!
     """
-    base_list = SCENE_CURATED_PROP_OVERRIDES.get(skey, raw_layers[:4])
-    out = [dict(x, alpha=0.98) for x in base_list]
-    if not parts_by_id:
-        return out
+    base_list = SCENE_CURATED_PROP_OVERRIDES.get(skey, raw_layers[:3])
+    # Keep car_ensemble intact if present; otherwise keep at most 2 grounded P3/P2 props inside the frame
+    has_car = any(x.get("part_id") == "02.props.car__p01" for x in base_list)
+    if has_car:
+        in_frame_list = [dict(x, alpha=0.98, is_set_extension=False) for x in base_list if x.get("plane") in ("P3", "P2")]
+    else:
+        grounded = [x for x in base_list if x.get("plane") in ("P3", "P2", "P1")]
+        if not grounded:
+            grounded = base_list[:2]
+        in_frame_list = [dict(x, alpha=0.98, is_set_extension=False) for x in grounded[:2]]
 
-    # First check if this scene contains a `car_ensemble` (`02.props.car__p01`) so its wheels stay locked
-    car_body = next((item for item in out if item["part_id"] == "02.props.car__p01"), None)
-    locked_car_sc = None
-    locked_car_cx = None
-    locked_car_floor_y = None
-    if car_body is not None:
-        raw_car_sc = float(car_body["scale"])
-        locked_car_cx = float(car_body["x"])
-        locked_car_floor_y = round(float(car_body["y"]) + 0.05 * raw_car_sc, 4)
-        locked_car_sc, car_meta = standardize_piece_scale(
-            "02.props.car__p01",
-            car_body["label"],
-            car_body["plane"],
-            raw_car_sc,
-            stage_ppm,
-            parts_by_id,
-        )
-        car_body["scale"] = locked_car_sc
-        car_body["y"] = round(locked_car_floor_y - 0.05 * locked_car_sc, 4)
-        car_body["scale_meta"] = car_meta
+    out = list(in_frame_list)
+    if parts_by_id:
+        # Check if this scene contains a `car_ensemble` (`02.props.car__p01`) so its wheels stay locked
+        car_body = next((item for item in out if item["part_id"] == "02.props.car__p01"), None)
+        locked_car_sc = None
+        locked_car_cx = None
+        locked_car_floor_y = None
+        if car_body is not None:
+            raw_car_sc = float(car_body["scale"])
+            locked_car_cx = float(car_body["x"])
+            locked_car_floor_y = round(float(car_body["y"]) + 0.05 * raw_car_sc, 4)
+            locked_car_sc, car_meta = standardize_piece_scale(
+                "02.props.car__p01",
+                car_body["label"],
+                car_body["plane"],
+                raw_car_sc,
+                stage_ppm,
+                parts_by_id,
+            )
+            car_body["scale"] = locked_car_sc
+            car_body["y"] = round(locked_car_floor_y - 0.05 * locked_car_sc, 4)
+            car_body["scale_meta"] = car_meta
 
-    for item in out:
-        pid = item["part_id"]
-        if pid == "02.props.car__p01" and locked_car_sc is not None:
-            continue
-        if locked_car_sc is not None and locked_car_cx is not None and locked_car_floor_y is not None:
-            if pid == "02.props.car__p05":
-                item["x"] = round(locked_car_cx - 0.585 * locked_car_sc, 4)
-                item["y"] = locked_car_floor_y
-                item["scale"] = round(0.45 * locked_car_sc, 4)
-                item["scale_meta"] = {"class_tag": "vehicle_wheel_locked", "canon_h_m": 0.65, "standardized_scale": item["scale"]}
+        for item in out:
+            pid = item["part_id"]
+            if pid == "02.props.car__p01" and locked_car_sc is not None:
                 continue
-            if pid == "02.props.car__p06":
-                item["x"] = round(locked_car_cx + 0.456 * locked_car_sc, 4)
-                item["y"] = locked_car_floor_y
-                item["scale"] = round(0.45 * locked_car_sc, 4)
-                item["scale_meta"] = {"class_tag": "vehicle_wheel_locked", "canon_h_m": 0.65, "standardized_scale": item["scale"]}
-                continue
-            if pid == "parents.02.car-argument__p03":
-                body_y = round(locked_car_floor_y - 0.05 * locked_car_sc, 4)
-                item["x"] = round(locked_car_cx - 0.04 * locked_car_sc, 4)
-                item["y"] = round(body_y - 0.46 * locked_car_sc, 4)
-                item["scale"] = round(0.42 * locked_car_sc, 4)
-                item["scale_meta"] = {"class_tag": "vehicle_cabin_locked", "canon_h_m": 0.62, "standardized_scale": item["scale"]}
-                continue
+            if locked_car_sc is not None and locked_car_cx is not None and locked_car_floor_y is not None:
+                if pid == "02.props.car__p05":
+                    item["x"] = round(locked_car_cx - 0.585 * locked_car_sc, 4)
+                    item["y"] = locked_car_floor_y
+                    item["scale"] = round(0.45 * locked_car_sc, 4)
+                    item["scale_meta"] = {"class_tag": "vehicle_wheel_locked", "canon_h_m": 0.65, "standardized_scale": item["scale"]}
+                    continue
+                if pid == "02.props.car__p06":
+                    item["x"] = round(locked_car_cx + 0.456 * locked_car_sc, 4)
+                    item["y"] = locked_car_floor_y
+                    item["scale"] = round(0.45 * locked_car_sc, 4)
+                    item["scale_meta"] = {"class_tag": "vehicle_wheel_locked", "canon_h_m": 0.65, "standardized_scale": item["scale"]}
+                    continue
+                if pid == "parents.02.car-argument__p03":
+                    body_y = round(locked_car_floor_y - 0.05 * locked_car_sc, 4)
+                    item["x"] = round(locked_car_cx - 0.04 * locked_car_sc, 4)
+                    item["y"] = round(body_y - 0.46 * locked_car_sc, 4)
+                    item["scale"] = round(0.42 * locked_car_sc, 4)
+                    item["scale_meta"] = {"class_tag": "vehicle_cabin_locked", "canon_h_m": 0.62, "standardized_scale": item["scale"]}
+                    continue
 
-        cal_sc, smeta = standardize_piece_scale(
-            pid,
-            item.get("label", ""),
-            item.get("plane", "P3"),
-            float(item.get("scale", 0.20)),
-            stage_ppm,
-            parts_by_id,
-        )
-        item["scale"] = cal_sc
-        item["scale_meta"] = smeta
+            cal_sc, smeta = standardize_piece_scale(
+                pid,
+                item.get("label", ""),
+                item.get("plane", "P3"),
+                float(item.get("scale", 0.20)),
+                stage_ppm,
+                parts_by_id,
+            )
+            item["scale"] = cal_sc
+            item["scale_meta"] = smeta
+
+    # Append the Outside-the-Frame Modular Lego Set Extension (`x in [1.00 .. 1.58]`)
+    lego_ext = get_scene_lego_extension(skey)
+    for lx in lego_ext:
+        l_role = lx.get("lego_role", "wall_bay")
+        sc_val = float(lx.get("scale", 0.50))
+        lx["scale_meta"] = {
+            "class_tag": f"lego_{l_role}",
+            "canon_h_m": round(sc_val * 4.2, 2),
+            "standardized_scale": sc_val,
+            "is_set_extension": True,
+            "lego_role": l_role,
+        }
+        out.append(lx)
 
     return out
+
 
 
 def clean_and_integrate_cutout(
@@ -3057,6 +3123,29 @@ def clean_and_integrate_cutout(
     return Image.fromarray(out_arr, mode="RGBA")
 
 
+def _load_blended_cel_backdrop(
+    backdrop_path: pathlib.Path,
+    cel_path: Optional[pathlib.Path],
+    W: int = 1280,
+    H: int = 720,
+) -> Tuple[Image.Image, Image.Image]:
+    """Loads `1280x720` `backdrop.webp` blended 68% with `cel.webp` and returns `(rgba_blended, cel_ref_rgb)`."""
+    if backdrop_path and backdrop_path.exists():
+        bg = Image.open(backdrop_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
+    else:
+        bg = Image.new("RGBA", (W, H), (14, 18, 26, 255))
+    cel_ref = bg.convert("RGB")
+    if cel_path and cel_path.exists():
+        try:
+            cel_bg = Image.open(cel_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
+            cel_ref = cel_bg.convert("RGB")
+            bg = Image.blend(bg, cel_bg, alpha=0.68)
+        except Exception:
+            pass
+    bg = ImageEnhance.Contrast(bg.convert("RGB")).enhance(1.04).convert("RGBA")
+    return bg, cel_ref
+
+
 def render_clean_scene_plate(
     out_webp: pathlib.Path,
     backdrop_path: pathlib.Path,
@@ -3068,48 +3157,88 @@ def render_clean_scene_plate(
     haze_rgb: Tuple[int, int, int] = (24, 30, 44),
     props_out_dir: Optional[pathlib.Path] = None,
     num_str: str = "01",
+    next_backdrop_path: Optional[pathlib.Path] = None,
+    next_cel_path: Optional[pathlib.Path] = None,
     return_pil: bool = False,
 ) -> Optional[Image.Image]:
     """
-    Assembles a complete 1280x720 painting from its 7-layer pieces as paint (`out_webp`),
-    saves a clean prop-free underpainting plate (`<stem>_env.webp`) for `levels.html`,
-    saves each piece's cel-ramp colorized, gouache-brushed RGBA sprite to `props_out_dir`,
-    and runs a whole-canvas gouache impasto, charcoal ink, and cold-pressed paper tooth pass.
+    Assembles BOTH:
+      1. The standard `1280x720` main frame plate (`s<idx>.webp` & `s<idx>_env.webp`), AND
+      2. The `2040x880` (`W_MOD x H_EXT`) Hyper-Flat Scene + Outside-the-Frame Lego Set Extension
+         Plate (`s<idx>_ext.webp` & `s<idx>_ext_env.webp`), featuring:
+         - `160px` of upper architectural headroom (`y = 0..160`) where stone gabled roofs
+           (`03.hero.chapel__p01`), spires, and boulevard trees protrude above the `720px` frame top
+           (matching Uploaded Image 1 `media_1793295948484_14eeb0d8.png`),
+         - `760x720` Side Set-Extension Zone (`x = 1280..2040, y = 160..880`) where a row-interpolated
+           hyper-flat sky & ground under-tape bridges Scene `idx` into Scene `idx+1` and is populated
+           with cel-ramp colorized Modular Lego pieces (`wall_with_door_hole`, `gable_portal_cap`,
+           `span_deck`, `boulevard_fence`, `boulevard_tree`, `boulevard_lamp`, `ground_curb`, matching
+           Uploaded Image 2 `media_1793295991132_6f4cd1fc.png`).
     """
     import cv2
     import numpy as np
 
-    W, H = 1280, 720
-    if backdrop_path.exists():
-        bg = Image.open(backdrop_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
+    W, H = W_FRAME, 720
+    bg_curr, cel_ref_curr = _load_blended_cel_backdrop(backdrop_path, cel_path, W, H)
+    if next_backdrop_path is not None:
+        bg_next, cel_ref_next = _load_blended_cel_backdrop(next_backdrop_path, next_cel_path, W, H)
     else:
-        bg = Image.new("RGBA", (W, H), (14, 18, 26, 255))
+        bg_next, cel_ref_next = bg_curr, cel_ref_curr
 
-    cel_ref_img = bg.convert("RGB")
-    # Blend 68% cel-wash plate (`cel.webp`) with 32% painted backdrop (`backdrop.webp`)
-    if cel_path and cel_path.exists():
-        try:
-            cel_bg = Image.open(cel_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
-            cel_ref_img = cel_bg.convert("RGB")
-            bg = Image.blend(bg, cel_bg, alpha=0.68)
-        except Exception:
-            pass
+    # Construct the `2040x880` (`W_MOD x H_EXT`) Hyper-Flat Extended Environment Under-Tape
+    curr_np = np.array(bg_curr.convert("RGB"), dtype=np.float32)
+    next_np = np.array(bg_next.convert("RGB"), dtype=np.float32)
 
-    cel_scene_small = cel_ref_img.resize((160, 90), Image.Resampling.BILINEAR)
-    canvas = ImageEnhance.Contrast(bg.convert("RGB")).enhance(1.04).convert("RGBA")
+    # Row-by-row horizontal wash between right edge of Scene i (`x=1216..1280`) and left edge of Scene i+1 (`x=0..64`)
+    right_strip = curr_np[:, -64:, :].mean(axis=1)  # (720, 3)
+    left_strip = next_np[:, :64, :].mean(axis=1)    # (720, 3)
+    right_smooth = cv2.GaussianBlur(right_strip[:, None, :], (1, 31), 8.0)[:, 0, :]
+    left_smooth = cv2.GaussianBlur(left_strip[:, None, :], (1, 31), 8.0)[:, 0, :]
 
-    # Subtle stage floor grounding gradient (no hard grid lines)
+    u = np.linspace(0.0, 1.0, W_EXT, dtype=np.float32)[None, :, None]
+    u_smooth = u * u * (3.0 - 2.0 * u)
+    ext_wash = right_smooth[:, None, :] * (1.0 - u_smooth) + left_smooth[:, None, :] * u_smooth
+
+    # Blend 24% mirrored/continued brushstroke texture from Scene i & Scene i+1 into the hyper-flat bridge
+    mir_curr = np.flip(curr_np[:, -min(W_EXT, W):, :], axis=1)
+    if mir_curr.shape[1] < W_EXT:
+        mir_curr = cv2.resize(mir_curr, (W_EXT, H), interpolation=cv2.INTER_LINEAR)
+    mir_next = np.flip(next_np[:, :min(W_EXT, W), :], axis=1)
+    if mir_next.shape[1] < W_EXT:
+        mir_next = cv2.resize(mir_next, (W_EXT, H), interpolation=cv2.INTER_LINEAR)
+    tex_bridge = mir_curr * (1.0 - u_smooth) + mir_next * u_smooth
+    ext_bridge_rgb = np.clip(0.76 * ext_wash + 0.24 * tex_bridge, 0, 255).astype(np.uint8)
+
+    # Assemble `W_MOD x H` (`2040 x 720`) main strip (`[0..1280]` frame + `[1280..2040]` hyper-flat bridge)
+    strip_720_np = np.concatenate([curr_np.astype(np.uint8), ext_bridge_rgb], axis=1)
+
+    # Build `W_MOD x H_HEADROOM` (`2040 x 160`) upper architectural headroom above `y = 0` of the frame
+    top_sky_row = cv2.GaussianBlur(strip_720_np[:24, :, :].astype(np.float32), (51, 15), 14.0).mean(axis=0)  # (2040, 3)
+    studio_sky = np.array([18.0, 22.0, 30.0], dtype=np.float32)[None, None, :]
+    vy = np.linspace(0.18, 0.58, H_HEADROOM, dtype=np.float32)[:, None, None]
+    headroom_np = np.clip(studio_sky * (1.0 - vy) + top_sky_row[None, :, :] * vy, 0, 255).astype(np.uint8)
+
+    full_env_np = np.concatenate([headroom_np, strip_720_np], axis=0)  # (880, 2040, 3)
+    ext_canvas = Image.fromarray(full_env_np, mode="RGB").convert("RGBA")
+    cel_ref_ext = Image.fromarray(full_env_np, mode="RGB")
+    cel_scene_small = cel_ref_curr.resize((160, 90), Image.Resampling.BILINEAR)
+
+    # Subtle hyper-flat stage floor grounding gradient across all `2040px`
     fy = max(480, min(660, int(floor_y)))
-    overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    fy_ext = H_HEADROOM + fy
+    overlay = Image.new("RGBA", (W_MOD, H_EXT), (0, 0, 0, 0))
     odraw = ImageDraw.Draw(overlay)
-    for y in range(fy, H):
-        t = (y - fy) / max(1.0, float(H - fy))
-        dark_a = int(32 * math.sqrt(t))
-        odraw.line([(0, y), (W, y)], fill=(8, 10, 15, dark_a))
-    canvas = Image.alpha_composite(canvas, overlay)
+    for y in range(fy_ext, H_EXT):
+        t = (y - fy_ext) / max(1.0, float(H_EXT - fy_ext))
+        dark_a = int(34 * math.sqrt(t))
+        odraw.line([(0, y), (W_MOD, y)], fill=(8, 10, 15, dark_a))
+    # Subtle top-of-frame horizontal architectural datum line at `y = H_HEADROOM` and right frame edge at `x = 1280`
+    odraw.line([(0, H_HEADROOM), (W_MOD, H_HEADROOM)], fill=(216, 171, 79, 48), width=1)
+    odraw.line([(W_FRAME, H_HEADROOM), (W_FRAME, H_EXT)], fill=(216, 171, 79, 52), width=1)
+    ext_canvas = Image.alpha_composite(ext_canvas, overlay)
 
-    # Save clean underpainting plate (`<stem>_env.webp` with ink pass) for `levels.html` live stage
-    env_canvas = canvas.copy()
+    # Save clean underpainting plates (`<stem>_env.webp` 1280x720 and `<stem>_ext_env.webp` 2040x880)
+    env_canvas = ext_canvas.copy()
     if ink_path and ink_path.exists():
         try:
             ink_im = Image.open(ink_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
@@ -3121,17 +3250,19 @@ def render_clean_scene_plate(
                 Image.new("L", (W, H), 20),
                 a_env,
             ))
-            env_canvas = Image.alpha_composite(env_canvas, ink_env)
+            env_canvas.alpha_composite(ink_env, dest=(0, H_HEADROOM))
         except Exception:
             pass
     out_webp.parent.mkdir(parents=True, exist_ok=True)
     env_webp = out_webp.parent / f"{out_webp.stem}_env.webp"
-    env_canvas.convert("RGB").save(env_webp, "WEBP", quality=86, method=4)
+    ext_env_webp = out_webp.parent / f"{out_webp.stem}_ext_env.webp"
+    env_canvas.crop((0, H_HEADROOM, W_FRAME, H_EXT)).convert("RGB").save(env_webp, "WEBP", quality=86, method=4)
+    env_canvas.convert("RGB").save(ext_env_webp, "WEBP", quality=86, method=4)
 
     if props_out_dir is not None:
         props_out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Paint all 7 planes (`P6 -> P0`) of curated pieces onto the canvas from back to front
+    # Paint all 7 planes (`P6 -> P0`) of curated in-frame props + Outside-the-Frame Lego Set Extensions
     draw_layers = sorted(
         [l for l in layers if not l.get("is_world_sheet")],
         key=lambda item: float(item.get("z", 1.4)),
@@ -3151,25 +3282,29 @@ def render_clean_scene_plate(
             continue
         sc = float(lyr.get("scale", 0.20))
         plane_id = str(lyr.get("plane", "P3"))
-        target_w, target_h = compute_piece_stage_dims(pw, ph, sc, plane_id, W, H)
+        is_ext = bool(lyr.get("is_set_extension", False))
+        l_role = str(lyr.get("lego_role", ""))
+        target_w, target_h = compute_piece_stage_dims(
+            pw, ph, sc, plane_id, W, H, is_set_extension=is_ext, lego_role=l_role
+        )
 
         p_resized = p_img.resize((target_w, target_h), Image.Resampling.LANCZOS)
         if lyr.get("flip"):
             p_resized = p_resized.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
 
         cx = int(round(float(lyr.get("x", 0.5)) * W))
-        by = int(round(float(lyr.get("y", 0.87)) * H))
+        by = H_HEADROOM + int(round(float(lyr.get("y", 0.87)) * H))
         dx = cx - target_w // 2
         dy = by - target_h
 
-        # Sample a generous local neighborhood (`±90px`) from `cel_ref_img` so the piece's
-        # 6-band Cel Pigment Ramp captures the local lighting, wall/sky wash, and floor tone
+        # Sample local neighborhood (`±90px`) from `cel_ref_ext` so both in-frame and outside-the-frame
+        # Lego pieces inherit the exact 6-band Cel Pigment Ramp of their background region!
         pad = 90
-        cx0 = max(0, min(W - 32, dx - pad))
-        cy0 = max(0, min(H - 32, dy - pad))
-        cx1 = max(cx0 + 32, min(W, dx + target_w + pad))
-        cy1 = max(cy0 + 32, min(H, dy + target_h + pad))
-        bg_crop = cel_ref_img.crop((cx0, cy0, cx1, cy1))
+        cx0 = max(0, min(W_MOD - 32, dx - pad))
+        cy0 = max(0, min(H_EXT - 32, dy - pad))
+        cx1 = max(cx0 + 32, min(W_MOD, dx + target_w + pad))
+        cy1 = max(cy0 + 32, min(H_EXT, dy + target_h + pad))
+        bg_crop = cel_ref_ext.crop((cx0, cy0, cx1, cy1))
 
         p_cel = clean_and_integrate_cutout(
             p_resized,
@@ -3192,32 +3327,55 @@ def render_clean_scene_plate(
             a_c = a_c.point(lambda a: int(a * alpha_mult))
             p_cel = Image.merge("RGBA", (r_c, g_c, b_c, a_c))
 
+        # For `wall_with_door_hole` and `wall_bay` (`is_set_extension=True`), tuck any left overlap (`x < 1280`)
+        # cleanly behind the right edge of the `1280x720` cel frame, and paint a deep dark doorway aperture
+        # behind `wall_with_door_hole` so the doorway hole reads as a real open portal (Uploaded Image 1)!
+        if is_ext and l_role in ("wall_with_door_hole", "wall_bay"):
+            if dx < W_FRAME:
+                clip_px = W_FRAME - dx
+                if clip_px < target_w:
+                    p_np = np.array(p_cel, dtype=np.uint8)
+                    p_np[:, :max(0, clip_px - 2), 3] = 0
+                    if 0 <= clip_px - 2 < target_w:
+                        p_np[:, clip_px - 2:min(target_w, clip_px + 2), 3] = (
+                            p_np[:, clip_px - 2:min(target_w, clip_px + 2), 3].astype(np.float32) * 0.45
+                        ).astype(np.uint8)
+                    p_cel = Image.fromarray(p_np, mode="RGBA")
+            if l_role == "wall_with_door_hole":
+                ap_layer = Image.new("RGBA", (W_MOD, H_EXT), (0, 0, 0, 0))
+                ap_draw = ImageDraw.Draw(ap_layer)
+                ap_x0 = max(W_FRAME + 16, dx + int(target_w * 0.36))
+                ap_x1 = min(W_MOD - 16, dx + int(target_w * 0.82))
+                ap_y0 = max(H_HEADROOM + 48, dy + int(target_h * 0.18))
+                ap_y1 = min(H_EXT - 4, by)
+                if ap_x1 > ap_x0 + 24 and ap_y1 > ap_y0 + 36:
+                    ap_draw.rectangle([ap_x0, ap_y0, ap_x1, ap_y1], fill=(9, 11, 16, 228))
+                    ext_canvas = Image.alpha_composite(ext_canvas, ap_layer)
+
         # Grounded elliptical floor contact shadow for floor-seated pieces on P4/P3/P2/P1
         if float(lyr.get("y", 0.87)) >= 0.55 and plane_id in ("P4", "P3", "P2", "P1"):
-            sh_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            sh_layer = Image.new("RGBA", (W_MOD, H_EXT), (0, 0, 0, 0))
             sdraw = ImageDraw.Draw(sh_layer)
             rx = int(target_w * 0.42)
             ry = max(5, int(target_h * 0.075))
             sh_alpha = 95 if plane_id in ("P4", "P1") else 118
             sdraw.ellipse([cx - rx, by - ry, cx + rx, by + ry], fill=(6, 8, 12, sh_alpha))
             sh_layer = sh_layer.filter(ImageFilter.GaussianBlur(radius=6))
-            canvas = Image.alpha_composite(canvas, sh_layer)
+            ext_canvas = Image.alpha_composite(ext_canvas, sh_layer)
 
-        canvas.alpha_composite(p_cel, dest=(dx, dy))
+        ext_canvas.alpha_composite(p_cel, dest=(dx, dy))
 
-    # Whole-Canvas Master Painting Unification Pass:
-    # 1. Edge-preserving bilateral gouache brushwork across piece-to-canvas boundaries
-    rgb_arr = np.array(canvas.convert("RGB"), dtype=np.uint8)
+    # Whole-Canvas Master Painting Unification Pass across all `2040x880` pixels:
+    rgb_arr = np.array(ext_canvas.convert("RGB"), dtype=np.uint8)
     gouache_canvas = cv2.bilateralFilter(rgb_arr, d=5, sigmaColor=22, sigmaSpace=22)
     blended_f = 0.82 * rgb_arr.astype(np.float32) + 0.18 * gouache_canvas.astype(np.float32)
 
-    # 2. Subtle cold-pressed watercolor paper micro-tooth across the whole painting
-    yy_c, xx_c = np.mgrid[0:H, 0:W].astype(np.float32)
+    yy_c, xx_c = np.mgrid[0:H_EXT, 0:W_MOD].astype(np.float32)
     paper_tooth = 1.6 * np.sin(xx_c * 0.65 + yy_c * 0.45) * np.cos(xx_c * 0.35 - yy_c * 0.55)
     blended_f = np.clip(blended_f + paper_tooth[..., None], 0, 255)
-    canvas = Image.fromarray(blended_f.astype(np.uint8), mode="RGB").convert("RGBA")
+    ext_canvas = Image.fromarray(blended_f.astype(np.uint8), mode="RGB").convert("RGBA")
 
-    # 3. Unified top warm charcoal-sepia ink pass (`ink.webp`) tying the entire painting together
+    # Unified top warm charcoal-sepia ink pass (`ink.webp`) over the `1280x720` frame
     if ink_path and ink_path.exists():
         try:
             ink_im = Image.open(ink_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
@@ -3229,15 +3387,19 @@ def render_clean_scene_plate(
                 Image.new("L", (W, H), 20),
                 a_top,
             ))
-            canvas = Image.alpha_composite(canvas, ink_dark)
+            ext_canvas.alpha_composite(ink_dark, dest=(0, H_HEADROOM))
         except Exception:
             pass
 
-    rgb = canvas.convert("RGB")
-    rgb.save(out_webp, "WEBP", quality=88, method=4)
+    ext_rgb = ext_canvas.convert("RGB")
+    frame_rgb = ext_rgb.crop((0, H_HEADROOM, W_FRAME, H_EXT))
+    frame_rgb.save(out_webp, "WEBP", quality=88, method=4)
+    ext_webp = out_webp.parent / f"{out_webp.stem}_ext.webp"
+    ext_rgb.save(ext_webp, "WEBP", quality=88, method=4)
     if return_pil:
-        return rgb
+        return ext_rgb
     return None
+
 
 
 
@@ -3256,7 +3418,7 @@ def main() -> None:
     world_data = json.loads(world_txt)
     world_by_k: Dict[str, Dict[str, Any]] = {s["k"]: s for s in world_data.get("shots", [])}
 
-    # Strictly verify every part_id, backdrop, and all 7 handmade planes (P6..P0) in CUSTOM_SCENES
+    # Strictly verify every part_id, backdrop, and all 7 handmade planes (P6..P0) in CUSTOM_SCENES + Lego Extensions
     missing_parts = []
     missing_bgs = []
     for skey, spec in CUSTOM_SCENES.items():
@@ -3268,9 +3430,12 @@ def main() -> None:
             pid = lyr["part_id"]
             if pid not in parts_by_id:
                 missing_parts.append((skey, pid))
+        for lx in get_scene_lego_extension(skey):
+            if lx["part_id"] not in parts_by_id:
+                missing_parts.append((skey, lx["part_id"]))
     if missing_parts or missing_bgs:
         raise RuntimeError(f"Missing parts: {missing_parts}, Missing bgs: {missing_bgs}")
-    print(f"  Verified {len(CUSTOM_SCENES)} custom scenes across all 7 handmade layers (P6..P0): 0 missing parts, 0 generic fallbacks!")
+    print(f"  Verified {len(CUSTOM_SCENES)} custom scenes + 90 Lego Set Extensions: 0 missing parts!")
 
     # Fix poet/black_tshirt in shots/play/data.json so draws[9] (Reading the Manuscript)
     # has has_scene_prop=True and default idle is prop-free upright stance
@@ -3291,24 +3456,46 @@ def main() -> None:
         "audit_scenes_09_11.png": [],
         "audit_scenes_12_14.png": [],
     }
+    poem_tape_strips: List[Image.Image] = []
 
     total_scenes = 0
     total_layers = 0
     scenes_with_all_7 = 0
 
-    print("[2/5] Building 7-layer cel-shaded & CIE-LAB integrated level.json files for all 14 poems...")
+    print("[2/5] Building Hyper-Flat 7-Layer + Outside-the-Frame Lego Set Extensions & Continuous Poem Tapes...")
     for poem_num in range(1, 15):
         num_str = f"{poem_num:02d}"
         lv_path = LEVELS_DIR / num_str / "level.json"
         lv = json.loads(lv_path.read_text())
         fw, fh = int(lv["frame"][0]), int(lv["frame"][1])
         lv["seven_planes_spec"] = SEVEN_PLANES
+        lv["tape_geometry"] = {
+            "frame_w": W_FRAME,
+            "ext_w": W_EXT,
+            "module_w": W_MOD,
+            "frame_h": 720,
+            "headroom_h": H_HEADROOM,
+            "ext_h": H_EXT,
+            "total_tape_w": len(lv["scenes"]) * W_MOD,
+            "hyperflat_floor_y": HYPERFLAT_FLOOR_Y,
+            "hyperflat_horizon_y": HYPERFLAT_HORIZON_Y,
+            "tape_file": "poem_tape.webp",
+        }
+
+        poem_ext_plates: List[Image.Image] = []
+        n_sc = len(lv["scenes"])
 
         for sc_idx, sc in enumerate(lv["scenes"]):
             skey = sc["key"]
             spec = CUSTOM_SCENES.get(skey)
             if not spec:
                 raise RuntimeError(f"Missing custom scene spec for {skey}!")
+
+            next_sc = lv["scenes"][(sc_idx + 1) % n_sc]
+            next_spec = CUSTOM_SCENES.get(next_sc["key"], spec)
+            next_bg_rel = next_spec["backdrop"]
+            next_wk = next_bg_rel.split("/")[1]
+            next_cel_rel = f"world/{next_wk}/cel.webp"
 
             backdrop_shots_rel = spec["backdrop"]
             backdrop_play_rel = f"../{backdrop_shots_rel}"
@@ -3355,11 +3542,10 @@ def main() -> None:
             stations: List[Dict[str, Any]] = []
 
             # 1. Populate native pixel-registered environmental planes (P6, P5, P4, P1, P0)
-            # from the shot's own `world/<wk>/S*_P*.webp` multiplane sheets (zero sticker soup!)
             covered_env_planes = set()
             for w_idx, wsh in enumerate(world_sheets):
                 w_p = wsh["plane"]
-                if any(p["plane"] == w_p for p in curated_prop_specs):
+                if any(p["plane"] == w_p and not p.get("is_set_extension") for p in curated_prop_specs):
                     continue
                 pmeta = SEVEN_PLANES.get(w_p, SEVEN_PLANES["P4"])
                 covered_env_planes.add(w_p)
@@ -3388,11 +3574,12 @@ def main() -> None:
                     "flip": False,
                     "alpha": 0.98,
                     "is_world_sheet": True,
+                    "is_set_extension": False,
                     "file": wsh["file"],
                     "shots_file": wsh["shots_file"],
                 })
 
-            # 2. Add the 1 to 3 curated, grounded interactive story props on P3 / P2
+            # 2. Add curated in-frame props + Outside-the-Frame Modular Lego Set-Extension pieces
             for e_idx, lspec in enumerate(curated_prop_specs):
                 pid = lspec["part_id"]
                 pt = parts_by_id[pid]
@@ -3403,6 +3590,8 @@ def main() -> None:
                 plane_id = lspec["plane"]
                 pmeta = SEVEN_PLANES.get(plane_id, SEVEN_PLANES["P3"])
                 covered_env_planes.add(plane_id)
+                is_ext = bool(lspec.get("is_set_extension", False))
+                l_role = lspec.get("lego_role", "")
 
                 lyr_obj = {
                     "id": f"lyr_{skey.replace('.', '_')}_{e_idx}_{pid.split('__')[-1]}",
@@ -3425,7 +3614,9 @@ def main() -> None:
                     "scale_meta": lspec.get("scale_meta", {}),
                     "width": int(pt.get("width", 240)),
                     "height": int(pt.get("height", 240)),
-                    "role": "focal_cast" if plane_id == "P2" else "station_prop",
+                    "role": "lego_extension" if is_ext else ("focal_cast" if plane_id == "P2" else "station_prop"),
+                    "lego_role": l_role,
+                    "is_set_extension": is_ext,
                     "anim_role": lspec.get("anim_role", "static"),
                     "flip": bool(lspec.get("flip", False)),
                     "alpha": round(float(lspec.get("alpha", 0.96)), 3),
@@ -3446,6 +3637,7 @@ def main() -> None:
                         "x": round(float(lspec["x"]), 3),
                         "mx": round(float(lspec["x"]) * fw, 1),
                         "y": round(float(lspec["y"]), 3),
+                        "is_set_extension": is_ext,
                         "anim_role": lspec.get("anim_role", "static"),
                     })
 
@@ -3480,11 +3672,12 @@ def main() -> None:
                         "flip": False,
                         "alpha": 0.98,
                         "is_world_sheet": True,
+                        "is_set_extension": False,
                         "file": f"../{cel_rel}" if (SHOTS_DIR / cel_rel).exists() else backdrop_play_rel,
                         "shots_file": cel_rel if (SHOTS_DIR / cel_rel).exists() else backdrop_shots_rel,
                     })
 
-            # Supplement stations with architectural landmarks from raw_specs so every scene has 3 stations
+            # Supplement stations with architectural landmarks from raw_specs so every scene has >= 3 stations
             if len(stations) < 3:
                 for r_idx, rspec in enumerate(raw_specs):
                     r_title = rspec.get("station_title")
@@ -3502,6 +3695,7 @@ def main() -> None:
                         "x": round(float(rspec["x"]), 3),
                         "mx": round(float(rspec["x"]) * fw, 1),
                         "y": round(float(rspec["y"]), 3),
+                        "is_set_extension": False,
                         "anim_role": rspec.get("anim_role", "static"),
                     })
                     if len(stations) >= 3:
@@ -3529,12 +3723,20 @@ def main() -> None:
 
             stations.sort(key=lambda s: s["x"])
             n_st = len(stations)
-            station_order = [0, 1, 2, 1] if n_st >= 3 else list(range(max(1, n_st)))
+            n_lines = len(sc.get("lines", []))
             for l_idx, ln in enumerate(sc.get("lines", [])):
                 if stations:
-                    st_pick = stations[station_order[l_idx % len(station_order)] % n_st]
+                    # Final line of the scene walks out into the Outside-the-Frame Lego Set Extension bridge!
+                    ext_stations = [s for s in stations if s.get("is_set_extension")]
+                    in_stations = [s for s in stations if not s.get("is_set_extension")]
+                    if l_idx == n_lines - 1 and ext_stations:
+                        st_pick = ext_stations[0]
+                    elif in_stations:
+                        st_pick = in_stations[l_idx % len(in_stations)]
+                    else:
+                        st_pick = stations[l_idx % n_st]
                     jitter = ((l_idx % 3) - 1) * 18.0
-                    ln["mx"] = round(max(160.0, min(fw - 160.0, float(st_pick["mx"]) + jitter)), 1)
+                    ln["mx"] = round(max(160.0, min(W_MOD - 140.0, float(st_pick["mx"]) + jitter)), 1)
                     ln["station_id"] = st_pick["id"]
                     ln["station_label"] = st_pick["title"]
                     ln["station_part_label"] = st_pick["part_label"]
@@ -3545,7 +3747,7 @@ def main() -> None:
 
             out_webp = LEVELS_DIR / num_str / sc["img"]
             props_dir = LEVELS_DIR / num_str / "props"
-            pil_plate = render_clean_scene_plate(
+            ext_pil = render_clean_scene_plate(
                 out_webp=out_webp,
                 backdrop_path=SHOTS_DIR / backdrop_shots_rel,
                 cel_path=SHOTS_DIR / cel_rel,
@@ -3556,12 +3758,17 @@ def main() -> None:
                 haze_rgb=stage_haze_tuple,
                 props_out_dir=props_dir,
                 num_str=num_str,
+                next_backdrop_path=SHOTS_DIR / next_bg_rel,
+                next_cel_path=SHOTS_DIR / next_cel_rel,
                 return_pil=True,
             )
 
             sc["floor"] = int(spec.get("floor", 614))
             sc["backdrop_file"] = backdrop_play_rel
             sc["env_img"] = f"{out_webp.stem}_env.webp"
+            sc["ext_img"] = f"{out_webp.stem}_ext.webp"
+            sc["ext_env_img"] = f"{out_webp.stem}_ext_env.webp"
+            sc["tape_x_offset"] = sc_idx * W_MOD
             sc["initial_cue"] = spec.get("initial_cue", "walk_stride_R")
             sc["preferred_actor"] = spec.get("preferred_actor")
             sc["counterpart"] = spec.get("counterpart")
@@ -3571,17 +3778,25 @@ def main() -> None:
                 for lyr in combined_layers
             ]
 
-            if pil_plate is not None:
-                thumb = pil_plate.resize((420, 236), Image.Resampling.LANCZOS)
+            if ext_pil is not None:
+                poem_ext_plates.append(ext_pil)
+                # Wide 540x234 audit thumbnail showing BOTH the 1280x720 Cel Frame AND the 760px Outside-the-Frame Lego Set Extension!
+                thumb = ext_pil.resize((540, 234), Image.Resampling.LANCZOS)
                 tdraw = ImageDraw.Draw(thumb)
-                tdraw.rectangle([0, 0, 420, 24], fill=(8, 10, 14))
-                st_names = " | ".join(s["title"][:14] for s in stations[:3])
-                tdraw.text((6, 5), f"{skey} [{int(stage_ppm)}px/m·{scale_marker_info['marker_count']}M] {sc['name'][:15]} -> {st_names[:30]}", fill=(255, 224, 120))
-                # Draw 7 color-coded plane indicator dots in top-right of audit thumbnail
-                for p_i, pk in enumerate(("P6", "P5", "P4", "P3", "P2", "P1", "P0")):
-                    p_rgb = SEVEN_PLANES[pk]["rgb"]
-                    dx_dot = 420 - (7 - p_i) * 11 - 4
-                    tdraw.ellipse([dx_dot, 7, dx_dot + 8, 15], fill=p_rgb, outline=(255, 255, 255))
+                # Mark the x=1280 frame boundary & y=160 headroom datum on the audit thumbnail
+                bx_thumb = int(round(540 * (W_FRAME / float(W_MOD))))
+                by_thumb = int(round(234 * (H_HEADROOM / float(H_EXT))))
+                tdraw.line([(bx_thumb, by_thumb), (bx_thumb, 234)], fill=(255, 210, 90), width=1)
+                tdraw.line([(0, by_thumb), (540, by_thumb)], fill=(255, 210, 90), width=1)
+                tdraw.rectangle([0, 0, 540, 22], fill=(8, 10, 14))
+                ext_names = " + ".join(
+                    l["label"][:18] for l in combined_layers if l.get("is_set_extension")
+                )
+                tdraw.text(
+                    (6, 4),
+                    f"{skey} [FRAME+LEGO WING] {sc['name'][:14]} -> {ext_names[:46]}",
+                    fill=(255, 224, 120),
+                )
                 if poem_num <= 4:
                     audit_batches["audit_scenes_01_04.png"].append(thumb)
                 elif poem_num <= 8:
@@ -3593,8 +3808,31 @@ def main() -> None:
 
             total_scenes += 1
 
+        # Stitch all scenes of the poem into a Continuous Horizontal Poem Background Tape (`poem_tape.webp`)
+        if poem_ext_plates:
+            half_w = W_MOD // 2   # 1020 px per module
+            half_h = H_EXT // 2   # 440 px tall
+            tape_im = Image.new("RGB", (len(poem_ext_plates) * half_w, half_h), (10, 12, 16))
+            for idx_p, p_im in enumerate(poem_ext_plates):
+                p_small = p_im.resize((half_w, half_h), Image.Resampling.LANCZOS)
+                tape_im.paste(p_small, (idx_p * half_w, 0))
+            tape_path = LEVELS_DIR / num_str / "poem_tape.webp"
+            tape_im.save(tape_path, "WEBP", quality=86, method=4)
+
+            # Also create a 1800x132 panorama strip for `audit_poem_tapes.png`
+            strip_thumb = tape_im.resize((1800, 132), Image.Resampling.LANCZOS)
+            sdraw = ImageDraw.Draw(strip_thumb)
+            sdraw.rectangle([0, 0, 520, 22], fill=(8, 10, 14))
+            sdraw.text(
+                (6, 4),
+                f"POEM {num_str} CONTINUOUS TAPE ({len(poem_ext_plates)} SCENES × 2040px = {len(poem_ext_plates)*W_MOD}px) · {lv['title']}",
+                fill=(120, 240, 190),
+            )
+            poem_tape_strips.append(strip_thumb)
+
         lv_path.write_text(json.dumps(lv, separators=(",", ":")))
-        print(f"  Poem {num_str} ({lv['title']}): custom-built {len(lv['scenes'])} 7-layer cel scenes")
+        print(f"  Poem {num_str} ({lv['title']}): built {len(lv['scenes'])} Hyper-Flat Lego Wing scenes + continuous poem_tape.webp")
+
 
     print("[3/5] Enriching level_assets_catalog.json with 7-layer color codes & standardized physical scales...")
     if CATALOG_OUT_PATH.exists():
@@ -3664,23 +3902,31 @@ def main() -> None:
         CATALOG_OUT_PATH.write_text(json.dumps(cat_data, separators=(",", ":")))
         print(f"  Updated {CATALOG_OUT_PATH} with {len(cat_items)} color-coded 7-layer items!")
 
-    print("[4/5] Saving visual audit contact sheets for all 90 7-layer cel scenes...")
+    print("[4/5] Saving visual audit contact sheets for all 90 Hyper-Flat Lego Wing scenes + 14 Continuous Poem Tapes...")
     SCRATCH_DIR.mkdir(parents=True, exist_ok=True)
     for bname, thumbs in audit_batches.items():
-        cols = 4
+        cols = 3
         rows = (len(thumbs) + cols - 1) // cols
-        grid = Image.new("RGB", (cols * 424, rows * 240), (10, 12, 16))
+        grid = Image.new("RGB", (cols * 544, rows * 238), (10, 12, 16))
         for i, im in enumerate(thumbs):
-            grid.paste(im, ((i % cols) * 424 + 2, (i // cols) * 240 + 2))
+            grid.paste(im, ((i % cols) * 544 + 2, (i // cols) * 238 + 2))
         grid.save(SCRATCH_DIR / bname)
-        print(f"  Saved {SCRATCH_DIR / bname} ({len(thumbs)} scenes)")
+        print(f"  Saved {SCRATCH_DIR / bname} ({len(thumbs)} extended scenes)")
+
+    if poem_tape_strips:
+        tape_grid = Image.new("RGB", (1804, len(poem_tape_strips) * 136), (10, 12, 16))
+        for i, st_im in enumerate(poem_tape_strips):
+            tape_grid.paste(st_im, (2, i * 136 + 2))
+        tape_grid.save(SCRATCH_DIR / "audit_poem_tapes.png")
+        print(f"  Saved {SCRATCH_DIR / 'audit_poem_tapes.png'} (14 continuous horizontal poem tapes)")
 
     print(
-        f"[5/5] DONE! Custom-built {total_scenes} scenes with {total_layers} verified multiplane layers "
+        f"[5/5] DONE! Built {total_scenes} Hyper-Flat Extended Lego Wing scenes with {total_layers} layers "
         f"({scenes_with_all_7}/{total_scenes} scenes have all 7 layers P6->P0 populated!)."
     )
 
 
 if __name__ == "__main__":
     main()
+
 

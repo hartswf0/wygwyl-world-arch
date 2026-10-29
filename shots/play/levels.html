@@ -157,8 +157,8 @@ a{color:#8fb8ff}
     <a href="../body_lab.html">🧬 CLIP Body Lab</a>
   </nav>
   <header>
-    <h1>WYGWYL · 14 Handmade 7-Layer Cel-Shaded Worlds & Authoring Studio</h1>
-    <p>Every single frame (`01.0`..`14.6`) is handmade <b>7 layers deep (`P6` Sky Cyan → `P5` Vista Periwinkle → `P4` Arch Cobalt → `P3` Props Amber → `P2` Hero Crimson → `P1` FG FX Sienna → `P0` Proscenium Mask Slate)</b> with cel-shaded gouache flats, depth-weighted ink contours (`INK_W`), and frame-specific semantic decomposition. Walk from structure to structure to inhabit each poem's stations—or open <b>🛠️ 7-Layer World Author</b> to inspect, color-code, solo planes, scale, and author the world live.</p>
+    <h1>WYGWYL · 14 Hyper-Flat 7-Layer Worlds, Outside-the-Frame Lego Wings & Continuous Poem Tapes</h1>
+    <p>Every scene (`01.0`..`14.6`) is built as a <b>`2040×880` Hyper-Flat Extended Module</b>: a clean `1280×720` cel-painted frame (`x=0..1280`), `160px` of upper architectural headroom (`y=-160..0`) for protruding gabled roofs & canopy trees, and a <b>`760px` Outside-the-Frame Modular Lego Set Extension (`x=1280..2040`)</b> that bridges every scene along a <b>Continuous Horizontal Poem Tape</b>. Switch camera modes (`🧱 Hyper-Flat Wing`, `🎞️ Continuous Tape Strip`, `🎥 Ortho Follow`) or open <b>🛠️ 7-Layer + Lego Author</b> to build outside the frame live.</p>
   </header>
   <div class="grid" id="lv"></div>
 </section>
@@ -168,6 +168,11 @@ a{color:#8fb8ff}
   <div class="top">
     <button class="btn" id="back">‹ 14 Poems</button>
     <div id="ttl"></div>
+    <select class="btn on" id="camModeSelect" title="Hyper-Flat Camera Position for Outside-the-Frame Lego Set Extensions & Continuous Poem Tape">
+      <option value="hyper_flat_wing">🧱 Cam: Hyper-Flat Lego Wing (2040×880)</option>
+      <option value="continuous_tape">🎞️ Cam: Continuous Poem Tape Strip</option>
+      <option value="ortho_follow">🎥 Cam: Ortho Follow (Frame → Wing)</option>
+    </select>
     <select class="btn" id="celModeSelect" title="Switch Cel-Shading, 7-Layer Color-Coding & Exploded Stack Signal">
       <option value="cel_wash">🎨 Cel Wash + Ink (7L)</option>
       <option value="color_coded">🌈 Color-Coded 7-Layer Pieces</option>
@@ -177,7 +182,7 @@ a{color:#8fb8ff}
     </select>
     <button class="btn" id="rigModeBtn" title="Toggle between 31-Part Brass-Pivot Articulated Tracksuit Rig and Painted Cut-Out Rig">🦿 Rig: 31-Part</button>
     <button class="btn" id="castBtn" title="Switch playable character from this poem's cast">⇄ Cast</button>
-    <button class="btn" id="asmToggleBtn" title="Open Handmade 7-Layer World Authoring Workbench">🛠️ 7-Layer Author</button>
+    <button class="btn" id="asmToggleBtn" title="Open Handmade 7-Layer & Outside-the-Frame Lego Authoring Workbench">🛠️ 7L + Lego Author</button>
     <div id="score"></div>
     <button class="btn" id="pause">Pause</button>
   </div>
@@ -186,7 +191,7 @@ a{color:#8fb8ff}
   <div id="emoHud">
     <div class="emo-kicker" id="emoKicker">STAGE STATION & REGISTER</div>
     <div class="emo-title" id="emoTitle">Searching & Yearning</div>
-    <div class="emo-sub" id="emoSub">Walk to the highlighted architectural station to embody each spoken line.</div>
+    <div class="emo-sub" id="emoSub">Walk across the 1280px cel frame and out into the 760px Lego Set-Extension Wing.</div>
   </div>
   <div id="sub"></div>
   <div id="pad"><div id="knob"><i></i></div></div>
@@ -195,9 +200,9 @@ a{color:#8fb8ff}
   <!-- Handmade 7-Layer World Authoring Workbench -->
   <aside id="asmPanel" aria-label="Handmade 7-Layer World Authoring Workbench">
     <div class="asm-head">
-      <b>🛠️ Handmade 7-Layer World Author (`P6→P0`)</b>
+      <b>🛠️ 7-Layer + Outside-Frame Lego Author</b>
       <div class="asm-row">
-        <button class="asm-btn" id="asmExportJsonBtn" title="Export this scene's handmade 7-layer JSON">💾 JSON</button>
+        <button class="asm-btn" id="asmExportJsonBtn" title="Export this scene's handmade 7-layer + Lego Wing JSON">💾 JSON</button>
         <button class="asm-btn" id="asmCopyPyBtn" title="Copy Python L(...) 7-layer spec for build_custom_90_scenes.py">📋 Py</button>
         <button class="asm-btn" id="asmCloseBtn">✕</button>
       </div>
@@ -209,11 +214,11 @@ a{color:#8fb8ff}
         <label>7L Tint:</label>
         <input id="colorTintSlider" type="range" min="0" max="100" value="0">
       </div>
-      <div style="font-family:var(--mono);font-size:.6rem;color:var(--brass)" id="frameShotHeader">Frame 7-Layer Semantic & Depth Blueprint</div>
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--brass)" id="frameShotHeader">Frame 7-Layer + Lego Extension Blueprint</div>
       <div class="bd-box" id="frameBreakdownBox"></div>
     </div>
     <div class="asm-sec" id="asmInspector">
-      <div style="font-family:var(--mono);font-size:.6rem;color:var(--cyan)">Active Frame 7-Layer Stack (Click piece on stage or row below):</div>
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--cyan)">Active Frame + Lego Wing Stack (`x=0..1.0` Frame · `x=1.0..1.59` Lego Wing):</div>
       <div class="plane-tree" id="sceneLayerTree"></div>
       <div id="asmSelectedTitle" style="font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">No piece selected</div>
       <div class="asm-row">
@@ -228,16 +233,25 @@ a{color:#8fb8ff}
       </div>
       <div class="asm-row">
         <label>Scale:</label>
-        <input id="asmScaleSlider" type="range" min="6" max="95" value="38">
+        <input id="asmScaleSlider" type="range" min="0.06" max="1.35" step="0.01" value="0.38">
+        <span id="asmScaleVal" style="font-family:var(--mono);font-size:.6rem;color:var(--brass)">0.38</span>
         <button class="asm-btn" id="asmScaleDown">−</button>
         <button class="asm-btn" id="asmScaleUp">+</button>
         <button class="asm-btn" id="asmFlipBtn">↔ Flip</button>
+        <button class="asm-btn" id="asmDupBtn" title="Duplicate piece">⧉</button>
         <button class="asm-btn" id="asmDelBtn" style="color:var(--bad)">🗑</button>
       </div>
       <div class="asm-row">
+        <label>Lego:</label>
+        <button class="asm-btn" id="asmSnapOutsideBtn" style="border-color:var(--brass);color:var(--brass)" title="Snap piece outside the 1280px frame into the 760px Lego Set-Extension Zone (x=1.00..1.59)">⇥ Snap Outside Frame</button>
+        <button class="asm-btn" id="asmTileStripBtn" style="border-color:var(--cyan);color:var(--cyan)" title="Tile selected piece (fence, tree, lamp, curb) across the 760px Boulevard Tape bridge">🔁 Tile Tape Strip</button>
+      </div>
+      <div class="asm-row">
         <label>Z / α:</label>
-        <input id="asmZSlider" type="range" min="20" max="620" value="240" title="Metric Stage Z-Depth (0.20 .. 6.20)">
-        <input id="asmAlphaSlider" type="range" min="15" max="100" value="98" title="Layer Opacity">
+        <input id="asmZSlider" type="range" min="0.20" max="6.20" step="0.05" value="2.40" title="Metric Stage Z-Depth (0.20 .. 6.20)">
+        <span id="asmZVal" style="font-family:var(--mono);font-size:.58rem;color:var(--muted)">2.40m</span>
+        <input id="asmAlphaSlider" type="range" min="0.15" max="1.00" step="0.01" value="0.98" title="Layer Opacity">
+        <span id="asmAlphaVal" style="font-family:var(--mono);font-size:.58rem;color:var(--muted)">98%</span>
       </div>
       <div class="asm-row">
         <label>Anim:</label>
@@ -262,7 +276,7 @@ a{color:#8fb8ff}
           <option value="cloud_drift_L">cloud_drift_L (drifting mist/haze)</option>
           <option value="proscenium_mask">proscenium_mask (camera repoussoir)</option>
         </select>
-        <button class="asm-btn" id="asmResetSceneBtn" title="Restore handmade 7-layer spec for this scene">↺ Reset</button>
+        <button class="asm-btn" id="asmResetSceneBtn" title="Restore handmade 7-layer + Lego Wing spec for this scene">↺ Reset</button>
       </div>
     </div>
     <div class="asm-sec">
@@ -350,12 +364,15 @@ const PLANE_ORDER_BACK_TO_FRONT = ['P6', 'P5', 'P4', 'P3', 'P2', 'P1', 'P0'];
 const PARALLAX_BY_PLANE = { P6: 0.18, P5: 0.38, P4: 0.66, P3: 0.88, P2: 1.00, P1: 1.18, P0: 1.34 };
 const Z_BY_PLANE = { P6: 6.00, P5: 3.80, P4: 2.42, P3: 1.40, P2: 1.00, P1: 0.52, P0: 0.24 };
 
+let camMode = 'hyper_flat_wing'; // 'hyper_flat_wing' | 'continuous_tape' | 'ortho_follow'
 let celRenderMode = 'cel_wash'; // 'cel_wash' | 'color_coded' | 'layout_ink' | 'exploded_7' | 'painted'
 let soloPlane = 'ALL';          // 'ALL' | 'P6'..'P0'
 let celStrength = 0.72;
 let colorTintStrength = 0.0;
 
-let CHARS = [], INDEX = [], CATALOG = [], L = null, actor = null, scenes = [], sceneImgs = [], audio = null, castIdx = 0;
+const W_FRAME = 1280, H_FRAME = 720, W_EXT = 760, W_MOD = 2040, H_HEADROOM = 160, H_EXT = 880;
+
+let CHARS = [], INDEX = [], CATALOG = [], L = null, actor = null, scenes = [], sceneImgs = [], sceneExtImgs = [], audio = null, castIdx = 0;
 let counterpart = null;
 let W=0, H=0, DPR=1;
 const cv = $('cv'), ctx = cv.getContext('2d');
@@ -382,9 +399,24 @@ function getCachedImg(url){
   return rec;
 }
 
-// Aspect-Aware Span Scaling Law (matches `compute_piece_stage_dims` in `build_custom_90_scenes.py` 1:1)
-function computePieceStageDims(pw, ph, sc, plane, fw, fh){
+// Aspect-Aware & Lego Set-Extension Span Scaling Law (matches `compute_piece_stage_dims` in `build_custom_90_scenes.py` 1:1)
+function computePieceStageDims(pw, ph, sc, plane, fw, fh, isSetExt, legoRole){
   const ar = pw / Math.max(1, ph);
+  if (isSetExt){
+    let hCap = fh * 1.15;
+    if (legoRole === 'gable_portal_cap'){
+      hCap = fh * 1.38;
+    } else if (legoRole === 'wall_with_door_hole' || legoRole === 'wall_bay' || legoRole === 'boulevard_tree'){
+      hCap = fh * 1.12;
+    }
+    let targetH = Math.max(20, Math.min(hCap, fh * sc));
+    let targetW = Math.max(20, targetH * ar);
+    if (targetW > fw * 1.35){
+      targetW = fw * 1.35;
+      targetH = Math.max(18, targetW / ar);
+    }
+    return { rawW: targetW, rawH: targetH };
+  }
   let targetH = Math.max(24, Math.min(fh * 0.78, fh * sc));
   let targetW = Math.max(24, targetH * ar);
   if (ar > 2.2 && targetW > fw * 0.85){
@@ -527,12 +559,12 @@ function buildShelf(){
     const best = store.get('wy.best.'+p.num);
     const meta = ARC_SUMMARY[p.num] || { arc: 'Emotional Journey', desc: '' };
     b.innerHTML =
-      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}?v=7"><span class="arc-pill">${meta.arc}</span></div>` +
+      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.num}/s0_ext.webp?v=8" onerror="this.src='levels/${p.thumb}?v=8'"><span class="arc-pill">🧱 ${meta.arc} · Continuous Tape</span></div>` +
       `<div class="body"><b></b><div class="theme"></div><small></small><div class="best"></div></div>`;
     b.querySelector('b').textContent = `${p.num} · ${p.title}`;
     b.querySelector('.theme').textContent = meta.desc;
-    b.querySelector('small').textContent = `${Math.round(p.duration)}s · ${p.scenes} handmade 7-layer scenes · ${p.lines} station lines`;
-    b.querySelector('.best').textContent = best ? (`★ Best resonance: ${best}/${p.lines} stations inhabited`) : 'Enter 7-layer cel poem →';
+    b.querySelector('small').textContent = `${Math.round(p.duration)}s · ${p.scenes} Hyper-Flat Lego Wing scenes (2040×880) · ${p.lines} station lines`;
+    b.querySelector('.best').textContent = best ? (`★ Best resonance: ${best}/${p.lines} stations inhabited`) : 'Enter Hyper-Flat Lego Wing & Poem Tape →';
     b.addEventListener('click', ()=>openLevel(p.num));
     g.append(b);
   });
@@ -596,13 +628,13 @@ async function openLevel(num){
   resize();
   preloadPoet31();
   use31PartRig = parseInt(num, 10) >= 4;
-  L = await (await fetch(`levels/${num}/level.json?v=7`)).json();
+  L = await (await fetch(`levels/${num}/level.json?v=8`)).json();
   scenes = L.scenes;
 
-  // Restore any user-saved custom 7-layer stage assemblies from localStorage (v7) & preload all cut-out + cel assets
+  // Restore any user-saved custom 7-layer + Lego Wing stage assemblies from localStorage (v8) & preload all cut-out + cel assets
   scenes.forEach((sc, idx) => {
     sc._defaultLayers = JSON.parse(JSON.stringify(sc.multiplane_layers || []));
-    const saved = store.get(`wy.stage.v7.${num}.${idx}`);
+    const saved = store.get(`wy.stage.v8.${num}.${idx}`);
     if (saved){
       try { sc.multiplane_layers = JSON.parse(saved); } catch(e){}
     }
@@ -617,8 +649,9 @@ async function openLevel(num){
     (sc.multiplane_layers || []).forEach(lyr => getCachedImg(lyr.file));
   });
 
-  // Load unified prop-free environment plates (`s<idx>_env.webp` = 68% cel + 32% backdrop + 28% ink)
-  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(s.env_img ? `levels/${num}/${s.env_img}?v=7` : (s.backdrop_file || `levels/${num}/${s.img}?v=7`))));
+  // Load 1280×720 environment plates (`s<idx>_env.webp`) AND 2040×880 Hyper-Flat Extended Environment Plates (`s<idx>_ext_env.webp`)
+  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(s.env_img ? `levels/${num}/${s.env_img}?v=8` : (s.backdrop_file || `levels/${num}/${s.img}?v=8`))));
+  sceneExtImgs = await Promise.all(scenes.map((s, idx) => Anim2.loadImg(`levels/${num}/${s.ext_env_img || ('s' + idx + '_ext_env.webp')}?v=8`).catch(() => sceneImgs[idx])));
 
   // Preload all cast & counterpart characters referenced by this poem's scenes
   castActorsByKey.clear();
@@ -974,7 +1007,7 @@ function frame(ts){
   const eff = Math.abs(m) < 0.12 ? 0 : m;
 
   const state = actor.ctrl.step(dt, eff, ts);
-  actor.x = Math.max(60, Math.min(fw - 60, actor.x));
+  actor.x = Math.max(60, Math.min(W_MOD - 60, actor.x));
 
   for (const sid in stationBoost){
     stationBoost[sid] = Math.max(0, stationBoost[sid] - dt * 0.45);
@@ -1104,8 +1137,8 @@ function stepCounterpart(dt, k, sc, ts){
   }
 }
 
-/* ---------- 7-Plane Cut-Out & Cel-Shaded Layer Renderer (P6 → P0) ---------- */
-function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
+/* ---------- 7-Plane Cut-Out & Outside-the-Frame Lego Layer Renderer (P6 → P0) ---------- */
+function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k, sceneOffsetX = 0){
   if (lyr.hidden) return;
   const plane = lyr.plane || 'P3';
   const pSpec = SEVEN_PLANES[plane] || SEVEN_PLANES.P3;
@@ -1113,11 +1146,6 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
   // If a single plane is soloed on the ribbon, dim non-soloed planes to 14%
   const soloDim = (soloPlane !== 'ALL' && soloPlane !== plane) ? 0.14 : 1.0;
 
-  // Native pixel-registered full-frame multiplane sheets (`world/<wk>/S*_P*.webp` + `cel.webp`):
-  // - Background planes (P6..P2) are already part of `baseImg` (`s<idx>_env.webp`), so skip re-drawing
-  //   unless the user is soloing that plane or inspecting in `color_coded` mode.
-  // - Foreground planes (P1, P0) with decomposed transparent sheets (`/S`) draw full-frame IN FRONT
-  //   of the playable Actor (P2) so the Actor walks behind foreground columns/arches/waves cleanly!
   if (lyr.is_world_sheet){
     const isDecompFg = (plane === 'P1' || plane === 'P0') && lyr.file && lyr.file.includes('/S');
     const isInspect = (soloPlane === plane) || (celRenderMode === 'color_coded');
@@ -1127,15 +1155,17 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
     if (!rec || !rec.ok) return;
     const im = rec.img;
     const p6Shift = camDelta * PARALLAX_BY_PLANE.P6 * s;
-    const rx = offX - p6Shift;
+    const rx = offX + sceneOffsetX * s - p6Shift;
     const ry = y0;
     const rw = fw * s;
     const rh = fh * s;
 
-    lyr._HitBox = {
-      cx: rx + rw * 0.5, by: ry + rh, x0: rx, y0: ry, w: rw, h: rh,
-      fw, fh, offX, stageY0: y0, s, camDelta, pFactor: PARALLAX_BY_PLANE.P6
-    };
+    if (sceneOffsetX === 0){
+      lyr._HitBox = {
+        cx: rx + rw * 0.5, by: ry + rh, x0: rx, y0: ry, w: rw, h: rh,
+        fw, fh, offX, stageY0: y0, s, camDelta, pFactor: PARALLAX_BY_PLANE.P6
+      };
+    }
 
     ctx.save();
     ctx.globalAlpha = Math.max(0.06, Math.min(1, (isInspect ? 0.94 : (lyr.alpha || 0.92)) * soloDim));
@@ -1157,19 +1187,20 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
   const iw = im.naturalWidth || lyr.width || 240;
   const ih = im.naturalHeight || lyr.height || 240;
 
-  const pFactor = PARALLAX_BY_PLANE[plane] !== undefined ? PARALLAX_BY_PLANE[plane] : 0.88;
+  // In Hyper-Flat Lego Wing & Continuous Tape modes, keep parallax ultra-flat (orthographic) so Lego joints never drift!
+  const rawPFactor = PARALLAX_BY_PLANE[plane] !== undefined ? PARALLAX_BY_PLANE[plane] : 0.88;
+  const pFactor = (camMode === 'hyper_flat_wing' || camMode === 'continuous_tape' || lyr.is_set_extension) ? 1.0 : rawPFactor;
   const boost = (lyr.station_id && stationBoost[lyr.station_id]) ? stationBoost[lyr.station_id] : 0;
   const tSec = ts / 1000;
   const speedMult = 1 + boost * 1.4;
 
-  let baseX = (lyr.x !== undefined ? lyr.x : 0.5) * fw;
+  let baseX = sceneOffsetX + (lyr.x !== undefined ? lyr.x : 0.5) * fw;
   let baseY = (lyr.y !== undefined ? lyr.y : 0.86) * fh;
   let rot = 0;
   let scMult = 1 + boost * 0.05;
   let alpha = (lyr.alpha !== undefined ? lyr.alpha : 0.98) * soloDim;
   const anim = lyr.anim_role || 'static';
 
-  // Procedural multiplane animations across all 7 planes
   if (anim === 'wheel_spin' || anim === 'turntable_spin'){
     rot = tSec * (anim === 'turntable_spin' ? 3.2 : 2.6) * speedMult;
   } else if (anim === 'car_chassis'){
@@ -1218,30 +1249,33 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
     baseX += Math.cos(tSec * 0.55) * 10;
   }
 
-  // Poem 11 ("The temple builds itself"): courses, columns & pediment descend into place!
   if (L && L.num === '11' && scenes[k]?.key === '11.2' && lyr.sheet_id && lyr.sheet_id.includes('temple.states')){
     const buildProg = Math.min(1, 0.45 + sceneResonance * 0.55);
     baseY -= (1 - buildProg) * 90;
   }
 
-  const { rawW, rawH } = computePieceStageDims(iw, ih, (lyr.scale || 0.35) * scMult, plane, fw, fh);
+  const isSetExt = Boolean(lyr.is_set_extension) || (lyr.x !== undefined && lyr.x > 1.0);
+  const legoRole = lyr.lego_role || '';
+  const { rawW, rawH } = computePieceStageDims(iw, ih, (lyr.scale || 0.35) * scMult, plane, fw, fh, isSetExt, legoRole);
   const drawH = rawH * s;
   const drawW = rawW * s;
 
   const screenX = offX + (baseX - camDelta * pFactor) * s;
   const screenY = y0 + baseY * s;
 
-  lyr._HitBox = {
-    cx: screenX,
-    by: screenY,
-    x0: screenX - drawW / 2,
-    y0: screenY - drawH,
-    w: drawW,
-    h: drawH,
-    fw, fh, offX, stageY0: y0, s, camDelta, pFactor
-  };
+  if (sceneOffsetX === 0){
+    lyr._HitBox = {
+      cx: screenX,
+      by: screenY,
+      x0: screenX - drawW / 2,
+      y0: screenY - drawH,
+      w: drawW,
+      h: drawH,
+      fw, fh, offX, stageY0: y0, s, camDelta, pFactor
+    };
+  }
 
-  // Grounded elliptical floor contact shadow for floor-seated props (no floating wall drop-shadow)
+  // Grounded elliptical floor contact shadow
   if (baseY >= fh * 0.55 && celRenderMode !== 'color_coded' && soloPlane !== plane){
     ctx.save();
     ctx.globalAlpha = Math.max(0.04, Math.min(0.46, alpha * 0.42));
@@ -1253,12 +1287,29 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
   }
 
   ctx.save();
+  // Tuck left overlap of extended walls (`wall_with_door_hole` / `wall_bay`) BEHIND the 16:9 cel painting (`x < fw`)!
+  if (isSetExt && (legoRole === 'wall_with_door_hole' || legoRole === 'wall_bay')){
+    const frameRightEdgeX = offX + (sceneOffsetX + fw - camDelta * pFactor) * s;
+    ctx.beginPath();
+    ctx.rect(frameRightEdgeX, y0 - H_HEADROOM * s - 20, W_EXT * s + 40, H_EXT * s + 40);
+    ctx.clip();
+  }
+
+  // Dark interior doorway aperture behind `wall_with_door_hole` (matching Uploaded Image 1)
+  if (isSetExt && legoRole === 'wall_with_door_hole'){
+    ctx.save();
+    ctx.fillStyle = 'rgba(14, 12, 18, 0.96)';
+    const holeX0 = screenX - drawW * 0.5 + drawW * 0.42;
+    const holeY0 = screenY - drawH + drawH * 0.22;
+    ctx.fillRect(holeX0, holeY0, drawW * 0.26, drawH * 0.77);
+    ctx.restore();
+  }
+
   ctx.globalAlpha = Math.max(0.04, Math.min(1, alpha));
   ctx.translate(screenX, screenY - drawH * 0.5);
   if (lyr.flip) ctx.scale(-1, 1);
   if (rot) ctx.rotate(rot);
 
-  // Color-coded aura or active station resonance glow
   if (celRenderMode === 'color_coded' || soloPlane === plane){
     ctx.shadowColor = pSpec.hex;
     ctx.shadowBlur = (soloPlane === plane ? 16 : 9) * s;
@@ -1280,25 +1331,24 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
   ctx.restore();
 
   // Draw color-coded plane badge & bounding box when in `color_coded` mode, `soloPlane === plane`, or `asmMode`
-  const showOverlay = asmMode || celRenderMode === 'color_coded' || (soloPlane !== 'ALL' && soloPlane === plane);
+  const showOverlay = (sceneOffsetX === 0) && (asmMode || celRenderMode === 'color_coded' || (soloPlane !== 'ALL' && soloPlane === plane));
   if (showOverlay){
     const isSel = selectedLayer === lyr;
     ctx.save();
-    ctx.strokeStyle = isSel ? '#4de2c2' : pSpec.hex;
+    ctx.strokeStyle = isSel ? '#4de2c2' : (isSetExt ? '#d8ab4f' : pSpec.hex);
     ctx.lineWidth = isSel ? 2.5 : (celRenderMode === 'color_coded' ? 1.8 : 1.3);
     if (!isSel && celRenderMode !== 'color_coded') ctx.setLineDash([4, 3]);
     ctx.strokeRect(screenX - drawW / 2, screenY - drawH, drawW, drawH);
 
-    // Top-left color-coded plane tag
-    const tagText = `${plane} (Z=${Number(lyr.z || pSpec.z).toFixed(1)}m) · ${(lyr.label || lyr.part_id).slice(0, 18)}`;
+    const legoBadge = isSetExt ? '🧱 ' : '';
+    const tagText = `${legoBadge}${plane} (Z=${Number(lyr.z || pSpec.z).toFixed(1)}m) · ${(lyr.label || lyr.part_id).slice(0, 18)}`;
     ctx.font = '700 10px "JetBrains Mono", monospace';
     const tw = Math.min(drawW + 24, ctx.measureText(tagText).width + 10);
-    ctx.fillStyle = isSel ? '#4de2c2' : pSpec.hex;
+    ctx.fillStyle = isSel ? '#4de2c2' : (isSetExt ? '#d8ab4f' : pSpec.hex);
     ctx.fillRect(screenX - drawW / 2, screenY - drawH - 16, tw, 16);
     ctx.fillStyle = '#07080b';
     ctx.fillText(tagText, screenX - drawW / 2 + 4, screenY - drawH - 4);
 
-    // Bottom-right resize handle in asmMode when selected
     if (asmMode && isSel){
       ctx.fillStyle = '#4de2c2';
       ctx.fillRect(screenX + drawW / 2 - 7, screenY - 7, 14, 14);
@@ -1313,11 +1363,10 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k){
 /* ---------- Interactive 7-Layer Exploded Isometric Stack View ---------- */
 function drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts){
   const mLayers = sc.multiplane_layers || [];
-  const stageW = Math.min(W, fw * s);
+  const stageW = Math.min(W, W_MOD * s);
   const cx = offX + stageW * 0.5;
   const stageHaze = sc?.cel_passes?.perspective?.stage_haze_rgb;
 
-  // Draw exploded reference plate on the left 34% if loaded, and live 7-plane stack on the right 66%
   const expRec = sc.cel_passes && sc.cel_passes.exploded_file ? getCachedImg(sc.cel_passes.exploded_file) : null;
   if (expRec && expRec.ok){
     ctx.save();
@@ -1326,7 +1375,6 @@ function drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts){
     ctx.restore();
   }
 
-  // Draw 7 horizontal depth decks from P6 (top/far) to P0 (bottom/near)
   const deckW = stageW * 0.72;
   const deckH = stageH * 0.115;
 
@@ -1339,7 +1387,6 @@ function drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts){
     ctx.save();
     ctx.globalAlpha = isSolo ? 0.95 : 0.22;
 
-    // Skewed perspective card deck for this depth plane
     ctx.beginPath();
     ctx.moveTo(deckX + 24 * s, deckY);
     ctx.lineTo(deckX + deckW, deckY);
@@ -1352,14 +1399,12 @@ function drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts){
     ctx.strokeStyle = spec.hex;
     ctx.stroke();
 
-    // Plane header badge on left edge of deck
     ctx.fillStyle = spec.hex;
     ctx.fillRect(deckX - 4, deckY + 4, 158 * s, 18 * s);
     ctx.fillStyle = '#07080b';
     ctx.font = `700 ${Math.max(9, Math.round(10.5 * s))}px "JetBrains Mono", monospace`;
     ctx.fillText(`${spec.name} · Z=${spec.z}m`, deckX + 4, deckY + 16 * s);
 
-    // Draw all handmade cutouts belonging to this plane along its deck
     const pLayers = mLayers.filter(l => (l.plane || 'P3') === pKey && !l.hidden);
     pLayers.forEach((lyr, li) => {
       const rec = getCachedImg(lyr.file);
@@ -1368,7 +1413,8 @@ function drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts){
       const iw = im.naturalWidth || 200, ih = im.naturalHeight || 200;
       const th = deckH * 0.92;
       const tw = Math.min(deckW * 0.28, th * (iw / Math.max(1, ih)));
-      const lx = deckX + 175 * s + (lyr.x || ((li + 1) / (pLayers.length + 1))) * (deckW - 220 * s);
+      const normX = Math.min(1, (lyr.x || ((li + 1) / (pLayers.length + 1))) / 1.58);
+      const lx = deckX + 175 * s + normX * (deckW - 220 * s);
       const ly = deckY + deckH * 0.92;
 
       lyr._HitBox = {
@@ -1387,7 +1433,6 @@ function drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts){
       ctx.fillText((lyr.label || lyr.part_id).slice(0, 18), lx - tw * 0.5, ly + 10 * s);
     });
 
-    // Frame breakdown metric on right edge of deck
     const rawBd = sc.cel_passes && sc.cel_passes.seven_layer_breakdown;
     const bd = Array.isArray(rawBd) ? rawBd.find(x => x.plane === pKey) : (rawBd && rawBd[pKey]);
     if (bd){
@@ -1401,7 +1446,7 @@ function drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts){
   });
 }
 
-/* ---------- Main Multiplane Stage Render Loop ---------- */
+/* ---------- Main Hyper-Flat Lego Wing & Continuous Poem Tape Render Loop ---------- */
 function draw(sc, k, t, state, ts, dt){
   ctx.setTransform(DPR,0,0,DPR,0,0);
   ctx.clearRect(0,0,W,H);
@@ -1410,81 +1455,133 @@ function draw(sc, k, t, state, ts, dt){
 
   const fw = L.frame[0], fh = L.frame[1];
   const land = W > H * 1.15;
-  const y0 = 114;
-  const stageH = land ? H - y0 - 66 : Math.min(H * 0.68, H - y0 - 120);
-  const s = stageH / fh;
+  const topBarH = 112;
+  const botBarH = land ? 64 : 112;
+  const availH = Math.max(220, H - topBarH - botBarH);
+  const availW = Math.max(320, W - 20);
+
+  // Compute Hyper-Flat Camera Framing:
+  // - `hyper_flat_wing`: Shows full 2040×880 module (`1280px` Frame + `760px` Lego Wing + `160px` Upper Gable Headroom)
+  // - `continuous_tape`: Shows 3320×880 strip (`Scene k` + `760px` Lego Bridge + `Scene k+1` docked on the right)
+  // - `ortho_follow`: Smoothly pans across `x = 0..2040` at full height
+  let worldSpanW = W_MOD;
+  if (camMode === 'continuous_tape'){
+    worldSpanW = (k + 1 < scenes.length) ? (W_MOD + W_FRAME) : W_MOD;
+  }
+
+  let s = availH / H_EXT;
+  if (camMode === 'hyper_flat_wing' || camMode === 'continuous_tape'){
+    s = Math.min(availW / worldSpanW, availH / H_EXT);
+  }
+  const stageH = fh * s;
+  const headroomPx = H_HEADROOM * s;
+  const totalExtH = H_EXT * s;
+  const yTopExt = topBarH + Math.max(0, (availH - totalExtH) * 0.5);
+  const y0 = yTopExt + headroomPx; // Top of the 16:9 cel frame (y=0 in frame coords; y=-160..0 is upper gable headroom)
   const vw = W / s;
 
-  $('emoHud').style.top = (y0 + 10) + 'px';
+  $('emoHud').style.top = (yTopExt + 6) + 'px';
 
-  const target = Math.max(0, Math.min(fw - vw, actor.x - vw/2));
-  camLeft += (vw >= fw ? (0 - camLeft) : (target - camLeft)) * 0.12;
-  const offX = vw >= fw ? (W - fw*s)/2 : 0;
-  const left = vw >= fw ? 0 : camLeft;
+  let offX = 10;
+  let left = 0;
+  if (camMode === 'hyper_flat_wing' || camMode === 'continuous_tape'){
+    camLeft = 0;
+    left = 0;
+    offX = Math.max(8, (W - worldSpanW * s) * 0.5);
+  } else {
+    const target = Math.max(0, Math.min(W_MOD - vw, actor.x - vw * 0.45));
+    camLeft += (vw >= W_MOD ? (0 - camLeft) : (target - camLeft)) * 0.12;
+    offX = vw >= W_MOD ? (W - W_MOD * s) * 0.5 : 0;
+    left = vw >= W_MOD ? 0 : camLeft;
+  }
+
   const fy = y0 + sc.floor * s;
   const px = x => offX + (x - left) * s;
+  const clipW = (camMode === 'hyper_flat_wing' || camMode === 'continuous_tape') ? (worldSpanW * s) : Math.min(W, W_MOD * s);
 
   ctx.save();
   ctx.beginPath();
-  ctx.rect(offX, y0, Math.min(W, fw*s), stageH);
+  ctx.rect(offX, yTopExt, clipW, totalExtH);
   ctx.clip();
 
-  // Special Mode: Exploded 7-Layer Multiplane Isometric Stack
   if (celRenderMode === 'exploded_7'){
     drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts);
     ctx.restore();
     return;
   }
 
-  // 1. BASE PLATE: Default (`cel_wash` / `painted`) uses the unified prop-free environment plate (`s<idx>_env.webp`),
-  //    or switches to `layout_file` / `planes_map_file` for diagnostic modes
+  // 1. CONTINUOUS BACKGROUND TAPE & EXTENDED BASE PLATE (`2040×880` with `160px` upper headroom + `760px` Lego Wing)
+  const extImg = sceneExtImgs[k];
   let baseImg = sceneImgs[k];
+  let useDiagnosticPlate = false;
   if (sc.cel_passes){
     if (celRenderMode === 'painted' && sc.backdrop_file){
       const bRec = getCachedImg(sc.backdrop_file);
       if (bRec && bRec.ok) baseImg = bRec.img;
     } else if (celRenderMode === 'layout_ink' && sc.cel_passes.layout_file){
       const lRec = getCachedImg(sc.cel_passes.layout_file);
-      if (lRec && lRec.ok) baseImg = lRec.img;
+      if (lRec && lRec.ok){ baseImg = lRec.img; useDiagnosticPlate = true; }
     } else if (celRenderMode === 'color_coded' && sc.cel_passes.planes_map_file){
       const pRec = getCachedImg(sc.cel_passes.planes_map_file);
-      if (pRec && pRec.ok) baseImg = pRec.img;
+      if (pRec && pRec.ok){ baseImg = pRec.img; useDiagnosticPlate = true; }
     }
   }
 
-  if (baseImg){
-    const sat = celRenderMode === 'layout_ink' ? 35 : Math.round(86 + sceneResonance * 24);
-    const bri = celRenderMode === 'color_coded' ? 68 : Math.round(90 + sceneResonance * 14);
+  const sat = celRenderMode === 'layout_ink' ? 35 : Math.round(88 + sceneResonance * 22);
+  const bri = celRenderMode === 'color_coded' ? 68 : Math.round(92 + sceneResonance * 12);
+  const p6Shift = (camMode === 'hyper_flat_wing' || camMode === 'continuous_tape') ? 0 : (left * PARALLAX_BY_PLANE.P6 * s);
+
+  if (extImg){
     ctx.save();
     ctx.filter = `saturate(${sat}%) brightness(${bri}%)`;
-    const p6Shift = left * PARALLAX_BY_PLANE.P6 * s;
+    ctx.drawImage(extImg, offX - p6Shift, yTopExt, W_MOD * s, H_EXT * s);
+    ctx.restore();
+  }
+  if (baseImg && (useDiagnosticPlate || !extImg)){
+    ctx.save();
+    ctx.filter = `saturate(${sat}%) brightness(${bri}%)`;
     ctx.drawImage(baseImg, offX - p6Shift, y0, fw * s, fh * s);
     ctx.restore();
   }
 
-  // Optional extra ink contour boost from `ink.webp` when celStrength > 0.80
+  // Docked Neighbor Scene (`Scene k+1` at `x = W_MOD = 2040px`) on the Continuous Poem Background Tape!
+  const nextSc = (k + 1 < scenes.length) ? scenes[k + 1] : null;
+  const nextExtImg = (k + 1 < sceneExtImgs.length) ? sceneExtImgs[k + 1] : null;
+  if (nextSc && nextExtImg && (camMode === 'continuous_tape' || camMode === 'ortho_follow')){
+    ctx.save();
+    ctx.filter = `saturate(${sat}%) brightness(${bri}%)`;
+    ctx.drawImage(nextExtImg, offX + W_MOD * s - p6Shift, yTopExt, W_MOD * s, H_EXT * s);
+    ctx.restore();
+  }
+
   if (celRenderMode === 'cel_wash' && celStrength > 0.80 && sc.cel_passes && sc.cel_passes.ink_file){
     const iRec = getCachedImg(sc.cel_passes.ink_file);
     if (iRec && iRec.ok){
       ctx.save();
       ctx.globalCompositeOperation = 'multiply';
       ctx.globalAlpha = Math.min(0.28, (celStrength - 0.75) * 0.80);
-      const p6Shift = left * PARALLAX_BY_PLANE.P6 * s;
       ctx.drawImage(iRec.img, offX - p6Shift, y0, fw * s, fh * s);
       ctx.restore();
     }
   }
 
   const mLayers = sc.multiplane_layers || [];
+  const nextLayers = (nextSc && (camMode === 'continuous_tape' || camMode === 'ortho_follow')) ? (nextSc.multiplane_layers || []) : [];
 
-  // 2. PLANE P6: Handmade Sky, Celestial Canopy & Atmospheric Aperture Cut-Outs (Z = 6.0m, #78c3dc)
+  // 2. PLANE P6: Sky, Celestial Canopy & Upper Gable/Spire Headroom Cut-Outs (Z = 6.0m, #78c3dc)
   for (let i = 0; i < mLayers.length; i++){
-    if (mLayers[i].plane === 'P6') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
+    if (mLayers[i].plane === 'P6') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k, 0);
+  }
+  for (let i = 0; i < nextLayers.length; i++){
+    if (nextLayers[i].plane === 'P6') drawMultiplaneLayer(nextLayers[i], fw, fh, offX, y0, s, left, ts, k + 1, W_MOD);
   }
 
-  // 3. PLANE P5: Handmade Distant Horizon & Skyline Cut-Outs (Z = 3.8m, #6ea0e1)
+  // 3. PLANE P5: Distant Horizon, Boulevard Trees & Skyline Cut-Outs (Z = 3.8m, #6ea0e1)
   for (let i = 0; i < mLayers.length; i++){
-    if (mLayers[i].plane === 'P5') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
+    if (mLayers[i].plane === 'P5') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k, 0);
+  }
+  for (let i = 0; i < nextLayers.length; i++){
+    if (nextLayers[i].plane === 'P5') drawMultiplaneLayer(nextLayers[i], fw, fh, offX, y0, s, left, ts, k + 1, W_MOD);
   }
 
   // 3b. 3D Perspective Horizon & Vanishing Point Overlay (in `layout_ink` or `asmMode`)
@@ -1494,7 +1591,7 @@ function draw(sc, k, t, state, ts, dt){
     const vpNorm = persp.vp_norm || [0.5, 0.56];
     const hx0 = offX + hNorm[0][0] * fw * s;
     const hy0 = y0 + hNorm[0][1] * fh * s;
-    const hx1 = offX + hNorm[1][0] * fw * s;
+    const hx1 = offX + hNorm[1][0] * W_MOD * s;
     const hy1 = y0 + hNorm[1][1] * fh * s;
     const vpx = offX + vpNorm[0] * fw * s;
     const vpy = y0 + vpNorm[1] * fh * s;
@@ -1513,35 +1610,41 @@ function draw(sc, k, t, state, ts, dt){
     ctx.stroke();
     ctx.fillStyle = 'rgba(77, 226, 194, 0.9)';
     ctx.font = '700 9.5px "JetBrains Mono", monospace';
-    ctx.fillText(`3D HORIZON · VP(${Math.round(vpNorm[0]*100)}%, ${Math.round(vpNorm[1]*100)}%)`, Math.max(offX + 12, Math.min(offX + fw*s - 180, vpx + 10)), vpy - 6);
+    ctx.fillText(`3D HORIZON TAPE · VP(${Math.round(vpNorm[0]*100)}%, ${Math.round(vpNorm[1]*100)}%)`, Math.max(offX + 12, Math.min(offX + fw*s - 180, vpx + 10)), vpy - 6);
     ctx.restore();
   }
 
-  // 4. Grounded Architectural Proscenium Stage Floor Deck (below fy)
+  // 4. Continuous Grounded Stage Floor Deck across `0 .. worldSpanW`
   const emoColor = (state.emotion_mod && state.emotion_mod.color) || [216, 171, 79];
   const [er, eg, eb] = emoColor;
   const floorGrad = ctx.createLinearGradient(0, fy - 12 * s, 0, y0 + stageH);
   floorGrad.addColorStop(0, `rgba(${er},${eg},${eb},0)`);
-  floorGrad.addColorStop(0.14, `rgba(12,15,22,0.68)`);
-  floorGrad.addColorStop(1, `rgba(7,9,14,0.90)`);
+  floorGrad.addColorStop(0.14, `rgba(12,15,22,0.52)`);
+  floorGrad.addColorStop(1, `rgba(7,9,14,0.82)`);
   ctx.fillStyle = floorGrad;
-  ctx.fillRect(offX, fy - 12 * s, Math.min(W, fw * s), y0 + stageH - (fy - 12 * s));
+  ctx.fillRect(offX, fy - 12 * s, clipW, y0 + stageH - (fy - 12 * s));
 
   ctx.strokeStyle = celRenderMode === 'color_coded' ? '#eb8c1e' : `rgba(${er},${eg},${eb},${0.35 + sceneResonance * 0.35})`;
   ctx.lineWidth = 1.6;
   ctx.beginPath();
   ctx.moveTo(offX, fy);
-  ctx.lineTo(offX + fw * s, fy);
+  ctx.lineTo(offX + clipW, fy);
   ctx.stroke();
 
-  // 5. PLANE P4: Handmade Midground Architecture, Walls, Portals & Bridges (Z = 2.42m, #2d69d2)
+  // 5. PLANE P4: Midground Architecture, Extended Doorway Walls, Gable Roofs & Boulevard Fences (Z = 2.42m, #2d69d2)
   for (let i = 0; i < mLayers.length; i++){
-    if (mLayers[i].plane === 'P4') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
+    if (mLayers[i].plane === 'P4') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k, 0);
+  }
+  for (let i = 0; i < nextLayers.length; i++){
+    if (nextLayers[i].plane === 'P4') drawMultiplaneLayer(nextLayers[i], fw, fh, offX, y0, s, left, ts, k + 1, W_MOD);
   }
 
-  // 6. PLANE P3: Handmade Grounded Stage Set, Vehicles & Station Props (Z = 1.40m, #eb8c1e)
+  // 6. PLANE P3: Grounded Stage Set, Catwalk Spans, Street Lamps & Station Props (Z = 1.40m, #eb8c1e)
   for (let i = 0; i < mLayers.length; i++){
-    if (mLayers[i].plane === 'P3' || !mLayers[i].plane) drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
+    if (mLayers[i].plane === 'P3' || !mLayers[i].plane) drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k, 0);
+  }
+  for (let i = 0; i < nextLayers.length; i++){
+    if (nextLayers[i].plane === 'P3' || !nextLayers[i].plane) drawMultiplaneLayer(nextLayers[i], fw, fh, offX, y0, s, left, ts, k + 1, W_MOD);
   }
 
   // 7. Stage Station Footlights & Architectural Plaques for Poem Lines
@@ -1599,10 +1702,10 @@ function draw(sc, k, t, state, ts, dt){
     }
   });
 
-  // 8. Living Atmospheric Particles
+  // 8. Living Atmospheric Particles across extended module
   ctx.save();
   particles.forEach(p => {
-    p.x = (p.x + p.vx * dt + fw) % fw;
+    p.x = (p.x + p.vx * dt + W_MOD) % W_MOD;
     p.y = (p.y + p.vy * dt + fh) % fh;
     ctx.fillStyle = `rgba(${er},${eg},${eb},${p.a * (0.35 + sceneResonance * 0.55)})`;
     ctx.beginPath();
@@ -1613,7 +1716,10 @@ function draw(sc, k, t, state, ts, dt){
 
   // 9. PLANE P2: Handmade Focal Cutouts + Dramatic Counterpart + Playable Actor (Z = 1.00m, #cd282d)
   for (let i = 0; i < mLayers.length; i++){
-    if (mLayers[i].plane === 'P2') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
+    if (mLayers[i].plane === 'P2') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k, 0);
+  }
+  for (let i = 0; i < nextLayers.length; i++){
+    if (nextLayers[i].plane === 'P2') drawMultiplaneLayer(nextLayers[i], fw, fh, offX, y0, s, left, ts, k + 1, W_MOD);
   }
 
   const p2SoloDim = (soloPlane !== 'ALL' && soloPlane !== 'P2') ? 0.18 : 1.0;
@@ -1657,24 +1763,64 @@ function draw(sc, k, t, state, ts, dt){
   }
   ctx.restore();
 
-  // 10. PLANE P1: Handmade Foreground Occluders, Waves, Headlight Cones & Rays (Z = 0.52m, #c49a6c)
+  // 10. PLANE P1: Foreground Occluders, Curbs, Hedges, Waves & Rays (Z = 0.52m, #c49a6c)
   for (let i = 0; i < mLayers.length; i++){
-    if (mLayers[i].plane === 'P1') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
+    if (mLayers[i].plane === 'P1') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k, 0);
+  }
+  for (let i = 0; i < nextLayers.length; i++){
+    if (nextLayers[i].plane === 'P1') drawMultiplaneLayer(nextLayers[i], fw, fh, offX, y0, s, left, ts, k + 1, W_MOD);
   }
 
-  // 11. PLANE P0: Handmade Proscenium Frame, Torn-Kraft Border & Screen-Space Vignette (Z = 0.24m, #9aa0ab)
+  // 11. PLANE P0: Proscenium Frame, Torn-Kraft Border & Screen-Space Vignette (Z = 0.24m, #9aa0ab)
   for (let i = 0; i < mLayers.length; i++){
-    if (mLayers[i].plane === 'P0') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k);
+    if (mLayers[i].plane === 'P0') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k, 0);
   }
 
-  // Subtle P0 Proscenium Arch Inner Matte Frame
-  if (soloPlane === 'ALL' || soloPlane === 'P0'){
-    ctx.save();
-    ctx.strokeStyle = (celRenderMode === 'color_coded' || soloPlane === 'P0') ? '#9aa0ab' : 'rgba(154,160,171,0.28)';
-    ctx.lineWidth = (celRenderMode === 'color_coded' || soloPlane === 'P0') ? 3.5 : 1.5;
-    ctx.strokeRect(offX + 2, y0 + 2, Math.min(W, fw * s) - 4, stageH - 4);
-    ctx.restore();
+  // 11b. Hyper-Flat Camera Frame Boundary (`x = 1280px`) & Upper Gable Headroom Line (`y = 0`)
+  const frameEdgeX = px(fw);
+  const wingEdgeX = px(W_MOD);
+  ctx.save();
+  // Top edge of 16:9 cel frame (separating `160px` upper gable headroom from `720px` main frame)
+  ctx.strokeStyle = 'rgba(216, 171, 79, 0.45)';
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(offX, y0);
+  ctx.lineTo(offX + clipW, y0);
+  ctx.stroke();
+
+  // Vertical right edge of the 1280×720 16:9 Cel Frame (`x = 1280px`) where Outside-the-Frame Lego Building begins!
+  ctx.strokeStyle = 'rgba(216, 171, 79, 0.85)';
+  ctx.lineWidth = 2.0;
+  ctx.beginPath();
+  ctx.moveTo(frameEdgeX, yTopExt);
+  ctx.lineTo(frameEdgeX, y0 + stageH);
+  ctx.stroke();
+
+  // Right edge of the 2040px Lego Extended Module (`x = 2040px`) where Scene k+1 docks on the Continuous Poem Tape
+  if (camMode === 'continuous_tape' || camMode === 'ortho_follow'){
+    ctx.strokeStyle = 'rgba(77, 226, 194, 0.75)';
+    ctx.beginPath();
+    ctx.moveTo(wingEdgeX, yTopExt);
+    ctx.lineTo(wingEdgeX, y0 + stageH);
+    ctx.stroke();
   }
+  ctx.setLineDash([]);
+
+  // Architectural Zone Badges in the Upper Headroom (`yTopExt + 4`)
+  ctx.font = `700 ${Math.max(9, Math.round(10.5 * s))}px "JetBrains Mono", monospace`;
+  ctx.fillStyle = 'rgba(11, 13, 16, 0.82)';
+  ctx.fillRect(frameEdgeX + 6, yTopExt + 5, Math.min(340 * s, (W_EXT - 12) * s), 18 * s);
+  ctx.fillStyle = '#d8ab4f';
+  ctx.fillText(`🧱 OUTSIDE-THE-FRAME LEGO WING (+760px · x=1280..2040)`, frameEdgeX + 12, yTopExt + 17 * s);
+
+  if (nextSc && camMode === 'continuous_tape'){
+    ctx.fillStyle = 'rgba(11, 13, 16, 0.82)';
+    ctx.fillRect(wingEdgeX + 6, yTopExt + 5, 290 * s, 18 * s);
+    ctx.fillStyle = '#4de2c2';
+    ctx.fillText(`🎞️ NEXT ON TAPE: ${nextSc.key} · ${nextSc.name}`, wingEdgeX + 12, yTopExt + 17 * s);
+  }
+  ctx.restore();
 
   // 12. Rising Poetic Word Echoes
   for (let i = wordEchoes.length - 1; i >= 0; i--){
@@ -1732,7 +1878,7 @@ function draw(sc, k, t, state, ts, dt){
   }
 }
 
-/* ---------- Handmade 7-Layer World Authoring Workbench ---------- */
+/* ---------- Handmade 7-Layer + Outside-the-Frame Lego Authoring Workbench ---------- */
 function saveCurrentSceneAssembly(){
   if (!L || cur.i < 0 || !scenes[cur.i]) return;
   const sc = scenes[cur.i];
@@ -1741,7 +1887,7 @@ function saveCurrentSceneAssembly(){
     delete copy._HitBox;
     return copy;
   });
-  store.set(`wy.stage.v7.${L.num}.${cur.i}`, JSON.stringify(clean));
+  store.set(`wy.stage.v8.${L.num}.${cur.i}`, JSON.stringify(clean));
 }
 
 function renderFrameBreakdown(scOpt){
@@ -1786,7 +1932,6 @@ function renderSceneLayerTree(){
   const mLayers = sc.multiplane_layers || [];
   tree.innerHTML = '';
 
-  // Sort display by P6 → P0 so the 7-layer stack is crystal clear
   const indexed = mLayers.map((lyr, i) => ({ lyr, i }));
   indexed.sort((a, b) => {
     const pa = SEVEN_PLANES[a.lyr.plane || 'P3']?.idx ?? 3;
@@ -1798,14 +1943,16 @@ function renderSceneLayerTree(){
   indexed.forEach(({ lyr }) => {
     const plane = lyr.plane || 'P3';
     const spec = SEVEN_PLANES[plane] || SEVEN_PLANES.P3;
+    const isExt = Boolean(lyr.is_set_extension) || (lyr.x !== undefined && lyr.x > 1.0);
     const row = document.createElement('div');
     row.className = 'layer-item' + (selectedLayer === lyr ? ' sel' : '');
     const canonM = lyr.scale_meta && lyr.scale_meta.canon_h_m ? `${lyr.scale_meta.canon_h_m}m · ` : '';
+    const legoIcon = isExt ? '🧱 ' : '';
     row.innerHTML =
-      `<span class="p-dot" style="background:${spec.hex}"></span>` +
+      `<span class="p-dot" style="background:${isExt ? '#d8ab4f' : spec.hex}"></span>` +
       `<span class="p-tag" style="color:${spec.hex}">${plane}</span>` +
-      `<span class="l-name">${lyr.label || lyr.part_id}</span>` +
-      `<span class="l-meta">${canonM}Z:${Number(lyr.z || spec.z).toFixed(1)} · ${(Number(lyr.scale || 0.35)*100).toFixed(0)}%</span>` +
+      `<span class="l-name">${legoIcon}${lyr.label || lyr.part_id}</span>` +
+      `<span class="l-meta">x:${Number(lyr.x || 0.5).toFixed(2)} · ${canonM}${(Number(lyr.scale || 0.35)*100).toFixed(0)}%</span>` +
       `<button class="vis-btn" title="Toggle piece visibility">${lyr.hidden ? '🚫' : '👁'}</button>`;
     row.addEventListener('click', (ev) => {
       if (ev.target.classList.contains('vis-btn')) return;
@@ -1831,7 +1978,7 @@ function updateAsmInspector(){
   const aSlider = $('asmAlphaSlider');
 
   if (!selectedLayer){
-    titleEl.textContent = 'Click any piece on stage or in the 7-Layer Stack above';
+    titleEl.textContent = 'Click any piece on stage or in the 7-Layer + Lego Stack above';
     document.querySelectorAll('#asmInspector [data-plane]').forEach(b => b.classList.remove('on'));
     return;
   }
@@ -1840,13 +1987,14 @@ function updateAsmInspector(){
   const scVal = Number(selectedLayer.scale || 0.35);
   const zVal = Number(selectedLayer.z !== undefined ? selectedLayer.z : spec.z);
   const aVal = Number(selectedLayer.alpha !== undefined ? selectedLayer.alpha : 0.98);
+  const isExt = Boolean(selectedLayer.is_set_extension) || (selectedLayer.x !== undefined && selectedLayer.x > 1.0);
 
-  titleEl.innerHTML = `<span style="color:${spec.hex}">${plane}</span> · ${selectedLayer.label || selectedLayer.part_id} <span style="color:var(--muted)">(${selectedLayer.sheet_id || ''})</span>`;
+  titleEl.innerHTML = `<span style="color:${spec.hex}">${plane}</span> · ${isExt ? '🧱 ' : ''}${selectedLayer.label || selectedLayer.part_id} <span style="color:var(--muted)">(x=${Number(selectedLayer.x||0.5).toFixed(2)})</span>`;
   animSel.value = selectedLayer.anim_role || 'static';
 
-  if (scSlider){ scSlider.value = scVal; $('asmScaleVal').textContent = scVal.toFixed(2); }
-  if (zSlider){ zSlider.value = zVal; $('asmZVal').textContent = zVal.toFixed(2) + 'm'; }
-  if (aSlider){ aSlider.value = aVal; $('asmAlphaVal').textContent = Math.round(aVal * 100) + '%'; }
+  if (scSlider){ scSlider.value = scVal; if ($('asmScaleVal')) $('asmScaleVal').textContent = scVal.toFixed(2); }
+  if (zSlider){ zSlider.value = zVal; if ($('asmZVal')) $('asmZVal').textContent = zVal.toFixed(2) + 'm'; }
+  if (aSlider){ aSlider.value = aVal; if ($('asmAlphaVal')) $('asmAlphaVal').textContent = Math.round(aVal * 100) + '%'; }
 
   document.querySelectorAll('#asmInspector [data-plane]').forEach(b => {
     b.classList.toggle('on', b.dataset.plane === plane);
@@ -1863,7 +2011,6 @@ function renderAsmCatalog(){
 
   grid.innerHTML = '';
 
-  // Special tab: `world_sheets` shows this scene's cel/ink/layout/exploded plates + poem kit sheets
   if (asmCategory === 'world_sheets' && sc && sc.cel_passes){
     const cp = sc.cel_passes;
     const plates = [
@@ -1923,7 +2070,8 @@ function addCatalogItemToStage(item){
   const fw = L.frame[0];
   const pKey = (soloPlane !== 'ALL') ? soloPlane : (item.plane || 'P4');
   const spec = SEVEN_PLANES[pKey] || SEVEN_PLANES.P4;
-  const defaultYByPlane = { P6: 0.28, P5: 0.44, P4: 0.72, P3: 0.88, P2: 0.90, P1: 0.95, P0: 0.52 };
+  const defaultYByPlane = { P6: 0.28, P5: 0.88, P4: 0.99, P3: 0.96, P2: 0.92, P1: 0.99, P0: 0.52 };
+  const placeOutside = camMode === 'hyper_flat_wing' || camMode === 'continuous_tape' || (actor && actor.x > fw);
 
   const newLayer = {
     id: `custom_${Date.now()}`,
@@ -1939,13 +2087,15 @@ function addCatalogItemToStage(item){
     haze_mix: spec.haze,
     pal_k: spec.palK,
     z: item.z || spec.z,
-    x: Number((actor ? actor.x / fw : 0.5).toFixed(3)),
-    y: defaultYByPlane[pKey] || 0.86,
-    scale: item.default_scale || 0.42,
+    x: placeOutside ? 1.26 : Number((actor ? actor.x / fw : 0.5).toFixed(3)),
+    y: defaultYByPlane[pKey] || 0.96,
+    scale: item.default_scale || (placeOutside ? 0.62 : 0.42),
     width: item.width || 240,
     height: item.height || 240,
-    role: 'handmade_7layer_cutout',
-    anim_role: item.anim_role || 'portal_aperture',
+    role: placeOutside ? 'lego_set_extension' : 'handmade_7layer_cutout',
+    is_set_extension: placeOutside,
+    lego_role: pKey === 'P4' ? 'gable_portal_cap' : (pKey === 'P5' ? 'boulevard_tree' : 'boulevard_lamp'),
+    anim_role: item.anim_role || 'static',
     alpha: pKey === 'P0' ? 0.68 : 0.98,
     file: item.file
   };
@@ -2004,16 +2154,17 @@ $('rigModeBtn').addEventListener('click', ()=>{
   use31PartRig = !use31PartRig;
   updateRigButtonLabel();
 });
+$('camModeSelect').addEventListener('change', e => {
+  camMode = e.target.value;
+});
 $('celModeSelect').addEventListener('change', e => {
   celRenderMode = e.target.value;
 });
 $('celStrengthSlider').addEventListener('input', e => {
-  celStrength = parseFloat(e.target.value);
-  $('celStrengthVal').textContent = Math.round(celStrength * 100) + '%';
+  celStrength = parseFloat(e.target.value) / 100;
 });
 $('colorTintSlider').addEventListener('input', e => {
-  colorTintStrength = parseFloat(e.target.value);
-  $('colorTintVal').textContent = Math.round(colorTintStrength * 100) + '%';
+  colorTintStrength = parseFloat(e.target.value) / 100;
 });
 $('asmToggleBtn').addEventListener('click', ()=>{
   asmMode = !asmMode;
@@ -2040,7 +2191,7 @@ $('asmScaleDown').addEventListener('click', ()=>{
 });
 $('asmScaleUp').addEventListener('click', ()=>{
   if (!selectedLayer) return;
-  selectedLayer.scale = Number(Math.min(1.05, (selectedLayer.scale || 0.35) * 1.1).toFixed(4));
+  selectedLayer.scale = Number(Math.min(1.38, (selectedLayer.scale || 0.35) * 1.1).toFixed(4));
   updateAsmInspector();
   renderSceneLayerTree();
   saveCurrentSceneAssembly();
@@ -2048,14 +2199,14 @@ $('asmScaleUp').addEventListener('click', ()=>{
 $('asmScaleSlider').addEventListener('input', e => {
   if (!selectedLayer) return;
   selectedLayer.scale = Number(parseFloat(e.target.value).toFixed(3));
-  $('asmScaleVal').textContent = selectedLayer.scale.toFixed(2);
+  if ($('asmScaleVal')) $('asmScaleVal').textContent = selectedLayer.scale.toFixed(2);
   renderSceneLayerTree();
   saveCurrentSceneAssembly();
 });
 $('asmZSlider').addEventListener('input', e => {
   if (!selectedLayer || !scenes[cur.i]) return;
   selectedLayer.z = Number(parseFloat(e.target.value).toFixed(2));
-  $('asmZVal').textContent = selectedLayer.z.toFixed(2) + 'm';
+  if ($('asmZVal')) $('asmZVal').textContent = selectedLayer.z.toFixed(2) + 'm';
   scenes[cur.i].multiplane_layers.sort((a, b) => (b.z || 1.4) - (a.z || 1.4));
   renderSceneLayerTree();
   saveCurrentSceneAssembly();
@@ -2063,7 +2214,7 @@ $('asmZSlider').addEventListener('input', e => {
 $('asmAlphaSlider').addEventListener('input', e => {
   if (!selectedLayer) return;
   selectedLayer.alpha = Number(parseFloat(e.target.value).toFixed(2));
-  $('asmAlphaVal').textContent = Math.round(selectedLayer.alpha * 100) + '%';
+  if ($('asmAlphaVal')) $('asmAlphaVal').textContent = Math.round(selectedLayer.alpha * 100) + '%';
   saveCurrentSceneAssembly();
 });
 $('asmFlipBtn').addEventListener('click', ()=>{
@@ -2076,9 +2227,39 @@ $('asmDupBtn').addEventListener('click', ()=>{
   const copy = JSON.parse(JSON.stringify(selectedLayer));
   delete copy._HitBox;
   copy.id = `dup_${Date.now()}`;
-  copy.x = Number(Math.min(0.94, (copy.x || 0.5) + 0.06).toFixed(3));
+  copy.x = Number(Math.min(1.56, (copy.x || 0.5) + 0.08).toFixed(3));
   scenes[cur.i].multiplane_layers.push(copy);
   selectedLayer = copy;
+  updateAsmInspector();
+  buildPlaneRibbon(scenes[cur.i]);
+  renderSceneLayerTree();
+  saveCurrentSceneAssembly();
+});
+$('asmSnapOutsideBtn').addEventListener('click', ()=>{
+  if (!selectedLayer || !scenes[cur.i]) return;
+  selectedLayer.is_set_extension = true;
+  selectedLayer.role = 'lego_set_extension';
+  if ((selectedLayer.x || 0.5) <= 1.0) selectedLayer.x = 1.24;
+  selectedLayer.y = 0.99;
+  if (!selectedLayer.lego_role) selectedLayer.lego_role = 'gable_portal_cap';
+  updateAsmInspector();
+  renderSceneLayerTree();
+  saveCurrentSceneAssembly();
+});
+$('asmTileStripBtn').addEventListener('click', ()=>{
+  if (!selectedLayer || !scenes[cur.i]) return;
+  const xs = [1.08, 1.24, 1.40, 1.54];
+  selectedLayer.is_set_extension = true;
+  selectedLayer.x = xs[0];
+  for (let i = 1; i < xs.length; i++){
+    const copy = JSON.parse(JSON.stringify(selectedLayer));
+    delete copy._HitBox;
+    copy.id = `tile_${Date.now()}_${i}`;
+    copy.x = xs[i];
+    copy.is_set_extension = true;
+    scenes[cur.i].multiplane_layers.push(copy);
+  }
+  scenes[cur.i].multiplane_layers.sort((a, b) => (b.z || 1.4) - (a.z || 1.4));
   updateAsmInspector();
   buildPlaneRibbon(scenes[cur.i]);
   renderSceneLayerTree();
@@ -2124,6 +2305,7 @@ $('asmResetSceneBtn').addEventListener('click', () => {
   if (!L || cur.i < 0 || !scenes[cur.i]) return;
   const sc = scenes[cur.i];
   sc.multiplane_layers = JSON.parse(JSON.stringify(sc._defaultLayers || []));
+  store.del(`wy.stage.v8.${L.num}.${cur.i}`);
   store.del(`wy.stage.v7.${L.num}.${cur.i}`);
   store.del(`wy.stage.v6.${L.num}.${cur.i}`);
   store.del(`wy.stage.v5.${L.num}.${cur.i}`);
@@ -2153,7 +2335,7 @@ $('asmExportJsonBtn').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `scene_${sc.key.replace('.','_')}_7layer_world.json`;
+  a.download = `scene_${sc.key.replace('.','_')}_7layer_lego_wing.json`;
   a.click();
 });
 $('asmCopyPyBtn').addEventListener('click', () => {
@@ -2179,7 +2361,7 @@ document.querySelectorAll('#asmCatRow [data-cat]').forEach(btn => {
   });
 });
 
-// Canvas pointer hit-testing for dragging & corner-scaling pieces when `asmMode` is active
+// Canvas pointer hit-testing for dragging & corner-scaling pieces across the 2040×880 Extended Module
 cv.addEventListener('pointerdown', e => {
   if (!asmMode || !scenes[cur.i]) return;
   const rect = cv.getBoundingClientRect();
@@ -2187,7 +2369,6 @@ cv.addEventListener('pointerdown', e => {
   const my = e.clientY - rect.top;
   const mLayers = scenes[cur.i].multiplane_layers || [];
 
-  // Check if clicking the bottom-right resize handle of currently selected layer
   if (selectedLayer && selectedLayer._HitBox){
     const hb = selectedLayer._HitBox;
     const hx = hb.x0 + hb.w;
@@ -2201,7 +2382,6 @@ cv.addEventListener('pointerdown', e => {
     }
   }
 
-  // Hit-test front-to-back (P0 -> P6)
   let hit = null;
   for (let i = mLayers.length - 1; i >= 0; i--){
     const lyr = mLayers[i];
@@ -2232,7 +2412,7 @@ cv.addEventListener('pointermove', e => {
   if (scalingLayer){
     const dy = dragOffset.startY - my;
     const factor = Math.max(0.25, Math.min(2.8, 1 + dy / 160));
-    scalingLayer.scale = Number(Math.max(0.06, Math.min(1.05, dragOffset.startScale * factor)).toFixed(3));
+    scalingLayer.scale = Number(Math.max(0.06, Math.min(1.38, dragOffset.startScale * factor)).toFixed(3));
     updateAsmInspector();
     return;
   }
@@ -2243,8 +2423,9 @@ cv.addEventListener('pointermove', e => {
   const newScreenBy = my - dragOffset.dy;
   const newBaseX = (newScreenCx - hb.offX) / hb.s + hb.camDelta * hb.pFactor;
   const newBaseY = (newScreenBy - hb.stageY0) / hb.s;
-  draggingLayer.x = Number(Math.max(0.03, Math.min(0.97, newBaseX / hb.fw)).toFixed(3));
-  draggingLayer.y = Number(Math.max(0.10, Math.min(0.98, newBaseY / hb.fh)).toFixed(3));
+  draggingLayer.x = Number(Math.max(0.03, Math.min(1.58, newBaseX / hb.fw)).toFixed(3));
+  draggingLayer.y = Number(Math.max(-0.18, Math.min(1.03, newBaseY / hb.fh)).toFixed(3));
+  if (draggingLayer.x > 1.0) draggingLayer.is_set_extension = true;
 });
 cv.addEventListener('pointerup', () => {
   if (draggingLayer || scalingLayer){
