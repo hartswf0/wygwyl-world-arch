@@ -561,13 +561,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "victory_cry",
         "counterpart": {"key": "ancestor_elder/white_silver", "x": 960, "dir": -1, "cue": "idle"},
         "layers": [
-            L("05.props.galaxy-universe__p01", "Swirling Spiral Galaxy Core Overhead", "P6", 6.00, 0.52, 0.28, 0.26, "planet_orbit", "Spiral Galaxies Overhead"),
-            L("05.props.star-names__p05", "Carved JUNE Star Nameplate in Sky", "P5", 3.80, 0.22, 0.34, 0.14, "sun_pulse", "Naming My Own Stars"),
-            L("05.hero.perimeter__p04", "Star-Inscribed Perimeter Stone Wall", "P4", 2.44, 0.24, 0.86, 0.32, "portal_aperture", None),
-            L("05.props.star-names__p06", "Radiant Star Crest Medallion", "P3", 1.40, 0.78, 0.76, 0.24, "sun_pulse", "The Waiting Past"),
-            L("05.props.star-names__p02", "Golden Constellation Astrolabe on Stage", "P2", 1.04, 0.48, 0.88, 0.22, "planet_orbit", None),
-            L("05.props.star-names__p14", "Foreground Inscribed Star Banner", "P1", 0.54, 0.84, 0.93, 0.16, "lamp_glow", None, False, 0.82),
-            L("05.set.winged_marble_gate__p04", "Proscenium East Star-Gate Pillar", "P0", 0.25, 0.96, 0.95, 0.38, "proscenium_mask", None, True, 0.85),
+            L("05.props.galaxy-universe__p01", "Swirling Spiral Galaxy Core Overhead", "P6", 6.00, 0.52, 0.24, 0.22, "planet_orbit", "Spiral Galaxies Overhead"),
+            L("05.props.galaxy-universe__p03", "Distant Nebula Cloud Canopy", "P5", 3.80, 0.22, 0.30, 0.18, "sun_pulse", "Naming My Own Stars"),
+            L("05.hero.perimeter__p04", "Star-Inscribed Perimeter Stone Wall", "P4", 2.44, 0.22, 0.86, 0.28, "portal_aperture", None),
+            L("05.props.galaxy-universe__p17", "Golden Constellation Pedestal", "P3", 1.40, 0.34, 0.88, 0.20, "planet_orbit", "Naming My Own Stars"),
+            L("05.props.staff-mattress-emblem__p07", "Radiant Star Crest Medallion", "P2", 1.04, 0.72, 0.86, 0.18, "sun_pulse", "The Waiting Past"),
+            L("05.props.galaxy-universe__p06", "Foreground Orbiting Star Cluster", "P1", 0.54, 0.84, 0.92, 0.15, "lamp_glow", None, False, 0.76),
+            L("05.set.winged_marble_gate__p04", "Proscenium East Star-Gate Pillar", "P0", 0.25, 0.96, 0.95, 0.34, "proscenium_mask", None, True, 0.78),
         ],
     },
     "05.2": {
@@ -879,12 +879,11 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "layers": [
             L("08.props.moons-laundry__p01", "High Equator Moon Above Club Roof", "P6", 6.00, 0.78, 0.22, 0.18, "planet_orbit", None, False, 0.86),
             L("08.set.rooftop_club__p06", "Far Mountain Range Beyond Rooftop Club", "P5", 3.80, 0.50, 0.76, 0.18, "static", None, False, 0.90),
-            L("08.hero.marquee__p01", "Glowing NEW SINGLE Theatre Stone Facade", "P4", 2.46, 0.24, 0.85, 0.38, "lamp_glow", "NEW SINGLE Club Marquee"),
-            L("08.set.rooftop_club__p04", "Pulsing Rooftop Strobe Tower", "P4", 2.38, 0.52, 0.86, 0.42, "speaker_pulse", "Soul Leaves the Dancer"),
-            L("08.props.basins__p01", "Rooftop Terrace Ice-Water Basin", "P3", 1.40, 0.82, 0.88, 0.22, "wave_mid", None),
-            L("08.cast.angel.wings__p03", "Luminous Outspread Soul Wings", "P2", 1.04, 0.58, 0.64, 0.24, "wing_flap_L", None),
-            L("08.fx.soul-weather__p01", "Ascending Luminous Soul Current", "P1", 0.46, 0.76, 0.58, 0.24, "sun_pulse", "Ascending Soul Vapor", False, 0.86),
-            L("08.hero.marquee.interior__p01", "Proscenium Neon Marquee Pillar", "P0", 0.25, 0.04, 0.95, 0.36, "proscenium_mask", None, False, 0.85),
+            L("08.hero.marquee__p01", "Glowing NEW SINGLE Theatre Stone Facade", "P4", 2.46, 0.24, 0.85, 0.32, "lamp_glow", "NEW SINGLE Club Marquee"),
+            L("07.props.speakers-vu__p15", "Rooftop Monitor Speaker Cabinet", "P3", 1.40, 0.26, 0.88, 0.20, "speaker_pulse", "Soul Leaves the Dancer"),
+            L("07.props.dj-decks__p03", "Rooftop Terrace DJ Console", "P2", 1.04, 0.72, 0.88, 0.19, "dj_console", None),
+            L("08.cast.angel.wings__p03", "Luminous Outspread Soul Wings", "P1", 0.54, 0.58, 0.64, 0.20, "wing_flap_L", "Ascending Soul Vapor", False, 0.82),
+            L("08.hero.marquee.interior__p01", "Proscenium Neon Marquee Pillar", "P0", 0.25, 0.04, 0.95, 0.34, "proscenium_mask", None, False, 0.78),
         ],
     },
     "08.1": {
@@ -893,14 +892,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "club_groove",
         "counterpart": {"key": "club_dress/club", "x": 920, "dir": -1, "cue": "idle"},
         "layers": [
-            L("08.fx.soul-weather__p01", "High Violet Ceiling Strobe Plume", "P6", 6.00, 0.50, 0.20, 0.18, "sun_pulse", None, False, 0.84),
+            L("08.props.moons-laundry__p01", "High Violet Ceiling Moon", "P6", 6.00, 0.50, 0.20, 0.16, "sun_pulse", None, False, 0.80),
             L("08.set.rooftop_club__p06", "Club Window Skyline Silhouette", "P5", 3.80, 0.50, 0.82, 0.18, "static", None, False, 0.88),
-            L("08.hero.marquee.interior__p01", "Neon NEW SINGLE Stage Arch", "P4", 2.44, 0.22, 0.84, 0.40, "portal_aperture", "Strangers Collide on Floor"),
-            L("08.hero.marquee.interior__p08", "Violet Club Colonnade Arch", "P4", 2.42, 0.80, 0.84, 0.40, "lamp_glow", "Midnight Dance Arches"),
-            L("07.props.dj-decks__p01", "Late-Night Club DJ Console", "P3", 1.40, 0.52, 0.86, 0.24, "dj_console", "Last One to Leave"),
-            L("08.props.basins__p01", "Chilled Club Lounge Basin", "P2", 1.04, 0.34, 0.88, 0.20, "wave_mid", None),
-            L("08.fx.soul-weather__p05", "Foreground Dancefloor Dry-Ice Haze", "P1", 0.52, 0.64, 0.88, 0.18, "cloud_drift_L", None, False, 0.78),
-            L("08.hero.marquee.interior__p08", "Proscenium Violet Arch Column", "P0", 0.25, 0.96, 0.95, 0.36, "proscenium_mask", None, True, 0.85),
+            L("08.hero.marquee.interior__p01", "Neon NEW SINGLE Stage Arch", "P4", 2.44, 0.22, 0.85, 0.34, "portal_aperture", "Strangers Collide on Floor"),
+            L("07.props.dj-decks__p01", "Late-Night Club DJ Console", "P3", 1.40, 0.52, 0.87, 0.20, "dj_console", "Last One to Leave"),
+            L("07.props.speakers-vu__p15", "Club Dancefloor Bass Monitor", "P2", 1.04, 0.24, 0.88, 0.19, "speaker_pulse", "Midnight Dance Arches"),
+            L("06.props.lantern-candle-guitar__p11", "Foreground Lounge Votive Candle", "P1", 0.52, 0.82, 0.91, 0.15, "lamp_glow", None, False, 0.78),
+            L("08.hero.marquee.interior__p08", "Proscenium Violet Arch Column", "P0", 0.25, 0.96, 0.95, 0.34, "proscenium_mask", None, True, 0.78),
         ],
     },
     "08.2": {
@@ -909,13 +907,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "open_arms_wide",
         "counterpart": {"key": "poet_soul/soul", "x": 720, "dir": -1, "cue": "kneel_2", "y_offset": -80},
         "layers": [
-            L("08.props.moons-laundry__p01", "Closest Salted Moon Overhead", "P6", 6.00, 0.80, 0.26, 0.22, "planet_orbit", "Moons of the Equator", False, 0.90),
-            L("08.set.atlantis_aerial__p01", "Aerial Mandala of Atlantis Below", "P5", 3.80, 0.22, 0.74, 0.34, "portal_other_world", "Aerial Atlantis Below", False, 0.92),
-            L("08.hero.marquee__p01", "High Equator Wind-Tower Colonnade", "P4", 2.42, 0.82, 0.85, 0.34, "portal_aperture", None),
-            L("08.props.moons-laundry__p25", "Equator Clothesline & Blowing Laundry", "P3", 1.42, 0.54, 0.74, 0.24, "curtain_sway_L", "Open Field at the Equator"),
-            L("08.cast.angel.wings__p03", "Hovering Equator Angel Wing Crest", "P2", 1.04, 0.64, 0.64, 0.22, "wing_flap_L", None),
-            L("08.fx.soul-weather__p01", "Foreground Salted Moon-Wind Stream", "P1", 0.52, 0.24, 0.76, 0.20, "sun_pulse", None, False, 0.80),
-            L("08.set.rooftop_club__p04", "Proscenium Equator Beacon Frame", "P0", 0.25, 0.04, 0.95, 0.36, "proscenium_mask", None, False, 0.84),
+            L("08.props.moons-laundry__p01", "Closest Salted Moon Overhead", "P6", 6.00, 0.80, 0.24, 0.20, "planet_orbit", "Moons of the Equator", False, 0.86),
+            L("08.set.atlantis_aerial__p01", "Aerial Mandala of Atlantis Below", "P5", 3.80, 0.22, 0.74, 0.28, "portal_other_world", "Aerial Atlantis Below", False, 0.84),
+            L("08.hero.marquee__p01", "High Equator Wind-Tower Colonnade", "P4", 2.42, 0.82, 0.85, 0.30, "portal_aperture", None),
+            L("04.props.word-shore__p23", "Equator Wind Wrought-Iron Lantern", "P3", 1.42, 0.28, 0.88, 0.19, "lamp_glow", "Open Field at the Equator"),
+            L("06.props.lantern-candle-guitar__p11", "Equator Votive Candle", "P2", 1.04, 0.74, 0.88, 0.16, "lamp_glow", None),
+            L("08.cast.angel.wings__p03", "Hovering Equator Angel Wing Crest", "P1", 0.52, 0.56, 0.64, 0.18, "wing_flap_L", None, False, 0.78),
+            L("08.set.rooftop_club__p04", "Proscenium Equator Beacon Frame", "P0", 0.25, 0.04, 0.95, 0.34, "proscenium_mask", None, False, 0.78),
         ],
     },
     "08.3": {
@@ -924,14 +922,14 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "kneel_universe",
         "counterpart": {"key": "angel/robe", "x": 880, "dir": -1, "cue": "idle"},
         "layers": [
-            L("08.props.moons-laundry__p01", "Sanctuary Moon Above Baptism Font", "P6", 6.00, 0.50, 0.20, 0.18, "planet_orbit", None, False, 0.86),
-            L("08.set.atlantis_aerial__p01", "Distant Luminous Mandala Horizon", "P5", 3.80, 0.50, 0.76, 0.28, "portal_other_world", None, False, 0.88),
-            L("08.hero.marquee__p01", "Marble Sanctuary Baptism Colonnade", "P4", 2.42, 0.20, 0.85, 0.36, "portal_aperture", None),
-            L("08.props.basins__p01", "West Marble Ice-Water Basin", "P3", 1.42, 0.24, 0.87, 0.24, "wave_mid", "Salted Ice-Water Basin"),
-            L("08.props.basins__p05", "Central Baptism Font of Ice Water", "P3", 1.38, 0.50, 0.88, 0.26, "wave_near", "Angels' Ice-Water Baptism"),
-            L("08.cast.angel.wings__p03", "Feathered Angel Sanctuary Wings", "P2", 1.04, 0.78, 0.72, 0.28, "wing_flap_L", "Choir of Night Angels"),
-            L("08.fx.soul-weather__p01", "Rising Ice-Water Baptism Mist", "P1", 0.52, 0.50, 0.84, 0.20, "sun_pulse", None, False, 0.82),
-            L("08.hero.marquee.interior__p01", "Proscenium Sanctuary Wing Arch", "P0", 0.25, 0.96, 0.95, 0.36, "proscenium_mask", None, True, 0.85),
+            L("08.props.moons-laundry__p01", "Sanctuary Moon Above Baptism Font", "P6", 6.00, 0.50, 0.20, 0.18, "planet_orbit", None, False, 0.84),
+            L("08.set.atlantis_aerial__p01", "Distant Luminous Mandala Horizon", "P5", 3.80, 0.50, 0.76, 0.24, "portal_other_world", None, False, 0.82),
+            L("08.hero.marquee__p01", "Marble Sanctuary Baptism Colonnade", "P4", 2.42, 0.20, 0.85, 0.30, "portal_aperture", None),
+            L("11.props.inlays-lantern__p15", "Sanctuary Baptism Brass Lantern", "P3", 1.42, 0.26, 0.88, 0.19, "lamp_glow", "Salted Ice-Water Basin"),
+            L("04.props.word-shore__p23", "Choir Colonnade Iron Lantern", "P3", 1.38, 0.72, 0.88, 0.19, "lamp_glow", "Angels' Ice-Water Baptism"),
+            L("08.cast.angel.wings__p03", "Feathered Angel Sanctuary Wings", "P2", 1.04, 0.52, 0.72, 0.22, "wing_flap_L", "Choir of Night Angels"),
+            L("06.props.lantern-candle-guitar__p11", "Foreground Baptism Votive Flame", "P1", 0.52, 0.44, 0.91, 0.15, "lamp_glow", None, False, 0.78),
+            L("08.hero.marquee.interior__p01", "Proscenium Sanctuary Wing Arch", "P0", 0.25, 0.96, 0.95, 0.34, "proscenium_mask", None, True, 0.78),
         ],
     },
     "08.4": {
@@ -940,13 +938,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "idle_hand_chest",
         "counterpart": None,
         "layers": [
-            L("09.props.moon-sun__p01", "Pale Dawn Disc Over Rooftop Terrace", "P6", 6.00, 0.78, 0.22, 0.16, "sun_pulse", None, False, 0.84),
-            L("08.set.rooftop_club__p06", "Quiet Dawn Skyline & Radio Masts", "P5", 3.80, 0.50, 0.84, 0.16, "static", None, False, 0.90),
-            L("08.hero.marquee__p01", "Quiet Dawn Rooftop Colonnade", "P4", 2.42, 0.52, 0.85, 0.36, "portal_aperture", "Soul Returns to the Body"),
-            L("08.props.basins__p06", "Still Terrace Basin at Dawn", "P3", 1.42, 0.80, 0.87, 0.22, "wave_mid", "Terrace Recovery Basin"),
-            L("08.props.basins__p01", "Clear Morning Water Font", "P2", 1.04, 0.34, 0.88, 0.20, "wave_near", None),
-            L("08.fx.soul-weather__p05", "Parting Smoke & Haze Cloud", "P1", 0.48, 0.22, 0.68, 0.22, "cloud_drift_L", "Breathing in the Smoke", False, 0.84),
-            L("08.set.rooftop_club__p04", "Proscenium Rooftop Parapet Column", "P0", 0.25, 0.04, 0.95, 0.36, "proscenium_mask", None, False, 0.85),
+            L("09.props.moon-sun__p01", "Pale Dawn Disc Over Rooftop Terrace", "P6", 6.00, 0.78, 0.22, 0.16, "sun_pulse", None, False, 0.82),
+            L("08.set.rooftop_club__p06", "Quiet Dawn Skyline & Radio Masts", "P5", 3.80, 0.50, 0.84, 0.16, "static", None, False, 0.86),
+            L("08.hero.marquee__p01", "Quiet Dawn Rooftop Colonnade", "P4", 2.42, 0.52, 0.85, 0.30, "portal_aperture", "Soul Returns to the Body"),
+            L("04.props.word-shore__p23", "Still Terrace Iron Lantern at Dawn", "P3", 1.42, 0.76, 0.88, 0.19, "lamp_glow", "Terrace Recovery Basin"),
+            L("06.props.lantern-candle-guitar__p11", "Clear Morning Votive Candle", "P2", 1.04, 0.28, 0.88, 0.16, "lamp_glow", "Breathing in the Smoke"),
+            L("11.props.inlays-lantern__p15", "Foreground Parapet Brass Lantern", "P1", 0.48, 0.18, 0.91, 0.16, "lamp_glow", None, False, 0.78),
+            L("08.set.rooftop_club__p04", "Proscenium Rooftop Parapet Column", "P0", 0.25, 0.04, 0.95, 0.34, "proscenium_mask", None, False, 0.78),
         ],
     },
     "08.5": {
@@ -955,14 +953,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "back_horizon",
         "counterpart": None,
         "layers": [
-            L("09.props.moon-sun__p01", "Morning Sun Over the Peaks", "P6", 6.00, 0.80, 0.26, 0.20, "sun_pulse", "Wandering Eyes at Dawn", False, 0.90),
-            L("10.set.mountain_road__p04", "Unfamiliar Mountains in the Distance", "P5", 3.80, 0.52, 0.84, 0.18, "water_backing", "Mountains From the Rooftop", False, 0.92),
-            L("08.set.rooftop_club__p06", "Rooftop Skyline & Radio Towers", "P4", 2.54, 0.50, 0.86, 0.16, "static", None),
-            L("08.set.rooftop_club__p04", "West Rooftop Beacon Tower", "P4", 2.40, 0.20, 0.86, 0.40, "portal_aperture", "Rooftop Parapet"),
-            L("08.props.basins__p06", "Dawn Terrace Parapet Basin", "P3", 1.40, 0.78, 0.88, 0.20, "wave_mid", None),
-            L("08.props.moons-laundry__p25", "Fluttering Morning Breeze Line", "P2", 1.04, 0.36, 0.78, 0.18, "curtain_sway_L", None),
-            L("08.fx.soul-weather__p05", "Morning Mist Clearing the Parapet", "P1", 0.52, 0.64, 0.86, 0.16, "cloud_drift_L", None, False, 0.78),
-            L("08.hero.marquee__p01", "Proscenium East Terrace Pilaster", "P0", 0.25, 0.96, 0.95, 0.36, "proscenium_mask", None, True, 0.85),
+            L("09.props.moon-sun__p01", "Morning Sun Over the Peaks", "P6", 6.00, 0.80, 0.24, 0.18, "sun_pulse", "Wandering Eyes at Dawn", False, 0.86),
+            L("10.set.mountain_road__p04", "Unfamiliar Mountains in the Distance", "P5", 3.80, 0.52, 0.82, 0.18, "water_backing", "Mountains From the Rooftop", False, 0.86),
+            L("08.set.rooftop_club__p04", "West Rooftop Beacon Tower", "P4", 2.40, 0.20, 0.86, 0.32, "portal_aperture", "Rooftop Parapet"),
+            L("04.props.word-shore__p23", "Dawn Terrace Parapet Lantern", "P3", 1.40, 0.76, 0.88, 0.19, "lamp_glow", None),
+            L("06.props.lantern-candle-guitar__p11", "Morning Parapet Brass Candle", "P2", 1.04, 0.28, 0.88, 0.16, "lamp_glow", None),
+            L("11.props.inlays-lantern__p15", "Foreground Dawn Watchtower Lantern", "P1", 0.52, 0.64, 0.91, 0.16, "lamp_glow", None, False, 0.78),
+            L("08.hero.marquee__p01", "Proscenium East Terrace Pilaster", "P0", 0.25, 0.96, 0.95, 0.34, "proscenium_mask", None, True, 0.78),
         ],
     },
 
@@ -975,14 +972,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "walk_stride_R",
         "counterpart": {"key": "ex/ex_jacket", "x": 920, "dir": 1, "cue": "walk_away"},
         "layers": [
-            L("09.props.moon-sun__p01", "Shared Full Moon Overhead", "P6", 6.00, 0.80, 0.26, 0.20, "sun_pulse", "Under the Shared Moon", False, 0.90),
-            L("09.set.atlantis_harbor_street__p08", "Distant Harbor Crane & Quayside", "P5", 3.80, 0.76, 0.82, 0.34, "portal_aperture", None, False, 0.90),
-            L("09.hero.canopy__p08", "Illuminated Neon Club Facade", "P4", 2.44, 0.22, 0.85, 0.44, "lamp_glow", "Outside the Club Canopy"),
-            L("09.set.atlantis_club_sidewalk__p04", "Double-Globe Harbor Streetlamp", "P4", 2.40, 0.52, 0.86, 0.44, "lamp_glow", "The EX in the Crowd"),
-            L("09.props.suitcases-notice__p19", "Club Sidewalk Iron Gate Signpost", "P3", 1.40, 0.36, 0.87, 0.28, "lamp_glow", None),
-            L("09.props.suitcases-notice__p04", "Resting Curbside Leather Valise", "P2", 1.04, 0.66, 0.89, 0.18, "drawer_slide", None),
-            L("09.fx.call-abyss__p19", "Foreground Sidewalk Night Mist", "P1", 0.52, 0.82, 0.88, 0.16, "cloud_drift_L", None, False, 0.78),
-            L("09.set.atlantis_club_sidewalk__p05", "Proscenium Iron Streetlamp Post", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
+            L("09.props.moon-sun__p01", "Shared Full Moon Overhead", "P6", 6.00, 0.80, 0.24, 0.18, "sun_pulse", "Under the Shared Moon", False, 0.86),
+            L("09.set.atlantis_harbor_street__p08", "Distant Harbor Crane & Quayside", "P5", 3.80, 0.76, 0.82, 0.28, "portal_aperture", None, False, 0.84),
+            L("09.set.atlantis_club_sidewalk__p04", "Double-Globe Harbor Streetlamp", "P4", 2.40, 0.52, 0.86, 0.36, "lamp_glow", "Outside the Club Canopy"),
+            L("09.props.suitcases-notice__p01", "Standing Strapped Leather Suitcase", "P3", 1.40, 0.34, 0.88, 0.18, "lamp_glow", "The EX in the Crowd"),
+            L("09.props.suitcases-notice__p05", "Resting Curbside Leather Valise", "P2", 1.04, 0.66, 0.89, 0.18, "drawer_slide", None),
+            L("06.props.lantern-candle-guitar__p11", "Foreground Curbside Lantern Glow", "P1", 0.52, 0.82, 0.91, 0.15, "lamp_glow", None, False, 0.78),
+            L("09.set.atlantis_club_sidewalk__p05", "Proscenium Iron Streetlamp Post", "P0", 0.25, 0.04, 0.95, 0.34, "proscenium_mask", None, False, 0.78),
         ],
     },
     "09.1": {
@@ -991,14 +987,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "walk_stride_L",
         "counterpart": {"key": "ex/ex_jacket", "x": 880, "dir": -1, "cue": "idle"},
         "layers": [
-            L("09.props.moon-sun__p01", "Moon Settling Over the Water", "P6", 6.00, 0.78, 0.26, 0.22, "sun_pulse", "Moonlight on the Harbor", False, 0.90),
-            L("09.set.atlantis_harbor_street__p08", "Distant Harbor Crane Silhouette", "P5", 3.80, 0.54, 0.85, 0.42, "portal_aperture", "Walking Toward the Moon", False, 0.92),
-            L("09.set.atlantis_club_sidewalk__p03", "Curved Iron Harbor Bridge Railing", "P4", 2.52, 0.50, 0.87, 0.20, "static", None),
-            L("09.set.atlantis_club_sidewalk__p05", "Harbor Quay Streetlamp West", "P4", 2.42, 0.22, 0.86, 0.44, "lamp_glow", "Harbor Quay Promenade"),
-            L("13.props.planet-boats__p18", "Moored Harbor Skiff on the Quay", "P3", 1.40, 0.76, 0.87, 0.24, "boat_rock", None),
-            L("09.props.suitcases-notice__p04", "Traveler's Suitcase by the Railing", "P2", 1.04, 0.38, 0.89, 0.18, "drawer_slide", None),
-            L("09.fx.call-abyss__p19", "Low Harbor Water Vapor", "P1", 0.52, 0.52, 0.90, 0.16, "cloud_drift_L", None, False, 0.78),
-            L("09.set.atlantis_club_sidewalk__p04", "Proscenium Harbor Quay Lamp Wing", "P0", 0.25, 0.96, 0.95, 0.38, "proscenium_mask", None, True, 0.85),
+            L("09.props.moon-sun__p01", "Moon Settling Over the Water", "P6", 6.00, 0.78, 0.24, 0.18, "sun_pulse", "Moonlight on the Harbor", False, 0.86),
+            L("09.set.atlantis_harbor_street__p08", "Distant Harbor Crane Silhouette", "P5", 3.80, 0.54, 0.85, 0.32, "portal_aperture", "Walking Toward the Moon", False, 0.84),
+            L("09.set.atlantis_club_sidewalk__p05", "Harbor Quay Streetlamp West", "P4", 2.42, 0.22, 0.86, 0.36, "lamp_glow", "Harbor Quay Promenade"),
+            L("13.props.planet-boats__p18", "Moored Harbor Skiff on the Quay", "P3", 1.40, 0.76, 0.87, 0.22, "boat_rock", None),
+            L("09.props.suitcases-notice__p05", "Traveler's Suitcase by the Railing", "P2", 1.04, 0.38, 0.89, 0.18, "drawer_slide", None),
+            L("04.props.word-shore__p23", "Foreground Quay Iron Lantern", "P1", 0.52, 0.16, 0.91, 0.17, "lamp_glow", None, False, 0.78),
+            L("09.set.atlantis_club_sidewalk__p04", "Proscenium Harbor Quay Lamp Wing", "P0", 0.25, 0.96, 0.95, 0.34, "proscenium_mask", None, True, 0.78),
         ],
     },
     "09.2": {
@@ -1007,14 +1002,14 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "shrug_peace",
         "counterpart": {"key": "ex/ex_jacket", "x": 880, "dir": -1, "cue": "suitcase"},
         "layers": [
-            L("09.props.moon-sun__p01", "High Harbor Moon Over the Pier", "P6", 6.00, 0.78, 0.22, 0.18, "sun_pulse", None, False, 0.86),
-            L("09.set.atlantis_harbor_street__p08", "Distant Pier Crane & Ship Mast", "P5", 3.80, 0.34, 0.84, 0.36, "portal_aperture", None, False, 0.90),
-            L("09.set.atlantis_club_sidewalk__p05", "Pier Curbside Lantern Post", "P4", 2.42, 0.18, 0.86, 0.42, "lamp_glow", None),
-            L("09.props.phonebooth__p14", "3D Glass Harbor Phone Booth", "P3", 1.44, 0.52, 0.87, 0.42, "booth_frame", "The Harbor Phone Booth"),
-            L("09.props.suitcases-notice__p19", "2nd Gate (01/12/14) Iron Signpost", "P3", 1.38, 0.80, 0.86, 0.36, "lamp_glow", "2nd Gate Notice Sign"),
-            L("09.props.suitcases-notice__p04", "Packed Brown Leather Suitcase on Curb", "P2", 1.04, 0.28, 0.89, 0.20, "drawer_slide", "Suitcases on the Curb"),
-            L("09.fx.call-abyss__p01", "Faint Ringing Echo from the Booth", "P1", 0.52, 0.52, 0.62, 0.14, "phone_ring", None, False, 0.80),
-            L("09.set.atlantis_club_sidewalk__p04", "Proscenium Pier Lantern Post", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
+            L("09.props.moon-sun__p01", "High Harbor Moon Over the Pier", "P6", 6.00, 0.78, 0.22, 0.18, "sun_pulse", None, False, 0.84),
+            L("09.set.atlantis_harbor_street__p08", "Distant Pier Crane & Ship Mast", "P5", 3.80, 0.34, 0.84, 0.28, "portal_aperture", None, False, 0.84),
+            L("09.set.atlantis_club_sidewalk__p05", "Pier Curbside Lantern Post", "P4", 2.42, 0.18, 0.86, 0.34, "lamp_glow", None),
+            L("09.props.phonebooth__p14", "3D Glass Harbor Phone Booth", "P3", 1.44, 0.52, 0.87, 0.28, "booth_frame", "The Harbor Phone Booth"),
+            L("09.props.suitcases-notice__p01", "Standing Brown Leather Suitcase", "P3", 1.38, 0.76, 0.88, 0.18, "lamp_glow", "2nd Gate Notice Sign"),
+            L("09.props.suitcases-notice__p05", "Packed Brown Leather Suitcase on Curb", "P2", 1.04, 0.28, 0.89, 0.18, "drawer_slide", "Suitcases on the Curb"),
+            L("04.props.word-shore__p23", "Foreground Pier Lantern", "P1", 0.52, 0.86, 0.91, 0.17, "lamp_glow", None, False, 0.78),
+            L("09.set.atlantis_club_sidewalk__p04", "Proscenium Pier Lantern Post", "P0", 0.25, 0.04, 0.95, 0.34, "proscenium_mask", None, False, 0.78),
         ],
     },
     "09.3": {
@@ -1576,16 +1571,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "waltz",
         "counterpart": {"key": "vintage_woman/gown", "x": 760, "dir": -1, "cue": "waltz"},
         "layers": [
-            L("14.set.vintage_party__p01", "1940s Ballroom Coffered Ceiling Panel", "P6", 6.04, 0.50, 0.22, 0.20, "static", None, False, 0.92),
-            L("01.props.chandeliers__p10", "Grand Crystal Ballroom Chandelier", "P6", 6.00, 0.50, 0.28, 0.22, "chandelier_sway", None, False, 0.92),
-            L("14.set.vintage_party__p02", "1940s Wood-Panelled Ballroom Back Wall", "P5", 3.80, 0.50, 0.78, 0.36, "static", None, False, 0.92),
-            L("14.set.vintage_party__p04", "Gleaming Hardwood Ballroom Dance Floor", "P4", 2.44, 0.50, 0.92, 0.22, "static", None),
-            L("14.set.vintage_party__p03", "1940s Grand Ballroom Archway", "P4", 2.40, 0.52, 0.86, 0.50, "portal_other_world", "The Dance at the Vintage Party"),
-            L("14.props.party__p19", "Warm Ballroom Festoon String Lights", "P3", 1.48, 0.50, 0.32, 0.22, "lamp_glow", "Under the Ballroom Lights"),
-            L("14.props.party__p01", "Draped Ballroom Refreshment Table", "P3", 1.42, 0.24, 0.88, 0.26, "lamp_glow", None),
-            L("14.props.party__p20", "Brass Horn Table Gramophone", "P2", 1.04, 0.80, 0.87, 0.28, "turntable_spin", "Gramophone Waltz"),
-            L("14.props.party__p19", "Foreground Festoon Bulb Canopy", "P1", 0.54, 0.78, 0.26, 0.18, "lamp_glow", None, False, 0.84),
-            L("14.set.vintage_party__p03", "Proscenium Ballroom Pilaster", "P0", 0.25, 0.96, 0.95, 0.38, "proscenium_mask", None, True, 0.85),
+            L("01.props.chandeliers__p10", "Grand Crystal Ballroom Chandelier", "P6", 6.00, 0.50, 0.24, 0.20, "chandelier_sway", None, False, 0.84),
+            L("14.set.vintage_party__p03", "Distant Ballroom Gallery Arch", "P5", 3.80, 0.22, 0.82, 0.26, "static", None, False, 0.80),
+            L("14.set.vintage_party__p03", "1940s Grand Ballroom Archway", "P4", 2.40, 0.80, 0.86, 0.28, "portal_other_world", "The Dance at the Vintage Party"),
+            L("14.props.party__p05", "Golden Ballroom Champagne Chalice", "P3", 1.42, 0.26, 0.88, 0.16, "lamp_glow", "Under the Ballroom Lights"),
+            L("14.props.party__p20", "Brass Horn Table Gramophone", "P2", 1.04, 0.78, 0.88, 0.22, "turntable_spin", "Gramophone Waltz"),
+            L("14.props.party__p19", "Foreground Festoon Bulb Canopy", "P1", 0.54, 0.78, 0.22, 0.16, "lamp_glow", None, False, 0.78),
+            L("14.set.vintage_party__p03", "Proscenium Ballroom Pilaster", "P0", 0.25, 0.97, 0.95, 0.30, "proscenium_mask", None, True, 0.60),
         ],
     },
     "14.6": {
@@ -1594,14 +1586,13 @@ CUSTOM_SCENES: Dict[str, Dict[str, Any]] = {
         "initial_cue": "idle_grounded",
         "counterpart": {"key": "vintage_man/suit", "x": 920, "dir": -1, "cue": "idle"},
         "layers": [
-            L("04.fx.moon-reach__p01", "Quiet Pre-Dawn Moon Returning to Genesis", "P6", 6.00, 0.80, 0.22, 0.18, "sun_pulse", None, False, 0.88),
-            L("14.set.vintage_party__p02", "Receding 1940s Ballroom Panelled Wall", "P5", 3.80, 0.34, 0.80, 0.34, "static", None, False, 0.90),
-            L("14.props.door__p02", "Closing Panelled Vintage Door", "P4", 2.40, 0.52, 0.86, 0.50, "portal_aperture", "The Vintage Door Closes"),
-            L("01.props.window__p01", "Quiet Bedroom Sash Window at Dawn", "P4", 2.44, 0.80, 0.85, 0.48, "portal_aperture", "Genesis · Back to Poem 01"),
-            L("14.props.party__p01", "Draped Ballroom Champagne Table", "P3", 1.44, 0.22, 0.88, 0.30, "lamp_glow", "Into the Ballroom Crowd"),
-            L("01.props.room__p18", "Genesis Bedroom Television & Stand", "P2", 1.04, 0.66, 0.89, 0.22, "portal_tv_flicker", None),
-            L("01.fx.haze-words__p08", "Drifting Genesis Morning Breath Plume", "P1", 0.54, 0.84, 0.90, 0.16, "cloud_drift_L", None, False, 0.80),
-            L("14.props.door__p11", "Proscenium Closing Threshold Jamb", "P0", 0.25, 0.04, 0.95, 0.38, "proscenium_mask", None, False, 0.85),
+            L("01.props.chandeliers__p02", "Warm Genesis Ceiling Skylight Glow", "P6", 6.00, 0.50, 0.20, 0.18, "sun_pulse", None, False, 0.78),
+            L("14.props.door__p02", "Receding Panelled Vintage Door", "P5", 3.80, 0.20, 0.84, 0.24, "static", "The Vintage Door Closes", False, 0.80),
+            L("01.props.window__p01", "Quiet Bedroom Sash Window at Dawn", "P4", 2.44, 0.82, 0.85, 0.26, "portal_aperture", "Genesis · Back to Poem 01"),
+            L("14.props.party__p20", "Brass Horn Table Gramophone", "P3", 1.44, 0.22, 0.88, 0.20, "lamp_glow", "Into the Ballroom Crowd"),
+            L("01.props.room__p18", "Genesis Bedroom Television & Stand", "P2", 1.04, 0.66, 0.89, 0.20, "portal_tv_flicker", None),
+            L("14.props.party__p05", "Foreground Golden Chalice Relic", "P1", 0.54, 0.86, 0.91, 0.14, "lamp_glow", None, False, 0.78),
+            L("14.props.door__p11", "Proscenium Closing Threshold Jamb", "P0", 0.25, 0.03, 0.95, 0.30, "proscenium_mask", None, False, 0.60),
         ],
     },
 }
@@ -1872,206 +1863,1005 @@ def compute_frame_seven_layer_breakdown(
 
 
 SCENE_CURATED_PROP_OVERRIDES: Dict[str, List[Dict[str, Any]]] = {
+    # =======================================================================
+    # POEM 01 · OUT OF LIFE
+    # =======================================================================
+    "01.0": [
+        L("01.props.room__p01", "Three-Drawer Wooden Bedroom Dresser", "P3", 1.44, 0.22, 0.88, 0.22, "drawer_slide", "Wooden Bedroom Dresser"),
+        L("01.props.room__p18", "Flickering Bedroom Television & Stand", "P3", 1.40, 0.68, 0.89, 0.20, "portal_tv_flicker", "Flickering TV Stand"),
+        L("01.props.handheld__p04", "Open Poetry Manuscript Sheaf on Floor", "P2", 1.04, 0.44, 0.90, 0.15, "static", "The Reading"),
+    ],
+    "01.1": [
+        L("01.props.window__p13", "Open Sash Window & Fire-Escape Balcony", "P4", 2.38, 0.78, 0.66, 0.24, "fire_escape_landing", "Fire-Escape Landing"),
+        L("01.props.room__p14", "Wide Bedroom Chest of Open Drawers", "P3", 1.44, 0.24, 0.88, 0.22, "drawer_slide", "Hallway & Drawers"),
+        L("01.props.room__p04", "Pulled-Out Numbered Wooden Drawer", "P2", 1.04, 0.48, 0.90, 0.12, "drawer_slide", "Haze at the Window"),
+    ],
+    "01.2": [
+        L("01.props.window__p12", "Open Apartment Sash Window Above the Drop", "P4", 2.40, 0.20, 0.60, 0.24, "portal_aperture", "Open Sash Window"),
+        L("01.props.window__p06", "Iron Fire-Escape Balcony Railing", "P3", 1.42, 0.76, 0.84, 0.20, "fire_escape_landing", "Edge of the Drop"),
+        L("01.props.handheld__p07", "Crumpled Poem Page Caught on the Ledge", "P2", 1.04, 0.45, 0.86, 0.14, "tambourine_arc", None),
+    ],
+    "01.3": [
+        L("01.props.chandeliers__p27", "Inverted 5-Branch Lit Chandelier Overhead", "P6", 6.00, 0.76, 0.26, 0.18, "lamp_glow", None),
+        L("01.props.window__p11", "Passing Iron Fire-Escape Grate", "P4", 2.40, 0.20, 0.76, 0.18, "static", "Tower Canyon Wall"),
+        L("01.props.chandeliers__p28", "Passing Lit Brass Ballroom Chandelier", "P3", 1.40, 0.70, 0.78, 0.18, "lamp_glow", "The Fall Montage"),
+        L("01.props.handheld__p07", "Tumbling Crumpled Manuscript Page", "P2", 1.04, 0.42, 0.86, 0.15, "tambourine_arc", None),
+    ],
+    "01.4": [
+        L("01.props.chandeliers__p27", "Grand 5-Branch Lit Crystal Chandelier", "P6", 6.00, 0.50, 0.28, 0.22, "lamp_glow", "Crystal Chandelier"),
+        L("01.props.chandeliers__p28", "West Ballroom Lit Brass Chandelier", "P4", 2.40, 0.20, 0.54, 0.18, "lamp_glow", None),
+        L("14.props.party__p20", "Brass Horn Table Gramophone", "P3", 1.40, 0.76, 0.88, 0.21, "turntable_spin", "Ballroom Table"),
+        L("14.props.party__p05", "Golden Ballroom Champagne Chalice", "P2", 1.04, 0.28, 0.89, 0.16, "lamp_glow", "Crashing the Vintage Party"),
+    ],
     "01.5": [
-        L("01.props.trapdoor__p12", "Open Floor Trapdoor Into the Abyss", "P3", 1.38, 0.52, 0.89, 0.22, "portal_aperture", "Hole in the Floor"),
+        L("01.props.chandeliers__p28", "Swaying Ballroom Chandelier Overhead", "P6", 6.00, 0.50, 0.25, 0.19, "lamp_glow", None),
+        L("01.props.trapdoor__p12", "Open Floor Trapdoor Into the Abyss", "P3", 1.38, 0.52, 0.89, 0.18, "portal_aperture", "Hole in the Floor"),
         L("14.props.party__p03", "Brass Gramophone by the Threshold", "P2", 1.04, 0.22, 0.88, 0.18, "lamp_glow", "Rim of the Void"),
+        L("14.props.party__p17", "Toppled Golden Champagne Coupe", "P1", 0.56, 0.80, 0.90, 0.15, "lamp_glow", None),
+    ],
+
+    # =======================================================================
+    # POEM 02 · IN THE NIGHTTIME OF YOUR FEAR
+    # =======================================================================
+    "02.0": [
+        L("02.props.mirror-phone-rings__p01", "Tall Carved Standing Mirror Frame", "P4", 2.40, 0.20, 0.85, 0.26, "portal_aperture", "Walls Caving Inward"),
+        L("02.props.mirror-phone-rings__p14", "Standing Mirror on Tilted Stand", "P3", 1.40, 0.46, 0.87, 0.20, "lamp_glow", None),
+        L("02.props.mirror-phone-rings__p06", "Ringing Midnight Smartphone", "P2", 1.04, 0.74, 0.88, 0.16, "phone_ring", "Emergency Ring"),
+    ],
+    "02.1": [
+        L("02.props.mirror-phone-rings__p04", "Ornate Standing Bedroom Mirror Frame", "P4", 2.40, 0.76, 0.84, 0.25, "portal_aperture", "The Midnight Mirror"),
+        L("02.set.bedroom_night__p05", "Dark Wooden Bed Headboard", "P3", 1.48, 0.28, 0.81, 0.11, "static", None),
+        L("02.set.bedroom_night__p04", "Low Wooden Bed Platform Frame", "P3", 1.46, 0.28, 0.88, 0.13, "lamp_base", "Midnight Bed"),
+        L("02.set.bedroom_night__p08", "Rumpled Dark-Blue Midnight Blanket", "P3", 1.42, 0.29, 0.86, 0.12, "lamp_base", None),
+        L("02.props.mirror-phone-rings__p05", "Glowing Smartphone Emergency Call", "P2", 1.04, 0.54, 0.88, 0.16, "phone_ring", "1:08 AM Call"),
+    ],
+    "02.2": [
+        L("02.props.window__p03", "Floral Living-Room Window Curtain", "P4", 2.42, 0.14, 0.76, 0.25, "curtain_sway_L", "Childhood Window View"),
+        L("02.set.living_room_1990s__p04", "1990s Floral Living Room Sofa", "P3", 1.46, 0.28, 0.88, 0.16, "lamp_base", "Living Room Sofa"),
+        *car_ensemble(cx=0.72, floor_y=0.87, car_scale=0.22, station_title="Family Sedan Pulling Up", with_parents=False),
+    ],
+    "02.3": [
+        L("02.props.window__p01", "Drawn Floral Curtain by the Frost Window", "P4", 2.42, 0.16, 0.78, 0.25, "curtain_sway_L", "Doorpost Height Marks"),
+        L("02.set.living_room_1990s__p04", "1990s Floral Living Room Sofa", "P3", 1.44, 0.74, 0.88, 0.16, "lamp_base", "Frost at the Window"),
+        L("02.props.tambourine__p15", "Ghost Child's Wooden Tambourine", "P2", 1.04, 0.36, 0.88, 0.16, "tambourine_arc", "The Ghost's Tambourine"),
     ],
     "02.4": [
-        L("02.props.car__p01", "1990s Family Sedan Body", "P3", 1.40, 0.62, 0.86, 0.23, "car_chassis", "Parents Arguing in the Car"),
-        L("02.props.car__p05", "Sedan Front Tire & Rim", "P3", 1.38, round(0.62 - 0.585 * 0.23, 4), 0.87, round(0.45 * 0.23, 4), "wheel_spin", None),
-        L("02.props.car__p06", "Sedan Rear Tire & Rim", "P3", 1.38, round(0.62 + 0.456 * 0.23, 4), 0.87, round(0.45 * 0.23, 4), "wheel_spin", None),
+        L("02.set.living_room_1990s__p06", "Slatted Venetian Window Blinds", "P4", 2.42, 0.22, 0.66, 0.18, "curtain_sway_L", "Raised Window Blinds"),
+        L("02.set.living_room_1990s__p04", "Childhood Floral Sofa by the Window", "P3", 1.46, 0.24, 0.88, 0.15, "lamp_base", None),
+        *car_ensemble(cx=0.66, floor_y=0.87, car_scale=0.22, station_title="Parents Arguing in the Car", with_parents=False),
     ],
+    "02.5": [
+        L("02.props.window__p02", "Open White Living-Room Window Frame", "P4", 2.44, 0.22, 0.72, 0.22, "portal_aperture", "Living Room Window"),
+        L("02.props.window__p03", "Billowing Floral Window Curtain", "P4", 2.40, 0.32, 0.74, 0.24, "curtain_sway_R", None),
+        L("02.props.tambourine__p15", "Wooden Tambourine Hurling Outward", "P2", 1.04, 0.56, 0.62, 0.17, "tambourine_arc", "Tambourine in Flight"),
+        L("02.props.tambourine__p11", "Spinning Tambourine Blur Disc", "P1", 0.54, 0.76, 0.74, 0.12, "tambourine_arc", None),
+    ],
+
+    # =======================================================================
+    # POEM 03 · HOW TO BREAK OFF AN ENGAGEMENT
+    # =======================================================================
+    "03.0": [
+        L("03.props.rose-window__p01", "Vaulted Gothic Rose Window Tracery", "P6", 6.00, 0.50, 0.28, 0.22, "stained_glass_glow", "Gothic Rose Window"),
+        L("03.hero.chapel__p01", "Stone Gothic Chapel Sanctuary Arch", "P4", 2.42, 0.80, 0.85, 0.24, "portal_aperture", "Chapel Sanctuary Arch"),
+        L("03.hero.chapel.interior-states__p05", "Empty First-Row Wooden Sanctuary Pew", "P3", 1.42, 0.26, 0.88, 0.17, "static", None),
+        L("02.props.tambourine__p15", "Tambourine Ringing Through the Nave", "P2", 1.04, 0.52, 0.64, 0.16, "tambourine_arc", "Arc of the Tambourine"),
+    ],
+    "03.1": [
+        L("03.props.rose-window__p11", "Stained-Glass Triforium Rose Medallion", "P6", 6.00, 0.50, 0.26, 0.20, "stained_glass_glow", "Empty Choir & Windows"),
+        L("03.hero.chapel.interior-states__p07", "Gothic Triple-Lancet Stone Archway", "P4", 2.42, 0.18, 0.84, 0.24, "portal_aperture", None),
+        L("03.hero.chapel.interior-states__p05", "Abandoned Wooden Chapel Pew West", "P3", 1.44, 0.36, 0.88, 0.17, "lamp_base", "Abandoned Wedding Pews"),
+        L("03.hero.chapel.interior-states__p11", "Weathered Wooden Sanctuary Pew East", "P3", 1.40, 0.74, 0.88, 0.17, "lamp_base", "Cobwebbed Baptist Pool"),
+        L("03.props.cobwebs__p01", "Draped Sanctuary Cobweb Veil", "P2", 1.04, 0.54, 0.86, 0.18, "curtain_sway_L", None),
+    ],
+    "03.2": [
+        L("03.props.rose-window__p03", "Dimmed Sanctuary Rose Window Frame", "P6", 6.00, 0.50, 0.26, 0.20, "lamp_glow", None),
+        L("03.props.gifts-bread-cups__p21", "Torn-Open Wedding Gift Box", "P3", 1.42, 0.30, 0.88, 0.17, "lamp_glow", "Left Chapel Side Door"),
+        L("03.props.gifts-bread-cups__p03", "Unbroken Loaf of Daily Bread", "P2", 1.04, 0.54, 0.89, 0.18, "lamp_glow", "Gifts at the Side Doors"),
+        L("03.props.gifts-bread-cups__p18", "Abandoned Silver Altar Chalice", "P1", 0.56, 0.76, 0.90, 0.16, "lamp_glow", None),
+    ],
+    "03.3": [
+        L("03.hero.chapel.interior-states__p01", "Storm-Lashed Gothic Triple Arch", "P4", 2.42, 0.20, 0.84, 0.24, "portal_aperture", "Thunder in the Nave"),
+        L("03.hero.chapel.interior-states__p11", "Shattered Wooden Pew in the Rain", "P3", 1.42, 0.70, 0.88, 0.17, "wave_mid", "The Storm Breaks"),
+        L("03.props.gifts-bread-cups__p18", "Toppled Communion Cup in the Downpour", "P2", 1.04, 0.38, 0.89, 0.17, "wave_near", None),
+    ],
+    "03.4": [
+        L("03.hero.chapel.ruin__p01", "Collapsed Stone Chapel Archway", "P4", 2.42, 0.22, 0.85, 0.24, "portal_aperture", "Collapsed Chapel Stone"),
+        L("03.props.gifts-bread-cups__p03", "Daily Bread Soaked on the Shore", "P3", 1.40, 0.50, 0.88, 0.18, "wave_mid", "Remnants on the Shore"),
+        L("03.props.strings-footprints__p11", "Parting Footsteps in Wet Sand", "P2", 1.04, 0.76, 0.89, 0.20, "drawer_slide", "Footsteps Leading Away"),
+    ],
+    "03.5": [
+        L("03.hero.chapel.ruin__p12", "Ruined Stone Sanctuary Arch on the Tide", "P4", 2.42, 0.22, 0.85, 0.24, "portal_aperture", "Ruined Shore Arch"),
+        L("04.props.word-shore__p23", "Rusted Shore Lantern at Dusk", "P3", 1.40, 0.76, 0.87, 0.20, "lamp_glow", "Tide Line at Dusk"),
+        L("03.props.tambourine-broken__p13", "Shattered Tambourine Rim & Skin", "P2", 1.04, 0.48, 0.89, 0.20, "tambourine_arc", "Shattered Tambourine"),
+    ],
+
+    # =======================================================================
+    # POEM 04 · NEVERMORE
+    # =======================================================================
     "04.0": [
-        L("04.props.word-shore__p22", "Rusted Shore Lantern in the Ash", "P3", 1.40, 0.26, 0.88, 0.20, "lamp_glow", "Broken Pieces on Sand"),
-        L("04.set.shore_night__p06", "Charred Wildfire Driftwood Stump", "P3", 1.42, 0.78, 0.88, 0.20, "static", "Charred Stump & Raven"),
-        L("04.props.ravens-stumps__p03", "Perched Black Raven on Stump", "P2", 1.04, 0.78, 0.74, 0.16, "wing_flap_L", None),
+        L("04.set.shore_night__p08", "Gnarled Wind-Swept Shore Tree West", "P4", 2.42, 0.18, 0.84, 0.25, "curtain_sway_L", "Ash-Covered Shore"),
+        L("04.props.word-shore__p23", "Rusted Shore Lantern in the Ash", "P3", 1.40, 0.36, 0.88, 0.20, "lamp_glow", "Broken Pieces on Sand"),
+        L("04.set.shore_night__p06", "Charred Wildfire Driftwood Stump", "P3", 1.42, 0.76, 0.88, 0.18, "static", "Charred Stump & Raven"),
+        L("04.props.ravens-stumps__p03", "Perched Black Raven on Focal Stump", "P2", 1.04, 0.76, 0.74, 0.18, "wing_flap_L", None),
     ],
     "04.1": [
-        L("04.props.word-shore__p23", "Still Wrought-Iron Shore Lantern", "P3", 1.42, 0.48, 0.87, 0.20, "static", "The Muted Waves"),
-        L("04.props.ravens-stumps__p04", "Silent Watching Raven on the Sand", "P2", 1.04, 0.80, 0.88, 0.16, "static", None),
+        L("04.set.shore_night__p09", "Still Gnarled Shore Tree in Silence", "P4", 2.42, 0.82, 0.84, 0.24, "static", "Muted Trees in Silence"),
+        L("04.props.word-shore__p23", "Still Wrought-Iron Shore Lantern", "P3", 1.42, 0.32, 0.88, 0.21, "static", "The Muted Waves"),
+        L("04.props.ravens-stumps__p04", "Silent Watching Raven on the Sand", "P2", 1.04, 0.62, 0.88, 0.19, "static", "Moon Over Still Water"),
     ],
     "04.2": [
-        L("04.props.word-shore__p22", "Weathered Shore Relic Lantern", "P3", 1.42, 0.24, 0.88, 0.20, "drawer_slide", "Folded Whispers"),
-        L("04.props.heart__p10", "Throbbing Poet Heart on Stand", "P2", 1.04, 0.52, 0.88, 0.22, "heart_beat", "The Heart on the Sand"),
+        L("04.hero.viaduct__p02", "Stone Coastal Viaduct Arch & Steps", "P4", 2.42, 0.80, 0.84, 0.25, "portal_aperture", "Steps Toward the Incline"),
+        L("04.props.word-shore__p02", "Broken Sundial Relic in the Sand", "P3", 1.42, 0.24, 0.88, 0.20, "drawer_slide", "Folded Whispers"),
+        L("04.props.heart__p12", "Anatomical Poet Heart Resting on Sand", "P2", 1.04, 0.52, 0.89, 0.17, "heart_beat", "The Heart on the Sand"),
+    ],
+    "04.3": [
+        L("04.props.ravens-stumps__p05", "Black Raven Guiding Uphill", "P5", 3.80, 0.72, 0.34, 0.16, "wing_flap_R", None),
+        L("04.hero.viaduct__p04", "Arched Stone Viaduct Bridge", "P4", 2.42, 0.78, 0.84, 0.24, "portal_aperture", "Crest of the Trail"),
+        L("04.props.faith-blooms__p27", "First Golden Mustard-Seed Bloom", "P3", 1.38, 0.52, 0.88, 0.22, "flower_bloom", "Handcrafted Faith Bloom"),
+        L("04.props.heart__p02", "Reclaimed Beating Heart Carried Uphill", "P2", 1.04, 0.28, 0.88, 0.20, "heart_beat", "Base of the Incline"),
+    ],
+    "04.4": [
+        L("04.set.shore_night__p08", "Moonlit Garden Border Tree", "P4", 2.42, 0.18, 0.84, 0.24, "curtain_sway_L", "Moonlit Garden Edge"),
+        L("04.props.faith-blooms__p27", "Golden Mustard Bloom West", "P3", 1.38, 0.34, 0.88, 0.23, "flower_bloom", "West Garden Row"),
+        L("04.props.faith-blooms__p08", "Golden Sunflower Head in Full Bloom", "P2", 1.04, 0.56, 0.88, 0.21, "flower_bloom", "Center of the Night Field"),
+        L("04.props.faith-blooms__p13", "Tall Sunflower Stalk & Leaves", "P1", 0.56, 0.78, 0.90, 0.21, "flower_bloom", None),
+    ],
+    "04.5": [
+        L("04.props.poet-jointed-hands__p11", "Articulated Left Hand on the Ground", "P3", 1.38, 0.26, 0.88, 0.20, "weave_hand_articulation", "Searching the Bare Ground"),
+        L("04.props.poet-jointed-hands__p12", "Articulated Right Hand Reattached", "P3", 1.34, 0.74, 0.88, 0.20, "weave_hand_articulation", "Putting the Hands Back On"),
+        L("04.props.heart__p01", "Reclaimed Beating Heart in the Chest", "P2", 1.04, 0.50, 0.87, 0.22, "heart_beat", "The Awakened Chest"),
+    ],
+    "04.6": [
+        L("04.hero.viaduct__p04", "Distant Stone Viaduct Arch Under Stars", "P4", 2.42, 0.78, 0.83, 0.24, "portal_aperture", "Standing Whole in the Field"),
+        L("04.props.faith-blooms__p27", "Blooming Golden Sunflower West", "P3", 1.38, 0.24, 0.88, 0.23, "flower_bloom", "Western Bloom Row"),
+        L("04.props.poet-jointed-hands__p01", "Whole Rejoined Hands Held Over Heart", "P2", 1.04, 0.46, 0.88, 0.21, "heart_beat", "Still Tree Under Stars"),
+        L("04.props.faith-blooms__p08", "Foreground Golden Sunflower Blossom", "P1", 0.56, 0.68, 0.90, 0.19, "flower_bloom", None),
+    ],
+
+    # =======================================================================
+    # POEM 05 · BLOODLINES
+    # =======================================================================
+    "05.0": [
+        L("05.props.galaxy-universe__p02", "Celestial Ancestral Star Sphere Overhead", "P6", 6.00, 0.76, 0.26, 0.20, "planet_orbit", None),
+        L("05.set.winged_marble_gate__p01", "West Sculpted Marble Angel-Wing Pillar", "P4", 2.42, 0.18, 0.84, 0.27, "portal_aperture", "The Field Goes Still"),
+        L("05.props.star-names__p01", "Radiant Sun & Earth Medallion", "P3", 1.38, 0.54, 0.87, 0.21, "planet_orbit", "Inheriting the Earth"),
+        L("05.props.staff-mattress-emblem__p01", "Carved Wooden Ancestor Staff", "P2", 1.04, 0.34, 0.89, 0.26, "static", "Ancestral Perimeter"),
     ],
     "05.1": [
-        L("05.props.galaxy-universe__p17", "Golden Constellation Pedestal", "P3", 1.40, 0.34, 0.88, 0.20, "planet_orbit", "Naming My Own Stars"),
-        L("05.props.staff-mattress-emblem__p07", "Radiant Star Crest Medallion", "P2", 1.04, 0.72, 0.86, 0.18, "sun_pulse", "The Waiting Past"),
+        L("05.props.galaxy-universe__p01", "Swirling Spiral Galaxy Core Overhead", "P6", 6.00, 0.50, 0.26, 0.22, "planet_orbit", "Spiral Galaxies Overhead"),
+        L("05.set.winged_marble_gate__p05", "East Sculpted Marble Angel-Wing Pillar", "P4", 2.42, 0.82, 0.84, 0.27, "portal_aperture", None),
+        L("05.props.galaxy-universe__p17", "Golden Constellation Pedestal", "P3", 1.40, 0.32, 0.88, 0.21, "planet_orbit", "Naming My Own Stars"),
+        L("05.props.staff-mattress-emblem__p07", "Radiant Star Crest Medallion", "P2", 1.04, 0.64, 0.88, 0.19, "sun_pulse", "The Waiting Past"),
+    ],
+    "05.2": [
+        L("05.props.staff-mattress-emblem__p05", "Southern-Pine Quilted Basement Mattress", "P3", 1.42, 0.46, 0.88, 0.22, "lamp_base", "Southern-Pine Mattress"),
+        L("05.props.staff-mattress-emblem__p02", "Brass Basement Hurricane Lantern", "P3", 1.38, 0.74, 0.87, 0.22, "lamp_glow", "Basement Window Well"),
+        L("05.props.staff-mattress-emblem__p01", "Carved Wooden Ancestor Staff by Mattress", "P2", 1.04, 0.22, 0.89, 0.26, "static", "Basement Timber Stairs"),
+    ],
+    "05.3": [
+        L("05.props.galaxy-universe__p18", "Elliptical Golden Orrery Cosmos Overhead", "P6", 6.00, 0.50, 0.25, 0.20, "planet_orbit", None),
+        L("05.set.winged_marble_gate__p03", "Winged Marble Sanctuary Archway", "P4", 2.42, 0.78, 0.84, 0.27, "portal_aperture", "Sanctuary of the Elders"),
+        L("05.props.galaxy-universe__p17", "Golden Pedestal Cupping a New Universe", "P3", 1.38, 0.28, 0.88, 0.22, "planet_orbit", "Inventing a New Universe"),
+        L("05.props.staff-mattress-emblem__p07", "Radiant Ancestral Star Emblem", "P2", 1.04, 0.54, 0.88, 0.19, "sun_pulse", "Awarding a Blessing"),
     ],
     "05.4": [
-        L("05.props.staff-mattress-emblem__p02", "Brass Watchtower Sanctuary Lantern", "P3", 1.38, 0.28, 0.88, 0.20, "lamp_glow", "Blood Through the Hands"),
-        L("05.props.staff-mattress-emblem__p07", "Radiant Solar Crest Medallion", "P2", 1.04, 0.64, 0.87, 0.18, "sun_pulse", "Fingerprints of Power"),
+        L("05.set.winged_marble_gate__p01", "West Winged Marble Sanctuary Pillar", "P4", 2.42, 0.18, 0.84, 0.27, "portal_aperture", None),
+        L("05.props.staff-mattress-emblem__p02", "Brass Watchtower Sanctuary Lantern", "P3", 1.38, 0.36, 0.88, 0.22, "lamp_glow", "Blood Through the Hands"),
+        L("05.props.staff-mattress-emblem__p07", "Radiant Solar Crest Medallion", "P2", 1.04, 0.68, 0.88, 0.19, "sun_pulse", "Fingerprints of Power"),
     ],
     "05.5": [
-        L("05.props.staff-mattress-emblem__p02", "Threshold Sanctuary Brass Lantern", "P3", 1.40, 0.30, 0.88, 0.20, "lamp_glow", "West Winged Pillar"),
-        L("05.props.staff-mattress-emblem__p07", "Resonant Baritone Seal on Threshold", "P2", 1.04, 0.68, 0.88, 0.18, "sun_pulse", "Threshold of Atlantis"),
+        L("05.set.winged_marble_gate__p02", "West Winged Threshold Column", "P4", 2.42, 0.18, 0.84, 0.27, "portal_aperture", "West Winged Pillar"),
+        L("05.set.winged_marble_gate__p04", "East Winged Threshold Column", "P4", 2.40, 0.82, 0.84, 0.27, "portal_aperture", None),
+        L("05.props.staff-mattress-emblem__p02", "Threshold Sanctuary Brass Lantern", "P3", 1.40, 0.36, 0.88, 0.22, "lamp_glow", "Threshold of Atlantis"),
+        L("05.props.staff-mattress-emblem__p07", "Resonant Baritone Seal on Threshold", "P2", 1.04, 0.66, 0.88, 0.19, "sun_pulse", None),
     ],
+
+    # =======================================================================
+    # POEM 06 · ATLANTIS
+    # =======================================================================
     "06.0": [
-        L("06.props.lantern-candle-guitar__p15", "NEXT GATES Sanctuary Signpost", "P3", 1.38, 0.76, 0.87, 0.22, "lamp_glow", "Next Gates Signpost"),
-        L("06.props.lantern-candle-guitar__p11", "Sanctuary Brass Votive Lantern", "P2", 1.04, 0.28, 0.88, 0.17, "lamp_glow", "The Light Gates Open"),
+        L("06.props.lantern-candle-guitar__p15", "NEXT GATES Sanctuary Signpost", "P3", 1.38, 0.74, 0.88, 0.22, "lamp_glow", "Next Gates Signpost"),
+        L("06.props.lantern-candle-guitar__p01", "Glowing Brass Hurricane Lantern", "P2", 1.04, 0.28, 0.88, 0.22, "lamp_glow", "The Light Gates Open"),
+    ],
+    "06.1": [
+        L("06.props.lantern-candle-guitar__p15", "NEXT GATES Causeway Signpost", "P3", 1.40, 0.24, 0.88, 0.22, "lamp_glow", "Yellow-Brick Causeway"),
+        L("06.props.lantern-candle-guitar__p01", "Causeway Brass Guide Lantern", "P2", 1.04, 0.72, 0.88, 0.22, "lamp_glow", "Following the Light"),
+        L("06.props.lantern-candle-guitar__p03", "Lit Wax Pillar Candle Along Curb", "P1", 0.56, 0.86, 0.90, 0.17, "lamp_glow", None),
     ],
     "06.2": [
-        L("06.props.lantern-candle-guitar__p15", "Waterfront Colonnade Signpost", "P3", 1.40, 0.26, 0.87, 0.21, "lamp_glow", "Waterfront Colonnade"),
-        L("06.props.lantern-candle-guitar__p11", "Harbor Quayside Brass Lantern", "P2", 1.04, 0.72, 0.88, 0.17, "lamp_glow", "Here We Are All One"),
+        L("06.props.lantern-candle-guitar__p07", "Waterfront NEXT GATES Colonnade Sign", "P3", 1.40, 0.24, 0.87, 0.20, "lamp_glow", "Waterfront Colonnade"),
+        L("13.props.planet-boats__p06", "Moored Wooden Harbor Rowboat", "P3", 1.36, 0.52, 0.89, 0.21, "wave_near", None),
+        L("06.props.lantern-candle-guitar__p01", "Harbor Quayside Brass Lantern", "P2", 1.04, 0.78, 0.88, 0.22, "lamp_glow", "Here We Are All One"),
     ],
     "06.3": [
-        L("06.props.coin-booth__p01", "Arched Wooden Heart-Scan Booth", "P3", 1.42, 0.52, 0.87, 0.24, "lamp_glow", "Heart-Scan Admission Booth"),
-        L("06.props.lantern-candle-guitar__p11", "Jungle Sanctuary Brass Lantern", "P2", 1.04, 0.24, 0.88, 0.17, "lamp_glow", "Relearned Currency"),
+        L("06.props.coin-booth__p01", "Arched Wooden Heart-Scan Admission Booth", "P3", 1.42, 0.54, 0.88, 0.25, "lamp_glow", "Heart-Scan Admission Booth"),
+        L("06.props.coin-booth__p02", "Glowing Turquoise Spiral Currency Portal", "P2", 1.04, 0.26, 0.86, 0.19, "sun_pulse", "Relearned Currency"),
+        L("06.props.lantern-candle-guitar__p01", "Jungle Sanctuary Brass Lantern", "P1", 0.56, 0.80, 0.89, 0.20, "lamp_glow", None),
     ],
     "06.4": [
-        L("06.props.lantern-candle-guitar__p15", "Central Plaza Sanctuary Signpost", "P3", 1.40, 0.30, 0.87, 0.21, "lamp_glow", "City Center Sanctuary"),
-        L("06.props.lantern-candle-guitar__p14", "Plaza Musician's Acoustic Guitar", "P2", 1.04, 0.70, 0.88, 0.18, "lamp_glow", "East Plaza Colonnade"),
+        L("06.props.lantern-candle-guitar__p15", "Central Plaza Sanctuary Signpost", "P3", 1.40, 0.26, 0.88, 0.21, "lamp_glow", "City Center Sanctuary"),
+        L("06.props.lantern-candle-guitar__p14", "Plaza Musician's Acoustic Guitar", "P2", 1.04, 0.64, 0.88, 0.21, "lamp_glow", "East Plaza Colonnade"),
+        L("06.props.lantern-candle-guitar__p01", "Plaza Brass Votive Lantern", "P1", 0.56, 0.84, 0.90, 0.20, "lamp_glow", None),
     ],
+    "06.5": [
+        L("06.props.lantern-candle-guitar__p01", "Cobblestone Alley Brass Lantern", "P3", 1.40, 0.26, 0.88, 0.22, "lamp_glow", "Narrow Cobblestone Alley"),
+        L("06.props.lantern-candle-guitar__p03", "Alleyway Lit Wax Pillar Candle", "P3", 1.36, 0.46, 0.89, 0.18, "lamp_glow", None),
+        L("06.props.lantern-candle-guitar__p05", "Upright Acoustic Guitar by Teahouse", "P2", 1.04, 0.72, 0.88, 0.23, "lamp_glow", "Music in the Streets"),
+    ],
+    "06.6": [
+        L("13.props.cafe__p13", "Harbor Teahouse Marble Table & Chairs", "P3", 1.40, 0.30, 0.88, 0.22, "lamp_base", "Harbor Teahouse Porch"),
+        L("06.props.lantern-candle-guitar__p14", "Resting Teahouse Porch Guitar", "P2", 1.04, 0.66, 0.88, 0.21, "lamp_glow", "Could Stay Forever"),
+        L("06.props.lantern-candle-guitar__p01", "Harbor Lantern at Twilight", "P1", 0.56, 0.84, 0.90, 0.20, "lamp_glow", None),
+    ],
+
+    # =======================================================================
+    # POEM 07 · WHAT HAVE WE DONE
+    # =======================================================================
+    "07.0": [
+        L("07.props.speakers-vu__p01", "Tall Dual-Driver Bass Speaker Left", "P4", 2.40, 0.20, 0.86, 0.24, "speaker_pulse", "Left Bass Speaker"),
+        L("07.props.speakers-vu__p02", "Tall Dual-Driver Bass Speaker Right", "P4", 2.38, 0.80, 0.86, 0.24, "speaker_pulse", "Right Bass Speaker"),
+        L("07.props.dj-decks__p01", "Dual-Turntable DJ Mixer Console", "P2", 1.04, 0.50, 0.88, 0.19, "dj_console", "DJ Turntable Booth"),
+    ],
+    "07.1": [
+        L("07.props.dj-decks__p02", "Spinning Turntable Platter Deck", "P3", 1.40, 0.74, 0.88, 0.22, "turntable_spin", "House Party Lounge"),
+        L("07.props.dj-decks__p10", "DJ Monitoring Headphones", "P2", 1.04, 0.28, 0.88, 0.19, "speaker_pulse", "Eyes Wide Shut"),
+        L("07.props.dj-decks__p06", "Spinning Vinyl Record LP", "P1", 0.56, 0.50, 0.89, 0.17, "turntable_spin", None),
+    ],
+    "07.2": [
+        L("07.props.speakers-vu__p01", "Left Bass Speaker Cabinet in Silhouette", "P3", 1.42, 0.24, 0.88, 0.24, "speaker_pulse", "Ghosts in the Speakers"),
+        L("07.props.speakers-vu__p02", "Right Bass Speaker Cabinet in Silhouette", "P3", 1.40, 0.76, 0.88, 0.24, "speaker_pulse", None),
+        L("07.props.speakers-vu__p08", "Throbbing Subwoofer Driver Cone", "P2", 1.04, 0.50, 0.88, 0.20, "speaker_pulse", "Resonant Bass Cone"),
+    ],
+    "07.3": [
+        L("07.props.speakers-vu__p12", "Glowing Analog VU Meter (-20..+3 dB)", "P3", 1.42, 0.22, 0.87, 0.15, "vu_needle", "VU Meter Into the Red"),
+        L("07.props.speakers-vu__p17", "Framed Peak VU Meter Dial", "P3", 1.40, 0.78, 0.87, 0.16, "vu_needle", None),
+        L("07.props.dj-decks__p14", "Overdriven Twin-Platter DJ Deck", "P2", 1.04, 0.50, 0.88, 0.19, "dj_console", "A Thousand Light Years"),
+    ],
+    "07.4": [
+        L("07.props.mic-daisy-rings__p01", "Stage Microphone on Stand", "P3", 1.40, 0.28, 0.88, 0.23, "static", "Diverging Wedding Path"),
+        L("14.props.reel__p07", "Plucked Eleven-Year White Daisy", "P2", 1.04, 0.68, 0.88, 0.20, "flower_bloom", "Wedding Bands & Daisies"),
+    ],
+    "07.5": [
+        L("07.props.dj-decks__p03", "Illuminated Club Booth DJ Console", "P3", 1.40, 0.34, 0.88, 0.18, "dj_console", "Illuminated Club Booth"),
+        L("07.props.speakers-vu__p01", "Club Stage Bass Speaker Tower", "P2", 1.04, 0.76, 0.87, 0.24, "speaker_pulse", "Eleven Years in Dark Rooms"),
+    ],
+    "07.6": [
+        L("07.props.mic-daisy-rings__p01", "Left-Behind Stage Mic Stand in the Rain", "P3", 1.40, 0.74, 0.88, 0.23, "static", "Three Roads in the Fog"),
+        L("04.props.word-shore__p23", "Dim Fog-Halod Street Lantern", "P2", 1.04, 0.26, 0.88, 0.20, "lamp_glow", "Rain, Fog, Dim Lights"),
+    ],
+
+    # =======================================================================
+    # POEM 08 · OUT OF MY MIND
+    # =======================================================================
     "08.0": [
-        L("07.props.speakers-vu__p15", "Rooftop Monitor Speaker Cabinet", "P3", 1.40, 0.24, 0.88, 0.20, "speaker_pulse", "NEW SINGLE Club Marquee"),
-        L("07.props.dj-decks__p03", "Rooftop Terrace DJ Console", "P2", 1.04, 0.72, 0.88, 0.19, "dj_console", "Soul Leaves the Dancer"),
+        L("07.props.speakers-vu__p01", "Rooftop Club Bass Speaker Tower", "P3", 1.40, 0.22, 0.87, 0.24, "speaker_pulse", "NEW SINGLE Club Marquee"),
+        L("07.props.dj-decks__p03", "Rooftop Terrace DJ Console", "P2", 1.04, 0.70, 0.88, 0.18, "dj_console", "Soul Leaves the Dancer"),
     ],
     "08.1": [
-        L("07.props.dj-decks__p01", "Late-Night Club DJ Console", "P3", 1.40, 0.52, 0.87, 0.20, "dj_console", "Last One to Leave"),
-        L("07.props.speakers-vu__p15", "Club Dancefloor Bass Monitor", "P2", 1.04, 0.22, 0.88, 0.19, "speaker_pulse", "Strangers Collide on Floor"),
+        L("07.props.speakers-vu__p02", "Club Dancefloor Bass Speaker Tower", "P3", 1.42, 0.20, 0.87, 0.24, "speaker_pulse", "Strangers Collide on Floor"),
+        L("07.props.dj-decks__p01", "Late-Night Club DJ Console", "P2", 1.04, 0.54, 0.88, 0.19, "dj_console", "Last One to Leave"),
+        L("07.props.dj-decks__p10", "Dropped DJ Headphones on Stage", "P1", 0.56, 0.82, 0.89, 0.18, "speaker_pulse", None),
     ],
     "08.2": [
-        L("04.props.word-shore__p23", "Equator Wind Wrought-Iron Lantern", "P3", 1.42, 0.28, 0.88, 0.19, "lamp_glow", "Open Field at the Equator"),
-        L("06.props.lantern-candle-guitar__p11", "Equator Votive Candle", "P2", 1.04, 0.74, 0.88, 0.16, "lamp_glow", "Moons of the Equator"),
+        L("05.props.galaxy-universe__p02", "Equator Celestial Star Sphere Overhead", "P6", 6.00, 0.76, 0.25, 0.20, "planet_orbit", "Aerial Atlantis"),
+        L("04.props.word-shore__p23", "Equator Wind Wrought-Iron Lantern", "P3", 1.42, 0.26, 0.88, 0.20, "lamp_glow", "Open Field at the Equator"),
+        L("06.props.lantern-candle-guitar__p01", "Glowing Equator Brass Hurricane Lantern", "P2", 1.04, 0.72, 0.88, 0.22, "lamp_glow", "Moons of the Equator"),
     ],
     "08.3": [
-        L("11.props.inlays-lantern__p15", "Sanctuary Baptism Brass Lantern", "P3", 1.42, 0.26, 0.88, 0.19, "lamp_glow", "Salted Ice-Water Basin"),
-        L("04.props.word-shore__p23", "Choir Colonnade Iron Lantern", "P2", 1.04, 0.72, 0.88, 0.19, "lamp_glow", "Angels' Ice-Water Baptism"),
+        L("11.props.inlays-lantern__p04", "Tall Wrought-Iron Sanctuary Baptism Lantern", "P3", 1.42, 0.26, 0.88, 0.22, "lamp_glow", "Salted Ice-Water Basin"),
+        L("04.props.word-shore__p23", "Choir Colonnade Iron Lantern", "P2", 1.04, 0.74, 0.88, 0.20, "lamp_glow", "Angels' Ice-Water Baptism"),
     ],
     "08.4": [
-        L("04.props.word-shore__p23", "Still Terrace Iron Lantern at Dawn", "P3", 1.42, 0.76, 0.88, 0.19, "lamp_glow", "Terrace Recovery Basin"),
-        L("06.props.lantern-candle-guitar__p11", "Clear Morning Votive Candle", "P2", 1.04, 0.28, 0.88, 0.16, "lamp_glow", "Soul Returns to the Body"),
+        L("06.props.lantern-candle-guitar__p01", "Clear Morning Brass Sanctuary Lantern", "P3", 1.42, 0.26, 0.88, 0.22, "lamp_glow", "Soul Returns to the Body"),
+        L("04.props.word-shore__p23", "Still Terrace Iron Lantern at Dawn", "P2", 1.04, 0.76, 0.88, 0.20, "lamp_glow", "Terrace Recovery Basin"),
     ],
     "08.5": [
-        L("04.props.word-shore__p23", "Dawn Terrace Parapet Lantern", "P3", 1.40, 0.76, 0.88, 0.19, "lamp_glow", "Rooftop Parapet"),
-        L("06.props.lantern-candle-guitar__p11", "Morning Parapet Brass Candle", "P2", 1.04, 0.28, 0.88, 0.16, "lamp_glow", "Mountains From the Rooftop"),
+        L("05.set.winged_marble_gate__p01", "Rooftop Marble Parapet Wing Pillar", "P4", 2.42, 0.18, 0.84, 0.26, "portal_aperture", None),
+        L("06.props.lantern-candle-guitar__p01", "Morning Parapet Brass Lantern", "P3", 1.40, 0.36, 0.88, 0.22, "lamp_glow", "Mountains From the Rooftop"),
+        L("04.props.word-shore__p23", "Dawn Terrace Parapet Lantern", "P2", 1.04, 0.76, 0.88, 0.20, "lamp_glow", "Rooftop Parapet"),
     ],
+
+    # =======================================================================
+    # POEM 09 · A GOOD PLACE TO BREAKDOWN
+    # =======================================================================
+    "09.0": [
+        L("09.props.suitcases-notice__p01", "Upright Brown Leather Suitcase", "P3", 1.42, 0.26, 0.88, 0.21, "static", "The EX in the Crowd"),
+        L("09.props.suitcases-notice__p05", "Packed Leather Suitcase by the Crowd", "P2", 1.04, 0.64, 0.88, 0.21, "static", "Harbor Crowd"),
+        L("09.props.suitcases-notice__p20", "2nd Gate 05:12 Pier Departure Sign", "P1", 0.56, 0.84, 0.87, 0.20, "lamp_glow", None),
+    ],
+    "09.1": [
+        L("13.props.planet-boats__p06", "Painted Wooden Harbor Rowboat at Quay", "P3", 1.40, 0.72, 0.88, 0.21, "wave_near", "Harbor Quay Promenade"),
+        L("09.props.suitcases-notice__p05", "Leather Suitcase Carried to the Pier", "P2", 1.04, 0.32, 0.88, 0.21, "static", "Walking Toward the Water"),
+    ],
+    "09.2": [
+        L("09.props.phonebooth__p02", "Harbor Glass Telephone Booth", "P3", 1.42, 0.52, 0.86, 0.25, "portal_aperture", "Harbor Phone Booth"),
+        L("09.props.suitcases-notice__p06", "Open Lined Trunk Suitcase on the Pier", "P3", 1.38, 0.24, 0.88, 0.21, "static", "Suitcases on the Pier"),
+        L("09.props.suitcases-notice__p05", "Closed Leather Suitcase Beside Booth", "P2", 1.04, 0.76, 0.88, 0.21, "static", None),
+    ],
+    "09.3": [
+        L("09.props.phonebooth__p15", "Open Harbor Phone Booth & Handset", "P3", 1.40, 0.26, 0.87, 0.25, "phone_ring", "Calling From the Booth"),
+        L("09.props.phones-chair__p07", "Mother's Floral Living-Room Armchair", "P2", 1.04, 0.74, 0.88, 0.24, "lamp_base", "The Call to Mother"),
+    ],
+    "09.4": [
+        L("13.props.planet-boats__p18", "Masted Wooden Harbor Sailboat", "P3", 1.42, 0.74, 0.88, 0.22, "wave_near", "Inner Harbor Water"),
+        L("13.props.planet-boats__p10", "Painted Harbor Skiff at the Dock", "P3", 1.38, 0.26, 0.89, 0.20, "wave_near", None),
+        L("09.props.suitcases-notice__p05", "Father & Son's Suitcase on the Quay", "P2", 1.04, 0.50, 0.88, 0.20, "static", "Father and Son Together"),
+    ],
+    "09.5": [
+        L("09.props.phonebooth__p14", "Silent Glass Telephone Booth in the Mist", "P3", 1.40, 0.68, 0.87, 0.24, "portal_aperture", "Misty Harbor Quay"),
+        L("09.props.suitcases-notice__p01", "Single Upright Suitcase Left on Pier", "P2", 1.04, 0.30, 0.88, 0.21, "static", "The EX Turns to Haze"),
+        L("13.props.planet-boats__p06", "Drifting Wooden Rowboat in Harbor Haze", "P1", 0.56, 0.86, 0.90, 0.18, "wave_near", None),
+    ],
+
+    # =======================================================================
+    # POEM 10 · BE ASTONISHED
+    # =======================================================================
     "10.0": [
-        L("11.props.parked-motorcycle__p01", "Parked Cafe Racer Motorcycle", "P3", 1.38, 0.56, 0.87, 0.24, "bike_chassis", "The Parked Motorcycle"),
+        L("11.props.parked-motorcycle__p01", "Parked Cafe-Racer Motorcycle Under Street", "P3", 1.38, 0.58, 0.87, 0.24, "bike_chassis", "The Parked Motorcycle"),
+        L("06.props.lantern-candle-guitar__p01", "Underground Vault Work Lantern", "P2", 1.04, 0.24, 0.88, 0.21, "lamp_glow", "Under the Street"),
     ],
     "10.1": [
-        L("11.props.parked-motorcycle__p01", "Ignited Cafe Racer Motorcycle", "P3", 1.38, 0.54, 0.87, 0.25, "bike_chassis", "Mounting the Machine"),
+        L("10.props.bike-skeleton__p01", "Copper-Frame Cafe-Racer Chassis", "P3", 1.38, 0.64, 0.87, 0.24, "bike_chassis", "Mounting the Machine"),
+        L("10.props.tree-dawn-sign__p20", "Glowing < 88 NEW DAWN km Signpost", "P2", 1.04, 0.26, 0.87, 0.21, "lamp_glow", "Steel Coverings"),
+    ],
+    "10.2": [
+        L("10.props.tree-dawn-sign__p19", "Silhouette Street Tree Against Amber Sky", "P4", 2.42, 0.80, 0.84, 0.25, "static", None),
+        L("10.props.bike-skeleton__p17", "Cafe-Racer Motorcycle Cruising the Avenue", "P3", 1.38, 0.44, 0.87, 0.24, "bike_chassis", "First Midnight Intersection"),
+    ],
+    "10.3": [
+        L("11.props.parked-motorcycle__p01", "Motorcycle Leaning Through Light Pool", "P3", 1.38, 0.40, 0.87, 0.24, "bike_chassis", "Avenue Light Pool"),
+        L("04.props.word-shore__p23", "Avenue Wrought-Iron Street Lantern", "P2", 1.04, 0.76, 0.88, 0.20, "lamp_glow", "Swagger Down the Avenue"),
     ],
     "10.4": [
-        L("10.props.bike-skeleton__p17", "Highway Motorcycle Heading Out", "P3", 1.38, 0.50, 0.87, 0.24, "bike_chassis", "Out of Atlantis"),
+        L("05.set.winged_marble_gate__p01", "City-Limit Winged Boundary Pillar", "P4", 2.42, 0.18, 0.84, 0.26, "portal_aperture", None),
+        L("10.props.bike-skeleton__p17", "Highway Motorcycle Heading Out at Dawn", "P3", 1.38, 0.50, 0.87, 0.24, "bike_chassis", "Out of Atlantis"),
+        L("10.props.tree-dawn-sign__p20", "< 88 NEW DAWN km Highway Signpost", "P2", 1.04, 0.80, 0.87, 0.20, "lamp_glow", "Leaving Atlantis"),
+    ],
+    "10.5": [
+        L("10.props.tree-dawn-sign__p01", "Gnarled Mountain-Pass Tree West", "P4", 2.42, 0.18, 0.84, 0.26, "static", None),
+        L("10.props.bike-skeleton__p01", "Full-Throttle Mountain-Pass Motorcycle", "P3", 1.38, 0.46, 0.87, 0.24, "bike_chassis", "Mountain Road Sweep"),
+        L("10.props.tree-dawn-sign__p20", "< 88 NEW DAWN km Summit Marker", "P2", 1.04, 0.76, 0.87, 0.21, "lamp_glow", "88 New Dawn km"),
+    ],
+
+    # =======================================================================
+    # POEM 11 · WELCOME BACK TO MYSELF
+    # =======================================================================
+    "11.0": [
+        L("11.props.temple.states__p02", "Ruined Stone Rubble Foundation on Shore", "P4", 2.40, 0.76, 0.85, 0.09, "static", "Ruins on the Shore"),
+        L("11.props.parked-motorcycle__p01", "Parked Motorcycle on the Chilly Shore", "P3", 1.40, 0.26, 0.87, 0.23, "bike_chassis", "Parked Bike by the Ruins"),
+        L("11.props.journal__p01", "Closed Tooled-Leather Sanctuary Journal", "P2", 1.04, 0.52, 0.89, 0.18, "lamp_glow", "Arrival on the Chilly Shore"),
     ],
     "11.1": [
-        L("11.props.inlays-lantern__p15", "Morning Sanctuary Brass Lantern", "P3", 1.40, 0.26, 0.88, 0.19, "lamp_glow", "Remnants in the Sunlight"),
-        L("11.props.journal__p11", "Cornerstone Leather Journal", "P2", 1.04, 0.68, 0.89, 0.17, "drawer_slide", "First Courses of Stone"),
+        L("11.props.temple.states__p03", "Laid White Marble Temple Foundation Steps", "P4", 2.40, 0.74, 0.84, 0.11, "static", "First Courses of Stone"),
+        L("11.props.inlays-lantern__p04", "Tall Wrought-Iron Morning Sanctuary Lantern", "P3", 1.40, 0.24, 0.87, 0.22, "lamp_glow", "Remnants in the Sunlight"),
+        L("11.props.journal__p04", "Open Flat Leather Architect's Journal", "P2", 1.04, 0.50, 0.89, 0.16, "drawer_slide", None),
     ],
     "11.2": [
-        L("11.props.inlays-lantern__p15", "Golden Temple Dedication Lantern", "P3", 1.40, 0.30, 0.88, 0.20, "lamp_glow", "The Temple Builds Itself"),
-        L("11.props.journal__p11", "Architect's Open Sanctuary Ledger", "P2", 1.04, 0.72, 0.89, 0.17, "lamp_glow", "Crowning the White Roof"),
+        L("11.props.temple.states__p01", "Half-Built Rising Fluted Marble Columns", "P4", 2.40, 0.76, 0.83, 0.20, "static", "Rising Fluted Columns"),
+        L("11.props.inlays-lantern__p18", "Cut White Marble Ashlar Stones", "P3", 1.40, 0.24, 0.88, 0.18, "static", "The Temple Builds Itself"),
+        L("11.props.journal__p07", "Handwritten Cream Parchment Blueprint Page", "P2", 1.04, 0.50, 0.89, 0.18, "lamp_glow", "Crowning the White Roof"),
     ],
     "11.3": [
-        L("11.props.inlays-lantern__p15", "Sanctuary Nave Brass Lantern", "P3", 1.38, 0.32, 0.88, 0.20, "lamp_glow", "Choir Chords in the Nave"),
-        L("11.props.journal__p11", "Hymnal & Journal on Marble Plinth", "P2", 1.04, 0.68, 0.88, 0.18, "lamp_glow", "New White Temple Nave"),
+        L("11.props.temple.states__p04", "Completed Classical White Marble Portico", "P4", 2.40, 0.76, 0.83, 0.25, "portal_aperture", "New White Temple Nave"),
+        L("11.props.inlays-lantern__p04", "Sanctuary Nave Wrought-Iron Lantern", "P3", 1.38, 0.24, 0.87, 0.22, "lamp_glow", "Choir Chords in the Nave"),
+        L("11.props.journal__p11", "Open Sanctuary Hymnal & Ledger", "P2", 1.04, 0.50, 0.89, 0.17, "lamp_glow", None),
     ],
+    "11.4": [
+        L("02.props.mirror-phone-rings__p04", "Ornate Standing Mirror by Reflecting Pool", "P4", 2.40, 0.76, 0.84, 0.25, "portal_aperture", "The Lonely Mirror"),
+        L("11.props.inlays-lantern__p15", "Reflecting Pool Brass Lantern", "P3", 1.40, 0.24, 0.88, 0.20, "lamp_glow", None),
+        L("11.props.journal__p04", "Open Leather Journal by the Water's Edge", "P2", 1.04, 0.50, 0.89, 0.16, "lamp_glow", "Journal by the Pool"),
+    ],
+    "11.5": [
+        L("11.props.temple.states__p06", "Golden-Lit Classical Temple Portico", "P4", 2.40, 0.76, 0.83, 0.25, "portal_aperture", "Welcoming the New"),
+        L("11.props.inlays-lantern__p04", "Golden Dedication Sanctuary Lantern", "P3", 1.40, 0.24, 0.87, 0.22, "lamp_glow", "Reflecting Pool"),
+        L("11.props.journal__p11", "Completed Sanctuary Chronicle", "P2", 1.04, 0.48, 0.89, 0.17, "lamp_glow", None),
+    ],
+
+    # =======================================================================
+    # POEM 12 · REUNION
+    # =======================================================================
     "12.0": [
-        L("12.set.temple_backroom__p06", "Carved Wooden Welcome Chair", "P3", 1.42, 0.28, 0.88, 0.22, "lamp_base", "Temple Porch Entrance"),
-        L("12.props.hand-hourglass__p05", "Sanctuary Welcome Hourglass", "P2", 1.04, 0.68, 0.88, 0.19, "hourglass_sand", "Welcome Home in the Hall"),
+        L("12.props.niche-porch__p15", "Hanging Brass Sanctuary Pendant Lamp", "P6", 6.00, 0.50, 0.24, 0.19, "lamp_glow", None),
+        L("12.props.niche-porch__p01", "Arched Stone Sanctuary Niche Frame", "P4", 2.40, 0.80, 0.83, 0.25, "portal_aperture", "Temple Porch Entrance"),
+        L("12.set.temple_backroom__p05", "Carved Wooden Welcome Chair", "P3", 1.42, 0.26, 0.88, 0.22, "lamp_base", "Welcome Home in the Hall"),
+        L("12.props.hand-hourglass__p01", "Upright Glass Hourglass of Welcome", "P2", 1.04, 0.56, 0.88, 0.22, "hourglass_sand", None),
+    ],
+    "12.1": [
+        L("12.props.niche-porch__p16", "Glowing Brass Hall Pendant Lamp", "P6", 6.00, 0.50, 0.24, 0.19, "lamp_glow", None),
+        L("12.set.temple_backroom__p07", "Elder's Wooden Gathering Chair", "P3", 1.42, 0.26, 0.88, 0.22, "lamp_base", "Echoing Hall Colonnade"),
+        L("04.props.heart__p01", "Beating Reunion Heart Emblem", "P2", 1.04, 0.52, 0.88, 0.21, "heart_beat", "Loud Voices & Laughter"),
+        L("12.props.hand-hourglass__p04", "Tilted Glass Hourglass on Stone Ledge", "P1", 0.56, 0.78, 0.89, 0.20, "hourglass_sand", None),
+    ],
+    "12.2": [
+        L("12.props.niche-porch__p01", "Quiet Stone Sanctuary Alcove Arch", "P4", 2.40, 0.20, 0.83, 0.25, "portal_aperture", "Afterlife Chamber"),
+        L("12.set.temple_backroom__p05", "Empty Wooden Chair in the Chamber", "P3", 1.42, 0.46, 0.88, 0.22, "lamp_base", "The Empty Rooms"),
+        L("12.props.last-hourglass__p01", "Tall Carved Wooden Hourglass", "P2", 1.04, 0.74, 0.88, 0.24, "hourglass_sand", None),
     ],
     "12.3": [
-        L("12.props.hand-hourglass__p05", "Glass Hourglass of Burning Sand", "P3", 1.38, 0.28, 0.88, 0.20, "hourglass_sand", "Glasses of Burning Sand"),
-        L("12.props.last-hourglass__p23", "Burning Wooden Hourglass Frame", "P2", 1.04, 0.64, 0.88, 0.22, "hourglass_sand", "The Burning Hourglasses"),
+        L("12.props.niche-porch__p15", "Sanctuary Pendant Lamp Above the Pillars", "P6", 6.00, 0.50, 0.24, 0.18, "lamp_glow", None),
+        L("12.props.hand-hourglass__p21", "Glass Hourglass of Burning Sand", "P3", 1.38, 0.28, 0.88, 0.22, "hourglass_sand", "Glasses of Burning Sand"),
+        L("12.props.last-hourglass__p23", "Burning Wooden Hourglass Frame", "P2", 1.04, 0.68, 0.88, 0.23, "hourglass_sand", "The Burning Hourglasses"),
     ],
     "12.4": [
-        L("12.set.temple_backroom__p06", "Elder's Carved Grove Bench", "P3", 1.40, 0.32, 0.88, 0.22, "lamp_base", "Western Forest Edge"),
-        L("13.props.harvest__p04", "Grove Wildflower Bouquet", "P2", 1.04, 0.68, 0.89, 0.18, "flower_bloom", "Every Living Tree"),
+        L("12.set.temple_backroom__p07", "Elder's Carved Grove Chair", "P3", 1.40, 0.28, 0.88, 0.22, "lamp_base", "Western Forest Edge"),
+        L("13.props.harvest__p09", "Lush Tied Bouquet of Poppies & Wildflowers", "P2", 1.04, 0.68, 0.88, 0.22, "flower_bloom", "Every Living Tree"),
     ],
     "12.5": [
-        L("12.set.temple_backroom__p06", "Terrace Gathering Seat", "P3", 1.40, 0.30, 0.88, 0.22, "lamp_base", "Shore Terrace Canopy"),
-        L("04.props.heart__p01", "Resonant Brotherhood Heart Emblem", "P2", 1.04, 0.66, 0.86, 0.19, "heart_beat", "The Brotherhood Chain"),
+        L("12.set.temple_backroom__p05", "Terrace Gathering Wooden Chair", "P3", 1.40, 0.26, 0.88, 0.22, "lamp_base", "Shore Terrace Canopy"),
+        L("04.props.heart__p01", "Resonant Brotherhood Heart Emblem", "P2", 1.04, 0.64, 0.87, 0.21, "heart_beat", "The Brotherhood Chain"),
+        L("12.props.hand-hourglass__p01", "Shared-Years Glass Hourglass", "P1", 0.56, 0.82, 0.89, 0.19, "hourglass_sand", None),
     ],
     "12.6": [
-        L("13.props.harvest__p01", "Meadow Dusk Wildflowers", "P3", 1.40, 0.26, 0.89, 0.18, "flower_bloom", "Football in the Meadow"),
-        L("12.props.reunion__p01", "Spiraling Leather Football", "P2", 1.04, 0.56, 0.68, 0.15, "tambourine_arc", "Spiraling Pass at Dusk"),
+        L("13.props.harvest__p08", "Meadow Dusk Poppy & Lavender Bouquet", "P3", 1.40, 0.24, 0.88, 0.21, "flower_bloom", "Football in the Meadow"),
+        L("12.props.reunion__p01", "Spiraling Leather Football", "P2", 1.04, 0.56, 0.66, 0.18, "tambourine_arc", "Spiraling Pass at Dusk"),
+        L("13.props.harvest__p14", "Foreground Meadow Poppy Cluster", "P1", 0.56, 0.82, 0.90, 0.18, "flower_bloom", None),
+    ],
+
+    # =======================================================================
+    # POEM 13 · HARVESTING OUR OLD STORIES
+    # =======================================================================
+    "13.0": [
+        L("11.props.temple.states__p04", "Distant White Marble Temple Portico", "P4", 2.40, 0.20, 0.83, 0.24, "portal_aperture", "Leaving the White Temple"),
+        L("13.props.planet-boats__p18", "Masted Wooden Sailboat in the Canal", "P3", 1.40, 0.74, 0.88, 0.21, "wave_near", None),
+        L("13.props.harvest__p09", "Freshly Gathered Scarlet Poppy Bouquet", "P2", 1.04, 0.46, 0.88, 0.21, "flower_bloom", "Old Stories Gathered"),
+    ],
+    "13.1": [
+        L("13.props.planet-boats__p01", "Banded Planet Rising Over the Harbor", "P6", 6.00, 0.78, 0.24, 0.19, "planet_orbit", None),
+        L("13.props.cafe__p13", "Corner Marble Bistro Table & Two Chairs", "P3", 1.40, 0.60, 0.88, 0.23, "lamp_base", "Harbor Cafe Awning"),
+        L("13.props.cafe__p11", "Cafe Table Edge & Porcelain Espresso Cup", "P2", 1.04, 0.28, 0.88, 0.18, "lamp_glow", "The Corner Cafe Table"),
+    ],
+    "13.2": [
+        L("13.props.planet-boats__p01", "Counted Planetary Orbit Overhead", "P6", 6.00, 0.50, 0.22, 0.20, "planet_orbit", "Counted Planetary Orbits"),
+        L("13.props.cafe__p04", "Freestanding Bentwood Cafe Chair", "P3", 1.40, 0.26, 0.88, 0.22, "lamp_base", None),
+        L("13.props.five-letters__p02", "Five Unsent Love Letters Tied in Wax", "P2", 1.04, 0.68, 0.89, 0.18, "drawer_slide", "Five Unsent Letters"),
+    ],
+    "13.3": [
+        L("13.props.harvest__p14", "Blooming Scarlet Poppy Cluster on Moss", "P3", 1.40, 0.72, 0.88, 0.20, "flower_bloom", "Drowned Atrium"),
+        L("13.props.five-letters__p02", "Scorched Unsent Letter on the Ground", "P2", 1.04, 0.46, 0.89, 0.18, "drawer_slide", "Victory-less Season"),
+        L("13.props.harvest__p03", "Single Tall Scarlet Poppy Stem", "P1", 0.56, 0.22, 0.90, 0.20, "flower_bloom", None),
+    ],
+    "13.4": [
+        L("13.props.harvest__p09", "Lush Tied Scarlet Poppy & Lavender Bouquet", "P3", 1.42, 0.26, 0.88, 0.22, "flower_bloom", "Scarlet Poppy Meadow"),
+        L("13.props.harvest__p08", "Harvested Hilltop Poppy Bouquet", "P2", 1.04, 0.56, 0.88, 0.21, "flower_bloom", "Harvesting the Poppies"),
+        L("13.props.harvest__p12", "Foreground Wildflower & Poppy Cluster", "P1", 0.56, 0.82, 0.90, 0.19, "flower_bloom", None),
+    ],
+    "13.5": [
+        L("13.props.cafe__p03", "Empty Bentwood Bistro Chair Waiting", "P3", 1.42, 0.28, 0.88, 0.22, "lamp_base", "Waiting by the Cafe"),
+        L("13.props.cafe__p11", "Bistro Table Edge with Porcelain Espresso Cup", "P3", 1.38, 0.52, 0.88, 0.18, "lamp_glow", None),
+        L("13.props.harvest__p07", "Poppy Bouquet Placed on the Table", "P2", 1.04, 0.76, 0.88, 0.21, "flower_bloom", "From a Distant Window"),
+    ],
+    "13.6": [
+        L("13.props.cafe__p13", "Bistro Table & Chairs Left Behind", "P3", 1.40, 0.28, 0.88, 0.22, "lamp_base", "Rising From the Table"),
+        L("13.props.planet-boats__p06", "Painted Wooden Harbor Rowboat at Pier", "P2", 1.04, 0.72, 0.88, 0.21, "wave_near", "Walking Toward the Quay"),
+    ],
+
+    # =======================================================================
+    # POEM 14 · OUT OF LIFE (FINALE)
+    # =======================================================================
+    "14.0": [
+        L("14.props.party__p19", "Festive String of Glowing Paper Lanterns", "P6", 6.00, 0.50, 0.22, 0.13, "lamp_glow", None),
+        L("13.props.planet-boats__p18", "Harbor Sailboat Before the White Skyline", "P3", 1.40, 0.28, 0.88, 0.21, "wave_near", "Everything I Built"),
+        L("14.props.reel__p08", "Luminous Ferris-Wheel Life-Memory Emblem", "P2", 1.04, 0.72, 0.87, 0.21, "sun_pulse", "Taken by the Haze"),
     ],
     "14.1": [
-        L("14.props.door__p02", "Closed Freestanding Vintage Door", "P3", 1.42, 0.76, 0.87, 0.28, "portal_aperture", "Distant Door in the Void"),
-        L("14.props.reel__p05", "Starburst Key of Answers", "P2", 1.04, 0.44, 0.82, 0.16, "sun_pulse", "Sharpened Key of Answers"),
+        L("14.props.door__p02", "Closed Freestanding Vintage Wooden Door", "P3", 1.42, 0.74, 0.87, 0.27, "portal_aperture", "Distant Door in the Void"),
+        L("14.props.reel__p06", "Lit Candle in Brass Holder Floating in Void", "P2", 1.04, 0.28, 0.87, 0.21, "sun_pulse", "Sharpened Key of Answers"),
     ],
     "14.2": [
-        L("14.props.party__p20", "Brass Horn Table Gramophone", "P3", 1.40, 0.26, 0.88, 0.21, "turntable_spin", "Highs of Life Memory"),
-        L("11.props.journal__p11", "Open Life-Reel Journal", "P2", 1.04, 0.68, 0.89, 0.18, "lamp_glow", "Love & Loss Endured"),
+        L("14.props.party__p20", "Brass Horn Table Gramophone", "P3", 1.42, 0.24, 0.88, 0.21, "turntable_spin", "Highs of Life Memory"),
+        L("14.props.reel__p03", "Scarlet Poppies Memory Medallion", "P3", 1.38, 0.50, 0.87, 0.20, "flower_bloom", None),
+        L("11.props.journal__p04", "Open Leather Life-Reel Journal", "P2", 1.04, 0.76, 0.89, 0.16, "lamp_glow", "Love & Loss Endured"),
     ],
     "14.3": [
-        L("14.props.door__p11", "Freestanding Vintage Door Ajar", "P3", 1.40, 0.76, 0.87, 0.28, "portal_aperture", "Battle Scars & Wisdom"),
-        L("11.props.journal__p11", "Unspooled Journal Pages", "P2", 1.04, 0.34, 0.89, 0.18, "lamp_glow", "Unspooling the Reel"),
+        L("14.props.door__p11", "Freestanding Vintage Door Ajar", "P3", 1.42, 0.76, 0.87, 0.27, "portal_aperture", "Battle Scars & Wisdom"),
+        L("14.props.reel__p02", "Brass Tambourine Memory Medallion", "P3", 1.38, 0.52, 0.87, 0.19, "tambourine_arc", None),
+        L("11.props.journal__p11", "Unspooled Journal Pages", "P2", 1.04, 0.26, 0.89, 0.17, "lamp_glow", "Unspooling the Reel"),
+    ],
+    "14.4": [
+        L("14.props.party__p19", "Festive String of Glowing Paper Lanterns", "P6", 6.00, 0.50, 0.22, 0.13, "lamp_glow", None),
+        L("14.props.door__p13", "Vintage Wooden Door Swinging Wide Open", "P3", 1.40, 0.68, 0.87, 0.27, "portal_aperture", "The Vintage Door Opens"),
+        L("14.props.party__p03", "Brass Gramophone Horn Calling From Inside", "P2", 1.04, 0.28, 0.88, 0.20, "lamp_glow", "Light Spilling Through"),
     ],
     "14.5": [
-        L("14.props.party__p05", "Golden Ballroom Champagne Chalice", "P3", 1.42, 0.26, 0.88, 0.16, "lamp_glow", "Under the Ballroom Lights"),
-        L("14.props.party__p20", "Brass Horn Table Gramophone", "P2", 1.04, 0.78, 0.88, 0.22, "turntable_spin", "Gramophone Waltz"),
+        L("01.props.chandeliers__p27", "Grand 5-Branch Lit Ballroom Chandelier", "P6", 6.00, 0.50, 0.26, 0.21, "lamp_glow", None),
+        L("14.props.party__p05", "Golden Ballroom Champagne Chalice", "P3", 1.42, 0.24, 0.88, 0.17, "lamp_glow", "Under the Ballroom Lights"),
+        L("14.props.party__p20", "Brass Horn Table Gramophone", "P2", 1.04, 0.76, 0.88, 0.22, "turntable_spin", "Gramophone Waltz"),
+        L("14.props.party__p16", "Spinning Vinyl Waltz Record LP", "P1", 0.56, 0.48, 0.90, 0.16, "turntable_spin", None),
     ],
     "14.6": [
         L("14.props.party__p20", "Brass Horn Table Gramophone", "P3", 1.44, 0.22, 0.88, 0.20, "lamp_glow", "Into the Ballroom Crowd"),
-        L("01.props.room__p18", "Genesis Bedroom Television & Stand", "P2", 1.04, 0.66, 0.89, 0.20, "portal_tv_flicker", "Genesis · Back to Poem 01"),
+        L("01.props.room__p01", "Genesis Wooden Bedroom Dresser", "P3", 1.40, 0.46, 0.88, 0.21, "drawer_slide", None),
+        L("01.props.room__p18", "Genesis Bedroom Television & Stand", "P2", 1.04, 0.72, 0.89, 0.20, "portal_tv_flicker", "Genesis · Back to Poem 01"),
     ],
 }
 
 
-def curate_scene_props(skey: str, raw_layers: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+# ---------------------------------------------------------------------------
+# Scale Marker Extraction & Standardized Physical Piece Scale Calibration
+# ---------------------------------------------------------------------------
+OBJECT_REAL_HEIGHT_M: Dict[str, float] = {
+    "person": 1.70,
+    "man": 1.72,
+    "woman": 1.65,
+    "child": 1.22,
+    "pedestrian": 1.70,
+    "door": 2.05,
+    "doorway": 2.10,
+    "storefront": 2.40,
+    "window": 1.35,
+    "railing": 1.00,
+    "fence": 1.15,
+    "street lamp": 2.90,
+    "lamp": 2.75,
+    "lantern": 0.55,
+    "vehicle": 1.45,
+    "car": 1.45,
+    "sedan": 1.45,
+    "chair": 0.88,
+    "bench": 0.86,
+    "table": 0.78,
+    "stairs": 2.20,
+    "staircase": 2.40,
+    "pillar": 3.40,
+    "column": 3.40,
+    "tree": 3.60,
+    "air conditioner": 0.68,
+    "flower": 0.45,
+    "building": 12.0,
+    "spire": 18.0,
+    "tower": 18.0,
+    "bridge": 4.50,
+}
+
+# Canonical physical size `(canon_h_m, canon_w_m, class_tag)` for every piece family
+CANONICAL_PIECE_METERS_BY_ID: Dict[str, Tuple[float, float, str]] = {
+    # Poem 01: Bedroom, Fire Escape, Ballroom & Trapdoor
+    "01.props.room__p01": (1.15, 1.35, "furniture_dresser"),
+    "01.props.room__p14": (1.18, 1.45, "furniture_chest"),
+    "01.props.room__p18": (1.12, 1.15, "furniture_tv_stand"),
+    "01.props.room__p03": (0.52, 0.78, "floor_drawer"),
+    "01.props.handheld__p04": (0.58, 0.72, "floor_manuscript"),
+    "01.props.handheld__p07": (0.55, 0.68, "tumbling_pages"),
+    "01.props.window__p13": (1.68, 1.85, "arch_fire_escape_balcony"),
+    "01.hero.severn__p11": (1.88, 1.75, "arch_fire_escape_stairs"),
+    "01.hero.severn__p12": (1.05, 1.45, "arch_landing_grate"),
+    "01.props.chandeliers__p27": (1.18, 1.45, "ceiling_chandelier"),
+    "01.props.chandeliers__p28": (1.15, 1.35, "ceiling_chandelier"),
+    "01.props.trapdoor__p12": (0.95, 1.55, "floor_trapdoor"),
+    "01.props.trapdoor__p11": (0.92, 1.40, "floor_trapdoor_frame"),
+    "01.props.trapdoor__p02": (0.78, 1.15, "floor_trapdoor_leaf"),
+    # Poem 02: Mirror, Bedroom, 1990s Living Room, Sedan, Tambourine
+    "02.props.mirror-phone-rings__p14": (1.58, 0.95, "standing_mirror"),
+    "02.props.mirror-phone-rings__p04": (1.62, 1.00, "standing_mirror"),
+    "02.props.mirror-phone-rings__p06": (0.62, 0.55, "table_phone"),
+    "02.set.bedroom_night__p05": (1.12, 1.50, "bed_headboard"),
+    "02.set.bedroom_night__p04": (0.86, 1.65, "bed_frame"),
+    "02.set.bedroom_night__p08": (0.78, 1.55, "bed_blanket"),
+    "02.set.living_room_1990s__p04": (1.55, 2.25, "living_room_sofa_curtains"),
+    "02.set.living_room_1990s__p08": (1.32, 0.78, "floor_lamp"),
+    "02.props.car__p01": (1.44, 3.35, "vehicle_sedan_body"),
+    "02.props.car__p05": (0.65, 0.65, "vehicle_wheel"),
+    "02.props.car__p06": (0.65, 0.65, "vehicle_wheel"),
+    "parents.02.car-argument__p03": (0.62, 0.95, "vehicle_cabin_occupants"),
+    "02.props.tambourine__p15": (0.68, 0.92, "music_tambourine"),
+    "02.props.tambourine__p01": (0.68, 0.92, "music_tambourine"),
+    # Poem 03: Cafe Racer, Chapel Pews, Altar, Rose Window
+    "03.props.bike__p01": (1.28, 2.15, "vehicle_motorcycle"),
+    "03.props.bike__p02": (1.28, 2.15, "vehicle_motorcycle"),
+    "03.props.bike__p07": (0.72, 0.85, "motorcycle_exhaust"),
+    "03.hero.chapel.interior-states__p05": (1.12, 1.85, "chapel_pew"),
+    "03.hero.chapel.interior-states__p11": (1.12, 1.85, "chapel_pew"),
+    "03.hero.chapel.interior-states__p08": (1.28, 1.65, "chapel_altar"),
+    "03.hero.chapel.interior-states__p12": (1.65, 1.65, "chapel_rose_window"),
+    "03.hero.chapel.interior-states__p02": (1.42, 1.25, "chapel_Timber_truss"),
+    "03.hero.chapel.interior-states__p10": (1.18, 1.35, "chapel_shattered_beam"),
+    # Poem 04: Hands, Phone Booth, Bridge Pylon
+    "04.props.hands__p01": (1.05, 1.15, "sculptural_hands"),
+    "04.props.hands__p02": (0.98, 1.05, "sculptural_hands"),
+    "04.props.hands__p03": (0.98, 1.05, "sculptural_hands"),
+    "04.props.hands__p06": (1.02, 1.12, "sculptural_hands"),
+    "04.props.booth__p01": (2.12, 1.18, "arch_phone_booth"),
+    "04.props.booth__p03": (2.12, 1.18, "arch_phone_booth"),
+    "04.props.booth__p07": (0.65, 0.58, "phone_receiver"),
+    "04.hero.bridge__p01": (2.25, 1.65, "arch_bridge_pylon"),
+    "04.hero.bridge__p05": (1.45, 1.95, "arch_bridge_parapet"),
+    # Poem 05: Ancestral Hearth, Table, Doors, Portrait
+    "05.props.hearth__p01": (1.68, 1.65, "hearth_fireplace"),
+    "05.props.hearth__p02": (1.18, 1.72, "dining_table"),
+    "05.props.hearth__p03": (1.02, 0.78, "wooden_chair"),
+    "05.props.hearth__p06": (0.78, 0.85, "hearth_tea_pot"),
+    "05.props.doors__p01": (2.05, 1.22, "arch_door_closed"),
+    "05.props.doors__p02": (2.05, 1.25, "arch_door_ajar"),
+    "05.props.doors__p03": (2.08, 1.32, "arch_door_open"),
+    "05.props.doors__p06": (1.28, 1.05, "wall_portrait"),
+    # Poem 06 & 08 & 10: Lanterns, Guitar, Campfire, Waystone, Telescope, Astrolabe
+    "06.props.lantern-candle-guitar__p01": (0.92, 0.68, "brass_lantern"),
+    "06.props.lantern-candle-guitar__p02": (0.84, 0.62, "brass_candle"),
+    "06.props.lantern-candle-guitar__p03": (1.15, 0.78, "acoustic_guitar"),
+    "06.props.lantern-candle-guitar__p06": (1.15, 0.82, "acoustic_guitar"),
+    "06.props.campfire-stones__p01": (1.05, 1.38, "campfire_circle"),
+    "06.props.campfire-stones__p02": (1.25, 0.98, "standing_waystone"),
+    "06.props.campfire-stones__p03": (1.48, 1.45, "stone_cairn_arch"),
+    "08.props.telescope__p01": (1.58, 1.28, "brass_telescope"),
+    "08.props.telescope__p02": (1.35, 1.18, "armillary_astrolabe"),
+    "08.props.telescope__p05": (1.12, 1.15, "star_chart_table"),
+    "10.props.beacon-wheel__p01": (1.42, 1.38, "ships_helm_wheel"),
+    "10.props.beacon-wheel__p02": (1.68, 1.25, "lighthouse_fresnel_lens"),
+    "10.props.beacon-wheel__p03": (1.28, 1.15, "brass_binocular_stand"),
+    # Poem 07: Club DJ Booth, Speakers, Disco Ball, Neon Arch
+    "07.props.dj-booth__p01": (1.38, 2.05, "club_dj_console"),
+    "07.props.dj-booth__p02": (1.68, 1.15, "club_speaker_stack"),
+    "07.props.dj-booth__p03": (0.98, 1.28, "club_turntable_deck"),
+    "07.props.club-lights__p01": (1.05, 1.05, "club_disco_ball"),
+    "07.props.club-lights__p03": (1.85, 1.65, "club_neon_arch"),
+    "07.props.club-lights__p15": (1.25, 0.92, "club_velvet_stanchion"),
+    # Poem 09: Sunken Columns, Anchors, Porthole, Diving Bell
+    "09.props.sunken-ruins__p01": (1.92, 1.18, "sunken_doric_column"),
+    "09.props.sunken-ruins__p02": (1.48, 1.55, "sunken_pediment_arch"),
+    "09.props.sunken-ruins__p03": (1.42, 1.18, "ship_anchor"),
+    "09.props.sunken-ruins__p05": (1.35, 1.35, "brass_porthole"),
+    "09.props.sunken-ruins__p06": (1.65, 1.32, "diving_bell"),
+    # Poem 11: Progressive Temple States & Mason Tools
+    "11.props.temple.states__p02": (1.35, 1.85, "temple_state_1_plinth"),
+    "11.props.temple.states__p03": (1.62, 1.88, "temple_state_2_drums"),
+    "11.props.temple.states__p01": (1.88, 1.95, "temple_state_3_colonnade"),
+    "11.props.temple.states__p04": (2.15, 2.15, "temple_state_4_sanctuary"),
+    "11.props.temple.states__p06": (1.72, 1.65, "temple_altar_brazier"),
+    "11.props.mason-tools__p01": (1.05, 1.25, "mason_chisel_mallet"),
+    "11.props.mason-tools__p02": (1.32, 1.15, "mason_plumb_square"),
+    "11.props.mason-tools__p03": (1.38, 1.48, "architect_drafting_table"),
+    # Poem 12: Hourglasses, Sundial, Bell
+    "12.props.hand-hourglass__p01": (1.22, 0.88, "glass_hourglass_upright"),
+    "12.props.hand-hourglass__p04": (1.12, 1.05, "glass_hourglass_tilted"),
+    "12.props.hand-hourglass__p21": (1.08, 0.95, "glass_hourglass_burning"),
+    "12.props.last-hourglass__p01": (1.48, 0.95, "tall_wooden_hourglass"),
+    "12.props.last-hourglass__p02": (1.28, 1.15, "stone_sundial"),
+    "12.props.last-hourglass__p03": (1.58, 1.32, "bronze_chronometer_bell"),
+    # Poem 13: Harvest Poppies & Harbor Cafe Bistro
+    "13.props.harvest__p09": (1.12, 1.18, "poppy_bouquet_vase"),
+    "13.props.harvest__p08": (0.98, 1.22, "wicker_harvest_basket"),
+    "13.props.harvest__p07": (0.95, 1.18, "wheat_poppy_sheaf"),
+    "13.props.cafe__p13": (1.18, 1.38, "bistro_table_chairs"),
+    "13.props.cafe__p11": (0.68, 0.72, "espresso_cup_saucer"),
+    "13.props.cafe__p01": (1.85, 2.10, "cafe_awning_menu"),
+    # Poem 14: Life-Reel Medallions & Vintage Party Ballroom
+    "14.props.reel__p08": (1.38, 1.38, "cinema_projector_reel"),
+    "14.props.reel__p06": (1.32, 1.32, "memory_medallion_frame"),
+    "14.props.reel__p03": (1.25, 1.55, "unspooled_film_ribbon"),
+    "14.props.reel__p02": (1.32, 1.32, "silver_film_canister"),
+    "14.props.party__p19": (1.15, 2.25, "paper_lantern_garland"),
+    "14.props.party__p20": (1.22, 1.05, "brass_horn_gramophone"),
+    "14.props.party__p03": (1.22, 1.05, "brass_horn_gramophone"),
+    "14.props.party__p01": (1.25, 1.48, "champagne_fountain_table"),
+}
+
+_TIGHT_BBOX_CACHE: Dict[str, Tuple[int, int, int, int, float, float]] = {}
+_SCALE_MARKER_CACHE: Dict[str, Dict[str, Any]] = {}
+
+
+def get_part_tight_metrics(pid: str, parts_by_id: Dict[str, Dict[str, Any]]) -> Tuple[int, int, int, int, float, float]:
     """
-    Filters out un-integrated environmental clutter stickers (walls, sky/water strips,
-    checkerboard FX cards, duplicate buildings/temples, and corner pillar stumps) and
-    returns only 1 to 3 self-contained, grounded physical story props on P3/P2 with
-    calibrated architectural scales (`0.14..0.26`).
+    Returns `(pw, ph, tight_w, tight_h, fill_w, fill_h)` for `pid` by measuring
+    its non-transparent alpha silhouette (`alpha > 24`) so transparent padding
+    margins never distort standardized physical piece scaling.
     """
-    if skey in SCENE_CURATED_PROP_OVERRIDES:
-        return [dict(x) for x in SCENE_CURATED_PROP_OVERRIDES[skey]]
+    if pid in _TIGHT_BBOX_CACHE:
+        return _TIGHT_BBOX_CACHE[pid]
+    import numpy as np
 
-    curated: List[Dict[str, Any]] = []
-    for lyr in raw_layers:
-        pid = lyr["part_id"]
-        pl = lyr["plane"]
-        if pl not in ("P3", "P2"):
+    pt = parts_by_id.get(pid, {})
+    pw = max(1, int(pt.get("width", 240)))
+    ph = max(1, int(pt.get("height", 240)))
+    rel = pt.get("file", "")
+    p_path = SHOTS_DIR / rel if rel else None
+    if p_path and p_path.exists():
+        try:
+            im = Image.open(p_path).convert("RGBA")
+            pw, ph = im.size
+            a = np.array(im)[..., 3]
+            ys, xs = np.where(a > 24)
+            if len(xs) > 16:
+                tw = max(8, int(xs.max() - xs.min() + 1))
+                th = max(8, int(ys.max() - ys.min() + 1))
+                fw = max(0.25, min(1.0, float(tw) / float(max(1, pw))))
+                fh = max(0.25, min(1.0, float(th) / float(max(1, ph))))
+                res = (pw, ph, tw, th, fw, fh)
+                _TIGHT_BBOX_CACHE[pid] = res
+                return res
+        except Exception:
+            pass
+    res = (pw, ph, pw, ph, 1.0, 1.0)
+    _TIGHT_BBOX_CACHE[pid] = res
+    return res
+
+
+def extract_cel_painting_scale_markers(fid: str, wshot: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Finds real-world scale markers (`person`, `door`, `window`, `street lamp`, `railing`,
+    `vehicle`, `pillar`, `stairs`, `chair`, `tree`, `building`, etc.) in the cel painting's
+    `shots/out/<fid>/shot.json` + `cartoon/signals.json` + `depth_sharp.npz`, and computes
+    the cel painting's calibrated `stage_px_per_meter` at focal plane `P2` (`1280x720`).
+    """
+    if fid in _SCALE_MARKER_CACHE:
+        return _SCALE_MARKER_CACHE[fid]
+    import numpy as np
+
+    W_STAGE, H_STAGE = 1280.0, 720.0
+    W_RAW, H_RAW = 1456.0, 816.0
+    sx = W_STAGE / W_RAW
+    sy = H_STAGE / H_RAW
+
+    z_hero = float(wshot.get("z_hero") or 10.5)
+    z_hero = max(4.5, min(22.0, z_hero))
+    focal_raw = float(wshot.get("focal") or 1250.0)
+    cam_ppm_raw = (focal_raw * sy) / z_hero
+
+    markers: List[Dict[str, Any]] = []
+    valid_ppms: List[float] = []
+    plane_values: Dict[str, Any] = {}
+
+    out_dir = SHOTS_DIR / "out" / fid if fid else None
+    depth_map = None
+    if out_dir and (out_dir / "depth_sharp.npz").exists():
+        try:
+            depth_map = np.load(out_dir / "depth_sharp.npz")["depth"]
+        except Exception:
+            depth_map = None
+
+    if out_dir and (out_dir / "cartoon" / "signals.json").exists():
+        try:
+            sig_d = json.loads((out_dir / "cartoon" / "signals.json").read_text())
+            plane_values = sig_d.get("plane_values") or {}
+            sl_p2 = (sig_d.get("scale_ladder") or {}).get("P2", {})
+            if "1.7m" in sl_p2:
+                sig_ppm = (float(sl_p2["1.7m"]) * sy) / 1.70
+                if 55.0 <= sig_ppm <= 210.0:
+                    valid_ppms.append(sig_ppm)
+        except Exception:
+            pass
+
+    if out_dir and (out_dir / "shot.json").exists():
+        try:
+            shot_d = json.loads((out_dir / "shot.json").read_text())
+            cam = shot_d.get("camera") or {}
+            if cam.get("focal_px"):
+                focal_raw = float(cam["focal_px"])
+                cam_ppm_raw = (focal_raw * sy) / z_hero
+
+            for det in shot_d.get("detections", []):
+                lbl = str(det.get("label", "")).strip().lower()
+                score = float(det.get("score", 0.0))
+                if score < 0.28:
+                    continue
+                matched_key = None
+                real_h_m = None
+                for k, hm in OBJECT_REAL_HEIGHT_M.items():
+                    if k == lbl or k in lbl:
+                        matched_key = k
+                        real_h_m = hm
+                        break
+                if not real_h_m:
+                    continue
+                box = det.get("box") or [0, 0, 0, 0]
+                if len(box) < 4:
+                    continue
+                x0, y0, x1, y1 = float(box[0]) * sx, float(box[1]) * sy, float(box[2]) * sx, float(box[3]) * sy
+                bw = max(1.0, x1 - x0)
+                bh = max(1.0, y1 - y0)
+                if bh < 14.0 or bh > H_STAGE * 0.92:
+                    continue
+
+                # Sample metric depth inside the marker's bounding box if available
+                z_marker = z_hero
+                if depth_map is not None:
+                    dh, dw = depth_map.shape[:2]
+                    ix0 = max(0, min(dw - 1, int((x0 / W_STAGE) * dw)))
+                    ix1 = max(ix0 + 1, min(dw, int((x1 / W_STAGE) * dw)))
+                    iy0 = max(0, min(dh - 1, int((y0 / H_STAGE) * dh)))
+                    iy1 = max(iy0 + 1, min(dh, int((y1 / H_STAGE) * dh)))
+                    patch = depth_map[iy0:iy1, ix0:ix1]
+                    if patch.size > 0:
+                        z_marker = max(2.5, min(35.0, float(np.median(patch))))
+
+                raw_marker_ppm = bh / real_h_m
+                depth_ratio = max(0.55, min(1.85, z_marker / max(3.5, z_hero)))
+                implied_p2_ppm = raw_marker_ppm * depth_ratio
+                if 50.0 <= implied_p2_ppm <= 220.0:
+                    valid_ppms.append(implied_p2_ppm)
+
+                markers.append({
+                    "label": matched_key,
+                    "score": round(score, 3),
+                    "box_stage": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
+                    "px_h": round(bh, 1),
+                    "real_h_m": real_h_m,
+                    "z_m": round(z_marker, 2),
+                    "implied_p2_px_per_m": round(implied_p2_ppm, 1),
+                })
+        except Exception:
+            pass
+
+    markers.sort(key=lambda m: m["score"], reverse=True)
+    if valid_ppms:
+        med_ppm = float(np.median(valid_ppms))
+        blended_ppm = 0.65 * med_ppm + 0.35 * cam_ppm_raw
+    else:
+        blended_ppm = cam_ppm_raw
+
+    # Clamp to a harmonious, stage-calibrated P2 range `[96.0 .. 134.0]` px/m (where 1.70m actor = 163..228px)
+    stage_ppm = round(max(96.0, min(134.0, blended_ppm)), 2)
+    res = {
+        "shot_id": fid,
+        "z_hero_m": round(z_hero, 2),
+        "focal_px": round(focal_raw, 1),
+        "stage_px_per_meter": stage_ppm,
+        "reference_human_170cm_px": round(stage_ppm * 1.70, 1),
+        "marker_count": len(markers),
+        "markers": markers[:8],
+        "plane_values": plane_values,
+    }
+    _SCALE_MARKER_CACHE[fid] = res
+    return res
+
+
+def infer_canonical_piece_meters(
+    pid: str,
+    label: str,
+    plane: str,
+    ar: float,
+) -> Tuple[float, float, str]:
+    """
+    Returns `(canon_h_m, canon_w_m, class_tag)` for any piece ID, using the explicit
+    dictionary first and falling back to semantic keyword rules if needed.
+    """
+    if pid in CANONICAL_PIECE_METERS_BY_ID:
+        return CANONICAL_PIECE_METERS_BY_ID[pid]
+    s = f"{pid} {label}".lower()
+    if any(k in s for k in ("booth", "door", "arch", "column", "pillar", "pylon", "temple", "sanctuary", "beacon", "lighthouse")):
+        return (1.92, 1.85, "arch_portal_element")
+    if any(k in s for k in ("window", "balcony", "stairs", "fire-escape", "hearth", "fireplace", "altar", "console", "speaker", "telescope")):
+        return (1.58, 1.75, "arch_fixture")
+    if any(k in s for k in ("sofa", "bed", "dresser", "chest", "table", "pew", "bistro", "chandelier", "garland", "wheel", "sundial", "bell", "reel")):
+        return (1.18, 1.65, "furniture_large_prop")
+    if any(k in s for k in ("chair", "lamp", "hourglass", "guitar", "lantern", "campfire", "waystone", "anchor", "gramophone", "vase", "bouquet", "basket")):
+        return (1.02, 1.20, "medium_stage_prop")
+    return (0.78, 0.95, "compact_stage_prop")
+
+
+def standardize_piece_scale(
+    pid: str,
+    label: str,
+    plane: str,
+    authored_sc: float,
+    stage_ppm: float,
+    parts_by_id: Dict[str, Dict[str, Any]],
+) -> Tuple[float, Dict[str, Any]]:
+    """
+    Computes a standardized, perspective-calibrated stage `scale` (`target_h / 720`)
+    for piece `pid` on `plane` using:
+      1. The piece's tight non-transparent alpha bounding box (`tight_w, tight_h`),
+      2. Its canonical physical height & width cap in meters (`canon_h_m, canon_w_m`),
+      3. The cel painting's scale-marker-calibrated `stage_px_per_meter` at `P2`,
+      4. The depth-plane perspective foreshortening multiplier (`P4: 0.78`, `P3: 0.90`, `P2: 1.00`).
+    """
+    H_STAGE = 720.0
+    pw, ph, tw, th, fill_w, fill_h = get_part_tight_metrics(pid, parts_by_id)
+    ar_tight = float(tw) / float(max(1, th))
+    canon_h_m, canon_w_m, class_tag = infer_canonical_piece_meters(pid, label, plane, ar_tight)
+
+    plane_persp_mult = {
+        "P6": 0.46,
+        "P5": 0.58,
+        "P4": 0.78,
+        "P3": 0.90,
+        "P2": 1.00,
+        "P1": 1.06,
+        "P0": 1.12,
+    }.get(plane, 0.90)
+
+    # Target visible silhouette height in stage pixels from physical meters & cel painting scale markers
+    desired_tight_h_px = canon_h_m * stage_ppm * plane_persp_mult
+    desired_tight_w_px = desired_tight_h_px * ar_tight
+    max_tight_w_px = canon_w_m * stage_ppm * plane_persp_mult
+    if desired_tight_w_px > max_tight_w_px and ar_tight > 0.1:
+        desired_tight_w_px = max_tight_w_px
+        desired_tight_h_px = desired_tight_w_px / ar_tight
+
+    # Convert tight visible height back to full image canvas height fraction (`sc = full_h_px / 720`)
+    full_h_px = desired_tight_h_px / max(0.32, fill_h)
+    phys_sc = full_h_px / H_STAGE
+
+    # Blend 74% physical scale-marker calibration with 26% authored scene composition scale
+    cal_sc = 0.74 * phys_sc + 0.26 * float(authored_sc)
+    cal_sc = round(max(0.11, min(0.32, cal_sc)), 4)
+
+    meta = {
+        "class_tag": class_tag,
+        "canon_h_m": round(canon_h_m, 2),
+        "canon_w_m": round(canon_w_m, 2),
+        "tight_bbox_px": [tw, th],
+        "fill_ratio": [round(fill_w, 3), round(fill_h, 3)],
+        "authored_scale": round(float(authored_sc), 4),
+        "standardized_scale": cal_sc,
+    }
+    return cal_sc, meta
+
+
+def curate_scene_props(
+    skey: str,
+    raw_layers: List[Dict[str, Any]],
+    stage_ppm: float = 118.0,
+    parts_by_id: Optional[Dict[str, Dict[str, Any]]] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Returns each scene's bespoke, multi-layer composition of verified freestanding
+    sculptural pieces across `P6`, `P5`, `P4`, `P3`, `P2`, `P1`, with every piece
+    standardized in physical scale (`canon_h_m` × `stage_px_per_meter`) while keeping
+    multi-part ensembles (`car_ensemble` sedan + tires + cabin parents) pixel-locked!
+    """
+    base_list = SCENE_CURATED_PROP_OVERRIDES.get(skey, raw_layers[:4])
+    out = [dict(x, alpha=0.98) for x in base_list]
+    if not parts_by_id:
+        return out
+
+    # First check if this scene contains a `car_ensemble` (`02.props.car__p01`) so its wheels stay locked
+    car_body = next((item for item in out if item["part_id"] == "02.props.car__p01"), None)
+    locked_car_sc = None
+    locked_car_cx = None
+    locked_car_floor_y = None
+    if car_body is not None:
+        raw_car_sc = float(car_body["scale"])
+        locked_car_cx = float(car_body["x"])
+        locked_car_floor_y = round(float(car_body["y"]) + 0.05 * raw_car_sc, 4)
+        locked_car_sc, car_meta = standardize_piece_scale(
+            "02.props.car__p01",
+            car_body["label"],
+            car_body["plane"],
+            raw_car_sc,
+            stage_ppm,
+            parts_by_id,
+        )
+        car_body["scale"] = locked_car_sc
+        car_body["y"] = round(locked_car_floor_y - 0.05 * locked_car_sc, 4)
+        car_body["scale_meta"] = car_meta
+
+    for item in out:
+        pid = item["part_id"]
+        if pid == "02.props.car__p01" and locked_car_sc is not None:
             continue
-        if any(bad in pid for bad in (".set.", ".fx.", ".hero.", "temple.states", "temple.whole")):
-            continue
-        item = dict(lyr)
-        # Upgrade open empty suitcase shell (p04) to closed vintage brown leather suitcase (p05)
-        if pid == "09.props.suitcases-notice__p04":
-            pid = "09.props.suitcases-notice__p05"
-            item["part_id"] = pid
-        sc = float(item.get("scale", 0.22))
-        # Calibrate prop scale so no cutout overwhelms the background architecture
-        if "car__p01" in pid:
-            sc = min(0.23, sc)
-            item["y"] = 0.86
-        elif "car__p05" in pid or "car__p06" in pid:
-            sc = min(round(0.45 * 0.23, 4), sc)
-            item["y"] = 0.87
-        elif any(k in pid for k in ("motorcycle", "bike-skeleton", "phonebooth", "coin-booth", "door")):
-            sc = min(0.26, max(0.18, sc * 0.76))
-            item["y"] = max(0.86, float(item.get("y", 0.87)))
-        elif "chandeliers" in pid:
-            sc = min(0.20, sc)
-        elif "tambourine" in pid and skey in ("02.5", "03.0"):
-            sc = min(0.15, sc)
-        elif "cafe__p07" in pid:
-            sc = 0.09
-        else:
-            sc = min(0.22, max(0.14, sc * 0.78))
-            if float(item.get("y", 0.87)) > 0.55:
-                item["y"] = max(0.86, min(0.90, float(item.get("y", 0.88))))
-        item["scale"] = round(sc, 4)
-        curated.append(item)
+        if locked_car_sc is not None and locked_car_cx is not None and locked_car_floor_y is not None:
+            if pid == "02.props.car__p05":
+                item["x"] = round(locked_car_cx - 0.585 * locked_car_sc, 4)
+                item["y"] = locked_car_floor_y
+                item["scale"] = round(0.45 * locked_car_sc, 4)
+                item["scale_meta"] = {"class_tag": "vehicle_wheel_locked", "canon_h_m": 0.65, "standardized_scale": item["scale"]}
+                continue
+            if pid == "02.props.car__p06":
+                item["x"] = round(locked_car_cx + 0.456 * locked_car_sc, 4)
+                item["y"] = locked_car_floor_y
+                item["scale"] = round(0.45 * locked_car_sc, 4)
+                item["scale_meta"] = {"class_tag": "vehicle_wheel_locked", "canon_h_m": 0.65, "standardized_scale": item["scale"]}
+                continue
+            if pid == "parents.02.car-argument__p03":
+                body_y = round(locked_car_floor_y - 0.05 * locked_car_sc, 4)
+                item["x"] = round(locked_car_cx - 0.04 * locked_car_sc, 4)
+                item["y"] = round(body_y - 0.46 * locked_car_sc, 4)
+                item["scale"] = round(0.42 * locked_car_sc, 4)
+                item["scale_meta"] = {"class_tag": "vehicle_cabin_locked", "canon_h_m": 0.62, "standardized_scale": item["scale"]}
+                continue
 
-    # Fix car wheel positions if car__p01 was rescaled to 0.23
-    cars = [c for c in curated if "car__p01" in c["part_id"]]
-    if cars:
-        c_cx = float(cars[0]["x"])
-        c_sc = float(cars[0]["scale"])
-        for c in curated:
-            if "car__p05" in c["part_id"]:
-                c["x"] = round(c_cx - 0.585 * c_sc, 4)
-                c["scale"] = round(0.45 * c_sc, 4)
-            elif "car__p06" in c["part_id"]:
-                c["x"] = round(c_cx + 0.456 * c_sc, 4)
-                c["scale"] = round(0.45 * c_sc, 4)
-        return curated[:4]
+        cal_sc, smeta = standardize_piece_scale(
+            pid,
+            item.get("label", ""),
+            item.get("plane", "P3"),
+            float(item.get("scale", 0.20)),
+            stage_ppm,
+            parts_by_id,
+        )
+        item["scale"] = cal_sc
+        item["scale_meta"] = smeta
 
-    return curated[:3]
+    return out
 
 
 def clean_and_integrate_cutout(
@@ -2079,17 +2869,26 @@ def clean_and_integrate_cutout(
     bg_crop: Image.Image,
     plane_id: str,
     haze_rgb: Tuple[int, int, int] = (24, 30, 44),
+    cel_scene_img: Optional[Image.Image] = None,
 ) -> Image.Image:
     """
-    Integrates a cut-out prop seamlessly into the local background environment:
+    Colorizes and integrates a cut-out piece directly into the Cel Painting (`world/<wk>/cel.webp`)
+    it sits in ("Pieces as Paint"):
       1. Strips the outer tan Kraft-paper die-cut margin (`#b5986e`) & matte fringe
-         within `dt <= 10px` of the silhouette edge and feathers the alpha boundary.
-      2. Transfers Luminance (`50% L`) and Chrominance (`70% A/B`) in CIE-LAB space
-         from `bg_crop` (Reinhard color transfer) so the prop inherits the exact shadow
-         key and color temperature of the background behind it.
-      3. Quantizes into soft cel-gouache steps, mixes depth-plane atmospheric haze,
-         adds a bottom `18%` ground ambient-occlusion gradient, and strokes a subtle
-         1px dark contour blended with the local background tone (zero neon sticker rim).
+         within `dt <= 11px` of the silhouette edge.
+      2. Modulates the outer `2px` silhouette boundary with a multi-frequency Organic
+         Bristle Edge (`dt_brush`) while keeping the interior 100% opaque matte gouache.
+      3. Extracts the 6-Band Luminance-Sorted Cel Pigment Ramp (`cel_ramp[0..5]`) from the
+         piece's wider local neighborhood in `cel.webp` (72% weight) + the full `cel.webp`
+         scene palette (28% weight).
+      4. Preserves the piece's internal hand-drawn ink linework (`ink_strength`), quantizes
+         its internal luminance (`[p05..p95]`) into 5 stepped cel-wash flats (`u_cel`),
+         applies figure-ground Notan windowing so pieces never vanish into dark floors or
+         wash out against bright skies, and colorizes the piece (`76%` direct Cel-Ramp +
+         `24%` CIE-LAB harmonized hue).
+      5. Applies an Edge-Preserving Bilateral Gouache Filter, re-inks internal linework,
+         adds a `1.8px` cel-palette top rim highlight (`cel_ramp[5]`), and draws the outer
+         `1.6px` charcoal-ink contour (`[15, 12, 19]` blended with `cel_ramp[0]`).
     """
     import cv2
     import numpy as np
@@ -2101,6 +2900,8 @@ def clean_and_integrate_cutout(
     if not mask.any():
         return p_img
 
+    h_px, w_px = alpha.shape
+
     # 1. Strip outer tan Kraft cardboard margin & white/grey border fringe
     u8_mask = mask.astype(np.uint8)
     dt = cv2.distanceTransform(u8_mask, cv2.DIST_L2, 5)
@@ -2110,9 +2911,9 @@ def clean_and_integrate_cutout(
     sat = max_c - min_c
     lum = 0.299 * r + 0.587 * g + 0.114 * b
 
-    kraft_rim = (dt <= 10.0) & (
-        ((r >= g - 6) & (g >= b - 10) & (lum > 82) & (sat < 102))
-        | ((lum > 165) & (sat < 48))
+    kraft_rim = (dt <= 11.0) & (
+        ((r >= g - 6) & (g >= b - 10) & (lum > 80) & (sat < 105))
+        | ((lum > 162) & (sat < 50))
     )
     clean_mask = mask & (~kraft_rim)
     if clean_mask.sum() > 64:
@@ -2120,48 +2921,134 @@ def clean_and_integrate_cutout(
         u8_mask = mask.astype(np.uint8)
         dt = cv2.distanceTransform(u8_mask, cv2.DIST_L2, 5)
 
+    # 2. Organic Bristle Silhouette Edge (100% opaque interior, bristle-feathered 1.8px rim)
+    yy, xx = np.mgrid[0:h_px, 0:w_px].astype(np.float32)
+    bristle = (
+        0.55 * np.sin(xx * 0.23 + yy * 0.17)
+        + 0.30 * np.cos(xx * 0.41 - yy * 0.29)
+        + 0.15 * np.sin(xx * 0.73 + yy * 0.61)
+    )
+    dt_brush = np.maximum(0.0, dt + bristle * 0.45)
     alpha_clean = np.where(mask, alpha, 0.0)
     alpha_soft = cv2.GaussianBlur(alpha_clean, (3, 3), 0.85)
-    alpha_out = np.where(mask, np.minimum(alpha_clean, np.clip(dt * 88.0, 0, 255)), alpha_soft * 0.30)
+    alpha_out = np.where(mask, np.minimum(alpha_clean, np.clip(dt_brush * 96.0, 0, 255)), alpha_soft * 0.26)
 
-    # 2. Reinhard CIE-LAB color & luminance harmonization to local `bg_crop`
-    bg_arr = np.array(bg_crop.resize((p_img.width, p_img.height), Image.Resampling.BILINEAR).convert("RGB"), dtype=np.uint8)
-    fg_u8 = np.clip(rgb, 0, 255).astype(np.uint8)
+    # 3. Extract the 6-Band Luminance-Sorted Cel Pigment Ramp (`cel_ramp[0..5]`) from `bg_crop` + `cel_scene_img`
+    bg_arr = np.array(bg_crop.resize((w_px, h_px), Image.Resampling.BILINEAR).convert("RGB"), dtype=np.uint8)
+    local_flat = bg_arr.reshape(-1, 3).astype(np.float32)
+    if cel_scene_img is not None:
+        scene_arr = np.array(cel_scene_img.convert("RGB"), dtype=np.float32).reshape(-1, 3)
+    else:
+        scene_arr = local_flat
 
-    fg_lab = cv2.cvtColor(fg_u8, cv2.COLOR_RGB2LAB).astype(np.float32)
-    bg_lab = cv2.cvtColor(bg_arr, cv2.COLOR_RGB2LAB).astype(np.float32)
+    def compute_6band_ramp(pix: np.ndarray) -> np.ndarray:
+        l_vals = 0.299 * pix[:, 0] + 0.587 * pix[:, 1] + 0.114 * pix[:, 2]
+        order = np.argsort(l_vals)
+        sorted_p = pix[order]
+        n_p = len(sorted_p)
+        edges = [0.0, 0.16, 0.34, 0.52, 0.70, 0.86, 1.00]
+        swatches = []
+        for bi in range(6):
+            i0 = int(edges[bi] * n_p)
+            i1 = max(i0 + 1, int(edges[bi + 1] * n_p))
+            swatches.append(sorted_p[i0:i1].mean(axis=0))
+        return np.array(swatches, dtype=np.float32)
+
+    local_ramp = compute_6band_ramp(local_flat)
+    scene_ramp = compute_6band_ramp(scene_arr)
+    cel_ramp = 0.72 * local_ramp + 0.28 * scene_ramp
+
+    bg_lum_mean = float(0.299 * local_flat[:, 0].mean() + 0.587 * local_flat[:, 1].mean() + 0.114 * local_flat[:, 2].mean())
+
+    # Ensure the upper cel swatches (`cel_ramp[4..5]`) have enough figure-ground contrast on very dark floors
+    for bi in range(6):
+        sw_lum = float(0.299 * cel_ramp[bi, 0] + 0.587 * cel_ramp[bi, 1] + 0.114 * cel_ramp[bi, 2])
+        min_band_lum = 18.0 + bi * 32.0
+        if bg_lum_mean < 98.0 and bi >= 3:
+            min_band_lum = max(min_band_lum, bg_lum_mean + 22.0 + (bi - 2) * 18.0)
+        if sw_lum < min_band_lum:
+            boost = min_band_lum - sw_lum
+            cel_ramp[bi] = np.clip(cel_ramp[bi] + boost * np.array([1.05, 0.98, 0.90], dtype=np.float32), 0.0, 245.0)
+
+    # 4. Detect internal hand-drawn ink linework (`ink_strength`) & normalize internal piece luminance (`u_cel`)
+    lum_blur = cv2.GaussianBlur(lum, (9, 9), 2.2)
+    ink_diff = np.maximum(0.0, lum_blur - lum)
+    ink_strength = np.clip((ink_diff - 6.5) / 22.0, 0.0, 1.0) * (dt > 1.8).astype(np.float32)
 
     valid = mask
     if valid.sum() > 25:
-        for ch_i, blend_w in ((0, 0.50), (1, 0.70), (2, 0.70)):
+        fg_l_vals = lum_blur[valid]
+        p05 = float(np.percentile(fg_l_vals, 5))
+        p95 = max(p05 + 14.0, float(np.percentile(fg_l_vals, 95)))
+    else:
+        p05, p95 = 20.0, 220.0
+
+    u_cont = np.clip((lum_blur - p05) / (p95 - p05), 0.0, 1.0)
+    # Posterize into 5 stepped cel-wash value flats while keeping 32% smooth transition
+    u_cel = 0.32 * u_cont + 0.68 * (np.round(u_cont * 4.0) / 4.0)
+
+    # Figure-Ground Notan Windowing against local background luminance
+    if bg_lum_mean < 98.0:
+        u_mapped = 0.24 + u_cel * 0.72
+    elif bg_lum_mean > 168.0:
+        u_mapped = 0.04 + u_cel * 0.76
+    else:
+        u_mapped = 0.12 + u_cel * 0.80
+
+    # Piecewise-linear lookup of `u_mapped` in `[0, 1]` across `cel_ramp[0..5]`
+    pos = np.clip(u_mapped * 5.0, 0.0, 4.999)
+    idx0 = np.floor(pos).astype(np.int32)
+    idx1 = np.minimum(5, idx0 + 1)
+    frac = (pos - idx0)[..., None]
+    ramp_rgb = cel_ramp[idx0] * (1.0 - frac) + cel_ramp[idx1] * frac
+
+    # 5. Also compute CIE-LAB chrominance-harmonized RGB (`24%` weight) so warm/cool intrinsic accents survive
+    fg_u8 = np.clip(rgb, 0, 255).astype(np.uint8)
+    fg_lab = cv2.cvtColor(fg_u8, cv2.COLOR_RGB2LAB).astype(np.float32)
+    bg_lab = cv2.cvtColor(bg_arr, cv2.COLOR_RGB2LAB).astype(np.float32)
+    if valid.sum() > 25:
+        for ch_i, blend_w in ((0, 0.42), (1, 0.78), (2, 0.78)):
             f_vals = fg_lab[..., ch_i][valid]
             b_vals = bg_lab[..., ch_i]
             f_mean, f_std = float(f_vals.mean()), max(4.0, float(f_vals.std()))
             b_mean, b_std = float(b_vals.mean()), max(4.0, float(b_vals.std()))
-            t_std = f_std * (1.0 - blend_w * 0.52) + b_std * (blend_w * 0.52)
-            t_mean = f_mean * (1.0 - blend_w) + b_mean * blend_w
+            if ch_i == 0:
+                t_std = max(20.0, f_std * 0.85 + b_std * 0.15)
+                raw_t_mean = f_mean * (1.0 - blend_w) + b_mean * blend_w
+                t_mean = min(180.0, max(raw_t_mean, b_mean + 28.0)) if b_mean < 105.0 else raw_t_mean
+            else:
+                t_std = f_std * 0.45 + b_std * 0.55
+                t_mean = f_mean * (1.0 - blend_w) + b_mean * blend_w
             fg_lab[..., ch_i] = np.clip((fg_lab[..., ch_i] - f_mean) * (t_std / f_std) + t_mean, 0, 255)
-
     harm_rgb = cv2.cvtColor(fg_lab.astype(np.uint8), cv2.COLOR_LAB2RGB).astype(np.float32)
 
-    # 3. Soft gouache cel quantization + atmospheric depth haze
-    step = 14.0
-    cel_rgb = 0.52 * harm_rgb + 0.48 * (np.round(harm_rgb / step) * step)
+    # Blend 76% direct Cel-Ramp Colorization with 24% CIE-LAB harmonized intrinsic color
+    combined_u8 = np.clip(0.76 * ramp_rgb + 0.24 * harm_rgb, 0, 255).astype(np.uint8)
+    gouache_u8 = cv2.bilateralFilter(combined_u8, d=5, sigmaColor=28, sigmaSpace=28)
+    cel_rgb = gouache_u8.astype(np.float32)
+
+    # Re-apply internal hand-drawn ink linework in the cel painting's deepest shadow ink color
+    inner_ink_col = cel_ramp[0] * 0.55 + np.array([14.0, 12.0, 18.0], dtype=np.float32) * 0.45
+    cel_rgb = cel_rgb * (1.0 - 0.72 * ink_strength[..., None]) + inner_ink_col * (0.72 * ink_strength[..., None])
+
+    # Plane atmospheric depth integration (`haze_mix`)
     pmeta = SEVEN_PLANES.get(plane_id, SEVEN_PLANES["P3"])
-    haze_mix = max(0.10, float(pmeta["haze_mix"]) + 0.06)
+    haze_mix = min(0.15, float(pmeta["haze_mix"]) * 0.45 + 0.02)
     haze = np.array(haze_rgb, dtype=np.float32)
     cel_rgb = cel_rgb * (1.0 - haze_mix) + haze * haze_mix
 
-    # 4. Ground ambient occlusion gradient on bottom 18% of prop
-    h_px = cel_rgb.shape[0]
-    v_grad = np.linspace(1.0, 0.80, h_px, dtype=np.float32)[:, None, None]
-    cel_rgb = cel_rgb * v_grad
+    # Subtle sunlit top gradient + cold-pressed paper micro-tooth
+    v_grad = np.linspace(1.06, 0.91, h_px, dtype=np.float32)[:, None, None]
+    cel_rgb = cel_rgb * v_grad + (bristle[..., None] * 1.5)
 
-    # 5. Subtle 1px dark contour blended with local background (zero neon rim)
-    outline = (dt > 0.0) & (dt <= 1.55)
-    bg_mean_rgb = bg_arr.reshape(-1, 3).mean(axis=0)
-    ink_col = np.array([14.0, 12.0, 18.0], dtype=np.float32) * 0.74 + bg_mean_rgb * 0.26
-    cel_rgb[outline] = cel_rgb[outline] * 0.32 + ink_col * 0.68
+    # 6. Cel-Palette Top Rim Light (`cel_ramp[5]`) + Warm Charcoal-Sepia Outer Ink Contour (`cel_ramp[0]`)
+    top_rim = (dt > 1.3) & (dt <= 3.1) & (yy < h_px * 0.65)
+    rim_col = np.clip(cel_ramp[5] * 1.15 + np.array([28.0, 24.0, 18.0], dtype=np.float32), 75.0, 242.0)
+    cel_rgb[top_rim] = cel_rgb[top_rim] * 0.72 + rim_col * 0.28
+
+    outline = (dt > 0.0) & (dt <= 1.55 + 0.35 * bristle)
+    ink_col = np.array([15.0, 12.0, 19.0], dtype=np.float32) * 0.68 + cel_ramp[0] * 0.32
+    cel_rgb[outline] = cel_rgb[outline] * 0.28 + ink_col * 0.72
 
     out_arr = np.dstack([
         np.clip(cel_rgb, 0, 255).astype(np.uint8),
@@ -2184,24 +3071,31 @@ def render_clean_scene_plate(
     return_pil: bool = False,
 ) -> Optional[Image.Image]:
     """
-    Renders a unified, integrated 1280x720 WebP scene plate (`out_webp`) and a clean
-    prop-free environment plate (`<stem>_env.webp`) for `levels.html`, while saving
-    each curated prop's Kraft-stripped, CIE-LAB harmonized RGBA sprite to `props_out_dir`.
+    Assembles a complete 1280x720 painting from its 7-layer pieces as paint (`out_webp`),
+    saves a clean prop-free underpainting plate (`<stem>_env.webp`) for `levels.html`,
+    saves each piece's cel-ramp colorized, gouache-brushed RGBA sprite to `props_out_dir`,
+    and runs a whole-canvas gouache impasto, charcoal ink, and cold-pressed paper tooth pass.
     """
+    import cv2
+    import numpy as np
+
     W, H = 1280, 720
     if backdrop_path.exists():
         bg = Image.open(backdrop_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
     else:
         bg = Image.new("RGBA", (W, H), (14, 18, 26, 255))
 
+    cel_ref_img = bg.convert("RGB")
     # Blend 68% cel-wash plate (`cel.webp`) with 32% painted backdrop (`backdrop.webp`)
     if cel_path and cel_path.exists():
         try:
             cel_bg = Image.open(cel_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
+            cel_ref_img = cel_bg.convert("RGB")
             bg = Image.blend(bg, cel_bg, alpha=0.68)
         except Exception:
             pass
 
+    cel_scene_small = cel_ref_img.resize((160, 90), Image.Resampling.BILINEAR)
     canvas = ImageEnhance.Contrast(bg.convert("RGB")).enhance(1.04).convert("RGBA")
 
     # Subtle stage floor grounding gradient (no hard grid lines)
@@ -2214,7 +3108,7 @@ def render_clean_scene_plate(
         odraw.line([(0, y), (W, y)], fill=(8, 10, 15, dark_a))
     canvas = Image.alpha_composite(canvas, overlay)
 
-    # Save clean environment plate (`<stem>_env.webp` with ink pass) for `levels.html` live stage
+    # Save clean underpainting plate (`<stem>_env.webp` with ink pass) for `levels.html` live stage
     env_canvas = canvas.copy()
     if ink_path and ink_path.exists():
         try:
@@ -2222,8 +3116,8 @@ def render_clean_scene_plate(
             _, _, _, a_ch = ink_im.split()
             a_env = a_ch.point(lambda a: int(a * 0.28))
             ink_env = Image.merge("RGBA", (
-                Image.new("L", (W, H), 14),
-                Image.new("L", (W, H), 12),
+                Image.new("L", (W, H), 16),
+                Image.new("L", (W, H), 13),
                 Image.new("L", (W, H), 20),
                 a_env,
             ))
@@ -2237,7 +3131,7 @@ def render_clean_scene_plate(
     if props_out_dir is not None:
         props_out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Composite only the curated interactive story props (`not is_world_sheet`)
+    # Paint all 7 planes (`P6 -> P0`) of curated pieces onto the canvas from back to front
     draw_layers = sorted(
         [l for l in layers if not l.get("is_world_sheet")],
         key=lambda item: float(item.get("z", 1.4)),
@@ -2268,15 +3162,24 @@ def render_clean_scene_plate(
         dx = cx - target_w // 2
         dy = by - target_h
 
-        cx0 = max(0, min(W - 16, dx))
-        cy0 = max(0, min(H - 16, dy))
-        cx1 = max(cx0 + 16, min(W, dx + target_w))
-        cy1 = max(cy0 + 16, min(H, dy + target_h))
-        bg_crop = canvas.crop((cx0, cy0, cx1, cy1))
+        # Sample a generous local neighborhood (`±90px`) from `cel_ref_img` so the piece's
+        # 6-band Cel Pigment Ramp captures the local lighting, wall/sky wash, and floor tone
+        pad = 90
+        cx0 = max(0, min(W - 32, dx - pad))
+        cy0 = max(0, min(H - 32, dy - pad))
+        cx1 = max(cx0 + 32, min(W, dx + target_w + pad))
+        cy1 = max(cy0 + 32, min(H, dy + target_h + pad))
+        bg_crop = cel_ref_img.crop((cx0, cy0, cx1, cy1))
 
-        p_cel = clean_and_integrate_cutout(p_resized, bg_crop, plane_id, haze_rgb=haze_rgb)
+        p_cel = clean_and_integrate_cutout(
+            p_resized,
+            bg_crop,
+            plane_id,
+            haze_rgb=haze_rgb,
+            cel_scene_img=cel_scene_small,
+        )
 
-        # Save the Kraft-stripped, CIE-LAB harmonized RGBA prop sprite for `levels.html`
+        # Save the cel-colorized, gouache-brushed RGBA piece sprite for `levels.html`
         if props_out_dir is not None:
             prop_fname = f"{lyr['id']}.webp"
             prop_path = props_out_dir / prop_fname
@@ -2289,27 +3192,40 @@ def render_clean_scene_plate(
             a_c = a_c.point(lambda a: int(a * alpha_mult))
             p_cel = Image.merge("RGBA", (r_c, g_c, b_c, a_c))
 
-        # Grounded elliptical floor contact shadow (skip for ceiling-hung chandeliers)
-        if float(lyr.get("y", 0.87)) >= 0.55:
+        # Grounded elliptical floor contact shadow for floor-seated pieces on P4/P3/P2/P1
+        if float(lyr.get("y", 0.87)) >= 0.55 and plane_id in ("P4", "P3", "P2", "P1"):
             sh_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
             sdraw = ImageDraw.Draw(sh_layer)
             rx = int(target_w * 0.42)
             ry = max(5, int(target_h * 0.075))
-            sdraw.ellipse([cx - rx, by - ry, cx + rx, by + ry], fill=(6, 8, 12, 118))
+            sh_alpha = 95 if plane_id in ("P4", "P1") else 118
+            sdraw.ellipse([cx - rx, by - ry, cx + rx, by + ry], fill=(6, 8, 12, sh_alpha))
             sh_layer = sh_layer.filter(ImageFilter.GaussianBlur(radius=6))
             canvas = Image.alpha_composite(canvas, sh_layer)
 
         canvas.alpha_composite(p_cel, dest=(dx, dy))
 
-    # Unified top world ink pass (`ink.webp`) tying the environment and props together
+    # Whole-Canvas Master Painting Unification Pass:
+    # 1. Edge-preserving bilateral gouache brushwork across piece-to-canvas boundaries
+    rgb_arr = np.array(canvas.convert("RGB"), dtype=np.uint8)
+    gouache_canvas = cv2.bilateralFilter(rgb_arr, d=5, sigmaColor=22, sigmaSpace=22)
+    blended_f = 0.82 * rgb_arr.astype(np.float32) + 0.18 * gouache_canvas.astype(np.float32)
+
+    # 2. Subtle cold-pressed watercolor paper micro-tooth across the whole painting
+    yy_c, xx_c = np.mgrid[0:H, 0:W].astype(np.float32)
+    paper_tooth = 1.6 * np.sin(xx_c * 0.65 + yy_c * 0.45) * np.cos(xx_c * 0.35 - yy_c * 0.55)
+    blended_f = np.clip(blended_f + paper_tooth[..., None], 0, 255)
+    canvas = Image.fromarray(blended_f.astype(np.uint8), mode="RGB").convert("RGBA")
+
+    # 3. Unified top warm charcoal-sepia ink pass (`ink.webp`) tying the entire painting together
     if ink_path and ink_path.exists():
         try:
             ink_im = Image.open(ink_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
             _, _, _, a_ch = ink_im.split()
             a_top = a_ch.point(lambda a: int(a * 0.30))
             ink_dark = Image.merge("RGBA", (
-                Image.new("L", (W, H), 14),
-                Image.new("L", (W, H), 12),
+                Image.new("L", (W, H), 16),
+                Image.new("L", (W, H), 13),
                 Image.new("L", (W, H), 20),
                 a_top,
             ))
@@ -2322,6 +3238,7 @@ def render_clean_scene_plate(
     if return_pil:
         return rgb
     return None
+
 
 
 def main() -> None:
@@ -2426,7 +3343,14 @@ def main() -> None:
                 })
 
             raw_specs = verify_handmade_seven_layers_for_scene(skey, spec["layers"])
-            curated_prop_specs = curate_scene_props(skey, raw_specs)
+            scale_marker_info = extract_cel_painting_scale_markers(fid, wshot)
+            stage_ppm = float(scale_marker_info["stage_px_per_meter"])
+            curated_prop_specs = curate_scene_props(
+                skey,
+                raw_specs,
+                stage_ppm=stage_ppm,
+                parts_by_id=parts_by_id,
+            )
             combined_layers: List[Dict[str, Any]] = []
             stations: List[Dict[str, Any]] = []
 
@@ -2435,7 +3359,7 @@ def main() -> None:
             covered_env_planes = set()
             for w_idx, wsh in enumerate(world_sheets):
                 w_p = wsh["plane"]
-                if w_p in ("P3", "P2") and any(p["plane"] == w_p for p in curated_prop_specs):
+                if any(p["plane"] == w_p for p in curated_prop_specs):
                     continue
                 pmeta = SEVEN_PLANES.get(w_p, SEVEN_PLANES["P4"])
                 covered_env_planes.add(w_p)
@@ -2498,6 +3422,7 @@ def main() -> None:
                     "x": round(float(lspec["x"]), 4),
                     "y": round(float(lspec["y"]), 4),
                     "scale": round(float(lspec["scale"]), 4),
+                    "scale_meta": lspec.get("scale_meta", {}),
                     "width": int(pt.get("width", 240)),
                     "height": int(pt.get("height", 240)),
                     "role": "focal_cast" if plane_id == "P2" else "station_prop",
@@ -2592,6 +3517,7 @@ def main() -> None:
                 "notan_file": f"../{notan_rel}" if notan_rel and (SHOTS_DIR / notan_rel).exists() else "",
                 "exploded_file": f"../{exploded_rel}" if exploded_rel and (SHOTS_DIR / exploded_rel).exists() else "",
                 "perspective": persp,
+                "scale_markers": scale_marker_info,
                 "world_sheets": [{k: v for k, v in ws.items() if k != "shots_file"} for ws in world_sheets],
                 "seven_layer_breakdown": compute_frame_seven_layer_breakdown(fid, skey, combined_layers),
             }
@@ -2649,8 +3575,8 @@ def main() -> None:
                 thumb = pil_plate.resize((420, 236), Image.Resampling.LANCZOS)
                 tdraw = ImageDraw.Draw(thumb)
                 tdraw.rectangle([0, 0, 420, 24], fill=(8, 10, 14))
-                st_names = " | ".join(s["title"][:16] for s in stations[:3])
-                tdraw.text((6, 5), f"{skey} [7L CEL] {sc['name'][:18]} -> {st_names[:36]}", fill=(255, 224, 120))
+                st_names = " | ".join(s["title"][:14] for s in stations[:3])
+                tdraw.text((6, 5), f"{skey} [{int(stage_ppm)}px/m·{scale_marker_info['marker_count']}M] {sc['name'][:15]} -> {st_names[:30]}", fill=(255, 224, 120))
                 # Draw 7 color-coded plane indicator dots in top-right of audit thumbnail
                 for p_i, pk in enumerate(("P6", "P5", "P4", "P3", "P2", "P1", "P0")):
                     p_rgb = SEVEN_PLANES[pk]["rgb"]
@@ -2670,7 +3596,7 @@ def main() -> None:
         lv_path.write_text(json.dumps(lv, separators=(",", ":")))
         print(f"  Poem {num_str} ({lv['title']}): custom-built {len(lv['scenes'])} 7-layer cel scenes")
 
-    print("[3/5] Enriching level_assets_catalog.json with 7-layer color codes & decomposed World sheets...")
+    print("[3/5] Enriching level_assets_catalog.json with 7-layer color codes & standardized physical scales...")
     if CATALOG_OUT_PATH.exists():
         cat_data = json.loads(CATALOG_OUT_PATH.read_text())
         cat_items = [it for it in cat_data.get("items", []) if it.get("category") != "world_sheets"]
@@ -2682,6 +3608,19 @@ def main() -> None:
             it["color_code"] = pmeta["color_code"]
             it["ink_weight"] = pmeta["ink_weight"]
             it["haze_mix"] = pmeta["haze_mix"]
+            pid_cat = it.get("part_id", "")
+            if pid_cat in parts_by_id:
+                std_sc, std_meta = standardize_piece_scale(
+                    pid_cat,
+                    it.get("label", ""),
+                    pl,
+                    float(it.get("default_scale", 0.20)),
+                    118.0,
+                    parts_by_id,
+                )
+                it["default_scale"] = std_sc
+                it["canon_h_m"] = std_meta["canon_h_m"]
+                it["class_tag"] = std_meta["class_tag"]
 
         # Add decomposed Atlantis World 7-Plane Sheets (`world/<wk>/S*_P*.webp`) as browsable worldbuilding layers!
         reel_poem_by_shot: Dict[str, int] = {}

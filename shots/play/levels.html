@@ -527,7 +527,7 @@ function buildShelf(){
     const best = store.get('wy.best.'+p.num);
     const meta = ARC_SUMMARY[p.num] || { arc: 'Emotional Journey', desc: '' };
     b.innerHTML =
-      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}?v=6"><span class="arc-pill">${meta.arc}</span></div>` +
+      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.thumb}?v=7"><span class="arc-pill">${meta.arc}</span></div>` +
       `<div class="body"><b></b><div class="theme"></div><small></small><div class="best"></div></div>`;
     b.querySelector('b').textContent = `${p.num} · ${p.title}`;
     b.querySelector('.theme').textContent = meta.desc;
@@ -596,13 +596,13 @@ async function openLevel(num){
   resize();
   preloadPoet31();
   use31PartRig = parseInt(num, 10) >= 4;
-  L = await (await fetch(`levels/${num}/level.json?v=6`)).json();
+  L = await (await fetch(`levels/${num}/level.json?v=7`)).json();
   scenes = L.scenes;
 
-  // Restore any user-saved custom 7-layer stage assemblies from localStorage (v6) & preload all cut-out + cel assets
+  // Restore any user-saved custom 7-layer stage assemblies from localStorage (v7) & preload all cut-out + cel assets
   scenes.forEach((sc, idx) => {
     sc._defaultLayers = JSON.parse(JSON.stringify(sc.multiplane_layers || []));
-    const saved = store.get(`wy.stage.v6.${num}.${idx}`);
+    const saved = store.get(`wy.stage.v7.${num}.${idx}`);
     if (saved){
       try { sc.multiplane_layers = JSON.parse(saved); } catch(e){}
     }
@@ -618,7 +618,7 @@ async function openLevel(num){
   });
 
   // Load unified prop-free environment plates (`s<idx>_env.webp` = 68% cel + 32% backdrop + 28% ink)
-  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(s.env_img ? `levels/${num}/${s.env_img}?v=6` : (s.backdrop_file || `levels/${num}/${s.img}?v=6`))));
+  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(s.env_img ? `levels/${num}/${s.env_img}?v=7` : (s.backdrop_file || `levels/${num}/${s.img}?v=7`))));
 
   // Preload all cast & counterpart characters referenced by this poem's scenes
   castActorsByKey.clear();
@@ -1741,7 +1741,7 @@ function saveCurrentSceneAssembly(){
     delete copy._HitBox;
     return copy;
   });
-  store.set(`wy.stage.v6.${L.num}.${cur.i}`, JSON.stringify(clean));
+  store.set(`wy.stage.v7.${L.num}.${cur.i}`, JSON.stringify(clean));
 }
 
 function renderFrameBreakdown(scOpt){
@@ -1754,9 +1754,15 @@ function renderFrameBreakdown(scOpt){
   }
   const rawBd = sc.cel_passes.seven_layer_breakdown;
   const persp = sc.cel_passes.perspective;
+  const sm = sc.cel_passes.scale_markers;
   const hz = persp && persp.stage_haze_rgb ? persp.stage_haze_rgb : [24, 30, 44];
   const vp = persp && persp.vp_norm ? `${Math.round(persp.vp_norm[0]*100)}%,${Math.round(persp.vp_norm[1]*100)}%` : '50%,56%';
-  let html = `<b>FRAME ${sc.cel_passes.world_key || sc.key} · 7-LAYER ARCHITECTURE & VP(${vp}) <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgb(${hz[0]},${hz[1]},${hz[2]});vertical-align:middle;margin-left:4px" title="Measured Frame Atmospheric Haze RGB"></span></b>`;
+  const ppmTxt = sm && sm.stage_px_per_meter ? ` · SCALE: ${Math.round(sm.stage_px_per_meter)}px/m (${sm.marker_count || 0} markers)` : '';
+  let html = `<b>FRAME ${sc.cel_passes.world_key || sc.key} · VP(${vp})${ppmTxt} <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgb(${hz[0]},${hz[1]},${hz[2]});vertical-align:middle;margin-left:4px" title="Measured Frame Atmospheric Haze RGB"></span></b>`;
+  if (sm && Array.isArray(sm.markers) && sm.markers.length){
+    const mTags = sm.markers.slice(0, 4).map(m => `${m.label}(${m.real_h_m}m=${Math.round(m.px_h)}px)`).join(' · ');
+    html += `<div style="font-size:10px;color:#a5f3fc;margin:2px 0 4px 0">📏 Cel Scale Markers: ${mTags}</div>`;
+  }
   PLANE_ORDER_BACK_TO_FRONT.forEach(pKey => {
     const info = Array.isArray(rawBd) ? rawBd.find(x => x.plane === pKey) : rawBd[pKey];
     const spec = SEVEN_PLANES[pKey];
@@ -1794,11 +1800,12 @@ function renderSceneLayerTree(){
     const spec = SEVEN_PLANES[plane] || SEVEN_PLANES.P3;
     const row = document.createElement('div');
     row.className = 'layer-item' + (selectedLayer === lyr ? ' sel' : '');
+    const canonM = lyr.scale_meta && lyr.scale_meta.canon_h_m ? `${lyr.scale_meta.canon_h_m}m · ` : '';
     row.innerHTML =
       `<span class="p-dot" style="background:${spec.hex}"></span>` +
       `<span class="p-tag" style="color:${spec.hex}">${plane}</span>` +
       `<span class="l-name">${lyr.label || lyr.part_id}</span>` +
-      `<span class="l-meta">Z:${Number(lyr.z || spec.z).toFixed(1)} · ${(Number(lyr.scale || 0.35)*100).toFixed(0)}%</span>` +
+      `<span class="l-meta">${canonM}Z:${Number(lyr.z || spec.z).toFixed(1)} · ${(Number(lyr.scale || 0.35)*100).toFixed(0)}%</span>` +
       `<button class="vis-btn" title="Toggle piece visibility">${lyr.hidden ? '🚫' : '👁'}</button>`;
     row.addEventListener('click', (ev) => {
       if (ev.target.classList.contains('vis-btn')) return;
@@ -2117,6 +2124,7 @@ $('asmResetSceneBtn').addEventListener('click', () => {
   if (!L || cur.i < 0 || !scenes[cur.i]) return;
   const sc = scenes[cur.i];
   sc.multiplane_layers = JSON.parse(JSON.stringify(sc._defaultLayers || []));
+  store.del(`wy.stage.v7.${L.num}.${cur.i}`);
   store.del(`wy.stage.v6.${L.num}.${cur.i}`);
   store.del(`wy.stage.v5.${L.num}.${cur.i}`);
   store.del(`wy.stage.v4.${L.num}.${cur.i}`);
@@ -2313,9 +2321,9 @@ document.addEventListener('gesturestart', e=>e.preventDefault());
 (async function(){
   try {
     const [dataRes, idxRes, catRes] = await Promise.all([
-      fetch('data.json?v=6'),
-      fetch('levels/index.json?v=6'),
-      fetch('level_assets_catalog.json?v=6').catch(() => null)
+      fetch('data.json?v=7'),
+      fetch('levels/index.json?v=7'),
+      fetch('level_assets_catalog.json?v=7').catch(() => null)
     ]);
     CHARS = (await dataRes.json()).characters;
     INDEX = await idxRes.json();
