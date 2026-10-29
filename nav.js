@@ -11,6 +11,8 @@
   'use strict';
 
   var ROUTES = [
+    { id: 'foundryinverse', name: '🔨 Foundry & Inverse Builder', does: 'Build on top of & through 72 Foundry worlds, 104 CLIP refs, 168 sculpted wedges, walk-in sets & metric cut-out cast', path: 'shots/foundry_inverse.html', carry: true },
+    { id: 'pngbrowser', name: '🖼️ Saved PNG Grid Browser',   does: '866 saved project PNGs: 62 Foundry/Inverse builds, 341 session proofs/audits, 90 multiplane plates & 365 kit sheets', path: 'shots/png_browser.html', carry: true },
     { id: 'terrarium',  name: '🐕 3D Terrarium & AI Dog',   does: '90 multiplane scenes, film portals, WorldText, Foundry 3D topography, Overview ↔ Horizontal Sidescroller & AI Dog Helper', path: 'shots/terrarium.html', carry: true },
     { id: 'worldfoundry',name:'🌍 World & Foundry Atlas',   does: '14 real-city landpacks, 77 evolved Foundry worlds, 882 camera shots & 104 CLIP Inverse-Topology sculptures', path: 'shots/world_foundry.html', carry: true },
     { id: 'wagstack',   name: '🪐 WAG-STACK Workbench',     does: 'Unified 24:00 hub: Districts, World Score, Cut Book, Worm, Sound Table, 3D Ring & Floor', path: 'shots/wag_stack.html', carry: true },

@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PNG Vault & Grid Browser · WYGWYL World Architecture</title>
+<style>
+:root {
+  --ink: #f3ead2;
+  --dim: #a99f86;
+  --gold: #ffd23f;
+  --pink: #ff3d6e;
+  --ok: #8fd694;
+  --cyan: #5ce1e6;
+  --panel: #121820;
+  --panel2: #17202b;
+  --edge: rgba(243,234,210,.16);
+  --bg: #0a0e14;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--ink); font: 14px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif; min-height: 100vh; }
+a { color: var(--gold); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Top Unified Navigation */
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  background: rgba(10, 14, 20, 0.96);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--edge);
+  padding: 10px 18px;
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand .k { font: 700 11px "Helvetica Neue", sans-serif; letter-spacing: .2em; color: var(--gold); text-transform: uppercase; }
+.brand h1 { font: 600 18px "Iowan Old Style", Palatino, Georgia, serif; color: var(--ink); }
+.navlinks { display: flex; flex-wrap: wrap; gap: 6px; }
+.navpill {
+  border: 1px solid var(--edge); background: var(--panel); color: var(--ink);
+  padding: 6px 11px; border-radius: 16px; font: 600 11px "Helvetica Neue", sans-serif;
+  letter-spacing: .06em; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+}
+.navpill:hover { border-color: var(--gold); color: var(--gold); text-decoration: none; }
+.navpill.active { border-color: var(--gold); background: rgba(255,210,63,.14); color: var(--gold); }
+.navpill.pink { border-color: var(--pink); color: var(--pink); }
+
+/* Header & Stats */
+.hero {
+  max-width: 1680px; margin: 0 auto; padding: 20px 18px 10px;
+}
+.hero p.lede {
+  font: 15px/1.55 "Iowan Old Style", Palatino, Georgia, serif;
+  color: #ddd3bb; max-width: 980px; margin-bottom: 14px;
+}
+.stats {
+  display: flex; flex-wrap: wrap; gap: 10px 24px; margin: 10px 0 14px;
+  padding: 12px 16px; background: var(--panel); border: 1px solid var(--edge); border-radius: 8px;
+}
+.stats div b { font: 700 22px "Helvetica Neue", sans-serif; color: var(--gold); display: block; }
+.stats div span { font: 600 10px "Helvetica Neue", sans-serif; letter-spacing: .14em; color: var(--dim); text-transform: uppercase; }
+
+/* Filter & Control Deck */
+.controls {
+  position: sticky; top: 53px; z-index: 30;
+  background: rgba(10, 14, 20, 0.95);
+  border-bottom: 1px solid var(--edge);
+  padding: 10px 18px;
+}
+.controls-inner { max-width: 1680px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+.search-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+#q {
+  flex: 1; min-width: 240px;
+  background: #0f151c; border: 1px solid var(--edge); color: var(--ink);
+  font-size: 14px; padding: 9px 14px; border-radius: 20px; outline: none;
+}
+#q:focus { border-color: var(--gold); }
+.density-group { display: flex; gap: 4px; align-items: center; }
+.density-group span { font: 700 10px "Helvetica Neue", sans-serif; letter-spacing: .12em; color: var(--dim); text-transform: uppercase; margin-right: 4px; }
+.d-btn {
+  border: 1px solid var(--edge); background: var(--panel); color: var(--ink);
+  padding: 6px 10px; border-radius: 14px; font: 600 11px "Helvetica Neue", sans-serif; cursor: pointer;
+}
+.d-btn.on { border-color: var(--gold); color: var(--gold); background: rgba(255,210,63,.1); }
+
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0; scrollbar-width: none; align-items: center; }
+.chips .lab { font: 700 10px "Helvetica Neue", sans-serif; letter-spacing: .14em; color: var(--dim); text-transform: uppercase; margin-right: 4px; flex-shrink: 0; }
+.chip {
+  flex: 0 0 auto; border: 1px solid var(--edge); background: var(--panel); color: var(--ink);
+  padding: 6px 12px; border-radius: 16px; font: 600 11px "Helvetica Neue", sans-serif; cursor: pointer;
+}
+.chip.on { border-color: var(--gold); color: var(--gold); background: rgba(255,210,63,.12); }
+.chip .cnt { color: var(--dim); margin-left: 4px; font-weight: 400; }
+
+/* Main Grid */
+main { max-width: 1680px; margin: 0 auto; padding: 14px 18px 90px; }
+.result-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: var(--dim); font-size: 12px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 1100px) { .grid { grid-template-columns: repeat(min(var(--cols, 4), 3), minmax(0, 1fr)); } }
+@media (max-width: 720px) { .grid { grid-template-columns: repeat(min(var(--cols, 4), 2), minmax(0, 1fr)); } }
+
+.card {
+  background: var(--panel); border: 1px solid var(--edge); border-radius: 6px;
+  overflow: hidden; display: flex; flex-direction: column; cursor: pointer;
+  transition: transform .12s ease, border-color .12s ease;
+}
+.card:hover { border-color: var(--gold); transform: translateY(-2px); }
+.card .thumb-wrap {
+  position: relative; width: 100%; aspect-ratio: var(--aspect, 16/10);
+  background: #070a0e; overflow: hidden; display: flex; align-items: center; justify-content: center;
+}
+.card.fit-contain .thumb-wrap img { object-fit: contain; }
+.card .thumb-wrap img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.card .badge-top {
+  position: absolute; left: 6px; top: 6px;
+  background: rgba(10,14,20,.86); border: 1px solid rgba(255,210,63,.4);
+  color: var(--gold); font: 700 10px "Helvetica Neue", sans-serif; padding: 2px 6px; border-radius: 6px;
+}
+.card .badge-dim {
+  position: absolute; right: 6px; bottom: 6px;
+  background: rgba(10,14,20,.86); color: var(--dim);
+  font: 600 10px Menlo, monospace; padding: 2px 5px; border-radius: 4px;
+}
+.card .meta { padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.card .meta .title { font: 700 12px/1.3 "Helvetica Neue", sans-serif; color: var(--ink); word-break: break-word; }
+.card .meta .fname { font: 10px Menlo, monospace; color: var(--cyan); word-break: break-all; }
+.card .meta .desc { font: 11px/1.35 "Helvetica Neue", sans-serif; color: var(--dim); margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card .actions {
+  padding: 6px 10px 8px; border-top: 1px solid rgba(243,234,210,.07);
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.act-btn {
+  border: 1px solid var(--edge); background: var(--panel2); color: var(--ink);
+  padding: 3px 8px; border-radius: 10px; font: 600 10px "Helvetica Neue", sans-serif;
+  cursor: pointer; text-decoration: none;
+}
+.act-btn:hover { border-color: var(--gold); color: var(--gold); text-decoration: none; }
+
+/* Ultra-dense wall mode overrides */
+.grid.wall-mode .card .meta .desc,
+.grid.wall-mode .card .actions { display: none; }
+.grid.wall-mode .card .meta { padding: 4px 6px; }
+.grid.wall-mode .card .meta .title { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Lightbox Modal */
+#lightbox {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(6, 9, 13, 0.96);
+  display: none; flex-direction: column;
+}
+#lightbox.on { display: flex; }
+.lb-bar {
+  padding: 10px 18px; border-bottom: 1px solid var(--edge);
+  background: #0d131b; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.lb-title { font: 700 14px "Helvetica Neue", sans-serif; color: var(--gold); }
+.lb-sub { font: 12px Menlo, monospace; color: var(--dim); margin-left: 10px; }
+.lb-stage {
+  flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center;
+  padding: 16px; position: relative; cursor: zoom-in;
+}
+.lb-stage.zoomed { align-items: flex-start; justify-content: flex-start; cursor: zoom-out; }
+.lb-stage img {
+  max-width: 100%; max-height: 100%; object-fit: contain;
+  border: 1px solid var(--edge); box-shadow: 0 12px 40px rgba(0,0,0,.7);
+}
+.lb-stage.zoomed img { max-width: none; max-height: none; }
+.lb-foot {
+  padding: 10px 18px; border-top: 1px solid var(--edge); background: #0d131b;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+}
+.lb-desc { font-size: 13px; color: #ddd3bb; max-width: 900px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="k">WYGWYL · VISUAL VAULT</span>
+    <h1>Saved PNG Grid Browser & Proof Archive</h1>
+  </div>
+  <nav class="navlinks">
+    <a class="navpill pink" href="foundry_inverse.html">🔨 Foundry & Inverse Builder Studio</a>
+    <a class="navpill active" href="png_browser.html">🖼️ Saved PNG Grid Browser</a>
+    <a class="navpill" href="terrarium.html?poem=01&foundry=w1623">🌍 3D Terrarium + Hound</a>
+    <a class="navpill" href="world_foundry.html">🗺️ World & Foundry Atlas</a>
+    <a class="navpill" href="wag_stack.html">🎞️ WAG-STACK</a>
+    <a class="navpill" href="body_lab.html">🦴 Body Lab</a>
+    <a class="navpill" href="crash_lab.html">🛡️ Crash Lab</a>
+    <a class="navpill" href="../index.html">🏠 Hub</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <p class="lede">
+    Every generated proof, contact sheet, multiplane audit, character rig sheet, and the <b>62 new Foundry &amp; Inverse Through-Frame Composite PNGs</b> are permanently saved in <code>shots/png_vault/</code> and indexed here. Filter by collection, poem, or visual type, switch from giant inspection cards to a 10-column contact-sheet wall, or click any PNG for a 1:1 pixel zoom loupe.
+  </p>
+  <div class="stats" id="stats"></div>
+</section>
+
+<section class="controls">
+  <div class="controls-inner">
+    <div class="search-row">
+      <input id="q" type="search" placeholder="Search saved PNGs by filename, poem (01..14), ref (01-07), world (w1623), character, or keyword…" autocomplete="off">
+      <div class="density-group">
+        <span>Grid</span>
+        <button class="d-btn" data-cols="2">2 XL</button>
+        <button class="d-btn" data-cols="3">3 Lg</button>
+        <button class="d-btn on" data-cols="4">4 Std</button>
+        <button class="d-btn" data-cols="6">6 Sheet</button>
+        <button class="d-btn" data-cols="10">10 Wall</button>
+      </div>
+      <button class="d-btn" id="fitBtn" title="Toggle Cover vs Contain thumbnail fit">Fit: Contain</button>
+    </div>
+    <div class="chips" id="catChips"></div>
+    <div class="chips" id="subChips" style="display:none"></div>
+    <div class="chips" id="poemChips"></div>
+  </div>
+</section>
+
+<main>
+  <div class="result-bar">
+    <span id="countText">Loading PNG catalog…</span>
+    <span id="pageInfo">Tip: Click any image for 1:1 fullscreen zoom · Use ← / → arrow keys to step through</span>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div style="text-align:center;margin-top:22px">
+    <button class="navpill" id="loadMoreBtn" style="display:none;padding:10px 24px;font-size:13px">Load More PNGs ↓</button>
+  </div>
+</main>
+
+<div id="lightbox">
+  <div class="lb-bar">
+    <div>
+      <span class="lb-title" id="lbTitle"></span>
+      <span class="lb-sub" id="lbSub"></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="d-btn" id="lbPrev">◀ Prev</button>
+      <button class="d-btn" id="lbZoom">🔍 1:1 Zoom</button>
+      <button class="d-btn" id="lbNext">Next ▶</button>
+      <a class="d-btn" id="lbDownload" download>⬇ Download PNG</a>
+      <a class="d-btn" id="lbStudio" href="foundry_inverse.html" style="border-color:var(--pink);color:var(--pink)">🔨 Open in Studio</a>
+      <button class="d-btn" id="lbClose" style="border-color:var(--gold);color:var(--gold)">✕ Close [Esc]</button>
+    </div>
+  </div>
+  <div class="lb-stage" id="lbStage">
+    <img id="lbImg" src="" alt="">
+  </div>
+  <div class="lb-foot">
+    <div class="lb-desc" id="lbDesc"></div>
+    <div class="lb-sub" id="lbPath"></div>
+  </div>
+</div>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+const cat = await fetch('png_vault/png_catalog.json').then(r => r.json());
+const ITEMS = cat.items || [];
+
+// Also merge any user-saved custom PNGs from localStorage
+const localSaved = JSON.parse(localStorage.getItem('wygwyl_custom_pngs') || '[]');
+for (const ls of localSaved) {
+  ITEMS.unshift(ls);
+}
+
+$('stats').innerHTML = [
+  [ITEMS.length, 'Total Indexed Plates'],
+  [cat.vault_png_count, 'Saved Vault PNGs'],
+  [cat.foundry_inverse_count, 'Foundry & Inverse Builds'],
+  [cat.artifact_png_count, 'Session Proof & Audit PNGs'],
+  [cat.repo_plates_and_sheets_count, 'Scene Plates & Kit Sheets']
+].map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
+
+let activeCat = new URLSearchParams(location.search).get('cat') || 'all';
+let activeSub = new URLSearchParams(location.search).get('sub') || 'all';
+let activePoem = new URLSearchParams(location.search).get('poem') || 'all';
+let containMode = true;
+let renderLimit = 120;
+let filtered = [];
+let lbIdx = 0;
+
+const SUB_LABELS = {
+  all: 'All 62 Foundry & Inverse Builds',
+  inverse_triple_through: '28 Inverse Triple-Through Landscapes',
+  foundry_camera_stand: '14 Poem Camera Stands × Multiplane',
+  walkin_interior_set: '14 Interior Walk-In Sets',
+  foundry_world_atlas: '6 Foundry World Cartographic Atlases'
+};
+
+function renderChips() {
+  const cats = [{ id: 'all', label: 'All Saved PNGs & Plates', count: ITEMS.length }, ...cat.categories];
+  $('catChips').innerHTML = `<span class="lab">Collection</span>` + cats.map(c =>
+    `<button class="chip ${activeCat === c.id ? 'on' : ''}" data-c="${c.id}">${c.label}<span class="cnt">${c.count}</span></button>`
+  ).join('');
+  $('catChips').querySelectorAll('.chip').forEach(b => b.onclick = () => {
+    activeCat = b.dataset.c;
+    activeSub = 'all';
+    renderLimit = 120;
+    renderChips();
+    runFilter();
+  });
+
+  if (activeCat === 'foundry_inverse' || activeCat === 'all') {
+    $('subChips').style.display = 'flex';
+    $('subChips').innerHTML = `<span class="lab">Foundry/Inverse</span>` + Object.entries(SUB_LABELS).map(([k, lab]) =>
+      `<button class="chip ${activeSub === k ? 'on' : ''}" data-s="${k}">${lab}</button>`
+    ).join('');
+    $('subChips').querySelectorAll('.chip').forEach(b => b.onclick = () => {
+      activeSub = b.dataset.s;
+      if (activeSub !== 'all' && activeCat !== 'foundry_inverse') activeCat = 'foundry_inverse';
+      renderLimit = 120;
+      renderChips();
+      runFilter();
+    });
+  } else {
+    $('subChips').style.display = 'none';
+  }
+
+  const poems = ['all', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14'];
+  $('poemChips').innerHTML = `<span class="lab">Poem Filter</span>` + poems.map(p =>
+    `<button class="chip ${activePoem === p ? 'on' : ''}" data-p="${p}">${p === 'all' ? 'All Poems' : 'Poem ' + p}</button>`
+  ).join('');
+  $('poemChips').querySelectorAll('.chip').forEach(b => b.onclick = () => {
+    activePoem = b.dataset.p;
+    renderLimit = 120;
+    renderChips();
+    runFilter();
+  });
+}
+
+function matchItem(it, toks) {
+  if (activeCat !== 'all' && it.category !== activeCat) return false;
+  if (activeSub !== 'all' && it.subcategory !== activeSub) return false;
+  if (activePoem !== 'all') {
+    const p = it.poem || '';
+    const fn = (it.filename || '').toLowerCase();
+    if (p !== activePoem && !fn.includes(activePoem)) return false;
+  }
+  if (toks.length) {
+    const hay = `${it.title} ${it.filename} ${it.desc} ${it.category} ${it.subcategory || ''} ${it.poem || ''} ${it.ref_id || ''} ${it.world || ''}`.toLowerCase();
+    for (const t of toks) {
+      if (!hay.includes(t)) return false;
+    }
+  }
+  return true;
+}
+
+function renderGrid() {
+  const slice = filtered.slice(0, renderLimit);
+  $('countText').textContent = `Showing ${slice.length} of ${filtered.length} matching PNGs (out of ${ITEMS.length} total saved plates)`;
+  $('grid').innerHTML = slice.map((it, idx) => {
+    const badge = it.subcategory ? it.subcategory.replace(/_/g, ' ').toUpperCase() : (it.poem && it.poem !== 'all' ? `POEM ${it.poem}` : it.category.split('_')[0].toUpperCase());
+    const dim = (it.width && it.height) ? `${it.width}×${it.height}` : '';
+    const sz = it.size_kb ? ` · ${it.size_kb} KB` : '';
+    const studioHref = it.ref_id
+      ? `foundry_inverse.html?poem=${it.poem || '01'}&ref=${it.ref_id}&world=${it.world || 'w1623'}`
+      : (it.poem && it.poem !== 'all' ? `foundry_inverse.html?poem=${it.poem}` : `foundry_inverse.html`);
+    return `<article class="card ${containMode ? 'fit-contain' : ''}" data-idx="${idx}">
+      <div class="thumb-wrap">
+        <img loading="lazy" src="${it.file}" alt="${it.title}">
+        <span class="badge-top">${badge}</span>
+        <span class="badge-dim">${dim}${sz}</span>
+      </div>
+      <div class="meta">
+        <div class="title">${it.title}</div>
+        <div class="fname">${it.filename || it.file}</div>
+        <div class="desc">${it.desc || ''}</div>
+      </div>
+      <div class="actions" onclick="event.stopPropagation()">
+        <a class="act-btn" href="${it.file}" download="${it.filename || 'plate.png'}">⬇ Save PNG</a>
+        <a class="act-btn" href="${studioHref}">🔨 Build On/Through</a>
+        ${it.poem && it.poem !== 'all' ? `<a class="act-btn" href="terrarium.html?poem=${it.poem}&foundry=${it.world || 'w1623'}">🌍 3D</a>` : ''}
+      </div>
+    </article>`;
+  }).join('');
+
+  $('grid').querySelectorAll('.card').forEach(c => {
+    c.onclick = () => openLightbox(+c.dataset.idx);
+  });
+
+  $('loadMoreBtn').style.display = filtered.length > renderLimit ? 'inline-flex' : 'none';
+}
+
+function runFilter() {
+  const toks = $('q').value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  filtered = ITEMS.filter(it => matchItem(it, toks));
+  renderGrid();
+}
+
+$('q').oninput = () => { renderLimit = 120; runFilter(); };
+$('loadMoreBtn').onclick = () => { renderLimit += 120; renderGrid(); };
+
+// Grid density buttons
+document.querySelectorAll('.d-btn[data-cols]').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.d-btn[data-cols]').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    const cols = +b.dataset.cols;
+    $('grid').style.setProperty('--cols', cols);
+    $('grid').classList.toggle('wall-mode', cols >= 8);
+  };
+});
+
+$('fitBtn').onclick = () => {
+  containMode = !containMode;
+  $('fitBtn').textContent = `Fit: ${containMode ? 'Contain' : 'Cover'}`;
+  renderGrid();
+};
+
+// Lightbox
+function openLightbox(idx) {
+  if (!filtered.length) return;
+  lbIdx = (idx + filtered.length) % filtered.length;
+  const it = filtered[lbIdx];
+  $('lbTitle').textContent = it.title;
+  $('lbSub').textContent = `${lbIdx + 1} / ${filtered.length} · ${it.width || ''}×${it.height || ''}px · ${it.size_kb || ''} KB`;
+  $('lbImg').src = it.file;
+  $('lbDesc').textContent = it.desc || '';
+  $('lbPath').textContent = `shots/${it.file}`;
+  $('lbDownload').href = it.file;
+  $('lbDownload').download = it.filename || 'plate.png';
+  $('lbStudio').href = it.ref_id
+    ? `foundry_inverse.html?poem=${it.poem || '01'}&ref=${it.ref_id}&world=${it.world || 'w1623'}`
+    : (it.poem && it.poem !== 'all' ? `foundry_inverse.html?poem=${it.poem}` : `foundry_inverse.html`);
+  $('lbStage').classList.remove('zoomed');
+  $('lightbox').classList.add('on');
+}
+
+$('lbClose').onclick = () => $('lightbox').classList.remove('on');
+$('lbPrev').onclick = () => openLightbox(lbIdx - 1);
+$('lbNext').onclick = () => openLightbox(lbIdx + 1);
+$('lbZoom').onclick = () => $('lbStage').classList.toggle('zoomed');
+$('lbStage').onclick = e => { if (e.target === $('lbImg') || e.target === $('lbStage')) $('lbStage').classList.toggle('zoomed'); };
+
+addEventListener('keydown', e => {
+  if (!$('lightbox').classList.contains('on')) return;
+  if (e.key === 'Escape') $('lbClose').onclick();
+  if (e.key === 'ArrowRight') $('lbNext').onclick();
+  if (e.key === 'ArrowLeft') $('lbPrev').onclick();
+});
+
+renderChips();
+runFilter();
+</script>
+</body>
+</html>

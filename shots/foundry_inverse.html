@@ -1,0 +1,1497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Foundry & Inverse Topology Builder Studio · WYGWYL</title>
+<style>
+:root {
+  --ink: #f3ead2;
+  --dim: #a99f86;
+  --gold: #ffd23f;
+  --pink: #ff3d6e;
+  --ok: #8fd694;
+  --warn: #f0c060;
+  --no: #ff6b5e;
+  --cyan: #5ce1e6;
+  --panel: #121820;
+  --panel2: #17202b;
+  --edge: rgba(243,234,210,.16);
+  --bg: #0a0e14;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 "Iowan Old Style", Palatino, Georgia, serif; }
+button, input, select { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+a { color: var(--gold); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Sticky Top Navigation & Mode Bar */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(10, 14, 20, 0.96);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--edge);
+  padding: 10px 18px;
+}
+.topbar-row {
+  max-width: 1560px; margin: 0 auto;
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+}
+.brand .k { font: 700 10px "Helvetica Neue", sans-serif; letter-spacing: .2em; color: var(--gold); text-transform: uppercase; display: block; }
+.brand h1 { font: 400 19px "Iowan Old Style", Palatino, Georgia, serif; color: var(--ink); margin: 0; }
+.mode-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.mtab {
+  border: 1px solid var(--edge); background: var(--panel); color: var(--ink);
+  padding: 8px 13px; border-radius: 18px; font: 700 11px "Helvetica Neue", sans-serif;
+  letter-spacing: .08em; cursor: pointer;
+}
+.mtab.on { border-color: var(--gold); color: var(--gold); background: rgba(255,210,63,.12); }
+.mtab.pink.on { border-color: var(--pink); color: var(--pink); background: rgba(255,61,110,.12); }
+.ext-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.navpill {
+  border: 1px solid var(--edge); background: var(--panel2); color: var(--ink);
+  padding: 6px 11px; border-radius: 15px; font: 600 11px "Helvetica Neue", sans-serif;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+}
+.navpill:hover { border-color: var(--gold); color: var(--gold); text-decoration: none; }
+
+main { max-width: 1560px; margin: 0 auto; padding: 20px 18px 90px; }
+.tab-pane { display: none; }
+.tab-pane.on { display: block; }
+
+/* Shared Foundry & Inverse Typography */
+.k { font: 700 11px "Helvetica Neue", Arial, sans-serif; letter-spacing: .2em; color: var(--gold); text-transform: uppercase; }
+h1.big { font-size: clamp(26px, 5vw, 42px); font-weight: 400; line-height: 1.1; margin: 6px 0 10px; }
+h2 { font-size: clamp(19px, 4vw, 24px); font-weight: 400; margin: 30px 0 8px; }
+h3 { font-weight: 400; font-size: 18px; margin: 16px 0 6px; }
+blockquote { border-left: 2px solid var(--gold); padding: 2px 0 2px 12px; color: var(--dim); font-style: italic; max-width: 820px; margin: 10px 0; font-size: 14px; }
+p.lede { max-width: 880px; color: #ddd3bb; font-size: 15px; }
+.note { color: var(--dim); font-size: 13px; max-width: 880px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 14px 0; }
+.stats b { font: 700 21px "Helvetica Neue", Arial, sans-serif; color: var(--ink); display: block; }
+.stats span { font: 600 10px "Helvetica Neue", Arial, sans-serif; letter-spacing: .14em; color: var(--dim); text-transform: uppercase; }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 8px; scrollbar-width: none; align-items: center; }
+.chips .lab { font: 700 10px "Helvetica Neue", sans-serif; letter-spacing: .15em; color: var(--dim); text-transform: uppercase; margin-right: 4px; flex-shrink: 0; }
+.chip { flex: 0 0 auto; border: 1px solid var(--edge); background: var(--panel); color: var(--ink); padding: 7px 12px; min-height: 36px; font: 600 12px "Helvetica Neue", Arial, sans-serif; cursor: pointer; border-radius: 18px; }
+.chip.on { border-color: var(--gold); color: var(--gold); background: rgba(255,210,63,.09); }
+.btn { background: var(--panel); color: var(--ink); border: 1px solid var(--edge); padding: 8px 13px; min-height: 36px; font: 700 11px "Helvetica Neue", Arial, sans-serif; letter-spacing: .1em; cursor: pointer; border-radius: 18px; }
+.btn:hover { border-color: var(--gold); color: var(--gold); }
+.btn.gold { border-color: var(--gold); color: var(--gold); background: rgba(255,210,63,.1); }
+.btn.pink { border-color: var(--pink); color: var(--pink); background: rgba(255,61,110,.1); }
+.btn.ok { border-color: var(--ok); color: var(--ok); background: rgba(143,214,148,.1); }
+
+/* =====================================================================
+   TAB 1: THROUGH-FRAME BUILDER STUDIO
+   ===================================================================== */
+.studio-layout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr) 330px;
+  gap: 14px;
+  margin-top: 12px;
+  align-items: start;
+}
+@media (max-width: 1260px) { .studio-layout { grid-template-columns: 1fr; } }
+
+.s-card {
+  background: var(--panel); border: 1px solid var(--edge); border-radius: 8px; padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.s-card h4 { font: 700 11px "Helvetica Neue", sans-serif; letter-spacing: .16em; color: var(--gold); text-transform: uppercase; border-bottom: 1px solid var(--edge); padding-bottom: 6px; }
+.ctrl-row { display: flex; flex-direction: column; gap: 3px; font: 12px "Helvetica Neue", sans-serif; color: var(--dim); }
+.ctrl-row .lbl { display: flex; justify-content: space-between; color: var(--ink); font-weight: 600; font-size: 11px; }
+.ctrl-row input[type=range] { width: 100%; accent-color: var(--gold); cursor: pointer; }
+.ctrl-row select { background: #0d131a; color: var(--ink); border: 1px solid var(--edge); padding: 7px 10px; border-radius: 6px; font-size: 12px; }
+
+.canvas-bay {
+  background: #06090d; border: 1px solid var(--edge); border-radius: 8px; padding: 10px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.canvas-wrap {
+  position: relative; width: 100%; aspect-ratio: 1280/540; background: #000;
+  border: 1px solid rgba(255,210,63,.35); overflow: hidden;
+}
+canvas#builderCanvas { width: 100%; height: 100%; display: block; cursor: grab; }
+canvas#builderCanvas:active { cursor: grabbing; }
+
+.quad-strip {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+}
+.qbox { background: var(--panel2); border: 1px solid var(--edge); border-radius: 4px; overflow: hidden; cursor: pointer; }
+.qbox:hover { border-color: var(--gold); }
+.qbox img { width: 100%; aspect-ratio: 2.39/1; object-fit: cover; display: block; }
+.qbox div { padding: 4px 6px; font: 600 10px "Helvetica Neue", sans-serif; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qbox b { color: var(--gold); }
+
+.palette-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 250px; overflow-y: auto; padding-right: 2px;
+}
+.p-item {
+  background: #0d131a; border: 1px solid var(--edge); border-radius: 5px; padding: 4px;
+  text-align: center; cursor: pointer; font: 600 10px "Helvetica Neue", sans-serif; color: var(--dim);
+}
+.p-item:hover { border-color: var(--gold); color: var(--gold); }
+.p-item img { width: 100%; height: 54px; object-fit: contain; display: block; margin-bottom: 3px; }
+
+.layer-list { display: flex; flex-direction: column; gap: 5px; max-height: 220px; overflow-y: auto; }
+.layer-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 6px 8px; background: #0d131a; border: 1px solid var(--edge); border-radius: 5px;
+  font: 11px "Helvetica Neue", sans-serif; cursor: pointer;
+}
+.layer-item.sel { border-color: var(--cyan); background: rgba(92,225,230,.1); }
+
+/* =====================================================================
+   TAB 2: INVERSE TOPOLOGY (inverse.html + Built Extensions)
+   ===================================================================== */
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 18px 0; }
+.flow div { background: var(--panel); border: 1px solid var(--edge); padding: 12px; position: relative; }
+.flow b { display: block; font: 700 11px "Helvetica Neue", Arial, sans-serif; letter-spacing: .18em; color: var(--gold); margin-bottom: 4px; }
+.flow span { font-size: 13px; color: #ddd3bb; }
+.flow div:not(:last-child)::after { content: "→"; position: absolute; right: -9px; top: 40%; color: var(--gold); font: 700 16px Helvetica; z-index: 1; }
+.bigger { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin: 12px 0; }
+.bigger div { border-left: 2px solid var(--gold); padding: 4px 12px; color: #ddd3bb; font-size: 14px; }
+.bigger b { color: var(--ink); }
+.maps { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.mapc { background: var(--panel); border: 1px solid var(--edge); }
+.mapc .pair { position: relative; cursor: pointer; }
+.mapc img { width: 100%; display: block; }
+.mapc .pair img.b { position: absolute; inset: 0; transition: opacity .3s; }
+.mapc .pair.show-a img.b { opacity: 0; }
+.mapc .c { padding: 8px 10px; font: 12px "Helvetica Neue", Arial, sans-serif; color: var(--dim); }
+.refs { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 10px; }
+.ref { background: var(--panel); border: 1px solid var(--edge); display: flex; flex-direction: column; }
+.ref .im { position: relative; cursor: pointer; }
+.ref img { width: 100%; display: block; aspect-ratio: 2.39/1; object-fit: cover; }
+.ref .im img.seg { position: absolute; inset: 0; opacity: 0; transition: opacity .25s; }
+.ref .im:hover img.seg, .ref .im.on img.seg { opacity: 1; }
+.ref .c { padding: 7px 9px 9px; font: 12px/1.45 "Helvetica Neue", Arial, sans-serif; color: var(--dim); flex: 1; }
+.ref .c b { color: var(--ink); }
+.src { display: inline-block; font: 700 10px "Helvetica Neue", Arial, sans-serif; letter-spacing: .12em; padding: 1px 6px; border-radius: 8px; margin-right: 4px; text-transform: uppercase; }
+.src.markov { background: #3a2050; color: #e0b8ff; }
+.src.generated { background: #203a50; color: #a8d8ff; }
+.src.archive { background: #4a3a1a; color: #ffd890; }
+.src.halfworld { background: #2a2a2a; color: #ddd; }
+.found { color: var(--pink)!important; }
+.match { margin: 18px 0 26px; border-top: 1px solid var(--edge); padding-top: 12px; }
+.mrow { display: grid; grid-template-columns: minmax(250px, 340px) 1fr; gap: 12px; align-items: start; }
+@media (max-width: 820px) { .mrow { grid-template-columns: 1fr; } }
+.mrow .refbox img { width: 100%; display: block; aspect-ratio: 2.39/1; object-fit: cover; border: 1px solid var(--gold); }
+.mrow .refbox div { font: 12px "Helvetica Neue", Arial, sans-serif; color: var(--dim); margin-top: 4px; }
+.worlds { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
+.wc { flex: 0 0 min(340px, 82vw); scroll-snap-align: start; background: var(--panel); border: 1px solid var(--edge); }
+.wc .pair { position: relative; cursor: pointer; }
+.wc img { width: 100%; display: block; aspect-ratio: 2.39/1; object-fit: cover; }
+.wc .pair img.b { position: absolute; inset: 0; opacity: 1; transition: opacity .3s; }
+.wc .pair.show-a img.b { opacity: 0; }
+.wc .lab { position: absolute; left: 6px; top: 6px; font: 700 10px "Helvetica Neue", Arial, sans-serif; letter-spacing: .14em; background: rgba(0,0,0,.68); padding: 2px 6px; border-radius: 8px; color: var(--gold); }
+.wc .c { padding: 6px 9px 9px; font: 12px/1.45 "Helvetica Neue", Arial, sans-serif; color: var(--dim); }
+.wc .c b { color: var(--ink); }
+.up { color: var(--ok)!important; }
+.wc ul { margin: 4px 0 0 16px; color: #cfc6ae; }
+
+/* =====================================================================
+   TAB 3: THE FOUNDRY (foundry/index.html + Stand Builder)
+   ===================================================================== */
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 8px; }
+.pv { background: var(--panel); border: 1px solid var(--edge); cursor: pointer; }
+.pv:hover { border-color: var(--gold); }
+.pv img { width: 100%; display: block; aspect-ratio: 2.39/1; object-fit: cover; }
+.pv div { padding: 6px 8px; font: 12px "Helvetica Neue", Arial, sans-serif; color: var(--dim); }
+.pv b { color: var(--ink); }
+.mapscroll { overflow-x: auto; padding-bottom: 6px; }
+.mapwrap { display: grid; grid-template-columns: 18px 1fr; gap: 6px; min-width: 620px; }
+.yax { writing-mode: vertical-rl; transform: rotate(180deg); font: 600 10px "Helvetica Neue", Arial, sans-serif; letter-spacing: .14em; color: var(--dim); text-align: center; }
+.xax { grid-column: 2; font: 600 10px "Helvetica Neue", Arial, sans-serif; letter-spacing: .14em; color: var(--dim); text-align: center; }
+.niches { display: grid; gap: 4px; }
+.cell { aspect-ratio: 4/3; background: #0f151c; border: 1px solid rgba(243,234,210,.06); position: relative; overflow: hidden; cursor: pointer; }
+.cell.empty { cursor: default; }
+.cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.badge { position: absolute; left: 3px; bottom: 3px; font: 700 10px "Helvetica Neue", Arial, sans-serif; background: rgba(10,12,14,.85); padding: 1px 4px; color: var(--gold); }
+.shelf, .strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
+.shelf .card { flex: 0 0 min(240px, 70vw); scroll-snap-align: start; cursor: pointer; background: var(--panel); border: 1px solid var(--edge); }
+.shelf .card img { width: 100%; display: block; aspect-ratio: 4/3; object-fit: cover; }
+.shelf .card div { padding: 6px 8px; font: 12px/1.35 "Helvetica Neue", Arial, sans-serif; color: var(--dim); }
+.shelf .card b { color: var(--ink); }
+.strip figure { flex: 0 0 min(400px, 86vw); scroll-snap-align: start; background: #05070a; border: 1px solid var(--edge); }
+.strip img { width: 100%; display: block; aspect-ratio: 2.39/1; object-fit: cover; }
+.strip figcaption { font: 12px/1.35 "Helvetica Neue", Arial, sans-serif; color: var(--dim); padding: 5px 8px; }
+canvas#scatter { width: 100%; height: auto; background: #0f151c; border: 1px solid var(--edge); display: block; cursor: pointer; }
+.legend { font: 12px "Helvetica Neue", Arial, sans-serif; color: var(--dim); display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 6px 0; }
+.legend i { display: inline-block; width: 14px; height: 10px; vertical-align: middle; margin-right: 4px; }
+
+/* Foundry World Detail Drawer */
+#detail { position: fixed; inset: 0; background: var(--bg); display: none; overflow-y: auto; z-index: 80; }
+#detail.on { display: block; }
+#detail .bar { position: sticky; top: 0; z-index: 2; background: rgba(11,17,24,.96); border-bottom: 1px solid var(--edge); padding: 10px 16px; }
+#detail .bar .row { max-width: 1360px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+#detail .in { max-width: 1360px; margin: 0 auto; padding: 12px 16px 70px; }
+.dgrid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 22px; margin-top: 8px; }
+@media (max-width: 860px) { .dgrid { grid-template-columns: 1fr; } }
+#dimg { width: 100%; display: block; border: 1px solid var(--edge); }
+.recipe li { margin: 2px 0 2px 18px; color: #ddd3bb; font-size: 14px; }
+.poem { border-top: 1px solid var(--edge); padding: 8px 0; }
+.poem h4 { font-weight: 400; font-size: 16px; }
+.poem h4 .n { font: 700 11px "Helvetica Neue", Arial, sans-serif; color: var(--gold); letter-spacing: .12em; margin-right: 6px; }
+.poem h4 .z { font: 600 10px "Helvetica Neue", Arial, sans-serif; color: var(--dim); letter-spacing: .12em; margin-left: 6px; text-transform: uppercase; }
+.poem .line { color: var(--dim); font-style: italic; font-size: 13px; }
+.t { font: 13px/1.4 "Helvetica Neue", Arial, sans-serif; margin: 2px 0 0 2px; }
+.t.ok::before { content: "✓ "; color: var(--ok); }
+.t.no::before { content: "✗ "; color: var(--no); }
+.t.warn::before { content: "~ "; color: var(--warn); }
+.t .kind { color: var(--dim); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; margin-left: 4px; }
+.meter { height: 6px; background: #1d252e; margin-top: 4px; }
+.meter i { display: block; height: 100%; background: var(--gold); }
+.abl { font: 13px/1.45 "Helvetica Neue", Arial, sans-serif; border-top: 1px solid var(--edge); padding: 6px 0; }
+.abl .d { font-weight: 700; } .neg { color: var(--no); } .pos { color: var(--ok); }
+.abl .f { color: var(--dim); margin-left: 12px; }
+.lin { display: flex; gap: 6px; flex-wrap: wrap; }
+.lin img { width: 92px; border: 1px solid var(--edge); cursor: pointer; }
+.sum { display: flex; gap: 14px; flex-wrap: wrap; font: 13px "Helvetica Neue", Arial, sans-serif; color: var(--dim); margin: 8px 0; }
+.sum b { color: var(--ink); font-size: 18px; margin-right: 4px; }
+pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim); background: #0f151c; padding: 8px; border: 1px solid var(--edge); max-height: 220px; overflow: auto; }
+
+/* =====================================================================
+   TAB 4: THE 882 SHOTS & TRIPLE-CUT ANIMATIC
+   ===================================================================== */
+#shotQ { width: 100%; background: #0f151c; border: 1px solid var(--edge); color: var(--ink); font-size: 16px; padding: 12px 16px; border-radius: 24px; margin: 12px 0 8px; outline: none; }
+#shotQ:focus { border-color: var(--gold); }
+.sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+.shot { background: var(--panel); border: 1px solid var(--edge); cursor: pointer; overflow: hidden; }
+.shot:hover { border-color: var(--gold); }
+.shot img { width: 100%; display: block; aspect-ratio: 2.39/1; object-fit: cover; background: #000; }
+.shot .c { padding: 6px 9px 8px; font: 12px/1.4 "Helvetica Neue", Arial, sans-serif; color: var(--dim); }
+.shot .c b { color: var(--gold); font-weight: 700; }
+.shot .c i { display: block; color: #ddd3bb; font: italic 13px/1.35 "Iowan Old Style", Georgia, serif; margin-top: 3px; max-height: 2.7em; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-row">
+    <div class="brand">
+      <span class="k">Where You Go When You Leave · Foundry × Inverse</span>
+      <h1>Build On Top Of &amp; Through The Foundry &amp; Inverse Topology</h1>
+    </div>
+    <div class="mode-tabs">
+      <button class="mtab pink on" data-tab="tab-builder">🔨 1. Through-Frame Builder Studio</button>
+      <button class="mtab" data-tab="tab-inverse">📐 2. Inverse Topology (104 Refs &amp; 168 Wedges)</button>
+      <button class="mtab" data-tab="tab-foundry">🏛️ 3. The Foundry (72 Worlds &amp; Stands)</button>
+      <button class="mtab" data-tab="tab-shots">🎬 4. The 882 Shots &amp; Triple Animatic</button>
+    </div>
+    <div class="ext-links">
+      <a class="navpill" href="png_browser.html" style="border-color:var(--gold);color:var(--gold)">🖼️ Saved PNG Grid Browser (872)</a>
+      <a class="navpill" href="terrarium.html?poem=01&foundry=w1623">🌍 3D Terrarium + Hound</a>
+      <a class="navpill" href="wag_stack.html">🎞️ WAG-STACK</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ===================================================================
+       TAB 1: INTERACTIVE THROUGH-FRAME BUILDER STUDIO
+       =================================================================== -->
+  <section class="tab-pane on" id="tab-builder">
+    <div class="k">Every Shot A Triple · Panoptic Depth Peeling · Metric Cut-Out Staging</div>
+    <h1 class="big">Build On Top Of &amp; Through Inverse Topology &amp; The Foundry</h1>
+    <p class="lede">
+      In <code>inverse.html</code>, every reference frame is segmented into sky, water, city, street, forest, meadow, beach, and rock, and sculpts the 6 Foundry worlds at an exact camera position, elevation, and heading. Here you build <b>through</b> the frame (using the panoptic mask to open sky, water, and window apertures into the reference image or multiplane stage) and <b>on top of</b> the frame (placing WYGWYL cut-out actors and props on the sculpted ground plane, automatically scaled by metric distance in meters). Every composite can be saved directly to the <a href="png_browser.html">PNG Grid Browser</a>.
+    </p>
+
+    <div class="studio-layout">
+      <!-- Left Column: World, Poem, Reference & Through-Aperture Controls -->
+      <div class="s-card">
+        <h4>1. Select Poem, Reference &amp; World</h4>
+        <div class="ctrl-row">
+          <div class="lbl"><span>Poem (01–14)</span><span id="lblPoem">01</span></div>
+          <select id="selPoem"></select>
+        </div>
+        <div class="ctrl-row">
+          <div class="lbl"><span>Reference Frame (104 Refs)</span><span id="lblRef">01-07</span></div>
+          <select id="selRef"></select>
+        </div>
+        <div class="ctrl-row">
+          <div class="lbl"><span>Foundry World (6 Sculpted Worlds)</span><span id="lblWorld">w1623</span></div>
+          <select id="selWorld"></select>
+        </div>
+        <div class="ctrl-row">
+          <div class="lbl"><span>Multiplane Scene Stop (A–F)</span><span id="lblStop">Stop C (s2)</span></div>
+          <select id="selStop">
+            <option value="0">Stop A · s0_ext.webp (Opening)</option>
+            <option value="1">Stop B · s1_ext.webp</option>
+            <option value="2" selected>Stop C · s2_ext.webp (Mid)</option>
+            <option value="3">Stop D · s3_ext.webp</option>
+            <option value="4">Stop E · s4_ext.webp</option>
+            <option value="5">Stop F · s5_ext.webp (Culmination)</option>
+          </select>
+        </div>
+
+        <h4>2. Through-Frame &amp; Panoptic Sliders</h4>
+        <div class="ctrl-row">
+          <div class="lbl"><span>Foundry Before (-a) ↔ Sculpted After (-b)</span><span id="valSculpt">100%</span></div>
+          <input type="range" id="slSculpt" min="0" max="100" value="100">
+        </div>
+        <div class="ctrl-row">
+          <div class="lbl"><span>Through-Sky/Water Reference Bleed</span><span id="valRefBleed">48%</span></div>
+          <input type="range" id="slRefBleed" min="0" max="100" value="48">
+        </div>
+        <div class="ctrl-row">
+          <div class="lbl"><span>Multiplane Stage Architecture Blend</span><span id="valStageBleed">36%</span></div>
+          <input type="range" id="slStageBleed" min="0" max="100" value="36">
+        </div>
+        <div class="ctrl-row">
+          <div class="lbl"><span>Panoptic Segmentation Grid Contour</span><span id="valSeg">18%</span></div>
+          <input type="range" id="slSeg" min="0" max="100" value="18">
+        </div>
+        <div class="ctrl-row">
+          <div class="lbl"><span>Through-Window Portal (Walk-In Set Mode)</span><span id="valPortal">OFF</span></div>
+          <input type="range" id="slPortal" min="0" max="100" value="0">
+        </div>
+
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+          <button class="btn gold" id="btnSavePng" style="flex:1">💾 Save PNG &amp; Add to Browser</button>
+          <a class="btn pink" id="btnOpen3D" href="terrarium.html?poem=01&foundry=w1623">🌍 3D Camera</a>
+        </div>
+      </div>
+
+      <!-- Center Column: Live Interactive Canvas & 4-Source Strip -->
+      <div class="canvas-bay">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div style="font:700 12px 'Helvetica Neue',sans-serif;color:var(--gold)" id="canvasHeaderTitle">
+            THROUGH-FRAME SYNTHESIS · w1623 × REF 01-07
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn" id="btnToggleTags">🏷️ Metric Tags: ON</button>
+            <button class="btn" id="btnToggleTape">🎞️ Poem Tape: ON</button>
+            <button class="btn" id="btnAutoStage">✨ Auto-Stage Cast at Tags</button>
+            <a class="btn ok" id="btnViewPrebuilt" href="png_browser.html?cat=foundry_inverse">🖼️ View Pre-Built PNG</a>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="builderCanvas" width="1280" height="540"></canvas>
+        </div>
+
+        <div style="font:12px 'Helvetica Neue',sans-serif;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
+          <span id="canvasTelemetry">Drag any cut-out actor or prop on the canvas · Moving toward the horizon automatically scales by metric distance (m)</span>
+          <span id="canvasGrownInfo" style="color:var(--ok)"></span>
+        </div>
+
+        <!-- 4-Source Input Strip -->
+        <div class="quad-strip">
+          <div class="qbox" id="qRef" title="Click to solo Reference Frame">
+            <img id="imgRefPreview" src="" alt="">
+            <div><b>1. REFERENCE</b> <span id="txtRefMeta"></span></div>
+          </div>
+          <div class="qbox" id="qSeg" title="Click to toggle Panoptic Segmentation">
+            <img id="imgSegPreview" src="" alt="">
+            <div><b>2. PANOPTIC SEG</b> <span id="txtSegMeta"></span></div>
+          </div>
+          <div class="qbox" id="qBefore" title="Click to view Foundry Before Sculpt">
+            <img id="imgBeforePreview" src="" alt="">
+            <div><b>3. FOUNDRY BEFORE</b> <span id="txtBeforeMeta"></span></div>
+          </div>
+          <div class="qbox" id="qAfter" title="Click to view Inverse Sculpted After">
+            <img id="imgAfterPreview" src="" alt="">
+            <div><b>4. SCULPTED AFTER</b> <span id="txtAfterMeta"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Cut-Out Cast & Prop Palette + Active Staged Layers -->
+      <div class="s-card">
+        <h4>3. Click to Add Cut-Out Cast &amp; Props</h4>
+        <div class="palette-grid" id="castPalette"></div>
+
+        <h4>4. Active Staged Layers (Drag on Canvas)</h4>
+        <div class="layer-list" id="layerList"></div>
+
+        <div id="selLayerControls" style="display:none;border-top:1px solid var(--edge);padding-top:8px">
+          <div class="ctrl-row">
+            <div class="lbl"><span>Selected Piece Scale</span><span id="valPieceScale">1.00×</span></div>
+            <input type="range" id="slPieceScale" min="25" max="250" value="100">
+          </div>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button class="btn" id="btnFlipPiece" style="flex:1">↔ Flip X</button>
+            <button class="btn" id="btnDelPiece" style="flex:1;color:var(--no);border-color:var(--no)">🗑 Remove</button>
+          </div>
+        </div>
+
+        <h4>5. Sculpted Island Map &amp; Camera Pin</h4>
+        <div style="position:relative;border:1px solid var(--edge);border-radius:4px;overflow:hidden">
+          <canvas id="miniMapCanvas" width="304" height="228" style="width:100%;display:block;background:#090d12"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       TAB 2: INVERSE TOPOLOGY (Full inverse.html + Built Extensions)
+       =================================================================== -->
+  <section class="tab-pane" id="tab-inverse">
+    <div class="k">Where You Go When You Leave · inverse topology — the shots shape the land</div>
+    <h1 class="big">Inverse topology — the shots shape the land</h1>
+    <p class="lede">
+      We already have extraordinary shots for these poems: the generated stills of every shot in the bible, the MARKOV_POET clips routed stanza by stanza, the archive footage the Cineosis forage found for each beat, the Halfworld frames. Forward, a world is grown and then photographed. Here it runs the other way: start from the best images for each poem and ask what the land must be for that frame to exist — then sculpt every world toward it.
+    </p>
+    <div class="flow">
+      <div><b>THE SHOTS</b><span id="invPools"></span></div>
+      <div><b>CHOOSE</b><span>CLIP ranks every image against its poem’s place, light and set pieces — and against every other poem</span></div>
+      <div><b>READ</b><span>a panoptic segmentation into the world’s own classes — sky, water, city, street, forest, meadow, beach, rock — plus horizon</span></div>
+      <div><b>FIND</b><span>search each world for the camera that already comes closest: position on the poem’s ground, heading, height</span></div>
+      <div><b>INFER</b><span>every missing region becomes a place: its column a bearing, its row below the horizon a distance, its height an elevation</span></div>
+      <div><b>SCULPT</b><span>carve the water, lay the beach, plant the forest, raise the ridge to its angle, stand the city up to its skyline</span></div>
+      <div><b>BUILD THROUGH</b><span>cut panoptic apertures &amp; stage our multiplane cut-out cast directly inside the sculpted terrain</span></div>
+    </div>
+    <div class="stats" id="invStats"></div>
+
+    <h2>Bigger than this — now built &amp; interactive</h2>
+    <div class="bigger">
+      <div><b>Clips, not stills.</b> A clip is a camera path and a duration. Read its motion (pan, dolly, rise) and the inverse gives a route through the land, not a point.</div>
+      <div><b>The reference as a reader.</b> Beside the poems and the builder, a third reader: can this world give back its shots? Evolve against it, and worlds are bred by their photographs.</div>
+      <div><b>Cross-poem finds are places.</b> When CLIP pulls the same chapel image for poem 3 and poem 11, the images are saying what the bible says: one site at two times.</div>
+      <div><b>Interiors become sets.</b> References with no horizon — the bedroom, the party, the hall — shape walk-in sets: their walls, light, windows looking out onto the Foundry world, and cut-out cast.</div>
+      <div><b>Every shot a triple.</b> The found image, the staged cut-out set, the rendered world: the film cuts and blends between all three, each matched to the same line.</div>
+      <div><b>All 62 Composite PNGs Saved.</b> Every landscape triple, walk-in set, and camera stand is pre-rendered in <a href="png_browser.html?cat=foundry_inverse">shots/png_vault/foundry_inverse/</a>.</div>
+    </div>
+
+    <h2>Each world, before and after its shots</h2>
+    <p class="note">Tap a map to compare the world before the references shaped it and after. Pink wedges are the cameras the inverse search found.</p>
+    <div class="maps" id="invMaps"></div>
+
+    <h2>Poem by poem (104 References · 168 Sculpted Wedges · Pre-Built Triple PNGs)</h2>
+    <div class="chips" id="invPoemChips"></div>
+    <div id="invPoemsContainer"></div>
+  </section>
+
+  <!-- ===================================================================
+       TAB 3: THE FOUNDRY (Full foundry/index.html + Stand Builder)
+       =================================================================== -->
+  <section class="tab-pane" id="tab-foundry">
+    <div class="k">Where You Go When You Leave · the world</div>
+    <h1 class="big">The Foundry — worlds read against the poems, and against a builder</h1>
+    <blockquote>
+      “Our language can be seen as an ancient city: a maze of little streets and squares, of old and new houses, and of houses with additions from various periods; and this surrounded by a multitude of new boroughs with straight regular streets and uniform houses.” — Wittgenstein, §18
+    </blockquote>
+    <div class="stats" id="fndStats"></div>
+
+    <h2>Each poem, across the worlds</h2>
+    <p class="note">What the camera stand at each poem actually sees in the best worlds, lit by the poem’s own hour. Tap a frame to inspect its world, or click <b>🔨 Build On Stand</b> to layer our multiplane cut-out scenes on top.</p>
+    <div class="chips" id="fndPoemChips"></div>
+    <div class="pgrid" id="fndPoemGrid"></div>
+
+    <h2>The niches (Water: Dry → Drowned × Grid: Lattice → Maze)</h2>
+    <div class="legend" id="fndCovLegend"></div>
+    <div class="mapscroll">
+      <div class="mapwrap">
+        <div class="yax">water: dry → drowned</div>
+        <div class="niches" id="fndNiches"></div>
+        <div class="xax">grid: lattice → maze</div>
+      </div>
+    </div>
+
+    <h2>Stepping stones</h2>
+    <p class="note">The least familiar worlds of the run — kept for being unlike the rest, even when the poems or the builder reject them.</p>
+    <div class="shelf" id="fndShelf"></div>
+
+    <h2>Every world grown (1,632 Worlds)</h2>
+    <p class="note">Each dot a world (dark → gold: poems and builder together); ringed = kept. Click any ringed dot to inspect.</p>
+    <canvas id="scatter" width="1100" height="420"></canvas>
+  </section>
+
+  <!-- ===================================================================
+       TAB 4: THE 882 SHOTS & TRIPLE-CUT ANIMATIC
+       =================================================================== -->
+  <section class="tab-pane" id="tab-shots">
+    <div class="k">Where You Go When You Leave · the shots</div>
+    <h1 class="big">The 882 shots — the poem steers the camera through the world</h1>
+    <p class="lede">
+      Each poem’s reading is cut into shots. Every frame keeps what is measured in it (`sky`, `water`, `city`, `tower`, `forest`, distance in meters), and every shot can be opened in the <b>Through-Frame Builder Studio</b> or flown in the <b>3D Terrarium</b>.
+    </p>
+    <input id="shotQ" type="search" placeholder="Search 882 shots — “moon over water”, “close night”, “gates”, “forest wide”, a line he says…" autocomplete="off">
+    <div class="chips" id="sc_kind"></div>
+    <div class="chips" id="sc_light"></div>
+    <div class="chips" id="sc_poem"></div>
+    <div class="chips" id="sc_world"></div>
+    <div style="margin:8px 0;color:var(--dim);font:600 12px 'Helvetica Neue',sans-serif" id="shotCount"></div>
+    <div class="sgrid" id="shotGrid"></div>
+  </section>
+</main>
+
+<!-- Foundry World Detail Modal Drawer (from foundry/index.html, augmented) -->
+<div id="detail">
+  <div class="bar">
+    <div class="row">
+      <div>
+        <div class="k" id="dk"></div>
+        <div id="dt" style="font-size:19px"></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn on" id="bmap">MAP</button>
+        <button class="btn" id="bpal">PALIMPSEST</button>
+        <button class="btn" id="binv">INVERSE SCULPTED</button>
+        <button class="btn" id="batlas">4-STATE ATLAS PNG</button>
+        <a class="btn pink" id="b3d" href="terrarium.html?poem=01&foundry=w1623">🌍 OPEN IN 3D TERRARIUM</a>
+        <button class="btn gold" id="bclose">CLOSE ✕</button>
+      </div>
+    </div>
+  </div>
+  <div class="in">
+    <div class="sum" id="dsum"></div>
+    <h3>What each stand sees (Click any stand to load into Through-Frame Studio)</h3>
+    <div class="strip" id="dviews"></div>
+    <div class="dgrid">
+      <div>
+        <img id="dimg" alt="">
+        <h3>Would anyone build this?</h3><div id="dbuild"></div>
+        <h3>Recipe</h3><ol class="recipe" id="drec"></ol>
+        <h3>Ablation — remove one epoch, regrow, re-read</h3><div id="dabl"></div>
+        <h3>Lineage</h3><div class="lin" id="dlin"></div>
+        <h3>Genome</h3><pre id="dgen"></pre>
+      </div>
+      <div>
+        <h3>The reading</h3><div id="dread"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+const F_BASE = 'data/terrarium/foundry/';
+
+const [A, R, I, SH_DATA] = await Promise.all([
+  fetch(F_BASE + 'archive.json').then(r => r.json()),
+  fetch(F_BASE + 'refs.json').then(r => r.json()),
+  fetch(F_BASE + 'inverse.json').then(r => r.json()),
+  fetch(F_BASE + 'shots.json').then(r => r.json())
+]);
+
+const Wd = A.worlds;
+const ORDER = Object.keys(A.poems).sort();
+const refsMap = Object.fromEntries(R.refs.map(r => [r.id, r]));
+const pct = v => Math.round((v ?? 0) * 100) + '%';
+const Q = w => w.q ?? w.r.score;
+const ZN = { B: 'Baltimere', C: 'the Center', A: 'Atlantis', all: 'the island' };
+
+// Mode Tab Switching
+document.querySelectorAll('.mtab').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.mtab').forEach(b => b.classList.remove('on'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
+    btn.classList.add('on');
+    $(btn.dataset.tab).classList.add('on');
+  };
+});
+
+// =========================================================================
+// TAB 1: INTERACTIVE THROUGH-FRAME BUILDER STUDIO
+// =========================================================================
+const bCanvas = $('builderCanvas');
+const bCtx = bCanvas.getContext('2d');
+const mCanvas = $('miniMapCanvas');
+const mCtx = mCanvas.getContext('2d');
+
+const urlQ = new URLSearchParams(location.search);
+let stPoem = urlQ.get('poem') || '01';
+let stRef = urlQ.get('ref') || '01-07';
+let stWorld = urlQ.get('world') || 'w1623';
+let stStop = 2;
+let showTags = true;
+let showTape = true;
+
+const imgCache = new Map();
+function loadImg(src) {
+  if (!src) return Promise.resolve(null);
+  if (imgCache.has(src)) return imgCache.get(src);
+  const p = new Promise(resolve => {
+    const im = new Image();
+    im.crossOrigin = 'anonymous';
+    im.onload = () => resolve(im);
+    im.onerror = () => resolve(null);
+    im.src = src;
+  });
+  imgCache.set(src, p);
+  return p;
+}
+
+// Populate Studio Selects
+$('selPoem').innerHTML = ORDER.map(n => `<option value="${n}">${n} · ${A.poems[n].title}</option>`).join('');
+$('selPoem').value = stPoem;
+
+function updateRefOptions() {
+  const pRefs = R.refs.filter(r => r.poem === stPoem);
+  const allList = pRefs.length ? pRefs : R.refs;
+  $('selRef').innerHTML = allList.map(r => {
+    const isLand = I.refs.includes(r.id);
+    return `<option value="${r.id}">${r.id} (${r.source}) · ${isLand ? 'Landscape Sculpt' : 'Walk-In Set'} · CLIP ${r.clip}</option>`;
+  }).join('');
+  if (allList.some(r => r.id === stRef)) {
+    $('selRef').value = stRef;
+  } else {
+    const landFirst = allList.find(r => I.refs.includes(r.id)) || allList[0];
+    stRef = landFirst.id;
+    $('selRef').value = stRef;
+  }
+}
+
+$('selWorld').innerHTML = I.worlds.map(w => `<option value="${w}">${w} · ${Wd[w]?.g?.layout || ''} (${pct(Q(Wd[w]))})</option>`).join('');
+$('selWorld').value = stWorld;
+
+// Cut-Out Cast & Prop Palette per poem (Full-body figures & curated scene props)
+const HERO_CAST_ITEMS = [
+  { name: 'Poet Full Figure (Front)', kind: 'actor', src: 'weave/cast/man/library/misc/body_front_08.png' },
+  { name: 'Poet Walking Figure', kind: 'actor', src: 'weave/cast/man/library/misc/body_front_09.png' },
+  { name: 'EX Leaning (Back View)', kind: 'actor', src: 'arena/parts/kit3/release_v2/cuts/ex.ex_jacket.master/ex.ex_jacket.master__p30.png' },
+  { name: 'Poet Seated Figure', kind: 'actor', src: 'weave/cast/man/library/misc/body_sitting_04.png' },
+  { name: 'Poet Seated Profile', kind: 'actor', src: 'weave/cast/man/library/misc/body_sitting_01.png' },
+  { name: 'Sash Window Portal', kind: 'prop', src: 'arena/parts/kit3/release_v2/cuts/01.props.window/01.props.window__p01.png' }
+];
+
+let scenePlansCache = null;
+async function getScenePlans() {
+  if (scenePlansCache) return scenePlansCache;
+  try {
+    scenePlansCache = await fetch('arena/parts/kit3/release_v2/scene_collage_plans.json').then(r => r.json());
+  } catch (e) {
+    scenePlansCache = { scenes: [] };
+  }
+  return scenePlansCache;
+}
+
+let stagedItems = [];
+let selectedLayerIdx = -1;
+
+async function buildCastPalette() {
+  const items = [...HERO_CAST_ITEMS];
+  const plans = await getScenePlans();
+  const pInt = parseInt(stPoem, 10);
+  const seen = new Set(items.map(x => x.src));
+  for (const sc of (plans.scenes || [])) {
+    if (parseInt(sc.book, 10) !== pInt) continue;
+    for (const pl of (sc.staged_placements || [])) {
+      const sem = pl.semantic_class || '';
+      const f = pl.file || '';
+      if (!f || seen.has(f)) continue;
+      if (['full_figure_adult', 'full_figure_child', 'crouched_or_prone_figure', 'door_window_arch', 'stair_bridge_viaduct', 'large_furniture', 'medium_prop'].includes(sem)) {
+        seen.add(f);
+        items.push({
+          name: (pl.label || 'Stage Piece').slice(0, 22),
+          kind: sem.includes('figure') ? 'actor' : 'prop',
+          src: f
+        });
+      }
+      if (items.length >= 15) break;
+    }
+    if (items.length >= 15) break;
+  }
+
+  $('castPalette').innerHTML = items.map((it, idx) => `
+    <div class="p-item" data-idx="${idx}">
+      <img src="${it.src}" alt="${it.name}" onerror="this.parentElement.style.display='none'">
+      <div>${it.name.slice(0, 16)}</div>
+    </div>
+  `).join('');
+
+  $('castPalette').querySelectorAll('.p-item').forEach(el => {
+    el.onclick = () => {
+      const it = items[+el.dataset.idx];
+      stagedItems.push({
+        name: it.name,
+        kind: it.kind,
+        src: it.src,
+        x: 0.3 + Math.random() * 0.4,
+        y: 0.72 + Math.random() * 0.14,
+        scale: 1.0,
+        flip: false
+      });
+      selectedLayerIdx = stagedItems.length - 1;
+      renderLayerList();
+      drawBuilderCanvas();
+    };
+  });
+}
+
+function getActiveInvShot() {
+  return I.shots.find(s => s.ref === stRef && s.world === stWorld)
+      || I.shots.find(s => s.ref === stRef)
+      || I.shots.find(s => s.poem === stPoem && s.world === stWorld)
+      || I.shots[0];
+}
+
+async function autoStageCastAtTags() {
+  stagedItems = [];
+  const invShot = getActiveInvShot();
+  const tags = (invShot?.tags_b || []).filter(t => t.what !== 'sky');
+  const pItems = [];
+  const plans = await getScenePlans();
+  const pInt = parseInt(stPoem, 10);
+  const seen = new Set();
+  for (const sc of (plans.scenes || [])) {
+    if (parseInt(sc.book, 10) !== pInt) continue;
+    for (const pl of (sc.staged_placements || [])) {
+      const sem = pl.semantic_class || '';
+      const f = pl.file || '';
+      if (!f || seen.has(f)) continue;
+      if (['full_figure_adult', 'full_figure_child', 'crouched_or_prone_figure', 'door_window_arch', 'large_furniture', 'medium_prop'].includes(sem)) {
+        seen.add(f);
+        pItems.push({
+          name: (pl.label || 'Stage Piece').slice(0, 20),
+          kind: sem.includes('figure') ? 'actor' : 'prop',
+          src: f
+        });
+      }
+      if (pItems.length >= 3) break;
+    }
+    if (pItems.length >= 3) break;
+  }
+  pItems.push(HERO_CAST_ITEMS[0], HERO_CAST_ITEMS[2]);
+
+  pItems.forEach((it, idx) => {
+    const tg = tags[idx];
+    const tx = tg ? tg.x : (0.24 + idx * 0.16);
+    const ty = 0.62 + (idx % 3) * 0.1;
+    stagedItems.push({
+      name: it.name,
+      kind: it.kind,
+      src: it.src,
+      x: Math.max(0.12, Math.min(0.88, tx)),
+      y: ty,
+      scale: 1.0,
+      flip: idx % 2 === 1
+    });
+  });
+  selectedLayerIdx = stagedItems.length ? 0 : -1;
+  renderLayerList();
+  drawBuilderCanvas();
+}
+
+function renderLayerList() {
+  $('layerList').innerHTML = stagedItems.map((it, idx) => `
+    <div class="layer-item ${idx === selectedLayerIdx ? 'sel' : ''}" data-idx="${idx}">
+      <span>${it.kind === 'actor' ? '🎭' : '🧩'} <b>${it.name.slice(0, 18)}</b></span>
+      <span style="color:var(--gold)">x:${it.x.toFixed(2)} y:${it.y.toFixed(2)}</span>
+    </div>
+  `).join('');
+  $('layerList').querySelectorAll('.layer-item').forEach(el => {
+    el.onclick = () => {
+      selectedLayerIdx = +el.dataset.idx;
+      renderLayerList();
+      drawBuilderCanvas();
+    };
+  });
+  if (selectedLayerIdx >= 0 && stagedItems[selectedLayerIdx]) {
+    $('selLayerControls').style.display = 'block';
+    const sc = Math.round(stagedItems[selectedLayerIdx].scale * 100);
+    $('slPieceScale').value = sc;
+    $('valPieceScale').textContent = (sc / 100).toFixed(2) + '×';
+  } else {
+    $('selLayerControls').style.display = 'none';
+  }
+}
+
+$('slPieceScale').oninput = e => {
+  if (selectedLayerIdx >= 0 && stagedItems[selectedLayerIdx]) {
+    stagedItems[selectedLayerIdx].scale = +e.target.value / 100;
+    $('valPieceScale').textContent = stagedItems[selectedLayerIdx].scale.toFixed(2) + '×';
+    drawBuilderCanvas();
+  }
+};
+$('btnFlipPiece').onclick = () => {
+  if (selectedLayerIdx >= 0 && stagedItems[selectedLayerIdx]) {
+    stagedItems[selectedLayerIdx].flip = !stagedItems[selectedLayerIdx].flip;
+    drawBuilderCanvas();
+  }
+};
+$('btnDelPiece').onclick = () => {
+  if (selectedLayerIdx >= 0) {
+    stagedItems.splice(selectedLayerIdx, 1);
+    selectedLayerIdx = stagedItems.length - 1;
+    renderLayerList();
+    drawBuilderCanvas();
+  }
+};
+
+async function drawBuilderCanvas() {
+  const W = bCanvas.width, H = bCanvas.height;
+  const rObj = refsMap[stRef] || R.refs[0];
+  const isLandRef = I.refs.includes(rObj.id);
+  const invShot = getActiveInvShot();
+  const vPoem = stPoem === '14' ? '13' : stPoem;
+
+  const refSrc = F_BASE + rObj.img;
+  const segSrc = F_BASE + rObj.seg;
+  const beforeSrc = isLandRef ? (F_BASE + invShot.a) : (F_BASE + `w/${stWorld}-v${vPoem}.jpg`);
+  const afterSrc = isLandRef ? (F_BASE + invShot.b) : (F_BASE + `w/${stWorld}-v${vPoem}.jpg`);
+  const stageSrc = `play/levels/${stPoem}/s${stStop}_ext.webp`;
+  const tapeSrc = `play/levels/${stPoem}/poem_tape.webp`;
+  const mapBSrc = F_BASE + `inv/${stWorld}/map-b.jpg`;
+
+  // Update 4-source preview strip
+  $('imgRefPreview').src = refSrc;
+  $('txtRefMeta').textContent = `${rObj.id} (${rObj.source}) · ${rObj.hour}`;
+  $('imgSegPreview').src = segSrc;
+  $('txtSegMeta').textContent = Object.entries(rObj.frac || {}).slice(0, 2).map(([k, v]) => `${k} ${Math.round(v)}%`).join(' · ');
+  $('imgBeforePreview').src = beforeSrc;
+  $('txtBeforeMeta').textContent = isLandRef ? `Match ${pct(invShot.before)}` : `Stand ${stWorld}-v${vPoem}`;
+  $('imgAfterPreview').src = afterSrc;
+  $('txtAfterMeta').textContent = isLandRef ? `Match ${pct(invShot.after)}` : `Hold ${pct(Wd[stWorld]?.r?.by_poem?.[stPoem])}`;
+
+  $('lblPoem').textContent = stPoem;
+  $('lblRef').textContent = stRef;
+  $('lblWorld').textContent = stWorld;
+  $('lblStop').textContent = `Stop ${String.fromCharCode(65 + stStop)} (s${stStop})`;
+  $('canvasHeaderTitle').textContent = `THROUGH-FRAME SYNTHESIS · ${stWorld.toUpperCase()} × REF ${rObj.id} (${rObj.source.toUpperCase()}) × POEM ${stPoem} STOP ${String.fromCharCode(65 + stStop)}`;
+  $('canvasGrownInfo').textContent = isLandRef && invShot.grown?.length
+    ? `Sculpted: ${invShot.grown.join(' · ')}`
+    : `Walk-In Set Mode (No Horizon → Shapes Walls, Windows & Light)`;
+  $('btnOpen3D').href = `terrarium.html?poem=${stPoem}&foundry=${stWorld}`;
+  $('btnViewPrebuilt').href = `png_browser.html?cat=foundry_inverse&poem=${stPoem}`;
+
+  const [imBefore, imAfter, imRef, imSeg, imStage, imTape, imMap] = await Promise.all([
+    loadImg(beforeSrc), loadImg(afterSrc), loadImg(refSrc), loadImg(segSrc),
+    loadImg(stageSrc), loadImg(tapeSrc), loadImg(mapBSrc)
+  ]);
+
+  bCtx.clearRect(0, 0, W, H);
+
+  const sculptAlpha = +$('slSculpt').value / 100;
+  const refBleed = +$('slRefBleed').value / 100;
+  const stageBleed = +$('slStageBleed').value / 100;
+  const segAlpha = +$('slSeg').value / 100;
+  const portalAlpha = +$('slPortal').value / 100;
+
+  // 1. Base Foundry Layer (Before -> Sculpted After)
+  if (imBefore) bCtx.drawImage(imBefore, 0, 0, W, H);
+  if (imAfter && sculptAlpha > 0) {
+    bCtx.save();
+    bCtx.globalAlpha = sculptAlpha;
+    bCtx.drawImage(imAfter, 0, 0, W, H);
+    bCtx.restore();
+  }
+
+  // Horizon row
+  const hor = (isLandRef ? invShot?.cam?.hor : rObj.horizon) || 0.38;
+  const horY = Math.round(Math.max(0.18, Math.min(0.72, hor)) * H);
+
+  // 2. Through-Aperture Reference Bleed (strongest in Sky & Water aperture)
+  if (imRef && refBleed > 0) {
+    bCtx.save();
+    bCtx.globalAlpha = refBleed;
+    bCtx.drawImage(imRef, 0, 0, W, H);
+    bCtx.restore();
+  }
+
+  // 3. Multiplane Stage Architecture Blend
+  if (imStage && stageBleed > 0) {
+    bCtx.save();
+    bCtx.globalAlpha = stageBleed;
+    bCtx.drawImage(imStage, 0, 0, W, H);
+    bCtx.restore();
+  }
+
+  // 4. Panoptic Segmentation Overlay
+  if (imSeg && segAlpha > 0) {
+    bCtx.save();
+    bCtx.globalAlpha = segAlpha;
+    bCtx.drawImage(imSeg, 0, 0, W, H);
+    bCtx.restore();
+  }
+
+  // 5. Walk-In Set Through-Window Portal
+  if (portalAlpha > 0 && imAfter) {
+    const pw = 420, ph = 220, px = (W - pw) / 2, py = 46;
+    bCtx.save();
+    bCtx.globalAlpha = portalAlpha;
+    bCtx.drawImage(imAfter, px, py, pw, ph);
+    bCtx.strokeStyle = '#ffd23f';
+    bCtx.lineWidth = 3;
+    bCtx.strokeRect(px, py, pw, ph);
+    bCtx.beginPath();
+    bCtx.moveTo(px + pw / 2, py); bCtx.lineTo(px + pw / 2, py + ph);
+    bCtx.moveTo(px, py + ph / 2); bCtx.lineTo(px + pw, py + ph / 2);
+    bCtx.stroke();
+    bCtx.fillStyle = 'rgba(10,14,20,0.85)';
+    bCtx.fillRect(px + 8, py + 8, 250, 20);
+    bCtx.fillStyle = '#ffd23f';
+    bCtx.font = '700 10px "Helvetica Neue", sans-serif';
+    bCtx.fillText(`THROUGH-WINDOW PORTAL → ${stWorld.toUpperCase()}`, px + 14, py + 22);
+    bCtx.restore();
+  }
+
+  // 6. Staged Cut-Out Actors & Props (sorted by y depth, scaled by distance from horizon!)
+  const sortedIndices = stagedItems.map((_, i) => i).sort((a, b) => stagedItems[a].y - stagedItems[b].y);
+  for (const idx of sortedIndices) {
+    const it = stagedItems[idx];
+    const im = await loadImg(it.src);
+    if (!im) continue;
+    // Distance factor: closer to bottom (y=0.95) -> 18m; closer to horizon (hor) -> 220m
+    const relDepth = Math.max(0.08, Math.min(1.0, (it.y - hor * 0.7) / (1.0 - hor * 0.7)));
+    const distMeters = Math.round(14 / Math.max(0.08, relDepth * relDepth));
+    it._distMeters = distMeters;
+
+    const baseH = (it.kind === 'actor' ? 235 : 195) * (0.35 + 0.75 * relDepth) * (it.scale || 1.0);
+    const ratio = im.width / Math.max(1, im.height);
+    const dw = baseH * ratio;
+    const dh = baseH;
+    const cx = it.x * W;
+    const cy = it.y * H;
+
+    // Contact shadow
+    bCtx.save();
+    bCtx.fillStyle = 'rgba(5, 8, 12, 0.55)';
+    bCtx.beginPath();
+    bCtx.ellipse(cx, cy + 4, dw * 0.38, 8, 0, 0, Math.PI * 2);
+    bCtx.fill();
+
+    bCtx.translate(cx, cy - dh / 2);
+    if (it.flip) bCtx.scale(-1, 1);
+    bCtx.drawImage(im, -dw / 2, -dh / 2, dw, dh);
+    bCtx.restore();
+
+    if (idx === selectedLayerIdx) {
+      bCtx.save();
+      bCtx.strokeStyle = '#5ce1e6';
+      bCtx.lineWidth = 1.5;
+      bCtx.setLineDash([5, 4]);
+      bCtx.strokeRect(cx - dw / 2, cy - dh, dw, dh);
+      bCtx.restore();
+    }
+
+    if (showTags) {
+      const tagTxt = `${it.name.slice(0, 14)} · ${distMeters}m`;
+      bCtx.save();
+      bCtx.font = '700 10px "Helvetica Neue", sans-serif';
+      const tw = bCtx.measureText(tagTxt).width + 12;
+      bCtx.fillStyle = 'rgba(10, 14, 20, 0.86)';
+      bCtx.strokeStyle = '#5ce1e6';
+      bCtx.lineWidth = 1;
+      bCtx.fillRect(cx - tw / 2, cy - dh - 22, tw, 18);
+      bCtx.strokeRect(cx - tw / 2, cy - dh - 22, tw, 18);
+      bCtx.fillStyle = '#5ce1e6';
+      bCtx.fillText(tagTxt, cx - tw / 2 + 6, cy - dh - 9);
+      bCtx.restore();
+    }
+  }
+
+  // 7. Poem Spectrogram Tape Strip at bottom
+  if (showTape && imTape) {
+    bCtx.drawImage(imTape, 0, H - 24, W, 24);
+  }
+
+  // 8. Horizon Line & Foundry/Inverse Rangefinder Tags
+  if (showTags) {
+    bCtx.save();
+    bCtx.strokeStyle = 'rgba(255, 61, 110, 0.65)';
+    bCtx.setLineDash([8, 6]);
+    bCtx.beginPath();
+    bCtx.moveTo(0, horY); bCtx.lineTo(W, horY);
+    bCtx.stroke();
+    bCtx.setLineDash([]);
+
+    bCtx.fillStyle = '#ff3d6e';
+    bCtx.font = '700 10px "Helvetica Neue", sans-serif';
+    const camZ = invShot?.cam?.z ? Math.round(invShot.cam.z) : 45;
+    const camHd = invShot?.cam?.hd ? Math.round(invShot.cam.hd) % 360 : 120;
+    bCtx.fillText(`INVERSE HORIZON ${Math.round(hor * 100)}% · CAM ${camZ}m UP · HEADING ${camHd}°`, 12, horY - 6);
+
+    const tags = (invShot?.tags_b || []).filter(t => t.what !== 'sky');
+    tags.slice(0, 6).forEach((t, i) => {
+      const tx = Math.max(70, Math.min(W - 90, t.x * W));
+      const ty = 18 + (i % 2) * 24;
+      const dist = t.near ? (t.near >= 1000 ? (t.near / 1000).toFixed(1) + 'km' : t.near + 'm') : '';
+      const lab = `${t.what} ${t.pct}%${dist ? ' · ' + dist : ''}`;
+      bCtx.font = '700 10px "Helvetica Neue", sans-serif';
+      const bw = bCtx.measureText(lab).width + 14;
+      const col = t.poem ? '#ff3d6e' : '#ffd23f';
+      bCtx.fillStyle = 'rgba(10, 14, 20, 0.85)';
+      bCtx.strokeStyle = col;
+      bCtx.fillRect(tx - bw / 2, ty, bw, 18);
+      bCtx.strokeRect(tx - bw / 2, ty, bw, 18);
+      bCtx.fillStyle = col;
+      bCtx.fillText(lab, tx - bw / 2 + 7, ty + 13);
+    });
+    bCtx.restore();
+  }
+
+  // 9. Draw MiniMap
+  mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height);
+  if (imMap) {
+    mCtx.drawImage(imMap, 0, 0, mCanvas.width, mCanvas.height);
+    if (invShot?.cam) {
+      const cx = (invShot.cam.x / 8000) * mCanvas.width;
+      const cy = (invShot.cam.y / 6000) * mCanvas.height;
+      const hd = (invShot.cam.hd || 0) * Math.PI / 180;
+      mCtx.strokeStyle = '#ffd23f';
+      mCtx.lineWidth = 2;
+      mCtx.beginPath();
+      mCtx.moveTo(cx, cy);
+      mCtx.lineTo(cx + 28 * Math.sin(hd - 0.4), cy - 28 * Math.cos(hd - 0.4));
+      mCtx.moveTo(cx, cy);
+      mCtx.lineTo(cx + 28 * Math.sin(hd + 0.4), cy - 28 * Math.cos(hd + 0.4));
+      mCtx.stroke();
+      mCtx.fillStyle = '#ff3d6e';
+      mCtx.beginPath();
+      mCtx.arc(cx, cy, 5, 0, Math.PI * 2);
+      mCtx.fill();
+    }
+  }
+}
+
+// Canvas Dragging for Cut-Out Cast & Props
+let dragging = false;
+bCanvas.addEventListener('pointerdown', e => {
+  const rect = bCanvas.getBoundingClientRect();
+  const nx = (e.clientX - rect.left) / rect.width;
+  const ny = (e.clientY - rect.top) / rect.height;
+  let best = -1, bestD = 0.12;
+  stagedItems.forEach((it, idx) => {
+    const d = Math.hypot(it.x - nx, (it.y - 0.1) - ny);
+    if (d < bestD) { bestD = d; best = idx; }
+  });
+  if (best >= 0) {
+    selectedLayerIdx = best;
+    dragging = true;
+    bCanvas.setPointerCapture(e.pointerId);
+    renderLayerList();
+    drawBuilderCanvas();
+  }
+});
+bCanvas.addEventListener('pointermove', e => {
+  if (!dragging || selectedLayerIdx < 0) return;
+  const rect = bCanvas.getBoundingClientRect();
+  stagedItems[selectedLayerIdx].x = Math.max(0.05, Math.min(0.95, (e.clientX - rect.left) / rect.width));
+  stagedItems[selectedLayerIdx].y = Math.max(0.25, Math.min(0.96, (e.clientY - rect.top) / rect.height));
+  renderLayerList();
+  drawBuilderCanvas();
+});
+bCanvas.addEventListener('pointerup', () => { dragging = false; });
+
+// Studio Control Listeners
+$('selPoem').onchange = async e => {
+  stPoem = e.target.value;
+  updateRefOptions();
+  await buildCastPalette();
+  await autoStageCastAtTags();
+};
+$('selRef').onchange = e => { stRef = e.target.value; drawBuilderCanvas(); };
+$('selWorld').onchange = e => { stWorld = e.target.value; drawBuilderCanvas(); };
+$('selStop').onchange = e => { stStop = +e.target.value; drawBuilderCanvas(); };
+
+['slSculpt', 'slRefBleed', 'slStageBleed', 'slSeg', 'slPortal'].forEach(id => {
+  $(id).oninput = e => {
+    const v = +e.target.value;
+    if (id === 'slSculpt') $('valSculpt').textContent = v + '%';
+    if (id === 'slRefBleed') $('valRefBleed').textContent = v + '%';
+    if (id === 'slStageBleed') $('valStageBleed').textContent = v + '%';
+    if (id === 'slSeg') $('valSeg').textContent = v + '%';
+    if (id === 'slPortal') $('valPortal').textContent = v === 0 ? 'OFF' : v + '%';
+    drawBuilderCanvas();
+  };
+});
+
+$('btnToggleTags').onclick = () => {
+  showTags = !showTags;
+  $('btnToggleTags').textContent = `🏷️ Metric Tags: ${showTags ? 'ON' : 'OFF'}`;
+  drawBuilderCanvas();
+};
+$('btnToggleTape').onclick = () => {
+  showTape = !showTape;
+  $('btnToggleTape').textContent = `🎞️ Poem Tape: ${showTape ? 'ON' : 'OFF'}`;
+  drawBuilderCanvas();
+};
+$('btnAutoStage').onclick = autoStageCastAtTags;
+
+// Save PNG & Add to Browser Vault
+$('btnSavePng').onclick = () => {
+  const dataUrl = bCanvas.toDataURL('image/png');
+  const fname = `custom_through_${stWorld}_poem${stPoem}_ref${stRef.replace('-', '_')}.png`;
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = fname;
+  a.click();
+
+  // Save metadata + dataURL to localStorage so png_browser.html displays it immediately
+  try {
+    const saved = JSON.parse(localStorage.getItem('wygwyl_custom_pngs') || '[]');
+    saved.unshift({
+      id: 'custom_' + Date.now(),
+      title: `Custom Through-Build · ${stWorld} × Ref ${stRef} (Poem ${stPoem})`,
+      filename: fname,
+      category: 'foundry_inverse',
+      category_label: 'Foundry & Inverse Through-Frame Builds',
+      subcategory: 'inverse_triple_through',
+      poem: stPoem,
+      ref_id: stRef,
+      world: stWorld,
+      file: dataUrl,
+      width: bCanvas.width,
+      height: bCanvas.height,
+      size_kb: Math.round(dataUrl.length * 0.75 / 1024),
+      desc: `Custom interactive composite saved from Foundry & Inverse Through-Frame Studio.`
+    });
+    localStorage.setItem('wygwyl_custom_pngs', JSON.stringify(saved.slice(0, 20)));
+  } catch (e) {}
+  $('btnSavePng').textContent = '✓ Saved PNG & Added to Vault!';
+  setTimeout(() => { $('btnSavePng').textContent = '💾 Save PNG & Add to Browser'; }, 2500);
+};
+
+// Helper to jump into Tab 1 Builder Studio from any tab
+window.__loadIntoStudio = async (poem, ref, world) => {
+  if (poem) { stPoem = poem; $('selPoem').value = stPoem; updateRefOptions(); await buildCastPalette(); }
+  if (ref) { stRef = ref; $('selRef').value = stRef; }
+  if (world && I.worlds.includes(world)) { stWorld = world; $('selWorld').value = stWorld; }
+  document.querySelector('[data-tab="tab-builder"]').click();
+  await autoStageCastAtTags();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// Initialize Tab 1
+updateRefOptions();
+await buildCastPalette();
+await autoStageCastAtTags();
+
+// =========================================================================
+// TAB 2: INVERSE TOPOLOGY (Full inverse.html + Built Extensions)
+// =========================================================================
+const P_INV = R.poems;
+$('invPools').textContent = `${R.pool.generated} generated stills · ${R.pool.markov} MARKOV_POET clips · ${R.pool.archive} archive frames · ${R.pool.halfworld} Halfworld frames`;
+const avgInv = k => I.shots.reduce((s, x) => s + x[k], 0) / Math.max(1, I.shots.length);
+const grownN = I.shots.reduce((s, x) => s + x.grown.length, 0);
+$('invStats').innerHTML = [
+  [Object.values(R.pool).reduce((a, b) => a + b, 0), 'images weighed'],
+  [R.refs.length, 'chosen for the poems'],
+  [I.refs.length, 'landscapes that shape land'],
+  [I.worlds.length, 'worlds shaped'],
+  [Math.round(avgInv('before') * 100) + '%', 'match, found camera'],
+  [Math.round(avgInv('after') * 100) + '%', 'match, after sculpting'],
+  [grownN, 'things grown'],
+  [62, 'saved composite PNGs']
+].map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
+
+$('invMaps').innerHTML = I.worlds.map(w => `
+  <div class="mapc">
+    <div class="pair" onclick="this.classList.toggle('show-a')">
+      <img loading="lazy" src="${F_BASE}inv/${w}/map-a.jpg" alt="">
+      <img loading="lazy" class="b" src="${F_BASE}inv/${w}/map-b.jpg" alt="">
+    </div>
+    <div class="c">
+      <b>${w}</b> · ${I.shots.filter(s => s.world === w).reduce((a, s) => a + s.grown.length, 0)} things grown for ${I.shots.filter(s => s.world === w).length} shots · tap: before / after
+      <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+        <a class="btn" style="padding:4px 9px;min-height:0;font-size:10px" href="png_vault/foundry_inverse/foundry_world_atlas_${w}.png" target="_blank">🖼️ 4-State Atlas PNG</a>
+        <a class="btn pink" style="padding:4px 9px;min-height:0;font-size:10px" href="terrarium.html?poem=01&foundry=${w}">🌍 Open ${w} in 3D</a>
+      </div>
+    </div>
+  </div>
+`).join('');
+
+let invPick = '01';
+const frText = f => Object.entries(f || {}).filter(([k]) => k !== 'other').sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => `${k} ${Math.round(v)}%`).join(' · ');
+
+function renderInvPoem() {
+  $('invPoemChips').innerHTML = Object.keys(P_INV).sort().map(n =>
+    `<button class="chip ${n === invPick ? 'on' : ''}" data-n="${n}">${n} ${P_INV[n].title}</button>`
+  ).join('');
+  $('invPoemChips').querySelectorAll('.chip').forEach(b => b.onclick = () => {
+    invPick = b.dataset.n;
+    renderInvPoem();
+  });
+
+  const n = invPick;
+  const rs = R.refs.filter(r => r.poem === n);
+  let h = `
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin:14px 0 8px">
+      <div>
+        <h3>${n} · ${P_INV[n].title}</h3>
+        <p class="note">${(P_INV[n].text || [])[0] || ''}</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn gold" href="png_vault/foundry_inverse/foundry_stand_poem_${n}.png" target="_blank">🖼️ Poem ${n} Stand × Multiplane PNG</a>
+        <a class="btn pink" href="png_vault/foundry_inverse/inverse_walkin_set_poem_${n}.png" target="_blank">🚪 Poem ${n} Walk-In Set PNG</a>
+      </div>
+    </div>
+    <div class="refs">
+      ${rs.map(r => `
+        <div class="ref">
+          <div class="im" onclick="this.classList.toggle('on')">
+            <img loading="lazy" src="${F_BASE}${r.img}" alt="">
+            <img loading="lazy" class="seg" src="${F_BASE}${r.seg}" alt="">
+          </div>
+          <div class="c">
+            <span class="src ${r.source}">${r.source}</span>
+            ${r.why !== 'own' ? '<b class="found">found by CLIP</b> · ' : ''}
+            fit ${r.clip} · ${r.hour}${r.horizon != null ? ' · horizon ' + Math.round(r.horizon * 100) + '%' : ' · no horizon'}<br>
+            ${frText(r.frac)}<br>
+            <i>${(r.desc || '').slice(0, 120)}</i>
+            ${I.refs.includes(r.id) ? '' : '<br><b>reads as a walk-in set, not a landscape</b>'}
+            <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn gold" style="padding:3px 8px;min-height:0;font-size:10px" onclick="window.__loadIntoStudio('${n}','${r.id}','w1623')">🔨 Build Through ${r.id}</button>
+              ${I.refs.includes(r.id) ? `<a class="btn" style="padding:3px 8px;min-height:0;font-size:10px" href="png_vault/foundry_inverse/inv_triple_${r.id.replace('-', '_')}_w1623.png" target="_blank">🖼️ Triple PNG</a>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  for (const rid of I.refs.filter(id => refsMap[id]?.poem === n)) {
+    const r = refsMap[rid];
+    const ms = I.shots.filter(s => s.ref === rid);
+    h += `
+      <div class="match">
+        <div class="mrow">
+          <div class="refbox">
+            <img loading="lazy" src="${F_BASE}${r.img}" alt="">
+            <div><span class="src ${r.source}">${r.source}</span> <b>${rid}</b> · ${frText(r.frac)}</div>
+            <div style="margin-top:8px">
+              <a href="png_vault/foundry_inverse/inv_triple_${rid.replace('-', '_')}_w1623.png" target="_blank">
+                <img loading="lazy" src="png_vault/foundry_inverse/inv_triple_${rid.replace('-', '_')}_w1623.png" alt="Triple Synthesis PNG" style="aspect-ratio:16/9;border-color:var(--pink)">
+              </a>
+              <div style="color:var(--pink);font-weight:700">↑ Saved Triple-Through Composite PNG (${rid})</div>
+            </div>
+          </div>
+          <div class="worlds">
+            ${ms.map(m => `
+              <div class="wc">
+                <div class="pair" onclick="this.classList.toggle('show-a')">
+                  <img loading="lazy" src="${F_BASE}${m.a}" alt="">
+                  <img loading="lazy" class="b" src="${F_BASE}${m.b}" alt="">
+                  <span class="lab">${m.world} · tap: found / sculpted</span>
+                </div>
+                <div class="c">
+                  match <b>${Math.round(m.before * 100)}%</b> → <b class="${m.after > m.before ? 'up' : ''}">${Math.round(m.after * 100)}%</b> · camera ${Math.round(m.cam.z)} m up, facing ${Math.round(m.cam.hd) % 360}°
+                  ${m.grown.length ? `<ul>${m.grown.map(g => `<li>${g}</li>`).join('')}</ul>` : '<br>the world already held it'}
+                  <div style="margin-top:6px;display:flex;gap:6px">
+                    <button class="btn gold" style="padding:3px 8px;min-height:0;font-size:10px" onclick="window.__loadIntoStudio('${n}','${rid}','${m.world}')">🔨 Build On ${m.world}</button>
+                    <a class="btn pink" style="padding:3px 8px;min-height:0;font-size:10px" href="terrarium.html?poem=${n}&foundry=${m.world}">🌍 3D Camera</a>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  $('invPoemsContainer').innerHTML = h;
+}
+renderInvPoem();
+
+// =========================================================================
+// TAB 3: THE FOUNDRY (Full foundry/index.html + Stand Builder)
+// =========================================================================
+const ranked = Object.values(Wd).sort((a, b) => Q(b) - Q(a));
+$('fndStats').innerHTML = [
+  [A.n_worlds, 'worlds grown'],
+  [A.gens, 'generations'],
+  [A.elites.length, 'niches held'],
+  [A.shelf.length, 'stepping stones'],
+  [pct(Q(ranked[0])), 'best (poems + builder)'],
+  [pct(Math.max(...ranked.map(w => w.r.score))), 'best poems'],
+  [pct(Math.max(...ranked.map(w => w.b ? w.b.score : 0))), 'best builder']
+].map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
+
+const COV = [
+  ['old town', '#b8765c'], ['borough', '#ccac92'], ['civic core', '#e2d6be'], ['suburb', '#d6ceb0'],
+  ['waterfront', '#aaa09c'], ['industry', '#b2aa96'], ['field', '#cec478'], ['forest', '#4e7446'],
+  ['meadow', '#a8be78'], ['beach', '#e8daac'], ['rock', '#968c80'], ['burned', '#463c38']
+];
+$('fndCovLegend').innerHTML = COV.map(([n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join('');
+
+let fndPick = '05';
+function renderFndPoemGrid() {
+  $('fndPoemChips').innerHTML = ORDER.filter(n => n !== '14').map(n =>
+    `<button class="chip ${n === fndPick ? 'on' : ''}" data-n="${n}">${n} ${A.poems[n].title}</button>`
+  ).join('');
+  $('fndPoemChips').querySelectorAll('.chip').forEach(b => b.onclick = () => {
+    fndPick = b.dataset.n;
+    renderFndPoemGrid();
+  });
+  const ws = ranked.slice(0, 18);
+  $('fndPoemGrid').innerHTML = ws.map(w => `
+    <div class="pv" data-id="${w.id}">
+      <img loading="lazy" src="${F_BASE}w/${w.id}-v${fndPick}.jpg" alt="">
+      <div>
+        <b>${w.id}</b> · this poem holds ${pct(w.r.by_poem[fndPick])} · world ${pct(Q(w))} · ${w.g.layout}
+        <div style="margin-top:4px;display:flex;gap:6px" onclick="event.stopPropagation()">
+          <button class="btn gold" style="padding:2px 7px;min-height:0;font-size:10px" onclick="window.__loadIntoStudio('${fndPick}',null,'${w.id}')">🔨 Build On Stand</button>
+          <button class="btn" style="padding:2px 7px;min-height:0;font-size:10px" onclick="window.__openWorld('${w.id}')">🔍 Inspect ${w.id}</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  $('fndPoemGrid').querySelectorAll('.pv').forEach(d => d.onclick = () => openWorld(d.dataset.id));
+}
+renderFndPoemGrid();
+
+const [BX, BY] = A.bins;
+const ni = $('fndNiches');
+ni.style.gridTemplateColumns = `repeat(${BX}, 1fr)`;
+for (let y = 0; y < BY; y++) {
+  for (let x = 0; x < BX; x++) {
+    const key = `${x},${y}`;
+    const w = A.elites.includes(key)
+      ? Object.values(Wd).filter(v => v.cell === key).sort((a, b) => Q(b) - Q(a) || b.nov - a.nov)[0]
+      : null;
+    const c = document.createElement('div');
+    c.className = 'cell' + (w ? '' : ' empty');
+    if (w) {
+      c.innerHTML = `<img loading="lazy" src="${F_BASE}w/${w.id}.jpg" alt=""><span class="badge">${pct(Q(w))}</span>`;
+      c.onclick = () => openWorld(w.id);
+    }
+    ni.appendChild(c);
+  }
+}
+
+for (const id of A.shelf) {
+  const w = Wd[id];
+  if (!w) continue;
+  const c = document.createElement('div');
+  c.className = 'card';
+  c.innerHTML = `<img loading="lazy" src="${F_BASE}w/${id}.jpg" alt=""><div><b>${id}</b> · poems ${pct(w.r.score)} · builder ${pct(w.b && w.b.score)} · novelty ${w.nov.toFixed(2)}<br>${w.g.layout} · ${w.g.topo} · ${w.g.layers.map(l => l.alg).join(' / ')}</div>`;
+  c.onclick = () => openWorld(id);
+  $('fndShelf').appendChild(c);
+}
+
+// Scatter Plot
+{
+  const cv = $('scatter'), x = cv.getContext('2d'), Wc = cv.width, Hc = cv.height;
+  x.fillStyle = '#a99f86'; x.font = '12px Helvetica';
+  x.fillText('lattice', 8, Hc - 8); x.textAlign = 'right'; x.fillText('maze', Wc - 8, Hc - 8);
+  x.textAlign = 'left'; x.fillText('dry', 8, 14); x.fillText('drowned', 8, Hc - 24);
+  const gold = s => `rgb(${40 + 215 * s | 0},${30 + 180 * s | 0},${20 + 43 * s | 0})`;
+  const pos = w => [20 + (w.organic - 0.35) / 0.65 * (Wc - 40), 20 + Math.min(1, w.water / 0.6) * (Hc - 50)];
+  for (const w of A.all) {
+    const [px, py] = pos(w);
+    x.fillStyle = gold(Math.max(0, (w.q ?? w.score) - 0.4) / 0.6);
+    x.beginPath(); x.arc(px, py, 3.2, 0, 7); x.fill();
+    if (Wd[w.id]) {
+      x.strokeStyle = '#ffd23f'; x.lineWidth = 1.3;
+      x.beginPath(); x.arc(px, py, 6, 0, 7); x.stroke();
+    }
+  }
+  cv.onclick = e => {
+    const r = cv.getBoundingClientRect(), mx = (e.clientX - r.left) * Wc / r.width, my = (e.clientY - r.top) * Hc / r.height;
+    let best = null, bd = 18;
+    for (const w of A.all) {
+      if (!Wd[w.id]) continue;
+      const [px, py] = pos(w);
+      const d = Math.hypot(px - mx, py - my);
+      if (d < bd) { bd = d; best = w.id; }
+    }
+    if (best) openWorld(best);
+  };
+}
+
+let curWorld = null, worldView = 'map';
+function setWorldView(v) {
+  worldView = v;
+  ['bmap', 'bpal', 'binv', 'batlas'].forEach(id => $(id).classList.remove('on'));
+  if (v === 'map') { $('bmap').classList.add('on'); $('dimg').src = `${F_BASE}w/${curWorld}.jpg`; }
+  if (v === 'pal') { $('bpal').classList.add('on'); $('dimg').src = `${F_BASE}w/${curWorld}-p.jpg`; }
+  if (v === 'inv') { $('binv').classList.add('on'); $('dimg').src = I.worlds.includes(curWorld) ? `${F_BASE}inv/${curWorld}/map-b.jpg` : `${F_BASE}w/${curWorld}.jpg`; }
+  if (v === 'atlas') { $('batlas').classList.add('on'); $('dimg').src = I.worlds.includes(curWorld) ? `png_vault/foundry_inverse/foundry_world_atlas_${curWorld}.png` : `${F_BASE}w/${curWorld}.jpg`; }
+}
+$('bmap').onclick = () => setWorldView('map');
+$('bpal').onclick = () => setWorldView('pal');
+$('binv').onclick = () => setWorldView('inv');
+$('batlas').onclick = () => setWorldView('atlas');
+$('bclose').onclick = () => $('detail').classList.remove('on');
+
+function openWorld(id) {
+  const w = Wd[id];
+  if (!w) return;
+  curWorld = id;
+  setWorldView('map');
+  $('b3d').href = `terrarium.html?poem=01&foundry=${I.worlds.includes(id) ? id : 'w1623'}`;
+  $('dk').textContent = `${id} · gen ${w.gen} · niche ${w.cell}`;
+  $('dt').textContent = `${w.g.layout} · ${w.g.topo === 'gridfit' ? 'grid first' : 'land first'} · ${w.g.layers.length} epochs`;
+  const K = w.r.kinds;
+  $('dsum').innerHTML = `<span><b>${pct(Q(w))}</b>together</span><span><b>${pct(w.r.score)}</b>poems</span><span><b>${pct(w.b && w.b.score)}</b>builder</span><span><b>${pct(K.seen)}</b>seen</span><span><b>${pct(K.film)}</b>film</span><span><b>${pct(K.game)}</b>game</span><span><b>${w.d.street_km}</b>km of street</span>`;
+  $('dviews').innerHTML = ORDER.filter(n => n !== '14').map(n => `
+    <figure style="cursor:pointer" onclick="document.getElementById('detail').classList.remove('on');window.__loadIntoStudio('${n}',null,'${id}')">
+      <img loading="lazy" src="${F_BASE}w/${id}-v${n}.jpg" alt="" onerror="this.src='${F_BASE}w/w1623-v${n}.jpg'">
+      <figcaption>${n} ${A.poems[n].title} — holds ${pct(w.r.by_poem[n])} · <b style="color:var(--gold)">🔨 Click to Build On Stand</b></figcaption>
+    </figure>
+  `).join('');
+  $('dbuild').innerHTML = w.b ? w.b.checks.map(c => `<div class="t ${c.ok ? 'ok' : c.warn ? 'warn' : 'no'}">${c.text}<span class="kind">${c.area}</span></div>`).join('') : '';
+  $('drec').innerHTML = w.recipe.map(r => `<li>${r}</li>`).join('');
+  $('dread').innerHTML = ORDER.map(n => {
+    const p = A.poems[n], ts = w.r.poems[n] || [];
+    return `<div class="poem"><h4><span class="n">${n}</span>${p.title}<span class="z">${ZN[p.zone]}${p.mode ? ' · then ' + p.mode : ''}</span></h4>
+      ${p.line ? `<div class="line">“${p.line}”</div>` : ''}<div class="meter"><i style="width:${(w.r.by_poem[n] || 0) * 100}%"></i></div>
+      ${ts.map(t => `<div class="t ${t.ok ? 'ok' : 'no'}">${t.text}<span class="kind">${t.kind}</span></div>`).join('')}</div>`;
+  }).join('');
+  $('dabl').innerHTML = (w.ablation && w.ablation.length) ? w.ablation.map(a => {
+    const L = w.g.layers[a.layer], c1 = a.score < 0 ? 'neg' : a.score > 0 ? 'pos' : '', c2 = (a.build ?? 0) < 0 ? 'neg' : (a.build ?? 0) > 0 ? 'pos' : '';
+    return `<div class="abl">without epoch ${a.layer + 1} (${L.alg} over ${ZN[L.zone]}): poems <span class="d ${c1}">${a.score > 0 ? '+' : ''}${Math.round(a.score * 100)}</span> · builder <span class="d ${c2}">${(a.build ?? 0) > 0 ? '+' : ''}${Math.round((a.build ?? 0) * 100)}</span>
+      ${a.flips.slice(0, 4).map(f => `<div class="f">${f.gained ? 'gains' : 'loses'} · poem ${f.poem}: ${f.gained ? f.now : f.was}</div>`).join('')}</div>`;
+  }).join('') : '<p class="note">(ablated only for the best worlds)</p>';
+  const chain = []; let p = w;
+  while (p && p.parents && p.parents.length && chain.length < 10) {
+    const q = Wd[p.parents[0]];
+    if (!q) { chain.push(p.parents[0]); break; }
+    chain.push(q.id); p = q;
+  }
+  $('dlin').innerHTML = chain.length ? chain.map(c => Wd[c] ? `<img src="${F_BASE}w/${c}.jpg" title="${c}" onclick="window.__openWorld('${c}')">` : `<span class="note">${c} (not kept)</span>`).join('') : '<span class="note">a first-generation world</span>';
+  $('dgen').textContent = JSON.stringify(w.g, null, 1);
+  $('detail').classList.add('on');
+  $('detail').scrollTop = 0;
+}
+window.__openWorld = openWorld;
+
+// =========================================================================
+// TAB 4: THE 882 SHOTS
+// =========================================================================
+const SH = SH_DATA.shots;
+const KIND = { establishing: 'establishing wide', pov: 'his point of view', sky: 'the sky', close: 'close · over the shoulder', medium: 'medium', tracking: 'tracking', aerial: 'aerial' };
+const fmtTime = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+for (const s of SH) {
+  s.text = [s.line, SH_DATA.poems[s.poem].title, SH_DATA.poems[s.poem].place, s.kind, KIND[s.kind], s.light.replace('→', ' '), s.subject, ...s.names, ...s.tags.map(t => t.what), s.world, s.mm + 'mm'].join(' ').toLowerCase();
+}
+const SF = { kind: new Set(), light: new Set(), poem: new Set(), world: new Set() };
+function makeShotChips(id, key, label, vals, name = v => v) {
+  $(id).innerHTML = `<span class="lab">${label}</span>` + vals.map(v => `<button class="chip" data-v="${v}">${name(v)}</button>`).join('');
+  $(id).querySelectorAll('.chip').forEach(b => b.onclick = () => {
+    const v = b.dataset.v;
+    SF[key].has(v) ? SF[key].delete(v) : SF[key].add(v);
+    b.classList.toggle('on');
+    runShots();
+  });
+}
+makeShotChips('sc_kind', 'kind', 'shot', Object.keys(KIND), v => KIND[v]);
+makeShotChips('sc_light', 'light', 'hour', [...new Set(SH.flatMap(s => s.light.split('→')))]);
+makeShotChips('sc_poem', 'poem', 'poem', Object.keys(SH_DATA.poems).sort(), v => `${v} ${SH_DATA.poems[v].title}`);
+makeShotChips('sc_world', 'world', 'world', Object.keys(SH_DATA.worlds), v => `${v} · ${SH_DATA.worlds[v].layout}`);
+
+function runShots() {
+  const toks = $('shotQ').value.toLowerCase().split(/\s+/).filter(t => t.length > 1);
+  const res = SH.filter(s => {
+    if (SF.kind.size && !SF.kind.has(s.kind)) return false;
+    if (SF.light.size && !s.light.split('→').some(l => SF.light.has(l))) return false;
+    if (SF.poem.size && !SF.poem.has(s.poem)) return false;
+    if (SF.world.size && !SF.world.has(s.world)) return false;
+    for (const t of toks) if (!s.text.includes(t)) return false;
+    return true;
+  });
+  $('shotCount').textContent = `${res.length} of ${SH.length} shots`;
+  $('shotGrid').innerHTML = res.slice(0, 96).map(s => {
+    const imgPath = s.img.startsWith('sb/') ? `${F_BASE}${s.img}` : `${F_BASE}w/${s.world}-v${s.poem === '14' ? '13' : s.poem}.jpg`;
+    return `<div class="shot">
+      <img loading="lazy" src="${imgPath}" alt="" onerror="this.src='${F_BASE}w/${s.world}-v${s.poem === '14' ? '13' : s.poem}.jpg'">
+      <div class="c">
+        <b>${s.poem}</b> ${SH_DATA.poems[s.poem].title} · ${fmtTime(s.t0)} · ${KIND[s.kind]} · ${s.mm}mm · ${s.light} · <b>${s.world}</b>
+        <i>“${s.line.slice(0, 130)}”</i>
+        <div style="margin-top:6px;display:flex;gap:6px">
+          <button class="btn gold" style="padding:3px 8px;min-height:0;font-size:10px" onclick="window.__loadIntoStudio('${s.poem}',null,'${s.world}')">🔨 Build On Shot</button>
+          <a class="btn pink" style="padding:3px 8px;min-height:0;font-size:10px" href="terrarium.html?poem=${s.poem}&foundry=${s.world}">🌍 Fly 3D Cam (${Math.round(s.cam.z)}m)</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+$('shotQ').oninput = runShots;
+runShots();
+</script>
+</body>
+</html>
