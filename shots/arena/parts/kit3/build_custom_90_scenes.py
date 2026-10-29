@@ -30,6 +30,9 @@ from lego_set_extensions import (
     W_MOD,
     HYPERFLAT_FLOOR_Y,
     HYPERFLAT_HORIZON_Y,
+    SHOT_SCALE_TIERS,
+    get_scene_shot_profile,
+    get_in_frame_portal_footage,
     get_scene_lego_extension,
 )
 
@@ -2615,26 +2618,34 @@ def get_part_tight_metrics(pid: str, parts_by_id: Dict[str, Dict[str, Any]]) -> 
     return res
 
 
-def extract_cel_painting_scale_markers(fid: str, wshot: Dict[str, Any]) -> Dict[str, Any]:
+def extract_cel_painting_scale_markers(fid: str, wshot: Dict[str, Any], skey: str = "") -> Dict[str, Any]:
     """
     Finds real-world scale markers (`person`, `door`, `window`, `street lamp`, `railing`,
     `vehicle`, `pillar`, `stairs`, `chair`, `tree`, `building`, etc.) in the cel painting's
-    `shots/out/<fid>/shot.json` + `cartoon/signals.json` + `depth_sharp.npz`, and computes
-    the cel painting's calibrated `stage_px_per_meter` at focal plane `P2` (`1280x720`).
+    `shots/out/<fid>/shot.json` + `cartoon/signals.json` + `depth_sharp.npz`, and combines
+    them with the hand-calibrated `shot_profile` (`shot_scale`, `camera_distance_m`, `focal_mm`,
+    `stage_px_per_meter`) so every scene's scale reflects its true camera distance (`2.9m` close-up
+    to `140m` aerial drop).
     """
-    if fid in _SCALE_MARKER_CACHE:
-        return _SCALE_MARKER_CACHE[fid]
+    cache_key = f"{skey}:{fid}"
+    if cache_key in _SCALE_MARKER_CACHE:
+        return _SCALE_MARKER_CACHE[cache_key]
     import numpy as np
+
+    shot_prof = get_scene_shot_profile(skey)
+    prof_ppm = float(shot_prof["stage_px_per_meter"])
+    prof_dist_m = float(shot_prof["camera_distance_m"])
+    prof_focal_mm = int(shot_prof["focal_mm"])
 
     W_STAGE, H_STAGE = 1280.0, 720.0
     W_RAW, H_RAW = 1456.0, 816.0
     sx = W_STAGE / W_RAW
     sy = H_STAGE / H_RAW
 
-    z_hero = float(wshot.get("z_hero") or 10.5)
-    z_hero = max(4.5, min(22.0, z_hero))
+    z_hero = float(wshot.get("z_hero") or prof_dist_m)
+    z_hero = max(2.5, min(180.0, z_hero))
     focal_raw = float(wshot.get("focal") or 1250.0)
-    cam_ppm_raw = (focal_raw * sy) / z_hero
+    cam_ppm_raw = (focal_raw * sy) / max(2.5, prof_dist_m)
 
     markers: List[Dict[str, Any]] = []
     valid_ppms: List[float] = []
@@ -2655,7 +2666,7 @@ def extract_cel_painting_scale_markers(fid: str, wshot: Dict[str, Any]) -> Dict[
             sl_p2 = (sig_d.get("scale_ladder") or {}).get("P2", {})
             if "1.7m" in sl_p2:
                 sig_ppm = (float(sl_p2["1.7m"]) * sy) / 1.70
-                if 55.0 <= sig_ppm <= 210.0:
+                if 18.0 <= sig_ppm <= 220.0:
                     valid_ppms.append(sig_ppm)
         except Exception:
             pass
@@ -2666,7 +2677,6 @@ def extract_cel_painting_scale_markers(fid: str, wshot: Dict[str, Any]) -> Dict[
             cam = shot_d.get("camera") or {}
             if cam.get("focal_px"):
                 focal_raw = float(cam["focal_px"])
-                cam_ppm_raw = (focal_raw * sy) / z_hero
 
             for det in shot_d.get("detections", []):
                 lbl = str(det.get("label", "")).strip().lower()
@@ -2701,12 +2711,12 @@ def extract_cel_painting_scale_markers(fid: str, wshot: Dict[str, Any]) -> Dict[
                     iy1 = max(iy0 + 1, min(dh, int((y1 / H_STAGE) * dh)))
                     patch = depth_map[iy0:iy1, ix0:ix1]
                     if patch.size > 0:
-                        z_marker = max(2.5, min(35.0, float(np.median(patch))))
+                        z_marker = max(2.5, min(65.0, float(np.median(patch))))
 
                 raw_marker_ppm = bh / real_h_m
-                depth_ratio = max(0.55, min(1.85, z_marker / max(3.5, z_hero)))
+                depth_ratio = max(0.55, min(1.85, z_marker / max(3.0, z_hero)))
                 implied_p2_ppm = raw_marker_ppm * depth_ratio
-                if 50.0 <= implied_p2_ppm <= 220.0:
+                if 18.0 <= implied_p2_ppm <= 220.0:
                     valid_ppms.append(implied_p2_ppm)
 
                 markers.append({
@@ -2724,15 +2734,23 @@ def extract_cel_painting_scale_markers(fid: str, wshot: Dict[str, Any]) -> Dict[
     markers.sort(key=lambda m: m["score"], reverse=True)
     if valid_ppms:
         med_ppm = float(np.median(valid_ppms))
-        blended_ppm = 0.65 * med_ppm + 0.35 * cam_ppm_raw
+        # Blend 84% hand-calibrated shot-distance tier (`18..178 px/m`) with 16% detected marker median
+        blended_ppm = 0.84 * prof_ppm + 0.16 * med_ppm
     else:
-        blended_ppm = cam_ppm_raw
+        blended_ppm = prof_ppm
 
-    # Clamp to a harmonious, stage-calibrated P2 range `[96.0 .. 134.0]` px/m (where 1.70m actor = 163..228px)
-    stage_ppm = round(max(96.0, min(134.0, blended_ppm)), 2)
+    stage_ppm = round(max(16.0, min(188.0, blended_ppm)), 2)
     res = {
         "shot_id": fid,
-        "z_hero_m": round(z_hero, 2),
+        "shot_scale": shot_prof["shot_scale"],
+        "short_label": shot_prof["short_label"],
+        "badge_color": shot_prof["badge_color"],
+        "camera_distance_m": prof_dist_m,
+        "focal_mm": prof_focal_mm,
+        "actor_scale_mult": shot_prof["actor_scale_mult"],
+        "distance_readout": shot_prof["distance_readout"],
+        "director_note": shot_prof["director_note"],
+        "z_hero_m": round(prof_dist_m, 2),
         "focal_px": round(focal_raw, 1),
         "stage_px_per_meter": stage_ppm,
         "reference_human_170cm_px": round(stage_ppm * 1.70, 1),
@@ -2740,7 +2758,7 @@ def extract_cel_painting_scale_markers(fid: str, wshot: Dict[str, Any]) -> Dict[
         "markers": markers[:8],
         "plane_values": plane_values,
     }
-    _SCALE_MARKER_CACHE[fid] = res
+    _SCALE_MARKER_CACHE[cache_key] = res
     return res
 
 
@@ -2777,11 +2795,11 @@ def standardize_piece_scale(
     parts_by_id: Dict[str, Dict[str, Any]],
 ) -> Tuple[float, Dict[str, Any]]:
     """
-    Computes a standardized, perspective-calibrated stage `scale` (`target_h / 720`)
+    Computes a standardized, camera-distance-calibrated stage `scale` (`target_h / 720`)
     for piece `pid` on `plane` using:
       1. The piece's tight non-transparent alpha bounding box (`tight_w, tight_h`),
       2. Its canonical physical height & width cap in meters (`canon_h_m, canon_w_m`),
-      3. The cel painting's scale-marker-calibrated `stage_px_per_meter` at `P2`,
+      3. The scene's true camera-distance `stage_px_per_meter` (`18..178 px/m`),
       4. The depth-plane perspective foreshortening multiplier (`P4: 0.78`, `P3: 0.90`, `P2: 1.00`).
     """
     H_STAGE = 720.0
@@ -2799,21 +2817,23 @@ def standardize_piece_scale(
         "P0": 1.12,
     }.get(plane, 0.90)
 
-    # Target visible silhouette height in stage pixels from physical meters & cel painting scale markers
-    desired_tight_h_px = canon_h_m * stage_ppm * plane_persp_mult
+    # Dampen extreme ppm swings with a 0.76 power curve around 116 px/m so 140m aerial props stay visible (0.09..0.15)
+    # while 3m close-up props expand cleanly (0.26..0.38)
+    eff_ppm = 116.0 * ((max(18.0, stage_ppm) / 116.0) ** 0.76)
+
+    desired_tight_h_px = canon_h_m * eff_ppm * plane_persp_mult
     desired_tight_w_px = desired_tight_h_px * ar_tight
-    max_tight_w_px = canon_w_m * stage_ppm * plane_persp_mult
+    max_tight_w_px = canon_w_m * eff_ppm * plane_persp_mult
     if desired_tight_w_px > max_tight_w_px and ar_tight > 0.1:
         desired_tight_w_px = max_tight_w_px
         desired_tight_h_px = desired_tight_w_px / ar_tight
 
-    # Convert tight visible height back to full image canvas height fraction (`sc = full_h_px / 720`)
     full_h_px = desired_tight_h_px / max(0.32, fill_h)
     phys_sc = full_h_px / H_STAGE
 
-    # Blend 74% physical scale-marker calibration with 26% authored scene composition scale
-    cal_sc = 0.74 * phys_sc + 0.26 * float(authored_sc)
-    cal_sc = round(max(0.11, min(0.32, cal_sc)), 4)
+    dist_ratio = eff_ppm / 116.0
+    cal_sc = 0.78 * phys_sc + 0.22 * (float(authored_sc) * dist_ratio)
+    cal_sc = round(max(0.08, min(0.42, cal_sc)), 4)
 
     meta = {
         "class_tag": class_tag,
@@ -2823,6 +2843,7 @@ def standardize_piece_scale(
         "fill_ratio": [round(fill_w, 3), round(fill_h, 3)],
         "authored_scale": round(float(authored_sc), 4),
         "standardized_scale": cal_sc,
+        "effective_ppm": round(eff_ppm, 1),
     }
     return cal_sc, meta
 
@@ -2834,16 +2855,14 @@ def curate_scene_props(
     parts_by_id: Optional[Dict[str, Dict[str, Any]]] = None,
 ) -> List[Dict[str, Any]]:
     """
-    Returns each scene's composition combining:
-      1. At most 1–2 subtle, scale-calibrated floor props inside the `1280x720` cel frame
-         (`x in [0.12 .. 0.88]`, or the locked 4-piece `car_ensemble` when present), keeping
-         the painted cel interior uncluttered.
-      2. The 4–10 Modular Outside-the-Frame Lego Set-Extension pieces (`x in [1.00 .. 1.58]`,
-         `is_set_extension=True`) from `get_scene_lego_extension(skey)` that fill the `760px`
-         inter-scene hole and bridge into the next scene on the continuous poem tape!
+    Returns each scene's hand-assembled composition combining:
+      1. Distance-calibrated in-frame props (`x in [0.12 .. 0.88]`), with layered multiplane
+         `aperture_footage` attached to any in-frame door, window, archway, TV screen, or mirror!
+      2. The hand-assembled, distance-calibrated Lego Set-Extension bridge (`x in [0.98 .. 1.58]`,
+         `is_set_extension=True`) from `get_scene_lego_extension(skey)`, with layered multiplane
+         `aperture_footage` inside every doorway, window, and portal opening!
     """
     base_list = SCENE_CURATED_PROP_OVERRIDES.get(skey, raw_layers[:3])
-    # Keep car_ensemble intact if present; otherwise keep at most 2 grounded P3/P2 props inside the frame
     has_car = any(x.get("part_id") == "02.props.car__p01" for x in base_list)
     if has_car:
         in_frame_list = [dict(x, alpha=0.98, is_set_extension=False) for x in base_list if x.get("plane") in ("P3", "P2")]
@@ -2853,9 +2872,31 @@ def curate_scene_props(
             grounded = base_list[:2]
         in_frame_list = [dict(x, alpha=0.98, is_set_extension=False) for x in grounded[:2]]
 
+    # Also include any in-frame P4 door/window/arch portal from `raw_layers` that has explicit `IN_FRAME_PORTAL_FOOTAGE`
+    existing_pids = {x.get("part_id") for x in in_frame_list}
+    for rl in raw_layers:
+        r_pid = rl.get("part_id", "")
+        if r_pid in existing_pids:
+            continue
+        if f"{skey}:{r_pid}" in (
+            "01.0:01.props.window__p01",
+            "01.1:01.props.window__p01",
+            "01.2:01.props.window__p01",
+            "01.4:14.set.vintage_party__p03",
+            "03.1:03.hero.chapel.interior-states__p12",
+            "04.3:04.props.booth__p01",
+            "05.4:05.props.doors__p03",
+            "07.3:07.props.club-lights__p03",
+            "09.3:09.props.sunken-ruins__p05",
+            "14.1:14.props.door__p02",
+            "14.3:14.props.door__p11",
+            "14.4:14.props.door__p13",
+        ):
+            in_frame_list.append(dict(rl, alpha=0.98, is_set_extension=False))
+            existing_pids.add(r_pid)
+
     out = list(in_frame_list)
     if parts_by_id:
-        # Check if this scene contains a `car_ensemble` (`02.props.car__p01`) so its wheels stay locked
         car_body = next((item for item in out if item["part_id"] == "02.props.car__p01"), None)
         locked_car_sc = None
         locked_car_cx = None
@@ -2878,6 +2919,10 @@ def curate_scene_props(
 
         for item in out:
             pid = item["part_id"]
+            af = get_in_frame_portal_footage(skey, pid, item.get("label", ""), item.get("anim_role", ""))
+            if af is not None:
+                item["aperture_footage"] = af
+
             if pid == "02.props.car__p01" and locked_car_sc is not None:
                 continue
             if locked_car_sc is not None and locked_car_cx is not None and locked_car_floor_y is not None:
@@ -2912,17 +2957,29 @@ def curate_scene_props(
             item["scale"] = cal_sc
             item["scale_meta"] = smeta
 
-    # Append the Outside-the-Frame Modular Lego Set Extension (`x in [1.00 .. 1.58]`)
+    # Append the hand-assembled, distance-calibrated Lego Set Extension (`x in [0.98 .. 1.58]`),
+    # modulated by the scene's true Camera Distance & Shot Scale (`stage_ppm` vs reference `114 px/m`)
+    shot_prof = get_scene_shot_profile(skey)
     lego_ext = get_scene_lego_extension(skey)
+    ext_dist_mult = max(0.54, min(1.32, (stage_ppm / 114.0) ** 0.42))
     for lx in lego_ext:
         l_role = lx.get("lego_role", "wall_bay")
-        sc_val = float(lx.get("scale", 0.50))
+        base_sc = float(lx.get("scale", 0.50))
+        if l_role in ("wall_with_door_hole", "wall_bay"):
+            # Keep wall bays substantial enough to bridge the horizon while still breathing with shot scale
+            sc_val = round(max(0.44, min(0.90, base_sc * (0.76 + 0.24 * ext_dist_mult))), 4)
+        else:
+            sc_val = round(max(0.11, min(0.86, base_sc * ext_dist_mult)), 4)
+        lx["scale"] = sc_val
         lx["scale_meta"] = {
             "class_tag": f"lego_{l_role}",
-            "canon_h_m": round(sc_val * 4.2, 2),
+            "canon_h_m": round(base_sc * 4.2, 2),
             "standardized_scale": sc_val,
             "is_set_extension": True,
             "lego_role": l_role,
+            "shot_scale": shot_prof["shot_scale"],
+            "camera_distance_m": shot_prof["camera_distance_m"],
+            "stage_px_per_meter": round(stage_ppm, 1),
         }
         out.append(lx)
 
@@ -3022,19 +3079,21 @@ def clean_and_integrate_cutout(
 
     local_ramp = compute_6band_ramp(local_flat)
     scene_ramp = compute_6band_ramp(scene_arr)
-    cel_ramp = 0.72 * local_ramp + 0.28 * scene_ramp
+    cel_ramp = 0.74 * local_ramp + 0.26 * scene_ramp
 
     bg_lum_mean = float(0.299 * local_flat[:, 0].mean() + 0.587 * local_flat[:, 1].mean() + 0.114 * local_flat[:, 2].mean())
 
-    # Ensure the upper cel swatches (`cel_ramp[4..5]`) have enough figure-ground contrast on very dark floors
+    # Ensure upper cel swatches (`cel_ramp[4..5]`) have figure-ground contrast on dark floors
+    # WITHOUT washing out saturation into neutral grey (lift toward `scene_ramp[5]` + warm gold tint)
+    top_tint = 0.65 * np.maximum(scene_ramp[5], local_ramp[5]) + 0.35 * np.array([235.0, 198.0, 145.0], dtype=np.float32)
     for bi in range(6):
         sw_lum = float(0.299 * cel_ramp[bi, 0] + 0.587 * cel_ramp[bi, 1] + 0.114 * cel_ramp[bi, 2])
-        min_band_lum = 18.0 + bi * 32.0
-        if bg_lum_mean < 98.0 and bi >= 3:
-            min_band_lum = max(min_band_lum, bg_lum_mean + 22.0 + (bi - 2) * 18.0)
+        min_band_lum = 12.0 + bi * 22.0
+        if bg_lum_mean < 88.0 and bi >= 3:
+            min_band_lum = max(min_band_lum, bg_lum_mean + 16.0 + (bi - 2) * 14.0)
         if sw_lum < min_band_lum:
-            boost = min_band_lum - sw_lum
-            cel_ramp[bi] = np.clip(cel_ramp[bi] + boost * np.array([1.05, 0.98, 0.90], dtype=np.float32), 0.0, 245.0)
+            need = min(0.55, (min_band_lum - sw_lum) / max(32.0, 225.0 - sw_lum))
+            cel_ramp[bi] = np.clip(cel_ramp[bi] * (1.0 - need) + top_tint * need, 0.0, 245.0)
 
     # 4. Detect internal hand-drawn ink linework (`ink_strength`) & normalize internal piece luminance (`u_cel`)
     lum_blur = cv2.GaussianBlur(lum, (9, 9), 2.2)
@@ -3050,16 +3109,16 @@ def clean_and_integrate_cutout(
         p05, p95 = 20.0, 220.0
 
     u_cont = np.clip((lum_blur - p05) / (p95 - p05), 0.0, 1.0)
-    # Posterize into 5 stepped cel-wash value flats while keeping 32% smooth transition
-    u_cel = 0.32 * u_cont + 0.68 * (np.round(u_cont * 4.0) / 4.0)
+    # Posterize into 5 stepped cel-wash value flats while keeping 38% smooth transition
+    u_cel = 0.38 * u_cont + 0.62 * (np.round(u_cont * 4.0) / 4.0)
 
     # Figure-Ground Notan Windowing against local background luminance
-    if bg_lum_mean < 98.0:
-        u_mapped = 0.24 + u_cel * 0.72
+    if bg_lum_mean < 92.0:
+        u_mapped = 0.18 + u_cel * 0.72
     elif bg_lum_mean > 168.0:
         u_mapped = 0.04 + u_cel * 0.76
     else:
-        u_mapped = 0.12 + u_cel * 0.80
+        u_mapped = 0.10 + u_cel * 0.78
 
     # Piecewise-linear lookup of `u_mapped` in `[0, 1]` across `cel_ramp[0..5]`
     pos = np.clip(u_mapped * 5.0, 0.0, 4.999)
@@ -3068,28 +3127,30 @@ def clean_and_integrate_cutout(
     frac = (pos - idx0)[..., None]
     ramp_rgb = cel_ramp[idx0] * (1.0 - frac) + cel_ramp[idx1] * frac
 
-    # 5. Also compute CIE-LAB chrominance-harmonized RGB (`24%` weight) so warm/cool intrinsic accents survive
+    # 5. Also compute CIE-LAB chrominance-harmonized RGB (`14%` weight) with strong chrominance transfer (`0.90`)
     fg_u8 = np.clip(rgb, 0, 255).astype(np.uint8)
     fg_lab = cv2.cvtColor(fg_u8, cv2.COLOR_RGB2LAB).astype(np.float32)
     bg_lab = cv2.cvtColor(bg_arr, cv2.COLOR_RGB2LAB).astype(np.float32)
     if valid.sum() > 25:
-        for ch_i, blend_w in ((0, 0.42), (1, 0.78), (2, 0.78)):
+        for ch_i, blend_w in ((0, 0.56), (1, 0.90), (2, 0.90)):
             f_vals = fg_lab[..., ch_i][valid]
             b_vals = bg_lab[..., ch_i]
             f_mean, f_std = float(f_vals.mean()), max(4.0, float(f_vals.std()))
             b_mean, b_std = float(b_vals.mean()), max(4.0, float(b_vals.std()))
             if ch_i == 0:
-                t_std = max(20.0, f_std * 0.85 + b_std * 0.15)
+                t_std = max(18.0, f_std * 0.75 + b_std * 0.25)
                 raw_t_mean = f_mean * (1.0 - blend_w) + b_mean * blend_w
-                t_mean = min(180.0, max(raw_t_mean, b_mean + 28.0)) if b_mean < 105.0 else raw_t_mean
+                t_mean = min(172.0, max(raw_t_mean, b_mean + 20.0)) if b_mean < 96.0 else raw_t_mean
             else:
-                t_std = f_std * 0.45 + b_std * 0.55
+                t_std = f_std * 0.25 + b_std * 0.75
                 t_mean = f_mean * (1.0 - blend_w) + b_mean * blend_w
             fg_lab[..., ch_i] = np.clip((fg_lab[..., ch_i] - f_mean) * (t_std / f_std) + t_mean, 0, 255)
     harm_rgb = cv2.cvtColor(fg_lab.astype(np.uint8), cv2.COLOR_LAB2RGB).astype(np.float32)
 
-    # Blend 76% direct Cel-Ramp Colorization with 24% CIE-LAB harmonized intrinsic color
-    combined_u8 = np.clip(0.76 * ramp_rgb + 0.24 * harm_rgb, 0, 255).astype(np.uint8)
+    # Blend 86% direct Cel-Ramp Colorization with 14% CIE-LAB harmonized color + spatial background wash
+    bg_blur_f = cv2.GaussianBlur(bg_arr.astype(np.float32), (31, 31), 9.0)
+    combined_f = 0.74 * ramp_rgb + 0.12 * harm_rgb + 0.14 * bg_blur_f
+    combined_u8 = np.clip(combined_f, 0, 255).astype(np.uint8)
     gouache_u8 = cv2.bilateralFilter(combined_u8, d=5, sigmaColor=28, sigmaSpace=28)
     cel_rgb = gouache_u8.astype(np.float32)
 
@@ -3104,8 +3165,8 @@ def clean_and_integrate_cutout(
     cel_rgb = cel_rgb * (1.0 - haze_mix) + haze * haze_mix
 
     # Subtle sunlit top gradient + cold-pressed paper micro-tooth
-    v_grad = np.linspace(1.06, 0.91, h_px, dtype=np.float32)[:, None, None]
-    cel_rgb = cel_rgb * v_grad + (bristle[..., None] * 1.5)
+    v_grad = np.linspace(1.04, 0.93, h_px, dtype=np.float32)[:, None, None]
+    cel_rgb = cel_rgb * v_grad + (bristle[..., None] * 1.4)
 
     # 6. Cel-Palette Top Rim Light (`cel_ramp[5]`) + Warm Charcoal-Sepia Outer Ink Contour (`cel_ramp[0]`)
     top_rim = (dt > 1.3) & (dt <= 3.1) & (yy < h_px * 0.65)
@@ -3146,6 +3207,163 @@ def _load_blended_cel_backdrop(
     return bg, cel_ref
 
 
+_PORTAL_FOOTAGE_RAW_CACHE: Dict[str, Image.Image] = {}
+
+
+def _load_portal_footage_rgb(rel_path: str) -> Optional[Image.Image]:
+    if not rel_path:
+        return None
+    if rel_path in _PORTAL_FOOTAGE_RAW_CACHE:
+        return _PORTAL_FOOTAGE_RAW_CACHE[rel_path]
+    p = SHOTS_DIR / rel_path
+    if not p.exists():
+        return None
+    try:
+        im = Image.open(p).convert("RGB")
+        _PORTAL_FOOTAGE_RAW_CACHE[rel_path] = im
+        return im
+    except Exception:
+        return None
+
+
+def _build_harmonized_portal_patch(
+    af: Dict[str, Any],
+    ap_w: int,
+    ap_h: int,
+    bg_crop: Image.Image,
+    haze_rgb: Tuple[int, int, int],
+) -> Optional[Image.Image]:
+    """
+    Creates a color-harmonized, recessed multiplane footage patch (`ap_w x ap_h` RGBA)
+    for a door, window, archway, television screen, or mirror opening:
+      - Aspect-crops and resizes the poem video keyframe (`cel_assets/video/P*`) or archival
+        16mm frame (`weave/archive/da69_frames/*`),
+      - Harmonizes 40% toward the local cel painting palette so it belongs to the same world
+        while preserving its luminous multiplane depth,
+      - Adds a recessed architectural lintel & jamb inner shadow,
+      - Adds optional window muntin bars (`mullions=True`) and diagonal glass reflection sheen,
+      - Feathers the outer 3px rim so it seats cleanly inside the portal frame.
+    """
+    import cv2
+    import numpy as np
+
+    if ap_w < 16 or ap_h < 16:
+        return None
+    src_im = _load_portal_footage_rgb(str(af.get("footage_file", "")))
+    if src_im is None:
+        src_im = _load_portal_footage_rgb(str(af.get("alt_footage_file", "")))
+    if src_im is None:
+        return None
+
+    sw, sh = src_im.size
+    target_ar = float(ap_w) / float(max(1, ap_h))
+    src_ar = float(sw) / float(max(1, sh))
+    if src_ar > target_ar:
+        new_sw = max(16, int(round(sh * target_ar)))
+        x0 = (sw - new_sw) // 2
+        cropped = src_im.crop((x0, 0, x0 + new_sw, sh))
+    else:
+        new_sh = max(16, int(round(sw / max(0.1, target_ar))))
+        y0 = (sh - new_sh) // 2
+        cropped = src_im.crop((0, y0, sw, y0 + new_sh))
+
+    ft_rgb = np.array(cropped.resize((ap_w, ap_h), Image.Resampling.LANCZOS), dtype=np.float32)
+    bg_rgb = np.array(bg_crop.resize((ap_w, ap_h), Image.Resampling.BILINEAR).convert("RGB"), dtype=np.float32)
+
+    # Harmonize mean/std in CIE-LAB (38% chrominance + 24% luminance) + slight warm interior boost
+    ft_lab = cv2.cvtColor(np.clip(ft_rgb, 0, 255).astype(np.uint8), cv2.COLOR_RGB2LAB).astype(np.float32)
+    bg_lab = cv2.cvtColor(np.clip(bg_rgb, 0, 255).astype(np.uint8), cv2.COLOR_RGB2LAB).astype(np.float32)
+    for ch_i, w_blend in ((0, 0.24), (1, 0.42), (2, 0.42)):
+        fm, fs = float(ft_lab[..., ch_i].mean()), max(6.0, float(ft_lab[..., ch_i].std()))
+        bm, bs = float(bg_lab[..., ch_i].mean()), max(6.0, float(bg_lab[..., ch_i].std()))
+        tm = fm * (1.0 - w_blend) + bm * w_blend
+        if ch_i == 0:
+            tm = max(tm, min(168.0, bm + 18.0))
+        ts = fs * 0.72 + bs * 0.28
+        ft_lab[..., ch_i] = np.clip((ft_lab[..., ch_i] - fm) * (ts / fs) + tm, 0, 255)
+
+    harm_u8 = cv2.cvtColor(ft_lab.astype(np.uint8), cv2.COLOR_LAB2RGB)
+    gouache_u8 = cv2.bilateralFilter(harm_u8, d=5, sigmaColor=24, sigmaSpace=24)
+    out_f = gouache_u8.astype(np.float32)
+
+    yy, xx = np.mgrid[0:ap_h, 0:ap_w].astype(np.float32)
+    nx = xx / max(1.0, float(ap_w - 1))
+    ny = yy / max(1.0, float(ap_h - 1))
+
+    portal_kind = str(af.get("portal_kind", "door"))
+    # Arch top mask if portal_kind == "arch"
+    arch_mask = np.ones((ap_h, ap_w), dtype=np.float32)
+    if portal_kind == "arch" and ap_h > 28:
+        arch_cy = 0.28
+        in_dome = ny < arch_cy
+        rx = (nx - 0.5) / 0.50
+        ry = (arch_cy - ny) / max(0.05, arch_cy)
+        r_dist = np.sqrt(rx * rx + ry * ry)
+        arch_mask = np.where(in_dome, np.clip((1.03 - r_dist) * 14.0, 0.0, 1.0), 1.0)
+
+    # Recessed architectural lintel (top) & jamb (left/right) inner shadow
+    lintel_sh = np.clip(ny / 0.14, 0.32, 1.0)
+    jamb_l = np.clip(nx / 0.10, 0.42, 1.0)
+    jamb_r = np.clip((1.0 - nx) / 0.10, 0.42, 1.0)
+    sill_b = np.clip((1.0 - ny) / 0.06, 0.65, 1.0)
+    recess_mult = lintel_sh * np.minimum(jamb_l, jamb_r) * sill_b
+    out_f *= recess_mult[..., None]
+
+    # Optional window mullions (casement panes) & diagonal glass sheen
+    if bool(af.get("mullions", False)) or portal_kind in ("window", "mirror", "screen"):
+        # Diagonal glass reflection sheen
+        diag = np.exp(-((nx * 0.85 + ny * 0.55 - 0.58) ** 2) / 0.012)
+        sheen_col = np.array([235.0, 242.0, 255.0], dtype=np.float32)
+        out_f = out_f * (1.0 - 0.16 * diag[..., None]) + sheen_col * (0.16 * diag[..., None])
+
+    if bool(af.get("mullions", False)):
+        m_col = np.array([22.0, 20.0, 26.0], dtype=np.float32)
+        v_bar = np.abs(xx - ap_w * 0.50) <= max(1.5, ap_w * 0.018)
+        h_bar1 = np.abs(yy - ap_h * 0.38) <= max(1.5, ap_h * 0.016)
+        h_bar2 = np.abs(yy - ap_h * 0.70) <= max(1.5, ap_h * 0.016)
+        bars = v_bar | h_bar1 | h_bar2
+        out_f[bars] = out_f[bars] * 0.22 + m_col * 0.78
+
+    # Dark inner frame border (2px) + 3px soft outer alpha feather
+    edge_dist = np.minimum(np.minimum(xx, ap_w - 1 - xx), np.minimum(yy, ap_h - 1 - yy))
+    border_ring = (edge_dist >= 1.0) & (edge_dist <= 3.2)
+    out_f[border_ring] *= 0.48
+    alpha_f = np.clip(edge_dist / 3.0, 0.0, 1.0) * arch_mask * 246.0
+
+    rgba = np.dstack([
+        np.clip(out_f, 0, 255).astype(np.uint8),
+        np.clip(alpha_f, 0, 255).astype(np.uint8),
+    ])
+    return Image.fromarray(rgba, mode="RGBA")
+
+
+def _apply_canvas_boundary_feather(patch_rgba: Image.Image, dest_x: int, canvas_w: int = W_MOD) -> Image.Image:
+    """
+    Smoothly tapers alpha of any composited prop/wall/portal near the outer left (`x in [0..108]`)
+    and outer right (`x in [canvas_w-108..canvas_w]`) boundaries of the 2040px module so NO prop
+    is ever sliced vertically at `x = 0` or `x = 2040` when scenes are stitched into `poem_tape.webp`!
+    """
+    import numpy as np
+
+    pw, ph = patch_rgba.size
+    if pw <= 2 or ph <= 2:
+        return patch_rgba
+    x0 = dest_x
+    x1 = dest_x + pw
+    margin = 108.0
+    if x0 >= margin and x1 <= (canvas_w - margin):
+        return patch_rgba
+
+    arr = np.array(patch_rgba, dtype=np.float32)
+    gx = (np.arange(pw, dtype=np.float32) + float(dest_x))[None, :]  # (1, pw)
+    t_left = np.clip(gx / margin, 0.0, 1.0)
+    w_left = 0.5 - 0.5 * np.cos(np.pi * t_left)
+    t_right = np.clip((float(canvas_w - 1) - gx) / margin, 0.0, 1.0)
+    w_right = 0.5 - 0.5 * np.cos(np.pi * t_right)
+    arr[..., 3] *= (w_left * w_right)
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), mode="RGBA")
+
+
 def render_clean_scene_plate(
     out_webp: pathlib.Path,
     backdrop_path: pathlib.Path,
@@ -3159,21 +3377,23 @@ def render_clean_scene_plate(
     num_str: str = "01",
     next_backdrop_path: Optional[pathlib.Path] = None,
     next_cel_path: Optional[pathlib.Path] = None,
+    stage_ppm: float = 114.0,
+    poem_num: int = 1,
     return_pil: bool = False,
 ) -> Optional[Image.Image]:
     """
-    Assembles BOTH:
-      1. The standard `1280x720` main frame plate (`s<idx>.webp` & `s<idx>_env.webp`), AND
-      2. The `2040x880` (`W_MOD x H_EXT`) Hyper-Flat Scene + Outside-the-Frame Lego Set Extension
-         Plate (`s<idx>_ext.webp` & `s<idx>_ext_env.webp`), featuring:
-         - `160px` of upper architectural headroom (`y = 0..160`) where stone gabled roofs
-           (`03.hero.chapel__p01`), spires, and boulevard trees protrude above the `720px` frame top
-           (matching Uploaded Image 1 `media_1793295948484_14eeb0d8.png`),
-         - `760x720` Side Set-Extension Zone (`x = 1280..2040, y = 160..880`) where a row-interpolated
-           hyper-flat sky & ground under-tape bridges Scene `idx` into Scene `idx+1` and is populated
-           with cel-ramp colorized Modular Lego pieces (`wall_with_door_hole`, `gable_portal_cap`,
-           `span_deck`, `boulevard_fence`, `boulevard_tree`, `boulevard_lamp`, `ground_curb`, matching
-           Uploaded Image 2 `media_1793295991132_6f4cd1fc.png`).
+    Assembles a 100% SEAMLESS Single-World Scene + Inter-Scene Bridge Plate (`2040x880`, `W_MOD x H_EXT`)
+    and crops the `1280x720` main frame (`s<idx>.webp`):
+      1. Eliminates the `x = 1280` vertical seam by starting `t_bridge` strictly at `x = 1280` (`w_next == 0`
+         and `w_wash == 0` for all `x <= 1280`) and softening the mirror-reflection crease across `x = 1280`.
+      2. Eliminates the `y = 160` horizontal headroom seam by driving `w_mir = v_smooth ** 1.35` to `1.0` at
+         `y = 159` so `headroom_np[159] == mir_top[159] == strip_720_np[0]`.
+      3. Eliminates the `x = 2040` inter-scene seam by tapering any prop/wall/portal alpha over the outer
+         `108px` (`_apply_canvas_boundary_feather`) and matching `strip_720_np[:, 2039] == next_np[:, 0]`.
+      4. Composites a Scale-Calibrated Poet Reference Figure (`1.72m * stage_ppm` pixels tall: `30px` in `140m`
+         Aerial vs `285px` in `3.1m` Close-Up) onto `s<idx>.webp` and `s<idx>_ext.webp` (after saving
+         `s<idx>_env.webp` and `s<idx>_ext_env.webp` actor-free for `levels.html`) so shot scale & distance
+         are immediately visible at a glance!
     """
     import cv2
     import numpy as np
@@ -3185,56 +3405,74 @@ def render_clean_scene_plate(
     else:
         bg_next, cel_ref_next = bg_curr, cel_ref_curr
 
-    # Construct the `2040x880` (`W_MOD x H_EXT`) Hyper-Flat Extended Environment Under-Tape
     curr_np = np.array(bg_curr.convert("RGB"), dtype=np.float32)
     next_np = np.array(bg_next.convert("RGB"), dtype=np.float32)
 
-    # Row-by-row horizontal wash between right edge of Scene i (`x=1216..1280`) and left edge of Scene i+1 (`x=0..64`)
-    right_strip = curr_np[:, -64:, :].mean(axis=1)  # (720, 3)
-    left_strip = next_np[:, :64, :].mean(axis=1)    # (720, 3)
-    right_smooth = cv2.GaussianBlur(right_strip[:, None, :], (1, 31), 8.0)[:, 0, :]
-    left_smooth = cv2.GaussianBlur(left_strip[:, None, :], (1, 31), 8.0)[:, 0, :]
+    x_coords = np.arange(W_MOD, dtype=np.float32)[None, :, None]  # (1, 2040, 1)
 
-    u = np.linspace(0.0, 1.0, W_EXT, dtype=np.float32)[None, :, None]
-    u_smooth = u * u * (3.0 - 2.0 * u)
-    ext_wash = right_smooth[:, None, :] * (1.0 - u_smooth) + left_smooth[:, None, :] * u_smooth
+    # 1. Build `curr_full` (720 x 2040 x 3) and soften the mirror crease across `x = 1280`
+    mir_curr = np.flip(curr_np[:, -W_EXT:, :], axis=1)
+    curr_raw = np.concatenate([curr_np, mir_curr], axis=1)  # (720, 2040, 3)
+    curr_crease_blur = cv2.GaussianBlur(curr_raw, (95, 15), 24.0)
+    w_crease = 0.78 * np.exp(-(((x_coords - float(W_FRAME)) / 96.0) ** 2))
+    curr_full = curr_raw * (1.0 - w_crease) + curr_crease_blur * w_crease
 
-    # Blend 24% mirrored/continued brushstroke texture from Scene i & Scene i+1 into the hyper-flat bridge
-    mir_curr = np.flip(curr_np[:, -min(W_EXT, W):, :], axis=1)
-    if mir_curr.shape[1] < W_EXT:
-        mir_curr = cv2.resize(mir_curr, (W_EXT, H), interpolation=cv2.INTER_LINEAR)
-    mir_next = np.flip(next_np[:, :min(W_EXT, W), :], axis=1)
-    if mir_next.shape[1] < W_EXT:
-        mir_next = cv2.resize(mir_next, (W_EXT, H), interpolation=cv2.INTER_LINEAR)
-    tex_bridge = mir_curr * (1.0 - u_smooth) + mir_next * u_smooth
-    ext_bridge_rgb = np.clip(0.76 * ext_wash + 0.24 * tex_bridge, 0, 255).astype(np.uint8)
+    # 2. Build `next_full` (720 x 2040 x 3) ending at `x = 2039` with `next_np[:, 0]`
+    mir_next_lead = np.flip(next_np[:, :W_EXT, :], axis=1)  # column 759 is `next_np[:, 0]`
+    mir_next_far = curr_np[:, :W_FRAME, :]
+    next_full = np.concatenate([mir_next_far, mir_next_lead], axis=1)  # (720, 2040, 3)
 
-    # Assemble `W_MOD x H` (`2040 x 720`) main strip (`[0..1280]` frame + `[1280..2040]` hyper-flat bridge)
-    strip_720_np = np.concatenate([curr_np.astype(np.uint8), ext_bridge_rgb], axis=1)
+    # 3. Row-by-row horizon-aligned gouache wash strictly across the bridge (`x = 1280..2040`)
+    right_strip = curr_np[:, -96:, :].mean(axis=1)  # (720, 3)
+    left_strip = next_np[:, :96, :].mean(axis=1)    # (720, 3)
+    right_smooth = cv2.GaussianBlur(right_strip[:, None, :], (1, 45), 11.0)[:, 0, :]
+    left_smooth = cv2.GaussianBlur(left_strip[:, None, :], (1, 45), 11.0)[:, 0, :]
 
-    # Build `W_MOD x H_HEADROOM` (`2040 x 160`) upper architectural headroom above `y = 0` of the frame
-    top_sky_row = cv2.GaussianBlur(strip_720_np[:24, :, :].astype(np.float32), (51, 15), 14.0).mean(axis=0)  # (2040, 3)
-    studio_sky = np.array([18.0, 22.0, 30.0], dtype=np.float32)[None, None, :]
-    vy = np.linspace(0.18, 0.58, H_HEADROOM, dtype=np.float32)[:, None, None]
-    headroom_np = np.clip(studio_sky * (1.0 - vy) + top_sky_row[None, :, :] * vy, 0, 255).astype(np.uint8)
+    # Strictly `t_bridge == 0.0` for `x <= 1280` and `t_bridge == 1.0` at `x = 2039`
+    t_bridge = np.clip((x_coords - float(W_FRAME)) / float(W_EXT - 1), 0.0, 1.0)
+    w_next = 0.5 - 0.5 * np.cos(np.pi * t_bridge)
+
+    # `w_wash == 0.0` at `x <= 1280` AND `w_wash == 0.0` at `x = 2039` -> ZERO vertical seam at x=1280 or x=2040!
+    sin_bridge = np.maximum(0.0, np.sin(np.pi * t_bridge))
+    w_wash = 0.42 * (sin_bridge ** 1.35)
+    wash_rgb = right_smooth[:, None, :] * (1.0 - w_next) + left_smooth[:, None, :] * w_next
+
+    tex_cross = curr_full * (1.0 - w_next) + next_full * w_next
+    tex_blur = cv2.GaussianBlur(tex_cross, (31, 9), 7.5)
+    w_brush = 0.36 * (sin_bridge ** 1.2)
+    tex_painted = tex_cross * (1.0 - w_brush) + tex_blur * w_brush
+
+    strip_720_f = tex_painted * (1.0 - w_wash) + wash_rgb * w_wash
+    strip_720_np = np.clip(strip_720_f, 0, 255).astype(np.uint8)
+
+    # 4. Build `2040 x 160` upper headroom where `y = 159` matches `strip_720_np[0]` with ZERO step (`w_mir == 1.0` at `y = 159`)!
+    mir_top_raw = np.flip(strip_720_np[:H_HEADROOM, :, :], axis=0).astype(np.float32)
+    mir_top_blur = cv2.GaussianBlur(mir_top_raw, (45, 25), 11.0)
+    v_t = np.linspace(0.0, 1.0, H_HEADROOM, dtype=np.float32)[:, None, None]
+    v_smooth = v_t * v_t * (3.0 - 2.0 * v_t)
+    # At `y = 159` (`v_t = 1.0`), `mir_top_blend` equals `mir_top_raw[-1] == strip_720_np[0]`
+    mir_top_blend = mir_top_blur * (1.0 - v_smooth) + mir_top_raw * v_smooth
+    top_sky_row = cv2.GaussianBlur(strip_720_np[:36, :, :].astype(np.float32), (65, 21), 16.0).mean(axis=0)
+    studio_sky = top_sky_row * 0.78 + np.array([18.0, 22.0, 32.0], dtype=np.float32)[None, :] * 0.22
+    sky_grad = studio_sky[None, :, :] * (1.0 - v_smooth) + top_sky_row[None, :, :] * v_smooth
+    w_mir = v_smooth ** 1.35  # 0.0 at y=0, 1.0 at y=159 -> exact C0+C1 match at y=160!
+    headroom_f = sky_grad * (1.0 - w_mir) + mir_top_blend * w_mir
+    headroom_np = np.clip(headroom_f, 0, 255).astype(np.uint8)
 
     full_env_np = np.concatenate([headroom_np, strip_720_np], axis=0)  # (880, 2040, 3)
     ext_canvas = Image.fromarray(full_env_np, mode="RGB").convert("RGBA")
     cel_ref_ext = Image.fromarray(full_env_np, mode="RGB")
     cel_scene_small = cel_ref_curr.resize((160, 90), Image.Resampling.BILINEAR)
 
-    # Subtle hyper-flat stage floor grounding gradient across all `2040px`
+    # Subtle continuous stage floor grounding gradient across all `2040px`
     fy = max(480, min(660, int(floor_y)))
     fy_ext = H_HEADROOM + fy
     overlay = Image.new("RGBA", (W_MOD, H_EXT), (0, 0, 0, 0))
     odraw = ImageDraw.Draw(overlay)
     for y in range(fy_ext, H_EXT):
         t = (y - fy_ext) / max(1.0, float(H_EXT - fy_ext))
-        dark_a = int(34 * math.sqrt(t))
+        dark_a = int(26 * math.sqrt(t))
         odraw.line([(0, y), (W_MOD, y)], fill=(8, 10, 15, dark_a))
-    # Subtle top-of-frame horizontal architectural datum line at `y = H_HEADROOM` and right frame edge at `x = 1280`
-    odraw.line([(0, H_HEADROOM), (W_MOD, H_HEADROOM)], fill=(216, 171, 79, 48), width=1)
-    odraw.line([(W_FRAME, H_HEADROOM), (W_FRAME, H_EXT)], fill=(216, 171, 79, 52), width=1)
     ext_canvas = Image.alpha_composite(ext_canvas, overlay)
 
     # Save clean underpainting plates (`<stem>_env.webp` 1280x720 and `<stem>_ext_env.webp` 2040x880)
@@ -3243,12 +3481,15 @@ def render_clean_scene_plate(
         try:
             ink_im = Image.open(ink_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
             _, _, _, a_ch = ink_im.split()
-            a_env = a_ch.point(lambda a: int(a * 0.28))
+            a_np = np.array(a_ch, dtype=np.float32) * 0.26
+            ramp_l = np.clip(np.arange(W, dtype=np.float32) / 110.0, 0.0, 1.0)[None, :]
+            ramp_r = np.clip((1280.0 - np.arange(W, dtype=np.float32)) / 180.0, 0.0, 1.0)[None, :]
+            a_np = (a_np * ramp_l * ramp_r).astype(np.uint8)
             ink_env = Image.merge("RGBA", (
                 Image.new("L", (W, H), 16),
                 Image.new("L", (W, H), 13),
                 Image.new("L", (W, H), 20),
-                a_env,
+                Image.fromarray(a_np, mode="L"),
             ))
             env_canvas.alpha_composite(ink_env, dest=(0, H_HEADROOM))
         except Exception:
@@ -3261,6 +3502,14 @@ def render_clean_scene_plate(
 
     if props_out_dir is not None:
         props_out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Check if the scene has dedicated framed portal pieces (`portal_door_arch`, `portal_window`, or in-frame portals)
+    # so we don't paste a second unframed rectangular portal box onto bare `wall_with_door_hole` / `wall_bay` plaster!
+    has_framed_ext_portal = any(
+        bool(l.get("aperture_footage")) and str(l.get("lego_role", "")) not in ("wall_with_door_hole", "wall_bay")
+        for l in layers
+        if not l.get("is_world_sheet")
+    )
 
     # Paint all 7 planes (`P6 -> P0`) of curated in-frame props + Outside-the-Frame Lego Set Extensions
     draw_layers = sorted(
@@ -3297,8 +3546,6 @@ def render_clean_scene_plate(
         dx = cx - target_w // 2
         dy = by - target_h
 
-        # Sample local neighborhood (`±90px`) from `cel_ref_ext` so both in-frame and outside-the-frame
-        # Lego pieces inherit the exact 6-band Cel Pigment Ramp of their background region!
         pad = 90
         cx0 = max(0, min(W_MOD - 32, dx - pad))
         cy0 = max(0, min(H_EXT - 32, dy - pad))
@@ -3314,6 +3561,34 @@ def render_clean_scene_plate(
             cel_scene_img=cel_scene_small,
         )
 
+        # Soft-feather all 4 edges of any wide `wall_with_door_hole` or `wall_bay` and infuse it with the exact
+        # spatially-aligned cel backdrop behind it so it melts into the continuous background tape with zero box edges!
+        if is_ext and l_role in ("wall_with_door_hole", "wall_bay"):
+            if has_framed_ext_portal:
+                lyr.pop("aperture_footage", None)
+            p_np = np.array(p_cel, dtype=np.float32)
+            ph_c, pw_c = p_np.shape[:2]
+            exact_bg = bg_crop.resize((pw_c, ph_c), Image.Resampling.BILINEAR).convert("RGB")
+            exact_bg_f = cv2.GaussianBlur(np.array(exact_bg, dtype=np.float32), (25, 25), 7.0)
+            p_np[..., :3] = 0.64 * p_np[..., :3] + 0.36 * exact_bg_f
+            yy_w, xx_w = np.mgrid[0:ph_c, 0:pw_c].astype(np.float32)
+            bristle_w = 16.0 * np.sin(yy_w * 0.08) + 9.0 * np.cos(yy_w * 0.21)
+            feather_l = max(160.0, min(320.0, pw_c * 0.42))
+            feather_r = max(120.0, min(240.0, pw_c * 0.30))
+            feather_t = max(64.0, min(140.0, ph_c * 0.26))
+            feather_b = max(32.0, min(72.0, ph_c * 0.14))
+            left_start = max(0.0, float(1220 - dx)) if dx < 1260 else 0.0
+            t_l = np.clip((xx_w - left_start + bristle_w) / feather_l, 0.0, 1.0)
+            w_l = 0.5 - 0.5 * np.cos(np.pi * t_l)
+            t_r = np.clip(((pw_c - 1 - xx_w) + bristle_w) / feather_r, 0.0, 1.0)
+            w_r = 0.5 - 0.5 * np.cos(np.pi * t_r)
+            t_top = np.clip((yy_w + 0.5 * bristle_w) / feather_t, 0.0, 1.0)
+            w_top = 0.5 - 0.5 * np.cos(np.pi * t_top)
+            t_bot = np.clip(((ph_c - 1 - yy_w) + 0.5 * bristle_w) / feather_b, 0.0, 1.0)
+            w_bot = 0.5 - 0.5 * np.cos(np.pi * t_bot)
+            p_np[..., 3] *= (0.66 * w_l * w_r * w_top * w_bot)
+            p_cel = Image.fromarray(np.clip(p_np, 0, 255).astype(np.uint8), mode="RGBA")
+
         # Save the cel-colorized, gouache-brushed RGBA piece sprite for `levels.html`
         if props_out_dir is not None:
             prop_fname = f"{lyr['id']}.webp"
@@ -3327,30 +3602,8 @@ def render_clean_scene_plate(
             a_c = a_c.point(lambda a: int(a * alpha_mult))
             p_cel = Image.merge("RGBA", (r_c, g_c, b_c, a_c))
 
-        # For `wall_with_door_hole` and `wall_bay` (`is_set_extension=True`), tuck any left overlap (`x < 1280`)
-        # cleanly behind the right edge of the `1280x720` cel frame, and paint a deep dark doorway aperture
-        # behind `wall_with_door_hole` so the doorway hole reads as a real open portal (Uploaded Image 1)!
-        if is_ext and l_role in ("wall_with_door_hole", "wall_bay"):
-            if dx < W_FRAME:
-                clip_px = W_FRAME - dx
-                if clip_px < target_w:
-                    p_np = np.array(p_cel, dtype=np.uint8)
-                    p_np[:, :max(0, clip_px - 2), 3] = 0
-                    if 0 <= clip_px - 2 < target_w:
-                        p_np[:, clip_px - 2:min(target_w, clip_px + 2), 3] = (
-                            p_np[:, clip_px - 2:min(target_w, clip_px + 2), 3].astype(np.float32) * 0.45
-                        ).astype(np.uint8)
-                    p_cel = Image.fromarray(p_np, mode="RGBA")
-            if l_role == "wall_with_door_hole":
-                ap_layer = Image.new("RGBA", (W_MOD, H_EXT), (0, 0, 0, 0))
-                ap_draw = ImageDraw.Draw(ap_layer)
-                ap_x0 = max(W_FRAME + 16, dx + int(target_w * 0.36))
-                ap_x1 = min(W_MOD - 16, dx + int(target_w * 0.82))
-                ap_y0 = max(H_HEADROOM + 48, dy + int(target_h * 0.18))
-                ap_y1 = min(H_EXT - 4, by)
-                if ap_x1 > ap_x0 + 24 and ap_y1 > ap_y0 + 36:
-                    ap_draw.rectangle([ap_x0, ap_y0, ap_x1, ap_y1], fill=(9, 11, 16, 228))
-                    ext_canvas = Image.alpha_composite(ext_canvas, ap_layer)
+        # Taper alpha near outer module edges `x = 0` and `x = 2040` so no prop is ever sliced at a scene join!
+        p_cel_baked = _apply_canvas_boundary_feather(p_cel, dx, W_MOD)
 
         # Grounded elliptical floor contact shadow for floor-seated pieces on P4/P3/P2/P1
         if float(lyr.get("y", 0.87)) >= 0.55 and plane_id in ("P4", "P3", "P2", "P1"):
@@ -3358,12 +3611,110 @@ def render_clean_scene_plate(
             sdraw = ImageDraw.Draw(sh_layer)
             rx = int(target_w * 0.42)
             ry = max(5, int(target_h * 0.075))
-            sh_alpha = 95 if plane_id in ("P4", "P1") else 118
+            sh_alpha = 84 if plane_id in ("P4", "P1") else 106
             sdraw.ellipse([cx - rx, by - ry, cx + rx, by + ry], fill=(6, 8, 12, sh_alpha))
             sh_layer = sh_layer.filter(ImageFilter.GaussianBlur(radius=6))
             ext_canvas = Image.alpha_composite(ext_canvas, sh_layer)
 
-        ext_canvas.alpha_composite(p_cel, dest=(dx, dy))
+        # Render Layered Multiplane Footage (`aperture_footage`) inside doors, windows, arches, TVs & mirrors!
+        af = lyr.get("aperture_footage")
+        portal_patch: Optional[Image.Image] = None
+        ap_x0, ap_y0, ap_x1, ap_y1 = 0, 0, 0, 0
+        if isinstance(af, dict) and af.get("footage_file"):
+            abox = af.get("aperture_box") or [0.24, 0.16, 0.78, 0.95]
+            ap_x0 = max(4, dx + int(round(target_w * float(abox[0]))))
+            ap_y0 = max(12, dy + int(round(target_h * float(abox[1]))))
+            ap_x1 = min(W_MOD - 4, dx + int(round(target_w * float(abox[2]))))
+            ap_y1 = min(H_EXT - 4, dy + int(round(target_h * float(abox[3]))))
+            ap_w = ap_x1 - ap_x0
+            ap_h = ap_y1 - ap_y0
+            if ap_w >= 20 and ap_h >= 20:
+                portal_patch = _build_harmonized_portal_patch(af, ap_w, ap_h, bg_crop, haze_rgb)
+                if portal_patch is not None:
+                    if props_out_dir is not None:
+                        pf_name = f"portal_{lyr['id']}.webp"
+                        portal_patch.save(props_out_dir / pf_name, "WEBP", quality=88, method=4)
+                        af["portal_footage_webp"] = f"levels/{num_str}/props/{pf_name}"
+                    portal_baked = _apply_canvas_boundary_feather(portal_patch, ap_x0, W_MOD)
+                    ext_canvas.alpha_composite(portal_baked, dest=(ap_x0, ap_y0))
+
+                    # Warm floor light spill wedge in front of the portal threshold
+                    if bool(af.get("warm_spill", True)) and by >= H_HEADROOM + 360:
+                        spill_layer = Image.new("RGBA", (W_MOD, H_EXT), (0, 0, 0, 0))
+                        sp_draw = ImageDraw.Draw(spill_layer)
+                        sp_y0 = min(H_EXT - 8, by - 4)
+                        sp_y1 = min(H_EXT - 2, by + max(24, int(ap_h * 0.24)))
+                        sp_poly = [
+                            (ap_x0 + 6, sp_y0),
+                            (ap_x1 - 6, sp_y0),
+                            (min(W_MOD - 2, ap_x1 + int(ap_w * 0.28)), sp_y1),
+                            (max(2, ap_x0 - int(ap_w * 0.22)), sp_y1),
+                        ]
+                        sp_draw.polygon(sp_poly, fill=(245, 208, 138, 44))
+                        spill_layer = spill_layer.filter(ImageFilter.GaussianBlur(radius=9))
+                        ext_canvas = Image.alpha_composite(ext_canvas, spill_layer)
+
+        # Composite the cel-colorized architectural/prop piece itself
+        ext_canvas.alpha_composite(p_cel_baked, dest=(dx, dy))
+
+        # 2) Also composite the inset portal footage inside the inner pane rectangle
+        #    so doors, windows, TV screens & mirrors clearly display their layered multiplane footage!
+        if portal_patch is not None and ap_x1 > ap_x0 + 20 and ap_y1 > ap_y0 + 20:
+            inset_w = max(12, int((ap_x1 - ap_x0) * 0.84))
+            inset_h = max(12, int((ap_y1 - ap_y0) * 0.84))
+            inset_x = ap_x0 + ((ap_x1 - ap_x0) - inset_w) // 2
+            inset_y = ap_y0 + ((ap_y1 - ap_y0) - inset_h) // 2
+            inset_patch = portal_patch.resize((inset_w, inset_h), Image.Resampling.LANCZOS)
+            ir, ig, ib, ia = inset_patch.split()
+            ia = ia.point(lambda a: int(a * 0.82))
+            inset_patch = _apply_canvas_boundary_feather(Image.merge("RGBA", (ir, ig, ib, ia)), inset_x, W_MOD)
+            ext_canvas.alpha_composite(inset_patch, dest=(inset_x, inset_y))
+
+    # Composite Scale-Calibrated Poet Reference Figure (`1.72m * stage_ppm` px tall) onto the baked preview plate
+    # so `s<idx>.webp`, `s<idx>_ext.webp`, and `poem_tape.webp` immediately reveal how close or far each shot is!
+    # (`s<idx>_env.webp` and `s<idx>_ext_env.webp` were already saved above without the actor for `levels.html`.)
+    actor_sprite_rel = (
+        "play/assets/poet__black_tshirt/06.webp"
+        if poem_num <= 3
+        else "play/assets/poet__red_black_sunglasses/09.webp"
+    )
+    actor_sprite_path = SHOTS_DIR / actor_sprite_rel
+    if actor_sprite_path.exists():
+        try:
+            act_im = Image.open(actor_sprite_path).convert("RGBA")
+            aw0, ah0 = act_im.size
+            # Canonical 1.72m human height scaled by `stage_ppm` (`30px` in 140m Aerial vs `285px` in 3.1m Close-Up)
+            act_h = max(28, min(320, int(round(1.72 * float(stage_ppm)))))
+            act_w = max(16, int(round(act_h * (float(aw0) / max(1.0, float(ah0))))))
+            act_resized = act_im.resize((act_w, act_h), Image.Resampling.LANCZOS)
+            act_cx = 560
+            act_by = fy_ext
+            act_dx = act_cx - act_w // 2
+            act_dy = act_by - act_h
+            bg_act_crop = cel_ref_ext.crop((
+                max(0, act_dx - 48),
+                max(0, act_dy - 48),
+                min(W_MOD, act_dx + act_w + 48),
+                min(H_EXT, act_dy + act_h + 48),
+            ))
+            act_cel = clean_and_integrate_cutout(
+                act_resized,
+                bg_act_crop,
+                "P2",
+                haze_rgb=haze_rgb,
+                cel_scene_img=cel_scene_small,
+            )
+            # Grounded foot contact shadow under the scale-calibrated Poet figure
+            ash_layer = Image.new("RGBA", (W_MOD, H_EXT), (0, 0, 0, 0))
+            asdraw = ImageDraw.Draw(ash_layer)
+            arx = max(10, int(act_w * 0.38))
+            ary = max(4, int(act_h * 0.06))
+            asdraw.ellipse([act_cx - arx, act_by - ary, act_cx + arx, act_by + ary], fill=(5, 7, 11, 118))
+            ash_layer = ash_layer.filter(ImageFilter.GaussianBlur(radius=5))
+            ext_canvas = Image.alpha_composite(ext_canvas, ash_layer)
+            ext_canvas.alpha_composite(act_cel, dest=(act_dx, act_dy))
+        except Exception:
+            pass
 
     # Whole-Canvas Master Painting Unification Pass across all `2040x880` pixels:
     rgb_arr = np.array(ext_canvas.convert("RGB"), dtype=np.uint8)
@@ -3375,17 +3726,20 @@ def render_clean_scene_plate(
     blended_f = np.clip(blended_f + paper_tooth[..., None], 0, 255)
     ext_canvas = Image.fromarray(blended_f.astype(np.uint8), mode="RGB").convert("RGBA")
 
-    # Unified top warm charcoal-sepia ink pass (`ink.webp`) over the `1280x720` frame
+    # Unified top warm charcoal-sepia ink pass (`ink.webp`) feathered smoothly at both `x = 0` and `x = 1280`
     if ink_path and ink_path.exists():
         try:
             ink_im = Image.open(ink_path).convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
             _, _, _, a_ch = ink_im.split()
-            a_top = a_ch.point(lambda a: int(a * 0.30))
+            a_np = np.array(a_ch, dtype=np.float32) * 0.26
+            ramp_l = np.clip(np.arange(W, dtype=np.float32) / 110.0, 0.0, 1.0)[None, :]
+            ramp_r = np.clip((1280.0 - np.arange(W, dtype=np.float32)) / 180.0, 0.0, 1.0)[None, :]
+            a_np = (a_np * ramp_l * ramp_r).astype(np.uint8)
             ink_dark = Image.merge("RGBA", (
                 Image.new("L", (W, H), 16),
                 Image.new("L", (W, H), 13),
                 Image.new("L", (W, H), 20),
-                a_top,
+                Image.fromarray(a_np, mode="L"),
             ))
             ext_canvas.alpha_composite(ink_dark, dest=(0, H_HEADROOM))
         except Exception:
@@ -3437,8 +3791,6 @@ def main() -> None:
         raise RuntimeError(f"Missing parts: {missing_parts}, Missing bgs: {missing_bgs}")
     print(f"  Verified {len(CUSTOM_SCENES)} custom scenes + 90 Lego Set Extensions: 0 missing parts!")
 
-    # Fix poet/black_tshirt in shots/play/data.json so draws[9] (Reading the Manuscript)
-    # has has_scene_prop=True and default idle is prop-free upright stance
     data_path = PLAY_DIR / "data.json"
     play_data = json.loads(data_path.read_text())
     for ch in play_data.get("characters", []):
@@ -3462,13 +3814,14 @@ def main() -> None:
     total_layers = 0
     scenes_with_all_7 = 0
 
-    print("[2/5] Building Hyper-Flat 7-Layer + Outside-the-Frame Lego Set Extensions & Continuous Poem Tapes...")
+    print("[2/5] Building Seamless Hand-Assembled 14-Poem Worlds, Shot-Distance Calibration & Layered Portal Footage...")
     for poem_num in range(1, 15):
         num_str = f"{poem_num:02d}"
         lv_path = LEVELS_DIR / num_str / "level.json"
         lv = json.loads(lv_path.read_text())
         fw, fh = int(lv["frame"][0]), int(lv["frame"][1])
         lv["seven_planes_spec"] = SEVEN_PLANES
+        lv["shot_scale_tiers"] = SHOT_SCALE_TIERS
         lv["tape_geometry"] = {
             "frame_w": W_FRAME,
             "ext_w": W_EXT,
@@ -3480,6 +3833,7 @@ def main() -> None:
             "hyperflat_floor_y": HYPERFLAT_FLOOR_Y,
             "hyperflat_horizon_y": HYPERFLAT_HORIZON_Y,
             "tape_file": "poem_tape.webp",
+            "seamless_cross_weave": True,
         }
 
         poem_ext_plates: List[Image.Image] = []
@@ -3505,7 +3859,6 @@ def main() -> None:
             persp = load_frame_perspective_signals(fid)
             stage_haze_tuple = tuple(persp["stage_haze_rgb"])
 
-            # Resolve cel, ink, layout_sheet, planes_gs, notan, exploded, and world 7-plane sheets
             cel_rel = f"world/{wk}/cel.webp"
             ink_rel = f"world/{wk}/ink.webp"
             layout_rel = f"out/{fid}/cartoon/layout_sheet.png" if fid else ""
@@ -3530,7 +3883,8 @@ def main() -> None:
                 })
 
             raw_specs = verify_handmade_seven_layers_for_scene(skey, spec["layers"])
-            scale_marker_info = extract_cel_painting_scale_markers(fid, wshot)
+            shot_profile = get_scene_shot_profile(skey)
+            scale_marker_info = extract_cel_painting_scale_markers(fid, wshot, skey=skey)
             stage_ppm = float(scale_marker_info["stage_px_per_meter"])
             curated_prop_specs = curate_scene_props(
                 skey,
@@ -3592,8 +3946,9 @@ def main() -> None:
                 covered_env_planes.add(plane_id)
                 is_ext = bool(lspec.get("is_set_extension", False))
                 l_role = lspec.get("lego_role", "")
+                af_spec = lspec.get("aperture_footage")
 
-                lyr_obj = {
+                lyr_obj: Dict[str, Any] = {
                     "id": f"lyr_{skey.replace('.', '_')}_{e_idx}_{pid.split('__')[-1]}",
                     "part_id": pid,
                     "sheet_id": sheet_by_part[pid]["id"],
@@ -3624,6 +3979,9 @@ def main() -> None:
                     "file": play_file,
                     "shots_file": shots_file,
                 }
+                if af_spec is not None:
+                    lyr_obj["aperture_footage"] = dict(af_spec)
+                    lyr_obj["aperture_footage"]["play_footage_file"] = f"../{af_spec['footage_file']}"
                 combined_layers.append(lyr_obj)
 
                 if st_title:
@@ -3639,6 +3997,7 @@ def main() -> None:
                         "y": round(float(lspec["y"]), 3),
                         "is_set_extension": is_ext,
                         "anim_role": lspec.get("anim_role", "static"),
+                        "has_portal_footage": af_spec is not None,
                     })
 
             # Ensure all 7 planes (P6..P0) have a registered layer entry
@@ -3677,7 +4036,6 @@ def main() -> None:
                         "shots_file": cel_rel if (SHOTS_DIR / cel_rel).exists() else backdrop_shots_rel,
                     })
 
-            # Supplement stations with architectural landmarks from raw_specs so every scene has >= 3 stations
             if len(stations) < 3:
                 for r_idx, rspec in enumerate(raw_specs):
                     r_title = rspec.get("station_title")
@@ -3701,6 +4059,7 @@ def main() -> None:
                     if len(stations) >= 3:
                         break
 
+            sc["shot_profile"] = shot_profile
             sc["cel_passes"] = {
                 "world_key": wk,
                 "shot_id": fid,
@@ -3712,6 +4071,7 @@ def main() -> None:
                 "exploded_file": f"../{exploded_rel}" if exploded_rel and (SHOTS_DIR / exploded_rel).exists() else "",
                 "perspective": persp,
                 "scale_markers": scale_marker_info,
+                "shot_profile": shot_profile,
                 "world_sheets": [{k: v for k, v in ws.items() if k != "shots_file"} for ws in world_sheets],
                 "seven_layer_breakdown": compute_frame_seven_layer_breakdown(fid, skey, combined_layers),
             }
@@ -3726,7 +4086,6 @@ def main() -> None:
             n_lines = len(sc.get("lines", []))
             for l_idx, ln in enumerate(sc.get("lines", [])):
                 if stations:
-                    # Final line of the scene walks out into the Outside-the-Frame Lego Set Extension bridge!
                     ext_stations = [s for s in stations if s.get("is_set_extension")]
                     in_stations = [s for s in stations if not s.get("is_set_extension")]
                     if l_idx == n_lines - 1 and ext_stations:
@@ -3760,6 +4119,8 @@ def main() -> None:
                 num_str=num_str,
                 next_backdrop_path=SHOTS_DIR / next_bg_rel,
                 next_cel_path=SHOTS_DIR / next_cel_rel,
+                stage_ppm=stage_ppm,
+                poem_num=poem_num,
                 return_pil=True,
             )
 
@@ -3780,22 +4141,19 @@ def main() -> None:
 
             if ext_pil is not None:
                 poem_ext_plates.append(ext_pil)
-                # Wide 540x234 audit thumbnail showing BOTH the 1280x720 Cel Frame AND the 760px Outside-the-Frame Lego Set Extension!
+                # Wide 540x234 seamless single-world audit thumbnail (NO vertical cut line across the painting!)
                 thumb = ext_pil.resize((540, 234), Image.Resampling.LANCZOS)
                 tdraw = ImageDraw.Draw(thumb)
-                # Mark the x=1280 frame boundary & y=160 headroom datum on the audit thumbnail
                 bx_thumb = int(round(540 * (W_FRAME / float(W_MOD))))
-                by_thumb = int(round(234 * (H_HEADROOM / float(H_EXT))))
-                tdraw.line([(bx_thumb, by_thumb), (bx_thumb, 234)], fill=(255, 210, 90), width=1)
-                tdraw.line([(0, by_thumb), (540, by_thumb)], fill=(255, 210, 90), width=1)
                 tdraw.rectangle([0, 0, 540, 22], fill=(8, 10, 14))
-                ext_names = " + ".join(
-                    l["label"][:18] for l in combined_layers if l.get("is_set_extension")
-                )
+                # Tiny 5px tick in header bar only to indicate where x=1280 sits without slicing the artwork
+                tdraw.line([(bx_thumb, 17), (bx_thumb, 22)], fill=(255, 210, 90), width=2)
+                n_portals = sum(1 for l in combined_layers if l.get("aperture_footage"))
+                dist_tag = f"{shot_profile['short_label']} {shot_profile['camera_distance_m']}m ({shot_profile['focal_mm']}mm · {int(round(stage_ppm))}px/m)"
                 tdraw.text(
                     (6, 4),
-                    f"{skey} [FRAME+LEGO WING] {sc['name'][:14]} -> {ext_names[:46]}",
-                    fill=(255, 224, 120),
+                    f"{skey} [{dist_tag}] {sc['name'][:16]} · {n_portals} Footage Portals",
+                    fill=(255, 228, 130),
                 )
                 if poem_num <= 4:
                     audit_batches["audit_scenes_01_04.png"].append(thumb)
@@ -3808,30 +4166,46 @@ def main() -> None:
 
             total_scenes += 1
 
-        # Stitch all scenes of the poem into a Continuous Horizontal Poem Background Tape (`poem_tape.webp`)
+        # Stitch all scenes of the poem into a Seamless Continuous Horizontal Poem Background Tape (`poem_tape.webp`)
         if poem_ext_plates:
+            import cv2
+            import numpy as np
+
             half_w = W_MOD // 2   # 1020 px per module
             half_h = H_EXT // 2   # 440 px tall
             tape_im = Image.new("RGB", (len(poem_ext_plates) * half_w, half_h), (10, 12, 16))
             for idx_p, p_im in enumerate(poem_ext_plates):
                 p_small = p_im.resize((half_w, half_h), Image.Resampling.LANCZOS)
                 tape_im.paste(p_small, (idx_p * half_w, 0))
+            # Apply a smooth gouache brush blend across each inter-scene join (`x = idx_p * half_w ± 36px`)
+            tape_np = np.array(tape_im, dtype=np.float32)
+            for idx_p in range(1, len(poem_ext_plates)):
+                jx = idx_p * half_w
+                x0 = max(0, jx - 36)
+                x1 = min(tape_np.shape[1], jx + 36)
+                band = tape_np[:, x0:x1, :]
+                band_blur = cv2.GaussianBlur(band, (35, 9), 9.0)
+                bx = np.arange(x0, x1, dtype=np.float32)[None, :, None]
+                w_j = 0.85 * np.exp(-(((bx - float(jx)) / 16.0) ** 2))
+                tape_np[:, x0:x1, :] = band * (1.0 - w_j) + band_blur * w_j
+            tape_im = Image.fromarray(np.clip(tape_np, 0, 255).astype(np.uint8), mode="RGB")
             tape_path = LEVELS_DIR / num_str / "poem_tape.webp"
             tape_im.save(tape_path, "WEBP", quality=86, method=4)
 
-            # Also create a 1800x132 panorama strip for `audit_poem_tapes.png`
+            # Create a 1800x132 panorama strip for `audit_poem_tapes.png`
             strip_thumb = tape_im.resize((1800, 132), Image.Resampling.LANCZOS)
             sdraw = ImageDraw.Draw(strip_thumb)
-            sdraw.rectangle([0, 0, 520, 22], fill=(8, 10, 14))
+            sdraw.rectangle([0, 0, 660, 22], fill=(8, 10, 14))
+            dists_str = " -> ".join(f"{s['shot_profile']['camera_distance_m']:.0f}m" for s in lv["scenes"])
             sdraw.text(
                 (6, 4),
-                f"POEM {num_str} CONTINUOUS TAPE ({len(poem_ext_plates)} SCENES × 2040px = {len(poem_ext_plates)*W_MOD}px) · {lv['title']}",
+                f"POEM {num_str} SEAMLESS WORLD TAPE ({len(poem_ext_plates)}×2040px) · {lv['title']} · Distances: [{dists_str}]",
                 fill=(120, 240, 190),
             )
             poem_tape_strips.append(strip_thumb)
 
         lv_path.write_text(json.dumps(lv, separators=(",", ":")))
-        print(f"  Poem {num_str} ({lv['title']}): built {len(lv['scenes'])} Hyper-Flat Lego Wing scenes + continuous poem_tape.webp")
+        print(f"  Poem {num_str} ({lv['title']}): built {len(lv['scenes'])} Seamless Single-World scenes + continuous poem_tape.webp")
 
 
     print("[3/5] Enriching level_assets_catalog.json with 7-layer color codes & standardized physical scales...")

@@ -157,8 +157,8 @@ a{color:#8fb8ff}
     <a href="../body_lab.html">🧬 CLIP Body Lab</a>
   </nav>
   <header>
-    <h1>WYGWYL · 14 Hyper-Flat 7-Layer Worlds, Outside-the-Frame Lego Wings & Continuous Poem Tapes</h1>
-    <p>Every scene (`01.0`..`14.6`) is built as a <b>`2040×880` Hyper-Flat Extended Module</b>: a clean `1280×720` cel-painted frame (`x=0..1280`), `160px` of upper architectural headroom (`y=-160..0`) for protruding gabled roofs & canopy trees, and a <b>`760px` Outside-the-Frame Modular Lego Set Extension (`x=1280..2040`)</b> that bridges every scene along a <b>Continuous Horizontal Poem Tape</b>. Switch camera modes (`🧱 Hyper-Flat Wing`, `🎞️ Continuous Tape Strip`, `🎥 Ortho Follow`) or open <b>🛠️ 7-Layer + Lego Author</b> to build outside the frame live.</p>
+    <h1>WYGWYL · 14 Seamless Single-World Poem Tapes, Calibrated Shot Distances & Layered Portal Footage</h1>
+    <p>Every poem (`01`..`14`) is hand-assembled as a <b>Seamless Single-World Continuous Tape</b> (`2040×880` per scene module with cross-woven horizon/ground bridges and zero hard vertical seams), calibrated across <b>5 Camera Distance & Shot-Scale Tiers (`2.9m Close-Up` → `140m Aerial Abyss`)</b>, with <b>Multiplane Video & 16mm Archival Footage layered inside 120 Doors, Windows, Archways, TVs & Mirrors</b>.</p>
   </header>
   <div class="grid" id="lv"></div>
 </section>
@@ -168,10 +168,10 @@ a{color:#8fb8ff}
   <div class="top">
     <button class="btn" id="back">‹ 14 Poems</button>
     <div id="ttl"></div>
-    <select class="btn on" id="camModeSelect" title="Hyper-Flat Camera Position for Outside-the-Frame Lego Set Extensions & Continuous Poem Tape">
-      <option value="hyper_flat_wing">🧱 Cam: Hyper-Flat Lego Wing (2040×880)</option>
-      <option value="continuous_tape">🎞️ Cam: Continuous Poem Tape Strip</option>
-      <option value="ortho_follow">🎥 Cam: Ortho Follow (Frame → Wing)</option>
+    <select class="btn on" id="camModeSelect" title="Camera Framing Mode: Seamless Single-World Wing, Continuous Poem Tape Panorama, or Ortho Follow">
+      <option value="hyper_flat_wing">🌍 Cam: Seamless Single-World (2040×880)</option>
+      <option value="continuous_tape">🎞️ Cam: Continuous Poem Tape Panorama</option>
+      <option value="ortho_follow">🎥 Cam: Shot-Distance Follow</option>
     </select>
     <select class="btn" id="celModeSelect" title="Switch Cel-Shading, 7-Layer Color-Coding & Exploded Stack Signal">
       <option value="cel_wash">🎨 Cel Wash + Ink (7L)</option>
@@ -559,12 +559,12 @@ function buildShelf(){
     const best = store.get('wy.best.'+p.num);
     const meta = ARC_SUMMARY[p.num] || { arc: 'Emotional Journey', desc: '' };
     b.innerHTML =
-      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.num}/s0_ext.webp?v=8" onerror="this.src='levels/${p.thumb}?v=8'"><span class="arc-pill">🧱 ${meta.arc} · Continuous Tape</span></div>` +
+      `<div class="thumb-wrap"><img loading="lazy" alt="" src="levels/${p.num}/s0_ext.webp?v=9" onerror="this.src='levels/${p.thumb}?v=9'"><span class="arc-pill">🌍 ${meta.arc} · Seamless Single-World Tape</span></div>` +
       `<div class="body"><b></b><div class="theme"></div><small></small><div class="best"></div></div>`;
     b.querySelector('b').textContent = `${p.num} · ${p.title}`;
     b.querySelector('.theme').textContent = meta.desc;
-    b.querySelector('small').textContent = `${Math.round(p.duration)}s · ${p.scenes} Hyper-Flat Lego Wing scenes (2040×880) · ${p.lines} station lines`;
-    b.querySelector('.best').textContent = best ? (`★ Best resonance: ${best}/${p.lines} stations inhabited`) : 'Enter Hyper-Flat Lego Wing & Poem Tape →';
+    b.querySelector('small').textContent = `${Math.round(p.duration)}s · ${p.scenes} Seamless Single-World scenes · Calibrated Shot Scale & Portal Footage`;
+    b.querySelector('.best').textContent = best ? (`★ Best resonance: ${best}/${p.lines} stations inhabited`) : 'Enter Seamless Single-World Poem Tape →';
     b.addEventListener('click', ()=>openLevel(p.num));
     g.append(b);
   });
@@ -628,13 +628,13 @@ async function openLevel(num){
   resize();
   preloadPoet31();
   use31PartRig = parseInt(num, 10) >= 4;
-  L = await (await fetch(`levels/${num}/level.json?v=8`)).json();
+  L = await (await fetch(`levels/${num}/level.json?v=9`)).json();
   scenes = L.scenes;
 
-  // Restore any user-saved custom 7-layer + Lego Wing stage assemblies from localStorage (v8) & preload all cut-out + cel assets
+  // Restore any user-saved custom 7-layer + Seamless Wing stage assemblies from localStorage (v9) & preload all cut-out + portal footage assets
   scenes.forEach((sc, idx) => {
     sc._defaultLayers = JSON.parse(JSON.stringify(sc.multiplane_layers || []));
-    const saved = store.get(`wy.stage.v8.${num}.${idx}`);
+    const saved = store.get(`wy.stage.v9.${num}.${idx}`);
     if (saved){
       try { sc.multiplane_layers = JSON.parse(saved); } catch(e){}
     }
@@ -646,12 +646,18 @@ async function openLevel(num){
       if (sc.cel_passes.planes_map_file) getCachedImg(sc.cel_passes.planes_map_file);
       if (sc.cel_passes.exploded_file) getCachedImg(sc.cel_passes.exploded_file);
     }
-    (sc.multiplane_layers || []).forEach(lyr => getCachedImg(lyr.file));
+    (sc.multiplane_layers || []).forEach(lyr => {
+      getCachedImg(lyr.file);
+      if (lyr.portal_footage_webp) getCachedImg(lyr.portal_footage_webp);
+      if (lyr.aperture_footage && lyr.aperture_footage.play_footage_file){
+        getCachedImg(lyr.aperture_footage.play_footage_file);
+      }
+    });
   });
 
-  // Load 1280×720 environment plates (`s<idx>_env.webp`) AND 2040×880 Hyper-Flat Extended Environment Plates (`s<idx>_ext_env.webp`)
-  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(s.env_img ? `levels/${num}/${s.env_img}?v=8` : (s.backdrop_file || `levels/${num}/${s.img}?v=8`))));
-  sceneExtImgs = await Promise.all(scenes.map((s, idx) => Anim2.loadImg(`levels/${num}/${s.ext_env_img || ('s' + idx + '_ext_env.webp')}?v=8`).catch(() => sceneImgs[idx])));
+  // Load 1280×720 environment plates (`s<idx>_env.webp`) AND 2040×880 Seamless Extended Environment Plates (`s<idx>_ext_env.webp`)
+  sceneImgs = await Promise.all(scenes.map(s => Anim2.loadImg(s.env_img ? `levels/${num}/${s.env_img}?v=9` : (s.backdrop_file || `levels/${num}/${s.img}?v=9`))));
+  sceneExtImgs = await Promise.all(scenes.map((s, idx) => Anim2.loadImg(`levels/${num}/${s.ext_env_img || ('s' + idx + '_ext_env.webp')}?v=9`).catch(() => sceneImgs[idx])));
 
   // Preload all cast & counterpart characters referenced by this poem's scenes
   castActorsByKey.clear();
@@ -686,8 +692,8 @@ async function openLevel(num){
   const arcMeta = ARC_SUMMARY[num] || { arc: 'Emotional Arc', desc: '' };
   $('ttl').textContent = `${L.num} · ${L.title}`;
   $('stt').textContent = `${L.num} · ${L.title}`;
-  $('stn').textContent = `${Math.round(L.duration)}s · ${scenes.length} handmade 7-layer scenes (P6→P0) · ${total} station lines`;
-  $('stArc').innerHTML = `<b>Handmade 7-Layer Architectural & Emotional Journey (${arcMeta.arc}):</b><br>${arcMeta.desc}`;
+  $('stn').textContent = `${Math.round(L.duration)}s · ${scenes.length} seamless single-world scenes (P6→P0) · ${total} station lines`;
+  $('stArc').innerHTML = `<b>Handmade Seamless World & Shot-Distance Journey (${arcMeta.arc}):</b><br>${arcMeta.desc}`;
   $('start').style.display = 'grid';
   $('end').style.display = 'none';
   buildArcBar();
@@ -770,9 +776,13 @@ function buildArcBar(){
     const btn = document.createElement('button');
     btn.className = 'sc-step' + (idx === cur.i ? ' active' : '');
     btn.dataset.idx = idx;
-    const emo = sc.emotion || 'searching';
-    const layerCount = (sc.multiplane_layers || []).length;
-    btn.innerHTML = `<small>${sc.key} · ${emo} · 7L/${layerCount}p</small><b>${sc.name}</b>`;
+    const sp = sc.shot_profile || {};
+    const distTag = sp.short ? `${sp.short} ${sp.camera_distance_m}m` : (sc.emotion || 'stage');
+    const badgeCol = sp.badge_color || '#facc15';
+    const portalCnt = (sc.multiplane_layers || []).filter(l => l.aperture_footage || l.portal_footage_webp).length;
+    const portalTag = portalCnt > 0 ? ` · 🎞️${portalCnt}` : '';
+    btn.innerHTML = `<small><span style="color:${badgeCol};font-weight:700">${sc.key} · ${distTag}</span>${portalTag}</small><b>${sc.name}</b>`;
+    btn.title = `${sc.key} ${sc.name} — ${sp.distance_readout || distTag}${portalCnt ? ' · ' + portalCnt + ' Layered Footage Portals' : ''}`;
     btn.addEventListener('click', () => {
       if (audio){
         audio.currentTime = sc.t0 + 0.05;
@@ -1022,20 +1032,25 @@ function frame(ts){
     }
   }
 
+  const sp = (sc && sc.shot_profile) ? sc.shot_profile : {};
+  const distBadge = sp.distance_readout ? `🎥 ${sp.distance_readout}` : `🎥 SHOT SCALE: ${(sc && sc.ppc) ? Math.round(sc.ppc * 100) + '%' : '100%'}`;
+  const portalLayers = (sc && sc.multiplane_layers) ? sc.multiplane_layers.filter(l => l.aperture_footage || l.portal_footage_webp) : [];
+  const portalSummary = portalLayers.length ? ` · 🎞️ ${portalLayers.length} Portal${portalLayers.length > 1 ? 's' : ''}` : '';
+
   if (activeLine){
     const emoMod = Anim2.EMOTION_MODS[activeLine.emotion] || Anim2.EMOTION_MODS.searching;
     const stName = activeLine.station_label || sc.name;
-    $('emoKicker').textContent = `📍 STATION: ${stName.toUpperCase()} · FRAME ${sc.frame_id || sc.key}`;
+    $('emoKicker').innerHTML = `<span style="color:${sp.badge_color || '#facc15'}">${distBadge}</span>${portalSummary} · 📍 ${stName.toUpperCase()}`;
     $('emoTitle').textContent = `${activeLine.emotion_label || emoMod.label}`;
     $('emoSub').textContent = `Walk to "${stName}" (${Math.round(activeLine.mx)}px) or press Space to embody & animate the 7-layer station.`;
     const eb = $('embodyBtn');
     if (eb) eb.textContent = `★ Embody @ ${stName.slice(0, 18)} (Space)`;
   } else if (sc){
     const emoMod = Anim2.EMOTION_MODS[sc.emotion] || Anim2.EMOTION_MODS.searching;
-    const stList = (sc.stations || []).map(s => s.title).join(' → ');
-    $('emoKicker').textContent = `${sc.key} · ${sc.name.toUpperCase()} · 7 LAYERS (P6→P0)`;
-    $('emoTitle').textContent = emoMod.label;
-    $('emoSub').textContent = stList ? `Stage Stations: ${stList}` : `Move between the handmade 7-layer stations as the reading unfolds.`;
+    const pLabels = portalLayers.slice(0, 2).map(l => (l.aperture_footage && l.aperture_footage.label) || l.label).join(' · ');
+    $('emoKicker').innerHTML = `<span style="color:${sp.badge_color || '#facc15'}">${distBadge}</span>${portalSummary}`;
+    $('emoTitle').textContent = `${sc.key} · ${sc.name} (${emoMod.label})`;
+    $('emoSub').textContent = pLabels ? `🎞️ Layered Portal Footage: ${pLabels}` : `Move seamlessly across the continuous poem world.`;
   }
 
   const focusRadius = 110 * sc.ppc;
@@ -1287,24 +1302,72 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k, sceneOff
   }
 
   ctx.save();
-  // Tuck left overlap of extended walls (`wall_with_door_hole` / `wall_bay`) BEHIND the 16:9 cel painting (`x < fw`)!
-  if (isSetExt && (legoRole === 'wall_with_door_hole' || legoRole === 'wall_bay')){
-    const frameRightEdgeX = offX + (sceneOffsetX + fw - camDelta * pFactor) * s;
-    ctx.beginPath();
-    ctx.rect(frameRightEdgeX, y0 - H_HEADROOM * s - 20, W_EXT * s + 40, H_EXT * s + 40);
-    ctx.clip();
+  const ap = lyr.aperture_footage || null;
+  const portalUrl = lyr.portal_footage_webp || (ap && ap.play_footage_file) || null;
+  const portalRec = portalUrl ? getCachedImg(portalUrl) : null;
+
+  // Compute aperture opening geometry for doors, windows, arches, TVs, and mirrors
+  let holeX0 = screenX - drawW * 0.36;
+  let holeY0 = screenY - drawH * 0.86;
+  let holeW = drawW * 0.72;
+  let holeH = drawH * 0.74;
+  if (isSetExt && legoRole === 'wall_with_door_hole'){
+    holeX0 = screenX - drawW * 0.5 + drawW * 0.36;
+    holeY0 = screenY - drawH + drawH * 0.16;
+    holeW = drawW * 0.34;
+    holeH = drawH * 0.82;
+  } else if (ap && Array.isArray(ap.aperture_rect_norm) && ap.aperture_rect_norm.length === 4){
+    const rn = ap.aperture_rect_norm;
+    holeX0 = screenX - drawW * 0.5 + drawW * rn[0];
+    holeY0 = screenY - drawH + drawH * rn[1];
+    holeW = drawW * Math.max(0.24, rn[2] - rn[0]);
+    holeH = drawH * Math.max(0.24, rn[3] - rn[1]);
   }
 
-  // Dark interior doorway aperture behind `wall_with_door_hole` (matching Uploaded Image 1)
-  if (isSetExt && legoRole === 'wall_with_door_hole'){
+  // Multiplane inner-world parallax shift as the player walks past the door/window
+  const portalShiftX = ((actor ? (actor.x - baseX) * -0.026 : 0) + Math.sin(tSec * 0.82 + k) * 4.2) * s;
+  const portalShiftY = Math.cos(tSec * 0.64 + k) * 2.2 * s;
+
+  // 1. Warm / Atmospheric Floor Light Spill in front of active portal openings
+  if ((ap || (isSetExt && legoRole === 'wall_with_door_hole')) && celRenderMode !== 'color_coded'){
+    const glowRgb = (ap && Array.isArray(ap.glow_rgb)) ? ap.glow_rgb : [238, 195, 130];
+    const spillCx = holeX0 + holeW * 0.5;
+    const spillCy = screenY + 4 * s;
+    const spillRx = Math.max(24 * s, holeW * 0.68);
     ctx.save();
-    ctx.fillStyle = 'rgba(14, 12, 18, 0.96)';
-    const holeX0 = screenX - drawW * 0.5 + drawW * 0.42;
-    const holeY0 = screenY - drawH + drawH * 0.22;
-    ctx.fillRect(holeX0, holeY0, drawW * 0.26, drawH * 0.77);
+    ctx.translate(spillCx, spillCy);
+    ctx.scale(1, 0.24);
+    const spillGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, spillRx);
+    spillGrad.addColorStop(0, `rgba(${glowRgb[0]},${glowRgb[1]},${glowRgb[2]},${0.28 * alpha})`);
+    spillGrad.addColorStop(1, `rgba(${glowRgb[0]},${glowRgb[1]},${glowRgb[2]},0)`);
+    ctx.fillStyle = spillGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, spillRx, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 
+  // 2. Behind-Frame Multiplane Portal Footage Layer (shows through transparent arches, frames & doorway cutouts)
+  if (portalRec && portalRec.ok){
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(holeX0, holeY0, holeW, holeH);
+    ctx.clip();
+    ctx.fillStyle = '#090b10';
+    ctx.fillRect(holeX0, holeY0, holeW, holeH);
+    ctx.globalAlpha = Math.max(0.15, Math.min(0.96, alpha * 0.94));
+    const padP = 12 * s;
+    ctx.drawImage(portalRec.img, holeX0 - padP + portalShiftX, holeY0 - padP + portalShiftY, holeW + padP * 2, holeH + padP * 2);
+    ctx.restore();
+  } else if (isSetExt && legoRole === 'wall_with_door_hole'){
+    ctx.save();
+    ctx.fillStyle = 'rgba(14, 12, 18, 0.94)';
+    ctx.fillRect(holeX0, holeY0, holeW, holeH);
+    ctx.restore();
+  }
+
+  // 3. Draw the Architectural / Prop Cut-Out Piece
+  ctx.save();
   ctx.globalAlpha = Math.max(0.04, Math.min(1, alpha));
   ctx.translate(screenX, screenY - drawH * 0.5);
   if (lyr.flip) ctx.scale(-1, 1);
@@ -1330,21 +1393,42 @@ function drawMultiplaneLayer(lyr, fw, fh, offX, y0, s, camDelta, ts, k, sceneOff
   }
   ctx.restore();
 
+  // 4. Inset Aperture Pane for Windows, Doors, TVs & Mirrors with Opaque Painted Interiors
+  if (portalRec && portalRec.ok && legoRole !== 'wall_with_door_hole' && celRenderMode !== 'color_coded'){
+    const inX0 = holeX0 + holeW * 0.08;
+    const inY0 = holeY0 + holeH * 0.08;
+    const inW = holeW * 0.84;
+    const inH = holeH * 0.84;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(inX0, inY0, inW, inH);
+    ctx.clip();
+    ctx.globalAlpha = Math.max(0.12, Math.min(0.88, alpha * 0.84));
+    const padIn = 10 * s;
+    ctx.drawImage(portalRec.img, inX0 - padIn + portalShiftX, inY0 - padIn + portalShiftY, inW + padIn * 2, inH + padIn * 2);
+    // Recessed lintel/jamb inner shadow
+    ctx.strokeStyle = 'rgba(8, 10, 15, 0.72)';
+    ctx.lineWidth = Math.max(2, 4 * s);
+    ctx.strokeRect(inX0, inY0, inW, inH);
+    ctx.restore();
+  }
+  ctx.restore();
+
   // Draw color-coded plane badge & bounding box when in `color_coded` mode, `soloPlane === plane`, or `asmMode`
   const showOverlay = (sceneOffsetX === 0) && (asmMode || celRenderMode === 'color_coded' || (soloPlane !== 'ALL' && soloPlane === plane));
   if (showOverlay){
     const isSel = selectedLayer === lyr;
     ctx.save();
-    ctx.strokeStyle = isSel ? '#4de2c2' : (isSetExt ? '#d8ab4f' : pSpec.hex);
+    ctx.strokeStyle = isSel ? '#4de2c2' : (ap ? '#38bdf8' : (isSetExt ? '#d8ab4f' : pSpec.hex));
     ctx.lineWidth = isSel ? 2.5 : (celRenderMode === 'color_coded' ? 1.8 : 1.3);
     if (!isSel && celRenderMode !== 'color_coded') ctx.setLineDash([4, 3]);
     ctx.strokeRect(screenX - drawW / 2, screenY - drawH, drawW, drawH);
 
-    const legoBadge = isSetExt ? '🧱 ' : '';
+    const legoBadge = ap ? '🎞️ ' : (isSetExt ? '🧱 ' : '');
     const tagText = `${legoBadge}${plane} (Z=${Number(lyr.z || pSpec.z).toFixed(1)}m) · ${(lyr.label || lyr.part_id).slice(0, 18)}`;
     ctx.font = '700 10px "JetBrains Mono", monospace';
     const tw = Math.min(drawW + 24, ctx.measureText(tagText).width + 10);
-    ctx.fillStyle = isSel ? '#4de2c2' : (isSetExt ? '#d8ab4f' : pSpec.hex);
+    ctx.fillStyle = isSel ? '#4de2c2' : (ap ? '#38bdf8' : (isSetExt ? '#d8ab4f' : pSpec.hex));
     ctx.fillRect(screenX - drawW / 2, screenY - drawH - 16, tw, 16);
     ctx.fillStyle = '#07080b';
     ctx.fillText(tagText, screenX - drawW / 2 + 4, screenY - drawH - 4);
@@ -1446,7 +1530,7 @@ function drawExplodedSevenLayerStage(sc, k, fw, fh, offX, y0, s, stageH, ts){
   });
 }
 
-/* ---------- Main Hyper-Flat Lego Wing & Continuous Poem Tape Render Loop ---------- */
+/* ---------- Main Seamless Single-World & Continuous Poem Tape Render Loop ---------- */
 function draw(sc, k, t, state, ts, dt){
   ctx.setTransform(DPR,0,0,DPR,0,0);
   ctx.clearRect(0,0,W,H);
@@ -1460,10 +1544,6 @@ function draw(sc, k, t, state, ts, dt){
   const availH = Math.max(220, H - topBarH - botBarH);
   const availW = Math.max(320, W - 20);
 
-  // Compute Hyper-Flat Camera Framing:
-  // - `hyper_flat_wing`: Shows full 2040×880 module (`1280px` Frame + `760px` Lego Wing + `160px` Upper Gable Headroom)
-  // - `continuous_tape`: Shows 3320×880 strip (`Scene k` + `760px` Lego Bridge + `Scene k+1` docked on the right)
-  // - `ortho_follow`: Smoothly pans across `x = 0..2040` at full height
   let worldSpanW = W_MOD;
   if (camMode === 'continuous_tape'){
     worldSpanW = (k + 1 < scenes.length) ? (W_MOD + W_FRAME) : W_MOD;
@@ -1477,7 +1557,7 @@ function draw(sc, k, t, state, ts, dt){
   const headroomPx = H_HEADROOM * s;
   const totalExtH = H_EXT * s;
   const yTopExt = topBarH + Math.max(0, (availH - totalExtH) * 0.5);
-  const y0 = yTopExt + headroomPx; // Top of the 16:9 cel frame (y=0 in frame coords; y=-160..0 is upper gable headroom)
+  const y0 = yTopExt + headroomPx;
   const vw = W / s;
 
   $('emoHud').style.top = (yTopExt + 6) + 'px';
@@ -1499,6 +1579,10 @@ function draw(sc, k, t, state, ts, dt){
   const px = x => offX + (x - left) * s;
   const clipW = (camMode === 'hyper_flat_wing' || camMode === 'continuous_tape') ? (worldSpanW * s) : Math.min(W, W_MOD * s);
 
+  // Calibrated Shot-Distance Actor Scale (so Close-Up 3m vs Medium 7m vs Wide 18m vs Extreme Wide 50m vs Aerial 140m is immediately felt!)
+  const sp = sc.shot_profile || {};
+  const actorShotScale = sp.actor_scale_mult ? Math.max(0.44, Math.min(1.34, sp.actor_scale_mult)) : (sc.ppc || 0.85);
+
   ctx.save();
   ctx.beginPath();
   ctx.rect(offX, yTopExt, clipW, totalExtH);
@@ -1510,7 +1594,7 @@ function draw(sc, k, t, state, ts, dt){
     return;
   }
 
-  // 1. CONTINUOUS BACKGROUND TAPE & EXTENDED BASE PLATE (`2040×880` with `160px` upper headroom + `760px` Lego Wing)
+  // 1. CONTINUOUS SEAMLESS BACKGROUND TAPE & EXTENDED BASE PLATE (`2040×880` with cross-woven horizon/ground bridge)
   const extImg = sceneExtImgs[k];
   let baseImg = sceneImgs[k];
   let useDiagnosticPlate = false;
@@ -1584,7 +1668,7 @@ function draw(sc, k, t, state, ts, dt){
     if (nextLayers[i].plane === 'P5') drawMultiplaneLayer(nextLayers[i], fw, fh, offX, y0, s, left, ts, k + 1, W_MOD);
   }
 
-  // 3b. 3D Perspective Horizon & Vanishing Point Overlay (in `layout_ink` or `asmMode`)
+  // 3b. 3D Perspective Horizon & Vanishing Point Overlay (only in `layout_ink` or `asmMode`)
   const persp = sc?.cel_passes?.perspective;
   if (persp && (celRenderMode === 'layout_ink' || asmMode)){
     const hNorm = persp.horizon_norm || [[0, 0.56], [1, 0.56]];
@@ -1614,22 +1698,24 @@ function draw(sc, k, t, state, ts, dt){
     ctx.restore();
   }
 
-  // 4. Continuous Grounded Stage Floor Deck across `0 .. worldSpanW`
+  // 4. Subtle Grounded Stage Floor Deck across `0 .. worldSpanW`
   const emoColor = (state.emotion_mod && state.emotion_mod.color) || [216, 171, 79];
   const [er, eg, eb] = emoColor;
   const floorGrad = ctx.createLinearGradient(0, fy - 12 * s, 0, y0 + stageH);
   floorGrad.addColorStop(0, `rgba(${er},${eg},${eb},0)`);
-  floorGrad.addColorStop(0.14, `rgba(12,15,22,0.52)`);
-  floorGrad.addColorStop(1, `rgba(7,9,14,0.82)`);
+  floorGrad.addColorStop(0.25, `rgba(12,15,22,0.28)`);
+  floorGrad.addColorStop(1, `rgba(7,9,14,0.58)`);
   ctx.fillStyle = floorGrad;
   ctx.fillRect(offX, fy - 12 * s, clipW, y0 + stageH - (fy - 12 * s));
 
-  ctx.strokeStyle = celRenderMode === 'color_coded' ? '#eb8c1e' : `rgba(${er},${eg},${eb},${0.35 + sceneResonance * 0.35})`;
-  ctx.lineWidth = 1.6;
-  ctx.beginPath();
-  ctx.moveTo(offX, fy);
-  ctx.lineTo(offX + clipW, fy);
-  ctx.stroke();
+  if (asmMode || celRenderMode === 'color_coded' || celRenderMode === 'layout_ink'){
+    ctx.strokeStyle = celRenderMode === 'color_coded' ? '#eb8c1e' : `rgba(${er},${eg},${eb},0.45)`;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(offX, fy);
+    ctx.lineTo(offX + clipW, fy);
+    ctx.stroke();
+  }
 
   // 5. PLANE P4: Midground Architecture, Extended Doorway Walls, Gable Roofs & Boulevard Fences (Z = 2.42m, #2d69d2)
   for (let i = 0; i < mLayers.length; i++){
@@ -1654,7 +1740,7 @@ function draw(sc, k, t, state, ts, dt){
     if (!vis) return;
     const active = t >= ln.t && t <= ln.e;
     const x = px(ln.mx);
-    const r = 90 * sc.ppc * s;
+    const r = 90 * actorShotScale * s;
     const lMod = Anim2.EMOTION_MODS[ln.emotion] || Anim2.EMOTION_MODS.searching;
     const col = st.done ? (st.ok ? '108,194,143' : '236,122,110') : lMod.color.join(',');
     const pulse = active ? 0.62 + 0.25 * Math.sin(ts / 160) : 0.28 + 0.1 * Math.sin(ts / 320);
@@ -1732,12 +1818,12 @@ function draw(sc, k, t, state, ts, dt){
     ctx.globalAlpha = cp.alpha * p2SoloDim;
     if (cp.isSoul) ctx.filter = 'drop-shadow(0 0 14px rgba(108,218,195,0.65))';
     else if (celRenderMode === 'color_coded') ctx.filter = 'drop-shadow(0 0 6px #cd282d)';
-    cp.actor.draw(ctx, cpState, px(cp.actor.x), cpY, sc.ppc * s, ts);
+    cp.actor.draw(ctx, cpState, px(cp.actor.x), cpY, actorShotScale * s, ts);
     ctx.restore();
   }
 
   // Player Footlight Aura
-  const auraR = (115 + sceneResonance * 80) * sc.ppc * s;
+  const auraR = (115 + sceneResonance * 80) * actorShotScale * s;
   const pool = ctx.createRadialGradient(px(actor.x), fy - 4, 4, px(actor.x), fy - 4, auraR);
   pool.addColorStop(0, `rgba(${er},${eg},${eb},${0.26 + sceneResonance * 0.22})`);
   pool.addColorStop(1, `rgba(${er},${eg},${eb},0)`);
@@ -1749,7 +1835,7 @@ function draw(sc, k, t, state, ts, dt){
   ctx.fillRect(px(actor.x) - auraR, fy - auraR, auraR * 2, auraR * 2);
   ctx.restore();
 
-  // Draw Playable Actor on P2
+  // Draw Playable Actor on P2 (scaled by calibrated Shot Distance `actorShotScale`!)
   ctx.save();
   ctx.globalAlpha = p2SoloDim;
   if (celRenderMode === 'color_coded' || soloPlane === 'P2'){
@@ -1757,9 +1843,9 @@ function draw(sc, k, t, state, ts, dt){
     ctx.shadowBlur = 10 * s;
   }
   if (actor.isPoet && use31PartRig){
-    drawPoet31Rig(ctx, state, px(actor.x), fy, sc.ppc * s, ts);
+    drawPoet31Rig(ctx, state, px(actor.x), fy, actorShotScale * s, ts);
   } else {
-    actor.draw(ctx, state, px(actor.x), fy, sc.ppc * s, ts);
+    actor.draw(ctx, state, px(actor.x), fy, actorShotScale * s, ts);
   }
   ctx.restore();
 
@@ -1776,50 +1862,51 @@ function draw(sc, k, t, state, ts, dt){
     if (mLayers[i].plane === 'P0') drawMultiplaneLayer(mLayers[i], fw, fh, offX, y0, s, left, ts, k, 0);
   }
 
-  // 11b. Hyper-Flat Camera Frame Boundary (`x = 1280px`) & Upper Gable Headroom Line (`y = 0`)
+  // 11b. Seamless World HUD Pill (top-right) & Optional Blueprint Grid Lines (only when Authoring or Layout mode is active!)
   const frameEdgeX = px(fw);
   const wingEdgeX = px(W_MOD);
   ctx.save();
-  // Top edge of 16:9 cel frame (separating `160px` upper gable headroom from `720px` main frame)
-  ctx.strokeStyle = 'rgba(216, 171, 79, 0.45)';
-  ctx.lineWidth = 1.2;
-  ctx.setLineDash([6, 4]);
-  ctx.beginPath();
-  ctx.moveTo(offX, y0);
-  ctx.lineTo(offX + clipW, y0);
-  ctx.stroke();
-
-  // Vertical right edge of the 1280×720 16:9 Cel Frame (`x = 1280px`) where Outside-the-Frame Lego Building begins!
-  ctx.strokeStyle = 'rgba(216, 171, 79, 0.85)';
-  ctx.lineWidth = 2.0;
-  ctx.beginPath();
-  ctx.moveTo(frameEdgeX, yTopExt);
-  ctx.lineTo(frameEdgeX, y0 + stageH);
-  ctx.stroke();
-
-  // Right edge of the 2040px Lego Extended Module (`x = 2040px`) where Scene k+1 docks on the Continuous Poem Tape
-  if (camMode === 'continuous_tape' || camMode === 'ortho_follow'){
-    ctx.strokeStyle = 'rgba(77, 226, 194, 0.75)';
+  if (asmMode || celRenderMode === 'layout_ink' || celRenderMode === 'color_coded'){
+    ctx.strokeStyle = 'rgba(216, 171, 79, 0.45)';
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([6, 4]);
     ctx.beginPath();
-    ctx.moveTo(wingEdgeX, yTopExt);
-    ctx.lineTo(wingEdgeX, y0 + stageH);
+    ctx.moveTo(offX, y0);
+    ctx.lineTo(offX + clipW, y0);
     ctx.stroke();
-  }
-  ctx.setLineDash([]);
 
-  // Architectural Zone Badges in the Upper Headroom (`yTopExt + 4`)
+    ctx.strokeStyle = 'rgba(216, 171, 79, 0.72)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(frameEdgeX, yTopExt);
+    ctx.lineTo(frameEdgeX, y0 + stageH);
+    ctx.stroke();
+
+    if (camMode === 'continuous_tape' || camMode === 'ortho_follow'){
+      ctx.strokeStyle = 'rgba(77, 226, 194, 0.65)';
+      ctx.beginPath();
+      ctx.moveTo(wingEdgeX, yTopExt);
+      ctx.lineTo(wingEdgeX, y0 + stageH);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  // Live Shot Distance & Portal Footage HUD Pill in upper-right of the stage viewport
+  const distText = sp.distance_readout ? `🎥 ${sp.distance_readout}` : `🎥 ${sc.key} · SINGLE-WORLD TAPE`;
+  const portalCnt = mLayers.filter(l => l.aperture_footage || l.portal_footage_webp).length;
+  const pillText = `${distText}${portalCnt ? ' · 🎞️ ' + portalCnt + ' PORTAL' + (portalCnt > 1 ? 'S' : '') : ''} · SEAMLESS TAPE`;
   ctx.font = `700 ${Math.max(9, Math.round(10.5 * s))}px "JetBrains Mono", monospace`;
-  ctx.fillStyle = 'rgba(11, 13, 16, 0.82)';
-  ctx.fillRect(frameEdgeX + 6, yTopExt + 5, Math.min(340 * s, (W_EXT - 12) * s), 18 * s);
-  ctx.fillStyle = '#d8ab4f';
-  ctx.fillText(`🧱 OUTSIDE-THE-FRAME LEGO WING (+760px · x=1280..2040)`, frameEdgeX + 12, yTopExt + 17 * s);
-
-  if (nextSc && camMode === 'continuous_tape'){
-    ctx.fillStyle = 'rgba(11, 13, 16, 0.82)';
-    ctx.fillRect(wingEdgeX + 6, yTopExt + 5, 290 * s, 18 * s);
-    ctx.fillStyle = '#4de2c2';
-    ctx.fillText(`🎞️ NEXT ON TAPE: ${nextSc.key} · ${nextSc.name}`, wingEdgeX + 12, yTopExt + 17 * s);
-  }
+  const pillW = ctx.measureText(pillText).width + 18;
+  const pillX = Math.max(offX + 12, offX + clipW - pillW - 10);
+  const pillY = yTopExt + 6;
+  ctx.fillStyle = 'rgba(11, 13, 16, 0.78)';
+  ctx.fillRect(pillX, pillY, pillW, 20 * s);
+  ctx.strokeStyle = sp.badge_color || '#facc15';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(pillX, pillY, pillW, 20 * s);
+  ctx.fillStyle = sp.badge_color || '#facc15';
+  ctx.fillText(pillText, pillX + 9, pillY + 14 * s);
   ctx.restore();
 
   // 12. Rising Poetic Word Echoes
@@ -1878,7 +1965,7 @@ function draw(sc, k, t, state, ts, dt){
   }
 }
 
-/* ---------- Handmade 7-Layer + Outside-the-Frame Lego Authoring Workbench ---------- */
+/* ---------- Handmade 7-Layer + Seamless World Authoring Workbench ---------- */
 function saveCurrentSceneAssembly(){
   if (!L || cur.i < 0 || !scenes[cur.i]) return;
   const sc = scenes[cur.i];
@@ -1887,7 +1974,7 @@ function saveCurrentSceneAssembly(){
     delete copy._HitBox;
     return copy;
   });
-  store.set(`wy.stage.v8.${L.num}.${cur.i}`, JSON.stringify(clean));
+  store.set(`wy.stage.v9.${L.num}.${cur.i}`, JSON.stringify(clean));
 }
 
 function renderFrameBreakdown(scOpt){
@@ -1901,13 +1988,19 @@ function renderFrameBreakdown(scOpt){
   const rawBd = sc.cel_passes.seven_layer_breakdown;
   const persp = sc.cel_passes.perspective;
   const sm = sc.cel_passes.scale_markers;
+  const sp = sc.shot_profile || {};
   const hz = persp && persp.stage_haze_rgb ? persp.stage_haze_rgb : [24, 30, 44];
   const vp = persp && persp.vp_norm ? `${Math.round(persp.vp_norm[0]*100)}%,${Math.round(persp.vp_norm[1]*100)}%` : '50%,56%';
-  const ppmTxt = sm && sm.stage_px_per_meter ? ` · SCALE: ${Math.round(sm.stage_px_per_meter)}px/m (${sm.marker_count || 0} markers)` : '';
-  let html = `<b>FRAME ${sc.cel_passes.world_key || sc.key} · VP(${vp})${ppmTxt} <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgb(${hz[0]},${hz[1]},${hz[2]});vertical-align:middle;margin-left:4px" title="Measured Frame Atmospheric Haze RGB"></span></b>`;
+  const distHeader = sp.distance_readout ? ` · <span style="color:${sp.badge_color || '#facc15'}">${sp.distance_readout}</span>` : '';
+  let html = `<b>FRAME ${sc.cel_passes.world_key || sc.key} · VP(${vp})${distHeader} <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgb(${hz[0]},${hz[1]},${hz[2]});vertical-align:middle;margin-left:4px" title="Measured Frame Atmospheric Haze RGB"></span></b>`;
   if (sm && Array.isArray(sm.markers) && sm.markers.length){
     const mTags = sm.markers.slice(0, 4).map(m => `${m.label}(${m.real_h_m}m=${Math.round(m.px_h)}px)`).join(' · ');
     html += `<div style="font-size:10px;color:#a5f3fc;margin:2px 0 4px 0">📏 Cel Scale Markers: ${mTags}</div>`;
+  }
+  const portals = (sc.multiplane_layers || []).filter(l => l.aperture_footage || l.portal_footage_webp);
+  if (portals.length){
+    const pTxt = portals.map(l => `${l.label} → ${(l.aperture_footage && l.aperture_footage.label) || 'Portal Footage'}`).join(' · ');
+    html += `<div style="font-size:10px;color:#facc15;margin:2px 0 4px 0">🎞️ Layered Portal Footage (${portals.length}): ${pTxt}</div>`;
   }
   PLANE_ORDER_BACK_TO_FRONT.forEach(pKey => {
     const info = Array.isArray(rawBd) ? rawBd.find(x => x.plane === pKey) : rawBd[pKey];
