@@ -11,6 +11,8 @@
   'use strict';
 
   var ROUTES = [
+    { id: 'terrarium',  name: '🐕 3D Terrarium & AI Dog',   does: '90 multiplane scenes, film portals, WorldText, Foundry 3D topography, Overview ↔ Horizontal Sidescroller & AI Dog Helper', path: 'shots/terrarium.html', carry: true },
+    { id: 'worldfoundry',name:'🌍 World & Foundry Atlas',   does: '14 real-city landpacks, 77 evolved Foundry worlds, 882 camera shots & 104 CLIP Inverse-Topology sculptures', path: 'shots/world_foundry.html', carry: true },
     { id: 'wagstack',   name: '🪐 WAG-STACK Workbench',     does: 'Unified 24:00 hub: Districts, World Score, Cut Book, Worm, Sound Table, 3D Ring & Floor', path: 'shots/wag_stack.html', carry: true },
     { id: 'playlevels', name: '🎮 Spectrogram World Levels', does: '14 sidescrolling poem worlds, 90 spectrogram-blended scenes & pinned World Score tape',  path: 'shots/play/levels.html', carry: true },
     { id: 'film',       name: '⊞ Seven Cuts & 2×2 Grid',    does: 'Suite, Scenes, Cineosis, Drift, Cels, Spine-Cels & Spectrogram Tape on one 24:00 clock', path: 'shots/film.html#grid', carry: true },

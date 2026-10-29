@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>WYGWYL · World Atlas, The Foundry, 882 Shots & Inverse Topology → 3D Terrarium</title>
+<style>
+:root {
+  --bg: #080c12;
+  --panel: #101722;
+  --panel2: #151f2e;
+  --ink: #f3ead2;
+  --dim: #a99f86;
+  --gold: #ffd23f;
+  --teal: #19e6c8;
+  --pink: #ff3d6e;
+  --orange: #ff8a3d;
+  --ok: #8fd694;
+  --edge: rgba(243, 234, 210, 0.16);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.55 "Iowan Old Style", Palatino, Georgia, serif;
+  min-height: 100vh;
+}
+a { color: var(--gold); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Top Unified Header */
+header.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8, 12, 18, 0.95);
+  border-bottom: 1px solid var(--edge);
+  backdrop-filter: blur(14px);
+  padding: 10px 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: 800 12px/1 "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mode-tab {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  color: var(--ink);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font: 700 11px/1 "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.mode-tab:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.mode-tab.active {
+  background: linear-gradient(180deg, #ffd23f, #dca316);
+  color: #080c12;
+  border-color: var(--gold);
+  box-shadow: 0 0 16px rgba(255, 210, 63, 0.35);
+}
+.nav-links {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.btn-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: 18px;
+  font: 800 11px/1 "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--teal);
+  background: rgba(25, 230, 200, 0.12);
+  color: var(--teal);
+  cursor: pointer;
+  text-decoration: none !important;
+}
+.btn-cta:hover {
+  background: var(--teal);
+  color: #041815;
+}
+.btn-gold {
+  border-color: var(--gold);
+  background: rgba(255, 210, 63, 0.14);
+  color: var(--gold);
+}
+.btn-gold:hover {
+  background: var(--gold);
+  color: #090d12;
+}
+.btn-orange {
+  border-color: var(--orange);
+  background: rgba(255, 138, 61, 0.15);
+  color: #ffb478;
+}
+.btn-orange:hover {
+  background: var(--orange);
+  color: #090d12;
+}
+
+main {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 20px 18px 90px;
+}
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+.kicker {
+  font: 700 11px/1.2 "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+h1 {
+  font-size: clamp(26px, 4.2vw, 42px);
+  font-weight: 400;
+  line-height: 1.08;
+  margin-bottom: 10px;
+}
+h2 {
+  font-size: 22px;
+  font-weight: 400;
+  margin: 26px 0 10px;
+  color: var(--gold);
+}
+.lede {
+  color: #ddd3bb;
+  max-width: 920px;
+  font-size: 15.5px;
+  margin-bottom: 18px;
+}
+
+/* TAB 1: WORLD ATLAS LAYOUT */
+.atlas-split {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .atlas-split { grid-template-columns: 1fr; }
+}
+.map-box {
+  position: relative;
+  background: #05080c;
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.map-box img.terrain-img {
+  width: 100%;
+  display: block;
+}
+.map-box .svg-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.poem-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.p-pill {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  color: var(--ink);
+  padding: 6px 11px;
+  border-radius: 16px;
+  font: 700 11px/1 "Helvetica Neue", Arial, sans-serif;
+  cursor: pointer;
+}
+.p-pill.on {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(255, 210, 63, 0.12);
+}
+.inspector-card {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.tape-preview {
+  width: 100%;
+  height: 78px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 210, 63, 0.35);
+  background: #000;
+}
+.scenes-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.scene-mini {
+  background: var(--panel2);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.scene-mini:hover { border-color: var(--teal); }
+.scene-mini img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+}
+.scene-mini div {
+  padding: 5px 7px;
+  font: 600 10.5px/1.3 "Helvetica Neue", Arial, sans-serif;
+  color: #ddd3bb;
+}
+.scene-mini b { color: var(--teal); }
+
+/* TAB 2: FOUNDRY WORLDS */
+.worlds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 14px;
+}
+.w-card {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.w-card .img-pair {
+  position: relative;
+  cursor: pointer;
+  background: #000;
+}
+.w-card .img-pair img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+.w-card .img-pair img.pal {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.w-card .img-pair:hover img.pal, .w-card .img-pair.show-pal img.pal {
+  opacity: 1;
+}
+.w-card .w-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(8, 12, 18, 0.85);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  padding: 3px 9px;
+  border-radius: 12px;
+  font: 800 10px/1.2 "Helvetica Neue", sans-serif;
+  letter-spacing: 0.08em;
+}
+.w-card .w-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+.views-row {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.views-row img {
+  height: 52px;
+  aspect-ratio: 2.39 / 1;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--edge);
+  cursor: pointer;
+}
+.views-row img:hover { border-color: var(--gold); }
+
+/* TAB 3: 882 SHOTS */
+.filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+#shot-search {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  color: var(--ink);
+  font-size: 15px;
+  padding: 11px 16px;
+  border-radius: 24px;
+  outline: none;
+}
+#shot-search:focus { border-color: var(--gold); }
+.chip-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0;
+  scrollbar-width: none;
+}
+.chip-row .lbl {
+  font: 800 10px/32px "Helvetica Neue", sans-serif;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+  text-transform: uppercase;
+  min-width: 64px;
+}
+.f-chip {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  color: var(--ink);
+  padding: 6px 11px;
+  border-radius: 16px;
+  font: 600 11px/1 "Helvetica Neue", sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.f-chip.on {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(255, 210, 63, 0.1);
+}
+.shots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 12px;
+}
+.s-card {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.s-card img {
+  width: 100%;
+  aspect-ratio: 2.39 / 1;
+  object-fit: cover;
+  display: block;
+  background: #000;
+}
+.s-card .s-meta {
+  padding: 9px 11px;
+  font: 12px/1.4 "Helvetica Neue", sans-serif;
+  color: var(--dim);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+.s-card .s-meta b { color: var(--gold); }
+.s-card .s-meta i {
+  color: #e5dcc5;
+  font: italic 12.5px/1.35 Georgia, serif;
+}
+
+/* TAB 4: INVERSE TOPOLOGY */
+.refs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.ref-card {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ref-card .im-wrap {
+  position: relative;
+  cursor: pointer;
+}
+.ref-card img {
+  width: 100%;
+  aspect-ratio: 2.39 / 1;
+  object-fit: cover;
+  display: block;
+}
+.ref-card img.seg {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.ref-card .im-wrap:hover img.seg { opacity: 1; }
+.ref-card .r-body {
+  padding: 8px 10px;
+  font: 11.5px/1.4 "Helvetica Neue", sans-serif;
+  color: var(--dim);
+}
+.src-badge {
+  display: inline-block;
+  font: 800 9.5px/1 sans-serif;
+  padding: 2px 6px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  margin-right: 5px;
+}
+.src-badge.markov { background: #3a2050; color: #e0b8ff; }
+.src-badge.generated { background: #203a50; color: #a8d8ff; }
+.src-badge.archive { background: #4a3a1a; color: #ffd890; }
+.src-badge.halfworld { background: #2a2a2a; color: #ddd; }
+</style>
+</head>
+<body>
+
+<header class="top-nav">
+  <div class="brand">
+    <span>🌍 WYGWYL · WORLD, FOUNDRY & 3D TERRARIUM HUB</span>
+  </div>
+  <div class="mode-tabs">
+    <button type="button" class="mode-tab active" data-tab="atlas">🗺️ 1. WORLD ATLAS & 14 STAGES</button>
+    <button type="button" class="mode-tab" data-tab="foundry">🏝️ 2. THE FOUNDRY (77 WORLDS)</button>
+    <button type="button" class="mode-tab" data-tab="shots">🎥 3. THE 882 SHOTS</button>
+    <button type="button" class="mode-tab" data-tab="inverse">⛰️ 4. INVERSE TOPOLOGY (104 REFS)</button>
+  </div>
+  <div class="nav-links">
+    <a class="btn-cta btn-gold" href="terrarium.html?stage=mount-vernon&poem=01&view=overview">▶ LAUNCH 3D TERRARIUM</a>
+    <a class="btn-cta" href="terrarium.html?stage=mount-vernon&poem=01&view=scroller">↔️ 3D HORIZONTAL SIDESCROLLER</a>
+    <a class="btn-cta btn-orange" href="wag_stack.html">◀ WAG-STACK</a>
+  </div>
+</header>
+
+<main>
+  <!-- TAB 1: WORLD ATLAS & 14 REAL-CITY STAGES -->
+  <section class="tab-pane active" id="pane-atlas">
+    <div class="kicker">Where You Go When You Leave · Perceived Island & 10 Scouted Real-City Landpacks</div>
+    <h1>Every Poem’s Ground Plays the Film & Mounts Our 90 Multiplane Scenes</h1>
+    <p class="lede">
+      Previously, clicking <b>WORLDTEXT GROUND</b> opened a bare <code>.landpack.json</code> heightfield with grey boxes and none of our assets, while <b>PLAY THE REAL CITY</b> showed generic <code>"storm gate keeper"</code> placeholders. Now every scouted stage and WorldText route is compiled with our <b>90 custom seamless sidescrolling scenes (<code>s0_ext.webp..s5_ext.webp</code>)</b>, <b>continuous <code>poem_tape.webp</code> ground ribbons</b>, <b>playable film portals (<code>P01-001.mp4..</code>)</b>, <b>cut-out props</b>, and the <b>🐕 Interactive AI Dog Helper</b>.
+    </p>
+
+    <div class="poem-bar" id="atlas-poem-bar"></div>
+
+    <div class="atlas-split">
+      <div class="map-box">
+        <img class="terrain-img" src="data/terrarium/terrain.webp" alt="WYGWYL Perceived Island Terrain">
+        <div class="svg-overlay" id="atlas-svg-wrap"></div>
+      </div>
+
+      <div class="inspector-card" id="atlas-inspector"></div>
+    </div>
+  </section>
+
+  <!-- TAB 2: THE FOUNDRY (EVOLVED WORLDS -> 3D TERRARIUM) -->
+  <section class="tab-pane" id="pane-foundry">
+    <div class="kicker">The Foundry · Quality-Diversity Evolution & 3D Landpack Compiler</div>
+    <h1>Evolved Foundry Worlds & Topography Inside the 3D Terrarium</h1>
+    <p class="lede">
+      Each Foundry world has an evolved topography genome (harbor, estuary, perceived island, caldera, ridge), 3 zones (<b>Baltimere</b>, <b>The Center</b>, <b>Atlantis</b>), palimpsest routes, and 14 poem camera stands. We compiled the elite Foundry worlds directly into 12-bit 3D Terrarium <code>.landpack.json</code> cartridges with 280 3D buildings and 28 inverse-topology camera wedges. Hover any map to toggle its <b>Palimpsest</b>, and click <b>▶ MOUNT IN 3D TERRARIUM</b> to drive or side-scroll through it!
+    </p>
+    <div class="worlds-grid" id="foundry-worlds-grid"></div>
+  </section>
+
+  <!-- TAB 3: THE 882 POEM-STEERED SHOTS -->
+  <section class="tab-pane" id="pane-shots">
+    <div class="kicker">The Shots · 882 Poem-Steered Camera Positions Across 6 Foundry Worlds</div>
+    <h1>Search Every Shot by Stanza, Framing, Light Hour & What’s in Frame</h1>
+    <p class="lede">
+      Every spoken line of the 14 poems steers a 3D camera `(x, y, z, heading, fov)` through the Foundry world. Filter by shot kind, hour of light, what is measured in frame, poem, or world — and launch any shot directly into the 3D Terrarium camera or ask the 🐕 Dog to fetch it!
+    </p>
+    <div class="filter-bar">
+      <input type="search" id="shot-search" placeholder="Search 882 shots — “moon over water”, “fire escape”, “gates”, “forest wide”, or any spoken line…">
+      <div class="chip-row" id="chips-poem"></div>
+      <div class="chip-row" id="chips-kind"></div>
+      <div class="chip-row" id="chips-what"></div>
+      <div class="chip-row" id="chips-world"></div>
+      <div id="shots-count" style="font:700 12px sans-serif;color:var(--gold)"></div>
+    </div>
+    <div class="shots-grid" id="shots-grid"></div>
+  </section>
+
+  <!-- TAB 4: INVERSE TOPOLOGY -->
+  <section class="tab-pane" id="pane-inverse">
+    <div class="kicker">Inverse Topology · 104 CLIP Reference Frames & 168 Sculpted Camera Wedges</div>
+    <h1>The Shots Shape the Land — Sculpted Terrain in the 3D Terrarium</h1>
+    <p class="lede">
+      Instead of growing a world and photographing it, Inverse Topology starts from our best MARKOV_POET clips, generated stills, Cineosis archive frames, and Halfworld shots — segments them into sky, water, city, street, forest, beach, and rock — and sculpts the 3D world’s heightfield so the terrain gives back the shot. Hover any reference below to inspect its panoptic segmentation, or open its sculpted terrain in the 3D Terrarium!
+    </p>
+    <div class="poem-bar" id="inv-poem-bar"></div>
+    <div id="inv-content"></div>
+  </section>
+</main>
+
+<script>
+(async function() {
+  const [master, shotsData, refsData, invData, svgText] = await Promise.all([
+    fetch('data/terrarium/terrarium_master_index.json').then(r => r.json()),
+    fetch('data/terrarium/foundry/shots.json').then(r => r.json()),
+    fetch('data/terrarium/foundry/refs.json').then(r => r.json()),
+    fetch('data/terrarium/foundry/inverse.json').then(r => r.json()),
+    fetch('data/terrarium/overlay.svg').then(r => r.text()).catch(() => '')
+  ]);
+
+  // Tab switching
+  document.querySelectorAll('.mode-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('pane-' + btn.dataset.tab)?.classList.add('active');
+    });
+  });
+
+  // ── TAB 1: WORLD ATLAS & 14 STAGES ─────────────────────────────────────────
+  const svgWrap = document.getElementById('atlas-svg-wrap');
+  if (svgWrap && svgText) svgWrap.innerHTML = svgText;
+
+  let curPoem = '01';
+  const poemBar = document.getElementById('atlas-poem-bar');
+  const inspector = document.getElementById('atlas-inspector');
+
+  function renderAtlas() {
+    const poems = Object.values(master.poems).sort((a, b) => a.num.localeCompare(b.num));
+    poemBar.innerHTML = poems.map(p =>
+      `<button type="button" class="p-pill ${p.num === curPoem ? 'on' : ''}" data-p="${p.num}">${p.num} · ${p.title}</button>`
+    ).join('');
+    poemBar.querySelectorAll('.p-pill').forEach(b => {
+      b.addEventListener('click', () => { curPoem = b.dataset.p; renderAtlas(); });
+    });
+
+    const pm = master.poems[curPoem];
+    const stageObj = master.real_stages.find(s => (s.poems || []).includes(curPoem)) || master.real_stages[0];
+
+    inspector.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div>
+          <div class="kicker">POEM ${pm.num} · REAL STAGE: ${stageObj.name}</div>
+          <h2 style="margin:2px 0 4px">${pm.title}</h2>
+          <div style="color:var(--dim);font:12.5px sans-serif">${pm.place} · ${pm.scenes.length} Multiplane Scenes · ${pm.clips.length} Film Clips · ${pm.wt_stops.length} WorldText Stops</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn-cta btn-gold" href="terrarium.html?stage=${stageObj.key}&poem=${pm.num}&view=overview">▶ WORLDTEXT GROUND (3D OVERVIEW)</a>
+          <a class="btn-cta" href="terrarium.html?stage=${stageObj.key}&poem=${pm.num}&view=scroller">↔️ HORIZONTAL SIDESCROLLER</a>
+          <a class="btn-cta btn-orange" href="terrarium.html?foundry=w1623&poem=${pm.num}&view=overview">🏝️ FOUNDRY w1623 3D</a>
+        </div>
+      </div>
+
+      <div>
+        <div style="font:700 10px sans-serif;letter-spacing:.12em;color:var(--gold);margin-bottom:4px">CONTINUOUS POEM TAPE & SPECTROGRAM GROUND RIBBON (<code>${pm.tape}</code>)</div>
+        <img class="tape-preview" src="${pm.tape}" alt="Poem ${pm.num} Tape">
+      </div>
+
+      <div>
+        <div style="font:700 10px sans-serif;letter-spacing:.12em;color:var(--teal);margin-bottom:6px">6 MULTIPLANE SIDESCROLLING SCENE PORTALS MOUNTED AT STOPS A → F</div>
+        <div class="scenes-strip">
+          ${pm.scenes.map(sc => `
+            <a class="scene-mini" href="terrarium.html?stage=${stageObj.key}&poem=${pm.num}&view=scroller" title="Open in 3D Horizontal Sidescroller">
+              <img src="${sc.plate}" alt="${sc.name}">
+              <div><b>STOP ${sc.key}</b> · ${sc.name}<br><span style="color:var(--dim);font-size:10px">${(sc.caption || '').slice(0, 48)}</span></div>
+            </a>
+          `).join('')}
+        </div>
+      </div>
+
+      <div>
+        <div style="font:700 10px sans-serif;letter-spacing:.12em;color:var(--orange);margin-bottom:6px">WORLDTEXT STANZA MONUMENTS ON THE REAL CITY STREET (<code>wt/${pm.num}.json</code>)</div>
+        <div style="display:flex;flex-direction:column;gap:4px;max-height:140px;overflow-y:auto;padding-right:4px">
+          ${pm.wt_stops.map((st, idx) => `
+            <div style="background:var(--panel2);border-left:3px solid var(--gold);padding:5px 9px;border-radius:4px;font-size:12.5px">
+              <b style="color:var(--gold);font-family:sans-serif;font-size:10px">STOP ${idx + 1} (${Number(st.lat).toFixed(4)}, ${Number(st.lon).toFixed(4)})</b> · “${st.text}”
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+  renderAtlas();
+
+  // ── TAB 2: THE FOUNDRY (EVOLVED WORLDS) ────────────────────────────────────
+  const fGrid = document.getElementById('foundry-worlds-grid');
+  if (fGrid) {
+    fGrid.innerHTML = master.foundry_worlds.map(fw => {
+      const viewsHtml = Array.from({ length: 13 }, (_, i) => {
+        const pn = String(i + 1).padStart(2, '0');
+        return `<a href="terrarium.html?foundry=${fw.id}&poem=${pn}&view=overview" title="Open Poem ${pn} Camera Stand in 3D Terrarium"><img src="data/terrarium/foundry/w/${fw.id}-v${pn}.jpg" alt="P${pn}"></a>`;
+      }).join('');
+      return `
+        <div class="w-card">
+          <div class="img-pair" onclick="this.classList.toggle('show-pal')" title="Click or hover to toggle Palimpsest Routes">
+            <img src="${fw.map_img}" alt="${fw.id}">
+            <img class="pal" src="${fw.palimpsest_img}" alt="${fw.id} Palimpsest">
+            <span class="w-badge">FOUNDRY ${fw.id.toUpperCase()} · ${fw.layout.toUpperCase()} · ${Math.round(fw.q * 100)}%</span>
+          </div>
+          <div class="w-body">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+              <b style="font:700 14px sans-serif;color:var(--ink)">${fw.name}</b>
+              <div style="display:flex;gap:6px">
+                <a class="btn-cta btn-gold" href="terrarium.html?foundry=${fw.id}&poem=01&view=overview">▶ 3D TERRARIUM</a>
+                <a class="btn-cta" href="terrarium.html?foundry=${fw.id}&poem=01&view=scroller">↔️ SIDESCROLLER</a>
+              </div>
+            </div>
+            <ul style="margin-left:16px;font:12px/1.4 sans-serif;color:var(--dim)">
+              ${(fw.recipe || []).slice(0, 3).map(r => `<li>${r}</li>`).join('')}
+            </ul>
+            <div style="font:700 10px sans-serif;letter-spacing:.1em;color:var(--gold);margin-top:4px">13 POEM CAMERA STAND RENDERS (CLICK ANY TO ENTER IN 3D):</div>
+            <div class="views-row">${viewsHtml}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── TAB 3: THE 882 SHOTS ──────────────────────────────────────────────────
+  const allShots = shotsData.shots || [];
+  const poemsDict = shotsData.poems || {};
+  const worldsDict = shotsData.worlds || {};
+  const KIND_NAMES = {
+    establishing: 'Establishing Wide',
+    pov: 'His Point of View',
+    sky: 'The Sky',
+    close: 'Close · Over Shoulder',
+    medium: 'Medium',
+    tracking: 'Tracking',
+    aerial: 'Aerial'
+  };
+  allShots.forEach(s => {
+    s._search = [
+      s.line,
+      (poemsDict[s.poem] || {}).title,
+      (poemsDict[s.poem] || {}).place,
+      s.kind,
+      KIND_NAMES[s.kind],
+      s.light,
+      s.subject,
+      ...(s.names || []),
+      ...(s.tags || []).map(t => t.what),
+      s.world
+    ].join(' ').toLowerCase();
+  });
+
+  const shotFilter = { poem: '', kind: '', what: '', world: 'w1623' };
+
+  function buildShotChips() {
+    const mk = (elId, label, key, vals, fmt = x => x) => {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      el.innerHTML = `<span class="lbl">${label}</span>` + vals.map(v =>
+        `<button type="button" class="f-chip ${shotFilter[key] === v ? 'on' : ''}" data-v="${v}">${fmt(v)}</button>`
+      ).join('');
+      el.querySelectorAll('.f-chip').forEach(b => {
+        b.addEventListener('click', () => {
+          shotFilter[key] = (shotFilter[key] === b.dataset.v) ? '' : b.dataset.v;
+          buildShotChips();
+          renderShotsGrid();
+        });
+      });
+    };
+    mk('chips-world', 'World', 'world', Object.keys(worldsDict), w => `${w} · ${worldsDict[w].layout}`);
+    mk('chips-poem', 'Poem', 'poem', Object.keys(poemsDict).sort(), p => `${p} ${poemsDict[p].title}`);
+    mk('chips-kind', 'Framing', 'kind', Object.keys(KIND_NAMES), k => KIND_NAMES[k]);
+    mk('chips-what', 'In Frame', 'what', ['water', 'city', 'forest', 'street', 'meadow', 'beach', 'rock']);
+  }
+
+  function renderShotsGrid() {
+    const q = (document.getElementById('shot-search')?.value || '').toLowerCase().trim();
+    const toks = q ? q.split(/\s+/).filter(Boolean) : [];
+    const filtered = allShots.filter(s => {
+      if (shotFilter.world && s.world !== shotFilter.world) return false;
+      if (shotFilter.poem && s.poem !== shotFilter.poem) return false;
+      if (shotFilter.kind && s.kind !== shotFilter.kind) return false;
+      if (shotFilter.what && !(s.tags || []).some(t => t.what === shotFilter.what && t.pct >= 2)) return false;
+      if (toks.length && !toks.every(t => s._search.includes(t))) return false;
+      return true;
+    });
+    const countEl = document.getElementById('shots-count');
+    if (countEl) countEl.textContent = `Showing ${Math.min(72, filtered.length)} of ${filtered.length} matching shots (out of ${allShots.length} total)`;
+
+    const grid = document.getElementById('shots-grid');
+    if (!grid) return;
+    grid.innerHTML = filtered.slice(0, 72).map(s => {
+      const imgUrl = s.world === 'w1623'
+        ? `data/terrarium/foundry/${s.img}`
+        : `https://hartswf0.github.io/butterfly-halfworld/wygwyl/world/foundry/${s.img}`;
+      const tagsStr = (s.tags || []).filter(t => t.what !== 'sky').slice(0, 4).map(t => `${t.what} ${t.pct}%`).join(' · ');
+      return `
+        <div class="s-card">
+          <img loading="lazy" src="${imgUrl}" alt="">
+          <div class="s-meta">
+            <div><b>P${s.poem} ${(poemsDict[s.poem] || {}).title || ''}</b> · ${KIND_NAMES[s.kind] || s.kind} · ${s.mm}mm · ${s.light} · <code>${s.world}</code></div>
+            <i>“${(s.line || '').slice(0, 130)}”</i>
+            <div style="font-size:10.5px;color:var(--teal)">${tagsStr || 'sky & horizon'} · Cam (${Math.round(s.cam.x)}m, ${Math.round(s.cam.y)}m, z=${Math.round(s.cam.z)}m, hd=${Math.round(s.cam.hd)}°)</div>
+            <div style="margin-top:auto;padding-top:6px;display:flex;gap:6px">
+              <a class="btn-cta btn-gold" style="padding:5px 10px;font-size:10px" href="terrarium.html?foundry=${s.world}&poem=${s.poem}&view=overview">▶ OPEN IN 3D TERRARIUM</a>
+              <a class="btn-cta" style="padding:5px 10px;font-size:10px" href="terrarium.html?foundry=${s.world}&poem=${s.poem}&view=scroller">↔️ SIDESCROLL</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  document.getElementById('shot-search')?.addEventListener('input', renderShotsGrid);
+  buildShotChips();
+  renderShotsGrid();
+
+  // ── TAB 4: INVERSE TOPOLOGY ───────────────────────────────────────────────
+  let invPoem = '01';
+  const invBar = document.getElementById('inv-poem-bar');
+  const invContent = document.getElementById('inv-content');
+
+  function renderInverse() {
+    const pKeys = Object.keys(refsData.poems || {}).sort();
+    invBar.innerHTML = pKeys.map(n =>
+      `<button type="button" class="p-pill ${n === invPoem ? 'on' : ''}" data-p="${n}">${n} · ${refsData.poems[n].title}</button>`
+    ).join('');
+    invBar.querySelectorAll('.p-pill').forEach(b => {
+      b.addEventListener('click', () => { invPoem = b.dataset.p; renderInverse(); });
+    });
+
+    const pInfo = refsData.poems[invPoem] || {};
+    const pRefs = (refsData.refs || []).filter(r => r.poem === invPoem);
+    const pInvShots = (invData.shots || []).filter(s => s.poem === invPoem && s.world === 'w1623');
+
+    invContent.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin:10px 0">
+        <div>
+          <h2 style="margin:0">Poem ${invPoem} · ${pInfo.title || ''} — ${pRefs.length} CLIP Reference Frames</h2>
+          <div style="color:var(--dim);font-size:13px">${(pInfo.text || [])[0] || ''} (Hover any frame to inspect panoptic segmentation)</div>
+        </div>
+        <a class="btn-cta btn-gold" href="terrarium.html?foundry=w1623&poem=${invPoem}&view=overview">⛰️ EXPLORE SCULPTED TERRAIN IN 3D TERRARIUM</a>
+      </div>
+
+      <div class="refs-grid">
+        ${pRefs.map(r => {
+          const fracStr = Object.entries(r.frac || {}).filter(([k]) => k !== 'other').sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => `${k} ${Math.round(v)}%`).join(' · ');
+          return `
+            <div class="ref-card">
+              <div class="im-wrap">
+                <img src="data/terrarium/foundry/${r.img}" alt="${r.id}">
+                ${r.seg ? `<img class="seg" src="data/terrarium/foundry/${r.seg}" alt="${r.id} seg">` : ''}
+              </div>
+              <div class="r-body">
+                <span class="src-badge ${r.source}">${r.source}</span>
+                <b style="color:var(--gold)">${r.id}</b> · CLIP ${r.clip} · ${r.hour || 'night'}<br>
+                <span style="color:var(--teal)">${fracStr}</span><br>
+                <i style="color:#e5dcc5">${(r.desc || r.line || '').slice(0, 115)}</i>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      ${pInvShots.length ? `
+        <h2>Before & After Inverse Sculpting on Foundry World w1623</h2>
+        <div class="shots-grid">
+          ${pInvShots.map(s => `
+            <div class="s-card">
+              <img src="data/terrarium/foundry/${s.b}" alt="${s.ref}">
+              <div class="s-meta">
+                <div><b>Ref ${s.ref} → Sculpted ${s.world}</b> · Match ${Math.round(s.before * 100)}% → <b style="color:var(--ok)">${Math.round(s.after * 100)}%</b></div>
+                <div style="font-size:11.5px;color:#ddd3bb">
+                  ${(s.grown || []).map(g => `• ${g}`).join('<br>') || 'Terrain already matched reference'}
+                </div>
+                <div style="margin-top:auto;padding-top:6px">
+                  <a class="btn-cta btn-gold" style="padding:5px 10px;font-size:10px" href="terrarium.html?foundry=${s.world}&poem=${s.poem}&view=overview">▶ VISIT SCULPTED CAMERA IN 3D</a>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    `;
+  }
+  renderInverse();
+})();
+</script>
+</body>
+</html>
