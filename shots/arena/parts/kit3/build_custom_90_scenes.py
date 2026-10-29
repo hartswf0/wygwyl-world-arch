@@ -3364,6 +3364,149 @@ def _apply_canvas_boundary_feather(patch_rgba: Image.Image, dest_x: int, canvas_
     return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), mode="RGBA")
 
 
+_WAG_STACK_CACHE: Optional[Dict[str, Any]] = None
+
+# 8x8 Bayer matrix normalized to [0..1] for Halfworld dot-matrix spectrogram halftoning
+_BAYER_8X8_NORM = [
+    [0 / 64.0, 32 / 64.0, 8 / 64.0, 40 / 64.0, 2 / 64.0, 34 / 64.0, 10 / 64.0, 42 / 64.0],
+    [48 / 64.0, 16 / 64.0, 56 / 64.0, 24 / 64.0, 50 / 64.0, 18 / 64.0, 58 / 64.0, 26 / 64.0],
+    [12 / 64.0, 44 / 64.0, 4 / 64.0, 36 / 64.0, 14 / 64.0, 46 / 64.0, 6 / 64.0, 38 / 64.0],
+    [60 / 64.0, 28 / 64.0, 52 / 64.0, 20 / 64.0, 62 / 64.0, 30 / 64.0, 54 / 64.0, 22 / 64.0],
+    [3 / 64.0, 35 / 64.0, 11 / 64.0, 43 / 64.0, 1 / 64.0, 33 / 64.0, 9 / 64.0, 41 / 64.0],
+    [51 / 64.0, 19 / 64.0, 59 / 64.0, 27 / 64.0, 49 / 64.0, 17 / 64.0, 57 / 64.0, 25 / 64.0],
+    [15 / 64.0, 47 / 64.0, 7 / 64.0, 39 / 64.0, 13 / 64.0, 45 / 64.0, 5 / 64.0, 37 / 64.0],
+    [63 / 64.0, 31 / 64.0, 55 / 64.0, 23 / 64.0, 61 / 64.0, 29 / 64.0, 53 / 64.0, 21 / 64.0],
+]
+
+
+def _hex_to_rgb_f(hex_str: str, fallback: Tuple[float, float, float] = (20.0, 24.0, 34.0)) -> Tuple[float, float, float]:
+    s = str(hex_str or "").strip().lstrip("#")
+    if len(s) == 3:
+        s = "".join(ch * 2 for ch in s)
+    if len(s) != 6:
+        return fallback
+    try:
+        return (float(int(s[0:2], 16)), float(int(s[2:4], 16)), float(int(s[4:6], 16)))
+    except Exception:
+        return fallback
+
+
+def _sky_hour_rgb(hour_val: float) -> Tuple[float, float, float]:
+    """
+    Matches `districts/index.html` sky(h) color script:
+    Night (`#0b1330`) runs from 01 to 10, dawn (`#e8a27a`) 4.5..7.5, day (`#9cc7e6`) 7.5..17, dusk (`#d0745a`) 17..20.5.
+    Smoothly interpolates across twilight transitions so hour [h0, h1] produces a rich sky gradient.
+    """
+    h = ((float(hour_val) % 24.0) + 24.0) % 24.0
+    stops = [
+        (0.0, (11.0, 19.0, 48.0)),     # deep night #0b1330
+        (4.2, (14.0, 22.0, 54.0)),     # pre-dawn night
+        (6.0, (232.0, 162.0, 122.0)),  # dawn #e8a27a
+        (8.2, (156.0, 199.0, 230.0)),  # day #9cc7e6
+        (16.5, (156.0, 199.0, 230.0)), # afternoon day
+        (19.0, (208.0, 116.0, 90.0)),  # dusk #d0745a
+        (21.0, (15.0, 21.0, 48.0)),    # evening night
+        (24.0, (11.0, 19.0, 48.0)),    # midnight
+    ]
+    for i in range(len(stops) - 1):
+        h0, c0 = stops[i]
+        h1, c1 = stops[i + 1]
+        if h0 <= h <= h1:
+            t = (h - h0) / max(0.001, h1 - h0)
+            t_s = t * t * (3.0 - 2.0 * t)
+            return (
+                c0[0] * (1.0 - t_s) + c1[0] * t_s,
+                c0[1] * (1.0 - t_s) + c1[1] * t_s,
+                c0[2] * (1.0 - t_s) + c1[2] * t_s,
+            )
+    return (11.0, 19.0, 48.0)
+
+
+def _load_wag_stack_spectrogram_and_districts() -> Dict[str, Any]:
+    """
+    Loads `shots/data/wag_stack/districts_scenes.json` and `shots/data/wag_stack/cut_book.json`,
+    decoding each poem's 192x48 spectrogram (`sp.data` base64 -> float32 [48, 192] in [0, 1]),
+    energy envelope, free cuts (`kill <= 0.20`), rests, and all 13 districts' `body` & `glow` palettes.
+    """
+    global _WAG_STACK_CACHE
+    if _WAG_STACK_CACHE is not None:
+        return _WAG_STACK_CACHE
+
+    import base64
+    import numpy as np
+
+    wag_dir = SHOTS_DIR / "data" / "wag_stack"
+    ds_path = wag_dir / "districts_scenes.json"
+    cb_path = wag_dir / "cut_book.json"
+
+    districts_by_id: Dict[str, Dict[str, Any]] = {}
+    scenes_by_key: Dict[str, Dict[str, Any]] = {}
+    script_by_num: Dict[str, Dict[str, Any]] = {}
+    transitions_by_from: Dict[str, Dict[str, Any]] = {}
+
+    if ds_path.exists():
+        ds = json.loads(ds_path.read_text())
+        for d in ds.get("districts", []):
+            did = d["id"]
+            body_hex = d.get("body") or ["#0d0f12", "#161922", "#1f2430"]
+            glow_hex = d.get("glow") or [d.get("color", "#fa8d15"), "#d8ab4f"]
+            districts_by_id[did] = {
+                **d,
+                "color_rgb": _hex_to_rgb_f(d.get("color", "#fa8d15")),
+                "body_rgb": [_hex_to_rgb_f(c, (14.0, 16.0, 22.0)) for c in body_hex],
+                "glow_rgb": [_hex_to_rgb_f(c, (240.0, 145.0, 35.0)) for c in glow_hex],
+            }
+        for s in ds.get("scenes", []):
+            scenes_by_key[s["key"]] = s
+        for sc_entry in ds.get("script", []):
+            script_by_num[sc_entry["num"]] = sc_entry
+        for tr in ds.get("transitions", []):
+            transitions_by_from[tr["from"]] = tr
+
+    songs_by_num: Dict[str, Dict[str, Any]] = {}
+    if cb_path.exists():
+        cb = json.loads(cb_path.read_text())
+        sets = cb.get("sets", [])
+        if sets:
+            for s in sets[0].get("songs", []):
+                num = str(s.get("n", "01")).zfill(2)
+                sp = s.get("spectrum", {})
+                w_sp = int(sp.get("w", 192))
+                h_sp = int(sp.get("h", 48))
+                raw_b64 = sp.get("data", "")
+                if raw_b64:
+                    raw_bytes = np.frombuffer(base64.b64decode(raw_b64), dtype=np.uint8)
+                    if raw_bytes.size == w_sp * h_sp:
+                        spec_arr = (raw_bytes.reshape((h_sp, w_sp)).astype(np.float32)) / 15.0
+                    else:
+                        spec_arr = np.zeros((h_sp, w_sp), dtype=np.float32)
+                else:
+                    spec_arr = np.zeros((h_sp, w_sp), dtype=np.float32)
+                env_arr = np.array(s.get("envelope", [0.35] * w_sp), dtype=np.float32)
+                free_cuts = [c for c in s.get("cuts", []) if float(c.get("kill", 1.0)) <= 0.20]
+                songs_by_num[num] = {
+                    "meta": {k: s[k] for k in ("n", "title", "seconds", "lufs", "lra", "bpm", "pulse", "balance", "onsets_per_min", "rest_seconds") if k in s},
+                    "spec_arr": spec_arr,
+                    "env_arr": env_arr,
+                    "free_cuts": free_cuts,
+                    "all_cuts": s.get("cuts", []),
+                    "rests": s.get("rests", []),
+                    "sections": s.get("sections", []),
+                    "spectrum_b64": raw_b64,
+                    "spectrum_w": w_sp,
+                    "spectrum_h": h_sp,
+                }
+
+    _WAG_STACK_CACHE = {
+        "districts_by_id": districts_by_id,
+        "scenes_by_key": scenes_by_key,
+        "script_by_num": script_by_num,
+        "transitions_by_from": transitions_by_from,
+        "songs_by_num": songs_by_num,
+    }
+    return _WAG_STACK_CACHE
+
+
 def render_clean_scene_plate(
     out_webp: pathlib.Path,
     backdrop_path: pathlib.Path,
@@ -3379,21 +3522,28 @@ def render_clean_scene_plate(
     next_cel_path: Optional[pathlib.Path] = None,
     stage_ppm: float = 114.0,
     poem_num: int = 1,
+    skey: str = "01.0",
+    next_skey: str = "01.1",
+    sc_idx: int = 0,
+    n_sc: int = 6,
     return_pil: bool = False,
 ) -> Optional[Image.Image]:
     """
-    Assembles a 100% SEAMLESS Single-World Scene + Inter-Scene Bridge Plate (`2040x880`, `W_MOD x H_EXT`)
-    and crops the `1280x720` main frame (`s<idx>.webp`):
-      1. Eliminates the `x = 1280` vertical seam by starting `t_bridge` strictly at `x = 1280` (`w_next == 0`
-         and `w_wash == 0` for all `x <= 1280`) and softening the mirror-reflection crease across `x = 1280`.
-      2. Eliminates the `y = 160` horizontal headroom seam by driving `w_mir = v_smooth ** 1.35` to `1.0` at
-         `y = 159` so `headroom_np[159] == mir_top[159] == strip_720_np[0]`.
-      3. Eliminates the `x = 2040` inter-scene seam by tapering any prop/wall/portal alpha over the outer
-         `108px` (`_apply_canvas_boundary_feather`) and matching `strip_720_np[:, 2039] == next_np[:, 0]`.
-      4. Composites a Scale-Calibrated Poet Reference Figure (`1.72m * stage_ppm` pixels tall: `30px` in `140m`
-         Aerial vs `285px` in `3.1m` Close-Up) onto `s<idx>.webp` and `s<idx>_ext.webp` (after saving
-         `s<idx>_env.webp` and `s<idx>_ext_env.webp` actor-free for `levels.html`) so shot scale & distance
-         are immediately visible at a glance!
+    Assembles a 100% SEAMLESS Single-World Scene + Visual Spectrogram & District Colour-Script Bridge Plate
+    (`2040x880`, `W_MOD x H_EXT`) and crops the `1280x720` main frame (`s<idx>.webp`):
+      1. ZERO Rorschach Mirror-Flipping (`np.flip` removed from horizontal bridge!):
+         Instead of flipping `curr_np` and `next_np`, builds a Multi-Scale Horizontal Strata Advection
+         that locks with exact C0+C1 pixel continuity at `x = 1280` (`exp(-x_ext / 28.0)`) and at `x = 2039`
+         (`exp(-(759 - x_ext) / 28.0)`), blended through the exact **District Body/Glow Palette Ramp**
+         (`d_curr -> d_next`) and **Treatment Sky-Hour Gradient (`hour[0] -> hour[1]`)** from `districts_scenes.json`.
+      2. "Hides the Crimes" in the Poem's Visual Spectrogram & Dark Architectural Thresholds:
+         Infuses the `x = 1280..2040` inter-scene bridge with the poem's real 48-band audio spectrogram &
+         8x8 Bayer Dot-Halfworld frequency columns from `cut_book.json`, rising out of deep `The Black` /
+         `d.body[0]` architectural silhouette piers with `d.glow` rim lighting.
+      3. Grades any `wall_with_door_hole` / `wall_bay` extension piece into a **Dark District Silhouette Pier**
+         (`d.body[0..1]` shadow core + `d.glow` contour rim) so no grey stone box ever sits over a colorful sky.
+      4. Keeps `s<idx>.webp`, `s<idx>_ext.webp`, and `poem_tape.webp` 100% free of frozen duplicate Poet statues
+         (the live playable Poet in `levels.html` dynamically scales by `stage_ppm`).
     """
     import cv2
     import numpy as np
@@ -3408,53 +3558,139 @@ def render_clean_scene_plate(
     curr_np = np.array(bg_curr.convert("RGB"), dtype=np.float32)
     next_np = np.array(bg_next.convert("RGB"), dtype=np.float32)
 
-    x_coords = np.arange(W_MOD, dtype=np.float32)[None, :, None]  # (1, 2040, 1)
+    wag = _load_wag_stack_spectrogram_and_districts()
+    d_map = wag["districts_by_id"]
+    sc_map = wag["scenes_by_key"]
+    scr_map = wag["script_by_num"]
+    song_map = wag["songs_by_num"]
 
-    # 1. Build `curr_full` (720 x 2040 x 3) and soften the mirror crease across `x = 1280`
-    mir_curr = np.flip(curr_np[:, -W_EXT:, :], axis=1)
-    curr_raw = np.concatenate([curr_np, mir_curr], axis=1)  # (720, 2040, 3)
-    curr_crease_blur = cv2.GaussianBlur(curr_raw, (95, 15), 24.0)
-    w_crease = 0.78 * np.exp(-(((x_coords - float(W_FRAME)) / 96.0) ** 2))
-    curr_full = curr_raw * (1.0 - w_crease) + curr_crease_blur * w_crease
+    sc_curr_meta = sc_map.get(skey, {})
+    sc_next_meta = sc_map.get(next_skey, sc_curr_meta)
+    d_curr_id = str(sc_curr_meta.get("d", "haze"))
+    d_next_id = str(sc_next_meta.get("d", d_curr_id))
+    d_curr = d_map.get(d_curr_id, d_map.get("haze", {}))
+    d_next = d_map.get(d_next_id, d_curr)
 
-    # 2. Build `next_full` (720 x 2040 x 3) ending at `x = 2039` with `next_np[:, 0]`
-    mir_next_lead = np.flip(next_np[:, :W_EXT, :], axis=1)  # column 759 is `next_np[:, 0]`
-    mir_next_far = curr_np[:, :W_FRAME, :]
-    next_full = np.concatenate([mir_next_far, mir_next_lead], axis=1)  # (720, 2040, 3)
+    scr_entry = scr_map.get(num_str, {"hour": [19.2, 20.4]})
+    h_pair = scr_entry.get("hour", [19.2, 20.4])
+    h_start = float(h_pair[0]) + (float(h_pair[1]) - float(h_pair[0])) * (float(sc_idx) / max(1.0, float(n_sc)))
+    h_end = float(h_pair[0]) + (float(h_pair[1]) - float(h_pair[0])) * (float(sc_idx + 1) / max(1.0, float(n_sc)))
+    sky_curr_rgb = np.array(_sky_hour_rgb(h_start), dtype=np.float32)
+    sky_next_rgb = np.array(_sky_hour_rgb(h_end), dtype=np.float32)
 
-    # 3. Row-by-row horizon-aligned gouache wash strictly across the bridge (`x = 1280..2040`)
-    right_strip = curr_np[:, -96:, :].mean(axis=1)  # (720, 3)
-    left_strip = next_np[:, :96, :].mean(axis=1)    # (720, 3)
-    right_smooth = cv2.GaussianBlur(right_strip[:, None, :], (1, 45), 11.0)[:, 0, :]
-    left_smooth = cv2.GaussianBlur(left_strip[:, None, :], (1, 45), 11.0)[:, 0, :]
+    body_curr_rgb = np.array((d_curr.get("body_rgb") or [(18.0, 20.0, 28.0)])[0], dtype=np.float32)
+    body_next_rgb = np.array((d_next.get("body_rgb") or [(18.0, 20.0, 28.0)])[0], dtype=np.float32)
+    mid_curr_rgb = np.array((d_curr.get("body_rgb") or [(38.0, 42.0, 56.0)])[-1], dtype=np.float32)
+    mid_next_rgb = np.array((d_next.get("body_rgb") or [(38.0, 42.0, 56.0)])[-1], dtype=np.float32)
+    glow_curr_rgb = np.array((d_curr.get("glow_rgb") or [(245.0, 145.0, 35.0)])[min(1, len(d_curr.get("glow_rgb", [1])) - 1)], dtype=np.float32)
+    glow_next_rgb = np.array((d_next.get("glow_rgb") or [(245.0, 145.0, 35.0)])[min(1, len(d_next.get("glow_rgb", [1])) - 1)], dtype=np.float32)
 
-    # Strictly `t_bridge == 0.0` for `x <= 1280` and `t_bridge == 1.0` at `x = 2039`
-    t_bridge = np.clip((x_coords - float(W_FRAME)) / float(W_EXT - 1), 0.0, 1.0)
-    w_next = 0.5 - 0.5 * np.cos(np.pi * t_bridge)
+    # 1. Build the 760px Inter-Scene Bridge (`x = 1280..2039`) WITHOUT `np.flip` Rorschach mirroring!
+    #    Multi-scale horizontal color strata from `curr_np`'s right edge and `next_np`'s left edge:
+    r_col0 = curr_np[:, -1, :]  # exact pixel column at x = 1279 (720, 3)
+    l_col0 = next_np[:, 0, :]   # exact pixel column at x = 0 of next scene (720, 3)
 
-    # `w_wash == 0.0` at `x <= 1280` AND `w_wash == 0.0` at `x = 2039` -> ZERO vertical seam at x=1280 or x=2040!
-    sin_bridge = np.maximum(0.0, np.sin(np.pi * t_bridge))
-    w_wash = 0.42 * (sin_bridge ** 1.35)
-    wash_rgb = right_smooth[:, None, :] * (1.0 - w_next) + left_smooth[:, None, :] * w_next
+    r_fine = cv2.GaussianBlur(curr_np[:, -24:, :].mean(axis=1)[:, None, :], (1, 9), 2.2)[:, 0, :]
+    l_fine = cv2.GaussianBlur(next_np[:, :24, :].mean(axis=1)[:, None, :], (1, 9), 2.2)[:, 0, :]
+    r_mid = cv2.GaussianBlur(curr_np[:, -80:, :].mean(axis=1)[:, None, :], (1, 31), 7.5)[:, 0, :]
+    l_mid = cv2.GaussianBlur(next_np[:, :80, :].mean(axis=1)[:, None, :], (1, 31), 7.5)[:, 0, :]
+    r_broad = cv2.GaussianBlur(curr_np[:, -160:, :].mean(axis=1)[:, None, :], (1, 75), 18.0)[:, 0, :]
+    l_broad = cv2.GaussianBlur(next_np[:, :160, :].mean(axis=1)[:, None, :], (1, 75), 18.0)[:, 0, :]
 
-    tex_cross = curr_full * (1.0 - w_next) + next_full * w_next
-    tex_blur = cv2.GaussianBlur(tex_cross, (31, 9), 7.5)
-    w_brush = 0.36 * (sin_bridge ** 1.2)
-    tex_painted = tex_cross * (1.0 - w_brush) + tex_blur * w_brush
+    x_ext = np.arange(W_EXT, dtype=np.float32)[None, :, None]  # (1, 760, 1)
+    t_b = x_ext / float(W_EXT - 1)                             # 0.0 at x=1280, 1.0 at x=2039
+    w_next = 0.5 - 0.5 * np.cos(np.pi * t_b)
+    sin_b = np.maximum(0.0, np.sin(np.pi * t_b))
 
-    strip_720_f = tex_painted * (1.0 - w_wash) + wash_rgb * w_wash
+    # Decay exact pixel detail from `curr_np[:, -1]` on left and into `next_np[:, 0]` on right -> ZERO Rorschach symmetry!
+    decay_l = np.exp(-x_ext / 28.0)
+    decay_r = np.exp(-(float(W_EXT - 1) - x_ext) / 28.0)
+    fine_decay_l = np.exp(-x_ext / 95.0)
+    fine_decay_r = np.exp(-(float(W_EXT - 1) - x_ext) / 95.0)
+
+    curr_stream = (
+        r_broad[:, None, :]
+        + (r_mid - r_broad)[:, None, :] * np.exp(-x_ext / 220.0)
+        + (r_fine - r_mid)[:, None, :] * fine_decay_l
+        + (r_col0 - r_fine)[:, None, :] * decay_l
+    )
+    next_stream = (
+        l_broad[:, None, :]
+        + (l_mid - l_broad)[:, None, :] * np.exp(-(float(W_EXT - 1) - x_ext) / 220.0)
+        + (l_fine - l_mid)[:, None, :] * fine_decay_r
+        + (l_col0 - l_fine)[:, None, :] * decay_r
+    )
+    bridge_base = curr_stream * (1.0 - w_next) + next_stream * w_next  # (720, 760, 3)
+
+    # 2. Infuse the District Colour-Script & 48-Band Audio Spectrogram across the bridge (`sin_b > 0`)
+    yy_b = np.linspace(0.0, 1.0, H, dtype=np.float32)[:, None, None]  # (720, 1, 1)
+    d_sky_ramp = sky_curr_rgb[None, None, :] * (1.0 - w_next) + sky_next_rgb[None, None, :] * w_next
+    d_mid_ramp = mid_curr_rgb[None, None, :] * (1.0 - w_next) + mid_next_rgb[None, None, :] * w_next
+    d_body_ramp = body_curr_rgb[None, None, :] * (1.0 - w_next) + body_next_rgb[None, None, :] * w_next
+    d_glow_ramp = glow_curr_rgb[None, None, :] * (1.0 - w_next) + glow_next_rgb[None, None, :] * w_next
+
+    # Vertical atmospheric strata for the District Colour Script (sky at top -> district mid -> deep district body at floor)
+    w_sky_v = np.clip(1.0 - yy_b / 0.42, 0.0, 1.0) ** 1.4
+    w_floor_v = np.clip((yy_b - 0.58) / 0.42, 0.0, 1.0) ** 1.3
+    w_mid_v = np.maximum(0.0, 1.0 - w_sky_v - w_floor_v)
+    district_strata = d_sky_ramp * w_sky_v + d_mid_ramp * w_mid_v + d_body_ramp * w_floor_v
+
+    # Blend 34% of the District Colour-Script strata into the middle of the bridge (0% at x=1280 and x=2039)
+    w_district_wash = 0.34 * (sin_b ** 1.35)
+    bridge_f = bridge_base * (1.0 - w_district_wash) + district_strata * w_district_wash
+
+    # 3. Render the Poem's 48-Band Visual Spectrogram & Bayer 8x8 Dot-Halfworld Ribbons into the bridge!
+    song_info = song_map.get(num_str)
+    if song_info is not None:
+        spec_arr = song_info["spec_arr"]  # (48, 192)
+        env_arr = song_info["env_arr"]    # (192,)
+        w_sp = spec_arr.shape[1]
+        c0 = int(round((float(sc_idx) + 0.55) / max(1.0, float(n_sc)) * (w_sp - 1)))
+        c1 = int(round((float(sc_idx) + 1.00) / max(1.0, float(n_sc)) * (w_sp - 1)))
+        c0 = max(0, min(w_sp - 4, c0))
+        c1 = max(c0 + 4, min(w_sp, c1))
+        spec_slice = spec_arr[:, c0:c1]  # (48, cols)
+        env_slice = env_arr[c0:c1]       # (cols,)
+
+        # Resize the spectrogram slice smoothly to (H=720, W_EXT=760)
+        spec_2d = cv2.resize(spec_slice, (W_EXT, H), interpolation=cv2.INTER_CUBIC)
+        env_1d = cv2.resize(env_slice[None, :], (W_EXT, 1), interpolation=cv2.INTER_LINEAR)[0]  # (760,)
+
+        # Create subtle vertical spectrogram frequency columns + 8x8 Bayer dot-matrix modulation
+        bayer_tile = np.array(_BAYER_8X8_NORM, dtype=np.float32)
+        yy_idx, xx_idx = np.mgrid[0:H, 0:W_EXT]
+        bayer_map = bayer_tile[(yy_idx // 3) % 8, (xx_idx // 3) % 8]
+        dot_mask = np.clip((spec_2d - bayer_map * 0.55) * 2.2, 0.0, 1.0)
+
+        # Concentrate spectrogram energy in the horizon/midground band (`y = 0.16..0.82`) and fade to 0 at bridge ends
+        sin_vert = np.maximum(0.0, np.sin(np.pi * np.clip((yy_b[:, :, 0] - 0.10) / 0.78, 0.0, 1.0)))
+        vert_window = sin_vert ** 1.2
+        spec_glow_w = (0.18 * spec_2d + 0.10 * dot_mask) * vert_window * (sin_b[:, :, 0] ** 1.4)
+        bridge_f = bridge_f * (1.0 - spec_glow_w[..., None]) + d_glow_ramp * spec_glow_w[..., None]
+
+        # Subtle dark architectural threshold silhouette under the audio energy envelope near the floor (`The Black`)
+        arch_sil_h = (0.10 + 0.16 * env_1d[None, :]) * (sin_b[:, :, 0] ** 1.3)
+        arch_sil_mask = np.clip((yy_b[:, :, 0] - (0.86 - arch_sil_h)) / 0.08, 0.0, 1.0) * (sin_b[:, :, 0] ** 1.5) * 0.42
+        black_pier_rgb = d_body_ramp * 0.55 + np.array([10.0, 12.0, 16.0], dtype=np.float32)[None, None, :] * 0.45
+        bridge_f = bridge_f * (1.0 - arch_sil_mask[..., None]) + black_pier_rgb * arch_sil_mask[..., None]
+
+    strip_720_f = np.concatenate([curr_np, bridge_f], axis=1)  # (720, 2040, 3)
     strip_720_np = np.clip(strip_720_f, 0, 255).astype(np.uint8)
 
-    # 4. Build `2040 x 160` upper headroom where `y = 159` matches `strip_720_np[0]` with ZERO step (`w_mir == 1.0` at `y = 159`)!
+    # 4. Build `2040 x 160` upper headroom using vertical sky advection + Sky-Hour colour script (`w_mir == 1.0` at `y = 159`)!
+    top_rows_blur = cv2.GaussianBlur(strip_720_np[:96, :, :].astype(np.float32), (65, 35), 16.0)
     mir_top_raw = np.flip(strip_720_np[:H_HEADROOM, :, :], axis=0).astype(np.float32)
-    mir_top_blur = cv2.GaussianBlur(mir_top_raw, (45, 25), 11.0)
+    mir_top_blur = cv2.GaussianBlur(mir_top_raw, (55, 29), 13.0)
     v_t = np.linspace(0.0, 1.0, H_HEADROOM, dtype=np.float32)[:, None, None]
     v_smooth = v_t * v_t * (3.0 - 2.0 * v_t)
     # At `y = 159` (`v_t = 1.0`), `mir_top_blend` equals `mir_top_raw[-1] == strip_720_np[0]`
     mir_top_blend = mir_top_blur * (1.0 - v_smooth) + mir_top_raw * v_smooth
-    top_sky_row = cv2.GaussianBlur(strip_720_np[:36, :, :].astype(np.float32), (65, 21), 16.0).mean(axis=0)
-    studio_sky = top_sky_row * 0.78 + np.array([18.0, 22.0, 32.0], dtype=np.float32)[None, :] * 0.22
-    sky_grad = studio_sky[None, :, :] * (1.0 - v_smooth) + top_sky_row[None, :, :] * v_smooth
+    top_sky_row = top_rows_blur[:24, :, :].mean(axis=0)  # (2040, 3)
+    # Infuse the upper sky canopy with the treatment's exact Hour Sky colour!
+    x_all = np.linspace(0.0, 1.0, W_MOD, dtype=np.float32)[None, :, None]
+    hour_sky_bar = sky_curr_rgb[None, None, :] * (1.0 - x_all) + sky_next_rgb[None, None, :] * x_all
+    studio_sky = top_sky_row[None, :, :] * 0.68 + hour_sky_bar * 0.32
+    sky_grad = studio_sky * (1.0 - v_smooth) + top_sky_row[None, :, :] * v_smooth
     w_mir = v_smooth ** 1.35  # 0.0 at y=0, 1.0 at y=159 -> exact C0+C1 match at y=160!
     headroom_f = sky_grad * (1.0 - w_mir) + mir_top_blend * w_mir
     headroom_np = np.clip(headroom_f, 0, 255).astype(np.uint8)
@@ -3504,14 +3740,13 @@ def render_clean_scene_plate(
         props_out_dir.mkdir(parents=True, exist_ok=True)
 
     # Check if the scene has dedicated framed portal pieces (`portal_door_arch`, `portal_window`, or in-frame portals)
-    # so we don't paste a second unframed rectangular portal box onto bare `wall_with_door_hole` / `wall_bay` plaster!
     has_framed_ext_portal = any(
         bool(l.get("aperture_footage")) and str(l.get("lego_role", "")) not in ("wall_with_door_hole", "wall_bay")
         for l in layers
         if not l.get("is_world_sheet")
     )
 
-    # Paint all 7 planes (`P6 -> P0`) of curated in-frame props + Outside-the-Frame Lego Set Extensions
+    # Paint all 7 planes (`P6 -> P0`) of curated in-frame props + Outside-the-Frame Set Extensions
     draw_layers = sorted(
         [l for l in layers if not l.get("is_world_sheet")],
         key=lambda item: float(item.get("z", 1.4)),
@@ -3561,23 +3796,26 @@ def render_clean_scene_plate(
             cel_scene_img=cel_scene_small,
         )
 
-        # Soft-feather all 4 edges of any wide `wall_with_door_hole` or `wall_bay` and infuse it with the exact
-        # spatially-aligned cel backdrop behind it so it melts into the continuous background tape with zero box edges!
+        # "Hide the Crimes": Transform any `wall_with_door_hole` or `wall_bay` extension piece from a grey cardboard
+        # wall into a Dark District Silhouette Threshold (`d.body[0]` + background blend + `d.glow` rim) that melts
+        # into the spectrogram sky with ZERO grey patches!
         if is_ext and l_role in ("wall_with_door_hole", "wall_bay"):
             if has_framed_ext_portal:
                 lyr.pop("aperture_footage", None)
             p_np = np.array(p_cel, dtype=np.float32)
             ph_c, pw_c = p_np.shape[:2]
             exact_bg = bg_crop.resize((pw_c, ph_c), Image.Resampling.BILINEAR).convert("RGB")
-            exact_bg_f = cv2.GaussianBlur(np.array(exact_bg, dtype=np.float32), (25, 25), 7.0)
-            p_np[..., :3] = 0.64 * p_np[..., :3] + 0.36 * exact_bg_f
+            exact_bg_f = cv2.GaussianBlur(np.array(exact_bg, dtype=np.float32), (31, 31), 9.0)
+            # Grade the wall into the local District's dark architectural shadow (`body_curr_rgb`) + background
+            dark_arch = body_curr_rgb[None, None, :] * 0.55 + exact_bg_f * 0.45
+            p_np[..., :3] = 0.28 * p_np[..., :3] + 0.72 * dark_arch
             yy_w, xx_w = np.mgrid[0:ph_c, 0:pw_c].astype(np.float32)
-            bristle_w = 16.0 * np.sin(yy_w * 0.08) + 9.0 * np.cos(yy_w * 0.21)
-            feather_l = max(160.0, min(320.0, pw_c * 0.42))
-            feather_r = max(120.0, min(240.0, pw_c * 0.30))
-            feather_t = max(64.0, min(140.0, ph_c * 0.26))
-            feather_b = max(32.0, min(72.0, ph_c * 0.14))
-            left_start = max(0.0, float(1220 - dx)) if dx < 1260 else 0.0
+            bristle_w = 18.0 * np.sin(yy_w * 0.08) + 10.0 * np.cos(yy_w * 0.21)
+            feather_l = max(180.0, min(340.0, pw_c * 0.45))
+            feather_r = max(140.0, min(260.0, pw_c * 0.35))
+            feather_t = max(110.0, min(220.0, ph_c * 0.42))
+            feather_b = max(36.0, min(80.0, ph_c * 0.16))
+            left_start = max(0.0, float(1240 - dx)) if dx < 1270 else 0.0
             t_l = np.clip((xx_w - left_start + bristle_w) / feather_l, 0.0, 1.0)
             w_l = 0.5 - 0.5 * np.cos(np.pi * t_l)
             t_r = np.clip(((pw_c - 1 - xx_w) + bristle_w) / feather_r, 0.0, 1.0)
@@ -3586,7 +3824,15 @@ def render_clean_scene_plate(
             w_top = 0.5 - 0.5 * np.cos(np.pi * t_top)
             t_bot = np.clip(((ph_c - 1 - yy_w) + 0.5 * bristle_w) / feather_b, 0.0, 1.0)
             w_bot = 0.5 - 0.5 * np.cos(np.pi * t_bot)
-            p_np[..., 3] *= (0.66 * w_l * w_r * w_top * w_bot)
+            p_np[..., 3] *= (0.46 * w_l * w_r * w_top * w_bot)
+            p_cel = Image.fromarray(np.clip(p_np, 0, 255).astype(np.uint8), mode="RGBA")
+        elif is_ext:
+            # Infuse other extension pieces (`portal_door_arch`, `portal_window`, `building_pier`, `stair_bridge_rail`)
+            # with a subtle District Body/Glow tint so they belong 100% to the District Colour Script!
+            p_np = np.array(p_cel, dtype=np.float32)
+            lum = (0.299 * p_np[..., 0] + 0.587 * p_np[..., 1] + 0.114 * p_np[..., 2]) / 255.0
+            d_tint = body_curr_rgb[None, None, :] * (1.0 - lum[..., None]) + glow_curr_rgb[None, None, :] * (lum[..., None] * 0.85)
+            p_np[..., :3] = 0.76 * p_np[..., :3] + 0.24 * d_tint
             p_cel = Image.fromarray(np.clip(p_np, 0, 255).astype(np.uint8), mode="RGBA")
 
         # Save the cel-colorized, gouache-brushed RGBA piece sprite for `levels.html`
@@ -3638,7 +3884,7 @@ def render_clean_scene_plate(
                     portal_baked = _apply_canvas_boundary_feather(portal_patch, ap_x0, W_MOD)
                     ext_canvas.alpha_composite(portal_baked, dest=(ap_x0, ap_y0))
 
-                    # Warm floor light spill wedge in front of the portal threshold
+                    # District-glow floor light spill wedge in front of the portal threshold
                     if bool(af.get("warm_spill", True)) and by >= H_HEADROOM + 360:
                         spill_layer = Image.new("RGBA", (W_MOD, H_EXT), (0, 0, 0, 0))
                         sp_draw = ImageDraw.Draw(spill_layer)
@@ -3650,7 +3896,8 @@ def render_clean_scene_plate(
                             (min(W_MOD - 2, ap_x1 + int(ap_w * 0.28)), sp_y1),
                             (max(2, ap_x0 - int(ap_w * 0.22)), sp_y1),
                         ]
-                        sp_draw.polygon(sp_poly, fill=(245, 208, 138, 44))
+                        g_col = (int(glow_curr_rgb[0]), int(glow_curr_rgb[1]), int(glow_curr_rgb[2]), 42)
+                        sp_draw.polygon(sp_poly, fill=g_col)
                         spill_layer = spill_layer.filter(ImageFilter.GaussianBlur(radius=9))
                         ext_canvas = Image.alpha_composite(ext_canvas, spill_layer)
 
@@ -3669,52 +3916,6 @@ def render_clean_scene_plate(
             ia = ia.point(lambda a: int(a * 0.82))
             inset_patch = _apply_canvas_boundary_feather(Image.merge("RGBA", (ir, ig, ib, ia)), inset_x, W_MOD)
             ext_canvas.alpha_composite(inset_patch, dest=(inset_x, inset_y))
-
-    # Composite Scale-Calibrated Poet Reference Figure (`1.72m * stage_ppm` px tall) onto the baked preview plate
-    # so `s<idx>.webp`, `s<idx>_ext.webp`, and `poem_tape.webp` immediately reveal how close or far each shot is!
-    # (`s<idx>_env.webp` and `s<idx>_ext_env.webp` were already saved above without the actor for `levels.html`.)
-    actor_sprite_rel = (
-        "play/assets/poet__black_tshirt/06.webp"
-        if poem_num <= 3
-        else "play/assets/poet__red_black_sunglasses/09.webp"
-    )
-    actor_sprite_path = SHOTS_DIR / actor_sprite_rel
-    if actor_sprite_path.exists():
-        try:
-            act_im = Image.open(actor_sprite_path).convert("RGBA")
-            aw0, ah0 = act_im.size
-            # Canonical 1.72m human height scaled by `stage_ppm` (`30px` in 140m Aerial vs `285px` in 3.1m Close-Up)
-            act_h = max(28, min(320, int(round(1.72 * float(stage_ppm)))))
-            act_w = max(16, int(round(act_h * (float(aw0) / max(1.0, float(ah0))))))
-            act_resized = act_im.resize((act_w, act_h), Image.Resampling.LANCZOS)
-            act_cx = 560
-            act_by = fy_ext
-            act_dx = act_cx - act_w // 2
-            act_dy = act_by - act_h
-            bg_act_crop = cel_ref_ext.crop((
-                max(0, act_dx - 48),
-                max(0, act_dy - 48),
-                min(W_MOD, act_dx + act_w + 48),
-                min(H_EXT, act_dy + act_h + 48),
-            ))
-            act_cel = clean_and_integrate_cutout(
-                act_resized,
-                bg_act_crop,
-                "P2",
-                haze_rgb=haze_rgb,
-                cel_scene_img=cel_scene_small,
-            )
-            # Grounded foot contact shadow under the scale-calibrated Poet figure
-            ash_layer = Image.new("RGBA", (W_MOD, H_EXT), (0, 0, 0, 0))
-            asdraw = ImageDraw.Draw(ash_layer)
-            arx = max(10, int(act_w * 0.38))
-            ary = max(4, int(act_h * 0.06))
-            asdraw.ellipse([act_cx - arx, act_by - ary, act_cx + arx, act_by + ary], fill=(5, 7, 11, 118))
-            ash_layer = ash_layer.filter(ImageFilter.GaussianBlur(radius=5))
-            ext_canvas = Image.alpha_composite(ext_canvas, ash_layer)
-            ext_canvas.alpha_composite(act_cel, dest=(act_dx, act_dy))
-        except Exception:
-            pass
 
     # Whole-Canvas Master Painting Unification Pass across all `2040x880` pixels:
     rgb_arr = np.array(ext_canvas.convert("RGB"), dtype=np.uint8)
@@ -3758,7 +3959,7 @@ def render_clean_scene_plate(
 
 
 def main() -> None:
-    print("[1/5] Loading wygwyl_atlas_manifest.json and world_data.js...")
+    print("[1/5] Loading wygwyl_atlas_manifest.json, world_data.js, districts_scenes.json & cut_book.json...")
     manifest = json.loads(MANIFEST_PATH.read_text())
     parts_by_id: Dict[str, Dict[str, Any]] = {}
     sheet_by_part: Dict[str, Dict[str, Any]] = {}
@@ -3771,6 +3972,7 @@ def main() -> None:
     world_txt = world_js_path.read_text().replace("window.WORLD = ", "", 1).rstrip(";\n ")
     world_data = json.loads(world_txt)
     world_by_k: Dict[str, Dict[str, Any]] = {s["k"]: s for s in world_data.get("shots", [])}
+    wag_stack = _load_wag_stack_spectrogram_and_districts()
 
     # Strictly verify every part_id, backdrop, and all 7 handmade planes (P6..P0) in CUSTOM_SCENES + Lego Extensions
     missing_parts = []
@@ -3789,7 +3991,7 @@ def main() -> None:
                 missing_parts.append((skey, lx["part_id"]))
     if missing_parts or missing_bgs:
         raise RuntimeError(f"Missing parts: {missing_parts}, Missing bgs: {missing_bgs}")
-    print(f"  Verified {len(CUSTOM_SCENES)} custom scenes + 90 Lego Set Extensions: 0 missing parts!")
+    print(f"  Verified {len(CUSTOM_SCENES)} custom scenes + 90 Set Extensions: 0 missing parts!")
 
     data_path = PLAY_DIR / "data.json"
     play_data = json.loads(data_path.read_text())
@@ -3814,7 +4016,7 @@ def main() -> None:
     total_layers = 0
     scenes_with_all_7 = 0
 
-    print("[2/5] Building Seamless Hand-Assembled 14-Poem Worlds, Shot-Distance Calibration & Layered Portal Footage...")
+    print("[2/5] Building Seamless Visual-Spectrogram & District Colour-Script 14-Poem Worlds...")
     for poem_num in range(1, 15):
         num_str = f"{poem_num:02d}"
         lv_path = LEVELS_DIR / num_str / "level.json"
@@ -3822,6 +4024,29 @@ def main() -> None:
         fw, fh = int(lv["frame"][0]), int(lv["frame"][1])
         lv["seven_planes_spec"] = SEVEN_PLANES
         lv["shot_scale_tiers"] = SHOT_SCALE_TIERS
+
+        scr_info = wag_stack["script_by_num"].get(num_str, {})
+        tr_info = wag_stack["transitions_by_from"].get(num_str, {})
+        song_info = wag_stack["songs_by_num"].get(num_str, {})
+        lv["colour_script"] = {
+            "hour": scr_info.get("hour", [19.2, 20.4]),
+            "weather": scr_info.get("weather", ["clear"]),
+            "why": scr_info.get("why", ""),
+            "seq": scr_info.get("seq", []),
+            "transition_out": tr_info,
+        }
+        if song_info:
+            lv["cut_book_summary"] = {
+                "meta": song_info.get("meta", {}),
+                "spectrum_w": song_info.get("spectrum_w", 192),
+                "spectrum_h": song_info.get("spectrum_h", 48),
+                "spectrum_b64": song_info.get("spectrum_b64", ""),
+                "envelope": [round(float(x), 3) for x in song_info.get("env_arr", [])],
+                "free_cuts": song_info.get("free_cuts", []),
+                "rests": song_info.get("rests", []),
+                "sections": song_info.get("sections", []),
+            }
+
         lv["tape_geometry"] = {
             "frame_w": W_FRAME,
             "ext_w": W_EXT,
@@ -3834,6 +4059,7 @@ def main() -> None:
             "hyperflat_horizon_y": HYPERFLAT_HORIZON_Y,
             "tape_file": "poem_tape.webp",
             "seamless_cross_weave": True,
+            "spectrogram_district_bridge": True,
         }
 
         poem_ext_plates: List[Image.Image] = []
@@ -3846,7 +4072,8 @@ def main() -> None:
                 raise RuntimeError(f"Missing custom scene spec for {skey}!")
 
             next_sc = lv["scenes"][(sc_idx + 1) % n_sc]
-            next_spec = CUSTOM_SCENES.get(next_sc["key"], spec)
+            next_skey = next_sc["key"]
+            next_spec = CUSTOM_SCENES.get(next_skey, spec)
             next_bg_rel = next_spec["backdrop"]
             next_wk = next_bg_rel.split("/")[1]
             next_cel_rel = f"world/{next_wk}/cel.webp"
@@ -3858,6 +4085,26 @@ def main() -> None:
             fid = wshot.get("id", "")
             persp = load_frame_perspective_signals(fid)
             stage_haze_tuple = tuple(persp["stage_haze_rgb"])
+
+            # Attach canonical District & Scene-Book metadata (`d`, `color`, `body`, `glow`, `here`, `block`, `camera`)
+            ds_sc_meta = wag_stack["scenes_by_key"].get(skey, {})
+            d_id = str(ds_sc_meta.get("d", sc.get("district_id", "haze")))
+            d_obj = wag_stack["districts_by_id"].get(d_id, {})
+            h_pair = scr_info.get("hour", [19.2, 20.4])
+            h_sc0 = round(float(h_pair[0]) + (float(h_pair[1]) - float(h_pair[0])) * (float(sc_idx) / max(1.0, float(n_sc))), 2)
+            h_sc1 = round(float(h_pair[0]) + (float(h_pair[1]) - float(h_pair[0])) * (float(sc_idx + 1) / max(1.0, float(n_sc))), 2)
+            sc["district_meta"] = {
+                "id": d_id,
+                "name": d_obj.get("name", d_id),
+                "color": d_obj.get("color", "#fa8d15"),
+                "body": d_obj.get("body", ["#0d0f12", "#181c26"]),
+                "glow": d_obj.get("glow", ["#fa8d15", "#d8ab4f"]),
+                "glow_share": d_obj.get("glow_share", 0.30),
+                "here": ds_sc_meta.get("here", ""),
+                "block": ds_sc_meta.get("block", ""),
+                "treatment_camera": ds_sc_meta.get("camera", ""),
+                "hour_window": [h_sc0, h_sc1],
+            }
 
             cel_rel = f"world/{wk}/cel.webp"
             ink_rel = f"world/{wk}/ink.webp"
@@ -4113,7 +4360,7 @@ def main() -> None:
                 ink_path=SHOTS_DIR / ink_rel,
                 floor_y=int(spec.get("floor", 614)),
                 layers=combined_layers,
-                district_glow=sc.get("palette_glow", ["#d8ab4f"]),
+                district_glow=sc["district_meta"]["glow"],
                 haze_rgb=stage_haze_tuple,
                 props_out_dir=props_dir,
                 num_str=num_str,
@@ -4121,6 +4368,10 @@ def main() -> None:
                 next_cel_path=SHOTS_DIR / next_cel_rel,
                 stage_ppm=stage_ppm,
                 poem_num=poem_num,
+                skey=skey,
+                next_skey=next_skey,
+                sc_idx=sc_idx,
+                n_sc=n_sc,
                 return_pil=True,
             )
 
@@ -4141,18 +4392,18 @@ def main() -> None:
 
             if ext_pil is not None:
                 poem_ext_plates.append(ext_pil)
-                # Wide 540x234 seamless single-world audit thumbnail (NO vertical cut line across the painting!)
                 thumb = ext_pil.resize((540, 234), Image.Resampling.LANCZOS)
                 tdraw = ImageDraw.Draw(thumb)
                 bx_thumb = int(round(540 * (W_FRAME / float(W_MOD))))
                 tdraw.rectangle([0, 0, 540, 22], fill=(8, 10, 14))
-                # Tiny 5px tick in header bar only to indicate where x=1280 sits without slicing the artwork
+                d_col_rgb = tuple(int(c) for c in _hex_to_rgb_f(sc["district_meta"]["color"]))
+                tdraw.rectangle([0, 0, 8, 22], fill=d_col_rgb)
                 tdraw.line([(bx_thumb, 17), (bx_thumb, 22)], fill=(255, 210, 90), width=2)
                 n_portals = sum(1 for l in combined_layers if l.get("aperture_footage"))
-                dist_tag = f"{shot_profile['short_label']} {shot_profile['camera_distance_m']}m ({shot_profile['focal_mm']}mm · {int(round(stage_ppm))}px/m)"
+                dist_tag = f"{sc['district_meta']['id'].upper()} · {shot_profile['short_label']} {shot_profile['camera_distance_m']}m"
                 tdraw.text(
-                    (6, 4),
-                    f"{skey} [{dist_tag}] {sc['name'][:16]} · {n_portals} Footage Portals",
+                    (12, 4),
+                    f"{skey} [{dist_tag}] {sc['name'][:16]} · {n_portals} Portals",
                     fill=(255, 228, 130),
                 )
                 if poem_num <= 4:
@@ -4177,7 +4428,6 @@ def main() -> None:
             for idx_p, p_im in enumerate(poem_ext_plates):
                 p_small = p_im.resize((half_w, half_h), Image.Resampling.LANCZOS)
                 tape_im.paste(p_small, (idx_p * half_w, 0))
-            # Apply a smooth gouache brush blend across each inter-scene join (`x = idx_p * half_w ± 36px`)
             tape_np = np.array(tape_im, dtype=np.float32)
             for idx_p in range(1, len(poem_ext_plates)):
                 jx = idx_p * half_w
@@ -4192,20 +4442,32 @@ def main() -> None:
             tape_path = LEVELS_DIR / num_str / "poem_tape.webp"
             tape_im.save(tape_path, "WEBP", quality=86, method=4)
 
-            # Create a 1800x132 panorama strip for `audit_poem_tapes.png`
-            strip_thumb = tape_im.resize((1800, 132), Image.Resampling.LANCZOS)
+            # Create a 1800x142 panorama strip for `audit_poem_tapes.png` with the Colour Script & Sky-Hour strip underneath!
+            strip_thumb = Image.new("RGB", (1800, 142), (8, 10, 14))
+            strip_thumb.paste(tape_im.resize((1800, 120), Image.Resampling.LANCZOS), (0, 0))
             sdraw = ImageDraw.Draw(strip_thumb)
-            sdraw.rectangle([0, 0, 660, 22], fill=(8, 10, 14))
-            dists_str = " -> ".join(f"{s['shot_profile']['camera_distance_m']:.0f}m" for s in lv["scenes"])
+            # Draw District Colour-Script bar at y = 120..131 and Sky-Hour bar at y = 131..141
+            sc_w = 1800 / max(1, len(lv["scenes"]))
+            for idx_s, s_obj in enumerate(lv["scenes"]):
+                sx0 = int(round(idx_s * sc_w))
+                sx1 = int(round((idx_s + 1) * sc_w))
+                dm = s_obj.get("district_meta", {})
+                d_rgb = tuple(int(c) for c in _hex_to_rgb_f(dm.get("color", "#fa8d15")))
+                hw = dm.get("hour_window", [19.2, 20.4])
+                sky_rgb = tuple(int(c) for c in _sky_hour_rgb(0.5 * (float(hw[0]) + float(hw[1]))))
+                sdraw.rectangle([sx0, 120, sx1 - 1, 131], fill=d_rgb)
+                sdraw.rectangle([sx0, 132, sx1 - 1, 141], fill=sky_rgb)
+            sdraw.rectangle([0, 0, 740, 20], fill=(8, 10, 14))
+            seq_str = " -> ".join(s["district_meta"]["id"] for s in lv["scenes"])
             sdraw.text(
-                (6, 4),
-                f"POEM {num_str} SEAMLESS WORLD TAPE ({len(poem_ext_plates)}×2040px) · {lv['title']} · Distances: [{dists_str}]",
+                (6, 3),
+                f"POEM {num_str} SPECTROGRAM & COLOUR-SCRIPT TAPE · {lv['title']} · Districts: [{seq_str}]",
                 fill=(120, 240, 190),
             )
             poem_tape_strips.append(strip_thumb)
 
         lv_path.write_text(json.dumps(lv, separators=(",", ":")))
-        print(f"  Poem {num_str} ({lv['title']}): built {len(lv['scenes'])} Seamless Single-World scenes + continuous poem_tape.webp")
+        print(f"  Poem {num_str} ({lv['title']}): built {len(lv['scenes'])} Spectrogram & District Colour-Script scenes + poem_tape.webp")
 
 
     print("[3/5] Enriching level_assets_catalog.json with 7-layer color codes & standardized physical scales...")
@@ -4288,9 +4550,9 @@ def main() -> None:
         print(f"  Saved {SCRATCH_DIR / bname} ({len(thumbs)} extended scenes)")
 
     if poem_tape_strips:
-        tape_grid = Image.new("RGB", (1804, len(poem_tape_strips) * 136), (10, 12, 16))
+        tape_grid = Image.new("RGB", (1804, len(poem_tape_strips) * 146), (10, 12, 16))
         for i, st_im in enumerate(poem_tape_strips):
-            tape_grid.paste(st_im, (2, i * 136 + 2))
+            tape_grid.paste(st_im, (2, i * 146 + 2))
         tape_grid.save(SCRATCH_DIR / "audit_poem_tapes.png")
         print(f"  Saved {SCRATCH_DIR / 'audit_poem_tapes.png'} (14 continuous horizontal poem tapes)")
 

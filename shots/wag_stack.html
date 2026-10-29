@@ -1,0 +1,1760 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WYGWYL · WAG-STACK Unified Workbench (24:00 · 14 Poems · 90 Scenes)</title>
+<meta name="description" content="Unified WAG-STACK Workbench: Colour Onto Time & 13 Districts, Halfworld Pacing Desk & World Score, Cut Book & Bayer DJ, Spacetime Worm, Sonic Field Topography, Periodic Sound Table (#Dr-OUT), Narrative 3D Ring, Spine-Cut, Videotext & Cutting Room Floor.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#090807;--panel:#12100e;--panel2:#191613;--panel3:#221e1a;
+  --ink:#ece6da;--dim:#a9a093;--faint:#6e675d;--rule:#2c2722;
+  --amber:#f2a541;--lime:#c4f46a;--teal:#38d9a9;--red:#e0483a;--cyan:#5cc8ff;--rose:#ff6b8b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 "IBM Plex Mono",ui-monospace,Menlo,monospace}
+a{color:var(--ink);text-decoration:none}
+
+/* Top Global WAG-STACK Header */
+header.wag-hdr{position:sticky;top:0;z-index:100;background:rgba(12,10,9,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--rule);padding:8px 14px;display:flex;flex-direction:column;gap:8px}
+.hdr-row1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font:700 19px/1 "Fraunces",Georgia,serif;margin:0}
+.brand h1 span{color:var(--amber)}
+.brand small{color:var(--dim);font-size:11px;border-left:1px solid var(--rule);padding-left:8px}
+.master-clock{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--rule);padding:4px 10px;border-radius:5px;margin-left:auto}
+.mc-btn{font:600 11.5px "IBM Plex Mono",monospace;background:var(--ink);color:var(--bg);border:0;border-radius:3px;padding:4px 10px;cursor:pointer}
+.mc-btn.ghost{background:none;color:var(--dim);border:1px solid var(--rule);padding:3px 8px}
+.mc-btn.ghost:hover{color:var(--ink);border-color:var(--dim)}
+.mc-tc{font-variant-numeric:tabular-nums;color:var(--lime);font-weight:600;font-size:12px;min-width:96px;text-align:center}
+.poem-select{font:inherit;font-size:11.5px;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:4px;padding:3px 7px}
+.ext-links{display:flex;gap:5px}
+.ext-link{padding:4px 9px;border-radius:4px;border:1px solid var(--rule);background:var(--panel);color:var(--dim);font-size:11px;transition:.15s}
+.ext-link:hover{color:var(--ink);border-color:var(--amber)}
+.ext-link.hi{color:var(--lime);border-color:rgba(196,244,106,.35);background:rgba(196,244,106,.08)}
+
+/* Global 24-Minute Colour Onto Time & Spectrogram Scrubber Bar */
+.global-tape-wrap{position:relative;height:38px;background:#050504;border:1px solid var(--rule);border-radius:4px;overflow:hidden;cursor:pointer}
+.global-tape-wrap canvas{width:100%;height:100%;display:block}
+.global-tape-hud{position:absolute;left:8px;top:3px;font-size:9.5px;color:rgba(236,230,218,.8);background:rgba(0,0,0,.65);padding:1px 6px;border-radius:3px;pointer-events:none}
+
+/* Mode Tabs */
+nav.mode-tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px}
+nav.mode-tabs button{font:500 11.5px "IBM Plex Mono",monospace;background:var(--panel);color:var(--dim);border:1px solid var(--rule);border-radius:4px;padding:5px 10px;cursor:pointer;white-space:nowrap;transition:.15s}
+nav.mode-tabs button:hover{color:var(--ink);border-color:var(--dim)}
+nav.mode-tabs button.on{background:var(--amber);color:#12100e;border-color:var(--amber);font-weight:600}
+nav.mode-tabs button kbd{font-size:9.5px;opacity:.7;margin-left:4px}
+
+/* Mode Panes */
+.mode-pane{display:none;padding:16px;max-width:1680px;margin:0 auto}
+.mode-pane.on{display:block}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;border-bottom:1px solid var(--rule);padding-bottom:8px}
+.sec-head h2{font:700 22px/1.2 "Fraunces",Georgia,serif;margin:0;color:var(--ink)}
+.sec-head p{color:var(--dim);margin:0;font-size:12px;max-width:85ch}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.grid-sidebar{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:12px}
+.card h3{font:600 11px "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+
+/* Mode 1: Districts */
+.district-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;margin-top:12px}
+.d-card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:10px;cursor:pointer;transition:.15s}
+.d-card:hover,.d-card.on{border-color:var(--amber);background:var(--panel2)}
+.d-swatches{display:flex;height:14px;border-radius:3px;overflow:hidden;margin:6px 0}
+.d-swatches span{flex:1}
+.trans-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:10px}
+.tr-card{background:var(--panel2);border:1px solid var(--rule);border-radius:5px;padding:8px;font-size:11.5px}
+
+/* Mode 2: World Score & Halfworld Pacing Desk */
+.desk-rules{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.rule-toggle{font:500 11.5px "IBM Plex Mono",monospace;padding:6px 11px;border-radius:4px;border:1px solid var(--rule);background:var(--panel2);color:var(--dim);cursor:pointer}
+.rule-toggle.on{border-color:var(--lime);color:var(--lime);background:rgba(196,244,106,.08)}
+.score-tracks-canvas{width:100%;height:240px;background:#060605;border:1px solid var(--rule);border-radius:5px;display:block;cursor:pointer}
+.line-list{max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.line-row{padding:8px;background:var(--panel2);border:1px solid var(--rule);border-radius:4px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.line-row:hover,.line-row.on{border-color:var(--amber);background:var(--panel3)}
+
+/* Mode 6: Periodic Sound Table */
+.ptable-wrap{overflow-x:auto;padding-bottom:6px}
+.ptable{display:grid;grid-template-columns:90px repeat(17,minmax(64px,1fr));gap:4px;min-width:1180px}
+.pt-hdr{padding:6px 4px;text-align:center;background:var(--panel2);border:1px solid var(--rule);border-radius:4px;font-size:10.5px}
+.pt-hdr b{display:block;font:700 15px/1.1 "Fraunces",serif;color:var(--amber)}
+.pt-row-lbl{padding:8px 6px;background:var(--panel2);border:1px solid var(--rule);border-radius:4px;font-weight:600;display:flex;flex-direction:column;justify-content:center}
+.pt-cell{padding:6px;background:var(--panel);border:1px solid var(--rule);border-radius:4px;cursor:pointer;min-height:66px;display:flex;flex-direction:column;justify-content:space-between;transition:.12s;font-size:10px;color:var(--dim)}
+.pt-cell:hover{border-color:var(--ink);color:var(--ink)}
+.pt-cell.on{border-color:var(--lime);background:rgba(196,244,106,.12);color:var(--ink);outline:1px solid var(--lime)}
+.pt-cell b{font:700 13px "Fraunces",serif;color:var(--ink)}
+.pads-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:10px}
+.pad-btn{padding:10px 6px;background:var(--panel2);border:1px solid var(--rule);border-radius:5px;color:var(--ink);font:inherit;font-size:11px;cursor:pointer;text-align:left;transition:.1s}
+.pad-btn:hover,.pad-btn.active{border-color:var(--lime);background:rgba(196,244,106,.16)}
+.pad-btn kbd{display:inline-block;padding:1px 5px;background:var(--bg);border:1px solid var(--rule);border-radius:3px;color:var(--amber);font-size:10px;margin-bottom:4px}
+
+/* Mode 7: Narrative 3D Ring */
+.ring-stage{position:relative;height:440px;background:radial-gradient(circle at 50% 40%,#1d1915,#070605);border:1px solid var(--rule);border-radius:8px;overflow:hidden;perspective:1100px;display:flex;align-items:center;justify-content:center}
+.ring-cylinder{position:relative;width:280px;height:180px;transform-style:preserve-3d;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.ring-card{position:absolute;inset:0;background:var(--panel2);border:2px solid var(--rule);border-radius:6px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;box-shadow:0 14px 36px rgba(0,0,0,.75)}
+.ring-card.cur{border-color:var(--lime);box-shadow:0 0 24px rgba(196,244,106,.35)}
+.ring-card img{width:100%;height:122px;object-fit:cover;background:#000}
+.ring-card .rc-meta{padding:5px 8px;font-size:10.5px;display:flex;justify-content:space-between;align-items:center}
+
+/* Mode 8: Spine-Cut, Videotext & Cutting Room Floor */
+.spine-rows{display:flex;flex-direction:column;gap:6px}
+.spine-row{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--rule);border-radius:5px;padding:6px}
+.spine-strip{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px}
+.spine-thumb{flex:0 0 132px;background:var(--panel2);border:1px solid var(--rule);border-radius:3px;overflow:hidden;cursor:pointer}
+.spine-thumb.on{border-color:var(--lime);outline:1px solid var(--lime)}
+.spine-thumb img{width:100%;height:74px;object-fit:cover;display:block}
+.spine-thumb span{display:block;padding:2px 4px;font-size:9.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.floor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px}
+.floor-card{background:var(--panel);border:1px solid var(--rule);border-radius:5px;overflow:hidden;display:flex;flex-direction:column}
+.floor-card.status-KEEP{border-color:var(--lime)}
+.floor-card.status-MAYBE{border-color:var(--amber)}
+.floor-card.status-FLOOR{opacity:.42;border-color:var(--red)}
+.floor-card img{width:100%;aspect-ratio:16/9;object-fit:cover;background:#000}
+.floor-triage{display:flex;gap:4px;padding:6px}
+.floor-triage button{flex:1;font:600 10px "IBM Plex Mono",monospace;padding:4px;border-radius:3px;border:1px solid var(--rule);background:var(--panel2);color:var(--dim);cursor:pointer}
+.floor-triage button.on-KEEP{background:var(--lime);color:#111;border-color:var(--lime)}
+.floor-triage button.on-MAYBE{background:var(--amber);color:#111;border-color:var(--amber)}
+.floor-triage button.on-FLOOR{background:var(--red);color:#fff;border-color:var(--red)}
+
+@media (max-width:980px){
+  .grid-2,.grid-3,.grid-sidebar{grid-template-columns:1fr}
+  .pads-grid{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header class="wag-hdr">
+  <div class="hdr-row1">
+    <div class="brand">
+      <a href="../index.html" class="ext-link">← Index</a>
+      <h1>WAG-STACK · <span>Unified Halfworld &amp; Cineosis Workbench</span></h1>
+      <small id="activeContextBadge">Poem 01 · Out of Life · The High-Rise</small>
+    </div>
+
+    <div class="master-clock">
+      <button class="mc-btn" id="btnGlobalPlay">▶ Play Suite</button>
+      <span class="mc-tc" id="globalTc">00:00 / 24:00</span>
+      <select class="poem-select" id="globalPoemSelect" aria-label="Select Poem"></select>
+      <button class="mc-btn ghost" id="btnGlobalHoleDrop" title="Audition nearest Free Cut (kill <= 0.20) with 3s window + 120ms hole-drop (H)">✂️ Hole-Drop (H)</button>
+    </div>
+
+    <div class="ext-links">
+      <a class="ext-link hi" id="lnkLevels" href="play/levels.html">🎮 Play Sidescroller</a>
+      <a class="ext-link hi" id="lnkFilmGrid" href="film.html#grid">⊞ 2×2 Film Grid</a>
+      <a class="ext-link" id="lnkFilmSuite" href="film.html#suite">🎬 Suite Cut</a>
+    </div>
+  </div>
+
+  <div class="global-tape-wrap" id="globalTapeWrap" title="Click or drag anywhere along the 24-minute Colour Onto Time, Sky-Hour &amp; 48x192 Spectrogram Tape">
+    <canvas id="globalTapeCanvas" width="1440" height="38"></canvas>
+    <span class="global-tape-hud" id="globalTapeHud">COLOUR ONTO TIME · 13 DISTRICTS · 14 POEMS · 90 SCENES · 48×192 SPECTROGRAM</span>
+  </div>
+
+  <nav class="mode-tabs" id="modeTabs">
+    <button data-mode="districts" class="on">1 · Colour Script &amp; 13 Districts<kbd>1</kbd></button>
+    <button data-mode="worldscore">2 · Halfworld Pacing Desk &amp; World Score<kbd>2</kbd></button>
+    <button data-mode="cutbook">3 · Cut Book &amp; Bayer Dot-Halfworld DJ<kbd>3</kbd></button>
+    <button data-mode="spacetime">4 · Sketchradio Spacetime Worm<kbd>4</kbd></button>
+    <button data-mode="sonicfield">5 · Sonic Field Topography (1,442)<kbd>5</kbd></button>
+    <button data-mode="sound-table">6 · Periodic Sound Table (#Dr-OUT)<kbd>6</kbd></button>
+    <button data-mode="ring">7 · Narrative 3D Ring (?line=02_L06)<kbd>7</kbd></button>
+    <button data-mode="spine">8 · Spine-Cut · Videotext · Floor<kbd>8</kbd></button>
+  </nav>
+</header>
+
+<!-- MODE 1: COLOUR SCRIPT & 13 DISTRICTS -->
+<section class="mode-pane on" id="pane-districts">
+  <div class="sec-head">
+    <div>
+      <h2>Colour Onto Time · 13 Districts, 90 Scenes &amp; 14 Physical Transitions</h2>
+      <p id="districtsThesis">Three films that share a map: Baltimere (sodium-orange exits), Atlantis (layered night stage), and The Shore (weather, ruin, morning).</p>
+    </div>
+    <div style="display:flex;gap:6px">
+      <span class="ext-link" id="distCountBadge">13 Districts · 90 Scenes · 14 Bridges</span>
+    </div>
+  </div>
+
+  <div class="grid-sidebar">
+    <div>
+      <div class="card">
+        <h3>13 Canonical Districts · Click any District to Filter Scenes &amp; Audition Palette <span id="selectedDistrictLabel">All 13 Districts</span></h3>
+        <div class="district-grid" id="districtCardsGrid"></div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h3>14 Inter-Poem Physical Transitions ("Where to Hide the Crimes")</h3>
+        <div class="trans-strip" id="transitionsGrid"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Scenes in Active Poem / District <span id="districtScenesCount"></span></h3>
+      <div id="districtScenesList" style="display:flex;flex-direction:column;gap:8px;max-height:680px;overflow-y:auto"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODE 2: HALFWORLD PACING DESK & WORLD SCORE -->
+<section class="mode-pane" id="pane-worldscore">
+  <div class="sec-head">
+    <div>
+      <h2>Halfworld Pacing Desk &amp; 4-Layer World Score Tape</h2>
+      <p>Tightens the audio score tape directly beneath our Halfworld 14-poem visual spectrogram &amp; extended plates (replacing the old butterfly film). The poet's reading is never covered; hits snap immediately after spoken lines.</p>
+    </div>
+    <div class="desk-rules">
+      <button class="rule-toggle on" data-rule="beds">✓ SCENE BEDS (Drone + Orchestra)</button>
+      <button class="rule-toggle on" data-rule="hits">✓ HITS ON CUES &amp; CUTS</button>
+      <button class="rule-toggle on" data-rule="whispers">✓ SUNG GHOSTS &amp; WHISPERS</button>
+      <button class="rule-toggle on" data-rule="duck">✓ DUCK BEDS UNDER VOICE (-9dB)</button>
+    </div>
+  </div>
+
+  <div class="grid-sidebar">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <h3>Halfworld Visual Spectrogram &amp; Extended Plate Monitor <span id="deskStageMeta">Poem 01</span></h3>
+        <canvas id="deskHalfworldCanvas" width="1120" height="440" style="width:100%;height:auto;background:#050608;border-radius:4px;border:1px solid var(--rule);display:block"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>4-Track Tightened World Score Tape (1: Reading · 2: Beds · 3: Hits on Cues · 4: Sung Ghosts)</h3>
+        <canvas class="score-tracks-canvas" id="deskScoreCanvas" width="1120" height="240"></canvas>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <h3>Spoken Lines &amp; Sung Codex Ghosts <span id="codexPoemMeta"></span></h3>
+        <div class="line-list" id="codexLinesList"></div>
+      </div>
+
+      <div class="card">
+        <h3>Poem World Orchestra &amp; CLAP Soundmarks</h3>
+        <div id="poemOrchestraList" style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODE 3: THE CUT BOOK & BAYER DOT-HALFWORLD DJ -->
+<section class="mode-pane" id="pane-cutbook">
+  <div class="sec-head">
+    <div>
+      <h2>The Cut Book (48×192 8×8 Bayer Spectrogram) &amp; Dot-Halfworld DJ Mixer</h2>
+      <p>Every poem's 48-band log-frequency spectrogram dithered through an 8×8 Bayer matrix into District `body` &amp; `glow` colors. Click any teal Free Cut (`kill &le; 0.20`) to audition a 3-second window with a 120ms hole-drop.</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <label style="font-size:11.5px;color:var(--dim)">DJ Crossfader A↔B:
+        <input type="range" id="djCrossfader" min="0" max="100" value="35" style="vertical-align:middle;width:140px">
+      </label>
+      <select id="djDeckBSelect" class="poem-select" title="Select Deck B Poem for Bayer Dot-Halfworld Crossfade"></select>
+    </div>
+  </div>
+
+  <div class="grid-sidebar">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <h3>192×48 8×8 Bayer Dot-Halfworld Spectrogram &amp; Free Cuts (`kill &le; 0.20`) <span id="cutbookMeta"></span></h3>
+        <canvas id="cutbookCanvas" width="1152" height="320" style="width:100%;height:auto;background:#050504;border:1px solid var(--rule);border-radius:4px;cursor:pointer;display:block"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Live 2-Deck Bayer Dot-Halfworld Visual DJ Composite (Deck A Plate × Spectrogram ↔ Deck B Plate)</h3>
+        <canvas id="bayerDjCanvas" width="960" height="340" style="width:100%;height:auto;background:#040404;border:1px solid var(--rule);border-radius:4px;display:block"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Free Cuts (`kill &le; 0.20`) &amp; Rest Windows · Click to Audition 3s Hole-Drop</h3>
+      <div id="freeCutsList" style="display:flex;flex-direction:column;gap:6px;max-height:640px;overflow-y:auto"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODE 4: SKETCHRADIO SPACETIME WORM -->
+<section class="mode-pane" id="pane-spacetime">
+  <div class="sec-head">
+    <div>
+      <h2>Sketchradio · 24-Minute 3D Spacetime Worm of the Whole Project</h2>
+      <p>All 14 poems, 90 scene plates, voice envelopes, rest gaps, and District Colour-Script ribbons extruded as a continuous 3D spacetime worm from `00:00` to `24:00`. Drag to orbit or scrub through spacetime.</p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <label style="font-size:11px;color:var(--dim)">Worm Yaw <input type="range" id="wormYaw" min="-60" max="60" value="-24"></label>
+      <label style="font-size:11px;color:var(--dim)">Worm Pitch <input type="range" id="wormPitch" min="8" max="55" value="24"></label>
+      <label style="font-size:11px;color:var(--dim)">Spread <input type="range" id="wormSpread" min="40" max="160" value="95"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>3D Spacetime Worm Tunnel (00:00 → 24:00 · Click any Slice to Jump Clock) <span id="wormHoverLabel"></span></h3>
+    <canvas id="spacetimeWormCanvas" width="1440" height="580" style="width:100%;height:auto;background:#050608;border:1px solid var(--rule);border-radius:6px;cursor:grab;display:block"></canvas>
+  </div>
+</section>
+
+<!-- MODE 5: SONIC FIELD TOPOGRAPHY -->
+<section class="mode-pane" id="pane-sonicfield">
+  <div class="sec-head">
+    <div>
+      <h2>Sonic Field Topography · 1,442 Sounds across Ecology, Form &amp; Meaning</h2>
+      <p>Schafer/Truax acoustic ecology (`keynote · signal · rhythm · soundmark`) mapped onto topographic contour hills. Click any sound peak to audition and inspect its 24-bar envelope.</p>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="rule-toggle on" data-topo="eco">ECOLOGY (x, y)</button>
+      <button class="rule-toggle" data-topo="form">FORM · DINOv2 Spectrogram (xf, yf)</button>
+      <button class="rule-toggle" data-topo="meaning">MEANING · CLAP Ekphrases (xs, ys)</button>
+      <input type="search" id="sonicSearch" placeholder="Filter 1,442 sounds (drone, glass, bell, choir…)" style="font:inherit;font-size:11.5px;padding:5px 9px;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:4px;width:250px">
+    </div>
+  </div>
+
+  <div class="grid-sidebar">
+    <div class="card">
+      <h3>Topographic Contour Map · Click any Peak to Audition Sample <span id="sonicMapStats">1,442 sounds</span></h3>
+      <canvas id="sonicTopoCanvas" width="1080" height="560" style="width:100%;height:auto;background:#060807;border:1px solid var(--rule);border-radius:5px;cursor:crosshair;display:block"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Selected Sound Peak &amp; Nearest Neighbors</h3>
+      <div id="sonicInspector"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODE 6: PERIODIC TABLE OF SOUND (#Dr-OUT) -->
+<section class="mode-pane" id="pane-sound-table">
+  <div class="sec-head">
+    <div>
+      <h2>Periodic Table of Sound · 17 Families × 3 Chion/Deamer Territory Rows (`IN / OFF / OUT`)</h2>
+      <p>Click any cell (e.g. `#Dr-OUT`, `#Po-IN`, `#Ch-OFF`) to inspect its law, priority, Deleuze sign links, and play its 16 live keyboard sampler pads (`1–8`, `Q–I`).</p>
+    </div>
+    <div>
+      <span class="ext-link hi" id="activeSoundCellBadge">#Dr-OUT · Drone OUT</span>
+    </div>
+  </div>
+
+  <div class="card ptable-wrap">
+    <div class="ptable" id="soundPeriodicGrid"></div>
+  </div>
+
+  <div class="grid-sidebar" style="margin-top:14px">
+    <div class="card">
+      <h3>16-Pad Live Sound Sampler (`1–8`, `Q–I` keys) for <span id="padBankTitle">#Dr-OUT</span></h3>
+      <div class="pads-grid" id="soundPadsGrid"></div>
+    </div>
+
+    <div class="card">
+      <h3>Cell Law, Deamer/Chion Reading &amp; Linked Signs</h3>
+      <div id="soundCellDetail"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODE 7: NARRATIVE 3D RING -->
+<section class="mode-pane" id="pane-ring">
+  <div class="sec-head">
+    <div>
+      <h2>Narrative Lab · 3D Orbiting Ring of Candidate Shots for Each Spoken Line</h2>
+      <p>Every spoken line sits at the center of a 3D ring of candidate visual shots (`Suite`, `Scenes`, `Cineosis`, `Drift`, `Cels`, `Spine-Cels`, `Custom Extended Spectrogram Plate`). Spin with `←/→` or click presets like `02_L06` and `04_L06`.</p>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <button class="rule-toggle on" data-ringpreset="02_L06">Preset: 02_L06#ring</button>
+      <button class="rule-toggle" data-ringpreset="04_L06">Preset: 04_L06#ring</button>
+      <button class="rule-toggle" data-ringpreset="01_L02">Preset: 01_L02#ring</button>
+      <button class="rule-toggle" data-ringpreset="07_L04">Preset: 07_L04#ring</button>
+      <select id="ringLineSelect" class="poem-select"></select>
+    </div>
+  </div>
+
+  <div class="grid-sidebar">
+    <div class="card">
+      <h3>3D Candidate Ring · Spin (`←` / `→`) or Click any Card <span id="ringActiveLineCode">02_L06</span></h3>
+      <div style="padding:10px 14px;background:var(--panel2);border:1px solid var(--rule);border-radius:5px;margin-bottom:10px">
+        <div style="font-size:10.5px;color:var(--amber);text-transform:uppercase;letter-spacing:.1em" id="ringPoemHeader">Poem 02 · Circle Up</div>
+        <div style="font:400 20px/1.35 'Fraunces',serif;color:var(--ink);margin-top:4px" id="ringSpokenLineText">"Circle up, let the street lamps spin into a ring of amber glass."</div>
+      </div>
+
+      <div class="ring-stage" id="ringStage">
+        <div class="ring-cylinder" id="ringCylinder"></div>
+      </div>
+
+      <div style="display:flex;justify-content:center;gap:8px;margin-top:10px">
+        <button class="mc-btn ghost" id="btnRingPrev">◀ Spin Left (←)</button>
+        <button class="mc-btn" id="btnRingAudition">▶ Audition Line &amp; Shot (A)</button>
+        <button class="mc-btn ghost" id="btnRingKeep">✓ Keep Candidate (C)</button>
+        <button class="mc-btn ghost" id="btnRingNext">Spin Right (→) ▶</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Selected Candidate Shot Inspector</h3>
+      <div id="ringCandidateDetail"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODE 8: SPINE-CUT, VIDEOTEXT & CUTTING ROOM FLOOR -->
+<section class="mode-pane" id="pane-spine">
+  <div class="sec-head">
+    <div>
+      <h2>Spine-Cut 4-Row Strips · Videotext Word-Grip · Cutting Room Floor (`KEEP / MAYBE / FLOOR`)</h2>
+      <p>Compare all 4 horizontal strips (`Hers/Suite`, `Blend/Drift`, `Cel/Spine-Cut`, `World/Spectrogram Plate`), inspect kinetic word-grip timing, and triage every candidate shot on the Cutting Room Floor.</p>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="rule-toggle on" id="btnFilterFloorAll">All Candidates</button>
+      <button class="rule-toggle" id="btnFilterFloorKeep">KEEP Only</button>
+      <button class="rule-toggle" id="btnFilterFloorMaybe">MAYBE Only</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Spine-Cut 4-Row Horizontal Comparison Strip for Active Poem (`hers / blend / cel / world`)</h3>
+    <div class="spine-rows" id="spineRowsContainer"></div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h3>Videotext Word-Grip Kinetic Line Stage (Words Scaled by `f0` Pitch &amp; `poet_dist` over Extended Plate)</h3>
+    <canvas id="videotextCanvas" width="1280" height="220" style="width:100%;height:auto;background:#060605;border:1px solid var(--rule);border-radius:5px;display:block"></canvas>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h3>Cutting Room Floor · Triage Every Candidate Shot (`K` = KEEP · `M` = MAYBE · `F` = FLOOR) <span id="floorTriageSummary"></span></h3>
+    <div class="floor-grid" id="cuttingRoomFloorGrid"></div>
+  </div>
+</section>
+
+<audio id="wagMasterAudio" src="cel_assets/WYGWYL_Suite_Audio.mp3" preload="metadata"></audio>
+<audio id="wagSampleAudio" preload="none"></audio>
+
+<script>
+const BUTTERFLY_BASE = 'https://hartswf0.github.io/butterfly-halfworld/wygwyl/';
+const CINEOSIS_BASE = 'https://hartswf0.github.io/cineosis-lab/lab/';
+const POEM_SLUGS = {
+  '01': '01', '02': '02', '03': '03', '04': '04', '05': '05', '06': '06', '07': '07',
+  '08': '08', '09': '09', '10': '10', '11': '11', '12': '12', '13': '13', '14': '14'
+};
+const BAYER8 = [
+  [ 0,48,12,60, 3,51,15,63],[32,16,44,28,35,19,47,31],[ 8,56, 4,52,11,59, 7,55],[40,24,36,20,43,27,39,23],
+  [ 2,50,14,62, 1,49,13,61],[34,18,46,30,33,17,45,29],[10,58, 6,54, 9,57, 5,53],[42,26,38,22,41,25,37,21]
+];
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const mmss = t => { t = Math.max(0, t || 0); return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(Math.floor(t % 60)).padStart(2, '0'); };
+
+const masterAudio = $('#wagMasterAudio');
+const sampleAudio = $('#wagSampleAudio');
+
+const W = {
+  mode: 'districts',
+  t: 0,
+  D: 1440.07,
+  playing: false,
+  poemNum: '01',
+  districtFilter: null,
+  districts: null,
+  cutBook: null,
+  poemWorlds: null,
+  codexLines: null,
+  sonic: null,
+  soundTable: null,
+  spine: null,
+  patches: {},
+  signs: {},
+  decodedSpectra: {},
+  plateCache: {},
+  tapeCache: {},
+  deskRules: { beds: true, hits: true, whispers: true, duck: true },
+  topoMode: 'eco',
+  selectedSonicIdx: 0,
+  activeSoundCell: 'Dr-OUT',
+  activePads: [],
+  ringLineKey: '02_L06',
+  ringIdx: 0,
+  ringCandidates: [],
+  floorStatus: JSON.parse(localStorage.getItem('wygwyl_floor_triage') || '{}'),
+  floorFilter: 'ALL',
+  audioCtx: null
+};
+
+function getPlateImage(poemNum, sIdx, ext = true) {
+  const p = String(poemNum || '01').padStart(2, '0');
+  const slug = POEM_SLUGS[p] || '01';
+  const k = `${p}_${sIdx}_${ext ? 'ext' : 'std'}`;
+  if (!W.plateCache[k]) {
+    const img = new Image();
+    img.src = `play/levels/${slug}/s${Math.max(0, Math.min(5, sIdx))}${ext ? '_ext' : ''}.webp`;
+    W.plateCache[k] = img;
+  }
+  return W.plateCache[k];
+}
+
+function getTapeImage(poemNum) {
+  const p = String(poemNum || '01').padStart(2, '0');
+  const slug = POEM_SLUGS[p] || '01';
+  if (!W.tapeCache[p]) {
+    const img = new Image();
+    img.src = `play/levels/${slug}/poem_tape.webp`;
+    W.tapeCache[p] = img;
+  }
+  return W.tapeCache[p];
+}
+
+function getSpectrum(pIdx) {
+  const song = W.cutBook?.sets?.[0]?.songs?.[pIdx];
+  if (!song || !song.spectrum?.data) return null;
+  if (!W.decodedSpectra[pIdx]) {
+    const raw = atob(song.spectrum.data);
+    const arr = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    W.decodedSpectra[pIdx] = arr;
+  }
+  return W.decodedSpectra[pIdx];
+}
+
+function getPoemAtTime(t) {
+  const list = W.districts?.script || [];
+  return list.find(s => t >= s.t0 && t <= s.t1) || list[0] || { num: '01', title: 'Out of Life', t0: 0, t1: 99, seq: ['highrise'] };
+}
+
+function getDistrictObj(dId) {
+  return (W.districts?.districts || []).find(d => d.id === dId) || {
+    id: dId || 'highrise', name: dId || 'The High-Rise', color: '#486078',
+    body: ['#141c24', '#243444', '#384c60', '#486078', '#688098'],
+    glow: ['#d89858', '#f0b870', '#ffd898', '#ffecc8']
+  };
+}
+
+function getActiveDistrictAtTime(t) {
+  const sc = getPoemAtTime(t);
+  const seq = sc.seq || ['highrise'];
+  const u = Math.max(0, Math.min(0.999, (t - (sc.t0 || 0)) / Math.max(1, (sc.t1 || 99) - (sc.t0 || 0))));
+  return getDistrictObj(seq[Math.floor(u * seq.length)]);
+}
+
+function playSynthTone(freq = 220, dur = 0.35, type = 'triangle', gainVal = 0.08) {
+  try {
+    if (!W.audioCtx) W.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (W.audioCtx.state === 'suspended') W.audioCtx.resume();
+    const osc = W.audioCtx.createOscillator();
+    const g = W.audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, W.audioCtx.currentTime);
+    g.gain.setValueAtTime(gainVal, W.audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0008, W.audioCtx.currentTime + dur);
+    osc.connect(g);
+    g.connect(W.audioCtx.destination);
+    osc.start();
+    osc.stop(W.audioCtx.currentTime + dur);
+  } catch (e) {}
+}
+
+function playRemoteOrSynthSample(relFile, fallbackFreq = 196) {
+  if (!relFile) {
+    playSynthTone(fallbackFreq, 0.45, 'sawtooth', 0.09);
+    return;
+  }
+  const url = relFile.startsWith('http') ? relFile : (BUTTERFLY_BASE + relFile);
+  sampleAudio.src = url;
+  sampleAudio.currentTime = 0;
+  sampleAudio.play().catch(() => {
+    playSynthTone(fallbackFreq, 0.45, 'triangle', 0.09);
+  });
+}
+
+// Global 24-Minute Tape Renderer
+function drawGlobalTape() {
+  const cv = $('#globalTapeCanvas');
+  if (!cv || !W.districts) return;
+  const ctx = cv.getContext('2d');
+  const cw = cv.width, ch = cv.height;
+  ctx.fillStyle = '#050504';
+  ctx.fillRect(0, 0, cw, ch);
+
+  const D = W.D;
+  (W.districts.script || []).forEach(sc => {
+    const x0 = (sc.t0 / D) * cw;
+    const x1 = (sc.t1 / D) * cw;
+    const seq = sc.seq || ['highrise'];
+    const segW = Math.max(1, (x1 - x0) / seq.length);
+    seq.forEach((dId, k) => {
+      const d = getDistrictObj(dId);
+      ctx.fillStyle = d.color || '#486078';
+      ctx.fillRect(x0 + k * segW, 0, segW + 0.5, 18);
+      if (d.glow && d.glow[0]) {
+        ctx.fillStyle = d.glow[0];
+        ctx.fillRect(x0 + k * segW, 18, segW + 0.5, 4);
+      }
+    });
+    // Poem divider & number
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x0, ch); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = '600 9.5px "IBM Plex Mono", monospace';
+    ctx.fillText(sc.num, x0 + 3, 12);
+  });
+
+  // Lower strip: active poem spectrogram envelope across full bar
+  const pIdx = Math.max(0, parseInt(W.poemNum, 10) - 1);
+  const spec = getSpectrum(pIdx);
+  if (spec) {
+    const d = getActiveDistrictAtTime(W.t);
+    ctx.fillStyle = (d.glow && d.glow[0]) || '#f2a541';
+    for (let bx = 0; bx < 192; bx++) {
+      let s = 0;
+      for (let by = 0; by < 48; by += 3) s += spec[by * 192 + bx];
+      const e = s / (16 * 15);
+      const x = (bx / 192) * cw;
+      const h = Math.max(1, e * 14);
+      ctx.fillRect(x, ch - h, Math.ceil(cw / 192), h);
+    }
+  }
+
+  // Playhead
+  const px = (W.t / D) * cw;
+  ctx.fillStyle = '#c4f46a';
+  ctx.fillRect(px - 1, 0, 2.5, ch);
+}
+
+function updateHeaderContext() {
+  const sc = getPoemAtTime(W.t);
+  W.poemNum = String(sc.num || '01').padStart(2, '0');
+  const dist = getActiveDistrictAtTime(W.t);
+  $('#activeContextBadge').textContent = `Poem ${W.poemNum} · ${sc.title} · ${dist.name} (${mmss(W.t)})`;
+  $('#globalTc').textContent = `${mmss(W.t)} / ${mmss(W.D)}`;
+  if ($('#globalPoemSelect').value !== W.poemNum) $('#globalPoemSelect').value = W.poemNum;
+  const localT = Math.max(0, W.t - (sc.t0 || 0)).toFixed(1);
+  $('#lnkLevels').href = `play/levels.html?poem=${W.poemNum}&t=${localT}`;
+  $('#lnkFilmGrid').href = `film.html?poem=${W.poemNum}&t=${W.t.toFixed(1)}#grid`;
+  $('#lnkFilmSuite').href = `film.html?poem=${W.poemNum}&t=${W.t.toFixed(1)}#suite`;
+}
+
+function seekGlobal(tSec) {
+  W.t = Math.max(0, Math.min(W.D - 0.1, tSec));
+  try { masterAudio.currentTime = W.t; } catch (e) {}
+  const prevPoem = W.poemNum;
+  updateHeaderContext();
+  drawGlobalTape();
+  if (W.poemNum !== prevPoem) {
+    renderActiveMode();
+  } else {
+    renderDynamicCanvases();
+  }
+}
+
+// ============================================================================
+// MODE 1: COLOUR ONTO TIME & 13 DISTRICTS
+// ============================================================================
+function renderDistrictsMode() {
+  if (!W.districts) return;
+  $('#districtsThesis').textContent = W.districts.thesis || '';
+  const dGrid = $('#districtCardsGrid');
+  dGrid.innerHTML = (W.districts.districts || []).map(d => {
+    const isOn = W.districtFilter === d.id;
+    const bodySpans = (d.body || []).map(c => `<span style="background:${esc(c)}"></span>`).join('');
+    const glowSpans = (d.glow || []).map(c => `<span style="background:${esc(c)}"></span>`).join('');
+    return `<div class="d-card ${isOn ? 'on' : ''}" data-did="${esc(d.id)}">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <b style="font:700 15px 'Fraunces',serif;color:${esc(d.color)}">${esc(d.name)}</b>
+        <small style="color:var(--dim)">${esc(d.realm || '')} · ${esc(d.hour || '')}h</small>
+      </div>
+      <div class="d-swatches" title="Body palette">${bodySpans}</div>
+      <div class="d-swatches" style="height:7px" title="Glow palette">${glowSpans}</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">${esc(d.mood || d.site || '')}</div>
+      <div style="font-size:10.5px;color:var(--faint);margin-top:3px">🎥 ${esc(d.camera || '')}</div>
+    </div>`;
+  }).join('');
+
+  dGrid.querySelectorAll('.d-card').forEach(el => {
+    el.onclick = () => {
+      const id = el.dataset.did;
+      W.districtFilter = (W.districtFilter === id) ? null : id;
+      const d = getDistrictObj(id);
+      playSynthTone(160 + (W.districts.districts.findIndex(x => x.id === id) * 22), 0.35, 'triangle', 0.07);
+      $('#selectedDistrictLabel').textContent = W.districtFilter ? `Filtered: ${d.name} (click again for All)` : 'All 13 Districts';
+      renderDistrictsMode();
+    };
+  });
+
+  // Transitions
+  const tGrid = $('#transitionsGrid');
+  tGrid.innerHTML = (W.districts.transitions || []).map(tr => {
+    const dA = getDistrictObj(tr.a), dB = getDistrictObj(tr.b);
+    return `<div class="tr-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <b style="color:var(--amber)">Poem ${esc(tr.from)} → ${esc(tr.to)}</b>
+        <span style="font-size:10px;padding:1px 5px;border-radius:3px;background:var(--panel);color:var(--lime)">${esc(tr.mode)}</span>
+      </div>
+      <div style="height:6px;border-radius:3px;background:linear-gradient(90deg,${esc(dA.color)},${esc(dB.color)});margin-bottom:5px"></div>
+      <div style="color:var(--ink);font-weight:500">${esc(tr.zone || '')}</div>
+      <div style="color:var(--dim);font-size:10.5px;margin-top:2px">${esc(tr.physical || tr.grammar || '')}</div>
+    </div>`;
+  }).join('');
+
+  // Scenes list
+  const allScenes = W.districts.scenes || [];
+  const filtered = W.districtFilter
+    ? allScenes.filter(s => s.d === W.districtFilter)
+    : allScenes.filter(s => String(s.poem).padStart(2, '0') === W.poemNum);
+  $('#districtScenesCount').textContent = `${filtered.length} scenes`;
+  const sList = $('#districtScenesList');
+  sList.innerHTML = filtered.map((s, idx) => {
+    const pNum = String(s.poem || '01').padStart(2, '0');
+    const slug = POEM_SLUGS[pNum] || '01';
+    const localIdx = idx % 6;
+    const d = getDistrictObj(s.d);
+    return `<div style="display:grid;grid-template-columns:130px 1fr;gap:10px;padding:8px;background:var(--panel2);border:1px solid var(--rule);border-radius:5px">
+      <img src="play/levels/${slug}/s${localIdx}_ext.webp" alt="" style="width:130px;height:68px;object-fit:cover;border-radius:3px;background:#000">
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <b style="color:var(--ink)">${esc(s.key)} · ${esc(s.name || s.title || '')}</b>
+          <span style="font-size:10px;color:${esc(d.color)}">● ${esc(d.name)}</span>
+        </div>
+        <div style="font-size:11px;color:var(--dim);margin:3px 0">${esc(s.here || s.what || '')}</div>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <a class="ext-link hi" href="play/levels.html?poem=${pNum}&scene=${localIdx}" style="padding:2px 7px;font-size:10px">🎮 Play Scene →</a>
+          <a class="ext-link" href="film.html?poem=${pNum}#suite" style="padding:2px 7px;font-size:10px">🎬 Watch in Suite →</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================================
+// MODE 2: HALFWORLD PACING DESK & WORLD SCORE
+// ============================================================================
+function renderWorldScoreMode() {
+  const pIdx = Math.max(0, parseInt(W.poemNum, 10) - 1);
+  const world = W.poemWorlds?.worlds?.[pIdx];
+  const codex = W.codexLines?.poems?.[pIdx];
+  const sc = getPoemAtTime(W.t);
+  $('#deskStageMeta').textContent = `Poem ${W.poemNum} · ${sc.title} · Drone ${world?.drone?.file || ''}`;
+  $('#codexPoemMeta').textContent = `${codex?.lines?.length || 0} lines`;
+
+  const lList = $('#codexLinesList');
+  if (codex && codex.lines) {
+    lList.innerHTML = codex.lines.map((ln, idx) => {
+      const r0 = ln.read ? ln.read[0] : idx * 6;
+      const r1 = ln.read ? ln.read[1] : r0 + 5;
+      return `<div class="line-row" data-r0="${r0}" data-sung="${esc(ln.sung_clip || '')}">
+        <div>
+          <div style="font-size:10px;color:var(--amber)">Line ${idx + 1} · ${r0.toFixed(1)}s–${r1.toFixed(1)}s · f0 ${ln.voice?.f0 || 120}Hz · ${esc(ln.voice?.mouth || 'poet')}</div>
+          <div style="font:400 14px/1.3 'Fraunces',serif;color:var(--ink);margin-top:2px">${esc(ln.text)}</div>
+        </div>
+        <button class="mc-btn ghost" style="flex-shrink:0" title="Audition Sung Codex Ghost / Cue Hit">♪ Ghost</button>
+      </div>`;
+    }).join('');
+    lList.querySelectorAll('.line-row').forEach(row => {
+      row.onclick = (e) => {
+        const sung = row.dataset.sung;
+        if (e.target.tagName === 'BUTTON' && sung) {
+          playRemoteOrSynthSample(sung, 220);
+        } else {
+          const r0 = parseFloat(row.dataset.r0) || 0;
+          seekGlobal((sc.t0 || 0) + r0);
+          if (!W.playing) $('#btnGlobalPlay').click();
+        }
+      };
+    });
+  }
+
+  const oList = $('#poemOrchestraList');
+  if (world && world.orchestra) {
+    oList.innerHTML = world.orchestra.map(o => `<div class="line-row" data-file="${esc(o.file)}" data-bpm="${o.tempo || 120}">
+      <div>
+        <b style="color:var(--lime);font-size:11.5px">${esc(o.instrument)} · ${esc(o.name)}</b>
+        <div style="font-size:10.5px;color:var(--dim)">${esc(o.song)} · ${o.tempo} BPM · ${esc(o.key)}</div>
+      </div>
+      <span style="color:var(--amber);font-size:11px">▶ Loop</span>
+    </div>`).join('');
+    oList.querySelectorAll('.line-row').forEach(row => {
+      row.onclick = () => playRemoteOrSynthSample(row.dataset.file, 146.8);
+    });
+  }
+
+  drawWorldScoreCanvases();
+}
+
+function drawWorldScoreCanvases() {
+  const cvStage = $('#deskHalfworldCanvas');
+  const cvScore = $('#deskScoreCanvas');
+  if (!cvStage || !cvScore) return;
+  const sc = getPoemAtTime(W.t);
+  const pDur = Math.max(1, (sc.t1 || 100) - (sc.t0 || 0));
+  const localT = Math.max(0, W.t - (sc.t0 || 0));
+  const u = Math.max(0, Math.min(1, localT / pDur));
+  const sIdx = Math.max(0, Math.min(5, Math.floor(u * 6)));
+  const dist = getActiveDistrictAtTime(W.t);
+
+  // 1. Halfworld Visual Spectrogram & Extended Plate Canvas
+  const ctx1 = cvStage.getContext('2d');
+  const W1 = cvStage.width, H1 = cvStage.height;
+  ctx1.fillStyle = (dist.body && dist.body[0]) || '#08090c';
+  ctx1.fillRect(0, 0, W1, H1);
+
+  const pImg = getPlateImage(W.poemNum, sIdx, true);
+  const tImg = getTapeImage(W.poemNum);
+  const topH = Math.floor(H1 * 0.72);
+  if (pImg && pImg.complete && pImg.naturalWidth > 0) {
+    const subU = (u * 6) - sIdx;
+    const sw = Math.min(pImg.naturalWidth, Math.floor(pImg.naturalHeight * (W1 / topH)));
+    const sx = Math.floor(subU * Math.max(0, pImg.naturalWidth - sw));
+    ctx1.drawImage(pImg, sx, 0, sw, pImg.naturalHeight, 0, 0, W1, topH);
+  } else {
+    pImg.onload = () => drawWorldScoreCanvases();
+  }
+
+  if (tImg && tImg.complete && tImg.naturalWidth > 0) {
+    ctx1.drawImage(tImg, 0, topH + 3, W1, H1 - topH - 3);
+    const vx = u * (W1 - 120);
+    ctx1.strokeStyle = '#c4f46a';
+    ctx1.lineWidth = 2;
+    ctx1.strokeRect(vx, topH + 5, 120, H1 - topH - 8);
+  } else {
+    tImg.onload = () => drawWorldScoreCanvases();
+  }
+
+  // 2. 4-Track World Score Tape Canvas
+  const ctx2 = cvScore.getContext('2d');
+  const W2 = cvScore.width, H2 = cvScore.height;
+  ctx2.fillStyle = '#070605';
+  ctx2.fillRect(0, 0, W2, H2);
+
+  const trackH = H2 / 4;
+  const labels = [
+    '1 · THE READING (Poet Voice · Never Covered)',
+    '2 · SCENE BEDS (District Drone & Orchestra Loops)',
+    '3 · HITS ON CUES & CUTS (Snapped After Spoken Lines)',
+    '4 · SUNG GHOSTS & ATLANTIS WHISPERS (Gap Fills)'
+  ];
+  const pIdx = Math.max(0, parseInt(W.poemNum, 10) - 1);
+  const codex = W.codexLines?.poems?.[pIdx];
+  const spec = getSpectrum(pIdx);
+
+  for (let tr = 0; tr < 4; tr++) {
+    const y0 = tr * trackH;
+    ctx2.strokeStyle = '#25201b';
+    ctx2.beginPath(); ctx2.moveTo(0, y0); ctx2.lineTo(W2, y0); ctx2.stroke();
+    ctx2.fillStyle = '#a9a093';
+    ctx2.font = '500 10.5px "IBM Plex Mono", monospace';
+    ctx2.fillText(labels[tr], 8, y0 + 14);
+  }
+
+  // Track 1: Spoken Lines
+  if (codex && codex.lines) {
+    codex.lines.forEach(ln => {
+      if (!ln.read) return;
+      const x0 = (ln.read[0] / pDur) * W2;
+      const x1 = (ln.read[1] / pDur) * W2;
+      ctx2.fillStyle = 'rgba(242,165,65,0.35)';
+      ctx2.fillRect(x0, 20, Math.max(4, x1 - x0), trackH - 24);
+      ctx2.strokeStyle = '#f2a541';
+      ctx2.strokeRect(x0, 20, Math.max(4, x1 - x0), trackH - 24);
+
+      // Track 3: Hit on Cue snapped immediately after spoken line ends!
+      if (W.deskRules.hits) {
+        ctx2.fillStyle = '#c4f46a';
+        ctx2.fillRect(x1 + 1, 2 * trackH + 18, 5, trackH - 24);
+      }
+
+      // Track 4: Sung Ghost in the gap after the line
+      if (W.deskRules.whispers && ln.sung_dur) {
+        const gw = Math.min(48, (ln.sung_dur / pDur) * W2 * 0.45);
+        ctx2.fillStyle = 'rgba(92,200,255,0.28)';
+        ctx2.fillRect(x1 + 6, 3 * trackH + 20, gw, trackH - 26);
+      }
+    });
+  }
+
+  // Track 2: Scene Beds & Spectrogram Envelope (ducked under reading when duck rule ON)
+  if (W.deskRules.beds && spec) {
+    for (let bx = 0; bx < 192; bx++) {
+      let s = 0;
+      for (let by = 0; by < 24; by++) s += spec[by * 192 + bx];
+      const e = s / (24 * 15);
+      const x = (bx / 192) * W2;
+      const h = Math.max(3, e * (trackH - 22));
+      ctx2.fillStyle = dist.color || '#38d9a9';
+      ctx2.fillRect(x, 2 * trackH - h - 3, Math.ceil(W2 / 192), h);
+    }
+  }
+
+  // Playhead
+  const px = u * W2;
+  ctx2.fillStyle = '#e0483a';
+  ctx2.fillRect(px - 1, 0, 2.5, H2);
+}
+
+// ============================================================================
+// MODE 3: CUT BOOK & BAYER DOT-HALFWORLD DJ
+// ============================================================================
+function renderCutBookMode() {
+  const pIdx = Math.max(0, parseInt(W.poemNum, 10) - 1);
+  const song = W.cutBook?.sets?.[0]?.songs?.[pIdx];
+  const dist = getActiveDistrictAtTime(W.t);
+  if (!song) return;
+
+  const freeCuts = (song.cuts || []).filter(c => c.kill <= 0.20);
+  $('#cutbookMeta').textContent = `${song.title} · ${song.bpm} BPM · ${freeCuts.length} Free Cuts (kill ≤ 0.20) · ${song.rests?.length || 0} Rests`;
+
+  const fList = $('#freeCutsList');
+  fList.innerHTML = freeCuts.map((c, idx) => `<div class="line-row" data-cut-t="${c.t}">
+    <div>
+      <b style="color:var(--teal)">✂️ Free Cut #${idx + 1} @ ${mmss(c.t)} (${c.t.toFixed(2)}s)</b>
+      <div style="font-size:10.5px;color:var(--dim)">kill=${c.kill.toFixed(2)} · kind=${esc(c.kind || 'bar')} · stems=${esc(JSON.stringify(c.stems || {}))}</div>
+    </div>
+    <button class="mc-btn ghost">Audition 3s</button>
+  </div>`).join('');
+
+  const sc = getPoemAtTime(W.t);
+  fList.querySelectorAll('.line-row').forEach(row => {
+    row.onclick = () => {
+      const ct = parseFloat(row.dataset.cutT) || 0;
+      seekGlobal((sc.t0 || 0) + Math.max(0, ct - 1.5));
+      if (!W.playing) $('#btnGlobalPlay').click();
+      setTimeout(() => { masterAudio.volume = 0.04; }, 1440);
+      setTimeout(() => { masterAudio.volume = 1.0; }, 1560);
+    };
+  });
+
+  drawCutBookCanvases();
+}
+
+function drawCutBookCanvases() {
+  const cv = $('#cutbookCanvas');
+  const djCv = $('#bayerDjCanvas');
+  if (!cv || !djCv) return;
+  const pIdx = Math.max(0, parseInt(W.poemNum, 10) - 1);
+  const song = W.cutBook?.sets?.[0]?.songs?.[pIdx];
+  const spec = getSpectrum(pIdx);
+  const dist = getActiveDistrictAtTime(W.t);
+  const ctx = cv.getContext('2d');
+  const cw = cv.width, ch = cv.height;
+  ctx.fillStyle = (dist.body && dist.body[0]) || '#060605';
+  ctx.fillRect(0, 0, cw, ch);
+
+  if (spec) {
+    const cellW = cw / 192;
+    const cellH = (ch - 36) / 48;
+    const bodyCols = dist.body || ['#141c24', '#283848', '#486078'];
+    const glowCols = dist.glow || ['#f2a541', '#ffd898'];
+    for (let bx = 0; bx < 192; bx++) {
+      for (let by = 0; by < 48; by++) {
+        const val = spec[by * 192 + bx] / 15.0;
+        const bayerThr = (BAYER8[by & 7][bx & 7] + 0.5) / 64.0;
+        if (val > bayerThr * 0.85) {
+          ctx.fillStyle = val > 0.62 ? glowCols[Math.min(glowCols.length - 1, Math.floor(val * glowCols.length))] : bodyCols[Math.min(bodyCols.length - 1, Math.floor(val * bodyCols.length))];
+          ctx.fillRect(bx * cellW, (47 - by) * cellH, Math.ceil(cellW - 0.5), Math.ceil(cellH - 0.5));
+        }
+      }
+    }
+  }
+
+  // Overlay Free Cuts (`kill <= 0.20`) and Rests
+  if (song) {
+    const dur = Math.max(1, song.duration || 100);
+    (song.rests || []).forEach(r => {
+      const rx = (r.t0 / dur) * cw;
+      const rw = ((r.t1 - r.t0) / dur) * cw;
+      ctx.fillStyle = 'rgba(92,200,255,0.18)';
+      ctx.fillRect(rx, 0, rw, ch);
+    });
+    (song.cuts || []).forEach(c => {
+      if (c.kill <= 0.20) {
+        const cx = (c.t / dur) * cw;
+        ctx.fillStyle = '#38d9a9';
+        ctx.fillRect(cx, 0, 2, ch);
+      }
+    });
+  }
+
+  // 2-Deck Bayer Dot-Halfworld DJ Canvas
+  const djCtx = djCv.getContext('2d');
+  const dw = djCv.width, dh = djCv.height;
+  const xfade = (parseFloat($('#djCrossfader')?.value || 35)) / 100;
+  const deckBPll = $('#djDeckBSelect')?.value || '04';
+  const imgA = getPlateImage(W.poemNum, 1, true);
+  const imgB = getPlateImage(deckBPll, 2, true);
+
+  djCtx.fillStyle = '#040404';
+  djCtx.fillRect(0, 0, dw, dh);
+  if (imgA && imgA.complete && imgA.naturalWidth > 0) {
+    djCtx.globalAlpha = 1 - xfade * 0.65;
+    djCtx.drawImage(imgA, 0, 0, dw, dh);
+  }
+  if (imgB && imgB.complete && imgB.naturalWidth > 0) {
+    djCtx.globalAlpha = xfade;
+    djCtx.drawImage(imgB, 0, 0, dw, dh);
+  }
+  djCtx.globalAlpha = 1;
+
+  // Superimpose Bayer Dot-Halfworld Matrix pulsed by live spectrogram
+  if (spec) {
+    const dotCols = 96, dotRows = 34;
+    const stepX = dw / dotCols, stepY = dh / dotRows;
+    const glow = (dist.glow && dist.glow[0]) || '#c4f46a';
+    djCtx.fillStyle = glow;
+    for (let gx = 0; gx < dotCols; gx++) {
+      const bx = Math.min(191, gx * 2);
+      for (let gy = 0; gy < dotRows; gy++) {
+        const by = Math.min(47, Math.floor((1 - gy / dotRows) * 47));
+        const e = spec[by * 192 + bx] / 15.0;
+        const thr = (BAYER8[gy & 7][gx & 7] + 0.5) / 64.0;
+        if (e > thr) {
+          const r = 1.2 + e * 3.2;
+          djCtx.beginPath();
+          djCtx.arc((gx + 0.5) * stepX, (gy + 0.5) * stepY, r, 0, Math.PI * 2);
+          djCtx.fill();
+        }
+      }
+    }
+  }
+}
+
+// ============================================================================
+// MODE 4: SKETCHRADIO 3D SPACETIME WORM
+// ============================================================================
+function drawSpacetimeWorm() {
+  const cv = $('#spacetimeWormCanvas');
+  if (!cv || !W.districts) return;
+  const ctx = cv.getContext('2d');
+  const cw = cv.width, ch = cv.height;
+  ctx.fillStyle = '#050608';
+  ctx.fillRect(0, 0, cw, ch);
+
+  const yaw = (parseFloat($('#wormYaw')?.value || -24)) * Math.PI / 180;
+  const pitch = (parseFloat($('#wormPitch')?.value || 24)) * Math.PI / 180;
+  const spread = parseFloat($('#wormSpread')?.value || 95);
+
+  const scripts = W.districts.script || [];
+  const N = 90; // 90 scenes along the 24-minute spacetime worm
+  const cx = cw * 0.5, cy = ch * 0.54;
+
+  for (let i = N - 1; i >= 0; i--) {
+    const u = i / Math.max(1, N - 1);
+    const tSlice = u * W.D;
+    const sc = getPoemAtTime(tSlice);
+    const pNum = String(sc.num || '01').padStart(2, '0');
+    const dist = getActiveDistrictAtTime(tSlice);
+
+    // 3D coordinates along the worm spine
+    const zNorm = (u - 0.5) * 2; // -1..+1
+    const waveX = Math.sin(u * Math.PI * 4) * 90;
+    const waveY = Math.cos(u * Math.PI * 2) * 35;
+
+    const sx = cx + zNorm * spread * 5.2 * Math.cos(yaw) + waveX;
+    const sy = cy + zNorm * spread * 2.1 * Math.sin(pitch) + waveY;
+    const scale = 0.38 + (1 - u * 0.52) * 0.72;
+    const cardW = 190 * scale, cardH = 106 * scale;
+
+    const isCur = Math.abs(tSlice - W.t) < (W.D / N);
+    ctx.save();
+    ctx.translate(sx, sy);
+
+    // Ribbon connector
+    ctx.fillStyle = dist.color || '#486078';
+    ctx.globalAlpha = isCur ? 0.98 : 0.72;
+    ctx.fillRect(-cardW / 2 - 4, -cardH / 2 - 4, cardW + 8, cardH + 8);
+
+    const pImg = getPlateImage(pNum, i % 6, true);
+    if (pImg && pImg.complete && pImg.naturalWidth > 0) {
+      ctx.drawImage(pImg, 0, 0, Math.min(1280, pImg.naturalWidth), pImg.naturalHeight, -cardW / 2, -cardH / 2, cardW, cardH);
+    }
+
+    if (isCur) {
+      ctx.strokeStyle = '#c4f46a';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(-cardW / 2 - 5, -cardH / 2 - 5, cardW + 10, cardH + 10);
+    }
+    ctx.fillStyle = '#fff';
+    ctx.font = `${Math.max(9, Math.round(11 * scale))}px "IBM Plex Mono", monospace`;
+    ctx.fillText(`P${pNum}·S${(i % 6) + 1} ${mmss(tSlice)}`, -cardW / 2 + 4, cardH / 2 - 5);
+    ctx.restore();
+  }
+}
+
+// ============================================================================
+// MODE 5: SONIC FIELD TOPOGRAPHY (1,442 SOUNDS)
+// ============================================================================
+function drawSonicTopography() {
+  const cv = $('#sonicTopoCanvas');
+  if (!cv || !W.sonic?.sounds) return;
+  const ctx = cv.getContext('2d');
+  const cw = cv.width, ch = cv.height;
+  ctx.fillStyle = '#060807';
+  ctx.fillRect(0, 0, cw, ch);
+
+  // Draw topographic contour rings
+  ctx.strokeStyle = 'rgba(56,217,169,0.11)';
+  ctx.lineWidth = 1;
+  for (let r = 40; r < 480; r += 36) {
+    ctx.beginPath(); ctx.arc(cw * 0.35, ch * 0.45, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cw * 0.68, ch * 0.55, r * 0.85, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  const q = ($('#sonicSearch')?.value || '').trim().toLowerCase();
+  const sounds = W.sonic.sounds;
+  const ecoColors = { keynote: '#486078', signal: '#f2a541', rhythm: '#38d9a9', soundmark: '#c4f46a' };
+
+  sounds.forEach((s, idx) => {
+    if (q && !(s.label?.toLowerCase().includes(q) || s.id?.toLowerCase().includes(q) || s.phr?.toLowerCase().includes(q))) return;
+    let nx = s.x, ny = s.y;
+    if (W.topoMode === 'form') { nx = (s.xf + 1) * 0.5; ny = (s.yf + 1) * 0.5; }
+    else if (W.topoMode === 'meaning') { nx = (s.xs + 1) * 0.5; ny = (s.ys + 1) * 0.5; }
+    const px = 40 + nx * (cw - 80);
+    const py = 30 + ny * (ch - 60);
+    const isSel = idx === W.selectedSonicIdx;
+    ctx.fillStyle = isSel ? '#fff' : (ecoColors[s.eco] || '#f2a541');
+    ctx.beginPath();
+    ctx.arc(px, py, isSel ? 6 : (s.hook ? 3.8 : 2.3), 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  const sel = sounds[W.selectedSonicIdx] || sounds[0];
+  if (sel) {
+    $('#sonicInspector').innerHTML = `<div style="padding:10px;background:var(--panel2);border:1px solid var(--rule);border-radius:5px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <b style="color:var(--lime);font-size:14px">${esc(sel.label || sel.id)}</b>
+        <span style="font-size:10.5px;color:var(--amber)">${esc(sel.eco)} · ${esc(sel.cls)}</span>
+      </div>
+      <div style="font-size:11.5px;color:var(--dim);margin:6px 0">${esc(sel.phr || '')}</div>
+      <div style="font-size:11px;color:var(--ink)">BPM: <b>${sel.bpm || '—'}</b> · Key: <b>${esc(sel.key || '—')}</b> · Dur: <b>${sel.dur}s</b> · Centroid: <b>${sel.cent}Hz</b></div>
+      <div style="display:flex;gap:3px;align-items:flex-end;height:44px;margin:10px 0;padding:4px;background:#050505;border-radius:3px">
+        ${(sel.c || []).map(v => `<span style="flex:1;background:var(--teal);height:${Math.max(8, Math.round(v * 100))}%"></span>`).join('')}
+      </div>
+      <button class="mc-btn" id="btnPlaySelectedSonic" style="width:100%">▶ Audition Sound Peak (${esc(sel.file)})</button>
+    </div>`;
+    $('#btnPlaySelectedSonic').onclick = () => playRemoteOrSynthSample(sel.file, sel.cent || 220);
+  }
+}
+
+// ============================================================================
+// MODE 6: PERIODIC TABLE OF SOUND (#Dr-OUT)
+// ============================================================================
+function renderSoundTableMode() {
+  if (!W.soundTable) return;
+  const grid = $('#soundPeriodicGrid');
+  const cols = W.soundTable.columns || [];
+  const rows = W.soundTable.rows || [];
+
+  let html = `<div class="pt-hdr"><b>Terr.</b><small>Row / Fam</small></div>`;
+  cols.forEach(c => {
+    html += `<div class="pt-hdr" title="${esc(c.what)}"><b>${esc(c.sym)}</b><small>${esc(c.name)}</small></div>`;
+  });
+
+  rows.forEach(r => {
+    html += `<div class="pt-row-lbl"><b>${esc(r.id)}</b><small style="font-size:9.5px;color:var(--dim);font-weight:400">${esc(r.name)}</small></div>`;
+    cols.forEach(c => {
+      const cellKey = `${c.sym}-${r.id}`;
+      const rData = c.rows?.[r.id] || {};
+      const isOn = W.activeSoundCell === cellKey;
+      html += `<div class="pt-cell ${isOn ? 'on' : ''}" data-cell="${esc(cellKey)}">
+        <div><b>${esc(cellKey)}</b></div>
+        <div style="line-height:1.25">${esc((rData.role || rData.what || c.family || '').slice(0, 38))}</div>
+      </div>`;
+    });
+  });
+  grid.innerHTML = html;
+
+  grid.querySelectorAll('.pt-cell').forEach(el => {
+    el.onclick = () => {
+      W.activeSoundCell = el.dataset.cell;
+      try { history.replaceState(null, '', '#' + W.activeSoundCell); } catch (e) {}
+      renderSoundTableMode();
+    };
+  });
+
+  const [sym, rId] = W.activeSoundCell.split('-');
+  const col = cols.find(c => c.sym === sym) || cols[0];
+  const rObj = col?.rows?.[rId] || {};
+  $('#activeSoundCellBadge').textContent = `#${W.activeSoundCell} · ${col?.name || ''} (${rId})`;
+  $('#padBankTitle').textContent = `#${W.activeSoundCell} · ${col?.name || ''}`;
+
+  $('#soundCellDetail').innerHTML = `<div style="display:flex;flex-direction:column;gap:8px">
+    <div style="font:700 18px 'Fraunces',serif;color:var(--amber)">#${esc(W.activeSoundCell)} · ${esc(col?.name)} (${esc(rId)})</div>
+    <p style="margin:0;color:var(--ink)"><b>What it is:</b> ${esc(col?.what || '')}</p>
+    <p style="margin:0;color:var(--lime)"><b>Law (Priority ${col?.priority || '—'}):</b> ${esc(col?.law || '')}</p>
+    <p style="margin:0;color:var(--dim)"><b>${esc(rId)} Territory Reading:</b> ${esc(typeof rObj === 'string' ? rObj : (rObj.gloss || rObj.role || JSON.stringify(rObj)))}</p>
+  </div>`;
+
+  // Populate 16 keyboard sampler pads matching this sound family
+  const padKeys = ['1','2','3','4','5','6','7','8','Q','W','E','R','T','Y','U','I'];
+  const allSounds = W.sonic?.sounds || [];
+  const famQuery = (col?.name || 'drone').toLowerCase();
+  let matched = allSounds.filter(s => (s.label || '').toLowerCase().includes(famQuery) || (s.id || '').toLowerCase().includes(sym.toLowerCase()));
+  if (matched.length < 16) matched = matched.concat(allSounds.slice(0, 16));
+  W.activePads = matched.slice(0, 16);
+
+  const pGrid = $('#soundPadsGrid');
+  pGrid.innerHTML = W.activePads.map((s, i) => `<button class="pad-btn" data-pad="${i}">
+    <kbd>${padKeys[i]}</kbd>
+    <div style="font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.label || s.id)}</div>
+    <div style="font-size:9.5px;color:var(--dim)">${s.dur}s · ${esc(s.key || `${s.cent}Hz`)}</div>
+  </button>`).join('');
+
+  pGrid.querySelectorAll('.pad-btn').forEach(b => {
+    b.onclick = () => triggerSamplerPad(+b.dataset.pad);
+  });
+}
+
+function triggerSamplerPad(idx) {
+  const s = W.activePads[idx];
+  if (!s) return;
+  const btns = $$('#soundPadsGrid .pad-btn');
+  btns.forEach((b, i) => b.classList.toggle('active', i === idx));
+  playRemoteOrSynthSample(s.file, s.cent || (140 + idx * 18));
+}
+
+// ============================================================================
+// MODE 7: NARRATIVE 3D RING (?line=02_L06#ring, ?line=04_L06#ring)
+// ============================================================================
+function buildRingLineOptions() {
+  const sel = $('#ringLineSelect');
+  if (!sel || !W.codexLines?.poems) return;
+  const opts = [];
+  W.codexLines.poems.forEach(p => {
+    const pNum = String(p.num).padStart(2, '0');
+    (p.lines || []).forEach((ln, idx) => {
+      const code = `${pNum}_L${String(idx + 1).padStart(2, '0')}`;
+      opts.push(`<option value="${code}">${code} · ${esc((ln.text || '').slice(0, 48))}</option>`);
+    });
+  });
+  sel.innerHTML = opts.join('');
+  if (W.ringLineKey) sel.value = W.ringLineKey;
+}
+
+function renderRingMode() {
+  const [pNumRaw, lPart] = (W.ringLineKey || '02_L06').split('_');
+  const pNum = String(pNumRaw || '02').padStart(2, '0');
+  const lIdx = Math.max(0, (parseInt((lPart || 'L06').replace('L', ''), 10) || 6) - 1);
+  const pIdx = Math.max(0, parseInt(pNum, 10) - 1);
+  const poem = W.codexLines?.poems?.[pIdx];
+  const ln = poem?.lines?.[Math.min(lIdx, (poem?.lines?.length || 1) - 1)] || { text: 'Circle up, let the street lamps spin into a ring.', read: [24, 31] };
+  const sc = (W.districts?.script || [])[pIdx] || { num: pNum, title: poem?.title || 'Circle Up', t0: pIdx * 95, t1: (pIdx + 1) * 95 };
+
+  $('#ringActiveLineCode').textContent = W.ringLineKey;
+  $('#ringPoemHeader').textContent = `Poem ${pNum} · ${poem?.title || sc.title} · Line ${lIdx + 1}`;
+  $('#ringSpokenLineText').textContent = `"${ln.text}"`;
+  if ($('#ringLineSelect') && $('#ringLineSelect').value !== W.ringLineKey) {
+    $('#ringLineSelect').value = W.ringLineKey;
+  }
+
+  const globalLineT = (sc.t0 || 0) + (ln.read ? ln.read[0] : lIdx * 7);
+  const slug = POEM_SLUGS[pNum] || '02';
+
+  // Assemble 8 candidate shots around the 3D cylinder ring for this spoken line
+  const cutSlugs = ['suite', 'scenes', 'cineosis', 'drift', 'cels', 'spinecels'];
+  const cands = [];
+  cutSlugs.forEach(cSlug => {
+    const list = W.patches[cSlug] || [];
+    if (list.length) {
+      let lo = 0, hi = list.length - 1;
+      while (lo < hi) {
+        const m = (lo + hi + 1) >> 1;
+        if (list[m].t0 <= globalLineT) lo = m; else hi = m - 1;
+      }
+      const p = list[lo];
+      if (p) {
+        let thumb = p.clip?.thumb || '';
+        if (thumb.startsWith('cels/posters/')) thumb = 'cel_assets/posters/' + thumb.slice('cels/posters/'.length);
+        else if (thumb.startsWith('cels/spine/')) thumb = 'cel_assets/spine/' + thumb.slice('cels/spine/'.length);
+        else if (thumb && !thumb.startsWith('http')) thumb = CINEOSIS_BASE + thumb;
+        cands.push({
+          sourceCut: cSlug.toUpperCase(),
+          title: p.clip?.title || p.film || cSlug,
+          year: p.clip?.year || '1954',
+          why: p.why || 'Matched candidate shot for this spoken line.',
+          thumb: thumb || `play/levels/${slug}/s${lIdx % 6}_ext.webp`,
+          fallback: `play/levels/${slug}/s${lIdx % 6}_ext.webp`,
+          codes: p.codes || []
+        });
+      }
+    }
+  });
+  // Add 2 custom Extended Spectrogram Plates from our poem level
+  cands.push({
+    sourceCut: 'SPECTROGRAM EXT PLATE A',
+    title: `Poem ${pNum} Extended Scene Plate s${lIdx % 6}_ext`,
+    year: '2026',
+    why: 'Continuous multi-scale horizontal strata & District Colour-Script plate.',
+    thumb: `play/levels/${slug}/s${lIdx % 6}_ext.webp`,
+    fallback: `play/levels/${slug}/s${lIdx % 6}_ext.webp`,
+    codes: ['Op', 'So']
+  });
+  cands.push({
+    sourceCut: 'MASTER POEM TAPE',
+    title: `Poem ${pNum} Full Spectrogram Panorama`,
+    year: '2026',
+    why: 'Continuous 14-poem sidescrolling spectrogram background tape.',
+    thumb: `play/levels/${slug}/poem_tape.webp`,
+    fallback: `play/levels/${slug}/s0_ext.webp`,
+    codes: ['Mn']
+  });
+
+  W.ringCandidates = cands;
+  const N = cands.length;
+  const cyl = $('#ringCylinder');
+  const radius = 340;
+  cyl.innerHTML = cands.map((c, i) => {
+    const ang = (i / N) * 360;
+    const isCur = (i === ((W.ringIdx % N) + N) % N);
+    return `<div class="ring-card ${isCur ? 'cur' : ''}" data-idx="${i}" style="transform: rotateY(${ang}deg) translateZ(${radius}px)">
+      <img src="${esc(c.thumb)}" alt="" onerror="this.onerror=null;this.src='${esc(c.fallback)}'">
+      <div class="rc-meta">
+        <b style="color:var(--lime)">${esc(c.sourceCut)}</b>
+        <span>${esc(c.year)}</span>
+      </div>
+      <div style="padding:0 8px 6px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.title)}</div>
+    </div>`;
+  }).join('');
+
+  const rotY = -((W.ringIdx / N) * 360);
+  cyl.style.transform = ` translateZ(-120px) rotateX(-5deg) rotateY(${rotY}deg)`;
+
+  cyl.querySelectorAll('.ring-card').forEach(el => {
+    el.onclick = () => {
+      W.ringIdx = +el.dataset.idx;
+      renderRingMode();
+    };
+  });
+
+  const activeCand = cands[((W.ringIdx % N) + N) % N];
+  if (activeCand) {
+    $('#ringCandidateDetail').innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">
+      <img src="${esc(activeCand.thumb)}" alt="" onerror="this.onerror=null;this.src='${esc(activeCand.fallback)}'" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:5px;border:1px solid var(--rule)">
+      <div>
+        <div style="font-size:10.5px;color:var(--lime);text-transform:uppercase">${esc(activeCand.sourceCut)} · ${esc(activeCand.year)}</div>
+        <div style="font:700 17px 'Fraunces',serif;color:var(--ink);margin:3px 0">${esc(activeCand.title)}</div>
+        <p style="font-size:12px;color:var(--dim);margin:4px 0">${esc(activeCand.why)}</p>
+      </div>
+      <div style="display:flex;gap:6px">
+        <a class="ext-link hi" href="play/levels.html?poem=${pNum}&scene=${lIdx % 6}">🎮 Stage in Sidescroller →</a>
+        <a class="ext-link" href="film.html?poem=${pNum}&t=${globalLineT.toFixed(1)}#grid">⊞ Compare in 2×2 Grid →</a>
+      </div>
+    </div>`;
+  }
+}
+
+// ============================================================================
+// MODE 8: SPINE-CUT, VIDEOTEXT & CUTTING ROOM FLOOR
+// ============================================================================
+function renderSpineAndFloorMode() {
+  const sc = getPoemAtTime(W.t);
+  const pNum = W.poemNum;
+  const slug = POEM_SLUGS[pNum] || '01';
+
+  // 1. 4-Row Horizontal Spine-Cut Comparison Strip
+  const rowDefs = [
+    { label: '1 · HERS (Suite)', key: 'suite' },
+    { label: '2 · BLEND (Drift)', key: 'drift' },
+    { label: '3 · CEL (Spine-Cut)', key: 'spinecels' },
+    { label: '4 · WORLD (Plates)', key: 'world' }
+  ];
+  const sContainer = $('#spineRowsContainer');
+  sContainer.innerHTML = rowDefs.map(r => {
+    let itemsHtml = '';
+    if (r.key === 'world') {
+      for (let s = 0; s < 6; s++) {
+        itemsHtml += `<div class="spine-thumb" data-t="${(sc.t0 || 0) + s * 15}">
+          <img src="play/levels/${slug}/s${s}_ext.webp" alt="">
+          <span>P${pNum}·S0${s + 1} Spectrogram Plate</span>
+        </div>`;
+      }
+    } else {
+      const list = (W.patches[r.key] || []).filter(p => String(p.chapter).padStart(2, '0') === pNum).slice(0, 14);
+      itemsHtml = list.map(p => {
+        let th = p.clip?.thumb || '';
+        if (th.startsWith('cels/posters/')) th = 'cel_assets/posters/' + th.slice('cels/posters/'.length);
+        else if (th.startsWith('cels/spine/')) th = 'cel_assets/spine/' + th.slice('cels/spine/'.length);
+        else if (th && !th.startsWith('http')) th = CINEOSIS_BASE + th;
+        const fb = `play/levels/${slug}/s0_ext.webp`;
+        return `<div class="spine-thumb" data-t="${p.t0}">
+          <img src="${esc(th || fb)}" alt="" onerror="this.onerror=null;this.src='${esc(fb)}'">
+          <span>${mmss(p.t0)} · ${esc(p.clip?.title || p.line || 'beat')}</span>
+        </div>`;
+      }).join('');
+    }
+    return `<div class="spine-row">
+      <div style="font-weight:600;color:var(--amber);font-size:11px">${esc(r.label)}</div>
+      <div class="spine-strip">${itemsHtml}</div>
+    </div>`;
+  }).join('');
+
+  sContainer.querySelectorAll('.spine-thumb').forEach(el => {
+    el.onclick = () => seekGlobal(parseFloat(el.dataset.t) || 0);
+  });
+
+  // 2. Cutting Room Floor Grid
+  const suiteP = (W.patches.suite || []).filter(p => String(p.chapter).padStart(2, '0') === pNum);
+  const celsP = (W.patches.cels || []).filter(p => String(p.chapter).padStart(2, '0') === pNum);
+  const combined = [
+    ...suiteP.map((p, i) => ({ id: `P${pNum}_SUITE_${i}`, cut: 'Suite', p })),
+    ...celsP.map((p, i) => ({ id: `P${pNum}_CELS_${i}`, cut: 'Cels', p }))
+  ];
+
+  const fGrid = $('#cuttingRoomFloorGrid');
+  const filteredFloor = combined.filter(item => {
+    const st = W.floorStatus[item.id] || 'KEEP';
+    if (W.floorFilter === 'KEEP') return st === 'KEEP';
+    if (W.floorFilter === 'MAYBE') return st === 'MAYBE';
+    return true;
+  });
+
+  let keepCnt = 0, maybeCnt = 0, floorCnt = 0;
+  combined.forEach(item => {
+    const st = W.floorStatus[item.id] || 'KEEP';
+    if (st === 'KEEP') keepCnt++;
+    else if (st === 'MAYBE') maybeCnt++;
+    else floorCnt++;
+  });
+  $('#floorTriageSummary').textContent = `${keepCnt} KEEP · ${maybeCnt} MAYBE · ${floorCnt} FLOOR`;
+
+  fGrid.innerHTML = filteredFloor.map((item, idx) => {
+    const st = W.floorStatus[item.id] || 'KEEP';
+    const p = item.p;
+    let th = p.clip?.thumb || '';
+    if (th.startsWith('cels/posters/')) th = 'cel_assets/posters/' + th.slice('cels/posters/'.length);
+    else if (th && !th.startsWith('http')) th = CINEOSIS_BASE + th;
+    const fb = `play/levels/${slug}/s${idx % 6}_ext.webp`;
+    return `<div class="floor-card status-${st}" data-id="${esc(item.id)}">
+      <img src="${esc(th || fb)}" alt="" onerror="this.onerror=null;this.src='${esc(fb)}'" style="cursor:pointer" data-t="${p.t0}">
+      <div style="padding:6px 8px;flex:1">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--amber)">
+          <span>${esc(item.cut)} · ${mmss(p.t0)}</span>
+          <span>${esc(p.clip?.year || '')}</span>
+        </div>
+        <b style="display:block;font-size:12px;margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.clip?.title || p.film)}</b>
+        <div style="font-size:10.5px;color:var(--dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(p.line || p.why || '')}</div>
+      </div>
+      <div class="floor-triage">
+        <button class="${st === 'KEEP' ? 'on-KEEP' : ''}" data-set="KEEP">KEEP (K)</button>
+        <button class="${st === 'MAYBE' ? 'on-MAYBE' : ''}" data-set="MAYBE">MAYBE (M)</button>
+        <button class="${st === 'FLOOR' ? 'on-FLOOR' : ''}" data-set="FLOOR">FLOOR (F)</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  fGrid.querySelectorAll('.floor-card').forEach(cardEl => {
+    const id = cardEl.dataset.id;
+    cardEl.querySelector('img').onclick = (e) => seekGlobal(parseFloat(e.target.dataset.t) || 0);
+    cardEl.querySelectorAll('.floor-triage button').forEach(btn => {
+      btn.onclick = () => {
+        W.floorStatus[id] = btn.dataset.set;
+        localStorage.setItem('wygwyl_floor_triage', JSON.stringify(W.floorStatus));
+        renderSpineAndFloorMode();
+      };
+    });
+  });
+
+  drawVideotextCanvas();
+}
+
+function drawVideotextCanvas() {
+  const cv = $('#videotextCanvas');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const cw = cv.width, ch = cv.height;
+  const dist = getActiveDistrictAtTime(W.t);
+  const pIdx = Math.max(0, parseInt(W.poemNum, 10) - 1);
+  const codex = W.codexLines?.poems?.[pIdx];
+  const pImg = getPlateImage(W.poemNum, Math.floor((W.t % 90) / 15), true);
+
+  ctx.fillStyle = (dist.body && dist.body[0]) || '#060605';
+  ctx.fillRect(0, 0, cw, ch);
+  if (pImg && pImg.complete && pImg.naturalWidth > 0) {
+    ctx.globalAlpha = 0.38;
+    ctx.drawImage(pImg, 0, 0, cw, ch);
+    ctx.globalAlpha = 1;
+  }
+
+  const lines = codex?.lines || [];
+  const sc = getPoemAtTime(W.t);
+  const localT = Math.max(0, W.t - (sc.t0 || 0));
+  const curLn = lines.find(l => l.read && localT >= l.read[0] && localT <= l.read[1]) || lines[0];
+  if (!curLn) return;
+
+  const words = (curLn.text || '').split(/\s+/).filter(Boolean);
+  const r0 = curLn.read ? curLn.read[0] : 0;
+  const r1 = curLn.read ? curLn.read[1] : r0 + 6;
+  const prog = Math.max(0, Math.min(1, (localT - r0) / Math.max(0.5, r1 - r0)));
+  const activeWordIdx = Math.floor(prog * words.length);
+
+  let x = 28, y = 78;
+  words.forEach((w, i) => {
+    const isHit = i === activeWordIdx;
+    const fSize = isHit ? 34 : (i < activeWordIdx ? 23 : 20);
+    ctx.font = `${isHit ? '700' : '500'} ${fSize}px "Fraunces", Georgia, serif`;
+    const tw = ctx.measureText(w + ' ').width;
+    if (x + tw > cw - 28) { x = 28; y += 46; }
+    if (isHit) {
+      ctx.fillStyle = 'rgba(196,244,106,0.22)';
+      ctx.fillRect(x - 4, y - fSize + 4, tw, fSize + 8);
+      ctx.fillStyle = '#c4f46a';
+    } else {
+      ctx.fillStyle = i < activeWordIdx ? '#ece6da' : 'rgba(236,230,218,0.48)';
+    }
+    ctx.fillText(w, x, y);
+    x += tw;
+  });
+}
+
+function renderDynamicCanvases() {
+  if (W.mode === 'worldscore') drawWorldScoreCanvases();
+  else if (W.mode === 'cutbook') drawCutBookCanvases();
+  else if (W.mode === 'spacetime') drawSpacetimeWorm();
+  else if (W.mode === 'spine') drawVideotextCanvas();
+}
+
+function renderActiveMode() {
+  if (W.mode === 'districts') renderDistrictsMode();
+  else if (W.mode === 'worldscore') renderWorldScoreMode();
+  else if (W.mode === 'cutbook') renderCutBookMode();
+  else if (W.mode === 'spacetime') drawSpacetimeWorm();
+  else if (W.mode === 'sonicfield') drawSonicTopography();
+  else if (W.mode === 'sound-table') renderSoundTableMode();
+  else if (W.mode === 'ring') renderRingMode();
+  else if (W.mode === 'spine') renderSpineAndFloorMode();
+}
+
+function setMode(mode) {
+  if (mode === 'videotext' || mode === 'floor') mode = 'spine';
+  W.mode = mode;
+  $$('#modeTabs button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+  $$('.mode-pane').forEach(p => p.classList.toggle('on', p.id === `pane-${mode}`));
+  renderActiveMode();
+}
+
+// Wire Events
+$$('#modeTabs button').forEach(b => b.onclick = () => {
+  try { history.replaceState(null, '', '#' + b.dataset.mode); } catch (e) {}
+  setMode(b.dataset.mode);
+});
+
+$('#btnGlobalPlay').onclick = () => {
+  if (W.playing) {
+    W.playing = false;
+    masterAudio.pause();
+    $('#btnGlobalPlay').textContent = '▶ Play Suite';
+  } else {
+    W.playing = true;
+    masterAudio.currentTime = W.t;
+    masterAudio.play().catch(() => {});
+    $('#btnGlobalPlay').textContent = '❚❚ Pause Suite';
+    const loop = () => {
+      if (!W.playing) return;
+      if (!masterAudio.paused) W.t = masterAudio.currentTime;
+      else W.t = (W.t + 0.033) % W.D;
+      updateHeaderContext();
+      drawGlobalTape();
+      renderDynamicCanvases();
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }
+};
+
+$('#btnGlobalHoleDrop').onclick = () => {
+  const pIdx = Math.max(0, parseInt(W.poemNum, 10) - 1);
+  const song = W.cutBook?.sets?.[0]?.songs?.[pIdx];
+  const sc = getPoemAtTime(W.t);
+  const free = (song?.cuts || []).filter(c => c.kill <= 0.20);
+  if (!free.length) return;
+  const localT = W.t - (sc.t0 || 0);
+  let best = free[0];
+  free.forEach(c => { if (Math.abs(c.t - localT) < Math.abs(best.t - localT)) best = c; });
+  seekGlobal((sc.t0 || 0) + Math.max(0, best.t - 1.5));
+  if (!W.playing) $('#btnGlobalPlay').click();
+  setTimeout(() => { masterAudio.volume = 0.04; }, 1440);
+  setTimeout(() => { masterAudio.volume = 1.0; }, 1560);
+};
+
+$('#globalPoemSelect').onchange = e => {
+  const pNum = e.target.value;
+  const sc = (W.districts?.script || []).find(s => s.num === pNum);
+  if (sc) seekGlobal(sc.t0 + 0.1);
+};
+
+const scrubGlobal = e => {
+  const r = $('#globalTapeWrap').getBoundingClientRect();
+  seekGlobal(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * W.D);
+};
+$('#globalTapeWrap').addEventListener('pointerdown', e => { scrubGlobal(e); $('#globalTapeWrap').setPointerCapture(e.pointerId); });
+$('#globalTapeWrap').addEventListener('pointermove', e => { if (e.buttons) scrubGlobal(e); });
+
+// Mode 2 rule toggles
+$$('#pane-worldscore .rule-toggle').forEach(btn => {
+  btn.onclick = () => {
+    const k = btn.dataset.rule;
+    W.deskRules[k] = !W.deskRules[k];
+    btn.classList.toggle('on', W.deskRules[k]);
+    drawWorldScoreCanvases();
+  };
+});
+
+// Mode 3 controls
+$('#djCrossfader')?.addEventListener('input', drawCutBookCanvases);
+$('#djDeckBSelect')?.addEventListener('change', drawCutBookCanvases);
+
+// Mode 4 controls
+['wormYaw', 'wormPitch', 'wormSpread'].forEach(id => {
+  $('#' + id)?.addEventListener('input', drawSpacetimeWorm);
+});
+$('#spacetimeWormCanvas')?.addEventListener('click', e => {
+  const r = e.target.getBoundingClientRect();
+  seekGlobal(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * W.D);
+  drawSpacetimeWorm();
+});
+
+// Mode 5 controls
+$$('#pane-sonicfield .rule-toggle').forEach(btn => {
+  btn.onclick = () => {
+    W.topoMode = btn.dataset.topo;
+    $$('#pane-sonicfield .rule-toggle').forEach(b => b.classList.toggle('on', b === btn));
+    drawSonicTopography();
+  };
+});
+$('#sonicSearch')?.addEventListener('input', drawSonicTopography);
+$('#sonicTopoCanvas')?.addEventListener('click', e => {
+  if (!W.sonic?.sounds) return;
+  const r = e.target.getBoundingClientRect();
+  const mx = (e.clientX - r.left) / r.width * e.target.width;
+  const my = (e.clientY - r.top) / r.height * e.target.height;
+  const cw = e.target.width, ch = e.target.height;
+  let bestIdx = 0, bestD = 1e9;
+  W.sonic.sounds.forEach((s, idx) => {
+    let nx = s.x, ny = s.y;
+    if (W.topoMode === 'form') { nx = (s.xf + 1) * 0.5; ny = (s.yf + 1) * 0.5; }
+    else if (W.topoMode === 'meaning') { nx = (s.xs + 1) * 0.5; ny = (s.ys + 1) * 0.5; }
+    const px = 40 + nx * (cw - 80), py = 30 + ny * (ch - 60);
+    const d = Math.hypot(px - mx, py - my);
+    if (d < bestD) { bestD = d; bestIdx = idx; }
+  });
+  W.selectedSonicIdx = bestIdx;
+  drawSonicTopography();
+  const sel = W.sonic.sounds[bestIdx];
+  if (sel) playRemoteOrSynthSample(sel.file, sel.cent || 220);
+});
+
+// Mode 7 Ring controls
+$$('[data-ringpreset]').forEach(btn => {
+  btn.onclick = () => {
+    W.ringLineKey = btn.dataset.ringpreset;
+    W.ringIdx = 0;
+    $$('[data-ringpreset]').forEach(b => b.classList.toggle('on', b === btn));
+    renderRingMode();
+  };
+});
+$('#ringLineSelect')?.addEventListener('change', e => {
+  W.ringLineKey = e.target.value;
+  W.ringIdx = 0;
+  renderRingMode();
+});
+$('#btnRingPrev').onclick = () => { W.ringIdx--; renderRingMode(); };
+$('#btnRingNext').onclick = () => { W.ringIdx++; renderRingMode(); };
+$('#btnRingAudition').onclick = () => {
+  const [pNumRaw, lPart] = (W.ringLineKey || '02_L06').split('_');
+  const pIdx = Math.max(0, (parseInt(pNumRaw, 10) || 2) - 1);
+  const lIdx = Math.max(0, (parseInt((lPart || 'L06').replace('L', ''), 10) || 6) - 1);
+  const ln = W.codexLines?.poems?.[pIdx]?.lines?.[lIdx];
+  const sc = (W.districts?.script || [])[pIdx];
+  if (sc && ln?.read) {
+    seekGlobal(sc.t0 + ln.read[0]);
+    if (!W.playing) $('#btnGlobalPlay').click();
+  }
+};
+$('#btnRingKeep').onclick = () => {
+  playSynthTone(523.25, 0.25, 'sine', 0.08);
+};
+
+// Mode 8 Floor filters
+$('#btnFilterFloorAll').onclick = () => { W.floorFilter = 'ALL'; renderSpineAndFloorMode(); };
+$('#btnFilterFloorKeep').onclick = () => { W.floorFilter = 'KEEP'; renderSpineAndFloorMode(); };
+$('#btnFilterFloorMaybe').onclick = () => { W.floorFilter = 'MAYBE'; renderSpineAndFloorMode(); };
+
+window.addEventListener('keydown', e => {
+  if (e.target.closest('input,textarea,select') || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === ' ') { e.preventDefault(); $('#btnGlobalPlay').click(); }
+  else if (e.key === 'h' || e.key === 'H') $('#btnGlobalHoleDrop').click();
+  else if (W.mode === 'ring' && e.key === 'ArrowLeft') { e.preventDefault(); W.ringIdx--; renderRingMode(); }
+  else if (W.mode === 'ring' && e.key === 'ArrowRight') { e.preventDefault(); W.ringIdx++; renderRingMode(); }
+  else if (W.mode === 'sound-table') {
+    const padKeys = ['1','2','3','4','5','6','7','8','Q','W','E','R','T','Y','U','I'];
+    const pIdx = padKeys.indexOf(e.key.toUpperCase());
+    if (pIdx >= 0) { e.preventDefault(); triggerSamplerPad(pIdx); }
+  }
+});
+
+// Boot & Load all WAG-STACK Datasets
+(async () => {
+  const [districts, cutBook, poemWorlds, codexLines, sonic, soundTable, spine, suiteP, celsP, spinecelsP, driftP, scenesP, cineosisP] = await Promise.all([
+    fetch('data/wag_stack/districts_scenes.json').then(r => r.json()).catch(() => null),
+    fetch('data/wag_stack/cut_book.json').then(r => r.json()).catch(() => null),
+    fetch('data/wag_stack/poemworlds.json').then(r => r.json()).catch(() => null),
+    fetch('data/wag_stack/codex_lines.json').then(r => r.json()).catch(() => null),
+    fetch('data/wag_stack/sonic.json').then(r => r.json()).catch(() => null),
+    fetch('data/wag_stack/sound_table.json').then(r => r.json()).catch(() => null),
+    fetch('data/wag_stack/spine.json').then(r => r.json()).catch(() => null),
+    fetch('data/wag_stack/suite_patches.json').then(r => r.json()).catch(() => []),
+    fetch('data/wag_stack/cels_patches.json').then(r => r.json()).catch(() => []),
+    fetch('data/wag_stack/spinecels_patches.json').then(r => r.json()).catch(() => []),
+    fetch('data/wag_stack/drift_patches.json').then(r => r.json()).catch(() => []),
+    fetch('data/wag_stack/scenes_patches.json').then(r => r.json()).catch(() => []),
+    fetch('data/wag_stack/cineosis_patches.json').then(r => r.json()).catch(() => [])
+  ]);
+
+  W.districts = districts;
+  W.cutBook = cutBook;
+  W.poemWorlds = poemWorlds;
+  W.codexLines = codexLines;
+  W.sonic = sonic;
+  W.soundTable = soundTable;
+  W.spine = spine;
+  W.patches = { suite: suiteP, cels: celsP, spinecels: spinecelsP, drift: driftP, scenes: scenesP, cineosis: cineosisP };
+  if (districts?.album) W.D = districts.album;
+
+  // Populate Poem Selects
+  const pOpts = (districts?.script || []).map(s => `<option value="${s.num}">Poem ${s.num} · ${esc(s.title)}</option>`).join('');
+  $('#globalPoemSelect').innerHTML = pOpts;
+  $('#djDeckBSelect').innerHTML = pOpts;
+  $('#djDeckBSelect').value = '04';
+
+  buildRingLineOptions();
+
+  // Parse URL params & hash (`?poem=`, `?t=`, `?line=02_L06#ring`, `#Dr-OUT`, `#worldscore`, etc.)
+  const params = new URLSearchParams(location.search);
+  const rawHash = location.hash.slice(1);
+  if (params.get('line')) W.ringLineKey = params.get('line');
+  if (params.get('poem') && districts?.script) {
+    const pNum = String(params.get('poem')).padStart(2, '0');
+    const sc = districts.script.find(s => s.num === pNum);
+    if (sc) W.t = sc.t0 + 0.1;
+  }
+  if (params.get('t')) {
+    W.t = Math.max(0, Math.min(W.D, parseFloat(params.get('t')) || 0));
+  }
+
+  let initialMode = 'districts';
+  if (rawHash.includes('-')) {
+    // e.g. #Dr-OUT or #Po-IN
+    W.activeSoundCell = rawHash;
+    initialMode = 'sound-table';
+  } else if (rawHash in { districts:1, worldscore:1, cutbook:1, spacetime:1, sonicfield:1, 'sound-table':1, ring:1, spine:1, videotext:1, floor:1 }) {
+    initialMode = rawHash;
+  } else if (params.get('line')) {
+    initialMode = 'ring';
+  }
+
+  updateHeaderContext();
+  drawGlobalTape();
+  setMode(initialMode);
+})();
+</script>
+<script src="../nav.js"></script>
+</body>
+</html>
