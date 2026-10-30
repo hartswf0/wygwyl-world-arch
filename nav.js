@@ -34,7 +34,26 @@
     { id: 'weave',      name: '🧶 WEAVE',                   does: 'Archive footage, painted gouache sets & cut-out puppets registered in one frame',        path: 'shots/weave.html', carry: false },
     { id: 'world',      name: '🌆 Atlantis 3D World',       does: 'Walk through layered 3D shot dioramas across twelve districts',                          path: 'shots/world.html', carry: false },
     { id: 'guide',      name: '📖 13-District Guide',       does: 'Colour Onto Time, district palettes, sky hours & physical inter-poem transitions',       path: 'shots/wag_stack.html#districts', carry: true },
-    { id: 'poems',      name: '📑 Poem Dossiers (01–14)',   does: 'One production page per poem: breakdowns, cast, props, places & kits',                   path: 'shots/poems/index.html', carry: false }
+    { id: 'poems',      name: '📑 Poem Dossiers (01–14)',   does: 'One production page per poem: breakdowns, cast, props, places & kits',                   path: 'shots/poems/index.html', carry: false },
+    { id: 'film',       name: 'Film',       does: 'Compare film cuts',               path: 'shots/film.html' },
+    { id: 'reels',      name: 'Reels',      does: 'Watch a poem sequence',           path: 'shots/reel.html' },
+    { id: 'world',      name: 'World',      does: 'Walk through shot dioramas',      path: 'shots/world.html' },
+    { id: 'map',        name: 'Map',        does: 'Locate shots in the city',        path: 'shots/map.html' },
+    { id: 'guide',      name: 'World guide', does: 'Read the districts',             path: '_city/index.html' },
+    { id: 'shotlab',    name: 'Shot Lab',   does: 'Inspect a shot and its layers',   path: 'shots/index.html' },
+    { id: 'storyboard', name: 'Storyboard', does: 'Inspect scene staging',           path: 'shots/storyboard.html' },
+    { id: 'studio',     name: 'Studio',     does: 'Inspect animation',               path: 'shots/studio.html' },
+    { id: 'animator',   name: 'Animator',   does: 'Live cartoon action & cues',       path: 'shots/animate.html' },
+    { id: 'pointcloud', name: '3D Points & Splats', does: 'Metric depth point clouds & Gaussians', path: 'shots/pointcloud.html' },
+    { id: 'scion',      name: 'SCION',      does: 'Direct the cel: beats, X-sheet, gates', path: 'shots/scion.html' },
+    { id: 'weave',      name: 'WEAVE',      does: 'Archive, cel and AI in one registered shot', path: 'shots/weave.html' },
+    { id: 'arena',      name: 'Acting Arena', does: 'Cut-out rig takes, checked and kept', path: 'shots/arena.html' },
+    { id: 'acts',       name: 'Acts Compendium', does: 'All 32 challenges, contact sheets & dossiers', path: 'shots/acts.html' },
+    { id: 'gallery',    name: 'Rig Gallery', does: 'Side-by-side pose & piece disassembly audit', path: 'shots/arena/gallery.html' },
+    { id: 'cineosis',   name: 'Cineosis Takes', does: 'Fifty vignettes on the card rig, gated', path: 'shots/arena/puppet/scion.html' },
+    { id: 'kit3',       name: 'Puppet Kit 3', does: 'One image + one prompt per parts sheet', path: 'shots/kit3.html' },
+    { id: 'kits2',      name: 'Character Kits v2', does: 'Every character, every poem: sheets to generate', path: 'shots/kits.html' },
+    { id: 'design',     name: 'Production Design', does: 'Each poem: reading, kit, props, places, needs', path: 'shots/design/index.html' },
   ];
   window.WYGWYL_ROUTES = ROUTES;
 
