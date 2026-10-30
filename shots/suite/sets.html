@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sets · WYGWYL cut-out suite</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--ok:#9fe08a;--mid:#e7c35a;--bad:#ff7b6b;--acc:#e7a35a;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,sans-serif}
+header.top{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:5}
+header.top h1{font:400 24px 'Permanent Marker',cursive;margin:0}
+header.top h1 small{font:12px var(--mono);color:var(--dim);margin-left:10px;letter-spacing:.08em}
+header.top a{color:var(--dim);font:12px var(--mono);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:999px}
+main{max-width:1360px;margin:0 auto;padding:20px 16px 80px;display:grid;gap:28px}
+h2{font:400 26px 'Permanent Marker',cursive;margin:0;color:var(--card)}
+p{margin:0;max-width:80ch}
+.dim{color:var(--dim)}
+.mono{font-family:var(--mono);font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.stat b{display:block;font:400 26px 'Permanent Marker';color:var(--acc)}
+.stat span{font:12px var(--mono);color:var(--dim)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{font:12px var(--mono);color:var(--ink);background:#21190f;border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+.chip.on{border-color:var(--card);color:var(--card)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}
+.sc{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;display:grid;min-width:0}
+.sc:hover{border-color:var(--card)}
+.sc img{width:100%;aspect-ratio:1280/746;object-fit:cover;display:block;background:#000}
+.sc .b{padding:8px 10px;display:grid;gap:4px}
+.sc .id{font:400 20px 'Permanent Marker';color:var(--acc)}
+.badge{font:600 11px var(--mono);border-radius:999px;padding:1px 8px;border:1px solid}
+.st-good{color:var(--ok);border-color:var(--ok)} .st-usable{color:var(--mid);border-color:var(--mid)} .st-needs{color:var(--bad);border-color:var(--bad)}
+.cf{font:11px var(--mono);color:var(--dim)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* detail */
+#detail{position:fixed;inset:0;background:var(--bg);z-index:20;display:none;overflow:auto}
+#detail.on{display:block}
+.dwrap{max-width:1200px;margin:0 auto;padding:16px;display:grid;gap:18px}
+.dhead{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.dhead .id{font:400 32px 'Permanent Marker';color:var(--acc)}
+.x{margin-left:auto;font:600 13px Inter;color:#1a120a;background:var(--card);border:0;border-radius:999px;padding:6px 14px;cursor:pointer}
+.two{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px}
+@media (max-width:880px){.two{grid-template-columns:1fr}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px;min-width:0;align-content:start}
+.box h3{margin:0;font:600 14px var(--mono);color:var(--card);letter-spacing:.04em}
+.stage{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:#000;border-radius:6px;perspective:1400px;touch-action:none}
+.stage .ly{position:absolute;inset:-4%;width:108%;height:108%;background-size:100% 100%;transition:transform .5s ease;will-change:transform}
+.stage.explode .ly{transition:transform .6s ease}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.planes{display:flex;gap:6px;flex-wrap:wrap}
+.planes label{font:11px var(--mono);color:var(--dim);display:flex;gap:4px;align-items:center;cursor:pointer}
+img.full{width:100%;height:auto;display:block;border-radius:6px}
+table{border-collapse:collapse;width:100%;font:12px var(--mono)}
+td,th{border-bottom:1px solid var(--line);padding:3px 6px;text-align:left;vertical-align:top}
+.slot{border-top:1px solid var(--line);padding-top:8px;display:grid;gap:6px}
+.clips{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,130px),1fr));gap:8px}
+.clip{display:grid;gap:3px;font:11px var(--mono);color:var(--ink);text-decoration:none;min-width:0}
+.clip img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:4px;background:#222}
+.clip .cut{object-fit:contain;background:repeating-conic-gradient(#2a221c 0 25%,#1a1410 0 50%) 0 0/14px 14px}
+.clip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+pre{white-space:pre-wrap;word-wrap:break-word;font:12px/1.5 var(--mono);color:#e6dccd;background:#0f0c0a;border:1px solid var(--line);border-radius:6px;padding:8px;margin:0;max-height:220px;overflow:auto}
+button:focus-visible,a:focus-visible,.sc:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="../../index.html" id="wy-index">← Index</a>
+  <h1>Sets <small>every scene as layers you can stage in · scale solved · archive grabbable</small></h1>
+</header>
+<main>
+  <section style="display:grid;gap:12px">
+    <p>Each of the 80 scenes in the breakdown gets one set: a plate (figure-free where we have one; figures the plate already had are painted out and logged), cut by measured depth and ADE20K class into planes <span class="mono">P6 sky · P5 far · P4 mid · P3 ground · [P2 puppets] · P1 near · P0 occluders</span>, a solved scale (where a 170 cm puppet stands and how big it is at every depth), the surfaces where an archive film can open, and ranked archive candidates for each. All coordinates are stage pixels, 1920×1080. Data: <span class="mono">shots/suite/data/sets/&lt;scene&gt;.json</span>; audit: <a class="mono" style="color:var(--card)" href="AUDIT_sets.md">AUDIT_sets.md</a>; archive search: <span class="mono">shots/suite/lib/archive_grab.py</span>.</p>
+    <p class="dim">Status: <b class="st-good">good</b> = the plate is the set and has no figures in it (scale is graded on its own) · <b class="st-usable">usable</b> = stands in, with the reason given · <b class="st-needs">needs a plate</b> = nothing we have is the set. Scale confidence: high (≥2 known-size objects agree with the ground plane) · medium (plane fit, ≤1 reference, camera height plausible) · low (camera height assumed at 1.5 m, or the plane disagrees with the picture: flags given) · assumed (no plane: stage calibration).</p>
+    <div class="stats" id="stats"></div>
+    <div class="filters" id="filters"></div>
+  </section>
+  <section class="grid" id="grid"></section>
+</main>
+<div id="detail" role="dialog" aria-modal="true"><div class="dwrap" id="dwrap"></div></div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const stCls = s => s === 'good' ? 'st-good' : s === 'usable' ? 'st-usable' : 'st-needs';
+let IDX = [], F = {poem: 'all', status: 'all'};
+fetch('data/sets/index.json').then(r => r.json()).then(d => { IDX = d.scenes; stats(); filters(); grid();
+  const h = decodeURIComponent(location.hash.slice(1)); if (h) open_(h); });
+function count(k) { const c = {}; IDX.forEach(s => c[s[k]] = (c[s[k]] || 0) + 1); return c; }
+function stats() {
+  const st = count('status'), cf = count('confidence'), sl = IDX.reduce((a, s) => a + s.slots, 0);
+  const plates = new Set(IDX.map(s => s.plate).filter(Boolean)).size;
+  $('#stats').innerHTML = [[IDX.length, 'scenes'], [plates, 'distinct plates'], [st.good || 0, 'good'], [st.usable || 0, 'usable'], [st['needs a plate'] || 0, 'need a plate'],
+    [(cf.high || 0) + ' / ' + (cf.medium || 0), 'scale high / medium'], [(cf.low || 0) + ' / ' + (cf.assumed || 0), 'scale low / assumed'], [sl, 'archive slots']]
+    .map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');
+}
+function filters() {
+  const poems = ['all', ...new Set(IDX.map(s => s.poem))], sts = ['all', 'good', 'usable', 'needs a plate'];
+  $('#filters').innerHTML = poems.map(p => `<span class="chip" data-k="poem" data-v="${p}">${p === 'all' ? 'all poems' : p}</span>`).join('') + '<span style="width:12px"></span>' +
+    sts.map(p => `<span class="chip" data-k="status" data-v="${p}">${p === 'all' ? 'any status' : p}</span>`).join('');
+  $('#filters').onclick = e => { const c = e.target.closest('.chip'); if (!c) return; F[c.dataset.k] = c.dataset.v; grid(); };
+}
+function grid() {
+  document.querySelectorAll('#filters .chip').forEach(c => c.classList.toggle('on', F[c.dataset.k] === c.dataset.v));
+  $('#grid').innerHTML = IDX.filter(s => (F.poem === 'all' || s.poem === F.poem) && (F.status === 'all' || s.status === F.status)).map(s => `
+   <div class="sc" tabindex="0" data-id="${s.scene_id}">
+     <img loading="lazy" src="${s.scale_check}" alt="scale check ${s.scene_id}">
+     <div class="b"><div class="row"><span class="id">${s.scene_id}</span><span class="badge ${stCls(s.status)}">${s.status}</span></div>
+     <div class="mono">${esc(s.movement)} · ${esc(s.set)}</div>
+     <div class="cf">${s.px_per_cm.toFixed(2)} px/cm · ${Math.round(s.figure_px)} px figure · scale ${s.confidence} · ${s.n_layers} layers · ${Object.entries(s.surfaces).map(([k, v]) => k + '×' + v).join(' ') || 'no surfaces'}</div></div>
+   </div>`).join('');
+}
+$('#grid').onclick = e => { const c = e.target.closest('.sc'); if (c) open_(c.dataset.id); };
+$('#grid').onkeydown = e => { if (e.key === 'Enter') { const c = e.target.closest('.sc'); if (c) open_(c.dataset.id); } };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') close_(); });
+function close_() { $('#detail').classList.remove('on'); document.body.style.overflow = ''; history.replaceState(null, '', location.pathname); }
+async function open_(id) {
+  const S = await fetch(`data/sets/${id}.json`).then(r => r.json());
+  history.replaceState(null, '', '#' + id);
+  const sc = S.scale, src = S.plate_sources[0];
+  const imgLayers = S.layers.filter(l => l.kind === 'image');
+  const codeLayers = S.layers.filter(l => l.kind === 'code' && l.plane !== 'P2');
+  const order = ['P6', 'P5', 'P4', 'P3', 'P2', 'P1', 'P0'];
+  const lyr = [...imgLayers, ...codeLayers].sort((a, b) => order.indexOf(a.plane) - order.indexOf(b.plane));
+  const W = S.stage.w, H = S.stage.h;
+  const polys = (S.surfaces || []).map(s => `<polygon points="${s.polygon.map(p => p.join(',')).join(' ')}" fill="rgba(231,163,90,.16)" stroke="#e7a35a" stroke-width="3"/><text x="${s.bbox[0] + 8}" y="${s.bbox[1] + 30}" fill="#fff" stroke="#000" stroke-width="5" paint-order="stroke" font-size="26" font-family="JetBrains Mono">${esc(s.id)}</text>`).join('');
+  const ground = S.ground || {};
+  const gl = `<line x1="0" x2="${W}" y1="${ground.y_px}" y2="${ground.y_px}" stroke="#9a9aff" stroke-width="3" stroke-dasharray="14 8"/>` + (ground.horizon_y_px != null ? `<line x1="0" x2="${W}" y1="${ground.horizon_y_px}" y2="${ground.horizon_y_px}" stroke="#7fd6ff" stroke-width="3"/>` : '');
+  const fig = (S.scale_check_figures || []).map(f => `<rect x="${f.x_px - f.figure_px * 0.13}" y="${f.y_px - f.figure_px}" width="${f.figure_px * 0.26}" height="${f.figure_px}" fill="rgba(150,150,150,.75)" stroke="#111" stroke-width="2"/>`).join('');
+  const tab = (sc.falloff?.table_y_pxpercm_distm || []).map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+  const slots = (S.archive_slots || []).map(sl => `<div class="slot"><div class="mono"><b style="color:var(--card)">${esc(sl.kind)}</b> ${sl.surface ? '· surface ' + esc(sl.surface) : ''} · join <b>${esc(sl.join)}</b> · query “${esc(sl.query)}”</div><div class="clips">` +
+    (sl.candidates || []).map(c => `<a class="clip" href="${esc(c.video_url)}#t=${c.t0 ?? 0}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(c.thumb_url)}" alt=""><span>${esc(c.title)}</span><span class="dim">${c.year ?? '—'} · ${c.score}</span></a>`).join('') +
+    (sl.objects || []).map(o => `<a class="clip" href="${esc(o.video_url)}" target="_blank" rel="noopener"><img class="cut" loading="lazy" src="${o.local ? esc(o.local) : ''}" alt=""><span>${esc(o.desc)}</span><span class="dim">${esc(o.tag)}</span></a>`).join('') + '</div></div>').join('');
+  const pa = S.passage_answer ? `<div class="slot"><div class="mono"><b style="color:var(--card)">answer</b> · the poem's fulcrum line “${esc(S.passage_answer.line)}” · ${esc(S.passage_answer.title)} (${S.passage_answer.year ?? '—'}) ${S.passage_answer.t_in}–${S.passage_answer.t_out}s: “${esc(S.passage_answer.said)}”</div></div>` : '';
+  $('#dwrap').innerHTML = `
+    <div class="dhead"><span class="id">${S.scene_id}</span><span class="badge ${stCls(S.status)}">${S.status}</span><span class="mono">${esc(S.title)} · ${esc(S.movement)} · set ${esc(S.set)} · ${esc(S.framing)}/${esc(S.camera)}</span><button class="x" id="x">close ✕</button></div>
+    <p class="dim">${esc(S.status_why)}</p>
+    <div class="two">
+      <div class="box"><h3>PLANES · move over the stage for parallax</h3>
+        <div class="stage" id="stage">${lyr.map(l => l.kind === 'image' ? `<div class="ly" data-p="${l.parallax}" data-plane="${l.plane}" style="background-image:url('${l.file}')"></div>` : `<div class="ly" data-p="${l.parallax}" data-plane="${l.plane}" style="background:${l.draw?.fill || 'transparent'}"></div>`).join('')}
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" id="ov" style="display:none">${polys}${gl}${fig}</svg></div>
+        <div class="row"><span class="chip" id="exp">explode</span><span class="chip" id="ovb">surfaces + ground + figures</span><span class="chip" id="sway">sway</span></div>
+        <div class="planes">${lyr.map(l => `<label><input type="checkbox" checked data-plane="${l.plane}">${l.plane} ${l.name || l.kind} ${l.depth_m != null ? '· ' + l.depth_m + ' m' : ''} ${l.area_frac != null ? '· ' + Math.round(l.area_frac * 100) + '%' : ''}</label>`).join('')}</div>
+        ${S.exploded ? `<img class="full" loading="lazy" src="${S.exploded}" alt="exploded planes">` : ''}
+      </div>
+      <div class="box"><h3>SCALE</h3>
+        <img class="full" src="${S.scale_check}" alt="scale check">
+        <div class="mono"><b>${sc.px_per_cm_at_ground_line} px/cm</b> at the ground line y=${ground.y_px} · 170 cm = ${sc.figure_height_px} px · ${sc.camera_distance_m ?? '—'} m from camera · camera ${sc.camera_height_m ?? '—'} m high · horizon y=${ground.horizon_y_px ?? '—'} · confidence <b>${sc.confidence}</b></div>
+        <p class="mono dim">${esc(sc.how_measured)}</p>
+        ${(sc.flags || []).length ? `<p class="mono" style="color:var(--bad)">flags: ${sc.flags.map(esc).join(' · ')}</p>` : ''}
+        ${(sc.refs || []).length ? `<table><tr><th>ref</th><th>known</th><th>measured px</th><th>predicted px</th></tr>${sc.refs.map(r => `<tr><td>${r.label}</td><td>${r.known_cm} cm</td><td>${r.measured_px}</td><td>${r.predicted_px}</td></tr>`).join('')}</table>` : ''}
+        ${tab ? `<details><summary class="mono">falloff: px/cm = ${sc.falloff.k ?? '—'} × (y − horizon)</summary><table><tr><th>y px</th><th>px/cm</th><th>distance m</th></tr>${tab}</table></details>` : ''}
+        <h3>PLATE</h3>
+        <p class="mono">${esc(src.cand || src.kind)} · ${esc(src.lib || src.what || '')} ${src.file ? '· ' + esc(src.file) : ''} · ledger ${esc(src.ledger || '—')}</p>
+        <p class="mono dim">${src.clip_vs_set != null ? `CLIP vs set ${src.clip_vs_set} · people in plate ${src.people_in_plate} (${Math.round((src.people_area || 0) * 100)}%) · painted out ${src.painted_out?.n ?? 0} (${((src.painted_out?.frac || 0) * 100).toFixed(1)}%) · chosen by ${(src.chosen_by || []).join(', ')}` : ''} ${src.override ? '· override: ' + esc(src.override) : ''}</p>
+        <details><summary class="mono">alternatives</summary><pre>${esc((S.plate_alternatives || []).map(a => `${a.cand}  CLIP ${a.clip?.toFixed?.(3)}  people ${a.people} ${a.people_area != null ? (a.people_area * 100).toFixed(0) + '%' : ''}  ${a.origin.join(',')}`).join('\n'))}</pre></details>
+      </div>
+    </div>
+    <div class="box"><h3>SURFACES & ARCHIVE SLOTS</h3>
+      <p class="mono dim">surfaces: ${(S.surfaces || []).map(s => `${s.id} (${s.label}, ${Math.round(s.area_frac * 100)}%, ${s.plane}${s.depth_m != null ? ', ' + s.depth_m + ' m' : ''})`).join(' · ') || '—'}</p>
+      ${(S.design_surfaces || []).length ? `<p class="mono dim">dossier: ${S.design_surfaces.map(esc).join(' · ')}</p>` : ''}
+      ${pa}${slots}
+    </div>
+    <details class="box"><summary class="mono">lines & dossier layers</summary><pre>${esc(S.lines)}\n\n${esc(JSON.stringify(S.design_layers || {}, null, 1))}</pre></details>`;
+  $('#detail').classList.add('on'); $('#detail').scrollTop = 0; document.body.style.overflow = 'hidden';
+  $('#x').onclick = close_;
+  wire();
+}
+function wire() {
+  const st = $('#stage'), L = [...st.querySelectorAll('.ly')]; let ex = false, sway = true, t0 = performance.now(), mx = 0, my = 0, hover = false;
+  const place = () => L.forEach((l, i) => { const p = +l.dataset.p;
+    l.style.transform = ex ? `translate3d(${(i - L.length / 2) * 3}%, ${(i - L.length / 2) * -2}%, ${(p - 1) * 160}px) rotateY(-18deg) scale(.82)` : `translate(${-mx * p * 3}%, ${-my * p * 1.2}%)`; });
+  st.onpointermove = e => { const r = st.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width - .5; my = (e.clientY - r.top) / r.height - .5; hover = true; if (!ex) L.forEach(l => l.style.transition = 'none'); place(); };
+  st.onpointerleave = () => { hover = false; L.forEach(l => l.style.transition = ''); };
+  $('#exp').onclick = () => { ex = !ex; $('#exp').classList.toggle('on', ex); st.classList.toggle('explode', ex); L.forEach(l => l.style.transition = ''); place(); };
+  $('#ovb').onclick = () => { const o = $('#ov'); const on = o.style.display === 'none'; o.style.display = on ? '' : 'none'; $('#ovb').classList.toggle('on', on); };
+  $('#sway').onclick = () => { sway = !sway; $('#sway').classList.toggle('on', sway); }; $('#sway').classList.add('on');
+  document.querySelectorAll('.planes input').forEach(c => c.onchange = () => st.querySelectorAll(`.ly[data-plane="${c.dataset.plane}"]`).forEach(l => l.style.visibility = c.checked ? '' : 'hidden'));
+  const tick = now => { if (!$('#detail').classList.contains('on') || !document.body.contains(st)) return;
+    if (sway && !hover && !ex) { const t = (now - t0) / 1000; mx = Math.sin(t * 0.5) * 0.5; my = Math.sin(t * 0.33) * 0.15; L.forEach(l => l.style.transition = 'none'); place(); }
+    requestAnimationFrame(tick); };
+  place(); requestAnimationFrame(tick);
+}
+</script>
+<script src="../../nav.js" defer></script>
+</body>
+</html>
