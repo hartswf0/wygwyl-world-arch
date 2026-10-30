@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cast Library · WYGWYL</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--ok:#9fe08a;--bad:#ff7b6b;--acc:#e7a35a;--na:#6f655a;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,sans-serif}
+header.top{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;background:rgba(13,11,10,.94);z-index:5}
+header.top h1{font:400 24px 'Permanent Marker',cursive;margin:0}
+header.top h1 small{font:12px var(--mono);color:var(--dim);margin-left:8px;letter-spacing:.06em}
+#wy-index{color:var(--dim);font:12px var(--mono);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:999px}
+main{max-width:1360px;margin:0 auto;padding:22px 16px 80px;display:grid;gap:40px}
+h2{font:400 28px 'Permanent Marker',cursive;margin:0;color:var(--card)}
+h3{font:600 16px Inter;margin:0}
+p{margin:0;max-width:78ch}
+.dim{color:var(--dim)}
+.mono{font-family:var(--mono)}
+section{display:grid;gap:14px;min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.grid3>div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.grid3 b{color:var(--card)}
+table{border-collapse:collapse;font:12px/1.4 var(--mono);width:100%}
+th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:600}
+.scroll{overflow-x:auto;max-width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:11.5px var(--mono);color:var(--ink);background:#21190f;border:1px solid var(--line);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.chip.pass{border-color:#3d6b33;color:var(--ok)}
+.chip.fail{border-color:#7a3329;color:var(--bad)}
+.chip.na{color:var(--na)}
+.chip.k{border-color:var(--card);color:var(--card)}
+img.wide{width:100%;height:auto;display:block;border-radius:6px;border:1px solid var(--line)}
+.lineup{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+.lineup img{height:300px;width:auto;display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,560px),1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px;min-width:0;scroll-margin-top:70px}
+.card header{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.card header h3{font:400 21px 'Permanent Marker',cursive;color:var(--card)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs button{font:600 12px var(--mono);background:#1d1712;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 9px;cursor:pointer}
+.tabs button.on{border-color:var(--card);color:var(--card)}
+.tabs button .v{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:6px;vertical-align:1px}
+.v.pass{background:var(--ok)}.v.fail{background:var(--bad)}.v.error{background:#888}
+video{width:100%;aspect-ratio:16/9;background:#000;border-radius:6px;display:block}
+.twocol{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:640px){.twocol{grid-template-columns:1fr}}
+.ruler svg{width:100%;height:auto;display:block}
+details>summary{cursor:pointer;font:600 12.5px var(--mono);color:var(--card);padding:4px 0}
+ul.notes{margin:6px 0 0;padding-left:18px;display:grid;gap:6px;font-size:13.5px}
+ul.notes li b{color:var(--acc);font-weight:600}
+ul.notes li.meas b{color:var(--bad)}
+.filter{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter input,.filter select{font:13px var(--mono);background:#1d1712;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+a{color:var(--acc)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="../../index.html" id="wy-index">← Index</a>
+  <h1>Cast Library <small>EVERY CHARACTER · ONE BATTERY · ONE SCALE</small></h1>
+</header>
+<main>
+<section>
+  <p>Every character of the cut-out suite run through the same six Acting Arena takes. Each one is built from its own painted Kit 3 cards. Each puppet is solved for its own body (fused skirt, back-only, child, wings, code-drawn dummy). <b>Everything below was measured on the render</b>, at 640×360 and about 1.4 px per cm, so one pixel is about 0.7 cm. Failed takes are kept.</p>
+  <div class="grid3" id="facts"></div>
+</section>
+
+<section>
+  <h2>The battery and the checks</h2>
+  <div class="panel scroll"><table id="battery"></table></div>
+  <div class="panel scroll"><table id="bycheck"></table></div>
+</section>
+
+<section id="scale">
+  <h2>Scale, solved once</h2>
+  <div class="grid3">
+    <div><b>One unit: the real centimetre.</b> Each character has a <span class="mono">height_cm</span>. Each cut part has its own measured <span class="mono">px_per_cm</span>, taken from the Kit 3 ghost it was painted into. The scale factor is <span class="mono">k = height_cm / build height</span>.</div>
+    <div><b>Into a set.</b> <span class="mono">ppc(y) = ppc_ground · (y − horizon) / (ground − horizon)</span>. A figure standing at foot line y is <span class="mono">height_cm · ppc(y)</span> px tall. Each part is drawn at <span class="mono">ppc(y) · k / part.px_per_cm</span>. If a figure is as tall as the camera is high, its head sits on the horizon at any depth.</div>
+    <div><b>Per-character corrections are data.</b> Collar tuck 0.8 cm. The head brad sits 4 % up the neck tab, or higher for short necks. The ankle brad sits the template's ankle height above the sole. Skirt knees ride in a slot 4 cm above the hem. Props the action owns (a chair) scale with the leg. Sockets the set owns (a picture frame) do not: they are re-staged to the reach top.</div>
+  </div>
+  <p class="dim">Library: <a href="lib/scale.js">lib/scale.js</a> and its Python twin <a href="lib/scale.py">lib/scale.py</a>. Both are tested against the same cases (<a href="lib/tests/scale_cases.json">tests/scale_cases.json</a>). Sample set calibration: <a href="data/sample_set_p07_plaza.json">data/sample_set_p07_plaza.json</a>.</p>
+  <h3>The whole cast at one foot line and one px/cm (0–200 cm grid)</h3>
+  <div class="lineup"><img src="cast/lineup.jpg" alt="All characters standing side by side at the same scale on a 0 to 200 cm grid" loading="lazy"></div>
+</section>
+
+<section>
+  <h2>Characters</h2>
+  <div class="filter">
+    <input id="q" type="search" placeholder="filter: name, poem, rig…" aria-label="Filter characters">
+    <select id="sort" aria-label="Sort"><option value="cast">cast order</option><option value="height">height</option><option value="pass">takes passed</option></select>
+    <span class="dim mono" id="count"></span>
+  </div>
+  <div class="cards" id="cards"></div>
+</section>
+
+<section>
+  <h2>Legacy arena rigs (audited, not re-run)</h2>
+  <div class="panel scroll"><table id="legacy"></table></div>
+</section>
+
+<section>
+  <h2>What is missing</h2>
+  <ul class="notes" id="missing">
+    <li>Sixteen extras share one painted man's head drawing (recoloured). The young poet in pajamas and the ghost child borrow the boy's head. Bola, Shim and Dot have code-drawn heads, because their v2 plates are the man's face recoloured. All of these need painted heads.</li>
+    <li>The woman's teal-dress and the mother's kits painted a hip-bridge triangle where the template asked for a skirt. The woman plays without a skirt here. The mother's profile has a brocade overlay.</li>
+    <li>Only the camera turns the EX away from us, and frames that would show his face are marked CUT. His turn take is mostly cut.</li>
+    <li>Lying down is still jointed cards. The replacement pose cards (sit, kneel, fall) are listed per character but not yet swapped in. Skirted and robed figures open their knee slots by up to 17 cm on the floor.</li>
+    <li>Arms that are not on a socket hang from the torso card's own shoulder, which sits higher than the motion's shoulder. They miss their free target by 2–9 cm. This is reported as <span class="mono">ik_unreached</span> and is not a check.</li>
+    <li>The sample set's scale comes from one person in the plate, assumed to be 170 cm. Lane C's per-scene sets replace it.</li>
+  </ul>
+</section>
+</main>
+<script>
+const TAKES = ['walk','turn','sit','reach','handoff','fall'];
+const CHECKS = ['foot_slide','brad_gap','contact','height_drift','floor','balance','face_never_seen'];
+const CN = {foot_slide:'foot slide',brad_gap:'brad gap',contact:'contact',height_drift:'height drift',floor:'floor',balance:'balance',face_never_seen:'face hidden'};
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let DATA, TK = {};
+
+function ruler(c){
+  // a 0-200 cm ruler with the figure's height and head units marked
+  const H = 200, W = 260, px = 0.9, h = c.height_cm, hh = c.proportions.head_cm;
+  let s = `<svg viewBox="0 0 ${W} ${H*px+26}" role="img" aria-label="${esc(c.name)} is ${h} cm tall, ${c.head_heights} heads">`;
+  for (let cm = 0; cm <= 200; cm += 10){ const y = 8 + (200-cm)*px; s += `<line x1="34" x2="${cm%50?40:46}" y1="${y}" y2="${y}" stroke="#9a8d7e"/>`; if (cm%50==0) s += `<text x="2" y="${y+4}" fill="#9a8d7e" font-size="10" font-family="JetBrains Mono">${cm}</text>`; }
+  s += `<line x1="34" x2="34" y1="8" y2="${8+200*px}" stroke="#9a8d7e"/>`;
+  const top = 8 + (200-h)*px;
+  s += `<rect x="58" y="${top}" width="26" height="${h*px}" fill="#c79a62" opacity=".85"/>`;
+  for (let i = 0; i*hh < h - 0.1; i++){ const y = top + i*hh*px; s += `<rect x="90" y="${y}" width="16" height="${Math.min(hh, h-i*hh)*px}" fill="${i%2?'#3b3029':'#6b5844'}"/>`; }
+  const P = c.proportions;
+  const mark = (cm, label) => { const y = 8 + (200-cm)*px; return `<line x1="58" x2="120" y1="${y}" y2="${y}" stroke="#e7a35a" stroke-dasharray="2 2"/><text x="124" y="${y+4}" fill="#efe6da" font-size="10" font-family="JetBrains Mono">${label} ${cm}</text>`; };
+  s += mark(h, 'crown') + mark(P.shoulder_height_cm, 'shoulder') + mark(P.hip_height_cm, 'hip') + mark(P.reach_top_cm, 'reach');
+  s += `<text x="58" y="${H*px+22}" fill="#9a8d7e" font-size="10" font-family="JetBrains Mono">${c.head_heights} heads · hand ${P.hand_cm} cm</text></svg>`;
+  return s;
+}
+
+function takeChips(t){
+  if (!t) return '';
+  return `<div class="chips">` + CHECKS.filter(k => k in t.checks).map(k => {
+    const v = t.checks[k]; const cls = v === true ? 'pass' : v === false ? 'fail' : 'na';
+    return `<span class="chip ${cls}">${CN[k]} ${v===true?'✓':v===false?'✗':'–'}</span>`; }).join('') + `</div>`;
+}
+
+function takeNumbers(t){
+  if (!t) return '';
+  const r = [
+    ['foot slide', `${t.foot_slide_cm_per_frame.worst} cm/f worst (${t.foot_slide_cm_per_frame.planted_frames} planted)`],
+    ['brad gap', `${t.brad_gap_cm.worst} cm worst · ${t.brad_gap_cm.hole_frames} hole frames`],
+    ['contact', t.contact_error_cm.frames ? `${t.contact_error_cm.median} cm median · ${t.contact_error_cm.worst} worst` : '–'],
+    ['height drift', t.height_drift_pct.frames ? `${t.height_drift_pct.mean} % mean · ${t.height_drift_pct.worst} worst` : '–'],
+    ['floor', t.floor_error_cm.p95_abs != null ? `p50 ${t.floor_error_cm.p50} · p95 |${t.floor_error_cm.p95_abs}| cm` : '–'],
+    ['balance', `${t.balance_pct} %`], ['view swaps', `${t.view_swaps} (pop ${t.swap_pop_cm} cm)`],
+    ['free-arm IK miss', `${t.ik_unreached_cm.worst} cm`],
+  ];
+  if (t.skirt_body_drop_cm) r.push(['skirt body drop', `${t.skirt_body_drop_cm.worst} cm (${t.skirt_body_drop_cm.frames} f)`]);
+  if (t.thigh_exits_skirt_frames != null) r.push(['thigh exits skirt', `${t.thigh_exits_skirt_frames} f (max ${t.thigh_exit_deg_max}°)`]);
+  if (t.face_cut_frames != null) r.push(['CUT (face)', `${t.face_cut_frames} of ${t.frames} f · camera yaw ${t.camera_yaw}°`]);
+  (t.notes||[]).forEach(n => r.push(['note', n]));
+  return `<table>${r.map(([a,b]) => `<tr><th>${esc(a)}</th><td>${esc(b)}</td></tr>`).join('')}</table>`;
+}
+
+function card(c){
+  const tk = TK[c.id] || {};
+  const passed = TAKES.filter(k => (c.arena[k]||{}).verdict === 'pass').length;
+  const d = c.drop || {};
+  const notes = c.solve_notes.map(n => `<li class="${n.measured?'meas':''}"><b>${esc(n.problem)}</b><br>→ ${esc(n.solution)}</li>`).join('');
+  const P = c.proportions;
+  const hs = Object.entries(c.heights_seen||{}).filter(([k,v]) => v && !k.includes('head')).map(([k,v]) => `${k} ${v}`).join(' · ');
+  return `<article class="card" id="c-${c.id}" data-q="${esc((c.name+' '+c.plays+' '+c.poems.join(' ')+' '+c.rig+' '+c.id).toLowerCase())}">
+    <header><h3>${esc(c.name)}</h3><span class="dim mono">${esc(c.plays)} · poems ${esc(c.poems.join(' '))}</span></header>
+    <div class="chips"><span class="chip k">${c.height_cm} cm</span><span class="chip">${c.head_heights} heads</span><span class="chip">rig ${esc(c.rig)}</span><span class="chip">build ${esc(P.build)} × ${P.k}</span><span class="chip">${passed}/6 takes pass</span></div>
+    <div class="tabs" role="tablist">${TAKES.map((k,i) => `<button role="tab" data-k="${k}" class="${i?'':'on'}" aria-selected="${!i}">${k}<span class="v ${(c.arena[k]||{}).verdict}"></span></button>`).join('')}</div>
+    <video controls muted playsinline preload="metadata" src="cast/${c.id}/walk.mp4#t=0.5"></video>
+    <div class="take-checks">${takeChips(tk.walk)}</div>
+    <details><summary>numbers for this take · contact sheet (1 fps)</summary><div class="take-num">${takeNumbers(tk.walk)}</div><img class="wide sheet" loading="lazy" src="cast/${c.id}/walk.jpg" alt="1 frame per second contact sheet"></details>
+    <div class="twocol">
+      <div class="ruler">${ruler(c)}</div>
+      <div><table>
+        <tr><th>shoulder / hip</th><td>${P.shoulder_height_cm} / ${P.hip_height_cm} cm</td></tr>
+        <tr><th>arm (upper + fore + hand)</th><td>${P.upper_arm_cm} + ${P.forearm_cm} + ${P.hand_cm}</td></tr>
+        <tr><th>leg (thigh + shin)</th><td>${P.thigh_cm} + ${P.shin_cm}</td></tr>
+        <tr><th>reach top</th><td>${P.reach_top_cm} cm</td></tr>
+        <tr><th>walk</th><td>${c.walk.cycle_frames ?? '–'} f cycle · stride ${c.walk.stride_cm ?? '–'} cm</td></tr>
+        <tr><th>sheet px/cm</th><td>${c.scale.sheet ? `${c.scale.sheet.median_px_per_cm} median · ${c.scale.sheet.spread}× spread · head ${c.scale.sheet.head_vs_body ?? '–'}×` : '–'}</td></tr>
+        <tr><th>heights seen</th><td>${esc(hs)}</td></tr>
+      </table></div>
+    </div>
+    <details><summary>drop at scale: plaza plate, near (y 1040) and far (y 935)</summary>
+      <img class="wide" loading="lazy" src="cast/${c.id}/drop.jpg" alt="${esc(c.name)} placed at two depths in the sample set, with the rule's height bars">
+      <p class="mono dim" style="font-size:12px">${['near','far'].map(t => d[t] ? `${t}: ${d[t].depth_m} m · rule ${d[t].want_height_px} px · measured ${d[t].measured_height_px} px · ${d[t].err_pct} % (vs its stance ${d[t].err_vs_stance_pct} %) ${d[t].ok?'✓':'✗'}` : '').join('<br>')}</p>
+    </details>
+    <details><summary>problems &amp; solutions (${c.solve_notes.length})</summary><ul class="notes">${notes}</ul></details>
+  </article>`;
+}
+
+function wire(el, c){
+  const v = el.querySelector('video');
+  el.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+    el.querySelectorAll('.tabs button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
+    const k = b.dataset.k;
+    v.src = `cast/${c.id}/${k}.mp4`; v.play().catch(()=>{});
+    el.querySelector('.take-checks').innerHTML = takeChips((TK[c.id]||{})[k]);
+    el.querySelector('.take-num').innerHTML = takeNumbers((TK[c.id]||{})[k]);
+    el.querySelector('img.sheet').src = `cast/${c.id}/${k}.jpg`;
+  }));
+}
+
+function render(){
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  const srt = document.getElementById('sort').value;
+  let cs = DATA.characters.slice();
+  if (srt === 'height') cs.sort((a,b) => b.height_cm - a.height_cm);
+  if (srt === 'pass') cs.sort((a,b) => TAKES.filter(k => (b.arena[k]||{}).verdict==='pass').length - TAKES.filter(k => (a.arena[k]||{}).verdict==='pass').length);
+  const box = document.getElementById('cards'); box.innerHTML = '';
+  let n = 0;
+  cs.forEach(c => {
+    const t = document.createElement('div'); t.innerHTML = card(c); const el = t.firstElementChild;
+    if (q && !el.dataset.q.includes(q)) return;
+    box.appendChild(el); wire(el, c); n++;
+  });
+  document.getElementById('count').textContent = `${n} of ${DATA.characters.length}`;
+}
+
+(async function(){
+  DATA = await (await fetch('data/characters.json')).json();
+  await Promise.all(DATA.characters.map(async c => { try { TK[c.id] = (await (await fetch(`cast/${c.id}/takes.json`)).json()).takes; } catch(e) { TK[c.id] = {}; } }));
+  const all = DATA.characters.flatMap(c => TAKES.map(k => TK[c.id][k]).filter(Boolean));
+  const pass = all.filter(t => t.verdict === 'pass').length;
+  document.getElementById('facts').innerHTML = [
+    [`${DATA.characters.length} characters`, `${DATA.legacy_rigs.length} legacy arena rigs audited as well`],
+    [`${all.length} takes rendered`, `${pass} pass all checks, ${all.length-pass} fail; each take has an mp4 and a 1 fps contact sheet`],
+    [`${all.reduce((a,t)=>a+t.frames,0).toLocaleString()} frames measured`, 'foot slide, brad gap and holes, contact, height drift, floor, balance'],
+  ].map(([a,b]) => `<div><b>${a}</b><br><span class="dim">${b}</span></div>`).join('');
+  const T = DATA.tolerances;
+  document.getElementById('battery').innerHTML = `<tr><th>take</th><th>Bolas bank</th><th>what it tests</th></tr>` +
+    [['walk','T001','planted feet, stride by leg length'],['turn','T014','every body view in one take; view-swap pop'],['sit','T006','a chair sized to the sitter'],['reach','T080','two hands to set-owned sockets at 140 cm'],['handoff','T046','hand meets a partner\'s hand'],['fall','T108','down to the floor and up']]
+      .map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('') +
+    `<tr><td colspan="3" class="dim">tolerances: foot slide ≤ ${T.foot_slide} cm/frame · brad gap ≤ ${T.brad_gap} cm and no hole at any brad · contact median ≤ ${T.contact} cm · height drift |mean| ≤ ${T.height_drift} % (rendered top vs the motion's head, standing frames) · floor p95 ≤ ${T.floor} cm · balance ≥ ${T.balance} %</td></tr>`;
+  const rows = TAKES.map(k => { const ts = DATA.characters.map(c => TK[c.id][k]).filter(Boolean);
+    return `<tr><td>${k}</td><td>${ts.filter(t=>t.verdict==='pass').length}/${ts.length}</td>` + CHECKS.map(ch => { const v = ts.filter(t => ch in t.checks && t.checks[ch] !== null); const f = v.filter(t => t.checks[ch] === false).length; return `<td class="${f?'':'dim'}">${v.length ? (f ? `<span style="color:var(--bad)">${f} fail</span>` : 'all pass') : '–'}</td>`; }).join('') + `</tr>`; });
+  document.getElementById('bycheck').innerHTML = `<tr><th>take</th><th>pass</th>${CHECKS.map(c => `<th>${CN[c]}</th>`).join('')}</tr>` + rows.join('');
+  document.getElementById('legacy').innerHTML = `<tr><th>rig</th><th>parts</th><th>arena</th><th>audit</th></tr>` + DATA.legacy_rigs.map(L =>
+    `<tr><td>${esc(L.name)}<br><span class="dim">→ superseded by ${esc(L.superseded_by)}</span></td><td>${esc(L.parts)}</td><td>${L.pass}/${L.takes} pass</td><td>${esc(L.audit)}</td></tr>`).join('');
+  document.getElementById('q').addEventListener('input', render);
+  document.getElementById('sort').addEventListener('change', render);
+  render();
+})();
+</script>
+<script src="../../nav.js" defer></script>
+</body>
+</html>
