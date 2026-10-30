@@ -55,6 +55,7 @@
     { id: 'kits2',      name: 'Character Kits v2', does: 'Every character, every poem: sheets to generate', path: 'shots/kits.html' },
     { id: 'design',     name: 'Production Design', does: 'Each poem: reading, kit, props, places, needs', path: 'shots/design/index.html' },
     { id: 'suite',      name: '✂️ Cut-Out Suite', does: 'Stage a scene: sets at true scale, cast, beats on words, archive joins, live checks, export & render', path: 'shots/suite/index.html' },
+    { id: 'suitereels', name: '🎞️ Staged Reels', does: 'All 14 poems staged in the suite: 80 scenes with measured checks', path: 'shots/suite/reels.html' },
     { id: 'suitebody',  name: '🧤 Body Lab · every part', does: '9,108 cut parts: all hands, feet, heads, eyes, mouths, limbs at one cm scale, with missing cells', path: 'shots/suite/body.html' },
     { id: 'suitecast',  name: '🚶 Cast in the Arena', does: '34 characters × 6 takes, measured: proportions, scale problems and how each was solved', path: 'shots/suite/cast.html' },
     { id: 'suitesets',  name: '🧱 Sets & Scale', does: '80 scenes as planes with solved scale, surfaces and archive slots', path: 'shots/suite/sets.html' },
