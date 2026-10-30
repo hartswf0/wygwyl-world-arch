@@ -123,6 +123,7 @@ import { makeCamera, probeLaneB, laneB, onGround, clampToPoly, groundOf } from '
 import { compileScene, ACTIONS, GOALS, wordAt } from './lib/solver.js';
 import { loadAssets, drawFrame, pickCard, partsFor } from './lib/draw.js';
 import { runChecks, checksForScene, THRESHOLDS } from './lib/checks.js';
+import { loadExtensions } from './lib/ext.js';
 
 const Q = new URLSearchParams(location.search);
 const CAPTURE = Q.get('capture') === '1';
@@ -155,6 +156,7 @@ async function open(id) {
   const draft = !CAPTURE && store.get('suite-draft-' + id);
   S.scene = draft ? JSON.parse(draft) : clone(file);
   S.draft = !!draft;
+  await loadExtensions(S.scene.extensions);   // lib/ext.js: modules the scene names
   S.set = await loadSet(id, S.scene.set);
   S.ctx.sources.set = S.set._from;
   S.cam = makeCamera(S.set);

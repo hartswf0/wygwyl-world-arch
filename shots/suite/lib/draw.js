@@ -4,6 +4,7 @@
 import { img } from './adapters.js';
 import { viewOf, axes, D2R, lerp, smooth } from './rig.js';
 import { socketWorld } from './solver.js';
+import { EXT } from './ext.js';
 
 const COLORS = ['#e7a35a', '#7fd3c4', '#ff7b6b', '#b9a5ff', '#9fe08a', '#f2d16b', '#6fb5ff', '#ff9ad5'];
 const RING = ['front', 'threequarter', 'profile', 'threequarter_back', 'back'];
@@ -23,6 +24,7 @@ export async function loadAssets(scene, set, ctx) {
   await Promise.all(want.map(async p => { A.parts[p.id] = await img(p.url); }));
   const clips = new Set((scene.joins || []).map(j => j.clip).filter(Boolean));
   await Promise.all([...clips].map(async k => { const m = ctx.archive[k]; if (m) A.archive[k] = { meta: m, im: await img(m.url) }; }));
+  await Promise.all(EXT.preload.map(fn => fn(scene, set, ctx, A)));   // lib/ext.js
   return A;
 }
 
@@ -58,7 +60,7 @@ export function pickCard(ctx, tr, fr) {
   if (!pool.length) return null;
   const v = viewOf(fr.phi).view;
   const want = fr.card.state;
-  const pin = c.cards?.[want];                                   // the scene can pin a card per state
+  const pin = c.cards?.[want] || (String(want).startsWith('card.') ? want : null);   // the scene can pin a card per state (or a pose beat names one)
   let cands = pin ? pool.filter(p => (Array.isArray(pin) ? pin : [pin]).includes(p.id)) : [];
   if (!cands.length) {
     const sameState = pool.filter(p => p.state === want || (want === 'dance' && p.state === 'dance'));
@@ -148,6 +150,7 @@ export function drawFrame(g, F) {
     const s = set.surfaces.find(x => x.id === j.surface);
     if (s) Z = cam.groundToWorld(boxOf(s.polygon)[0], s.base_y ?? cam.yg)[1] - 0.5;   // just in front of its own occluder
     if (j.kind === 'citizen' && j.at) Z = cam.groundToWorld(j.at[0], j.at[1])[1];
+    if (j.ground_y != null) Z = cam.groundToWorld(j.ground_x ?? 960, j.ground_y)[1] - 0.5;   // a join may stand at its own ground line (a pane cut in the plate)
     items.push({ Z, kind: 'join', draw: () => drawJoin(g, base, j, s, F, cv, probe) });
   }
   for (const id of comp.order) {
@@ -375,6 +378,7 @@ function drawProps(g, stageM, tr, fr, P, F, out, only) {
       g.rotate(-1.1); g.fillStyle = '#111'; g.fillRect(0, -0.6 * s, 12 * s, 1.2 * s);
       const gl = g.createRadialGradient(12 * s, 0, 0, 12 * s, 0, 5 * s); gl.addColorStop(0, 'rgba(255,170,70,1)'); gl.addColorStop(1, 'rgba(240,138,36,0)');
       g.fillStyle = gl; g.beginPath(); g.arc(12 * s, 0, 5 * s, 0, 7); g.fill();
+    } else if (EXT.props[p.kind] && EXT.props[p.kind](g, p, s, F)) {   // lib/ext.js prop cards
     } else {
       g.fillStyle = p.color || '#c79a62'; g.fillRect(-(p.w_cm || 10) * s / 2, -(p.h_cm || 10) * s, (p.w_cm || 10) * s, (p.h_cm || 10) * s);
     }
@@ -388,6 +392,7 @@ function drawJoin(g, base, j, s, F, cv, probe) {
   const t1 = j.t_end ?? scene.duration;
   const fr = stripFrame(A, j.clip, (t - j.t) + (j.clip_in || 0));
   if (!fr) return;
+  if (EXT.joins[j.kind]) return EXT.joins[j.kind](g, base, j, s, F, cv, probe, { fr, camMatrix, tag, pathPoly, boxOf, coverInto, fade });   // lib/ext.js
   g.setTransform(base.multiply(camMatrix(set, cv, s?.parallax ?? 1)));
   let a = fade(t, j.t, t1, j.fade || 0.4) * (j.mix ?? 0.9);
   if (j.gate) { // touch-gated: plays while the named contact is held
@@ -442,6 +447,7 @@ function drawAnswer(g, j, F, probe) {
 function drawFx(g, base, fx, F, cv) {
   const { t, set, scene } = F, W = set.frame[0], H = set.frame[1];
   g.setTransform(base.multiply(camMatrix(set, cv, fx.parallax ?? 1)));
+  if (EXT.fx[fx.kind]) return EXT.fx[fx.kind](g, base, fx, F, cv, { camMatrix, tag, pathPoly, boxOf });   // lib/ext.js
   if (fx.kind === 'haze') {           // torn tracing-paper sheets on rails, sliding in from the left
     const n = fx.sheets || 3;
     for (let i = 0; i < n; i++) {
