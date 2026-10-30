@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Body Lab · Every Part</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--ok:#9fe08a;--mid:#e7c35a;--bad:#ff7b6b;--acc:#e7a35a;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;overflow-x:hidden}
+header.top{display:flex;align-items:center;gap:12px;padding:12px max(16px,env(safe-area-inset-right)) 12px max(16px,env(safe-area-inset-left));border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:5}
+header.top h1{font:400 24px 'Permanent Marker',cursive;margin:0}
+header.top h1 small{font:12px var(--mono);color:var(--dim);margin-left:10px;letter-spacing:.08em}
+header.top a{color:var(--dim);font:12px var(--mono);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:999px}
+header.top a:hover{color:var(--ink);border-color:var(--card)}
+header.top .sp{flex:1}
+main{max-width:1500px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right)) 120px max(16px,env(safe-area-inset-left));display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+main>*{min-width:0}
+p{margin:0;max-width:86ch}.dim{color:var(--dim)}.mono{font-family:var(--mono);font-size:12px}
+h2{font:400 22px 'Permanent Marker',cursive;margin:0;color:var(--card)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{font:12px var(--mono);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer}
+.tabs button.on{border-color:var(--card);color:var(--card)}
+.tabs button b{color:var(--dim);font-weight:400;margin-left:6px}
+.ctl{display:flex;gap:10px 16px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.ctl label{font:12px var(--mono);color:var(--dim);display:flex;gap:6px;align-items:center}
+.ctl select,.ctl input[type=text]{font:12px var(--mono);background:#0f0c0a;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 6px;max-width:190px}
+.ctl input[type=range]{width:110px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{font:12px var(--mono);background:#21190f;border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.stat b{color:var(--card);font-weight:600;margin-right:6px}
+.who{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px;min-width:0}
+.who h3{margin:0;font:600 15px Inter;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.who h3 span{font:12px var(--mono);color:var(--dim);font-weight:400}
+.wall{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 8px;min-width:0;background:repeating-linear-gradient(0deg,transparent 0,transparent calc(var(--cm)*10 - 1px),#241d17 calc(var(--cm)*10 - 1px),#241d17 calc(var(--cm)*10));padding:6px;border-radius:6px}
+.part{position:relative;display:grid;justify-items:center;gap:2px;cursor:pointer;max-width:100%}
+.part .im{position:relative;max-width:100%}
+.part img{display:block;width:100%;height:100%;object-fit:contain}
+.part svg{position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none;overflow:visible}
+.part:hover svg,.part.sel svg,body.showpiv .part svg{opacity:1}
+.part .cap{font:9.5px/1.15 var(--mono);color:var(--dim);max-width:120px;text-align:center;overflow-wrap:anywhere}
+.part.noscale .im{outline:1px dashed #6b5a48}
+.part.comp img{filter:saturate(.65)}
+.part.coded img{filter:grayscale(.4)}
+.part.sel{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+.miss{display:grid;place-items:center;border:1.5px dashed var(--bad);color:var(--bad);font:9.5px/1.2 var(--mono);text-align:center;padding:4px;border-radius:6px;min-width:58px;min-height:40px;background:rgba(255,123,107,.06);max-width:120px;overflow-wrap:anywhere}
+.ruler{display:grid;justify-items:start;gap:2px;font:10px var(--mono);color:var(--dim)}
+.ruler i{display:block;width:6px;background:var(--card);border-radius:2px}
+.more{font:12px var(--mono);color:var(--card);background:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;align-self:center}
+#info{position:fixed;left:max(16px,env(safe-area-inset-left));right:max(16px,env(safe-area-inset-right));bottom:12px;max-width:760px;margin:0 auto;background:#120e0b;border:1px solid var(--card);border-radius:10px;padding:10px 12px;font:12px/1.5 var(--mono);display:none;z-index:9;max-height:42vh;overflow:auto}
+#info b{color:var(--card)}#info .x{float:right;cursor:pointer;color:var(--dim)}
+#info code{color:#e6dccd;overflow-wrap:anywhere}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font:11px var(--mono);color:var(--dim)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+@media (max-width:600px){header.top h1 small{display:none}.ctl select{max-width:140px}}
+</style></head>
+<body>
+<header class="top"><a href="../../index.html" id="wy-index">← Index</a><h1>Body Lab · every part<small>ALL HANDS · FEET · HEADS · FACES · LIMBS · ONE TRUE SCALE</small></h1><span class="sp"></span><a href="../body_lab.html">older Body Lab</a><a href="data/parts.json">parts.json</a><a href="AUDIT_parts.md">audit</a></header>
+<main>
+<p>Every cut puppet part of every character, side by side at <b>one true scale</b>: each card is drawn at its real size in cm (its file px ÷ its sheet's px/cm, which was measured against the character's skeleton from their height). The faint lines are every 10&nbsp;cm. Hover or tap a card for its pivot (green) and sockets (red); “missing” shows the kit cells a character still lacks. <span class="dim">Painted = a painting of this character; composited = recoloured or pasted from other paintings by the v2 kit generator; coded = drawn by a program. Cards with no measured scale are drawn 40&nbsp;cm tall with a dashed edge.</span></p>
+<div class="stats" id="stats"></div>
+<div class="tabs" id="tabs"></div>
+<div class="ctl">
+ <label>who <select id="fChar"></select></label>
+ <label>view <select id="fView"></select></label>
+ <label>poem <select id="fPoem"></select></label>
+ <label>state <input type="text" id="fState" placeholder="fist, smile, kneel…"></label>
+ <label><input type="checkbox" id="pPainted" checked>painted</label>
+ <label><input type="checkbox" id="pComp">composited</label>
+ <label><input type="checkbox" id="pCoded">coded</label>
+ <label><input type="checkbox" id="fScaled">scaled only</label>
+ <label><input type="checkbox" id="fMiss">missing</label>
+ <label><input type="checkbox" id="fPiv">all pivots</label>
+ <label>px/cm <input type="range" id="fZoom" min="1" max="8" step="0.5" value="3"><span id="zv" class="mono">3</span></label>
+</div>
+<div class="legend"><span><i style="background:#3cdc5a"></i>pivot (the brad it turns on)</span><span><i style="background:#e63c32"></i>sockets (where children pin)</span><span><i style="border:1px dashed #6b5a48"></i>no measured scale</span><span><i style="border:1.5px dashed var(--bad)"></i>missing kit cell</span></div>
+<div id="walls"></div>
+</main>
+<div id="info"></div>
+<script>
+const CATS=[['hands','Hands'],['feet','Feet & shoes'],['heads','Heads'],['face','Eyes · mouths · brows'],['limbs','Limbs'],['body','Torsos & hips'],['replacement','Whole-body cards'],['prop','Props']];
+const CATPARTS={hands:['hand'],feet:['foot'],heads:['head','face_plate'],face:['eye','mouth','brow','nose','glasses','accessory'],limbs:['upper_arm','forearm','thigh','shin','limb'],body:['torso','pelvis','wing'],replacement:['replacement'],prop:['prop']};
+const ORDER=['poet','ex','young_poet','ghost_child','woman','parents','family','ancestors','atlantis','party','angels','bola','shim','dot','-'];
+const NAMES={poet:'POET',ex:'EX',young_poet:'YOUNG POET',ghost_child:'GHOST CHILD',woman:'THE WOMAN (mother / she)',parents:'PARENTS',family:'FAMILY & FRIENDS',ancestors:'ANCESTORS',atlantis:'ATLANTIS PEOPLE',party:'PARTY · CLUB · DJ',angels:'ANGELS',bola:'BOLA',shim:'SHIM',dot:'DOT','-':'no character (poem props)'};
+const PAGE=90;
+let P=[],SUM=null,cat='hands',shown={},sel=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+Promise.all([fetch('data/parts.json').then(r=>r.json()),fetch('data/parts_summary.json').then(r=>r.json())]).then(([R,S])=>{P=R.parts;SUM=S;init()}).catch(e=>{$('walls').innerHTML='<p class="dim">Could not load data/parts.json: '+esc(e)+'</p>'});
+function opts(el,vals,all){el.innerHTML=`<option value="">${all}</option>`+vals.map(v=>`<option value="${esc(v)}">${esc(NAMES[v]||v)}</option>`).join('')}
+function init(){
+ const chars=[...new Set(P.map(p=>p.character))].sort((a,b)=>(ORDER.indexOf(a)+1||99)-(ORDER.indexOf(b)+1||99));
+ opts($('fChar'),chars,'everyone');
+ opts($('fView'),['front','threequarter','profile','threequarter_back','back','flat','unknown'],'any view');
+ opts($('fPoem'),Array.from({length:14},(_,i)=>String(i+1).padStart(2,'0')),'any poem');
+ const t=SUM.totals;
+ $('stats').innerHTML=[['parts',t.parts],['painted',t.by_paint.painted],['composited',t.by_paint.composited||0],['coded',t.by_paint.coded||0],['with a scale',t.with_scale],['hands',t.by_category.hands],['feet',t.by_category.feet],['heads',t.by_category.heads],['face',t.by_category.face],['limbs',t.by_category.limbs]].map(([k,v])=>`<span class="stat"><b>${v}</b>${k}</span>`).join('');
+ const H=new URLSearchParams(location.hash.slice(1));
+ cat=H.get('cat')||ls('bodylab.cat')||'hands';
+ if(H.get('miss'))$('fMiss').checked=true;
+ if(H.get('who'))$('fChar').value=H.get('who');
+ if(H.get('comp'))$('pComp').checked=true;
+ drawTabs();
+ for(const id of ['fChar','fView','fPoem','pPainted','pComp','pCoded','fScaled','fMiss']) $(id).addEventListener('change',()=>{shown={};render()});
+ $('fState').addEventListener('input',()=>{shown={};render()});
+ $('fZoom').addEventListener('input',()=>{$('zv').textContent=$('fZoom').value;render()});
+ $('fPiv').addEventListener('change',()=>document.body.classList.toggle('showpiv',$('fPiv').checked));
+ render();
+}
+function drawTabs(){
+ const n=c=>P.filter(p=>p.category===c&&pass(p,true)).length;
+ $('tabs').innerHTML=CATS.map(([k,l])=>`<button class="${k===cat?'on':''}" data-c="${k}">${l}<b>${n(k)}</b></button>`).join('');
+ $('tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{cat=b.dataset.c;ls('bodylab.cat',cat);shown={};drawTabs();render()});
+}
+function pass(p,ignoreCat){
+ if(!ignoreCat&&p.category!==cat)return false;
+ const paint={painted:$('pPainted').checked,composited:$('pComp').checked,coded:$('pCoded').checked};
+ if(!paint[p.paint])return false;
+ const c=$('fChar').value; if(c&&p.character!==c)return false;
+ const v=$('fView').value; if(v&&p.view!==v)return false;
+ const po=$('fPoem').value; if(po&&!(p.poems||[]).includes(po))return false;
+ const s=$('fState').value.trim().toLowerCase(); if(s&&!(String(p.state)+' '+p.id).toLowerCase().includes(s))return false;
+ if($('fScaled').checked&&!(p.scale&&p.scale.px_per_cm))return false;
+ return true;
+}
+function card(p,Z){
+ const ppc=p.scale&&p.scale.px_per_cm;
+ const k=ppc?Z/ppc:(40*Z)/Math.max(p.h,p.w);
+ const w=Math.max(4,p.w*k),h=Math.max(4,p.h*k);
+ const socks=Object.entries(p.sockets||{}).map(([n,q])=>`<g><line x1="${q[0]-7/k}" y1="${q[1]}" x2="${q[0]+7/k}" y2="${q[1]}"/><line x1="${q[0]}" y1="${q[1]-7/k}" x2="${q[0]}" y2="${q[1]+7/k}"/></g>`).join('');
+ const piv=p.pivot?`<circle cx="${p.pivot[0]}" cy="${p.pivot[1]}" r="${4.5/k}" fill="#3cdc5a" stroke="#000" stroke-width="${1/k}"/>`:'';
+ const cls=['part',ppc?'':'noscale',p.paint==='composited'?'comp':'',p.paint==='coded'?'coded':''].join(' ');
+ const cap=[p.side!=='-'?p.side:'',p.view&&p.view!=='unknown'?p.view.replace('threequarter','3q'):'',p.state&&!['rest','unassigned'].includes(p.state)?p.state:''].filter(Boolean).join(' ');
+ return `<div class="${cls}" data-id="${esc(p.id)}" style="width:${w.toFixed(1)}px"><div class="im" style="width:${w.toFixed(1)}px;height:${h.toFixed(1)}px"><img loading="lazy" decoding="async" src="../${esc(p.file)}" alt="${esc(p.part+' '+cap)}"><svg viewBox="0 0 ${p.w} ${p.h}" preserveAspectRatio="none"><g stroke="#e63c32" stroke-width="${2/k}">${socks}</g>${piv}</svg></div><div class="cap">${esc(p.part==='limb'?'limb?':p.part.replace('_',' '))}${cap?' · '+esc(cap):''}</div></div>`;
+}
+function missingFor(ch){
+ const m=SUM&&SUM.missing&&SUM.missing[ch]; if(!m)return [];
+ const parts=CATPARTS[cat];
+ const useAny=$('pComp').checked;
+ return (useAny?m.missing_even_composited:m.missing_painted_cells).filter(c=>parts.includes(c[0]));
+}
+function render(){
+ const Z=+$('fZoom').value;
+ document.documentElement.style.setProperty('--cm',Z+'px');
+ const L=P.filter(p=>pass(p));
+ const by={};for(const p of L)(by[p.character]=by[p.character]||[]).push(p);
+ let chars=Object.keys(by);
+ if($('fMiss').checked&&SUM){for(const c of Object.keys(SUM.missing))if(!chars.includes(c)&&(!$('fChar').value||$('fChar').value===c))chars.push(c)}
+ chars.sort((a,b)=>(ORDER.indexOf(a)+1||99)-(ORDER.indexOf(b)+1||99));
+ const html=[];
+ for(const ch of chars){
+  const arr=(by[ch]||[]).slice().sort((a,b)=>(a.part+a.view+a.state).localeCompare(b.part+b.view+b.state));
+  const lim=shown[ch]||PAGE;
+  const sc=arr.filter(p=>p.scale&&p.scale.px_per_cm).length;
+  const H=(arr[0]&&arr[0].char_height_cm)||'';
+  let miss='';
+  if($('fMiss').checked){const M=missingFor(ch);const tot=SUM.missing[ch]?SUM.missing[ch].missing_painted_cells.length:0;
+   miss=M.length?M.map(c=>`<div class="miss" title="missing kit cell">${esc(c[0].replace('_',' '))}${c[1]!=='-'?' '+c[1]:''}<br>${esc(c[2]==='*'?'':c[2])} ${esc(c[3]!=='rest'&&c[3]!=='blank'?c[3]:'')}</div>`).join(''):(SUM.missing[ch]?'<span class="mono dim">no missing cells in this category</span>':'');}
+  html.push(`<section class="who"><h3>${esc(NAMES[ch]||ch)}<span>${arr.length} cards · ${sc} at true scale${H?' · '+H+' cm tall':''}${$('fMiss').checked&&SUM.missing[ch]?' · '+missingFor(ch).length+' kit cells missing here':''}</span></h3>
+  <div class="wall"><div class="ruler"><i style="height:${10*Z}px"></i>10 cm</div>${arr.slice(0,lim).map(p=>card(p,Z)).join('')}${arr.length>lim?`<button class="more" data-ch="${esc(ch)}">show all ${arr.length}</button>`:''}${miss}</div></section>`);
+ }
+ $('walls').innerHTML=html.join('')||'<p class="dim">Nothing matches these filters.</p>';
+ $('walls').querySelectorAll('.more').forEach(b=>b.onclick=()=>{shown[b.dataset.ch]=1e9;render()});
+ $('walls').querySelectorAll('.part').forEach(el=>el.onclick=()=>info(el));
+}
+function info(el){
+ document.querySelectorAll('.part.sel').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');
+ const p=P.find(q=>q.id===el.dataset.id);if(!p)return;
+ const sc=p.scale||{};
+ $('info').style.display='block';
+ $('info').innerHTML=`<span class="x" onclick="this.parentNode.style.display='none'">close ✕</span><b>${esc(p.id)}</b><br>
+ ${esc(p.character)} · ${esc(p.costume)} · <b>${esc(p.part)}</b> ${esc(p.side)} · ${esc(p.view)} · state ${esc(p.state)} · ${esc(p.paint)} · named by ${esc(p.label_method)}<br>
+ file <code>${esc(p.file)}</code> ${p.w}×${p.h}px · pivot [${(p.pivot||[]).join(', ')}] (${esc(p.pivot_source)}) · parent ${esc(p.parent_part)}<br>
+ sockets ${esc(Object.entries(p.sockets||{}).map(([k,v])=>k+' ['+v.join(',')+']').join('  '))}<br>
+ scale ${sc.px_per_cm?sc.px_per_cm+' px/cm':'none'} — ${esc(sc.source)}${sc.vs_skeleton_pct!=null?` · this card vs the skeleton: ${sc.vs_skeleton_pct>0?'+':''}${sc.vs_skeleton_pct}%`:''}${p.height_cm_real?` · ${p.height_cm_real} cm tall`:''}<br>
+ sheet <code>${esc(p.sheet)}</code> · poems ${esc((p.poems||[]).join(' '))}<br><span class="dim">${esc(p.provenance)}</span>`;
+}
+</script>
+<script src="../../nav.js" defer></script>
+</body></html>
