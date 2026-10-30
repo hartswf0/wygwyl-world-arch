@@ -2773,17 +2773,22 @@ def infer_canonical_piece_meters(
     dictionary first and falling back to semantic keyword rules if needed.
     """
     if pid in CANONICAL_PIECE_METERS_BY_ID:
-        return CANONICAL_PIECE_METERS_BY_ID[pid]
+        ch, cw, ctag = CANONICAL_PIECE_METERS_BY_ID[pid]
+        if ctag == "arch_portal_element":
+            return (max(2.65, ch * 1.35), max(2.45, cw * 1.32), ctag)
+        if ctag == "arch_fixture":
+            return (max(2.05, ch * 1.28), max(2.10, cw * 1.25), ctag)
+        return (ch, cw, ctag)
     s = f"{pid} {label}".lower()
-    if any(k in s for k in ("booth", "door", "arch", "column", "pillar", "pylon", "temple", "sanctuary", "beacon", "lighthouse")):
-        return (1.92, 1.85, "arch_portal_element")
-    if any(k in s for k in ("window", "balcony", "stairs", "fire-escape", "hearth", "fireplace", "altar", "console", "speaker", "telescope")):
-        return (1.58, 1.75, "arch_fixture")
-    if any(k in s for k in ("sofa", "bed", "dresser", "chest", "table", "pew", "bistro", "chandelier", "garland", "wheel", "sundial", "bell", "reel")):
-        return (1.18, 1.65, "furniture_large_prop")
+    if any(k in s for k in ("booth", "door", "arch", "column", "pillar", "pylon", "temple", "sanctuary", "beacon", "lighthouse", "viaduct", "tower", "facade", "wall", "building", "chapel", "ruins", "gate")):
+        return (2.82, 2.65, "arch_portal_element")
+    if any(k in s for k in ("window", "balcony", "stairs", "fire-escape", "hearth", "fireplace", "altar", "console", "speaker", "telescope", "mirror", "screen", "tv")):
+        return (2.12, 2.18, "arch_fixture")
+    if any(k in s for k in ("sofa", "bed", "dresser", "chest", "table", "pew", "bistro", "chandelier", "garland", "wheel", "sundial", "bell", "reel", "bench")):
+        return (1.32, 1.82, "furniture_large_prop")
     if any(k in s for k in ("chair", "lamp", "hourglass", "guitar", "lantern", "campfire", "waystone", "anchor", "gramophone", "vase", "bouquet", "basket")):
-        return (1.02, 1.20, "medium_stage_prop")
-    return (0.78, 0.95, "compact_stage_prop")
+        return (1.06, 1.24, "medium_stage_prop")
+    return (0.82, 0.98, "compact_stage_prop")
 
 
 def standardize_piece_scale(
@@ -2800,7 +2805,7 @@ def standardize_piece_scale(
       1. The piece's tight non-transparent alpha bounding box (`tight_w, tight_h`),
       2. Its canonical physical height & width cap in meters (`canon_h_m, canon_w_m`),
       3. The scene's true camera-distance `stage_px_per_meter` (`18..178 px/m`),
-      4. The depth-plane perspective foreshortening multiplier (`P4: 0.78`, `P3: 0.90`, `P2: 1.00`).
+      4. The depth-plane perspective foreshortening multiplier (`P4: 0.84`, `P3: 0.92`, `P2: 1.00`).
     """
     H_STAGE = 720.0
     pw, ph, tw, th, fill_w, fill_h = get_part_tight_metrics(pid, parts_by_id)
@@ -2808,18 +2813,16 @@ def standardize_piece_scale(
     canon_h_m, canon_w_m, class_tag = infer_canonical_piece_meters(pid, label, plane, ar_tight)
 
     plane_persp_mult = {
-        "P6": 0.46,
-        "P5": 0.58,
-        "P4": 0.78,
-        "P3": 0.90,
+        "P6": 0.52,
+        "P5": 0.66,
+        "P4": 0.84,
+        "P3": 0.92,
         "P2": 1.00,
         "P1": 1.06,
         "P0": 1.12,
     }.get(plane, 0.90)
 
-    # Dampen extreme ppm swings with a 0.76 power curve around 116 px/m so 140m aerial props stay visible (0.09..0.15)
-    # while 3m close-up props expand cleanly (0.26..0.38)
-    eff_ppm = 116.0 * ((max(18.0, stage_ppm) / 116.0) ** 0.76)
+    eff_ppm = 116.0 * ((max(18.0, stage_ppm) / 116.0) ** 0.72)
 
     desired_tight_h_px = canon_h_m * eff_ppm * plane_persp_mult
     desired_tight_w_px = desired_tight_h_px * ar_tight
@@ -2832,8 +2835,9 @@ def standardize_piece_scale(
     phys_sc = full_h_px / H_STAGE
 
     dist_ratio = eff_ppm / 116.0
-    cal_sc = 0.78 * phys_sc + 0.22 * (float(authored_sc) * dist_ratio)
-    cal_sc = round(max(0.08, min(0.42, cal_sc)), 4)
+    cal_sc = 0.72 * phys_sc + 0.28 * (float(authored_sc) * dist_ratio)
+    max_cap = 0.62 if class_tag == "arch_portal_element" else (0.52 if class_tag == "arch_fixture" else 0.44)
+    cal_sc = round(max(0.09, min(max_cap, cal_sc)), 4)
 
     meta = {
         "class_tag": class_tag,
@@ -2856,8 +2860,10 @@ def curate_scene_props(
 ) -> List[Dict[str, Any]]:
     """
     Returns each scene's hand-assembled composition combining:
-      1. Distance-calibrated in-frame props (`x in [0.12 .. 0.88]`), with layered multiplane
-         `aperture_footage` attached to any in-frame door, window, archway, TV screen, or mirror!
+      1. Distance-calibrated in-frame multiplane architecture, portals & props (`x in [0.10 .. 0.90]`),
+         preserving up to 5 distinct layers across P4 (architectural doors/windows/arches/balconies),
+         P3 (grounded furniture & vehicles), and P2/P1 (focal & foreground elements), with layered
+         multiplane `aperture_footage` attached to every door, window, archway, TV screen, or mirror!
       2. The hand-assembled, distance-calibrated Lego Set-Extension bridge (`x in [0.98 .. 1.58]`,
          `is_set_extension=True`) from `get_scene_lego_extension(skey)`, with layered multiplane
          `aperture_footage` inside every doorway, window, and portal opening!
@@ -2867,14 +2873,19 @@ def curate_scene_props(
     if has_car:
         in_frame_list = [dict(x, alpha=0.98, is_set_extension=False) for x in base_list if x.get("plane") in ("P3", "P2")]
     else:
-        grounded = [x for x in base_list if x.get("plane") in ("P3", "P2", "P1")]
+        grounded = [
+            x for x in base_list
+            if x.get("plane") in ("P4", "P3", "P2", "P1") and float(x.get("y", 0.86)) >= 0.76
+        ]
         if not grounded:
-            grounded = base_list[:2]
-        in_frame_list = [dict(x, alpha=0.98, is_set_extension=False) for x in grounded[:2]]
+            grounded = [dict(x, y=max(0.82, float(x.get("y", 0.86)))) for x in base_list[:2]]
+        in_frame_list = [dict(x, alpha=0.98, is_set_extension=False) for x in grounded[:3]]
 
-    # Also include any in-frame P4 door/window/arch portal from `raw_layers` that has explicit `IN_FRAME_PORTAL_FOOTAGE`
+    # Also include grounded in-frame P4 door/window/arch portals from `raw_layers`
     existing_pids = {x.get("part_id") for x in in_frame_list}
     for rl in raw_layers:
+        if len(in_frame_list) >= 4:
+            break
         r_pid = rl.get("part_id", "")
         if r_pid in existing_pids:
             continue
@@ -2892,7 +2903,9 @@ def curate_scene_props(
             "14.3:14.props.door__p11",
             "14.4:14.props.door__p13",
         ):
-            in_frame_list.append(dict(rl, alpha=0.98, is_set_extension=False))
+            r_copy = dict(rl, alpha=0.98, is_set_extension=False)
+            r_copy["y"] = max(0.80, float(r_copy.get("y", 0.86)))
+            in_frame_list.append(r_copy)
             existing_pids.add(r_pid)
 
     out = list(in_frame_list)
@@ -3585,42 +3598,132 @@ def render_clean_scene_plate(
     glow_curr_rgb = np.array((d_curr.get("glow_rgb") or [(245.0, 145.0, 35.0)])[min(1, len(d_curr.get("glow_rgb", [1])) - 1)], dtype=np.float32)
     glow_next_rgb = np.array((d_next.get("glow_rgb") or [(245.0, 145.0, 35.0)])[min(1, len(d_next.get("glow_rgb", [1])) - 1)], dtype=np.float32)
 
-    # 1. Build the 760px Inter-Scene Bridge (`x = 1280..2039`) WITHOUT `np.flip` Rorschach mirroring!
-    #    Multi-scale horizontal color strata from `curr_np`'s right edge and `next_np`'s left edge:
-    r_col0 = curr_np[:, -1, :]  # exact pixel column at x = 1279 (720, 3)
-    l_col0 = next_np[:, 0, :]   # exact pixel column at x = 0 of next scene (720, 3)
+    # 1. Build a 100% 2D/3D Painted Inter-Scene Corridor (`x = 920..2040`) Built ON TOP OF & THROUGH
+    #    the Foundry 3D Terrain (`sb/w1623` / `inv/w1623`) + CLIP Panoptic Aperture (`refs/` + `-seg.jpg`)
+    #    with ZERO 1D horizontal pixel-extrusion smearing!
+    foundry_dir = SHOTS_DIR / "data" / "terrarium" / "foundry"
+    p_lookup = num_str if int(num_str) <= 13 else f"{((sc_idx * 2) % 13) + 1:02d}"
+    sb_candidates = sorted((foundry_dir / "sb" / "w1623").glob(f"{p_lookup}-*.jpg"))
+    inv_candidates = sorted((foundry_dir / "inv" / "w1623").glob(f"{p_lookup}-*-b.jpg"))
+    ref_candidates = sorted(
+        p for p in (foundry_dir / "refs").glob(f"{p_lookup}-*.jpg") if not p.name.endswith("-seg.jpg")
+    )
 
-    r_fine = cv2.GaussianBlur(curr_np[:, -24:, :].mean(axis=1)[:, None, :], (1, 9), 2.2)[:, 0, :]
-    l_fine = cv2.GaussianBlur(next_np[:, :24, :].mean(axis=1)[:, None, :], (1, 9), 2.2)[:, 0, :]
-    r_mid = cv2.GaussianBlur(curr_np[:, -80:, :].mean(axis=1)[:, None, :], (1, 31), 7.5)[:, 0, :]
-    l_mid = cv2.GaussianBlur(next_np[:, :80, :].mean(axis=1)[:, None, :], (1, 31), 7.5)[:, 0, :]
-    r_broad = cv2.GaussianBlur(curr_np[:, -160:, :].mean(axis=1)[:, None, :], (1, 75), 18.0)[:, 0, :]
-    l_broad = cv2.GaussianBlur(next_np[:, :160, :].mean(axis=1)[:, None, :], (1, 75), 18.0)[:, 0, :]
+    sb_img_np = curr_np.copy()
+    if inv_candidates:
+        pick_inv = inv_candidates[sc_idx % len(inv_candidates)]
+        try:
+            sb_img_np = np.array(
+                Image.open(pick_inv).convert("RGB").resize((W, H), Image.Resampling.LANCZOS),
+                dtype=np.float32,
+            )
+        except Exception:
+            pass
+    elif sb_candidates:
+        pick_sb = sb_candidates[min(len(sb_candidates) - 1, int(round(sc_idx * len(sb_candidates) / max(1, n_sc))))]
+        try:
+            sb_img_np = np.array(
+                Image.open(pick_sb).convert("RGB").resize((W, H), Image.Resampling.LANCZOS),
+                dtype=np.float32,
+            )
+        except Exception:
+            pass
+
+    ref_img_np = next_np.copy()
+    seg_img_np = None
+    if ref_candidates:
+        pick_ref = ref_candidates[min(len(ref_candidates) - 1, int(round(sc_idx * len(ref_candidates) / max(1, n_sc))))]
+        try:
+            ref_img_np = np.array(
+                Image.open(pick_ref).convert("RGB").resize((W, H), Image.Resampling.LANCZOS),
+                dtype=np.float32,
+            )
+            seg_p = pick_ref.with_name(f"{pick_ref.stem}-seg.jpg")
+            if seg_p.exists():
+                seg_img_np = np.array(
+                    Image.open(seg_p).convert("RGB").resize((W, H), Image.Resampling.BILINEAR),
+                    dtype=np.float32,
+                )
+        except Exception:
+            pass
+
+    # Fuse CLIP Reference sky/water/light *through* the Foundry 3D terrain via Panoptic Segmentation + Horizon mask
+    yy_full = np.linspace(0.0, 1.0, H, dtype=np.float32)[:, None, None]  # (720, 1, 1)
+    if seg_img_np is not None:
+        # Sky/water/light regions in panoptic mask have higher blue/cyan or high luminance
+        seg_sky_water = np.clip(
+            (seg_img_np[..., 2] - seg_img_np[..., 0] * 0.55) / 140.0
+            + np.clip(1.0 - yy_full[:, :, 0] / 0.54, 0.0, 1.0) * 0.65,
+            0.0,
+            1.0,
+        )
+        ap_mask = cv2.GaussianBlur(seg_sky_water.astype(np.float32), (65, 65), 22.0)[..., None]
+    else:
+        ap_mask = (np.clip(1.0 - yy_full / 0.56, 0.0, 1.0) ** 1.25) * 0.65
+
+    foundry_through = sb_img_np * (1.0 - 0.48 * ap_mask) + ref_img_np * (0.48 * ap_mask)
+
+    # Harmonize `foundry_through` into the Cel-Gouache palette bridging `curr_np` and `next_np`
+    def _harmonize_to_cel_target(src_f: np.ndarray, tgt_f: np.ndarray) -> np.ndarray:
+        src_u8 = np.clip(src_f, 0, 255).astype(np.uint8)
+        tgt_u8 = np.clip(tgt_f, 0, 255).astype(np.uint8)
+        s_lab = cv2.cvtColor(src_u8, cv2.COLOR_RGB2LAB).astype(np.float32)
+        t_lab = cv2.cvtColor(tgt_u8, cv2.COLOR_RGB2LAB).astype(np.float32)
+        for ch_i, w_b in ((0, 0.58), (1, 0.84), (2, 0.84)):
+            sm, ss = float(s_lab[..., ch_i].mean()), max(5.0, float(s_lab[..., ch_i].std()))
+            tm, ts = float(t_lab[..., ch_i].mean()), max(5.0, float(t_lab[..., ch_i].std()))
+            nm = sm * (1.0 - w_b) + tm * w_b
+            ns = ss * (1.0 - 0.65 * w_b) + ts * (0.65 * w_b)
+            s_lab[..., ch_i] = np.clip((s_lab[..., ch_i] - sm) * (ns / ss) + nm, 0, 255)
+        h_u8 = cv2.cvtColor(s_lab.astype(np.uint8), cv2.COLOR_LAB2RGB)
+        # Posterize gently + bilateral gouache filter so it matches `cel.webp`
+        g_u8 = cv2.bilateralFilter(h_u8, d=5, sigmaColor=26, sigmaSpace=26)
+        return g_u8.astype(np.float32)
+
+    foundry_cel_curr = _harmonize_to_cel_target(foundry_through, curr_np)
+    foundry_cel_next = _harmonize_to_cel_target(foundry_through, next_np)
+
+    # Subtle 18% Foundry x Inverse sky/horizon through-aperture inside the main `0..1280` frame (`curr_np`)
+    sky_through_w = (np.clip(1.0 - yy_full / 0.54, 0.0, 1.0) ** 1.35) * 0.20
+    curr_enriched = curr_np * (1.0 - sky_through_w) + foundry_cel_curr * sky_through_w
+
+    # Construct the `2040px` (`W_MOD`) continuous 2D painted world strip using wide 2D overlapping panels:
+    # - `x = 0..1280` starts with `curr_enriched`
+    # - `x = 840..1760` weaves in the 2D `foundry_cel` panorama + interior/exterior detail from `curr_np` & `next_np`
+    # - `x = 1360..2040` weaves in the 2D left half of `next_np` shifted so that `x = 2039` is `next_np`!
+    x_mod = np.arange(W_MOD, dtype=np.float32)[None, :, None]  # (1, 2040, 1)
+
+    # Build a 2040px-wide Foundry x Inverse 2D panoramic layer (from `foundry_cel_curr` -> `foundry_cel_next`)
+    w_pan = np.clip((x_mod - 640.0) / 1160.0, 0.0, 1.0)
+    w_pan_s = 0.5 - 0.5 * np.cos(np.pi * w_pan)
+    pan_curr_2040 = cv2.resize(foundry_cel_curr, (W_MOD, H), interpolation=cv2.INTER_LANCZOS4)
+    pan_next_2040 = cv2.resize(foundry_cel_next, (W_MOD, H), interpolation=cv2.INTER_LANCZOS4)
+    foundry_pan_2040 = pan_curr_2040 * (1.0 - w_pan_s) + pan_next_2040 * w_pan_s
+
+    # Also build a 2040px-wide 2D Cel Canvas where:
+    # - `x = 0..1280` is `curr_enriched`
+    # - `x = 1280..2040` is a 2D cropped/scaled vista of `next_np[:, :880, :]` blended with `curr_enriched[:, 400:1280, :]`
+    next_vista_760 = cv2.resize(next_np[:, :960, :], (W_EXT, H), interpolation=cv2.INTER_LANCZOS4)
+    curr_vista_760 = cv2.resize(curr_enriched[:, 320:1280, :], (W_EXT, H), interpolation=cv2.INTER_LANCZOS4)
 
     x_ext = np.arange(W_EXT, dtype=np.float32)[None, :, None]  # (1, 760, 1)
     t_b = x_ext / float(W_EXT - 1)                             # 0.0 at x=1280, 1.0 at x=2039
     w_next = 0.5 - 0.5 * np.cos(np.pi * t_b)
     sin_b = np.maximum(0.0, np.sin(np.pi * t_b))
 
-    # Decay exact pixel detail from `curr_np[:, -1]` on left and into `next_np[:, 0]` on right -> ZERO Rorschach symmetry!
-    decay_l = np.exp(-x_ext / 28.0)
-    decay_r = np.exp(-(float(W_EXT - 1) - x_ext) / 28.0)
-    fine_decay_l = np.exp(-x_ext / 95.0)
-    fine_decay_r = np.exp(-(float(W_EXT - 1) - x_ext) / 95.0)
+    # 2D Panoramic Bridge Base: combines 2D `curr_vista_760`, 2D `foundry_pan_2040[:, 1280:]`, and 2D `next_vista_760`
+    cel_2d_bridge = curr_vista_760 * (1.0 - w_next) + next_vista_760 * w_next
+    foundry_bridge = foundry_pan_2040[:, W_FRAME:, :]
+    bridge_base = 0.56 * cel_2d_bridge + 0.44 * foundry_bridge
 
-    curr_stream = (
-        r_broad[:, None, :]
-        + (r_mid - r_broad)[:, None, :] * np.exp(-x_ext / 220.0)
-        + (r_fine - r_mid)[:, None, :] * fine_decay_l
-        + (r_col0 - r_fine)[:, None, :] * decay_l
-    )
-    next_stream = (
-        l_broad[:, None, :]
-        + (l_mid - l_broad)[:, None, :] * np.exp(-(float(W_EXT - 1) - x_ext) / 220.0)
-        + (l_fine - l_mid)[:, None, :] * fine_decay_r
-        + (l_col0 - l_fine)[:, None, :] * decay_r
-    )
-    bridge_base = curr_stream * (1.0 - w_next) + next_stream * w_next  # (720, 760, 3)
+    # Smooth 240px raised-cosine 2D cross-fade across `x = 1280` (so `curr_enriched[:, 1040:1280]` and `bridge_base[:, :240]`
+    # lock together with zero vertical seam!) and at `x = 1860..2040` into `next_np[:, 0, :]`:
+    r_edge_col = curr_enriched[:, -1:, :]
+    l_edge_col = next_np[:, :1, :]
+    lock_l = np.exp(-x_ext / 42.0)
+    lock_r = np.exp(-(float(W_EXT - 1) - x_ext) / 42.0)
+    bridge_base = bridge_base * (1.0 - 0.65 * lock_l) + (0.65 * lock_l) * (0.55 * r_edge_col + 0.45 * curr_enriched[:, -64:, :].mean(axis=1, keepdims=True))
+    bridge_base = bridge_base * (1.0 - 0.65 * lock_r) + (0.65 * lock_r) * (0.55 * l_edge_col + 0.45 * next_np[:, :64, :].mean(axis=1, keepdims=True))
 
     # 2. Infuse the District Colour-Script & 48-Band Audio Spectrogram across the bridge (`sin_b > 0`)
     yy_b = np.linspace(0.0, 1.0, H, dtype=np.float32)[:, None, None]  # (720, 1, 1)
@@ -3635,8 +3738,8 @@ def render_clean_scene_plate(
     w_mid_v = np.maximum(0.0, 1.0 - w_sky_v - w_floor_v)
     district_strata = d_sky_ramp * w_sky_v + d_mid_ramp * w_mid_v + d_body_ramp * w_floor_v
 
-    # Blend 34% of the District Colour-Script strata into the middle of the bridge (0% at x=1280 and x=2039)
-    w_district_wash = 0.34 * (sin_b ** 1.35)
+    # Blend 22% of the District Colour-Script atmospheric wash into the bridge while preserving 78% crisp 2D/3D painting!
+    w_district_wash = 0.22 * (sin_b ** 1.35)
     bridge_f = bridge_base * (1.0 - w_district_wash) + district_strata * w_district_wash
 
     # 3. Render the Poem's 48-Band Visual Spectrogram & Bayer 8x8 Dot-Halfworld Ribbons into the bridge!
@@ -3665,16 +3768,24 @@ def render_clean_scene_plate(
         # Concentrate spectrogram energy in the horizon/midground band (`y = 0.16..0.82`) and fade to 0 at bridge ends
         sin_vert = np.maximum(0.0, np.sin(np.pi * np.clip((yy_b[:, :, 0] - 0.10) / 0.78, 0.0, 1.0)))
         vert_window = sin_vert ** 1.2
-        spec_glow_w = (0.18 * spec_2d + 0.10 * dot_mask) * vert_window * (sin_b[:, :, 0] ** 1.4)
+        spec_glow_w = (0.14 * spec_2d + 0.08 * dot_mask) * vert_window * (sin_b[:, :, 0] ** 1.4)
         bridge_f = bridge_f * (1.0 - spec_glow_w[..., None]) + d_glow_ramp * spec_glow_w[..., None]
 
         # Subtle dark architectural threshold silhouette under the audio energy envelope near the floor (`The Black`)
-        arch_sil_h = (0.10 + 0.16 * env_1d[None, :]) * (sin_b[:, :, 0] ** 1.3)
-        arch_sil_mask = np.clip((yy_b[:, :, 0] - (0.86 - arch_sil_h)) / 0.08, 0.0, 1.0) * (sin_b[:, :, 0] ** 1.5) * 0.42
+        arch_sil_h = (0.08 + 0.12 * env_1d[None, :]) * (sin_b[:, :, 0] ** 1.3)
+        arch_sil_mask = np.clip((yy_b[:, :, 0] - (0.88 - arch_sil_h)) / 0.08, 0.0, 1.0) * (sin_b[:, :, 0] ** 1.5) * 0.34
         black_pier_rgb = d_body_ramp * 0.55 + np.array([10.0, 12.0, 16.0], dtype=np.float32)[None, None, :] * 0.45
         bridge_f = bridge_f * (1.0 - arch_sil_mask[..., None]) + black_pier_rgb * arch_sil_mask[..., None]
 
-    strip_720_f = np.concatenate([curr_np, bridge_f], axis=1)  # (720, 2040, 3)
+    strip_720_f = np.concatenate([curr_enriched, bridge_f], axis=1)  # (720, 2040, 3)
+    # Cross-weave a 280px wide 2D transition across `x = 1280` (`x = 1140..1420`) so there is ZERO vertical seam at x=1280!
+    j_x0, j_x1 = 1120, 1440
+    j_band = strip_720_f[:, j_x0:j_x1, :]
+    j_pan = foundry_pan_2040[:, j_x0:j_x1, :]
+    j_t = np.linspace(0.0, 1.0, j_x1 - j_x0, dtype=np.float32)[None, :, None]
+    j_bell = np.maximum(0.0, np.sin(np.pi * j_t)) ** 1.4
+    j_smooth = cv2.GaussianBlur(j_band, (45, 15), 11.0)
+    strip_720_f[:, j_x0:j_x1, :] = j_band * (1.0 - 0.52 * j_bell) + (0.58 * j_pan + 0.42 * j_smooth) * (0.52 * j_bell)
     strip_720_np = np.clip(strip_720_f, 0, 255).astype(np.uint8)
 
     # 4. Build `2040 x 160` upper headroom using vertical sky advection + Sky-Hour colour script (`w_mir == 1.0` at `y = 159`)!
@@ -3796,9 +3907,9 @@ def render_clean_scene_plate(
             cel_scene_img=cel_scene_small,
         )
 
-        # "Hide the Crimes": Transform any `wall_with_door_hole` or `wall_bay` extension piece from a grey cardboard
-        # wall into a Dark District Silhouette Threshold (`d.body[0]` + background blend + `d.glow` rim) that melts
-        # into the spectrogram sky with ZERO grey patches!
+        # "Hide the Crimes": Integrate any `wall_with_door_hole` or `wall_bay` extension piece into the
+        # District Colour Script with organic bristle-feathered edges while keeping its hand-drawn architectural
+        # detail and glowing portal apertures crisp and visible!
         if is_ext and l_role in ("wall_with_door_hole", "wall_bay"):
             if has_framed_ext_portal:
                 lyr.pop("aperture_footage", None)
@@ -3806,16 +3917,15 @@ def render_clean_scene_plate(
             ph_c, pw_c = p_np.shape[:2]
             exact_bg = bg_crop.resize((pw_c, ph_c), Image.Resampling.BILINEAR).convert("RGB")
             exact_bg_f = cv2.GaussianBlur(np.array(exact_bg, dtype=np.float32), (31, 31), 9.0)
-            # Grade the wall into the local District's dark architectural shadow (`body_curr_rgb`) + background
-            dark_arch = body_curr_rgb[None, None, :] * 0.55 + exact_bg_f * 0.45
-            p_np[..., :3] = 0.28 * p_np[..., :3] + 0.72 * dark_arch
+            dark_arch = body_curr_rgb[None, None, :] * 0.45 + exact_bg_f * 0.55
+            p_np[..., :3] = 0.64 * p_np[..., :3] + 0.36 * dark_arch
             yy_w, xx_w = np.mgrid[0:ph_c, 0:pw_c].astype(np.float32)
-            bristle_w = 18.0 * np.sin(yy_w * 0.08) + 10.0 * np.cos(yy_w * 0.21)
-            feather_l = max(180.0, min(340.0, pw_c * 0.45))
-            feather_r = max(140.0, min(260.0, pw_c * 0.35))
-            feather_t = max(110.0, min(220.0, ph_c * 0.42))
-            feather_b = max(36.0, min(80.0, ph_c * 0.16))
-            left_start = max(0.0, float(1240 - dx)) if dx < 1270 else 0.0
+            bristle_w = 14.0 * np.sin(yy_w * 0.08) + 8.0 * np.cos(yy_w * 0.21)
+            feather_l = max(110.0, min(220.0, pw_c * 0.32))
+            feather_r = max(95.0, min(190.0, pw_c * 0.28))
+            feather_t = max(75.0, min(160.0, ph_c * 0.30))
+            feather_b = max(24.0, min(56.0, ph_c * 0.12))
+            left_start = max(0.0, float(1210 - dx)) if dx < 1240 else 0.0
             t_l = np.clip((xx_w - left_start + bristle_w) / feather_l, 0.0, 1.0)
             w_l = 0.5 - 0.5 * np.cos(np.pi * t_l)
             t_r = np.clip(((pw_c - 1 - xx_w) + bristle_w) / feather_r, 0.0, 1.0)
@@ -3824,7 +3934,7 @@ def render_clean_scene_plate(
             w_top = 0.5 - 0.5 * np.cos(np.pi * t_top)
             t_bot = np.clip(((ph_c - 1 - yy_w) + 0.5 * bristle_w) / feather_b, 0.0, 1.0)
             w_bot = 0.5 - 0.5 * np.cos(np.pi * t_bot)
-            p_np[..., 3] *= (0.46 * w_l * w_r * w_top * w_bot)
+            p_np[..., 3] *= (0.84 * w_l * w_r * w_top * w_bot)
             p_cel = Image.fromarray(np.clip(p_np, 0, 255).astype(np.uint8), mode="RGBA")
         elif is_ext:
             # Infuse other extension pieces (`portal_door_arch`, `portal_window`, `building_pier`, `stair_bridge_rail`)
@@ -3832,7 +3942,7 @@ def render_clean_scene_plate(
             p_np = np.array(p_cel, dtype=np.float32)
             lum = (0.299 * p_np[..., 0] + 0.587 * p_np[..., 1] + 0.114 * p_np[..., 2]) / 255.0
             d_tint = body_curr_rgb[None, None, :] * (1.0 - lum[..., None]) + glow_curr_rgb[None, None, :] * (lum[..., None] * 0.85)
-            p_np[..., :3] = 0.76 * p_np[..., :3] + 0.24 * d_tint
+            p_np[..., :3] = 0.78 * p_np[..., :3] + 0.22 * d_tint
             p_cel = Image.fromarray(np.clip(p_np, 0, 255).astype(np.uint8), mode="RGBA")
 
         # Save the cel-colorized, gouache-brushed RGBA piece sprite for `levels.html`
@@ -4424,23 +4534,36 @@ def main() -> None:
 
             half_w = W_MOD // 2   # 1020 px per module
             half_h = H_EXT // 2   # 440 px tall
-            tape_im = Image.new("RGB", (len(poem_ext_plates) * half_w, half_h), (10, 12, 16))
-            for idx_p, p_im in enumerate(poem_ext_plates):
-                p_small = p_im.resize((half_w, half_h), Image.Resampling.LANCZOS)
-                tape_im.paste(p_small, (idx_p * half_w, 0))
-            tape_np = np.array(tape_im, dtype=np.float32)
-            for idx_p in range(1, len(poem_ext_plates)):
+            small_plates = [
+                np.array(p_im.resize((half_w, half_h), Image.Resampling.LANCZOS), dtype=np.float32)
+                for p_im in poem_ext_plates
+            ]
+            tape_np = np.concatenate(small_plates, axis=1)  # (440, N * 1020, 3)
+            for idx_p in range(1, len(small_plates)):
                 jx = idx_p * half_w
-                x0 = max(0, jx - 36)
-                x1 = min(tape_np.shape[1], jx + 36)
+                hw_ov = 88
+                x0 = max(0, jx - hw_ov)
+                x1 = min(tape_np.shape[1], jx + hw_ov)
                 band = tape_np[:, x0:x1, :]
-                band_blur = cv2.GaussianBlur(band, (35, 9), 9.0)
+                # Multi-scale 2D cross-weave across the module threshold so no vertical seam is ever visible
+                band_mid = cv2.GaussianBlur(band, (55, 11), 14.0)
+                band_broad = cv2.GaussianBlur(band, (115, 21), 28.0)
                 bx = np.arange(x0, x1, dtype=np.float32)[None, :, None]
-                w_j = 0.85 * np.exp(-(((bx - float(jx)) / 16.0) ** 2))
-                tape_np[:, x0:x1, :] = band * (1.0 - w_j) + band_blur * w_j
+                dist_norm = np.abs(bx - float(jx)) / float(hw_ov)
+                w_cos = 0.5 * (1.0 + np.cos(np.pi * np.clip(dist_norm, 0.0, 1.0)))
+                w_mid = 0.62 * (w_cos ** 1.3)
+                w_broad = 0.34 * (w_cos ** 2.2)
+                tape_np[:, x0:x1, :] = (
+                    band * (1.0 - w_mid - w_broad)
+                    + band_mid * w_mid
+                    + band_broad * w_broad
+                )
             tape_im = Image.fromarray(np.clip(tape_np, 0, 255).astype(np.uint8), mode="RGB")
             tape_path = LEVELS_DIR / num_str / "poem_tape.webp"
-            tape_im.save(tape_path, "WEBP", quality=86, method=4)
+            tape_im.save(tape_path, "WEBP", quality=88, method=4)
+            vault_tapes_dir = SHOTS_DIR / "png_vault" / "painted_tapes"
+            vault_tapes_dir.mkdir(parents=True, exist_ok=True)
+            tape_im.save(vault_tapes_dir / f"poem_{num_str}_scene_tape.png", "PNG", optimize=True)
 
             # Create a 1800x142 panorama strip for `audit_poem_tapes.png` with the Colour Script & Sky-Hour strip underneath!
             strip_thumb = Image.new("RGB", (1800, 142), (8, 10, 14))

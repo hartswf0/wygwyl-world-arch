@@ -198,7 +198,7 @@ main { max-width: 1680px; margin: 0 auto; padding: 14px 18px 90px; }
 
 <section class="hero">
   <p class="lede">
-    Every generated proof, contact sheet, multiplane audit, character rig sheet, and the <b>62 new Foundry &amp; Inverse Through-Frame Composite PNGs</b> are permanently saved in <code>shots/png_vault/</code> and indexed here. Filter by collection, poem, or visual type, switch from giant inspection cards to a 10-column contact-sheet wall, or click any PNG for a 1:1 pixel zoom loupe.
+    Every generated proof, contact sheet, multiplane audit, character rig sheet, the <b>62 Foundry &amp; Inverse Through-Frame Composite PNGs</b>, the <b>183 Individual Painted &amp; Shaped Multiplane Shots (<code>01-00..14-07</code> + 28 Inverse Through-Frames)</b>, and the <b>43 Continuous Shot-by-Shot &amp; Scene Cinema Tapes</b> are permanently saved in <code>shots/png_vault/</code> and indexed here. Filter by collection, sub-type, or poem, switch from giant inspection cards to a 10-column contact-sheet wall, or click any PNG for a 1:1 pixel zoom &amp; horizontal tape auto-pan.
   </p>
   <div class="stats" id="stats"></div>
 </section>
@@ -206,7 +206,7 @@ main { max-width: 1680px; margin: 0 auto; padding: 14px 18px 90px; }
 <section class="controls">
   <div class="controls-inner">
     <div class="search-row">
-      <input id="q" type="search" placeholder="Search saved PNGs by filename, poem (01..14), ref (01-07), world (w1623), character, or keyword…" autocomplete="off">
+      <input id="q" type="search" placeholder="Search saved PNGs by filename, poem (01..14), shot (01_00), ref (01-07), world (w1623), character, or keyword…" autocomplete="off">
       <div class="density-group">
         <span>Grid</span>
         <button class="d-btn" data-cols="2">2 XL</button>
@@ -226,7 +226,7 @@ main { max-width: 1680px; margin: 0 auto; padding: 14px 18px 90px; }
 <main>
   <div class="result-bar">
     <span id="countText">Loading PNG catalog…</span>
-    <span id="pageInfo">Tip: Click any image for 1:1 fullscreen zoom · Use ← / → arrow keys to step through</span>
+    <span id="pageInfo">Tip: Click any image for 1:1 fullscreen zoom · On wide horizontal tapes, click ▶ Auto-Pan Tape · Use ← / → arrow keys to step through</span>
   </div>
   <div class="grid" id="grid"></div>
   <div style="text-align:center;margin-top:22px">
@@ -240,9 +240,10 @@ main { max-width: 1680px; margin: 0 auto; padding: 14px 18px 90px; }
       <span class="lb-title" id="lbTitle"></span>
       <span class="lb-sub" id="lbSub"></span>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <button class="d-btn" id="lbPrev">◀ Prev</button>
       <button class="d-btn" id="lbZoom">🔍 1:1 Zoom</button>
+      <button class="d-btn" id="lbPan" style="display:none;border-color:var(--ok);color:var(--ok)">▶ Auto-Pan Tape</button>
       <button class="d-btn" id="lbNext">Next ▶</button>
       <a class="d-btn" id="lbDownload" download>⬇ Download PNG</a>
       <a class="d-btn" id="lbStudio" href="foundry_inverse.html" style="border-color:var(--pink);color:var(--pink)">🔨 Open in Studio</a>
@@ -269,12 +270,19 @@ for (const ls of localSaved) {
   ITEMS.unshift(ls);
 }
 
+const paintedTapesCount = cat.painted_tapes_count ?? ITEMS.filter(x => x.category === 'painted_tapes').length;
+const paintedShotsCount = cat.painted_shots_count ?? ITEMS.filter(x => x.category === 'painted_shots').length;
+const foundryInvCount = cat.foundry_inverse_count ?? ITEMS.filter(x => x.category === 'foundry_inverse').length;
+const artifactCount = cat.artifact_png_count ?? ITEMS.filter(x => x.category === 'session_artifacts').length;
+const repoCount = cat.repo_plates_and_sheets_count ?? ITEMS.filter(x => x.category === 'multiplane_tapes' || x.category === 'master_kit_sheets').length;
+
 $('stats').innerHTML = [
   [ITEMS.length, 'Total Indexed Plates'],
-  [cat.vault_png_count, 'Saved Vault PNGs'],
-  [cat.foundry_inverse_count, 'Foundry & Inverse Builds'],
-  [cat.artifact_png_count, 'Session Proof & Audit PNGs'],
-  [cat.repo_plates_and_sheets_count, 'Scene Plates & Kit Sheets']
+  [paintedTapesCount, 'Continuous Painted Tapes & Sheets'],
+  [paintedShotsCount, 'Painted & Shaped Shots'],
+  [foundryInvCount, 'Foundry & Inverse Builds'],
+  [artifactCount, 'Session Proof & Audit PNGs'],
+  [repoCount, 'Scene Plates & Kit Sheets']
 ].map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
 
 let activeCat = new URLSearchParams(location.search).get('cat') || 'all';
@@ -284,17 +292,45 @@ let containMode = true;
 let renderLimit = 120;
 let filtered = [];
 let lbIdx = 0;
+let panTimer = null;
 
-const SUB_LABELS = {
-  all: 'All 62 Foundry & Inverse Builds',
-  inverse_triple_through: '28 Inverse Triple-Through Landscapes',
-  foundry_camera_stand: '14 Poem Camera Stands × Multiplane',
-  walkin_interior_set: '14 Interior Walk-In Sets',
-  foundry_world_atlas: '6 Foundry World Cartographic Atlases'
+const SUB_BY_CAT = {
+  painted_tapes: {
+    all: 'All 43 Painted Tapes & Contact Sheets',
+    master_shot_tapes_panorama: '14-Poem Master Panorama',
+    continuous_shot_tape: '14 Continuous Shot-by-Shot Tapes',
+    continuous_scene_tape: '14 Continuous Multiplane Scene Tapes',
+    poem_shots_sheet: '14 Per-Poem Shot Contact Sheets'
+  },
+  painted_shots: {
+    all: 'All 183 Painted & Shaped Shots',
+    shot_establishing: 'Establishing Wide Shots',
+    shot_medium: 'Medium Stage Shots',
+    shot_close: 'Close / Over-Shoulder Shots',
+    shot_pov: 'Point-of-View (POV) Shots',
+    shot_tracking: 'Tracking Shots',
+    shot_sky: 'Sky / Aerial Shots',
+    inverse_painted_frame: '28 Inverse-Sculpted Through-Frames'
+  },
+  foundry_inverse: {
+    all: 'All 62 Foundry & Inverse Builds',
+    inverse_triple_through: '28 Inverse Triple-Through Landscapes',
+    foundry_camera_stand: '14 Poem Camera Stands × Multiplane',
+    walkin_interior_set: '14 Interior Walk-In Sets',
+    foundry_world_atlas: '6 Foundry World Cartographic Atlases'
+  }
 };
 
+function getNormalizedCategories() {
+  if (Array.isArray(cat.categories)) return cat.categories;
+  if (cat.categories && typeof cat.categories === 'object') {
+    return Object.entries(cat.categories).map(([id, count]) => ({ id, label: id, count }));
+  }
+  return [];
+}
+
 function renderChips() {
-  const cats = [{ id: 'all', label: 'All Saved PNGs & Plates', count: ITEMS.length }, ...cat.categories];
+  const cats = [{ id: 'all', label: 'All Saved PNGs & Plates', count: ITEMS.length }, ...getNormalizedCategories()];
   $('catChips').innerHTML = `<span class="lab">Collection</span>` + cats.map(c =>
     `<button class="chip ${activeCat === c.id ? 'on' : ''}" data-c="${c.id}">${c.label}<span class="cnt">${c.count}</span></button>`
   ).join('');
@@ -306,14 +342,24 @@ function renderChips() {
     runFilter();
   });
 
-  if (activeCat === 'foundry_inverse' || activeCat === 'all') {
+  const subMap = SUB_BY_CAT[activeCat] || (activeCat === 'all' ? {
+    all: 'All Sub-Types',
+    continuous_shot_tape: '🎞️ 14 Shot-by-Shot Tapes',
+    continuous_scene_tape: '🏛️ 14 Multiplane Scene Tapes',
+    poem_shots_sheet: '▦ 14 Shot Contact Sheets',
+    inverse_painted_frame: '🎨 28 Inverse Painted Frames',
+    inverse_triple_through: '📐 28 Inverse Triple Plates',
+    foundry_camera_stand: '📷 14 Foundry Camera Stands',
+    walkin_interior_set: '🚪 14 Walk-In Interior Sets'
+  } : null);
+
+  if (subMap) {
     $('subChips').style.display = 'flex';
-    $('subChips').innerHTML = `<span class="lab">Foundry/Inverse</span>` + Object.entries(SUB_LABELS).map(([k, lab]) =>
+    $('subChips').innerHTML = `<span class="lab">Sub-Type</span>` + Object.entries(subMap).map(([k, lab]) =>
       `<button class="chip ${activeSub === k ? 'on' : ''}" data-s="${k}">${lab}</button>`
     ).join('');
     $('subChips').querySelectorAll('.chip').forEach(b => b.onclick = () => {
       activeSub = b.dataset.s;
-      if (activeSub !== 'all' && activeCat !== 'foundry_inverse') activeCat = 'foundry_inverse';
       renderLimit = 120;
       renderChips();
       runFilter();
@@ -335,15 +381,16 @@ function renderChips() {
 }
 
 function matchItem(it, toks) {
+  const itemSub = it.subcategory || it.sub_type || '';
   if (activeCat !== 'all' && it.category !== activeCat) return false;
-  if (activeSub !== 'all' && it.subcategory !== activeSub) return false;
+  if (activeSub !== 'all' && itemSub !== activeSub) return false;
   if (activePoem !== 'all') {
-    const p = it.poem || '';
-    const fn = (it.filename || '').toLowerCase();
-    if (p !== activePoem && !fn.includes(activePoem)) return false;
+    const p = (it.poem || '').toLowerCase();
+    const fn = (it.filename || it.file || '').toLowerCase();
+    if (p !== activePoem && !fn.includes(`_${activePoem}_`) && !fn.includes(`poem_${activePoem}`)) return false;
   }
   if (toks.length) {
-    const hay = `${it.title} ${it.filename} ${it.desc} ${it.category} ${it.subcategory || ''} ${it.poem || ''} ${it.ref_id || ''} ${it.world || ''}`.toLowerCase();
+    const hay = `${it.title} ${it.filename || it.file} ${it.desc} ${it.category} ${itemSub} ${it.poem || ''} ${it.ref_id || ''} ${it.world || ''}`.toLowerCase();
     for (const t of toks) {
       if (!hay.includes(t)) return false;
     }
@@ -355,12 +402,17 @@ function renderGrid() {
   const slice = filtered.slice(0, renderLimit);
   $('countText').textContent = `Showing ${slice.length} of ${filtered.length} matching PNGs (out of ${ITEMS.length} total saved plates)`;
   $('grid').innerHTML = slice.map((it, idx) => {
-    const badge = it.subcategory ? it.subcategory.replace(/_/g, ' ').toUpperCase() : (it.poem && it.poem !== 'all' ? `POEM ${it.poem}` : it.category.split('_')[0].toUpperCase());
+    const itemSub = it.subcategory || it.sub_type || '';
+    const badge = itemSub ? itemSub.replace(/_/g, ' ').toUpperCase() : (it.poem && it.poem !== 'all' ? `POEM ${it.poem}` : it.category.split('_')[0].toUpperCase());
     const dim = (it.width && it.height) ? `${it.width}×${it.height}` : '';
-    const sz = it.size_kb ? ` · ${it.size_kb} KB` : '';
-    const studioHref = it.ref_id
-      ? `foundry_inverse.html?poem=${it.poem || '01'}&ref=${it.ref_id}&world=${it.world || 'w1623'}`
-      : (it.poem && it.poem !== 'all' ? `foundry_inverse.html?poem=${it.poem}` : `foundry_inverse.html`);
+    const kb = it.size_kb || (it.bytes ? Math.round(it.bytes / 1024) : '');
+    const sz = kb ? ` · ${kb} KB` : '';
+    const fname = it.filename || (it.file ? it.file.split('/').pop() : 'plate.png');
+    const studioHref = it.category === 'painted_tapes' || it.category === 'painted_shots'
+      ? `foundry_inverse.html?tab=tab-tapes&poem=${(it.poem && it.poem !== 'all' && it.poem !== 'ALL') ? it.poem : '01'}`
+      : (it.ref_id
+          ? `foundry_inverse.html?poem=${it.poem || '01'}&ref=${it.ref_id}&world=${it.world || 'w1623'}`
+          : (it.poem && it.poem !== 'all' ? `foundry_inverse.html?poem=${it.poem}` : `foundry_inverse.html`));
     return `<article class="card ${containMode ? 'fit-contain' : ''}" data-idx="${idx}">
       <div class="thumb-wrap">
         <img loading="lazy" src="${it.file}" alt="${it.title}">
@@ -369,13 +421,13 @@ function renderGrid() {
       </div>
       <div class="meta">
         <div class="title">${it.title}</div>
-        <div class="fname">${it.filename || it.file}</div>
+        <div class="fname">${fname}</div>
         <div class="desc">${it.desc || ''}</div>
       </div>
       <div class="actions" onclick="event.stopPropagation()">
-        <a class="act-btn" href="${it.file}" download="${it.filename || 'plate.png'}">⬇ Save PNG</a>
-        <a class="act-btn" href="${studioHref}">🔨 Build On/Through</a>
-        ${it.poem && it.poem !== 'all' ? `<a class="act-btn" href="terrarium.html?poem=${it.poem}&foundry=${it.world || 'w1623'}">🌍 3D</a>` : ''}
+        <a class="act-btn" href="${it.file}" download="${fname}">⬇ Save PNG</a>
+        <a class="act-btn" href="${studioHref}">${it.category === 'painted_tapes' ? '🎞️ Tape Player' : '🔨 Studio'}</a>
+        ${it.poem && it.poem !== 'all' && it.poem !== 'ALL' ? `<a class="act-btn" href="terrarium.html?poem=${it.poem}&foundry=${it.world || 'w1623'}">🌍 3D</a>` : ''}
       </div>
     </article>`;
   }).join('');
@@ -413,30 +465,64 @@ $('fitBtn').onclick = () => {
   renderGrid();
 };
 
+function stopTapePan() {
+  if (panTimer) {
+    cancelAnimationFrame(panTimer);
+    panTimer = null;
+  }
+  $('lbPan').textContent = '▶ Auto-Pan Tape';
+}
+
 // Lightbox
 function openLightbox(idx) {
   if (!filtered.length) return;
+  stopTapePan();
   lbIdx = (idx + filtered.length) % filtered.length;
   const it = filtered[lbIdx];
+  const kb = it.size_kb || (it.bytes ? Math.round(it.bytes / 1024) : '');
+  const fname = it.filename || (it.file ? it.file.split('/').pop() : 'plate.png');
   $('lbTitle').textContent = it.title;
-  $('lbSub').textContent = `${lbIdx + 1} / ${filtered.length} · ${it.width || ''}×${it.height || ''}px · ${it.size_kb || ''} KB`;
+  $('lbSub').textContent = `${lbIdx + 1} / ${filtered.length} · ${it.width || ''}×${it.height || ''}px · ${kb} KB`;
   $('lbImg').src = it.file;
   $('lbDesc').textContent = it.desc || '';
   $('lbPath').textContent = `shots/${it.file}`;
   $('lbDownload').href = it.file;
-  $('lbDownload').download = it.filename || 'plate.png';
-  $('lbStudio').href = it.ref_id
-    ? `foundry_inverse.html?poem=${it.poem || '01'}&ref=${it.ref_id}&world=${it.world || 'w1623'}`
-    : (it.poem && it.poem !== 'all' ? `foundry_inverse.html?poem=${it.poem}` : `foundry_inverse.html`);
+  $('lbDownload').download = fname;
+  $('lbStudio').href = it.category === 'painted_tapes' || it.category === 'painted_shots'
+    ? `foundry_inverse.html?tab=tab-tapes&poem=${(it.poem && it.poem !== 'all' && it.poem !== 'ALL') ? it.poem : '01'}`
+    : (it.ref_id
+        ? `foundry_inverse.html?poem=${it.poem || '01'}&ref=${it.ref_id}&world=${it.world || 'w1623'}`
+        : (it.poem && it.poem !== 'all' ? `foundry_inverse.html?poem=${it.poem}` : `foundry_inverse.html`));
+  const isWideTape = (it.width && it.height && it.width >= it.height * 3.2);
+  $('lbPan').style.display = isWideTape ? 'inline-block' : 'none';
   $('lbStage').classList.remove('zoomed');
   $('lightbox').classList.add('on');
 }
 
-$('lbClose').onclick = () => $('lightbox').classList.remove('on');
+$('lbPan').onclick = () => {
+  if (panTimer) {
+    stopTapePan();
+    return;
+  }
+  const stg = $('lbStage');
+  stg.classList.add('zoomed');
+  $('lbPan').textContent = '⏸ Pause Tape Pan';
+  const step = () => {
+    if (!panTimer) return;
+    stg.scrollLeft += 2.6;
+    if (stg.scrollLeft + stg.clientWidth >= stg.scrollWidth - 2) {
+      stg.scrollLeft = 0;
+    }
+    panTimer = requestAnimationFrame(step);
+  };
+  panTimer = requestAnimationFrame(step);
+};
+
+$('lbClose').onclick = () => { stopTapePan(); $('lightbox').classList.remove('on'); };
 $('lbPrev').onclick = () => openLightbox(lbIdx - 1);
 $('lbNext').onclick = () => openLightbox(lbIdx + 1);
-$('lbZoom').onclick = () => $('lbStage').classList.toggle('zoomed');
-$('lbStage').onclick = e => { if (e.target === $('lbImg') || e.target === $('lbStage')) $('lbStage').classList.toggle('zoomed'); };
+$('lbZoom').onclick = () => { stopTapePan(); $('lbStage').classList.toggle('zoomed'); };
+$('lbStage').onclick = e => { if (e.target === $('lbImg') || e.target === $('lbStage')) { stopTapePan(); $('lbStage').classList.toggle('zoomed'); } };
 
 addEventListener('keydown', e => {
   if (!$('lightbox').classList.contains('on')) return;

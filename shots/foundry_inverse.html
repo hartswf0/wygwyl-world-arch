@@ -263,6 +263,36 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
 .shot .c { padding: 6px 9px 8px; font: 12px/1.4 "Helvetica Neue", Arial, sans-serif; color: var(--dim); }
 .shot .c b { color: var(--gold); font-weight: 700; }
 .shot .c i { display: block; color: #ddd3bb; font: italic 13px/1.35 "Iowan Old Style", Georgia, serif; margin-top: 3px; max-height: 2.7em; overflow: hidden; }
+
+/* =====================================================================
+   TAB 5: CONTINUOUS PAINTED SHOT TAPES & 183-SHOT CINEMA PLAYER
+   ===================================================================== */
+.tape-deck {
+  background: var(--panel); border: 1px solid var(--edge); border-radius: 10px;
+  padding: 14px; margin: 14px 0 22px; display: flex; flex-direction: column; gap: 14px;
+}
+.tape-scroll-bay {
+  position: relative; width: 100%; overflow-x: auto; overflow-y: hidden;
+  background: #05070b; border: 1px solid rgba(255,210,63,.35); border-radius: 6px;
+  scroll-behavior: auto;
+}
+.tape-scroll-bay img {
+  height: 240px; width: auto; display: block; max-width: none;
+}
+.tape-playhead {
+  position: sticky; left: 50%; top: 0; bottom: 0; width: 2px; height: 240px;
+  background: var(--pink); box-shadow: 0 0 10px var(--pink); pointer-events: none; z-index: 5;
+}
+.cinema-trio {
+  display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 12px; align-items: start;
+}
+@media (max-width: 1100px) { .cinema-trio { grid-template-columns: 1fr; } }
+.cinema-box {
+  background: #070a0f; border: 1px solid var(--edge); border-radius: 6px; overflow: hidden;
+}
+.cinema-box img { width: 100%; aspect-ratio: 1280/560; object-fit: cover; display: block; }
+.cinema-box .cb-meta { padding: 8px 10px; font: 12px/1.45 "Helvetica Neue", sans-serif; color: var(--dim); }
+.cinema-box .cb-meta b { color: var(--gold); }
 </style>
 </head>
 <body>
@@ -275,12 +305,14 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
     </div>
     <div class="mode-tabs">
       <button class="mtab pink on" data-tab="tab-builder">🔨 1. Through-Frame Builder Studio</button>
-      <button class="mtab" data-tab="tab-inverse">📐 2. Inverse Topology (104 Refs &amp; 168 Wedges)</button>
-      <button class="mtab" data-tab="tab-foundry">🏛️ 3. The Foundry (72 Worlds &amp; Stands)</button>
-      <button class="mtab" data-tab="tab-shots">🎬 4. The 882 Shots &amp; Triple Animatic</button>
+      <button class="mtab" data-tab="tab-tapes">🎞️ 2. Continuous Painted Shot Tapes (183 Shots)</button>
+      <button class="mtab" data-tab="tab-inverse">📐 3. Inverse Topology (104 Refs &amp; 168 Wedges)</button>
+      <button class="mtab" data-tab="tab-foundry">🏛️ 4. The Foundry (72 Worlds &amp; Stands)</button>
+      <button class="mtab" data-tab="tab-shots">🎬 5. The 882 Shots &amp; Painted Cinema</button>
     </div>
     <div class="ext-links">
-      <a class="navpill" href="png_browser.html" style="border-color:var(--gold);color:var(--gold)">🖼️ Saved PNG Grid Browser (872)</a>
+      <a class="navpill" href="png_browser.html?cat=painted_tapes" style="border-color:var(--ok);color:var(--ok)">🎞️ Painted Tapes Vault (43)</a>
+      <a class="navpill" href="png_browser.html" style="border-color:var(--gold);color:var(--gold)">🖼️ Saved PNG Grid Browser (1,098)</a>
       <a class="navpill" href="terrarium.html?poem=01&foundry=w1623">🌍 3D Terrarium + Hound</a>
       <a class="navpill" href="wag_stack.html">🎞️ WAG-STACK</a>
     </div>
@@ -504,17 +536,111 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
        =================================================================== -->
   <section class="tab-pane" id="tab-shots">
     <div class="k">Where You Go When You Leave · the shots</div>
-    <h1 class="big">The 882 shots — the poem steers the camera through the world</h1>
+    <h1 class="big">The 882 shots — painted &amp; shaped across the worlds</h1>
     <p class="lede">
-      Each poem’s reading is cut into shots. Every frame keeps what is measured in it (`sky`, `water`, `city`, `tower`, `forest`, distance in meters), and every shot can be opened in the <b>Through-Frame Builder Studio</b> or flown in the <b>3D Terrarium</b>.
+      Each poem’s reading is cut into shots. Every frame keeps what is measured in it (<code>sky</code>, <code>water</code>, <code>city</code>, <code>tower</code>, <code>forest</code>, distance in meters), and every shot is now <b>painted &amp; shaped as a multiplane cinema plate</b> (<code>shots/png_vault/painted_shots/shot_01_00.png..shot_14_07.png</code>) and stitched into the <b>14 Continuous Painted Shot Tapes</b>.
     </p>
-    <input id="shotQ" type="search" placeholder="Search 882 shots — “moon over water”, “close night”, “gates”, “forest wide”, a line he says…" autocomplete="off">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 8px">
+      <input id="shotQ" type="search" style="flex:1;margin:0" placeholder="Search 882 shots — “moon over water”, “close night”, “gates”, “forest wide”, a line he says…" autocomplete="off">
+      <button class="btn gold" id="btnTogglePaintedShots">🎨 View Mode: Painted &amp; Shaped Shot PNGs (ON)</button>
+      <a class="btn ok" href="png_browser.html?cat=painted_shots">🖼️ Browse All 183 Painted Shots</a>
+    </div>
     <div class="chips" id="sc_kind"></div>
     <div class="chips" id="sc_light"></div>
     <div class="chips" id="sc_poem"></div>
     <div class="chips" id="sc_world"></div>
     <div style="margin:8px 0;color:var(--dim);font:600 12px 'Helvetica Neue',sans-serif" id="shotCount"></div>
     <div class="sgrid" id="shotGrid"></div>
+  </section>
+
+  <!-- ===================================================================
+       TAB 5: CONTINUOUS PAINTED SHOT TAPES & 183-SHOT CINEMA PLAYER
+       =================================================================== -->
+  <section class="tab-pane" id="tab-tapes">
+    <div class="k">Every Shot Painted &amp; Shaped Into A Real Tape · 155 Poem Shots + 28 Inverse Frames = 183 Plates</div>
+    <h1 class="big">Continuous Painted Shot-by-Shot Cinema Tapes (Poems 01–14)</h1>
+    <p class="lede">
+      Each shot in the film (`01-00` through `14-07`) has been individually painted and shaped across all 7 multiplane depth layers — fusing the <b>Foundry 3D Terrain</b> (`sb/w1623` &amp; `inv/w1623`), <b>Panoptic Reference Apertures</b> (`refs/` + `-seg.jpg`), <b>Atlantis Cel-Gouache Paintings</b>, <b>Distance-Calibrated Architectural Portals &amp; Video Windows</b>, and <b>Full-Body Cast</b> — then woven through 280px architectural threshold bridges into <b>14 Continuous Horizontal Shot-by-Shot Cinema Tapes</b>.
+    </p>
+
+    <div class="chips" id="tapePoemChips"></div>
+
+    <div class="tape-deck">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="k" id="tapeHeaderKicker">POEM 01 · OUT OF LIFE · CONTINUOUS PAINTED SHOT-BY-SHOT TAPE</div>
+          <h3 id="tapeHeaderTitle" style="margin:2px 0 0">17 Painted Shots Woven Into A Single Continuous Horizontal World</h3>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn gold" id="btnTapePlay">▶ Play Spoken Poem + Roll Tape</button>
+          <button class="btn" id="btnTapePrevShot">⏮ Prev Shot</button>
+          <button class="btn" id="btnTapeNextShot">⏭ Next Shot</button>
+          <a class="btn ok" id="btnDownloadShotTape" href="png_vault/painted_tapes/poem_01_shot_tape.png" download>⬇ Shot Tape PNG</a>
+          <a class="btn" id="btnDownloadSceneTape" href="png_vault/painted_tapes/poem_01_scene_tape.png" download>⬇ Scene Tape PNG</a>
+          <a class="btn pink" id="btnDownloadShotsSheet" href="png_vault/painted_tapes/poem_01_shots_sheet.png" target="_blank">▦ Contact Sheet PNG</a>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <audio id="tapeAudio" preload="metadata" src="play/levels/01/reading.mp3" style="height:32px"></audio>
+        <input type="range" id="tapeScrub" min="0" max="1000" value="0" style="flex:1;accent-color:var(--gold);cursor:pointer">
+        <span id="tapeTimeLabel" style="font:700 12px Menlo,monospace;color:var(--gold)">0:00 / 1:40 · Shot #00</span>
+      </div>
+
+      <!-- Continuous Shot-by-Shot Cinema Tape Ribbon -->
+      <div>
+        <div style="display:flex;justify-content:space-between;font:700 10px 'Helvetica Neue',sans-serif;letter-spacing:.14em;color:var(--ok);text-transform:uppercase;margin-bottom:4px">
+          <span>1. Continuous Painted Shot-by-Shot Cinema Tape (Drag or Scrub horizontally · Click any beat to jump)</span>
+          <span id="tapeShotDimLabel"></span>
+        </div>
+        <div class="tape-scroll-bay" id="shotTapeScrollBay">
+          <img id="imgContinuousShotTape" src="png_vault/painted_tapes/poem_01_shot_tape.png" alt="Continuous Painted Shot Tape">
+        </div>
+      </div>
+
+      <!-- Continuous Multiplane Scene Tape Ribbon -->
+      <div>
+        <div style="display:flex;justify-content:space-between;font:700 10px 'Helvetica Neue',sans-serif;letter-spacing:.14em;color:var(--cyan);text-transform:uppercase;margin-bottom:4px">
+          <span>2. Continuous 7-Plane Extended Scene Level Tape (Foundry × Inverse × Cel Corridors, Zero 1D Smear)</span>
+          <span>play/levels/<span id="lblSceneTapePoem">01</span>/poem_tape.webp</span>
+        </div>
+        <div class="tape-scroll-bay" id="sceneTapeScrollBay">
+          <img id="imgContinuousSceneTape" src="png_vault/painted_tapes/poem_01_scene_tape.png" alt="Continuous Multiplane Scene Tape" style="height:185px">
+        </div>
+      </div>
+
+      <!-- Live Active Shot Triple Comparison (Painted Multiplane Shot vs Foundry 3D Storyboard vs Panoptic Reference) -->
+      <div class="cinema-trio">
+        <div class="cinema-box" style="border-color:var(--gold)">
+          <img id="imgActivePaintedShot" src="png_vault/painted_shots/shot_01_00.png" alt="Active Painted Shot">
+          <div class="cb-meta">
+            <b id="txtActiveShotTitle">POEM 01 SHOT #00 · ESTABLISHING 38MM</b>
+            <div id="txtActiveShotLine" style="color:var(--ink);font-style:italic;margin:3px 0"></div>
+            <div id="txtActiveShotTelemetry"></div>
+          </div>
+        </div>
+        <div class="cinema-box">
+          <img id="imgActiveFoundryRaw" src="data/terrarium/foundry/sb/w1623/01-00.jpg" alt="Foundry 3D Storyboard">
+          <div class="cb-meta">
+            <b>FOUNDRY 3D CAMERA STAND (w1623)</b>
+            <div id="txtActiveFoundryMeta" style="margin-top:3px">Underlying 3D terrain &amp; massing rendered from camera stand</div>
+          </div>
+        </div>
+        <div class="cinema-box">
+          <img id="imgActiveRefPanoptic" src="data/terrarium/foundry/refs/01-07.jpg" alt="Panoptic Reference">
+          <div class="cb-meta">
+            <b>CLIP REFERENCE &amp; PANOPTIC APERTURE</b>
+            <div id="txtActiveRefMeta" style="margin-top:3px">Bleeds through sky, water &amp; window portals</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin:20px 0 8px">
+      <h2 style="margin:0" id="poemShotsGridHeading">All Painted &amp; Shaped Shots in Poem 01</h2>
+      <a class="btn gold" href="png_vault/painted_tapes/all_14_painted_shot_tapes_master.png" target="_blank">🖼️ View All 14 Poems Master Shot-Tapes Panorama PNG</a>
+    </div>
+    <div class="sgrid" id="poemPaintedShotsGrid"></div>
   </section>
 </main>
 
@@ -1206,6 +1332,7 @@ function renderInvPoem() {
         <p class="note">${(P_INV[n].text || [])[0] || ''}</p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn ok" href="png_vault/painted_tapes/poem_${n}_shot_tape.png" target="_blank">🎞️ Poem ${n} Painted Shot Tape PNG</a>
         <a class="btn gold" href="png_vault/foundry_inverse/foundry_stand_poem_${n}.png" target="_blank">🖼️ Poem ${n} Stand × Multiplane PNG</a>
         <a class="btn pink" href="png_vault/foundry_inverse/inverse_walkin_set_poem_${n}.png" target="_blank">🚪 Poem ${n} Walk-In Set PNG</a>
       </div>
@@ -1226,7 +1353,8 @@ function renderInvPoem() {
             ${I.refs.includes(r.id) ? '' : '<br><b>reads as a walk-in set, not a landscape</b>'}
             <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
               <button class="btn gold" style="padding:3px 8px;min-height:0;font-size:10px" onclick="window.__loadIntoStudio('${n}','${r.id}','w1623')">🔨 Build Through ${r.id}</button>
-              ${I.refs.includes(r.id) ? `<a class="btn" style="padding:3px 8px;min-height:0;font-size:10px" href="png_vault/foundry_inverse/inv_triple_${r.id.replace('-', '_')}_w1623.png" target="_blank">🖼️ Triple PNG</a>` : ''}
+              ${I.refs.includes(r.id) ? `<a class="btn ok" style="padding:3px 8px;min-height:0;font-size:10px" href="png_vault/painted_shots/inverse_painted_${r.id.replace('-', '_')}_w1623.png" target="_blank">🎨 Painted Frame PNG</a>` : ''}
+              ${I.refs.includes(r.id) ? `<a class="btn" style="padding:3px 8px;min-height:0;font-size:10px" href="png_vault/foundry_inverse/inv_triple_${r.id.replace('-', '_')}_w1623.png" target="_blank">🖼️ Triple Proof</a>` : ''}
             </div>
           </div>
         </div>
@@ -1244,10 +1372,13 @@ function renderInvPoem() {
             <img loading="lazy" src="${F_BASE}${r.img}" alt="">
             <div><span class="src ${r.source}">${r.source}</span> <b>${rid}</b> · ${frText(r.frac)}</div>
             <div style="margin-top:8px">
-              <a href="png_vault/foundry_inverse/inv_triple_${rid.replace('-', '_')}_w1623.png" target="_blank">
-                <img loading="lazy" src="png_vault/foundry_inverse/inv_triple_${rid.replace('-', '_')}_w1623.png" alt="Triple Synthesis PNG" style="aspect-ratio:16/9;border-color:var(--pink)">
+              <a href="png_vault/painted_shots/inverse_painted_${rid.replace('-', '_')}_w1623.png" target="_blank">
+                <img loading="lazy" src="png_vault/painted_shots/inverse_painted_${rid.replace('-', '_')}_w1623.png" alt="Pure Borderless Painted Shot PNG" style="aspect-ratio:1280/560;border-color:var(--ok)">
               </a>
-              <div style="color:var(--pink);font-weight:700">↑ Saved Triple-Through Composite PNG (${rid})</div>
+              <div style="color:var(--ok);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-top:3px">
+                <span>↑ Pure Painted Through-Frame (${rid})</span>
+                <a href="png_vault/foundry_inverse/inv_triple_${rid.replace('-', '_')}_w1623.png" target="_blank" style="color:var(--pink);font-size:11px">4-Panel Proof ↗</a>
+              </div>
             </div>
           </div>
           <div class="worlds">
@@ -1441,7 +1572,7 @@ function openWorld(id) {
 window.__openWorld = openWorld;
 
 // =========================================================================
-// TAB 4: THE 882 SHOTS
+// TAB 4: THE 882 SHOTS (with Painted & Shaped Shot PNG Toggle)
 // =========================================================================
 const SH = SH_DATA.shots;
 const KIND = { establishing: 'establishing wide', pov: 'his point of view', sky: 'the sky', close: 'close · over the shoulder', medium: 'medium', tracking: 'tracking', aerial: 'aerial' };
@@ -1450,6 +1581,8 @@ for (const s of SH) {
   s.text = [s.line, SH_DATA.poems[s.poem].title, SH_DATA.poems[s.poem].place, s.kind, KIND[s.kind], s.light.replace('→', ' '), s.subject, ...s.names, ...s.tags.map(t => t.what), s.world, s.mm + 'mm'].join(' ').toLowerCase();
 }
 const SF = { kind: new Set(), light: new Set(), poem: new Set(), world: new Set() };
+let showPaintedShotsMode = true;
+
 function makeShotChips(id, key, label, vals, name = v => v) {
   $(id).innerHTML = `<span class="lab">${label}</span>` + vals.map(v => `<button class="chip" data-v="${v}">${name(v)}</button>`).join('');
   $(id).querySelectorAll('.chip').forEach(b => b.onclick = () => {
@@ -1464,6 +1597,12 @@ makeShotChips('sc_light', 'light', 'hour', [...new Set(SH.flatMap(s => s.light.s
 makeShotChips('sc_poem', 'poem', 'poem', Object.keys(SH_DATA.poems).sort(), v => `${v} ${SH_DATA.poems[v].title}`);
 makeShotChips('sc_world', 'world', 'world', Object.keys(SH_DATA.worlds), v => `${v} · ${SH_DATA.worlds[v].layout}`);
 
+$('btnTogglePaintedShots').onclick = () => {
+  showPaintedShotsMode = !showPaintedShotsMode;
+  $('btnTogglePaintedShots').textContent = `🎨 View Mode: ${showPaintedShotsMode ? 'Painted & Shaped Shot PNGs (ON)' : 'Raw Foundry Polygon Frames'}`;
+  runShots();
+};
+
 function runShots() {
   const toks = $('shotQ').value.toLowerCase().split(/\s+/).filter(t => t.length > 1);
   const res = SH.filter(s => {
@@ -1476,15 +1615,20 @@ function runShots() {
   });
   $('shotCount').textContent = `${res.length} of ${SH.length} shots`;
   $('shotGrid').innerHTML = res.slice(0, 96).map(s => {
-    const imgPath = s.img.startsWith('sb/') ? `${F_BASE}${s.img}` : `${F_BASE}w/${s.world}-v${s.poem === '14' ? '13' : s.poem}.jpg`;
+    const kPad = String(s.k ?? 0).padStart(2, '0');
+    const paintedPath = `png_vault/painted_shots/shot_${s.poem}_${kPad}.png`;
+    const rawPath = s.img.startsWith('sb/') ? `${F_BASE}${s.img}` : `${F_BASE}w/${s.world}-v${s.poem === '14' ? '13' : s.poem}.jpg`;
+    const imgPath = showPaintedShotsMode ? paintedPath : rawPath;
     return `<div class="shot">
-      <img loading="lazy" src="${imgPath}" alt="" onerror="this.src='${F_BASE}w/${s.world}-v${s.poem === '14' ? '13' : s.poem}.jpg'">
+      <img loading="lazy" src="${imgPath}" alt="" onerror="this.src='${rawPath}'" title="Hover or toggle view mode to compare Painted Multiplane Shot vs Raw Foundry Polygon">
       <div class="c">
-        <b>${s.poem}</b> ${SH_DATA.poems[s.poem].title} · ${fmtTime(s.t0)} · ${KIND[s.kind]} · ${s.mm}mm · ${s.light} · <b>${s.world}</b>
+        <b>${s.poem}-${kPad}</b> ${SH_DATA.poems[s.poem].title} · ${fmtTime(s.t0)} · ${KIND[s.kind]} · ${s.mm}mm · ${s.light} · <b>${s.world}</b>
         <i>“${s.line.slice(0, 130)}”</i>
-        <div style="margin-top:6px;display:flex;gap:6px">
-          <button class="btn gold" style="padding:3px 8px;min-height:0;font-size:10px" onclick="window.__loadIntoStudio('${s.poem}',null,'${s.world}')">🔨 Build On Shot</button>
-          <a class="btn pink" style="padding:3px 8px;min-height:0;font-size:10px" href="terrarium.html?poem=${s.poem}&foundry=${s.world}">🌍 Fly 3D Cam (${Math.round(s.cam.z)}m)</a>
+        <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">
+          <button class="btn ok" style="padding:3px 7px;min-height:0;font-size:10px" onclick="window.__openInTapePlayer('${s.poem}',${s.k || 0})">🎞️ Tape #${kPad}</button>
+          <a class="btn" style="padding:3px 7px;min-height:0;font-size:10px" href="${paintedPath}" target="_blank">🎨 Painted PNG</a>
+          <button class="btn gold" style="padding:3px 7px;min-height:0;font-size:10px" onclick="window.__loadIntoStudio('${s.poem}',null,'${s.world}')">🔨 Studio</button>
+          <a class="btn pink" style="padding:3px 7px;min-height:0;font-size:10px" href="terrarium.html?poem=${s.poem}&foundry=${s.world}">🌍 3D (${Math.round(s.cam.z)}m)</a>
         </div>
       </div>
     </div>`;
@@ -1492,6 +1636,250 @@ function runShots() {
 }
 $('shotQ').oninput = runShots;
 runShots();
+
+// =========================================================================
+// TAB 5: CONTINUOUS PAINTED SHOT TAPES & 183-SHOT CINEMA PLAYER
+// =========================================================================
+let tapePoem = urlQ.get('poem') || '01';
+let tapeShotIdx = 0;
+let paintedManifest = { shots: [], tapes: [] };
+try {
+  paintedManifest = await fetch(F_BASE + 'painted_shots_manifest.json').then(r => r.json());
+} catch (e) {}
+
+const POEM_TITLES_ALL = {
+  ...Object.fromEntries(ORDER.map(n => [n, A.poems[n]?.title || `Poem ${n}`])),
+  '14': 'Hot Minute'
+};
+
+function getShotsForPoem(pNum) {
+  const fromManifest = (paintedManifest.shots || []).filter(s => s.poem === pNum && s.sub_type !== 'inverse_painted_frame');
+  if (fromManifest.length) return fromManifest;
+  const fromSh = SH.filter(s => s.poem === pNum && s.world === 'w1623').sort((a, b) => (a.k || 0) - (b.k || 0));
+  return fromSh.map(s => {
+    const kPad = String(s.k || 0).padStart(2, '0');
+    return {
+      id: `painted_shot_${pNum}_${kPad}`,
+      title: `Poem ${pNum} Shot #${kPad} · ${(s.kind || 'medium').toUpperCase()} ${s.mm || 35}mm`,
+      poem: pNum,
+      file: `png_vault/painted_shots/shot_${pNum}_${kPad}.png`,
+      shot_meta: {
+        shot_k: s.k || 0,
+        t0: s.t0 || 0,
+        t1: s.t1 || 10,
+        kind: s.kind || 'medium',
+        mm: s.mm || 35,
+        light: s.light || 'dusk→night',
+        line: s.line || '',
+        ref_id: `${pNum}-01`,
+        district_id: 'haze',
+        portals_painted: 1,
+        cast_painted: 1
+      }
+    };
+  });
+}
+
+function renderTapePoemChips() {
+  const allP = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14'];
+  $('tapePoemChips').innerHTML = `<span class="lab">Select Poem Tape</span>` + allP.map(n =>
+    `<button class="chip ${n === tapePoem ? 'on' : ''}" data-tp="${n}">${n} · ${POEM_TITLES_ALL[n] || ''}</button>`
+  ).join('');
+  $('tapePoemChips').querySelectorAll('.chip').forEach(b => b.onclick = () => {
+    tapePoem = b.dataset.tp;
+    tapeShotIdx = 0;
+    renderTapePoemChips();
+    loadPoemTapeDeck();
+  });
+}
+
+function updateActiveShotInTapeDeck(idx, scrollTape = true) {
+  const pShots = getShotsForPoem(tapePoem);
+  if (!pShots.length) return;
+  tapeShotIdx = Math.max(0, Math.min(pShots.length - 1, idx));
+  const cur = pShots[tapeShotIdx];
+  const sm = cur.shot_meta || {};
+  const kPad = String(sm.shot_k ?? tapeShotIdx).padStart(2, '0');
+
+  $('imgActivePaintedShot').src = cur.file;
+  $('txtActiveShotTitle').textContent = `POEM ${tapePoem} SHOT #${kPad} · ${(sm.kind || 'MEDIUM').toUpperCase()} ${sm.mm || 35}MM · ${(sm.light || '').toUpperCase()}`;
+  $('txtActiveShotLine').textContent = sm.line ? `“${sm.line}”` : '';
+  $('txtActiveShotTelemetry').textContent = `District: ${(sm.district_id || 'haze').toUpperCase()} · Ref ${sm.ref_id || ''} · ${sm.portals_painted ?? 1} Portals · ${sm.cast_painted ?? 1} Full-Body Cast · Time ${fmtTime(sm.t0 || 0)}–${fmtTime(sm.t1 || 0)}`;
+
+  const rawSb = `${F_BASE}sb/w1623/${tapePoem}-${kPad}.jpg`;
+  const fallbackStand = `${F_BASE}w/w1623-v${tapePoem === '14' ? '13' : tapePoem}.jpg`;
+  $('imgActiveFoundryRaw').src = rawSb;
+  $('imgActiveFoundryRaw').onerror = () => { $('imgActiveFoundryRaw').src = fallbackStand; };
+  $('txtActiveFoundryMeta').textContent = `Foundry w1623 Stand · Shot ${tapePoem}-${kPad} (${sm.kind || 'medium'}, ${sm.mm || 35}mm)`;
+
+  const refId = sm.ref_id || `${tapePoem}-01`;
+  const rObj = refsMap[refId] || R.refs.find(r => r.poem === tapePoem) || R.refs[0];
+  if (rObj) {
+    $('imgActiveRefPanoptic').src = `${F_BASE}${rObj.img}`;
+    $('txtActiveRefMeta').textContent = `Ref ${rObj.id} (${rObj.source}) · CLIP ${rObj.clip} · ${frText(rObj.frac)}`;
+  }
+
+  const frac = pShots.length > 1 ? tapeShotIdx / (pShots.length - 1) : 0;
+  if (scrollTape) {
+    const sb1 = $('shotTapeScrollBay');
+    const sb2 = $('sceneTapeScrollBay');
+    if (sb1.scrollWidth > sb1.clientWidth) {
+      sb1.scrollLeft = Math.round(frac * (sb1.scrollWidth - sb1.clientWidth));
+    }
+    if (sb2.scrollWidth > sb2.clientWidth) {
+      sb2.scrollLeft = Math.round(frac * (sb2.scrollWidth - sb2.clientWidth));
+    }
+    $('tapeScrub').value = Math.round(frac * 1000);
+  }
+  const aud = $('tapeAudio');
+  const dur = aud.duration && isFinite(aud.duration) ? aud.duration : 100;
+  const curSec = sm.t0 ?? (frac * dur);
+  $('tapeTimeLabel').textContent = `${fmtTime(curSec)} / ${fmtTime(dur)} · Shot #${kPad} (${tapeShotIdx + 1}/${pShots.length})`;
+
+  $('poemPaintedShotsGrid').querySelectorAll('.shot').forEach((el, i) => {
+    el.style.borderColor = i === tapeShotIdx ? 'var(--gold)' : 'var(--edge)';
+  });
+}
+
+function loadPoemTapeDeck() {
+  const title = POEM_TITLES_ALL[tapePoem] || `Poem ${tapePoem}`;
+  const pShots = getShotsForPoem(tapePoem);
+  $('tapeHeaderKicker').textContent = `POEM ${tapePoem} · ${title.toUpperCase()} · CONTINUOUS PAINTED SHOT-BY-SHOT TAPE`;
+  $('tapeHeaderTitle').textContent = `${pShots.length} Painted & Shaped Multiplane Shots Woven Into A Continuous Horizontal World`;
+
+  const shotTapeUrl = `png_vault/painted_tapes/poem_${tapePoem}_shot_tape.png`;
+  const sceneTapeUrl = `png_vault/painted_tapes/poem_${tapePoem}_scene_tape.png`;
+  const sheetUrl = `png_vault/painted_tapes/poem_${tapePoem}_shots_sheet.png`;
+
+  $('imgContinuousShotTape').src = shotTapeUrl;
+  $('imgContinuousSceneTape').src = sceneTapeUrl;
+  $('lblSceneTapePoem').textContent = tapePoem;
+  $('btnDownloadShotTape').href = shotTapeUrl;
+  $('btnDownloadSceneTape').href = sceneTapeUrl;
+  $('btnDownloadShotsSheet').href = sheetUrl;
+
+  const aud = $('tapeAudio');
+  aud.pause();
+  $('btnTapePlay').textContent = '▶ Play Spoken Poem + Roll Tape';
+  aud.src = `play/levels/${tapePoem}/reading.mp3`;
+
+  $('poemShotsGridHeading').textContent = `All ${pShots.length} Painted & Shaped Shots in Poem ${tapePoem} (${title})`;
+  $('poemPaintedShotsGrid').innerHTML = pShots.map((s, idx) => {
+    const sm = s.shot_meta || {};
+    const kPad = String(sm.shot_k ?? idx).padStart(2, '0');
+    return `<div class="shot" data-sidx="${idx}">
+      <img loading="lazy" src="${s.file}" alt="${s.title}">
+      <div class="c">
+        <b>#${kPad}</b> · ${fmtTime(sm.t0 || 0)}–${fmtTime(sm.t1 || 0)} · ${(sm.kind || 'medium').toUpperCase()} · ${sm.mm || 35}mm · ${sm.light || ''}
+        <i>“${(sm.line || '').slice(0, 125)}”</i>
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap" onclick="event.stopPropagation()">
+          <a class="btn ok" style="padding:3px 8px;min-height:0;font-size:10px" href="${s.file}" download="shot_${tapePoem}_${kPad}.png">⬇ Save Shot PNG</a>
+          <button class="btn gold" style="padding:3px 8px;min-height:0;font-size:10px" onclick="window.__loadIntoStudio('${tapePoem}','${sm.ref_id || ''}','w1623')">🔨 Edit in Studio</button>
+          <a class="btn pink" style="padding:3px 8px;min-height:0;font-size:10px" href="terrarium.html?poem=${tapePoem}&foundry=w1623">🌍 3D</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  $('poemPaintedShotsGrid').querySelectorAll('.shot').forEach(el => {
+    el.onclick = () => {
+      const idx = +el.dataset.sidx;
+      updateActiveShotInTapeDeck(idx, true);
+      const sm = pShots[idx]?.shot_meta;
+      if (sm && sm.t0 != null && isFinite(aud.duration)) {
+        aud.currentTime = sm.t0;
+      }
+    };
+  });
+
+  updateActiveShotInTapeDeck(0, true);
+}
+
+$('btnTapePrevShot').onclick = () => updateActiveShotInTapeDeck(tapeShotIdx - 1, true);
+$('btnTapeNextShot').onclick = () => updateActiveShotInTapeDeck(tapeShotIdx + 1, true);
+
+$('btnTapePlay').onclick = () => {
+  const aud = $('tapeAudio');
+  if (aud.paused) {
+    aud.play().catch(() => {});
+    $('btnTapePlay').textContent = '⏸ Pause Poem & Tape';
+  } else {
+    aud.pause();
+    $('btnTapePlay').textContent = '▶ Play Spoken Poem + Roll Tape';
+  }
+};
+
+$('tapeAudio').addEventListener('timeupdate', () => {
+  const aud = $('tapeAudio');
+  if (!aud.duration || !isFinite(aud.duration)) return;
+  const t = aud.currentTime;
+  const frac = Math.max(0, Math.min(1, t / aud.duration));
+  $('tapeScrub').value = Math.round(frac * 1000);
+
+  const sb1 = $('shotTapeScrollBay');
+  const sb2 = $('sceneTapeScrollBay');
+  if (sb1.scrollWidth > sb1.clientWidth) {
+    sb1.scrollLeft = Math.round(frac * (sb1.scrollWidth - sb1.clientWidth));
+  }
+  if (sb2.scrollWidth > sb2.clientWidth) {
+    sb2.scrollLeft = Math.round(frac * (sb2.scrollWidth - sb2.clientWidth));
+  }
+
+  const pShots = getShotsForPoem(tapePoem);
+  let matchIdx = Math.min(pShots.length - 1, Math.floor(frac * pShots.length));
+  for (let i = 0; i < pShots.length; i++) {
+    const sm = pShots[i].shot_meta;
+    if (sm && t >= (sm.t0 || 0) && t <= (sm.t1 || 9999)) {
+      matchIdx = i;
+      break;
+    }
+  }
+  if (matchIdx !== tapeShotIdx) {
+    updateActiveShotInTapeDeck(matchIdx, false);
+  }
+  const kPad = String(pShots[tapeShotIdx]?.shot_meta?.shot_k ?? tapeShotIdx).padStart(2, '0');
+  $('tapeTimeLabel').textContent = `${fmtTime(t)} / ${fmtTime(aud.duration)} · Shot #${kPad} (${tapeShotIdx + 1}/${pShots.length})`;
+});
+
+$('tapeScrub').oninput = e => {
+  const frac = +e.target.value / 1000;
+  const pShots = getShotsForPoem(tapePoem);
+  const idx = Math.min(pShots.length - 1, Math.floor(frac * pShots.length));
+  updateActiveShotInTapeDeck(idx, true);
+  const aud = $('tapeAudio');
+  if (aud.duration && isFinite(aud.duration)) {
+    aud.currentTime = frac * aud.duration;
+  }
+};
+
+$('shotTapeScrollBay').addEventListener('click', e => {
+  const bay = $('shotTapeScrollBay');
+  const clickX = e.clientX - bay.getBoundingClientRect().left + bay.scrollLeft;
+  const frac = Math.max(0, Math.min(1, clickX / Math.max(1, bay.scrollWidth)));
+  const pShots = getShotsForPoem(tapePoem);
+  const idx = Math.min(pShots.length - 1, Math.floor(frac * pShots.length));
+  updateActiveShotInTapeDeck(idx, false);
+});
+
+window.__openInTapePlayer = (poem, kIdx) => {
+  tapePoem = poem;
+  renderTapePoemChips();
+  loadPoemTapeDeck();
+  const pShots = getShotsForPoem(tapePoem);
+  const foundIdx = pShots.findIndex(s => (s.shot_meta?.shot_k ?? -1) === kIdx);
+  updateActiveShotInTapeDeck(foundIdx >= 0 ? foundIdx : 0, true);
+  document.querySelector('[data-tab="tab-tapes"]').click();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+renderTapePoemChips();
+loadPoemTapeDeck();
+
+// Support ?tab=tab-tapes in URL query string
+const initTab = urlQ.get('tab');
+if (initTab && document.querySelector(`[data-tab="${initTab}"]`)) {
+  document.querySelector(`[data-tab="${initTab}"]`).click();
+}
 </script>
 </body>
 </html>
