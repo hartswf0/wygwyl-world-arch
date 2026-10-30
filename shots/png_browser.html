@@ -198,7 +198,7 @@ main { max-width: 1680px; margin: 0 auto; padding: 14px 18px 90px; }
 
 <section class="hero">
   <p class="lede">
-    Every generated proof, contact sheet, multiplane audit, character rig sheet, the <b>62 Foundry &amp; Inverse Through-Frame Composite PNGs</b>, the <b>183 Individual Painted &amp; Shaped Multiplane Shots (<code>01-00..14-07</code> + 28 Inverse Through-Frames)</b>, and the <b>43 Continuous Shot-by-Shot &amp; Scene Cinema Tapes</b> are permanently saved in <code>shots/png_vault/</code> and indexed here. Filter by collection, sub-type, or poem, switch from giant inspection cards to a 10-column contact-sheet wall, or click any PNG for a 1:1 pixel zoom &amp; horizontal tape auto-pan.
+    Every generated proof, contact sheet, multiplane audit, character rig sheet, the <b>119 360°×180° Outpainted Equirectangular Spheres &amp; Shared Horizon Panoramas</b>, the <b>259 Individual Painted &amp; Shaped Multiplane Shots (<code>01-00..14-07</code> + all 104 Equirectangular Inverse-Sculpted Through-Frames)</b>, the <b>62 Foundry &amp; Inverse Through-Frame Composite PNGs</b>, and the <b>43 Continuous Shot-by-Shot &amp; Scene Cinema Tapes</b> are permanently saved in <code>shots/png_vault/</code> and indexed here. Filter by collection, sub-type, or poem, switch from giant inspection cards to a 10-column contact-sheet wall, or click any PNG for a 1:1 pixel zoom &amp; horizontal tape auto-pan.
   </p>
   <div class="stats" id="stats"></div>
 </section>
@@ -206,7 +206,7 @@ main { max-width: 1680px; margin: 0 auto; padding: 14px 18px 90px; }
 <section class="controls">
   <div class="controls-inner">
     <div class="search-row">
-      <input id="q" type="search" placeholder="Search saved PNGs by filename, poem (01..14), shot (01_00), ref (01-07), world (w1623), character, or keyword…" autocomplete="off">
+      <input id="q" type="search" placeholder="Search saved PNGs by filename, poem (01..14), shot (01_00), ref (01-07), equirec, world (w1623), character, or keyword…" autocomplete="off">
       <div class="density-group">
         <span>Grid</span>
         <button class="d-btn" data-cols="2">2 XL</button>
@@ -270,6 +270,7 @@ for (const ls of localSaved) {
   ITEMS.unshift(ls);
 }
 
+const equirecCount = cat.equirectangular_count ?? ITEMS.filter(x => x.category === 'equirectangular').length;
 const paintedTapesCount = cat.painted_tapes_count ?? ITEMS.filter(x => x.category === 'painted_tapes').length;
 const paintedShotsCount = cat.painted_shots_count ?? ITEMS.filter(x => x.category === 'painted_shots').length;
 const foundryInvCount = cat.foundry_inverse_count ?? ITEMS.filter(x => x.category === 'foundry_inverse').length;
@@ -278,6 +279,7 @@ const repoCount = cat.repo_plates_and_sheets_count ?? ITEMS.filter(x => x.catego
 
 $('stats').innerHTML = [
   [ITEMS.length, 'Total Indexed Plates'],
+  [equirecCount, '360° Equirectangular Outpaints'],
   [paintedTapesCount, 'Continuous Painted Tapes & Sheets'],
   [paintedShotsCount, 'Painted & Shaped Shots'],
   [foundryInvCount, 'Foundry & Inverse Builds'],
@@ -295,6 +297,12 @@ let lbIdx = 0;
 let panTimer = null;
 
 const SUB_BY_CAT = {
+  equirectangular: {
+    all: 'All 119 360° Equirectangular Plates',
+    master_equirec_sheet: '14-Poem Shared Equirectangular Master Sheet',
+    shared_poem_equirec: '14 Shared Poem 360°×180° Panoramas',
+    ref_equirec_outpaint: '104 Outpainted Reference Equirectangular Spheres'
+  },
   painted_tapes: {
     all: 'All 43 Painted Tapes & Contact Sheets',
     master_shot_tapes_panorama: '14-Poem Master Panorama',
@@ -303,14 +311,14 @@ const SUB_BY_CAT = {
     poem_shots_sheet: '14 Per-Poem Shot Contact Sheets'
   },
   painted_shots: {
-    all: 'All 183 Painted & Shaped Shots',
+    all: 'All 259 Painted & Shaped Shots',
     shot_establishing: 'Establishing Wide Shots',
     shot_medium: 'Medium Stage Shots',
     shot_close: 'Close / Over-Shoulder Shots',
     shot_pov: 'Point-of-View (POV) Shots',
     shot_tracking: 'Tracking Shots',
     shot_sky: 'Sky / Aerial Shots',
-    inverse_painted_frame: '28 Inverse-Sculpted Through-Frames'
+    inverse_painted_frame: '104 Equirectangular Inverse-Sculpted Through-Frames'
   },
   foundry_inverse: {
     all: 'All 62 Foundry & Inverse Builds',
@@ -344,10 +352,12 @@ function renderChips() {
 
   const subMap = SUB_BY_CAT[activeCat] || (activeCat === 'all' ? {
     all: 'All Sub-Types',
+    shared_poem_equirec: '🌐 14 Shared 360° Equirec Panoramas',
+    ref_equirec_outpaint: '🌐 104 Ref Equirec Outpaints',
+    inverse_painted_frame: '🎨 104 Inverse Painted Frames',
     continuous_shot_tape: '🎞️ 14 Shot-by-Shot Tapes',
     continuous_scene_tape: '🏛️ 14 Multiplane Scene Tapes',
     poem_shots_sheet: '▦ 14 Shot Contact Sheets',
-    inverse_painted_frame: '🎨 28 Inverse Painted Frames',
     inverse_triple_through: '📐 28 Inverse Triple Plates',
     foundry_camera_stand: '📷 14 Foundry Camera Stands',
     walkin_interior_set: '🚪 14 Walk-In Interior Sets'

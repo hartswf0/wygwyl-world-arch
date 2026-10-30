@@ -115,11 +115,12 @@ canvas#builderCanvas { width: 100%; height: 100%; display: block; cursor: grab; 
 canvas#builderCanvas:active { cursor: grabbing; }
 
 .quad-strip {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
 }
+@media (max-width: 900px) { .quad-strip { grid-template-columns: repeat(2, 1fr); } }
 .qbox { background: var(--panel2); border: 1px solid var(--edge); border-radius: 4px; overflow: hidden; cursor: pointer; }
 .qbox:hover { border-color: var(--gold); }
-.qbox img { width: 100%; aspect-ratio: 2.39/1; object-fit: cover; display: block; }
+.qbox img { width: 100%; aspect-ratio: 2/1; object-fit: cover; display: block; }
 .qbox div { padding: 4px 6px; font: 600 10px "Helvetica Neue", sans-serif; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .qbox b { color: var(--gold); }
 
@@ -142,7 +143,7 @@ canvas#builderCanvas:active { cursor: grabbing; }
 .layer-item.sel { border-color: var(--cyan); background: rgba(92,225,230,.1); }
 
 /* =====================================================================
-   TAB 2: INVERSE TOPOLOGY (inverse.html + Built Extensions)
+   TAB 2: INVERSE TOPOLOGY (inverse.html + 360° Equirectangular Outpaints)
    ===================================================================== */
 .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 18px 0; }
 .flow div { background: var(--panel); border: 1px solid var(--edge); padding: 12px; position: relative; }
@@ -159,12 +160,35 @@ canvas#builderCanvas:active { cursor: grabbing; }
 .mapc .pair img.b { position: absolute; inset: 0; transition: opacity .3s; }
 .mapc .pair.show-a img.b { opacity: 0; }
 .mapc .c { padding: 8px 10px; font: 12px "Helvetica Neue", Arial, sans-serif; color: var(--dim); }
-.refs { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 10px; }
-.ref { background: var(--panel); border: 1px solid var(--edge); display: flex; flex-direction: column; }
-.ref .im { position: relative; cursor: pointer; }
-.ref img { width: 100%; display: block; aspect-ratio: 2.39/1; object-fit: cover; }
+
+.eq-poem-banner {
+  background: var(--panel); border: 1px solid rgba(92,225,230,.45); border-radius: 8px;
+  padding: 12px; margin: 12px 0 16px;
+}
+.eq-poem-banner .eq-stage {
+  position: relative; width: 100%; aspect-ratio: 2/1; max-height: 460px;
+  background: #05080c; border: 1px solid var(--gold); border-radius: 6px; overflow: hidden; cursor: pointer;
+}
+.eq-poem-banner .eq-stage img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.refs { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; }
+.ref { background: var(--panel); border: 1px solid var(--edge); display: flex; flex-direction: column; border-radius: 4px; overflow: hidden; }
+.ref .im { position: relative; cursor: pointer; background: #05080c; }
+.ref img { width: 100%; display: block; aspect-ratio: 2/1; object-fit: cover; }
+.ref.rect-mode img { aspect-ratio: 2.39/1; }
 .ref .im img.seg { position: absolute; inset: 0; opacity: 0; transition: opacity .25s; }
 .ref .im:hover img.seg, .ref .im.on img.seg { opacity: 1; }
+.ref .im .hor-line {
+  position: absolute; left: 0; right: 0; height: 0;
+  border-top: 2px dashed rgba(255, 210, 63, 0.85);
+  pointer-events: none; z-index: 3;
+}
+.ref .im .hor-tag {
+  position: absolute; right: 6px; transform: translateY(-100%);
+  background: rgba(8,11,16,.88); color: var(--gold); border: 1px solid rgba(255,210,63,.5);
+  font: 700 9px "Helvetica Neue", sans-serif; padding: 1px 5px; border-radius: 4px;
+  pointer-events: none; z-index: 4;
+}
 .ref .c { padding: 7px 9px 9px; font: 12px/1.45 "Helvetica Neue", Arial, sans-serif; color: var(--dim); flex: 1; }
 .ref .c b { color: var(--ink); }
 .src { display: inline-block; font: 700 10px "Helvetica Neue", Arial, sans-serif; letter-spacing: .12em; padding: 1px 6px; border-radius: 8px; margin-right: 4px; text-transform: uppercase; }
@@ -174,9 +198,9 @@ canvas#builderCanvas:active { cursor: grabbing; }
 .src.halfworld { background: #2a2a2a; color: #ddd; }
 .found { color: var(--pink)!important; }
 .match { margin: 18px 0 26px; border-top: 1px solid var(--edge); padding-top: 12px; }
-.mrow { display: grid; grid-template-columns: minmax(250px, 340px) 1fr; gap: 12px; align-items: start; }
+.mrow { display: grid; grid-template-columns: minmax(270px, 360px) 1fr; gap: 12px; align-items: start; }
 @media (max-width: 820px) { .mrow { grid-template-columns: 1fr; } }
-.mrow .refbox img { width: 100%; display: block; aspect-ratio: 2.39/1; object-fit: cover; border: 1px solid var(--gold); }
+.mrow .refbox img { width: 100%; display: block; aspect-ratio: 2/1; object-fit: cover; border: 1px solid var(--gold); }
 .mrow .refbox div { font: 12px "Helvetica Neue", Arial, sans-serif; color: var(--dim); margin-top: 4px; }
 .worlds { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
 .wc { flex: 0 0 min(340px, 82vw); scroll-snap-align: start; background: var(--panel); border: 1px solid var(--edge); }
@@ -306,13 +330,14 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
     <div class="mode-tabs">
       <button class="mtab pink on" data-tab="tab-builder">🔨 1. Through-Frame Builder Studio</button>
       <button class="mtab" data-tab="tab-tapes">🎞️ 2. Continuous Painted Shot Tapes (183 Shots)</button>
-      <button class="mtab" data-tab="tab-inverse">📐 3. Inverse Topology (104 Refs &amp; 168 Wedges)</button>
+      <button class="mtab" data-tab="tab-inverse">🌐 3. Inverse Topology &amp; 360° Equirec (104/104 Inverted)</button>
       <button class="mtab" data-tab="tab-foundry">🏛️ 4. The Foundry (72 Worlds &amp; Stands)</button>
       <button class="mtab" data-tab="tab-shots">🎬 5. The 882 Shots &amp; Painted Cinema</button>
     </div>
     <div class="ext-links">
+      <a class="navpill" href="png_browser.html?cat=equirectangular" style="border-color:var(--cyan);color:var(--cyan)">🌐 360° Equirec Vault (119)</a>
       <a class="navpill" href="png_browser.html?cat=painted_tapes" style="border-color:var(--ok);color:var(--ok)">🎞️ Painted Tapes Vault (43)</a>
-      <a class="navpill" href="png_browser.html" style="border-color:var(--gold);color:var(--gold)">🖼️ Saved PNG Grid Browser (1,098)</a>
+      <a class="navpill" href="png_browser.html" style="border-color:var(--gold);color:var(--gold)">🖼️ Saved PNG Grid Browser (1,217)</a>
       <a class="navpill" href="terrarium.html?poem=01&foundry=w1623">🌍 3D Terrarium + Hound</a>
       <a class="navpill" href="wag_stack.html">🎞️ WAG-STACK</a>
     </div>
@@ -324,10 +349,10 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
        TAB 1: INTERACTIVE THROUGH-FRAME BUILDER STUDIO
        =================================================================== -->
   <section class="tab-pane on" id="tab-builder">
-    <div class="k">Every Shot A Triple · Panoptic Depth Peeling · Metric Cut-Out Staging</div>
-    <h1 class="big">Build On Top Of &amp; Through Inverse Topology &amp; The Foundry</h1>
+    <div class="k">Every Shot A Triple · 360° Equirectangular Outpaint · Shared Horizon Inversion</div>
+    <h1 class="big">Build On Top Of &amp; Through Inverse Topology &amp; 360° Equirectangular Worlds</h1>
     <p class="lede">
-      In <code>inverse.html</code>, every reference frame is segmented into sky, water, city, street, forest, meadow, beach, and rock, and sculpts the 6 Foundry worlds at an exact camera position, elevation, and heading. Here you build <b>through</b> the frame (using the panoptic mask to open sky, water, and window apertures into the reference image or multiplane stage) and <b>on top of</b> the frame (placing WYGWYL cut-out actors and props on the sculpted ground plane, automatically scaled by metric distance in meters). Every composite can be saved directly to the <a href="png_browser.html">PNG Grid Browser</a>.
+      Every reference frame (<code>01-00..13-07</code>) is projected into a <code>2:1</code> (<code>360°×180°</code>) equirectangular sphere, outpainted across the full azimuth ring locked to its poem’s <b>Shared Equirectangular Horizon Line</b>, and inverted to sculpt all 6 Foundry worlds (<code>104/104</code> references inverted across <code>624</code> world wedges). Here you build <b>through</b> the frame and <b>on top of</b> the sculpted ground plane.
     </p>
 
     <div class="studio-layout">
@@ -339,7 +364,7 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
           <select id="selPoem"></select>
         </div>
         <div class="ctrl-row">
-          <div class="lbl"><span>Reference Frame (104 Refs)</span><span id="lblRef">01-07</span></div>
+          <div class="lbl"><span>Reference Frame (104/104 Inverted)</span><span id="lblRef">01-07</span></div>
           <select id="selRef"></select>
         </div>
         <div class="ctrl-row">
@@ -358,25 +383,29 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
           </select>
         </div>
 
-        <h4>2. Through-Frame &amp; Panoptic Sliders</h4>
+        <h4>2. Through-Frame &amp; 360° Equirec Sliders</h4>
         <div class="ctrl-row">
           <div class="lbl"><span>Foundry Before (-a) ↔ Sculpted After (-b)</span><span id="valSculpt">100%</span></div>
           <input type="range" id="slSculpt" min="0" max="100" value="100">
         </div>
         <div class="ctrl-row">
-          <div class="lbl"><span>Through-Sky/Water Reference Bleed</span><span id="valRefBleed">48%</span></div>
-          <input type="range" id="slRefBleed" min="0" max="100" value="48">
+          <div class="lbl"><span style="color:var(--cyan)">🌐 360° Equirec Outpaint Horizon Bleed</span><span id="valEquirec">36%</span></div>
+          <input type="range" id="slEquirec" min="0" max="100" value="36">
         </div>
         <div class="ctrl-row">
-          <div class="lbl"><span>Multiplane Stage Architecture Blend</span><span id="valStageBleed">36%</span></div>
-          <input type="range" id="slStageBleed" min="0" max="100" value="36">
+          <div class="lbl"><span>Through-Sky/Water Reference Bleed</span><span id="valRefBleed">42%</span></div>
+          <input type="range" id="slRefBleed" min="0" max="100" value="42">
         </div>
         <div class="ctrl-row">
-          <div class="lbl"><span>Panoptic Segmentation Grid Contour</span><span id="valSeg">18%</span></div>
-          <input type="range" id="slSeg" min="0" max="100" value="18">
+          <div class="lbl"><span>Multiplane Stage Architecture Blend</span><span id="valStageBleed">32%</span></div>
+          <input type="range" id="slStageBleed" min="0" max="100" value="32">
         </div>
         <div class="ctrl-row">
-          <div class="lbl"><span>Through-Window Portal (Walk-In Set Mode)</span><span id="valPortal">OFF</span></div>
+          <div class="lbl"><span>360° Panoptic Segmentation Contour</span><span id="valSeg">16%</span></div>
+          <input type="range" id="slSeg" min="0" max="100" value="16">
+        </div>
+        <div class="ctrl-row">
+          <div class="lbl"><span>Through-Window Portal Aperture</span><span id="valPortal">OFF</span></div>
           <input type="range" id="slPortal" min="0" max="100" value="0">
         </div>
 
@@ -386,7 +415,7 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
         </div>
       </div>
 
-      <!-- Center Column: Live Interactive Canvas & 4-Source Strip -->
+      <!-- Center Column: Live Interactive Canvas & 5-Source Strip -->
       <div class="canvas-bay">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
           <div style="font:700 12px 'Helvetica Neue',sans-serif;color:var(--gold)" id="canvasHeaderTitle">
@@ -396,7 +425,7 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
             <button class="btn" id="btnToggleTags">🏷️ Metric Tags: ON</button>
             <button class="btn" id="btnToggleTape">🎞️ Poem Tape: ON</button>
             <button class="btn" id="btnAutoStage">✨ Auto-Stage Cast at Tags</button>
-            <a class="btn ok" id="btnViewPrebuilt" href="png_browser.html?cat=foundry_inverse">🖼️ View Pre-Built PNG</a>
+            <a class="btn ok" id="btnViewPrebuilt" href="png_browser.html?cat=equirectangular">🌐 View 360° Equirec PNG</a>
           </div>
         </div>
 
@@ -405,27 +434,31 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
         </div>
 
         <div style="font:12px 'Helvetica Neue',sans-serif;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
-          <span id="canvasTelemetry">Drag any cut-out actor or prop on the canvas · Moving toward the horizon automatically scales by metric distance (m)</span>
+          <span id="canvasTelemetry">Drag any cut-out actor or prop on the canvas · Moving toward the shared equirectangular horizon automatically scales by metric distance (m)</span>
           <span id="canvasGrownInfo" style="color:var(--ok)"></span>
         </div>
 
-        <!-- 4-Source Input Strip -->
+        <!-- 5-Source Input Strip -->
         <div class="quad-strip">
-          <div class="qbox" id="qRef" title="Click to solo Reference Frame">
+          <div class="qbox" id="qRef" title="Original Rectilinear Reference Frame">
             <img id="imgRefPreview" src="" alt="">
-            <div><b>1. REFERENCE</b> <span id="txtRefMeta"></span></div>
+            <div><b>1. RECTILINEAR</b> <span id="txtRefMeta"></span></div>
           </div>
-          <div class="qbox" id="qSeg" title="Click to toggle Panoptic Segmentation">
+          <div class="qbox" id="qEq" title="Outpainted 360°×180° Equirectangular Sphere" style="border-color:rgba(92,225,230,.5)">
+            <img id="imgEqPreview" src="" alt="">
+            <div><b style="color:var(--cyan)">2. 360° EQUIREC</b> <span id="txtEqMeta"></span></div>
+          </div>
+          <div class="qbox" id="qSeg" title="Outpainted 360° Equirectangular Panoptic Seg + Shared Horizon">
             <img id="imgSegPreview" src="" alt="">
-            <div><b>2. PANOPTIC SEG</b> <span id="txtSegMeta"></span></div>
+            <div><b>3. EQUIREC SEG</b> <span id="txtSegMeta"></span></div>
           </div>
-          <div class="qbox" id="qBefore" title="Click to view Foundry Before Sculpt">
+          <div class="qbox" id="qBefore" title="Foundry 3D World Before Sculpt">
             <img id="imgBeforePreview" src="" alt="">
-            <div><b>3. FOUNDRY BEFORE</b> <span id="txtBeforeMeta"></span></div>
+            <div><b>4. FOUNDRY BEFORE</b> <span id="txtBeforeMeta"></span></div>
           </div>
-          <div class="qbox" id="qAfter" title="Click to view Inverse Sculpted After">
+          <div class="qbox" id="qAfter" title="Inverse Sculpted After from Shared Equirectangular Horizon">
             <img id="imgAfterPreview" src="" alt="">
-            <div><b>4. SCULPTED AFTER</b> <span id="txtAfterMeta"></span></div>
+            <div><b>5. SCULPTED AFTER</b> <span id="txtAfterMeta"></span></div>
           </div>
         </div>
       </div>
@@ -458,40 +491,40 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
   </section>
 
   <!-- ===================================================================
-       TAB 2: INVERSE TOPOLOGY (Full inverse.html + Built Extensions)
+       TAB 2: INVERSE TOPOLOGY (Full inverse.html + 360° Equirectangular Outpaint)
        =================================================================== -->
   <section class="tab-pane" id="tab-inverse">
-    <div class="k">Where You Go When You Leave · inverse topology — the shots shape the land</div>
-    <h1 class="big">Inverse topology — the shots shape the land</h1>
+    <div class="k">Where You Go When You Leave · 360° equirectangular outpaint &amp; shared horizon inverse topology</div>
+    <h1 class="big">Inverse topology — 360° equirectangular outpaint &amp; shared horizon</h1>
     <p class="lede">
-      We already have extraordinary shots for these poems: the generated stills of every shot in the bible, the MARKOV_POET clips routed stanza by stanza, the archive footage the Cineosis forage found for each beat, the Halfworld frames. Forward, a world is grown and then photographed. Here it runs the other way: start from the best images for each poem and ask what the land must be for that frame to exist — then sculpt every world toward it.
+      Previously, 76 of the 104 poem references were interior rooms, windows, or close-ups with <code>no horizon</code> and could not invert to sculpt the land. Now <b>every single reference (<code>104/104</code>)</b> is gnomonically projected into a <code>2:1</code> (<code>360°×180°</code>) equirectangular sphere, outpainted across the full azimuth ring from the poem’s sibling frames, Foundry 3D camera stand, and Atlantis gouache backdrop, locked onto the poem’s <b>Shared Equirectangular Horizon Line</b>, and inverted to sculpt all 6 Foundry worlds (<code>624</code> sculpted wedges).
     </p>
     <div class="flow">
       <div><b>THE SHOTS</b><span id="invPools"></span></div>
-      <div><b>CHOOSE</b><span>CLIP ranks every image against its poem’s place, light and set pieces — and against every other poem</span></div>
-      <div><b>READ</b><span>a panoptic segmentation into the world’s own classes — sky, water, city, street, forest, meadow, beach, rock — plus horizon</span></div>
-      <div><b>FIND</b><span>search each world for the camera that already comes closest: position on the poem’s ground, heading, height</span></div>
-      <div><b>INFER</b><span>every missing region becomes a place: its column a bearing, its row below the horizon a distance, its height an elevation</span></div>
-      <div><b>SCULPT</b><span>carve the water, lay the beach, plant the forest, raise the ridge to its angle, stand the city up to its skyline</span></div>
-      <div><b>BUILD THROUGH</b><span>cut panoptic apertures &amp; stage our multiplane cut-out cast directly inside the sculpted terrain</span></div>
+      <div><b>360° EQUIREC</b><span>gnomonic projection of every rectilinear frame into a 2:1 (360°×180°) sphere</span></div>
+      <div><b>OUTPAINT</b><span>fuse sibling azimuth refs, Foundry 3D stands &amp; gouache sky/ground around 360°</span></div>
+      <div><b>SHARED HORIZON</b><span>lock all 8 shots of each poem to a single shared equirectangular horizon equator</span></div>
+      <div><b>INVERT ALL 104</b><span>every column a compass bearing, every row below the shared horizon a metric distance</span></div>
+      <div><b>SCULPT 6 WORLDS</b><span>carve the water, raise city blocks along window sightlines, plant forests &amp; meadows</span></div>
+      <div><b>BUILD THROUGH</b><span>stage WYGWYL cut-out cast &amp; portals inside the 624 sculpted world wedges</span></div>
     </div>
     <div class="stats" id="invStats"></div>
 
-    <h2>Bigger than this — now built &amp; interactive</h2>
+    <h2>Bigger than this — now built with 360° equirectangular outpaints</h2>
     <div class="bigger">
-      <div><b>Clips, not stills.</b> A clip is a camera path and a duration. Read its motion (pan, dolly, rise) and the inverse gives a route through the land, not a point.</div>
-      <div><b>The reference as a reader.</b> Beside the poems and the builder, a third reader: can this world give back its shots? Evolve against it, and worlds are bred by their photographs.</div>
-      <div><b>Cross-poem finds are places.</b> When CLIP pulls the same chapel image for poem 3 and poem 11, the images are saying what the bible says: one site at two times.</div>
-      <div><b>Interiors become sets.</b> References with no horizon — the bedroom, the party, the hall — shape walk-in sets: their walls, light, windows looking out onto the Foundry world, and cut-out cast.</div>
-      <div><b>Every shot a triple.</b> The found image, the staged cut-out set, the rendered world: the film cuts and blends between all three, each matched to the same line.</div>
-      <div><b>All 62 Composite PNGs Saved.</b> Every landscape triple, walk-in set, and camera stand is pre-rendered in <a href="png_browser.html?cat=foundry_inverse">shots/png_vault/foundry_inverse/</a>.</div>
+      <div><b>Every set now has a 360° horizon.</b> The 76 interior rooms and window frames (`01-00..01-06`, all of Poem `02`, all of Poem `13`) are outpainted into full 360°×180° spheres so what lies outside the room’s window sculpts the Foundry world.</div>
+      <div><b>Shared poem horizon equator.</b> All 8 references of a poem share one canonical equirectangular horizon line (`35%–50%` by camera stand altitude), uniting interior sets and exterior vistas on a single spherical ring.</div>
+      <div><b>14 shared poem 360° panoramas.</b> At the top of each poem below, inspect the fused 8-frustum 360°×180° equirectangular master panorama with compass bearings and gnomonic frustum footprints.</div>
+      <div><b>104/104 inverted across 6 worlds.</b> Every reference now produces 6 sculpted Foundry world wedges (`624` total before/after pairs) plus a pure borderless painted through-frame (`inverse_painted_XX_YY_w1623.png`).</div>
+      <div><b>Toggle Rectilinear ↔ 360° Equirec.</b> Switch any reference card between its 360° Outpainted Equirectangular (`2:1`), 360° Equirectangular Panoptic Segmentation, and Original Rectilinear (`2.39:1`) frame.</div>
+      <div><b>All 119 Equirectangular PNGs Saved.</b> Browse all 104 per-reference equirectangular plates and 14 shared poem panoramas in <a href="png_browser.html?cat=equirectangular">shots/png_vault/equirectangular/</a>.</div>
     </div>
 
     <h2>Each world, before and after its shots</h2>
     <p class="note">Tap a map to compare the world before the references shaped it and after. Pink wedges are the cameras the inverse search found.</p>
     <div class="maps" id="invMaps"></div>
 
-    <h2>Poem by poem (104 References · 168 Sculpted Wedges · Pre-Built Triple PNGs)</h2>
+    <h2>Poem by poem (104/104 References Outpainted &amp; Inverted from Shared Equirectangular Horizon · 624 Sculpted Wedges)</h2>
     <div class="chips" id="invPoemChips"></div>
     <div id="invPoemsContainer"></div>
   </section>
@@ -946,42 +979,48 @@ async function drawBuilderCanvas() {
   const vPoem = stPoem === '14' ? '13' : stPoem;
 
   const refSrc = F_BASE + rObj.img;
-  const segSrc = F_BASE + rObj.seg;
-  const beforeSrc = isLandRef ? (F_BASE + invShot.a) : (F_BASE + `w/${stWorld}-v${vPoem}.jpg`);
-  const afterSrc = isLandRef ? (F_BASE + invShot.b) : (F_BASE + `w/${stWorld}-v${vPoem}.jpg`);
+  const eqSrc = F_BASE + (rObj.eq_img || `equirec/${rObj.id}-eq.jpg`);
+  const segSrc = F_BASE + (rObj.eq_seg || `equirec/${rObj.id}-eq-seg.jpg`);
+  const beforeSrc = isLandRef && invShot?.a ? (F_BASE + invShot.a) : (F_BASE + `w/${stWorld}-v${vPoem}.jpg`);
+  const afterSrc = isLandRef && invShot?.b ? (F_BASE + invShot.b) : (F_BASE + `w/${stWorld}-v${vPoem}.jpg`);
   const stageSrc = `play/levels/${stPoem}/s${stStop}_ext.webp`;
   const tapeSrc = `play/levels/${stPoem}/poem_tape.webp`;
   const mapBSrc = F_BASE + `inv/${stWorld}/map-b.jpg`;
 
-  // Update 4-source preview strip
+  const shHor = rObj.shared_horizon ?? rObj.horizon ?? invShot?.cam?.hor ?? 0.38;
+
+  // Update 5-source preview strip
   $('imgRefPreview').src = refSrc;
   $('txtRefMeta').textContent = `${rObj.id} (${rObj.source}) · ${rObj.hour}`;
+  $('imgEqPreview').src = eqSrc;
+  $('txtEqMeta').textContent = `Shared Hor ${Math.round(shHor * 100)}% · Az ${Math.round(rObj.eq_azimuth_deg || 0)}°`;
   $('imgSegPreview').src = segSrc;
-  $('txtSegMeta').textContent = Object.entries(rObj.frac || {}).slice(0, 2).map(([k, v]) => `${k} ${Math.round(v)}%`).join(' · ');
+  $('txtSegMeta').textContent = Object.entries(rObj.eq_frac || rObj.frac || {}).slice(0, 2).map(([k, v]) => `${k} ${Math.round(v)}%`).join(' · ');
   $('imgBeforePreview').src = beforeSrc;
-  $('txtBeforeMeta').textContent = isLandRef ? `Match ${pct(invShot.before)}` : `Stand ${stWorld}-v${vPoem}`;
+  $('txtBeforeMeta').textContent = isLandRef && invShot ? `Match ${pct(invShot.before)}` : `Stand ${stWorld}-v${vPoem}`;
   $('imgAfterPreview').src = afterSrc;
-  $('txtAfterMeta').textContent = isLandRef ? `Match ${pct(invShot.after)}` : `Hold ${pct(Wd[stWorld]?.r?.by_poem?.[stPoem])}`;
+  $('txtAfterMeta').textContent = isLandRef && invShot ? `Match ${pct(invShot.after)}` : `Hold ${pct(Wd[stWorld]?.r?.by_poem?.[stPoem])}`;
 
   $('lblPoem').textContent = stPoem;
   $('lblRef').textContent = stRef;
   $('lblWorld').textContent = stWorld;
   $('lblStop').textContent = `Stop ${String.fromCharCode(65 + stStop)} (s${stStop})`;
-  $('canvasHeaderTitle').textContent = `THROUGH-FRAME SYNTHESIS · ${stWorld.toUpperCase()} × REF ${rObj.id} (${rObj.source.toUpperCase()}) × POEM ${stPoem} STOP ${String.fromCharCode(65 + stStop)}`;
-  $('canvasGrownInfo').textContent = isLandRef && invShot.grown?.length
-    ? `Sculpted: ${invShot.grown.join(' · ')}`
-    : `Walk-In Set Mode (No Horizon → Shapes Walls, Windows & Light)`;
+  $('canvasHeaderTitle').textContent = `THROUGH-FRAME SYNTHESIS · ${stWorld.toUpperCase()} × REF ${rObj.id} (360° EQUIREC HORIZON ${Math.round(shHor * 100)}%) × POEM ${stPoem}`;
+  $('canvasGrownInfo').textContent = invShot?.grown?.length
+    ? `Sculpted via Shared Equirec: ${invShot.grown.join(' · ')}`
+    : `Inverted from Shared Equirectangular Horizon (${Math.round(shHor * 100)}%)`;
   $('btnOpen3D').href = `terrarium.html?poem=${stPoem}&foundry=${stWorld}`;
-  $('btnViewPrebuilt').href = `png_browser.html?cat=foundry_inverse&poem=${stPoem}`;
+  $('btnViewPrebuilt').href = `png_vault/equirectangular/equirec_ref_${rObj.id.replace('-', '_')}.png`;
 
-  const [imBefore, imAfter, imRef, imSeg, imStage, imTape, imMap] = await Promise.all([
-    loadImg(beforeSrc), loadImg(afterSrc), loadImg(refSrc), loadImg(segSrc),
-    loadImg(stageSrc), loadImg(tapeSrc), loadImg(mapBSrc)
+  const [imBefore, imAfter, imEq, imRef, imSeg, imStage, imTape, imMap] = await Promise.all([
+    loadImg(beforeSrc), loadImg(afterSrc), loadImg(eqSrc), loadImg(refSrc),
+    loadImg(segSrc), loadImg(stageSrc), loadImg(tapeSrc), loadImg(mapBSrc)
   ]);
 
   bCtx.clearRect(0, 0, W, H);
 
   const sculptAlpha = +$('slSculpt').value / 100;
+  const eqBleed = +($('slEquirec')?.value ?? 36) / 100;
   const refBleed = +$('slRefBleed').value / 100;
   const stageBleed = +$('slStageBleed').value / 100;
   const segAlpha = +$('slSeg').value / 100;
@@ -996,11 +1035,19 @@ async function drawBuilderCanvas() {
     bCtx.restore();
   }
 
-  // Horizon row
-  const hor = (isLandRef ? invShot?.cam?.hor : rObj.horizon) || 0.38;
+  // Horizon row locked to Shared Equirectangular Horizon Line
+  const hor = shHor;
   const horY = Math.round(Math.max(0.18, Math.min(0.72, hor)) * H);
 
-  // 2. Through-Aperture Reference Bleed (strongest in Sky & Water aperture)
+  // 1B. 360° Outpainted Equirectangular Sphere Bleed
+  if (imEq && eqBleed > 0) {
+    bCtx.save();
+    bCtx.globalAlpha = eqBleed;
+    bCtx.drawImage(imEq, 0, 0, W, H);
+    bCtx.restore();
+  }
+
+  // 2. Through-Aperture Reference Bleed
   if (imRef && refBleed > 0) {
     bCtx.save();
     bCtx.globalAlpha = refBleed;
@@ -1016,7 +1063,7 @@ async function drawBuilderCanvas() {
     bCtx.restore();
   }
 
-  // 4. Panoptic Segmentation Overlay
+  // 4. 360° Panoptic Segmentation Overlay
   if (imSeg && segAlpha > 0) {
     bCtx.save();
     bCtx.globalAlpha = segAlpha;
@@ -1045,13 +1092,12 @@ async function drawBuilderCanvas() {
     bCtx.restore();
   }
 
-  // 6. Staged Cut-Out Actors & Props (sorted by y depth, scaled by distance from horizon!)
+  // 6. Staged Cut-Out Actors & Props (sorted by y depth, scaled by distance from shared horizon!)
   const sortedIndices = stagedItems.map((_, i) => i).sort((a, b) => stagedItems[a].y - stagedItems[b].y);
   for (const idx of sortedIndices) {
     const it = stagedItems[idx];
     const im = await loadImg(it.src);
     if (!im) continue;
-    // Distance factor: closer to bottom (y=0.95) -> 18m; closer to horizon (hor) -> 220m
     const relDepth = Math.max(0.08, Math.min(1.0, (it.y - hor * 0.7) / (1.0 - hor * 0.7)));
     const distMeters = Math.round(14 / Math.max(0.08, relDepth * relDepth));
     it._distMeters = distMeters;
@@ -1105,21 +1151,22 @@ async function drawBuilderCanvas() {
     bCtx.drawImage(imTape, 0, H - 24, W, 24);
   }
 
-  // 8. Horizon Line & Foundry/Inverse Rangefinder Tags
+  // 8. Shared Equirectangular Horizon Line & Foundry/Inverse Rangefinder Tags
   if (showTags) {
     bCtx.save();
-    bCtx.strokeStyle = 'rgba(255, 61, 110, 0.65)';
-    bCtx.setLineDash([8, 6]);
+    bCtx.strokeStyle = 'rgba(255, 210, 63, 0.85)';
+    bCtx.lineWidth = 2;
+    bCtx.setLineDash([10, 6]);
     bCtx.beginPath();
     bCtx.moveTo(0, horY); bCtx.lineTo(W, horY);
     bCtx.stroke();
     bCtx.setLineDash([]);
 
-    bCtx.fillStyle = '#ff3d6e';
+    bCtx.fillStyle = '#ffd23f';
     bCtx.font = '700 10px "Helvetica Neue", sans-serif';
     const camZ = invShot?.cam?.z ? Math.round(invShot.cam.z) : 45;
     const camHd = invShot?.cam?.hd ? Math.round(invShot.cam.hd) % 360 : 120;
-    bCtx.fillText(`INVERSE HORIZON ${Math.round(hor * 100)}% · CAM ${camZ}m UP · HEADING ${camHd}°`, 12, horY - 6);
+    bCtx.fillText(`SHARED EQUIRECTANGULAR HORIZON ${Math.round(hor * 100)}% · 360° OUTPAINT · CAM ${camZ}m UP · HEADING ${camHd}°`, 12, horY - 6);
 
     const tags = (invShot?.tags_b || []).filter(t => t.what !== 'sky');
     tags.slice(0, 6).forEach((t, i) => {
@@ -1204,10 +1251,12 @@ $('selRef').onchange = e => { stRef = e.target.value; drawBuilderCanvas(); };
 $('selWorld').onchange = e => { stWorld = e.target.value; drawBuilderCanvas(); };
 $('selStop').onchange = e => { stStop = +e.target.value; drawBuilderCanvas(); };
 
-['slSculpt', 'slRefBleed', 'slStageBleed', 'slSeg', 'slPortal'].forEach(id => {
+['slSculpt', 'slEquirec', 'slRefBleed', 'slStageBleed', 'slSeg', 'slPortal'].forEach(id => {
+  if (!$(id)) return;
   $(id).oninput = e => {
     const v = +e.target.value;
     if (id === 'slSculpt') $('valSculpt').textContent = v + '%';
+    if (id === 'slEquirec') $('valEquirec').textContent = v + '%';
     if (id === 'slRefBleed') $('valRefBleed').textContent = v + '%';
     if (id === 'slStageBleed') $('valStageBleed').textContent = v + '%';
     if (id === 'slSeg') $('valSeg').textContent = v + '%';
@@ -1237,7 +1286,6 @@ $('btnSavePng').onclick = () => {
   a.download = fname;
   a.click();
 
-  // Save metadata + dataURL to localStorage so png_browser.html displays it immediately
   try {
     const saved = JSON.parse(localStorage.getItem('wygwyl_custom_pngs') || '[]');
     saved.unshift({
@@ -1278,7 +1326,7 @@ await buildCastPalette();
 await autoStageCastAtTags();
 
 // =========================================================================
-// TAB 2: INVERSE TOPOLOGY (Full inverse.html + Built Extensions)
+// TAB 2: INVERSE TOPOLOGY (360° Equirectangular Outpaints & Shared Horizon)
 // =========================================================================
 const P_INV = R.poems;
 $('invPools').textContent = `${R.pool.generated} generated stills · ${R.pool.markov} MARKOV_POET clips · ${R.pool.archive} archive frames · ${R.pool.halfworld} Halfworld frames`;
@@ -1286,13 +1334,14 @@ const avgInv = k => I.shots.reduce((s, x) => s + x[k], 0) / Math.max(1, I.shots.
 const grownN = I.shots.reduce((s, x) => s + x.grown.length, 0);
 $('invStats').innerHTML = [
   [Object.values(R.pool).reduce((a, b) => a + b, 0), 'images weighed'],
-  [R.refs.length, 'chosen for the poems'],
-  [I.refs.length, 'landscapes that shape land'],
+  [R.refs.length, 'chosen & 360° outpainted'],
+  [I.refs.length, 'inverted via shared horizon'],
   [I.worlds.length, 'worlds shaped'],
+  [I.shots.length, 'sculpted world wedges'],
   [Math.round(avgInv('before') * 100) + '%', 'match, found camera'],
   [Math.round(avgInv('after') * 100) + '%', 'match, after sculpting'],
   [grownN, 'things grown'],
-  [62, 'saved composite PNGs']
+  [119, '360° equirectangular PNGs']
 ].map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
 
 $('invMaps').innerHTML = I.worlds.map(w => `
@@ -1312,7 +1361,18 @@ $('invMaps').innerHTML = I.worlds.map(w => `
 `).join('');
 
 let invPick = '01';
+let refProjMode = 'eq'; // 'eq' | 'eq_seg' | 'rect'
+let showCleanSharedBanner = false;
 const frText = f => Object.entries(f || {}).filter(([k]) => k !== 'other').sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => `${k} ${Math.round(v)}%`).join(' · ');
+
+window.__setRefProjMode = mode => {
+  refProjMode = mode;
+  renderInvPoem();
+};
+window.__toggleSharedBannerMode = () => {
+  showCleanSharedBanner = !showCleanSharedBanner;
+  renderInvPoem();
+};
 
 function renderInvPoem() {
   $('invPoemChips').innerHTML = Object.keys(P_INV).sort().map(n =>
@@ -1325,59 +1385,135 @@ function renderInvPoem() {
 
   const n = invPick;
   const rs = R.refs.filter(r => r.poem === n);
+  const shMeta = (R.shared_horizons && R.shared_horizons[n]) || (I.shared_horizons && I.shared_horizons[n]) || {
+    shared_hor: rs[0]?.shared_horizon ?? rs[0]?.horizon ?? 0.36,
+    cam_z: 67,
+    cam_hd: 150,
+    zone: 'Baltimere & Atlantis',
+    eq_img: `equirec/poem_${n}_shared_eq.jpg`,
+    vault_png: `png_vault/equirectangular/equirec_shared_poem_${n}.png`
+  };
+  const shPct = Math.round((shMeta.shared_hor || 0.36) * 100);
+  const bannerImgSrc = showCleanSharedBanner
+    ? `${F_BASE}${shMeta.eq_img || `equirec/poem_${n}_shared_eq.jpg`}`
+    : (shMeta.vault_png || `png_vault/equirectangular/equirec_shared_poem_${n}.png`);
+
   let h = `
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin:14px 0 8px">
       <div>
-        <h3>${n} · ${P_INV[n].title}</h3>
+        <h3>${n} · ${P_INV[n].title} <span style="font-size:13px;color:var(--cyan);margin-left:8px">🌐 Shared Equirectangular Horizon: ${shPct}% (${Math.round(shMeta.cam_z || 45)}m up · ${shMeta.zone || ''})</span></h3>
         <p class="note">${(P_INV[n].text || [])[0] || ''}</p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn" style="border-color:var(--cyan);color:var(--cyan)" href="png_vault/equirectangular/equirec_shared_poem_${n}.png" target="_blank">🌐 Poem ${n} 360° Shared Equirec PNG</a>
         <a class="btn ok" href="png_vault/painted_tapes/poem_${n}_shot_tape.png" target="_blank">🎞️ Poem ${n} Painted Shot Tape PNG</a>
         <a class="btn gold" href="png_vault/foundry_inverse/foundry_stand_poem_${n}.png" target="_blank">🖼️ Poem ${n} Stand × Multiplane PNG</a>
         <a class="btn pink" href="png_vault/foundry_inverse/inverse_walkin_set_poem_${n}.png" target="_blank">🚪 Poem ${n} Walk-In Set PNG</a>
       </div>
     </div>
+
+    <!-- Shared Poem-Level 360°×180° Equirectangular Master Panorama Banner -->
+    <div class="eq-poem-banner">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <div style="font:700 11px 'Helvetica Neue',sans-serif;letter-spacing:.14em;color:var(--cyan);text-transform:uppercase">
+          🌐 POEM ${n} · SHARED 360°×180° EQUIRECTANGULAR HORIZON SPHERE (${rs.length} REFERENCES FUSED ALONG ${shPct}% EQUATOR)
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn ${!showCleanSharedBanner ? 'gold' : ''}" style="padding:4px 10px;min-height:0;font-size:10px" onclick="window.__toggleSharedBannerMode()">
+            ${showCleanSharedBanner ? '📐 Show 8-Frustum + Horizon Annotations' : '🌅 Show Clean 360° Sphere'}
+          </button>
+          <a class="btn ok" style="padding:4px 10px;min-height:0;font-size:10px" href="png_vault/equirectangular/equirec_shared_poem_${n}.png" download>⬇ Download 1600×800 Master Equirec PNG</a>
+          <a class="btn" style="padding:4px 10px;min-height:0;font-size:10px" href="png_vault/equirectangular/all_14_poems_shared_equirec_master.png" target="_blank">▦ All 14 Poems Equirec Sheet ↗</a>
+        </div>
+      </div>
+      <div class="eq-stage" onclick="window.__toggleSharedBannerMode()" title="Click to toggle Annotated 8-Frustum Master vs Clean 360° Equirectangular Sphere">
+        <img loading="lazy" src="${bannerImgSrc}" alt="Shared 360 Equirectangular Panorama">
+      </div>
+    </div>
+
+    <!-- Reference Projection Mode Switcher Bar -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0">
+      <div style="font:700 11px 'Helvetica Neue',sans-serif;letter-spacing:.12em;color:var(--gold);text-transform:uppercase">
+        ALL ${rs.length} REFERENCE CARDS · PROJECTION &amp; OUTPAINT VIEW MODE (HOVER OR TAP ANY CARD TO FLIP SEGMENTATION):
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn ${refProjMode === 'eq' ? 'gold' : ''}" style="padding:5px 11px;min-height:0;font-size:11px" onclick="window.__setRefProjMode('eq')">🌐 360° Outpainted Equirectangular (2:1)</button>
+        <button class="btn ${refProjMode === 'eq_seg' ? 'gold' : ''}" style="padding:5px 11px;min-height:0;font-size:11px" onclick="window.__setRefProjMode('eq_seg')">📐 360° Equirec Panoptic Seg + Shared Horizon</button>
+        <button class="btn ${refProjMode === 'rect' ? 'gold' : ''}" style="padding:5px 11px;min-height:0;font-size:11px" onclick="window.__setRefProjMode('rect')">🖼️ Original Rectilinear (2.39:1)</button>
+      </div>
+    </div>
+
     <div class="refs">
-      ${rs.map(r => `
-        <div class="ref">
+      ${rs.map(r => {
+        const ridU = r.id.replace('-', '_');
+        const rHor = r.shared_horizon ?? r.horizon ?? shMeta.shared_hor ?? 0.36;
+        const rHorPct = Math.round(rHor * 100);
+        const origHor = r.orig_horizon;
+        const az = Math.round(r.eq_azimuth_deg ?? 150) % 360;
+        const eqImg = F_BASE + (r.eq_img || `equirec/${r.id}-eq.jpg`);
+        const eqSeg = F_BASE + (r.eq_seg || `equirec/${r.id}-eq-seg.jpg`);
+        const rectImg = F_BASE + r.img;
+        const rectSeg = F_BASE + r.seg;
+
+        const primarySrc = refProjMode === 'rect' ? rectImg : (refProjMode === 'eq_seg' ? eqSeg : eqImg);
+        const hoverSrc = refProjMode === 'rect' ? rectSeg : (refProjMode === 'eq_seg' ? eqImg : eqSeg);
+
+        return `
+        <div class="ref ${refProjMode === 'rect' ? 'rect-mode' : ''}">
           <div class="im" onclick="this.classList.toggle('on')">
-            <img loading="lazy" src="${F_BASE}${r.img}" alt="">
-            <img loading="lazy" class="seg" src="${F_BASE}${r.seg}" alt="">
+            <img loading="lazy" src="${primarySrc}" alt="">
+            <img loading="lazy" class="seg" src="${hoverSrc}" alt="">
+            <div class="hor-line" style="top:${rHorPct}%"></div>
+            <div class="hor-tag" style="top:${rHorPct}%">SHARED HORIZON ${rHorPct}% · AZ ${az}°</div>
           </div>
           <div class="c">
             <span class="src ${r.source}">${r.source}</span>
+            <b>${r.id}</b> ·
             ${r.why !== 'own' ? '<b class="found">found by CLIP</b> · ' : ''}
-            fit ${r.clip} · ${r.hour}${r.horizon != null ? ' · horizon ' + Math.round(r.horizon * 100) + '%' : ' · no horizon'}<br>
-            ${frText(r.frac)}<br>
-            <i>${(r.desc || '').slice(0, 120)}</i>
-            ${I.refs.includes(r.id) ? '' : '<br><b>reads as a walk-in set, not a landscape</b>'}
-            <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+            fit ${r.clip} · ${r.hour} · <b style="color:var(--cyan)">shared equirec horizon ${rHorPct}%</b><br>
+            <span style="color:var(--gold)">🌐 360° Outpaint:</span> ${frText(r.eq_frac || r.frac)}<br>
+            <i>${(r.desc || '').slice(0, 115)}</i><br>
+            <b style="color:var(--ok)">${origHor != null ? `✓ Native landscape (${Math.round(origHor * 100)}%) locked to ${rHorPct}% shared equator → sculpts 6 worlds` : `✓ 360° outpainted from interior set at ${rHorPct}% shared horizon → inverts & sculpts 6 worlds`}</b>
+            <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">
               <button class="btn gold" style="padding:3px 8px;min-height:0;font-size:10px" onclick="window.__loadIntoStudio('${n}','${r.id}','w1623')">🔨 Build Through ${r.id}</button>
-              ${I.refs.includes(r.id) ? `<a class="btn ok" style="padding:3px 8px;min-height:0;font-size:10px" href="png_vault/painted_shots/inverse_painted_${r.id.replace('-', '_')}_w1623.png" target="_blank">🎨 Painted Frame PNG</a>` : ''}
-              ${I.refs.includes(r.id) ? `<a class="btn" style="padding:3px 8px;min-height:0;font-size:10px" href="png_vault/foundry_inverse/inv_triple_${r.id.replace('-', '_')}_w1623.png" target="_blank">🖼️ Triple Proof</a>` : ''}
+              <a class="btn" style="padding:3px 8px;min-height:0;font-size:10px;border-color:var(--cyan);color:var(--cyan)" href="png_vault/equirectangular/equirec_ref_${ridU}.png" target="_blank">🌐 360° Equirec PNG</a>
+              <a class="btn ok" style="padding:3px 8px;min-height:0;font-size:10px" href="png_vault/painted_shots/inverse_painted_${ridU}_w1623.png" target="_blank">🎨 Painted Frame PNG</a>
             </div>
           </div>
         </div>
-      `).join('')}
+      `}).join('')}
     </div>
   `;
 
   for (const rid of I.refs.filter(id => refsMap[id]?.poem === n)) {
     const r = refsMap[rid];
+    const ridU = rid.replace('-', '_');
     const ms = I.shots.filter(s => s.ref === rid);
+    const rHorPct = Math.round((r.shared_horizon ?? r.horizon ?? 0.36) * 100);
+    const eqImg = F_BASE + (r.eq_img || `equirec/${rid}-eq.jpg`);
+    const eqSeg = F_BASE + (r.eq_seg || `equirec/${rid}-eq-seg.jpg`);
     h += `
       <div class="match">
         <div class="mrow">
           <div class="refbox">
-            <img loading="lazy" src="${F_BASE}${r.img}" alt="">
-            <div><span class="src ${r.source}">${r.source}</span> <b>${rid}</b> · ${frText(r.frac)}</div>
+            <div style="position:relative;cursor:pointer" onclick="const im=this.querySelector('img');im.src=im.src.endsWith('-eq-seg.jpg')?'${eqImg}':'${eqSeg}'" title="Click to toggle 360° Equirectangular Outpaint vs 360° Panoptic Seg + Shared Horizon">
+              <img loading="lazy" src="${eqImg}" alt="${rid} 360 Equirectangular Outpaint">
+              <span style="position:absolute;left:6px;top:6px;background:rgba(8,11,16,.88);border:1px solid var(--cyan);color:var(--cyan);font:700 9px 'Helvetica Neue',sans-serif;padding:2px 6px;border-radius:6px">
+                🌐 360° EQUIREC · SHARED HORIZON ${rHorPct}% (TAP FOR SEG)
+              </span>
+            </div>
+            <div>
+              <span class="src ${r.source}">${r.source}</span> <b>${rid}</b> ·
+              <span style="color:var(--cyan)">${r.orig_horizon != null ? 'Native Landscape + 360° Equirec' : 'Outpainted Set → 360° Equirec Inverted'}</span> ·
+              ${frText(r.eq_frac || r.frac)}
+            </div>
             <div style="margin-top:8px">
-              <a href="png_vault/painted_shots/inverse_painted_${rid.replace('-', '_')}_w1623.png" target="_blank">
-                <img loading="lazy" src="png_vault/painted_shots/inverse_painted_${rid.replace('-', '_')}_w1623.png" alt="Pure Borderless Painted Shot PNG" style="aspect-ratio:1280/560;border-color:var(--ok)">
+              <a href="png_vault/painted_shots/inverse_painted_${ridU}_w1623.png" target="_blank">
+                <img loading="lazy" src="png_vault/painted_shots/inverse_painted_${ridU}_w1623.png" alt="Pure Borderless Painted Shot PNG" style="aspect-ratio:1280/560;border-color:var(--ok)">
               </a>
               <div style="color:var(--ok);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-top:3px">
                 <span>↑ Pure Painted Through-Frame (${rid})</span>
-                <a href="png_vault/foundry_inverse/inv_triple_${rid.replace('-', '_')}_w1623.png" target="_blank" style="color:var(--pink);font-size:11px">4-Panel Proof ↗</a>
+                <a href="png_vault/equirectangular/equirec_ref_${ridU}.png" target="_blank" style="color:var(--cyan);font-size:11px">🌐 360° Equirec Plate ↗</a>
               </div>
             </div>
           </div>
@@ -1390,7 +1526,7 @@ function renderInvPoem() {
                   <span class="lab">${m.world} · tap: found / sculpted</span>
                 </div>
                 <div class="c">
-                  match <b>${Math.round(m.before * 100)}%</b> → <b class="${m.after > m.before ? 'up' : ''}">${Math.round(m.after * 100)}%</b> · camera ${Math.round(m.cam.z)} m up, facing ${Math.round(m.cam.hd) % 360}°
+                  match <b>${Math.round(m.before * 100)}%</b> → <b class="${m.after > m.before ? 'up' : ''}">${Math.round(m.after * 100)}%</b> · camera ${Math.round(m.cam.z)} m up, facing ${Math.round(m.cam.hd) % 360}° · hor ${rHorPct}%
                   ${m.grown.length ? `<ul>${m.grown.map(g => `<li>${g}</li>`).join('')}</ul>` : '<br>the world already held it'}
                   <div style="margin-top:6px;display:flex;gap:6px">
                     <button class="btn gold" style="padding:3px 8px;min-height:0;font-size:10px" onclick="window.__loadIntoStudio('${n}','${rid}','${m.world}')">🔨 Build On ${m.world}</button>
