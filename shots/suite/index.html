@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cut-Out Suite · WYGWYL</title>
+<link rel="icon" href="../../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b0a;--panel:#16120f;--line:#2a221c;--ink:#efe6da;--dim:#9a8d7e;--card:#c79a62;--ok:#9fe08a;--bad:#ff7b6b;--acc:#e7a35a;--teal:#7fd3c4;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;overflow-x:hidden}
+header.top{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;background:rgba(13,11,10,.96);z-index:20}
+header.top h1{font:400 24px 'Permanent Marker',cursive;margin:0}
+header.top h1 small{font:11px var(--mono);color:var(--dim);margin-left:8px;letter-spacing:.08em}
+header a{color:var(--dim);font:12px var(--mono);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:999px}
+header a:hover{color:var(--ink);border-color:var(--card)}
+.sp{flex:1}
+select,button,input,textarea{font:12px var(--mono);color:var(--ink);background:#1d1712;border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+button{cursor:pointer}
+button:hover{border-color:var(--card)}
+button.on{background:var(--card);color:#1a120a;border-color:var(--card)}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs button{border-radius:999px;padding:5px 12px}
+main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px;padding:14px 16px 40px;max-width:1700px;margin:0 auto}
+@media (max-width:1000px){main{grid-template-columns:minmax(0,1fr)}}
+#stageBox{position:relative;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none}
+#stage{width:100%;height:100%;display:block}
+#busy{position:absolute;inset:auto 8px 8px auto;font:11px var(--mono);color:var(--dim);background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px}
+.transport{display:flex;gap:8px;align-items:center;margin:8px 0 4px;flex-wrap:wrap}
+.transport input[type=range]{flex:1;min-width:120px;accent-color:var(--acc)}
+.transport .tc{font:12px var(--mono);color:var(--dim);min-width:150px}
+.timeline{position:relative;border:1px solid var(--line);border-radius:6px;background:var(--panel);margin-top:6px;overflow:hidden}
+.trow{position:relative;height:30px;border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:0}
+.trow .lab{position:absolute;left:4px;top:7px;font:10px var(--mono);color:var(--dim);z-index:2;pointer-events:none;background:rgba(22,18,15,.8);padding:0 3px}
+.words .w{position:absolute;top:4px;height:22px;font:11px/22px var(--mono);color:var(--dim);border-left:1px solid #3a2f26;padding-left:3px;white-space:nowrap;overflow:hidden;cursor:pointer}
+.words .w.now{color:#1a120a;background:var(--acc)}
+.chip{position:absolute;top:4px;height:22px;font:10px/20px var(--mono);border:1px solid var(--card);background:#2b2016;color:var(--ink);border-radius:4px;padding:0 5px;white-space:nowrap;cursor:grab;transform:translateX(-1px);max-width:160px;overflow:hidden;text-overflow:ellipsis;touch-action:none}
+.chip.auto{border-style:dashed;border-color:var(--teal);background:#14211f;cursor:default}
+.chip.sel{background:var(--card);color:#1a120a}
+.chip.join{border-color:#b9a5ff;background:#1d1830}
+.playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--bad);pointer-events:none;z-index:3}
+aside{display:grid;gap:12px;align-content:start;min-width:0}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.box h2{font:400 20px 'Permanent Marker',cursive;color:var(--card);margin:0 0 6px}
+.box h3{font:600 13px var(--mono);margin:10px 0 4px;color:var(--acc)}
+.box p{margin:4px 0;color:var(--dim);font-size:13px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font:12px var(--mono)}
+.kv b{color:var(--dim);font-weight:400}
+.lib{display:flex;flex-wrap:wrap;gap:4px}
+.lib button{font-size:11px;padding:3px 7px}
+textarea{width:100%;min-height:90px;resize:vertical}
+table{border-collapse:collapse;width:100%;font:11.5px var(--mono)}
+td,th{border-bottom:1px solid var(--line);padding:5px 4px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:400}
+.pass{color:var(--ok)}.fail{color:var(--bad)}.warn{color:var(--acc)}
+.fr{color:var(--teal);cursor:pointer;text-decoration:underline dotted}
+.castrow{display:grid;grid-template-columns:1fr 1fr;gap:4px;border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
+.castrow .nm{grid-column:1/-1;font:600 12px var(--mono);color:var(--acc);display:flex;justify-content:space-between;gap:6px}
+.castrow.sel .nm{color:var(--ok)}
+.castrow label{font:10px var(--mono);color:var(--dim);display:grid;gap:2px}
+.small{font:11px var(--mono);color:var(--dim)}
+.about{max-width:1700px;margin:0 auto;padding:0 16px 60px;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.about h2{font:400 22px 'Permanent Marker',cursive;color:var(--card);margin:0}
+.about div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:13.5px;color:#d9cfc2}
+.about code{font:12px var(--mono);color:var(--acc)}
+img.sheet{width:100%;height:auto;border-radius:4px;display:block;margin-top:6px}
+.hide{display:none!important}
+body.capture{background:#000}
+body.capture header,body.capture aside,body.capture .transport,body.capture .timeline,body.capture .about,body.capture #wy-index{display:none!important}
+body.capture main{display:block;padding:0}
+body.capture #stageBox{width:1920px;height:1080px;border:0;border-radius:0}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="../../index.html" id="wy-index">← Index</a>
+  <h1>Cut-Out Suite<small>STAGE · ACT · CHECK · EXPORT</small></h1>
+  <select id="scenePick" aria-label="scene"></select>
+  <span class="sp"></span>
+  <div class="tabs" role="tablist">
+    <button data-mode="block">Block</button><button data-mode="act" class="on">Act</button><button data-mode="check">Check</button><button data-mode="export">Export</button>
+  </div>
+  <div class="tabs">
+    <button id="tGrey" title="capsules at true size">greybox</button>
+    <button id="tDebug" title="ground, surfaces, plants, contacts">debug</button>
+    <button id="tCap" class="on" title="the reading's words">words</button>
+  </div>
+</header>
+<main>
+  <section style="min-width:0">
+    <div id="stageBox"><canvas id="stage" width="1920" height="1080"></canvas><div id="busy">loading…</div></div>
+    <div class="transport">
+      <button id="play" aria-label="play">▶ play</button>
+      <input id="scrub" type="range" min="0" max="100" value="0" step="1" aria-label="frame">
+      <span class="tc" id="tc">0.00 s · f0</span>
+    </div>
+    <div class="timeline" id="timeline">
+      <div class="trow words" id="wordsRow"><span class="lab">words</span></div>
+      <div id="trackRows"></div>
+      <div class="playhead" id="ph"></div>
+    </div>
+    <p class="small" id="hint">Drag a beat chip along its row: it snaps to the nearest word start. Dashed chips were made by goals.</p>
+  </section>
+  <aside>
+    <div class="box" id="pBlock"></div>
+    <div class="box" id="pAct"></div>
+    <div class="box" id="pCheck"></div>
+    <div class="box" id="pExport"></div>
+  </aside>
+</main>
+<section class="about">
+  <div><h2>What this is</h2><p>A staging tool for the cut-out film. A scene is code: <code>frame = draw(scene.json, t)</code>. Open a scene and its set planes, the reading for that scene with its word times, and its cast load together. <b>Block</b> puts puppets on the ground plane; their size comes from where their feet are (horizon + the set's measured px/cm), never from a slider. <b>Act</b> places beats on words and gives puppets goals; the solver turns both into footsteps, IK reaches and held gestures. <b>Check</b> draws every frame and measures it. <b>Export</b> writes the scene pack.</p></div>
+  <div><h2>Solver</h2><p>Puppets are skeletons in world centimetres, projected through one level pinhole per set. Walks are footstep plans: plants fixed in the world, swing arcs, a pelvis lowered until both legs reach (leg IK). Reaches and gestures are two-bone IK with a pole; contact targets are points on set surfaces or sockets on other puppets. Puppets with only replacement cards hop-step: the card moves only while lifted. Goals (go to, keep distance, sway to the beat, wander, walk with, face) compile into dashed beats you can read.</p></div>
+  <div><h2>What is measured, what is missing</h2><p id="honest">The checks run on the drawn frame: sole points and palms come from the same matrices that draw the cards; scale and occlusion come from each puppet drawn alone into a mask. Sources in use are listed under Export; anything marked STAND-IN is waiting on lanes A–C.</p></div>
+</section>
+<script type="module">
+import { loadParts, loadCharacters, loadSet, loadArchive, loadScene, loadSceneIndex, SOURCES, suiteURL } from './lib/adapters.js';
+import { makeCamera, probeLaneB, laneB, onGround, clampToPoly, groundOf } from './lib/camera.js';
+import { compileScene, ACTIONS, GOALS, wordAt } from './lib/solver.js';
+import { loadAssets, drawFrame, pickCard, partsFor } from './lib/draw.js';
+import { runChecks, checksForScene, THRESHOLDS } from './lib/checks.js';
+
+const Q = new URLSearchParams(location.search);
+const CAPTURE = Q.get('capture') === '1';
+if (CAPTURE) document.body.classList.add('capture');
+const $ = id => document.getElementById(id);
+const S = { scene: null, file: null, set: null, cam: null, ctx: null, comp: null, A: null, t: 0, playing: false, mode: 'act', sel: { cast: null, beat: null }, opts: { greybox: Q.get('grey') === '1', debug: Q.get('debug') === '1', captions: Q.get('captions') !== '0' }, probe: null, checks: null, audio: new Audio() };
+window.SUITE = { ready: false };
+
+const clone = o => JSON.parse(JSON.stringify(o));
+const fmt = (v, d = 2) => (v == null ? '—' : typeof v === 'number' ? v.toFixed(d) : v);
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
+
+async function boot() {
+  await probeLaneB();
+  const [C, AR, IDX] = await Promise.all([loadCharacters(), loadArchive(), loadSceneIndex()]);
+  const P = await loadParts(C.characters);
+  S.ctx = { parts: P.parts, characters: C.characters, archive: AR, pickCard, sources: { parts: P.from, characters: C.from, laneB: laneB() ? 'lib/scale.js (lane B)' : null } };
+  const pick = $('scenePick');
+  for (const s of IDX.scenes) { const o = document.createElement('option'); o.value = s.id; o.textContent = `${s.id} · ${s.title}`; pick.appendChild(o); }
+  pick.onchange = () => { const u = new URL(location); u.searchParams.set('scene', pick.value); history.replaceState(null, '', u); open(pick.value); };
+  const id = Q.get('scene') || IDX.scenes[0]?.id;
+  pick.value = id;
+  await open(id);
+}
+
+async function open(id) {
+  $('busy').textContent = 'loading ' + id + '…'; $('busy').classList.remove('hide');
+  const file = await loadScene(id);
+  S.file = clone(file);
+  const draft = !CAPTURE && store.get('suite-draft-' + id);
+  S.scene = draft ? JSON.parse(draft) : clone(file);
+  S.draft = !!draft;
+  S.set = await loadSet(id, S.scene.set);
+  S.ctx.sources.set = S.set._from;
+  S.cam = makeCamera(S.set);
+  S.A = await loadAssets(S.scene, S.set, S.ctx);
+  if (document.fonts) await document.fonts.ready;
+  S.audio.src = suiteURL(S.scene.audio.file.replace(/^suite\//, ''));
+  S.checks = S.scene.checks?.items ? S.scene.checks : null;
+  S.sel = { cast: S.scene.cast[0]?.id, beat: null };
+  solve();
+  S.t = 0;
+  $('scrub').max = S.comp.N - 1;
+  renderAll();
+  $('busy').classList.add('hide');
+  window.SUITE = { ready: true, id, frames: S.comp.N, fps: S.comp.fps, frameJPEG, runChecks: doChecks, contactSheet, sceneJSON: () => exportJSON(), probe: () => S.probe };
+}
+
+function solve() {
+  const t0 = performance.now();
+  S.work = clone(S.scene);
+  S.comp = compileScene(S.work, { ...S.ctx, cam: S.cam, set: S.set });
+  // keep the snapped times visible in the editor
+  S.work.beats.forEach((b, i) => { if (S.scene.beats[i]) S.scene.beats[i].t = b.t; });
+  S.solveMs = performance.now() - t0;
+}
+function edited() { if (!CAPTURE) store.set('suite-draft-' + S.scene.scene_id, JSON.stringify(S.scene)); S.draft = true; S.checks = null; solve(); renderAll(); }
+
+// ───────── drawing ─────────
+const cv = $('stage'), g = cv.getContext('2d');
+function sizeCanvas() {
+  if (CAPTURE) { cv.width = 1920; cv.height = 1080; return; }
+  const r = $('stageBox').getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1);
+  const w = Math.round(r.width * d), h = Math.round(r.height * d);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+}
+function draw() {
+  sizeCanvas();
+  g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#000'; g.fillRect(0, 0, cv.width, cv.height);
+  const k = cv.width / S.set.frame[0];
+  g.setTransform(k, 0, 0, k, 0, 0);
+  S.probe = drawFrame(g, { t: S.t, scene: S.work, set: S.set, cam: S.cam, comp: S.comp, ctx: S.ctx, A: S.A, opts: S.opts });
+}
+function frameJPEG(f, q = 0.92) { S.t = f / S.comp.fps; draw(); return cv.toDataURL('image/jpeg', q); }
+function renderAll() { draw(); drawTimeline(); drawPanels(); updateTC(); }
+function updateTC() {
+  const f = Math.round(S.t * S.comp.fps);
+  const w = (S.work.audio.words || []).find(w => S.t >= w[1] && S.t < w[2] + 0.1);
+  $('tc').textContent = `${S.t.toFixed(2)} s · f${f} / ${S.comp.N - 1}${w ? ' · “' + w[0] + '”' : ''}`;
+  $('scrub').value = f;
+  $('ph').style.left = `${100 * S.t / S.scene.duration}%`;
+  document.querySelectorAll('.words .w').forEach(el => el.classList.toggle('now', S.t >= +el.dataset.t0 && S.t < +el.dataset.t1));
+}
+
+// ───────── transport ─────────
+$('scrub').oninput = e => { S.t = +e.target.value / S.comp.fps; if (S.playing) S.audio.currentTime = S.t; draw(); updateTC(); };
+$('play').onclick = () => {
+  S.playing = !S.playing; $('play').textContent = S.playing ? '❚❚ pause' : '▶ play';
+  if (S.playing) { if (S.t >= S.scene.duration - 0.05) S.t = 0; S.audio.currentTime = S.t; S.audio.play().catch(() => {}); S.clock0 = performance.now() - S.t * 1000; loop(); }
+  else S.audio.pause();
+};
+function loop() {
+  if (!S.playing) return;
+  S.t = !S.audio.paused && S.audio.currentTime > 0 ? S.audio.currentTime : (performance.now() - S.clock0) / 1000;
+  if (S.t >= S.scene.duration) { S.t = S.scene.duration - 1 / S.comp.fps; S.playing = false; $('play').textContent = '▶ play'; S.audio.pause(); }
+  draw(); updateTC(); requestAnimationFrame(loop);
+}
+const seek = f => { S.t = Math.max(0, Math.min(S.comp.N - 1, f)) / S.comp.fps; draw(); updateTC(); };
+addEventListener('resize', () => { if (S.comp) draw(); });
+
+// ───────── timeline: words + beat chips ─────────
+function drawTimeline() {
+  const D = S.scene.duration, row = $('wordsRow');
+  row.querySelectorAll('.w').forEach(e => e.remove());
+  for (const w of S.work.audio.words) {
+    if (w[2] < 0 || w[1] > D) continue;
+    const el = document.createElement('span'); el.className = 'w'; el.textContent = w[0];
+    el.style.left = `${100 * Math.max(0, w[1]) / D}%`; el.style.width = `${100 * (w[2] - Math.max(0, w[1])) / D}%`;
+    el.dataset.t0 = w[1]; el.dataset.t1 = w[2]; el.title = `${w[0]} ${w[1].toFixed(2)}–${w[2].toFixed(2)} s (${w[3]})`;
+    el.onclick = () => seek(Math.round(Math.max(0, w[1]) * S.comp.fps));
+    row.appendChild(el);
+  }
+  const tr = $('trackRows'); tr.innerHTML = '';
+  const rows = [...S.scene.cast.map(c => c.id), 'joins'];
+  for (const id of rows) {
+    const r = document.createElement('div'); r.className = 'trow'; r.innerHTML = `<span class="lab">${id}</span>`;
+    if (id === 'joins') {
+      for (const j of S.work.joins || []) { const c = document.createElement('span'); c.className = 'chip join'; c.style.left = `${100 * j.t / D}%`; c.textContent = `${j.kind} · ${S.ctx.archive[j.clip]?.title || j.clip}`; c.title = JSON.stringify(j); c.onclick = () => seek(Math.round(j.t * S.comp.fps)); r.appendChild(c); }
+    } else {
+      S.scene.beats.forEach((b, i) => { if (b.who === id) r.appendChild(chip(b, i, false)); });
+      for (const b of S.comp.chars[id]?.beats || []) if (b.auto) r.appendChild(chip(b, -1, true));
+    }
+    tr.appendChild(r);
+  }
+}
+function chip(b, i, auto) {
+  const D = S.scene.duration, c = document.createElement('span');
+  c.className = 'chip' + (auto ? ' auto' : '') + (S.sel.beat === i && !auto ? ' sel' : '');
+  c.style.left = `${100 * Math.max(0, b.t) / D}%`;
+  c.textContent = (b.label || b.action) + (b.word_anchor != null ? ` @${b.word_anchor}` : '');
+  c.title = auto ? `${b.action} (goal: ${b.goal}) ${b.why || ''} t=${b.t}s` : `${b.action} t=${b.t}s ${JSON.stringify(b.args || {})}`;
+  if (auto) { c.onclick = () => seek(Math.round(b.t * S.comp.fps)); return c; }
+  c.onpointerdown = e => {
+    e.preventDefault(); c.setPointerCapture(e.pointerId);
+    const row = c.parentElement.getBoundingClientRect(); let moved = false;
+    c.onpointermove = ev => { moved = true; const t = Math.max(0, Math.min(D, (ev.clientX - row.left) / row.width * D)); c.style.left = `${100 * t / D}%`; c.dataset.t = t; };
+    c.onpointerup = ev => {
+      c.onpointermove = c.onpointerup = null;
+      S.sel.beat = i; S.sel.cast = b.who;
+      if (moved && c.dataset.t) {
+        const t = +c.dataset.t, words = S.work.audio.words;
+        let best = null; for (const w of words) if (w[1] >= 0 && (!best || Math.abs(w[1] - t) < Math.abs(best[1] - t))) best = w;
+        if (best && Math.abs(best[1] - t) < 0.45) { b.word_anchor = best[0]; b.t = best[1]; } else { delete b.word_anchor; b.t = +(Math.round(t * S.comp.fps) / S.comp.fps).toFixed(3); }
+        edited();
+      } else { seek(Math.round(b.t * S.comp.fps)); drawPanels(); drawTimeline(); }
+    };
+  };
+  return c;
+}
+
+// ───────── block: drag puppets on the ground ─────────
+function stagePoint(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * S.set.frame[0], (e.clientY - r.top) / r.height * S.set.frame[1]]; }
+function hit(p) {
+  let best = null;
+  for (const [id, pr] of Object.entries(S.probe?.chars || {})) {
+    const fr = S.comp.chars[id].frames[Math.round(S.t * S.comp.fps)], ppc = pr.ppc, h = S.comp.chars[id].B.H * ppc;
+    const x0 = pr.foot[0] - 0.2 * h, x1 = pr.foot[0] + 0.2 * h, y0 = pr.foot[1] - h, y1 = pr.foot[1] + 10;
+    if (p[0] >= x0 && p[0] <= x1 && p[1] >= y0 && p[1] <= y1 && (!best || fr.Z < best.Z)) best = { id, Z: fr.Z };
+  }
+  return best?.id;
+}
+cv.addEventListener('pointerdown', e => {
+  if (CAPTURE) return;
+  const p = stagePoint(e), id = hit(p);
+  if (S.mode === 'act' && S.sel.beat != null && S.scene.beats[S.sel.beat]?.action === 'walk_to' && !id) {
+    const b = S.scene.beats[S.sel.beat]; b.args = { ...(b.args || {}), to: clampToPoly(p, groundOf(p, S.set)).map(Math.round) }; edited(); return;
+  }
+  if (!id) return;
+  S.sel.cast = id; drawPanels();
+  if (S.mode !== 'block') return;
+  cv.setPointerCapture(e.pointerId);
+  const c = S.scene.cast.find(x => x.id === id);
+  let last = 0;
+  cv.onpointermove = ev => {
+    const q = stagePoint(ev), gnd = groundOf(c.place, S.set);
+    c.place = clampToPoly(q, onGround(q, S.set) ? groundOf(q, S.set) : gnd).map(Math.round);
+    const now = performance.now(); if (now - last > 60) { last = now; solve(); draw(); drawPanels(); }
+  };
+  cv.onpointerup = () => { cv.onpointermove = cv.onpointerup = null; edited(); };
+});
+
+// ───────── panels ─────────
+document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { S.mode = b.dataset.mode; document.querySelectorAll('[data-mode]').forEach(x => x.classList.toggle('on', x === b)); drawPanels(); });
+$('tGrey').onclick = () => { S.opts.greybox = !S.opts.greybox; $('tGrey').classList.toggle('on', S.opts.greybox); draw(); };
+$('tDebug').onclick = () => { S.opts.debug = !S.opts.debug; $('tDebug').classList.toggle('on', S.opts.debug); draw(); };
+$('tCap').onclick = () => { S.opts.captions = !S.opts.captions; $('tCap').classList.toggle('on', S.opts.captions); draw(); };
+
+function drawPanels() {
+  for (const m of ['block', 'act', 'check', 'export']) $('p' + m[0].toUpperCase() + m.slice(1)).classList.toggle('hide', S.mode !== m && !(innerWidth > 1000 && m === 'check' && S.mode === 'act' && false));
+  if (S.mode === 'block') panelBlock(); if (S.mode === 'act') panelAct(); if (S.mode === 'check') panelCheck(); if (S.mode === 'export') panelExport();
+}
+function opt(v, cur, label) { return `<option value="${v}" ${v === cur ? 'selected' : ''}>${label || v}</option>`; }
+function panelBlock() {
+  const el = $('pBlock'), f = Math.round(S.t * S.comp.fps);
+  const views = ['front', 'threequarter', 'profile', 'threequarter_back', 'back'];
+  let h = `<h2>Block</h2><p>Drag a puppet on the stage; it stays on the ground and scales with depth. Set: <b>${S.set.set_id || S.scene.set}</b> · horizon ${S.cam.yh.toFixed(0)} px · camera ${S.cam.hc.toFixed(0)} cm.</p>`;
+  for (const c of S.scene.cast) {
+    const tr = S.comp.chars[c.id], fr = tr.frames[f], pr = S.probe?.chars[c.id];
+    const costumes = [...new Set(partsFor(S.ctx, { character: c.character }).all.map(p => p.costume))];
+    h += `<div class="castrow ${S.sel.cast === c.id ? 'sel' : ''}" data-id="${c.id}"><div class="nm"><span>${c.id} · ${tr.ch.name || c.character}</span><span class="small">${tr.mode}${partsFor(S.ctx, c).fallback ? ' · costume fallback' : ''}</span></div>
+      <label>character<select data-k="character">${Object.keys(S.ctx.characters).map(k => opt(k, c.character)).join('')}</select></label>
+      <label>costume<select data-k="costume">${costumes.map(k => opt(k, c.costume)).join('')}</select></label>
+      <label>start view<select data-k="view">${views.map(v => opt(v, c.view)).join('')}</select></label>
+      <label>side<select data-k="side">${opt('R', c.side || 'R', 'R (screen right)')}${opt('L', c.side, 'L (screen left)')}</select></label>
+      <label>render<select data-k="mode">${opt('', c.mode || '', 'auto')}${opt('jointed', c.mode)}${opt('cards', c.mode)}</select></label>
+      <label>head<select data-k="head">${opt('', c.head || '', 'by view')}${S.ctx.parts.filter(p => p.character === c.character && p.part === 'head').map(p => opt(p.state !== '-' ? p.state : p.id, c.head, p.id.replace(/^man\./, ''))).join('')}</select></label>
+      <div class="small" style="grid-column:1/-1">place ${c.place.join(', ')} · ${tr.B.H} cm · ${pr ? pr.ppc.toFixed(2) : '—'} px/cm here → ${pr ? (tr.B.H * pr.ppc).toFixed(0) : '—'} px tall · depth ${(fr.Z / 100).toFixed(2)} m · view now ${pr?.cardView || pr?.headView || pr?.view || ''}</div></div>`;
+  }
+  el.innerHTML = h;
+  el.querySelectorAll('.castrow select').forEach(s => s.onchange = () => {
+    const c = S.scene.cast.find(x => x.id === s.closest('.castrow').dataset.id); const k = s.dataset.k;
+    if (s.value === '') delete c[k]; else c[k] = s.value;
+    if (k === 'view') c.facing = undefined;
+    loadAssets(S.scene, S.set, S.ctx).then(A => { S.A = A; S.ctx._pcache = null; edited(); });
+  });
+}
+function panelAct() {
+  const el = $('pAct'); const id = S.sel.cast; const words = S.work.audio.words;
+  const near = (() => { let b = null; for (const w of words) if (w[1] >= 0 && (!b || Math.abs(w[1] - S.t) < Math.abs(b[1] - S.t))) b = w; return b; })();
+  let h = `<h2>Act</h2><p>Selected: <b>${id || '—'}</b> (click a puppet). New beats land on the word nearest the playhead: <b>“${near?.[0] || ''}”</b> ${near ? near[1].toFixed(2) + ' s' : ''}.</p><h3>Action library</h3><div class="lib">`;
+  for (const [k, a] of Object.entries(ACTIONS)) h += `<button data-act="${k}" title="${a.doc} · args ${a.args}">${k}</button>`;
+  h += `</div><h3>Goals</h3><div class="lib">`;
+  for (const [k, a] of Object.entries(GOALS)) h += `<button data-goal="${k}" title="${a.doc} · args ${a.args}">${k}</button>`;
+  h += `</div>`;
+  const gs = (S.scene.goals || []).map((g2, i) => ({ g2, i })).filter(x => x.g2.who === id);
+  if (gs.length) h += `<table>${gs.map(({ g2, i }) => `<tr><td>${g2.kind}</td><td>${JSON.stringify(g2.args || {})}</td><td><button data-delgoal="${i}">×</button></td></tr>`).join('')}</table>`;
+  const auto = (S.comp.chars[id]?.beats || []).filter(b => b.auto);
+  if (auto.length) h += `<p class="small">${auto.length} beats from goals: ${auto.slice(0, 6).map(b => `${b.action}@${b.t.toFixed(2)}s (${b.why || b.goal})`).join(' · ')}${auto.length > 6 ? ' …' : ''}</p>`;
+  const b = S.sel.beat != null ? S.scene.beats[S.sel.beat] : null;
+  if (b) {
+    h += `<h3>Beat</h3><div class="kv"><b>who</b><span>${b.who}</span><b>action</b><span>${b.action}</span><b>t</b><span>${b.t?.toFixed(3)} s · f${Math.round(b.t * S.comp.fps)}</span></div>
+      <label class="small">word<select id="bWord">${opt('', b.word_anchor ?? '', '(free time)')}${words.filter(w => w[1] >= 0).map(w => opt(w[0], b.word_anchor, `${w[0]} @${w[1].toFixed(2)}`)).join('')}</select></label>
+      <label class="small">label<input id="bLabel" value="${b.label || ''}" style="width:100%"></label>
+      <label class="small">args (JSON)<textarea id="bArgs">${JSON.stringify(b.args || {}, null, 1)}</textarea></label>
+      <div class="lib"><button id="bApply">apply</button><button id="bDel">delete beat</button></div>
+      ${b.action === 'walk_to' ? '<p class="small">Tip: click the ground on the stage to set this walk\'s target.</p>' : ''}`;
+  }
+  const cs = S.comp.contacts.filter(c => c.who === id);
+  if (cs.length) h += `<h3>Contacts</h3><p class="small">${cs.map(c => `${c.side} → ${JSON.stringify(c.target)} from ${c.t.toFixed(2)} to ${c.t_release.toFixed(2)} s`).join('<br>')}</p>`;
+  if (S.comp.chars[id]) h += `<p class="small">solve ${S.solveMs.toFixed(0)} ms · arm reach max ${S.comp.chars[id].ratioMax.toFixed(3)} · leg ${S.comp.chars[id].legRatioMax.toFixed(3)}${S.comp.chars[id].log.length ? ' · ' + S.comp.chars[id].log.join('; ') : ''}</p>`;
+  el.innerHTML = h;
+  el.querySelectorAll('[data-act]').forEach(btn => btn.onclick = () => {
+    if (!id) return;
+    const k = btn.dataset.act, def = { walk_to: { to: [Math.round(S.set.frame[0] / 2), Math.round((S.cam.yh + S.set.frame[1]) / 2)] }, reach: { side: 'R', target: { surface: S.set.surfaces[0]?.id } }, hold_gesture: { side: 'R', name: 'palm_out' }, turn: { to: 'camera' }, sway: { bpm: 120 }, hand_opens: { side: 'R' }, hand_closes: { side: 'R' }, release: { side: 'R' }, hand_off: { to: S.scene.cast.find(c => c.id !== id)?.id, prop: 'poem_page' } }[k] || {};
+    S.scene.beats.push({ t: near ? near[1] : S.t, who: id, action: k, word_anchor: near?.[0], args: def });
+    S.sel.beat = S.scene.beats.length - 1; edited();
+  });
+  el.querySelectorAll('[data-goal]').forEach(btn => btn.onclick = () => {
+    if (!id) return;
+    const k = btn.dataset.goal, other = S.scene.cast.find(c => c.id !== id)?.id;
+    const def = { go_to: { target: Object.keys(S.set.marks)[0] }, keep_distance: { from: other, min_cm: 250, max_cm: 400 }, sway_to_beat: { bpm: 120 }, wander: { bpm: 120, every_bars: 2, step_cm: 60 }, walk_with: { who: other, side: 'L', gap_cm: 60 }, face: { who: other } }[k];
+    (S.scene.goals = S.scene.goals || []).push({ who: id, kind: k, args: def }); edited();
+  });
+  el.querySelectorAll('[data-delgoal]').forEach(btn => btn.onclick = () => { S.scene.goals.splice(+btn.dataset.delgoal, 1); edited(); });
+  if (b) {
+    $('bApply').onclick = () => { try { b.args = JSON.parse($('bArgs').value); } catch (e) { alert('args: ' + e.message); return; } const w = $('bWord').value; if (w) b.word_anchor = w; else delete b.word_anchor; b.label = $('bLabel').value || undefined; edited(); };
+    $('bDel').onclick = () => { S.scene.beats.splice(S.sel.beat, 1); S.sel.beat = null; edited(); };
+  }
+}
+function panelCheck() {
+  const el = $('pCheck');
+  let h = `<h2>Check</h2><p>Draws all ${S.comp.N} frames and measures them (≈ ${(S.comp.N * 0.03).toFixed(0)} s).</p><div class="lib"><button id="cRun">run checks</button><span class="small" id="cProg"></span></div>`;
+  if (S.checks) {
+    h += `<p class="small">${S.checks.pass ? '<span class="pass">all hard checks pass</span>' : '<span class="fail">some checks fail</span>'} · measured on ${S.checks.measured_on}</p><table><tr><th>check</th><th>value</th><th>limit</th><th>frames</th></tr>`;
+    for (const it of S.checks.items) {
+      const cls = it.pass ? (it.warn ? 'warn' : 'pass') : (it.warnOnly ? 'warn' : 'fail');
+      const fr = it.frames.length ? `<span class="fr" data-f="${it.frames[0]}">${it.frame_ranges.slice(0, 60)}</span>` : '—';
+      h += `<tr><td title="${it.label}">${it.id}</td><td class="${cls}">${fmt(it.value, 3)} <span class="small">${it.unit}</span></td><td>${it.threshold}</td><td>${fr}</td></tr>`;
+      h += `<tr><td colspan="4" class="small">${Object.entries(it.per || {}).map(([k, v]) => `${k}: ${typeof v === 'number' ? v.toFixed(3) : v}`).join(' · ')}</td></tr>`;
+    }
+    h += `</table>`;
+  }
+  el.innerHTML = h;
+  $('cRun').onclick = () => doChecks();
+  el.querySelectorAll('.fr').forEach(s => s.onclick = () => seek(+s.dataset.f));
+}
+async function doChecks() {
+  const prog = $('cProg');
+  const res = await runChecks({ scene: S.work, set: S.set, cam: S.cam, comp: S.comp, ctx: S.ctx, A: S.A }, { scale: 0.5, every: 1, greybox: false, onProgress: p => { if (prog) prog.textContent = `${Math.round(p * 100)}%`; } });
+  S.checks = res; if (!CAPTURE) drawPanels(); draw();
+  return res;
+}
+function exportJSON() {
+  const s = clone(S.scene);
+  s.beats = s.beats.map(b => { const o = { t: +(+b.t).toFixed(3), who: b.who, action: b.action }; if (b.word_anchor != null) o.word_anchor = b.word_anchor; if (b.label) o.label = b.label; if (b.args) o.args = b.args; if (b.contact) o.contact = b.contact; return o; });
+  s.beats_from_goals = S.comp.auto.map(b => ({ t: b.t, who: b.who, action: b.action, args: b.args, goal: b.goal, why: b.why }));
+  s.contacts = S.comp.contacts.map(c => ({ who: c.who, side: c.side, target: c.target, t: +c.t.toFixed(3), t_release: +c.t_release.toFixed(3) }));
+  s.cast = s.cast.map(c => { const tr = S.comp.chars[c.id], fr = tr.frames[0], p = S.cam.project(fr.X, 0, fr.Z); return { ...c, scale: { px_per_cm: +p[2].toFixed(4), height_px: +(tr.B.H * p[2]).toFixed(1), from: 'set horizon + px_per_cm_at_ground_line (automatic)' }, render: tr.mode }; });
+  s.sources = { ...S.ctx.sources, archive: 'data/archive/index.json' };
+  if (S.checks) { s.checks = checksForScene(S.checks); s.checks.items = S.checks.items; }
+  return s;
+}
+async function contactSheet(cols = 4, n = 12) {
+  const N = S.comp.N, fs = [];
+  const beatFs = [...new Set([...S.scene.beats.map(b => Math.round(b.t * S.comp.fps)), ...S.comp.contacts.map(c => Math.round((c.t + 0.1) * S.comp.fps))])].filter(f => f >= 0 && f < N).sort((a, b) => a - b);
+  for (let i = 0; i < n; i++) fs.push(Math.round(i * (N - 1) / (n - 1)));
+  const pick = [...new Set([...fs, ...beatFs])].sort((a, b) => a - b);
+  while (pick.length > n) { let bi = 1, bd = Infinity; for (let i = 1; i < pick.length - 1; i++) { const d = pick[i + 1] - pick[i - 1]; if (d < bd) { bd = d; bi = i; } } pick.splice(bi, 1); }
+  const w = 480, h = 270, pad = 8, lab = 46, rows = Math.ceil(pick.length / cols);
+  const sh = document.createElement('canvas'); sh.width = cols * (w + pad) + pad; sh.height = rows * (h + lab + pad) + pad + 60;
+  const sg = sh.getContext('2d'); sg.fillStyle = '#0d0b0a'; sg.fillRect(0, 0, sh.width, sh.height);
+  sg.fillStyle = '#efe6da'; sg.font = '22px "Permanent Marker", cursive'; sg.fillText(`${S.scene.scene_id} · ${S.scene.title_card || ''}`, pad, 34);
+  sg.font = '12px "JetBrains Mono", monospace'; sg.fillStyle = '#9a8d7e';
+  sg.fillText(`${S.set._standIn ? 'STAND-IN set' : 'set'} ${S.set._from} · ${S.comp.N} frames @ ${S.comp.fps} fps · suite ${S.scene.audio.suite_in}–${S.scene.audio.suite_out} s`, pad, 52);
+  const qa = S.checks?.items || [];
+  for (let i = 0; i < pick.length; i++) {
+    const f = pick[i], x = pad + (i % cols) * (w + pad), y = 60 + pad + Math.floor(i / cols) * (h + lab + pad);
+    sg.save(); sg.beginPath(); sg.rect(x, y, w, h); sg.clip(); sg.translate(x, y); sg.scale(w / 1920, h / 1080);
+    drawFrame(sg, { t: f / S.comp.fps, scene: S.work, set: S.set, cam: S.cam, comp: S.comp, ctx: S.ctx, A: S.A, opts: { ...S.opts, captions: true } });
+    sg.restore();
+    const t = f / S.comp.fps, word = S.work.audio.words.find(ww => t >= ww[1] && t < ww[2] + 0.1);
+    const beats = S.comp.order.flatMap(id => S.comp.chars[id].beats.filter(b => Math.abs(b.t * S.comp.fps - f) < 1.5).map(b => `${id} ${b.label || b.action}`));
+    const flags = qa.filter(it => it.frames.includes(f)).map(it => it.id);
+    sg.fillStyle = '#efe6da'; sg.font = '12px "JetBrains Mono", monospace';
+    sg.fillText(`f${f} · ${t.toFixed(2)} s${word ? ' · “' + word[0] + '”' : ''}`, x, y + h + 15);
+    sg.fillStyle = '#c79a62'; sg.fillText(beats.join(' · ').slice(0, 64), x, y + h + 29);
+    sg.fillStyle = flags.length ? '#ff7b6b' : '#9fe08a'; sg.fillText(flags.length ? 'QA: ' + flags.join(', ') : 'QA clean', x, y + h + 43);
+  }
+  return sh.toDataURL('image/jpeg', 0.86);
+}
+function panelExport() {
+  const el = $('pExport'), src = S.ctx.sources;
+  el.innerHTML = `<h2>Export</h2><p>The pack: <code>data/scenes/${S.scene.scene_id}.json</code> (contract schema + beats from goals, contacts, measured checks), a contact sheet, and a film rendered headless with the reading.</p>
+   <div class="lib"><button id="eJSON">download scene JSON</button><button id="eSheet">contact sheet</button>${S.draft ? '<button id="eRevert">revert to file</button>' : ''}</div>
+   <div id="eOut"></div>
+   <h3>Sources in use</h3><div class="kv"><b>parts</b><span>${src.parts}${src.parts?.includes('cast_parts') ? '' : ' (STAND-IN rigs: lane B cast_parts.json not found)'}</span><b>characters</b><span>${src.characters}${src.characters?.includes('proxy') ? ' (STAND-IN, lane B pending)' : ''}</span><b>scale</b><span>${src.laneB || 'camera.js formula (lane B scale.js not found)'}</span><b>set</b><span>${src.set}${S.set._standIn ? ' (STAND-IN, lane C pending)' : ''}</span><b>audio</b><span>${S.scene.audio.file} · suite ${S.scene.audio.suite_in}–${S.scene.audio.suite_out} s</span></div>
+   <h3>Headless</h3><p class="small">python3 -m http.server 8800 (repo root), then<br><code>node shots/suite/render.mjs ${S.scene.scene_id}</code> → renders/${S.scene.scene_id}.mp4 + data/scenes/${S.scene.scene_id}.sheet.jpg + measured checks written into the scene JSON. <code>node shots/suite/render.mjs --all</code> batch-renders every scene in data/scenes/index.json.</p>
+   ${S.scene.notes ? `<h3>Notes</h3><p class="small">${S.scene.notes.map(n => '· ' + n).join('<br>')}</p>` : ''}`;
+  $('eJSON').onclick = () => { const b = new Blob([JSON.stringify(exportJSON(), null, 1)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `${S.scene.scene_id}.json`; a.click(); };
+  $('eSheet').onclick = async () => { $('eOut').innerHTML = '<p class="small">drawing…</p>'; const u = await contactSheet(); $('eOut').innerHTML = `<img class="sheet" src="${u}" alt="contact sheet"><a download="${S.scene.scene_id}.sheet.jpg" href="${u}" class="small">save</a>`; };
+  if ($('eRevert')) $('eRevert').onclick = () => { store.del('suite-draft-' + S.scene.scene_id); open(S.scene.scene_id); };
+}
+
+if (S.opts.greybox) $('tGrey').classList.add('on'); if (S.opts.debug) $('tDebug').classList.add('on'); if (!S.opts.captions) $('tCap').classList.remove('on');
+boot().catch(e => { $('busy').textContent = 'error: ' + e.message; console.error(e); window.SUITE = { ready: false, error: e.message }; });
+</script>
+<script src="../../nav.js" defer></script>
+</body>
+</html>
