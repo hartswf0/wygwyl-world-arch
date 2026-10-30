@@ -28,7 +28,7 @@ if (!(await up())) {
   console.log('serving', ROOT, 'on', PORT);
 }
 
-const browser = await puppeteer.launch({ headless: 'new', args: ['--disable-gpu', '--window-size=1920,1080', '--autoplay-policy=no-user-gesture-required'] });
+const browser = await puppeteer.launch({ headless: 'new', protocolTimeout: 1800000, args: ['--disable-gpu', '--window-size=1920,1080', '--autoplay-policy=no-user-gesture-required'] });
 let failed = 0;
 for (const id of ids) {
   const page = await browser.newPage();

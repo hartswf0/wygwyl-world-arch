@@ -119,6 +119,8 @@ body.capture #stageBox{width:1920px;height:1080px;border:0;border-radius:0}
 </section>
 <script type="module">
 import { loadParts, loadCharacters, loadSet, loadArchive, loadScene, loadSceneIndex, SOURCES, suiteURL } from './lib/adapters.js';
+import { applySetPatch } from './lib/set_patch.js';
+import { applyExtras, EXTRA_ACTIONS } from './lib/actions_extra.js';
 import { makeCamera, probeLaneB, laneB, onGround, clampToPoly, groundOf } from './lib/camera.js';
 import { compileScene, ACTIONS, GOALS, wordAt } from './lib/solver.js';
 import { loadAssets, drawFrame, pickCard, partsFor } from './lib/draw.js';
@@ -155,7 +157,7 @@ async function open(id) {
   const draft = !CAPTURE && store.get('suite-draft-' + id);
   S.scene = draft ? JSON.parse(draft) : clone(file);
   S.draft = !!draft;
-  S.set = await loadSet(id, S.scene.set);
+  S.set = applySetPatch(await loadSet(id, S.scene.set), S.scene.set_patch);
   S.ctx.sources.set = S.set._from;
   S.cam = makeCamera(S.set);
   S.A = await loadAssets(S.scene, S.set, S.ctx);
@@ -168,13 +170,13 @@ async function open(id) {
   $('scrub').max = S.comp.N - 1;
   renderAll();
   $('busy').classList.add('hide');
-  window.SUITE = { ready: true, id, frames: S.comp.N, fps: S.comp.fps, frameJPEG, runChecks: doChecks, contactSheet, sceneJSON: () => exportJSON(), probe: () => S.probe };
+  window.SUITE = { ready: true, id, frames: S.comp.N, fps: S.comp.fps, frameJPEG, runChecks: doChecks, contactSheet, sceneJSON: () => exportJSON(), probe: () => S.probe, comp: () => S.comp, set: () => S.set, cam: () => S.cam };
 }
 
 function solve() {
   const t0 = performance.now();
   S.work = clone(S.scene);
-  S.comp = compileScene(S.work, { ...S.ctx, cam: S.cam, set: S.set });
+  S.comp = applyExtras(compileScene(S.work, { ...S.ctx, cam: S.cam, set: S.set }), S.work);
   // keep the snapped times visible in the editor
   S.work.beats.forEach((b, i) => { if (S.scene.beats[i]) S.scene.beats[i].t = b.t; });
   S.solveMs = performance.now() - t0;
@@ -343,7 +345,7 @@ function panelAct() {
   const el = $('pAct'); const id = S.sel.cast; const words = S.work.audio.words;
   const near = (() => { let b = null; for (const w of words) if (w[1] >= 0 && (!b || Math.abs(w[1] - S.t) < Math.abs(b[1] - S.t))) b = w; return b; })();
   let h = `<h2>Act</h2><p>Selected: <b>${id || '—'}</b> (click a puppet). New beats land on the word nearest the playhead: <b>“${near?.[0] || ''}”</b> ${near ? near[1].toFixed(2) + ' s' : ''}.</p><h3>Action library</h3><div class="lib">`;
-  for (const [k, a] of Object.entries(ACTIONS)) h += `<button data-act="${k}" title="${a.doc} · args ${a.args}">${k}</button>`;
+  for (const [k, a] of Object.entries({ ...ACTIONS, ...EXTRA_ACTIONS })) h += `<button data-act="${k}" title="${a.doc} · args ${a.args}">${k}</button>`;
   h += `</div><h3>Goals</h3><div class="lib">`;
   for (const [k, a] of Object.entries(GOALS)) h += `<button data-goal="${k}" title="${a.doc} · args ${a.args}">${k}</button>`;
   h += `</div>`;

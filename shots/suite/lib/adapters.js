@@ -1,6 +1,7 @@
 // Adapters to lanes A (parts), B (characters, scale.js) and C (sets).
 // Each source is tried in order; the first that loads wins. The real lane files come first, so when they land on main
 // the suite switches to them with no code change. To pin a source, edit the one line in SOURCES.
+import { addReplacementHands } from './hands_extra.js';
 const SUITE = new URL('../', import.meta.url);        // shots/suite/
 const SHOTS = new URL('../../', import.meta.url);     // shots/
 
@@ -44,13 +45,13 @@ const LANE_B_ID = { 'poet|black_tshirt': 'poet_tshirt', 'poet|red_black_sunglass
   dancer_dress: 'dancer_dress', dancer_shirt: 'dancer_shirt', dancer_jacket: 'dancer_jacket' };
 const B_TO_SUITE = { poet_tshirt: ['poet', 'black_tshirt'], poet_tracksuit: ['poet', 'red_black_sunglasses'], ex: ['ex', 'ex_jacket'], father_elder: ['father_elder', 'elder_father_coat'],
   dancer_dress: ['dancer_dress', 'club_dress'], dancer_shirt: ['dancer_shirt', 'club_shirt'], dancer_jacket: ['dancer_jacket', 'club_jacket'] };
-const KIND = { thigh: 'thigh', shin: 'shin', foot: 'foot', uarm: 'upper_arm', farm: 'forearm', hand: 'hand', torso: 'torso' };
+const KIND = { thigh: 'thigh', shin: 'shin', foot: 'foot', uarm: 'upper_arm', farm: 'forearm', hand: 'hand', torso: 'torso', pelvis: 'pelvis', bridge: 'pelvis' };   // pelvis: a skirt/robe rig's skirt card; bridge: a legged rig's hip bridge
 
 // lane B's cast_parts.json + characters.json -> contract part records the stager draws
 function laneBParts(castParts, chars) {
   const out = [];
   for (const [bid, entry] of Object.entries(castParts.characters || {})) {
-    const map = B_TO_SUITE[bid]; if (!map) continue;
+    const map = B_TO_SUITE[bid] || [bid, bid];                 // every other lane-B character keeps its own id
     const [cid, costume] = map, ch = (chars || []).find(c => c.id === bid);
     for (const [view, parts] of Object.entries(entry.views || {})) {
       for (const [key, p] of Object.entries(parts)) {
@@ -62,6 +63,7 @@ function laneBParts(castParts, chars) {
         if (part === 'forearm') Object.assign(sk, { elbow: A, wrist: B });
         if (part === 'hand') Object.assign(sk, { wrist: A, tip: B, fingertips: B });
         if (part === 'torso') Object.assign(sk, { neck: A, hip: B }, p.sockets || {});
+        if (part === 'pelvis') Object.assign(sk, { hip: A });
         if (part === 'foot') { if (view === 'profile' || view === 'threequarter') Object.assign(sk, { ankle: A, toe: p.toe || B, heel: p.heel, toe_sole: p.toe || B }); else Object.assign(sk, { ankle: A, sole: B }); }
         out.push({ id: `B.${bid}.${view}.${key}`, character: cid, costume, part, side: side || '-', view, state: part === 'foot' ? 'flat' : '-', file: p.file, w: p.size[0], h: p.size[1],
           pivot: A, sockets: sk, scale: { px_per_cm: p.px_per_cm, source: 'lane B cast_parts.json (measured against the Kit 3 template)' }, len_cm: p.len_cm, laneB: true });
@@ -89,6 +91,8 @@ export async function loadParts(characters) {
     const covered = new Set(B.map(p => p.character + '|' + p.costume));
     // lane B rigs replace the stand-in jointed parts of the same character+costume; replacement cards stay
     parts = parts.filter(p => p.part === 'body' || !covered.has(p.character + '|' + p.costume)).concat(B);
+    const hc = await firstJSON(['data/hand_cards.json']);         // replacement hand shapes (lib/hands_extra.js)
+    if (hc) parts = addReplacementHands(parts, hc.data, B_TO_SUITE);
     from.push(rig.from + ` (${B.length} rig parts)`);
   }
   if (new URLSearchParams(location.search).get('registry') === '1') {

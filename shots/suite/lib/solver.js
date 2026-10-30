@@ -490,6 +490,10 @@ function resolveTargets(tr, out, ctx) {
       const a = fr.arms[s]; if (!a.win || a.weight <= 0) continue;
       const T = targetWorld(a.win, s, fr, tr, out, ctx, st);
       if (!T) continue;
+      if (a.win.kind === 'hold_gesture') {          // a held arm shape is a pose, not a reach: keep it inside this body's arm
+        const sh = J0['shoulder' + s], d = sub(T.wrist, sh), L = len(d), max = 0.97 * (B.uarm + B.farm);
+        if (L > max) T.wrist = add(sh, mul(d, max / L));
+      }
       const k = a.weight;
       st.arms[s] = { ...st.arms[s], target: lerp3(J0['wrist' + s], T.wrist, k), handDir: T.handDir };
       a.targetPoint = T.point; a.targetDesc = T.desc;

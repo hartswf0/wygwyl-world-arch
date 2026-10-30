@@ -4,6 +4,7 @@
 import { img } from './adapters.js';
 import { viewOf, axes, D2R, lerp, smooth } from './rig.js';
 import { socketWorld } from './solver.js';
+import { FX_EXTRA } from './fx_extra.js';
 
 const COLORS = ['#e7a35a', '#7fd3c4', '#ff7b6b', '#b9a5ff', '#9fe08a', '#f2d16b', '#6fb5ff', '#ff9ad5'];
 const RING = ['front', 'threequarter', 'profile', 'threequarter_back', 'back'];
@@ -252,7 +253,7 @@ export function drawCharacter(g, base, tr, fr, F, cv, opts) {
       else {
         const torso = pickPart(ctx, c, 'torso', view, side);
         const tl = Math.hypot(torso.sockets.neck[0] - torso.sockets.hip[0], torso.sockets.neck[1] - torso.sockets.hip[1]);
-        const k = s * (part.view === 'profile' ? 0.15 : 0.2) * B.H / part.w, ang = Math.atan2(B2[1] - A2[1], B2[0] - A2[0]) / D2R + 90;
+        const k = part.scale?.px_per_cm ? s / part.scale.px_per_cm : s * (part.view === 'profile' ? 0.15 : 0.2) * B.H / part.w, ang = Math.atan2(B2[1] - A2[1], B2[0] - A2[0]) / D2R + 90;
         pv = part.sockets.hip || part.pivot;
         M = new DOMMatrix().translate(A2[0], A2[1]).rotate(ang).scale(part.view === 'profile' && mirror ? -k : k, k).translate(-pv[0], -pv[1]);
       }
@@ -484,7 +485,7 @@ function drawFx(g, base, fx, F, cv) {
   } else if (fx.kind === 'darken') {
     const u = smooth((t - (fx.t0 ?? 0)) / (fx.dur ?? 1)) * (fx.alpha ?? 0.3);
     g.save(); g.globalAlpha = u; g.fillStyle = fx.color || '#000'; g.fillRect(0, 0, W, H); g.restore();
-  }
+  } else if (FX_EXTRA[fx.kind]) FX_EXTRA[fx.kind](g, fx, F, cv);      // lib/fx_extra.js: props, sweeps, flashes, rain, …
 }
 
 // ───── overlays ─────

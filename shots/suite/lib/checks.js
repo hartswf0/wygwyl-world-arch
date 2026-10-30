@@ -52,7 +52,7 @@ export async function runChecks(F0, opts = {}) {
     probes.push(pr);
     // foot slide: drawn sole points of planted feet, frame to frame, in cm at that foot's depth
     for (const id of ids) {
-      const p = pr.chars[id]; if (!p || p.hidden) continue;
+      const p = pr.chars[id]; if (!p || p.hidden) { for (const k of Object.keys(prev)) if (k.startsWith(id + ':')) delete prev[k]; continue; }   // a vanished body re-plants where it reappears
       for (const s of p.soles) {
         const key = id + ':' + s.side, q = prev[key];
         if (q && q.planted && s.planted && q.pts.length === s.pts.length) {
