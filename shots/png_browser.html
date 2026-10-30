@@ -198,7 +198,7 @@ main { max-width: 1680px; margin: 0 auto; padding: 14px 18px 90px; }
 
 <section class="hero">
   <p class="lede">
-    Every generated proof, contact sheet, multiplane audit, character rig sheet, the <b>119 360°×180° Outpainted Equirectangular Spheres &amp; Shared Horizon Panoramas</b>, the <b>259 Individual Painted &amp; Shaped Multiplane Shots (<code>01-00..14-07</code> + all 104 Equirectangular Inverse-Sculpted Through-Frames)</b>, the <b>62 Foundry &amp; Inverse Through-Frame Composite PNGs</b>, and the <b>43 Continuous Shot-by-Shot &amp; Scene Cinema Tapes</b> are permanently saved in <code>shots/png_vault/</code> and indexed here. Filter by collection, sub-type, or poem, switch from giant inspection cards to a 10-column contact-sheet wall, or click any PNG for a 1:1 pixel zoom &amp; horizontal tape auto-pan.
+    Every generated proof, contact sheet, multiplane audit, character rig sheet, the <b>119 Concentric Onion Depth Masks &amp; 6-Shell Peel Plates</b>, the <b>119 360°×180° Outpainted Equirectangular Spheres &amp; Shared Horizon Panoramas</b>, the <b>259 Individual Painted &amp; Shaped Multiplane Shots (<code>01-00..14-07</code> + all 104 Equirectangular Inverse-Sculpted Through-Frames)</b>, the <b>62 Foundry &amp; Inverse Through-Frame Composite PNGs</b>, and the <b>43 Continuous Shot-by-Shot &amp; Scene Cinema Tapes</b> are permanently saved in <code>shots/png_vault/</code> and indexed here. Filter by collection, sub-type, or poem, switch from giant inspection cards to a 10-column contact-sheet wall, or click any PNG for a 1:1 pixel zoom &amp; horizontal tape auto-pan.
   </p>
   <div class="stats" id="stats"></div>
 </section>
@@ -206,7 +206,7 @@ main { max-width: 1680px; margin: 0 auto; padding: 14px 18px 90px; }
 <section class="controls">
   <div class="controls-inner">
     <div class="search-row">
-      <input id="q" type="search" placeholder="Search saved PNGs by filename, poem (01..14), shot (01_00), ref (01-07), equirec, world (w1623), character, or keyword…" autocomplete="off">
+      <input id="q" type="search" placeholder="Search saved PNGs by filename, poem (01..14), shot (01_00), ref (01-07), onion, depth, equirec, world (w1623), character…" autocomplete="off">
       <div class="density-group">
         <span>Grid</span>
         <button class="d-btn" data-cols="2">2 XL</button>
@@ -270,6 +270,7 @@ for (const ls of localSaved) {
   ITEMS.unshift(ls);
 }
 
+const onionDepthCount = cat.onion_depth_count ?? ITEMS.filter(x => x.category === 'onion_depth').length;
 const equirecCount = cat.equirectangular_count ?? ITEMS.filter(x => x.category === 'equirectangular').length;
 const paintedTapesCount = cat.painted_tapes_count ?? ITEMS.filter(x => x.category === 'painted_tapes').length;
 const paintedShotsCount = cat.painted_shots_count ?? ITEMS.filter(x => x.category === 'painted_shots').length;
@@ -279,6 +280,7 @@ const repoCount = cat.repo_plates_and_sheets_count ?? ITEMS.filter(x => x.catego
 
 $('stats').innerHTML = [
   [ITEMS.length, 'Total Indexed Plates'],
+  [onionDepthCount, 'Onion Depth & 6-Shell Plates'],
   [equirecCount, '360° Equirectangular Outpaints'],
   [paintedTapesCount, 'Continuous Painted Tapes & Sheets'],
   [paintedShotsCount, 'Painted & Shaped Shots'],
@@ -297,6 +299,12 @@ let lbIdx = 0;
 let panTimer = null;
 
 const SUB_BY_CAT = {
+  onion_depth: {
+    all: 'All 119 Onion Depth & 6-Shell Peel Plates',
+    master_onion_depth_sheet: '14-Poem Master Onion Depth Contact Sheet',
+    shared_poem_onion_depth: '14 Shared Poem 360° Equirec Depth & Onion Shells',
+    ref_onion_depth_peel: '104 Per-Ref Equirec Depth Masks & 6 Peeled Onion Shells'
+  },
   equirectangular: {
     all: 'All 119 360° Equirectangular Plates',
     master_equirec_sheet: '14-Poem Shared Equirectangular Master Sheet',
@@ -352,6 +360,8 @@ function renderChips() {
 
   const subMap = SUB_BY_CAT[activeCat] || (activeCat === 'all' ? {
     all: 'All Sub-Types',
+    shared_poem_onion_depth: '🧅 14 Poem Onion Depth Panoramas',
+    ref_onion_depth_peel: '🧅 104 Ref 6-Shell Onion Peels',
     shared_poem_equirec: '🌐 14 Shared 360° Equirec Panoramas',
     ref_equirec_outpaint: '🌐 104 Ref Equirec Outpaints',
     inverse_painted_frame: '🎨 104 Inverse Painted Frames',

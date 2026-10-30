@@ -115,14 +115,27 @@ canvas#builderCanvas { width: 100%; height: 100%; display: block; cursor: grab; 
 canvas#builderCanvas:active { cursor: grabbing; }
 
 .quad-strip {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px;
 }
-@media (max-width: 900px) { .quad-strip { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 980px) { .quad-strip { grid-template-columns: repeat(3, 1fr); } }
 .qbox { background: var(--panel2); border: 1px solid var(--edge); border-radius: 4px; overflow: hidden; cursor: pointer; }
 .qbox:hover { border-color: var(--gold); }
 .qbox img { width: 100%; aspect-ratio: 2/1; object-fit: cover; display: block; }
 .qbox div { padding: 4px 6px; font: 600 10px "Helvetica Neue", sans-serif; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .qbox b { color: var(--gold); }
+
+.onion-bar {
+  display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+  padding: 7px 10px; background: #0c1219; border: 1px solid rgba(92,225,230,.3); border-radius: 6px;
+}
+.onion-pill {
+  border: 1px solid var(--edge); background: var(--panel); color: var(--ink);
+  padding: 4px 9px; border-radius: 14px; font: 700 10px "Helvetica Neue", sans-serif;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+}
+.onion-pill:hover { border-color: var(--gold); }
+.onion-pill.on { background: rgba(255,210,63,.16); border-color: var(--gold); color: var(--gold); }
+.onion-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
 .palette-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 250px; overflow-y: auto; padding-right: 2px;
@@ -335,9 +348,10 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
       <button class="mtab" data-tab="tab-shots">🎬 5. The 882 Shots &amp; Painted Cinema</button>
     </div>
     <div class="ext-links">
+      <a class="navpill" href="png_browser.html?cat=onion_depth" style="border-color:#ff9f1c;color:#ff9f1c">🧅 Onion Depth Vault (119)</a>
       <a class="navpill" href="png_browser.html?cat=equirectangular" style="border-color:var(--cyan);color:var(--cyan)">🌐 360° Equirec Vault (119)</a>
       <a class="navpill" href="png_browser.html?cat=painted_tapes" style="border-color:var(--ok);color:var(--ok)">🎞️ Painted Tapes Vault (43)</a>
-      <a class="navpill" href="png_browser.html" style="border-color:var(--gold);color:var(--gold)">🖼️ Saved PNG Grid Browser (1,217)</a>
+      <a class="navpill" href="png_browser.html" style="border-color:var(--gold);color:var(--gold)">🖼️ Saved PNG Grid Browser (686)</a>
       <a class="navpill" href="terrarium.html?poem=01&foundry=w1623">🌍 3D Terrarium + Hound</a>
       <a class="navpill" href="wag_stack.html">🎞️ WAG-STACK</a>
     </div>
@@ -349,10 +363,10 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
        TAB 1: INTERACTIVE THROUGH-FRAME BUILDER STUDIO
        =================================================================== -->
   <section class="tab-pane on" id="tab-builder">
-    <div class="k">Every Shot A Triple · 360° Equirectangular Outpaint · Shared Horizon Inversion</div>
-    <h1 class="big">Build On Top Of &amp; Through Inverse Topology &amp; 360° Equirectangular Worlds</h1>
+    <div class="k">Every Shot A Triple · 360° Equirectangular Outpaint &amp; Depth Mask · 6 Concentric Onion Depth Shells (R0..R5)</div>
+    <h1 class="big">Build On Top Of &amp; Through Inverse Topology, 360° Equirectangular Depth Masks &amp; Concentric Onion Planes</h1>
     <p class="lede">
-      Every reference frame (<code>01-00..13-07</code>) is projected into a <code>2:1</code> (<code>360°×180°</code>) equirectangular sphere, outpainted across the full azimuth ring locked to its poem’s <b>Shared Equirectangular Horizon Line</b>, and inverted to sculpt all 6 Foundry worlds (<code>104/104</code> references inverted across <code>624</code> world wedges). Here you build <b>through</b> the frame and <b>on top of</b> the sculpted ground plane.
+      Every reference frame (<code>01-00..13-07</code>) is projected into a <code>2:1</code> (<code>360°×180°</code>) equirectangular sphere with a continuous <b>Equirectangular Depth Mask</b> and peeled into <b>6 Concentric Onion Depth Shells (<code>R0 Core FX 1.2m</code> → <code>R1 Actors 3.2m</code> → <code>R2 Props/Set 7.5m</code> → <code>R3 Arch Aperture 18m</code> → <code>R4 Foundry Land 95m</code> → <code>R5 Sky Dome 800m</code>)</b>. Toggle any onion shell below or click <b>🧅 Exploded Onion Planes</b> to see all 6 depth shells fanned out like an onion.
     </p>
 
     <div class="studio-layout">
@@ -383,7 +397,7 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
           </select>
         </div>
 
-        <h4>2. Through-Frame &amp; 360° Equirec Sliders</h4>
+        <h4>2. Through-Frame, 360° Equirec &amp; Onion Depth Sliders</h4>
         <div class="ctrl-row">
           <div class="lbl"><span>Foundry Before (-a) ↔ Sculpted After (-b)</span><span id="valSculpt">100%</span></div>
           <input type="range" id="slSculpt" min="0" max="100" value="100">
@@ -391,6 +405,10 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
         <div class="ctrl-row">
           <div class="lbl"><span style="color:var(--cyan)">🌐 360° Equirec Outpaint Horizon Bleed</span><span id="valEquirec">36%</span></div>
           <input type="range" id="slEquirec" min="0" max="100" value="36">
+        </div>
+        <div class="ctrl-row">
+          <div class="lbl"><span style="color:#ff9f1c">🧅 360° Equirectangular Depth Mask Overlay</span><span id="valDepthMask">0%</span></div>
+          <input type="range" id="slDepthMask" min="0" max="100" value="0">
         </div>
         <div class="ctrl-row">
           <div class="lbl"><span>Through-Sky/Water Reference Bleed</span><span id="valRefBleed">42%</span></div>
@@ -415,18 +433,32 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
         </div>
       </div>
 
-      <!-- Center Column: Live Interactive Canvas & 5-Source Strip -->
+      <!-- Center Column: Live Interactive Canvas, Concentric Onion Shell Peeler & 6-Source Strip -->
       <div class="canvas-bay">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
           <div style="font:700 12px 'Helvetica Neue',sans-serif;color:var(--gold)" id="canvasHeaderTitle">
             THROUGH-FRAME SYNTHESIS · w1623 × REF 01-07
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn" id="btnOnionExplode" style="border-color:#ff9f1c;color:#ff9f1c">🧅 Exploded Onion Planes: OFF</button>
             <button class="btn" id="btnToggleTags">🏷️ Metric Tags: ON</button>
             <button class="btn" id="btnToggleTape">🎞️ Poem Tape: ON</button>
-            <button class="btn" id="btnAutoStage">✨ Auto-Stage Cast at Tags</button>
-            <a class="btn ok" id="btnViewPrebuilt" href="png_browser.html?cat=equirectangular">🌐 View 360° Equirec PNG</a>
+            <button class="btn" id="btnAutoStage">✨ Auto-Stage Cast at Onion Shells</button>
+            <a class="btn ok" id="btnViewOnionPlate" href="png_vault/onion_depth/onion_depth_ref_01_07.png" target="_blank">🧅 6-Shell Onion PNG</a>
+            <a class="btn" id="btnViewPrebuilt" href="png_vault/equirectangular/equirec_ref_01_07.png" target="_blank" style="border-color:var(--cyan);color:var(--cyan)">🌐 360° Equirec PNG</a>
           </div>
+        </div>
+
+        <!-- Concentric Onion Depth Shell Peeler Bar (R0..R5) -->
+        <div class="onion-bar" id="onionShellBar">
+          <span style="font:700 10px 'Helvetica Neue',sans-serif;letter-spacing:.12em;color:#ff9f1c;text-transform:uppercase;margin-right:4px">🧅 Onion Depth Shells:</span>
+          <button class="onion-pill on" data-shell="all">All 6 Shells (R0..R5)</button>
+          <button class="onion-pill" data-shell="0"><i class="onion-dot" style="background:#ff3d6e"></i>R0 Core FX (1.2m)</button>
+          <button class="onion-pill" data-shell="1"><i class="onion-dot" style="background:#ff9f1c"></i>R1 Actors (3.2m)</button>
+          <button class="onion-pill" data-shell="2"><i class="onion-dot" style="background:#ffd23f"></i>R2 Props/Set (7.5m)</button>
+          <button class="onion-pill" data-shell="3"><i class="onion-dot" style="background:#8fd694"></i>R3 Arch Aperture (18m)</button>
+          <button class="onion-pill" data-shell="4"><i class="onion-dot" style="background:#5ce1e6"></i>R4 Foundry Land (95m)</button>
+          <button class="onion-pill" data-shell="5"><i class="onion-dot" style="background:#7b61ff"></i>R5 Sky Dome (800m)</button>
         </div>
 
         <div class="canvas-wrap">
@@ -434,13 +466,13 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
         </div>
 
         <div style="font:12px 'Helvetica Neue',sans-serif;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
-          <span id="canvasTelemetry">Drag any cut-out actor or prop on the canvas · Moving toward the shared equirectangular horizon automatically scales by metric distance (m)</span>
+          <span id="canvasTelemetry">Drag any cut-out item on canvas · Items automatically assign to Concentric Onion Shells (R0 1.2m → R5 800m) by distance to shared horizon</span>
           <span id="canvasGrownInfo" style="color:var(--ok)"></span>
         </div>
 
-        <!-- 5-Source Input Strip -->
+        <!-- 6-Source Input Strip -->
         <div class="quad-strip">
-          <div class="qbox" id="qRef" title="Original Rectilinear Reference Frame">
+          <div class="qbox" id="qRef" title="Original Rectilinear Reference Frame (Click to toggle Rectilinear Depth Mask)">
             <img id="imgRefPreview" src="" alt="">
             <div><b>1. RECTILINEAR</b> <span id="txtRefMeta"></span></div>
           </div>
@@ -448,17 +480,21 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
             <img id="imgEqPreview" src="" alt="">
             <div><b style="color:var(--cyan)">2. 360° EQUIREC</b> <span id="txtEqMeta"></span></div>
           </div>
+          <div class="qbox" id="qDepth" title="360°×180° Equirectangular Depth Mask + 6 Onion Contours (Click to toggle Depth Overlay on Canvas)" style="border-color:rgba(255,159,28,.6)">
+            <img id="imgDepthPreview" src="" alt="">
+            <div><b style="color:#ff9f1c">3. EQUIREC DEPTH</b> <span id="txtDepthMeta"></span></div>
+          </div>
           <div class="qbox" id="qSeg" title="Outpainted 360° Equirectangular Panoptic Seg + Shared Horizon">
             <img id="imgSegPreview" src="" alt="">
-            <div><b>3. EQUIREC SEG</b> <span id="txtSegMeta"></span></div>
+            <div><b>4. EQUIREC SEG</b> <span id="txtSegMeta"></span></div>
           </div>
           <div class="qbox" id="qBefore" title="Foundry 3D World Before Sculpt">
             <img id="imgBeforePreview" src="" alt="">
-            <div><b>4. FOUNDRY BEFORE</b> <span id="txtBeforeMeta"></span></div>
+            <div><b>5. FOUNDRY BEFORE</b> <span id="txtBeforeMeta"></span></div>
           </div>
           <div class="qbox" id="qAfter" title="Inverse Sculpted After from Shared Equirectangular Horizon">
             <img id="imgAfterPreview" src="" alt="">
-            <div><b>5. SCULPTED AFTER</b> <span id="txtAfterMeta"></span></div>
+            <div><b>6. SCULPTED AFTER</b> <span id="txtAfterMeta"></span></div>
           </div>
         </div>
       </div>
@@ -468,10 +504,21 @@ pre { white-space: pre-wrap; font: 11px/1.4 Menlo, monospace; color: var(--dim);
         <h4>3. Click to Add Cut-Out Cast &amp; Props</h4>
         <div class="palette-grid" id="castPalette"></div>
 
-        <h4>4. Active Staged Layers (Drag on Canvas)</h4>
+        <h4>4. Active Staged Onion Shell Items</h4>
         <div class="layer-list" id="layerList"></div>
 
         <div id="selLayerControls" style="display:none;border-top:1px solid var(--edge);padding-top:8px">
+          <div class="ctrl-row" style="margin-bottom:6px">
+            <div class="lbl"><span>Onion Depth Shell Plane (R0..R5)</span><span id="valPieceShell" style="color:#ff9f1c">R1</span></div>
+            <select id="selPieceShell">
+              <option value="0">R0 · Core Veil &amp; Foreground FX (1.2m · d=0–16%)</option>
+              <option value="1" selected>R1 · Inner Actor Ring (3.2m · d=16–32%)</option>
+              <option value="2">R2 · Midground Set &amp; Props (7.5m · d=32–48%)</option>
+              <option value="3">R3 · Architectural Aperture Ring (18m · d=48–66%)</option>
+              <option value="4">R4 · Foundry 3D Land Ring (95m · d=66–84%)</option>
+              <option value="5">R5 · Outer 360° Sky Dome (800m · d=84–100%)</option>
+            </select>
+          </div>
           <div class="ctrl-row">
             <div class="lbl"><span>Selected Piece Scale</span><span id="valPieceScale">1.00×</span></div>
             <input type="range" id="slPieceScale" min="25" max="250" value="100">
@@ -871,6 +918,29 @@ async function buildCastPalette() {
   });
 }
 
+const ONION_SHELL_META = [
+  { idx: 0, id: 'R0', short: 'R0 Core FX', radius_m: 1.2, d_min: 0.00, d_max: 0.16, hex: '#ff3d6e', y_default: 0.90 },
+  { idx: 1, id: 'R1', short: 'R1 Actors', radius_m: 3.2, d_min: 0.16, d_max: 0.32, hex: '#ff9f1c', y_default: 0.82 },
+  { idx: 2, id: 'R2', short: 'R2 Props/Set', radius_m: 7.5, d_min: 0.32, d_max: 0.48, hex: '#ffd23f', y_default: 0.72 },
+  { idx: 3, id: 'R3', short: 'R3 Arch Aperture', radius_m: 18.0, d_min: 0.48, d_max: 0.66, hex: '#8fd694', y_default: 0.62 },
+  { idx: 4, id: 'R4', short: 'R4 Foundry Land', radius_m: 95.0, d_min: 0.66, d_max: 0.84, hex: '#5ce1e6', y_default: 0.48 },
+  { idx: 5, id: 'R5', short: 'R5 Sky Dome', radius_m: 800.0, d_min: 0.84, d_max: 1.00, hex: '#7b61ff', y_default: 0.28 }
+];
+
+let activeOnionShell = 'all'; // 'all' | 0..5
+let onionExplodeMode = false;
+let rectPreviewDepthMode = false;
+
+function yToOnionShellIdx(y, hor) {
+  const rel = Math.max(0, Math.min(1, (y - hor * 0.65) / Math.max(0.1, 1 - hor * 0.65)));
+  if (rel > 0.84) return 0;
+  if (rel > 0.64) return 1;
+  if (rel > 0.44) return 2;
+  if (rel > 0.22) return 3;
+  if (y >= hor * 0.85) return 4;
+  return 5;
+}
+
 function getActiveInvShot() {
   return I.shots.find(s => s.ref === stRef && s.world === stWorld)
       || I.shots.find(s => s.ref === stRef)
@@ -896,7 +966,7 @@ async function autoStageCastAtTags() {
         seen.add(f);
         pItems.push({
           name: (pl.label || 'Stage Piece').slice(0, 20),
-          kind: sem.includes('figure') ? 'actor' : 'prop',
+          kind: sem.includes('figure') ? 'actor' : (sem.includes('arch') || sem.includes('window') ? 'arch' : 'prop'),
           src: f
         });
       }
@@ -904,19 +974,23 @@ async function autoStageCastAtTags() {
     }
     if (pItems.length >= 3) break;
   }
-  pItems.push(HERO_CAST_ITEMS[0], HERO_CAST_ITEMS[2]);
+  pItems.push(HERO_CAST_ITEMS[0], HERO_CAST_ITEMS[2], HERO_CAST_ITEMS[5]);
 
-  pItems.forEach((it, idx) => {
+  // Assign items across Concentric Onion Shells R0, R1, R2, R3
+  const shellAssignments = [1, 1, 2, 3, 0];
+  pItems.slice(0, 5).forEach((it, idx) => {
+    const shIdx = shellAssignments[idx] ?? (it.kind === 'actor' ? 1 : (it.kind === 'arch' ? 3 : 2));
+    const shMeta = ONION_SHELL_META[shIdx];
     const tg = tags[idx];
-    const tx = tg ? tg.x : (0.24 + idx * 0.16);
-    const ty = 0.62 + (idx % 3) * 0.1;
+    const tx = tg ? tg.x : (0.20 + idx * 0.15);
     stagedItems.push({
       name: it.name,
       kind: it.kind,
       src: it.src,
-      x: Math.max(0.12, Math.min(0.88, tx)),
-      y: ty,
-      scale: 1.0,
+      shellIdx: shIdx,
+      x: Math.max(0.14, Math.min(0.86, tx)),
+      y: shMeta.y_default + (idx % 2) * 0.03,
+      scale: shIdx === 0 ? 0.85 : (shIdx === 1 ? 1.0 : (shIdx === 2 ? 0.82 : 0.92)),
       flip: idx % 2 === 1
     });
   });
@@ -926,12 +1000,17 @@ async function autoStageCastAtTags() {
 }
 
 function renderLayerList() {
-  $('layerList').innerHTML = stagedItems.map((it, idx) => `
+  $('layerList').innerHTML = stagedItems.map((it, idx) => {
+    const sh = ONION_SHELL_META[it.shellIdx ?? 1] || ONION_SHELL_META[1];
+    return `
     <div class="layer-item ${idx === selectedLayerIdx ? 'sel' : ''}" data-idx="${idx}">
-      <span>${it.kind === 'actor' ? '🎭' : '🧩'} <b>${it.name.slice(0, 18)}</b></span>
-      <span style="color:var(--gold)">x:${it.x.toFixed(2)} y:${it.y.toFixed(2)}</span>
+      <span>
+        <b style="color:${sh.hex};margin-right:4px">[${sh.id}]</b>
+        ${it.kind === 'actor' ? '🎭' : '🧩'} <b>${it.name.slice(0, 16)}</b>
+      </span>
+      <span style="color:var(--gold)">${sh.radius_m}m · y:${it.y.toFixed(2)}</span>
     </div>
-  `).join('');
+  `}).join('');
   $('layerList').querySelectorAll('.layer-item').forEach(el => {
     el.onclick = () => {
       selectedLayerIdx = +el.dataset.idx;
@@ -941,12 +1020,32 @@ function renderLayerList() {
   });
   if (selectedLayerIdx >= 0 && stagedItems[selectedLayerIdx]) {
     $('selLayerControls').style.display = 'block';
-    const sc = Math.round(stagedItems[selectedLayerIdx].scale * 100);
+    const cur = stagedItems[selectedLayerIdx];
+    const sc = Math.round((cur.scale || 1) * 100);
     $('slPieceScale').value = sc;
     $('valPieceScale').textContent = (sc / 100).toFixed(2) + '×';
+    if ($('selPieceShell')) {
+      const sIdx = cur.shellIdx ?? 1;
+      $('selPieceShell').value = String(sIdx);
+      $('valPieceShell').textContent = `${ONION_SHELL_META[sIdx].id} (${ONION_SHELL_META[sIdx].radius_m}m)`;
+      $('valPieceShell').style.color = ONION_SHELL_META[sIdx].hex;
+    }
   } else {
     $('selLayerControls').style.display = 'none';
   }
+}
+
+if ($('selPieceShell')) {
+  $('selPieceShell').onchange = e => {
+    if (selectedLayerIdx >= 0 && stagedItems[selectedLayerIdx]) {
+      const sIdx = +e.target.value;
+      const sh = ONION_SHELL_META[sIdx] || ONION_SHELL_META[1];
+      stagedItems[selectedLayerIdx].shellIdx = sIdx;
+      stagedItems[selectedLayerIdx].y = sh.y_default;
+      renderLayerList();
+      drawBuilderCanvas();
+    }
+  };
 }
 
 $('slPieceScale').oninput = e => {
@@ -971,15 +1070,144 @@ $('btnDelPiece').onclick = () => {
   }
 };
 
+// Onion Shell Filter Bar & Exploded Onion Planes Toggle
+if ($('onionShellBar')) {
+  $('onionShellBar').querySelectorAll('.onion-pill').forEach(btn => {
+    btn.onclick = () => {
+      $('onionShellBar').querySelectorAll('.onion-pill').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      activeOnionShell = btn.dataset.shell === 'all' ? 'all' : +btn.dataset.shell;
+      drawBuilderCanvas();
+    };
+  });
+}
+if ($('btnOnionExplode')) {
+  $('btnOnionExplode').onclick = () => {
+    onionExplodeMode = !onionExplodeMode;
+    $('btnOnionExplode').textContent = `🧅 Exploded Onion Planes: ${onionExplodeMode ? 'ON' : 'OFF'}`;
+    $('btnOnionExplode').classList.toggle('gold', onionExplodeMode);
+    drawBuilderCanvas();
+  };
+}
+if ($('qDepth')) {
+  $('qDepth').onclick = () => {
+    const sl = $('slDepthMask');
+    if (!sl) return;
+    sl.value = +sl.value > 20 ? 0 : 72;
+    $('valDepthMask').textContent = sl.value + '%';
+    drawBuilderCanvas();
+  };
+}
+if ($('qRef')) {
+  $('qRef').onclick = () => {
+    rectPreviewDepthMode = !rectPreviewDepthMode;
+    drawBuilderCanvas();
+  };
+}
+
+async function drawExplodedOnionCanvas(W, H, hor, imEq, imAfter, imStage, imRef, imEqDepth) {
+  // Background blueprint grid
+  bCtx.fillStyle = '#070a10';
+  bCtx.fillRect(0, 0, W, H);
+  bCtx.strokeStyle = 'rgba(92, 225, 230, 0.08)';
+  bCtx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) { bCtx.beginPath(); bCtx.moveTo(x, 0); bCtx.lineTo(x, H); bCtx.stroke(); }
+  for (let y = 0; y < H; y += 40) { bCtx.beginPath(); bCtx.moveTo(0, y); bCtx.lineTo(W, y); bCtx.stroke(); }
+
+  bCtx.fillStyle = '#ffd23f';
+  bCtx.font = '700 12px "Helvetica Neue", sans-serif';
+  bCtx.fillText('🧅 EXPLODED CONCENTRIC ONION DEPTH PLANES (BACK-TO-FRONT: R5 SKY DOME 800m -> R4 FOUNDRY 95m -> R3 ARCH 18m -> R2 PROPS 7.5m -> R1 ACTORS 3.2m -> R0 CORE 1.2m)', 16, 22);
+
+  // Draw the 6 concentric onion shells fanned from back-right (R5) to front-left (R0)
+  const pw = 450, ph = 255;
+  const shellSources = [imRef, imRef, imStage, imStage, imAfter, imEq];
+
+  for (let sIdx = 5; sIdx >= 0; sIdx--) {
+    if (activeOnionShell !== 'all' && activeOnionShell !== sIdx) continue;
+    const sh = ONION_SHELL_META[sIdx];
+    const t = sIdx / 5.0; // 0 (front-left R0) .. 1 (back-right R5)
+    const px = Math.round(36 + t * (W - pw - 72));
+    const py = Math.round(230 - t * 182);
+
+    bCtx.save();
+    // Translucent glass backing for each onion shell plane
+    bCtx.fillStyle = 'rgba(12, 17, 25, 0.82)';
+    bCtx.fillRect(px, py, pw, ph);
+
+    // Draw shell visual slice + optional depth mask tint
+    const srcIm = shellSources[sIdx] || imEq;
+    if (srcIm) {
+      bCtx.save();
+      bCtx.globalAlpha = sIdx >= 4 ? 0.85 : (sIdx === 3 ? 0.68 : 0.42);
+      if (sIdx === 5) {
+        // Upper sky dome slice
+        bCtx.drawImage(srcIm, 0, 0, srcIm.width, srcIm.height * 0.55, px, py, pw, ph * 0.58);
+      } else if (sIdx === 4) {
+        // Horizon & Foundry topography band
+        bCtx.drawImage(srcIm, 0, srcIm.height * 0.25, srcIm.width, srcIm.height * 0.65, px, py + ph * 0.22, pw, ph * 0.68);
+      } else {
+        bCtx.drawImage(srcIm, px, py, pw, ph);
+      }
+      bCtx.restore();
+    }
+
+    if (imEqDepth && (+($('slDepthMask')?.value ?? 0) > 0 || sIdx === 3)) {
+      bCtx.save();
+      bCtx.globalAlpha = 0.28;
+      bCtx.drawImage(imEqDepth, px, py, pw, ph);
+      bCtx.restore();
+    }
+
+    // Draw concentric onion ring ellipse inside plane
+    bCtx.strokeStyle = sh.hex;
+    bCtx.lineWidth = 1.5;
+    bCtx.setLineDash([6, 4]);
+    const rx = pw * (0.18 + 0.06 * sIdx), ry = ph * (0.16 + 0.05 * sIdx);
+    bCtx.beginPath();
+    bCtx.ellipse(px + pw / 2, py + ph * 0.55, Math.min(pw * 0.46, rx), Math.min(ph * 0.42, ry), 0, 0, Math.PI * 2);
+    bCtx.stroke();
+    bCtx.setLineDash([]);
+
+    // Draw staged cut-out items belonging to this onion shell `sIdx`
+    const shItems = stagedItems.filter(it => (it.shellIdx ?? 1) === sIdx);
+    for (const it of shItems) {
+      const im = await loadImg(it.src);
+      if (!im) continue;
+      const dh = (it.kind === 'actor' ? 145 : 120) * (it.scale || 1.0);
+      const dw = dh * (im.width / Math.max(1, im.height));
+      const ix = px + it.x * pw;
+      const iy = py + Math.min(0.94, Math.max(0.35, it.y)) * ph;
+      bCtx.save();
+      bCtx.translate(ix, iy - dh / 2);
+      if (it.flip) bCtx.scale(-1, 1);
+      bCtx.drawImage(im, -dw / 2, -dh / 2, dw, dh);
+      bCtx.restore();
+    }
+
+    // Onion Shell Rim & Header Badge
+    bCtx.strokeStyle = sh.hex;
+    bCtx.lineWidth = 2.5;
+    bCtx.strokeRect(px, py, pw, ph);
+    bCtx.fillStyle = 'rgba(8, 11, 16, 0.92)';
+    bCtx.fillRect(px, py, pw, 22);
+    bCtx.fillStyle = sh.hex;
+    bCtx.font = '700 11px "Helvetica Neue", sans-serif';
+    bCtx.fillText(`ONION SHELL ${sh.id} · ${sh.short.toUpperCase()} · RADIUS ${sh.radius_m}m (DEPTH ${Math.round(sh.d_min*100)}–${Math.round(sh.d_max*100)}%)`, px + 8, py + 15);
+    bCtx.restore();
+  }
+}
+
 async function drawBuilderCanvas() {
   const W = bCanvas.width, H = bCanvas.height;
   const rObj = refsMap[stRef] || R.refs[0];
+  const ridU = rObj.id.replace('-', '_');
   const isLandRef = I.refs.includes(rObj.id);
   const invShot = getActiveInvShot();
   const vPoem = stPoem === '14' ? '13' : stPoem;
 
-  const refSrc = F_BASE + rObj.img;
+  const refSrc = F_BASE + (rectPreviewDepthMode ? (rObj.depth_img || `refs/${rObj.id}-depth.jpg`) : rObj.img);
   const eqSrc = F_BASE + (rObj.eq_img || `equirec/${rObj.id}-eq.jpg`);
+  const eqDepthSrc = F_BASE + (rObj.eq_depth_img || `equirec/${rObj.id}-eq-depth.jpg`);
   const segSrc = F_BASE + (rObj.eq_seg || `equirec/${rObj.id}-eq-seg.jpg`);
   const beforeSrc = isLandRef && invShot?.a ? (F_BASE + invShot.a) : (F_BASE + `w/${stWorld}-v${vPoem}.jpg`);
   const afterSrc = isLandRef && invShot?.b ? (F_BASE + invShot.b) : (F_BASE + `w/${stWorld}-v${vPoem}.jpg`);
@@ -989,11 +1217,15 @@ async function drawBuilderCanvas() {
 
   const shHor = rObj.shared_horizon ?? rObj.horizon ?? invShot?.cam?.hor ?? 0.38;
 
-  // Update 5-source preview strip
+  // Update 6-source preview strip
   $('imgRefPreview').src = refSrc;
-  $('txtRefMeta').textContent = `${rObj.id} (${rObj.source}) · ${rObj.hour}`;
+  $('txtRefMeta').textContent = rectPreviewDepthMode ? `${rObj.id} Depth Mask` : `${rObj.id} (${rObj.source}) · ${rObj.hour}`;
   $('imgEqPreview').src = eqSrc;
   $('txtEqMeta').textContent = `Shared Hor ${Math.round(shHor * 100)}% · Az ${Math.round(rObj.eq_azimuth_deg || 0)}°`;
+  if ($('imgDepthPreview')) {
+    $('imgDepthPreview').src = eqDepthSrc;
+    $('txtDepthMeta').textContent = `6 Onion Shells (R0 1.2m → R5 800m)`;
+  }
   $('imgSegPreview').src = segSrc;
   $('txtSegMeta').textContent = Object.entries(rObj.eq_frac || rObj.frac || {}).slice(0, 2).map(([k, v]) => `${k} ${Math.round(v)}%`).join(' · ');
   $('imgBeforePreview').src = beforeSrc;
@@ -1005,61 +1237,81 @@ async function drawBuilderCanvas() {
   $('lblRef').textContent = stRef;
   $('lblWorld').textContent = stWorld;
   $('lblStop').textContent = `Stop ${String.fromCharCode(65 + stStop)} (s${stStop})`;
-  $('canvasHeaderTitle').textContent = `THROUGH-FRAME SYNTHESIS · ${stWorld.toUpperCase()} × REF ${rObj.id} (360° EQUIREC HORIZON ${Math.round(shHor * 100)}%) × POEM ${stPoem}`;
+  $('canvasHeaderTitle').textContent = `THROUGH-FRAME & ONION DEPTH SYNTHESIS · ${stWorld.toUpperCase()} × REF ${rObj.id} (HORIZON ${Math.round(shHor * 100)}%) × POEM ${stPoem}`;
   $('canvasGrownInfo').textContent = invShot?.grown?.length
     ? `Sculpted via Shared Equirec: ${invShot.grown.join(' · ')}`
     : `Inverted from Shared Equirectangular Horizon (${Math.round(shHor * 100)}%)`;
   $('btnOpen3D').href = `terrarium.html?poem=${stPoem}&foundry=${stWorld}`;
-  $('btnViewPrebuilt').href = `png_vault/equirectangular/equirec_ref_${rObj.id.replace('-', '_')}.png`;
+  $('btnViewPrebuilt').href = `png_vault/equirectangular/equirec_ref_${ridU}.png`;
+  if ($('btnViewOnionPlate')) {
+    $('btnViewOnionPlate').href = `png_vault/onion_depth/onion_depth_ref_${ridU}.png`;
+  }
 
-  const [imBefore, imAfter, imEq, imRef, imSeg, imStage, imTape, imMap] = await Promise.all([
-    loadImg(beforeSrc), loadImg(afterSrc), loadImg(eqSrc), loadImg(refSrc),
+  const [imBefore, imAfter, imEq, imEqDepth, imRef, imSeg, imStage, imTape, imMap] = await Promise.all([
+    loadImg(beforeSrc), loadImg(afterSrc), loadImg(eqSrc), loadImg(eqDepthSrc), loadImg(F_BASE + rObj.img),
     loadImg(segSrc), loadImg(stageSrc), loadImg(tapeSrc), loadImg(mapBSrc)
   ]);
 
   bCtx.clearRect(0, 0, W, H);
+  const hor = shHor;
+  const horY = Math.round(Math.max(0.18, Math.min(0.72, hor)) * H);
+
+  if (onionExplodeMode) {
+    await drawExplodedOnionCanvas(W, H, hor, imEq, imAfter, imStage, imRef, imEqDepth);
+    return;
+  }
 
   const sculptAlpha = +$('slSculpt').value / 100;
   const eqBleed = +($('slEquirec')?.value ?? 36) / 100;
+  const depthAlpha = +($('slDepthMask')?.value ?? 0) / 100;
   const refBleed = +$('slRefBleed').value / 100;
   const stageBleed = +$('slStageBleed').value / 100;
   const segAlpha = +$('slSeg').value / 100;
   const portalAlpha = +$('slPortal').value / 100;
 
-  // 1. Base Foundry Layer (Before -> Sculpted After)
-  if (imBefore) bCtx.drawImage(imBefore, 0, 0, W, H);
-  if (imAfter && sculptAlpha > 0) {
-    bCtx.save();
-    bCtx.globalAlpha = sculptAlpha;
-    bCtx.drawImage(imAfter, 0, 0, W, H);
-    bCtx.restore();
+  // 1. Base Foundry Layer (Shell R4: Before -> Sculpted After)
+  if (activeOnionShell === 'all' || activeOnionShell === 4 || activeOnionShell === 5) {
+    if (imBefore) bCtx.drawImage(imBefore, 0, 0, W, H);
+    if (imAfter && sculptAlpha > 0) {
+      bCtx.save();
+      bCtx.globalAlpha = sculptAlpha;
+      bCtx.drawImage(imAfter, 0, 0, W, H);
+      bCtx.restore();
+    }
+  } else {
+    bCtx.fillStyle = '#090d14';
+    bCtx.fillRect(0, 0, W, H);
   }
 
-  // Horizon row locked to Shared Equirectangular Horizon Line
-  const hor = shHor;
-  const horY = Math.round(Math.max(0.18, Math.min(0.72, hor)) * H);
-
-  // 1B. 360° Outpainted Equirectangular Sphere Bleed
-  if (imEq && eqBleed > 0) {
+  // 1B. 360° Outpainted Equirectangular Sphere Bleed (Shell R5 Sky Dome)
+  if (imEq && (eqBleed > 0 || activeOnionShell === 5)) {
     bCtx.save();
-    bCtx.globalAlpha = eqBleed;
+    bCtx.globalAlpha = activeOnionShell === 5 ? 0.92 : eqBleed;
     bCtx.drawImage(imEq, 0, 0, W, H);
     bCtx.restore();
   }
 
   // 2. Through-Aperture Reference Bleed
-  if (imRef && refBleed > 0) {
+  if (imRef && refBleed > 0 && (activeOnionShell === 'all' || activeOnionShell <= 3)) {
     bCtx.save();
     bCtx.globalAlpha = refBleed;
     bCtx.drawImage(imRef, 0, 0, W, H);
     bCtx.restore();
   }
 
-  // 3. Multiplane Stage Architecture Blend
-  if (imStage && stageBleed > 0) {
+  // 3. Multiplane Stage Architecture Blend (Shell R3)
+  if (imStage && (stageBleed > 0 || activeOnionShell === 3) && (activeOnionShell === 'all' || activeOnionShell === 3)) {
     bCtx.save();
-    bCtx.globalAlpha = stageBleed;
+    bCtx.globalAlpha = activeOnionShell === 3 ? 0.85 : stageBleed;
     bCtx.drawImage(imStage, 0, 0, W, H);
+    bCtx.restore();
+  }
+
+  // 3B. 360° Equirectangular Depth Mask Overlay (with 6 Onion Shell Contours)
+  if (imEqDepth && depthAlpha > 0) {
+    bCtx.save();
+    bCtx.globalAlpha = depthAlpha;
+    bCtx.drawImage(imEqDepth, 0, 0, W, H);
     bCtx.restore();
   }
 
@@ -1092,14 +1344,19 @@ async function drawBuilderCanvas() {
     bCtx.restore();
   }
 
-  // 6. Staged Cut-Out Actors & Props (sorted by y depth, scaled by distance from shared horizon!)
+  // 6. Staged Cut-Out Actors & Props (sorted by onion shell depth R5 -> R0!)
   const sortedIndices = stagedItems.map((_, i) => i).sort((a, b) => stagedItems[a].y - stagedItems[b].y);
   for (const idx of sortedIndices) {
     const it = stagedItems[idx];
+    const sIdx = it.shellIdx ?? yToOnionShellIdx(it.y, hor);
+    it.shellIdx = sIdx;
+    if (activeOnionShell !== 'all' && activeOnionShell !== sIdx) continue;
+    const shMeta = ONION_SHELL_META[sIdx] || ONION_SHELL_META[1];
+
     const im = await loadImg(it.src);
     if (!im) continue;
     const relDepth = Math.max(0.08, Math.min(1.0, (it.y - hor * 0.7) / (1.0 - hor * 0.7)));
-    const distMeters = Math.round(14 / Math.max(0.08, relDepth * relDepth));
+    const distMeters = shMeta.radius_m;
     it._distMeters = distMeters;
 
     const baseH = (it.kind === 'actor' ? 235 : 195) * (0.35 + 0.75 * relDepth) * (it.scale || 1.0);
@@ -1109,12 +1366,17 @@ async function drawBuilderCanvas() {
     const cx = it.x * W;
     const cy = it.y * H;
 
-    // Contact shadow
+    // Contact shadow + Onion Shell ground ring
     bCtx.save();
     bCtx.fillStyle = 'rgba(5, 8, 12, 0.55)';
     bCtx.beginPath();
     bCtx.ellipse(cx, cy + 4, dw * 0.38, 8, 0, 0, Math.PI * 2);
     bCtx.fill();
+    bCtx.strokeStyle = shMeta.hex;
+    bCtx.lineWidth = 1.5;
+    bCtx.beginPath();
+    bCtx.ellipse(cx, cy + 4, dw * 0.42, 10, 0, 0, Math.PI * 2);
+    bCtx.stroke();
 
     bCtx.translate(cx, cy - dh / 2);
     if (it.flip) bCtx.scale(-1, 1);
@@ -1123,24 +1385,24 @@ async function drawBuilderCanvas() {
 
     if (idx === selectedLayerIdx) {
       bCtx.save();
-      bCtx.strokeStyle = '#5ce1e6';
-      bCtx.lineWidth = 1.5;
+      bCtx.strokeStyle = shMeta.hex;
+      bCtx.lineWidth = 2;
       bCtx.setLineDash([5, 4]);
       bCtx.strokeRect(cx - dw / 2, cy - dh, dw, dh);
       bCtx.restore();
     }
 
     if (showTags) {
-      const tagTxt = `${it.name.slice(0, 14)} · ${distMeters}m`;
+      const tagTxt = `[${shMeta.id}] ${it.name.slice(0, 14)} · ${distMeters}m`;
       bCtx.save();
       bCtx.font = '700 10px "Helvetica Neue", sans-serif';
       const tw = bCtx.measureText(tagTxt).width + 12;
-      bCtx.fillStyle = 'rgba(10, 14, 20, 0.86)';
-      bCtx.strokeStyle = '#5ce1e6';
-      bCtx.lineWidth = 1;
+      bCtx.fillStyle = 'rgba(10, 14, 20, 0.88)';
+      bCtx.strokeStyle = shMeta.hex;
+      bCtx.lineWidth = 1.2;
       bCtx.fillRect(cx - tw / 2, cy - dh - 22, tw, 18);
       bCtx.strokeRect(cx - tw / 2, cy - dh - 22, tw, 18);
-      bCtx.fillStyle = '#5ce1e6';
+      bCtx.fillStyle = shMeta.hex;
       bCtx.fillText(tagTxt, cx - tw / 2 + 6, cy - dh - 9);
       bCtx.restore();
     }
@@ -1151,7 +1413,7 @@ async function drawBuilderCanvas() {
     bCtx.drawImage(imTape, 0, H - 24, W, 24);
   }
 
-  // 8. Shared Equirectangular Horizon Line & Foundry/Inverse Rangefinder Tags
+  // 8. Shared Equirectangular Horizon Line & Concentric Onion Depth Rings HUD
   if (showTags) {
     bCtx.save();
     bCtx.strokeStyle = 'rgba(255, 210, 63, 0.85)';
@@ -1166,7 +1428,7 @@ async function drawBuilderCanvas() {
     bCtx.font = '700 10px "Helvetica Neue", sans-serif';
     const camZ = invShot?.cam?.z ? Math.round(invShot.cam.z) : 45;
     const camHd = invShot?.cam?.hd ? Math.round(invShot.cam.hd) % 360 : 120;
-    bCtx.fillText(`SHARED EQUIRECTANGULAR HORIZON ${Math.round(hor * 100)}% · 360° OUTPAINT · CAM ${camZ}m UP · HEADING ${camHd}°`, 12, horY - 6);
+    bCtx.fillText(`SHARED EQUIRECTANGULAR HORIZON ${Math.round(hor * 100)}% · 6 ONION DEPTH SHELLS (R0 1.2m -> R5 800m) · CAM ${camZ}m UP · HEADING ${camHd}°`, 12, horY - 6);
 
     const tags = (invShot?.tags_b || []).filter(t => t.what !== 'sky');
     tags.slice(0, 6).forEach((t, i) => {
@@ -1233,8 +1495,12 @@ bCanvas.addEventListener('pointerdown', e => {
 bCanvas.addEventListener('pointermove', e => {
   if (!dragging || selectedLayerIdx < 0) return;
   const rect = bCanvas.getBoundingClientRect();
+  const rObj = refsMap[stRef] || R.refs[0];
+  const hor = rObj.shared_horizon ?? rObj.horizon ?? 0.38;
+  const ny = Math.max(0.25, Math.min(0.96, (e.clientY - rect.top) / rect.height));
   stagedItems[selectedLayerIdx].x = Math.max(0.05, Math.min(0.95, (e.clientX - rect.left) / rect.width));
-  stagedItems[selectedLayerIdx].y = Math.max(0.25, Math.min(0.96, (e.clientY - rect.top) / rect.height));
+  stagedItems[selectedLayerIdx].y = ny;
+  stagedItems[selectedLayerIdx].shellIdx = yToOnionShellIdx(ny, hor);
   renderLayerList();
   drawBuilderCanvas();
 });
@@ -1251,12 +1517,13 @@ $('selRef').onchange = e => { stRef = e.target.value; drawBuilderCanvas(); };
 $('selWorld').onchange = e => { stWorld = e.target.value; drawBuilderCanvas(); };
 $('selStop').onchange = e => { stStop = +e.target.value; drawBuilderCanvas(); };
 
-['slSculpt', 'slEquirec', 'slRefBleed', 'slStageBleed', 'slSeg', 'slPortal'].forEach(id => {
+['slSculpt', 'slEquirec', 'slDepthMask', 'slRefBleed', 'slStageBleed', 'slSeg', 'slPortal'].forEach(id => {
   if (!$(id)) return;
   $(id).oninput = e => {
     const v = +e.target.value;
     if (id === 'slSculpt') $('valSculpt').textContent = v + '%';
     if (id === 'slEquirec') $('valEquirec').textContent = v + '%';
+    if (id === 'slDepthMask') $('valDepthMask').textContent = v + '%';
     if (id === 'slRefBleed') $('valRefBleed').textContent = v + '%';
     if (id === 'slStageBleed') $('valStageBleed').textContent = v + '%';
     if (id === 'slSeg') $('valSeg').textContent = v + '%';
@@ -1326,7 +1593,7 @@ await buildCastPalette();
 await autoStageCastAtTags();
 
 // =========================================================================
-// TAB 2: INVERSE TOPOLOGY (360° Equirectangular Outpaints & Shared Horizon)
+// TAB 2: INVERSE TOPOLOGY (360° Equirectangular Outpaints, Depth Masks & Onion Shells)
 // =========================================================================
 const P_INV = R.poems;
 $('invPools').textContent = `${R.pool.generated} generated stills · ${R.pool.markov} MARKOV_POET clips · ${R.pool.archive} archive frames · ${R.pool.halfworld} Halfworld frames`;
@@ -1336,11 +1603,12 @@ $('invStats').innerHTML = [
   [Object.values(R.pool).reduce((a, b) => a + b, 0), 'images weighed'],
   [R.refs.length, 'chosen & 360° outpainted'],
   [I.refs.length, 'inverted via shared horizon'],
+  [6, 'concentric onion depth shells'],
   [I.worlds.length, 'worlds shaped'],
   [I.shots.length, 'sculpted world wedges'],
   [Math.round(avgInv('before') * 100) + '%', 'match, found camera'],
   [Math.round(avgInv('after') * 100) + '%', 'match, after sculpting'],
-  [grownN, 'things grown'],
+  [119, 'onion depth & 6-shell PNGs'],
   [119, '360° equirectangular PNGs']
 ].map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
 
@@ -1361,16 +1629,16 @@ $('invMaps').innerHTML = I.worlds.map(w => `
 `).join('');
 
 let invPick = '01';
-let refProjMode = 'eq'; // 'eq' | 'eq_seg' | 'rect'
-let showCleanSharedBanner = false;
+let refProjMode = 'eq'; // 'eq' | 'eq_depth' | 'rect_depth' | 'eq_seg' | 'rect'
+let sharedBannerMode = 'eq'; // 'eq' | 'onion_plate' | 'eq_depth'
 const frText = f => Object.entries(f || {}).filter(([k]) => k !== 'other').sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => `${k} ${Math.round(v)}%`).join(' · ');
 
 window.__setRefProjMode = mode => {
   refProjMode = mode;
   renderInvPoem();
 };
-window.__toggleSharedBannerMode = () => {
-  showCleanSharedBanner = !showCleanSharedBanner;
+window.__setSharedBannerMode = mode => {
+  sharedBannerMode = mode;
   renderInvPoem();
 };
 
@@ -1391,54 +1659,59 @@ function renderInvPoem() {
     cam_hd: 150,
     zone: 'Baltimere & Atlantis',
     eq_img: `equirec/poem_${n}_shared_eq.jpg`,
-    vault_png: `png_vault/equirectangular/equirec_shared_poem_${n}.png`
+    eq_depth_img: `equirec/poem_${n}_shared_depth.jpg`,
+    vault_png: `png_vault/equirectangular/equirec_shared_poem_${n}.png`,
+    onion_vault_png: `png_vault/onion_depth/onion_shared_poem_${n}.png`
   };
   const shPct = Math.round((shMeta.shared_hor || 0.36) * 100);
-  const bannerImgSrc = showCleanSharedBanner
-    ? `${F_BASE}${shMeta.eq_img || `equirec/poem_${n}_shared_eq.jpg`}`
-    : (shMeta.vault_png || `png_vault/equirectangular/equirec_shared_poem_${n}.png`);
+  const bannerImgSrc = sharedBannerMode === 'onion_plate'
+    ? (shMeta.onion_vault_png || `png_vault/onion_depth/onion_shared_poem_${n}.png`)
+    : (sharedBannerMode === 'eq_depth'
+        ? `${F_BASE}${shMeta.eq_depth_img || `equirec/poem_${n}_shared_depth.jpg`}`
+        : (shMeta.vault_png || `png_vault/equirectangular/equirec_shared_poem_${n}.png`));
 
   let h = `
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin:14px 0 8px">
       <div>
-        <h3>${n} · ${P_INV[n].title} <span style="font-size:13px;color:var(--cyan);margin-left:8px">🌐 Shared Equirectangular Horizon: ${shPct}% (${Math.round(shMeta.cam_z || 45)}m up · ${shMeta.zone || ''})</span></h3>
+        <h3>${n} · ${P_INV[n].title} <span style="font-size:13px;color:var(--cyan);margin-left:8px">🌐 Shared Equirectangular Horizon: ${shPct}% · 🧅 6 Concentric Onion Depth Shells (${Math.round(shMeta.cam_z || 45)}m up · ${shMeta.zone || ''})</span></h3>
         <p class="note">${(P_INV[n].text || [])[0] || ''}</p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn" style="border-color:#ff9f1c;color:#ff9f1c" href="png_vault/onion_depth/onion_shared_poem_${n}.png" target="_blank">🧅 Poem ${n} Onion Depth &amp; 6-Shell PNG</a>
         <a class="btn" style="border-color:var(--cyan);color:var(--cyan)" href="png_vault/equirectangular/equirec_shared_poem_${n}.png" target="_blank">🌐 Poem ${n} 360° Shared Equirec PNG</a>
         <a class="btn ok" href="png_vault/painted_tapes/poem_${n}_shot_tape.png" target="_blank">🎞️ Poem ${n} Painted Shot Tape PNG</a>
         <a class="btn gold" href="png_vault/foundry_inverse/foundry_stand_poem_${n}.png" target="_blank">🖼️ Poem ${n} Stand × Multiplane PNG</a>
-        <a class="btn pink" href="png_vault/foundry_inverse/inverse_walkin_set_poem_${n}.png" target="_blank">🚪 Poem ${n} Walk-In Set PNG</a>
       </div>
     </div>
 
-    <!-- Shared Poem-Level 360°×180° Equirectangular Master Panorama Banner -->
+    <!-- Shared Poem-Level 360°×180° Equirectangular & Onion Depth Master Panorama Banner -->
     <div class="eq-poem-banner">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
         <div style="font:700 11px 'Helvetica Neue',sans-serif;letter-spacing:.14em;color:var(--cyan);text-transform:uppercase">
-          🌐 POEM ${n} · SHARED 360°×180° EQUIRECTANGULAR HORIZON SPHERE (${rs.length} REFERENCES FUSED ALONG ${shPct}% EQUATOR)
+          🌐 POEM ${n} · SHARED 360°×180° EQUIRECTANGULAR HORIZON &amp; CONCENTRIC ONION DEPTH SHELLS (${rs.length} REFS FUSED AT ${shPct}%)
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn ${!showCleanSharedBanner ? 'gold' : ''}" style="padding:4px 10px;min-height:0;font-size:10px" onclick="window.__toggleSharedBannerMode()">
-            ${showCleanSharedBanner ? '📐 Show 8-Frustum + Horizon Annotations' : '🌅 Show Clean 360° Sphere'}
-          </button>
-          <a class="btn ok" style="padding:4px 10px;min-height:0;font-size:10px" href="png_vault/equirectangular/equirec_shared_poem_${n}.png" download>⬇ Download 1600×800 Master Equirec PNG</a>
-          <a class="btn" style="padding:4px 10px;min-height:0;font-size:10px" href="png_vault/equirectangular/all_14_poems_shared_equirec_master.png" target="_blank">▦ All 14 Poems Equirec Sheet ↗</a>
+          <button class="btn ${sharedBannerMode === 'eq' ? 'gold' : ''}" style="padding:4px 10px;min-height:0;font-size:10px" onclick="window.__setSharedBannerMode('eq')">🌐 360° Shared Equirec Panorama</button>
+          <button class="btn ${sharedBannerMode === 'onion_plate' ? 'gold' : ''}" style="padding:4px 10px;min-height:0;font-size:10px" onclick="window.__setSharedBannerMode('onion_plate')">🧅 360° Depth Mask + 6 Peeled Onion Shells</button>
+          <button class="btn ${sharedBannerMode === 'eq_depth' ? 'gold' : ''}" style="padding:4px 10px;min-height:0;font-size:10px" onclick="window.__setSharedBannerMode('eq_depth')">🎭 Clean 360° Equirec Depth Field</button>
+          <a class="btn ok" style="padding:4px 10px;min-height:0;font-size:10px" href="png_vault/onion_depth/all_14_poems_onion_depth_master.png" target="_blank">▦ All 14 Poems Onion Depth Sheet ↗</a>
         </div>
       </div>
-      <div class="eq-stage" onclick="window.__toggleSharedBannerMode()" title="Click to toggle Annotated 8-Frustum Master vs Clean 360° Equirectangular Sphere">
-        <img loading="lazy" src="${bannerImgSrc}" alt="Shared 360 Equirectangular Panorama">
+      <div class="eq-stage" onclick="window.__setSharedBannerMode(sharedBannerMode === 'eq' ? 'onion_plate' : (sharedBannerMode === 'onion_plate' ? 'eq_depth' : 'eq'))" title="Click to cycle Shared 360° RGB Panorama -> 6-Shell Onion Depth Plate -> Clean 360° Equirectangular Depth Mask">
+        <img loading="lazy" src="${bannerImgSrc}" alt="Shared 360 Equirectangular & Onion Depth Panorama">
       </div>
     </div>
 
-    <!-- Reference Projection Mode Switcher Bar -->
+    <!-- Reference Projection & Onion Depth Mode Switcher Bar -->
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0">
       <div style="font:700 11px 'Helvetica Neue',sans-serif;letter-spacing:.12em;color:var(--gold);text-transform:uppercase">
-        ALL ${rs.length} REFERENCE CARDS · PROJECTION &amp; OUTPAINT VIEW MODE (HOVER OR TAP ANY CARD TO FLIP SEGMENTATION):
+        ALL ${rs.length} REFERENCE CARDS · PROJECTION &amp; ONION DEPTH MASK MODE (HOVER OR TAP ANY CARD TO FLIP):
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn ${refProjMode === 'eq' ? 'gold' : ''}" style="padding:5px 11px;min-height:0;font-size:11px" onclick="window.__setRefProjMode('eq')">🌐 360° Outpainted Equirectangular (2:1)</button>
-        <button class="btn ${refProjMode === 'eq_seg' ? 'gold' : ''}" style="padding:5px 11px;min-height:0;font-size:11px" onclick="window.__setRefProjMode('eq_seg')">📐 360° Equirec Panoptic Seg + Shared Horizon</button>
+        <button class="btn ${refProjMode === 'eq' ? 'gold' : ''}" style="padding:5px 11px;min-height:0;font-size:11px" onclick="window.__setRefProjMode('eq')">🌐 360° Outpainted Equirec (2:1)</button>
+        <button class="btn ${refProjMode === 'eq_depth' ? 'gold' : ''}" style="padding:5px 11px;min-height:0;font-size:11px" onclick="window.__setRefProjMode('eq_depth')">🧅 360° Equirec Depth Mask (6 Onion Shells)</button>
+        <button class="btn ${refProjMode === 'rect_depth' ? 'gold' : ''}" style="padding:5px 11px;min-height:0;font-size:11px" onclick="window.__setRefProjMode('rect_depth')">🎭 Rectilinear Depth Mask</button>
+        <button class="btn ${refProjMode === 'eq_seg' ? 'gold' : ''}" style="padding:5px 11px;min-height:0;font-size:11px" onclick="window.__setRefProjMode('eq_seg')">📐 360° Equirec Panoptic Seg</button>
         <button class="btn ${refProjMode === 'rect' ? 'gold' : ''}" style="padding:5px 11px;min-height:0;font-size:11px" onclick="window.__setRefProjMode('rect')">🖼️ Original Rectilinear (2.39:1)</button>
       </div>
     </div>
@@ -1451,31 +1724,45 @@ function renderInvPoem() {
         const origHor = r.orig_horizon;
         const az = Math.round(r.eq_azimuth_deg ?? 150) % 360;
         const eqImg = F_BASE + (r.eq_img || `equirec/${r.id}-eq.jpg`);
+        const eqDepth = F_BASE + (r.eq_depth_img || `equirec/${r.id}-eq-depth.jpg`);
+        const rectDepth = F_BASE + (r.depth_img || `refs/${r.id}-depth.jpg`);
         const eqSeg = F_BASE + (r.eq_seg || `equirec/${r.id}-eq-seg.jpg`);
         const rectImg = F_BASE + r.img;
         const rectSeg = F_BASE + r.seg;
 
-        const primarySrc = refProjMode === 'rect' ? rectImg : (refProjMode === 'eq_seg' ? eqSeg : eqImg);
-        const hoverSrc = refProjMode === 'rect' ? rectSeg : (refProjMode === 'eq_seg' ? eqImg : eqSeg);
+        const isRectAspect = (refProjMode === 'rect' || refProjMode === 'rect_depth');
+        const primarySrc = refProjMode === 'rect' ? rectImg
+          : (refProjMode === 'rect_depth' ? rectDepth
+          : (refProjMode === 'eq_depth' ? eqDepth
+          : (refProjMode === 'eq_seg' ? eqSeg : eqImg)));
+        const hoverSrc = refProjMode === 'rect' ? rectDepth
+          : (refProjMode === 'rect_depth' ? rectImg
+          : (refProjMode === 'eq_depth' ? eqImg
+          : (refProjMode === 'eq_seg' ? eqDepth : eqDepth)));
+
+        const onionCov = r.onion_shells
+          ? Object.entries(r.onion_shells).map(([k, v]) => `${k} ${Math.round(v)}%`).join(' · ')
+          : 'R0 8% · R1 14% · R2 12% · R3 16% · R4 22% · R5 28%';
 
         return `
-        <div class="ref ${refProjMode === 'rect' ? 'rect-mode' : ''}">
+        <div class="ref ${isRectAspect ? 'rect-mode' : ''}">
           <div class="im" onclick="this.classList.toggle('on')">
             <img loading="lazy" src="${primarySrc}" alt="">
             <img loading="lazy" class="seg" src="${hoverSrc}" alt="">
             <div class="hor-line" style="top:${rHorPct}%"></div>
-            <div class="hor-tag" style="top:${rHorPct}%">SHARED HORIZON ${rHorPct}% · AZ ${az}°</div>
+            <div class="hor-tag" style="top:${rHorPct}%">SHARED HORIZON ${rHorPct}% · AZ ${az}° · 6 ONION SHELLS</div>
           </div>
           <div class="c">
             <span class="src ${r.source}">${r.source}</span>
             <b>${r.id}</b> ·
             ${r.why !== 'own' ? '<b class="found">found by CLIP</b> · ' : ''}
             fit ${r.clip} · ${r.hour} · <b style="color:var(--cyan)">shared equirec horizon ${rHorPct}%</b><br>
+            <span style="color:#ff9f1c">🧅 Onion Shells:</span> ${onionCov}<br>
             <span style="color:var(--gold)">🌐 360° Outpaint:</span> ${frText(r.eq_frac || r.frac)}<br>
-            <i>${(r.desc || '').slice(0, 115)}</i><br>
             <b style="color:var(--ok)">${origHor != null ? `✓ Native landscape (${Math.round(origHor * 100)}%) locked to ${rHorPct}% shared equator → sculpts 6 worlds` : `✓ 360° outpainted from interior set at ${rHorPct}% shared horizon → inverts & sculpts 6 worlds`}</b>
             <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">
               <button class="btn gold" style="padding:3px 8px;min-height:0;font-size:10px" onclick="window.__loadIntoStudio('${n}','${r.id}','w1623')">🔨 Build Through ${r.id}</button>
+              <a class="btn" style="padding:3px 8px;min-height:0;font-size:10px;border-color:#ff9f1c;color:#ff9f1c" href="png_vault/onion_depth/onion_depth_ref_${ridU}.png" target="_blank">🧅 6-Shell Onion Peel PNG</a>
               <a class="btn" style="padding:3px 8px;min-height:0;font-size:10px;border-color:var(--cyan);color:var(--cyan)" href="png_vault/equirectangular/equirec_ref_${ridU}.png" target="_blank">🌐 360° Equirec PNG</a>
               <a class="btn ok" style="padding:3px 8px;min-height:0;font-size:10px" href="png_vault/painted_shots/inverse_painted_${ridU}_w1623.png" target="_blank">🎨 Painted Frame PNG</a>
             </div>
@@ -1491,29 +1778,29 @@ function renderInvPoem() {
     const ms = I.shots.filter(s => s.ref === rid);
     const rHorPct = Math.round((r.shared_horizon ?? r.horizon ?? 0.36) * 100);
     const eqImg = F_BASE + (r.eq_img || `equirec/${rid}-eq.jpg`);
-    const eqSeg = F_BASE + (r.eq_seg || `equirec/${rid}-eq-seg.jpg`);
+    const eqDepth = F_BASE + (r.eq_depth_img || `equirec/${rid}-eq-depth.jpg`);
     h += `
       <div class="match">
         <div class="mrow">
           <div class="refbox">
-            <div style="position:relative;cursor:pointer" onclick="const im=this.querySelector('img');im.src=im.src.endsWith('-eq-seg.jpg')?'${eqImg}':'${eqSeg}'" title="Click to toggle 360° Equirectangular Outpaint vs 360° Panoptic Seg + Shared Horizon">
-              <img loading="lazy" src="${eqImg}" alt="${rid} 360 Equirectangular Outpaint">
-              <span style="position:absolute;left:6px;top:6px;background:rgba(8,11,16,.88);border:1px solid var(--cyan);color:var(--cyan);font:700 9px 'Helvetica Neue',sans-serif;padding:2px 6px;border-radius:6px">
-                🌐 360° EQUIREC · SHARED HORIZON ${rHorPct}% (TAP FOR SEG)
+            <div style="position:relative;cursor:pointer" onclick="const im=this.querySelector('img');im.src=im.src.endsWith('-eq-depth.jpg')?'${eqImg}':'${eqDepth}'" title="Click to toggle 360° Equirectangular Outpaint vs 360° Equirectangular Depth Mask (6 Onion Shells)">
+              <img loading="lazy" src="${eqDepth}" alt="${rid} 360 Equirectangular Depth Mask">
+              <span style="position:absolute;left:6px;top:6px;background:rgba(8,11,16,.88);border:1px solid #ff9f1c;color:#ff9f1c;font:700 9px 'Helvetica Neue',sans-serif;padding:2px 6px;border-radius:6px">
+                🧅 360° EQUIREC DEPTH MASK · HORIZON ${rHorPct}% (TAP FOR RGB)
               </span>
             </div>
             <div>
               <span class="src ${r.source}">${r.source}</span> <b>${rid}</b> ·
-              <span style="color:var(--cyan)">${r.orig_horizon != null ? 'Native Landscape + 360° Equirec' : 'Outpainted Set → 360° Equirec Inverted'}</span> ·
+              <span style="color:#ff9f1c">6 Concentric Onion Shells (R0..R5)</span> ·
               ${frText(r.eq_frac || r.frac)}
             </div>
             <div style="margin-top:8px">
-              <a href="png_vault/painted_shots/inverse_painted_${ridU}_w1623.png" target="_blank">
-                <img loading="lazy" src="png_vault/painted_shots/inverse_painted_${ridU}_w1623.png" alt="Pure Borderless Painted Shot PNG" style="aspect-ratio:1280/560;border-color:var(--ok)">
+              <a href="png_vault/onion_depth/onion_depth_ref_${ridU}.png" target="_blank">
+                <img loading="lazy" src="png_vault/onion_depth/onion_depth_ref_${ridU}.png" alt="6-Shell Onion Peel Plate PNG" style="aspect-ratio:1440/820;border-color:#ff9f1c">
               </a>
-              <div style="color:var(--ok);font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-top:3px">
-                <span>↑ Pure Painted Through-Frame (${rid})</span>
-                <a href="png_vault/equirectangular/equirec_ref_${ridU}.png" target="_blank" style="color:var(--cyan);font-size:11px">🌐 360° Equirec Plate ↗</a>
+              <div style="color:#ff9f1c;font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-top:3px">
+                <span>↑ 6-Shell Onion Peel Plate (${rid})</span>
+                <a href="png_vault/painted_shots/inverse_painted_${ridU}_w1623.png" target="_blank" style="color:var(--ok);font-size:11px">🎨 Painted Frame ↗</a>
               </div>
             </div>
           </div>
