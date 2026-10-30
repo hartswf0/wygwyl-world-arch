@@ -5,6 +5,7 @@
 // reaches and gestures are IK targets; card-only characters (no jointed parts yet) hop-step between plants.
 import { D2R, add, sub, mul, len, norm, lerp, lerp3, smooth, wrapDeg, axes, bodyOf, poseBody, bodyPoint, viewOf } from './rig.js';
 import { pip, clampToPoly, segHitsPoly, polyBox, onGround, groundOf } from './camera.js';
+import { extFrame } from './ext.js';
 
 export const ACTIONS = {
   walk_to:      { args: '{to:[x,y] | mark | surface:id, speed?, arrive_word?}', doc: 'footstep-planned walk on the ground plane; detours round occluder footprints' },
@@ -424,6 +425,7 @@ function buildFrames(tr, scene, ctx, out, fps, N) {
     // posture, pulses, sway
     const drop = easeAt(posture, t, 'drop'), back = easeAt(posture, t, 'back');
     let headPitch = easeAt(head, t, 'pitch'), lean = (c.lean || 0) + (walking ? 3 : 0), bob = 0, sway = 0, swayCard = 0, dropPulse = 0;
+    const xm = extFrame(tr, t, B); if (xm) { headPitch += xm.headPitch; lean += xm.lean; dropPulse += xm.drop; }   // lib/ext.js action channels
     for (const p of pulses) {
       const u = (t - p.t) / 0.45; if (u < 0 || u > 1) continue;
       const k = Math.sin(Math.PI * Math.min(1, u * 1.6)) * (1 - u) * 1.6;
@@ -472,8 +474,8 @@ function buildFrames(tr, scene, ctx, out, fps, N) {
     const a2 = easeAt(alpha, t, 'a');
     // prop holders
     tr.frames.push({ f, t, X, Z, phi, pelvisY, lean: lean + sway * 3, headPitch, bob, feet, arms: armSt, hands: hShape, head: stepAt(heads, t, 'head'),
-      walking, phase, alpha: a2, swayCard, swayRot: swaying ? sway * 2.5 : 0, swaying: !!swaying,
-      card: { X: cardX, Z: cardZ, lift: cardLift, planted: cardPlanted, state: (walking && swaying && w?.keep) ? 'dance' : walking ? 'walk' : swaying ? 'dance' : ((tr.walks.some(wk => t >= wk.t1) && c.card_state_after_walk) || c.card_state || 'stand') },
+      walking, phase, alpha: a2 * (xm?.alpha ?? 1), swayCard, swayRot: swaying ? sway * 2.5 : 0, swaying: !!swaying,
+      card: { X: cardX, Z: cardZ, lift: cardLift, planted: cardPlanted, state: (!walking && xm?.card) ? xm.card : (walking && swaying && w?.keep) ? 'dance' : walking ? 'walk' : swaying ? 'dance' : ((tr.walks.some(wk => t >= wk.t1) && c.card_state_after_walk) || c.card_state || 'stand') },
       posture: drop > 0.1 * B.H ? 'sit' : 'stand', back });
   }
 }

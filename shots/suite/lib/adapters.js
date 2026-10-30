@@ -146,6 +146,7 @@ export function normSet(s) {
   if (set.ground.horizon_y_px == null) set.ground.horizon_y_px = set.frame[1] * 0.45;
   if (set.ground.y_px == null) set.ground.y_px = set.frame[1] * 0.86;
   if (!set.scale.px_per_cm_at_ground_line && set.scale.figure_height_px) set.scale.px_per_cm_at_ground_line = set.scale.figure_height_px / 175;
+  if (!set.scale.focal_px && set.scale.focal_px_stage) set.scale.focal_px = set.scale.focal_px_stage;   // lane C's focal: puppets and plate layers share one depth scale
   // lane C stores the whole plate beside its planes: it is the back card, under every plane cut from it
   const layers = set.layers || [];
   if (set.plate && !layers.some(l => l.file === set.plate)) layers.unshift({ id: `${set.scene_id}.plate`, plane: 'P6', kind: 'image', file: set.plate, parallax: 1, z: -1 });
