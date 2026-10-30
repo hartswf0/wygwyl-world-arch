@@ -22,7 +22,7 @@ export function fileURL(f) {
   if (f.startsWith('/')) return f;
   if (f.startsWith('shots/')) return new URL(f.slice(6), SHOTS).href;
   if (f.startsWith('suite/')) return new URL(f.slice(6), SUITE).href;
-  if (f.startsWith('data/') || f.startsWith('lib/')) return new URL(f, SUITE).href;
+  if (f.startsWith('data/') || f.startsWith('lib/') || f.startsWith('sets/') || f.startsWith('parts/') || f.startsWith('cast/')) return new URL(f, SUITE).href;   // lane files are relative to shots/suite/
   return new URL(f, SHOTS).href;                    // contract paths are relative to shots/
 }
 
@@ -142,7 +142,10 @@ export function normSet(s) {
   if (set.ground.horizon_y_px == null) set.ground.horizon_y_px = set.frame[1] * 0.45;
   if (set.ground.y_px == null) set.ground.y_px = set.frame[1] * 0.86;
   if (!set.scale.px_per_cm_at_ground_line && set.scale.figure_height_px) set.scale.px_per_cm_at_ground_line = set.scale.figure_height_px / 175;
-  set.layers = (set.layers || []).map((l, i) => ({ parallax: 1, z: i, ...l, url: fileURL(l.file) }));
+  // lane C stores the whole plate beside its planes: it is the back card, under every plane cut from it
+  const layers = set.layers || [];
+  if (set.plate && !layers.some(l => l.file === set.plate)) layers.unshift({ id: `${set.scene_id}.plate`, plane: 'P6', kind: 'image', file: set.plate, parallax: 1, z: -1 });
+  set.layers = layers.map((l, i) => ({ parallax: 1, z: i, ...l, url: fileURL(l.file) }));
   set.surfaces = set.surfaces || [];
   set.occluders = (set.occluders || []).map(o => ({ ...o, base_y: o.base_y ?? Math.max(...(o.polygon || [[0, 0]]).map(p => p[1])), url: fileURL(o.file) }));
   set.walkable = set.walkable || [[0, set.ground.horizon_y_px + 20], [set.frame[0], set.ground.horizon_y_px + 20], [set.frame[0], set.frame[1]], [0, set.frame[1]]];
