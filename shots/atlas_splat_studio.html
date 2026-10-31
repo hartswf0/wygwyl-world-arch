@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WYGWYL · World Labs Atlas / Marble .GLB & 3D Gaussian Splat Infrastructure Studio</title>
+  <style>
+    :root {
+      --bg: #070b10;
+      --panel: #0d141e;
+      --panel-2: #121c2a;
+      --border: rgba(243, 234, 210, 0.16);
+      --gold: #ffd23f;
+      --teal: #19e6c8;
+      --green: #8fd694;
+      --coral: #ff3d6e;
+      --amber: #ff9f1c;
+      --violet: #7b61ff;
+      --fg: #f3ead2;
+      --muted: #9cb0c9;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+    }
+    /* Top Suite Navigation */
+    .top-nav {
+      height: 48px;
+      background: linear-gradient(90deg, #090f17, #111b28);
+      border-bottom: 1px solid rgba(255, 210, 63, 0.32);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      gap: 10px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      color: var(--gold);
+      white-space: nowrap;
+    }
+    .brand span.badge {
+      background: rgba(25, 230, 200, 0.16);
+      border: 1px solid var(--teal);
+      color: var(--teal);
+      padding: 3px 8px;
+      border-radius: 99px;
+      font-size: 10px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+    }
+    .nav-links a {
+      color: var(--fg);
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 9px;
+      border-radius: 7px;
+      border: 1px solid rgba(243, 234, 210, 0.15);
+      background: rgba(255, 255, 255, 0.03);
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      border-color: var(--gold);
+      color: #090d12;
+      background: var(--gold);
+    }
+
+    /* Main 3-Column Workspace */
+    .workspace {
+      display: grid;
+      grid-template-columns: 350px 1fr 410px;
+      height: calc(100vh - 48px);
+      width: 100vw;
+    }
+    .col {
+      height: 100%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .col-left {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 12px;
+      gap: 12px;
+    }
+    .col-center {
+      position: relative;
+      background: #05080c;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .col-right {
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      padding: 12px;
+      gap: 12px;
+    }
+
+    /* Cards & Controls */
+    .section-card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tab-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .btn {
+      background: #162234;
+      color: var(--fg);
+      border: 1px solid rgba(243, 234, 210, 0.22);
+      border-radius: 7px;
+      padding: 7px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.14s ease;
+      text-align: center;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+    .btn.active {
+      background: linear-gradient(180deg, #ffd23f, #e0a81e);
+      color: #080c12;
+      border-color: var(--gold);
+    }
+    .btn.teal {
+      background: rgba(25, 230, 200, 0.14);
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+    .btn.teal.active, .btn.teal:hover {
+      background: var(--teal);
+      color: #041512;
+    }
+
+    /* Hub / District Selector List */
+    .hub-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .hub-item {
+      background: rgba(10, 16, 24, 0.85);
+      border: 1px solid rgba(243, 234, 210, 0.16);
+      border-radius: 9px;
+      padding: 9px 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .hub-item:hover {
+      border-color: var(--teal);
+    }
+    .hub-item.active {
+      border-color: var(--gold);
+      background: linear-gradient(90deg, rgba(255, 210, 63, 0.14), rgba(25, 230, 200, 0.06));
+      box-shadow: 0 0 16px rgba(255, 210, 63, 0.18);
+    }
+    .hub-item .hi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--gold);
+    }
+    .hub-item .hi-sub {
+      font-size: 10.5px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .hub-item .hi-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .pill {
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #cfe0f5;
+    }
+    .pill.teal { background: rgba(25, 230, 200, 0.16); color: var(--teal); }
+    .pill.green { background: rgba(143, 214, 148, 0.18); color: var(--green); }
+    .pill.coral { background: rgba(255, 61, 110, 0.18); color: #ff8da8; }
+
+    /* Center 3D Viewport & Overlays */
+    #viewport-wrap {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+    }
+    #three-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .vp-hud-top {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .vp-hud-box {
+      pointer-events: auto;
+      background: rgba(8, 13, 20, 0.9);
+      border: 1px solid rgba(255, 210, 63, 0.35);
+      border-radius: 10px;
+      padding: 7px 11px;
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+    }
+    .frustum-bar {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      pointer-events: auto;
+      background: rgba(8, 13, 20, 0.92);
+      border: 1px solid rgba(25, 230, 200, 0.38);
+      border-radius: 11px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      backdrop-filter: blur(12px);
+    }
+    .frustum-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    /* Receiver Dropzone */
+    .drop-zone {
+      border: 2px dashed rgba(25, 230, 200, 0.5);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      background: rgba(25, 230, 200, 0.05);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--gold);
+      background: rgba(255, 210, 63, 0.12);
+    }
+
+    /* Anchor & Excluded Ref Grid in Right Column */
+    .anchor-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .ref-card {
+      background: #0b111a;
+      border: 1px solid rgba(143, 214, 148, 0.35);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: transform 0.12s ease;
+    }
+    .ref-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+    }
+    .ref-card.excluded {
+      border-color: rgba(255, 61, 110, 0.45);
+      opacity: 0.88;
+    }
+    .ref-card img {
+      width: 100%;
+      height: 92px;
+      object-fit: cover;
+      display: block;
+    }
+    .ref-card .rc-body {
+      padding: 6px 8px;
+      font-size: 10.5px;
+      line-height: 1.3;
+    }
+    .matrix-box {
+      font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+      font-size: 10.5px;
+      background: #070b10;
+      border: 1px solid rgba(25, 230, 200, 0.28);
+      border-radius: 7px;
+      padding: 8px;
+      color: #a8f0e2;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+    }
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--teal);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="top-nav">
+    <div class="brand">
+      <span>🌐 WYGWYL · ATLAS / MARBLE .GLB &amp; SPLAT INFRASTRUCTURE STUDIO</span>
+      <span class="badge">4 MEGA-HUBS · 10 DISTRICTS · LIVE 3D SPLAT + .GLB COLLIDER</span>
+    </div>
+    <nav class="nav-links">
+      <a href="atlas_splat_studio.html" class="active">🌐 Atlas Splat &amp; .GLB Studio</a>
+      <a href="terrarium.html">🗺️ 3D Terrarium &amp; Dog</a>
+      <a href="foundry_inverse.html">🧅 Foundry Inverse &amp; Onion Depth</a>
+      <a href="png_browser.html?cat=atlas_splats">🖼️ PNG Vault (701)</a>
+      <a href="stage.html">🎭 Multiplane Stage</a>
+      <a href="crash_lab.html">🛡️ Crash Lab</a>
+      <a href="body_lab.html">🦾 Body Lab</a>
+      <a href="suite.html">🎬 14-Poem Suite</a>
+    </nav>
+  </header>
+
+  <main class="workspace">
+    <!-- LEFT COLUMN: 4 MEGA-HUBS, 10 DISTRICTS, UPLOAD EXPORTER & RECEIVER DOCK -->
+    <aside class="col col-left">
+      <div class="section-card">
+        <div class="section-title">
+          <span>1. Select Splat Hub or City District</span>
+          <span id="lbl-active-mode" style="color:var(--teal)">4 Mega-Hubs</span>
+        </div>
+        <div class="tab-row">
+          <button class="btn active" id="tab-megahubs" type="button">🔥 4 Mega-Hubs (92%)</button>
+          <button class="btn" id="tab-districts" type="button">🏙️ All 10 Districts</button>
+        </div>
+        <div class="hub-list" id="hub-list-container"></div>
+      </div>
+
+      <!-- EXPORT TO MARBLE / ATLAS PACK -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>2. Export Upload Pack for Marble / Atlas</span>
+          <span class="pill teal">Ready</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.35;">
+          Upload the <b>Chisel .GLB Collider</b> + <b>2560×1280 Clean Pano</b> (or the 4–6 Actor-Cleaned Anchors + OpenCV Poses) to <a href="https://marble.worldlabs.ai/" target="_blank" style="color:var(--gold)">Marble</a> / <a href="https://www.worldlabs.ai/blog/atlas" target="_blank" style="color:var(--teal)">Atlas</a>:
+        </div>
+        <div class="tab-row">
+          <a id="dl-chisel-glb" class="btn teal" href="#" download>⬇ Chisel .GLB Mesh</a>
+          <a id="dl-clean-pano" class="btn" href="#" download>⬇ 2560×1280 Pano</a>
+          <a id="dl-clean-depth" class="btn" href="#" download>⬇ 2560×1280 Depth</a>
+          <a id="dl-splat-seed" class="btn" href="#" download>⬇ 3D .SPLAT Seed</a>
+        </div>
+        <div class="tab-row">
+          <a id="btn-open-terrarium" class="btn active" href="terrarium.html">🚀 Mount This Hub in 3D Terrarium</a>
+        </div>
+      </div>
+
+      <!-- RECEIVE & INTEGRATE .GLB / .SPLAT / .PLY INFRASTRUCTURE -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>3. Receive &amp; Mount .GLB / .SPLAT / .PLY</span>
+          <span class="pill green">OpenCV ↔ Three.js</span>
+        </div>
+        <label class="drop-zone" id="drop-zone">
+          <input type="file" id="file-receiver" accept=".glb,.gltf,.splat,.ply,.spz,.json" style="display:none" multiple />
+          <div style="font-weight:800;font-size:12px;color:var(--teal);margin-bottom:4px;">
+            📥 Drop Marble/Atlas .GLB, .SPLAT, .PLY, or .SPZ Here
+          </div>
+          <div style="font-size:10.5px;color:var(--muted);">
+            Automatically applies the <b>OpenCV (+X left, +Y down, +Z fwd) → Three.js Terrarium Datum</b> transform, registers floor/wall colliders, and mounts the splat!
+          </div>
+        </label>
+        <div class="slider-row">
+          <span>Coord Convention:</span>
+          <select id="sel-coord-conv" style="background:#0a1018;color:var(--fg);border:1px solid var(--border);border-radius:5px;padding:4px;font-size:10.5px;">
+            <option value="threejs">Three.js Metric (Pre-Aligned Seed / GLB)</option>
+            <option value="opencv">Marble OpenCV (+X Left, +Y Down, +Z Fwd)</option>
+          </select>
+        </div>
+        <div class="slider-row">
+          <span>Splat Scale:</span>
+          <input type="range" id="sl-splat-scale" min="0.2" max="3.5" step="0.05" value="1.0" />
+          <span id="val-splat-scale">1.0×</span>
+        </div>
+        <div class="slider-row">
+          <span>Splat Opacity:</span>
+          <input type="range" id="sl-splat-opacity" min="0.0" max="1.0" step="0.02" value="0.92" />
+          <span id="val-splat-opacity">92%</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER COLUMN: LIVE 3D .GLB + GAUSSIAN SPLAT INFRASTRUCTURE VIEWPORT -->
+    <section class="col col-center">
+      <div id="viewport-wrap">
+        <canvas id="three-canvas"></canvas>
+
+        <!-- TOP VIEWPORT HUD -->
+        <div class="vp-hud-top">
+          <div class="vp-hud-box">
+            <strong id="vp-title" style="color:var(--gold)">MEGA-HUB 01 · ATLANTIS</strong>
+            <span class="pill teal" id="vp-stats">28,000 Splats · 11,240 GLB Tris</span>
+          </div>
+
+          <div class="vp-hud-box">
+            <span>.GLB Infrastructure Mode:</span>
+            <button class="btn active" id="btn-glb-wire" type="button">📐 Chisel Wire + Solid</button>
+            <button class="btn" id="btn-glb-occ" type="button" title="Renders .GLB to depth buffer only so R3 walls occlude R1 2.5D actors inside the splat!">👻 Depth-Occlusion Prepass</button>
+            <button class="btn" id="btn-glb-off" type="button">Hide .GLB</button>
+            <button class="btn teal active" id="btn-toggle-actors" type="button">🎭 R1 Cut-Out Actors: ON</button>
+            <button class="btn" id="btn-bake-plate" type="button">📸 Bake 16:9 Backplate</button>
+          </div>
+        </div>
+
+        <!-- BOTTOM VIEWPORT HUD: TWIN-STATE MORPH & POSED CAMERA FRUSTUMS (A..F) -->
+        <div class="frustum-bar">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div style="font-size:11px;font-weight:800;color:var(--teal);">
+              🎥 POSED SPATIAL CONTEXT CAMERAS &amp; SET-PIECE PORTALS (CLICK TO STEP INSIDE FRUSTUM):
+            </div>
+            <div id="twin-morph-wrap" style="display:flex;align-items:center;gap:8px;font-size:11px;background:rgba(255,210,63,0.12);padding:4px 10px;border-radius:7px;border:1px solid var(--gold);">
+              <strong style="color:var(--gold)">⚡ Twin-State Splat Morph (P03 Storm Ruin ↔ P11 White Temple):</strong>
+              <input type="range" id="sl-twin-morph" min="0" max="1" step="0.01" value="1.0" style="width:130px;accent-color:var(--gold);" />
+              <span id="val-twin-morph" style="font-weight:800;color:var(--gold);">100% Temple</span>
+            </div>
+          </div>
+          <div class="frustum-pills" id="frustum-buttons"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: PANO, BLUEPRINT PLATE, INCLUDED ANCHORS, EXCLUDED REFS & MATRIX -->
+    <aside class="col col-right">
+      <div class="section-card">
+        <div class="section-title">
+          <span>Actor-Cleaned 2560×1280 (2:1) Pano &amp; Depth</span>
+          <a id="link-full-plate" href="#" target="_blank" style="color:var(--teal);font-size:10.5px;text-decoration:none;">🔍 Full Blueprint PNG</a>
+        </div>
+        <img id="img-hub-pano" src="data/terrarium/atlas_packs/hub_01_atlantis/pano_2560x1280_clean.jpg" alt="Pano" style="width:100%;height:130px;object-fit:cover;border-radius:7px;border:1px solid var(--border);" />
+        <img id="img-hub-depth" src="data/terrarium/atlas_packs/hub_01_atlantis/depth_2560x1280.jpg" alt="Depth" style="width:100%;height:95px;object-fit:cover;border-radius:7px;border:1px solid var(--border);" />
+        <div id="txt-bang-for-buck" style="font-size:11px;color:var(--gold);background:rgba(255,210,63,0.09);padding:7px 9px;border-radius:6px;border-left:3px solid var(--gold);line-height:1.35;"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title">
+          <span>✓ Included Spatial Context Anchors (R0/R1 Stripped)</span>
+          <span class="pill green" id="cnt-included">6 Anchors</span>
+        </div>
+        <div class="anchor-grid" id="grid-included-anchors"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title">
+          <span>✕ Excluded Refs (Prevent Spatial Poisoning &amp; Bleed)</span>
+          <span class="pill coral" id="cnt-excluded">Excluded</span>
+        </div>
+        <div class="anchor-grid" id="grid-excluded-refs"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title">
+          <span>OpenCV ↔ Three.js Terrarium Bridge Matrix</span>
+          <span class="pill teal">1m = 1u</span>
+        </div>
+        <div class="matrix-box" id="box-coord-matrix"></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- THREE.JS + GLTFLOADER + ORBITCONTROLS -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    const STATE = {
+      manifest: null,
+      tabMode: 'megahubs', // 'megahubs' | 'districts'
+      activeHubId: 'hub_01_atlantis',
+      activeDistrictKey: 'centro',
+      glbMode: 'wire', // 'wire' | 'occ' | 'off'
+      showActors: true,
+      splatScale: 1.0,
+      splatOpacity: 0.92,
+      twinMorph: 1.0,
+      coordConv: 'threejs',
+    };
+
+    // ── THREE.JS SCENE SETUP ──────────────────────────────────────────────────
+    const canvas = document.getElementById('three-canvas');
+    const wrap = document.getElementById('viewport-wrap');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x060a10);
+    scene.fog = new THREE.FogExp2(0x060a10, 0.0032);
+
+    const camera = new THREE.PerspectiveCamera(48, 16 / 9, 0.2, 1200);
+    camera.position.set(35, 38, 65);
+
+    const orbit = new OrbitControls(camera, canvas);
+    orbit.enableDamping = true;
+    orbit.dampingFactor = 0.06;
+    orbit.target.set(0, 4, 0);
+
+    const ambLight = new THREE.AmbientLight(0xd8e6ff, 1.35);
+    scene.add(ambLight);
+    const dirLight = new THREE.DirectionalLight(0xffebc2, 1.4);
+    dirLight.position.set(60, 120, 80);
+    scene.add(dirLight);
+
+    const gridHelper = new THREE.GridHelper(220, 44, 0x19e6c8, 0x162436);
+    gridHelper.position.y = -0.05;
+    scene.add(gridHelper);
+
+    const glbGroup = new THREE.Group();
+    glbGroup.name = 'CHISEL_GLB_INFRASTRUCTURE';
+    scene.add(glbGroup);
+
+    const splatGroup = new THREE.Group();
+    splatGroup.name = 'GAUSSIAN_SPLAT_CLOUD';
+    scene.add(splatGroup);
+
+    const actorsGroup = new THREE.Group();
+    actorsGroup.name = 'R1_CUTOUT_ACTORS_AND_FRUSTUMS';
+    scene.add(actorsGroup);
+
+    const gltfLoader = new GLTFLoader();
+    const texLoader = new THREE.TextureLoader();
+
+    function resizeViewport() {
+      const w = wrap.clientWidth || 800;
+      const h = wrap.clientHeight || 600;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', resizeViewport);
+    resizeViewport();
+
+    // Create soft Gaussian radial sprite texture for splat rendering
+    function makeGaussianSplatTexture() {
+      const sz = 64;
+      const cv = document.createElement('canvas');
+      cv.width = sz; cv.height = sz;
+      const ctx = cv.getContext('2d');
+      const grad = ctx.createRadialGradient(sz/2, sz/2, 1, sz/2, sz/2, sz/2);
+      grad.addColorStop(0.0, 'rgba(255,255,255,1.0)');
+      grad.addColorStop(0.35, 'rgba(255,255,255,0.82)');
+      grad.addColorStop(0.7, 'rgba(255,255,255,0.28)');
+      grad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, sz, sz);
+      const tex = new THREE.CanvasTexture(cv);
+      return tex;
+    }
+    const GAUSSIAN_TEX = makeGaussianSplatTexture();
+
+    // ── PARSE 32-BYTE `.SPLAT` OR `.PLY` BUFFER INTO THREE.JS SPLAT CLOUD ────
+    function parse32ByteSplatBuffer(arrayBuffer, applyOpenCVFlip = false) {
+      const byteLen = arrayBuffer.byteLength;
+      const count = Math.floor(byteLen / 32);
+      const dv = new DataView(arrayBuffer);
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      const scales = new Float32Array(count);
+
+      for (let i = 0; i < count; i++) {
+        const off = i * 32;
+        let x = dv.getFloat32(off + 0, true);
+        let y = dv.getFloat32(off + 4, true);
+        let z = dv.getFloat32(off + 8, true);
+        if (applyOpenCVFlip) {
+          x = -x;
+          y = -y;
+        }
+        const sx = dv.getFloat32(off + 12, true);
+        const sy = dv.getFloat32(off + 16, true);
+        const sz = dv.getFloat32(off + 20, true);
+        const r = dv.getUint8(off + 24) / 255.0;
+        const g = dv.getUint8(off + 25) / 255.0;
+        const b = dv.getUint8(off + 26) / 255.0;
+
+        positions[i * 3 + 0] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+        colors[i * 3 + 0] = r;
+        colors[i * 3 + 1] = g;
+        colors[i * 3 + 2] = b;
+        scales[i] = Math.max(0.15, Math.min(4.5, (sx + sy + sz) / 3.0));
+      }
+      return { count, positions, colors, scales };
+    }
+
+    function createSplatPointsMesh(parsed, name = 'SPLAT_CLOUD') {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(parsed.positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(parsed.colors, 3));
+      geo.setAttribute('aScale', new THREE.BufferAttribute(parsed.scales, 1));
+
+      const mat = new THREE.PointsMaterial({
+        size: 2.35 * STATE.splatScale,
+        map: GAUSSIAN_TEX,
+        vertexColors: true,
+        transparent: true,
+        opacity: STATE.splatOpacity,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+        sizeAttenuation: true,
+      });
+      const pts = new THREE.Points(geo, mat);
+      pts.name = name;
+      return pts;
+    }
+
+    // ── LOAD & MOUNT CHISEL `.GLB` COLLIDER + `.SPLAT` CLOUD + ACTORS ─────────
+    let primarySplatMesh = null;
+    let twinRuinSplatMesh = null;
+    let activeColliders = [];
+
+    function clearGroup(grp) {
+      while (grp.children.length > 0) {
+        const c = grp.children[0];
+        grp.remove(c);
+        if (c.geometry) c.geometry.dispose();
+      }
+    }
+
+    function applyGlbRenderMode() {
+      glbGroup.visible = (STATE.glbMode !== 'off');
+      glbGroup.traverse(o => {
+        if (o.isMesh) {
+          if (STATE.glbMode === 'occ') {
+            // Phantom Depth-Occlusion Prepass: invisible color, writes to depth buffer to occlude R1 actors behind R3 walls!
+            o.material.colorWrite = false;
+            o.material.depthWrite = true;
+            o.material.transparent = false;
+            o.renderOrder = 0;
+          } else {
+            o.material.colorWrite = true;
+            o.material.depthWrite = true;
+            o.material.transparent = true;
+            o.material.opacity = 0.58;
+          }
+        }
+        if (o.isLineSegments) {
+          o.visible = (STATE.glbMode === 'wire');
+        }
+      });
+      document.getElementById('btn-glb-wire').classList.toggle('active', STATE.glbMode === 'wire');
+      document.getElementById('btn-glb-occ').classList.toggle('active', STATE.glbMode === 'occ');
+      document.getElementById('btn-glb-off').classList.toggle('active', STATE.glbMode === 'off');
+    }
+
+    async function loadGlbCollider(glbUrl) {
+      clearGroup(glbGroup);
+      activeColliders = [];
+      return new Promise((resolve) => {
+        gltfLoader.load(
+          glbUrl,
+          (gltf) => {
+            const root = gltf.scene;
+            root.traverse((child) => {
+              if (child.isMesh) {
+                child.material = new THREE.MeshLambertMaterial({
+                  vertexColors: !!child.geometry.attributes.color,
+                  color: child.geometry.attributes.color ? 0xffffff : 0x3b526b,
+                  transparent: true,
+                  opacity: 0.58,
+                  side: THREE.DoubleSide,
+                });
+                activeColliders.push(child);
+                // Add crisp Chisel wireframe overlay
+                const edges = new THREE.EdgesGeometry(child.geometry, 22);
+                const line = new THREE.LineSegments(
+                  edges,
+                  new THREE.LineBasicMaterial({ color: 0x19e6c8, transparent: true, opacity: 0.36 })
+                );
+                child.add(line);
+              }
+            });
+            glbGroup.add(root);
+            applyGlbRenderMode();
+            resolve(root);
+          },
+          undefined,
+          (err) => {
+            console.warn('GLB load error:', err);
+            resolve(null);
+          }
+        );
+      });
+    }
+
+    async function loadSplatFile(splatUrl, twinRuinUrl = null) {
+      clearGroup(splatGroup);
+      primarySplatMesh = null;
+      twinRuinSplatMesh = null;
+      try {
+        const res = await fetch(splatUrl);
+        if (res.ok) {
+          const buf = await res.arrayBuffer();
+          const parsed = parse32ByteSplatBuffer(buf, STATE.coordConv === 'opencv');
+          primarySplatMesh = createSplatPointsMesh(parsed, 'PRIMARY_SPLAT');
+          splatGroup.add(primarySplatMesh);
+        }
+        if (twinRuinUrl) {
+          const res2 = await fetch(twinRuinUrl);
+          if (res2.ok) {
+            const buf2 = await res2.arrayBuffer();
+            const parsed2 = parse32ByteSplatBuffer(buf2, STATE.coordConv === 'opencv');
+            twinRuinSplatMesh = createSplatPointsMesh(parsed2, 'TWIN_RUIN_SPLAT');
+            twinRuinSplatMesh.material.opacity = (1.0 - STATE.twinMorph) * STATE.splatOpacity;
+            if (primarySplatMesh) primarySplatMesh.material.opacity = STATE.twinMorph * STATE.splatOpacity;
+            splatGroup.add(twinRuinSplatMesh);
+          }
+        }
+      } catch (e) {
+        console.warn('Splat load error:', e);
+      }
+    }
+
+    function makeBannerSprite(lines, borderColor = '#ffd23f') {
+      const cv = document.createElement('canvas');
+      cv.width = 512; cv.height = 128;
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = 'rgba(8, 13, 20, 0.92)';
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 4;
+      ctx.strokeRect(4, 4, 504, 120);
+      ctx.fillRect(4, 4, 504, 120);
+      ctx.fillStyle = borderColor;
+      ctx.font = '800 22px "Helvetica Neue", Arial, sans-serif';
+      ctx.fillText(String(lines[0] || '').slice(0, 42), 18, 44);
+      ctx.fillStyle = '#f3ead2';
+      ctx.font = '600 17px "Helvetica Neue", Arial, sans-serif';
+      ctx.fillText(String(lines[1] || '').slice(0, 50), 18, 86);
+      const tex = new THREE.CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+      sp.scale.set(9.0, 2.25, 1);
+      return sp;
+    }
+
+    function mountPosedFrustumsAndCutoutCast(cameras) {
+      clearGroup(actorsGroup);
+      const frustumContainer = document.getElementById('frustum-buttons');
+      frustumContainer.innerHTML = '';
+
+      const heroCutouts = [
+        'kits/packs/poet_tracksuit_v1/01_COMPONENTS/01_torso_front.png',
+        'arena/bodies/ACT-001_p0.png',
+        'arena/bodies/ACT-014_p0.png',
+        'arena/bodies/ACT-019_p0.png',
+        'arena/bodies/ACT-028_p0.png',
+        'arena/bodies/ACT-011_p0.png',
+      ];
+
+      (cameras || []).forEach((cam, idx) => {
+        const pos = cam.threejs_pose.position_m;
+        const look = cam.threejs_pose.look_at_m;
+        const groundY = cam.threejs_pose.ground_y_m || 0;
+        const yawRad = THREE.MathUtils.degToRad(cam.azimuth_deg || 0);
+
+        // 1. Posed Camera Frustum Pyramid at exact `threejs_pose.position_m`
+        const fg = new THREE.Group();
+        fg.position.set(pos[0], pos[1], pos[2]);
+        fg.rotation.y = yawRad;
+
+        const coneGeo = new THREE.ConeGeometry(1.8, 3.6, 4, 1, true);
+        coneGeo.rotateX(Math.PI / 2);
+        coneGeo.rotateZ(Math.PI / 4);
+        const coneWire = new THREE.LineSegments(
+          new THREE.EdgesGeometry(coneGeo),
+          new THREE.LineBasicMaterial({ color: 0x19e6c8 })
+        );
+        fg.add(coneWire);
+
+        // Floating Reference Image Plane inside the frustum
+        const rTex = texLoader.load(cam.source_img);
+        rTex.colorSpace = THREE.SRGBColorSpace;
+        const rPlane = new THREE.Mesh(
+          new THREE.PlaneGeometry(3.2, 1.8),
+          new THREE.MeshBasicMaterial({ map: rTex, side: THREE.DoubleSide })
+        );
+        rPlane.position.set(0, 0, 1.8);
+        fg.add(rPlane);
+
+        const lbl = makeBannerSprite(
+          [`[${cam.set_piece}] REF ${cam.ref_id} · ${cam.onion_shell}`, cam.role],
+          '#19e6c8'
+        );
+        lbl.position.set(0, 2.5, 1.2);
+        fg.add(lbl);
+        actorsGroup.add(fg);
+
+        // 2. 2.5D Cut-Out Actor Standee (`Onion Shell R1`, 3.2m in front of camera on `.glb` floor collider!)
+        const actorX = pos[0] + Math.sin(yawRad) * 4.2;
+        const actorZ = pos[2] + Math.cos(yawRad) * 4.2;
+        const cTex = texLoader.load(heroCutouts[idx % heroCutouts.length]);
+        cTex.colorSpace = THREE.SRGBColorSpace;
+        const cMesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(2.4, 3.6),
+          new THREE.MeshBasicMaterial({
+            map: cTex,
+            transparent: true,
+            alphaTest: 0.08,
+            side: THREE.DoubleSide,
+          })
+        );
+        cMesh.position.set(actorX, groundY + 1.85, actorZ);
+        cMesh.rotation.y = yawRad;
+        actorsGroup.add(cMesh);
+
+        // 3. Add button to bottom Frustum Bar
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn';
+        btn.textContent = `🎥 [${cam.set_piece}] Ref ${cam.ref_id} (${cam.onion_shell})`;
+        btn.addEventListener('click', () => {
+          camera.position.set(pos[0] - Math.sin(yawRad) * 4.5, pos[1] + 1.4, pos[2] - Math.cos(yawRad) * 4.5);
+          orbit.target.set(look[0], look[1], look[2]);
+          orbit.update();
+        });
+        frustumContainer.appendChild(btn);
+      });
+    }
+
+    // ── UI RENDERING FOR ACTIVE MEGA-HUB OR DISTRICT ─────────────────────────
+    async function selectMegaHub(hubId) {
+      STATE.activeHubId = hubId;
+      const hub = STATE.manifest.mega_hubs.find(h => h.hub_id === hubId) || STATE.manifest.mega_hubs[0];
+      const primaryDistrict = STATE.manifest.districts[hub.primary_stage];
+
+      renderSelectorList();
+
+      // Update Viewport Header & Download Links
+      document.getElementById('vp-title').textContent = hub.title;
+      document.getElementById('vp-stats').textContent = `${hub.splat_seed.splat_count.toLocaleString()} 3D Splats · ${hub.chisel_glb.triangles.toLocaleString()} Chisel .GLB Tris`;
+      document.getElementById('dl-chisel-glb').href = hub.chisel_glb.file;
+      document.getElementById('dl-clean-pano').href = hub.pano_2560x1280;
+      document.getElementById('dl-clean-depth').href = hub.depth_2560x1280;
+      document.getElementById('dl-splat-seed').href = hub.splat_seed.file;
+      document.getElementById('btn-open-terrarium').href = `terrarium.html?stage=${hub.primary_stage}&poem=${hub.poems[0]}&splat=${encodeURIComponent(hub.splat_seed.file)}`;
+
+      // Right Column Updates
+      document.getElementById('img-hub-pano').src = hub.pano_2560x1280;
+      document.getElementById('img-hub-depth').src = hub.depth_2560x1280;
+      document.getElementById('link-full-plate').href = hub.vault_plate;
+      document.getElementById('txt-bang-for-buck').innerHTML = `<b>★ Bang-for-Buck Strategy:</b> ${hub.bang_for_buck}`;
+
+      // Show Twin-State Splat Morph slider when on Hub 02 (or allow morphing on any twin hub)
+      const twinWrap = document.getElementById('twin-morph-wrap');
+      twinWrap.style.display = hub.twin_state_splat ? 'flex' : 'none';
+
+      // Populate Included Anchors & Excluded Refs
+      const incGrid = document.getElementById('grid-included-anchors');
+      document.getElementById('cnt-included').textContent = `${hub.anchor_files.length} Clean Anchors`;
+      incGrid.innerHTML = hub.anchor_files.map(a => `
+        <div class="ref-card" onclick="window.open('${a.clean_img}', '_blank')">
+          <img src="${a.clean_img}" alt="${a.ref_id}" />
+          <div class="rc-body">
+            <div style="font-weight:800;color:var(--green);">✓ Ref ${a.ref_id} · ${a.shell} (+${a.elev_m}m)</div>
+            <div style="color:var(--fg);">${a.role}</div>
+            <div style="color:var(--teal);font-size:9.5px;">Actor Stripped: ${a.actor_inpainted_pct}%</div>
+          </div>
+        </div>
+      `).join('');
+
+      // Gather Excluded Refs across linked stages
+      const allExcluded = [];
+      hub.linked_stages.forEach(sk => {
+        const d = STATE.manifest.districts[sk];
+        if (d && d.excluded_refs) allExcluded.push(...d.excluded_refs);
+      });
+      const excGrid = document.getElementById('grid-excluded-refs');
+      document.getElementById('cnt-excluded').textContent = `${allExcluded.length} Filtered Out`;
+      excGrid.innerHTML = allExcluded.map(ex => `
+        <div class="ref-card excluded">
+          <img src="data/terrarium/foundry/refs/${ex.id}.jpg" alt="${ex.id}" />
+          <div class="rc-body">
+            <div style="font-weight:800;color:var(--coral);">✕ Reject Ref ${ex.id}</div>
+            <div style="color:#ffccd8;">${ex.reason}</div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('box-coord-matrix').textContent = JSON.stringify(hub.coordinate_bridge, null, 2);
+
+      // Load 3D Chisel `.glb` + 3D `.splat` + Posed Frustums
+      await loadGlbCollider(hub.chisel_glb.file);
+      await loadSplatFile(
+        hub.splat_seed.file,
+        hub.twin_state_splat ? hub.twin_state_splat.file : null
+      );
+      mountPosedFrustumsAndCutoutCast(hub.cameras || (primaryDistrict && primaryDistrict.cameras) || []);
+
+      camera.position.set(36, 40, 66);
+      orbit.target.set(0, 4, 0);
+      orbit.update();
+    }
+
+    async function selectDistrict(dKey) {
+      STATE.activeDistrictKey = dKey;
+      const d = STATE.manifest.districts[dKey];
+      if (!d) return;
+
+      renderSelectorList();
+
+      const matchingHub = STATE.manifest.mega_hubs.find(h => h.linked_stages.includes(dKey)) || STATE.manifest.mega_hubs[0];
+      const p0 = d.poems[0];
+
+      document.getElementById('vp-title').textContent = `DISTRICT · ${d.name}`;
+      document.getElementById('vp-stats').textContent = `${d.chisel_glb.triangles.toLocaleString()} Chisel .GLB Tris · ${d.cameras.length} Posed Cameras`;
+      document.getElementById('dl-chisel-glb').href = d.chisel_glb.file;
+      document.getElementById('dl-clean-pano').href = `data/terrarium/foundry/equirec/poem_${p0}_shared_eq.jpg`;
+      document.getElementById('dl-clean-depth').href = `data/terrarium/foundry/equirec/poem_${p0}_shared_depth.jpg`;
+      document.getElementById('dl-splat-seed').href = matchingHub.splat_seed.file;
+      document.getElementById('btn-open-terrarium').href = `terrarium.html?stage=${dKey}&poem=${p0}&splat=${encodeURIComponent(matchingHub.splat_seed.file)}`;
+
+      document.getElementById('img-hub-pano').src = `data/terrarium/foundry/equirec/poem_${p0}_shared_eq.jpg`;
+      document.getElementById('img-hub-depth').src = `data/terrarium/foundry/equirec/poem_${p0}_shared_depth.jpg`;
+      document.getElementById('link-full-plate').href = d.blueprint_png;
+      document.getElementById('txt-bang-for-buck').innerHTML = `<b>Portal &amp; Splat Topology:</b> ${d.portal_notes}`;
+      document.getElementById('twin-morph-wrap').style.display = (dKey === 'inner-harbor' || dKey === 'holland-island') ? 'flex' : 'none';
+
+      const incGrid = document.getElementById('grid-included-anchors');
+      document.getElementById('cnt-included').textContent = `${d.anchor_refs.length} Clean Anchors`;
+      incGrid.innerHTML = d.anchor_refs.map(a => `
+        <div class="ref-card" onclick="window.open('data/terrarium/foundry/refs/${a.id}.jpg', '_blank')">
+          <img src="data/terrarium/foundry/refs/${a.id}.jpg" alt="${a.id}" />
+          <div class="rc-body">
+            <div style="font-weight:800;color:var(--green);">✓ [${a.set_piece}] Ref ${a.id} · ${a.shell}</div>
+            <div style="color:var(--fg);">${a.role}</div>
+          </div>
+        </div>
+      `).join('');
+
+      const excGrid = document.getElementById('grid-excluded-refs');
+      document.getElementById('cnt-excluded').textContent = `${d.excluded_refs.length} Filtered Out`;
+      excGrid.innerHTML = d.excluded_refs.map(ex => `
+        <div class="ref-card excluded">
+          <img src="data/terrarium/foundry/refs/${ex.id}.jpg" alt="${ex.id}" />
+          <div class="rc-body">
+            <div style="font-weight:800;color:var(--coral);">✕ Reject Ref ${ex.id}</div>
+            <div style="color:#ffccd8;">${ex.reason}</div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('box-coord-matrix').textContent = JSON.stringify(d.coordinate_bridge, null, 2);
+
+      await loadGlbCollider(d.chisel_glb.file);
+      await loadSplatFile(matchingHub.splat_seed.file, matchingHub.twin_state_splat ? matchingHub.twin_state_splat.file : null);
+      mountPosedFrustumsAndCutoutCast(d.cameras || []);
+    }
+
+    function renderSelectorList() {
+      const container = document.getElementById('hub-list-container');
+      if (!STATE.manifest) return;
+
+      if (STATE.tabMode === 'megahubs') {
+        container.innerHTML = STATE.manifest.mega_hubs.map(h => `
+          <div class="hub-item ${h.hub_id === STATE.activeHubId ? 'active' : ''}" data-hub="${h.hub_id}">
+            <div class="hi-top">
+              <span>#${h.rank} · ${h.title.replace('MEGA-HUB 0' + h.rank + ' · ', '')}</span>
+            </div>
+            <div class="hi-sub">${h.subtitle}</div>
+            <div class="hi-pills">
+              <span class="pill teal">${h.poems.length} Poems (P${h.poems.join(', P')})</span>
+              <span class="pill green">${h.splat_seed.splat_count.toLocaleString()} Splats</span>
+              <span class="pill">${h.chisel_glb.buildings_extruded} Bldgs .GLB</span>
+            </div>
+          </div>
+        `).join('');
+        container.querySelectorAll('.hub-item').forEach(el => {
+          el.addEventListener('click', () => selectMegaHub(el.dataset.hub));
+        });
+      } else {
+        container.innerHTML = Object.values(STATE.manifest.districts).map(d => `
+          <div class="hub-item ${d.key === STATE.activeDistrictKey ? 'active' : ''}" data-district="${d.key}">
+            <div class="hi-top">
+              <span>${d.name.split('·')[0].trim()}</span>
+              <span class="pill teal">${d.zone}</span>
+            </div>
+            <div class="hi-sub">${d.portal_notes.slice(0, 95)}...</div>
+            <div class="hi-pills">
+              <span class="pill green">✓ ${d.anchor_refs.length} Anchors</span>
+              <span class="pill coral">✕ ${d.excluded_refs.length} Excluded</span>
+              <span class="pill">P${d.poems.join(', P')}</span>
+            </div>
+          </div>
+        `).join('');
+        container.querySelectorAll('.hub-item').forEach(el => {
+          el.addEventListener('click', () => selectDistrict(el.dataset.district));
+        });
+      }
+    }
+
+    // ── DRAG-AND-DROP RECEIVER FOR MARBLE / ATLAS `.GLB`, `.SPLAT`, `.PLY` ───
+    async function handleDroppedFiles(fileList) {
+      for (const file of fileList) {
+        const name = file.name.toLowerCase();
+        const url = URL.createObjectURL(file);
+        if (name.endsWith('.glb') || name.endsWith('.gltf')) {
+          await loadGlbCollider(url);
+          document.getElementById('vp-title').textContent = `MOUNTED CUSTOM .GLB INFRASTRUCTURE: ${file.name}`;
+        } else if (name.endsWith('.splat') || name.endsWith('.ply') || name.endsWith('.spz')) {
+          const buf = await file.arrayBuffer();
+          clearGroup(splatGroup);
+          const parsed = parse32ByteSplatBuffer(buf, STATE.coordConv === 'opencv');
+          primarySplatMesh = createSplatPointsMesh(parsed, file.name);
+          splatGroup.add(primarySplatMesh);
+          document.getElementById('vp-stats').textContent = `${parsed.count.toLocaleString()} Imported Splats (${file.name})`;
+        }
+      }
+    }
+
+    // ── WIRE CONTROLS ────────────────────────────────────────────────────────
+    document.getElementById('tab-megahubs').addEventListener('click', () => {
+      STATE.tabMode = 'megahubs';
+      document.getElementById('tab-megahubs').classList.add('active');
+      document.getElementById('tab-districts').classList.remove('active');
+      document.getElementById('lbl-active-mode').textContent = '4 Mega-Hubs';
+      selectMegaHub(STATE.activeHubId);
+    });
+    document.getElementById('tab-districts').addEventListener('click', () => {
+      STATE.tabMode = 'districts';
+      document.getElementById('tab-districts').classList.add('active');
+      document.getElementById('tab-megahubs').classList.remove('active');
+      document.getElementById('lbl-active-mode').textContent = '10 Districts';
+      selectDistrict(STATE.activeDistrictKey);
+    });
+
+    document.getElementById('btn-glb-wire').addEventListener('click', () => { STATE.glbMode = 'wire'; applyGlbRenderMode(); });
+    document.getElementById('btn-glb-occ').addEventListener('click', () => { STATE.glbMode = 'occ'; applyGlbRenderMode(); });
+    document.getElementById('btn-glb-off').addEventListener('click', () => { STATE.glbMode = 'off'; applyGlbRenderMode(); });
+
+    document.getElementById('btn-toggle-actors').addEventListener('click', (e) => {
+      STATE.showActors = !STATE.showActors;
+      actorsGroup.visible = STATE.showActors;
+      e.target.classList.toggle('active', STATE.showActors);
+      e.target.textContent = STATE.showActors ? '🎭 R1 Cut-Out Actors: ON' : '🎭 R1 Cut-Out Actors: OFF';
+    });
+
+    document.getElementById('btn-bake-plate').addEventListener('click', () => {
+      renderer.render(scene, camera);
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `baked_splat_backplate_${STATE.activeHubId}.png`;
+      a.click();
+    });
+
+    document.getElementById('sl-splat-scale').addEventListener('input', (e) => {
+      STATE.splatScale = parseFloat(e.target.value) || 1.0;
+      document.getElementById('val-splat-scale').textContent = STATE.splatScale.toFixed(2) + '×';
+      if (primarySplatMesh) primarySplatMesh.material.size = 2.35 * STATE.splatScale;
+      if (twinRuinSplatMesh) twinRuinSplatMesh.material.size = 2.35 * STATE.splatScale;
+    });
+
+    document.getElementById('sl-splat-opacity').addEventListener('input', (e) => {
+      STATE.splatOpacity = parseFloat(e.target.value) || 0.92;
+      document.getElementById('val-splat-opacity').textContent = Math.round(STATE.splatOpacity * 100) + '%';
+      if (primarySplatMesh) primarySplatMesh.material.opacity = STATE.splatOpacity * (twinRuinSplatMesh ? STATE.twinMorph : 1.0);
+      if (twinRuinSplatMesh) twinRuinSplatMesh.material.opacity = STATE.splatOpacity * (1.0 - STATE.twinMorph);
+    });
+
+    document.getElementById('sl-twin-morph').addEventListener('input', (e) => {
+      STATE.twinMorph = parseFloat(e.target.value);
+      document.getElementById('val-twin-morph').textContent = `${Math.round(STATE.twinMorph * 100)}% Temple`;
+      if (primarySplatMesh) primarySplatMesh.material.opacity = STATE.twinMorph * STATE.splatOpacity;
+      if (twinRuinSplatMesh) twinRuinSplatMesh.material.opacity = (1.0 - STATE.twinMorph) * STATE.splatOpacity;
+    });
+
+    document.getElementById('sel-coord-conv').addEventListener('change', (e) => {
+      STATE.coordConv = e.target.value;
+    });
+
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-receiver');
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length) handleDroppedFiles(e.target.files);
+    });
+    ['dragenter', 'dragover'].forEach(ev => {
+      dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+      wrap.addEventListener(ev, (e) => { e.preventDefault(); });
+    });
+    ['dragleave', 'drop'].forEach(ev => {
+      dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+    });
+    dropZone.addEventListener('drop', (e) => {
+      if (e.dataTransfer && e.dataTransfer.files) handleDroppedFiles(e.dataTransfer.files);
+    });
+    wrap.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer && e.dataTransfer.files) handleDroppedFiles(e.dataTransfer.files);
+    });
+
+    // ── INITIALIZE ───────────────────────────────────────────────────────────
+    async function init() {
+      const res = await fetch('data/terrarium/atlas_packs/atlas_infrastructure_manifest.json');
+      STATE.manifest = await res.json();
+      const q = new URLSearchParams(location.search);
+      const qHub = q.get('hub');
+      const qDistrict = q.get('district');
+      if (qDistrict && STATE.manifest.districts[qDistrict]) {
+        STATE.tabMode = 'districts';
+        document.getElementById('tab-districts').classList.add('active');
+        document.getElementById('tab-megahubs').classList.remove('active');
+        await selectDistrict(qDistrict);
+      } else {
+        await selectMegaHub(qHub || 'hub_01_atlantis');
+      }
+    }
+    init();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      orbit.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>

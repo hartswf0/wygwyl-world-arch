@@ -318,6 +318,7 @@ WYGWYL_EXTENSION = r"""
 <div id="wyg-top-hud">
   <a href="wag_stack.html" title="Back to WAG-STACK Suite">◀ WAG-STACK</a>
   <a href="world_foundry.html" title="World & Foundry Atlas">🌍 WORLD & FOUNDRY ATLAS</a>
+  <a href="atlas_splat_studio.html" title="World Labs Atlas / Marble .GLB & 3D Splat Studio" style="border-color:#19e6c8;color:#19e6c8">🌐 ATLAS SPLAT STUDIO</a>
   <span class="wyg-sep"></span>
   <label style="font-size:10px;color:#a99f86">STAGE / CITY:</label>
   <select id="wyg-sel-stage" title="Select Scouted Real-City Landpack"></select>
@@ -326,6 +327,14 @@ WYGWYL_EXTENSION = r"""
   <label style="font-size:10px;color:#a99f86">FOUNDRY 3D:</label>
   <select id="wyg-sel-foundry" title="Mount Evolved Foundry World Topography & Inverse Camera Stands">
     <option value="">— Real City Ground —</option>
+  </select>
+  <select id="wyg-sel-splat" title="Mount 3D Gaussian Splat (.splat) Infrastructure Over Active Terrarium Ground" style="border-color:#19e6c8;color:#19e6c8">
+    <option value="">🌐 3D Splat Overlay: Off</option>
+    <option value="data/terrarium/atlas_packs/splats/hub_01_atlantis.splat">🌐 Hub #1 Splat · Atlantis Vertical Block (P06–P10)</option>
+    <option value="data/terrarium/atlas_packs/splats/hub_02_harbor_temple.splat">🌐 Hub #2 Splat · Harbor White Temple (P11–P13)</option>
+    <option value="data/terrarium/atlas_packs/splats/hub_02_harbor_storm_ruin.splat">🌐 Hub #2 Splat · Storm Ruin Chapel (P03 Twin-State)</option>
+    <option value="data/terrarium/atlas_packs/splats/hub_03_mount_vernon.splat">🌐 Hub #3 Splat · Mount Vernon Tower & Ballroom (P01, P02, P14)</option>
+    <option value="data/terrarium/atlas_packs/splats/hub_04_shore_garden.splat">🌐 Hub #4 Splat · Ruins Shore & Garden Causeway (P04–P05)</option>
   </select>
   <select id="wyg-sel-texmode" title="Switch Ground Texture Layer (Map / Palimpsest / Inverse Sculpted)">
     <option value="map">Ground: Map / Sat</option>
@@ -372,6 +381,7 @@ WYGWYL_EXTENSION = r"""
   <div id="wyg-dog-body">
     <div id="wyg-dog-log"></div>
     <div id="wyg-dog-chips">
+      <button type="button" data-q="mount 3d gaussian splat infrastructure here">🌐 Mount 3D Gaussian Splat</button>
       <button type="button" data-q="fetch clips for this poem">🎬 Fetch Poem Clips</button>
       <button type="button" data-q="spawn all 6 scenes & props here">🖼️ Mount 6 Scenes & Props</button>
       <button type="button" data-q="bring poet tracksuit and vintage couple">🕺 Spawn Poet & Couple</button>
@@ -400,6 +410,8 @@ WYGWYL_EXTENSION = r"""
     activeStageKey: 'mount-vernon',
     activePoemNum: '01',
     activeFoundryId: '',
+    activeSplatUrl: '',
+    splatGroup: null,
     texMode: 'map',
     viewMode: 'overview', // 'overview' | 'scroller' | 'frustum' | 'drive'
     scrollerT: 0,
@@ -1440,6 +1452,30 @@ WYGWYL_EXTENSION = r"""
       return;
     }
 
+    // 2b. Atlas / Marble 3D Gaussian Splat & .GLB Infrastructure request
+    if (/splat|atlas|marble|gaussian|glb|chisel/.test(ql)) {
+      let splatUrl = 'data/terrarium/atlas_packs/splats/hub_01_atlantis.splat';
+      let label = 'Hub 01 · Atlantis / Centro (P01, P06, P08, P10, P12)';
+      if (/harbor|temple|11/.test(ql)) {
+        splatUrl = 'data/terrarium/atlas_packs/splats/hub_02_harbor_temple.splat';
+        label = 'Hub 02B · Rebuilt White Temple (P11 Twin-State)';
+      } else if (/storm|ruin|03/.test(ql)) {
+        splatUrl = 'data/terrarium/atlas_packs/splats/hub_02_harbor_storm_ruin.splat';
+        label = 'Hub 02A · Storm Ruin Pier (P03 Twin-State)';
+      } else if (/mount|vernon|roof|04|09/.test(ql)) {
+        splatUrl = 'data/terrarium/atlas_packs/splats/hub_03_mount_vernon.splat';
+        label = 'Hub 03 · Mount Vernon Rooftops (P04, P09)';
+      } else if (/shore|garden|tree|02|07|13/.test(ql)) {
+        splatUrl = 'data/terrarium/atlas_packs/splats/hub_04_shore_garden.splat';
+        label = 'Hub 04 · Shoreline & White Tree Garden (P02, P07, P13)';
+      }
+      await mountSplatInfrastructureInTerrarium(splatUrl);
+      const selSplat = document.getElementById('wyg-sel-splat');
+      if (selSplat) selSplat.value = splatUrl;
+      dogLogMessage('hound', `🐾 <b>Mounted 3D Gaussian Splat Infrastructure (${label})!</b><br>28,000+ datum-locked 3D Gaussians are now aligned directly over the Terrarium terrain and Chisel <code>.glb</code> collider. Open <a href="atlas_splat_studio.html" style="color:#c4b5fd;font-weight:800;">🌐 Atlas Splat & .GLB Studio</a> to morph Twin-State splats or drop new <code>.spz/.ply/.splat/.glb</code> exports!`);
+      return;
+    }
+
     // 3. Poem / Stage navigation request ("poem 13", "fells point", "mount vernon", etc.)
     const pMatch = ql.match(/poem\s*(\d{1,2})/);
     const stageMatch = STATE.master.real_stages.find(s => ql.includes(s.key.replace('-', ' ')) || ql.includes(s.name.toLowerCase().split(',')[0]));
@@ -1582,6 +1618,54 @@ WYGWYL_EXTENSION = r"""
     );
   }
 
+  // ── 6B. ATLAS / MARBLE 3D GAUSSIAN SPLAT INFRASTRUCTURE MOUNTER ────────────
+  async function mountSplatInfrastructureInTerrarium(splatUrl) {
+    if (!window.scene || !window.THREE) return;
+    if (STATE.splatGroup) {
+      window.scene.remove(STATE.splatGroup);
+      STATE.splatGroup = null;
+    }
+    if (!splatUrl) return;
+    try {
+      const res = await fetch(splatUrl);
+      if (!res.ok) return;
+      const buf = await res.arrayBuffer();
+      const n = Math.floor(buf.byteLength / 32);
+      const dv = new DataView(buf);
+      const u8 = new Uint8Array(buf);
+      const pos = new Float32Array(n * 3);
+      const col = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        const off = i * 32;
+        pos[i * 3 + 0] = dv.getFloat32(off + 0, true);
+        pos[i * 3 + 1] = dv.getFloat32(off + 4, true) + 0.35;
+        pos[i * 3 + 2] = dv.getFloat32(off + 8, true);
+        col[i * 3 + 0] = u8[off + 24] / 255;
+        col[i * 3 + 1] = u8[off + 25] / 255;
+        col[i * 3 + 2] = u8[off + 26] / 255;
+      }
+      const geom = new THREE.BufferGeometry();
+      geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geom.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      const mat = new THREE.PointsMaterial({
+        size: 3.2,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.90,
+        sizeAttenuation: true,
+        depthWrite: false
+      });
+      const pts = new THREE.Points(geom, mat);
+      pts.name = 'wygwyl_splat_infrastructure';
+      STATE.splatGroup = new THREE.Group();
+      STATE.splatGroup.add(pts);
+      window.scene.add(STATE.splatGroup);
+      updateDogBubble('🌐 3D SPLAT MOUNTED!', `Loaded ${n.toLocaleString()} 3D Gaussians over the Terrarium datum!`);
+    } catch (err) {
+      console.warn('[wygwyl] Failed to mount splat infrastructure:', err);
+    }
+  }
+
   // ── 7. UI WIRING & URL PARAMETER INTERCEPTION ──────────────────────────────
   function syncSelectorsUI() {
     const selStage = document.getElementById('wyg-sel-stage');
@@ -1645,6 +1729,13 @@ WYGWYL_EXTENSION = r"""
 
     if (selTex) {
       selTex.addEventListener('change', () => applyGroundTextureMode(selTex.value));
+    }
+
+    const selSplat = document.getElementById('wyg-sel-splat');
+    if (selSplat) {
+      selSplat.addEventListener('change', () => {
+        mountSplatInfrastructureInTerrarium(selSplat.value);
+      });
     }
 
     // Camera Mode Buttons
@@ -1728,14 +1819,15 @@ WYGWYL_EXTENSION = r"""
     dogLogMessage(
       'hound',
       `🐕 <b>Woof! I'm the Halfworld Hound — your in-world AI Director & Asset Fetcher.</b><br>` +
-      `We've mounted our <b>90 sidescrolling multiplane scenes</b>, <b>continuous poem tapes</b>, <b>playable film portals</b>, <b>WorldText stops</b>, and <b>Foundry 3D topographies</b> right onto the Terrarium ground! Press <b>[V]</b> anytime to toggle between <b>🗺️ 3D Overview</b> and <b>↔️ Horizontal Sidescroller</b>, or ask me to fetch any shot, clip, prop, or world.`
+      `We've mounted our <b>90 sidescrolling multiplane scenes</b>, <b>continuous poem tapes</b>, <b>playable film portals</b>, <b>WorldText stops</b>, <b>Foundry 3D topographies</b>, and <b>Atlas / Marble 3D Gaussian Splat + .GLB infrastructure</b> right onto the Terrarium ground! Press <b>[V]</b> anytime to toggle between <b>🗺️ 3D Overview</b> and <b>↔️ Horizontal Sidescroller</b>, or ask me to fetch any shot, clip, prop, or 3D splat.`
     );
 
-    // Parse URL parameters (`?cart=`, `?stage=`, `?poem=`, `?foundry=`, `?wt=`, `?land=`, `?view=`)
+    // Parse URL parameters (`?cart=`, `?stage=`, `?poem=`, `?foundry=`, `?wt=`, `?land=`, `?view=`, `?splat=`)
     const q = new URLSearchParams(location.search);
     let initStage = q.get('stage') || '';
     let initPoem = q.get('poem') || '';
     let initFoundry = q.get('foundry') || '';
+    const initSplat = q.get('splat') || '';
     const rawCart = q.get('cart') || '';
     const rawWt = q.get('wt') || '';
 
@@ -1761,6 +1853,11 @@ WYGWYL_EXTENSION = r"""
       foundryId: initFoundry || null,
       poemNum: initPoem || null
     });
+
+    if (initSplat) {
+      if (selSplat) selSplat.value = initSplat;
+      setTimeout(() => mountSplatInfrastructureInTerrarium(initSplat), 500);
+    }
 
     if (q.get('view') === 'scroller') {
       setTimeout(() => setViewMode('scroller'), 600);
