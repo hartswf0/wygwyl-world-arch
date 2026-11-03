@@ -442,12 +442,12 @@
     <aside class="col col-left">
       <div class="section-card">
         <div class="section-title">
-          <span>1. Select Splat Hub or City District</span>
-          <span id="lbl-active-mode" style="color:var(--teal)">4 Mega-Hubs</span>
+          <span>1. Select City District or Mega-Hub (Walk Inside Splat)</span>
+          <span id="lbl-active-mode" style="color:var(--teal)">10 Districts</span>
         </div>
         <div class="tab-row">
-          <button class="btn active" id="tab-megahubs" type="button">🔥 4 Mega-Hubs (92%)</button>
-          <button class="btn" id="tab-districts" type="button">🏙️ All 10 Districts</button>
+          <button class="btn active" id="tab-districts" type="button">🏙️ All 10 Districts (Inside Splat)</button>
+          <button class="btn" id="tab-megahubs" type="button">🔥 4 Mega-Hubs (92%)</button>
         </div>
         <div class="hub-list" id="hub-list-container"></div>
       </div>
@@ -515,17 +515,30 @@
         <!-- TOP VIEWPORT HUD -->
         <div class="vp-hud-top">
           <div class="vp-hud-box">
-            <strong id="vp-title" style="color:var(--gold)">MEGA-HUB 01 · ATLANTIS</strong>
-            <span class="pill teal" id="vp-stats">28,000 Splats · 11,240 GLB Tris</span>
+            <strong id="vp-title" style="color:var(--gold)">DISTRICT · CENTRO HISTÓRICO</strong>
+            <span class="pill teal" id="vp-stats">60,000 SHARP 3DGS · 15,263 GLB Tris</span>
+            <button class="btn active" id="btn-cam-inside" type="button" title="Jump directly inside the primary 3D Gaussian Splat stage (WASD / Arrow keys to walk)">🚶 Inside District Splat (WASD)</button>
+            <button class="btn" id="btn-cam-aerial" type="button" title="Pull camera out to aerial district overview">🛰️ Aerial Overview</button>
+          </div>
+
+          <div class="vp-hud-box" style="border-color:var(--teal);background:rgba(8,16,28,0.92);">
+            <strong style="color:var(--gold);">🍮 Splat Effect Mode:</strong>
+            <button class="btn active" id="btn-eff-sharp" type="button" title="Full Apple ml-sharp 2-Layer 3DGS (Layer-0 Surface + Layer-1 Hidden Disocclusion)">🟢 AFTER: Apple SHARP 2-Layer 3DGS</button>
+            <button class="btn teal" id="btn-eff-xray" type="button" title="Highlights Layer-1 Hidden Disocclusion Gaussians in electric cyan behind foreground edges">🔵 Layer-1 Disocclusion X-Ray</button>
+            <button class="btn" id="btn-eff-l0" type="button" title="Shows only Layer-0 visible surface Gaussians so you can see the disocclusion gaps that Layer-1 fills">🟡 Layer-0 Only</button>
+            <button class="btn" id="btn-eff-before" type="button" style="border-color:var(--coral);color:#ffccd8;" title="Morphs splats back to legacy Oct-31 synthetic contour-ring depth to show the shredded walls before Apple SHARP">🔴 BEFORE: Legacy Shredded Splat</button>
+            <span style="margin-left:4px;color:var(--muted);">Before↔After:</span>
+            <input type="range" id="sl-effect-morph" min="0" max="1" step="0.01" value="1.0" style="width:95px;accent-color:var(--teal);" />
+            <span id="val-effect-morph" style="font-weight:800;color:var(--teal);">100% SHARP</span>
           </div>
 
           <div class="vp-hud-box">
-            <span>.GLB Infrastructure Mode:</span>
-            <button class="btn active" id="btn-glb-wire" type="button">📐 Chisel Wire + Solid</button>
-            <button class="btn" id="btn-glb-occ" type="button" title="Renders .GLB to depth buffer only so R3 walls occlude R1 2.5D actors inside the splat!">👻 Depth-Occlusion Prepass</button>
+            <span>.GLB Collider:</span>
+            <button class="btn" id="btn-glb-wire" type="button">📐 Wire + Solid</button>
+            <button class="btn active" id="btn-glb-occ" type="button" title="Renders .GLB to depth buffer only so you see the clean 3D Gaussian Splat inside the District!">👻 Depth-Occlusion Only</button>
             <button class="btn" id="btn-glb-off" type="button">Hide .GLB</button>
-            <button class="btn teal active" id="btn-toggle-actors" type="button">🎭 R1 Cut-Out Actors: ON</button>
-            <button class="btn" id="btn-bake-plate" type="button">📸 Bake 16:9 Backplate</button>
+            <button class="btn teal active" id="btn-toggle-actors" type="button">🎭 R1 Actors: ON</button>
+            <button class="btn" id="btn-bake-plate" type="button">📸 Bake 16:9 Plate</button>
           </div>
         </div>
 
@@ -600,15 +613,18 @@
 
     const STATE = {
       manifest: null,
-      tabMode: 'megahubs', // 'megahubs' | 'districts'
+      tabMode: 'districts', // default to All 10 Districts so user walks directly inside each District!
       activeHubId: 'hub_01_atlantis',
       activeDistrictKey: 'centro',
-      glbMode: 'wire', // 'wire' | 'occ' | 'off'
+      glbMode: 'occ', // default to Depth-Occlusion Only so .GLB wireframe doesn't clutter the interior 3DGS
       showActors: true,
-      splatScale: 1.0,
-      splatOpacity: 0.92,
+      splatScale: 1.15,
+      splatOpacity: 0.96,
       twinMorph: 1.0,
       coordConv: 'threejs',
+      effectMode: 'sharp', // 'sharp' | 'xray' | 'l0' | 'before'
+      effectMorph: 1.0,    // 0.0 = Legacy Shredded Splat, 1.0 = Apple SHARP 2-Layer 3DGS
+      currentSpawnCam: null,
     };
 
     // ── THREE.JS SCENE SETUP ──────────────────────────────────────────────────
@@ -683,14 +699,18 @@
     }
     const GAUSSIAN_TEX = makeGaussianSplatTexture();
 
-    // ── PARSE 32-BYTE `.SPLAT` OR `.PLY` BUFFER INTO THREE.JS SPLAT CLOUD ────
+    // ── PARSE 32-BYTE `.SPLAT` BUFFER WITH APPLE `ml-sharp` LAYER-1 & BEFORE/AFTER METADATA ──
     function parse32ByteSplatBuffer(arrayBuffer, applyOpenCVFlip = false) {
       const byteLen = arrayBuffer.byteLength;
       const count = Math.floor(byteLen / 32);
       const dv = new DataView(arrayBuffer);
       const positions = new Float32Array(count * 3);
+      const basePositions = new Float32Array(count * 3);
       const colors = new Float32Array(count * 3);
+      const baseColors = new Float32Array(count * 3);
       const scales = new Float32Array(count);
+      const isLayer1 = new Uint8Array(count);
+      const dzLegacy = new Float32Array(count);
 
       for (let i = 0; i < count; i++) {
         const off = i * 32;
@@ -707,16 +727,30 @@
         const r = dv.getUint8(off + 24) / 255.0;
         const g = dv.getUint8(off + 25) / 255.0;
         const b = dv.getUint8(off + 26) / 255.0;
+        const q0 = dv.getUint8(off + 28);
+        const q2 = dv.getUint8(off + 30);
+        const q3 = dv.getUint8(off + 31);
 
         positions[i * 3 + 0] = x;
         positions[i * 3 + 1] = y;
         positions[i * 3 + 2] = z;
+        basePositions[i * 3 + 0] = x;
+        basePositions[i * 3 + 1] = y;
+        basePositions[i * 3 + 2] = z;
+
         colors[i * 3 + 0] = r;
         colors[i * 3 + 1] = g;
         colors[i * 3 + 2] = b;
+        baseColors[i * 3 + 0] = r;
+        baseColors[i * 3 + 1] = g;
+        baseColors[i * 3 + 2] = b;
+
         scales[i] = Math.max(0.15, Math.min(4.5, (sx + sy + sz) / 3.0));
+        isLayer1[i] = (q0 === 255) ? 1 : 0;
+        const u16 = q2 | (q3 << 8);
+        dzLegacy[i] = (q0 === 128 && q2 === 128) ? 0.0 : ((u16 / 65535.0) * 30.0 - 15.0);
       }
-      return { count, positions, colors, scales };
+      return { count, positions, basePositions, colors, baseColors, scales, isLayer1, dzLegacy };
     }
 
     function createSplatPointsMesh(parsed, name = 'SPLAT_CLOUD') {
@@ -737,7 +771,106 @@
       });
       const pts = new THREE.Points(geo, mat);
       pts.name = name;
+      pts.userData.parsed = parsed;
       return pts;
+    }
+
+    function applySplatEffectMode() {
+      if (!primarySplatMesh || !primarySplatMesh.userData.parsed) return;
+      const p = primarySplatMesh.userData.parsed;
+      const posAttr = primarySplatMesh.geometry.getAttribute('position');
+      const colAttr = primarySplatMesh.geometry.getAttribute('color');
+      const posArr = posAttr.array;
+      const colArr = colAttr.array;
+
+      const mode = STATE.effectMode;
+      const morph = STATE.effectMorph; // 1.0 = AFTER (SHARP), 0.0 = BEFORE (Legacy Shredded)
+      const legacyWeight = 1.0 - morph;
+
+      // Determine camera forward vector for radial depth displacement
+      let fx = 0, fy = 0, fz = -1;
+      if (STATE.currentSpawnCam && STATE.currentSpawnCam.position_m && STATE.currentSpawnCam.look_at_m) {
+        const cp = STATE.currentSpawnCam.position_m;
+        const cl = STATE.currentSpawnCam.look_at_m;
+        const dx = cl[0] - cp[0], dy = cl[1] - cp[1], dz = cl[2] - cp[2];
+        const len = Math.hypot(dx, dy, dz) || 1;
+        fx = dx / len; fy = dy / len; fz = dz / len;
+      }
+
+      for (let i = 0; i < p.count; i++) {
+        const i3 = i * 3;
+        const l1 = p.isLayer1[i] === 1;
+        const bx = p.basePositions[i3 + 0];
+        const by = p.basePositions[i3 + 1];
+        const bz = p.basePositions[i3 + 2];
+        const br = p.baseColors[i3 + 0];
+        const bg = p.baseColors[i3 + 1];
+        const bb = p.baseColors[i3 + 2];
+
+        // Hide Layer-1 disocclusion Gaussians when in `l0` mode or when morphed toward Legacy Before
+        if ((mode === 'l0' || mode === 'before' || morph < 0.35) && l1) {
+          posArr[i3 + 0] = 0;
+          posArr[i3 + 1] = -9999;
+          posArr[i3 + 2] = 0;
+          continue;
+        }
+
+        const dz = p.dzLegacy[i] * legacyWeight;
+        posArr[i3 + 0] = bx + fx * dz;
+        posArr[i3 + 1] = by + fy * dz;
+        posArr[i3 + 2] = bz + fz * dz;
+
+        if (mode === 'xray' && l1) {
+          // Electric cyan highlight on Layer-1 hidden disocclusion Gaussians!
+          colArr[i3 + 0] = br * 0.25 + 0.08;
+          colArr[i3 + 1] = bg * 0.25 + 0.92;
+          colArr[i3 + 2] = bb * 0.25 + 0.85;
+        } else if (legacyWeight > 0.25) {
+          // Warm orange tint proportional to legacy contour ring distortion
+          const ringTint = Math.min(0.45, Math.abs(dz) * 0.06);
+          colArr[i3 + 0] = Math.min(1.0, br + ringTint * 0.9);
+          colArr[i3 + 1] = bg * (1.0 - ringTint * 0.3);
+          colArr[i3 + 2] = bb * (1.0 - ringTint * 0.6);
+        } else {
+          colArr[i3 + 0] = br;
+          colArr[i3 + 1] = bg;
+          colArr[i3 + 2] = bb;
+        }
+      }
+      posAttr.needsUpdate = true;
+      colAttr.needsUpdate = true;
+
+      document.getElementById('btn-eff-sharp').classList.toggle('active', mode === 'sharp');
+      document.getElementById('btn-eff-xray').classList.toggle('active', mode === 'xray');
+      document.getElementById('btn-eff-l0').classList.toggle('active', mode === 'l0');
+      document.getElementById('btn-eff-before').classList.toggle('active', mode === 'before');
+      document.getElementById('val-effect-morph').textContent = `${Math.round(morph * 100)}% SHARP`;
+    }
+
+    function stepInsideCameraStage(pose, slightOrbit = true) {
+      if (!pose || !pose.position_m || !pose.look_at_m) return;
+      STATE.currentSpawnCam = pose;
+      const pos = pose.position_m;
+      const look = pose.look_at_m;
+      const dx = look[0] - pos[0];
+      const dy = look[1] - pos[1];
+      const dz = look[2] - pos[2];
+      // Place user right inside the camera frustum (with a tiny lateral offset if slightOrbit=true so 3D parallax is immediately visible!)
+      const rx = -dz * 0.06;
+      const rz = dx * 0.06;
+      camera.position.set(
+        pos[0] + (slightOrbit ? rx : 0),
+        pos[1] + 0.15,
+        pos[2] + (slightOrbit ? rz : 0)
+      );
+      orbit.target.set(
+        pos[0] + dx * 0.85,
+        pos[1] + dy * 0.85,
+        pos[2] + dz * 0.85
+      );
+      orbit.update();
+      document.getElementById('btn-cam-inside').classList.add('active');
+      document.getElementById('btn-cam-aerial').classList.remove('active');
     }
 
     // ── LOAD & MOUNT CHISEL `.GLB` COLLIDER + `.SPLAT` CLOUD + ACTORS ─────────
@@ -943,11 +1076,9 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn';
-        btn.textContent = `🎥 [${cam.set_piece}] Ref ${cam.ref_id} (${cam.onion_shell})`;
+        btn.textContent = `🎥 Step Inside [${cam.set_piece}] Ref ${cam.ref_id} (${cam.onion_shell})`;
         btn.addEventListener('click', () => {
-          camera.position.set(pos[0] - Math.sin(yawRad) * 4.5, pos[1] + 1.4, pos[2] - Math.cos(yawRad) * 4.5);
-          orbit.target.set(look[0], look[1], look[2]);
-          orbit.update();
+          stepInsideCameraStage(cam.threejs_pose, true);
         });
         frustumContainer.appendChild(btn);
       });
@@ -963,7 +1094,7 @@
 
       // Update Viewport Header & Download Links
       document.getElementById('vp-title').textContent = hub.title;
-      document.getElementById('vp-stats').textContent = `${hub.splat_seed.splat_count.toLocaleString()} 3D Splats · ${hub.chisel_glb.triangles.toLocaleString()} Chisel .GLB Tris`;
+      document.getElementById('vp-stats').textContent = `${hub.splat_seed.splat_count.toLocaleString()} SHARP 2-Layer 3DGS · ${hub.chisel_glb.triangles.toLocaleString()} .GLB Tris`;
       document.getElementById('dl-chisel-glb').href = hub.chisel_glb.file;
       document.getElementById('dl-clean-pano').href = hub.pano_2560x1280;
       document.getElementById('dl-clean-depth').href = hub.depth_2560x1280;
@@ -1020,11 +1151,16 @@
         hub.splat_seed.file,
         hub.twin_state_splat ? hub.twin_state_splat.file : null
       );
-      mountPosedFrustumsAndCutoutCast(hub.cameras || (primaryDistrict && primaryDistrict.cameras) || []);
-
-      camera.position.set(36, 40, 66);
-      orbit.target.set(0, 4, 0);
-      orbit.update();
+      applySplatEffectMode();
+      const cams = hub.cameras || (primaryDistrict && primaryDistrict.cameras) || [];
+      mountPosedFrustumsAndCutoutCast(cams);
+      if (cams.length > 0) {
+        stepInsideCameraStage(cams[0].threejs_pose, true);
+      } else {
+        camera.position.set(36, 40, 66);
+        orbit.target.set(0, 4, 0);
+        orbit.update();
+      }
     }
 
     async function selectDistrict(dKey) {
@@ -1036,14 +1172,16 @@
 
       const matchingHub = STATE.manifest.mega_hubs.find(h => h.linked_stages.includes(dKey)) || STATE.manifest.mega_hubs[0];
       const p0 = d.poems[0];
+      const districtSplatUrl = (d.splat_seed && d.splat_seed.file) ? d.splat_seed.file : matchingHub.splat_seed.file;
+      const districtSplatCount = (d.splat_seed && d.splat_seed.splat_count) ? d.splat_seed.splat_count : matchingHub.splat_seed.splat_count;
 
       document.getElementById('vp-title').textContent = `DISTRICT · ${d.name}`;
-      document.getElementById('vp-stats').textContent = `${d.chisel_glb.triangles.toLocaleString()} Chisel .GLB Tris · ${d.cameras.length} Posed Cameras`;
+      document.getElementById('vp-stats').textContent = `${districtSplatCount.toLocaleString()} SHARP 2-Layer 3DGS · ${d.cameras.length} Walkable Portals`;
       document.getElementById('dl-chisel-glb').href = d.chisel_glb.file;
       document.getElementById('dl-clean-pano').href = `data/terrarium/foundry/equirec/poem_${p0}_shared_eq.jpg`;
       document.getElementById('dl-clean-depth').href = `data/terrarium/foundry/equirec/poem_${p0}_shared_depth.jpg`;
-      document.getElementById('dl-splat-seed').href = matchingHub.splat_seed.file;
-      document.getElementById('btn-open-terrarium').href = `terrarium.html?stage=${dKey}&poem=${p0}&splat=${encodeURIComponent(matchingHub.splat_seed.file)}`;
+      document.getElementById('dl-splat-seed').href = districtSplatUrl;
+      document.getElementById('btn-open-terrarium').href = `terrarium.html?stage=${dKey}&poem=${p0}&splat=${encodeURIComponent(districtSplatUrl)}`;
 
       document.getElementById('img-hub-pano').src = `data/terrarium/foundry/equirec/poem_${p0}_shared_eq.jpg`;
       document.getElementById('img-hub-depth').src = `data/terrarium/foundry/equirec/poem_${p0}_shared_depth.jpg`;
@@ -1053,7 +1191,7 @@
 
       const incGrid = document.getElementById('grid-included-anchors');
       document.getElementById('cnt-included').textContent = `${d.anchor_refs.length} Clean Anchors`;
-      incGrid.innerHTML = d.anchor_refs.map(a => `
+      incGrid.innerHTML = d.anchor_refs.map((a, idx) => `
         <div class="ref-card" onclick="window.open('data/terrarium/foundry/refs/${a.id}.jpg', '_blank')">
           <img src="data/terrarium/foundry/refs/${a.id}.jpg" alt="${a.id}" />
           <div class="rc-body">
@@ -1078,8 +1216,15 @@
       document.getElementById('box-coord-matrix').textContent = JSON.stringify(d.coordinate_bridge, null, 2);
 
       await loadGlbCollider(d.chisel_glb.file);
-      await loadSplatFile(matchingHub.splat_seed.file, matchingHub.twin_state_splat ? matchingHub.twin_state_splat.file : null);
+      await loadSplatFile(districtSplatUrl, matchingHub.twin_state_splat ? matchingHub.twin_state_splat.file : null);
       mountPosedFrustumsAndCutoutCast(d.cameras || []);
+
+      // Spawn the user directly INSIDE this District's primary Apple SHARP 3DGS stage!
+      const spawnPose = (d.splat_seed && d.splat_seed.spawn_camera) || (d.cameras && d.cameras[0] && d.cameras[0].threejs_pose);
+      if (spawnPose) {
+        stepInsideCameraStage(spawnPose, true);
+      }
+      applySplatEffectMode();
     }
 
     function renderSelectorList() {
@@ -1104,20 +1249,22 @@
           el.addEventListener('click', () => selectMegaHub(el.dataset.hub));
         });
       } else {
-        container.innerHTML = Object.values(STATE.manifest.districts).map(d => `
+        container.innerHTML = Object.values(STATE.manifest.districts).map(d => {
+          const sCount = (d.splat_seed && d.splat_seed.splat_count) ? d.splat_seed.splat_count.toLocaleString() : '60,000';
+          return `
           <div class="hub-item ${d.key === STATE.activeDistrictKey ? 'active' : ''}" data-district="${d.key}">
             <div class="hi-top">
-              <span>${d.name.split('·')[0].trim()}</span>
+              <span>🚶 ${d.name.split('·')[0].trim()}</span>
               <span class="pill teal">${d.zone}</span>
             </div>
             <div class="hi-sub">${d.portal_notes.slice(0, 95)}...</div>
             <div class="hi-pills">
-              <span class="pill green">✓ ${d.anchor_refs.length} Anchors</span>
-              <span class="pill coral">✕ ${d.excluded_refs.length} Excluded</span>
+              <span class="pill green">⚡ ${sCount} SHARP 3DGS</span>
+              <span class="pill teal">🎥 ${d.cameras.length} Portals</span>
               <span class="pill">P${d.poems.join(', P')}</span>
             </div>
           </div>
-        `).join('');
+        `}).join('');
         container.querySelectorAll('.hub-item').forEach(el => {
           el.addEventListener('click', () => selectDistrict(el.dataset.district));
         });
@@ -1159,6 +1306,74 @@
       selectDistrict(STATE.activeDistrictKey);
     });
 
+    document.getElementById('btn-cam-inside').addEventListener('click', () => {
+      if (STATE.currentSpawnCam) stepInsideCameraStage(STATE.currentSpawnCam, true);
+    });
+    document.getElementById('btn-cam-aerial').addEventListener('click', () => {
+      camera.position.set(36, 40, 66);
+      orbit.target.set(0, 4, 0);
+      orbit.update();
+      document.getElementById('btn-cam-aerial').classList.add('active');
+      document.getElementById('btn-cam-inside').classList.remove('active');
+    });
+
+    document.getElementById('btn-eff-sharp').addEventListener('click', () => {
+      STATE.effectMode = 'sharp';
+      STATE.effectMorph = 1.0;
+      document.getElementById('sl-effect-morph').value = '1.0';
+      applySplatEffectMode();
+    });
+    document.getElementById('btn-eff-xray').addEventListener('click', () => {
+      STATE.effectMode = 'xray';
+      STATE.effectMorph = 1.0;
+      document.getElementById('sl-effect-morph').value = '1.0';
+      applySplatEffectMode();
+    });
+    document.getElementById('btn-eff-l0').addEventListener('click', () => {
+      STATE.effectMode = 'l0';
+      STATE.effectMorph = 1.0;
+      document.getElementById('sl-effect-morph').value = '1.0';
+      applySplatEffectMode();
+    });
+    document.getElementById('btn-eff-before').addEventListener('click', () => {
+      STATE.effectMode = 'before';
+      STATE.effectMorph = 0.0;
+      document.getElementById('sl-effect-morph').value = '0.0';
+      applySplatEffectMode();
+    });
+    document.getElementById('sl-effect-morph').addEventListener('input', (e) => {
+      STATE.effectMorph = parseFloat(e.target.value);
+      STATE.effectMode = (STATE.effectMorph < 0.25) ? 'before' : (STATE.effectMode === 'before' ? 'sharp' : STATE.effectMode);
+      applySplatEffectMode();
+    });
+
+    // WASD / Arrow-Key First-Person Walk Controller inside District Splats
+    const keysDown = new Set();
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+      keysDown.add(e.key.toLowerCase());
+    });
+    window.addEventListener('keyup', (e) => keysDown.delete(e.key.toLowerCase()));
+
+    function updateWalkMovement() {
+      if (keysDown.size === 0) return;
+      const fwd = new THREE.Vector3();
+      camera.getWorldDirection(fwd);
+      const right = new THREE.Vector3().crossVectors(fwd, camera.up).normalize();
+      const speed = 0.28;
+      const delta = new THREE.Vector3();
+      if (keysDown.has('w') || keysDown.has('arrowup')) delta.addScaledVector(fwd, speed);
+      if (keysDown.has('s') || keysDown.has('arrowdown')) delta.addScaledVector(fwd, -speed);
+      if (keysDown.has('d') || keysDown.has('arrowright')) delta.addScaledVector(right, speed);
+      if (keysDown.has('a') || keysDown.has('arrowleft')) delta.addScaledVector(right, -speed);
+      if (keysDown.has('e')) delta.y += speed * 0.7;
+      if (keysDown.has('q')) delta.y -= speed * 0.7;
+      if (delta.lengthSq() > 0) {
+        camera.position.add(delta);
+        orbit.target.add(delta);
+      }
+    }
+
     document.getElementById('btn-glb-wire').addEventListener('click', () => { STATE.glbMode = 'wire'; applyGlbRenderMode(); });
     document.getElementById('btn-glb-occ').addEventListener('click', () => { STATE.glbMode = 'occ'; applyGlbRenderMode(); });
     document.getElementById('btn-glb-off').addEventListener('click', () => { STATE.glbMode = 'off'; applyGlbRenderMode(); });
@@ -1167,7 +1382,7 @@
       STATE.showActors = !STATE.showActors;
       actorsGroup.visible = STATE.showActors;
       e.target.classList.toggle('active', STATE.showActors);
-      e.target.textContent = STATE.showActors ? '🎭 R1 Cut-Out Actors: ON' : '🎭 R1 Cut-Out Actors: OFF';
+      e.target.textContent = STATE.showActors ? '🎭 R1 Actors: ON' : '🎭 R1 Actors: OFF';
     });
 
     document.getElementById('btn-bake-plate').addEventListener('click', () => {
@@ -1175,7 +1390,7 @@
       const dataUrl = canvas.toDataURL('image/png');
       const a = document.createElement('a');
       a.href = dataUrl;
-      a.download = `baked_splat_backplate_${STATE.activeHubId}.png`;
+      a.download = `baked_splat_backplate_${STATE.activeDistrictKey || STATE.activeHubId}.png`;
       a.click();
     });
 
@@ -1231,19 +1446,29 @@
       const q = new URLSearchParams(location.search);
       const qHub = q.get('hub');
       const qDistrict = q.get('district');
-      if (qDistrict && STATE.manifest.districts[qDistrict]) {
+      const qMode = q.get('effect');
+      if (qMode && ['sharp', 'xray', 'l0', 'before'].includes(qMode)) {
+        STATE.effectMode = qMode;
+        STATE.effectMorph = (qMode === 'before') ? 0.0 : 1.0;
+        document.getElementById('sl-effect-morph').value = String(STATE.effectMorph);
+      }
+      if (qHub && STATE.manifest.mega_hubs.some(h => h.hub_id === qHub) && !qDistrict) {
+        STATE.tabMode = 'megahubs';
+        document.getElementById('tab-megahubs').classList.add('active');
+        document.getElementById('tab-districts').classList.remove('active');
+        await selectMegaHub(qHub);
+      } else {
         STATE.tabMode = 'districts';
         document.getElementById('tab-districts').classList.add('active');
         document.getElementById('tab-megahubs').classList.remove('active');
-        await selectDistrict(qDistrict);
-      } else {
-        await selectMegaHub(qHub || 'hub_01_atlantis');
+        await selectDistrict((qDistrict && STATE.manifest.districts[qDistrict]) ? qDistrict : 'centro');
       }
     }
     init();
 
     function animate() {
       requestAnimationFrame(animate);
+      updateWalkMovement();
       orbit.update();
       renderer.render(scene, camera);
     }
