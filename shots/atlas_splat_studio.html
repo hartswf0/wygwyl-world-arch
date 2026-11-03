@@ -1,729 +1,561 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>3D Gaussian Splat World · All 10 Districts (Apple ml-sharp)</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-    html, body {
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      background: #070b12;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      color: #f3ead2;
-    }
-    #three-canvas {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      display: block;
-      cursor: grab;
-      touch-action: none;
-    }
-    #three-canvas:active {
-      cursor: grabbing;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>WYGWYL · Seeing-As (S2 Construct) & 07-Spacetime</title>
+<style>
+@font-face{font-family:"IM Fell English";src:url(fonts/im-fell-english-latin-400-normal.woff2) format("woff2");font-style:normal;font-display:swap}
+@font-face{font-family:"IM Fell English";src:url(fonts/im-fell-english-latin-400-italic.woff2) format("woff2");font-style:italic;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url(fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2");font-weight:400 500;font-display:swap}
 
-    #hud-dock {
-      position: fixed;
-      bottom: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      max-width: 96vw;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-    }
-    #hud-dock.hidden {
-      opacity: 0;
-      pointer-events: none !important;
-    }
-    .dock-row {
-      pointer-events: auto;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      background: rgba(6, 10, 16, 0.72);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 999px;
-      padding: 4px 9px;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-    }
-    .pill-btn {
-      background: transparent;
-      color: rgba(243, 234, 210, 0.85);
-      border: 1px solid transparent;
-      border-radius: 999px;
-      padding: 5px 11px;
-      font-size: 11.5px;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.12s ease;
-    }
-    .pill-btn:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.12);
-    }
-    .pill-btn.active {
-      background: #ffd23f;
-      color: #06090e;
-      border-color: #ffd23f;
-    }
-    .pill-btn.teal.active {
-      background: #19e6c8;
-      color: #041014;
-      border-color: #19e6c8;
-    }
-    .pill-btn.coral.active {
-      background: #ff3d6e;
-      color: #fff;
-      border-color: #ff3d6e;
-    }
-    .sep {
-      width: 1px;
-      height: 16px;
-      background: rgba(255, 255, 255, 0.18);
-      margin: 0 3px;
-    }
-    #btn-hide-ui {
-      position: fixed;
-      top: 12px;
-      right: 12px;
-      z-index: 30;
-      background: rgba(6, 10, 16, 0.55);
-      color: rgba(243, 234, 210, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 999px;
-      padding: 5px 11px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      backdrop-filter: blur(8px);
-    }
-  </style>
+:root{
+  --paper:#ebe3cf;
+  --panel:#e2d8c1;
+  --ink:#1c1814;
+  --soft:#655c4d;
+  --faint:#b2a791;
+  --lamp:#b86b11;
+  --bar:50px;
+  --fi:15px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:19px/1.58 "IM Fell English",Georgia,serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.mono{font:500 11.5px/1.4 "IBM Plex Mono",ui-monospace,Menlo,monospace;letter-spacing:.08em;text-transform:uppercase}
+
+/* Double-ruled archival frame from Afterlight */
+.frame-border{position:fixed;inset:0;pointer-events:none;z-index:60}
+.frame-border i{position:absolute;display:block;border:1px solid var(--ink)}
+.frame-border i.o{inset:calc(var(--fi) - 6px);z-index:2}
+.frame-border i.n{inset:var(--fi);border-width:2px;box-shadow:0 0 0 60px var(--paper)}
+
+/* Top chapter bar */
+.bar{
+  position:fixed;
+  left:calc(var(--fi) + 2px);
+  right:calc(var(--fi) + 2px);
+  top:calc(var(--fi) + 2px);
+  height:var(--bar);
+  z-index:55;
+  background:var(--paper);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:0 22px;
+  border-bottom:1px solid var(--ink);
+}
+.bar-title{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-title span{color:var(--soft);margin-right:.6em}
+.bar-tabs{display:flex;gap:18px;align-items:center}
+.bar-tabs a{
+  text-decoration:none;
+  color:var(--soft);
+  padding:4px 0;
+  border-bottom:1.5px solid transparent;
+  transition:color .2s,border-color .2s;
+}
+.bar-tabs a.active,.bar-tabs a:hover{color:var(--ink);border-bottom-color:var(--ink)}
+
+.wrap{
+  max-width:1240px;
+  margin:0 auto;
+  padding:calc(var(--bar) + var(--fi) + 36px) 42px 96px;
+  display:grid;
+  gap:72px;
+}
+
+/* Section headers */
+.shead{
+  border-top:1px solid var(--ink);
+  padding-top:18px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px 24px;
+}
+.shead .eyebrow{color:var(--lamp)}
+.shead h2{font-weight:400;font-size:clamp(30px,4.5vw,52px);line-height:1.05;margin:4px 0 0}
+.shead p{font-style:italic;color:var(--soft);margin:0;max-width:36em;font-size:19px}
+
+/* Screening Room Feature Grid */
+.feature-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);
+  gap:36px;
+  align-items:start;
+}
+@media (max-width:900px){
+  .feature-grid{grid-template-columns:1fr}
+  .wrap{padding-inline:24px}
+}
+
+.vbox{
+  position:relative;
+  border:1.5px solid var(--ink);
+  background:#dfd7c5;
+  aspect-ratio:16/9;
+  overflow:hidden;
+}
+.vbox video,.vbox canvas{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+
+.mode-switch{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+  align-items:center;
+}
+.pill{
+  font:500 11px/1 "IBM Plex Mono",monospace;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  padding:8px 13px;
+  border:1px solid var(--ink);
+  background:var(--paper);
+  color:var(--ink);
+  transition:background .15s,color .15s;
+}
+.pill.active,.pill:hover{
+  background:var(--ink);
+  color:var(--paper);
+}
+
+/* S2 Construct Interactive Controls & Notes */
+.notes{display:grid;gap:16px}
+.notes h3{font-weight:400;font-size:28px;line-height:1.15;margin:0}
+.notes p{margin:0;color:var(--soft)}
+.pos-list{
+  display:grid;
+  gap:8px;
+  margin-top:6px;
+  border-top:1px solid var(--faint);
+  padding-top:12px;
+}
+.pos-btn{
+  display:grid;
+  grid-template-columns:56px 1fr auto;
+  align-items:baseline;
+  gap:10px;
+  text-align:left;
+  padding:8px 12px;
+  border:1px solid transparent;
+  transition:border-color .15s,background .15s;
+}
+.pos-btn:hover,.pos-btn.active{
+  border-color:var(--ink);
+  background:var(--panel);
+}
+.pos-btn .ang{color:var(--lamp)}
+.pos-btn .sub{font-style:italic;font-size:15.5px;color:var(--soft);grid-column:2 / -1}
+
+/* 07-Spacetime Videotext Book Layout */
+.book{
+  display:grid;
+  grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);
+  gap:44px;
+  align-items:start;
+}
+@media (max-width:900px){.book{grid-template-columns:1fr}}
+.sticky-screen{
+  position:sticky;
+  top:calc(var(--bar) + var(--fi) + 24px);
+}
+.vtext{display:grid;gap:6px}
+.vtext p{
+  margin:0;
+  padding:8px 12px;
+  color:var(--soft);
+  cursor:pointer;
+  border-left:2px solid transparent;
+  transition:color .25s,background .25s,border-color .25s;
+}
+.vtext p:hover{color:var(--ink);background:rgba(28,24,20,.04)}
+.vtext p.now{
+  color:var(--ink);
+  border-left-color:var(--ink);
+  background:var(--panel);
+}
+.vtext p .tcode{
+  font:500 11px/1 "IBM Plex Mono",monospace;
+  color:var(--lamp);
+  margin-right:10px;
+}
+.vtext p .district-tag{
+  display:block;
+  font:500 10.5px/1.3 "IBM Plex Mono",monospace;
+  color:var(--soft);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-top:2px;
+}
+</style>
 </head>
 <body>
-  <canvas id="three-canvas"></canvas>
 
-  <button id="btn-hide-ui" type="button" title="Toggle UI (Key: H)">👁️ UI [H]</button>
+<div class="frame-border" aria-hidden="true"><i class="o"></i><i class="n"></i></div>
 
-  <div id="hud-dock">
-    <div class="dock-row">
-      <div id="portal-pills" style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;"></div>
-      <div class="sep"></div>
-      <button class="pill-btn teal active" id="mode-sharp" type="button">🟢 SHARP 2-Layer 3DGS</button>
-      <button class="pill-btn teal" id="mode-xray" type="button">🔵 Layer-1 Disocclusion X-Ray</button>
-      <button class="pill-btn teal" id="mode-l0" type="button">🟡 Layer-0 Only (No Disocclusion)</button>
-      <button class="pill-btn coral" id="mode-before" type="button">🔴 Legacy Before</button>
-      <div class="sep"></div>
-      <button class="pill-btn teal active" id="btn-sway" type="button">🔄 Auto-Parallax</button>
-      <button class="pill-btn" id="btn-reset" type="button">🎯 Center [R]</button>
+<header class="bar">
+  <div class="bar-title"><span>WYGWYL · AFTERLIGHT</span>Seeing-As &amp; 07-Spacetime</div>
+  <nav class="bar-tabs mono">
+    <a href="#s2-construct" class="active">S2 · Construct (0:30)</a>
+    <a href="#spacetime-07">07 · Spacetime (1:00)</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <!-- SECTION 1: SEEING-AS · S2 CONSTRUCT -->
+  <section id="s2-construct">
+    <div class="shead">
+      <div>
+        <div class="eyebrow mono">Seeing-As · S2 · Construct · 0:30</div>
+        <h2>Figures in Formless Matter</h2>
+      </div>
+      <p>Four places as one point cloud; each assembles from one position only. Aspect, construction, teleology.</p>
     </div>
 
-    <div class="dock-row" id="district-pills"></div>
-  </div>
+    <div class="feature-grid" style="margin-top:24px">
+      <div>
+        <div class="vbox" id="construct-stage">
+          <video id="construct-video" controls playsinline preload="auto" poster="videos/wygwyl_seeing_construct.jpg" src="videos/wygwyl_seeing_construct.mp4"></video>
+          <canvas id="construct-canvas" width="960" height="540" style="display:none;cursor:grab"></canvas>
+        </div>
+        <div class="mode-switch">
+          <button type="button" class="pill active" id="btn-mode-film">Watch S2 Construct Film (0:30)</button>
+          <button type="button" class="pill" id="btn-mode-interactive">Interactive 3D Point Cloud (Drag 0°–360°)</button>
+          <span class="mono" id="construct-readout" style="margin-left:auto;color:var(--soft)">Azimuth 000° · Position I</span>
+        </div>
+      </div>
 
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+      <div class="notes">
+        <h3>One Shared Cloud, Four Alignments</h3>
+        <p>Every point in this cloud carries Apple <code>ml-sharp</code> neural depth along its camera ray. From any arbitrary angle the cloud reads as swirling latent strata on warm parchment—until the camera crosses 0°, 90°, 180°, or 270°, where the rays lock into perspective registration.</p>
+
+        <div class="pos-list" id="construct-positions">
+          <button type="button" class="pos-btn active" data-t="2.5" data-deg="0">
+            <span class="ang mono">I · 0°</span>
+            <strong>Mount Vernon · Poet's Room</strong>
+            <span class="sub">Iron fire escape &amp; window aperture</span>
+          </button>
+          <button type="button" class="pos-btn" data-t="9.5" data-deg="90">
+            <span class="ang mono">II · 90°</span>
+            <strong>Holland Island · Storm Chapel</strong>
+            <span class="sub">Sunken Chesapeake causeway &amp; timber nave</span>
+          </button>
+          <button type="button" class="pos-btn" data-t="16.8" data-deg="180">
+            <span class="ang mono">III · 180°</span>
+            <strong>Centro Histórico · Atlantis Gates</strong>
+            <span class="sub">Marble threshold &amp; column relief</span>
+          </button>
+          <button type="button" class="pos-btn" data-t="24.0" data-deg="270">
+            <span class="ang mono">IV · 270°</span>
+            <strong>Fells Point · Tres Marías Portal</strong>
+            <span class="sub">Harbor cobblestone &amp; luminous archway</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: 07-SPACETIME VIDEOTEXT -->
+  <section id="spacetime-07">
+    <div class="shead">
+      <div>
+        <div class="eyebrow mono">Chapter VII · 07-Spacetime · 1:00</div>
+        <h2>A Walk Through the Latent Volume</h2>
+      </div>
+      <p>Every clip is a 4D volume of neural depth and time: the newest frame faces the camera, and earlier slices trail behind it in space.</p>
+    </div>
+
+    <div class="book" style="margin-top:24px">
+      <div class="sticky-screen">
+        <div class="vbox">
+          <video id="spacetime-video" controls playsinline preload="auto" poster="videos/wygwyl_07_spacetime.jpg" src="videos/wygwyl_07_spacetime.mp4"></video>
+        </div>
+        <div class="mode-switch">
+          <button type="button" class="pill" data-seek="0.5">I · Assemble (0:00)</button>
+          <button type="button" class="pill" data-seek="12.2">III · Night Volume (0:12)</button>
+          <button type="button" class="pill" data-seek="24.2">V · Neon Portal (0:24)</button>
+          <button type="button" class="pill" data-seek="34.8">The Montage · Face &amp; Side (0:35)</button>
+          <button type="button" class="pill" data-seek="50.6">3D Title (0:51)</button>
+        </div>
+      </div>
+
+      <div class="vtext" id="spacetime-cues">
+        <p data-t0="0.0" data-t1="6.2" class="now">
+          <span class="tcode">0:00</span>Every frame is a place the light once stood. Formless dust settles into the living volume of the Poet's room as the camera walks forward along the Z-axis.
+          <span class="district-tag">I · Mount Vernon · Paper Ink + Neural Depth</span>
+        </p>
+        <p data-t0="6.2" data-t1="12.0">
+          <span class="tcode">0:06</span>Hold the frames together — and the storm chapel's past forty-eight slices hang behind the present frame like suspended sheets of rain.
+          <span class="district-tag">II · Holland Island · Orbital Walk</span>
+        </p>
+        <p data-t0="12.0" data-t1="18.0">
+          <span class="tcode">0:12</span>— and a city becomes a body in time. On deep night canvas, multi-scale Gaussian halation turns the Atlantis marble threshold into a corridor of light.
+          <span class="district-tag">III · Centro Histórico · Light Mode &amp; Bloom</span>
+        </p>
+        <p data-t0="18.0" data-t1="24.0">
+          <span class="tcode">0:18</span>Walk forward through the volume. The rain walker's silhouette leaves a carved tunnel of footsteps suspended across depth and time.
+          <span class="district-tag">IV · Woodberry · Z-Axis Push</span>
+        </p>
+        <p data-t0="24.0" data-t1="29.8">
+          <span class="tcode">0:24</span>The present is the brightest slice. Earlier moments decay exponentially behind the focal plane via Beers-Law transmittance.
+          <span class="district-tag">V · Tres Marías &amp; Fells Point · Neon Portal</span>
+        </p>
+        <p data-t0="29.8" data-t1="34.8">
+          <span class="tcode">0:30</span>Ten districts — one latent world. A wide orbital sweep across the Dorchester tidal marsh exposes the layered strata before the montage begins.
+          <span class="district-tag">VI · Dorchester Marsh · Wide Side Orbit</span>
+        </p>
+        <p data-t0="34.8" data-t1="49.4">
+          <span class="tcode">0:35</span><strong>THE MONTAGE</strong> — Every volume twice: first a face-on push into the present slice, then an immediate ±62° side-on cut exposing the 4D neural depth and temporal ribbons, accelerating to 0.25s cuts.
+          <span class="district-tag">All 10 Districts · Accelerating Face-On / Side-On Cuts</span>
+        </p>
+        <p data-t0="49.4" data-t1="60.0">
+          <span class="tcode">0:50</span>Silence on the drop — then eighteen thousand scattered points coalesce in 3D space to form the title <em>W Y G W Y L</em>.
+          <span class="district-tag">Coda · 3D Point-Cloud Typography</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ---------------------------------------------------------------------------
+// 1. S2 Construct: Video <-> Interactive 3D Anamorphic Point Cloud Switcher
+// ---------------------------------------------------------------------------
+const constructVid = document.getElementById('construct-video');
+const constructCanvas = document.getElementById('construct-canvas');
+const btnFilm = document.getElementById('btn-mode-film');
+const btnInter = document.getElementById('btn-mode-interactive');
+const readout = document.getElementById('construct-readout');
+const posBtns = Array.from(document.querySelectorAll('#construct-positions .pos-btn'));
+
+let interactiveMode = false;
+let targetYawDeg = 0;
+let curYawDeg = 0;
+let isDragging = false;
+let dragStartX = 0;
+let dragStartYaw = 0;
+
+btnFilm.addEventListener('click', () => {
+  interactiveMode = false;
+  btnFilm.classList.add('active');
+  btnInter.classList.remove('active');
+  constructCanvas.style.display = 'none';
+  constructVid.style.display = 'block';
+  constructVid.play().catch(()=>{});
+});
+
+btnInter.addEventListener('click', () => {
+  interactiveMode = true;
+  btnInter.classList.add('active');
+  btnFilm.classList.remove('active');
+  constructVid.pause();
+  constructVid.style.display = 'none';
+  constructCanvas.style.display = 'block';
+  initInteractiveConstruct();
+});
+
+posBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    posBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const t = parseFloat(btn.dataset.t);
+    const deg = parseFloat(btn.dataset.deg);
+    targetYawDeg = deg;
+    if (!interactiveMode) {
+      constructVid.currentTime = t;
+      constructVid.play().catch(()=>{});
+    }
+  });
+});
+
+constructVid.addEventListener('timeupdate', () => {
+  if (interactiveMode) return;
+  const t = constructVid.currentTime;
+  let activeIdx = 0;
+  let deg = 0;
+  if (t < 6.8) { activeIdx = 0; deg = 0; }
+  else if (t < 13.8) { activeIdx = 1; deg = 90; }
+  else if (t < 20.8) { activeIdx = 2; deg = 180; }
+  else { activeIdx = 3; deg = 270; }
+  posBtns.forEach((b, i) => b.classList.toggle('active', i === activeIdx));
+  readout.textContent = `Film Clock ${t.toFixed(1)}s · Position ${['I','II','III','IV'][activeIdx]} (${deg}°)`;
+});
+
+// Interactive 4-Place Anamorphic Cloud in HTML5 Canvas (loads 4 reference images + Apple SHARP depth maps)
+let constructReady = false;
+let constructPts = [];
+const PLACE_SPECS = [
+  { deg: 0,   name: 'I · Mount Vernon',     img: 'data/terrarium/atlas_packs/frames/frame_01-00.jpg', depth: 'data/terrarium/atlas_packs/splats/depth_01-00_sharp.png' },
+  { deg: 90,  name: 'II · Holland Island',  img: 'data/terrarium/atlas_packs/frames/frame_03-00.jpg', depth: 'data/terrarium/atlas_packs/splats/depth_03-00_sharp.png' },
+  { deg: 180, name: 'III · Centro Atlantis',img: 'data/terrarium/atlas_packs/frames/frame_06-00.jpg', depth: 'data/terrarium/atlas_packs/splats/depth_06-00_sharp.png' },
+  { deg: 270, name: 'IV · Fells Point',     img: 'data/terrarium/atlas_packs/frames/frame_13-01.jpg', depth: 'data/terrarium/atlas_packs/splats/depth_13-01_sharp.png' },
+];
+
+function loadImageData(url, w, h) {
+  return new Promise((resolve) => {
+    const im = new Image();
+    im.crossOrigin = 'anonymous';
+    im.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(im, 0, 0, w, h);
+      resolve(ctx.getImageData(0, 0, w, h).data);
+    };
+    im.onerror = () => resolve(null);
+    im.src = url;
+  });
+}
+
+async function initInteractiveConstruct() {
+  if (constructReady) return;
+  constructReady = true;
+  const gw = 120, gh = 68, D = 680;
+  const pts = [];
+
+  for (let k = 0; k < 4; k++) {
+    const spec = PLACE_SPECS[k];
+    const [rgbData, dData] = await Promise.all([
+      loadImageData(spec.img, gw, gh),
+      loadImageData(spec.depth, gw, gh)
+    ]);
+    if (!rgbData) continue;
+    const th = spec.deg * Math.PI / 180;
+    const rkX = Math.cos(th), rkZ = Math.sin(th);
+    const fkX = -Math.sin(th), fkZ = Math.cos(th);
+
+    for (let y = 0; y < gh; y++) {
+      for (let x = 0; x < gw; x++) {
+        const u = (x / gw - 0.5) * 540;
+        const v = (y / gh - 0.5) * 304;
+        const r2 = (u / 275) ** 2 + (v / 155) ** 2;
+        if (r2 > 1.05) continue;
+        const idx = (y * gw + x) * 4;
+        const dVal = dData ? (dData[idx] / 255.0) : 0.5;
+        const zRay = (0.5 - dVal) * 420;
+        const scale = (D + zRay) / D;
+        const xl = u * scale;
+        const yl = v * scale;
+        pts.push({
+          k,
+          Xw: xl * rkX + zRay * fkX,
+          Yw: yl,
+          Zw: xl * rkZ + zRay * fkZ,
+          r: rgbData[idx],
+          g: rgbData[idx + 1],
+          b: rgbData[idx + 2],
+        });
+      }
     }
   }
-  </script>
-  <script type="module">
-    import * as THREE from 'three';
+  constructPts = pts;
+  requestAnimationFrame(drawInteractiveConstruct);
+}
 
-    const STATE = {
-      manifest: null,
-      activeDistrictKey: 'fells-point',
-      activeCamIdx: 0,
-      renderMode: 'sharp', // 'sharp' | 'xray' | 'l0' | 'before'
-      autoSway: true,
-      swayTime: 0,
-      allParsed: null,
-      stageData: null,
-      basis: null,
-      // Smooth spring-damped 3D camera controller state inside the room
-      curR: 0, curU: 0, curF: 0, curYaw: 0, curPitch: 0,
-      tgtR: 0, tgtU: 0, tgtF: 0, tgtYaw: 0, tgtPitch: 0,
-    };
-
-    const canvas = document.getElementById('three-canvas');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x070b12);
-
-    const camera = new THREE.PerspectiveCamera(23, window.innerWidth / window.innerHeight, 0.2, 400);
-    const splatGroup = new THREE.Group();
-    scene.add(splatGroup);
-
-    let splatMesh = null;
-
-    function computeCameraBasis(pos, look) {
-      const px = pos[0], py = pos[1], pz = pos[2];
-      let fx = look[0] - px, fy = look[1] - py, fz = look[2] - pz;
-      const flen = Math.hypot(fx, fy, fz) || 1.0;
-      fx /= flen; fy /= flen; fz /= flen;
-
-      let rx = -fz, ry = 0, rz = fx;
-      const rlen = Math.hypot(rx, ry, rz) || 1.0;
-      rx /= rlen; ry /= rlen; rz /= rlen;
-
-      const ux = ry * fz - rz * fy;
-      const uy = rz * fx - rx * fz;
-      const uz = rx * fy - ry * fx;
-      return { P: [px, py, pz], R: [rx, ry, rz], U: [ux, uy, uz], F: [fx, fy, fz], dist: flen };
+constructCanvas.addEventListener('pointerdown', e => {
+  isDragging = true;
+  dragStartX = e.clientX;
+  dragStartYaw = targetYawDeg;
+  constructCanvas.setPointerCapture(e.pointerId);
+});
+constructCanvas.addEventListener('pointermove', e => {
+  if (!isDragging) return;
+  const dx = e.clientX - dragStartX;
+  targetYawDeg = (dragStartYaw + dx * 0.45 + 3600) % 360;
+});
+constructCanvas.addEventListener('pointerup', () => {
+  isDragging = false;
+  // Snap gently if within 12 degrees of a canonical 90-degree position
+  for (const canon of [0, 90, 180, 270, 360]) {
+    if (Math.abs(targetYawDeg - canon) < 12) {
+      targetYawDeg = canon % 360;
+      break;
     }
+  }
+});
 
-    function updateViewportUniforms() {
-      renderer.setSize(window.innerWidth, window.innerHeight, false);
-      camera.aspect = window.innerWidth / window.innerHeight;
-      // Adapt vertical FOV to aspect ratio so the 2.15:1 cinema splat stage always fills the screen comfortably
-      const targetHorizFovRad = THREE.MathUtils.degToRad(50.0);
-      const vertFovRad = 2.0 * Math.atan(Math.tan(targetHorizFovRad * 0.5) / Math.max(1.15, camera.aspect));
-      camera.fov = THREE.MathUtils.radToDeg(vertFovRad);
-      camera.updateProjectionMatrix();
+function drawInteractiveConstruct() {
+  if (interactiveMode && constructPts.length) {
+    let diff = ((targetYawDeg - curYawDeg + 540) % 360) - 180;
+    curYawDeg = (curYawDeg + diff * 0.14 + 360) % 360;
 
-      if (splatMesh && splatMesh.material.uniforms) {
-        const focalDevPx = renderer.domElement.height / (2.0 * Math.tan(vertFovRad * 0.5));
-        splatMesh.material.uniforms.uFocalPx.value = focalDevPx;
-      }
-    }
-    window.addEventListener('resize', updateViewportUniforms);
+    const ctx = constructCanvas.getContext('2d');
+    const W = constructCanvas.width, H = constructCanvas.height;
+    ctx.fillStyle = '#ebe3cf';
+    ctx.fillRect(0, 0, W, H);
 
-    // ── PARSE `.SPLAT` BINARY ──
-    function parse32ByteSplatBuffer(arrayBuffer) {
-      const count = Math.floor(arrayBuffer.byteLength / 32);
-      const dv = new DataView(arrayBuffer);
-      const basePositions = new Float32Array(count * 3);
-      const baseColors = new Float32Array(count * 3);
-      const baseAlphas = new Float32Array(count);
-      const baseScales = new Float32Array(count);
-      const isLayer1 = new Uint8Array(count);
-      const camIdx = new Uint8Array(count);
-      const dzLegacy = new Float32Array(count);
+    const yaw = curYawDeg * Math.PI / 180;
+    const cy = Math.cos(-yaw), sy = Math.sin(-yaw);
+    const D = 680, focal = 820;
 
-      for (let i = 0; i < count; i++) {
-        const off = i * 32;
-        basePositions[i * 3 + 0] = dv.getFloat32(off + 0, true);
-        basePositions[i * 3 + 1] = dv.getFloat32(off + 4, true);
-        basePositions[i * 3 + 2] = dv.getFloat32(off + 8, true);
-
-        const sx = dv.getFloat32(off + 12, true);
-        const sy = dv.getFloat32(off + 16, true);
-        const sz = dv.getFloat32(off + 20, true);
-        baseScales[i] = Math.max(0.16, Math.min(0.65, (sx + sy + sz) / 3.0));
-
-        baseColors[i * 3 + 0] = dv.getUint8(off + 24) / 255.0;
-        baseColors[i * 3 + 1] = dv.getUint8(off + 25) / 255.0;
-        baseColors[i * 3 + 2] = dv.getUint8(off + 26) / 255.0;
-        baseAlphas[i] = Math.max(0.35, dv.getUint8(off + 27) / 255.0);
-
-        const q0 = dv.getUint8(off + 28);
-        const q1 = dv.getUint8(off + 29);
-        const q2 = dv.getUint8(off + 30);
-        const q3 = dv.getUint8(off + 31);
-
-        isLayer1[i] = (q0 === 255) ? 1 : 0;
-        camIdx[i] = q1;
-        const u16 = q2 | (q3 << 8);
-        dzLegacy[i] = (q0 === 128 && q2 === 128) ? 0.0 : ((u16 / 65535.0) * 30.0 - 15.0);
-      }
-      return { count, basePositions, baseColors, baseAlphas, baseScales, isLayer1, camIdx, dzLegacy };
-    }
-
-    // Extract active camera stage's Gaussians and allocate counting-sort buffers
-    const NUM_BUCKETS = 2048;
-    const bucketCounts = new Int32Array(NUM_BUCKETS);
-    const bucketOffsets = new Int32Array(NUM_BUCKETS);
-
-    function buildActiveStageSplatMesh() {
-      while (splatGroup.children.length > 0) {
-        const c = splatGroup.children[0];
-        splatGroup.remove(c);
-        if (c.geometry) c.geometry.dispose();
-      }
-      splatMesh = null;
-      if (!STATE.allParsed) return;
-
-      const all = STATE.allParsed;
-      const targetCam = STATE.activeCamIdx;
-
-      // Count how many Gaussians belong to targetCam
-      let nStage = 0;
-      for (let i = 0; i < all.count; i++) {
-        if (all.camIdx[i] === targetCam) nStage++;
-      }
-      if (nStage === 0) return;
-
-      const uPos = new Float32Array(nStage * 3); // Unsorted stage positions (after mode/legacy displacement)
-      const uCol = new Float32Array(nStage * 3);
-      const uAlp = new Float32Array(nStage);
-      const uScl = new Float32Array(nStage);
-      const sBasePos = new Float32Array(nStage * 3);
-      const sBaseCol = new Float32Array(nStage * 3);
-      const sBaseAlp = new Float32Array(nStage);
-      const sBaseScl = new Float32Array(nStage);
-      const sIsL1 = new Uint8Array(nStage);
-      const sDzLeg = new Float32Array(nStage);
-
-      let k = 0;
-      for (let i = 0; i < all.count; i++) {
-        if (all.camIdx[i] !== targetCam) continue;
-        sBasePos[k * 3 + 0] = all.basePositions[i * 3 + 0];
-        sBasePos[k * 3 + 1] = all.basePositions[i * 3 + 1];
-        sBasePos[k * 3 + 2] = all.basePositions[i * 3 + 2];
-        sBaseCol[k * 3 + 0] = all.baseColors[i * 3 + 0];
-        sBaseCol[k * 3 + 1] = all.baseColors[i * 3 + 1];
-        sBaseCol[k * 3 + 2] = all.baseColors[i * 3 + 2];
-        sBaseAlp[k] = all.baseAlphas[i];
-        sBaseScl[k] = all.baseScales[i];
-        sIsL1[k] = all.isLayer1[i];
-        sDzLeg[k] = all.dzLegacy[i];
-        k++;
-      }
-
-      // Sorted attribute buffers sent to GPU
-      const sortedPos = new Float32Array(nStage * 3);
-      const sortedCol = new Float32Array(nStage * 3);
-      const sortedAlp = new Float32Array(nStage);
-      const sortedScl = new Float32Array(nStage);
-      const depthKeys = new Uint16Array(nStage);
-      const sortedIndices = new Int32Array(nStage);
-
-      STATE.stageData = {
-        nStage,
-        uPos, uCol, uAlp, uScl,
-        sBasePos, sBaseCol, sBaseAlp, sBaseScl, sIsL1, sDzLeg,
-        sortedPos, sortedCol, sortedAlp, sortedScl,
-        depthKeys, sortedIndices,
-      };
-
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(sortedPos, 3));
-      geo.setAttribute('color', new THREE.BufferAttribute(sortedCol, 3));
-      geo.setAttribute('aAlpha', new THREE.BufferAttribute(sortedAlp, 1));
-      geo.setAttribute('aScale', new THREE.BufferAttribute(sortedScl, 1));
-
-      const mat = new THREE.ShaderMaterial({
-        uniforms: {
-          uFocalPx: { value: 2000.0 },
-        },
-        vertexShader: `
-          attribute float aScale;
-          attribute float aAlpha;
-          varying vec3 vColor;
-          varying float vAlpha;
-          uniform float uFocalPx;
-          void main() {
-            vColor = color;
-            vAlpha = aAlpha;
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_Position = projectionMatrix * mvPosition;
-            float dist = max(1.2, -mvPosition.z);
-            // Perspective-accurate Gaussian footprint scaled to Retina viewport focal length
-            gl_PointSize = clamp(aScale * (uFocalPx / dist) * 0.42, 4.0, 110.0);
-          }
-        `,
-        fragmentShader: `
-          varying vec3 vColor;
-          varying float vAlpha;
-          void main() {
-            if (vAlpha <= 0.01) discard;
-            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
-            float r2 = dot(cxy, cxy);
-            if (r2 > 1.0) discard;
-            // True 2D Gaussian radial falloff exp(-2.2 * r^2)
-            float gauss = exp(-2.25 * r2);
-            gl_FragColor = vec4(vColor, vAlpha * gauss);
-          }
-        `,
-        vertexColors: true,
-        transparent: true,
-        depthTest: true,
-        depthWrite: false,
-        blending: THREE.NormalBlending,
-      });
-
-      splatMesh = new THREE.Points(geo, mat);
-      splatMesh.frustumCulled = false;
-      splatGroup.add(splatMesh);
-
-      updateViewportUniforms();
-      applySplatModeToStageData();
-      sortStageSplatsBackToFront();
-    }
-
-    function applySplatModeToStageData() {
-      const sd = STATE.stageData;
-      if (!sd || !STATE.basis) return;
-      const mode = STATE.renderMode;
-      const fx = STATE.basis.F[0], fy = STATE.basis.F[1], fz = STATE.basis.F[2];
-
-      for (let i = 0; i < sd.nStage; i++) {
-        const i3 = i * 3;
-        const l1 = sd.sIsL1[i] === 1;
-        const bx = sd.sBasePos[i3 + 0], by = sd.sBasePos[i3 + 1], bz = sd.sBasePos[i3 + 2];
-        const br = sd.sBaseCol[i3 + 0], bg = sd.sBaseCol[i3 + 1], bb = sd.sBaseCol[i3 + 2];
-
-        if ((mode === 'l0' || mode === 'before') && l1) {
-          sd.uPos[i3 + 0] = bx;
-          sd.uPos[i3 + 1] = by;
-          sd.uPos[i3 + 2] = bz;
-          sd.uAlp[i] = 0.0;
-          sd.uScl[i] = 0.0;
-          continue;
-        }
-
-        const dz = (mode === 'before') ? sd.sDzLeg[i] : 0.0;
-        sd.uPos[i3 + 0] = bx + fx * dz;
-        sd.uPos[i3 + 1] = by + fy * dz;
-        sd.uPos[i3 + 2] = bz + fz * dz;
-        sd.uAlp[i] = sd.sBaseAlp[i];
-        sd.uScl[i] = sd.sBaseScl[i];
-
-        if (mode === 'xray' && l1) {
-          sd.uCol[i3 + 0] = 0.08;
-          sd.uCol[i3 + 1] = 0.96;
-          sd.uCol[i3 + 2] = 0.86;
-          sd.uAlp[i] = 0.95;
-        } else if (mode === 'before') {
-          const tint = Math.min(0.4, Math.abs(dz) * 0.05);
-          sd.uCol[i3 + 0] = Math.min(1.0, br + tint * 0.85);
-          sd.uCol[i3 + 1] = bg * (1.0 - tint * 0.35);
-          sd.uCol[i3 + 2] = bb * (1.0 - tint * 0.55);
-        } else {
-          sd.uCol[i3 + 0] = br;
-          sd.uCol[i3 + 1] = bg;
-          sd.uCol[i3 + 2] = bb;
-        }
-      }
-
-      ['sharp', 'xray', 'l0', 'before'].forEach(m => {
-        document.getElementById(`mode-${m}`).classList.toggle('active', mode === m);
-      });
-    }
-
-    // O(N) 2048-Bucket Back-to-Front Counting Sort (~0.7ms per frame)
-    const camFwd = new THREE.Vector3();
-    function sortStageSplatsBackToFront() {
-      const sd = STATE.stageData;
-      if (!sd || !splatMesh) return;
-
-      camera.getWorldDirection(camFwd);
-      const cx = camera.position.x, cy = camera.position.y, cz = camera.position.z;
-      const fx = camFwd.x, fy = camFwd.y, fz = camFwd.z;
-
-      const n = sd.nStage;
-      const uPos = sd.uPos;
-      const keys = sd.depthKeys;
-
-      bucketCounts.fill(0);
-
-      // Map depth in [0.5m .. 40.5m] -> bucket [2047 .. 0] so FARTHEST Gaussians come FIRST!
-      const scale = (NUM_BUCKETS - 1) / 40.0;
-      for (let i = 0; i < n; i++) {
-        const i3 = i * 3;
-        const d = (uPos[i3 + 0] - cx) * fx + (uPos[i3 + 1] - cy) * fy + (uPos[i3 + 2] - cz) * fz;
-        // Invert depth so largest distance -> bucket 0 (drawn first), smallest distance -> bucket 2047 (drawn last on top)
-        let b = Math.floor((40.5 - d) * scale);
-        if (b < 0) b = 0;
-        else if (b >= NUM_BUCKETS) b = NUM_BUCKETS - 1;
-        keys[i] = b;
-        bucketCounts[b]++;
-      }
-
-      let offset = 0;
-      for (let b = 0; b < NUM_BUCKETS; b++) {
-        bucketOffsets[b] = offset;
-        offset += bucketCounts[b];
-      }
-
-      const sortedIdx = sd.sortedIndices;
-      for (let i = 0; i < n; i++) {
-        const b = keys[i];
-        sortedIdx[bucketOffsets[b]++] = i;
-      }
-
-      const sPos = sd.sortedPos, sCol = sd.sortedCol, sAlp = sd.sortedAlp, sScl = sd.sortedScl;
-      const uCol = sd.uCol, uAlp = sd.uAlp, uScl = sd.uScl;
-
-      for (let j = 0; j < n; j++) {
-        const i = sortedIdx[j];
-        const j3 = j * 3, i3 = i * 3;
-        sPos[j3 + 0] = uPos[i3 + 0];
-        sPos[j3 + 1] = uPos[i3 + 1];
-        sPos[j3 + 2] = uPos[i3 + 2];
-        sCol[j3 + 0] = uCol[i3 + 0];
-        sCol[j3 + 1] = uCol[i3 + 1];
-        sCol[j3 + 2] = uCol[i3 + 2];
-        sAlp[j] = uAlp[i];
-        sScl[j] = uScl[i];
-      }
-
-      splatMesh.geometry.attributes.position.needsUpdate = true;
-      splatMesh.geometry.attributes.color.needsUpdate = true;
-      splatMesh.geometry.attributes.aAlpha.needsUpdate = true;
-      splatMesh.geometry.attributes.aScale.needsUpdate = true;
-    }
-
-    function resetCameraToStageCenter() {
-      STATE.tgtR = 0;
-      STATE.tgtU = 0;
-      STATE.tgtF = 0;
-      STATE.tgtYaw = 0;
-      STATE.tgtPitch = 0;
-    }
-
-    // ── INTUITIVE, BOUNDED 3D ROOM PARALLAX & WALK CONTROLLER ──
-    let isDragging = false;
-    let dragButton = 0;
-    let lastX = 0, lastY = 0;
-
-    canvas.addEventListener('pointerdown', (e) => {
-      isDragging = true;
-      dragButton = e.button;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      canvas.setPointerCapture(e.pointerId);
-      // Pause auto-sway when user grabs the view
-      if (STATE.autoSway) {
-        STATE.autoSway = false;
-        document.getElementById('btn-sway').classList.remove('active');
-      }
+    // Determine alignment lock with each of the 4 places
+    const aligns = [0, 90, 180, 270].map(deg => {
+      const d = Math.abs(((curYawDeg - deg + 540) % 360) - 180);
+      return Math.max(0, 1 - d / 55);
     });
+    const maxAlign = Math.max(...aligns);
+    const bestIdx = aligns.indexOf(maxAlign);
+    readout.textContent = `Azimuth ${Math.round(curYawDeg).toString().padStart(3,'0')}° · ${maxAlign > 0.78 ? 'LOCKED · ' + PLACE_SPECS[bestIdx].name : 'ORBITING LATENT CLOUD'}`;
 
-    canvas.addEventListener('pointermove', (e) => {
-      if (!isDragging) return;
-      const dx = (e.clientX - lastX) / window.innerWidth;
-      const dy = (e.clientY - lastY) / window.innerHeight;
-      lastX = e.clientX;
-      lastY = e.clientY;
+    for (let i = 0; i < constructPts.length; i++) {
+      const p = constructPts[i];
+      const al = aligns[p.k];
+      const Xc = p.Xw * cy + p.Zw * sy;
+      const Zc = -p.Xw * sy + p.Zw * cy + D;
+      if (Zc < 40) continue;
+      const px = focal * Xc / Zc + W * 0.5;
+      const py = focal * p.Yw / Zc + H * 0.5;
+      if (px < 0 || px >= W || py < 0 || py >= H) continue;
 
-      if (dragButton === 2 || e.shiftKey) {
-        // Right-drag or Shift+drag: pure truck left/right & pedestal up/down
-        STATE.tgtR = Math.max(-2.6, Math.min(2.6, STATE.tgtR - dx * 5.0));
-        STATE.tgtU = Math.max(-1.4, Math.min(1.4, STATE.tgtU + dy * 3.5));
-      } else {
-        // Left-drag: coupled 3D parallax shift + smooth look rotation around room center!
-        STATE.tgtR = Math.max(-2.4, Math.min(2.4, STATE.tgtR - dx * 4.2));
-        STATE.tgtU = Math.max(-1.2, Math.min(1.2, STATE.tgtU + dy * 2.8));
-        STATE.tgtYaw = Math.max(-0.26, Math.min(0.26, STATE.tgtYaw + dx * 0.45));
-        STATE.tgtPitch = Math.max(-0.16, Math.min(0.16, STATE.tgtPitch + dy * 0.32));
-      }
-    });
-
-    ['pointerup', 'pointercancel'].forEach(ev => {
-      canvas.addEventListener(ev, () => { isDragging = false; });
-    });
-    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-    canvas.addEventListener('dblclick', () => resetCameraToStageCenter());
-
-    canvas.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      // Smoothly dolly forward/backward inside the room within safe bounds [-2.2m .. +4.8m]
-      STATE.tgtF = Math.max(-2.2, Math.min(4.8, STATE.tgtF - e.deltaY * 0.004));
-    }, { passive: false });
-
-    const keys = new Set();
-    window.addEventListener('keydown', (e) => {
-      const k = e.key.toLowerCase();
-      if (k === 'h') {
-        document.getElementById('hud-dock').classList.toggle('hidden');
-        return;
-      }
-      if (k === 'r' || k === ' ') {
-        resetCameraToStageCenter();
-        return;
-      }
-      keys.add(k);
-    });
-    window.addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
-
-    function updateCameraPose(dt) {
-      if (!STATE.basis) return;
-
-      // Keyboard WASD / Arrow movement inside safe room bounds
-      if (keys.size > 0) {
-        if (STATE.autoSway) {
-          STATE.autoSway = false;
-          document.getElementById('btn-sway').classList.remove('active');
-        }
-        const spd = 2.8 * dt;
-        if (keys.has('w') || keys.has('arrowup')) STATE.tgtF = Math.min(4.8, STATE.tgtF + spd);
-        if (keys.has('s') || keys.has('arrowdown')) STATE.tgtF = Math.max(-2.2, STATE.tgtF - spd);
-        if (keys.has('d') || keys.has('arrowright')) STATE.tgtR = Math.min(2.6, STATE.tgtR + spd * 0.8);
-        if (keys.has('a') || keys.has('arrowleft')) STATE.tgtR = Math.max(-2.6, STATE.tgtR - spd * 0.8);
-        if (keys.has('e')) STATE.tgtU = Math.min(1.4, STATE.tgtU + spd * 0.6);
-        if (keys.has('q')) STATE.tgtU = Math.max(-1.4, STATE.tgtU - spd * 0.6);
-      }
-
-      // Gentle figure-8 3D parallax sway when Auto-Parallax is active so 3D depth is immediately visible
-      let swayR = 0, swayU = 0, swayF = 0;
-      if (STATE.autoSway) {
-        STATE.swayTime += dt;
-        swayR = Math.sin(STATE.swayTime * 1.15) * 1.15;
-        swayU = Math.cos(STATE.swayTime * 0.85) * 0.38;
-        swayF = Math.sin(STATE.swayTime * 0.65) * 0.85;
-      }
-
-      const damp = Math.min(1.0, dt * 10.0);
-      STATE.curR += ((STATE.tgtR + swayR) - STATE.curR) * damp;
-      STATE.curU += ((STATE.tgtU + swayU) - STATE.curU) * damp;
-      STATE.curF += ((STATE.tgtF + swayF) - STATE.curF) * damp;
-      STATE.curYaw += (STATE.tgtYaw - STATE.curYaw) * damp;
-      STATE.curPitch += (STATE.tgtPitch - STATE.curPitch) * damp;
-
-      const { P, R, U, F, dist } = STATE.basis;
-      const baseAdvance = 0.6 + STATE.curF;
-
-      const cx = P[0] + R[0] * STATE.curR + U[0] * STATE.curU + F[0] * baseAdvance;
-      const cy = P[1] + R[1] * STATE.curR + U[1] * STATE.curU + F[1] * baseAdvance;
-      const cz = P[2] + R[2] * STATE.curR + U[2] * STATE.curU + F[2] * baseAdvance;
-      camera.position.set(cx, cy, cz);
-
-      // Look toward the stage centroid at median depth (`~10.5m` ahead of P), plus slight user yaw/pitch
-      const focusDist = Math.max(9.0, Math.min(16.0, dist)) * 0.92;
-      const lx = P[0] + F[0] * focusDist + R[0] * (STATE.curYaw * focusDist * 0.6 + STATE.curR * 0.22) + U[0] * (-STATE.curPitch * focusDist * 0.6 + STATE.curU * 0.22);
-      const ly = P[1] + F[1] * focusDist + R[1] * (STATE.curYaw * focusDist * 0.6 + STATE.curR * 0.22) + U[1] * (-STATE.curPitch * focusDist * 0.6 + STATE.curU * 0.22);
-      const lz = P[2] + F[2] * focusDist + R[2] * (STATE.curYaw * focusDist * 0.6 + STATE.curR * 0.22) + U[2] * (-STATE.curPitch * focusDist * 0.6 + STATE.curU * 0.22);
-      camera.lookAt(lx, ly, lz);
-
-      sortStageSplatsBackToFront();
+      const alpha = al * 0.88 + (1 - al) * 0.14;
+      const sz = al > 0.7 ? 2.4 : 3.2;
+      ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${alpha.toFixed(2)})`;
+      ctx.fillRect(px, py, sz, sz);
     }
+  }
+  requestAnimationFrame(drawInteractiveConstruct);
+}
 
-    function activatePortal(camIdx) {
-      STATE.activeCamIdx = camIdx;
-      const cam = STATE.orderedCams[camIdx];
-      if (!cam) return;
-      STATE.basis = computeCameraBasis(cam.threejs_pose.position_m, cam.threejs_pose.look_at_m);
-      resetCameraToStageCenter();
-      STATE.curR = 0; STATE.curU = 0; STATE.curF = 0; STATE.curYaw = 0; STATE.curPitch = 0;
-      buildActiveStageSplatMesh();
-    }
+// ---------------------------------------------------------------------------
+// 2. 07-Spacetime Videotext Synchronization
+// ---------------------------------------------------------------------------
+const stVid = document.getElementById('spacetime-video');
+const cues = Array.from(document.querySelectorAll('#spacetime-cues p'));
+const seekPills = Array.from(document.querySelectorAll('[data-seek]'));
 
-    async function selectDistrict(dKey) {
-      const d = STATE.manifest.districts[dKey];
-      if (!d) return;
-      STATE.activeDistrictKey = dKey;
+cues.forEach(p => {
+  p.addEventListener('click', () => {
+    stVid.currentTime = parseFloat(p.dataset.t0) + 0.1;
+    stVid.play().catch(()=>{});
+  });
+});
 
-      document.querySelectorAll('#district-pills .pill-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.district === dKey);
-      });
+seekPills.forEach(btn => {
+  btn.addEventListener('click', () => {
+    stVid.currentTime = parseFloat(btn.dataset.seek);
+    stVid.play().catch(()=>{});
+  });
+});
 
-      const heroRef = d.splat_seed && d.splat_seed.hero_ref;
-      const ordered = [];
-      (d.cameras || []).forEach(c => {
-        if (heroRef && c.ref_id === heroRef && ordered.length === 0) ordered.unshift(c);
-        else if (heroRef && c.ref_id === heroRef) ordered.unshift(c);
-        else ordered.push(c);
-      });
-      STATE.orderedCams = ordered;
-
-      const portalContainer = document.getElementById('portal-pills');
-      portalContainer.innerHTML = '';
-      ordered.forEach((cam, idx) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'pill-btn' + (idx === 0 ? ' active' : '');
-        b.textContent = idx === 0 ? `★ View ${cam.set_piece} (SHARP)` : `View ${cam.set_piece}`;
-        b.addEventListener('click', () => {
-          portalContainer.querySelectorAll('.pill-btn').forEach((el, i) => el.classList.toggle('active', i === idx));
-          activatePortal(idx);
-        });
-        portalContainer.appendChild(b);
-      });
-
-      const splatUrl = (d.splat_seed && d.splat_seed.file) || `data/terrarium/atlas_packs/splats/district_${dKey}_sharp.splat`;
-      const res = await fetch(splatUrl);
-      if (res.ok) {
-        const buf = await res.arrayBuffer();
-        STATE.allParsed = parse32ByteSplatBuffer(buf);
-      }
-
-      activatePortal(0);
-    }
-
-    // Wire UI buttons
-    ['sharp', 'xray', 'l0', 'before'].forEach(m => {
-      document.getElementById(`mode-${m}`).addEventListener('click', () => {
-        STATE.renderMode = m;
-        applySplatModeToStageData();
-        sortStageSplatsBackToFront();
-      });
-    });
-
-    document.getElementById('btn-sway').addEventListener('click', (e) => {
-      STATE.autoSway = !STATE.autoSway;
-      e.currentTarget.classList.toggle('active', STATE.autoSway);
-    });
-
-    document.getElementById('btn-reset').addEventListener('click', () => {
-      resetCameraToStageCenter();
-    });
-
-    document.getElementById('btn-hide-ui').addEventListener('click', () => {
-      document.getElementById('hud-dock').classList.toggle('hidden');
-    });
-
-    async function init() {
-      const res = await fetch('data/terrarium/atlas_packs/atlas_infrastructure_manifest.json');
-      STATE.manifest = await res.json();
-
-      const districtContainer = document.getElementById('district-pills');
-      const shortNames = {
-        'mount-vernon': 'Mount Vernon',
-        'woodberry': 'Woodberry',
-        'holland-island': 'Holland Island',
-        'assateague': 'Assateague',
-        'teotihuacan': 'Teotihuacán',
-        'centro': 'Centro Histórico',
-        'condesa': 'Condesa',
-        'tres-marias': 'Tres Marías',
-        'inner-harbor': 'Inner Harbor',
-        'fells-point': 'Fells Point',
-      };
-
-      Object.keys(STATE.manifest.districts).forEach(dKey => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'pill-btn';
-        b.dataset.district = dKey;
-        b.textContent = shortNames[dKey] || dKey;
-        b.addEventListener('click', () => selectDistrict(dKey));
-        districtContainer.appendChild(b);
-      });
-
-      const q = new URLSearchParams(location.search);
-      const qDistrict = q.get('district');
-      const initial = (qDistrict && STATE.manifest.districts[qDistrict]) ? qDistrict : 'fells-point';
-      await selectDistrict(initial);
-    }
-    init();
-
-    let lastTime = performance.now();
-    function animate(now) {
-      requestAnimationFrame(animate);
-      const dt = Math.min(0.05, (now - lastTime) * 0.001);
-      lastTime = now;
-      updateCameraPose(dt);
-      renderer.render(scene, camera);
-    }
-    requestAnimationFrame(animate);
-  </script>
+stVid.addEventListener('timeupdate', () => {
+  const t = stVid.currentTime;
+  cues.forEach(p => {
+    const t0 = parseFloat(p.dataset.t0), t1 = parseFloat(p.dataset.t1);
+    p.classList.toggle('now', t >= t0 && t < t1);
+  });
+});
+</script>
 </body>
 </html>

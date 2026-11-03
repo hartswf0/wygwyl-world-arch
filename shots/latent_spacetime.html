@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>WYGWYL · Seeing-As (S2 Construct) & 07-Spacetime</title>
+<style>
+@font-face{font-family:"IM Fell English";src:url(fonts/im-fell-english-latin-400-normal.woff2) format("woff2");font-style:normal;font-display:swap}
+@font-face{font-family:"IM Fell English";src:url(fonts/im-fell-english-latin-400-italic.woff2) format("woff2");font-style:italic;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url(fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2");font-weight:400 500;font-display:swap}
+
+:root{
+  --paper:#ebe3cf;
+  --panel:#e2d8c1;
+  --ink:#1c1814;
+  --soft:#655c4d;
+  --faint:#b2a791;
+  --lamp:#b86b11;
+  --bar:50px;
+  --fi:15px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:19px/1.58 "IM Fell English",Georgia,serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.mono{font:500 11.5px/1.4 "IBM Plex Mono",ui-monospace,Menlo,monospace;letter-spacing:.08em;text-transform:uppercase}
+
+/* Double-ruled archival frame from Afterlight */
+.frame-border{position:fixed;inset:0;pointer-events:none;z-index:60}
+.frame-border i{position:absolute;display:block;border:1px solid var(--ink)}
+.frame-border i.o{inset:calc(var(--fi) - 6px);z-index:2}
+.frame-border i.n{inset:var(--fi);border-width:2px;box-shadow:0 0 0 60px var(--paper)}
+
+/* Top chapter bar */
+.bar{
+  position:fixed;
+  left:calc(var(--fi) + 2px);
+  right:calc(var(--fi) + 2px);
+  top:calc(var(--fi) + 2px);
+  height:var(--bar);
+  z-index:55;
+  background:var(--paper);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:0 22px;
+  border-bottom:1px solid var(--ink);
+}
+.bar-title{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-title span{color:var(--soft);margin-right:.6em}
+.bar-tabs{display:flex;gap:18px;align-items:center}
+.bar-tabs a{
+  text-decoration:none;
+  color:var(--soft);
+  padding:4px 0;
+  border-bottom:1.5px solid transparent;
+  transition:color .2s,border-color .2s;
+}
+.bar-tabs a.active,.bar-tabs a:hover{color:var(--ink);border-bottom-color:var(--ink)}
+
+.wrap{
+  max-width:1240px;
+  margin:0 auto;
+  padding:calc(var(--bar) + var(--fi) + 36px) 42px 96px;
+  display:grid;
+  gap:72px;
+}
+
+/* Section headers */
+.shead{
+  border-top:1px solid var(--ink);
+  padding-top:18px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px 24px;
+}
+.shead .eyebrow{color:var(--lamp)}
+.shead h2{font-weight:400;font-size:clamp(30px,4.5vw,52px);line-height:1.05;margin:4px 0 0}
+.shead p{font-style:italic;color:var(--soft);margin:0;max-width:36em;font-size:19px}
+
+/* Screening Room Feature Grid */
+.feature-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);
+  gap:36px;
+  align-items:start;
+}
+@media (max-width:900px){
+  .feature-grid{grid-template-columns:1fr}
+  .wrap{padding-inline:24px}
+}
+
+.vbox{
+  position:relative;
+  border:1.5px solid var(--ink);
+  background:#dfd7c5;
+  aspect-ratio:16/9;
+  overflow:hidden;
+}
+.vbox video,.vbox canvas{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+
+.mode-switch{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+  align-items:center;
+}
+.pill{
+  font:500 11px/1 "IBM Plex Mono",monospace;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  padding:8px 13px;
+  border:1px solid var(--ink);
+  background:var(--paper);
+  color:var(--ink);
+  transition:background .15s,color .15s;
+}
+.pill.active,.pill:hover{
+  background:var(--ink);
+  color:var(--paper);
+}
+
+/* S2 Construct Interactive Controls & Notes */
+.notes{display:grid;gap:16px}
+.notes h3{font-weight:400;font-size:28px;line-height:1.15;margin:0}
+.notes p{margin:0;color:var(--soft)}
+.pos-list{
+  display:grid;
+  gap:8px;
+  margin-top:6px;
+  border-top:1px solid var(--faint);
+  padding-top:12px;
+}
+.pos-btn{
+  display:grid;
+  grid-template-columns:56px 1fr auto;
+  align-items:baseline;
+  gap:10px;
+  text-align:left;
+  padding:8px 12px;
+  border:1px solid transparent;
+  transition:border-color .15s,background .15s;
+}
+.pos-btn:hover,.pos-btn.active{
+  border-color:var(--ink);
+  background:var(--panel);
+}
+.pos-btn .ang{color:var(--lamp)}
+.pos-btn .sub{font-style:italic;font-size:15.5px;color:var(--soft);grid-column:2 / -1}
+
+/* 07-Spacetime Videotext Book Layout */
+.book{
+  display:grid;
+  grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);
+  gap:44px;
+  align-items:start;
+}
+@media (max-width:900px){.book{grid-template-columns:1fr}}
+.sticky-screen{
+  position:sticky;
+  top:calc(var(--bar) + var(--fi) + 24px);
+}
+.vtext{display:grid;gap:6px}
+.vtext p{
+  margin:0;
+  padding:8px 12px;
+  color:var(--soft);
+  cursor:pointer;
+  border-left:2px solid transparent;
+  transition:color .25s,background .25s,border-color .25s;
+}
+.vtext p:hover{color:var(--ink);background:rgba(28,24,20,.04)}
+.vtext p.now{
+  color:var(--ink);
+  border-left-color:var(--ink);
+  background:var(--panel);
+}
+.vtext p .tcode{
+  font:500 11px/1 "IBM Plex Mono",monospace;
+  color:var(--lamp);
+  margin-right:10px;
+}
+.vtext p .district-tag{
+  display:block;
+  font:500 10.5px/1.3 "IBM Plex Mono",monospace;
+  color:var(--soft);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-top:2px;
+}
+</style>
+</head>
+<body>
+
+<div class="frame-border" aria-hidden="true"><i class="o"></i><i class="n"></i></div>
+
+<header class="bar">
+  <div class="bar-title"><span>WYGWYL · AFTERLIGHT</span>Seeing-As &amp; 07-Spacetime</div>
+  <nav class="bar-tabs mono">
+    <a href="#s2-construct" class="active">S2 · Construct (0:30)</a>
+    <a href="#spacetime-07">07 · Spacetime (1:00)</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <!-- SECTION 1: SEEING-AS · S2 CONSTRUCT -->
+  <section id="s2-construct">
+    <div class="shead">
+      <div>
+        <div class="eyebrow mono">Seeing-As · S2 · Construct · 0:30</div>
+        <h2>Figures in Formless Matter</h2>
+      </div>
+      <p>Four places as one point cloud; each assembles from one position only. Aspect, construction, teleology.</p>
+    </div>
+
+    <div class="feature-grid" style="margin-top:24px">
+      <div>
+        <div class="vbox" id="construct-stage">
+          <video id="construct-video" controls playsinline preload="auto" poster="videos/wygwyl_seeing_construct.jpg" src="videos/wygwyl_seeing_construct.mp4"></video>
+          <canvas id="construct-canvas" width="960" height="540" style="display:none;cursor:grab"></canvas>
+        </div>
+        <div class="mode-switch">
+          <button type="button" class="pill active" id="btn-mode-film">Watch S2 Construct Film (0:30)</button>
+          <button type="button" class="pill" id="btn-mode-interactive">Interactive 3D Point Cloud (Drag 0°–360°)</button>
+          <span class="mono" id="construct-readout" style="margin-left:auto;color:var(--soft)">Azimuth 000° · Position I</span>
+        </div>
+      </div>
+
+      <div class="notes">
+        <h3>One Shared Cloud, Four Alignments</h3>
+        <p>Every point in this cloud carries Apple <code>ml-sharp</code> neural depth along its camera ray. From any arbitrary angle the cloud reads as swirling latent strata on warm parchment—until the camera crosses 0°, 90°, 180°, or 270°, where the rays lock into perspective registration.</p>
+
+        <div class="pos-list" id="construct-positions">
+          <button type="button" class="pos-btn active" data-t="2.5" data-deg="0">
+            <span class="ang mono">I · 0°</span>
+            <strong>Mount Vernon · Poet's Room</strong>
+            <span class="sub">Iron fire escape &amp; window aperture</span>
+          </button>
+          <button type="button" class="pos-btn" data-t="9.5" data-deg="90">
+            <span class="ang mono">II · 90°</span>
+            <strong>Holland Island · Storm Chapel</strong>
+            <span class="sub">Sunken Chesapeake causeway &amp; timber nave</span>
+          </button>
+          <button type="button" class="pos-btn" data-t="16.8" data-deg="180">
+            <span class="ang mono">III · 180°</span>
+            <strong>Centro Histórico · Atlantis Gates</strong>
+            <span class="sub">Marble threshold &amp; column relief</span>
+          </button>
+          <button type="button" class="pos-btn" data-t="24.0" data-deg="270">
+            <span class="ang mono">IV · 270°</span>
+            <strong>Fells Point · Tres Marías Portal</strong>
+            <span class="sub">Harbor cobblestone &amp; luminous archway</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: 07-SPACETIME VIDEOTEXT -->
+  <section id="spacetime-07">
+    <div class="shead">
+      <div>
+        <div class="eyebrow mono">Chapter VII · 07-Spacetime · 1:00</div>
+        <h2>A Walk Through the Latent Volume</h2>
+      </div>
+      <p>Every clip is a 4D volume of neural depth and time: the newest frame faces the camera, and earlier slices trail behind it in space.</p>
+    </div>
+
+    <div class="book" style="margin-top:24px">
+      <div class="sticky-screen">
+        <div class="vbox">
+          <video id="spacetime-video" controls playsinline preload="auto" poster="videos/wygwyl_07_spacetime.jpg" src="videos/wygwyl_07_spacetime.mp4"></video>
+        </div>
+        <div class="mode-switch">
+          <button type="button" class="pill" data-seek="0.5">I · Assemble (0:00)</button>
+          <button type="button" class="pill" data-seek="12.2">III · Night Volume (0:12)</button>
+          <button type="button" class="pill" data-seek="24.2">V · Neon Portal (0:24)</button>
+          <button type="button" class="pill" data-seek="34.8">The Montage · Face &amp; Side (0:35)</button>
+          <button type="button" class="pill" data-seek="50.6">3D Title (0:51)</button>
+        </div>
+      </div>
+
+      <div class="vtext" id="spacetime-cues">
+        <p data-t0="0.0" data-t1="6.2" class="now">
+          <span class="tcode">0:00</span>Every frame is a place the light once stood. Formless dust settles into the living volume of the Poet's room as the camera walks forward along the Z-axis.
+          <span class="district-tag">I · Mount Vernon · Paper Ink + Neural Depth</span>
+        </p>
+        <p data-t0="6.2" data-t1="12.0">
+          <span class="tcode">0:06</span>Hold the frames together — and the storm chapel's past forty-eight slices hang behind the present frame like suspended sheets of rain.
+          <span class="district-tag">II · Holland Island · Orbital Walk</span>
+        </p>
+        <p data-t0="12.0" data-t1="18.0">
+          <span class="tcode">0:12</span>— and a city becomes a body in time. On deep night canvas, multi-scale Gaussian halation turns the Atlantis marble threshold into a corridor of light.
+          <span class="district-tag">III · Centro Histórico · Light Mode &amp; Bloom</span>
+        </p>
+        <p data-t0="18.0" data-t1="24.0">
+          <span class="tcode">0:18</span>Walk forward through the volume. The rain walker's silhouette leaves a carved tunnel of footsteps suspended across depth and time.
+          <span class="district-tag">IV · Woodberry · Z-Axis Push</span>
+        </p>
+        <p data-t0="24.0" data-t1="29.8">
+          <span class="tcode">0:24</span>The present is the brightest slice. Earlier moments decay exponentially behind the focal plane via Beers-Law transmittance.
+          <span class="district-tag">V · Tres Marías &amp; Fells Point · Neon Portal</span>
+        </p>
+        <p data-t0="29.8" data-t1="34.8">
+          <span class="tcode">0:30</span>Ten districts — one latent world. A wide orbital sweep across the Dorchester tidal marsh exposes the layered strata before the montage begins.
+          <span class="district-tag">VI · Dorchester Marsh · Wide Side Orbit</span>
+        </p>
+        <p data-t0="34.8" data-t1="49.4">
+          <span class="tcode">0:35</span><strong>THE MONTAGE</strong> — Every volume twice: first a face-on push into the present slice, then an immediate ±62° side-on cut exposing the 4D neural depth and temporal ribbons, accelerating to 0.25s cuts.
+          <span class="district-tag">All 10 Districts · Accelerating Face-On / Side-On Cuts</span>
+        </p>
+        <p data-t0="49.4" data-t1="60.0">
+          <span class="tcode">0:50</span>Silence on the drop — then eighteen thousand scattered points coalesce in 3D space to form the title <em>W Y G W Y L</em>.
+          <span class="district-tag">Coda · 3D Point-Cloud Typography</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ---------------------------------------------------------------------------
+// 1. S2 Construct: Video <-> Interactive 3D Anamorphic Point Cloud Switcher
+// ---------------------------------------------------------------------------
+const constructVid = document.getElementById('construct-video');
+const constructCanvas = document.getElementById('construct-canvas');
+const btnFilm = document.getElementById('btn-mode-film');
+const btnInter = document.getElementById('btn-mode-interactive');
+const readout = document.getElementById('construct-readout');
+const posBtns = Array.from(document.querySelectorAll('#construct-positions .pos-btn'));
+
+let interactiveMode = false;
+let targetYawDeg = 0;
+let curYawDeg = 0;
+let isDragging = false;
+let dragStartX = 0;
+let dragStartYaw = 0;
+
+btnFilm.addEventListener('click', () => {
+  interactiveMode = false;
+  btnFilm.classList.add('active');
+  btnInter.classList.remove('active');
+  constructCanvas.style.display = 'none';
+  constructVid.style.display = 'block';
+  constructVid.play().catch(()=>{});
+});
+
+btnInter.addEventListener('click', () => {
+  interactiveMode = true;
+  btnInter.classList.add('active');
+  btnFilm.classList.remove('active');
+  constructVid.pause();
+  constructVid.style.display = 'none';
+  constructCanvas.style.display = 'block';
+  initInteractiveConstruct();
+});
+
+posBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    posBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const t = parseFloat(btn.dataset.t);
+    const deg = parseFloat(btn.dataset.deg);
+    targetYawDeg = deg;
+    if (!interactiveMode) {
+      constructVid.currentTime = t;
+      constructVid.play().catch(()=>{});
+    }
+  });
+});
+
+constructVid.addEventListener('timeupdate', () => {
+  if (interactiveMode) return;
+  const t = constructVid.currentTime;
+  let activeIdx = 0;
+  let deg = 0;
+  if (t < 6.8) { activeIdx = 0; deg = 0; }
+  else if (t < 13.8) { activeIdx = 1; deg = 90; }
+  else if (t < 20.8) { activeIdx = 2; deg = 180; }
+  else { activeIdx = 3; deg = 270; }
+  posBtns.forEach((b, i) => b.classList.toggle('active', i === activeIdx));
+  readout.textContent = `Film Clock ${t.toFixed(1)}s · Position ${['I','II','III','IV'][activeIdx]} (${deg}°)`;
+});
+
+// Interactive 4-Place Anamorphic Cloud in HTML5 Canvas (loads 4 reference images + Apple SHARP depth maps)
+let constructReady = false;
+let constructPts = [];
+const PLACE_SPECS = [
+  { deg: 0,   name: 'I · Mount Vernon',     img: 'data/terrarium/atlas_packs/frames/frame_01-00.jpg', depth: 'data/terrarium/atlas_packs/splats/depth_01-00_sharp.png' },
+  { deg: 90,  name: 'II · Holland Island',  img: 'data/terrarium/atlas_packs/frames/frame_03-00.jpg', depth: 'data/terrarium/atlas_packs/splats/depth_03-00_sharp.png' },
+  { deg: 180, name: 'III · Centro Atlantis',img: 'data/terrarium/atlas_packs/frames/frame_06-00.jpg', depth: 'data/terrarium/atlas_packs/splats/depth_06-00_sharp.png' },
+  { deg: 270, name: 'IV · Fells Point',     img: 'data/terrarium/atlas_packs/frames/frame_13-01.jpg', depth: 'data/terrarium/atlas_packs/splats/depth_13-01_sharp.png' },
+];
+
+function loadImageData(url, w, h) {
+  return new Promise((resolve) => {
+    const im = new Image();
+    im.crossOrigin = 'anonymous';
+    im.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(im, 0, 0, w, h);
+      resolve(ctx.getImageData(0, 0, w, h).data);
+    };
+    im.onerror = () => resolve(null);
+    im.src = url;
+  });
+}
+
+async function initInteractiveConstruct() {
+  if (constructReady) return;
+  constructReady = true;
+  const gw = 120, gh = 68, D = 680;
+  const pts = [];
+
+  for (let k = 0; k < 4; k++) {
+    const spec = PLACE_SPECS[k];
+    const [rgbData, dData] = await Promise.all([
+      loadImageData(spec.img, gw, gh),
+      loadImageData(spec.depth, gw, gh)
+    ]);
+    if (!rgbData) continue;
+    const th = spec.deg * Math.PI / 180;
+    const rkX = Math.cos(th), rkZ = Math.sin(th);
+    const fkX = -Math.sin(th), fkZ = Math.cos(th);
+
+    for (let y = 0; y < gh; y++) {
+      for (let x = 0; x < gw; x++) {
+        const u = (x / gw - 0.5) * 540;
+        const v = (y / gh - 0.5) * 304;
+        const r2 = (u / 275) ** 2 + (v / 155) ** 2;
+        if (r2 > 1.05) continue;
+        const idx = (y * gw + x) * 4;
+        const dVal = dData ? (dData[idx] / 255.0) : 0.5;
+        const zRay = (0.5 - dVal) * 420;
+        const scale = (D + zRay) / D;
+        const xl = u * scale;
+        const yl = v * scale;
+        pts.push({
+          k,
+          Xw: xl * rkX + zRay * fkX,
+          Yw: yl,
+          Zw: xl * rkZ + zRay * fkZ,
+          r: rgbData[idx],
+          g: rgbData[idx + 1],
+          b: rgbData[idx + 2],
+        });
+      }
+    }
+  }
+  constructPts = pts;
+  requestAnimationFrame(drawInteractiveConstruct);
+}
+
+constructCanvas.addEventListener('pointerdown', e => {
+  isDragging = true;
+  dragStartX = e.clientX;
+  dragStartYaw = targetYawDeg;
+  constructCanvas.setPointerCapture(e.pointerId);
+});
+constructCanvas.addEventListener('pointermove', e => {
+  if (!isDragging) return;
+  const dx = e.clientX - dragStartX;
+  targetYawDeg = (dragStartYaw + dx * 0.45 + 3600) % 360;
+});
+constructCanvas.addEventListener('pointerup', () => {
+  isDragging = false;
+  // Snap gently if within 12 degrees of a canonical 90-degree position
+  for (const canon of [0, 90, 180, 270, 360]) {
+    if (Math.abs(targetYawDeg - canon) < 12) {
+      targetYawDeg = canon % 360;
+      break;
+    }
+  }
+});
+
+function drawInteractiveConstruct() {
+  if (interactiveMode && constructPts.length) {
+    let diff = ((targetYawDeg - curYawDeg + 540) % 360) - 180;
+    curYawDeg = (curYawDeg + diff * 0.14 + 360) % 360;
+
+    const ctx = constructCanvas.getContext('2d');
+    const W = constructCanvas.width, H = constructCanvas.height;
+    ctx.fillStyle = '#ebe3cf';
+    ctx.fillRect(0, 0, W, H);
+
+    const yaw = curYawDeg * Math.PI / 180;
+    const cy = Math.cos(-yaw), sy = Math.sin(-yaw);
+    const D = 680, focal = 820;
+
+    // Determine alignment lock with each of the 4 places
+    const aligns = [0, 90, 180, 270].map(deg => {
+      const d = Math.abs(((curYawDeg - deg + 540) % 360) - 180);
+      return Math.max(0, 1 - d / 55);
+    });
+    const maxAlign = Math.max(...aligns);
+    const bestIdx = aligns.indexOf(maxAlign);
+    readout.textContent = `Azimuth ${Math.round(curYawDeg).toString().padStart(3,'0')}° · ${maxAlign > 0.78 ? 'LOCKED · ' + PLACE_SPECS[bestIdx].name : 'ORBITING LATENT CLOUD'}`;
+
+    for (let i = 0; i < constructPts.length; i++) {
+      const p = constructPts[i];
+      const al = aligns[p.k];
+      const Xc = p.Xw * cy + p.Zw * sy;
+      const Zc = -p.Xw * sy + p.Zw * cy + D;
+      if (Zc < 40) continue;
+      const px = focal * Xc / Zc + W * 0.5;
+      const py = focal * p.Yw / Zc + H * 0.5;
+      if (px < 0 || px >= W || py < 0 || py >= H) continue;
+
+      const alpha = al * 0.88 + (1 - al) * 0.14;
+      const sz = al > 0.7 ? 2.4 : 3.2;
+      ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${alpha.toFixed(2)})`;
+      ctx.fillRect(px, py, sz, sz);
+    }
+  }
+  requestAnimationFrame(drawInteractiveConstruct);
+}
+
+// ---------------------------------------------------------------------------
+// 2. 07-Spacetime Videotext Synchronization
+// ---------------------------------------------------------------------------
+const stVid = document.getElementById('spacetime-video');
+const cues = Array.from(document.querySelectorAll('#spacetime-cues p'));
+const seekPills = Array.from(document.querySelectorAll('[data-seek]'));
+
+cues.forEach(p => {
+  p.addEventListener('click', () => {
+    stVid.currentTime = parseFloat(p.dataset.t0) + 0.1;
+    stVid.play().catch(()=>{});
+  });
+});
+
+seekPills.forEach(btn => {
+  btn.addEventListener('click', () => {
+    stVid.currentTime = parseFloat(btn.dataset.seek);
+    stVid.play().catch(()=>{});
+  });
+});
+
+stVid.addEventListener('timeupdate', () => {
+  const t = stVid.currentTime;
+  cues.forEach(p => {
+    const t0 = parseFloat(p.dataset.t0), t1 = parseFloat(p.dataset.t1);
+    p.classList.toggle('now', t >= t0 && t < t1);
+  });
+});
+</script>
+</body>
+</html>
