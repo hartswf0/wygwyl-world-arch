@@ -2,622 +2,141 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WYGWYL · World Labs Atlas / Marble .GLB & 3D Gaussian Splat Infrastructure Studio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>3D World · All 10 Districts (Apple ml-sharp 2-Layer 3DGS)</title>
   <style>
-    :root {
-      --bg: #070b10;
-      --panel: #0d141e;
-      --panel-2: #121c2a;
-      --border: rgba(243, 234, 210, 0.16);
-      --gold: #ffd23f;
-      --teal: #19e6c8;
-      --green: #8fd694;
-      --coral: #ff3d6e;
-      --amber: #ff9f1c;
-      --violet: #7b61ff;
-      --fg: #f3ead2;
-      --muted: #9cb0c9;
-    }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-      overflow: hidden;
-    }
-    /* Top Suite Navigation */
-    .top-nav {
-      height: 48px;
-      background: linear-gradient(90deg, #090f17, #111b28);
-      border-bottom: 1px solid rgba(255, 210, 63, 0.32);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 14px;
-      gap: 10px;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 800;
-      font-size: 13px;
-      letter-spacing: 0.06em;
-      color: var(--gold);
-      white-space: nowrap;
-    }
-    .brand span.badge {
-      background: rgba(25, 230, 200, 0.16);
-      border: 1px solid var(--teal);
-      color: var(--teal);
-      padding: 3px 8px;
-      border-radius: 99px;
-      font-size: 10px;
-    }
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      overflow-x: auto;
-    }
-    .nav-links a {
-      color: var(--fg);
-      text-decoration: none;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 5px 9px;
-      border-radius: 7px;
-      border: 1px solid rgba(243, 234, 210, 0.15);
-      background: rgba(255, 255, 255, 0.03);
-      white-space: nowrap;
-      transition: all 0.15s ease;
-    }
-    .nav-links a:hover, .nav-links a.active {
-      border-color: var(--gold);
-      color: #090d12;
-      background: var(--gold);
-    }
-
-    /* Main 3-Column Workspace */
-    .workspace {
-      display: grid;
-      grid-template-columns: 350px 1fr 410px;
-      height: calc(100vh - 48px);
       width: 100vw;
-    }
-    .col {
-      height: 100%;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-    .col-left {
-      background: var(--panel);
-      border-right: 1px solid var(--border);
-      padding: 12px;
-      gap: 12px;
-    }
-    .col-center {
-      position: relative;
-      background: #05080c;
-      display: flex;
-      flex-direction: column;
+      height: 100vh;
       overflow: hidden;
-    }
-    .col-right {
-      background: var(--panel);
-      border-left: 1px solid var(--border);
-      padding: 12px;
-      gap: 12px;
-    }
-
-    /* Cards & Controls */
-    .section-card {
-      background: var(--panel-2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .section-title {
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--gold);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .tab-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-    .btn {
-      background: #162234;
-      color: var(--fg);
-      border: 1px solid rgba(243, 234, 210, 0.22);
-      border-radius: 7px;
-      padding: 7px 10px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.14s ease;
-      text-align: center;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-    }
-    .btn:hover {
-      border-color: var(--gold);
-      color: var(--gold);
-    }
-    .btn.active {
-      background: linear-gradient(180deg, #ffd23f, #e0a81e);
-      color: #080c12;
-      border-color: var(--gold);
-    }
-    .btn.teal {
-      background: rgba(25, 230, 200, 0.14);
-      border-color: var(--teal);
-      color: var(--teal);
-    }
-    .btn.teal.active, .btn.teal:hover {
-      background: var(--teal);
-      color: #041512;
-    }
-
-    /* Hub / District Selector List */
-    .hub-list {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-    .hub-item {
-      background: rgba(10, 16, 24, 0.85);
-      border: 1px solid rgba(243, 234, 210, 0.16);
-      border-radius: 9px;
-      padding: 9px 10px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .hub-item:hover {
-      border-color: var(--teal);
-    }
-    .hub-item.active {
-      border-color: var(--gold);
-      background: linear-gradient(90deg, rgba(255, 210, 63, 0.14), rgba(25, 230, 200, 0.06));
-      box-shadow: 0 0 16px rgba(255, 210, 63, 0.18);
-    }
-    .hub-item .hi-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 11.5px;
-      font-weight: 800;
-      color: var(--gold);
-    }
-    .hub-item .hi-sub {
-      font-size: 10.5px;
-      color: var(--muted);
-      line-height: 1.35;
-    }
-    .hub-item .hi-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 2px;
-    }
-    .pill {
-      font-size: 9.5px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 5px;
-      background: rgba(255, 255, 255, 0.06);
-      color: #cfe0f5;
-    }
-    .pill.teal { background: rgba(25, 230, 200, 0.16); color: var(--teal); }
-    .pill.green { background: rgba(143, 214, 148, 0.18); color: var(--green); }
-    .pill.coral { background: rgba(255, 61, 110, 0.18); color: #ff8da8; }
-
-    /* Center 3D Viewport & Toolbar Below View (Zero Overlay Clutter on 3D Canvas) */
-    #viewport-wrap {
-      position: relative;
-      flex: 1;
-      width: 100%;
-      min-height: 480px;
-      background: #05080e;
+      background: #05080d;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #f3ead2;
     }
     #three-canvas {
-      width: 100%;
-      height: 100%;
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
       display: block;
+      cursor: grab;
     }
-    .vp-corner-badge {
-      position: absolute;
-      top: 10px;
-      left: 12px;
+    #three-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* Ultra-minimal floating dock at bottom edge — zero sidebars, zero text walls */
+    #hud-dock {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      max-width: 96vw;
       pointer-events: none;
-      background: rgba(6, 10, 16, 0.72);
-      border: 1px solid rgba(25, 230, 200, 0.35);
-      border-radius: 7px;
+      transition: opacity 0.2s ease;
+    }
+    #hud-dock.hidden {
+      opacity: 0;
+      pointer-events: none !important;
+    }
+    .dock-row {
+      pointer-events: auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      background: rgba(6, 10, 16, 0.68);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      padding: 4px 8px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .pill-btn {
+      background: transparent;
+      color: rgba(243, 234, 210, 0.82);
+      border: 1px solid transparent;
+      border-radius: 999px;
       padding: 4px 10px;
       font-size: 11px;
-      color: var(--fg);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      backdrop-filter: blur(6px);
-    }
-    .vp-controls-below {
-      background: #0a1018;
-      border-top: 1px solid rgba(25, 230, 200, 0.28);
-      padding: 8px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .vp-hud-top {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-    }
-    .vp-hud-box {
-      background: rgba(14, 22, 34, 0.95);
-      border: 1px solid rgba(255, 210, 63, 0.25);
-      border-radius: 8px;
-      padding: 5px 9px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 5px;
-      font-size: 10.5px;
-    }
-    .frustum-bar {
-      background: rgba(14, 22, 34, 0.95);
-      border: 1px solid rgba(25, 230, 200, 0.25);
-      border-radius: 8px;
-      padding: 6px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .frustum-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-
-    /* Receiver Dropzone */
-    .drop-zone {
-      border: 2px dashed rgba(25, 230, 200, 0.5);
-      border-radius: 10px;
-      padding: 12px;
-      text-align: center;
-      background: rgba(25, 230, 200, 0.05);
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.15s ease;
+      white-space: nowrap;
+      transition: all 0.12s ease;
     }
-    .drop-zone:hover, .drop-zone.dragover {
-      border-color: var(--gold);
-      background: rgba(255, 210, 63, 0.12);
+    .pill-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
     }
-
-    /* Anchor & Excluded Ref Grid in Right Column */
-    .anchor-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+    .pill-btn.active {
+      background: #ffd23f;
+      color: #06090e;
+      border-color: #ffd23f;
     }
-    .ref-card {
-      background: #0b111a;
-      border: 1px solid rgba(143, 214, 148, 0.35);
-      border-radius: 8px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      cursor: pointer;
-      transition: transform 0.12s ease;
+    .pill-btn.teal.active {
+      background: #19e6c8;
+      color: #041014;
+      border-color: #19e6c8;
     }
-    .ref-card:hover {
-      transform: translateY(-2px);
-      border-color: var(--gold);
+    .pill-btn.coral.active {
+      background: #ff3d6e;
+      color: #fff;
+      border-color: #ff3d6e;
     }
-    .ref-card.excluded {
-      border-color: rgba(255, 61, 110, 0.45);
-      opacity: 0.88;
+    .sep {
+      width: 1px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.18);
+      margin: 0 3px;
     }
-    .ref-card img {
-      width: 100%;
-      height: 92px;
-      object-fit: cover;
-      display: block;
-    }
-    .ref-card .rc-body {
-      padding: 6px 8px;
-      font-size: 10.5px;
-      line-height: 1.3;
-    }
-    .matrix-box {
-      font-family: "SFMono-Regular", Consolas, Menlo, monospace;
-      font-size: 10.5px;
-      background: #070b10;
-      border: 1px solid rgba(25, 230, 200, 0.28);
-      border-radius: 7px;
-      padding: 8px;
-      color: #a8f0e2;
-      overflow-x: auto;
-      white-space: pre;
-    }
-    .slider-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
+    #btn-hide-ui {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 30;
+      background: rgba(6, 10, 16, 0.55);
+      color: rgba(243, 234, 210, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 999px;
+      padding: 5px 11px;
       font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
     }
-    .slider-row input[type="range"] {
-      flex: 1;
-      accent-color: var(--teal);
-    }
-
-    /* Mobile-First Responsive Layout (< 960px) */
-    @media (max-width: 960px) {
-      html, body {
-        overflow: auto;
-        height: auto;
-      }
-      .top-nav {
-        height: auto;
-        padding: 8px 10px;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 6px;
-        position: sticky;
-        top: 0;
-        z-index: 50;
-      }
-      .brand span.badge { display: none; }
-      .nav-links {
-        width: 100%;
-        overflow-x: auto;
-        padding-bottom: 2px;
-        scrollbar-width: none;
-      }
-      .nav-links a {
-        min-height: 36px;
-        display: inline-flex;
-        align-items: center;
-      }
-      .workspace {
-        display: flex;
-        flex-direction: column;
-        height: auto;
-        width: 100%;
-      }
-      .col-center {
-        order: -1;
-        height: auto;
-        border-bottom: 1px solid var(--border);
-      }
-      #viewport-wrap {
-        height: 64dvh;
-        min-height: 460px;
-      }
-      .col-left, .col-right {
-        height: auto;
-        overflow: visible;
-        border: none;
-        border-bottom: 1px solid var(--border);
-      }
-      .btn {
-        min-height: 32px;
-        padding: 5px 8px;
-      }
-      .hub-item {
-        min-height: 42px;
-      }
+    #btn-hide-ui:hover {
+      color: #fff;
+      border-color: #19e6c8;
     }
   </style>
 </head>
 <body>
+  <canvas id="three-canvas"></canvas>
 
-  <!-- TOP NAVIGATION BAR -->
-  <header class="top-nav">
-    <div class="brand">
-      <span>🌐 WYGWYL · ATLAS / MARBLE .GLB &amp; SPLAT INFRASTRUCTURE STUDIO</span>
-      <span class="badge">4 MEGA-HUBS · 10 DISTRICTS · LIVE 3D SPLAT + .GLB COLLIDER</span>
+  <button id="btn-hide-ui" type="button" title="Toggle UI (Key: H)">👁️ UI [H]</button>
+
+  <div id="hud-dock">
+    <!-- Row 1: Camera Portals inside current District + Render Mode -->
+    <div class="dock-row">
+      <div id="portal-pills" style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;"></div>
+      <div class="sep"></div>
+      <button class="pill-btn teal active" id="mode-world" type="button">🟢 3D World + Splats</button>
+      <button class="pill-btn teal" id="mode-splats" type="button">🟣 Pure 3DGS Cloud</button>
+      <button class="pill-btn teal" id="mode-xray" type="button">🔵 Layer-1 Disocclusion X-Ray</button>
+      <button class="pill-btn coral" id="mode-before" type="button">🔴 Legacy Before</button>
     </div>
-    <nav class="nav-links">
-      <a href="agent_office_kanban.html" style="border-color:#ffd23f;color:#ffd23f">🏢 Agent Office &amp; Worktree Kanban (Mobile+Live)</a>
-      <a href="atlas_splat_studio.html" class="active">🌐 Atlas Splat &amp; .GLB Studio</a>
-      <a href="terrarium.html">🗺️ 3D Terrarium &amp; Dog</a>
-      <a href="foundry_inverse.html">🧅 Foundry Inverse &amp; Onion Depth</a>
-      <a href="png_browser.html?cat=atlas_splats">🖼️ PNG Vault (701)</a>
-      <a href="stage.html">🎭 Multiplane Stage</a>
-      <a href="crash_lab.html">🛡️ Crash Lab</a>
-      <a href="body_lab.html">🦾 Body Lab</a>
-      <a href="suite.html">🎬 14-Poem Suite</a>
-    </nav>
-  </header>
 
-  <main class="workspace">
-    <!-- LEFT COLUMN: 4 MEGA-HUBS, 10 DISTRICTS, UPLOAD EXPORTER & RECEIVER DOCK -->
-    <aside class="col col-left">
-      <div class="section-card">
-        <div class="section-title">
-          <span>1. Select City District or Mega-Hub (Walk Inside Splat)</span>
-          <span id="lbl-active-mode" style="color:var(--teal)">10 Districts</span>
-        </div>
-        <div class="tab-row">
-          <button class="btn active" id="tab-districts" type="button">🏙️ All 10 Districts (Inside Splat)</button>
-          <button class="btn" id="tab-megahubs" type="button">🔥 4 Mega-Hubs (92%)</button>
-        </div>
-        <div class="hub-list" id="hub-list-container"></div>
-      </div>
+    <!-- Row 2: All 10 Districts -->
+    <div class="dock-row" id="district-pills"></div>
+  </div>
 
-      <!-- EXPORT TO MARBLE / ATLAS PACK -->
-      <div class="section-card">
-        <div class="section-title">
-          <span>2. Export Upload Pack for Marble / Atlas</span>
-          <span class="pill teal">Ready</span>
-        </div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.35;">
-          Upload the <b>Chisel .GLB Collider</b> + <b>2560×1280 Clean Pano</b> (or the 4–6 Actor-Cleaned Anchors + OpenCV Poses) to <a href="https://marble.worldlabs.ai/" target="_blank" style="color:var(--gold)">Marble</a> / <a href="https://www.worldlabs.ai/blog/atlas" target="_blank" style="color:var(--teal)">Atlas</a>:
-        </div>
-        <div class="tab-row">
-          <a id="dl-chisel-glb" class="btn teal" href="#" download>⬇ Chisel .GLB Mesh</a>
-          <a id="dl-clean-pano" class="btn" href="#" download>⬇ 2560×1280 Pano</a>
-          <a id="dl-clean-depth" class="btn" href="#" download>⬇ 2560×1280 Depth</a>
-          <a id="dl-splat-seed" class="btn" href="#" download>⬇ 3D .SPLAT Seed</a>
-        </div>
-        <div class="tab-row">
-          <a id="btn-open-terrarium" class="btn active" href="terrarium.html">🚀 Mount This Hub in 3D Terrarium</a>
-        </div>
-      </div>
-
-      <!-- RECEIVE & INTEGRATE .GLB / .SPLAT / .PLY INFRASTRUCTURE -->
-      <div class="section-card">
-        <div class="section-title">
-          <span>3. Receive &amp; Mount .GLB / .SPLAT / .PLY</span>
-          <span class="pill green">OpenCV ↔ Three.js</span>
-        </div>
-        <label class="drop-zone" id="drop-zone">
-          <input type="file" id="file-receiver" accept=".glb,.gltf,.splat,.ply,.spz,.json" style="display:none" multiple />
-          <div style="font-weight:800;font-size:12px;color:var(--teal);margin-bottom:4px;">
-            📥 Drop Marble/Atlas .GLB, .SPLAT, .PLY, or .SPZ Here
-          </div>
-          <div style="font-size:10.5px;color:var(--muted);">
-            Automatically applies the <b>OpenCV (+X left, +Y down, +Z fwd) → Three.js Terrarium Datum</b> transform, registers floor/wall colliders, and mounts the splat!
-          </div>
-        </label>
-        <div class="slider-row">
-          <span>Coord Convention:</span>
-          <select id="sel-coord-conv" style="background:#0a1018;color:var(--fg);border:1px solid var(--border);border-radius:5px;padding:4px;font-size:10.5px;">
-            <option value="threejs">Three.js Metric (Pre-Aligned Seed / GLB)</option>
-            <option value="opencv">Marble OpenCV (+X Left, +Y Down, +Z Fwd)</option>
-          </select>
-        </div>
-        <div class="slider-row">
-          <span>Splat Scale:</span>
-          <input type="range" id="sl-splat-scale" min="0.2" max="3.5" step="0.05" value="1.0" />
-          <span id="val-splat-scale">1.0×</span>
-        </div>
-        <div class="slider-row">
-          <span>Splat Opacity:</span>
-          <input type="range" id="sl-splat-opacity" min="0.0" max="1.0" step="0.02" value="0.92" />
-          <span id="val-splat-opacity">92%</span>
-        </div>
-      </div>
-    </aside>
-
-    <!-- CENTER COLUMN: LIVE 3D .GLB + GAUSSIAN SPLAT INFRASTRUCTURE VIEWPORT -->
-    <section class="col col-center">
-      <!-- 100% UNOBSTRUCTED 3D VIEWPORT (ZERO BUTTON BOXES ON TOP OF CANVAS) -->
-      <div id="viewport-wrap">
-        <canvas id="three-canvas"></canvas>
-        <div class="vp-corner-badge">
-          <strong id="vp-title" style="color:var(--gold)">DISTRICT · CENTRO HISTÓRICO</strong>
-          <span class="pill teal" id="vp-stats">60,000 SHARP 3DGS</span>
-          <span style="color:var(--muted);">Drag to Orbit · Scroll to Zoom · WASD to Walk</span>
-        </div>
-      </div>
-
-      <!-- COMPACT CONTROL STRIP BELOW THE 3D VIEW -->
-      <div class="vp-controls-below">
-        <div class="vp-hud-top">
-          <div class="vp-hud-box" style="border-color:var(--teal);">
-            <strong style="color:var(--gold);">🍮 Splat Effect:</strong>
-            <button class="btn active" id="btn-eff-sharp" type="button">🟢 AFTER: Apple SHARP 2-Layer 3DGS</button>
-            <button class="btn teal" id="btn-eff-xray" type="button">🔵 Layer-1 Disocclusion X-Ray</button>
-            <button class="btn" id="btn-eff-l0" type="button">🟡 Layer-0 Only</button>
-            <button class="btn" id="btn-eff-before" type="button" style="border-color:var(--coral);color:#ffccd8;">🔴 BEFORE: Legacy Shredded Splat</button>
-            <span style="color:var(--muted);">Before↔After:</span>
-            <input type="range" id="sl-effect-morph" min="0" max="1" step="0.01" value="1.0" style="width:90px;accent-color:var(--teal);" />
-            <span id="val-effect-morph" style="font-weight:800;color:var(--teal);">100% SHARP</span>
-          </div>
-
-          <div class="vp-hud-box">
-            <button class="btn active" id="btn-cam-inside" type="button">🚶 Inside Splat (WASD)</button>
-            <button class="btn" id="btn-cam-aerial" type="button">🛰️ All-District Aerial</button>
-            <button class="btn" id="btn-glb-wire" type="button">📐 .GLB Wire</button>
-            <button class="btn" id="btn-glb-occ" type="button">👻 .GLB Depth</button>
-            <button class="btn active" id="btn-glb-off" type="button">Hide .GLB</button>
-            <button class="btn teal" id="btn-toggle-actors" type="button">🎭 R1 Actors: OFF</button>
-            <button class="btn" id="btn-bake-plate" type="button">📸 Bake PNG</button>
-          </div>
-        </div>
-
-        <div class="frustum-bar">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-            <div style="font-size:10.5px;font-weight:800;color:var(--teal);">
-              🎥 STEP INSIDE CAMERA PORTALS (A..F):
-            </div>
-            <div id="twin-morph-wrap" style="display:none;align-items:center;gap:8px;font-size:10.5px;">
-              <strong style="color:var(--gold)">⚡ Twin-State Morph:</strong>
-              <input type="range" id="sl-twin-morph" min="0" max="1" step="0.01" value="1.0" style="width:110px;accent-color:var(--gold);" />
-              <span id="val-twin-morph" style="font-weight:800;color:var(--gold);">100% Temple</span>
-            </div>
-          </div>
-          <div class="frustum-pills" id="frustum-buttons"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- RIGHT COLUMN: PANO, BLUEPRINT PLATE, INCLUDED ANCHORS, EXCLUDED REFS & MATRIX -->
-    <aside class="col col-right">
-      <div class="section-card">
-        <div class="section-title">
-          <span>Actor-Cleaned 2560×1280 (2:1) Pano &amp; Depth</span>
-          <a id="link-full-plate" href="#" target="_blank" style="color:var(--teal);font-size:10.5px;text-decoration:none;">🔍 Full Blueprint PNG</a>
-        </div>
-        <img id="img-hub-pano" src="data/terrarium/atlas_packs/hub_01_atlantis/pano_2560x1280_clean.jpg" alt="Pano" style="width:100%;height:130px;object-fit:cover;border-radius:7px;border:1px solid var(--border);" />
-        <img id="img-hub-depth" src="data/terrarium/atlas_packs/hub_01_atlantis/depth_2560x1280.jpg" alt="Depth" style="width:100%;height:95px;object-fit:cover;border-radius:7px;border:1px solid var(--border);" />
-        <div id="txt-bang-for-buck" style="font-size:11px;color:var(--gold);background:rgba(255,210,63,0.09);padding:7px 9px;border-radius:6px;border-left:3px solid var(--gold);line-height:1.35;"></div>
-      </div>
-
-      <div class="section-card">
-        <div class="section-title">
-          <span>✓ Included Spatial Context Anchors (R0/R1 Stripped)</span>
-          <span class="pill green" id="cnt-included">6 Anchors</span>
-        </div>
-        <div class="anchor-grid" id="grid-included-anchors"></div>
-      </div>
-
-      <div class="section-card">
-        <div class="section-title">
-          <span>✕ Excluded Refs (Prevent Spatial Poisoning &amp; Bleed)</span>
-          <span class="pill coral" id="cnt-excluded">Excluded</span>
-        </div>
-        <div class="anchor-grid" id="grid-excluded-refs"></div>
-      </div>
-
-      <div class="section-card">
-        <div class="section-title">
-          <span>OpenCV ↔ Three.js Terrarium Bridge Matrix</span>
-          <span class="pill teal">1m = 1u</span>
-        </div>
-        <div class="matrix-box" id="box-coord-matrix"></div>
-      </div>
-    </aside>
-  </main>
-
-  <!-- THREE.JS + GLTFLOADER + ORBITCONTROLS -->
   <script type="importmap">
   {
     "imports": {
@@ -633,82 +152,321 @@
 
     const STATE = {
       manifest: null,
-      tabMode: 'districts', // default to All 10 Districts so user walks directly inside each District!
-      activeHubId: 'hub_01_atlantis',
-      activeDistrictKey: 'centro',
-      glbMode: 'off', // default OFF so .GLB collider boxes never depth-occlude or clutter the 3D Gaussian Splat
-      showActors: false, // default OFF so floating reference postcards/banners never block the view
-      splatScale: 1.25,
-      splatOpacity: 1.0,
-      twinMorph: 1.0,
-      coordConv: 'threejs',
-      effectMode: 'sharp', // 'sharp' | 'xray' | 'l0' | 'before'
-      effectMorph: 1.0,    // 0.0 = Legacy Shredded Splat, 1.0 = Apple SHARP 2-Layer 3DGS
-      currentSpawnCam: null,
-      activeCamIdx: 0,     // 0 = Hero Apple SHARP 2-Layer 3DGS stage, 1..N = secondary stages, -1 = all (aerial)
+      activeDistrictKey: 'fells-point',
+      activeCamIdx: 0, // 0 = Hero SHARP 2-Layer stage, 1..N = other camera stages, -1 = District Aerial
+      renderMode: 'world', // 'world' | 'splats' | 'xray' | 'before'
+      orderedCams: [],
+      currentPose: null,
     };
 
-    // ── THREE.JS SCENE SETUP ──────────────────────────────────────────────────
     const canvas = document.getElementById('three-canvas');
-    const wrap = document.getElementById('viewport-wrap');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x060a10);
-    scene.fog = new THREE.FogExp2(0x060a10, 0.0032);
+    scene.background = new THREE.Color(0x05080d);
 
-    const camera = new THREE.PerspectiveCamera(48, 16 / 9, 0.2, 1200);
-    camera.position.set(35, 38, 65);
-
+    const camera = new THREE.PerspectiveCamera(34, window.innerWidth / window.innerHeight, 0.15, 900);
     const orbit = new OrbitControls(camera, canvas);
     orbit.enableDamping = true;
     orbit.dampingFactor = 0.06;
-    orbit.target.set(0, 4, 0);
+    orbit.rotateSpeed = 0.65;
+    orbit.zoomSpeed = 0.9;
 
-    const ambLight = new THREE.AmbientLight(0xd8e6ff, 1.35);
+    const ambLight = new THREE.AmbientLight(0xffffff, 1.4);
     scene.add(ambLight);
-    const dirLight = new THREE.DirectionalLight(0xffebc2, 1.4);
-    dirLight.position.set(60, 120, 80);
+    const dirLight = new THREE.DirectionalLight(0xfff0d4, 1.2);
+    dirLight.position.set(40, 90, 50);
     scene.add(dirLight);
 
-    const gridHelper = new THREE.GridHelper(220, 44, 0x19e6c8, 0x162436);
-    gridHelper.position.y = -0.05;
-    gridHelper.visible = false; // hidden inside splat stages so wireframe grid never clutters the view
-    scene.add(gridHelper);
+    const domeGroup = new THREE.Group();
+    scene.add(domeGroup);
 
-    const glbGroup = new THREE.Group();
-    glbGroup.name = 'CHISEL_GLB_INFRASTRUCTURE';
-    glbGroup.visible = false;
-    scene.add(glbGroup);
+    const stageMeshGroup = new THREE.Group();
+    scene.add(stageMeshGroup);
 
     const splatGroup = new THREE.Group();
-    splatGroup.name = 'GAUSSIAN_SPLAT_CLOUD';
     scene.add(splatGroup);
 
-    const actorsGroup = new THREE.Group();
-    actorsGroup.name = 'R1_CUTOUT_ACTORS_AND_FRUSTUMS';
-    actorsGroup.visible = false; // hidden by default so floating reference postcards never block the 3DGS
-    scene.add(actorsGroup);
+    const glbGroup = new THREE.Group();
+    scene.add(glbGroup);
 
-    const gltfLoader = new GLTFLoader();
     const texLoader = new THREE.TextureLoader();
+    const gltfLoader = new GLTFLoader();
 
-    function resizeViewport() {
-      const w = wrap.clientWidth || 800;
-      const h = wrap.clientHeight || 600;
-      renderer.setSize(w, h, false);
-      camera.aspect = w / h;
+    function onResize() {
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
+      camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
     }
-    window.addEventListener('resize', resizeViewport);
-    resizeViewport();
+    window.addEventListener('resize', onResize);
+    onResize();
 
-    // ── PARSE 32-BYTE `.SPLAT` BUFFER WITH APPLE `ml-sharp` LAYER-1 & BEFORE/AFTER METADATA ──
-    function parse32ByteSplatBuffer(arrayBuffer, applyOpenCVFlip = false) {
-      const byteLen = arrayBuffer.byteLength;
-      const count = Math.floor(byteLen / 32);
+    function clearGroup(grp) {
+      while (grp.children.length > 0) {
+        const c = grp.children[0];
+        grp.remove(c);
+        if (c.geometry) c.geometry.dispose();
+      }
+    }
+
+    function computeCameraBasis(pos, look) {
+      const px = pos[0], py = pos[1], pz = pos[2];
+      let fx = look[0] - px, fy = look[1] - py, fz = look[2] - pz;
+      const flen = Math.hypot(fx, fy, fz) || 1.0;
+      fx /= flen; fy /= flen; fz /= flen;
+
+      let rx = -fz, ry = 0, rz = fx;
+      const rlen = Math.hypot(rx, ry, rz) || 1.0;
+      rx /= rlen; ry /= rlen; rz /= rlen;
+
+      const ux = ry * fz - rz * fy;
+      const uy = rz * fx - rx * fz;
+      const uz = rx * fy - ry * fx;
+      return { P: [px, py, pz], R: [rx, ry, rz], U: [ux, uy, uz], F: [fx, fy, fz], dist: flen };
+    }
+
+    function loadImageData(url, targetW, targetH) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const cv = document.createElement('canvas');
+          cv.width = targetW;
+          cv.height = targetH;
+          const ctx = cv.getContext('2d');
+          ctx.drawImage(img, 0, 0, targetW, targetH);
+          resolve({ img, data: ctx.getImageData(0, 0, targetW, targetH).data });
+        };
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+    }
+
+    // ── 1. BUILD 360° DEPTH-DISPLACED SURROUND WORLD DOME (ZERO BLACK VOID) ──
+    async function buildSurroundWorldDome(eqUrl, depthUrl, centerPos = [0, 0, 0]) {
+      clearGroup(domeGroup);
+      const W = 160, H = 80;
+      const [eqLoaded, depthLoaded] = await Promise.all([
+        loadImageData(eqUrl, 1024, 512),
+        loadImageData(depthUrl, W, H),
+      ]);
+      if (!eqLoaded) return;
+
+      const tex = new THREE.Texture(eqLoaded.img);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.needsUpdate = true;
+
+      const geo = new THREE.SphereGeometry(1, W - 1, H - 1);
+      const posAttr = geo.attributes.position;
+      const uvAttr = geo.attributes.uv;
+      const dArr = depthLoaded ? depthLoaded.data : null;
+
+      for (let i = 0; i < posAttr.count; i++) {
+        const u = uvAttr.getX(i);
+        const v = 1.0 - uvAttr.getY(i);
+        const gx = Math.min(W - 1, Math.max(0, Math.floor(u * (W - 1))));
+        const gy = Math.min(H - 1, Math.max(0, Math.floor(v * (H - 1))));
+        const dVal = dArr ? (dArr[(gy * W + gx) * 4] / 255.0) : 0.5;
+        // Bright = close (26m), Dark = far horizon (85m)
+        const rad = 26.0 + (1.0 - dVal) * 58.0;
+
+        const nx = posAttr.getX(i);
+        const ny = posAttr.getY(i);
+        const nz = posAttr.getZ(i);
+
+        let wx = nx * rad;
+        let wy = ny * rad;
+        let wz = nz * rad;
+        // Flatten lower hemisphere gently into a walkable surround ground terrain
+        if (wy < -2.2) {
+          const groundScale = -2.2 / wy;
+          wx *= Math.min(2.6, Math.pow(groundScale, 0.45));
+          wz *= Math.min(2.6, Math.pow(groundScale, 0.45));
+          wy = -2.2 + (wy + 2.2) * 0.12;
+        }
+        posAttr.setXYZ(i, centerPos[0] + wx, centerPos[1] + wy + 2.0, centerPos[2] + wz);
+      }
+      geo.computeVertexNormals();
+
+      const mat = new THREE.MeshBasicMaterial({
+        map: tex,
+        side: THREE.BackSide,
+        depthWrite: true,
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      domeGroup.add(mesh);
+    }
+
+    // ── 2. BUILD WATERTIGHT 2-LAYER 3D NEURAL DEPTH RELIEF SURFACE PER CAMERA STAGE ──
+    const stageMeshes = [];
+    async function buildNeuralDepthStageMeshes(orderedCams, heroRef) {
+      clearGroup(stageMeshGroup);
+      stageMeshes.length = 0;
+
+      for (let camIdx = 0; camIdx < orderedCams.length; camIdx++) {
+        const cam = orderedCams[camIdx];
+        const refId = cam.ref_id;
+        const rgbUrl = cam.source_img || `data/terrarium/foundry/refs/${refId}.jpg`;
+        const sharpDepthUrl = `data/terrarium/atlas_packs/splats/depth_${refId}_sharp.png`;
+
+        const GW = 220, GH = 124;
+        const [rgbLoaded, depthLoaded] = await Promise.all([
+          loadImageData(rgbUrl, 1024, 512),
+          loadImageData(sharpDepthUrl, GW, GH),
+        ]);
+        if (!rgbLoaded) continue;
+
+        const tex = new THREE.Texture(rgbLoaded.img);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.needsUpdate = true;
+
+        const basis = computeCameraBasis(cam.threejs_pose.position_m, cam.threejs_pose.look_at_m);
+        const fovDeg = cam.threejs_pose.fov_deg || 55.0;
+        const f_s = (GW * 0.5) / Math.tan(THREE.MathUtils.degToRad(fovDeg * 0.5));
+        const targetDist = Math.max(9.0, Math.min(18.0, basis.dist));
+        const dArr = depthLoaded ? depthLoaded.data : null;
+
+        // Smooth depth map with a 3x3 box pass to prevent spike artifacts while keeping crisp 3D volume
+        const zGrid = new Float32Array(GW * GH);
+        const legZGrid = new Float32Array(GW * GH);
+        for (let vg = 0; vg < GH; vg++) {
+          const vNorm = vg / (GH - 1);
+          for (let ug = 0; ug < GW; ug++) {
+            let dNorm = 0.5;
+            if (dArr) {
+              let sum = 0, cnt = 0;
+              for (let dy = -1; dy <= 1; dy++) {
+                const yy = Math.min(GH - 1, Math.max(0, vg + dy));
+                for (let dx = -1; dx <= 1; dx++) {
+                  const xx = Math.min(GW - 1, Math.max(0, ug + dx));
+                  sum += dArr[(yy * GW + xx) * 4] / 255.0;
+                  cnt++;
+                }
+              }
+              dNorm = sum / cnt;
+            }
+            // Metric depth in meters (close foreground = 4.2m, far background = 22.0m)
+            const zc = targetDist * (0.42 + (1.0 - dNorm) * 1.15);
+            zGrid[vg * GW + ug] = zc;
+
+            // Legacy synthetic contour-ring depth for Before/After comparison
+            const ring = Math.sin(Math.hypot(ug - GW * 0.5, vg - GH * 0.5) * 0.35) * 3.8;
+            legZGrid[vg * GW + ug] = Math.max(2.5, zc + ring);
+          }
+        }
+
+        // Layer-0 Foreground 3D Relief Mesh
+        const geo = new THREE.BufferGeometry();
+        const vCount = GW * GH;
+        const positions = new Float32Array(vCount * 3);
+        const sharpPositions = new Float32Array(vCount * 3);
+        const beforePositions = new Float32Array(vCount * 3);
+        const uvs = new Float32Array(vCount * 2);
+
+        for (let vg = 0; vg < GH; vg++) {
+          for (let ug = 0; ug < GW; ug++) {
+            const idx = vg * GW + ug;
+            const zc = zGrid[idx];
+            const xc = ((ug - GW * 0.5) / f_s) * zc;
+            const yc = ((vg - GH * 0.5) / f_s) * zc;
+
+            const wx = basis.P[0] + xc * basis.R[0] - yc * basis.U[0] + zc * basis.F[0];
+            const wy = basis.P[1] + xc * basis.R[1] - yc * basis.U[1] + zc * basis.F[1];
+            const wz = basis.P[2] + xc * basis.R[2] - yc * basis.U[2] + zc * basis.F[2];
+
+            positions[idx * 3 + 0] = wx;
+            positions[idx * 3 + 1] = wy;
+            positions[idx * 3 + 2] = wz;
+            sharpPositions[idx * 3 + 0] = wx;
+            sharpPositions[idx * 3 + 1] = wy;
+            sharpPositions[idx * 3 + 2] = wz;
+
+            const lzc = legZGrid[idx];
+            const lxc = ((ug - GW * 0.5) / f_s) * lzc;
+            const lyc = ((vg - GH * 0.5) / f_s) * lzc;
+            beforePositions[idx * 3 + 0] = basis.P[0] + lxc * basis.R[0] - lyc * basis.U[0] + lzc * basis.F[0];
+            beforePositions[idx * 3 + 1] = basis.P[1] + lxc * basis.R[1] - lyc * basis.U[1] + lzc * basis.F[1];
+            beforePositions[idx * 3 + 2] = basis.P[2] + lxc * basis.R[2] - lyc * basis.U[2] + lzc * basis.F[2];
+
+            uvs[idx * 2 + 0] = ug / (GW - 1);
+            uvs[idx * 2 + 1] = 1.0 - (vg / (GH - 1));
+          }
+        }
+
+        // Build index buffer while skipping steep depth-step silhouette edges (> 3.2m jump)
+        // so foreground characters/pillars separate cleanly from background walls!
+        const indices = [];
+        for (let vg = 0; vg < GH - 1; vg++) {
+          for (let ug = 0; ug < GW - 1; ug++) {
+            const a = vg * GW + ug;
+            const b = a + 1;
+            const c = (vg + 1) * GW + ug;
+            const d = c + 1;
+
+            const za = zGrid[a], zb = zGrid[b], zc_ = zGrid[c], zd = zGrid[d];
+            const maxJump1 = Math.max(Math.abs(za - zb), Math.abs(za - zc_), Math.abs(zb - zc_));
+            const maxJump2 = Math.max(Math.abs(zb - zd), Math.abs(zc_ - zd), Math.abs(zb - zc_));
+            if (maxJump1 < 3.6) indices.push(a, c, b);
+            if (maxJump2 < 3.6) indices.push(b, c, d);
+          }
+        }
+
+        geo.setIndex(indices);
+        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+
+        const mat = new THREE.MeshBasicMaterial({
+          map: tex,
+          side: THREE.DoubleSide,
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.userData = { camIdx, sharpPositions, beforePositions };
+        stageMeshGroup.add(mesh);
+
+        // Layer-1 Hidden Disocclusion Backdrop Shell (sits 2.2m behind foreground depth steps to fill any torn silhouette gaps!)
+        const bgGeo = new THREE.BufferGeometry();
+        const bgPos = new Float32Array(vCount * 3);
+        const bgInd = [];
+        for (let vg = 0; vg < GH; vg++) {
+          for (let ug = 0; ug < GW; ug++) {
+            const idx = vg * GW + ug;
+            // Push forward depth regions back to background wall depth so disocclusion corridors are filled
+            const zBack = Math.max(zGrid[idx] + 1.4, targetDist * 1.15);
+            const xc = ((ug - GW * 0.5) / f_s) * zBack;
+            const yc = ((vg - GH * 0.5) / f_s) * zBack;
+            bgPos[idx * 3 + 0] = basis.P[0] + xc * basis.R[0] - yc * basis.U[0] + zBack * basis.F[0];
+            bgPos[idx * 3 + 1] = basis.P[1] + xc * basis.R[1] - yc * basis.U[1] + zBack * basis.F[1];
+            bgPos[idx * 3 + 2] = basis.P[2] + xc * basis.R[2] - yc * basis.U[2] + zBack * basis.F[2];
+          }
+        }
+        for (let vg = 0; vg < GH - 1; vg++) {
+          for (let ug = 0; ug < GW - 1; ug++) {
+            const a = vg * GW + ug, b = a + 1, c = (vg + 1) * GW + ug, d = c + 1;
+            bgInd.push(a, c, b, b, c, d);
+          }
+        }
+        bgGeo.setIndex(bgInd);
+        bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPos, 3));
+        bgGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+        const bgMat = new THREE.MeshBasicMaterial({
+          map: tex,
+          color: 0xdde8f8,
+          side: THREE.DoubleSide,
+        });
+        const bgMesh = new THREE.Mesh(bgGeo, bgMat);
+        bgMesh.userData = { camIdx, isBackdrop: true };
+        stageMeshGroup.add(bgMesh);
+
+        stageMeshes.push({ mesh, bgMesh, camIdx });
+      }
+    }
+
+    // ── 3. PARSE & RENDER 2D-GRID APPLE `ml-sharp` 3D GAUSSIAN SPLATS ──
+    let primarySplatMesh = null;
+    function parse32ByteSplatBuffer(arrayBuffer) {
+      const count = Math.floor(arrayBuffer.byteLength / 32);
       const dv = new DataView(arrayBuffer);
       const positions = new Float32Array(count * 3);
       const basePositions = new Float32Array(count * 3);
@@ -721,13 +479,9 @@
 
       for (let i = 0; i < count; i++) {
         const off = i * 32;
-        let x = dv.getFloat32(off + 0, true);
-        let y = dv.getFloat32(off + 4, true);
-        let z = dv.getFloat32(off + 8, true);
-        if (applyOpenCVFlip) {
-          x = -x;
-          y = -y;
-        }
+        const x = dv.getFloat32(off + 0, true);
+        const y = dv.getFloat32(off + 4, true);
+        const z = dv.getFloat32(off + 8, true);
         const sx = dv.getFloat32(off + 12, true);
         const sy = dv.getFloat32(off + 16, true);
         const sz = dv.getFloat32(off + 20, true);
@@ -745,7 +499,6 @@
         basePositions[i * 3 + 0] = x;
         basePositions[i * 3 + 1] = y;
         basePositions[i * 3 + 2] = z;
-
         colors[i * 3 + 0] = r;
         colors[i * 3 + 1] = g;
         colors[i * 3 + 2] = b;
@@ -753,7 +506,7 @@
         baseColors[i * 3 + 1] = g;
         baseColors[i * 3 + 2] = b;
 
-        scales[i] = Math.max(0.24, Math.min(4.5, (sx + sy + sz) / 3.0));
+        scales[i] = Math.max(0.18, Math.min(3.5, (sx + sy + sz) / 3.0));
         isLayer1[i] = (q0 === 255) ? 1 : 0;
         camIdx[i] = q1;
         const u16 = q2 | (q3 << 8);
@@ -762,773 +515,355 @@
       return { count, positions, basePositions, colors, baseColors, scales, isLayer1, camIdx, dzLegacy };
     }
 
-    function createSplatPointsMesh(parsed, name = 'SPLAT_CLOUD') {
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(parsed.positions, 3));
-      geo.setAttribute('color', new THREE.BufferAttribute(parsed.colors, 3));
-      geo.setAttribute('aScale', new THREE.BufferAttribute(parsed.scales, 1));
+    async function loadDistrictSplat(splatUrl) {
+      clearGroup(splatGroup);
+      primarySplatMesh = null;
+      try {
+        const res = await fetch(splatUrl);
+        if (!res.ok) return;
+        const buf = await res.arrayBuffer();
+        const parsed = parse32ByteSplatBuffer(buf);
 
-      // Hardware Z-buffered Gaussian Splat shader: foreground Layer-0 Gaussians occlude
-      // background Layer-1 Gaussians until you orbit/walk around the foreground edge!
-      const mat = new THREE.ShaderMaterial({
-        uniforms: {
-          uScale: { value: STATE.splatScale },
-          uOpacity: { value: STATE.splatOpacity },
-        },
-        vertexShader: `
-          attribute float aScale;
-          varying vec3 vColor;
-          uniform float uScale;
-          void main() {
-            vColor = color;
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_Position = projectionMatrix * mvPosition;
-            float dist = max(0.8, -mvPosition.z);
-            gl_PointSize = clamp(uScale * aScale * (1850.0 / dist), 7.0, 68.0);
-          }
-        `,
-        fragmentShader: `
-          varying vec3 vColor;
-          uniform float uOpacity;
-          void main() {
-            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
-            float r2 = dot(cxy, cxy);
-            if (r2 > 1.0) discard;
-            float softShade = 1.0 - 0.14 * r2;
-            gl_FragColor = vec4(vColor * softShade, uOpacity);
-          }
-        `,
-        vertexColors: true,
-        transparent: false,
-        depthTest: true,
-        depthWrite: true,
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(parsed.positions, 3));
+        geo.setAttribute('color', new THREE.BufferAttribute(parsed.colors, 3));
+        geo.setAttribute('aScale', new THREE.BufferAttribute(parsed.scales, 1));
+
+        const mat = new THREE.ShaderMaterial({
+          uniforms: {
+            uPointScale: { value: 1.0 },
+          },
+          vertexShader: `
+            attribute float aScale;
+            varying vec3 vColor;
+            uniform float uPointScale;
+            void main() {
+              vColor = color;
+              vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+              gl_Position = projectionMatrix * mvPosition;
+              float dist = max(0.8, -mvPosition.z);
+              gl_PointSize = clamp(uPointScale * aScale * (1150.0 / dist), 3.5, 48.0);
+            }
+          `,
+          fragmentShader: `
+            varying vec3 vColor;
+            void main() {
+              vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+              float r2 = dot(cxy, cxy);
+              if (r2 > 1.0) discard;
+              gl_FragColor = vec4(vColor * (1.0 - 0.12 * r2), 1.0);
+            }
+          `,
+          vertexColors: true,
+          depthTest: true,
+          depthWrite: true,
+        });
+
+        primarySplatMesh = new THREE.Points(geo, mat);
+        primarySplatMesh.userData.parsed = parsed;
+        splatGroup.add(primarySplatMesh);
+      } catch (e) {
+        console.warn('Splat error:', e);
+      }
+    }
+
+    function applyRenderMode() {
+      const mode = STATE.renderMode;
+      const activeCam = STATE.activeCamIdx;
+
+      // 1. Update solid 2-Layer 3D Neural Depth Stage Meshes
+      stageMeshes.forEach(({ mesh, bgMesh, camIdx }) => {
+        const isCurrentStage = (activeCam === -1) || (camIdx === activeCam);
+        if (mode === 'splats') {
+          mesh.visible = false;
+          bgMesh.visible = false;
+          return;
+        }
+        mesh.visible = isCurrentStage;
+        bgMesh.visible = isCurrentStage && (mode !== 'before');
+
+        if (isCurrentStage) {
+          const posAttr = mesh.geometry.getAttribute('position');
+          const src = (mode === 'before') ? mesh.userData.beforePositions : mesh.userData.sharpPositions;
+          posAttr.array.set(src);
+          posAttr.needsUpdate = true;
+          bgMesh.material.color.setHex(mode === 'xray' ? 0x19e6c8 : 0xdde8f8);
+        }
       });
-      const pts = new THREE.Points(geo, mat);
-      pts.name = name;
-      pts.userData.parsed = parsed;
-      return pts;
-    }
 
-    function applySplatEffectMode() {
-      if (!primarySplatMesh || !primarySplatMesh.userData.parsed) return;
-      const p = primarySplatMesh.userData.parsed;
-      const posAttr = primarySplatMesh.geometry.getAttribute('position');
-      const colAttr = primarySplatMesh.geometry.getAttribute('color');
-      const posArr = posAttr.array;
-      const colArr = colAttr.array;
+      // 2. Update 3D Gaussian Splat Cloud
+      if (primarySplatMesh && primarySplatMesh.userData.parsed) {
+        const p = primarySplatMesh.userData.parsed;
+        const posAttr = primarySplatMesh.geometry.getAttribute('position');
+        const colAttr = primarySplatMesh.geometry.getAttribute('color');
+        const posArr = posAttr.array;
+        const colArr = colAttr.array;
 
-      const mode = STATE.effectMode;
-      const morph = STATE.effectMorph; // 1.0 = AFTER (SHARP), 0.0 = BEFORE (Legacy Shredded)
-      const legacyWeight = 1.0 - morph;
+        primarySplatMesh.material.uniforms.uPointScale.value = (mode === 'splats') ? 1.55 : 0.85;
 
-      // Determine camera forward vector for radial depth displacement
-      let fx = 0, fy = 0, fz = -1;
-      if (STATE.currentSpawnCam && STATE.currentSpawnCam.position_m && STATE.currentSpawnCam.look_at_m) {
-        const cp = STATE.currentSpawnCam.position_m;
-        const cl = STATE.currentSpawnCam.look_at_m;
-        const dx = cl[0] - cp[0], dy = cl[1] - cp[1], dz = cl[2] - cp[2];
-        const len = Math.hypot(dx, dy, dz) || 1;
-        fx = dx / len; fy = dy / len; fz = dz / len;
+        let fx = 0, fy = 0, fz = -1;
+        if (STATE.currentPose && STATE.currentPose.position_m && STATE.currentPose.look_at_m) {
+          const cp = STATE.currentPose.position_m, cl = STATE.currentPose.look_at_m;
+          const dx = cl[0] - cp[0], dy = cl[1] - cp[1], dz = cl[2] - cp[2];
+          const len = Math.hypot(dx, dy, dz) || 1;
+          fx = dx / len; fy = dy / len; fz = dz / len;
+        }
+
+        for (let i = 0; i < p.count; i++) {
+          const i3 = i * 3;
+          if (activeCam >= 0 && p.camIdx[i] !== activeCam) {
+            posArr[i3 + 0] = 0; posArr[i3 + 1] = -9999; posArr[i3 + 2] = 0;
+            continue;
+          }
+          const l1 = p.isLayer1[i] === 1;
+          if (mode === 'world' && !l1) {
+            // In hybrid 3D World mode, Layer-0 is rendered as a watertight 220x124 3D neural surface while Layer-1 3DGS fills disocclusions
+            posArr[i3 + 0] = 0; posArr[i3 + 1] = -9999; posArr[i3 + 2] = 0;
+            continue;
+          }
+          if (mode === 'before' && l1) {
+            posArr[i3 + 0] = 0; posArr[i3 + 1] = -9999; posArr[i3 + 2] = 0;
+            continue;
+          }
+
+          const bx = p.basePositions[i3 + 0], by = p.basePositions[i3 + 1], bz = p.basePositions[i3 + 2];
+          const br = p.baseColors[i3 + 0], bg = p.baseColors[i3 + 1], bb = p.baseColors[i3 + 2];
+          const dz = (mode === 'before') ? p.dzLegacy[i] : 0.0;
+
+          posArr[i3 + 0] = bx + fx * dz;
+          posArr[i3 + 1] = by + fy * dz;
+          posArr[i3 + 2] = bz + fz * dz;
+
+          if (mode === 'xray' && l1) {
+            colArr[i3 + 0] = 0.10;
+            colArr[i3 + 1] = 0.95;
+            colArr[i3 + 2] = 0.85;
+          } else {
+            colArr[i3 + 0] = br;
+            colArr[i3 + 1] = bg;
+            colArr[i3 + 2] = bb;
+          }
+        }
+        posAttr.needsUpdate = true;
+        colAttr.needsUpdate = true;
       }
 
-      for (let i = 0; i < p.count; i++) {
-        const i3 = i * 3;
-        // Filter to active camera stage when inside a portal (STATE.activeCamIdx >= 0) so other stages don't bleed in
-        if (STATE.activeCamIdx >= 0 && p.camIdx && p.camIdx[i] !== STATE.activeCamIdx) {
-          posArr[i3 + 0] = 0;
-          posArr[i3 + 1] = -9999;
-          posArr[i3 + 2] = 0;
-          continue;
-        }
+      glbGroup.visible = (activeCam === -1);
 
-        const l1 = p.isLayer1[i] === 1;
-        const bx = p.basePositions[i3 + 0];
-        const by = p.basePositions[i3 + 1];
-        const bz = p.basePositions[i3 + 2];
-        const br = p.baseColors[i3 + 0];
-        const bg = p.baseColors[i3 + 1];
-        const bb = p.baseColors[i3 + 2];
-
-        // Hide Layer-1 disocclusion Gaussians when in `l0` mode or when morphed toward Legacy Before
-        if ((mode === 'l0' || mode === 'before' || morph < 0.35) && l1) {
-          posArr[i3 + 0] = 0;
-          posArr[i3 + 1] = -9999;
-          posArr[i3 + 2] = 0;
-          continue;
-        }
-
-        const dz = p.dzLegacy[i] * legacyWeight;
-        posArr[i3 + 0] = bx + fx * dz;
-        posArr[i3 + 1] = by + fy * dz;
-        posArr[i3 + 2] = bz + fz * dz;
-
-        if (mode === 'xray' && l1) {
-          // Electric cyan highlight on Layer-1 hidden disocclusion Gaussians!
-          colArr[i3 + 0] = br * 0.25 + 0.08;
-          colArr[i3 + 1] = bg * 0.25 + 0.92;
-          colArr[i3 + 2] = bb * 0.25 + 0.85;
-        } else if (legacyWeight > 0.25) {
-          // Warm orange tint proportional to legacy contour ring distortion
-          const ringTint = Math.min(0.45, Math.abs(dz) * 0.06);
-          colArr[i3 + 0] = Math.min(1.0, br + ringTint * 0.9);
-          colArr[i3 + 1] = bg * (1.0 - ringTint * 0.3);
-          colArr[i3 + 2] = bb * (1.0 - ringTint * 0.6);
-        } else {
-          colArr[i3 + 0] = br;
-          colArr[i3 + 1] = bg;
-          colArr[i3 + 2] = bb;
-        }
-      }
-      posAttr.needsUpdate = true;
-      colAttr.needsUpdate = true;
-
-      document.getElementById('btn-eff-sharp').classList.toggle('active', mode === 'sharp');
-      document.getElementById('btn-eff-xray').classList.toggle('active', mode === 'xray');
-      document.getElementById('btn-eff-l0').classList.toggle('active', mode === 'l0');
-      document.getElementById('btn-eff-before').classList.toggle('active', mode === 'before');
-      document.getElementById('val-effect-morph').textContent = `${Math.round(morph * 100)}% SHARP`;
+      document.getElementById('mode-world').classList.toggle('active', mode === 'world');
+      document.getElementById('mode-splats').classList.toggle('active', mode === 'splats');
+      document.getElementById('mode-xray').classList.toggle('active', mode === 'xray');
+      document.getElementById('mode-before').classList.toggle('active', mode === 'before');
     }
 
-    function stepInsideCameraStage(pose, slightOrbit = false) {
+    function stepInsideStage(pose) {
       if (!pose || !pose.position_m || !pose.look_at_m) return;
-      STATE.currentSpawnCam = pose;
-      gridHelper.visible = false;
+      STATE.currentPose = pose;
       const pos = pose.position_m;
       const look = pose.look_at_m;
       const dx = look[0] - pos[0];
       const dy = look[1] - pos[1];
       const dz = look[2] - pos[2];
-      // Match camera vertical FOV (25 deg) to the unprojected 2.18:1 cinema stage so the 3D Gaussian Splat fills 100% of the viewport edge-to-edge!
-      camera.fov = 25;
+
+      camera.fov = 26;
       camera.updateProjectionMatrix();
-      const rx = -dz * 0.035;
-      const rz = dx * 0.035;
+      // Place camera slightly inside the stage frustum so 3D walls/buildings fill 100% of the screen
       camera.position.set(
-        pos[0] + dx * 0.06 + (slightOrbit ? rx : 0),
-        pos[1] + dy * 0.06,
-        pos[2] + dz * 0.06 + (slightOrbit ? rz : 0)
+        pos[0] + dx * 0.14,
+        pos[1] + dy * 0.14,
+        pos[2] + dz * 0.14
       );
       orbit.target.set(
-        pos[0] + dx * 0.92,
-        pos[1] + dy * 0.92,
-        pos[2] + dz * 0.92
+        pos[0] + dx * 0.95,
+        pos[1] + dy * 0.95,
+        pos[2] + dz * 0.95
       );
       orbit.update();
-      document.getElementById('btn-cam-inside').classList.add('active');
-      document.getElementById('btn-cam-aerial').classList.remove('active');
     }
 
-    // ── LOAD & MOUNT CHISEL `.GLB` COLLIDER + `.SPLAT` CLOUD + ACTORS ─────────
-    let primarySplatMesh = null;
-    let twinRuinSplatMesh = null;
-    let activeColliders = [];
-
-    function clearGroup(grp) {
-      while (grp.children.length > 0) {
-        const c = grp.children[0];
-        grp.remove(c);
-        if (c.geometry) c.geometry.dispose();
-      }
-    }
-
-    function applyGlbRenderMode() {
-      glbGroup.visible = (STATE.glbMode !== 'off');
-      glbGroup.traverse(o => {
-        if (o.isMesh) {
-          if (STATE.glbMode === 'occ') {
-            // Phantom Depth-Occlusion Prepass: invisible color, writes to depth buffer to occlude R1 actors behind R3 walls!
-            o.material.colorWrite = false;
-            o.material.depthWrite = true;
-            o.material.transparent = false;
-            o.renderOrder = 0;
-          } else {
-            o.material.colorWrite = true;
-            o.material.depthWrite = true;
-            o.material.transparent = true;
-            o.material.opacity = 0.58;
-          }
-        }
-        if (o.isLineSegments) {
-          o.visible = (STATE.glbMode === 'wire');
-        }
-      });
-      document.getElementById('btn-glb-wire').classList.toggle('active', STATE.glbMode === 'wire');
-      document.getElementById('btn-glb-occ').classList.toggle('active', STATE.glbMode === 'occ');
-      document.getElementById('btn-glb-off').classList.toggle('active', STATE.glbMode === 'off');
-    }
-
-    async function loadGlbCollider(glbUrl) {
+    async function loadGlbSubtle(glbUrl) {
       clearGroup(glbGroup);
-      activeColliders = [];
       return new Promise((resolve) => {
         gltfLoader.load(
           glbUrl,
           (gltf) => {
-            const root = gltf.scene;
-            root.traverse((child) => {
+            gltf.scene.traverse((child) => {
               if (child.isMesh) {
                 child.material = new THREE.MeshLambertMaterial({
                   vertexColors: !!child.geometry.attributes.color,
-                  color: child.geometry.attributes.color ? 0xffffff : 0x3b526b,
+                  color: child.geometry.attributes.color ? 0xffffff : 0x2d4258,
                   transparent: true,
-                  opacity: 0.58,
+                  opacity: 0.32,
                   side: THREE.DoubleSide,
                 });
-                activeColliders.push(child);
-                // Add crisp Chisel wireframe overlay
-                const edges = new THREE.EdgesGeometry(child.geometry, 22);
-                const line = new THREE.LineSegments(
-                  edges,
-                  new THREE.LineBasicMaterial({ color: 0x19e6c8, transparent: true, opacity: 0.36 })
-                );
-                child.add(line);
               }
             });
-            glbGroup.add(root);
-            applyGlbRenderMode();
-            resolve(root);
+            glbGroup.add(gltf.scene);
+            resolve();
           },
           undefined,
-          (err) => {
-            console.warn('GLB load error:', err);
-            resolve(null);
-          }
+          () => resolve()
         );
       });
-    }
-
-    async function loadSplatFile(splatUrl, twinRuinUrl = null) {
-      clearGroup(splatGroup);
-      primarySplatMesh = null;
-      twinRuinSplatMesh = null;
-      try {
-        const res = await fetch(splatUrl);
-        if (res.ok) {
-          const buf = await res.arrayBuffer();
-          const parsed = parse32ByteSplatBuffer(buf, STATE.coordConv === 'opencv');
-          primarySplatMesh = createSplatPointsMesh(parsed, 'PRIMARY_SPLAT');
-          splatGroup.add(primarySplatMesh);
-        }
-        if (twinRuinUrl) {
-          const res2 = await fetch(twinRuinUrl);
-          if (res2.ok) {
-            const buf2 = await res2.arrayBuffer();
-            const parsed2 = parse32ByteSplatBuffer(buf2, STATE.coordConv === 'opencv');
-            twinRuinSplatMesh = createSplatPointsMesh(parsed2, 'TWIN_RUIN_SPLAT');
-            if (twinRuinSplatMesh.material.uniforms) {
-              twinRuinSplatMesh.material.uniforms.uOpacity.value = (1.0 - STATE.twinMorph) * STATE.splatOpacity;
-            }
-            if (primarySplatMesh && primarySplatMesh.material.uniforms) {
-              primarySplatMesh.material.uniforms.uOpacity.value = STATE.twinMorph * STATE.splatOpacity;
-            }
-            splatGroup.add(twinRuinSplatMesh);
-          }
-        }
-      } catch (e) {
-        console.warn('Splat load error:', e);
-      }
-    }
-
-    function makeBannerSprite(lines, borderColor = '#ffd23f') {
-      const cv = document.createElement('canvas');
-      cv.width = 512; cv.height = 128;
-      const ctx = cv.getContext('2d');
-      ctx.fillStyle = 'rgba(8, 13, 20, 0.92)';
-      ctx.strokeStyle = borderColor;
-      ctx.lineWidth = 4;
-      ctx.strokeRect(4, 4, 504, 120);
-      ctx.fillRect(4, 4, 504, 120);
-      ctx.fillStyle = borderColor;
-      ctx.font = '800 22px "Helvetica Neue", Arial, sans-serif';
-      ctx.fillText(String(lines[0] || '').slice(0, 42), 18, 44);
-      ctx.fillStyle = '#f3ead2';
-      ctx.font = '600 17px "Helvetica Neue", Arial, sans-serif';
-      ctx.fillText(String(lines[1] || '').slice(0, 50), 18, 86);
-      const tex = new THREE.CanvasTexture(cv);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
-      sp.scale.set(9.0, 2.25, 1);
-      return sp;
-    }
-
-    function mountPosedFrustumsAndCutoutCast(cameras, heroRef = null) {
-      clearGroup(actorsGroup);
-      const frustumContainer = document.getElementById('frustum-buttons');
-      frustumContainer.innerHTML = '';
-
-      // Order cameras identically to `build_all_10_districts_sharp_splats.py` (`heroRef` at camIdx = 0)
-      const orderedCams = [];
-      (cameras || []).forEach(c => {
-        if (heroRef && c.ref_id === heroRef && orderedCams.length === 0) {
-          orderedCams.unshift(c);
-        } else if (heroRef && c.ref_id === heroRef) {
-          orderedCams.unshift(c);
-        } else {
-          orderedCams.push(c);
-        }
-      });
-
-      const heroCutouts = [
-        'kits/packs/poet_tracksuit_v1/01_COMPONENTS/01_torso_front.png',
-        'arena/bodies/ACT-001_p0.png',
-        'arena/bodies/ACT-014_p0.png',
-        'arena/bodies/ACT-019_p0.png',
-        'arena/bodies/ACT-028_p0.png',
-        'arena/bodies/ACT-011_p0.png',
-      ];
-
-      orderedCams.forEach((cam, idx) => {
-        const pos = cam.threejs_pose.position_m;
-        const look = cam.threejs_pose.look_at_m;
-        const groundY = cam.threejs_pose.ground_y_m || 0;
-        const yawRad = THREE.MathUtils.degToRad(cam.azimuth_deg || 0);
-
-        // 1. Posed Camera Frustum Pyramid at exact `threejs_pose.position_m` (only visible when R1 Actors: ON)
-        const fg = new THREE.Group();
-        fg.position.set(pos[0], pos[1], pos[2]);
-        fg.rotation.y = yawRad;
-
-        const coneGeo = new THREE.ConeGeometry(1.8, 3.6, 4, 1, true);
-        coneGeo.rotateX(Math.PI / 2);
-        coneGeo.rotateZ(Math.PI / 4);
-        const coneWire = new THREE.LineSegments(
-          new THREE.EdgesGeometry(coneGeo),
-          new THREE.LineBasicMaterial({ color: 0x19e6c8 })
-        );
-        fg.add(coneWire);
-
-        // 2. 2.5D Cut-Out Actor Standee (`Onion Shell R1`, 6.5m in front of camera on `.glb` floor collider!)
-        const actorX = pos[0] + Math.sin(yawRad) * 6.5;
-        const actorZ = pos[2] + Math.cos(yawRad) * 6.5;
-        const cTex = texLoader.load(heroCutouts[idx % heroCutouts.length]);
-        cTex.colorSpace = THREE.SRGBColorSpace;
-        const cMesh = new THREE.Mesh(
-          new THREE.PlaneGeometry(2.4, 3.6),
-          new THREE.MeshBasicMaterial({
-            map: cTex,
-            transparent: true,
-            alphaTest: 0.08,
-            side: THREE.DoubleSide,
-          })
-        );
-        cMesh.position.set(actorX, groundY + 1.85, actorZ);
-        cMesh.rotation.y = yawRad;
-        actorsGroup.add(fg);
-        actorsGroup.add(cMesh);
-
-        // 3. Add button to bottom Frustum Bar
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn' + (idx === STATE.activeCamIdx ? ' active' : '');
-        const tag = (idx === 0) ? '★ SHARP 2-Layer' : `Stage ${idx + 1}`;
-        btn.textContent = `🎥 [${cam.set_piece}] Ref ${cam.ref_id} (${tag})`;
-        btn.addEventListener('click', () => {
-          STATE.activeCamIdx = idx;
-          frustumContainer.querySelectorAll('.btn').forEach((b, bi) => b.classList.toggle('active', bi === idx));
-          stepInsideCameraStage(cam.threejs_pose, false);
-          applySplatEffectMode();
-        });
-        frustumContainer.appendChild(btn);
-      });
-    }
-
-    // ── UI RENDERING FOR ACTIVE MEGA-HUB OR DISTRICT ─────────────────────────
-    async function selectMegaHub(hubId) {
-      STATE.activeHubId = hubId;
-      STATE.activeCamIdx = 0;
-      const hub = STATE.manifest.mega_hubs.find(h => h.hub_id === hubId) || STATE.manifest.mega_hubs[0];
-      const primaryDistrict = STATE.manifest.districts[hub.primary_stage];
-
-      renderSelectorList();
-
-      // Update Viewport Header & Download Links
-      document.getElementById('vp-title').textContent = hub.title;
-      document.getElementById('vp-stats').textContent = `${hub.splat_seed.splat_count.toLocaleString()} SHARP 2-Layer 3DGS · ${hub.chisel_glb.triangles.toLocaleString()} .GLB Tris`;
-      document.getElementById('dl-chisel-glb').href = hub.chisel_glb.file;
-      document.getElementById('dl-clean-pano').href = hub.pano_2560x1280;
-      document.getElementById('dl-clean-depth').href = hub.depth_2560x1280;
-      document.getElementById('dl-splat-seed').href = hub.splat_seed.file;
-      document.getElementById('btn-open-terrarium').href = `terrarium.html?stage=${hub.primary_stage}&poem=${hub.poems[0]}&splat=${encodeURIComponent(hub.splat_seed.file)}`;
-
-      // Right Column Updates
-      document.getElementById('img-hub-pano').src = hub.pano_2560x1280;
-      document.getElementById('img-hub-depth').src = hub.depth_2560x1280;
-      document.getElementById('link-full-plate').href = hub.vault_plate;
-      document.getElementById('txt-bang-for-buck').innerHTML = `<b>★ Bang-for-Buck Strategy:</b> ${hub.bang_for_buck}`;
-
-      // Show Twin-State Splat Morph slider when on Hub 02 (or allow morphing on any twin hub)
-      const twinWrap = document.getElementById('twin-morph-wrap');
-      twinWrap.style.display = hub.twin_state_splat ? 'flex' : 'none';
-
-      // Populate Included Anchors & Excluded Refs
-      const incGrid = document.getElementById('grid-included-anchors');
-      document.getElementById('cnt-included').textContent = `${hub.anchor_files.length} Clean Anchors`;
-      incGrid.innerHTML = hub.anchor_files.map(a => `
-        <div class="ref-card" onclick="window.open('${a.clean_img}', '_blank')">
-          <img src="${a.clean_img}" alt="${a.ref_id}" />
-          <div class="rc-body">
-            <div style="font-weight:800;color:var(--green);">✓ Ref ${a.ref_id} · ${a.shell} (+${a.elev_m}m)</div>
-            <div style="color:var(--fg);">${a.role}</div>
-            <div style="color:var(--teal);font-size:9.5px;">Actor Stripped: ${a.actor_inpainted_pct}%</div>
-          </div>
-        </div>
-      `).join('');
-
-      // Gather Excluded Refs across linked stages
-      const allExcluded = [];
-      hub.linked_stages.forEach(sk => {
-        const d = STATE.manifest.districts[sk];
-        if (d && d.excluded_refs) allExcluded.push(...d.excluded_refs);
-      });
-      const excGrid = document.getElementById('grid-excluded-refs');
-      document.getElementById('cnt-excluded').textContent = `${allExcluded.length} Filtered Out`;
-      excGrid.innerHTML = allExcluded.map(ex => `
-        <div class="ref-card excluded">
-          <img src="data/terrarium/foundry/refs/${ex.id}.jpg" alt="${ex.id}" />
-          <div class="rc-body">
-            <div style="font-weight:800;color:var(--coral);">✕ Reject Ref ${ex.id}</div>
-            <div style="color:#ffccd8;">${ex.reason}</div>
-          </div>
-        </div>
-      `).join('');
-
-      document.getElementById('box-coord-matrix').textContent = JSON.stringify(hub.coordinate_bridge, null, 2);
-
-      // Load 3D Chisel `.glb` + 3D `.splat` + Posed Frustums
-      await loadGlbCollider(hub.chisel_glb.file);
-      await loadSplatFile(
-        hub.splat_seed.file,
-        hub.twin_state_splat ? hub.twin_state_splat.file : null
-      );
-      const cams = hub.cameras || (primaryDistrict && primaryDistrict.cameras) || [];
-      const heroRef = primaryDistrict && primaryDistrict.splat_seed && primaryDistrict.splat_seed.hero_ref;
-      mountPosedFrustumsAndCutoutCast(cams, heroRef);
-      const spawnPose = (primaryDistrict && primaryDistrict.splat_seed && primaryDistrict.splat_seed.spawn_camera) || (cams[0] && cams[0].threejs_pose);
-      if (spawnPose) {
-        stepInsideCameraStage(spawnPose, false);
-      } else {
-        camera.position.set(36, 40, 66);
-        orbit.target.set(0, 4, 0);
-        orbit.update();
-      }
-      applySplatEffectMode();
     }
 
     async function selectDistrict(dKey) {
-      STATE.activeDistrictKey = dKey;
-      STATE.activeCamIdx = 0;
       const d = STATE.manifest.districts[dKey];
       if (!d) return;
+      STATE.activeDistrictKey = dKey;
+      STATE.activeCamIdx = 0;
 
-      renderSelectorList();
+      // Highlight active District pill
+      document.querySelectorAll('#district-pills .pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.district === dKey);
+      });
 
-      const matchingHub = STATE.manifest.mega_hubs.find(h => h.linked_stages.includes(dKey)) || STATE.manifest.mega_hubs[0];
-      const p0 = d.poems[0];
-      const districtSplatUrl = (d.splat_seed && d.splat_seed.file) ? d.splat_seed.file : matchingHub.splat_seed.file;
-      const districtSplatCount = (d.splat_seed && d.splat_seed.splat_count) ? d.splat_seed.splat_count : matchingHub.splat_seed.splat_count;
-
-      document.getElementById('vp-title').textContent = `DISTRICT · ${d.name}`;
-      document.getElementById('vp-stats').textContent = `${districtSplatCount.toLocaleString()} SHARP 2-Layer 3DGS · ${d.cameras.length} Walkable Portals`;
-      document.getElementById('dl-chisel-glb').href = d.chisel_glb.file;
-      document.getElementById('dl-clean-pano').href = `data/terrarium/foundry/equirec/poem_${p0}_shared_eq.jpg`;
-      document.getElementById('dl-clean-depth').href = `data/terrarium/foundry/equirec/poem_${p0}_shared_depth.jpg`;
-      document.getElementById('dl-splat-seed').href = districtSplatUrl;
-      document.getElementById('btn-open-terrarium').href = `terrarium.html?stage=${dKey}&poem=${p0}&splat=${encodeURIComponent(districtSplatUrl)}`;
-
-      document.getElementById('img-hub-pano').src = `data/terrarium/foundry/equirec/poem_${p0}_shared_eq.jpg`;
-      document.getElementById('img-hub-depth').src = `data/terrarium/foundry/equirec/poem_${p0}_shared_depth.jpg`;
-      document.getElementById('link-full-plate').href = d.blueprint_png;
-      document.getElementById('txt-bang-for-buck').innerHTML = `<b>Portal &amp; Splat Topology:</b> ${d.portal_notes}`;
-      document.getElementById('twin-morph-wrap').style.display = (dKey === 'inner-harbor' || dKey === 'holland-island') ? 'flex' : 'none';
-
-      const incGrid = document.getElementById('grid-included-anchors');
-      document.getElementById('cnt-included').textContent = `${d.anchor_refs.length} Clean Anchors`;
-      incGrid.innerHTML = d.anchor_refs.map((a, idx) => `
-        <div class="ref-card" onclick="window.open('data/terrarium/foundry/refs/${a.id}.jpg', '_blank')">
-          <img src="data/terrarium/foundry/refs/${a.id}.jpg" alt="${a.id}" />
-          <div class="rc-body">
-            <div style="font-weight:800;color:var(--green);">✓ [${a.set_piece}] Ref ${a.id} · ${a.shell}</div>
-            <div style="color:var(--fg);">${a.role}</div>
-          </div>
-        </div>
-      `).join('');
-
-      const excGrid = document.getElementById('grid-excluded-refs');
-      document.getElementById('cnt-excluded').textContent = `${d.excluded_refs.length} Filtered Out`;
-      excGrid.innerHTML = d.excluded_refs.map(ex => `
-        <div class="ref-card excluded">
-          <img src="data/terrarium/foundry/refs/${ex.id}.jpg" alt="${ex.id}" />
-          <div class="rc-body">
-            <div style="font-weight:800;color:var(--coral);">✕ Reject Ref ${ex.id}</div>
-            <div style="color:#ffccd8;">${ex.reason}</div>
-          </div>
-        </div>
-      `).join('');
-
-      document.getElementById('box-coord-matrix').textContent = JSON.stringify(d.coordinate_bridge, null, 2);
-
-      await loadGlbCollider(d.chisel_glb.file);
-      await loadSplatFile(districtSplatUrl, matchingHub.twin_state_splat ? matchingHub.twin_state_splat.file : null);
+      // Order cameras with Hero Apple SHARP stage at index 0
       const heroRef = d.splat_seed && d.splat_seed.hero_ref;
-      mountPosedFrustumsAndCutoutCast(d.cameras || [], heroRef);
+      const ordered = [];
+      (d.cameras || []).forEach(c => {
+        if (heroRef && c.ref_id === heroRef && ordered.length === 0) ordered.unshift(c);
+        else if (heroRef && c.ref_id === heroRef) ordered.unshift(c);
+        else ordered.push(c);
+      });
+      STATE.orderedCams = ordered;
 
-      // Spawn the user directly INSIDE this District's primary Apple SHARP 3DGS stage!
-      const spawnPose = (d.splat_seed && d.splat_seed.spawn_camera) || (d.cameras && d.cameras[0] && d.cameras[0].threejs_pose);
-      if (spawnPose) {
-        stepInsideCameraStage(spawnPose, false);
-      }
-      applySplatEffectMode();
-    }
-
-    function renderSelectorList() {
-      const container = document.getElementById('hub-list-container');
-      if (!STATE.manifest) return;
-
-      if (STATE.tabMode === 'megahubs') {
-        container.innerHTML = STATE.manifest.mega_hubs.map(h => `
-          <div class="hub-item ${h.hub_id === STATE.activeHubId ? 'active' : ''}" data-hub="${h.hub_id}">
-            <div class="hi-top">
-              <span>#${h.rank} · ${h.title.replace('MEGA-HUB 0' + h.rank + ' · ', '')}</span>
-            </div>
-            <div class="hi-sub">${h.subtitle}</div>
-            <div class="hi-pills">
-              <span class="pill teal">${h.poems.length} Poems (P${h.poems.join(', P')})</span>
-              <span class="pill green">${h.splat_seed.splat_count.toLocaleString()} Splats</span>
-              <span class="pill">${h.chisel_glb.buildings_extruded} Bldgs .GLB</span>
-            </div>
-          </div>
-        `).join('');
-        container.querySelectorAll('.hub-item').forEach(el => {
-          el.addEventListener('click', () => selectMegaHub(el.dataset.hub));
+      // Render camera portal pills
+      const portalContainer = document.getElementById('portal-pills');
+      portalContainer.innerHTML = '';
+      ordered.forEach((cam, idx) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pill-btn' + (idx === 0 ? ' active' : '');
+        b.textContent = idx === 0 ? `★ Portal ${cam.set_piece} (SHARP)` : `Portal ${cam.set_piece}`;
+        b.addEventListener('click', () => {
+          STATE.activeCamIdx = idx;
+          portalContainer.querySelectorAll('.pill-btn').forEach((el, i) => el.classList.toggle('active', i === idx));
+          stepInsideStage(cam.threejs_pose);
+          applyRenderMode();
         });
-      } else {
-        container.innerHTML = Object.values(STATE.manifest.districts).map(d => {
-          const sCount = (d.splat_seed && d.splat_seed.splat_count) ? d.splat_seed.splat_count.toLocaleString() : '60,000';
-          return `
-          <div class="hub-item ${d.key === STATE.activeDistrictKey ? 'active' : ''}" data-district="${d.key}">
-            <div class="hi-top">
-              <span>🚶 ${d.name.split('·')[0].trim()}</span>
-              <span class="pill teal">${d.zone}</span>
-            </div>
-            <div class="hi-sub">${d.portal_notes.slice(0, 95)}...</div>
-            <div class="hi-pills">
-              <span class="pill green">⚡ ${sCount} SHARP 3DGS</span>
-              <span class="pill teal">🎥 ${d.cameras.length} Portals</span>
-              <span class="pill">P${d.poems.join(', P')}</span>
-            </div>
-          </div>
-        `}).join('');
-        container.querySelectorAll('.hub-item').forEach(el => {
-          el.addEventListener('click', () => selectDistrict(el.dataset.district));
-        });
+        portalContainer.appendChild(b);
+      });
+
+      const aerialBtn = document.createElement('button');
+      aerialBtn.type = 'button';
+      aerialBtn.className = 'pill-btn';
+      aerialBtn.textContent = '🛰️ Aerial 360°';
+      aerialBtn.addEventListener('click', () => {
+        STATE.activeCamIdx = -1;
+        portalContainer.querySelectorAll('.pill-btn').forEach(el => el.classList.remove('active'));
+        aerialBtn.classList.add('active');
+        camera.fov = 46;
+        camera.updateProjectionMatrix();
+        camera.position.set(26, 24, 42);
+        orbit.target.set(0, 3, 8);
+        orbit.update();
+        applyRenderMode();
+      });
+      portalContainer.appendChild(aerialBtn);
+
+      const p0 = d.poems[0];
+      const eqUrl = `data/terrarium/foundry/equirec/poem_${p0}_shared_eq.jpg`;
+      const depthUrl = `data/terrarium/foundry/equirec/poem_${p0}_shared_depth.jpg`;
+      const splatUrl = (d.splat_seed && d.splat_seed.file) || `data/terrarium/atlas_packs/splats/district_${dKey}_sharp.splat`;
+      const centerPos = (ordered[0] && ordered[0].threejs_pose && ordered[0].threejs_pose.position_m) || [0, 0, 0];
+
+      await Promise.all([
+        buildSurroundWorldDome(eqUrl, depthUrl, centerPos),
+        buildNeuralDepthStageMeshes(ordered, heroRef),
+        loadDistrictSplat(splatUrl),
+        loadGlbSubtle(d.chisel_glb.file),
+      ]);
+
+      if (ordered[0]) {
+        stepInsideStage(ordered[0].threejs_pose);
       }
+      applyRenderMode();
     }
 
-    // ── DRAG-AND-DROP RECEIVER FOR MARBLE / ATLAS `.GLB`, `.SPLAT`, `.PLY` ───
-    async function handleDroppedFiles(fileList) {
-      for (const file of fileList) {
-        const name = file.name.toLowerCase();
-        const url = URL.createObjectURL(file);
-        if (name.endsWith('.glb') || name.endsWith('.gltf')) {
-          await loadGlbCollider(url);
-          document.getElementById('vp-title').textContent = `MOUNTED CUSTOM .GLB INFRASTRUCTURE: ${file.name}`;
-        } else if (name.endsWith('.splat') || name.endsWith('.ply') || name.endsWith('.spz')) {
-          const buf = await file.arrayBuffer();
-          clearGroup(splatGroup);
-          const parsed = parse32ByteSplatBuffer(buf, STATE.coordConv === 'opencv');
-          primarySplatMesh = createSplatPointsMesh(parsed, file.name);
-          splatGroup.add(primarySplatMesh);
-          document.getElementById('vp-stats').textContent = `${parsed.count.toLocaleString()} Imported Splats (${file.name})`;
-        }
-      }
-    }
-
-    // ── WIRE CONTROLS ────────────────────────────────────────────────────────
-    document.getElementById('tab-megahubs').addEventListener('click', () => {
-      STATE.tabMode = 'megahubs';
-      document.getElementById('tab-megahubs').classList.add('active');
-      document.getElementById('tab-districts').classList.remove('active');
-      document.getElementById('lbl-active-mode').textContent = '4 Mega-Hubs';
-      selectMegaHub(STATE.activeHubId);
-    });
-    document.getElementById('tab-districts').addEventListener('click', () => {
-      STATE.tabMode = 'districts';
-      document.getElementById('tab-districts').classList.add('active');
-      document.getElementById('tab-megahubs').classList.remove('active');
-      document.getElementById('lbl-active-mode').textContent = '10 Districts';
-      selectDistrict(STATE.activeDistrictKey);
+    // Wire mode buttons
+    ['world', 'splats', 'xray', 'before'].forEach(m => {
+      document.getElementById(`mode-${m}`).addEventListener('click', () => {
+        STATE.renderMode = m;
+        applyRenderMode();
+      });
     });
 
-    document.getElementById('btn-cam-inside').addEventListener('click', () => {
-      if (STATE.activeCamIdx < 0) STATE.activeCamIdx = 0;
-      if (STATE.currentSpawnCam) stepInsideCameraStage(STATE.currentSpawnCam, false);
-      applySplatEffectMode();
-    });
-    document.getElementById('btn-cam-aerial').addEventListener('click', () => {
-      STATE.activeCamIdx = -1;
-      gridHelper.visible = true;
-      camera.fov = 48;
-      camera.updateProjectionMatrix();
-      camera.position.set(36, 40, 66);
-      orbit.target.set(0, 4, 0);
-      orbit.update();
-      applySplatEffectMode();
-      document.getElementById('btn-cam-aerial').classList.add('active');
-      document.getElementById('btn-cam-inside').classList.remove('active');
+    // Toggle UI button + 'H' shortcut
+    const hudDock = document.getElementById('hud-dock');
+    document.getElementById('btn-hide-ui').addEventListener('click', () => {
+      hudDock.classList.toggle('hidden');
     });
 
-    document.getElementById('btn-eff-sharp').addEventListener('click', () => {
-      STATE.effectMode = 'sharp';
-      STATE.effectMorph = 1.0;
-      document.getElementById('sl-effect-morph').value = '1.0';
-      applySplatEffectMode();
-    });
-    document.getElementById('btn-eff-xray').addEventListener('click', () => {
-      STATE.effectMode = 'xray';
-      STATE.effectMorph = 1.0;
-      document.getElementById('sl-effect-morph').value = '1.0';
-      applySplatEffectMode();
-    });
-    document.getElementById('btn-eff-l0').addEventListener('click', () => {
-      STATE.effectMode = 'l0';
-      STATE.effectMorph = 1.0;
-      document.getElementById('sl-effect-morph').value = '1.0';
-      applySplatEffectMode();
-    });
-    document.getElementById('btn-eff-before').addEventListener('click', () => {
-      STATE.effectMode = 'before';
-      STATE.effectMorph = 0.0;
-      document.getElementById('sl-effect-morph').value = '0.0';
-      applySplatEffectMode();
-    });
-    document.getElementById('sl-effect-morph').addEventListener('input', (e) => {
-      STATE.effectMorph = parseFloat(e.target.value);
-      STATE.effectMode = (STATE.effectMorph < 0.25) ? 'before' : (STATE.effectMode === 'before' ? 'sharp' : STATE.effectMode);
-      applySplatEffectMode();
-    });
-
-    // WASD / Arrow-Key First-Person Walk Controller inside District Splats
-    const keysDown = new Set();
+    // WASD + Arrow keys first-person movement
+    const keys = new Set();
     window.addEventListener('keydown', (e) => {
-      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
-      keysDown.add(e.key.toLowerCase());
+      const k = e.key.toLowerCase();
+      if (k === 'h') {
+        hudDock.classList.toggle('hidden');
+        return;
+      }
+      keys.add(k);
     });
-    window.addEventListener('keyup', (e) => keysDown.delete(e.key.toLowerCase()));
+    window.addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
 
-    function updateWalkMovement() {
-      if (keysDown.size === 0) return;
+    function updateWalk() {
+      if (keys.size === 0) return;
       const fwd = new THREE.Vector3();
       camera.getWorldDirection(fwd);
       const right = new THREE.Vector3().crossVectors(fwd, camera.up).normalize();
-      const speed = 0.28;
+      const speed = 0.22;
       const delta = new THREE.Vector3();
-      if (keysDown.has('w') || keysDown.has('arrowup')) delta.addScaledVector(fwd, speed);
-      if (keysDown.has('s') || keysDown.has('arrowdown')) delta.addScaledVector(fwd, -speed);
-      if (keysDown.has('d') || keysDown.has('arrowright')) delta.addScaledVector(right, speed);
-      if (keysDown.has('a') || keysDown.has('arrowleft')) delta.addScaledVector(right, -speed);
-      if (keysDown.has('e')) delta.y += speed * 0.7;
-      if (keysDown.has('q')) delta.y -= speed * 0.7;
+      if (keys.has('w') || keys.has('arrowup')) delta.addScaledVector(fwd, speed);
+      if (keys.has('s') || keys.has('arrowdown')) delta.addScaledVector(fwd, -speed);
+      if (keys.has('d') || keys.has('arrowright')) delta.addScaledVector(right, speed);
+      if (keys.has('a') || keys.has('arrowleft')) delta.addScaledVector(right, -speed);
+      if (keys.has('e')) delta.y += speed * 0.7;
+      if (keys.has('q')) delta.y -= speed * 0.7;
       if (delta.lengthSq() > 0) {
         camera.position.add(delta);
         orbit.target.add(delta);
       }
     }
 
-    document.getElementById('btn-glb-wire').addEventListener('click', () => { STATE.glbMode = 'wire'; applyGlbRenderMode(); });
-    document.getElementById('btn-glb-occ').addEventListener('click', () => { STATE.glbMode = 'occ'; applyGlbRenderMode(); });
-    document.getElementById('btn-glb-off').addEventListener('click', () => { STATE.glbMode = 'off'; applyGlbRenderMode(); });
-
-    document.getElementById('btn-toggle-actors').addEventListener('click', (e) => {
-      STATE.showActors = !STATE.showActors;
-      actorsGroup.visible = STATE.showActors;
-      e.target.classList.toggle('active', STATE.showActors);
-      e.target.textContent = STATE.showActors ? '🎭 R1 Actors: ON' : '🎭 R1 Actors: OFF';
-    });
-
-    document.getElementById('btn-bake-plate').addEventListener('click', () => {
-      renderer.render(scene, camera);
-      const dataUrl = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = `baked_splat_backplate_${STATE.activeDistrictKey || STATE.activeHubId}.png`;
-      a.click();
-    });
-
-    document.getElementById('sl-splat-scale').addEventListener('input', (e) => {
-      STATE.splatScale = parseFloat(e.target.value) || 1.0;
-      document.getElementById('val-splat-scale').textContent = STATE.splatScale.toFixed(2) + '×';
-      if (primarySplatMesh && primarySplatMesh.material.uniforms) primarySplatMesh.material.uniforms.uScale.value = STATE.splatScale;
-      if (twinRuinSplatMesh && twinRuinSplatMesh.material.uniforms) twinRuinSplatMesh.material.uniforms.uScale.value = STATE.splatScale;
-    });
-
-    document.getElementById('sl-splat-opacity').addEventListener('input', (e) => {
-      STATE.splatOpacity = parseFloat(e.target.value) || 0.92;
-      document.getElementById('val-splat-opacity').textContent = Math.round(STATE.splatOpacity * 100) + '%';
-      if (primarySplatMesh && primarySplatMesh.material.uniforms) primarySplatMesh.material.uniforms.uOpacity.value = STATE.splatOpacity * (twinRuinSplatMesh ? STATE.twinMorph : 1.0);
-      if (twinRuinSplatMesh && twinRuinSplatMesh.material.uniforms) twinRuinSplatMesh.material.uniforms.uOpacity.value = STATE.splatOpacity * (1.0 - STATE.twinMorph);
-    });
-
-    document.getElementById('sl-twin-morph').addEventListener('input', (e) => {
-      STATE.twinMorph = parseFloat(e.target.value);
-      document.getElementById('val-twin-morph').textContent = `${Math.round(STATE.twinMorph * 100)}% Temple`;
-      if (primarySplatMesh && primarySplatMesh.material.uniforms) primarySplatMesh.material.uniforms.uOpacity.value = STATE.twinMorph * STATE.splatOpacity;
-      if (twinRuinSplatMesh && twinRuinSplatMesh.material.uniforms) twinRuinSplatMesh.material.uniforms.uOpacity.value = (1.0 - STATE.twinMorph) * STATE.splatOpacity;
-    });
-
-    document.getElementById('sel-coord-conv').addEventListener('change', (e) => {
-      STATE.coordConv = e.target.value;
-    });
-
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file-receiver');
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files.length) handleDroppedFiles(e.target.files);
-    });
-    ['dragenter', 'dragover'].forEach(ev => {
-      dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-      wrap.addEventListener(ev, (e) => { e.preventDefault(); });
-    });
-    ['dragleave', 'drop'].forEach(ev => {
-      dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
-    });
-    dropZone.addEventListener('drop', (e) => {
-      if (e.dataTransfer && e.dataTransfer.files) handleDroppedFiles(e.dataTransfer.files);
-    });
-    wrap.addEventListener('drop', (e) => {
-      e.preventDefault();
-      if (e.dataTransfer && e.dataTransfer.files) handleDroppedFiles(e.dataTransfer.files);
-    });
-
-    // ── INITIALIZE ───────────────────────────────────────────────────────────
     async function init() {
       const res = await fetch('data/terrarium/atlas_packs/atlas_infrastructure_manifest.json');
       STATE.manifest = await res.json();
+
+      const districtContainer = document.getElementById('district-pills');
+      const shortNames = {
+        'mount-vernon': 'Mount Vernon',
+        'woodberry': 'Woodberry',
+        'holland-island': 'Holland Island',
+        'assateague': 'Assateague',
+        'teotihuacan': 'Teotihuacán',
+        'centro': 'Centro Histórico',
+        'condesa': 'Condesa',
+        'tres-marias': 'Tres Marías',
+        'inner-harbor': 'Inner Harbor',
+        'fells-point': 'Fells Point',
+      };
+
+      Object.keys(STATE.manifest.districts).forEach(dKey => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pill-btn';
+        b.dataset.district = dKey;
+        b.textContent = shortNames[dKey] || dKey;
+        b.addEventListener('click', () => selectDistrict(dKey));
+        districtContainer.appendChild(b);
+      });
+
       const q = new URLSearchParams(location.search);
-      const qHub = q.get('hub');
       const qDistrict = q.get('district');
-      const qMode = q.get('effect');
-      if (qMode && ['sharp', 'xray', 'l0', 'before'].includes(qMode)) {
-        STATE.effectMode = qMode;
-        STATE.effectMorph = (qMode === 'before') ? 0.0 : 1.0;
-        document.getElementById('sl-effect-morph').value = String(STATE.effectMorph);
-      }
-      if (qHub && STATE.manifest.mega_hubs.some(h => h.hub_id === qHub) && !qDistrict) {
-        STATE.tabMode = 'megahubs';
-        document.getElementById('tab-megahubs').classList.add('active');
-        document.getElementById('tab-districts').classList.remove('active');
-        await selectMegaHub(qHub);
-      } else {
-        STATE.tabMode = 'districts';
-        document.getElementById('tab-districts').classList.add('active');
-        document.getElementById('tab-megahubs').classList.remove('active');
-        await selectDistrict((qDistrict && STATE.manifest.districts[qDistrict]) ? qDistrict : 'centro');
-      }
+      const initial = (qDistrict && STATE.manifest.districts[qDistrict]) ? qDistrict : 'fells-point';
+      await selectDistrict(initial);
     }
     init();
 
     function animate() {
       requestAnimationFrame(animate);
-      updateWalkMovement();
+      updateWalk();
       orbit.update();
       renderer.render(scene, camera);
     }
