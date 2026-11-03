@@ -23078,6 +23078,7 @@ try{
   <a href="wag_stack.html" title="Back to WAG-STACK Suite">◀ WAG-STACK</a>
   <a href="world_foundry.html" title="World & Foundry Atlas">🌍 WORLD & FOUNDRY ATLAS</a>
   <a href="atlas_splat_studio.html" title="World Labs Atlas / Marble .GLB & 3D Splat Studio" style="border-color:#19e6c8;color:#19e6c8">🌐 ATLAS SPLAT STUDIO</a>
+  <a href="agent_office_kanban.html" title="In-World 3D Agent-Office & Git Worktree City" style="border-color:#ffd23f;color:#ffd23f">⛩️ IN-WORLD AGENT WORKTREES</a>
   <span class="wyg-sep"></span>
   <label style="font-size:10px;color:#a99f86">STAGE / CITY:</label>
   <select id="wyg-sel-stage" title="Select Scouted Real-City Landpack"></select>
@@ -23773,7 +23774,193 @@ try{
     // G. ENSURE THE DOG IS IN THE SCENE & ANNOUNCE THE MOUNTED POEM
     ensureDog();
     placeDogAtMode();
-    updateDogBubble(`🐕 POEM ${pNum}: ${pm.title.toUpperCase()}`, `${setPieces.length} Multiplane Stages + ${pm.clips.length} Clips Live!`);
+    mountInWorldAgentWorktrees(grp, setPieces);
+    updateDogBubble(`🐕 POEM ${pNum}: ${pm.title.toUpperCase()}`, `${setPieces.length} Multiplane Stages + In-World Git Worktrees Live!`);
+  }
+
+  // ── 2B. IN-WORLD 3D AGENT-OFFICE & GIT WORKTREE MONUMENTS ALONG THE STREET ──
+  function mountInWorldAgentWorktrees(grp, setPieces) {
+    if (typeof THREE === 'undefined' || !grp) return;
+    const loader = new THREE.TextureLoader();
+    STATE.agentCastMeshes = [];
+
+    const STATIONS = [
+      {
+        stopIdx: 0,
+        id: 'WT-101',
+        station: 'STOP A · PLANNING PLAZA',
+        agent: 'ANCESTOR MAESTRO',
+        role: 'Claude Opus 4.6 · Spawns Worktrees & Stages Multiplane Plates',
+        branch: 'feat/wt-101-onion-peel',
+        worktree: '.worktrees/wt-101-onion-peel',
+        spriteUrl: 'kits/packs/poem_08/cut/08.cast.angel.main-poses/card_01.png',
+        beforeImg: 'play/levels/01/s1_ext.webp',
+        afterImg: 'kits/packs/poem_01/cut/01.hero.severn/card_01.png',
+        color: 0xffd23f,
+        hex: '#ffd23f',
+        action: 'spawn'
+      },
+      {
+        stopIdx: 1,
+        id: 'WT-103',
+        station: 'STOP B · DOING DJ-DECK DESK',
+        agent: 'THE POET (3D SPLAT ENGINEER)',
+        role: 'Claude Sonnet 4.5 · Chisel .GLB Z-Buffer Phantom + Splat',
+        branch: 'feat/wt-103-glb-z-phantom [MOUNTED]',
+        worktree: '.worktrees/wt-103-glb-z-phantom',
+        spriteUrl: 'arena/bodies/ACT-001_p0.png',
+        beforeImg: 'kits/packs/poem_07/cut/07.props.dj-decks/card_01.png',
+        afterImg: 'play/levels/07/s2_ext.webp',
+        color: 0x19e6c8,
+        hex: '#19e6c8',
+        action: 'exec'
+      },
+      {
+        stopIdx: 2,
+        id: 'WT-104',
+        station: 'STOP C · CROSS-MODEL AUDIT GATE',
+        agent: 'THE EX (CODEX o3-pro AUDITOR)',
+        role: 'Audits Claude Diffs · 27,818 Splats + .GLB Verified',
+        branch: 'feat/wt-104-twin-state-harbor-morph [MOUNTED]',
+        worktree: '.worktrees/wt-104-twin-state-harbor-morph',
+        spriteUrl: 'kits/packs/poem_09/cut/poet.09.main-poses/card_03.png',
+        beforeImg: 'play/levels/03/s1_ext.webp',
+        afterImg: 'play/levels/11/s1_ext.webp',
+        color: 0xff3d6e,
+        hex: '#ff3d6e',
+        action: 'audit'
+      },
+      {
+        stopIdx: 3,
+        id: 'WT-103-55M',
+        station: 'STOP D · 55-MIN PROMPT-CACHE PHONEBOOTH',
+        agent: 'THE MUSE (MEMORY COMPACTOR)',
+        role: 'Writes HANDOFF_55M.md to Ground Before 60m TTL Expiry',
+        branch: '.worktrees/wt-103-glb-z-phantom/HANDOFF_55M.md',
+        worktree: '.worktrees/wt-103-glb-z-phantom',
+        spriteUrl: 'kits/packs/poem_01/cut/party.vintage_party.main-poses/card_05.png',
+        beforeImg: 'kits/packs/poem_09/cut/09.props.phonebooth/card_01.png',
+        afterImg: 'kits/packs/poem_06/cut/06.props.coin-booth/card_01.png',
+        color: 0xa855f7,
+        hex: '#a855f7',
+        action: 'compact'
+      },
+      {
+        stopIdx: 4,
+        id: 'WT-105',
+        station: 'STOP E · ATLANTIS FORUM FIFO MERGE ARCH',
+        agent: 'SINGLE-FILE MERGE GATE (#1 IN QUEUE)',
+        role: '0 Overlapping Files · git merge --no-ff into main',
+        branch: 'feat/wt-105-cache-compactor-vault [MOUNTED]',
+        worktree: '.worktrees/wt-105-cache-compactor-vault',
+        spriteUrl: 'kits/packs/poem_01/cut/party.vintage_party.main-poses/card_02.png',
+        beforeImg: 'kits/packs/poem_06/cut/06.hero.forum/card_01.png',
+        afterImg: 'play/levels/12/s4_ext.webp',
+        color: 0x8fd694,
+        hex: '#8fd694',
+        action: 'merge'
+      }
+    ];
+
+    STATIONS.forEach((st, idx) => {
+      const sp = setPieces[Math.min(setPieces.length - 1, st.stopIdx)] || { x: -30 + idx * 14, z: 0 };
+      const x = (Number.isFinite(sp.x) ? sp.x : (-30 + idx * 14)) + 5.2;
+      const z = (Number.isFinite(sp.z) ? sp.z : 0) + 4.4;
+      const gy = groundY(x, z);
+
+      const node = new THREE.Group();
+      node.position.set(x, gy, z);
+      node.userData = { isAgentWorktreeStation: true, station: st };
+
+      // 1. Glowing 3D Worktree Pedestal Ring on the Street Ground
+      const ringGeo = new THREE.RingGeometry(1.9, 2.45, 32);
+      ringGeo.rotateX(-Math.PI / 2);
+      const ringMesh = new THREE.Mesh(
+        ringGeo,
+        new THREE.MeshBasicMaterial({ color: st.color, side: THREE.DoubleSide, transparent: true, opacity: 0.88 })
+      );
+      ringMesh.position.y = 0.14;
+      node.add(ringMesh);
+
+      // 2. Articulated 2.5D Agent Character Cutout Standing in the Street
+      const charTex = loader.load(st.spriteUrl);
+      charTex.colorSpace = THREE.SRGBColorSpace;
+      const charMat = new THREE.MeshBasicMaterial({
+        map: charTex,
+        transparent: true,
+        alphaTest: 0.06,
+        side: THREE.DoubleSide
+      });
+      const charMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 3.8), charMat);
+      charMesh.position.set(0, 2.1, 0);
+      charMesh.userData = { isAgentActor: true, station: st, basePos: new THREE.Vector3(x, gy, z), phase: idx * 1.3 };
+      node.add(charMesh);
+
+      // 3. Diegetic 3D Floating Before / After Hologram Screens in the World
+      if (st.beforeImg && st.afterImg) {
+        const bTex = loader.load(st.beforeImg);
+        bTex.colorSpace = THREE.SRGBColorSpace;
+        const aTex = loader.load(st.afterImg);
+        aTex.colorSpace = THREE.SRGBColorSpace;
+
+        const bPlane = new THREE.Mesh(
+          new THREE.PlaneGeometry(3.4, 2.0),
+          new THREE.MeshBasicMaterial({ map: bTex, side: THREE.DoubleSide })
+        );
+        bPlane.position.set(-2.3, 3.6, -1.2);
+        bPlane.rotation.y = 0.25;
+        node.add(bPlane);
+
+        const aPlane = new THREE.Mesh(
+          new THREE.PlaneGeometry(3.4, 2.0),
+          new THREE.MeshBasicMaterial({ map: aTex, side: THREE.DoubleSide })
+        );
+        aPlane.position.set(2.3, 3.6, -1.2);
+        aPlane.rotation.y = -0.25;
+        node.add(aPlane);
+      }
+
+      // 4. Special 3D Architecture for Shrine (Stop D) & Golden FIFO Merge Archway (Stop E)
+      if (st.action === 'compact') {
+        const crystal = new THREE.Mesh(
+          new THREE.OctahedronGeometry(1.25, 0),
+          new THREE.MeshBasicMaterial({ color: 0xa855f7, wireframe: true })
+        );
+        crystal.position.set(0, 4.9, 0);
+        crystal.name = 'CACHE_SHRINE_CRYSTAL';
+        node.add(crystal);
+      } else if (st.action === 'merge') {
+        const archMat = new THREE.MeshBasicMaterial({ color: 0xffd23f });
+        const leftPillar = new THREE.Mesh(new THREE.BoxGeometry(0.45, 6.2, 0.45), archMat);
+        leftPillar.position.set(-3.2, 3.1, 0);
+        const rightPillar = new THREE.Mesh(new THREE.BoxGeometry(0.45, 6.2, 0.45), archMat);
+        rightPillar.position.set(3.2, 3.1, 0);
+        const topBeam = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.55, 0.65), archMat);
+        topBeam.position.set(0, 6.2, 0);
+        node.add(leftPillar, rightPillar, topBeam);
+      }
+
+      // 5. Overhead Diegetic 3D Worktree & Agent Soul Banner
+      const tag = makeTextSprite(
+        [
+          `${st.station} · ${st.agent}`,
+          `🌿 ${st.branch} · ${st.role}`
+        ],
+        {
+          bg: 'rgba(8, 12, 18, 0.92)',
+          border: st.hex,
+          accent: st.hex,
+          fg: '#f3ead2',
+          scaleX: 10.2,
+          scaleY: 2.5
+        }
+      );
+      tag.position.set(0, 6.8, 0);
+      node.add(tag);
+
+      grp.add(node);
+      STATE.agentCastMeshes.push({ node, charMesh, ringMesh, st });
+    });
   }
 
   // Replace the generic "keeper of the storm gate" in FILM STUDIO with the real WYGWYL poem blueprint!
@@ -24648,6 +24835,23 @@ try{
         const { tail, head } = STATE.dogGroup.userData;
         if (tail) tail.rotation.z = Math.sin(t * 7.5) * 0.38;
         if (head) head.rotation.z = Math.sin(t * 2.2) * 0.06;
+      }
+      if (Array.isArray(STATE.agentCastMeshes)) {
+        STATE.agentCastMeshes.forEach((item, idx) => {
+          if (item.charMesh) {
+            item.charMesh.position.y = 2.1 + Math.abs(Math.sin(t * 3.2 + idx * 1.4)) * 0.22;
+            item.charMesh.rotation.z = Math.sin(t * 2.4 + idx) * 0.04;
+          }
+          if (item.ringMesh) {
+            const s = 1.0 + Math.sin(t * 3.0 + idx) * 0.08;
+            item.ringMesh.scale.set(s, s, 1);
+          }
+          const crystal = item.node && item.node.getObjectByName('CACHE_SHRINE_CRYSTAL');
+          if (crystal) {
+            crystal.rotation.y = t * 1.4;
+            crystal.rotation.x = Math.sin(t * 0.9) * 0.35;
+          }
+        });
       }
       if (STATE.viewMode === 'scroller' && STATE.scrollerAuto) {
         const nextT = (STATE.scrollerT + 0.0007) % 1.0;

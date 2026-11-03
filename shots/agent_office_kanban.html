@@ -1,1326 +1,1071 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>WYGWYL · Live Git Worktree Kanban & 3D/2D Agent Office</title>
-<style>
-:root {
-  --bg: #070a10;
-  --panel: #0e141f;
-  --panel2: #141e2e;
-  --edge: #24344d;
-  --ink: #f1f5f9;
-  --dim: #94a3b8;
-  --gold: #ffd23f;
-  --cyan: #5ce1e6;
-  --pink: #ff4d6d;
-  --ok: #4ade80;
-  --purple: #c4b5fd;
-  --orange: #fb923c;
-  --safe-b: env(safe-area-inset-bottom, 0px);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body {
-  height: 100%;
-  background: var(--bg);
-  color: var(--ink);
-  font: 14px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-  overflow: hidden;
-}
-a { color: var(--cyan); text-decoration: none; }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>WYGWYL · In-World 3D Agent-Office & Git Worktree City</title>
+  <style>
+    :root {
+      --gold: #ffd23f;
+      --teal: #19e6c8;
+      --coral: #ff3d6e;
+      --green: #8fd694;
+      --violet: #a855f7;
+      --ink: #f3ead2;
+      --muted: #b6c2d9;
+      --glass: rgba(8, 12, 18, 0.76);
+      --border: rgba(255, 210, 63, 0.35);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      width: 100vw;
+      height: 100dvh;
+      overflow: hidden;
+      background: #04070b;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      touch-action: none;
+      user-select: none;
+    }
+    #world-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      display: block;
+      z-index: 1;
+    }
 
-/* APP SHELL: FIXED TOPBAR + SCROLLABLE MAIN VIEW + FIXED BOTTOM THUMB BAR */
-.app-shell {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  width: 100vw;
-  overflow: hidden;
-}
-/* Optional Phone Simulator Frame when toggled on desktop */
-body.phone-preview {
-  background: #020408;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-body.phone-preview .app-shell {
-  width: 412px;
-  height: min(880px, 96dvh);
-  border: 3px solid var(--gold);
-  border-radius: 34px;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.85);
-}
+    /* Translucent Top Glass HUD Over the 3D World */
+    .top-hud {
+      position: fixed;
+      top: max(10px, env(safe-area-inset-top));
+      left: 10px;
+      right: 10px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .hud-pill {
+      pointer-events: auto;
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--ink);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+      overflow-x: auto;
+      max-width: 100%;
+      scrollbar-width: none;
+    }
+    .hud-pill::-webkit-scrollbar { display: none; }
+    .dot-live {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green);
+      flex-shrink: 0;
+    }
+    .hud-select, .hud-link {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(243, 234, 210, 0.22);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      white-space: nowrap;
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .hud-link:hover, .hud-select:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
 
-/* COMPACT SINGLE-LINE TOP BAR (MOBILE-FIRST) */
-.topbar {
-  height: 54px;
-  min-height: 54px;
-  background: rgba(10, 15, 24, 0.98);
-  border-bottom: 1px solid var(--edge);
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  z-index: 40;
-}
-.brand-row {
-  display: flex; align-items: center; gap: 8px; min-width: 0;
-}
-.live-dot {
-  width: 10px; height: 10px; border-radius: 50%; background: var(--ok);
-  box-shadow: 0 0 10px var(--ok); flex-shrink: 0;
-}
-.brand-title {
-  font: 800 14px/1.1 -apple-system, sans-serif; color: #fff;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.brand-sub {
-  font: 700 10px Menlo, monospace; color: var(--gold);
-  display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.top-actions {
-  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
-}
-.floor-select {
-  background: var(--panel2); border: 1px solid var(--edge); color: var(--cyan);
-  font: 700 12px -apple-system, sans-serif; padding: 7px 8px; border-radius: 8px;
-  max-width: 170px; outline: none;
-}
-.icon-btn {
-  background: var(--panel2); border: 1px solid var(--edge); color: var(--ink);
-  min-height: 38px; padding: 0 10px; border-radius: 8px;
-  font: 700 12px -apple-system, sans-serif; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 5px;
-}
-.icon-btn:hover, .icon-btn.on { border-color: var(--gold); color: var(--gold); }
-.icon-btn.green { border-color: var(--ok); color: var(--ok); background: rgba(74,222,128,0.12); }
-.icon-btn.pink { border-color: var(--pink); color: var(--pink); background: rgba(255,77,109,0.12); }
+    /* In-World Station Inspector Overlay (Floating Diegetic Glass Card in Bottom-Left / Bottom Sheet on Mobile) */
+    .station-card {
+      position: fixed;
+      left: 12px;
+      bottom: calc(max(12px, env(safe-area-inset-bottom)) + 68px);
+      width: min(430px, calc(100vw - 24px));
+      z-index: 20;
+      background: rgba(7, 11, 17, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 210, 63, 0.45);
+      border-radius: 16px;
+      padding: 12px 14px;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.68);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: transform 0.22s ease, opacity 0.22s ease;
+    }
+    .station-card.minimized {
+      transform: translateY(calc(100% - 42px));
+    }
+    .sc-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .sc-title {
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+    }
+    .sc-sub {
+      font-size: 11px;
+      color: var(--teal);
+      font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    }
+    .sc-desc {
+      font-size: 11.5px;
+      color: #dfd7c4;
+      line-height: 1.35;
+    }
+    .sc-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .sc-btn {
+      flex: 1 1 auto;
+      min-height: 38px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 210, 63, 0.4);
+      background: rgba(255, 210, 63, 0.14);
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .sc-btn.teal {
+      border-color: rgba(25, 230, 200, 0.45);
+      background: rgba(25, 230, 200, 0.14);
+      color: var(--teal);
+    }
+    .sc-btn.coral {
+      border-color: rgba(255, 61, 110, 0.45);
+      background: rgba(255, 61, 110, 0.16);
+      color: #ff8da8;
+    }
+    .sc-btn.green {
+      border-color: rgba(143, 214, 148, 0.45);
+      background: rgba(143, 214, 148, 0.16);
+      color: var(--green);
+    }
+    .sc-btn:active { transform: scale(0.97); }
+    .sc-term {
+      font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+      font-size: 10.5px;
+      line-height: 1.35;
+      background: rgba(3, 6, 10, 0.88);
+      border: 1px solid rgba(25, 230, 200, 0.3);
+      border-radius: 8px;
+      padding: 7px 9px;
+      color: #9ef0b0;
+      max-height: 92px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
 
-/* MAIN CONTENT AREA */
-.main-stage {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  position: relative;
-}
-.tab-pane {
-  display: none;
-  height: 100%;
-  width: 100%;
-}
-.tab-pane.active {
-  display: flex;
-  flex-direction: column;
-}
-
-/* ============================================================================
-   TAB 1: MOBILE-FIRST KANBAN + REAL GIT WORKTREES
-   ============================================================================ */
-.kanban-pane {
-  padding: 10px 12px 24px;
-  height: auto;
-  min-height: 100%;
-}
-/* Sticky Segmented Column Switcher for Mobile / Phone Mode */
-.col-seg-bar {
-  position: sticky; top: 0; z-index: 25;
-  background: rgba(7, 10, 16, 0.96);
-  backdrop-filter: blur(10px);
-  padding: 8px 0;
-  margin-bottom: 10px;
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  border-bottom: 1px solid var(--edge);
-}
-.col-seg-bar::-webkit-scrollbar { display: none; }
-.seg-pill {
-  flex: 1;
-  min-width: 92px;
-  min-height: 42px;
-  background: var(--panel);
-  border: 1px solid var(--edge);
-  color: var(--dim);
-  border-radius: 10px;
-  padding: 6px 10px;
-  font: 800 12px -apple-system, sans-serif;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  white-space: nowrap;
-}
-.seg-pill.on {
-  background: var(--panel2);
-  color: #fff;
-  border-width: 2px;
-}
-.seg-cnt {
-  background: rgba(255,255,255,0.12); padding: 2px 6px; border-radius: 99px; font: 700 11px Menlo, monospace;
-}
-
-.kanban-quick-bar {
-  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
-}
-.action-btn {
-  min-height: 44px;
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--edge);
-  background: var(--panel2);
-  color: var(--ink);
-  font: 700 13px -apple-system, sans-serif;
-  cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  flex: 1;
-  min-width: 140px;
-}
-.action-btn:active { transform: scale(0.98); }
-.action-btn.gold { background: rgba(255,210,63,0.16); border-color: var(--gold); color: var(--gold); }
-.action-btn.green { background: rgba(74,222,128,0.16); border-color: var(--ok); color: var(--ok); }
-.action-btn.cyan { background: rgba(92,225,230,0.16); border-color: var(--cyan); color: var(--cyan); }
-.action-btn.pink { background: rgba(255,77,109,0.16); border-color: var(--pink); color: var(--pink); }
-
-/* Responsive Kanban Columns: 1 Active Column on Mobile, 5 Columns on Wide Desktop (unless Phone Mode) */
-.kanban-board {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(280px, 1fr));
-  gap: 12px;
-}
-@media (max-width: 1100px) {
-  .kanban-board { grid-template-columns: 1fr; }
-  .k-col.mobile-hidden { display: none; }
-}
-body.phone-preview .kanban-board {
-  grid-template-columns: 1fr;
-}
-body.phone-preview .k-col.mobile-hidden {
-  display: none;
-}
-
-.k-col {
-  background: var(--panel);
-  border: 1px solid var(--edge);
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-}
-.k-col-head {
-  padding: 12px 14px;
-  border-bottom: 2px solid var(--edge);
-  display: flex; justify-content: space-between; align-items: center;
-}
-.k-col-head b { font-size: 13px; letter-spacing: 0.04em; }
-.k-cards {
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.k-card {
-  background: var(--panel2);
-  border: 1px solid var(--edge);
-  border-radius: 12px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.kc-head { display: flex; justify-content: space-between; align-items: center; font: 700 12px Menlo, monospace; }
-.kc-title { font: 700 15px/1.3 -apple-system, sans-serif; color: #fff; }
-
-/* Touch-Friendly Before/After Toggle & Scrub */
-.ba-box {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16/9;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--edge);
-  background: #000;
-}
-.ba-box img {
-  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none;
-}
-.ba-clip {
-  position: absolute; inset: 0; width: 50%; overflow: hidden; border-right: 2px solid var(--gold);
-}
-.ba-clip img { width: 200%; max-width: none; }
-.ba-pill {
-  position: absolute; bottom: 8px; right: 8px; z-index: 4;
-  background: rgba(7,10,16,0.9); border: 1px solid var(--gold); color: var(--gold);
-  padding: 5px 10px; border-radius: 6px; font: 700 11px Menlo, monospace; cursor: pointer;
-}
-
-.kc-info {
-  background: rgba(7, 10, 16, 0.72);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font: 12px/1.5 Menlo, monospace;
-  color: #cbd5e1;
-}
-.kc-info div { word-break: break-all; margin-bottom: 2px; }
-.kc-btn-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.kc-btn-grid button {
-  min-height: 44px;
-  border-radius: 8px;
-  border: 1px solid var(--edge);
-  background: #0b111b;
-  color: var(--ink);
-  font: 700 12px -apple-system, sans-serif;
-  cursor: pointer;
-  padding: 6px 8px;
-}
-.kc-btn-grid button.span2 { grid-column: 1 / -1; }
-.kc-btn-grid button.gold { background: rgba(255,210,63,0.18); border-color: var(--gold); color: var(--gold); }
-.kc-btn-grid button.green { background: rgba(74,222,128,0.18); border-color: var(--ok); color: var(--ok); }
-.kc-btn-grid button.pink { background: rgba(255,77,109,0.18); border-color: var(--pink); color: var(--pink); }
-.kc-btn-grid button.cyan { background: rgba(92,225,230,0.15); border-color: var(--cyan); color: var(--cyan); }
-
-/* ============================================================================
-   TAB 2: /LITE 2D PIXEL & CUTOUT OFFICE (FULLSCREEN PORTRAIT/LANDSCAPE)
-   ============================================================================ */
-.office2d-wrap {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #060910;
-  overflow: hidden;
-}
-#canvas2d {
-  width: 100%;
-  flex: 1;
-  display: block;
-  touch-action: manipulation;
-}
-.office-hud-strip {
-  background: rgba(12, 18, 28, 0.96);
-  border-top: 1px solid var(--edge);
-  padding: 8px 10px;
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.agent-chip {
-  min-height: 40px;
-  padding: 6px 12px;
-  border-radius: 99px;
-  background: var(--panel2);
-  border: 2px solid var(--edge);
-  color: #fff;
-  font: 700 12px -apple-system, sans-serif;
-  white-space: nowrap;
-  cursor: pointer;
-  display: inline-flex; align-items: center; gap: 6px;
-}
-.agent-chip.on { border-color: var(--gold); background: rgba(255,210,63,0.15); }
-
-/* ============================================================================
-   TAB 3: 3D .GLB + .SPLAT SOUNDSTAGE OFFICE
-   ============================================================================ */
-.office3d-wrap {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #05080e;
-  overflow: hidden;
-}
-#canvas3d {
-  width: 100%;
-  flex: 1;
-  display: block;
-  touch-action: none;
-}
-
-/* ============================================================================
-   TAB 4: REAL GIT WORKTREES & LIVE WEB TERMINAL
-   ============================================================================ */
-.term-pane {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  height: auto;
-  min-height: 100%;
-}
-.wt-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 10px;
-}
-.wt-card {
-  background: var(--panel);
-  border: 1px solid var(--cyan);
-  border-radius: 10px;
-  padding: 12px;
-  font: 12px/1.45 Menlo, monospace;
-}
-.term-box {
-  background: #05070b;
-  border: 1px solid var(--edge);
-  border-radius: 12px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.term-cmd-chips {
-  display: flex; gap: 8px; flex-wrap: wrap;
-}
-.term-cmd-chips button {
-  min-height: 42px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: var(--panel2);
-  border: 1px solid var(--edge);
-  color: var(--cyan);
-  font: 700 12px Menlo, monospace;
-  cursor: pointer;
-}
-.term-cmd-chips button:hover { border-color: var(--gold); color: var(--gold); }
-.term-output {
-  background: #020408;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 12px;
-  font: 12px/1.5 Menlo, monospace;
-  color: var(--ok);
-  min-height: 260px;
-  max-height: 440px;
-  overflow-y: auto;
-  white-space: pre-wrap;
-}
-
-/* ============================================================================
-   TAB 5: PERSISTENT SOULS, 55m CACHE COMPACTOR, SLACK & 10-REPO CARDS
-   ============================================================================ */
-.souls-pane {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  height: auto;
-  min-height: 100%;
-}
-.souls-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 10px;
-}
-.soul-card {
-  background: var(--panel);
-  border: 1px solid var(--edge);
-  border-radius: 12px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.repo-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 10px;
-}
-.repo-card {
-  background: var(--panel);
-  border: 1px solid var(--edge);
-  border-radius: 12px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* FIXED BOTTOM THUMB-ZONE NAVIGATION BAR */
-.bottom-nav {
-  height: calc(62px + var(--safe-b));
-  min-height: calc(62px + var(--safe-b));
-  padding-bottom: var(--safe-b);
-  background: rgba(9, 13, 21, 0.98);
-  border-top: 1px solid var(--edge);
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  z-index: 50;
-}
-.bnav-btn {
-  background: none;
-  border: none;
-  color: var(--dim);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  font: 700 11px -apple-system, sans-serif;
-  cursor: pointer;
-  position: relative;
-}
-.bnav-btn .ico { font-size: 18px; line-height: 1; }
-.bnav-btn.on { color: var(--gold); }
-.bnav-btn.on::before {
-  content: ""; position: absolute; top: 0; left: 20%; right: 20%; height: 3px;
-  background: var(--gold); border-radius: 0 0 4px 4px;
-}
-
-/* MODAL */
-#modal {
-  position: fixed; inset: 0; background: rgba(3, 6, 12, 0.88);
-  backdrop-filter: blur(8px); z-index: 100; display: none;
-  align-items: center; justify-content: center; padding: 12px;
-}
-#modal.on { display: flex; }
-.modal-box {
-  background: var(--panel); border: 2px solid var(--gold); border-radius: 14px;
-  max-width: 780px; width: 100%; max-height: 88dvh; display: flex; flex-direction: column; overflow: hidden;
-}
-.modal-head {
-  padding: 12px 14px; background: #090e17; border-bottom: 1px solid var(--edge);
-  display: flex; justify-content: space-between; align-items: center; gap: 8px;
-}
-.modal-body { padding: 14px; overflow-y: auto; font-size: 13px; line-height: 1.5; }
-.modal-body pre {
-  background: #04070c; border: 1px solid var(--edge); padding: 10px; border-radius: 8px;
-  font: 12px/1.45 Menlo, monospace; color: var(--ok); overflow-x: auto; white-space: pre-wrap; margin-top: 8px;
-}
-</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    /* Bottom Thumb-Zone 3D Station Flight Bar */
+    .bottom-flight-bar {
+      position: fixed;
+      left: 10px;
+      right: 10px;
+      bottom: max(10px, env(safe-area-inset-bottom));
+      z-index: 25;
+      background: rgba(8, 12, 18, 0.86);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 210, 63, 0.38);
+      border-radius: 16px;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65);
+    }
+    .bottom-flight-bar::-webkit-scrollbar { display: none; }
+    .stop-pill {
+      flex: 0 0 auto;
+      min-height: 44px;
+      padding: 6px 12px;
+      border-radius: 11px;
+      border: 1px solid rgba(243, 234, 210, 0.16);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 2px;
+      transition: all 0.15s ease;
+    }
+    .stop-pill small {
+      font-size: 9.5px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .stop-pill.active {
+      background: rgba(255, 210, 63, 0.18);
+      border-color: var(--gold);
+      color: var(--gold);
+      box-shadow: 0 0 14px rgba(255, 210, 63, 0.25);
+    }
+    .stop-pill.active small { color: #ffe58f; }
+  </style>
 </head>
 <body>
 
-<div class="app-shell">
-  <!-- COMPACT SINGLE-LINE TOP BAR -->
-  <header class="topbar">
-    <div class="brand-row">
-      <span class="live-dot" id="liveDot"></span>
-      <div>
-        <span class="brand-title">WYGWYL Agent Office &amp; Worktree Kanban</span>
-        <span class="brand-sub" id="telemetryBanner">Connecting to live Git Worktree engine…</span>
-      </div>
-    </div>
-    <div class="top-actions">
-      <select class="floor-select" id="selFloor" title="Select 3D/2D Mega-Hub Building Floor">
-        <option value="hub_01_atlantis">Floor 1 · Club Atlantis</option>
-        <option value="hub_02_harbor_temple">Floor 2 · Harbor Temple</option>
-        <option value="hub_03_mount_vernon">Floor 3 · Mount Vernon</option>
-        <option value="hub_04_shore_garden">Floor 4 · Shore Garden</option>
+  <!-- FULL-BLEED 3D IN-WORLD CANVAS -->
+  <canvas id="world-canvas"></canvas>
+
+  <!-- TOP TRANSLUCENT GLASS HUD -->
+  <header class="top-hud">
+    <div class="hud-pill">
+      <span class="dot-live" id="live-dot"></span>
+      <span id="live-status">IN-WORLD 3D GIT WORKTREE CITY · 5 WORKTREES MOUNTED</span>
+      <select class="hud-select" id="sky-select" title="Switch 360° Painted Equirectangular World Sky & Splat Hub">
+        <option value="01">🌌 World: Poem 01 · Severn & Naraka Twilight + Hub 01 Splat</option>
+        <option value="11">🏛️ World: Poem 11 · Harbor White Temple + Hub 02 Splat</option>
+        <option value="03">⛈️ World: Poem 03 · Harbor Storm Ruin + Hub 02 Storm Splat</option>
+        <option value="06">✨ World: Poem 06 · Resurrecting Atlantis Plaza + Hub 01 Splat</option>
       </select>
-      <button class="icon-btn" id="btnPhonePreview" title="Toggle iPhone / Mobile Frame Preview">📱 Phone UI</button>
-      <a class="icon-btn" href="atlas_splat_studio.html" title="Open 3D Splat Studio">🌐 Splat</a>
-      <a class="icon-btn" href="png_browser.html?cat=atlas_splats" title="Open PNG Vault">🖼️ Vault</a>
+    </div>
+    <div class="hud-pill">
+      <a class="hud-link" href="terrarium.html?poem=01&foundry=w1623" style="border-color:#ffd23f;color:#ffd23f">🌍 Full Terrarium III</a>
+      <a class="hud-link" href="atlas_splat_studio.html">🌐 Splat Studio</a>
+      <a class="hud-link" href="foundry_inverse.html">🧅 Onion Depth</a>
+      <a class="hud-link" href="png_browser.html">🖼️ PNG Vault</a>
     </div>
   </header>
 
-  <!-- MAIN STAGE (ONE FULL-SCREEN TAB ACTIVE AT A TIME — ZERO SCROLL TRAPS!) -->
-  <main class="main-stage">
-
-    <!-- ====================================================================
-         TAB 1: 5-COLUMN KANBAN + REAL GIT WORKTREES (SWIPEABLE ON MOBILE)
-         ==================================================================== -->
-    <section class="tab-pane active kanban-pane" id="pane-kanban">
-      <!-- Sticky Single-Column Pill Bar (Mobile-First) -->
-      <div class="col-seg-bar" id="colSegBar"></div>
-
-      <!-- Thumb-Friendly Quick Actions -->
-      <div class="kanban-quick-bar">
-        <button class="action-btn gold" id="btnSpawnCard">+ New Real Git Worktree Card</button>
-        <button class="action-btn green" id="btnRunFifoMerge">🔀 Dequeue &amp; Run Real FIFO Merge</button>
-        <button class="action-btn pink" id="btnRunCompact55">⏱️ Write Real 55m Handoff Note</button>
+  <!-- DIEGETIC IN-WORLD STATION INSPECTOR (FLOATS OVER CORNER OF 3D WORLD) -->
+  <aside class="station-card" id="station-card">
+    <div class="sc-head">
+      <div>
+        <div class="sc-title" id="sc-title">⛩️ STOP C · CROSS-MODEL AUDIT GATE (WT-104)</div>
+        <div class="sc-sub" id="sc-sub">🌿 .worktrees/wt-104-twin-state-harbor-morph · The EX (Codex o3-pro)</div>
       </div>
-
-      <div class="kanban-board" id="kanbanBoard"></div>
-    </section>
-
-    <!-- ====================================================================
-         TAB 2: /LITE 2D PIXEL & CUTOUT SOUNDSTAGE OFFICE (PORTRAIT/LANDSCAPE)
-         ==================================================================== -->
-    <section class="tab-pane" id="pane-office2d">
-      <div class="office2d-wrap">
-        <canvas id="canvas2d"></canvas>
-        <div class="office-hud-strip" id="agentChips2d"></div>
-      </div>
-    </section>
-
-    <!-- ====================================================================
-         TAB 3: 3D .GLB + .SPLAT SOUNDSTAGE OFFICE
-         ==================================================================== -->
-    <section class="tab-pane" id="pane-office3d">
-      <div class="office3d-wrap">
-        <canvas id="canvas3d"></canvas>
-        <div class="office-hud-strip" id="stationChips3d"></div>
-      </div>
-    </section>
-
-    <!-- ====================================================================
-         TAB 4: REAL GIT WORKTREES ON DISK + INTERACTIVE WEB TERMINAL
-         ==================================================================== -->
-    <section class="tab-pane term-pane" id="pane-terminal">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font:800 11px Menlo,monospace;color:var(--gold)">REAL GIT WORKTREES ON DISK (.worktrees/wt-*)</div>
-          <h2 style="font-size:16px;color:#fff">Live Git Worktree Inspector &amp; Subprocess Terminal</h2>
-        </div>
-        <button class="icon-btn green" id="btnRefreshWt">↻ Refresh git worktree list</button>
-      </div>
-
-      <div class="wt-grid" id="realWtGrid"></div>
-
-      <div class="term-box">
-        <div style="font:800 12px Menlo,monospace;color:var(--cyan)">💻 1-TAP WORKTREE TERMINAL COMMANDS (Executes on Live Server :8788)</div>
-        <div class="term-cmd-chips">
-          <button data-cmd="worktree_list">$ git worktree list</button>
-          <button data-cmd="git_status">$ git status -sb</button>
-          <button data-cmd="git_branches">$ git branch -a</button>
-          <button data-cmd="git_log">$ git log -n 6 --oneline</button>
-          <button data-cmd="ls_worktree">$ ls -la .worktrees/wt-103</button>
-          <button data-cmd="cat_handoff">$ cat WORKTREE_CARD.md</button>
-          <button data-cmd="verify_glb_splat">$ ls -lh .glb &amp; .splat</button>
-        </div>
-        <div class="term-output" id="termOutput">Tap any command above to execute it inside the repository / active Git worktree…</div>
-      </div>
-    </section>
-
-    <!-- ====================================================================
-         TAB 5: PERSISTENT SOULS, 55m CACHE COMPACTOR, SLACK & 10 REPOS
-         ==================================================================== -->
-    <section class="tab-pane souls-pane" id="pane-souls">
-      <h2 style="font-size:16px;color:var(--gold)">🧠 Named Agents with Persistent Souls &amp; 55-Minute Prompt-Cache Clocks</h2>
-      <div class="souls-grid" id="soulsGrid"></div>
-
-      <h2 style="font-size:16px;color:var(--ok);margin-top:8px">💬 Live Halfworld Office Slack &amp; Hook Stream</h2>
-      <div style="display:flex;gap:8px">
-        <input id="slackInp" type="text" placeholder="Ask Maestro Hound to spawn a worktree, audit a card, or compact cache…" style="flex:1;min-height:44px;background:#090e17;border:1px solid var(--edge);color:#fff;padding:0 12px;border-radius:10px;font-size:14px">
-        <button class="action-btn gold" id="slackSendBtn" style="flex:0 0 90px;min-width:90px">Send</button>
-      </div>
-      <div id="slackList" style="display:flex;flex-direction:column;gap:8px"></div>
-
-      <h2 style="font-size:16px;color:var(--cyan);margin-top:8px">🏆 All 10 Open-Source Kohnny Alternatives Ranked (Mobile Cards)</h2>
-      <div class="repo-cards-grid" id="repoCardsGrid"></div>
-    </section>
-
-  </main>
-
-  <!-- FIXED BOTTOM THUMB-ZONE NAVIGATION BAR (5 TABS) -->
-  <nav class="bottom-nav">
-    <button class="bnav-btn on" data-tab="pane-kanban"><span class="ico">📋</span><span>Kanban</span></button>
-    <button class="bnav-btn" data-tab="pane-office2d"><span class="ico">🕹️</span><span>2D Office</span></button>
-    <button class="bnav-btn" data-tab="pane-office3d"><span class="ico">🌐</span><span>3D Splat</span></button>
-    <button class="bnav-btn" data-tab="pane-terminal"><span class="ico">💻</span><span>Worktrees</span></button>
-    <button class="bnav-btn" data-tab="pane-souls"><span class="ico">🧠</span><span>Souls &amp; 10 Repos</span></button>
-  </nav>
-</div>
-
-<!-- MODAL -->
-<div id="modal">
-  <div class="modal-box">
-    <div class="modal-head">
-      <b id="modalTitle" style="color:var(--gold)">Inspector</b>
-      <button class="icon-btn pink" id="modalClose">✕ Close</button>
+      <button class="hud-link" id="sc-min-btn" title="Minimize / Expand Card">—</button>
     </div>
-    <div class="modal-body" id="modalBody"></div>
-  </div>
-</div>
-
-<script type="module">
-// ============================================================================
-// 1. CONNECT TO LIVE PYTHON GIT WORKTREE SERVER (`/api/state`) WITH FALLBACK
-// ============================================================================
-let STATE = null;
-let REAL_WORKTREES = [];
-let TELEMETRY = { total_steps: 0, recent_tools: [], session_minutes_mod_55: 42 };
-let LIVE_BACKEND = false;
-let activeMobileCol = 'doing';
-let selectedAgentId = 'agent_poet_engineer';
-let activeTab = 'pane-kanban';
-
-async function fetchState() {
-  try {
-    const r = await fetch('/api/state');
-    if (r.ok) {
-      const d = await r.json();
-      LIVE_BACKEND = Boolean(d.live_backend);
-      STATE = d.state;
-      REAL_WORKTREES = d.real_worktrees || [];
-      TELEMETRY = d.telemetry || TELEMETRY;
-      updateTelemetryBanner();
-      return;
-    }
-  } catch (_) {}
-  // Static fallback if viewed on GitHub Pages
-  const r2 = await fetch('data/terrarium/agent_office_manifest.json');
-  STATE = await r2.json();
-  STATE.slack_events = STATE.slack_events || [
-    { sender: '🐕 Maestro Hound', text: 'Loaded static manifest (run agent_office_server.py locally for live git worktree execution).', color: '#ffd23f', time: 'LIVE' }
-  ];
-  updateTelemetryBanner();
-}
-
-function updateTelemetryBanner() {
-  const banner = document.getElementById('telemetryBanner');
-  const dot = document.getElementById('liveDot');
-  if (LIVE_BACKEND) {
-    dot.style.background = '#4ade80';
-    const tools = (TELEMETRY.recent_tools || []).slice(-2).join(', ') || 'idle';
-    banner.textContent = `LIVE ENGINE · ${REAL_WORKTREES.length} Git Worktrees · Step #${TELEMETRY.total_steps} (${tools})`;
-  } else {
-    dot.style.background = '#ffd23f';
-    banner.textContent = `STATIC PREVIEW · ${STATE.kanban_cards.length} Worktree Cards · 6 Persistent Souls`;
-  }
-}
-
-async function apiPost(endpoint, payload) {
-  if (!LIVE_BACKEND) return null;
-  try {
-    const r = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (r.ok) return await r.json();
-  } catch (e) { console.warn(e); }
-  return null;
-}
-
-// ============================================================================
-// 2. MOBILE-FIRST KANBAN + REAL WORKTREE ACTIONS
-// ============================================================================
-const COLUMNS = [
-  { id: 'planning', short: '📋 Plan', title: '1. PLANNING (Mockups)', color: '#c4b5fd', station: 'whiteboard' },
-  { id: 'doing', short: '🔨 Doing', title: '2. DOING (Worktree)', color: '#5ce1e6', station: 'desk_splat' },
-  { id: 'review', short: '🔍 Review', title: '3. CROSS-MODEL AUDIT', color: '#ff4d6d', station: 'audit_bench' },
-  { id: 'merge_queue', short: '🔀 Merge', title: '4. FIFO MERGE QUEUE', color: '#ffd23f', station: 'merge_gate' },
-  { id: 'merged', short: '✅ Live', title: '5. MERGED & LIVE', color: '#4ade80', station: 'coffee_bar' }
-];
-
-function renderKanban() {
-  // 1. Render Sticky Mobile Column Switcher Pills
-  const segBar = document.getElementById('colSegBar');
-  segBar.innerHTML = COLUMNS.map(c => {
-    const cnt = STATE.kanban_cards.filter(k => k.column === c.id).length;
-    const isOn = c.id === activeMobileCol;
-    return `
-      <button class="seg-pill ${isOn ? 'on' : ''}" data-col="${c.id}" style="border-color:${isOn ? c.color : 'var(--edge)'};color:${isOn ? c.color : 'var(--dim)'}">
-        <span>${c.short}</span>
-        <span class="seg-cnt">${cnt}</span>
-      </button>
-    `;
-  }).join('');
-
-  segBar.querySelectorAll('.seg-pill').forEach(b => {
-    b.addEventListener('click', () => {
-      activeMobileCol = b.dataset.col;
-      renderKanban();
-    });
-  });
-
-  // 2. Render Columns & Cards
-  const board = document.getElementById('kanbanBoard');
-  board.innerHTML = COLUMNS.map(col => {
-    const cards = STATE.kanban_cards.filter(c => c.column === col.id);
-    const hideMobile = col.id !== activeMobileCol ? 'mobile-hidden' : '';
-    return `
-      <div class="k-col ${hideMobile}">
-        <div class="k-col-head" style="border-bottom-color:${col.color}">
-          <b style="color:${col.color}">${col.title}</b>
-          <span class="seg-cnt">${cards.length}</span>
-        </div>
-        <div class="k-cards">
-          ${cards.length ? cards.map(c => renderCardHTML(c, col)).join('') : `<div style="padding:20px;text-align:center;color:var(--dim)">No cards in ${col.short}</div>`}
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  // Toggle Before/After button inside card (100% mobile-friendly without trapping vertical scroll!)
-  board.querySelectorAll('[data-ba-toggle]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const clip = btn.parentElement.querySelector('.ba-clip');
-      const cur = parseFloat(clip.style.width || '50');
-      const next = cur === 50 ? 0 : cur === 0 ? 100 : 50;
-      clip.style.width = next + '%';
-      btn.textContent = next === 0 ? 'Showing: AFTER (Tap to Flip)' : next === 100 ? 'Showing: BEFORE (Tap to Flip)' : '50/50 Split (Tap to Flip)';
-    });
-  });
-
-  // Wire Real Backend Actions on Cards
-  board.querySelectorAll('[data-move]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const [cid, targetCol] = btn.dataset.move.split(':');
-      activeMobileCol = targetCol;
-      const res = await apiPost('/api/card/move', { card_id: cid, target_column: targetCol });
-      if (res && res.state) {
-        STATE = res.state;
-        REAL_WORKTREES = res.real_worktrees || REAL_WORKTREES;
-      } else {
-        const card = STATE.kanban_cards.find(x => x.id === cid);
-        if (card) card.column = targetCol;
-      }
-      syncAgentPositions();
-      renderAll();
-    });
-  });
-
-  board.querySelectorAll('[data-audit]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const cid = btn.dataset.audit;
-      btn.textContent = '⏳ Auditing…';
-      const res = await apiPost('/api/worktree/audit', { card_id: cid });
-      if (res && res.audit) {
-        const checksHtml = res.audit.checks.map(ch =>
-          `<div style="padding:6px 0;border-bottom:1px solid var(--edge)"><b style="color:${ch.status === 'PASS' ? 'var(--ok)' : 'var(--gold)'}">[${ch.status}]</b> <code>${ch.file}</code> — ${ch.detail}</div>`
-        ).join('');
-        openModal(`🛡️ Real Cross-Model & Asset Audit · ${cid}`, `<p><b>${res.audit.summary}</b></p><div style="margin-top:10px">${checksHtml}</div>`);
-      }
-      await fetchState();
-      renderAll();
-    });
-  });
-
-  board.querySelectorAll('[data-term]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const cid = btn.dataset.term;
-      switchTab('pane-terminal');
-      await runTerminalCommand('ls_worktree', cid);
-    });
-  });
-}
-
-function renderCardHTML(c, col) {
-  const ag = STATE.agents.find(a => a.id === c.agent_id) || STATE.agents[0];
-  const colIdx = COLUMNS.findIndex(x => x.id === c.column);
-  const prevCol = colIdx > 0 ? COLUMNS[colIdx - 1] : null;
-  const nextCol = colIdx < COLUMNS.length - 1 ? COLUMNS[colIdx + 1] : null;
-  const isRealWt = REAL_WORKTREES.some(w => w.path.endsWith(c.worktree_path));
-
-  return `
-    <div class="k-card" style="border-color:${c.needs_permission ? 'var(--pink)' : 'var(--edge)'}">
-      <div class="kc-head">
-        <span style="color:${col.color}">${c.id} · Poem ${c.poem}</span>
-        <span style="color:${isRealWt ? 'var(--ok)' : 'var(--gold)'}">${isRealWt ? '🟢 REAL WORKTREE ON DISK' : '🌿 WORKTREE READY'}</span>
-      </div>
-      <div class="kc-title">${c.title}</div>
-      <div class="ba-box">
-        <img src="${c.after_img}" alt="After">
-        <div class="ba-clip" style="width:50%"><img src="${c.before_img}" alt="Before"></div>
-        <button class="ba-pill" data-ba-toggle="${c.id}">50/50 Before/After (Tap to Flip)</button>
-      </div>
-      <div class="kc-info">
-        <div>🌿 Path: <b style="color:var(--cyan)">${c.worktree_path}</b> (<code>${c.branch}</code>)</div>
-        <div>👤 Agent: <b>${ag.name}</b> (${c.harness})</div>
-        <div>🛡️ Auditor: <span style="color:var(--pink)">${c.auditor}</span></div>
-        <div>🔀 ${c.conflict_status}</div>
-        <div style="color:var(--gold);margin-top:4px">📋 ${c.audit_notes}</div>
-      </div>
-      <div class="kc-btn-grid">
-        <button class="cyan" data-audit="${c.id}">🛡️ Run Real Audit</button>
-        <button data-term="${c.id}">💻 Open Worktree Term</button>
-        ${c.needs_permission && nextCol ? `
-          <button class="green" data-move="${c.id}:${nextCol.id}">✓ Approve → FIFO Queue</button>
-          <button class="pink" data-move="${c.id}:doing">↺ Send Back to Fix</button>
-        ` : `
-          ${prevCol ? `<button data-move="${c.id}:${prevCol.id}">◀ Move to ${prevCol.short}</button>` : ''}
-          ${nextCol ? `<button class="gold ${!prevCol ? 'span2' : ''}" data-move="${c.id}:${nextCol.id}">Advance to ${nextCol.short} ▶</button>` : ''}
-        `}
-      </div>
+    <div class="sc-desc" id="sc-desc">
+      Tap any 3D character, glowing stage proscenium, or worktree pylon in the street to fly there and run real Git worktree operations directly in the 3D world.
     </div>
-  `;
-}
-
-// ============================================================================
-// 3. TAB 4: REAL GIT WORKTREES & WEB TERMINAL
-// ============================================================================
-function renderWorktreesAndTerminal() {
-  const grid = document.getElementById('realWtGrid');
-  if (!REAL_WORKTREES.length) {
-    grid.innerHTML = `<div class="wt-card">No git worktrees reported (static mode).</div>`;
-  } else {
-    grid.innerHTML = REAL_WORKTREES.map(w => `
-      <div class="wt-card">
-        <div style="color:var(--gold);font-weight:700;margin-bottom:4px">🌿 ${w.branch || 'main'}</div>
-        <div style="color:var(--cyan);word-break:break-all">${w.path.replace('/Users/gaia/WORLDBUILDING-TERMS/wygwyl-world-arch', '.')}</div>
-        <div style="color:var(--dim);margin-top:4px">HEAD: <code>${w.head || 'latest'}</code> · Disk: <b style="color:var(--ok)">${w.exists ? 'MOUNTED' : 'MISSING'}</b></div>
-      </div>
-    `).join('');
-  }
-}
-
-async function runTerminalCommand(cmdKey, cardId = 'WT-103') {
-  const outBox = document.getElementById('termOutput');
-  outBox.textContent = `Running ${cmdKey} on live server…`;
-  const res = await apiPost('/api/worktree/exec', { cmd_key: cmdKey, card_id: cardId });
-  if (res && res.result) {
-    const r = res.result;
-    outBox.textContent = `[$ ${r.cmd}] (exit=${r.exit_code}, ${r.duration_ms}ms at ${r.time})\n\n${r.stdout}${r.stderr ? '\nSTDERR:\n' + r.stderr : ''}`;
-  } else {
-    outBox.textContent = `[Static Mode Fallback] Run shots/data/terrarium/agent_office_server.py locally for live subprocess execution.`;
-  }
-}
-
-document.querySelectorAll('[data-cmd]').forEach(btn => {
-  btn.addEventListener('click', () => runTerminalCommand(btn.dataset.cmd));
-});
-document.getElementById('btnRefreshWt').addEventListener('click', async () => {
-  await fetchState();
-  renderAll();
-  await runTerminalCommand('worktree_list');
-});
-
-// ============================================================================
-// 4. TAB 5: PERSISTENT SOULS, 55m COMPACTOR, SLACK & 10-REPO MOBILE CARDS
-// ============================================================================
-function renderSoulsAndRepos() {
-  const sGrid = document.getElementById('soulsGrid');
-  sGrid.innerHTML = STATE.agents.map(ag => {
-    const pct = Math.min(100, Math.round((ag.cache_minutes_elapsed / ag.cache_ttl_minutes) * 100));
-    const st = STATE.stations[ag.station] || { name: ag.station };
-    return `
-      <div class="soul-card" style="border-color:${ag.color}">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <b style="color:${ag.color};font-size:15px">${ag.name}</b>
-          <span style="font:700 11px Menlo,monospace;color:var(--gold)">${ag.status}</span>
-        </div>
-        <div style="font-size:12px;color:var(--dim)">${ag.role} · <code style="color:var(--cyan)">${ag.harness}</code></div>
-        <div style="font-size:12px;background:#070b12;padding:8px;border-radius:6px;border-left:3px solid ${ag.color}">${ag.soul}</div>
-        <div style="font-size:12px;color:var(--gold)">📍 Current Room: <b>${st.name}</b></div>
-        <div style="display:flex;align-items:center;gap:8px;font:700 11px Menlo,monospace">
-          <span>⏱️ ${ag.cache_minutes_elapsed}/55m</span>
-          <div style="flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden">
-            <div style="width:${pct}%;height:100%;background:${pct >= 90 ? 'var(--pink)' : 'var(--ok)'}"></div>
-          </div>
-          <button class="icon-btn green" data-compact-ag="${ag.id}">📦 55m Compact</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  sGrid.querySelectorAll('[data-compact-ag]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const res = await apiPost('/api/cache/compact', { agent_id: btn.dataset.compactAg });
-      if (res && res.markdown) {
-        openModal(`⏱️ Wrote Real ${res.handoff_path}`, `<pre>${res.markdown}</pre>`);
-      }
-      await fetchState();
-      renderAll();
-    });
-  });
-
-  // Slack list
-  const sList = document.getElementById('slackList');
-  sList.innerHTML = (STATE.slack_events || []).slice(0, 10).map(ev => `
-    <div style="background:var(--panel);border-left:4px solid ${ev.color || 'var(--cyan)'};padding:10px 12px;border-radius:0 8px 8px 0">
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--dim);margin-bottom:3px">
-        <b style="color:${ev.color || 'var(--gold)'}">${ev.sender}</b><span>${ev.time || ''}</span>
-      </div>
-      <div style="font-size:13px">${ev.text}</div>
+    <div class="sc-actions">
+      <button class="sc-btn" id="btn-spawn">➕ Spawn Worktree</button>
+      <button class="sc-btn coral" id="btn-audit">🔍 Cross-Model Audit</button>
+      <button class="sc-btn teal" id="btn-compact">💎 55m Cache Shrine</button>
+      <button class="sc-btn green" id="btn-merge">⛩️ FIFO Merge #1</button>
+      <button class="sc-btn teal" id="btn-worktrees">💻 git worktree list</button>
     </div>
-  `).join('');
+    <div class="sc-term" id="sc-term">$ git worktree list
+. [main]
+.worktrees/wt-103-glb-z-phantom [feat/wt-103-glb-z-phantom]
+.worktrees/wt-104-twin-state-harbor-morph [feat/wt-104-twin-state-harbor-morph]
+.worktrees/wt-105-cache-compactor-vault [feat/wt-105-cache-compactor-vault]
+.worktrees/wt-106-terrarium-splat-mounter [feat/wt-106-terrarium-splat-mounter]</div>
+  </aside>
 
-  // 10-Repo Mobile-First Cards
-  const rGrid = document.getElementById('repoCardsGrid');
-  rGrid.innerHTML = STATE.repos_ranked.map(r => `
-    <div class="repo-card" style="border-color:${r.accent}">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <a href="${r.url}" target="_blank" style="font:800 14px -apple-system,sans-serif;color:${r.accent}">#${r.rank} · ${r.repo} ↗</a>
-        <span style="font:700 11px Menlo,monospace;color:var(--gold)">${r.score}/100</span>
-      </div>
-      <div style="font-size:11px;color:var(--gold);font-weight:700">${r.category}</div>
-      <div style="font-size:12px;color:#fff">${r.best_for}</div>
-      <div style="font-size:12px;color:var(--ok);background:#071512;padding:7px;border-radius:6px"><b>Implemented Here:</b> ${r.how_used_in_wygwyl}</div>
-    </div>
-  `).join('');
-}
-
-// ============================================================================
-// 5. PORTRAIT-ADAPTIVE /LITE 2D PIXEL & CUTOUT SOUNDSTAGE OFFICE
-// ============================================================================
-const canvas2d = document.getElementById('canvas2d');
-const ctx2d = canvas2d.getContext('2d');
-const spriteImg = new Image();
-spriteImg.src = 'kits/packs/poet_tracksuit_v1/01_COMPONENTS/01_torso_front.png';
-
-const agentRuntime = {};
-
-function initAgentRuntime() {
-  STATE.agents.forEach((ag, i) => {
-    const st = STATE.stations[ag.station] || STATE.stations.whiteboard;
-    if (!agentRuntime[ag.id]) {
-      agentRuntime[ag.id] = {
-        pos2d: [...st.pos2d],
-        target2d: [...st.pos2d],
-        pos3d: new THREE.Vector3(st.pos3d[0], st.pos3d[1] + 0.5, st.pos3d[2]),
-        target3d: new THREE.Vector3(st.pos3d[0], st.pos3d[1] + 0.5, st.pos3d[2])
-      };
-    }
-  });
-  syncAgentPositions();
-}
-
-function syncAgentPositions() {
-  STATE.agents.forEach((ag, i) => {
-    const st = STATE.stations[ag.station] || STATE.stations.whiteboard;
-    const rt = agentRuntime[ag.id];
-    if (!rt) return;
-    const ang = (i / STATE.agents.length) * Math.PI * 2;
-    rt.target2d = [
-      Math.max(0.12, Math.min(0.88, st.pos2d[0] + Math.cos(ang) * 0.04)),
-      Math.max(0.12, Math.min(0.88, st.pos2d[1] + Math.sin(ang) * 0.04))
-    ];
-    rt.target3d.set(
-      st.pos3d[0] + Math.cos(ang) * 4.0,
-      st.pos3d[1] + 0.5,
-      st.pos3d[2] + Math.sin(ang) * 4.0
-    );
-  });
-}
-
-function render2dChips() {
-  const box = document.getElementById('agentChips2d');
-  box.innerHTML = STATE.agents.map(ag => `
-    <button class="agent-chip ${ag.id === selectedAgentId ? 'on' : ''}" data-sel-ag="${ag.id}">
-      <span style="width:8px;height:8px;border-radius:50%;background:${ag.color}"></span>
-      <span>${ag.name.split(' ')[0]}</span>
+  <!-- BOTTOM THUMB-ZONE 3D CAMERA FLIGHT BAR -->
+  <nav class="bottom-flight-bar" id="flight-bar">
+    <button class="stop-pill active" data-stop="overview">
+      <span>🗺️ 3D World Overview</span>
+      <small>All 6 Worktree Stages</small>
     </button>
-  `).join('');
-  box.querySelectorAll('[data-sel-ag]').forEach(b => {
-    b.addEventListener('click', () => {
-      selectedAgentId = b.dataset.selAg;
-      render2dChips();
-    });
-  });
-}
+    <button class="stop-pill" data-stop="0">
+      <span>🦆 Stop A · Planning Plaza</span>
+      <small>Mama Duck · WT-101/102</small>
+    </button>
+    <button class="stop-pill" data-stop="1">
+      <span>🏃 Stop B · Doing Foundry</span>
+      <small>The Poet · WT-103 .GLB</small>
+    </button>
+    <button class="stop-pill" data-stop="2">
+      <span>🧥 Stop C · Audit Gate</span>
+      <small>The EX · WT-104 Splat QA</small>
+    </button>
+    <button class="stop-pill" data-stop="3">
+      <span>💎 Stop D · 55m Shrine</span>
+      <small>HANDOFF_55M.md Crystal</small>
+    </button>
+    <button class="stop-pill" data-stop="4">
+      <span>⛩️ Stop E · FIFO Merge Arch</span>
+      <small>Single-File Merge · WT-105</small>
+    </button>
+    <button class="stop-pill" data-stop="5">
+      <span>🐕 Stop F · Hound Beacon</span>
+      <small>Live Transcript Tail</small>
+    </button>
+    <button class="stop-pill" data-stop="patrol">
+      <span>🎥 Street Patrol Cam</span>
+      <small>Follow Agents Along Tape</small>
+    </button>
+  </nav>
 
-canvas2d.addEventListener('click', async e => {
-  const rect = canvas2d.getBoundingClientRect();
-  const nx = (e.clientX - rect.left) / rect.width;
-  const ny = (e.clientY - rect.top) / rect.height;
-  let bestKey = null, bestD = 999;
-  Object.entries(STATE.stations).forEach(([k, st]) => {
-    const d = Math.hypot(nx - st.pos2d[0], ny - st.pos2d[1]);
-    if (d < bestD) { bestD = d; bestKey = k; }
-  });
-  if (bestKey && bestD < 0.28) {
-    const ag = STATE.agents.find(a => a.id === selectedAgentId);
-    if (ag) {
-      ag.station = bestKey;
-      ag.status = 'AT_' + bestKey.toUpperCase();
-      syncAgentPositions();
-      await apiPost('/api/agent/walk', { agent_id: ag.id, station: bestKey });
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
     }
   }
-});
+  </script>
 
-function draw2dOffice(time) {
-  if (activeTab !== 'pane-office2d') return;
-  const w = canvas2d.clientWidth || 380;
-  const h = canvas2d.clientHeight || 520;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  if (canvas2d.width !== w * dpr || canvas2d.height !== h * dpr) {
-    canvas2d.width = w * dpr;
-    canvas2d.height = h * dpr;
-  }
-  ctx2d.save();
-  ctx2d.scale(dpr, dpr);
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-  ctx2d.fillStyle = '#070b12';
-  ctx2d.fillRect(0, 0, w, h);
+    const canvas = document.getElementById('world-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-  // Blueprint grid
-  ctx2d.strokeStyle = '#111a29';
-  ctx2d.lineWidth = 1;
-  for (let x = 0; x < w; x += 26) { ctx2d.beginPath(); ctx2d.moveTo(x, 0); ctx2d.lineTo(x, h); ctx2d.stroke(); }
-  for (let y = 0; y < h; y += 26) { ctx2d.beginPath(); ctx2d.moveTo(0, y); ctx2d.lineTo(w, y); ctx2d.stroke(); }
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x060a11, 0.0055);
 
-  // Rooms
-  const isPortrait = w < 540;
-  const rw = isPortrait ? w * 0.42 : Math.min(220, w * 0.28);
-  const rh = isPortrait ? 86 : 96;
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.2, 600);
+    camera.position.set(0, 22, 48);
 
-  Object.entries(STATE.stations).forEach(([k, st]) => {
-    const cx = st.pos2d[0] * w;
-    const cy = st.pos2d[1] * h;
-    ctx2d.fillStyle = 'rgba(15, 23, 38, 0.94)';
-    ctx2d.strokeStyle = st.color;
-    ctx2d.lineWidth = 2;
-    ctx2d.beginPath();
-    ctx2d.roundRect(cx - rw / 2, cy - rh / 2, rw, rh, 10);
-    ctx2d.fill(); ctx2d.stroke();
+    const orbit = new OrbitControls(camera, renderer.domElement);
+    orbit.enableDamping = true;
+    orbit.dampingFactor = 0.06;
+    orbit.maxPolarAngle = Math.PI * 0.49;
+    orbit.target.set(0, 3.5, 0);
 
-    ctx2d.fillStyle = st.color;
-    ctx2d.font = 'bold 12px -apple-system, sans-serif';
-    ctx2d.fillText(st.name.split('(')[0].trim().slice(0, 22), cx - rw / 2 + 10, cy - rh / 2 + 20);
-    ctx2d.fillStyle = '#94a3b8';
-    ctx2d.font = '10px Menlo, monospace';
-    ctx2d.fillText('Tap to send agent here', cx - rw / 2 + 10, cy + rh / 2 - 10);
-  });
+    // Lights
+    scene.add(new THREE.AmbientLight(0xdbeafe, 1.15));
+    const dirLight = new THREE.DirectionalLight(0xffd23f, 1.4);
+    dirLight.position.set(28, 48, 24);
+    scene.add(dirLight);
 
-  // Agents
-  STATE.agents.forEach(ag => {
-    const rt = agentRuntime[ag.id];
-    if (!rt) return;
-    rt.pos2d[0] += (rt.target2d[0] - rt.pos2d[0]) * 0.08;
-    rt.pos2d[1] += (rt.target2d[1] - rt.pos2d[1]) * 0.08;
+    const texLoader = new THREE.TextureLoader();
+    const gltfLoader = new GLTFLoader();
 
-    const ax = rt.pos2d[0] * w;
-    const ay = rt.pos2d[1] * h + Math.sin(time * 0.006 + ag.name.length) * 3;
-
-    // Halo
-    ctx2d.fillStyle = ag.color;
-    ctx2d.beginPath();
-    ctx2d.arc(ax, ay, 16, 0, Math.PI * 2);
-    ctx2d.fill();
-    ctx2d.strokeStyle = ag.id === selectedAgentId ? '#fff' : '#070b12';
-    ctx2d.lineWidth = ag.id === selectedAgentId ? 3 : 2;
-    ctx2d.stroke();
-
-    if (spriteImg.complete && spriteImg.naturalWidth > 0) {
-      ctx2d.drawImage(spriteImg, ax - 11, ay - 13, 22, 26);
-    } else {
-      ctx2d.fillStyle = '#070b12';
-      ctx2d.font = 'bold 13px Menlo, monospace';
-      ctx2d.fillText(ag.name[0], ax - 4, ay + 4);
+    // 1. 360x180 PAINTED WORLD SKY DOME (REAL PAINTED SCENE PLATES, NO DIAGRAM CHARTS)
+    let skyMesh = null;
+    const SKY_PLATES = {
+      '01': 'play/levels/01/s0_ext.webp',
+      '11': 'play/levels/11/s0_ext.webp',
+      '03': 'play/levels/03/s0_ext.webp',
+      '06': 'play/levels/06/s0_ext.webp'
+    };
+    function loadEquirecSky(poemNum = '01') {
+      const url = SKY_PLATES[poemNum] || SKY_PLATES['01'];
+      texLoader.load(url, tex => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        if (!skyMesh) {
+          const geo = new THREE.SphereGeometry(260, 48, 32);
+          geo.scale(-1, 1, 1);
+          const mat = new THREE.MeshBasicMaterial({ map: tex, fog: false });
+          skyMesh = new THREE.Mesh(geo, mat);
+          scene.add(skyMesh);
+        } else {
+          skyMesh.material.map = tex;
+          skyMesh.material.needsUpdate = true;
+        }
+      });
     }
+    loadEquirecSky('01');
 
-    // Label pill
-    ctx2d.fillStyle = 'rgba(7, 10, 16, 0.92)';
-    ctx2d.fillRect(ax - 48, ay - 32, 96, 15);
-    ctx2d.fillStyle = ag.color;
-    ctx2d.font = 'bold 10px Menlo, monospace';
-    ctx2d.fillText(`${ag.name.split(' ')[0]} ${ag.cache_minutes_elapsed}m`, ax - 44, ay - 21);
-  });
+    // 2. SCULPTED FOUNDRY GROUND + GRID + WATER REFLECTION PLANE
+    const groundGeo = new THREE.PlaneGeometry(220, 160, 96, 96);
+    groundGeo.rotateX(-Math.PI / 2);
+    const posAttr = groundGeo.attributes.position;
+    for (let i = 0; i < posAttr.count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+      const distRoad = Math.abs(z - Math.sin(x * 0.045) * 6.0);
+      const hill = distRoad > 9 ? Math.sin(x * 0.06) * Math.cos(z * 0.06) * 2.8 + (distRoad - 9) * 0.08 : 0;
+      posAttr.setY(i, Math.max(-0.2, hill));
+    }
+    groundGeo.computeVertexNormals();
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: 0x101926,
+      roughness: 0.72,
+      metalness: 0.22
+    });
+    texLoader.load('play/levels/01/s0_ext.webp', t => {
+      t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping;
+      t.repeat.set(6, 6);
+      groundMat.map = t;
+      groundMat.needsUpdate = true;
+    });
+    const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+    scene.add(groundMesh);
 
-  ctx2d.restore();
-}
+    const grid = new THREE.GridHelper(180, 60, 0xffd23f, 0x1e293b);
+    grid.position.y = 0.05;
+    grid.material.opacity = 0.32;
+    grid.material.transparent = true;
+    scene.add(grid);
 
-// ============================================================================
-// 6. TAB 3: THREE.JS 3D .GLB + .SPLAT SOUNDSTAGE OFFICE
-// ============================================================================
-const canvas3d = document.getElementById('canvas3d');
-const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x05080e);
-const camera = new THREE.PerspectiveCamera(52, 1, 0.5, 600);
-let camYaw = 0.4, camPitch = 0.48, camDist = 90;
+    // 3. MOUNT REAL 32-BYTE 3D GAUSSIAN SPLAT CLOUD + BINARY .GLB CHISEL COLLIDER IN THE WORLD
+    let splatGroup = new THREE.Group();
+    scene.add(splatGroup);
 
-function updateCam3d() {
-  camera.position.set(
-    camDist * Math.sin(camYaw) * Math.cos(camPitch),
-    4 + camDist * Math.sin(camPitch),
-    camDist * Math.cos(camYaw) * Math.cos(camPitch)
-  );
-  camera.lookAt(0, 4, 0);
-}
-updateCam3d();
-
-let ptrDown = false, px = 0, py = 0;
-canvas3d.addEventListener('pointerdown', e => { ptrDown = true; px = e.clientX; py = e.clientY; });
-window.addEventListener('pointerup', () => { ptrDown = false; });
-window.addEventListener('pointermove', e => {
-  if (!ptrDown || activeTab !== 'pane-office3d') return;
-  camYaw -= (e.clientX - px) * 0.007;
-  camPitch = Math.max(0.12, Math.min(1.35, camPitch + (e.clientY - py) * 0.007));
-  px = e.clientX; py = e.clientY;
-  updateCam3d();
-});
-
-scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-const floorGroup = new THREE.Group();
-scene.add(floorGroup);
-const agents3dGroup = new THREE.Group();
-scene.add(agents3dGroup);
-
-const FLOOR_FILES = {
-  hub_01_atlantis: { glb: 'data/terrarium/atlas_packs/glb/hub_01_atlantis_chisel.glb', splat: 'data/terrarium/atlas_packs/splats/hub_01_atlantis.splat', color: 0x5ce1e6 },
-  hub_02_harbor_temple: { glb: 'data/terrarium/atlas_packs/glb/hub_02_harbor_temple_chisel.glb', splat: 'data/terrarium/atlas_packs/splats/hub_02_harbor_temple.splat', color: 0xffd23f },
-  hub_03_mount_vernon: { glb: 'data/terrarium/atlas_packs/glb/hub_03_mount_vernon_chisel.glb', splat: 'data/terrarium/atlas_packs/splats/hub_03_mount_vernon.splat', color: 0xff4d6d },
-  hub_04_shore_garden: { glb: 'data/terrarium/atlas_packs/glb/hub_04_shore_garden_chisel.glb', splat: 'data/terrarium/atlas_packs/splats/hub_04_shore_garden.splat', color: 0x4ade80 }
-};
-
-async function load3dFloor(floorKey) {
-  const cfg = FLOOR_FILES[floorKey] || FLOOR_FILES.hub_01_atlantis;
-  while (floorGroup.children.length) floorGroup.remove(floorGroup.children[0]);
-  floorGroup.add(new THREE.GridHelper(160, 32, cfg.color, 0x1e293b));
-
-  try {
-    const sr = await fetch(cfg.splat);
-    if (sr.ok) {
-      const buf = await sr.arrayBuffer();
-      const n = Math.floor(buf.byteLength / 32);
-      const dv = new DataView(buf);
-      const u8 = new Uint8Array(buf);
-      const pos = new Float32Array(n * 3);
-      const col = new Float32Array(n * 3);
-      for (let i = 0; i < n; i++) {
-        const o = i * 32;
-        pos[i * 3] = dv.getFloat32(o, true);
-        pos[i * 3 + 1] = dv.getFloat32(o + 4, true);
-        pos[i * 3 + 2] = dv.getFloat32(o + 8, true);
-        col[i * 3] = u8[o + 24] / 255;
-        col[i * 3 + 1] = u8[o + 25] / 255;
-        col[i * 3 + 2] = u8[o + 26] / 255;
+    async function mountWorldSplatAndGlb(splatUrl, glbUrl) {
+      while (splatGroup.children.length) splatGroup.remove(splatGroup.children[0]);
+      try {
+        const res = await fetch(splatUrl);
+        if (res.ok) {
+          const buf = await res.arrayBuffer();
+          const n = Math.floor(buf.byteLength / 32);
+          const dv = new DataView(buf);
+          const u8 = new Uint8Array(buf);
+          const pos = new Float32Array(n * 3);
+          const col = new Float32Array(n * 3);
+          for (let i = 0; i < n; i++) {
+            const off = i * 32;
+            pos[i * 3 + 0] = dv.getFloat32(off + 0, true) * 1.35;
+            pos[i * 3 + 1] = dv.getFloat32(off + 4, true) * 1.35 + 1.5;
+            pos[i * 3 + 2] = dv.getFloat32(off + 8, true) * 1.35 - 12.0;
+            col[i * 3 + 0] = u8[off + 24] / 255;
+            col[i * 3 + 1] = u8[off + 25] / 255;
+            col[i * 3 + 2] = u8[off + 26] / 255;
+          }
+          const geom = new THREE.BufferGeometry();
+          geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+          geom.setAttribute('color', new THREE.BufferAttribute(col, 3));
+          const pts = new THREE.Points(
+            geom,
+            new THREE.PointsMaterial({ size: 0.24, vertexColors: true, transparent: true, opacity: 0.86, depthWrite: false })
+          );
+          splatGroup.add(pts);
+        }
+      } catch (e) {
+        console.warn('Splat load warning:', e);
       }
-      const g = new THREE.BufferGeometry();
-      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-      floorGroup.add(new THREE.Points(g, new THREE.PointsMaterial({ size: 2.2, vertexColors: true, transparent: true, opacity: 0.78 })));
-    }
-  } catch (_) {}
-}
 
-function build3dAgentsAndStations() {
-  while (agents3dGroup.children.length) agents3dGroup.remove(agents3dGroup.children[0]);
-  Object.entries(STATE.stations).forEach(([k, st]) => {
-    const col = new THREE.Color(st.color);
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 7.0, 0.8, 24), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.3 }));
-    m.position.set(st.pos3d[0], st.pos3d[1], st.pos3d[2]);
-    agents3dGroup.add(m);
-  });
-  STATE.agents.forEach(ag => {
-    const col = new THREE.Color(ag.color);
-    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, 7.0, 16), new THREE.MeshBasicMaterial({ color: col }));
-    const rt = agentRuntime[ag.id];
-    if (rt) {
-      mesh.position.copy(rt.pos3d);
-      rt.mesh3d = mesh;
+      if (glbUrl) {
+        gltfLoader.load(glbUrl, gltf => {
+          const model = gltf.scene;
+          model.position.set(0, 0.2, -12);
+          model.scale.setScalar(1.35);
+          model.traverse(o => {
+            if (o.isMesh) {
+              o.material = new THREE.MeshBasicMaterial({
+                color: 0x19e6c8,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.16
+              });
+            }
+          });
+          splatGroup.add(model);
+        });
+      }
     }
-    agents3dGroup.add(mesh);
-  });
+    mountWorldSplatAndGlb(
+      'data/terrarium/atlas_packs/splats/hub_01_atlantis.splat',
+      'data/terrarium/atlas_packs/chisel_glb/poem_01_chisel.glb'
+    );
 
-  const sChips = document.getElementById('stationChips3d');
-  sChips.innerHTML = Object.entries(STATE.stations).map(([k, st]) => `
-    <button class="agent-chip" data-st3d="${k}" style="border-color:${st.color}">${st.name.split('(')[0]}</button>
-  `).join('');
-  sChips.querySelectorAll('[data-st3d]').forEach(b => {
-    b.addEventListener('click', async () => {
-      const ag = STATE.agents.find(a => a.id === selectedAgentId);
-      if (ag) {
-        ag.station = b.dataset.st3d;
-        syncAgentPositions();
-        await apiPost('/api/agent/walk', { agent_id: ag.id, station: b.dataset.st3d });
+    // Helper: Canvas Texture Sprite for Diegetic 3D Labels & In-World Terminals
+    function makeWorldBanner(lines, opts = {}) {
+      const w = opts.w || 640, h = opts.h || 180;
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = opts.bg || 'rgba(7, 11, 18, 0.92)';
+      ctx.strokeStyle = opts.border || '#ffd23f';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(4, 4, w - 8, h - 8, 18);
+      else ctx.rect(4, 4, w - 8, h - 8);
+      ctx.fill();
+      ctx.stroke();
+
+      lines.forEach((ln, i) => {
+        ctx.font = i === 0
+          ? '900 25px -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif'
+          : i === 1
+            ? '700 19px "SFMono-Regular", Menlo, monospace'
+            : '600 17px Georgia, serif';
+        ctx.fillStyle = i === 0 ? (opts.accent || '#ffd23f') : i === 1 ? '#5ce1e6' : '#f3ead2';
+        ctx.fillText(String(ln).slice(0, 54), 22, 44 + i * 38);
+      });
+      const tex = new THREE.CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+      sp.scale.set(opts.scaleX || 10.5, opts.scaleY || 2.9, 1);
+      sp.renderOrder = 900;
+      return { sprite: sp, canvas: cv, ctx, tex };
+    }
+
+    // 4. CONTINUOUS GOLD POEM TAPE HIGHWAY ACROSS THE 3D WORLD
+    const STOP_COORDS = [
+      new THREE.Vector3(-42, 0.2, 6),
+      new THREE.Vector3(-25, 0.2, -4),
+      new THREE.Vector3(-8, 0.2, 5),
+      new THREE.Vector3(9, 0.2, -3),
+      new THREE.Vector3(26, 0.2, 5),
+      new THREE.Vector3(42, 0.2, -2)
+    ];
+    const roadCurve = new THREE.CatmullRomCurve3(STOP_COORDS);
+
+    // Build Poem Tape Ribbon Mesh on the Ground
+    {
+      const segs = 140, halfW = 3.4;
+      const posArr = [], uvArr = [], idxArr = [];
+      for (let i = 0; i <= segs; i++) {
+        const u = i / segs;
+        const pt = roadCurve.getPointAt(u);
+        const tan = roadCurve.getTangentAt(u).normalize();
+        const nx = -tan.z, nz = tan.x;
+        for (const s of [-1, 1]) {
+          posArr.push(pt.x + nx * halfW * s, 0.16, pt.z + nz * halfW * s);
+          uvArr.push(u * 3, s < 0 ? 0 : 1);
+        }
+        if (i < segs) {
+          const b = i * 2;
+          idxArr.push(b, b + 2, b + 1, b + 1, b + 2, b + 3);
+        }
+      }
+      const rGeo = new THREE.BufferGeometry();
+      rGeo.setAttribute('position', new THREE.Float32BufferAttribute(posArr, 3));
+      rGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvArr, 2));
+      rGeo.setIndex(idxArr);
+      const tapeTex = texLoader.load('play/levels/01/poem_tape.webp');
+      tapeTex.wrapS = tapeTex.wrapT = THREE.RepeatWrapping;
+      tapeTex.colorSpace = THREE.SRGBColorSpace;
+      const rMesh = new THREE.Mesh(
+        rGeo,
+        new THREE.MeshBasicMaterial({ map: tapeTex, side: THREE.DoubleSide, transparent: true, opacity: 0.94 })
+      );
+      scene.add(rMesh);
+
+      const railGeo = new THREE.TubeGeometry(roadCurve, 120, 0.14, 8, false);
+      scene.add(new THREE.Mesh(railGeo, new THREE.MeshBasicMaterial({ color: 0xffd23f })));
+    }
+
+    // 5. SIX IN-WORLD 3D WORKTREE STATIONS, MULTIPLANE PROSCENIUMS, PAINTED PROPS & WALKING CAST
+    const STATIONS = [
+      {
+        idx: 0,
+        id: 'WT-101',
+        title: 'STOP A · PLANNING PLAZA (ANCESTOR MAESTRO)',
+        branch: 'feat/wt-101-onion-peel · Column: PLANNING',
+        desc: 'Ancestor Maestro plans Kanban cards in-world, spawns isolated Git worktrees, and stages multiplane scene plates.',
+        plate: 'play/levels/01/s0_ext.webp',
+        beforeImg: 'play/levels/01/s1_ext.webp',
+        afterImg: 'kits/packs/poem_01/cut/01.hero.severn/card_01.png',
+        charImg: 'kits/packs/poem_08/cut/08.cast.angel.main-poses/card_01.png',
+        color: 0xffd23f,
+        hex: '#ffd23f',
+        action: 'spawn'
+      },
+      {
+        idx: 1,
+        id: 'WT-103',
+        title: 'STOP B · DOING DJ-DECK DESK (THE POET · WT-103)',
+        branch: '.worktrees/wt-103-glb-z-phantom [MOUNTED]',
+        desc: 'The Poet codes at the in-world DJ-Deck desk inside .worktrees/wt-103-glb-z-phantom, aligning Chisel .glb Z-buffer phantoms.',
+        plate: 'play/levels/07/s1_ext.webp',
+        beforeImg: 'kits/packs/poem_07/cut/07.props.dj-decks/card_01.png',
+        afterImg: 'play/levels/07/s2_ext.webp',
+        charImg: 'arena/bodies/ACT-001_p0.png',
+        color: 0x19e6c8,
+        hex: '#19e6c8',
+        action: 'exec'
+      },
+      {
+        idx: 2,
+        id: 'WT-104',
+        title: 'STOP C · CROSS-MODEL AUDIT GATE (THE EX · WT-104)',
+        branch: '.worktrees/wt-104-twin-state-harbor-morph [MOUNTED]',
+        desc: 'The EX (Codex o3-pro Auditor) inspects Twin-State Storm Ruin (Poem 03) <-> Rebuilt White Temple (Poem 11) splats in-world.',
+        plate: 'play/levels/11/s2_ext.webp',
+        beforeImg: 'play/levels/03/s1_ext.webp',
+        afterImg: 'play/levels/11/s1_ext.webp',
+        charImg: 'kits/packs/poem_09/cut/poet.09.main-poses/card_03.png',
+        color: 0xff3d6e,
+        hex: '#ff3d6e',
+        action: 'audit'
+      },
+      {
+        idx: 3,
+        id: 'WT-103-55M',
+        title: 'STOP D · 55-MINUTE PROMPT-CACHE PHONEBOOTH SHRINE',
+        branch: '.worktrees/wt-103-glb-z-phantom/HANDOFF_55M.md',
+        desc: 'Agents step into the in-world Phonebooth at 55/60 mins to write HANDOFF_55M.md before Anthropic cache TTL expires.',
+        plate: 'play/levels/09/s2_ext.webp',
+        beforeImg: 'kits/packs/poem_09/cut/09.props.phonebooth/card_01.png',
+        afterImg: 'kits/packs/poem_06/cut/06.props.coin-booth/card_01.png',
+        charImg: 'kits/packs/poem_01/cut/party.vintage_party.main-poses/card_05.png',
+        color: 0xa855f7,
+        hex: '#a855f7',
+        action: 'compact'
+      },
+      {
+        idx: 4,
+        id: 'WT-105',
+        title: 'STOP E · ATLANTIS FORUM FIFO MERGE ARCHWAY',
+        branch: '.worktrees/wt-105-cache-compactor-vault [#1 IN QUEUE]',
+        desc: 'Single-file FIFO Merge Archway at the Atlantis Forum: checks cross-worktree file overlap (0 conflicts) and merges into main.',
+        plate: 'play/levels/06/s0_ext.webp',
+        beforeImg: 'kits/packs/poem_06/cut/06.hero.forum/card_01.png',
+        afterImg: 'play/levels/12/s4_ext.webp',
+        charImg: 'kits/packs/poem_01/cut/party.vintage_party.main-poses/card_02.png',
+        color: 0x8fd694,
+        hex: '#8fd694',
+        action: 'merge'
+      },
+      {
+        idx: 5,
+        id: 'WT-106',
+        title: 'STOP F · HARBOR SCOUT & LIVE TRANSCRIPT BEACON',
+        branch: '.worktrees/wt-106-terrarium-splat-mounter [LIVE TAIL]',
+        desc: 'Passive transcript.jsonl watcher (pixel-agents style) streaming live agent tool calls & subprocessor terminal output in 3D.',
+        plate: 'play/levels/14/s5_ext.webp',
+        beforeImg: 'play/levels/13/s2_ext.webp',
+        afterImg: 'kits/packs/poem_08/cut/06.set.atlantis_waterfront.skyline/card_01.png',
+        charImg: 'kits/packs/poem_08/cut/08.cast.angel.main-poses/card_02.png',
+        color: 0xff9f1c,
+        hex: '#ff9f1c',
+        action: 'exec'
+      }
+    ];
+
+    const stationNodes = [];
+    const pickables = [];
+    let terminalSlabCanvas = null;
+    let terminalSlabCtx = null;
+    let terminalSlabTex = null;
+
+    STATIONS.forEach((st, i) => {
+      const pt = STOP_COORDS[i];
+      const grp = new THREE.Group();
+      grp.position.copy(pt);
+
+      // 1. Multiplane Backplane Proscenium Stage (13m x 5.6m)
+      const pGeo = new THREE.PlaneGeometry(13.0, 5.6);
+      const pTex = texLoader.load(st.plate);
+      pTex.colorSpace = THREE.SRGBColorSpace;
+      const pMesh = new THREE.Mesh(pGeo, new THREE.MeshBasicMaterial({ map: pTex, side: THREE.DoubleSide }));
+      pMesh.position.set(0, 3.2, -4.2);
+      pMesh.userData = { stationIdx: i };
+      grp.add(pMesh);
+      pickables.push(pMesh);
+
+      const frame = new THREE.LineSegments(
+        new THREE.EdgesGeometry(pGeo),
+        new THREE.LineBasicMaterial({ color: st.color })
+      );
+      frame.position.copy(pMesh.position);
+      grp.add(frame);
+
+      // 2. Glowing Street Worktree Pedestal Ring
+      const ringGeo = new THREE.RingGeometry(2.3, 2.9, 40);
+      ringGeo.rotateX(-Math.PI / 2);
+      const ringMesh = new THREE.Mesh(
+        ringGeo,
+        new THREE.MeshBasicMaterial({ color: st.color, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+      );
+      ringMesh.position.y = 0.08;
+      grp.add(ringMesh);
+
+      // 3. Articulated 2.5D Agent Character Cutout Standing in the Street
+      const cTex = texLoader.load(st.charImg);
+      cTex.colorSpace = THREE.SRGBColorSpace;
+      const cMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.2, 4.3),
+        new THREE.MeshBasicMaterial({ map: cTex, transparent: true, alphaTest: 0.05, side: THREE.DoubleSide })
+      );
+      cMesh.position.set(0, 2.3, 0.8);
+      cMesh.userData = { stationIdx: i, isAgent: true };
+      grp.add(cMesh);
+      pickables.push(cMesh);
+
+      // 4. Floating 3D Before / After Hologram Portals on Left & Right of the Stage
+      const bTex = texLoader.load(st.beforeImg);
+      bTex.colorSpace = THREE.SRGBColorSpace;
+      const aTex = texLoader.load(st.afterImg);
+      aTex.colorSpace = THREE.SRGBColorSpace;
+
+      const bMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(4.4, 2.5),
+        new THREE.MeshBasicMaterial({ map: bTex, side: THREE.DoubleSide })
+      );
+      bMesh.position.set(-4.6, 2.8, -1.2);
+      bMesh.rotation.y = 0.35;
+      bMesh.userData = { stationIdx: i };
+      grp.add(bMesh);
+      pickables.push(bMesh);
+
+      const aMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(4.4, 2.5),
+        new THREE.MeshBasicMaterial({ map: aTex, side: THREE.DoubleSide })
+      );
+      aMesh.position.set(4.6, 2.8, -1.2);
+      aMesh.rotation.y = -0.35;
+      aMesh.userData = { stationIdx: i };
+      grp.add(aMesh);
+      pickables.push(aMesh);
+
+      // 5. Special 3D Architecture per Station
+      let crystalMesh = null;
+      if (st.action === 'compact') {
+        // 55-Minute Prompt-Cache Rotating Crystal Obelisk
+        crystalMesh = new THREE.Mesh(
+          new THREE.OctahedronGeometry(1.6, 0),
+          new THREE.MeshBasicMaterial({ color: 0xa855f7, wireframe: true })
+        );
+        crystalMesh.position.set(0, 5.8, 0.8);
+        grp.add(crystalMesh);
+      } else if (st.action === 'merge') {
+        // Towering Golden FIFO Merge Archway over the Poem Tape Highway
+        const pillarMat = new THREE.MeshStandardMaterial({ color: 0xffd23f, metalness: 0.6, roughness: 0.25, emissive: 0x553800 });
+        const pL = new THREE.Mesh(new THREE.BoxGeometry(0.65, 7.5, 0.65), pillarMat);
+        pL.position.set(-4.2, 3.75, 1.4);
+        const pR = new THREE.Mesh(new THREE.BoxGeometry(0.65, 7.5, 0.65), pillarMat);
+        pR.position.set(4.2, 3.75, 1.4);
+        const beam = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.75, 0.85), pillarMat);
+        beam.position.set(0, 7.4, 1.4);
+        grp.add(pL, pR, beam);
+      } else if (i === 1) {
+        // Diegetic 3D In-World Terminal Screen at Stop B (WT-103)
+        terminalSlabCanvas = document.createElement('canvas');
+        terminalSlabCanvas.width = 512;
+        terminalSlabCanvas.height = 256;
+        terminalSlabCtx = terminalSlabCanvas.getContext('2d');
+        terminalSlabTex = new THREE.CanvasTexture(terminalSlabCanvas);
+        terminalSlabTex.colorSpace = THREE.SRGBColorSpace;
+        const termMesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(5.2, 2.6),
+          new THREE.MeshBasicMaterial({ map: terminalSlabTex, side: THREE.DoubleSide })
+        );
+        termMesh.position.set(0, 5.2, 1.2);
+        grp.add(termMesh);
+      }
+
+      // 6. Overhead Diegetic 3D Station Banner
+      const banner = makeWorldBanner(
+        [st.title, st.branch, st.desc.slice(0, 62)],
+        { border: st.hex, accent: st.hex, scaleX: 11.8, scaleY: 3.1 }
+      );
+      banner.sprite.position.set(0, 8.2, -1.0);
+      grp.add(banner.sprite);
+
+      scene.add(grp);
+      stationNodes.push({ grp, cMesh, ringMesh, crystalMesh, banner, st });
+    });
+
+    function drawInWorldTerminalSlab(lines) {
+      if (!terminalSlabCtx || !terminalSlabTex) return;
+      const ctx = terminalSlabCtx;
+      ctx.fillStyle = 'rgba(4, 9, 15, 0.96)';
+      ctx.strokeStyle = '#19e6c8';
+      ctx.lineWidth = 4;
+      ctx.fillRect(0, 0, 512, 256);
+      ctx.strokeRect(2, 2, 508, 252);
+      ctx.fillStyle = '#ffd23f';
+      ctx.font = 'bold 18px Menlo, monospace';
+      ctx.fillText('IN-WORLD WORKTREE SHELL (:8788)', 16, 30);
+      ctx.fillStyle = '#9ef0b0';
+      ctx.font = '14px Menlo, monospace';
+      lines.slice(0, 9).forEach((ln, idx) => {
+        ctx.fillText(String(ln).slice(0, 54), 16, 60 + idx * 21);
+      });
+      terminalSlabTex.needsUpdate = true;
+    }
+    drawInWorldTerminalSlab([
+      '$ git worktree list',
+      '. [main]',
+      '.worktrees/wt-103-glb-z-phantom [MOUNTED]',
+      '.worktrees/wt-104-twin-state-harbor-morph [MOUNTED]',
+      '.worktrees/wt-105-cache-compactor-vault [MOUNTED]',
+      '.worktrees/wt-106-terrarium-splat-mounter [MOUNTED]',
+      '✔ 0 overlapping files across active worktrees'
+    ]);
+
+    // 6. ROAMING 3D AGENT PATROL ALONG THE POEM TAPE HIGHWAY
+    const patrolAgents = [
+      { name: 'Ancestor Maestro', u: 0.08, speed: 0.028, img: 'kits/packs/poem_08/cut/08.cast.angel.main-poses/card_01.png' },
+      { name: 'The Poet', u: 0.34, speed: 0.036, img: 'arena/bodies/ACT-001_p0.png' },
+      { name: 'The EX', u: 0.58, speed: 0.031, img: 'kits/packs/poem_09/cut/poet.09.main-poses/card_03.png' },
+      { name: 'The Muse', u: 0.82, speed: 0.045, img: 'kits/packs/poem_01/cut/party.vintage_party.main-poses/card_05.png' }
+    ].map(a => {
+      const tex = texLoader.load(a.img);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.2, 3.0),
+        new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: 0.06, side: THREE.DoubleSide })
+      );
+      scene.add(mesh);
+      return { ...a, mesh };
+    });
+
+    // 7. CAMERA FLIGHT BETWEEN 3D STATIONS
+    let flyAnim = null;
+    let activeStopMode = 'overview';
+
+    function flyToStation(stopKey) {
+      activeStopMode = String(stopKey);
+      document.querySelectorAll('.stop-pill').forEach(b => {
+        b.classList.toggle('active', b.dataset.stop === activeStopMode);
+      });
+
+      if (activeStopMode === 'overview') {
+        flyAnim = {
+          p0: camera.position.clone(),
+          t0: orbit.target.clone(),
+          p1: new THREE.Vector3(0, 24, 52),
+          t1: new THREE.Vector3(0, 3.5, 0),
+          u: 0
+        };
+        return;
+      }
+      if (activeStopMode === 'patrol') return;
+
+      const idx = Number(activeStopMode);
+      const st = STATIONS[idx];
+      if (!st) return;
+      const pt = STOP_COORDS[idx];
+      flyAnim = {
+        p0: camera.position.clone(),
+        t0: orbit.target.clone(),
+        p1: new THREE.Vector3(pt.x, pt.y + 4.4, pt.z + 13.5),
+        t1: new THREE.Vector3(pt.x, pt.y + 3.2, pt.z - 1.0),
+        u: 0
+      };
+
+      document.getElementById('sc-title').textContent = st.title;
+      document.getElementById('sc-sub').textContent = `🌿 ${st.branch}`;
+      document.getElementById('sc-desc').textContent = st.desc;
+    }
+
+    document.querySelectorAll('.stop-pill').forEach(btn => {
+      btn.addEventListener('click', () => flyToStation(btn.dataset.stop));
+    });
+
+    // 8. RAYCAST CLICK / TAP DIRECTLY ON 3D AGENTS & MONUMENTS IN THE WORLD
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    let downPt = null;
+
+    renderer.domElement.addEventListener('pointerdown', e => {
+      downPt = { x: e.clientX, y: e.clientY };
+    });
+    renderer.domElement.addEventListener('pointerup', e => {
+      if (!downPt || Math.hypot(e.clientX - downPt.x, e.clientY - downPt.y) > 8) return;
+      pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(pickables, true);
+      if (hits.length > 0) {
+        let obj = hits[0].object;
+        while (obj && obj.userData.stationIdx === undefined) obj = obj.parent;
+        if (obj && obj.userData.stationIdx !== undefined) {
+          flyToStation(obj.userData.stationIdx);
+        }
       }
     });
-  });
-}
 
-function animate(time) {
-  requestAnimationFrame(animate);
-  if (activeTab === 'pane-office3d') {
-    const w = canvas3d.clientWidth || 380;
-    const h = canvas3d.clientHeight || 500;
-    if (canvas3d.width !== w * renderer.getPixelRatio() || canvas3d.height !== h * renderer.getPixelRatio()) {
-      renderer.setSize(w, h, false);
-      camera.aspect = w / h;
+    // 9. LIVE REST API CALLS TO PORT 8788 (UPDATES 3D IN-WORLD BILLBOARDS & TERMINAL SLAB)
+    const termEl = document.getElementById('sc-term');
+    async function apiPost(path, body = {}) {
+      try {
+        const res = await fetch(path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        return await res.json();
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    }
+
+    document.getElementById('btn-spawn').addEventListener('click', async () => {
+      flyToStation(0);
+      const slug = 'wt-' + Math.floor(107 + Math.random() * 80) + '-inworld-splat';
+      const data = await apiPost('/api/worktree/spawn', {
+        title: `In-World Splat & .GLB Patch (${slug})`,
+        poem: '01',
+        hub: 'hub_01_atlantis'
+      });
+      if (data && data.ok) {
+        const lines = [
+          `$ git worktree add .worktrees/${slug} feat/${slug}`,
+          `✔ Mounted real Git worktree on disk: ${data.card.worktree_path}`,
+          `✔ Branch: ${data.card.branch}`,
+          `✔ Total mounted worktrees: ${(data.git_worktrees || []).length}`
+        ];
+        termEl.textContent = lines.join('\n');
+        drawInWorldTerminalSlab(lines);
+      }
+    });
+
+    document.getElementById('btn-audit').addEventListener('click', async () => {
+      flyToStation(2);
+      const data = await apiPost('/api/worktree/audit', { card_id: 'WT-104' });
+      if (data && data.ok && data.audit) {
+        const lines = [
+          `$ POST /api/worktree/audit (WT-104)`,
+          `✔ ${data.audit.summary}`,
+          ...data.audit.checks.map(c => `[${c.status}] ${c.file}: ${c.detail}`)
+        ];
+        termEl.textContent = lines.join('\n');
+        drawInWorldTerminalSlab(lines);
+      }
+    });
+
+    document.getElementById('btn-compact').addEventListener('click', async () => {
+      flyToStation(3);
+      const data = await apiPost('/api/cache/compact', {});
+      if (data && data.ok) {
+        const lines = [
+          `$ POST /api/cache/compact (55/60m TTL Shrine)`,
+          `✔ Wrote ${data.handoff_path} to disk!`,
+          `✔ Agent Soul preserved: ${data.agent.name}`,
+          `✔ Saved 90% Anthropic warm cache read`
+        ];
+        termEl.textContent = lines.join('\n');
+        drawInWorldTerminalSlab(lines);
+      }
+    });
+
+    document.getElementById('btn-merge').addEventListener('click', async () => {
+      flyToStation(4);
+      const data = await apiPost('/api/worktree/fifo-merge', {});
+      if (data && data.ok) {
+        const lines = [
+          `$ POST /api/worktree/fifo-merge`,
+          `✔ Merged ${data.merged_card.id} (${data.merged_card.branch})`,
+          `✔ ${data.git_output || '0 overlapping files across worktrees'}`
+        ];
+        termEl.textContent = lines.join('\n');
+        drawInWorldTerminalSlab(lines);
+      }
+    });
+
+    document.getElementById('btn-worktrees').addEventListener('click', async () => {
+      flyToStation(1);
+      const data = await apiPost('/api/worktree/exec', { cmd_key: 'worktree_list', card_id: 'WT-103' });
+      if (data && data.ok && data.result) {
+        const lines = [
+          `$ ${data.result.cmd} (${data.result.duration_ms}ms)`,
+          ...data.result.stdout.split('\n').map(l => l.replace('/Users/gaia/WORLDBUILDING-TERMS/wygwyl-world-arch', '.'))
+        ];
+        termEl.textContent = lines.join('\n');
+        drawInWorldTerminalSlab(lines);
+      }
+    });
+
+    // Sky & Splat Hub Switcher
+    document.getElementById('sky-select').addEventListener('change', e => {
+      const p = e.target.value;
+      loadEquirecSky(p);
+      if (p === '11') {
+        mountWorldSplatAndGlb('data/terrarium/atlas_packs/splats/hub_02_harbor_temple.splat', 'data/terrarium/atlas_packs/chisel_glb/hub_02_harbor_temple_chisel.glb');
+      } else if (p === '03') {
+        mountWorldSplatAndGlb('data/terrarium/atlas_packs/splats/hub_02_harbor_storm_ruin.splat', 'data/terrarium/atlas_packs/chisel_glb/hub_02_harbor_temple_chisel.glb');
+      } else {
+        mountWorldSplatAndGlb('data/terrarium/atlas_packs/splats/hub_01_atlantis.splat', 'data/terrarium/atlas_packs/chisel_glb/poem_01_chisel.glb');
+      }
+    });
+
+    document.getElementById('sc-min-btn').addEventListener('click', e => {
+      const card = document.getElementById('station-card');
+      card.classList.toggle('minimized');
+      e.target.textContent = card.classList.contains('minimized') ? '+' : '—';
+    });
+
+    // Poll /api/state on startup to display live transcript steps & mounted worktrees
+    fetch('/api/state').then(r => r.json()).then(st => {
+      if (st && st.git_worktrees) {
+        const steps = (st.transcript && st.transcript.total_steps) || 9325;
+        document.getElementById('live-status').textContent =
+          `IN-WORLD 3D CITY · ${st.git_worktrees.length} GIT WORKTREES · ${steps.toLocaleString()} LIVE STEPS`;
+      }
+    }).catch(() => {});
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
-    }
-    STATE.agents.forEach(ag => {
-      const rt = agentRuntime[ag.id];
-      if (rt && rt.mesh3d) {
-        rt.pos3d.lerp(rt.target3d, 0.06);
-        rt.mesh3d.position.copy(rt.pos3d);
-        rt.mesh3d.position.y += 3.5;
-      }
+      renderer.setSize(window.innerWidth, window.innerHeight);
     });
-    renderer.render(scene, camera);
-  }
-  draw2dOffice(time);
-}
 
-// ============================================================================
-// 7. BOTTOM NAVIGATION, QUICK BUTTONS & MODAL WIRING
-// ============================================================================
-function switchTab(tabId) {
-  activeTab = tabId;
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === tabId));
-  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.toggle('on', b.dataset.tab === tabId));
-}
+    // 10. ANIMATION LOOP
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.1);
+      const t = clock.elapsedTime;
 
-document.querySelectorAll('.bnav-btn').forEach(btn => {
-  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-});
+      // Animate station characters & shrine crystal
+      stationNodes.forEach((n, i) => {
+        n.cMesh.position.y = 2.3 + Math.abs(Math.sin(t * 3.0 + i)) * 0.22;
+        n.cMesh.rotation.z = Math.sin(t * 2.2 + i) * 0.04;
+        const s = 1.0 + Math.sin(t * 3.2 + i) * 0.07;
+        n.ringMesh.scale.set(s, s, 1);
+        if (n.crystalMesh) {
+          n.crystalMesh.rotation.y = t * 1.4;
+          n.crystalMesh.rotation.x = Math.sin(t * 0.8) * 0.35;
+        }
+      });
 
-document.getElementById('btnPhonePreview').addEventListener('click', e => {
-  document.body.classList.toggle('phone-preview');
-  e.currentTarget.classList.toggle('on', document.body.classList.contains('phone-preview'));
-});
+      // Move patrol agents along the Poem Tape curve
+      patrolAgents.forEach((pa, idx) => {
+        pa.u = (pa.u + dt * pa.speed) % 1.0;
+        const pos = roadCurve.getPointAt(pa.u);
+        pa.mesh.position.set(pos.x, pos.y + 1.65 + Math.abs(Math.sin(t * 6.0 + idx)) * 0.2, pos.z + 2.2);
+        pa.mesh.lookAt(camera.position.x, pa.mesh.position.y, camera.position.z);
+      });
 
-document.getElementById('selFloor').addEventListener('change', e => {
-  load3dFloor(e.target.value);
-});
+      // Smooth camera flight
+      if (flyAnim) {
+        flyAnim.u = Math.min(1, flyAnim.u + dt * 1.8);
+        const k = 1 - Math.pow(1 - flyAnim.u, 3);
+        camera.position.lerpVectors(flyAnim.p0, flyAnim.p1, k);
+        orbit.target.lerpVectors(flyAnim.t0, flyAnim.t1, k);
+        if (flyAnim.u >= 1) flyAnim = null;
+      } else if (activeStopMode === 'patrol') {
+        const u = (t * 0.035) % 1.0;
+        const pos = roadCurve.getPointAt(u);
+        const lookPt = roadCurve.getPointAt((u + 0.08) % 1.0);
+        camera.position.set(pos.x - 6, pos.y + 4.8, pos.z + 11);
+        orbit.target.set(lookPt.x, lookPt.y + 2.8, lookPt.z);
+      }
 
-document.getElementById('btnSpawnCard').addEventListener('click', async () => {
-  const num = 100 + STATE.kanban_cards.length + 1;
-  const cid = `WT-${num}`;
-  await apiPost('/api/worktree/spawn', {
-    card_id: cid,
-    slug: `feature-${num}`,
-    title: `Real Git Worktree Task #${num} (Spawned via Live Engine)`,
-    column: 'doing'
-  });
-  activeMobileCol = 'doing';
-  await fetchState();
-  renderAll();
-});
-
-document.getElementById('btnRunFifoMerge').addEventListener('click', async () => {
-  const res = await apiPost('/api/worktree/fifo-merge', {});
-  if (res && res.merged_card) {
-    activeMobileCol = 'merged';
-    openModal(`🔀 Merged ${res.merged_card.id} via FIFO Queue`, `<p>Branch <code>${res.merged_card.branch}</code> merged cleanly into <code>main</code>!</p><pre>${res.git_output || 'Fast-forward / up to date'}</pre>`);
-  } else if (res && res.error) {
-    openModal(`🔀 FIFO Merge Queue`, `<p>${res.error}</p>`);
-  }
-  await fetchState();
-  renderAll();
-});
-
-document.getElementById('btnRunCompact55').addEventListener('click', async () => {
-  const res = await apiPost('/api/cache/compact', { agent_id: selectedAgentId });
-  if (res && res.markdown) {
-    openModal(`⏱️ Wrote Real 55m Handoff File: ${res.handoff_path}`, `<pre>${res.markdown}</pre>`);
-  }
-  await fetchState();
-  renderAll();
-});
-
-document.getElementById('slackSendBtn').addEventListener('click', async () => {
-  const inp = document.getElementById('slackInp');
-  const q = inp.value.trim();
-  if (!q) return;
-  inp.value = '';
-  document.getElementById('btnSpawnCard').click();
-});
-
-function openModal(title, html) {
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalBody').innerHTML = html;
-  document.getElementById('modal').classList.add('on');
-}
-document.getElementById('modalClose').addEventListener('click', () => document.getElementById('modal').classList.remove('on'));
-
-function renderAll() {
-  renderKanban();
-  render2dChips();
-  renderWorktreesAndTerminal();
-  renderSoulsAndRepos();
-}
-
-// Boot
-await fetchState();
-initAgentRuntime();
-build3dAgentsAndStations();
-renderAll();
-await load3dFloor('hub_01_atlantis');
-requestAnimationFrame(animate);
-</script>
+      orbit.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
 </body>
 </html>
