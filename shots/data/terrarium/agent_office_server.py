@@ -301,6 +301,18 @@ class AgentOfficeHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
+    def translate_path(self, path):
+        p = super().translate_path(path)
+        if not os.path.exists(p):
+            try:
+                rel = os.path.relpath(p, str(ROOT))
+                cand = SHOTS / rel
+                if cand.exists():
+                    return str(cand)
+            except Exception:
+                pass
+        return p
+
     def log_message(self, format, *args):
         # Keep logs clean
         pass
