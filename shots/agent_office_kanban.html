@@ -1,0 +1,1267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WYGWYL · 3D/2D Agent Office & Kanban Git Worktree Orchestrator</title>
+<style>
+:root {
+  --bg: #070a10;
+  --panel: #0e141f;
+  --panel2: #131c2b;
+  --edge: #24324a;
+  --ink: #ecf2f8;
+  --dim: #94a8c4;
+  --gold: #ffd23f;
+  --cyan: #5ce1e6;
+  --pink: #ff4d6d;
+  --ok: #4ade80;
+  --purple: #c4b5fd;
+  --orange: #fb923c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 13px/1.45 "Helvetica Neue", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  overflow-x: hidden;
+}
+a { color: var(--cyan); text-decoration: none; }
+
+/* TOP BAR */
+.topbar {
+  position: sticky; top: 0; z-index: 60;
+  background: rgba(9, 13, 21, 0.96);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--edge);
+  padding: 10px 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.brand .k {
+  font: 800 10px/1 "Helvetica Neue", sans-serif;
+  letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase; display: block; margin-bottom: 3px;
+}
+.brand h1 { font: 700 17px/1.15 "Helvetica Neue", sans-serif; color: #fff; }
+.navlinks { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+.navpill {
+  background: #141e2e; border: 1px solid var(--edge); color: var(--ink);
+  padding: 6px 11px; border-radius: 999px; font: 700 11px "Helvetica Neue", sans-serif;
+  cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 5px;
+}
+.navpill:hover, .navpill.active { border-color: var(--gold); color: var(--gold); background: #1a263b; }
+
+/* HERO CONTROLS & FLOOR SELECTOR */
+.control-strip {
+  background: linear-gradient(180deg, #0d1420 0%, #090d15 100%);
+  border-bottom: 1px solid var(--edge);
+  padding: 10px 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.floor-tabs, .view-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.lbl-tag { font: 800 10px/1 Menlo, monospace; color: var(--dim); text-transform: uppercase; letter-spacing: 0.12em; margin-right: 4px; }
+.btn {
+  background: var(--panel2); border: 1px solid var(--edge); color: var(--ink);
+  padding: 6px 11px; border-radius: 6px; font: 700 11px "Helvetica Neue", sans-serif;
+  cursor: pointer; transition: all .15s;
+}
+.btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.btn.on { background: rgba(92,225,230,0.16); border-color: var(--cyan); color: var(--cyan); }
+.btn.gold { background: rgba(255,210,63,0.15); border-color: var(--gold); color: var(--gold); }
+.btn.green { background: rgba(74,222,128,0.15); border-color: var(--ok); color: var(--ok); }
+.btn.pink { background: rgba(255,77,109,0.15); border-color: var(--pink); color: var(--pink); }
+.btn.purple { background: rgba(196,181,253,0.15); border-color: var(--purple); color: var(--purple); }
+
+/* MAIN WORKSPACE GRID */
+.workspace {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  padding: 14px 18px 80px;
+  max-width: 1920px;
+  margin: 0 auto;
+}
+
+/* TOP SIMULATION STAGE (3D OFFICE + /LITE 2D PIXEL OFFICE + AGENT SOULS) */
+.office-stage {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 380px;
+  gap: 12px;
+  min-height: 450px;
+}
+@media (max-width: 1400px) {
+  .office-stage { grid-template-columns: 1fr 1fr; }
+  .souls-dock { grid-column: 1 / -1; }
+}
+@media (max-width: 900px) {
+  .office-stage { grid-template-columns: 1fr; }
+}
+.viewport-card {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.vp-head {
+  padding: 8px 12px;
+  background: rgba(16, 24, 38, 0.95);
+  border-bottom: 1px solid var(--edge);
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.vp-head b { font-size: 12px; color: var(--cyan); letter-spacing: 0.04em; }
+.vp-head span { font: 11px Menlo, monospace; color: var(--dim); }
+.vp-body {
+  position: relative;
+  flex: 1;
+  min-height: 390px;
+  background: #05080d;
+}
+#canvas3d, #canvas2d {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.vp-overlay-pills {
+  position: absolute; bottom: 10px; left: 10px; right: 10px;
+  display: flex; gap: 6px; flex-wrap: wrap; pointer-events: none;
+}
+.station-pill {
+  pointer-events: auto;
+  background: rgba(10, 15, 24, 0.88);
+  border: 1px solid var(--edge);
+  color: var(--ink);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font: 700 10px "Helvetica Neue", sans-serif;
+  cursor: pointer;
+}
+.station-pill:hover { border-color: var(--gold); color: var(--gold); }
+
+/* PERSISTENT SOUL & 55-MINUTE CACHE DOCK */
+.souls-dock {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  max-height: 455px;
+}
+.souls-list {
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+.agent-card {
+  background: var(--panel2);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.agent-card:hover, .agent-card.selected { border-color: var(--gold); }
+.ag-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px; }
+.ag-name { font: 700 12px "Helvetica Neue", sans-serif; display: flex; align-items: center; gap: 6px; }
+.ag-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.ag-role { font-size: 11px; color: var(--dim); margin-bottom: 4px; }
+.ag-soul { font-size: 11px; color: #cbd5e1; background: rgba(0,0,0,0.28); padding: 5px 7px; border-radius: 5px; margin-bottom: 6px; border-left: 2px solid var(--gold); }
+.cache-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 700 10px Menlo, monospace; }
+.cache-bar { flex: 1; height: 7px; background: #1e293b; border-radius: 4px; overflow: hidden; }
+.cache-fill { height: 100%; transition: width .3s; }
+
+/* 5-COLUMN KANBAN + GIT WORKTREE BOARD */
+.kanban-section {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  padding: 12px;
+}
+.kanban-header {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--edge);
+}
+.kanban-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(260px, 1fr));
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.k-col {
+  background: #0a0f18;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  min-height: 440px;
+}
+.k-col-head {
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--edge);
+  background: rgba(20, 29, 44, 0.85);
+  border-radius: 8px 8px 0 0;
+}
+.k-col-head .ctitle { font: 800 12px "Helvetica Neue", sans-serif; letter-spacing: 0.06em; display: flex; justify-content: space-between; }
+.k-col-head .csub { font-size: 11px; color: var(--dim); margin-top: 2px; }
+.k-cards {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.k-card {
+  background: var(--panel2);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  transition: transform .12s, border-color .12s;
+}
+.k-card:hover { border-color: var(--gold); transform: translateY(-1px); }
+.kc-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; font: 700 11px Menlo, monospace; }
+.kc-title { font: 700 13px/1.3 "Helvetica Neue", sans-serif; color: #fff; }
+
+/* BEFORE / AFTER MINI SLIDER IN CARD */
+.ba-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #000;
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: ew-resize;
+}
+.ba-wrap img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none;
+}
+.ba-before-clip {
+  position: absolute; inset: 0; width: 50%; overflow: hidden; border-right: 2px solid var(--gold);
+}
+.ba-before-clip img { width: 200%; max-width: none; }
+.ba-tag {
+  position: absolute; top: 5px; padding: 2px 6px; border-radius: 4px;
+  font: 800 9px Menlo, monospace; background: rgba(7,10,16,0.85);
+}
+.ba-tag.b { left: 5px; color: var(--pink); border: 1px solid var(--pink); }
+.ba-tag.a { right: 5px; color: var(--ok); border: 1px solid var(--ok); }
+
+.kc-meta {
+  font: 11px/1.4 Menlo, monospace;
+  color: var(--dim);
+  background: rgba(6, 9, 15, 0.65);
+  padding: 6px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.kc-meta div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kc-meta b { color: var(--cyan); }
+.kc-actions { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+.kc-actions button { flex: 1; padding: 5px 6px; font-size: 10px; }
+
+/* 10-REPO RANKING MATRIX & SLACK LOG DRAWER */
+.bottom-split {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 1200px) { .bottom-split { grid-template-columns: 1fr; } }
+
+.repo-table-wrap {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  padding: 12px;
+  overflow-x: auto;
+}
+table.repo-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.repo-tbl th, table.repo-tbl td {
+  padding: 8px 10px; border-bottom: 1px solid var(--edge); text-align: left; vertical-align: top;
+}
+table.repo-tbl th { font: 800 10px Menlo, monospace; color: var(--gold); text-transform: uppercase; background: #0a0f18; }
+table.repo-tbl tr:hover { background: rgba(92,225,230,0.06); }
+.cmd-pill {
+  display: inline-block; background: #070b12; border: 1px solid var(--edge);
+  padding: 3px 7px; border-radius: 4px; font: 10px Menlo, monospace; color: var(--cyan);
+  cursor: pointer; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cmd-pill:hover { border-color: var(--gold); color: var(--gold); }
+
+/* OFFICE SLACK & HOOK STREAM */
+.slack-card {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  max-height: 460px;
+}
+.slack-log {
+  padding: 10px 12px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+.slack-msg {
+  background: var(--panel2);
+  border-left: 3px solid var(--cyan);
+  padding: 7px 10px;
+  border-radius: 0 6px 6px 0;
+}
+.slack-msg b { color: var(--gold); }
+.slack-input-row {
+  padding: 10px;
+  border-top: 1px solid var(--edge);
+  display: flex;
+  gap: 8px;
+}
+.slack-input-row input {
+  flex: 1; background: #080c14; border: 1px solid var(--edge); color: #fff;
+  padding: 8px 12px; border-radius: 6px; outline: none;
+}
+.slack-input-row input:focus { border-color: var(--gold); }
+
+/* MODAL FOR HANDOFF NOTE / CARD INSPECTOR */
+#modal {
+  position: fixed; inset: 0; background: rgba(4, 7, 12, 0.85);
+  backdrop-filter: blur(8px); z-index: 100; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+}
+#modal.on { display: flex; }
+.modal-box {
+  background: var(--panel); border: 2px solid var(--gold); border-radius: 12px;
+  max-width: 920px; width: 100%; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;
+}
+.modal-head {
+  padding: 12px 16px; background: #0b111b; border-bottom: 1px solid var(--edge);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-body { padding: 16px; overflow-y: auto; font-size: 13px; line-height: 1.55; }
+.modal-body pre {
+  background: #070a10; border: 1px solid var(--edge); padding: 12px; border-radius: 6px;
+  font: 12px/1.45 Menlo, monospace; color: var(--ok); overflow-x: auto; white-space: pre-wrap; margin-top: 8px;
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="k">KOHNNY × 10 OPEN-SOURCE REPOS · UNIFIED FOR WYGWYL</span>
+    <h1>3D/2D Multiplayer Agent Office &amp; Kanban Git Worktree Studio</h1>
+  </div>
+  <nav class="navlinks">
+    <a class="navpill active" href="agent_office_kanban.html">🏢 Agent Office &amp; Worktree Kanban</a>
+    <a class="navpill" href="atlas_splat_studio.html" style="border-color:#a78bfa;color:#c4b5fd">🌐 Atlas Splat &amp; .GLB Studio</a>
+    <a class="navpill" href="foundry_inverse.html">🔨 Foundry &amp; Inverse Studio</a>
+    <a class="navpill" href="png_browser.html?cat=atlas_splats">🖼️ Saved PNG Grid Browser (1,352)</a>
+    <a class="navpill" href="terrarium.html?poem=01&foundry=w1623">🌍 3D Terrarium + Hound</a>
+    <a class="navpill" href="wag_stack.html">🎞️ WAG-STACK</a>
+  </nav>
+</header>
+
+<section class="control-strip">
+  <div class="floor-tabs">
+    <span class="lbl-tag">🏢 Building Floor (agent-office):</span>
+    <button class="btn on" data-floor="hub_01_atlantis">Floor 1 · Hub 01 Club Atlantis (P06–P10)</button>
+    <button class="btn" data-floor="hub_02_harbor_temple">Floor 2 · Hub 02 Harbor Temple (P03, P11)</button>
+    <button class="btn" data-floor="hub_03_mount_vernon">Floor 3 · Hub 03 Mount Vernon (P01, P02, P14)</button>
+    <button class="btn" data-floor="hub_04_shore_garden">Floor 4 · Hub 04 Shore Garden (P04, P05)</button>
+  </div>
+  <div class="view-tabs">
+    <button class="btn gold" id="btnNewCard">+ Plan New Worktree Card (Maestro Hound)</button>
+    <button class="btn green" id="btnFifoMerge">🔀 Dequeue &amp; Merge FIFO Slot #1</button>
+    <button class="btn pink" id="btnCompactAll">⏱️ Trigger 55m Cache Auto-Compaction</button>
+    <button class="btn purple" id="btnShowBlueprints">🖼️ View Architecture Plates (3)</button>
+  </div>
+</section>
+
+<main class="workspace">
+  <!-- 1. TOP SIMULATION STAGE: 3D .GLB+.SPLAT OFFICE + /LITE 2D PIXEL OFFICE + PERSISTENT SOULS -->
+  <section class="office-stage">
+    <!-- Left: Live Three.js 3D Soundstage Office -->
+    <div class="viewport-card">
+      <div class="vp-head">
+        <b id="title3d">🌐 3D MULTIPLAYER SOUNDSTAGE OFFICE · FLOOR 1 (CLUB ATLANTIS .GLB + .SPLAT)</b>
+        <span>Drag to Orbit · Scroll to Zoom · Click Station Pill to Walk Agent</span>
+      </div>
+      <div class="vp-body">
+        <canvas id="canvas3d"></canvas>
+        <div class="vp-overlay-pills" id="stationPills3d"></div>
+      </div>
+    </div>
+
+    <!-- Center: Live /lite 2D Pixel & Isometric Floorplan -->
+    <div class="viewport-card">
+      <div class="vp-head">
+        <b style="color:var(--purple)">📱 /LITE 2D PIXEL OFFICE &amp; A* PATHFINDING VIEW (PixelOffice + Claude-Office)</b>
+        <span>Click any room to send selected agent</span>
+      </div>
+      <div class="vp-body">
+        <canvas id="canvas2d"></canvas>
+      </div>
+    </div>
+
+    <!-- Right: Named Persistent-Soul Agents & 55-Minute Prompt Cache Timers -->
+    <div class="souls-dock">
+      <div class="vp-head">
+        <b style="color:var(--gold)">🧠 PERSISTENT SOULS &amp; 55m PROMPT-CACHE TIMERS</b>
+        <span id="activeAgentTag">6 Active Agents</span>
+      </div>
+      <div class="souls-list" id="soulsList"></div>
+    </div>
+  </section>
+
+  <!-- 2. 5-COLUMN KANBAN + GIT WORKTREE + CROSS-MODEL AUDIT + FIFO MERGE BOARD -->
+  <section class="kanban-section">
+    <div class="kanban-header">
+      <div>
+        <span class="lbl-tag" style="color:var(--gold)">KOHNNY × AGENT-007 × WORKBENCH × VIBE-KANBAN × CLAUDE-OFFICE</span>
+        <h2 style="font-size:16px;color:#fff;margin-top:2px">5-Column Git Worktree Kanban Pipeline (Drag or Click Stage Buttons — Watch Agents Walk Between Stations!)</h2>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="lbl-tag">Cross-Model Rule: Claude Codes → Codex/Gemini Audits → Single-File FIFO Merge</span>
+      </div>
+    </div>
+    <div class="kanban-grid" id="kanbanGrid"></div>
+  </section>
+
+  <!-- 3. BOTTOM SPLIT: 10-REPO RANKING MATRIX & LIVE OFFICE SLACK / HOOK STREAM -->
+  <section class="bottom-split">
+    <div class="repo-table-wrap">
+      <div class="kanban-header" style="margin-bottom:8px">
+        <div>
+          <span class="lbl-tag" style="color:var(--cyan)">WHICH OF THESE ARE BEST? · DEFINITIVE RANKING FOR OUR PIPELINE</span>
+          <h3 style="font-size:15px;color:#fff">All 10 Open-Source Kohnny Alternatives Ranked &amp; Integrated (Click Any Command to Copy)</h3>
+        </div>
+      </div>
+      <table class="repo-tbl">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Repository &amp; Category</th>
+            <th>Why It's Best / What We Took From It</th>
+            <th>One-Click Install / Run Command</th>
+          </tr>
+        </thead>
+        <tbody id="repoTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="slack-card">
+      <div class="vp-head">
+        <b style="color:var(--ok)">💬 HALFWORLD OFFICE SLACK &amp; HOOK STREAM (Maestro Hound · Poet · EX Auditor)</b>
+        <span>Live Worktree &amp; Audit Events</span>
+      </div>
+      <div class="slack-log" id="slackLog"></div>
+      <div class="slack-input-row">
+        <input id="slackInput" type="text" placeholder="Tell Maestro Hound or The Poet what card to plan, audit, compact, or merge…">
+        <button class="btn gold" id="slackSend">Send</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- MODAL -->
+<div id="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <b id="modalTitle" style="color:var(--gold);font-size:15px">Inspector</b>
+      <button class="btn pink" id="modalClose">✕ Close [Esc]</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script type="module">
+const res = await fetch('data/terrarium/agent_office_manifest.json');
+const DATA = await res.json();
+
+const FLOOR_CONFIG = {
+  hub_01_atlantis: {
+    label: 'FLOOR 1 · HUB 01: CLUB ATLANTIS (P06–P10)',
+    glb: 'data/terrarium/atlas_packs/glb/hub_01_atlantis_chisel.glb',
+    splat: 'data/terrarium/atlas_packs/splats/hub_01_atlantis.splat',
+    color: 0x5ce1e6
+  },
+  hub_02_harbor_temple: {
+    label: 'FLOOR 2 · HUB 02: HARBOR TEMPLE TWIN-STATE (P03, P11)',
+    glb: 'data/terrarium/atlas_packs/glb/hub_02_harbor_temple_chisel.glb',
+    splat: 'data/terrarium/atlas_packs/splats/hub_02_harbor_temple.splat',
+    color: 0xffd23f
+  },
+  hub_03_mount_vernon: {
+    label: 'FLOOR 3 · HUB 03: MOUNT VERNON ROOFTOPS (P01, P02, P14)',
+    glb: 'data/terrarium/atlas_packs/glb/hub_03_mount_vernon_chisel.glb',
+    splat: 'data/terrarium/atlas_packs/splats/hub_03_mount_vernon.splat',
+    color: 0xff4d6d
+  },
+  hub_04_shore_garden: {
+    label: 'FLOOR 4 · HUB 04: SHORELINE & WHITE TREE GARDEN (P04, P05)',
+    glb: 'data/terrarium/atlas_packs/glb/hub_04_shore_garden_chisel.glb',
+    splat: 'data/terrarium/atlas_packs/splats/hub_04_shore_garden.splat',
+    color: 0x4ade80
+  }
+};
+
+let selectedAgentId = DATA.agents[0].id;
+let activeFloor = 'hub_01_atlantis';
+
+function logSlack(sender, text, color = '#5ce1e6') {
+  const box = document.getElementById('slackLog');
+  const div = document.createElement('div');
+  div.className = 'slack-msg';
+  div.style.borderLeftColor = color;
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  div.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-bottom:2px"><b>${sender}</b><span>${time}</span></div><div>${text}</div>`;
+  box.prepend(div);
+}
+
+// ============================================================================
+// 1. RENDER PERSISTENT SOULS & 55-MINUTE CACHE DOCK
+// ============================================================================
+function renderSoulsDock() {
+  const list = document.getElementById('soulsList');
+  list.innerHTML = DATA.agents.map(ag => {
+    const pct = Math.min(100, Math.round((ag.cache_minutes_elapsed / ag.cache_ttl_minutes) * 100));
+    const barCol = pct >= 90 ? 'var(--pink)' : pct >= 70 ? 'var(--gold)' : 'var(--ok)';
+    const st = DATA.stations[ag.station] || { name: ag.station };
+    return `
+      <div class="agent-card ${ag.id === selectedAgentId ? 'selected' : ''}" data-ag="${ag.id}">
+        <div class="ag-top">
+          <div class="ag-name"><span class="ag-dot" style="background:${ag.color}"></span>${ag.name}</div>
+          <span style="font:700 10px Menlo,monospace;color:${ag.color}">${ag.status}</span>
+        </div>
+        <div class="ag-role">${ag.role} · <code style="color:var(--cyan)">${ag.harness}</code></div>
+        <div class="ag-soul">${ag.soul}</div>
+        <div style="font-size:11px;color:var(--gold);margin-bottom:5px">📍 Station: <b>${st.name}</b></div>
+        <div class="cache-row">
+          <span>⏱️ Cache: ${ag.cache_minutes_elapsed}:00 / ${ag.cache_ttl_minutes}:00</span>
+          <div class="cache-bar"><div class="cache-fill" style="width:${pct}%;background:${barCol}"></div></div>
+          <button class="btn" style="padding:2px 6px;font-size:10px" data-compact="${ag.id}">📦 Compact</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  list.querySelectorAll('.agent-card').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.dataset.compact) return;
+      selectedAgentId = el.dataset.ag;
+      renderSoulsDock();
+    });
+  });
+
+  list.querySelectorAll('[data-compact]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      triggerAgentCacheCompaction(btn.dataset.compact);
+    });
+  });
+}
+
+function triggerAgentCacheCompaction(agentId) {
+  const ag = DATA.agents.find(a => a.id === agentId);
+  if (!ag) return;
+  const oldMins = ag.cache_minutes_elapsed;
+  ag.cache_minutes_elapsed = 1;
+  ag.station = 'library';
+  ag.status = 'COMPACTED_HANDOFF';
+  syncAgentTargets();
+  renderSoulsDock();
+
+  const card = DATA.kanban_cards.find(c => c.agent_id === ag.id) || DATA.kanban_cards[0];
+  const md = `# ⏱️ 55-Minute Prompt-Cache Auto-Compaction Handoff Note\n` +
+    `- **Agent**: ${ag.name} (${ag.harness})\n` +
+    `- **Compacted At**: ${oldMins}:00 / 55:00 (Saved before 60:00 Anthropic Cache TTL Expiry!)\n` +
+    `- **Active Worktree**: \`${card.worktree_path}\` (\`${card.branch}\`)\n` +
+    `- **Cross-Model Auditor**: ${ag.auditor_harness}\n\n` +
+    `## Persistent Soul Preserved\n> ${ag.soul}\n\n` +
+    `## Memory Checkpoints Written to .worktrees/${card.id.toLowerCase()}/HANDOFF_55M.md\n` +
+    ag.memory_notes.map(m => `- ${m}`).join('\n') +
+    `\n\n## Warm-Cache Resume Command\n\`\`\`bash\n${card.tmux_cmd}\n\`\`\``;
+
+  logSlack(
+    `⏱️ 55m Cache Daemon (${ag.name})`,
+    `Auto-compacted session at <b>${oldMins}:00 / 55:00</b> into <code>.worktrees/${card.id.toLowerCase()}/HANDOFF_55M.md</code> and reset warm cache clock to <code>01:00</code>!`,
+    '#4ade80'
+  );
+  openModal(`⏱️ 55-Minute Prompt-Cache Handoff Note · ${ag.name}`, `<p>Kohnny + <code>claude-code-kanban</code> auto-compaction triggered before the 60-minute prompt cache expired:</p><pre>${md}</pre>`);
+}
+
+// ============================================================================
+// 2. RENDER 5-COLUMN KANBAN + GIT WORKTREE PIPELINE
+// ============================================================================
+const COLUMNS = [
+  { id: 'planning', title: '📋 1. PLANNING', sub: 'Before/After HTML Mockups (Whiteboard)', color: '#c4b5fd', station: 'whiteboard' },
+  { id: 'doing', title: '🔨 2. DOING (WORKTREE)', sub: 'Isolated Git Worktree + tmux (Desk)', color: '#5ce1e6', station: 'desk_splat' },
+  { id: 'review', title: '🔍 3. CROSS-MODEL REVIEW', sub: 'Codex/Gemini Audits Claude (Audit Bench)', color: '#ff4d6d', station: 'audit_bench' },
+  { id: 'merge_queue', title: '🔀 4. FIFO MERGE QUEUE', sub: 'Single-File Conflict-Free Queue (Merge Gate)', color: '#ffd23f', station: 'merge_gate' },
+  { id: 'merged', title: '✅ 5. MERGED & LIVE', sub: 'Deployed to origin/main & :8788 (Lounge)', color: '#4ade80', station: 'coffee_bar' }
+];
+
+function renderKanban() {
+  const grid = document.getElementById('kanbanGrid');
+  grid.innerHTML = COLUMNS.map(col => {
+    const cards = DATA.kanban_cards.filter(c => c.column === col.id);
+    return `
+      <div class="k-col">
+        <div class="k-col-head" style="border-bottom-color:${col.color}">
+          <div class="ctitle" style="color:${col.color}"><span>${col.title}</span><span>${cards.length}</span></div>
+          <div class="csub">${col.sub}</div>
+        </div>
+        <div class="k-cards">
+          ${cards.map(c => renderCardHTML(c, col)).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Wire Before/After interactive sliders inside cards
+  grid.querySelectorAll('.ba-wrap').forEach(wrap => {
+    const clip = wrap.querySelector('.ba-before-clip');
+    const move = e => {
+      const rect = wrap.getBoundingClientRect();
+      const x = Math.max(0, Math.min(rect.width, (e.clientX || (e.touches && e.touches[0].clientX) || 0) - rect.left));
+      const pct = (x / rect.width) * 100;
+      clip.style.width = pct + '%';
+    };
+    wrap.addEventListener('mousemove', move);
+    wrap.addEventListener('touchmove', move, { passive: true });
+  });
+
+  // Wire stage transition & inspector buttons
+  grid.querySelectorAll('[data-move]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [cardId, dir] = btn.dataset.move.split(':');
+      moveCardStage(cardId, dir);
+    });
+  });
+
+  grid.querySelectorAll('[data-inspect]').forEach(btn => {
+    btn.addEventListener('click', () => inspectCard(btn.dataset.inspect));
+  });
+}
+
+function renderCardHTML(c, col) {
+  const ag = DATA.agents.find(a => a.id === c.agent_id) || DATA.agents[0];
+  const colIdx = COLUMNS.findIndex(x => x.id === c.column);
+  const canPrev = colIdx > 0;
+  const canNext = colIdx < COLUMNS.length - 1;
+
+  return `
+    <div class="k-card" style="border-color:${c.needs_permission ? 'var(--pink)' : 'var(--edge)'}">
+      <div class="kc-top">
+        <span style="color:${col.color}">${c.id} · P${c.poem}</span>
+        <span style="color:${ag.color}">👤 ${ag.name.split(' ')[0]}</span>
+      </div>
+      <div class="kc-title">${c.title}</div>
+      <div class="ba-wrap" title="Scrub horizontally to compare BEFORE vs AFTER mockup">
+        <img src="${c.after_img}" alt="After">
+        <div class="ba-before-clip"><img src="${c.before_img}" alt="Before"></div>
+        <span class="ba-tag b">BEFORE</span>
+        <span class="ba-tag a">AFTER</span>
+      </div>
+      <div class="kc-meta">
+        <div>🌿 <b>${c.worktree_path}</b></div>
+        <div>🤖 Coder: ${c.harness}</div>
+        <div>🛡️ Auditor: <span style="color:var(--pink)">${c.auditor}</span></div>
+        <div>🔀 ${c.conflict_status}</div>
+      </div>
+      ${c.needs_permission ? `
+        <div class="kc-actions">
+          <button class="btn green" data-move="${c.id}:next">✓ Approve → FIFO Merge</button>
+          <button class="btn pink" data-move="${c.id}:prev">↺ Request Fix (Doing)</button>
+        </div>
+      ` : `
+        <div class="kc-actions">
+          ${canPrev ? `<button class="btn" data-move="${c.id}:prev">◀ Prev</button>` : ''}
+          <button class="btn" data-inspect="${c.id}">🔍 Inspect / tmux</button>
+          ${canNext ? `<button class="btn gold" data-move="${c.id}:next">Advance ▶</button>` : ''}
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function moveCardStage(cardId, dir) {
+  const card = DATA.kanban_cards.find(c => c.id === cardId);
+  if (!card) return;
+  const idx = COLUMNS.findIndex(x => x.id === card.column);
+  const nextIdx = dir === 'next' ? Math.min(COLUMNS.length - 1, idx + 1) : Math.max(0, idx - 1);
+  const targetCol = COLUMNS[nextIdx];
+  card.column = targetCol.id;
+  card.needs_permission = (targetCol.id === 'review');
+
+  // Move the assigned agent to the matching 3D & 2D Office Station!
+  const ag = DATA.agents.find(a => a.id === card.agent_id);
+  if (ag) {
+    ag.station = targetCol.station;
+    ag.status = targetCol.id.toUpperCase();
+    selectedAgentId = ag.id;
+  }
+
+  syncAgentTargets();
+  renderSoulsDock();
+  renderKanban();
+
+  logSlack(
+    `🐕 Maestro Hound → ${ag ? ag.name : 'Agent'}`,
+    `Moved card <b>${card.id} (${card.title})</b> to <b>${targetCol.title}</b>. Agent walked to <b>${DATA.stations[targetCol.station].name}</b> in worktree <code>${card.worktree_path}</code>.`,
+    targetCol.color
+  );
+}
+
+function inspectCard(cardId) {
+  const c = DATA.kanban_cards.find(x => x.id === cardId);
+  if (!c) return;
+  const ag = DATA.agents.find(a => a.id === c.agent_id) || DATA.agents[0];
+  openModal(
+    `${c.id} · ${c.title}`,
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div><div class="lbl-tag" style="color:var(--pink);margin-bottom:4px">BEFORE MOCKUP</div><img src="${c.before_img}" style="width:100%;border-radius:6px;border:1px solid var(--pink)"></div>
+      <div><div class="lbl-tag" style="color:var(--ok);margin-bottom:4px">AFTER MOCKUP</div><img src="${c.after_img}" style="width:100%;border-radius:6px;border:1px solid var(--ok)"></div>
+    </div>
+    <p><b>Mockup Notes:</b> ${c.mockup_caption}</p>
+    <p style="margin-top:6px"><b>Assigned Agent:</b> ${ag.name} (<code>${c.harness}</code>) · <b>Cross-Model Auditor:</b> <span style="color:var(--pink)">${c.auditor}</span></p>
+    <p style="margin-top:6px"><b>Files Touched (FIFO Conflict Guard):</b> <code>${c.files_touched.join(', ')}</code></p>
+    <p style="margin-top:6px"><b>Audit &amp; Queue Notes:</b> ${c.audit_notes}</p>
+    <div style="margin-top:10px" class="lbl-tag">Copyable Git Worktree + tmux Launch Command (langwatch/kanban-code):</div>
+    <pre>${c.tmux_cmd}</pre>`
+  );
+}
+
+// ============================================================================
+// 3. RENDER 10-REPO RANKING TABLE
+// ============================================================================
+function renderRepoTable() {
+  const tbody = document.getElementById('repoTableBody');
+  tbody.innerHTML = DATA.repos_ranked.map(r => `
+    <tr>
+      <td><b style="color:${r.accent};font-size:14px">#${r.rank}</b><br><span style="font:700 10px Menlo,monospace;color:var(--dim)">${r.score}/100</span></td>
+      <td>
+        <a href="${r.url}" target="_blank" style="font-weight:700;color:${r.accent};font-size:13px">${r.repo} ↗</a>
+        <div style="font-size:11px;color:var(--gold);margin-top:2px">${r.category}</div>
+      </td>
+      <td>
+        <div style="color:#fff;font-weight:600;margin-bottom:3px">${r.best_for}</div>
+        <div style="color:var(--ok);font-size:11px"><b>In Our WYGWYL Studio:</b> ${r.how_used_in_wygwyl}</div>
+      </td>
+      <td>
+        <span class="cmd-pill" data-copy="${r.install_cmd.replace(/"/g, '&quot;')}" title="Click to copy command">📋 ${r.install_cmd}</span>
+      </td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('[data-copy]').forEach(el => {
+    el.addEventListener('click', () => {
+      navigator.clipboard?.writeText(el.dataset.copy);
+      const orig = el.textContent;
+      el.textContent = '✓ Copied to clipboard!';
+      setTimeout(() => { el.textContent = orig; }, 1400);
+    });
+  });
+}
+
+// ============================================================================
+// 4. THREE.JS 3D MULTIPLAYER SOUNDSTAGE OFFICE (.GLB + .SPLAT + 6 STATIONS)
+// ============================================================================
+const canvas3d = document.getElementById('canvas3d');
+const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x060911);
+scene.fog = new THREE.FogExp2(0x060911, 0.0045);
+
+const camera = new THREE.PerspectiveCamera(50, 1.6, 0.5, 600);
+let camYaw = 0.35, camPitch = 0.48, camDist = 92;
+const camTarget = new THREE.Vector3(0, 4, 0);
+
+function updateCameraOrbit() {
+  camera.position.x = camTarget.x + camDist * Math.sin(camYaw) * Math.cos(camPitch);
+  camera.position.y = camTarget.y + camDist * Math.sin(camPitch);
+  camera.position.z = camTarget.z + camDist * Math.cos(camYaw) * Math.cos(camPitch);
+  camera.lookAt(camTarget);
+}
+updateCameraOrbit();
+
+let isDragging3d = false, prevX = 0, prevY = 0;
+canvas3d.addEventListener('mousedown', e => { isDragging3d = true; prevX = e.clientX; prevY = e.clientY; });
+window.addEventListener('mouseup', () => { isDragging3d = false; });
+window.addEventListener('mousemove', e => {
+  if (!isDragging3d) return;
+  camYaw -= (e.clientX - prevX) * 0.007;
+  camPitch = Math.max(0.12, Math.min(1.35, camPitch + (e.clientY - prevY) * 0.007));
+  prevX = e.clientX; prevY = e.clientY;
+  updateCameraOrbit();
+});
+canvas3d.addEventListener('wheel', e => {
+  e.preventDefault();
+  camDist = Math.max(28, Math.min(180, camDist + e.deltaY * 0.06));
+  updateCameraOrbit();
+}, { passive: false });
+
+scene.add(new THREE.AmbientLight(0xdbeafe, 0.85));
+const dirLight = new THREE.DirectionalLight(0xffd23f, 0.9);
+dirLight.position.set(40, 80, 50);
+scene.add(dirLight);
+
+const floorGroup = new THREE.Group();
+scene.add(floorGroup);
+const stationsGroup = new THREE.Group();
+scene.add(stationsGroup);
+const agents3dGroup = new THREE.Group();
+scene.add(agents3dGroup);
+
+function makeLabelSprite(text, borderHex = '#5ce1e6', subText = '') {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = 'rgba(8, 13, 22, 0.90)';
+  ctx.strokeStyle = borderHex;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.roundRect(8, 8, 496, 112, 16);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = borderHex;
+  ctx.font = 'bold 26px "Helvetica Neue", Arial, sans-serif';
+  ctx.fillText(text.slice(0, 34), 26, 52);
+  if (subText) {
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '21px Menlo, monospace';
+    ctx.fillText(subText.slice(0, 42), 26, 92);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+  const sp = new THREE.Sprite(mat);
+  sp.scale.set(19, 4.8, 1);
+  return sp;
+}
+
+// Build 3D Office Stations
+Object.entries(DATA.stations).forEach(([stKey, st]) => {
+  const g = new THREE.Group();
+  g.position.set(st.pos3d[0], st.pos3d[1], st.pos3d[2]);
+  const col = new THREE.Color(st.color);
+
+  // Glowing platform pad
+  const padGeo = new THREE.CylinderGeometry(7.5, 8.2, 0.8, 28);
+  const padMat = new THREE.MeshBasicMaterial({ color: col, wireframe: false, transparent: true, opacity: 0.26 });
+  g.add(new THREE.Mesh(padGeo, padMat));
+
+  const ringGeo = new THREE.RingGeometry(7.4, 8.2, 32);
+  const ringMat = new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.45;
+  g.add(ring);
+
+  // 3D Desk / Whiteboard / Bookshelf / Gate prop
+  const propGeo = new THREE.BoxGeometry(5.5, 4.2, 2.2);
+  const propMat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.35, metalness: 0.3 });
+  const prop = new THREE.Mesh(propGeo, propMat);
+  prop.position.y = 2.5;
+  g.add(prop);
+
+  const lbl = makeLabelSprite(st.name, st.color, `Station: ${stKey}`);
+  lbl.position.y = 8.5;
+  g.add(lbl);
+  stationsGroup.add(g);
+});
+
+// Build 3D Agent Avatars
+const agentMeshes = {};
+DATA.agents.forEach((ag, i) => {
+  const g = new THREE.Group();
+  const st = DATA.stations[ag.station] || DATA.stations.whiteboard;
+  const angle = (i / DATA.agents.length) * Math.PI * 2;
+  const startX = st.pos3d[0] + Math.cos(angle) * 3.5;
+  const startZ = st.pos3d[2] + Math.sin(angle) * 3.5;
+  g.position.set(startX, st.pos3d[1] + 0.5, startZ);
+
+  const col = new THREE.Color(ag.color);
+  // 2.5D Agent Pillar + Halo
+  const bodyGeo = new THREE.CylinderGeometry(1.4, 1.8, 6.2, 16);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.28 });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = 3.1;
+  g.add(body);
+
+  const headGeo = new THREE.SphereGeometry(1.45, 16, 16);
+  const head = new THREE.Mesh(headGeo, bodyMat);
+  head.position.y = 7.2;
+  g.add(head);
+
+  const badge = makeLabelSprite(ag.name, ag.color, `${ag.status} · ${ag.cache_minutes_elapsed}/55m`);
+  badge.position.y = 11.8;
+  badge.scale.set(16, 4.0, 1);
+  g.add(badge);
+
+  agents3dGroup.add(g);
+  agentMeshes[ag.id] = {
+    group: g,
+    badge,
+    target3d: new THREE.Vector3(startX, st.pos3d[1] + 0.5, startZ),
+    pos2d: [...st.pos2d],
+    target2d: [...st.pos2d]
+  };
+});
+
+function syncAgentTargets() {
+  DATA.agents.forEach((ag, i) => {
+    const st = DATA.stations[ag.station] || DATA.stations.whiteboard;
+    const m = agentMeshes[ag.id];
+    if (!m) return;
+    const offsetAngle = (i / DATA.agents.length) * Math.PI * 2;
+    m.target3d.set(
+      st.pos3d[0] + Math.cos(offsetAngle) * 3.8,
+      st.pos3d[1] + 0.5,
+      st.pos3d[2] + Math.sin(offsetAngle) * 3.8
+    );
+    m.target2d = [
+      st.pos2d[0] + Math.cos(offsetAngle) * 0.035,
+      st.pos2d[1] + Math.sin(offsetAngle) * 0.045
+    ];
+  });
+}
+
+// Load real binary .GLB + .SPLAT for the selected building floor!
+async function load3dFloor(floorKey) {
+  activeFloor = floorKey;
+  const cfg = FLOOR_CONFIG[floorKey] || FLOOR_CONFIG.hub_01_atlantis;
+  document.getElementById('title3d').textContent = `🌐 3D MULTIPLAYER SOUNDSTAGE · ${cfg.label}`;
+
+  while (floorGroup.children.length) {
+    floorGroup.remove(floorGroup.children[0]);
+  }
+
+  // Reference floor grid
+  const grid = new THREE.GridHelper(170, 34, cfg.color, 0x1e293b);
+  floorGroup.add(grid);
+
+  // Load 32-byte .splat cloud
+  try {
+    const sres = await fetch(cfg.splat);
+    if (sres.ok) {
+      const buf = await sres.arrayBuffer();
+      const n = Math.floor(buf.byteLength / 32);
+      const dv = new DataView(buf);
+      const u8 = new Uint8Array(buf);
+      const pos = new Float32Array(n * 3);
+      const col = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        const off = i * 32;
+        pos[i * 3 + 0] = dv.getFloat32(off + 0, true);
+        pos[i * 3 + 1] = dv.getFloat32(off + 4, true);
+        pos[i * 3 + 2] = dv.getFloat32(off + 8, true);
+        col[i * 3 + 0] = u8[off + 24] / 255;
+        col[i * 3 + 1] = u8[off + 25] / 255;
+        col[i * 3 + 2] = u8[off + 26] / 255;
+      }
+      const geom = new THREE.BufferGeometry();
+      geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geom.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      const mat = new THREE.PointsMaterial({ size: 2.2, vertexColors: true, transparent: true, opacity: 0.72 });
+      floorGroup.add(new THREE.Points(geom, mat));
+    }
+  } catch (e) { console.warn(e); }
+
+  // Parse binary .glb Chisel wireframe
+  try {
+    const gres = await fetch(cfg.glb);
+    if (gres.ok) {
+      const buf = await gres.arrayBuffer();
+      const dv = new DataView(buf);
+      const jsonLen = dv.getUint32(12, true);
+      const jsonStr = new TextDecoder().decode(new Uint8Array(buf, 20, jsonLen));
+      const gltf = JSON.parse(jsonStr);
+      const binStart = 20 + jsonLen + 8;
+      gltf.nodes.forEach(node => {
+        const prim = gltf.meshes[node.mesh].primitives[0];
+        const posAcc = gltf.accessors[prim.attributes.POSITION];
+        const idxAcc = gltf.accessors[prim.indices];
+        const posBv = gltf.bufferViews[posAcc.bufferView];
+        const idxBv = gltf.bufferViews[idxAcc.bufferView];
+        const verts = new Float32Array(buf, binStart + posBv.byteOffset, posAcc.count * 3);
+        const indices = new Uint32Array(buf, binStart + idxBv.byteOffset, idxAcc.count);
+        const geom = new THREE.BufferGeometry();
+        geom.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+        geom.setIndex(new THREE.BufferAttribute(indices, 1));
+        const isTerrain = node.name.includes('TERRAIN');
+        const mat = new THREE.MeshBasicMaterial({
+          color: isTerrain ? 0x22c55e : cfg.color,
+          wireframe: true,
+          transparent: true,
+          opacity: isTerrain ? 0.16 : 0.34
+        });
+        floorGroup.add(new THREE.Mesh(geom, mat));
+      });
+    }
+  } catch (e) { console.warn(e); }
+}
+
+// Render Station Shortcut Pills in 3D Viewport
+const pillsBox = document.getElementById('stationPills3d');
+pillsBox.innerHTML = Object.entries(DATA.stations).map(([k, st]) =>
+  `<button class="station-pill" data-st="${k}" style="border-color:${st.color}">Walk to ${st.name.split('(')[0]}</button>`
+).join('');
+pillsBox.querySelectorAll('[data-st]').forEach(b => {
+  b.addEventListener('click', () => {
+    const ag = DATA.agents.find(a => a.id === selectedAgentId);
+    if (!ag) return;
+    ag.station = b.dataset.st;
+    ag.status = 'WALKING_TO_' + b.dataset.st.toUpperCase();
+    syncAgentTargets();
+    renderSoulsDock();
+    logSlack(`🚶 ${ag.name}`, `Walking to <b>${DATA.stations[b.dataset.st].name}</b> on ${FLOOR_CONFIG[activeFloor].label}.`, ag.color);
+  });
+});
+
+// ============================================================================
+// 5. /LITE 2D PIXEL & ISOMETRIC OFFICE CANVAS SIMULATION
+// ============================================================================
+const canvas2d = document.getElementById('canvas2d');
+const ctx2d = canvas2d.getContext('2d');
+
+canvas2d.addEventListener('click', e => {
+  const rect = canvas2d.getBoundingClientRect();
+  const nx = (e.clientX - rect.left) / rect.width;
+  const ny = (e.clientY - rect.top) / rect.height;
+  // Find nearest station
+  let bestKey = null, bestDist = 999;
+  Object.entries(DATA.stations).forEach(([k, st]) => {
+    const d = Math.hypot(nx - st.pos2d[0], ny - st.pos2d[1]);
+    if (d < bestDist) { bestDist = d; bestKey = k; }
+  });
+  if (bestKey && bestDist < 0.25) {
+    const ag = DATA.agents.find(a => a.id === selectedAgentId);
+    if (ag) {
+      ag.station = bestKey;
+      ag.status = 'AT_' + bestKey.toUpperCase();
+      syncAgentTargets();
+      renderSoulsDock();
+      logSlack(`📱 /lite 2D Command`, `Directed <b>${ag.name}</b> to <b>${DATA.stations[bestKey].name}</b>.`, ag.color);
+    }
+  }
+});
+
+function draw2dPixelOffice(time) {
+  const w = canvas2d.clientWidth || 600;
+  const h = canvas2d.clientHeight || 390;
+  if (canvas2d.width !== w || canvas2d.height !== h) {
+    canvas2d.width = w; canvas2d.height = h;
+  }
+  ctx2d.fillStyle = '#080c14';
+  ctx2d.fillRect(0, 0, w, h);
+
+  // Pixel floor grid
+  ctx2d.strokeStyle = '#131d2e';
+  ctx2d.lineWidth = 1;
+  for (let x = 0; x < w; x += 28) { ctx2d.beginPath(); ctx2d.moveTo(x, 0); ctx2d.lineTo(x, h); ctx2d.stroke(); }
+  for (let y = 0; y < h; y += 28) { ctx2d.beginPath(); ctx2d.moveTo(0, y); ctx2d.lineTo(w, y); ctx2d.stroke(); }
+
+  // Draw connecting corridor paths between stations
+  const stList = Object.values(DATA.stations);
+  ctx2d.strokeStyle = 'rgba(92, 225, 230, 0.16)';
+  ctx2d.setLineDash([6, 6]);
+  ctx2d.lineWidth = 2;
+  ctx2d.beginPath();
+  stList.forEach((st, idx) => {
+    const px = st.pos2d[0] * w, py = st.pos2d[1] * h;
+    if (idx === 0) ctx2d.moveTo(px, py);
+    else ctx2d.lineTo(px, py);
+  });
+  ctx2d.closePath();
+  ctx2d.stroke();
+  ctx2d.setLineDash([]);
+
+  // Draw the 6 Office Rooms
+  Object.entries(DATA.stations).forEach(([k, st]) => {
+    const cx = st.pos2d[0] * w, cy = st.pos2d[1] * h;
+    const rw = Math.min(185, w * 0.27), rh = 78;
+    ctx2d.fillStyle = 'rgba(16, 24, 38, 0.92)';
+    ctx2d.strokeStyle = st.color;
+    ctx2d.lineWidth = 2;
+    ctx2d.beginPath();
+    ctx2d.roundRect(cx - rw / 2, cy - rh / 2, rw, rh, 8);
+    ctx2d.fill(); ctx2d.stroke();
+
+    ctx2d.fillStyle = st.color;
+    ctx2d.font = 'bold 11px "Helvetica Neue", sans-serif';
+    ctx2d.fillText(st.name.slice(0, 26), cx - rw / 2 + 8, cy - rh / 2 + 18);
+  });
+
+  // Draw & step agents along 2D paths
+  DATA.agents.forEach(ag => {
+    const m = agentMeshes[ag.id];
+    if (!m) return;
+    m.pos2d[0] += (m.target2d[0] - m.pos2d[0]) * 0.06;
+    m.pos2d[1] += (m.target2d[1] - m.pos2d[1]) * 0.06;
+
+    const ax = m.pos2d[0] * w;
+    const ay = m.pos2d[1] * h + Math.sin(time * 0.006 + ag.name.length) * 2.5;
+
+    // Agent pixel token
+    ctx2d.fillStyle = ag.color;
+    ctx2d.beginPath();
+    ctx2d.arc(ax, ay, 12, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.strokeStyle = ag.id === selectedAgentId ? '#ffffff' : '#080c14';
+    ctx2d.lineWidth = ag.id === selectedAgentId ? 3 : 2;
+    ctx2d.stroke();
+
+    ctx2d.fillStyle = '#080c14';
+    ctx2d.font = 'bold 11px Menlo, monospace';
+    ctx2d.fillText(ag.name[0], ax - 4, ay + 4);
+
+    // Speech / status pill above agent
+    ctx2d.fillStyle = 'rgba(7, 10, 16, 0.9)';
+    ctx2d.fillRect(ax - 46, ay - 28, 92, 14);
+    ctx2d.fillStyle = ag.color;
+    ctx2d.font = 'bold 9px Menlo, monospace';
+    ctx2d.fillText(`${ag.name.split(' ')[0]} (${ag.cache_minutes_elapsed}m)`, ax - 42, ay - 18);
+  });
+}
+
+// Main Animation Loop
+function animate(time) {
+  requestAnimationFrame(animate);
+
+  const w3 = canvas3d.clientWidth || 600;
+  const h3 = canvas3d.clientHeight || 390;
+  if (canvas3d.width !== w3 * renderer.getPixelRatio() || canvas3d.height !== h3 * renderer.getPixelRatio()) {
+    renderer.setSize(w3, h3, false);
+    camera.aspect = w3 / h3;
+    camera.updateProjectionMatrix();
+  }
+
+  // Smoothly walk 3D agents toward their target station
+  DATA.agents.forEach((ag, idx) => {
+    const m = agentMeshes[ag.id];
+    if (!m) return;
+    m.group.position.lerp(m.target3d, 0.05);
+    m.group.position.y = m.target3d.y + Math.abs(Math.sin(time * 0.005 + idx)) * 0.6;
+  });
+
+  renderer.render(scene, camera);
+  draw2dPixelOffice(time);
+}
+
+// ============================================================================
+// 6. TOP CONTROLS, SLACK BAR & MODAL WIRING
+// ============================================================================
+function openModal(title, html) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modal').classList.add('on');
+}
+document.getElementById('modalClose').addEventListener('click', () => document.getElementById('modal').classList.remove('on'));
+window.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('modal').classList.remove('on'); });
+
+document.querySelectorAll('[data-floor]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-floor]').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    load3dFloor(btn.dataset.floor);
+  });
+});
+
+document.getElementById('btnFifoMerge').addEventListener('click', () => {
+  const qCard = DATA.kanban_cards.find(c => c.column === 'merge_queue');
+  if (!qCard) {
+    logSlack('🔀 FIFO Merge Gate', 'Merge Queue is currently empty — advance a card from Cross-Model Review first!', '#ffd23f');
+    return;
+  }
+  moveCardStage(qCard.id, 'next');
+  logSlack('✅ FIFO Semantic Merger (workbench)', `Merged <b>${qCard.id} (${qCard.branch})</b> single-file into <code>origin/main</code> with 0 conflicts!`, '#4ade80');
+});
+
+document.getElementById('btnCompactAll').addEventListener('click', () => {
+  const hottest = [...DATA.agents].sort((a, b) => b.cache_minutes_elapsed - a.cache_minutes_elapsed)[0];
+  triggerAgentCacheCompaction(hottest.id);
+});
+
+document.getElementById('btnNewCard').addEventListener('click', () => {
+  const nextNum = 100 + DATA.kanban_cards.length + 1;
+  const newId = `WT-${nextNum}`;
+  const slug = `wt-${nextNum}-maestro-task`;
+  const newCard = {
+    id: newId,
+    title: `Hub 01–04 Live Multiplane Splat & Puppet Pass #${nextNum}`,
+    column: 'planning',
+    poem: '06',
+    hub: activeFloor,
+    worktree_path: `.worktrees/${slug}`,
+    branch: `feat/${slug}`,
+    agent_id: selectedAgentId,
+    harness: 'Claude Code (Opus 4.6)',
+    auditor: 'The EX (Codex o3-pro Cross-Model Pass)',
+    files_touched: ['shots/atlas_splat_studio.html', 'shots/terrarium.html'],
+    conflict_status: 'CLEAN (Isolated Worktree Spawned)',
+    before_img: 'png_vault/atlas_splats/what_happens_01_naive_vs_infrastructure.png',
+    after_img: 'png_vault/atlas_splats/what_happens_04_all_4_megahubs_live_3d_views.png',
+    mockup_caption: 'Maestro Hound auto-generated Before/After mockup at the Planning Whiteboard.',
+    tmux_cmd: `git worktree add .worktrees/${slug} -b feat/${slug} && tmux new -s ${newId.toLowerCase()} 'cd .worktrees/${slug} && claude'`,
+    audit_notes: 'Spawned in Planning. Agent walked to Whiteboard.',
+    needs_permission: false
+  };
+  DATA.kanban_cards.unshift(newCard);
+  const ag = DATA.agents.find(a => a.id === selectedAgentId);
+  if (ag) { ag.station = 'whiteboard'; ag.status = 'PLANNING_' + newId; }
+  syncAgentTargets();
+  renderSoulsDock();
+  renderKanban();
+  logSlack('🐕 Maestro Hound (Billion)', `Created new Kanban Worktree Card <b>${newId}</b> in <code>.worktrees/${slug}</code> and sent <b>${ag ? ag.name : 'Agent'}</b> to the Planning Whiteboard!`, '#ffd23f');
+});
+
+document.getElementById('btnShowBlueprints').addEventListener('click', () => {
+  openModal(
+    '🖼️ WYGWYL Agent Office & Kanban Worktree Architecture Plates (Saved in shots/png_vault/atlas_splats/)',
+    `<div style="display:flex;flex-direction:column;gap:16px">
+      <div><div class="lbl-tag" style="color:var(--gold);margin-bottom:4px">1. 10 OPEN-SOURCE REPOS RANKED & SYNTHESIZED FOR WYGWYL</div><img src="png_vault/atlas_splats/kohnny_10repos_comparison_and_architecture.png" style="width:100%;border-radius:8px;border:1px solid var(--edge)"></div>
+      <div><div class="lbl-tag" style="color:var(--cyan);margin-bottom:4px">2. 3D MULTIPLAYER SOUNDSTAGE OFFICE (.GLB + .SPLAT) & /LITE 2D PIXEL FLOORPLAN</div><img src="png_vault/atlas_splats/wygwyl_3d_agent_office_and_pixel_lite_simulation.png" style="width:100%;border-radius:8px;border:1px solid var(--edge)"></div>
+      <div><div class="lbl-tag" style="color:var(--ok);margin-bottom:4px">3. 5-COLUMN KANBAN + GIT WORKTREE + CROSS-MODEL AUDIT + 55m CACHE COMPACTION PIPELINE</div><img src="png_vault/atlas_splats/wygwyl_kanban_worktree_crossmodel_pipeline.png" style="width:100%;border-radius:8px;border:1px solid var(--edge)"></div>
+    </div>`
+  );
+});
+
+const slackInput = document.getElementById('slackInput');
+document.getElementById('slackSend').addEventListener('click', () => {
+  const q = slackInput.value.trim();
+  if (!q) return;
+  slackInput.value = '';
+  logSlack('👤 Director (You)', q, '#ffffff');
+  const ql = q.toLowerCase();
+  if (ql.includes('compact') || ql.includes('55')) {
+    document.getElementById('btnCompactAll').click();
+  } else if (ql.includes('merge') || ql.includes('fifo')) {
+    document.getElementById('btnFifoMerge').click();
+  } else {
+    document.getElementById('btnNewCard').click();
+  }
+});
+slackInput.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('slackSend').click(); });
+
+// Initialize everything
+renderSoulsDock();
+renderKanban();
+renderRepoTable();
+await load3dFloor('hub_01_atlantis');
+logSlack('🐕 Maestro Hound (Agent-007)', 'Welcome to the unified <b>WYGWYL 3D/2D Agent Office &amp; Git Worktree Kanban Studio</b>! All 10 open-source repos + Kohnny mechanics are active. Click <b>Advance ▶</b> on any card to watch our 2.5D Cast walk between stations!', '#ffd23f');
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
