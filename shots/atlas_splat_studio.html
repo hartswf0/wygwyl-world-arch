@@ -233,57 +233,69 @@
     .pill.green { background: rgba(143, 214, 148, 0.18); color: var(--green); }
     .pill.coral { background: rgba(255, 61, 110, 0.18); color: #ff8da8; }
 
-    /* Center 3D Viewport & Overlays */
+    /* Center 3D Viewport & Toolbar Below View (Zero Overlay Clutter on 3D Canvas) */
     #viewport-wrap {
       position: relative;
       flex: 1;
       width: 100%;
-      min-height: 0;
+      min-height: 480px;
+      background: #05080e;
     }
     #three-canvas {
       width: 100%;
       height: 100%;
       display: block;
     }
-    .vp-hud-top {
+    .vp-corner-badge {
       position: absolute;
       top: 10px;
-      left: 10px;
-      right: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      pointer-events: none;
-    }
-    .vp-hud-box {
-      pointer-events: auto;
-      background: rgba(8, 13, 20, 0.9);
-      border: 1px solid rgba(255, 210, 63, 0.35);
-      border-radius: 10px;
-      padding: 7px 11px;
-      backdrop-filter: blur(10px);
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 7px;
-      font-size: 11px;
-    }
-    .frustum-bar {
-      position: absolute;
-      bottom: 12px;
       left: 12px;
-      right: 12px;
-      pointer-events: auto;
-      background: rgba(8, 13, 20, 0.92);
-      border: 1px solid rgba(25, 230, 200, 0.38);
-      border-radius: 11px;
+      pointer-events: none;
+      background: rgba(6, 10, 16, 0.72);
+      border: 1px solid rgba(25, 230, 200, 0.35);
+      border-radius: 7px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(6px);
+    }
+    .vp-controls-below {
+      background: #0a1018;
+      border-top: 1px solid rgba(25, 230, 200, 0.28);
       padding: 8px 12px;
       display: flex;
       flex-direction: column;
       gap: 6px;
-      backdrop-filter: blur(12px);
+    }
+    .vp-hud-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .vp-hud-box {
+      background: rgba(14, 22, 34, 0.95);
+      border: 1px solid rgba(255, 210, 63, 0.25);
+      border-radius: 8px;
+      padding: 5px 9px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+      font-size: 10.5px;
+    }
+    .frustum-bar {
+      background: rgba(14, 22, 34, 0.95);
+      border: 1px solid rgba(25, 230, 200, 0.25);
+      border-radius: 8px;
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
     .frustum-pills {
       display: flex;
@@ -400,9 +412,12 @@
       }
       .col-center {
         order: -1;
-        height: 52dvh;
-        min-height: 340px;
+        height: auto;
         border-bottom: 1px solid var(--border);
+      }
+      #viewport-wrap {
+        height: 64dvh;
+        min-height: 460px;
       }
       .col-left, .col-right {
         height: auto;
@@ -410,7 +425,11 @@
         border: none;
         border-bottom: 1px solid var(--border);
       }
-      .btn, .hub-item {
+      .btn {
+        min-height: 32px;
+        padding: 5px 8px;
+      }
+      .hub-item {
         min-height: 42px;
       }
     }
@@ -509,48 +528,49 @@
 
     <!-- CENTER COLUMN: LIVE 3D .GLB + GAUSSIAN SPLAT INFRASTRUCTURE VIEWPORT -->
     <section class="col col-center">
+      <!-- 100% UNOBSTRUCTED 3D VIEWPORT (ZERO BUTTON BOXES ON TOP OF CANVAS) -->
       <div id="viewport-wrap">
         <canvas id="three-canvas"></canvas>
+        <div class="vp-corner-badge">
+          <strong id="vp-title" style="color:var(--gold)">DISTRICT · CENTRO HISTÓRICO</strong>
+          <span class="pill teal" id="vp-stats">60,000 SHARP 3DGS</span>
+          <span style="color:var(--muted);">Drag to Orbit · Scroll to Zoom · WASD to Walk</span>
+        </div>
+      </div>
 
-        <!-- TOP VIEWPORT HUD -->
+      <!-- COMPACT CONTROL STRIP BELOW THE 3D VIEW -->
+      <div class="vp-controls-below">
         <div class="vp-hud-top">
-          <div class="vp-hud-box">
-            <strong id="vp-title" style="color:var(--gold)">DISTRICT · CENTRO HISTÓRICO</strong>
-            <span class="pill teal" id="vp-stats">60,000 SHARP 3DGS · 15,263 GLB Tris</span>
-            <button class="btn active" id="btn-cam-inside" type="button" title="Jump directly inside the primary 3D Gaussian Splat stage (WASD / Arrow keys to walk)">🚶 Inside District Splat (WASD)</button>
-            <button class="btn" id="btn-cam-aerial" type="button" title="Pull camera out to aerial district overview">🛰️ Aerial Overview</button>
-          </div>
-
-          <div class="vp-hud-box" style="border-color:var(--teal);background:rgba(8,16,28,0.92);">
-            <strong style="color:var(--gold);">🍮 Splat Effect Mode:</strong>
-            <button class="btn active" id="btn-eff-sharp" type="button" title="Full Apple ml-sharp 2-Layer 3DGS (Layer-0 Surface + Layer-1 Hidden Disocclusion)">🟢 AFTER: Apple SHARP 2-Layer 3DGS</button>
-            <button class="btn teal" id="btn-eff-xray" type="button" title="Highlights Layer-1 Hidden Disocclusion Gaussians in electric cyan behind foreground edges">🔵 Layer-1 Disocclusion X-Ray</button>
-            <button class="btn" id="btn-eff-l0" type="button" title="Shows only Layer-0 visible surface Gaussians so you can see the disocclusion gaps that Layer-1 fills">🟡 Layer-0 Only</button>
-            <button class="btn" id="btn-eff-before" type="button" style="border-color:var(--coral);color:#ffccd8;" title="Morphs splats back to legacy Oct-31 synthetic contour-ring depth to show the shredded walls before Apple SHARP">🔴 BEFORE: Legacy Shredded Splat</button>
-            <span style="margin-left:4px;color:var(--muted);">Before↔After:</span>
-            <input type="range" id="sl-effect-morph" min="0" max="1" step="0.01" value="1.0" style="width:95px;accent-color:var(--teal);" />
+          <div class="vp-hud-box" style="border-color:var(--teal);">
+            <strong style="color:var(--gold);">🍮 Splat Effect:</strong>
+            <button class="btn active" id="btn-eff-sharp" type="button">🟢 AFTER: Apple SHARP 2-Layer 3DGS</button>
+            <button class="btn teal" id="btn-eff-xray" type="button">🔵 Layer-1 Disocclusion X-Ray</button>
+            <button class="btn" id="btn-eff-l0" type="button">🟡 Layer-0 Only</button>
+            <button class="btn" id="btn-eff-before" type="button" style="border-color:var(--coral);color:#ffccd8;">🔴 BEFORE: Legacy Shredded Splat</button>
+            <span style="color:var(--muted);">Before↔After:</span>
+            <input type="range" id="sl-effect-morph" min="0" max="1" step="0.01" value="1.0" style="width:90px;accent-color:var(--teal);" />
             <span id="val-effect-morph" style="font-weight:800;color:var(--teal);">100% SHARP</span>
           </div>
 
           <div class="vp-hud-box">
-            <span>.GLB Collider:</span>
-            <button class="btn" id="btn-glb-wire" type="button">📐 Wire + Solid</button>
-            <button class="btn active" id="btn-glb-occ" type="button" title="Renders .GLB to depth buffer only so you see the clean 3D Gaussian Splat inside the District!">👻 Depth-Occlusion Only</button>
-            <button class="btn" id="btn-glb-off" type="button">Hide .GLB</button>
-            <button class="btn teal active" id="btn-toggle-actors" type="button">🎭 R1 Actors: ON</button>
-            <button class="btn" id="btn-bake-plate" type="button">📸 Bake 16:9 Plate</button>
+            <button class="btn active" id="btn-cam-inside" type="button">🚶 Inside Splat (WASD)</button>
+            <button class="btn" id="btn-cam-aerial" type="button">🛰️ All-District Aerial</button>
+            <button class="btn" id="btn-glb-wire" type="button">📐 .GLB Wire</button>
+            <button class="btn" id="btn-glb-occ" type="button">👻 .GLB Depth</button>
+            <button class="btn active" id="btn-glb-off" type="button">Hide .GLB</button>
+            <button class="btn teal" id="btn-toggle-actors" type="button">🎭 R1 Actors: OFF</button>
+            <button class="btn" id="btn-bake-plate" type="button">📸 Bake PNG</button>
           </div>
         </div>
 
-        <!-- BOTTOM VIEWPORT HUD: TWIN-STATE MORPH & POSED CAMERA FRUSTUMS (A..F) -->
         <div class="frustum-bar">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-            <div style="font-size:11px;font-weight:800;color:var(--teal);">
-              🎥 POSED SPATIAL CONTEXT CAMERAS &amp; SET-PIECE PORTALS (CLICK TO STEP INSIDE FRUSTUM):
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <div style="font-size:10.5px;font-weight:800;color:var(--teal);">
+              🎥 STEP INSIDE CAMERA PORTALS (A..F):
             </div>
-            <div id="twin-morph-wrap" style="display:flex;align-items:center;gap:8px;font-size:11px;background:rgba(255,210,63,0.12);padding:4px 10px;border-radius:7px;border:1px solid var(--gold);">
-              <strong style="color:var(--gold)">⚡ Twin-State Splat Morph (P03 Storm Ruin ↔ P11 White Temple):</strong>
-              <input type="range" id="sl-twin-morph" min="0" max="1" step="0.01" value="1.0" style="width:130px;accent-color:var(--gold);" />
+            <div id="twin-morph-wrap" style="display:none;align-items:center;gap:8px;font-size:10.5px;">
+              <strong style="color:var(--gold)">⚡ Twin-State Morph:</strong>
+              <input type="range" id="sl-twin-morph" min="0" max="1" step="0.01" value="1.0" style="width:110px;accent-color:var(--gold);" />
               <span id="val-twin-morph" style="font-weight:800;color:var(--gold);">100% Temple</span>
             </div>
           </div>
@@ -616,15 +636,16 @@
       tabMode: 'districts', // default to All 10 Districts so user walks directly inside each District!
       activeHubId: 'hub_01_atlantis',
       activeDistrictKey: 'centro',
-      glbMode: 'occ', // default to Depth-Occlusion Only so .GLB wireframe doesn't clutter the interior 3DGS
-      showActors: true,
-      splatScale: 1.15,
-      splatOpacity: 0.96,
+      glbMode: 'off', // default OFF so .GLB collider boxes never depth-occlude or clutter the 3D Gaussian Splat
+      showActors: false, // default OFF so floating reference postcards/banners never block the view
+      splatScale: 1.25,
+      splatOpacity: 1.0,
       twinMorph: 1.0,
       coordConv: 'threejs',
       effectMode: 'sharp', // 'sharp' | 'xray' | 'l0' | 'before'
       effectMorph: 1.0,    // 0.0 = Legacy Shredded Splat, 1.0 = Apple SHARP 2-Layer 3DGS
       currentSpawnCam: null,
+      activeCamIdx: 0,     // 0 = Hero Apple SHARP 2-Layer 3DGS stage, 1..N = secondary stages, -1 = all (aerial)
     };
 
     // ── THREE.JS SCENE SETUP ──────────────────────────────────────────────────
@@ -654,10 +675,12 @@
 
     const gridHelper = new THREE.GridHelper(220, 44, 0x19e6c8, 0x162436);
     gridHelper.position.y = -0.05;
+    gridHelper.visible = false; // hidden inside splat stages so wireframe grid never clutters the view
     scene.add(gridHelper);
 
     const glbGroup = new THREE.Group();
     glbGroup.name = 'CHISEL_GLB_INFRASTRUCTURE';
+    glbGroup.visible = false;
     scene.add(glbGroup);
 
     const splatGroup = new THREE.Group();
@@ -666,6 +689,7 @@
 
     const actorsGroup = new THREE.Group();
     actorsGroup.name = 'R1_CUTOUT_ACTORS_AND_FRUSTUMS';
+    actorsGroup.visible = false; // hidden by default so floating reference postcards never block the 3DGS
     scene.add(actorsGroup);
 
     const gltfLoader = new GLTFLoader();
@@ -681,24 +705,6 @@
     window.addEventListener('resize', resizeViewport);
     resizeViewport();
 
-    // Create soft Gaussian radial sprite texture for splat rendering
-    function makeGaussianSplatTexture() {
-      const sz = 64;
-      const cv = document.createElement('canvas');
-      cv.width = sz; cv.height = sz;
-      const ctx = cv.getContext('2d');
-      const grad = ctx.createRadialGradient(sz/2, sz/2, 1, sz/2, sz/2, sz/2);
-      grad.addColorStop(0.0, 'rgba(255,255,255,1.0)');
-      grad.addColorStop(0.35, 'rgba(255,255,255,0.82)');
-      grad.addColorStop(0.7, 'rgba(255,255,255,0.28)');
-      grad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, sz, sz);
-      const tex = new THREE.CanvasTexture(cv);
-      return tex;
-    }
-    const GAUSSIAN_TEX = makeGaussianSplatTexture();
-
     // ── PARSE 32-BYTE `.SPLAT` BUFFER WITH APPLE `ml-sharp` LAYER-1 & BEFORE/AFTER METADATA ──
     function parse32ByteSplatBuffer(arrayBuffer, applyOpenCVFlip = false) {
       const byteLen = arrayBuffer.byteLength;
@@ -710,6 +716,7 @@
       const baseColors = new Float32Array(count * 3);
       const scales = new Float32Array(count);
       const isLayer1 = new Uint8Array(count);
+      const camIdx = new Uint8Array(count);
       const dzLegacy = new Float32Array(count);
 
       for (let i = 0; i < count; i++) {
@@ -728,6 +735,7 @@
         const g = dv.getUint8(off + 25) / 255.0;
         const b = dv.getUint8(off + 26) / 255.0;
         const q0 = dv.getUint8(off + 28);
+        const q1 = dv.getUint8(off + 29);
         const q2 = dv.getUint8(off + 30);
         const q3 = dv.getUint8(off + 31);
 
@@ -745,12 +753,13 @@
         baseColors[i * 3 + 1] = g;
         baseColors[i * 3 + 2] = b;
 
-        scales[i] = Math.max(0.15, Math.min(4.5, (sx + sy + sz) / 3.0));
+        scales[i] = Math.max(0.24, Math.min(4.5, (sx + sy + sz) / 3.0));
         isLayer1[i] = (q0 === 255) ? 1 : 0;
+        camIdx[i] = q1;
         const u16 = q2 | (q3 << 8);
         dzLegacy[i] = (q0 === 128 && q2 === 128) ? 0.0 : ((u16 / 65535.0) * 30.0 - 15.0);
       }
-      return { count, positions, basePositions, colors, baseColors, scales, isLayer1, dzLegacy };
+      return { count, positions, basePositions, colors, baseColors, scales, isLayer1, camIdx, dzLegacy };
     }
 
     function createSplatPointsMesh(parsed, name = 'SPLAT_CLOUD') {
@@ -759,15 +768,40 @@
       geo.setAttribute('color', new THREE.BufferAttribute(parsed.colors, 3));
       geo.setAttribute('aScale', new THREE.BufferAttribute(parsed.scales, 1));
 
-      const mat = new THREE.PointsMaterial({
-        size: 2.35 * STATE.splatScale,
-        map: GAUSSIAN_TEX,
+      // Hardware Z-buffered Gaussian Splat shader: foreground Layer-0 Gaussians occlude
+      // background Layer-1 Gaussians until you orbit/walk around the foreground edge!
+      const mat = new THREE.ShaderMaterial({
+        uniforms: {
+          uScale: { value: STATE.splatScale },
+          uOpacity: { value: STATE.splatOpacity },
+        },
+        vertexShader: `
+          attribute float aScale;
+          varying vec3 vColor;
+          uniform float uScale;
+          void main() {
+            vColor = color;
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            gl_Position = projectionMatrix * mvPosition;
+            float dist = max(0.8, -mvPosition.z);
+            gl_PointSize = clamp(uScale * aScale * (1850.0 / dist), 7.0, 68.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vColor;
+          uniform float uOpacity;
+          void main() {
+            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+            float r2 = dot(cxy, cxy);
+            if (r2 > 1.0) discard;
+            float softShade = 1.0 - 0.14 * r2;
+            gl_FragColor = vec4(vColor * softShade, uOpacity);
+          }
+        `,
         vertexColors: true,
-        transparent: true,
-        opacity: STATE.splatOpacity,
-        depthWrite: false,
-        blending: THREE.NormalBlending,
-        sizeAttenuation: true,
+        transparent: false,
+        depthTest: true,
+        depthWrite: true,
       });
       const pts = new THREE.Points(geo, mat);
       pts.name = name;
@@ -799,6 +833,14 @@
 
       for (let i = 0; i < p.count; i++) {
         const i3 = i * 3;
+        // Filter to active camera stage when inside a portal (STATE.activeCamIdx >= 0) so other stages don't bleed in
+        if (STATE.activeCamIdx >= 0 && p.camIdx && p.camIdx[i] !== STATE.activeCamIdx) {
+          posArr[i3 + 0] = 0;
+          posArr[i3 + 1] = -9999;
+          posArr[i3 + 2] = 0;
+          continue;
+        }
+
         const l1 = p.isLayer1[i] === 1;
         const bx = p.basePositions[i3 + 0];
         const by = p.basePositions[i3 + 1];
@@ -847,26 +889,29 @@
       document.getElementById('val-effect-morph').textContent = `${Math.round(morph * 100)}% SHARP`;
     }
 
-    function stepInsideCameraStage(pose, slightOrbit = true) {
+    function stepInsideCameraStage(pose, slightOrbit = false) {
       if (!pose || !pose.position_m || !pose.look_at_m) return;
       STATE.currentSpawnCam = pose;
+      gridHelper.visible = false;
       const pos = pose.position_m;
       const look = pose.look_at_m;
       const dx = look[0] - pos[0];
       const dy = look[1] - pos[1];
       const dz = look[2] - pos[2];
-      // Place user right inside the camera frustum (with a tiny lateral offset if slightOrbit=true so 3D parallax is immediately visible!)
-      const rx = -dz * 0.06;
-      const rz = dx * 0.06;
+      // Match camera vertical FOV (25 deg) to the unprojected 2.18:1 cinema stage so the 3D Gaussian Splat fills 100% of the viewport edge-to-edge!
+      camera.fov = 25;
+      camera.updateProjectionMatrix();
+      const rx = -dz * 0.035;
+      const rz = dx * 0.035;
       camera.position.set(
-        pos[0] + (slightOrbit ? rx : 0),
-        pos[1] + 0.15,
-        pos[2] + (slightOrbit ? rz : 0)
+        pos[0] + dx * 0.06 + (slightOrbit ? rx : 0),
+        pos[1] + dy * 0.06,
+        pos[2] + dz * 0.06 + (slightOrbit ? rz : 0)
       );
       orbit.target.set(
-        pos[0] + dx * 0.85,
-        pos[1] + dy * 0.85,
-        pos[2] + dz * 0.85
+        pos[0] + dx * 0.92,
+        pos[1] + dy * 0.92,
+        pos[2] + dz * 0.92
       );
       orbit.update();
       document.getElementById('btn-cam-inside').classList.add('active');
@@ -970,8 +1015,12 @@
             const buf2 = await res2.arrayBuffer();
             const parsed2 = parse32ByteSplatBuffer(buf2, STATE.coordConv === 'opencv');
             twinRuinSplatMesh = createSplatPointsMesh(parsed2, 'TWIN_RUIN_SPLAT');
-            twinRuinSplatMesh.material.opacity = (1.0 - STATE.twinMorph) * STATE.splatOpacity;
-            if (primarySplatMesh) primarySplatMesh.material.opacity = STATE.twinMorph * STATE.splatOpacity;
+            if (twinRuinSplatMesh.material.uniforms) {
+              twinRuinSplatMesh.material.uniforms.uOpacity.value = (1.0 - STATE.twinMorph) * STATE.splatOpacity;
+            }
+            if (primarySplatMesh && primarySplatMesh.material.uniforms) {
+              primarySplatMesh.material.uniforms.uOpacity.value = STATE.twinMorph * STATE.splatOpacity;
+            }
             splatGroup.add(twinRuinSplatMesh);
           }
         }
@@ -1002,10 +1051,22 @@
       return sp;
     }
 
-    function mountPosedFrustumsAndCutoutCast(cameras) {
+    function mountPosedFrustumsAndCutoutCast(cameras, heroRef = null) {
       clearGroup(actorsGroup);
       const frustumContainer = document.getElementById('frustum-buttons');
       frustumContainer.innerHTML = '';
+
+      // Order cameras identically to `build_all_10_districts_sharp_splats.py` (`heroRef` at camIdx = 0)
+      const orderedCams = [];
+      (cameras || []).forEach(c => {
+        if (heroRef && c.ref_id === heroRef && orderedCams.length === 0) {
+          orderedCams.unshift(c);
+        } else if (heroRef && c.ref_id === heroRef) {
+          orderedCams.unshift(c);
+        } else {
+          orderedCams.push(c);
+        }
+      });
 
       const heroCutouts = [
         'kits/packs/poet_tracksuit_v1/01_COMPONENTS/01_torso_front.png',
@@ -1016,13 +1077,13 @@
         'arena/bodies/ACT-011_p0.png',
       ];
 
-      (cameras || []).forEach((cam, idx) => {
+      orderedCams.forEach((cam, idx) => {
         const pos = cam.threejs_pose.position_m;
         const look = cam.threejs_pose.look_at_m;
         const groundY = cam.threejs_pose.ground_y_m || 0;
         const yawRad = THREE.MathUtils.degToRad(cam.azimuth_deg || 0);
 
-        // 1. Posed Camera Frustum Pyramid at exact `threejs_pose.position_m`
+        // 1. Posed Camera Frustum Pyramid at exact `threejs_pose.position_m` (only visible when R1 Actors: ON)
         const fg = new THREE.Group();
         fg.position.set(pos[0], pos[1], pos[2]);
         fg.rotation.y = yawRad;
@@ -1036,27 +1097,9 @@
         );
         fg.add(coneWire);
 
-        // Floating Reference Image Plane inside the frustum
-        const rTex = texLoader.load(cam.source_img);
-        rTex.colorSpace = THREE.SRGBColorSpace;
-        const rPlane = new THREE.Mesh(
-          new THREE.PlaneGeometry(3.2, 1.8),
-          new THREE.MeshBasicMaterial({ map: rTex, side: THREE.DoubleSide })
-        );
-        rPlane.position.set(0, 0, 1.8);
-        fg.add(rPlane);
-
-        const lbl = makeBannerSprite(
-          [`[${cam.set_piece}] REF ${cam.ref_id} · ${cam.onion_shell}`, cam.role],
-          '#19e6c8'
-        );
-        lbl.position.set(0, 2.5, 1.2);
-        fg.add(lbl);
-        actorsGroup.add(fg);
-
-        // 2. 2.5D Cut-Out Actor Standee (`Onion Shell R1`, 3.2m in front of camera on `.glb` floor collider!)
-        const actorX = pos[0] + Math.sin(yawRad) * 4.2;
-        const actorZ = pos[2] + Math.cos(yawRad) * 4.2;
+        // 2. 2.5D Cut-Out Actor Standee (`Onion Shell R1`, 6.5m in front of camera on `.glb` floor collider!)
+        const actorX = pos[0] + Math.sin(yawRad) * 6.5;
+        const actorZ = pos[2] + Math.cos(yawRad) * 6.5;
         const cTex = texLoader.load(heroCutouts[idx % heroCutouts.length]);
         cTex.colorSpace = THREE.SRGBColorSpace;
         const cMesh = new THREE.Mesh(
@@ -1070,15 +1113,20 @@
         );
         cMesh.position.set(actorX, groundY + 1.85, actorZ);
         cMesh.rotation.y = yawRad;
+        actorsGroup.add(fg);
         actorsGroup.add(cMesh);
 
         // 3. Add button to bottom Frustum Bar
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'btn';
-        btn.textContent = `🎥 Step Inside [${cam.set_piece}] Ref ${cam.ref_id} (${cam.onion_shell})`;
+        btn.className = 'btn' + (idx === STATE.activeCamIdx ? ' active' : '');
+        const tag = (idx === 0) ? '★ SHARP 2-Layer' : `Stage ${idx + 1}`;
+        btn.textContent = `🎥 [${cam.set_piece}] Ref ${cam.ref_id} (${tag})`;
         btn.addEventListener('click', () => {
-          stepInsideCameraStage(cam.threejs_pose, true);
+          STATE.activeCamIdx = idx;
+          frustumContainer.querySelectorAll('.btn').forEach((b, bi) => b.classList.toggle('active', bi === idx));
+          stepInsideCameraStage(cam.threejs_pose, false);
+          applySplatEffectMode();
         });
         frustumContainer.appendChild(btn);
       });
@@ -1087,6 +1135,7 @@
     // ── UI RENDERING FOR ACTIVE MEGA-HUB OR DISTRICT ─────────────────────────
     async function selectMegaHub(hubId) {
       STATE.activeHubId = hubId;
+      STATE.activeCamIdx = 0;
       const hub = STATE.manifest.mega_hubs.find(h => h.hub_id === hubId) || STATE.manifest.mega_hubs[0];
       const primaryDistrict = STATE.manifest.districts[hub.primary_stage];
 
@@ -1151,20 +1200,23 @@
         hub.splat_seed.file,
         hub.twin_state_splat ? hub.twin_state_splat.file : null
       );
-      applySplatEffectMode();
       const cams = hub.cameras || (primaryDistrict && primaryDistrict.cameras) || [];
-      mountPosedFrustumsAndCutoutCast(cams);
-      if (cams.length > 0) {
-        stepInsideCameraStage(cams[0].threejs_pose, true);
+      const heroRef = primaryDistrict && primaryDistrict.splat_seed && primaryDistrict.splat_seed.hero_ref;
+      mountPosedFrustumsAndCutoutCast(cams, heroRef);
+      const spawnPose = (primaryDistrict && primaryDistrict.splat_seed && primaryDistrict.splat_seed.spawn_camera) || (cams[0] && cams[0].threejs_pose);
+      if (spawnPose) {
+        stepInsideCameraStage(spawnPose, false);
       } else {
         camera.position.set(36, 40, 66);
         orbit.target.set(0, 4, 0);
         orbit.update();
       }
+      applySplatEffectMode();
     }
 
     async function selectDistrict(dKey) {
       STATE.activeDistrictKey = dKey;
+      STATE.activeCamIdx = 0;
       const d = STATE.manifest.districts[dKey];
       if (!d) return;
 
@@ -1217,12 +1269,13 @@
 
       await loadGlbCollider(d.chisel_glb.file);
       await loadSplatFile(districtSplatUrl, matchingHub.twin_state_splat ? matchingHub.twin_state_splat.file : null);
-      mountPosedFrustumsAndCutoutCast(d.cameras || []);
+      const heroRef = d.splat_seed && d.splat_seed.hero_ref;
+      mountPosedFrustumsAndCutoutCast(d.cameras || [], heroRef);
 
       // Spawn the user directly INSIDE this District's primary Apple SHARP 3DGS stage!
       const spawnPose = (d.splat_seed && d.splat_seed.spawn_camera) || (d.cameras && d.cameras[0] && d.cameras[0].threejs_pose);
       if (spawnPose) {
-        stepInsideCameraStage(spawnPose, true);
+        stepInsideCameraStage(spawnPose, false);
       }
       applySplatEffectMode();
     }
@@ -1307,12 +1360,19 @@
     });
 
     document.getElementById('btn-cam-inside').addEventListener('click', () => {
-      if (STATE.currentSpawnCam) stepInsideCameraStage(STATE.currentSpawnCam, true);
+      if (STATE.activeCamIdx < 0) STATE.activeCamIdx = 0;
+      if (STATE.currentSpawnCam) stepInsideCameraStage(STATE.currentSpawnCam, false);
+      applySplatEffectMode();
     });
     document.getElementById('btn-cam-aerial').addEventListener('click', () => {
+      STATE.activeCamIdx = -1;
+      gridHelper.visible = true;
+      camera.fov = 48;
+      camera.updateProjectionMatrix();
       camera.position.set(36, 40, 66);
       orbit.target.set(0, 4, 0);
       orbit.update();
+      applySplatEffectMode();
       document.getElementById('btn-cam-aerial').classList.add('active');
       document.getElementById('btn-cam-inside').classList.remove('active');
     });
@@ -1397,22 +1457,22 @@
     document.getElementById('sl-splat-scale').addEventListener('input', (e) => {
       STATE.splatScale = parseFloat(e.target.value) || 1.0;
       document.getElementById('val-splat-scale').textContent = STATE.splatScale.toFixed(2) + '×';
-      if (primarySplatMesh) primarySplatMesh.material.size = 2.35 * STATE.splatScale;
-      if (twinRuinSplatMesh) twinRuinSplatMesh.material.size = 2.35 * STATE.splatScale;
+      if (primarySplatMesh && primarySplatMesh.material.uniforms) primarySplatMesh.material.uniforms.uScale.value = STATE.splatScale;
+      if (twinRuinSplatMesh && twinRuinSplatMesh.material.uniforms) twinRuinSplatMesh.material.uniforms.uScale.value = STATE.splatScale;
     });
 
     document.getElementById('sl-splat-opacity').addEventListener('input', (e) => {
       STATE.splatOpacity = parseFloat(e.target.value) || 0.92;
       document.getElementById('val-splat-opacity').textContent = Math.round(STATE.splatOpacity * 100) + '%';
-      if (primarySplatMesh) primarySplatMesh.material.opacity = STATE.splatOpacity * (twinRuinSplatMesh ? STATE.twinMorph : 1.0);
-      if (twinRuinSplatMesh) twinRuinSplatMesh.material.opacity = STATE.splatOpacity * (1.0 - STATE.twinMorph);
+      if (primarySplatMesh && primarySplatMesh.material.uniforms) primarySplatMesh.material.uniforms.uOpacity.value = STATE.splatOpacity * (twinRuinSplatMesh ? STATE.twinMorph : 1.0);
+      if (twinRuinSplatMesh && twinRuinSplatMesh.material.uniforms) twinRuinSplatMesh.material.uniforms.uOpacity.value = STATE.splatOpacity * (1.0 - STATE.twinMorph);
     });
 
     document.getElementById('sl-twin-morph').addEventListener('input', (e) => {
       STATE.twinMorph = parseFloat(e.target.value);
       document.getElementById('val-twin-morph').textContent = `${Math.round(STATE.twinMorph * 100)}% Temple`;
-      if (primarySplatMesh) primarySplatMesh.material.opacity = STATE.twinMorph * STATE.splatOpacity;
-      if (twinRuinSplatMesh) twinRuinSplatMesh.material.opacity = (1.0 - STATE.twinMorph) * STATE.splatOpacity;
+      if (primarySplatMesh && primarySplatMesh.material.uniforms) primarySplatMesh.material.uniforms.uOpacity.value = STATE.twinMorph * STATE.splatOpacity;
+      if (twinRuinSplatMesh && twinRuinSplatMesh.material.uniforms) twinRuinSplatMesh.material.uniforms.uOpacity.value = (1.0 - STATE.twinMorph) * STATE.splatOpacity;
     });
 
     document.getElementById('sel-coord-conv').addEventListener('change', (e) => {
