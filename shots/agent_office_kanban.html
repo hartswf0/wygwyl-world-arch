@@ -256,6 +256,7 @@
       <span class="dot-live" id="live-dot"></span>
       <span id="live-status">IN-WORLD 3D GIT WORKTREE CITY · 5 WORKTREES MOUNTED</span>
       <select class="hud-select" id="sky-select" title="Switch 360° Painted Equirectangular World Sky & Splat Hub">
+        <option value="l3g">⚡ World: L3G-Mem MPS Infinite Street (24,380 Adaptive Splats · 317 FPS)</option>
         <option value="01">🌌 World: Poem 01 · Severn & Naraka Twilight + Hub 01 Splat</option>
         <option value="11">🏛️ World: Poem 11 · Harbor White Temple + Hub 02 Splat</option>
         <option value="03">⛈️ World: Poem 03 · Harbor Storm Ruin + Hub 02 Storm Splat</option>
@@ -283,6 +284,7 @@
       Tap any 3D character, glowing stage proscenium, or worktree pylon in the street to fly there and run real Git worktree operations directly in the 3D world.
     </div>
     <div class="sc-actions">
+      <button class="sc-btn" id="btn-l3g">⚡ L3G-Mem MPS</button>
       <button class="sc-btn" id="btn-spawn">➕ Spawn Worktree</button>
       <button class="sc-btn coral" id="btn-audit">🔍 Cross-Model Audit</button>
       <button class="sc-btn teal" id="btn-compact">💎 55m Cache Shrine</button>
@@ -490,8 +492,8 @@
       }
     }
     mountWorldSplatAndGlb(
-      'data/terrarium/atlas_packs/splats/hub_01_atlantis.splat',
-      'data/terrarium/atlas_packs/chisel_glb/poem_01_chisel.glb'
+      'data/terrarium/atlas_packs/splats/l3g_infinite_street.splat',
+      'data/terrarium/atlas_packs/glb/hub_01_atlantis_collider.glb'
     );
 
     // Helper: Canvas Texture Sprite for Diegetic 3D Labels & In-World Terminals
@@ -986,16 +988,42 @@
       }
     });
 
+    document.getElementById('btn-l3g').addEventListener('click', async () => {
+      flyToStation(2);
+      mountWorldSplatAndGlb(
+        'data/terrarium/atlas_packs/splats/l3g_infinite_street.splat',
+        'data/terrarium/atlas_packs/glb/hub_01_atlantis_collider.glb'
+      );
+      try {
+        const res = await fetch('data/terrarium/atlas_packs/l3g_mem_telemetry.json');
+        const tel = await res.json();
+        const bm = tel.mps_gpu_benchmarks || {};
+        const bd = tel.breakdown_by_origin || {};
+        const lines = [
+          `$ python3 build_l3g_mem_mps.py [M3 Max MPS]`,
+          `✔ Mounted l3g_infinite_street.splat (${tel.total_gaussians_in_memory.toLocaleString()} adaptive splats)`,
+          `✔ Anchors: ${bd.pre_seeded_keyframe_anchors.toLocaleString()} | Spawned: ${bd.adaptively_spawned_disocclusion_and_corridors.toLocaleString()} | Loop-Refined: ${bd.multi_view_loop_closure_refined.toLocaleString()}`,
+          `✔ MPS 16-D Latent Render: ${bm.direct_latent_frustum_render_ms}ms (${bm.l3g_mem_projection_fps_on_m3_max} FPS) · ${tel.memory_compression_ratio}`
+        ];
+        termEl.textContent = lines.join('\n');
+        drawInWorldTerminalSlab(lines);
+      } catch (err) {
+        console.warn(err);
+      }
+    });
+
     // Sky & Splat Hub Switcher
     document.getElementById('sky-select').addEventListener('change', e => {
       const p = e.target.value;
-      loadEquirecSky(p);
-      if (p === '11') {
-        mountWorldSplatAndGlb('data/terrarium/atlas_packs/splats/hub_02_harbor_temple.splat', 'data/terrarium/atlas_packs/chisel_glb/hub_02_harbor_temple_chisel.glb');
+      loadEquirecSky(p === 'l3g' ? '01' : p);
+      if (p === 'l3g') {
+        mountWorldSplatAndGlb('data/terrarium/atlas_packs/splats/l3g_infinite_street.splat', 'data/terrarium/atlas_packs/glb/hub_01_atlantis_collider.glb');
+      } else if (p === '11') {
+        mountWorldSplatAndGlb('data/terrarium/atlas_packs/splats/hub_02_harbor_temple.splat', 'data/terrarium/atlas_packs/glb/hub_02_harbor_temple_collider.glb');
       } else if (p === '03') {
-        mountWorldSplatAndGlb('data/terrarium/atlas_packs/splats/hub_02_harbor_storm_ruin.splat', 'data/terrarium/atlas_packs/chisel_glb/hub_02_harbor_temple_chisel.glb');
+        mountWorldSplatAndGlb('data/terrarium/atlas_packs/splats/hub_02_harbor_storm_ruin.splat', 'data/terrarium/atlas_packs/glb/hub_02_harbor_temple_collider.glb');
       } else {
-        mountWorldSplatAndGlb('data/terrarium/atlas_packs/splats/hub_01_atlantis.splat', 'data/terrarium/atlas_packs/chisel_glb/poem_01_chisel.glb');
+        mountWorldSplatAndGlb('data/terrarium/atlas_packs/splats/hub_01_atlantis.splat', 'data/terrarium/atlas_packs/glb/hub_01_atlantis_collider.glb');
       }
     });
 
