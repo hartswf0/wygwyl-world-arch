@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>3D World · All 10 Districts (Apple ml-sharp 2-Layer 3DGS)</title>
+  <title>3D Gaussian Splat World · All 10 Districts (Apple ml-sharp)</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
     html, body {
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      background: #05080d;
+      background: #070b12;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #f3ead2;
     }
@@ -21,12 +21,12 @@
       height: 100vh;
       display: block;
       cursor: grab;
+      touch-action: none;
     }
     #three-canvas:active {
       cursor: grabbing;
     }
 
-    /* Ultra-minimal floating dock at bottom edge — zero sidebars, zero text walls */
     #hud-dock {
       position: fixed;
       bottom: 14px;
@@ -52,20 +52,20 @@
       align-items: center;
       justify-content: center;
       gap: 4px;
-      background: rgba(6, 10, 16, 0.68);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(6, 10, 16, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 999px;
-      padding: 4px 8px;
+      padding: 4px 9px;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
     }
     .pill-btn {
       background: transparent;
-      color: rgba(243, 234, 210, 0.82);
+      color: rgba(243, 234, 210, 0.85);
       border: 1px solid transparent;
       border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 11px;
+      padding: 5px 11px;
+      font-size: 11.5px;
       font-weight: 700;
       cursor: pointer;
       white-space: nowrap;
@@ -73,7 +73,7 @@
     }
     .pill-btn:hover {
       color: #fff;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.12);
     }
     .pill-btn.active {
       background: #ffd23f;
@@ -102,7 +102,7 @@
       right: 12px;
       z-index: 30;
       background: rgba(6, 10, 16, 0.55);
-      color: rgba(243, 234, 210, 0.75);
+      color: rgba(243, 234, 210, 0.8);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 999px;
       padding: 5px 11px;
@@ -110,10 +110,6 @@
       font-weight: 700;
       cursor: pointer;
       backdrop-filter: blur(8px);
-    }
-    #btn-hide-ui:hover {
-      color: #fff;
-      border-color: #19e6c8;
     }
   </style>
 </head>
@@ -123,40 +119,44 @@
   <button id="btn-hide-ui" type="button" title="Toggle UI (Key: H)">👁️ UI [H]</button>
 
   <div id="hud-dock">
-    <!-- Row 1: Camera Portals inside current District + Render Mode -->
     <div class="dock-row">
       <div id="portal-pills" style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;"></div>
       <div class="sep"></div>
-      <button class="pill-btn teal active" id="mode-world" type="button">🟢 3D World + Splats</button>
-      <button class="pill-btn teal" id="mode-splats" type="button">🟣 Pure 3DGS Cloud</button>
+      <button class="pill-btn teal active" id="mode-sharp" type="button">🟢 SHARP 2-Layer 3DGS</button>
       <button class="pill-btn teal" id="mode-xray" type="button">🔵 Layer-1 Disocclusion X-Ray</button>
+      <button class="pill-btn teal" id="mode-l0" type="button">🟡 Layer-0 Only (No Disocclusion)</button>
       <button class="pill-btn coral" id="mode-before" type="button">🔴 Legacy Before</button>
+      <div class="sep"></div>
+      <button class="pill-btn teal active" id="btn-sway" type="button">🔄 Auto-Parallax</button>
+      <button class="pill-btn" id="btn-reset" type="button">🎯 Center [R]</button>
     </div>
 
-    <!-- Row 2: All 10 Districts -->
     <div class="dock-row" id="district-pills"></div>
   </div>
 
   <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
     }
   }
   </script>
   <script type="module">
     import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
     const STATE = {
       manifest: null,
       activeDistrictKey: 'fells-point',
-      activeCamIdx: 0, // 0 = Hero SHARP 2-Layer stage, 1..N = other camera stages, -1 = District Aerial
-      renderMode: 'world', // 'world' | 'splats' | 'xray' | 'before'
-      orderedCams: [],
-      currentPose: null,
+      activeCamIdx: 0,
+      renderMode: 'sharp', // 'sharp' | 'xray' | 'l0' | 'before'
+      autoSway: true,
+      swayTime: 0,
+      allParsed: null,
+      stageData: null,
+      basis: null,
+      // Smooth spring-damped 3D camera controller state inside the room
+      curR: 0, curU: 0, curF: 0, curYaw: 0, curPitch: 0,
+      tgtR: 0, tgtU: 0, tgtF: 0, tgtYaw: 0, tgtPitch: 0,
     };
 
     const canvas = document.getElementById('three-canvas');
@@ -165,51 +165,13 @@
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x05080d);
+    scene.background = new THREE.Color(0x070b12);
 
-    const camera = new THREE.PerspectiveCamera(34, window.innerWidth / window.innerHeight, 0.15, 900);
-    const orbit = new OrbitControls(camera, canvas);
-    orbit.enableDamping = true;
-    orbit.dampingFactor = 0.06;
-    orbit.rotateSpeed = 0.65;
-    orbit.zoomSpeed = 0.9;
-
-    const ambLight = new THREE.AmbientLight(0xffffff, 1.4);
-    scene.add(ambLight);
-    const dirLight = new THREE.DirectionalLight(0xfff0d4, 1.2);
-    dirLight.position.set(40, 90, 50);
-    scene.add(dirLight);
-
-    const domeGroup = new THREE.Group();
-    scene.add(domeGroup);
-
-    const stageMeshGroup = new THREE.Group();
-    scene.add(stageMeshGroup);
-
+    const camera = new THREE.PerspectiveCamera(23, window.innerWidth / window.innerHeight, 0.2, 400);
     const splatGroup = new THREE.Group();
     scene.add(splatGroup);
 
-    const glbGroup = new THREE.Group();
-    scene.add(glbGroup);
-
-    const texLoader = new THREE.TextureLoader();
-    const gltfLoader = new GLTFLoader();
-
-    function onResize() {
-      renderer.setSize(window.innerWidth, window.innerHeight, false);
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-    }
-    window.addEventListener('resize', onResize);
-    onResize();
-
-    function clearGroup(grp) {
-      while (grp.children.length > 0) {
-        const c = grp.children[0];
-        grp.remove(c);
-        if (c.geometry) c.geometry.dispose();
-      }
-    }
+    let splatMesh = null;
 
     function computeCameraBasis(pos, look) {
       const px = pos[0], py = pos[1], pz = pos[2];
@@ -227,498 +189,442 @@
       return { P: [px, py, pz], R: [rx, ry, rz], U: [ux, uy, uz], F: [fx, fy, fz], dist: flen };
     }
 
-    function loadImageData(url, targetW, targetH) {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          const cv = document.createElement('canvas');
-          cv.width = targetW;
-          cv.height = targetH;
-          const ctx = cv.getContext('2d');
-          ctx.drawImage(img, 0, 0, targetW, targetH);
-          resolve({ img, data: ctx.getImageData(0, 0, targetW, targetH).data });
-        };
-        img.onerror = () => resolve(null);
-        img.src = url;
-      });
-    }
+    function updateViewportUniforms() {
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      // Adapt vertical FOV to aspect ratio so the 2.15:1 cinema splat stage always fills the screen comfortably
+      const targetHorizFovRad = THREE.MathUtils.degToRad(50.0);
+      const vertFovRad = 2.0 * Math.atan(Math.tan(targetHorizFovRad * 0.5) / Math.max(1.15, camera.aspect));
+      camera.fov = THREE.MathUtils.radToDeg(vertFovRad);
+      camera.updateProjectionMatrix();
 
-    // ── 1. BUILD 360° DEPTH-DISPLACED SURROUND WORLD DOME (ZERO BLACK VOID) ──
-    async function buildSurroundWorldDome(eqUrl, depthUrl, centerPos = [0, 0, 0]) {
-      clearGroup(domeGroup);
-      const W = 160, H = 80;
-      const [eqLoaded, depthLoaded] = await Promise.all([
-        loadImageData(eqUrl, 1024, 512),
-        loadImageData(depthUrl, W, H),
-      ]);
-      if (!eqLoaded) return;
-
-      const tex = new THREE.Texture(eqLoaded.img);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.needsUpdate = true;
-
-      const geo = new THREE.SphereGeometry(1, W - 1, H - 1);
-      const posAttr = geo.attributes.position;
-      const uvAttr = geo.attributes.uv;
-      const dArr = depthLoaded ? depthLoaded.data : null;
-
-      for (let i = 0; i < posAttr.count; i++) {
-        const u = uvAttr.getX(i);
-        const v = 1.0 - uvAttr.getY(i);
-        const gx = Math.min(W - 1, Math.max(0, Math.floor(u * (W - 1))));
-        const gy = Math.min(H - 1, Math.max(0, Math.floor(v * (H - 1))));
-        const dVal = dArr ? (dArr[(gy * W + gx) * 4] / 255.0) : 0.5;
-        // Bright = close (26m), Dark = far horizon (85m)
-        const rad = 26.0 + (1.0 - dVal) * 58.0;
-
-        const nx = posAttr.getX(i);
-        const ny = posAttr.getY(i);
-        const nz = posAttr.getZ(i);
-
-        let wx = nx * rad;
-        let wy = ny * rad;
-        let wz = nz * rad;
-        // Flatten lower hemisphere gently into a walkable surround ground terrain
-        if (wy < -2.2) {
-          const groundScale = -2.2 / wy;
-          wx *= Math.min(2.6, Math.pow(groundScale, 0.45));
-          wz *= Math.min(2.6, Math.pow(groundScale, 0.45));
-          wy = -2.2 + (wy + 2.2) * 0.12;
-        }
-        posAttr.setXYZ(i, centerPos[0] + wx, centerPos[1] + wy + 2.0, centerPos[2] + wz);
-      }
-      geo.computeVertexNormals();
-
-      const mat = new THREE.MeshBasicMaterial({
-        map: tex,
-        side: THREE.BackSide,
-        depthWrite: true,
-      });
-      const mesh = new THREE.Mesh(geo, mat);
-      domeGroup.add(mesh);
-    }
-
-    // ── 2. BUILD WATERTIGHT 2-LAYER 3D NEURAL DEPTH RELIEF SURFACE PER CAMERA STAGE ──
-    const stageMeshes = [];
-    async function buildNeuralDepthStageMeshes(orderedCams, heroRef) {
-      clearGroup(stageMeshGroup);
-      stageMeshes.length = 0;
-
-      for (let camIdx = 0; camIdx < orderedCams.length; camIdx++) {
-        const cam = orderedCams[camIdx];
-        const refId = cam.ref_id;
-        const rgbUrl = cam.source_img || `data/terrarium/foundry/refs/${refId}.jpg`;
-        const sharpDepthUrl = `data/terrarium/atlas_packs/splats/depth_${refId}_sharp.png`;
-
-        const GW = 220, GH = 124;
-        const [rgbLoaded, depthLoaded] = await Promise.all([
-          loadImageData(rgbUrl, 1024, 512),
-          loadImageData(sharpDepthUrl, GW, GH),
-        ]);
-        if (!rgbLoaded) continue;
-
-        const tex = new THREE.Texture(rgbLoaded.img);
-        tex.colorSpace = THREE.SRGBColorSpace;
-        tex.needsUpdate = true;
-
-        const basis = computeCameraBasis(cam.threejs_pose.position_m, cam.threejs_pose.look_at_m);
-        const fovDeg = cam.threejs_pose.fov_deg || 55.0;
-        const f_s = (GW * 0.5) / Math.tan(THREE.MathUtils.degToRad(fovDeg * 0.5));
-        const targetDist = Math.max(9.0, Math.min(18.0, basis.dist));
-        const dArr = depthLoaded ? depthLoaded.data : null;
-
-        // Smooth depth map with a 3x3 box pass to prevent spike artifacts while keeping crisp 3D volume
-        const zGrid = new Float32Array(GW * GH);
-        const legZGrid = new Float32Array(GW * GH);
-        for (let vg = 0; vg < GH; vg++) {
-          const vNorm = vg / (GH - 1);
-          for (let ug = 0; ug < GW; ug++) {
-            let dNorm = 0.5;
-            if (dArr) {
-              let sum = 0, cnt = 0;
-              for (let dy = -1; dy <= 1; dy++) {
-                const yy = Math.min(GH - 1, Math.max(0, vg + dy));
-                for (let dx = -1; dx <= 1; dx++) {
-                  const xx = Math.min(GW - 1, Math.max(0, ug + dx));
-                  sum += dArr[(yy * GW + xx) * 4] / 255.0;
-                  cnt++;
-                }
-              }
-              dNorm = sum / cnt;
-            }
-            // Metric depth in meters (close foreground = 4.2m, far background = 22.0m)
-            const zc = targetDist * (0.42 + (1.0 - dNorm) * 1.15);
-            zGrid[vg * GW + ug] = zc;
-
-            // Legacy synthetic contour-ring depth for Before/After comparison
-            const ring = Math.sin(Math.hypot(ug - GW * 0.5, vg - GH * 0.5) * 0.35) * 3.8;
-            legZGrid[vg * GW + ug] = Math.max(2.5, zc + ring);
-          }
-        }
-
-        // Layer-0 Foreground 3D Relief Mesh
-        const geo = new THREE.BufferGeometry();
-        const vCount = GW * GH;
-        const positions = new Float32Array(vCount * 3);
-        const sharpPositions = new Float32Array(vCount * 3);
-        const beforePositions = new Float32Array(vCount * 3);
-        const uvs = new Float32Array(vCount * 2);
-
-        for (let vg = 0; vg < GH; vg++) {
-          for (let ug = 0; ug < GW; ug++) {
-            const idx = vg * GW + ug;
-            const zc = zGrid[idx];
-            const xc = ((ug - GW * 0.5) / f_s) * zc;
-            const yc = ((vg - GH * 0.5) / f_s) * zc;
-
-            const wx = basis.P[0] + xc * basis.R[0] - yc * basis.U[0] + zc * basis.F[0];
-            const wy = basis.P[1] + xc * basis.R[1] - yc * basis.U[1] + zc * basis.F[1];
-            const wz = basis.P[2] + xc * basis.R[2] - yc * basis.U[2] + zc * basis.F[2];
-
-            positions[idx * 3 + 0] = wx;
-            positions[idx * 3 + 1] = wy;
-            positions[idx * 3 + 2] = wz;
-            sharpPositions[idx * 3 + 0] = wx;
-            sharpPositions[idx * 3 + 1] = wy;
-            sharpPositions[idx * 3 + 2] = wz;
-
-            const lzc = legZGrid[idx];
-            const lxc = ((ug - GW * 0.5) / f_s) * lzc;
-            const lyc = ((vg - GH * 0.5) / f_s) * lzc;
-            beforePositions[idx * 3 + 0] = basis.P[0] + lxc * basis.R[0] - lyc * basis.U[0] + lzc * basis.F[0];
-            beforePositions[idx * 3 + 1] = basis.P[1] + lxc * basis.R[1] - lyc * basis.U[1] + lzc * basis.F[1];
-            beforePositions[idx * 3 + 2] = basis.P[2] + lxc * basis.R[2] - lyc * basis.U[2] + lzc * basis.F[2];
-
-            uvs[idx * 2 + 0] = ug / (GW - 1);
-            uvs[idx * 2 + 1] = 1.0 - (vg / (GH - 1));
-          }
-        }
-
-        // Build index buffer while skipping steep depth-step silhouette edges (> 3.2m jump)
-        // so foreground characters/pillars separate cleanly from background walls!
-        const indices = [];
-        for (let vg = 0; vg < GH - 1; vg++) {
-          for (let ug = 0; ug < GW - 1; ug++) {
-            const a = vg * GW + ug;
-            const b = a + 1;
-            const c = (vg + 1) * GW + ug;
-            const d = c + 1;
-
-            const za = zGrid[a], zb = zGrid[b], zc_ = zGrid[c], zd = zGrid[d];
-            const maxJump1 = Math.max(Math.abs(za - zb), Math.abs(za - zc_), Math.abs(zb - zc_));
-            const maxJump2 = Math.max(Math.abs(zb - zd), Math.abs(zc_ - zd), Math.abs(zb - zc_));
-            if (maxJump1 < 3.6) indices.push(a, c, b);
-            if (maxJump2 < 3.6) indices.push(b, c, d);
-          }
-        }
-
-        geo.setIndex(indices);
-        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
-
-        const mat = new THREE.MeshBasicMaterial({
-          map: tex,
-          side: THREE.DoubleSide,
-        });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.userData = { camIdx, sharpPositions, beforePositions };
-        stageMeshGroup.add(mesh);
-
-        // Layer-1 Hidden Disocclusion Backdrop Shell (sits 2.2m behind foreground depth steps to fill any torn silhouette gaps!)
-        const bgGeo = new THREE.BufferGeometry();
-        const bgPos = new Float32Array(vCount * 3);
-        const bgInd = [];
-        for (let vg = 0; vg < GH; vg++) {
-          for (let ug = 0; ug < GW; ug++) {
-            const idx = vg * GW + ug;
-            // Push forward depth regions back to background wall depth so disocclusion corridors are filled
-            const zBack = Math.max(zGrid[idx] + 1.4, targetDist * 1.15);
-            const xc = ((ug - GW * 0.5) / f_s) * zBack;
-            const yc = ((vg - GH * 0.5) / f_s) * zBack;
-            bgPos[idx * 3 + 0] = basis.P[0] + xc * basis.R[0] - yc * basis.U[0] + zBack * basis.F[0];
-            bgPos[idx * 3 + 1] = basis.P[1] + xc * basis.R[1] - yc * basis.U[1] + zBack * basis.F[1];
-            bgPos[idx * 3 + 2] = basis.P[2] + xc * basis.R[2] - yc * basis.U[2] + zBack * basis.F[2];
-          }
-        }
-        for (let vg = 0; vg < GH - 1; vg++) {
-          for (let ug = 0; ug < GW - 1; ug++) {
-            const a = vg * GW + ug, b = a + 1, c = (vg + 1) * GW + ug, d = c + 1;
-            bgInd.push(a, c, b, b, c, d);
-          }
-        }
-        bgGeo.setIndex(bgInd);
-        bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPos, 3));
-        bgGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
-        const bgMat = new THREE.MeshBasicMaterial({
-          map: tex,
-          color: 0xdde8f8,
-          side: THREE.DoubleSide,
-        });
-        const bgMesh = new THREE.Mesh(bgGeo, bgMat);
-        bgMesh.userData = { camIdx, isBackdrop: true };
-        stageMeshGroup.add(bgMesh);
-
-        stageMeshes.push({ mesh, bgMesh, camIdx });
+      if (splatMesh && splatMesh.material.uniforms) {
+        const focalDevPx = renderer.domElement.height / (2.0 * Math.tan(vertFovRad * 0.5));
+        splatMesh.material.uniforms.uFocalPx.value = focalDevPx;
       }
     }
+    window.addEventListener('resize', updateViewportUniforms);
 
-    // ── 3. PARSE & RENDER 2D-GRID APPLE `ml-sharp` 3D GAUSSIAN SPLATS ──
-    let primarySplatMesh = null;
+    // ── PARSE `.SPLAT` BINARY ──
     function parse32ByteSplatBuffer(arrayBuffer) {
       const count = Math.floor(arrayBuffer.byteLength / 32);
       const dv = new DataView(arrayBuffer);
-      const positions = new Float32Array(count * 3);
       const basePositions = new Float32Array(count * 3);
-      const colors = new Float32Array(count * 3);
       const baseColors = new Float32Array(count * 3);
-      const scales = new Float32Array(count);
+      const baseAlphas = new Float32Array(count);
+      const baseScales = new Float32Array(count);
       const isLayer1 = new Uint8Array(count);
       const camIdx = new Uint8Array(count);
       const dzLegacy = new Float32Array(count);
 
       for (let i = 0; i < count; i++) {
         const off = i * 32;
-        const x = dv.getFloat32(off + 0, true);
-        const y = dv.getFloat32(off + 4, true);
-        const z = dv.getFloat32(off + 8, true);
+        basePositions[i * 3 + 0] = dv.getFloat32(off + 0, true);
+        basePositions[i * 3 + 1] = dv.getFloat32(off + 4, true);
+        basePositions[i * 3 + 2] = dv.getFloat32(off + 8, true);
+
         const sx = dv.getFloat32(off + 12, true);
         const sy = dv.getFloat32(off + 16, true);
         const sz = dv.getFloat32(off + 20, true);
-        const r = dv.getUint8(off + 24) / 255.0;
-        const g = dv.getUint8(off + 25) / 255.0;
-        const b = dv.getUint8(off + 26) / 255.0;
+        baseScales[i] = Math.max(0.16, Math.min(0.65, (sx + sy + sz) / 3.0));
+
+        baseColors[i * 3 + 0] = dv.getUint8(off + 24) / 255.0;
+        baseColors[i * 3 + 1] = dv.getUint8(off + 25) / 255.0;
+        baseColors[i * 3 + 2] = dv.getUint8(off + 26) / 255.0;
+        baseAlphas[i] = Math.max(0.35, dv.getUint8(off + 27) / 255.0);
+
         const q0 = dv.getUint8(off + 28);
         const q1 = dv.getUint8(off + 29);
         const q2 = dv.getUint8(off + 30);
         const q3 = dv.getUint8(off + 31);
 
-        positions[i * 3 + 0] = x;
-        positions[i * 3 + 1] = y;
-        positions[i * 3 + 2] = z;
-        basePositions[i * 3 + 0] = x;
-        basePositions[i * 3 + 1] = y;
-        basePositions[i * 3 + 2] = z;
-        colors[i * 3 + 0] = r;
-        colors[i * 3 + 1] = g;
-        colors[i * 3 + 2] = b;
-        baseColors[i * 3 + 0] = r;
-        baseColors[i * 3 + 1] = g;
-        baseColors[i * 3 + 2] = b;
-
-        scales[i] = Math.max(0.18, Math.min(3.5, (sx + sy + sz) / 3.0));
         isLayer1[i] = (q0 === 255) ? 1 : 0;
         camIdx[i] = q1;
         const u16 = q2 | (q3 << 8);
         dzLegacy[i] = (q0 === 128 && q2 === 128) ? 0.0 : ((u16 / 65535.0) * 30.0 - 15.0);
       }
-      return { count, positions, basePositions, colors, baseColors, scales, isLayer1, camIdx, dzLegacy };
+      return { count, basePositions, baseColors, baseAlphas, baseScales, isLayer1, camIdx, dzLegacy };
     }
 
-    async function loadDistrictSplat(splatUrl) {
-      clearGroup(splatGroup);
-      primarySplatMesh = null;
-      try {
-        const res = await fetch(splatUrl);
-        if (!res.ok) return;
-        const buf = await res.arrayBuffer();
-        const parsed = parse32ByteSplatBuffer(buf);
+    // Extract active camera stage's Gaussians and allocate counting-sort buffers
+    const NUM_BUCKETS = 2048;
+    const bucketCounts = new Int32Array(NUM_BUCKETS);
+    const bucketOffsets = new Int32Array(NUM_BUCKETS);
 
-        const geo = new THREE.BufferGeometry();
-        geo.setAttribute('position', new THREE.BufferAttribute(parsed.positions, 3));
-        geo.setAttribute('color', new THREE.BufferAttribute(parsed.colors, 3));
-        geo.setAttribute('aScale', new THREE.BufferAttribute(parsed.scales, 1));
-
-        const mat = new THREE.ShaderMaterial({
-          uniforms: {
-            uPointScale: { value: 1.0 },
-          },
-          vertexShader: `
-            attribute float aScale;
-            varying vec3 vColor;
-            uniform float uPointScale;
-            void main() {
-              vColor = color;
-              vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-              gl_Position = projectionMatrix * mvPosition;
-              float dist = max(0.8, -mvPosition.z);
-              gl_PointSize = clamp(uPointScale * aScale * (1150.0 / dist), 3.5, 48.0);
-            }
-          `,
-          fragmentShader: `
-            varying vec3 vColor;
-            void main() {
-              vec2 cxy = 2.0 * gl_PointCoord - 1.0;
-              float r2 = dot(cxy, cxy);
-              if (r2 > 1.0) discard;
-              gl_FragColor = vec4(vColor * (1.0 - 0.12 * r2), 1.0);
-            }
-          `,
-          vertexColors: true,
-          depthTest: true,
-          depthWrite: true,
-        });
-
-        primarySplatMesh = new THREE.Points(geo, mat);
-        primarySplatMesh.userData.parsed = parsed;
-        splatGroup.add(primarySplatMesh);
-      } catch (e) {
-        console.warn('Splat error:', e);
+    function buildActiveStageSplatMesh() {
+      while (splatGroup.children.length > 0) {
+        const c = splatGroup.children[0];
+        splatGroup.remove(c);
+        if (c.geometry) c.geometry.dispose();
       }
+      splatMesh = null;
+      if (!STATE.allParsed) return;
+
+      const all = STATE.allParsed;
+      const targetCam = STATE.activeCamIdx;
+
+      // Count how many Gaussians belong to targetCam
+      let nStage = 0;
+      for (let i = 0; i < all.count; i++) {
+        if (all.camIdx[i] === targetCam) nStage++;
+      }
+      if (nStage === 0) return;
+
+      const uPos = new Float32Array(nStage * 3); // Unsorted stage positions (after mode/legacy displacement)
+      const uCol = new Float32Array(nStage * 3);
+      const uAlp = new Float32Array(nStage);
+      const uScl = new Float32Array(nStage);
+      const sBasePos = new Float32Array(nStage * 3);
+      const sBaseCol = new Float32Array(nStage * 3);
+      const sBaseAlp = new Float32Array(nStage);
+      const sBaseScl = new Float32Array(nStage);
+      const sIsL1 = new Uint8Array(nStage);
+      const sDzLeg = new Float32Array(nStage);
+
+      let k = 0;
+      for (let i = 0; i < all.count; i++) {
+        if (all.camIdx[i] !== targetCam) continue;
+        sBasePos[k * 3 + 0] = all.basePositions[i * 3 + 0];
+        sBasePos[k * 3 + 1] = all.basePositions[i * 3 + 1];
+        sBasePos[k * 3 + 2] = all.basePositions[i * 3 + 2];
+        sBaseCol[k * 3 + 0] = all.baseColors[i * 3 + 0];
+        sBaseCol[k * 3 + 1] = all.baseColors[i * 3 + 1];
+        sBaseCol[k * 3 + 2] = all.baseColors[i * 3 + 2];
+        sBaseAlp[k] = all.baseAlphas[i];
+        sBaseScl[k] = all.baseScales[i];
+        sIsL1[k] = all.isLayer1[i];
+        sDzLeg[k] = all.dzLegacy[i];
+        k++;
+      }
+
+      // Sorted attribute buffers sent to GPU
+      const sortedPos = new Float32Array(nStage * 3);
+      const sortedCol = new Float32Array(nStage * 3);
+      const sortedAlp = new Float32Array(nStage);
+      const sortedScl = new Float32Array(nStage);
+      const depthKeys = new Uint16Array(nStage);
+      const sortedIndices = new Int32Array(nStage);
+
+      STATE.stageData = {
+        nStage,
+        uPos, uCol, uAlp, uScl,
+        sBasePos, sBaseCol, sBaseAlp, sBaseScl, sIsL1, sDzLeg,
+        sortedPos, sortedCol, sortedAlp, sortedScl,
+        depthKeys, sortedIndices,
+      };
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(sortedPos, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(sortedCol, 3));
+      geo.setAttribute('aAlpha', new THREE.BufferAttribute(sortedAlp, 1));
+      geo.setAttribute('aScale', new THREE.BufferAttribute(sortedScl, 1));
+
+      const mat = new THREE.ShaderMaterial({
+        uniforms: {
+          uFocalPx: { value: 2000.0 },
+        },
+        vertexShader: `
+          attribute float aScale;
+          attribute float aAlpha;
+          varying vec3 vColor;
+          varying float vAlpha;
+          uniform float uFocalPx;
+          void main() {
+            vColor = color;
+            vAlpha = aAlpha;
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            gl_Position = projectionMatrix * mvPosition;
+            float dist = max(1.2, -mvPosition.z);
+            // Perspective-accurate Gaussian footprint scaled to Retina viewport focal length
+            gl_PointSize = clamp(aScale * (uFocalPx / dist) * 0.42, 4.0, 110.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vColor;
+          varying float vAlpha;
+          void main() {
+            if (vAlpha <= 0.01) discard;
+            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+            float r2 = dot(cxy, cxy);
+            if (r2 > 1.0) discard;
+            // True 2D Gaussian radial falloff exp(-2.2 * r^2)
+            float gauss = exp(-2.25 * r2);
+            gl_FragColor = vec4(vColor, vAlpha * gauss);
+          }
+        `,
+        vertexColors: true,
+        transparent: true,
+        depthTest: true,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+      });
+
+      splatMesh = new THREE.Points(geo, mat);
+      splatMesh.frustumCulled = false;
+      splatGroup.add(splatMesh);
+
+      updateViewportUniforms();
+      applySplatModeToStageData();
+      sortStageSplatsBackToFront();
     }
 
-    function applyRenderMode() {
+    function applySplatModeToStageData() {
+      const sd = STATE.stageData;
+      if (!sd || !STATE.basis) return;
       const mode = STATE.renderMode;
-      const activeCam = STATE.activeCamIdx;
+      const fx = STATE.basis.F[0], fy = STATE.basis.F[1], fz = STATE.basis.F[2];
 
-      // 1. Update solid 2-Layer 3D Neural Depth Stage Meshes
-      stageMeshes.forEach(({ mesh, bgMesh, camIdx }) => {
-        const isCurrentStage = (activeCam === -1) || (camIdx === activeCam);
-        if (mode === 'splats') {
-          mesh.visible = false;
-          bgMesh.visible = false;
-          return;
-        }
-        mesh.visible = isCurrentStage;
-        bgMesh.visible = isCurrentStage && (mode !== 'before');
+      for (let i = 0; i < sd.nStage; i++) {
+        const i3 = i * 3;
+        const l1 = sd.sIsL1[i] === 1;
+        const bx = sd.sBasePos[i3 + 0], by = sd.sBasePos[i3 + 1], bz = sd.sBasePos[i3 + 2];
+        const br = sd.sBaseCol[i3 + 0], bg = sd.sBaseCol[i3 + 1], bb = sd.sBaseCol[i3 + 2];
 
-        if (isCurrentStage) {
-          const posAttr = mesh.geometry.getAttribute('position');
-          const src = (mode === 'before') ? mesh.userData.beforePositions : mesh.userData.sharpPositions;
-          posAttr.array.set(src);
-          posAttr.needsUpdate = true;
-          bgMesh.material.color.setHex(mode === 'xray' ? 0x19e6c8 : 0xdde8f8);
-        }
-      });
-
-      // 2. Update 3D Gaussian Splat Cloud
-      if (primarySplatMesh && primarySplatMesh.userData.parsed) {
-        const p = primarySplatMesh.userData.parsed;
-        const posAttr = primarySplatMesh.geometry.getAttribute('position');
-        const colAttr = primarySplatMesh.geometry.getAttribute('color');
-        const posArr = posAttr.array;
-        const colArr = colAttr.array;
-
-        primarySplatMesh.material.uniforms.uPointScale.value = (mode === 'splats') ? 1.55 : 0.85;
-
-        let fx = 0, fy = 0, fz = -1;
-        if (STATE.currentPose && STATE.currentPose.position_m && STATE.currentPose.look_at_m) {
-          const cp = STATE.currentPose.position_m, cl = STATE.currentPose.look_at_m;
-          const dx = cl[0] - cp[0], dy = cl[1] - cp[1], dz = cl[2] - cp[2];
-          const len = Math.hypot(dx, dy, dz) || 1;
-          fx = dx / len; fy = dy / len; fz = dz / len;
+        if ((mode === 'l0' || mode === 'before') && l1) {
+          sd.uPos[i3 + 0] = bx;
+          sd.uPos[i3 + 1] = by;
+          sd.uPos[i3 + 2] = bz;
+          sd.uAlp[i] = 0.0;
+          sd.uScl[i] = 0.0;
+          continue;
         }
 
-        for (let i = 0; i < p.count; i++) {
-          const i3 = i * 3;
-          if (activeCam >= 0 && p.camIdx[i] !== activeCam) {
-            posArr[i3 + 0] = 0; posArr[i3 + 1] = -9999; posArr[i3 + 2] = 0;
-            continue;
-          }
-          const l1 = p.isLayer1[i] === 1;
-          if (mode === 'world' && !l1) {
-            // In hybrid 3D World mode, Layer-0 is rendered as a watertight 220x124 3D neural surface while Layer-1 3DGS fills disocclusions
-            posArr[i3 + 0] = 0; posArr[i3 + 1] = -9999; posArr[i3 + 2] = 0;
-            continue;
-          }
-          if (mode === 'before' && l1) {
-            posArr[i3 + 0] = 0; posArr[i3 + 1] = -9999; posArr[i3 + 2] = 0;
-            continue;
-          }
+        const dz = (mode === 'before') ? sd.sDzLeg[i] : 0.0;
+        sd.uPos[i3 + 0] = bx + fx * dz;
+        sd.uPos[i3 + 1] = by + fy * dz;
+        sd.uPos[i3 + 2] = bz + fz * dz;
+        sd.uAlp[i] = sd.sBaseAlp[i];
+        sd.uScl[i] = sd.sBaseScl[i];
 
-          const bx = p.basePositions[i3 + 0], by = p.basePositions[i3 + 1], bz = p.basePositions[i3 + 2];
-          const br = p.baseColors[i3 + 0], bg = p.baseColors[i3 + 1], bb = p.baseColors[i3 + 2];
-          const dz = (mode === 'before') ? p.dzLegacy[i] : 0.0;
-
-          posArr[i3 + 0] = bx + fx * dz;
-          posArr[i3 + 1] = by + fy * dz;
-          posArr[i3 + 2] = bz + fz * dz;
-
-          if (mode === 'xray' && l1) {
-            colArr[i3 + 0] = 0.10;
-            colArr[i3 + 1] = 0.95;
-            colArr[i3 + 2] = 0.85;
-          } else {
-            colArr[i3 + 0] = br;
-            colArr[i3 + 1] = bg;
-            colArr[i3 + 2] = bb;
-          }
+        if (mode === 'xray' && l1) {
+          sd.uCol[i3 + 0] = 0.08;
+          sd.uCol[i3 + 1] = 0.96;
+          sd.uCol[i3 + 2] = 0.86;
+          sd.uAlp[i] = 0.95;
+        } else if (mode === 'before') {
+          const tint = Math.min(0.4, Math.abs(dz) * 0.05);
+          sd.uCol[i3 + 0] = Math.min(1.0, br + tint * 0.85);
+          sd.uCol[i3 + 1] = bg * (1.0 - tint * 0.35);
+          sd.uCol[i3 + 2] = bb * (1.0 - tint * 0.55);
+        } else {
+          sd.uCol[i3 + 0] = br;
+          sd.uCol[i3 + 1] = bg;
+          sd.uCol[i3 + 2] = bb;
         }
-        posAttr.needsUpdate = true;
-        colAttr.needsUpdate = true;
       }
 
-      glbGroup.visible = (activeCam === -1);
-
-      document.getElementById('mode-world').classList.toggle('active', mode === 'world');
-      document.getElementById('mode-splats').classList.toggle('active', mode === 'splats');
-      document.getElementById('mode-xray').classList.toggle('active', mode === 'xray');
-      document.getElementById('mode-before').classList.toggle('active', mode === 'before');
-    }
-
-    function stepInsideStage(pose) {
-      if (!pose || !pose.position_m || !pose.look_at_m) return;
-      STATE.currentPose = pose;
-      const pos = pose.position_m;
-      const look = pose.look_at_m;
-      const dx = look[0] - pos[0];
-      const dy = look[1] - pos[1];
-      const dz = look[2] - pos[2];
-
-      camera.fov = 26;
-      camera.updateProjectionMatrix();
-      // Place camera slightly inside the stage frustum so 3D walls/buildings fill 100% of the screen
-      camera.position.set(
-        pos[0] + dx * 0.14,
-        pos[1] + dy * 0.14,
-        pos[2] + dz * 0.14
-      );
-      orbit.target.set(
-        pos[0] + dx * 0.95,
-        pos[1] + dy * 0.95,
-        pos[2] + dz * 0.95
-      );
-      orbit.update();
-    }
-
-    async function loadGlbSubtle(glbUrl) {
-      clearGroup(glbGroup);
-      return new Promise((resolve) => {
-        gltfLoader.load(
-          glbUrl,
-          (gltf) => {
-            gltf.scene.traverse((child) => {
-              if (child.isMesh) {
-                child.material = new THREE.MeshLambertMaterial({
-                  vertexColors: !!child.geometry.attributes.color,
-                  color: child.geometry.attributes.color ? 0xffffff : 0x2d4258,
-                  transparent: true,
-                  opacity: 0.32,
-                  side: THREE.DoubleSide,
-                });
-              }
-            });
-            glbGroup.add(gltf.scene);
-            resolve();
-          },
-          undefined,
-          () => resolve()
-        );
+      ['sharp', 'xray', 'l0', 'before'].forEach(m => {
+        document.getElementById(`mode-${m}`).classList.toggle('active', mode === m);
       });
+    }
+
+    // O(N) 2048-Bucket Back-to-Front Counting Sort (~0.7ms per frame)
+    const camFwd = new THREE.Vector3();
+    function sortStageSplatsBackToFront() {
+      const sd = STATE.stageData;
+      if (!sd || !splatMesh) return;
+
+      camera.getWorldDirection(camFwd);
+      const cx = camera.position.x, cy = camera.position.y, cz = camera.position.z;
+      const fx = camFwd.x, fy = camFwd.y, fz = camFwd.z;
+
+      const n = sd.nStage;
+      const uPos = sd.uPos;
+      const keys = sd.depthKeys;
+
+      bucketCounts.fill(0);
+
+      // Map depth in [0.5m .. 40.5m] -> bucket [2047 .. 0] so FARTHEST Gaussians come FIRST!
+      const scale = (NUM_BUCKETS - 1) / 40.0;
+      for (let i = 0; i < n; i++) {
+        const i3 = i * 3;
+        const d = (uPos[i3 + 0] - cx) * fx + (uPos[i3 + 1] - cy) * fy + (uPos[i3 + 2] - cz) * fz;
+        // Invert depth so largest distance -> bucket 0 (drawn first), smallest distance -> bucket 2047 (drawn last on top)
+        let b = Math.floor((40.5 - d) * scale);
+        if (b < 0) b = 0;
+        else if (b >= NUM_BUCKETS) b = NUM_BUCKETS - 1;
+        keys[i] = b;
+        bucketCounts[b]++;
+      }
+
+      let offset = 0;
+      for (let b = 0; b < NUM_BUCKETS; b++) {
+        bucketOffsets[b] = offset;
+        offset += bucketCounts[b];
+      }
+
+      const sortedIdx = sd.sortedIndices;
+      for (let i = 0; i < n; i++) {
+        const b = keys[i];
+        sortedIdx[bucketOffsets[b]++] = i;
+      }
+
+      const sPos = sd.sortedPos, sCol = sd.sortedCol, sAlp = sd.sortedAlp, sScl = sd.sortedScl;
+      const uCol = sd.uCol, uAlp = sd.uAlp, uScl = sd.uScl;
+
+      for (let j = 0; j < n; j++) {
+        const i = sortedIdx[j];
+        const j3 = j * 3, i3 = i * 3;
+        sPos[j3 + 0] = uPos[i3 + 0];
+        sPos[j3 + 1] = uPos[i3 + 1];
+        sPos[j3 + 2] = uPos[i3 + 2];
+        sCol[j3 + 0] = uCol[i3 + 0];
+        sCol[j3 + 1] = uCol[i3 + 1];
+        sCol[j3 + 2] = uCol[i3 + 2];
+        sAlp[j] = uAlp[i];
+        sScl[j] = uScl[i];
+      }
+
+      splatMesh.geometry.attributes.position.needsUpdate = true;
+      splatMesh.geometry.attributes.color.needsUpdate = true;
+      splatMesh.geometry.attributes.aAlpha.needsUpdate = true;
+      splatMesh.geometry.attributes.aScale.needsUpdate = true;
+    }
+
+    function resetCameraToStageCenter() {
+      STATE.tgtR = 0;
+      STATE.tgtU = 0;
+      STATE.tgtF = 0;
+      STATE.tgtYaw = 0;
+      STATE.tgtPitch = 0;
+    }
+
+    // ── INTUITIVE, BOUNDED 3D ROOM PARALLAX & WALK CONTROLLER ──
+    let isDragging = false;
+    let dragButton = 0;
+    let lastX = 0, lastY = 0;
+
+    canvas.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      dragButton = e.button;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      canvas.setPointerCapture(e.pointerId);
+      // Pause auto-sway when user grabs the view
+      if (STATE.autoSway) {
+        STATE.autoSway = false;
+        document.getElementById('btn-sway').classList.remove('active');
+      }
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      const dx = (e.clientX - lastX) / window.innerWidth;
+      const dy = (e.clientY - lastY) / window.innerHeight;
+      lastX = e.clientX;
+      lastY = e.clientY;
+
+      if (dragButton === 2 || e.shiftKey) {
+        // Right-drag or Shift+drag: pure truck left/right & pedestal up/down
+        STATE.tgtR = Math.max(-2.6, Math.min(2.6, STATE.tgtR - dx * 5.0));
+        STATE.tgtU = Math.max(-1.4, Math.min(1.4, STATE.tgtU + dy * 3.5));
+      } else {
+        // Left-drag: coupled 3D parallax shift + smooth look rotation around room center!
+        STATE.tgtR = Math.max(-2.4, Math.min(2.4, STATE.tgtR - dx * 4.2));
+        STATE.tgtU = Math.max(-1.2, Math.min(1.2, STATE.tgtU + dy * 2.8));
+        STATE.tgtYaw = Math.max(-0.26, Math.min(0.26, STATE.tgtYaw + dx * 0.45));
+        STATE.tgtPitch = Math.max(-0.16, Math.min(0.16, STATE.tgtPitch + dy * 0.32));
+      }
+    });
+
+    ['pointerup', 'pointercancel'].forEach(ev => {
+      canvas.addEventListener(ev, () => { isDragging = false; });
+    });
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    canvas.addEventListener('dblclick', () => resetCameraToStageCenter());
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      // Smoothly dolly forward/backward inside the room within safe bounds [-2.2m .. +4.8m]
+      STATE.tgtF = Math.max(-2.2, Math.min(4.8, STATE.tgtF - e.deltaY * 0.004));
+    }, { passive: false });
+
+    const keys = new Set();
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      if (k === 'h') {
+        document.getElementById('hud-dock').classList.toggle('hidden');
+        return;
+      }
+      if (k === 'r' || k === ' ') {
+        resetCameraToStageCenter();
+        return;
+      }
+      keys.add(k);
+    });
+    window.addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+
+    function updateCameraPose(dt) {
+      if (!STATE.basis) return;
+
+      // Keyboard WASD / Arrow movement inside safe room bounds
+      if (keys.size > 0) {
+        if (STATE.autoSway) {
+          STATE.autoSway = false;
+          document.getElementById('btn-sway').classList.remove('active');
+        }
+        const spd = 2.8 * dt;
+        if (keys.has('w') || keys.has('arrowup')) STATE.tgtF = Math.min(4.8, STATE.tgtF + spd);
+        if (keys.has('s') || keys.has('arrowdown')) STATE.tgtF = Math.max(-2.2, STATE.tgtF - spd);
+        if (keys.has('d') || keys.has('arrowright')) STATE.tgtR = Math.min(2.6, STATE.tgtR + spd * 0.8);
+        if (keys.has('a') || keys.has('arrowleft')) STATE.tgtR = Math.max(-2.6, STATE.tgtR - spd * 0.8);
+        if (keys.has('e')) STATE.tgtU = Math.min(1.4, STATE.tgtU + spd * 0.6);
+        if (keys.has('q')) STATE.tgtU = Math.max(-1.4, STATE.tgtU - spd * 0.6);
+      }
+
+      // Gentle figure-8 3D parallax sway when Auto-Parallax is active so 3D depth is immediately visible
+      let swayR = 0, swayU = 0, swayF = 0;
+      if (STATE.autoSway) {
+        STATE.swayTime += dt;
+        swayR = Math.sin(STATE.swayTime * 1.15) * 1.15;
+        swayU = Math.cos(STATE.swayTime * 0.85) * 0.38;
+        swayF = Math.sin(STATE.swayTime * 0.65) * 0.85;
+      }
+
+      const damp = Math.min(1.0, dt * 10.0);
+      STATE.curR += ((STATE.tgtR + swayR) - STATE.curR) * damp;
+      STATE.curU += ((STATE.tgtU + swayU) - STATE.curU) * damp;
+      STATE.curF += ((STATE.tgtF + swayF) - STATE.curF) * damp;
+      STATE.curYaw += (STATE.tgtYaw - STATE.curYaw) * damp;
+      STATE.curPitch += (STATE.tgtPitch - STATE.curPitch) * damp;
+
+      const { P, R, U, F, dist } = STATE.basis;
+      const baseAdvance = 0.6 + STATE.curF;
+
+      const cx = P[0] + R[0] * STATE.curR + U[0] * STATE.curU + F[0] * baseAdvance;
+      const cy = P[1] + R[1] * STATE.curR + U[1] * STATE.curU + F[1] * baseAdvance;
+      const cz = P[2] + R[2] * STATE.curR + U[2] * STATE.curU + F[2] * baseAdvance;
+      camera.position.set(cx, cy, cz);
+
+      // Look toward the stage centroid at median depth (`~10.5m` ahead of P), plus slight user yaw/pitch
+      const focusDist = Math.max(9.0, Math.min(16.0, dist)) * 0.92;
+      const lx = P[0] + F[0] * focusDist + R[0] * (STATE.curYaw * focusDist * 0.6 + STATE.curR * 0.22) + U[0] * (-STATE.curPitch * focusDist * 0.6 + STATE.curU * 0.22);
+      const ly = P[1] + F[1] * focusDist + R[1] * (STATE.curYaw * focusDist * 0.6 + STATE.curR * 0.22) + U[1] * (-STATE.curPitch * focusDist * 0.6 + STATE.curU * 0.22);
+      const lz = P[2] + F[2] * focusDist + R[2] * (STATE.curYaw * focusDist * 0.6 + STATE.curR * 0.22) + U[2] * (-STATE.curPitch * focusDist * 0.6 + STATE.curU * 0.22);
+      camera.lookAt(lx, ly, lz);
+
+      sortStageSplatsBackToFront();
+    }
+
+    function activatePortal(camIdx) {
+      STATE.activeCamIdx = camIdx;
+      const cam = STATE.orderedCams[camIdx];
+      if (!cam) return;
+      STATE.basis = computeCameraBasis(cam.threejs_pose.position_m, cam.threejs_pose.look_at_m);
+      resetCameraToStageCenter();
+      STATE.curR = 0; STATE.curU = 0; STATE.curF = 0; STATE.curYaw = 0; STATE.curPitch = 0;
+      buildActiveStageSplatMesh();
     }
 
     async function selectDistrict(dKey) {
       const d = STATE.manifest.districts[dKey];
       if (!d) return;
       STATE.activeDistrictKey = dKey;
-      STATE.activeCamIdx = 0;
 
-      // Highlight active District pill
       document.querySelectorAll('#district-pills .pill-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.district === dKey);
       });
 
-      // Order cameras with Hero Apple SHARP stage at index 0
       const heroRef = d.splat_seed && d.splat_seed.hero_ref;
       const ordered = [];
       (d.cameras || []).forEach(c => {
@@ -728,103 +634,51 @@
       });
       STATE.orderedCams = ordered;
 
-      // Render camera portal pills
       const portalContainer = document.getElementById('portal-pills');
       portalContainer.innerHTML = '';
       ordered.forEach((cam, idx) => {
         const b = document.createElement('button');
         b.type = 'button';
         b.className = 'pill-btn' + (idx === 0 ? ' active' : '');
-        b.textContent = idx === 0 ? `★ Portal ${cam.set_piece} (SHARP)` : `Portal ${cam.set_piece}`;
+        b.textContent = idx === 0 ? `★ View ${cam.set_piece} (SHARP)` : `View ${cam.set_piece}`;
         b.addEventListener('click', () => {
-          STATE.activeCamIdx = idx;
           portalContainer.querySelectorAll('.pill-btn').forEach((el, i) => el.classList.toggle('active', i === idx));
-          stepInsideStage(cam.threejs_pose);
-          applyRenderMode();
+          activatePortal(idx);
         });
         portalContainer.appendChild(b);
       });
 
-      const aerialBtn = document.createElement('button');
-      aerialBtn.type = 'button';
-      aerialBtn.className = 'pill-btn';
-      aerialBtn.textContent = '🛰️ Aerial 360°';
-      aerialBtn.addEventListener('click', () => {
-        STATE.activeCamIdx = -1;
-        portalContainer.querySelectorAll('.pill-btn').forEach(el => el.classList.remove('active'));
-        aerialBtn.classList.add('active');
-        camera.fov = 46;
-        camera.updateProjectionMatrix();
-        camera.position.set(26, 24, 42);
-        orbit.target.set(0, 3, 8);
-        orbit.update();
-        applyRenderMode();
-      });
-      portalContainer.appendChild(aerialBtn);
-
-      const p0 = d.poems[0];
-      const eqUrl = `data/terrarium/foundry/equirec/poem_${p0}_shared_eq.jpg`;
-      const depthUrl = `data/terrarium/foundry/equirec/poem_${p0}_shared_depth.jpg`;
       const splatUrl = (d.splat_seed && d.splat_seed.file) || `data/terrarium/atlas_packs/splats/district_${dKey}_sharp.splat`;
-      const centerPos = (ordered[0] && ordered[0].threejs_pose && ordered[0].threejs_pose.position_m) || [0, 0, 0];
-
-      await Promise.all([
-        buildSurroundWorldDome(eqUrl, depthUrl, centerPos),
-        buildNeuralDepthStageMeshes(ordered, heroRef),
-        loadDistrictSplat(splatUrl),
-        loadGlbSubtle(d.chisel_glb.file),
-      ]);
-
-      if (ordered[0]) {
-        stepInsideStage(ordered[0].threejs_pose);
+      const res = await fetch(splatUrl);
+      if (res.ok) {
+        const buf = await res.arrayBuffer();
+        STATE.allParsed = parse32ByteSplatBuffer(buf);
       }
-      applyRenderMode();
+
+      activatePortal(0);
     }
 
-    // Wire mode buttons
-    ['world', 'splats', 'xray', 'before'].forEach(m => {
+    // Wire UI buttons
+    ['sharp', 'xray', 'l0', 'before'].forEach(m => {
       document.getElementById(`mode-${m}`).addEventListener('click', () => {
         STATE.renderMode = m;
-        applyRenderMode();
+        applySplatModeToStageData();
+        sortStageSplatsBackToFront();
       });
     });
 
-    // Toggle UI button + 'H' shortcut
-    const hudDock = document.getElementById('hud-dock');
+    document.getElementById('btn-sway').addEventListener('click', (e) => {
+      STATE.autoSway = !STATE.autoSway;
+      e.currentTarget.classList.toggle('active', STATE.autoSway);
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      resetCameraToStageCenter();
+    });
+
     document.getElementById('btn-hide-ui').addEventListener('click', () => {
-      hudDock.classList.toggle('hidden');
+      document.getElementById('hud-dock').classList.toggle('hidden');
     });
-
-    // WASD + Arrow keys first-person movement
-    const keys = new Set();
-    window.addEventListener('keydown', (e) => {
-      const k = e.key.toLowerCase();
-      if (k === 'h') {
-        hudDock.classList.toggle('hidden');
-        return;
-      }
-      keys.add(k);
-    });
-    window.addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
-
-    function updateWalk() {
-      if (keys.size === 0) return;
-      const fwd = new THREE.Vector3();
-      camera.getWorldDirection(fwd);
-      const right = new THREE.Vector3().crossVectors(fwd, camera.up).normalize();
-      const speed = 0.22;
-      const delta = new THREE.Vector3();
-      if (keys.has('w') || keys.has('arrowup')) delta.addScaledVector(fwd, speed);
-      if (keys.has('s') || keys.has('arrowdown')) delta.addScaledVector(fwd, -speed);
-      if (keys.has('d') || keys.has('arrowright')) delta.addScaledVector(right, speed);
-      if (keys.has('a') || keys.has('arrowleft')) delta.addScaledVector(right, -speed);
-      if (keys.has('e')) delta.y += speed * 0.7;
-      if (keys.has('q')) delta.y -= speed * 0.7;
-      if (delta.lengthSq() > 0) {
-        camera.position.add(delta);
-        orbit.target.add(delta);
-      }
-    }
 
     async function init() {
       const res = await fetch('data/terrarium/atlas_packs/atlas_infrastructure_manifest.json');
@@ -861,13 +715,15 @@
     }
     init();
 
-    function animate() {
+    let lastTime = performance.now();
+    function animate(now) {
       requestAnimationFrame(animate);
-      updateWalk();
-      orbit.update();
+      const dt = Math.min(0.05, (now - lastTime) * 0.001);
+      lastTime = now;
+      updateCameraPose(dt);
       renderer.render(scene, camera);
     }
-    animate();
+    requestAnimationFrame(animate);
   </script>
 </body>
 </html>
