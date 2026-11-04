@@ -64,12 +64,75 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .cue b::after{content:"";position:absolute;left:-4px;bottom:0;width:7px;height:7px;border-right:1px solid var(--ink);border-bottom:1px solid var(--ink);transform:rotate(45deg)}
 @keyframes drop{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
 
-.toc{max-width:920px;margin:0 auto;padding:30px 28px 40px}
+.toc{max-width:960px;margin:0 auto;padding:30px 28px 40px}
 .toc h2{font-weight:400;text-align:center;font-size:15px;letter-spacing:.24em;margin:0 0 18px}
 .gh{text-align:center;margin:36px 0 22px}
 .gh .sc{color:var(--lamp)}
 .gh h3{font-weight:400;font-size:clamp(24px,3.6vw,34px);margin:8px 0 6px;letter-spacing:.02em}
 .gh p{font-style:italic;font-size:16.5px;color:var(--soft);margin:0 auto;max-width:38em;line-height:1.45}
+
+/* ---------- Sundance Master Feature Screening Stage ---------- */
+.feature-stage{
+  max-width:960px;
+  margin:10px auto 44px;
+  padding:24px 28px 28px;
+  border:1.5px solid var(--ink);
+  background:var(--panel);
+}
+.feature-head{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:10px;
+  margin-bottom:12px;
+  padding-bottom:10px;
+  border-bottom:1px solid rgba(28,24,20,0.2);
+}
+.feature-head h3{
+  font-weight:400;
+  font-size:clamp(22px,3vw,30px);
+  margin:0;
+}
+.feature-head .kicker{
+  color:var(--lamp);
+  font:500 11px/1.3 "IBM Plex Mono",monospace;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.feature-sub{
+  font-style:italic;
+  color:var(--soft);
+  margin:0 0 14px;
+  font-size:17px;
+}
+.chap-strip{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:12px;
+}
+.chap-pill{
+  font:500 10px/1.2 "IBM Plex Mono",monospace;
+  letter-spacing:.05em;
+  padding:5px 8px;
+  border:1px solid var(--ink);
+  background:var(--paper);
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s;
+}
+.chap-pill:hover,.chap-pill.active{
+  background:var(--ink);
+  color:var(--paper);
+}
+.chap-pill .t-badge{
+  color:var(--lamp);
+  margin-left:4px;
+}
+.chap-pill.active .t-badge{
+  color:#f9ae06;
+}
 
 .row{
   display:grid;
@@ -273,32 +336,93 @@ function renderTocRows(curNum) {
   return html;
 }
 
-function homeView() {
-  document.title = 'WYGWYL · Afterlight Videotext (14 Poems · 14 Picture Techniques)';
+function homeView(scrollToFeature = false) {
+  document.title = 'WYGWYL · Afterlight Videotext & Sundance Feature (14 Poems · 14 Optical Techniques)';
   document.body.classList.add('unfold');
+  const chaps = (MANIFEST && MANIFEST.feature_chapters) || [];
+  const featSrc = (MANIFEST && MANIFEST.feature_video) || 'data/terrarium/seeing_spacetime_films/wygwyl_afterlight_feature.mp4?v=10';
+  const featDur = (MANIFEST && MANIFEST.feature_dur) || 200;
+  const chapHtml = chaps.map((ch, i) => `
+    <button type="button" class="chap-pill${i === 0 ? ' active' : ''}" data-t0="${ch.t0}" data-idx="${i}">
+      ${esc(ch.label)} <span class="t-badge">${mmss(ch.t0)}</span>
+    </button>
+  `).join('');
+
   $('#app').innerHTML = `
     <section class="splash">
-      <div class="eyebrow mono">WYGWYL × AFTERLIGHT · SOSUKE VIDEOTEXT &amp; SCREENING ROOM EDITION</div>
+      <div class="eyebrow mono">WYGWYL × AFTERLIGHT · SUNDANCE NEW FRONTIER VIDEOTEXT &amp; FEATURE EDITION</div>
       <h1>${letters('AFTERLIGHT VIDEOTEXT')}</h1>
-      <p class="it">Fourteen poems on the film’s own clock — each poem in its own Afterlight picture technique</p>
+      <p class="it">Fourteen poems on the film’s own clock — each poem in its own 3D Afterlight optical technique</p>
       <p class="by">Scroll through a poem’s text and the film moves with you; press play and the text moves with the film.</p>
       <div class="studio-links">
+        <a href="#feature" id="btn-jump-feature">★ Watch Master Sundance Feature (${mmss(featDur)})</a>
         <a href="#/01">▶ Start Chapter I (Poem 01 · Breath &amp; Embers)</a>
-        <a href="atlas_splat_studio.html">🎥 Open 60fps WebGL Multiplane Studio &amp; 3-Reel Suite</a>
+        <a href="atlas_splat_studio.html">🎥 Open 60fps WebGL Multiplane Studio &amp; Optical Shader Lab</a>
       </div>
-      <a class="cue" href="#contents" aria-label="Contents"><span class="sc">Contents</span><b></b></a>
+      <a class="cue" href="#feature-room" aria-label="Contents"><span class="sc">Feature &amp; Contents</span><b></b></a>
     </section>
+
+    <section class="feature-stage" id="feature-room">
+      <div class="feature-head">
+        <div>
+          <div class="kicker">★ THE FEATURE · SUNDANCE NEW FRONTIER CUT (${mmss(featDur)})</div>
+          <h3>Where You Go When You Leave — Every Poem Cut Into One</h3>
+        </div>
+        <div class="mono" id="feat-active-label">00 · COLD OPEN — TITLE · V92</div>
+      </div>
+      <p class="feature-sub">Cold open, fourteen continuous 3D multiplane poem movements (FX01–FX14) joined by celluloid halation dissolves, The Avalanche (every volume twice, tightening to a quarter-second, then 1.4s of silence before one gold dot), and archival colophon.</p>
+      <div class="vbox">
+        <video id="feat-v" controls playsinline preload="metadata" poster="videos/poems/poem_01_videotext_fx.jpg" src="${esc(featSrc)}"></video>
+      </div>
+      <div class="chap-strip" id="feat-chaps">${chapHtml}</div>
+    </section>
+
     <section class="toc" id="contents">
-      <h2 class="sc">Contents</h2>
+      <h2 class="sc">Contents · The Fourteen Videotext Chapters</h2>
       ${renderTocRows()}
     </section>
     <p class="colophon">
-      Each chapter pairs one of the 14 WYGWYL poems with a signature picture technique from the Afterlight Screening Room (Breath on Glass, Makyō Magic Mirror, Falling Raindrop Video Lenses, Darkroom Tray &amp; Two-Block Linocut, Semantic 3D Heart-Scan Naming, Underwater Caustic Waterline, Radial Time-Delay Watercolour, Seeing-As Astral Smoke, Carry the Glow 3D Relighting, 9,000 Firefly Pinholes, 30-Course Nipkow Temple Assembly, Burning Hourglass Sand, Daimonji Revolving Lantern &amp; Gate Burn, and Warm Cave Thermal Scanline).
-      <span class="mono">14 POEMS · 42 FILMS (14 AFTERLIGHT FX + 14 CONSTRUCT + 14 SPACETIME WORMS)<br><a href="atlas_splat_studio.html">RETURN TO FILMMAKER'S MULTIPLANE CAMERA STUDIO</a></span>
+      Each chapter pairs one of the 14 WYGWYL poems with a signature 3D optical technique from the Afterlight Screening Room (Breath on Glass, Makyō Magic Mirror, Refracting Raindrop Lenses, Darkroom Tray &amp; Two-Block Linocut, Volumetric 3D Heart-Scan &amp; Diffraction Stars, 3D Surface-Projected Underwater Caustics, Radial Time-Delay Watercolour, Seeing-As Astral Smoke, Carry the Glow 3D Relighting, Bokeh Firefly Pinholes &amp; Risograph Dawn, Sea-Fog Clearing &amp; Volumetric God-Rays, Burning Hourglass Bokeh Sand, Daimonji Revolving Lantern &amp; 35mm Gate Burn, and Warm Cave Infrared Memory &amp; Horizon Portal).
+      <span class="mono">MASTER SUNDANCE FEATURE + 14 POEMS × 3 REELS (AFTERLIGHT FX · FLUID CONSTRUCT · SPACETIME WORM)<br><a href="atlas_splat_studio.html">RETURN TO FILMMAKER'S 60FPS MULTIPLANE CAMERA &amp; SHADER STUDIO</a></span>
     </p>
   `;
   const cue = $('.cue');
-  if (cue) cue.addEventListener('click', (e) => { e.preventDefault(); $('#contents').scrollIntoView({ behavior: 'smooth' }); });
+  if (cue) cue.addEventListener('click', (e) => { e.preventDefault(); $('#feature-room').scrollIntoView({ behavior: 'smooth' }); });
+  const jf = $('#btn-jump-feature');
+  if (jf) jf.addEventListener('click', (e) => {
+    e.preventDefault();
+    $('#feature-room').scrollIntoView({ behavior: 'smooth' });
+    const fv = $('#feat-v');
+    if (fv) fv.play().catch(()=>{});
+  });
+
+  const fv = $('#feat-v');
+  const activeLbl = $('#feat-active-label');
+  const pills = $$('#feat-chaps .chap-pill');
+  pills.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t0 = parseFloat(btn.dataset.t0 || '0');
+      fv.currentTime = t0 + 0.05;
+      fv.play().catch(()=>{});
+    });
+  });
+  if (fv && chaps.length) {
+    fv.addEventListener('timeupdate', () => {
+      const t = fv.currentTime;
+      let curIdx = 0;
+      for (let i = 0; i < chaps.length; i++) {
+        if (t >= chaps[i].t0 - 0.1) curIdx = i;
+      }
+      pills.forEach((p, idx) => p.classList.toggle('active', idx === curIdx));
+      const c = chaps[curIdx];
+      if (c && activeLbl) {
+        activeLbl.textContent = `${c.label.toUpperCase()} — [${c.fx_code || ''}] ${c.title || ''}`;
+      }
+    });
+  }
+  if (scrollToFeature) {
+    setTimeout(() => { $('#feature-room')?.scrollIntoView({ behavior: 'smooth' }); }, 80);
+  }
 }
 
 function chapterView(numStr) {
@@ -340,6 +464,7 @@ function chapterView(numStr) {
     <nav class="bar">
       <div class="left-nav">
         <button class="sc tocb" id="tocb" aria-label="Contents"><span class="lbl">Contents</span></button>
+        <a href="#feature" class="mono" style="text-decoration:none;color:var(--ink)">★ Feature</a>
         <a href="atlas_splat_studio.html#poem-${f.num}" class="mono" style="text-decoration:none;color:var(--lamp)">🎥 Studio Rig</a>
       </div>
       <div class="here"><span class="sc">${rn} · P${esc(f.num)}</span>${esc(f.title)} — <i>${esc(f.fx_name)}</i></div>
@@ -630,13 +755,20 @@ function chapterView(numStr) {
 }
 
 async function initApp() {
-  MANIFEST = await fetch('data/terrarium/seeing_spacetime_films/videotext_manifest.json?v=9').then(r => r.json());
+  MANIFEST = await fetch('data/terrarium/seeing_spacetime_films/videotext_manifest.json?v=10').then(r => r.json());
   function route() {
     if (cleanup) { cleanup(); cleanup = null; }
-    const m = location.hash.match(/^#\/?(\d+)/);
-    if (m) chapterView(m[1].padStart(2, '0'));
-    else homeView();
-    scrollTo(0, 0);
+    const h = location.hash || '';
+    const m = h.match(/^#\/?(\d+)/);
+    if (m) {
+      chapterView(m[1].padStart(2, '0'));
+      scrollTo(0, 0);
+    } else if (h.includes('feature')) {
+      homeView(true);
+    } else {
+      homeView(false);
+      scrollTo(0, 0);
+    }
   }
   addEventListener('hashchange', route);
   route();
