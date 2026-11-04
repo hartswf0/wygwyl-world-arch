@@ -179,11 +179,11 @@ select.poem-select{
 /* Master Dual Theater */
 .master-grid{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:28px;
+  grid-template-columns:repeat(3, 1fr);
+  gap:22px;
   margin-top:20px;
 }
-@media (max-width:920px){
+@media (max-width:1020px){
   .master-grid{grid-template-columns:1fr}
 }
 .card-box{
@@ -259,10 +259,10 @@ select.poem-select{
 
 .pair-screens{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:24px;
+  grid-template-columns:repeat(3, 1fr);
+  gap:18px;
 }
-@media (max-width:860px){.pair-screens{grid-template-columns:1fr}}
+@media (max-width:1040px){.pair-screens{grid-template-columns:1fr}}
 
 .screen-col{display:grid;gap:8px}
 .screen-label{
@@ -323,6 +323,12 @@ select.poem-select{
   color:var(--ink);
 }
 .common-badge b{color:var(--lamp)}
+.fx-badge{
+  font:500 10.5px/1.2 "IBM Plex Mono",monospace;
+  padding:4px 9px;
+  background:var(--ink);
+  color:var(--paper);
+}
 </style>
 </head>
 <body>
@@ -330,11 +336,12 @@ select.poem-select{
 <div class="frame-border" aria-hidden="true"><i class="o"></i><i class="n"></i></div>
 
 <header class="bar">
-  <div class="bar-title"><span>WYGWYL · FILMMAKER STUDIO</span>Fluid 3D Multiplane Camera, Common Places, Cels &amp; 14-Poem Suite</div>
+  <div class="bar-title"><span>WYGWYL · FILMMAKER STUDIO</span>Fluid 3D Multiplane Camera, Afterlight Videotext FX &amp; 14-Poem Suite</div>
   <nav class="bar-tabs mono">
     <a href="#filmmaker-rig" class="active">Interactive Multiplane Camera</a>
+    <a href="afterlight_videotext.html" style="color:var(--lamp);font-weight:600">📖 Afterlight Videotext Reader (Scroll ↔ Clock)</a>
     <a href="#master-reels">Master Reels</a>
-    <a href="#poems-suite">All 14 Poems (Frame-Accurate Sync)</a>
+    <a href="#poems-suite">All 14 Poems (3-Reel Sync)</a>
   </nav>
 </header>
 
@@ -416,20 +423,31 @@ select.poem-select{
   <section id="master-reels">
     <div class="shead">
       <div>
-        <div class="eyebrow mono">Master Anthology · Continuous Multiplane Parallax &amp; 4D Spacetime Worms</div>
-        <h2>Fluid Multiplane Construct (`S2`) &amp; Spacetime Worms (`07w`)</h2>
+        <div class="eyebrow mono">Master Anthology · 14 Afterlight Picture Techniques, Multiplane Construct &amp; Spacetime Worms</div>
+        <h2>Afterlight Videotext FX (`FX01–14`), Construct (`S2`) &amp; Spacetime Worms (`07w`)</h2>
       </div>
-      <p>Left: Continuous 2.5D/3D inverse-depth multiplane camera glide across each poem’s Common Places and Painted Cels (`cel_v2/*.png` + `frames/*.png` + `image.jpg` + `cartoon/flats.png` + `glow_pass.png`), transitioning smoothly by optical depth plane without exposing frame borders or debug lines. Right: Continuous Z-corridor walk through all Poem Cel Shots with halo-free 4D spacetime worm ribbons in each City District’s palette.</p>
+      <p>Left: Bespoke Afterlight Picture Technique per poem (`FX01–FX14`, from Breath on Glass &amp; Makyō Mirror to Raindrop Lenses, 9,000 Firefly Pinholes, 30-Course Nipkow Temple Assembly, and Hourglass Sand) — <a href="afterlight_videotext.html" style="color:var(--lamp);font-weight:600">open the interactive Scroll ↔ Clock Videotext Reader</a>. Center: Continuous 3D Multiplane Construct (`S2`). Right: 4D Spacetime Worms (`07w`).</p>
     </div>
 
     <div class="master-grid">
+      <div class="card-box">
+        <div class="vbox">
+          <video id="master-fx-vid" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_01_videotext_fx.mp4?v=9"></video>
+        </div>
+        <div class="meta-line">
+          <h3>✦ Afterlight Videotext FX</h3>
+          <span class="mono" style="color:var(--lamp)">14 Bespoke Picture Techniques · 0:30</span>
+        </div>
+        <p class="desc-text">Each of the 14 poems is paired with its own signature visual technique from the Afterlight Screening Room (`A5 Breath &amp; Embers`, `05 Makyō Mirror`, `02d Raindrop Lenses`, `08 Darkroom &amp; Linocut`, `23 Semantic 3D Naming`, `22 Caustic Waterline`, `01 Radial Time-Delay`, `S1 Astral Smoke`, `09 Carry the Glow`, `07 Firefly Pinholes`, `19 Nipkow Temple`, `M3 Hourglass`, `06 Daimonji Gate Burn`, `08 Warm Cave Scanline`).</p>
+      </div>
+
       <div class="card-box">
         <div class="vbox">
           <video id="master-construct-vid" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_01_construct.mp4?v=8"></video>
         </div>
         <div class="meta-line">
           <h3>S2 · Fluid Multiplane Construct</h3>
-          <span class="mono" style="color:var(--lamp)">5 Common-Place &amp; Cel Stations · Continuous 3D Parallax · 0:30</span>
+          <span class="mono" style="color:var(--lamp)">5 Common-Place &amp; Cel Stations · 0:30</span>
         </div>
         <p class="desc-text">Continuous Steadicam depth-parallax glide (`cv2.remap` inverse-depth disparity) across each poem’s Common Hero Places (`atlas.heroes`) and Painted Cels (`cel_v2/*.png`, `frames/*.png`, `image.jpg`, `flats.png`, `film/shot.mp4`), with seamless optical rack-focus &amp; depth-plane dissolves.</p>
       </div>
@@ -440,21 +458,21 @@ select.poem-select{
         </div>
         <div class="meta-line">
           <h3>07w · Spacetime Worms &amp; City Walk</h3>
-          <span class="mono" style="color:var(--lamp)">Continuous Z-Corridor · Full-Frame Cels · Real Suite Audio</span>
+          <span class="mono" style="color:var(--lamp)">Continuous Z-Corridor · Full-Frame Cels</span>
         </div>
         <p class="desc-text">Glides continuously along the Z-corridor through all Common Places and Poem Cel Shots (`P01-001..P14-009`) at 100% full-frame legibility, with halo-free receding 4D spacetime worm ribbons in each City District’s `body` + `glow` palette.</p>
       </div>
     </div>
   </section>
 
-  <!-- ALL 14 POEMS PAIRED SUITE -->
+  <!-- ALL 14 POEMS 3-REEL SUITE -->
   <section id="poems-suite">
     <div class="shead">
       <div>
-        <div class="eyebrow mono">The Complete 14-Poem Suite · Frame-Accurate Filmmaker Transport</div>
-        <h2>One Fluid Multiplane Construct &amp; One Spacetime Worm per Poem</h2>
+        <div class="eyebrow mono">The Complete 14-Poem Suite · 3-Reel Frame-Accurate Transport &amp; Videotext Reader</div>
+        <h2>Three Films per Poem: Afterlight Videotext FX · Fluid Construct · Spacetime Worm</h2>
       </div>
-      <p>Use the frame-step (`-1f` / `+1f`), speed (`0.25×` / `0.5×` / `1×`), or `▶ Play Sync` controls on any poem, or click `Load in Camera Rig ↑` to bring that poem’s Common Places into the interactive 60fps WebGL Multiplane Studio above.</p>
+      <p>Use the frame-step (`-1f` / `+1f`), speed (`0.25×` / `0.5×` / `1×`), or `▶ Play All 3 Sync` controls on any poem, click `📖 Read Videotext` to open the poem on its scroll-clock in the Afterlight Videotext Reader, or click `Load in Camera Rig ↑`.</p>
     </div>
 
     <div class="poems-list" id="poems-container"></div>
@@ -898,6 +916,23 @@ function formatSmpte24(sec) {
   return `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}:${String(ff).padStart(2,'0')}`;
 }
 
+const FX_SPEC_BY_NUM = {
+  "01": { code: "A5·A1·09", name: "Breath on Glass & Rising Embers" },
+  "02": { code: "05·20·L2", name: "Makyō Magic Mirror & Retinal Afterimage" },
+  "03": { code: "02d·02c·M4", name: "Falling Raindrop Video Lenses & Mud Relief" },
+  "04": { code: "08·03", name: "Darkroom Silver Tray & Two-Block Linocut" },
+  "05": { code: "23·24·09", name: "Semantic 3D Heart-Scan Naming & Stars" },
+  "06": { code: "10·22", name: "Refracted Caustic Net & Falling Waterline" },
+  "07": { code: "01·16", name: "Radial Time-Delay & Turning Platter Rings" },
+  "08": { code: "S1·A2b·14", name: "Seeing-As Astral Split & Subject Smoke" },
+  "09": { code: "09·11·21", name: "Carry the Glow 3D Relighting & Voice Threads" },
+  "10": { code: "07·04", name: "9,000 Firefly Pinholes & Risograph Dawn" },
+  "11": { code: "A1·19·07", name: "Sea-Fog Clearing & 30-Course Nipkow Temple" },
+  "12": { code: "M3·A4", name: "Burning Hourglass Sand of Time & Wind" },
+  "13": { code: "06·V2·M2a", name: "Daimonji Revolving Lantern & Gate Burn" },
+  "14": { code: "08·A3·12", name: "Warm Cave Thermal Scanline & Vintage Door" }
+};
+
 async function loadPoemsSuite() {
   const res = await fetch('film/poems.json');
   const poems = await res.json();
@@ -928,6 +963,7 @@ async function loadPoemsSuite() {
 
   poems.forEach((p, idx) => {
     const num = p.num;
+    const fxSpec = FX_SPEC_BY_NUM[num] || { code: "FX", name: "Afterlight Videotext FX" };
     const ad = atlasList[idx] || {};
     const dos = dossierList[idx] || {};
     const cd = cityDistricts[p.district] || {};
@@ -968,25 +1004,37 @@ async function loadPoemsSuite() {
         <div class="pactions">
           <span class="tc-box">TC 00:00:00</span>
           <button type="button" class="pill btn-step-back" title="Step Back 1 Frame (1/24s)">◀ -1f</button>
-          <button type="button" class="pill btn-sync">▶ Play Sync</button>
+          <button type="button" class="pill btn-sync">▶ Play All 3 Sync</button>
           <button type="button" class="pill btn-step-fwd" title="Step Forward 1 Frame (1/24s)">+1f ▶</button>
           <button type="button" class="pill btn-rate" data-rate="1.0" title="Toggle Slow-Motion Playback Rate">1.0×</button>
+          <a href="afterlight_videotext.html#/${num}" class="pill" style="text-decoration:none;background:var(--ink);color:var(--paper)" title="Open this poem in the Scroll ↔ Clock Afterlight Videotext Reader">📖 Read Videotext</a>
           <button type="button" class="pill btn-rig" title="Load this poem's Common Places & Cels into the 60fps WebGL Multiplane Camera Studio">Load in Camera Rig ↑</button>
         </div>
       </div>
 
       <div class="city-meta-bar">
-        <span class="mono" style="color:var(--soft)">BODY + GLOW PALETTE (${(cd.name || dos.district || p.district_name).toUpperCase()}):</span>
+        <span class="fx-badge">✦ AFTERLIGHT FX [${fxSpec.code}]: ${fxSpec.name.toUpperCase()}</span>
+        <span class="mono" style="color:var(--soft)">PALETTE (${(cd.name || dos.district || p.district_name).toUpperCase()}):</span>
         <span class="swatch-row">${swatchesHtml}</span>
         ${commonPlacesHtml}
-        ${distPlaces.slice(0, 3).join('')}
+        ${distPlaces.slice(0, 2).join('')}
       </div>
 
       <div class="pair-screens">
         <div class="screen-col">
           <div class="screen-label">
+            <span class="mono" style="color:var(--lamp)">✦ Afterlight FX [${fxSpec.code}] · ${fxSpec.name}</span>
+            <span class="mono" style="color:var(--soft)">0:30</span>
+          </div>
+          <div class="vbox">
+            <video class="vid-fx" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_${num}_videotext_fx.mp4?v=9"></video>
+          </div>
+        </div>
+
+        <div class="screen-col">
+          <div class="screen-label">
             <span class="mono">S2 · Fluid Multiplane Construct (5 Stations)</span>
-            <span class="mono" style="color:var(--soft)">0:30 · Continuous 3D Depth Parallax</span>
+            <span class="mono" style="color:var(--soft)">0:30 · 3D Depth Parallax</span>
           </div>
           <div class="vbox">
             <video class="vid-construct" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_${num}_construct.mp4?v=8"></video>
@@ -995,8 +1043,8 @@ async function loadPoemsSuite() {
 
         <div class="screen-col">
           <div class="screen-label">
-            <span class="mono">07w · Spacetime Worm &amp; City Walk (Full-Frame Cels)</span>
-            <span class="mono" style="color:var(--soft)">Continuous Z-Corridor · 4D Trail</span>
+            <span class="mono">07w · Spacetime Worm &amp; City Walk</span>
+            <span class="mono" style="color:var(--soft)">Z-Corridor · 4D Trail</span>
           </div>
           <div class="vbox">
             <video class="vid-worm" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_${num}_spacetime_worm.mp4?v=8"></video>
@@ -1007,6 +1055,7 @@ async function loadPoemsSuite() {
       <div class="moves-strip">${movesHtml}</div>
     `;
 
+    const vFx = row.querySelector('.vid-fx');
     const vC = row.querySelector('.vid-construct');
     const vW = row.querySelector('.vid-worm');
     const tcBox = row.querySelector('.tc-box');
@@ -1016,32 +1065,36 @@ async function loadPoemsSuite() {
     const btnRate = row.querySelector('.btn-rate');
     const btnRig = row.querySelector('.btn-rig');
 
-    vC.addEventListener('timeupdate', () => {
-      tcBox.textContent = `TC ${formatSmpte24(vC.currentTime)}`;
+    vFx.addEventListener('timeupdate', () => {
+      tcBox.textContent = `TC ${formatSmpte24(vFx.currentTime)}`;
     });
 
     btnSync.addEventListener('click', () => {
-      if (vC.paused) {
-        vC.play().catch(()=>{});
-        vW.play().catch(()=>{});
+      if (vFx.paused) {
+        vFx.play().catch(()=>{});
+        vC.muted = true; vC.play().catch(()=>{});
+        vW.muted = true; vW.play().catch(()=>{});
         btnSync.textContent = '⏸ Pause Sync';
       } else {
+        vFx.pause();
         vC.pause();
         vW.pause();
-        btnSync.textContent = '▶ Play Sync';
+        btnSync.textContent = '▶ Play All 3 Sync';
       }
     });
 
     btnBack.addEventListener('click', () => {
-      vC.pause(); vW.pause();
-      btnSync.textContent = '▶ Play Sync';
+      vFx.pause(); vC.pause(); vW.pause();
+      btnSync.textContent = '▶ Play All 3 Sync';
+      vFx.currentTime = Math.max(0, vFx.currentTime - 1/24);
       vC.currentTime = Math.max(0, vC.currentTime - 1/24);
       vW.currentTime = Math.max(0, vW.currentTime - 1/24);
     });
 
     btnFwd.addEventListener('click', () => {
-      vC.pause(); vW.pause();
-      btnSync.textContent = '▶ Play Sync';
+      vFx.pause(); vC.pause(); vW.pause();
+      btnSync.textContent = '▶ Play All 3 Sync';
+      vFx.currentTime = Math.min(vFx.duration || 30, vFx.currentTime + 1/24);
       vC.currentTime = Math.min(vC.duration || 30, vC.currentTime + 1/24);
       vW.currentTime = Math.min(vW.duration || 45, vW.currentTime + 1/24);
     });
@@ -1051,6 +1104,7 @@ async function loadPoemsSuite() {
     btnRate.addEventListener('click', () => {
       rIdx = (rIdx + 1) % rates.length;
       const r = rates[rIdx];
+      vFx.playbackRate = r;
       vC.playbackRate = r;
       vW.playbackRate = r;
       btnRate.textContent = `${r}×`;
@@ -1063,10 +1117,12 @@ async function loadPoemsSuite() {
     row.querySelectorAll('.move-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const frac = parseFloat(chip.dataset.frac);
+        vFx.currentTime = frac * (vFx.duration || 30.0);
         vC.currentTime = frac * (vC.duration || 30.0);
         vW.currentTime = frac * (vW.duration || 40.0);
-        vC.play().catch(()=>{});
-        vW.play().catch(()=>{});
+        vFx.play().catch(()=>{});
+        vC.muted = true; vC.play().catch(()=>{});
+        vW.muted = true; vW.play().catch(()=>{});
         btnSync.textContent = '⏸ Pause Sync';
       });
     });
