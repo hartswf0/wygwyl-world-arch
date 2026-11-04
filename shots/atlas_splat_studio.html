@@ -419,30 +419,30 @@ select.poem-select{
         <div class="eyebrow mono">Master Anthology · Continuous Multiplane Parallax &amp; 4D Spacetime Worms</div>
         <h2>Fluid Multiplane Construct (`S2`) &amp; Spacetime Worms (`07w`)</h2>
       </div>
-      <p>Left: Continuous 2.5D/3D inverse-depth multiplane camera glide across each poem’s Common Places and Painted Cels (`cel.png` + `frame0.png` + `ink.png`), transitioning smoothly by depth layer without exposing frame borders. Right: Continuous Z-corridor walk through all Poem Cel Shots with 4D spacetime worm ribbons in each City District’s palette.</p>
+      <p>Left: Continuous 2.5D/3D inverse-depth multiplane camera glide across each poem’s Common Places and Painted Cels (`cel_v2/*.png` + `frames/*.png` + `image.jpg` + `cartoon/flats.png` + `glow_pass.png`), transitioning smoothly by optical depth plane without exposing frame borders or debug lines. Right: Continuous Z-corridor walk through all Poem Cel Shots with halo-free 4D spacetime worm ribbons in each City District’s palette.</p>
     </div>
 
     <div class="master-grid">
       <div class="card-box">
         <div class="vbox">
-          <video id="master-construct-vid" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_01_construct.mp4?v=6"></video>
+          <video id="master-construct-vid" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_01_construct.mp4?v=8"></video>
         </div>
         <div class="meta-line">
           <h3>S2 · Fluid Multiplane Construct</h3>
           <span class="mono" style="color:var(--lamp)">5 Common-Place &amp; Cel Stations · Continuous 3D Parallax · 0:30</span>
         </div>
-        <p class="desc-text">Continuous Steadicam depth-parallax glide (`cv2.remap` inverse-depth disparity) across each poem’s Common Hero Places (`atlas.heroes`) and Painted Cels (`program/frame0.png`, `cartoon/cel.png`, `cartoon/ink.png`, `film/shot.mp4`), with seamless depth-ordered transitions between stations.</p>
+        <p class="desc-text">Continuous Steadicam depth-parallax glide (`cv2.remap` inverse-depth disparity) across each poem’s Common Hero Places (`atlas.heroes`) and Painted Cels (`cel_v2/*.png`, `frames/*.png`, `image.jpg`, `flats.png`, `film/shot.mp4`), with seamless optical rack-focus &amp; depth-plane dissolves.</p>
       </div>
 
       <div class="card-box">
         <div class="vbox">
-          <video id="master-worm-vid" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_01_spacetime_worm.mp4?v=6"></video>
+          <video id="master-worm-vid" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_01_spacetime_worm.mp4?v=8"></video>
         </div>
         <div class="meta-line">
           <h3>07w · Spacetime Worms &amp; City Walk</h3>
           <span class="mono" style="color:var(--lamp)">Continuous Z-Corridor · Full-Frame Cels · Real Suite Audio</span>
         </div>
-        <p class="desc-text">Glides continuously along the Z-corridor through all Common Places and Poem Cel Shots (`P01-001..P14-009`) at 100% full-frame legibility, with receding 4D spacetime worm ribbons extruded behind the opaque foreground figures in each City District’s `body` + `glow` palette.</p>
+        <p class="desc-text">Glides continuously along the Z-corridor through all Common Places and Poem Cel Shots (`P01-001..P14-009`) at 100% full-frame legibility, with halo-free receding 4D spacetime worm ribbons in each City District’s `body` + `glow` palette.</p>
       </div>
     </div>
   </section>
@@ -545,7 +545,7 @@ void main() {
 }
 `;
 
-function initMultiplaneStudio(poems, atlasList, dossierList, cityDistricts, heroPoemsMap) {
+function initMultiplaneStudio(poems, atlasList, dossierList, cityDistricts, heroPoemsMap, viewDirMap) {
   const canvas = document.getElementById('gl-multiplane-canvas');
   const gl = canvas.getContext('webgl', { preserveDrawingBuffer: true });
   if (!gl) return;
@@ -842,15 +842,17 @@ function initMultiplaneStudio(poems, atlasList, dossierList, cityDistricts, hero
     document.getElementById('hud-telemetry').innerHTML =
       `PARALLAX: ${parallaxDeg.toFixed(1)}° · DOLLY: ${dollyA.toFixed(2)}×<br>60 FPS · FULL-BLEED 1280×720`;
 
-    const dirA = `out/V${stA.vn}`;
-    const dirB = `out/V${stB.vn}`;
+    const subA = viewDirMap[String(stA.vn)] || '018da7e9-231c-44d0-87f5-b0b0cb7b61cb_0';
+    const subB = viewDirMap[String(stB.vn)] || '018da7e9-231c-44d0-87f5-b0b0cb7b61cb_0';
+    const dirA = `out/${subA}`;
+    const dirB = `out/${subB}`;
 
-    const tCelA = loadTex(`${dirA}/cartoon/cel.png`);
-    const tAngA = loadTex(`${dirA}/program/frame0.png`);
+    const tCelA = loadTex(`${dirA}/image.jpg`);
+    const tAngA = loadTex(`${dirA}/cartoon/flats.png`);
     const tDepA = loadTex(`${dirA}/depth.jpg`, [128,128,128]);
 
-    const tCelB = loadTex(`${dirB}/cartoon/cel.png`);
-    const tAngB = loadTex(`${dirB}/program/frame0.png`);
+    const tCelB = loadTex(`${dirB}/image.jpg`);
+    const tAngB = loadTex(`${dirB}/cartoon/flats.png`);
     const tDepB = loadTex(`${dirB}/depth.jpg`, [128,128,128]);
 
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -900,6 +902,7 @@ async function loadPoemsSuite() {
   const res = await fetch('film/poems.json');
   const poems = await res.json();
   const cityRes = await fetch('../_city/districts.json').then(r => r.ok ? r.json() : {districts:[]}).catch(() => ({districts:[]}));
+  const viewDirMap = await fetch('data/terrarium/seeing_spacetime_films/bible_view_map.json').then(r => r.ok ? r.json() : {}).catch(() => ({}));
   const cityDistricts = {};
   (cityRes.districts || []).forEach(d => { cityDistricts[d.id] = d; });
   const container = document.getElementById('poems-container');
@@ -921,7 +924,7 @@ async function loadPoemsSuite() {
   });
 
   // Initialize the interactive 60fps WebGL Multiplane Studio
-  initMultiplaneStudio(poems, atlasList, dossierList, cityDistricts, heroPoemsMap);
+  initMultiplaneStudio(poems, atlasList, dossierList, cityDistricts, heroPoemsMap, viewDirMap);
 
   poems.forEach((p, idx) => {
     const num = p.num;
@@ -986,7 +989,7 @@ async function loadPoemsSuite() {
             <span class="mono" style="color:var(--soft)">0:30 · Continuous 3D Depth Parallax</span>
           </div>
           <div class="vbox">
-            <video class="vid-construct" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_${num}_construct.mp4?v=6"></video>
+            <video class="vid-construct" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_${num}_construct.mp4?v=8"></video>
           </div>
         </div>
 
@@ -996,7 +999,7 @@ async function loadPoemsSuite() {
             <span class="mono" style="color:var(--soft)">Continuous Z-Corridor · 4D Trail</span>
           </div>
           <div class="vbox">
-            <video class="vid-worm" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_${num}_spacetime_worm.mp4?v=6"></video>
+            <video class="vid-worm" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_${num}_spacetime_worm.mp4?v=8"></video>
           </div>
         </div>
       </div>

@@ -191,59 +191,82 @@ def build_city_master_index():
     return city_data, districts_by_id, bible_to_dir, id_to_dir, hero_poems
 
 
+def temporal_smooth_frames(frames_list):
+    """
+    Applies a gentle 3-tap temporal Gaussian filter `[0.22, 0.56, 0.22]` across consecutive frames
+    to eliminate any frame-to-frame cel quantization boil or exposure micro-jitter while preserving
+    100% spatial sharpness.
+    """
+    n = len(frames_list)
+    if n < 3:
+        return frames_list
+    out = [frames_list[0]]
+    for i in range(1, n - 1):
+        sm_fr = 0.22 * frames_list[i - 1] + 0.56 * frames_list[i] + 0.22 * frames_list[i + 1]
+        out.append(sm_fr.astype(np.float32))
+    out.append(frames_list[-1])
+    return out
+
+
+def apply_cinema_grade(img_rgb, body_hex, glow_hex):
+    """
+    Applies a subtle, cohesive cinema color grade using the City District's `body` (deep shadow)
+    and `glow` (highlight warmth) palette plus a gentle filmic S-curve, with ZERO edge noise.
+    """
+    c_body = hex_to_rgb_float((body_hex or ["#181a24"])[0])
+    c_glow = hex_to_rgb_float((glow_hex or ["#fa8d15"])[0])
+    lum = (img_rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32))[..., None]
+    # Subtle shadow tint + highlight bloom tint (5% each so original cel colors stay true)
+    graded = img_rgb * 0.93 + (c_body[None, None, :] * (1.0 - lum) + c_glow[None, None, :] * lum) * 0.07
+    # Gentle filmic contrast S-curve
+    graded = np.clip(graded, 0.0, 1.0)
+    graded = 0.88 * graded + 0.12 * (graded * graded * (3.0 - 2.0 * graded))
+    return np.clip(graded, 0.0, 1.0).astype(np.float32)
+
+
 def build_cel_plate_from_dir(odir, body_hex, glow_hex, w=W, h=H):
     """
-    Builds two 100% legible, vibrant Cel plates from a `shots/out/<id>` or keyframe directory:
-      1. `angular_cel`: `program/frame0.png` + `cartoon/consensus.png` + `cartoon/ink.png`
-         (the bold faceted polygon cel style from `wygwyl_cartoon.mp4`)
-      2. `painted_cel`: `cartoon/cel.png` + `program/frame0.png` + `multiplane/glow_pass.png` + `cartoon/ink.png`
+    Builds two 100% artifact-free, cinema-grade plates from a `shots/out/<id>` or keyframe directory:
+      - NEVER uses `cartoon/ink.png` (which contains jagged superpixel region borders)
+      - NEVER uses `cartoon/consensus.png` (which contains neon green/blue debug masks)
+      - Combines `image.jpg`, `cartoon/flats.png`, `program/frame0.png`, and `multiplane/glow_pass.png`
+        into clean, luminous cinema plates.
     """
     prog0 = load_rgb_resized(os.path.join(odir, "program/frame0.png"), w, h)
-    cel = load_rgb_resized(os.path.join(odir, "cartoon/cel.png"), w, h)
     flats = load_rgb_resized(os.path.join(odir, "cartoon/flats.png"), w, h)
-    consensus = load_rgb_resized(os.path.join(odir, "cartoon/consensus.png"), w, h)
-    ink = load_rgba_resized(os.path.join(odir, "cartoon/ink.png"), w, h)
     glow = load_rgb_resized(os.path.join(odir, "multiplane/glow_pass.png"), w, h)
     img_jpg = load_rgb_resized(os.path.join(odir, "image.jpg"), w, h)
 
-    # 1. Angular Faceted Cel (`program/frame0.png` + `flats.png` + `consensus.png` + crisp ink)
-    ang = prog0 if prog0 is not None else (flats if flats is not None else cel)
-    if ang is None:
-        ang = img_jpg if img_jpg is not None else np.full((h, w, 3), 0.5, dtype=np.float32)
-    if consensus is not None:
-        ang = 0.78 * ang + 0.22 * consensus
+    base = img_jpg if img_jpg is not None else (flats if flats is not None else prog0)
+    if base is None:
+        base = np.full((h, w, 3), 0.5, dtype=np.float32)
+
+    # 1. Softly stylized Angular/Flat Cel (`image.jpg` + `flats.png` + `glow_pass.png`, ZERO jagged ink!)
+    ang = base.copy()
+    if flats is not None and img_jpg is not None:
+        ang = 0.68 * img_jpg + 0.32 * flats
+    elif prog0 is not None and img_jpg is not None:
+        ang = 0.72 * img_jpg + 0.28 * prog0
     if glow is not None:
         ang = np.clip(ang + 0.25 * glow, 0.0, 1.0)
-    if ink is not None:
-        ia = ink[..., 3:4] * 0.85
-        ang = ang * (1.0 - ia) + ink[..., :3] * ia
+    ang = apply_cinema_grade(ang, body_hex, glow_hex)
 
-    # 2. Rich Painted Multiplane Cel (`cartoon/cel.png` + `program/frame0.png` + `image.jpg` detail + `glow`)
-    pnt = cel if cel is not None else ang
-    if prog0 is not None and cel is not None:
-        pnt = 0.62 * cel + 0.38 * prog0
-    if img_jpg is not None:
-        pnt = 0.78 * pnt + 0.22 * img_jpg
+    # 2. Pure Cinema Multiplane Plate (`image.jpg` + subtle `flats.png` painterliness + optical `glow_pass.png`)
+    pnt = base.copy()
+    if flats is not None and img_jpg is not None:
+        pnt = 0.84 * img_jpg + 0.16 * flats
     if glow is not None:
-        pnt = np.clip(pnt + 0.30 * glow, 0.0, 1.0)
-    if ink is not None:
-        ia = ink[..., 3:4] * 0.75
-        pnt = pnt * (1.0 - ia) + ink[..., :3] * ia
+        pnt = np.clip(pnt + 0.28 * glow, 0.0, 1.0)
+    pnt = apply_cinema_grade(pnt, body_hex, glow_hex)
 
-    # Boost chroma saturation slightly so district colors sing clearly
-    for arr in (ang, pnt):
-        hsv = cv2.cvtColor((np.clip(arr, 0.0, 1.0) * 255.0).astype(np.uint8), cv2.COLOR_RGB2HSV).astype(np.float32)
-        hsv[..., 1] = np.clip(hsv[..., 1] * 1.22, 0.0, 255.0)
-        arr[:] = cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2RGB).astype(np.float32) / 255.0
-
-    return np.clip(ang, 0.0, 1.0), np.clip(pnt, 0.0, 1.0), ink
+    return np.clip(ang, 0.0, 1.0), np.clip(pnt, 0.0, 1.0), None
 
 
 def load_common_place_station(out_dir, local_view_info, default_district, body_hex, glow_hex, n_frames=36, w=W, h=H):
     """
     Loads a Common Place / City District Station from `shots/out/<shot_id>/` with:
-      - Full-screen 1280x720 `angular_cel`, `painted_cel`, and `frames` (combining `film/shot.mp4` multiplane motion
-        with the painted Cel + Ink layers so the station is 100% sharp, legible, and alive!)
+      - Pure, glitch-free multiplane cinema frames from `film/shot.mp4` (NO static keyframe ghost overlay,
+        NO jagged `cartoon/ink.png` region borders!)
       - Full-resolution depth map (`depth_sharp.npz`)
     """
     sid = os.path.basename(out_dir)
@@ -252,37 +275,39 @@ def load_common_place_station(out_dir, local_view_info, default_district, body_h
     bno = meta.get("bible_no")
     vinfo = local_view_info.get(int(bno), {}) if bno is not None else {}
 
-    angular_cel, painted_cel, ink = build_cel_plate_from_dir(out_dir, body_hex, glow_hex, w, h)
+    d_name = vinfo.get("district_name") or default_district
+    p_kind = vinfo.get("place_kind") or f"CITY DISTRICT · {str(d_name).upper()}"
+    p_name = vinfo.get("place_name") or (meta.get("prompt") or f"View #{bno}").split(",")[0][:52]
+    p_brief = vinfo.get("place_brief") or f"View #{bno} in {d_name}"
+    d_body = vinfo.get("district_body") or body_hex
+    d_glow = vinfo.get("district_glow") or glow_hex
+
+    angular_cel, painted_cel, _ = build_cel_plate_from_dir(out_dir, d_body, d_glow, w, h)
+    glow = load_rgb_resized(os.path.join(out_dir, "multiplane/glow_pass.png"), w, h)
 
     frames = []
     mp4_path = os.path.join(out_dir, "film/shot.mp4")
     if os.path.exists(mp4_path):
         cap = cv2.VideoCapture(mp4_path)
         total = max(1, int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
-        idxs = np.linspace(0, total - 1, n_frames).astype(int)
-        for i_f, idx in enumerate(idxs):
-            cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
+        # Read contiguous 1:1 native cinema frames (zero frame-skip stutter, zero ghost-blending!)
+        start_f = max(0, (total - n_frames) // 2)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, int(start_f))
+        for i_f in range(n_frames):
             ok, fr = cap.read()
-            if ok and fr is not None:
-                fr = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
-                fr = cv2.resize(fr, (w, h), interpolation=cv2.INTER_AREA).astype(np.float32) / 255.0
-                # Smoothly progress during station hold from Angular Studio Cel -> Painted Multiplane Cel in motion!
-                u_prog = i_f / max(1.0, n_frames - 1.0)
-                cel_ref = (1.0 - sm(0.0, 0.45, u_prog)) * angular_cel + sm(0.0, 0.45, u_prog) * painted_cel
-                comp = 0.62 * cel_ref + 0.38 * fr
-                if ink is not None:
-                    ia = ink[..., 3:4] * 0.72
-                    comp = comp * (1.0 - ia) + ink[..., :3] * ia
-                frames.append(np.clip(comp, 0.0, 1.0).astype(np.float32))
+            if not ok or fr is None:
+                break
+            fr = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
+            fr = cv2.resize(fr, (w, h), interpolation=cv2.INTER_AREA).astype(np.float32) / 255.0
+            if glow is not None:
+                fr = np.clip(fr + 0.18 * glow, 0.0, 1.0)
+            fr = apply_cinema_grade(fr, d_body, d_glow)
+            frames.append(fr)
         cap.release()
 
     if not frames:
         for i_f in range(n_frames):
-            u_prog = i_f / max(1.0, n_frames - 1.0)
-            zoom = 1.0 + 0.05 * u_prog
-            M = cv2.getRotationMatrix2D((w / 2.0, h / 2.0), 0.0, zoom)
-            cel_ref = (1.0 - sm(0.0, 0.45, u_prog)) * angular_cel + sm(0.0, 0.45, u_prog) * painted_cel
-            frames.append(cv2.warpAffine(cel_ref, M, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE))
+            frames.append(painted_cel.copy())
 
     depth_map = None
     for npz_name in ["depth_sharp.npz", "arrays.npz"]:
@@ -299,21 +324,15 @@ def load_common_place_station(out_dir, local_view_info, default_district, body_h
         lum = painted_cel @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
         depth_map = 3.0 + 10.0 * (1.0 - lum)
 
-    d_name = vinfo.get("district_name") or default_district
-    p_kind = vinfo.get("place_kind") or f"CITY DISTRICT · {str(d_name).upper()}"
-    p_name = vinfo.get("place_name") or (meta.get("prompt") or f"View #{bno}").split(",")[0][:52]
-    p_brief = vinfo.get("place_brief") or f"View #{bno} in {d_name}"
-    d_body = vinfo.get("district_body") or body_hex
-    d_glow = vinfo.get("district_glow") or glow_hex
-
-    d_thresh = np.percentile(depth_map, 32)
+    d_thresh = np.percentile(depth_map, 35)
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
     cent = np.exp(-(((xx / w - 0.5) / 0.38) ** 2 + ((yy / h - 0.52) / 0.42) ** 2))
-    fg_mask = ((depth_map <= d_thresh) & (cent > 0.32)).astype(np.float32)
-    fg_mask = cv2.GaussianBlur(fg_mask, (0, 0), 2.5)
+    fg_mask = ((depth_map <= d_thresh) & (cent > 0.30)).astype(np.float32)
+    fg_mask = cv2.GaussianBlur(fg_mask, (0, 0), 12.0)
 
     return {
         "id": f"V{bno:02d}" if bno is not None else sid[:6],
+        "out_subdir": sid,
         "kind_badge": p_kind,
         "name": p_name,
         "what": p_brief,
@@ -344,10 +363,9 @@ def find_first_keyframe_dir(shot_id):
 
 def load_poem_cel_shot(scion_data, scene_map, default_district, body_hex, glow_hex, n_frames=32, w=W, h=H):
     """
-    Loads a Poem Cel Shot (`P<NN>-<MMM>`) at full 1280x720 resolution with 100% legibility:
-      - Uses `cel_v2/*.png` + `program/frame0.png` + `cartoon/cel.png` + `cartoon/ink.png`
-      - Extracts `fg_rgba` / `fg_mask` so we can render the 4D Spacetime Worm trail BEHIND the foreground subject
-        without EVER obscuring the subject or the full-frame painted cel!
+    Loads a Poem Cel Shot (`P<NN>-<MMM>`) at full 1280x720 resolution with 100% cinema legibility and ZERO glitches:
+      - Prioritizes the temporally-stabilized 16:9 widescreen painted cel video `shots/cel_assets/patches/{sid}.mp4`
+        with NO static keyframe ghost overlay, NO per-frame exposure flicker, and NO gradient edge noise!
     """
     sid = scion_data["id"]
     kf_dir = find_first_keyframe_dir(sid)
@@ -358,11 +376,11 @@ def load_poem_cel_shot(scion_data, scene_map, default_district, body_hex, glow_h
     dist_name = sc_info.get("district") or default_district
     place_tag = sc_info.get("common_place_tag") or f"CITY DISTRICT · {str(dist_name).upper()}"
 
-    angular_cel, painted_cel, ink_rgba = (None, None, None)
+    angular_cel, painted_cel = (None, None)
     fg_rgba, depth_map, fg_mask = (None, None, None)
 
     if kf_dir:
-        angular_cel, painted_cel, ink_rgba = build_cel_plate_from_dir(kf_dir, body_hex, glow_hex, w, h)
+        angular_cel, painted_cel, _ = build_cel_plate_from_dir(kf_dir, body_hex, glow_hex, w, h)
         fg_rgba = load_rgba_resized(os.path.join(kf_dir, "layers/fg.png"), w, h)
         arr_path = os.path.join(kf_dir, "arrays.npz")
         if os.path.exists(arr_path):
@@ -371,7 +389,7 @@ def load_poem_cel_shot(scion_data, scene_map, default_district, body_hex, glow_h
                 if "depth" in arr:
                     depth_map = cv2.resize(arr["depth"].astype(np.float32), (w, h), interpolation=cv2.INTER_LINEAR)
                 if "masks" in arr and len(arr["masks"]) > 0:
-                    fg_mask = cv2.resize(arr["masks"][0].astype(np.float32), (w, h), interpolation=cv2.INTER_NEAREST)
+                    fg_mask = cv2.resize(arr["masks"][0].astype(np.float32), (w, h), interpolation=cv2.INTER_LINEAR)
             except Exception:
                 pass
         if depth_map is None:
@@ -385,42 +403,50 @@ def load_poem_cel_shot(scion_data, scene_map, default_district, body_hex, glow_h
     patch_mp4 = os.path.join(SHOTS_ROOT, "cel_assets/patches", f"{sid}.mp4")
 
     frames = []
-    if cel_pngs:
-        total = len(cel_pngs)
-        idxs = np.linspace(0, total - 1, n_frames).astype(int)
-        for i_f, idx in enumerate(idxs):
-            cel_im = load_rgb_resized(cel_pngs[idx], w, h)
+    # 1. Primary: `cel_v2/*.png` + `frames/*.png` (sharp actors & painted cels) with locked shot-wide exposure and ZERO edge noise!
+    if cel_pngs or raw_pngs:
+        total = max(len(cel_pngs), len(raw_pngs))
+        stride = max(1, min(2, total // max(1, n_frames)))
+        span_needed = min(total, n_frames * stride)
+        start_idx = max(0, (total - span_needed) // 2)
+        idxs = [min(total - 1, start_idx + k * stride) for k in range(n_frames)]
+        raw_frames = []
+        for idx in idxs:
+            cel_im = load_rgb_resized(cel_pngs[min(idx, len(cel_pngs) - 1)], w, h) if cel_pngs else None
             raw_im = load_rgb_resized(raw_pngs[min(idx, len(raw_pngs) - 1)], w, h) if raw_pngs else None
-            comp = 0.84 * cel_im + 0.16 * raw_im if (cel_im is not None and raw_im is not None) else (cel_im if cel_im is not None else raw_im)
+            comp = 0.68 * cel_im + 0.32 * raw_im if (cel_im is not None and raw_im is not None) else (cel_im if cel_im is not None else raw_im)
             if comp is not None:
-                p2, p98 = np.percentile(comp, 2.0), np.percentile(comp, 98.5)
-                comp = np.clip((comp - p2) / max(p98 - p2, 0.16), 0.0, 1.0)
-                # Compute per-frame dynamic ink outline locked to the moving cel_v2 frame!
-                lum = comp @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
-                gy, gx = np.gradient(lum)
-                ink_edge = np.clip((np.hypot(gx, gy) - 0.035) * 8.5, 0.0, 0.72)[..., None]
-                comp = comp * (1.0 - ink_edge) + 0.05 * ink_edge
-                frames.append(comp.astype(np.float32))
-    elif os.path.exists(patch_mp4):
+                raw_frames.append(comp)
+        if raw_frames:
+            mid_fr = raw_frames[len(raw_frames) // 2]
+            p2, p98 = float(np.percentile(mid_fr, 1.5)), float(np.percentile(mid_fr, 99.0))
+            span = max(p98 - p2, 0.22)
+            for fr in raw_frames:
+                norm_fr = np.clip((fr - p2) / span, 0.0, 1.0)
+                frames.append(apply_cinema_grade(norm_fr, body_hex, glow_hex))
+
+    # 2. Fallback to `shots/cel_assets/patches/{sid}.mp4` if `cel_v2` / `frames` are absent
+    if not frames and os.path.exists(patch_mp4):
         cap = cv2.VideoCapture(patch_mp4)
         total = max(1, int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
-        idxs = np.linspace(0, total - 1, n_frames).astype(int)
-        for idx in idxs:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
+        start_f = max(0, (total - n_frames) // 2)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_f)
+        raw_frames = []
+        for _ in range(n_frames):
             ok, fr = cap.read()
-            if ok and fr is not None:
-                fr = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
-                fr = cv2.resize(fr, (w, h), interpolation=cv2.INTER_AREA).astype(np.float32) / 255.0
-                if painted_cel is not None:
-                    fr = 0.50 * fr + 0.50 * painted_cel
-                p2, p98 = np.percentile(fr, 2.0), np.percentile(fr, 98.5)
-                fr = np.clip((fr - p2) / max(p98 - p2, 0.16), 0.0, 1.0)
-                lum = fr @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
-                gy, gx = np.gradient(lum)
-                ink_edge = np.clip((np.hypot(gx, gy) - 0.035) * 8.5, 0.0, 0.72)[..., None]
-                fr = fr * (1.0 - ink_edge) + 0.05 * ink_edge
-                frames.append(fr.astype(np.float32))
+            if not ok or fr is None:
+                break
+            fr = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
+            fr = cv2.resize(fr, (w, h), interpolation=cv2.INTER_AREA).astype(np.float32) / 255.0
+            raw_frames.append(fr)
         cap.release()
+        if raw_frames:
+            mid_fr = raw_frames[len(raw_frames) // 2]
+            p2, p98 = float(np.percentile(mid_fr, 1.5)), float(np.percentile(mid_fr, 99.0))
+            span = max(p98 - p2, 0.22)
+            for fr in raw_frames:
+                norm_fr = np.clip((fr - p2) / span, 0.0, 1.0)
+                frames.append(apply_cinema_grade(norm_fr, body_hex, glow_hex))
 
     if not frames:
         base = painted_cel if painted_cel is not None else np.full((h, w, 3), 0.5, dtype=np.float32)
@@ -434,12 +460,11 @@ def load_poem_cel_shot(scion_data, scene_map, default_district, body_hex, glow_h
         if fg_rgba is not None:
             fg_mask = (fg_rgba[..., 3] > 0.25).astype(np.float32)
         else:
-            # Derive clean foreground figure mask from depth (nearest 28% in central region)
-            d_thresh = np.percentile(depth_map, 32)
+            d_thresh = np.percentile(depth_map, 35)
             yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
-            cent = np.exp(-(((xx / w - 0.5) / 0.36) ** 2 + ((yy / h - 0.52) / 0.42) ** 2))
-            fg_mask = ((depth_map <= d_thresh) & (cent > 0.35)).astype(np.float32)
-            fg_mask = cv2.GaussianBlur(fg_mask, (0, 0), 2.5)
+            cent = np.exp(-(((xx / w - 0.5) / 0.38) ** 2 + ((yy / h - 0.52) / 0.42) ** 2))
+            fg_mask = ((depth_map <= d_thresh) & (cent > 0.30)).astype(np.float32)
+    fg_mask = cv2.GaussianBlur(fg_mask.astype(np.float32), (0, 0), 12.0)
 
     return {
         "id": sid,
@@ -520,51 +545,41 @@ _BASE_YY, _BASE_XX = np.mgrid[0:H, 0:W].astype(np.float32)
 
 def prepare_station_multiplane(station, k_idx):
     """
-    Precomputes a smooth, artifact-free normalized closeness (inverse depth / disparity) field
-    `disp in [0, 1]` (`1.0` = near foreground, `0.0` = deep background) plus subtle architectural
-    depth-contour filaments so `cv2.remap` produces genuine 3D multiplane camera parallax
-    across the full 1280x720 frame without ever exposing frame borders or breaking into dots.
+    Precomputes a wide-smoothed, artifact-free normalized closeness (inverse depth / disparity) field
+    `disp in [0, 1]` (`1.0` = near foreground, `0.0` = deep background) so `cv2.remap` produces
+    silky-smooth 3D multiplane camera parallax across the full 1280x720 frame without local shearing
+    or edge glitches.
     """
     depth = station["depth"]
     d_lo, d_hi = np.percentile(depth, 3), np.percentile(depth, 97)
     d_norm = np.clip((depth - d_lo) / max(d_hi - d_lo, 1e-3), 0.0, 1.0)
-    # Closeness (disparity): 1.0 = closest foreground, 0.0 = farthest background
     disp = 1.0 - d_norm
-    # Smooth disparity so multiplane parallax sheets glide cohesively without tearing cel ink lines
-    disp_smooth = cv2.GaussianBlur(disp, (0, 0), 9.0).astype(np.float32)
+    # Wide Gaussian smoothing (sigma=18) ensures multiplane depth sheets glide like real glass cinema planes
+    # without warping or tearing fine lines
+    disp_smooth = cv2.GaussianBlur(disp, (0, 0), 18.0).astype(np.float32)
 
-    # Extract delicate depth-ridge & cel-contour filaments for subtle latent-space shimmer during depth transitions
-    gy, gx = np.gradient(cv2.GaussianBlur(disp, (0, 0), 2.2))
-    depth_ridge = np.clip((np.hypot(gx, gy) - 0.008) * 18.0, 0.0, 1.0).astype(np.float32)
-
-    # Give each station a gentle, distinct continuous camera drift vector (subtle ±3.5° equivalent arc)
-    # so the camera feels like a fluid Steadicam / techno-crane moving continuously through 3D space
     angle_bias = (k_idx * 1.15)
     pan_dir = 1.0 if (k_idx % 2 == 0) else -1.0
-    tilt_dir = math.sin(angle_bias) * 0.65
+    tilt_dir = math.sin(angle_bias) * 0.55
 
     return {
         "disp": disp_smooth,
-        "depth_ridge": depth_ridge,
         "pan_dir": pan_dir,
         "tilt_dir": tilt_dir,
     }
 
 
-def warp_multiplane_3d(img_rgb, disp, pan_x, tilt_y, dolly_scale, depth_stretch=0.06):
+def warp_multiplane_3d(img_rgb, disp, pan_x, tilt_y, dolly_scale, depth_stretch=0.045):
     """
     Applies a real 2.5D/3D multiplane camera transform using dense per-pixel inverse-depth
     parallax (`cv2.remap`).
-      - `dolly_scale`: base optical overscan + forward dolly (`1.08 .. 1.18`) so the image NEVER
+      - `dolly_scale`: base optical overscan + forward dolly (`1.07 .. 1.15`) so the image NEVER
         pulls away from the 1280x720 frame edges.
-      - `pan_x`, `tilt_y`: subtle continuous camera translation/rotation in pixels (`±26px` horizontal,
-        `±9px` vertical). Near planes (`disp -> 1`) shift 3.2x more than far background planes (`disp -> 0`),
-        creating unmistakable, fluid 3D parallax without tilting the frame into a trapezoid.
-      - `depth_stretch`: differential perspective expansion between foreground and background as the
-        camera pushes forward along +Z.
+      - `pan_x`, `tilt_y`: subtle continuous Steadicam translation in pixels (`±18px` horizontal,
+        `±6px` vertical). Near planes (`disp -> 1`) shift smoothly past far background planes (`disp -> 0`).
     """
     local_scale = dolly_scale * (1.0 + depth_stretch * (disp - 0.35))
-    parallax_weight = 0.28 + 0.82 * disp
+    parallax_weight = 0.30 + 0.70 * disp
 
     map_x = (_BASE_XX - W * 0.5) / local_scale + W * 0.5 + pan_x * parallax_weight
     map_y = (_BASE_YY - H * 0.5) / local_scale + H * 0.5 + tilt_y * parallax_weight
@@ -583,28 +598,20 @@ def eval_station_fluid_view(station, mp, u_local, phase_t):
     Evaluates a single station at continuous normalized time `u_local` (`0.0` -> `1.0` during its segment,
     and smoothly extending beyond `[0, 1]` during overlapping cross-depth transitions so camera velocity
     NEVER stops or jerks!).
+    Uses 100% pure moving frame (`base_cel`) with ZERO static keyframe overlay so moving subjects never ghost!
     """
     frames = station["frames"]
     n_f = len(frames)
-    # Continuous ping-pong / slow-flow playback through the station's multiplane cel frames
     f_pos = np.clip(u_local, 0.0, 1.0) * (n_f - 1)
-    i0 = int(f_pos)
-    i1 = min(n_f - 1, i0 + 1)
-    frac_f = f_pos - i0
-    base_cel = frames[i0] * (1.0 - frac_f) + frames[i1] * frac_f
-
-    # Subtle, continuous blend between Angular Program Cel (`frame0.png`) and Painted Cel (`cel.png` + `shot.mp4`)
-    # so the filmmaker sees the underlying cel structure breathe fluidly
-    ang_mix = 0.16 * (0.5 + 0.5 * math.sin(phase_t * 0.7))
-    plate = base_cel * (1.0 - ang_mix) + station["angular_cel"] * ang_mix
+    plate = frames[min(n_f - 1, max(0, int(round(f_pos))))]
 
     # Continuous, never-stopping Steadicam glide:
-    # Subtle lateral parallax (`-24px` -> `+24px` = ~3.5° optical rotation) + continuous forward Z-dolly (`1.09` -> `1.18`)
+    # Subtle lateral parallax (`-18px` -> `+18px` = ~2.6° optical rotation) + continuous forward Z-dolly (`1.07` -> `1.14`)
     u_centered = u_local - 0.5
-    pan_x = mp["pan_dir"] * (u_centered * 46.0 + 6.0 * math.sin(phase_t * 0.55))
-    tilt_y = mp["tilt_dir"] * (u_centered * 16.0 + 4.0 * math.cos(phase_t * 0.45))
-    dolly_scale = 1.12 + 0.08 * u_local
-    depth_stretch = 0.075 * u_local
+    pan_x = mp["pan_dir"] * (u_centered * 34.0 + 4.0 * math.sin(phase_t * 0.45))
+    tilt_y = mp["tilt_dir"] * (u_centered * 12.0 + 2.5 * math.cos(phase_t * 0.38))
+    dolly_scale = 1.07 + 0.07 * u_local
+    depth_stretch = 0.045 * u_local
 
     warped_rgb = warp_multiplane_3d(plate, mp["disp"], pan_x, tilt_y, dolly_scale, depth_stretch)
     return warped_rgb
@@ -614,13 +621,10 @@ def render_construct_frame(poem_num, poem_title, district_name, stations, multip
     """
     Renders one frame of `S2 · Common Places & Painted Cels Construct` as a FLUID, CONTINUOUS
     Filmmaker's Multiplane Camera (`30.0s` = `5` stations × `6.0s` each):
-      - The camera NEVER freezes and NEVER whips 72° across blank beige paper.
-      - Instead, it glides continuously with subtle 3D inverse-depth parallax (`cv2.remap`) across
+      - The camera glides continuously with subtle 3D inverse-depth parallax (`cv2.remap`) across
         100% of the 1280x720 frame.
-      - During the last `1.9s` (`32%`) of each station, the camera performs a continuous Depth-Ordered
-        Multiplane Dissolve into the next station: deep architectural planes emerge first while foreground
-        cels part smoothly in Z-depth, accompanied by a subtle `18%` luminous depth-contour shimmer
-        in the City District's `glow` palette.
+      - During the last `2.0s` (`33%`) of each station, the camera performs a continuous Optical
+        Rack-Focus & Depth-Plane Dissolve into the next station with ZERO neon edge lines or glitches.
     """
     n_st = len(stations)
     seg_dur = total_dur / float(n_st)
@@ -632,7 +636,7 @@ def render_construct_frame(poem_num, poem_title, district_name, stations, multip
     st_next = stations[(seg_idx + 1) % n_st]
     mp_next = multiplanes[(seg_idx + 1) % n_st]
 
-    trans_start = 0.68  # 4.08s of continuous fluid multiplane glide + 1.92s of seamless depth-layer morph
+    trans_start = 0.67  # 4.02s of continuous fluid multiplane glide + 1.98s of seamless optical depth dissolve
     im_curr = eval_station_fluid_view(st_curr, mp_curr, u_seg, t)
 
     if u_seg <= trans_start:
@@ -641,25 +645,24 @@ def render_construct_frame(poem_num, poem_title, district_name, stations, multip
         active_k = seg_idx
         state_lbl = "CONTINUOUS 3D MULTIPLANE GLIDE"
     else:
-        # Seamless, continuous C^2 depth-ordered morph into the next Common Place / Cel station
         u_tr = smootherstep((u_seg - trans_start) / (1.0 - trans_start))
-        # Incoming station starts its continuous glide early (`u_local` from `-0.18` to `+0.14`)
-        # so it is already in fluid motion when it appears—zero static start!
-        u_next_local = -0.18 + 0.32 * u_tr
+        u_next_local = -0.15 + 0.30 * u_tr
         im_next = eval_station_fluid_view(st_next, mp_next, u_next_local, t)
 
-        # Depth-ordered transition weight: deep background of next station emerges first,
-        # while near foreground of current station parts last
-        depth_bias = 0.22 * (mp_next["disp"] - mp_curr["disp"])
+        # Subtle optical rack-focus softness at the midpoint of the depth handoff (like a real cinema lens dissolve)
+        dof_env = math.sin(math.pi * u_tr)
+        if dof_env > 0.15:
+            sigma = 2.8 * dof_env
+            im_curr_soft = cv2.GaussianBlur(im_curr, (0, 0), sigma)
+            im_next_soft = cv2.GaussianBlur(im_next, (0, 0), sigma)
+            im_curr = im_curr * (1.0 - 0.45 * (1.0 - u_tr)) + im_curr_soft * (0.45 * (1.0 - u_tr))
+            im_next = im_next * (1.0 - 0.45 * u_tr) + im_next_soft * (0.45 * u_tr)
+
+        # Smooth depth-ordered transition weight (deep background emerges slightly ahead of near foreground)
+        depth_bias = 0.15 * (mp_next["disp"] - mp_curr["disp"])
         w_next = np.clip(u_tr + depth_bias * math.sin(math.pi * u_tr), 0.0, 1.0)[..., None]
 
-        canvas = im_curr * (1.0 - w_next) + im_next * w_next
-
-        # Subtle architectural depth-contour shimmer (`glow_hex`) at the midpoint of the depth handoff
-        shimmer_env = math.sin(math.pi * u_tr) ** 1.5
-        glow_col = hex_to_rgb_float((st_next.get("glow_hex") or ["#fa8d15"])[0])
-        ridge_mix = (0.5 * mp_curr["depth_ridge"] + 0.5 * mp_next["depth_ridge"])[..., None]
-        canvas = np.clip(canvas + 0.16 * shimmer_env * ridge_mix * glow_col[None, None, :], 0.0, 1.0)
+        canvas = np.clip(im_curr * (1.0 - w_next) + im_next * w_next, 0.0, 1.0)
 
         if u_tr < 0.5:
             active_st = st_curr
@@ -667,7 +670,7 @@ def render_construct_frame(poem_num, poem_title, district_name, stations, multip
         else:
             active_st = st_next
             active_k = (seg_idx + 1) % n_st
-        state_lbl = "FLUID DEPTH-PLANE TRANSITION"
+        state_lbl = "OPTICAL DEPTH-PLANE DISSOLVE"
 
     badge = f"{active_st['kind_badge']}  [{active_k + 1}/{n_st} · {state_lbl}]"
     return draw_clean_lower_third_hud(
@@ -684,101 +687,82 @@ def render_construct_frame(poem_num, poem_title, district_name, stations, multip
 
 
 # ==============================================================================
-# MODE 2: 07w SPACETIME WORM & CITY WALK (Fluid Continuous Z-Corridor + Multiplane Parallax)
+# MODE 2: 07w SPACETIME WORM & CITY WALK (Halo-Free Volumetric Motion Ribbon + Multiplane Parallax)
 # ==============================================================================
 
 def render_spacetime_worm_shot_frame(shot_bundle, u_shot, global_t=0.0):
     """
     Renders a single shot at normalized progress `u_shot in [0, 1]` with:
-      - Continuous, fluid 2.5D/3D multiplane camera glide (`cv2.remap` using real `depth_sharp.npz` disparity)
-        with subtle lateral Steadicam drift (`±14px`) and smooth forward Z-dolly (`1.08 -> 1.18`).
-      - 100% full-frame (`1280x720`) legibility of the City District Cel background (`painted_cel` / `frames`).
-      - Sculpted, fluid 4D Spacetime Worm ribbon of the moving subject (`fg_mask` / `fg_rgba`) trailing into
-        deep 3D space BEHIND the 100% opaque foreground subject!
+      - Continuous, fluid 2.5D/3D multiplane camera glide (`cv2.remap` using wide-smoothed `depth_sharp.npz` disparity)
+        with subtle lateral Steadicam drift (`±14px`) and smooth forward Z-dolly (`1.06 -> 1.13`).
+      - Halo-free, silky-smooth 4D Spacetime Worm motion ribbon (`6` softly-feathered temporal echoes in the
+        City District's `glow` palette receding along the optical Z-axis into the background) with ZERO
+        double-warped foreground cutout halos and ZERO jagged polygon contour lines!
     """
     frames = shot_bundle["frames"]
     n_f = len(frames)
     f_pos = np.clip(u_shot, 0.0, 1.0) * (n_f - 1)
-    i0 = int(f_pos)
-    i1 = min(n_f - 1, i0 + 1)
-    frac_f = f_pos - i0
-    present_frame = frames[i0] * (1.0 - frac_f) + frames[i1] * frac_f
+    present_frame = frames[min(n_f - 1, max(0, int(round(f_pos))))]
 
-    # Smooth inverse-depth disparity for continuous multiplane background parallax
     if "disp_smooth" not in shot_bundle:
         depth = shot_bundle["depth"]
         d_lo, d_hi = np.percentile(depth, 3), np.percentile(depth, 97)
         d_norm = np.clip((depth - d_lo) / max(d_hi - d_lo, 1e-3), 0.0, 1.0)
-        shot_bundle["disp_smooth"] = cv2.GaussianBlur(1.0 - d_norm, (0, 0), 9.0).astype(np.float32)
+        shot_bundle["disp_smooth"] = cv2.GaussianBlur(1.0 - d_norm, (0, 0), 18.0).astype(np.float32)
+        shot_bundle["median_frame"] = np.median(frames[::max(1, n_f // 8)], axis=0).astype(np.float32)
+        yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        shot_bundle["center_env"] = np.exp(-(((xx / W - 0.5) / 0.42) ** 2 + ((yy / H - 0.50) / 0.44) ** 2)).astype(np.float32)
+
     disp = shot_bundle["disp_smooth"]
+    median_fr = shot_bundle["median_frame"]
+    center_env = shot_bundle["center_env"]
 
-    # 1. Fluid, continuous multiplane Z-dolly + subtle Steadicam drift on the background Cel
-    pan_x = (u_shot - 0.5) * 26.0 + 4.0 * math.sin(global_t * 0.6)
-    tilt_y = (0.5 - u_shot) * 9.0 + 2.5 * math.cos(global_t * 0.5)
-    dolly_scale = 1.09 + 0.09 * u_shot
-    bg_plate = warp_multiplane_3d(present_frame, disp, pan_x, tilt_y, dolly_scale, depth_stretch=0.06 * u_shot)
+    # 1. Fluid, continuous multiplane Z-dolly + subtle Steadicam drift on the present frame
+    pan_x = (u_shot - 0.5) * 22.0 + 3.5 * math.sin(global_t * 0.5)
+    tilt_y = (0.5 - u_shot) * 8.0 + 2.0 * math.cos(global_t * 0.42)
+    dolly_scale = 1.06 + 0.07 * u_shot
+    bg_plate = warp_multiplane_3d(present_frame, disp, pan_x, tilt_y, dolly_scale, depth_stretch=0.045 * u_shot)
 
-    body_hex = shot_bundle.get("body_hex") or ["#1e1d2c"]
     glow_hex = shot_bundle.get("glow_hex") or ["#01acd4", "#fa8d15"]
     c_glow1 = hex_to_rgb_float(glow_hex[0])
     c_glow2 = hex_to_rgb_float(glow_hex[min(1, len(glow_hex) - 1)])
 
+    # Compute smooth per-frame subject salience for the present frame so echoes tuck cleanly behind the subject
+    # without needing a second mismatched affine cutout!
+    curr_diff = np.mean(np.abs(present_frame - median_fr), axis=2)
+    curr_sal = np.clip(curr_diff * 3.2 + 0.35 * disp * center_env, 0.0, 1.0)
+    curr_sal_soft = cv2.GaussianBlur(curr_sal.astype(np.float32), (0, 0), 16.0)
+    # Protect the core of the present foreground figure so receding echoes emerge around/behind it
+    bg_receptive = np.clip(1.0 - 0.72 * curr_sal_soft, 0.15, 1.0)
+
     canvas = bg_plate.copy()
 
-    # 2. Extract the foreground figure mask & contour to extrude the 4D Spacetime Worm BEHIND the figure
-    fg_mask = shot_bundle["fg_mask"]
-    fg_soft = cv2.GaussianBlur(fg_mask, (0, 0), 4.0)
-
-    mask_u8 = (fg_mask > 0.30).astype(np.uint8) * 255
-    contours, _ = cv2.findContours(mask_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Render 10 densely-spaced receding temporal slices (`age = 10 .. 1`, back-to-front) BEHIND the present subject
-    # so the spacetime worm forms a smooth, continuous volumetric ribbon rather than discrete steps
-    n_echoes = 10
-    trail_env = sm(0.0, 0.12, u_shot)
+    # 2. Render 6 softly-feathered receding temporal slices (`age = 6 .. 1`) along the optical Z-corridor
+    n_echoes = 6
+    trail_env = sm(0.0, 0.15, u_shot) * (1.0 - 0.35 * sm(0.85, 1.0, u_shot))
     for age in range(n_echoes, 0, -1):
-        f_past_pos = max(0.0, f_pos - age * 1.6)
-        p0 = int(f_past_pos)
-        p1 = min(n_f - 1, p0 + 1)
-        pf = f_past_pos - p0
-        past_fr = frames[p0] * (1.0 - pf) + frames[p1] * pf
+        f_past_pos = max(0.0, f_pos - age * 2.5)
+        past_fr = frames[min(n_f - 1, max(0, int(round(f_past_pos))))]
+
+        past_diff = np.mean(np.abs(past_fr - median_fr), axis=2)
+        past_sal = np.clip(past_diff * 3.2 + 0.30 * disp * center_env, 0.0, 1.0)
+        past_matte = cv2.GaussianBlur(past_sal.astype(np.float32), (0, 0), 18.0)
 
         frac = age / float(n_echoes)
-        sc_echo = 1.0 - 0.25 * frac
-        tx = (1.0 - sc_echo) * (W * 0.56) - age * 11.0
-        ty = (1.0 - sc_echo) * (H * 0.38) - age * 5.0
+        sc_echo = 1.0 - 0.18 * frac
+        tx = (1.0 - sc_echo) * (W * 0.54) - age * 9.5
+        ty = (1.0 - sc_echo) * (H * 0.42) - age * 4.2
         M_echo = np.array([[sc_echo, 0.0, tx], [0.0, sc_echo, ty]], dtype=np.float32)
 
-        warped_fr = cv2.warpAffine(past_fr, M_echo, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0))
-        warped_m = cv2.warpAffine(fg_soft, M_echo, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+        warped_fr = cv2.warpAffine(past_fr, M_echo, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
+        warped_m = cv2.warpAffine(past_matte, M_echo, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
 
         tint_col = lerp(c_glow1, c_glow2, frac)
-        echo_rgb = 0.68 * warped_fr + 0.32 * tint_col[None, None, :]
-        echo_alpha = warped_m * (0.42 * (1.0 - 0.65 * frac)) * trail_env
+        echo_rgb = 0.72 * warped_fr + 0.28 * tint_col[None, None, :]
+        echo_alpha = (warped_m * bg_receptive * (0.26 * (1.0 - 0.60 * frac)) * trail_env)[..., None]
 
-        canvas = canvas * (1.0 - echo_alpha[..., None]) + echo_rgb * echo_alpha[..., None]
+        canvas = canvas * (1.0 - echo_alpha) + echo_rgb * echo_alpha
 
-        if contours and (age % 2 == 0):
-            rim_layer = (np.clip(canvas, 0.0, 1.0) * 255.0).astype(np.uint8)
-            col_u8 = tuple(int(np.clip(x * 255.0, 0, 255)) for x in tint_col)
-            for cnt in contours:
-                if cv2.contourArea(cnt) > 250:
-                    pts = cnt[:, 0, :].astype(np.float32)
-                    pts_w = np.column_stack([pts[:, 0] * sc_echo + tx, pts[:, 1] * sc_echo + ty]).astype(np.int32)
-                    cv2.polylines(rim_layer, [pts_w.reshape(-1, 1, 2)], True, col_u8, 1, cv2.LINE_AA)
-            rim_f = rim_layer.astype(np.float32) / 255.0
-            rim_w = 0.38 * (1.0 - 0.5 * frac) * trail_env
-            canvas = canvas * (1.0 - rim_w) + rim_f * rim_w
-
-    # 3. Composite the 100% SHARP, 100% OPAQUE Present Foreground Subject ON TOP of its Spacetime Worm trail!
-    fg_zoom = 1.08 + 0.11 * u_shot
-    M_fg = cv2.getRotationMatrix2D((W / 2.0, H / 2.0), 0.0, fg_zoom)
-    M_fg[0, 2] += pan_x * 0.85
-    M_fg[1, 2] += tilt_y * 0.85
-    fg_present_rgb = cv2.warpAffine(present_frame, M_fg, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
-    fg_present_m = cv2.warpAffine(fg_soft, M_fg, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
-
-    canvas = canvas * (1.0 - fg_present_m[..., None]) + fg_present_rgb * fg_present_m[..., None]
     return np.clip(canvas, 0.0, 1.0)
 
 
@@ -1013,11 +997,11 @@ def build_single_poem_pair(poem_num):
 
     # Load Common Place stations from `shots/out/` (top 3) + key Poem Cel stations (2) = 5 canonical stations for `S2 Construct`
     terr_stations = [
-        load_common_place_station(od, local_view_info, district_name, body_hex, glow_hex, n_frames=36)
+        load_common_place_station(od, local_view_info, district_name, body_hex, glow_hex, n_frames=48)
         for od in ordered_out_dirs[:4]
     ]
     poem_bundles = [
-        load_poem_cel_shot(sc, scene_map, district_name, body_hex, glow_hex, n_frames=32)
+        load_poem_cel_shot(sc, scene_map, district_name, body_hex, glow_hex, n_frames=48)
         for sc in scion_list
     ]
 
@@ -1076,6 +1060,24 @@ def build_single_poem_pair(poem_num):
     shutil.copy2(out_worm, os.path.join(POEMS_VID_DIR, f"poem_{poem_num:02d}_spacetime_worm.mp4"))
     Image.fromarray(w_frames[int(4.5 * FPS)]).save(os.path.join(POEMS_VID_DIR, f"poem_{poem_num:02d}_spacetime_worm.jpg"), quality=92)
 
+    if poem_num == 1:
+        # Save 8-frame progression sheets (`4x2`) for Poem 01 Construct & Spacetime Worm
+        pw, ph = 480, 270
+        prog_c = Image.new("RGB", (4 * pw, 2 * ph), (16, 18, 24))
+        prog_w = Image.new("RGB", (4 * pw, 2 * ph), (16, 18, 24))
+        c_idxs = np.linspace(int(1.2 * FPS), len(c_frames) - int(1.5 * FPS), 8).astype(int)
+        w_idxs = np.linspace(int(1.2 * FPS), len(w_frames) - int(1.5 * FPS), 8).astype(int)
+        for k, ci in enumerate(c_idxs):
+            im_c = Image.fromarray(c_frames[ci]).resize((pw, ph), Image.Resampling.LANCZOS)
+            prog_c.paste(im_c, ((k % 4) * pw, (k // 4) * ph))
+        for k, wi in enumerate(w_idxs):
+            im_w = Image.fromarray(w_frames[wi]).resize((pw, ph), Image.Resampling.LANCZOS)
+            prog_w.paste(im_w, ((k % 4) * pw, (k // 4) * ph))
+        prog_c.save(os.path.join(ARTIFACT_DIR, "wygwyl_seeing_construct_sheet.png"))
+        prog_w.save(os.path.join(ARTIFACT_DIR, "wygwyl_07_spacetime_sheet.png"))
+        prog_c.save(os.path.join(OUT_DIR, "wygwyl_seeing_construct_sheet.png"))
+        prog_w.save(os.path.join(OUT_DIR, "wygwyl_07_spacetime_sheet.png"))
+
     seg_frames = int((construct_dur / float(n_st)) * FPS)
     f_locked = c_frames[int(seg_frames * 0.35)]
     f_orbit = c_frames[int(seg_frames * 0.86)]
@@ -1097,6 +1099,13 @@ def build_single_poem_pair(poem_num):
 if __name__ == "__main__":
     os.makedirs(OUT_DIR, exist_ok=True)
     os.makedirs(POEMS_VID_DIR, exist_ok=True)
+
+    # Export `bible_view_map.json` so the interactive 60fps WebGL Filmmaker Studio loads exact `out/<uuid>` directories
+    _, _, bible_to_dir_map, _, _ = build_city_master_index()
+    view_dir_json = {str(k): os.path.basename(v) for k, v in bible_to_dir_map.items()}
+    with open(os.path.join(OUT_DIR, "bible_view_map.json"), "w") as jf:
+        json.dump(view_dir_json, jf, indent=2)
+
     if len(sys.argv) > 1:
         poems_to_run = [int(x) for x in sys.argv[1:]]
     else:
