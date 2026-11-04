@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>WYGWYL · 14 Poems: Territory Constructs (S2) & Spacetime Worms (07w)</title>
+<title>WYGWYL · Filmmaker's Multiplane Camera Studio & 14-Poem Suite</title>
 <style>
 @font-face{font-family:"IM Fell English";src:url(fonts/im-fell-english-latin-400-normal.woff2) format("woff2");font-style:normal;font-display:swap}
 @font-face{font-family:"IM Fell English";src:url(fonts/im-fell-english-latin-400-italic.woff2) format("woff2");font-style:italic;font-display:swap}
@@ -60,11 +60,11 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .bar-tabs a.active,.bar-tabs a:hover{color:var(--ink);border-bottom-color:var(--ink)}
 
 .wrap{
-  max-width:1280px;
+  max-width:1320px;
   margin:0 auto;
-  padding:calc(var(--bar) + var(--fi) + 32px) 40px 96px;
+  padding:calc(var(--bar) + var(--fi) + 32px) 36px 96px;
   display:grid;
-  gap:64px;
+  gap:56px;
 }
 
 .shead{
@@ -77,8 +77,104 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   gap:10px 24px;
 }
 .shead .eyebrow{color:var(--lamp)}
-.shead h2{font-weight:400;font-size:clamp(28px,4.2vw,48px);line-height:1.06;margin:4px 0 0}
-.shead p{font-style:italic;color:var(--soft);margin:0;max-width:38em;font-size:18.5px}
+.shead h2{font-weight:400;font-size:clamp(26px,3.8vw,44px);line-height:1.06;margin:4px 0 0}
+.shead p{font-style:italic;color:var(--soft);margin:0;max-width:40em;font-size:18px}
+
+/* Interactive Filmmaker's Multiplane Rig */
+.rig-grid{
+  display:grid;
+  grid-template-columns:1.6fr 1fr;
+  gap:24px;
+  margin-top:18px;
+  align-items:start;
+}
+@media (max-width:980px){
+  .rig-grid{grid-template-columns:1fr}
+  .wrap{padding-inline:20px}
+}
+.stage-wrap{
+  position:relative;
+  border:2px solid var(--ink);
+  background:#121318;
+  aspect-ratio:16/9;
+  overflow:hidden;
+  cursor:grab;
+  user-select:none;
+}
+.stage-wrap:active{cursor:grabbing}
+.stage-wrap canvas{
+  width:100%;
+  height:100%;
+  display:block;
+}
+.stage-hud{
+  position:absolute;
+  left:0;right:0;bottom:0;
+  padding:10px 16px;
+  background:rgba(16,18,24,0.86);
+  border-top:1px solid rgba(235,195,120,0.65);
+  color:#f5f0e6;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  pointer-events:none;
+}
+.stage-hud .sh-left{display:grid;gap:2px}
+.stage-hud .sh-badge{color:#fabc5c;font:500 11px/1.2 "IBM Plex Mono",monospace;letter-spacing:.07em}
+.stage-hud .sh-title{font-style:italic;font-size:16px;color:#f5f0e6}
+.stage-hud .sh-right{font:500 10.5px/1.3 "IBM Plex Mono",monospace;color:#d7d2c6;text-align:right}
+
+.rig-controls{
+  background:var(--panel);
+  border:1.5px solid var(--ink);
+  padding:16px 18px;
+  display:grid;
+  gap:14px;
+}
+.ctrl-group{display:grid;gap:6px}
+.ctrl-label{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  font:500 10.5px/1.3 "IBM Plex Mono",monospace;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  color:var(--ink);
+}
+.ctrl-label span.val{color:var(--lamp)}
+input[type="range"]{
+  width:100%;
+  accent-color:var(--ink);
+  cursor:pointer;
+}
+select.poem-select{
+  width:100%;
+  padding:7px 10px;
+  font:500 11.5px/1.3 "IBM Plex Mono",monospace;
+  background:var(--paper);
+  border:1px solid var(--ink);
+  color:var(--ink);
+}
+.station-strip{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+.st-btn{
+  font:500 10px/1.2 "IBM Plex Mono",monospace;
+  padding:6px 9px;
+  border:1px solid var(--ink);
+  background:var(--paper);
+  color:var(--ink);
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  transition:background .15s,color .15s;
+}
+.st-btn:hover,.st-btn.active{
+  background:var(--ink);
+  color:var(--paper);
+}
 
 /* Master Dual Theater */
 .master-grid{
@@ -89,7 +185,6 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 }
 @media (max-width:920px){
   .master-grid{grid-template-columns:1fr}
-  .wrap{padding-inline:22px}
 }
 .card-box{
   display:grid;
@@ -98,7 +193,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .vbox{
   position:relative;
   border:1.5px solid var(--ink);
-  background:#dfd7c5;
+  background:#14161d;
   aspect-ratio:16/9;
   overflow:hidden;
 }
@@ -127,24 +222,24 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   border-top:1px solid var(--faint);
   padding-top:24px;
   display:grid;
-  gap:18px;
+  gap:16px;
 }
 .poem-head{
   display:flex;
   flex-wrap:wrap;
-  align-items:baseline;
-  gap:8px 18px;
+  align-items: center;
+  gap:8px 14px;
 }
 .poem-head .pnum{color:var(--lamp);font-size:13px}
-.poem-head h3{font-weight:400;font-size:30px;margin:0;letter-spacing:.01em}
-.poem-head .pterr{font-style:italic;color:var(--soft);font-size:18px}
-.poem-head .pactions{margin-left:auto;display:flex;gap:8px}
+.poem-head h3{font-weight:400;font-size:28px;margin:0;letter-spacing:.01em}
+.poem-head .pterr{font-style:italic;color:var(--soft);font-size:17.5px}
+.poem-head .pactions{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 
 .pill{
-  font:500 10.5px/1 "IBM Plex Mono",monospace;
-  letter-spacing:.07em;
+  font:500 10px/1 "IBM Plex Mono",monospace;
+  letter-spacing:.06em;
   text-transform:uppercase;
-  padding:7px 12px;
+  padding:7px 10px;
   border:1px solid var(--ink);
   background:var(--paper);
   color:var(--ink);
@@ -153,6 +248,13 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .pill:hover,.pill.active{
   background:var(--ink);
   color:var(--paper);
+}
+.tc-box{
+  font:500 11px/1 "IBM Plex Mono",monospace;
+  padding:6px 9px;
+  background:#1c1814;
+  color:#fabc5c;
+  letter-spacing:.08em;
 }
 
 .pair-screens{
@@ -228,46 +330,119 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 <div class="frame-border" aria-hidden="true"><i class="o"></i><i class="n"></i></div>
 
 <header class="bar">
-  <div class="bar-title"><span>WYGWYL · AFTERLIGHT</span>14 Poems · Common Places, Cels &amp; City District Colors</div>
+  <div class="bar-title"><span>WYGWYL · FILMMAKER STUDIO</span>Fluid 3D Multiplane Camera, Common Places, Cels &amp; 14-Poem Suite</div>
   <nav class="bar-tabs mono">
-    <a href="#master-reels" class="active">Master Anthology Reels</a>
-    <a href="#poems-suite">All 14 Poems (Construct + Worm Pairs)</a>
+    <a href="#filmmaker-rig" class="active">Interactive Multiplane Camera</a>
+    <a href="#master-reels">Master Reels</a>
+    <a href="#poems-suite">All 14 Poems (Frame-Accurate Sync)</a>
   </nav>
 </header>
 
 <main class="wrap">
 
+  <!-- INTERACTIVE FILMMAKER'S 2.5D/3D MULTIPLANE CAMERA RIG -->
+  <section id="filmmaker-rig">
+    <div class="shead">
+      <div>
+        <div class="eyebrow mono">Real-Time 60fps WebGL Inverse-Depth Multiplane Camera · Subtle Continuous Parallax</div>
+        <h2>Filmmaker’s Fluid Multiplane Camera &amp; Depth-Transition Studio</h2>
+      </div>
+      <p>Drag directly on the 16:9 monitor for inertia-damped manual gimbal control, or engage <b>Fluid Steadicam Drift</b>. Adjust rotation/parallax subtlety (`0°–6°`), dolly focal push, and Painted vs. Angular Cel blend, or click any Common Place station to perform a continuous depth-ordered transition.</p>
+    </div>
+
+    <div class="rig-grid">
+      <div class="stage-wrap" id="gl-stage-wrap" title="Drag to orbit/pan with inertia damping, or use Fluid Steadicam Drift">
+        <canvas id="gl-multiplane-canvas" width="1280" height="720"></canvas>
+        <div class="stage-hud">
+          <div class="sh-left">
+            <div class="sh-badge" id="hud-badge">COMMON PLACE (P01·P10) · V92 · NARAKA MARKET</div>
+            <div class="sh-title" id="hud-title">The Underpass Shadow-Pool — “an underpass under the market flooded ankle-deep”</div>
+          </div>
+          <div class="sh-right" id="hud-telemetry">
+            PARALLAX: 2.8° · DOLLY: 1.12×<br>60 FPS · FULL-BLEED 1280×720
+          </div>
+        </div>
+      </div>
+
+      <div class="rig-controls">
+        <div class="ctrl-group">
+          <div class="ctrl-label"><span>1. Poem &amp; City Territory</span><span class="val" id="lbl-poem-dist">Naraka Market</span></div>
+          <select class="poem-select" id="sel-poem"></select>
+        </div>
+
+        <div class="ctrl-group">
+          <div class="ctrl-label"><span>2. Common Place &amp; District Stations (Click to Depth-Morph)</span></div>
+          <div class="station-strip" id="station-buttons"></div>
+        </div>
+
+        <div class="ctrl-group">
+          <div class="ctrl-label"><span>3. Camera Motion Mode</span></div>
+          <div class="station-strip">
+            <button type="button" class="st-btn active" id="btn-mode-fluid">Fluid Steadicam Drift</button>
+            <button type="button" class="st-btn" id="btn-mode-auto-seq">Auto-Sequence Stations</button>
+            <button type="button" class="st-btn" id="btn-mode-manual">Manual Gimbal (Drag)</button>
+          </div>
+        </div>
+
+        <div class="ctrl-group">
+          <div class="ctrl-label"><span>Rotation / Parallax Subtlety</span><span class="val" id="val-parallax">2.8° (Fluid)</span></div>
+          <input type="range" id="rng-parallax" min="0" max="6.0" step="0.1" value="2.8">
+        </div>
+
+        <div class="ctrl-group">
+          <div class="ctrl-label"><span>Steadicam Glide Speed</span><span class="val" id="val-speed">0.45×</span></div>
+          <input type="range" id="rng-speed" min="0.10" max="1.50" step="0.05" value="0.45">
+        </div>
+
+        <div class="ctrl-group">
+          <div class="ctrl-label"><span>Optical Dolly Z-Push (Overscan)</span><span class="val" id="val-dolly">1.12×</span></div>
+          <input type="range" id="rng-dolly" min="1.04" max="1.28" step="0.01" value="1.12">
+        </div>
+
+        <div class="ctrl-group">
+          <div class="ctrl-label"><span>Cel Layer Mix (Painted Cel ↔ Angular Program Cel)</span><span class="val" id="val-celmix">20% Angular</span></div>
+          <input type="range" id="rng-celmix" min="0" max="100" step="1" value="20">
+        </div>
+
+        <div class="ctrl-group">
+          <div class="ctrl-label"><span>Depth Relief X-Ray Overlay</span><span class="val" id="val-depthvis">0%</span></div>
+          <input type="range" id="rng-depthvis" min="0" max="100" step="1" value="0">
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- MASTER ANTHOLOGY REELS -->
   <section id="master-reels">
     <div class="shead">
       <div>
-        <div class="eyebrow mono">Master Anthology · Common Places, Painted Cels &amp; City District Palettes</div>
-        <h2>Seeing-As (S2 Construct) &amp; 07-Spacetime Worms</h2>
+        <div class="eyebrow mono">Master Anthology · Continuous Multiplane Parallax &amp; 4D Spacetime Worms</div>
+        <h2>Fluid Multiplane Construct (`S2`) &amp; Spacetime Worms (`07w`)</h2>
       </div>
-      <p>Left: Common Places shared across the city (`The Orange Catwalk`, `The Underpass Shadow-Pool`, `The Drowned Cathedral`, `The Named Viaduct`, `The Shore Steps`, `The House`, `The Sunken Forum`, `The Spire Elevator Shaft`, `The LED Canopy`, `The Temple's Pools`, `The Sleep-Dam Wall`) + painted Cels (`cel.png` + `consensus.png` + `ink.png`) in one 3D point cloud per poem. Right: All 9–16 Cel Shots per poem extruded into 4D spacetime worms graded by each City District's 8-color palette.</p>
+      <p>Left: Continuous 2.5D/3D inverse-depth multiplane camera glide across each poem’s Common Places and Painted Cels (`cel.png` + `frame0.png` + `ink.png`), transitioning smoothly by depth layer without exposing frame borders. Right: Continuous Z-corridor walk through all Poem Cel Shots with 4D spacetime worm ribbons in each City District’s palette.</p>
     </div>
 
     <div class="master-grid">
       <div class="card-box">
         <div class="vbox">
-          <video id="master-construct-vid" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_01_construct.mp4?v=5"></video>
+          <video id="master-construct-vid" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_01_construct.mp4?v=6"></video>
         </div>
         <div class="meta-line">
-          <h3>S2 · Common Places &amp; Cels Construct</h3>
-          <span class="mono" style="color:var(--lamp)">5 Common-Place &amp; Cel Stations / Cloud · 0:30</span>
+          <h3>S2 · Fluid Multiplane Construct</h3>
+          <span class="mono" style="color:var(--lamp)">5 Common-Place &amp; Cel Stations · Continuous 3D Parallax · 0:30</span>
         </div>
-        <p class="desc-text">Each poem's Common Hero Places (`atlas.heroes`), Named City District Places (`_city/districts.json`), and painted Cels (`program/frame0.png`, `cartoon/cel.png`, `cartoon/ink.png`, `film/shot.mp4`) coexist inside one 3D point cloud. Each station holds 100% stationary and full-frame (`1280×720`) for 4.3 seconds before turning smoothly in one direction to the next station.</p>
+        <p class="desc-text">Continuous Steadicam depth-parallax glide (`cv2.remap` inverse-depth disparity) across each poem’s Common Hero Places (`atlas.heroes`) and Painted Cels (`program/frame0.png`, `cartoon/cel.png`, `cartoon/ink.png`, `film/shot.mp4`), with seamless depth-ordered transitions between stations.</p>
       </div>
 
       <div class="card-box">
         <div class="vbox">
-          <video id="master-worm-vid" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_01_spacetime_worm.mp4?v=5"></video>
+          <video id="master-worm-vid" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_01_spacetime_worm.mp4?v=6"></video>
         </div>
         <div class="meta-line">
-          <h3>07w · Spacetime Worms &amp; City Walk (All Poem Cels)</h3>
-          <span class="mono" style="color:var(--lamp)">Straight-Ahead Z-Corridor · Full-Frame Cels · Real Suite Audio</span>
+          <h3>07w · Spacetime Worms &amp; City Walk</h3>
+          <span class="mono" style="color:var(--lamp)">Continuous Z-Corridor · Full-Frame Cels · Real Suite Audio</span>
         </div>
-        <p class="desc-text">Glides straight forward along the Z-corridor through all Common Places and Poem Cel Shots (`P01-001..P14-009`) at 100% full-frame legibility, with receding 4D spacetime worm trails and silhouette contour rings extruded behind the moving foreground figures in each City District's `body` + `glow` palette.</p>
+        <p class="desc-text">Glides continuously along the Z-corridor through all Common Places and Poem Cel Shots (`P01-001..P14-009`) at 100% full-frame legibility, with receding 4D spacetime worm ribbons extruded behind the opaque foreground figures in each City District’s `body` + `glow` palette.</p>
       </div>
     </div>
   </section>
@@ -276,10 +451,10 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   <section id="poems-suite">
     <div class="shead">
       <div>
-        <div class="eyebrow mono">The Complete 14-Poem Suite · Common Places, Cels &amp; City Colors</div>
-        <h2>One Territory Construct &amp; One Spacetime Worm per Poem</h2>
+        <div class="eyebrow mono">The Complete 14-Poem Suite · Frame-Accurate Filmmaker Transport</div>
+        <h2>One Fluid Multiplane Construct &amp; One Spacetime Worm per Poem</h2>
       </div>
-      <p>Click “Play Both in Sync” on any poem to watch its Common Places &amp; Painted Cels Construct (`S2`) alongside its full-frame Spacetime Worm &amp; City Walk (`07w`), with each City District's measured `body` + `glow` color palette and recurring Common Places listed below.</p>
+      <p>Use the frame-step (`-1f` / `+1f`), speed (`0.25×` / `0.5×` / `1×`), or `▶ Play Sync` controls on any poem, or click `Load in Camera Rig ↑` to bring that poem’s Common Places into the interactive 60fps WebGL Multiplane Studio above.</p>
     </div>
 
     <div class="poems-list" id="poems-container"></div>
@@ -288,6 +463,439 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 </main>
 
 <script>
+// ============================================================================
+// 1. REAL-TIME 60FPS WEBGL 2.5D/3D INVERSE-DEPTH MULTIPLANE CAMERA STUDIO
+// ============================================================================
+const VS_SRC = `
+attribute vec2 aPos;
+varying vec2 vUv;
+void main() {
+  vUv = vec2(aPos.x * 0.5 + 0.5, 0.5 - aPos.y * 0.5);
+  gl_Position = vec4(aPos, 0.0, 1.0);
+}
+`;
+
+const FS_SRC = `
+precision highp float;
+varying vec2 vUv;
+
+uniform sampler2D uCelA;
+uniform sampler2D uAngA;
+uniform sampler2D uDepthA;
+
+uniform sampler2D uCelB;
+uniform sampler2D uAngB;
+uniform sampler2D uDepthB;
+
+uniform vec2 uPanA;
+uniform float uDollyA;
+uniform vec2 uPanB;
+uniform float uDollyB;
+
+uniform float uMorph;     // 0.0 = Station A, 1.0 = Station B
+uniform float uCelMix;    // 0.0 = Painted Cel, 1.0 = Angular Program Cel
+uniform float uDepthVis;  // 0.0 = Normal, 1.0 = Depth Relief X-Ray
+uniform vec3 uGlowCol;
+
+vec2 mirrorUv(vec2 uv) {
+  vec2 m = mod(uv, 2.0);
+  if (m.x < 0.0) m.x += 2.0;
+  if (m.y < 0.0) m.y += 2.0;
+  return vec2(m.x > 1.0 ? 2.0 - m.x : m.x, m.y > 1.0 ? 2.0 - m.y : m.y);
+}
+
+vec4 evalMultiplane(sampler2D tCel, sampler2D tAng, sampler2D tDepth, vec2 pan, float dolly, float stretch) {
+  float dRaw = texture2D(tDepth, vUv).r;
+  float disp = clamp(1.0 - dRaw, 0.0, 1.0);
+  float localScale = dolly * (1.0 + stretch * (disp - 0.35));
+  float pWeight = 0.28 + 0.82 * disp;
+  vec2 uvWarped = (vUv - 0.5) / localScale + 0.5 + pan * pWeight;
+  uvWarped = mirrorUv(uvWarped);
+
+  vec3 celCol = texture2D(tCel, uvWarped).rgb;
+  vec3 angCol = texture2D(tAng, uvWarped).rgb;
+  vec3 col = mix(celCol, angCol, uCelMix);
+  float dispWarped = clamp(1.0 - texture2D(tDepth, uvWarped).r, 0.0, 1.0);
+  return vec4(col, dispWarped);
+}
+
+void main() {
+  float stretchA = 0.05 * uMorph;
+  float stretchB = 0.05 * (uMorph - 1.0);
+
+  vec4 sampA = evalMultiplane(uCelA, uAngA, uDepthA, uPanA, uDollyA, stretchA);
+  vec4 sampB = evalMultiplane(uCelB, uAngB, uDepthB, uPanB, uDollyB, stretchB);
+
+  // Depth-ordered transition: deep background of B emerges first while near foreground of A parts last
+  float depthBias = 0.24 * (sampB.a - sampA.a);
+  float wB = clamp(uMorph + depthBias * sin(3.14159265 * uMorph), 0.0, 1.0);
+
+  vec3 col = mix(sampA.rgb, sampB.rgb, wB);
+  float disp = mix(sampA.a, sampB.a, wB);
+
+  // Subtle depth-contour shimmer during depth transitions
+  float shimmer = pow(sin(3.14159265 * uMorph), 1.6) * abs(sampB.a - sampA.a) * 0.45;
+  col += shimmer * uGlowCol;
+
+  // Optional depth relief X-ray visualization for filmmakers checking plane separation
+  vec3 depthCol = mix(vec3(0.08, 0.11, 0.18), uGlowCol, disp);
+  col = mix(col, depthCol, uDepthVis);
+
+  gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+}
+`;
+
+function initMultiplaneStudio(poems, atlasList, dossierList, cityDistricts, heroPoemsMap) {
+  const canvas = document.getElementById('gl-multiplane-canvas');
+  const gl = canvas.getContext('webgl', { preserveDrawingBuffer: true });
+  if (!gl) return;
+
+  function compileShader(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, VS_SRC));
+  gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, FS_SRC));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, 'aPos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  function createPlaceholderTex(r, g, b) {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([r, g, b, 255]));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    return tex;
+  }
+
+  const texCache = {};
+  function loadTex(url, fallbackRgb = [30, 34, 44]) {
+    if (texCache[url]) return texCache[url];
+    const tex = createPlaceholderTex(fallbackRgb[0], fallbackRgb[1], fallbackRgb[2]);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    };
+    img.src = url;
+    texCache[url] = tex;
+    return tex;
+  }
+
+  const uLocs = {
+    uCelA: gl.getUniformLocation(prog, 'uCelA'),
+    uAngA: gl.getUniformLocation(prog, 'uAngA'),
+    uDepthA: gl.getUniformLocation(prog, 'uDepthA'),
+    uCelB: gl.getUniformLocation(prog, 'uCelB'),
+    uAngB: gl.getUniformLocation(prog, 'uAngB'),
+    uDepthB: gl.getUniformLocation(prog, 'uDepthB'),
+    uPanA: gl.getUniformLocation(prog, 'uPanA'),
+    uDollyA: gl.getUniformLocation(prog, 'uDollyA'),
+    uPanB: gl.getUniformLocation(prog, 'uPanB'),
+    uDollyB: gl.getUniformLocation(prog, 'uDollyB'),
+    uMorph: gl.getUniformLocation(prog, 'uMorph'),
+    uCelMix: gl.getUniformLocation(prog, 'uCelMix'),
+    uDepthVis: gl.getUniformLocation(prog, 'uDepthVis'),
+    uGlowCol: gl.getUniformLocation(prog, 'uGlowCol'),
+  };
+
+  // Build station lists per poem from `atlasList`
+  const poemStations = poems.map((p, idx) => {
+    const ad = atlasList[idx] || {};
+    const cd = cityDistricts[p.district] || {};
+    const distName = cd.name || p.district_name || 'Naraka Market';
+    const glowHex = (cd.glow && cd.glow[0]) ? cd.glow[0] : '#fa8d15';
+    const stations = [];
+    const seen = new Set();
+
+    (ad.heroes || []).forEach(h => {
+      const shared = (heroPoemsMap[h.id] || [`P${p.num}`]).join('·');
+      (h.views || []).forEach(v => {
+        if (!seen.has(v.n) && stations.length < 6) {
+          seen.add(v.n);
+          stations.push({
+            vn: v.n,
+            id: `V${v.n}`,
+            badge: `COMMON PLACE (${shared}) · V${v.n} · ${distName.toUpperCase()}`,
+            title: `${h.name} — “${(h.brief || '').slice(0, 78)}”`,
+            glowHex,
+            distName,
+          });
+        }
+      });
+    });
+
+    (ad.districts || []).forEach(d => {
+      (d.places || []).forEach(pl => {
+        (pl.views || []).forEach(v => {
+          if (!seen.has(v.n) && stations.length < 6) {
+            seen.add(v.n);
+            stations.push({
+              vn: v.n,
+              id: `V${v.n}`,
+              badge: `CITY DISTRICT · ${(d.name || distName).toUpperCase()} · V${v.n}`,
+              title: `${pl.name} — “${(pl.what || '').slice(0, 78)}”`,
+              glowHex,
+              distName: d.name || distName,
+            });
+          }
+        });
+      });
+    });
+
+    if (stations.length === 0) {
+      stations.push({ vn: 92, id: 'V92', badge: `COMMON PLACE · V92`, title: `The Underpass Shadow-Pool`, glowHex, distName });
+    }
+    return stations;
+  });
+
+  const selPoem = document.getElementById('sel-poem');
+  poems.forEach((p, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `Poem ${p.num} · ${p.title} (${poemStations[i][0].distName})`;
+    selPoem.appendChild(opt);
+  });
+
+  let curPoemIdx = 0;
+  let stA = poemStations[0][0];
+  let stB = poemStations[0][Math.min(1, poemStations[0].length - 1)];
+  let morphTarget = 0.0;
+  let morphCurrent = 0.0;
+  let activeStationIdx = 0;
+
+  let camMode = 'fluid'; // 'fluid' | 'autoseq' | 'manual'
+  let parallaxDeg = 2.8;
+  let glideSpeed = 0.45;
+  let baseDolly = 1.12;
+  let celMix = 0.20;
+  let depthVis = 0.0;
+
+  // Manual gimbal drag with smooth inertia damping
+  let isDragging = false;
+  let dragStart = { x: 0, y: 0 };
+  let manualTarget = { x: 0, y: 0 };
+  let manualCurrent = { x: 0, y: 0 };
+
+  const stageWrap = document.getElementById('gl-stage-wrap');
+  stageWrap.addEventListener('pointerdown', e => {
+    isDragging = true;
+    dragStart = { x: e.clientX, y: e.clientY };
+    stageWrap.setPointerCapture(e.pointerId);
+  });
+  stageWrap.addEventListener('pointermove', e => {
+    if (!isDragging) return;
+    const dx = (e.clientX - dragStart.x) / stageWrap.clientWidth;
+    const dy = (e.clientY - dragStart.y) / stageWrap.clientHeight;
+    dragStart = { x: e.clientX, y: e.clientY };
+    manualTarget.x = Math.max(-0.045, Math.min(0.045, manualTarget.x - dx * 0.06));
+    manualTarget.y = Math.max(-0.025, Math.min(0.025, manualTarget.y - dy * 0.05));
+  });
+  stageWrap.addEventListener('pointerup', () => { isDragging = false; });
+
+  function hexToRgbVec(hex) {
+    const h = (hex || '#fa8d15').replace('#', '');
+    if (h.length !== 6) return [0.98, 0.55, 0.08];
+    return [parseInt(h.slice(0,2),16)/255, parseInt(h.slice(2,4),16)/255, parseInt(h.slice(4,6),16)/255];
+  }
+
+  function updateHud(st) {
+    document.getElementById('hud-badge').textContent = st.badge;
+    document.getElementById('hud-title').textContent = st.title;
+    document.getElementById('lbl-poem-dist').textContent = st.distName;
+  }
+
+  function triggerStationTransition(newIdx) {
+    const list = poemStations[curPoemIdx];
+    if (!list[newIdx]) return;
+    if (morphCurrent > 0.5) {
+      stA = stB;
+    }
+    morphCurrent = 0.0;
+    stB = list[newIdx];
+    morphTarget = 1.0;
+    activeStationIdx = newIdx;
+    updateHud(stB);
+    document.querySelectorAll('#station-buttons .st-btn').forEach((b, i) => {
+      b.classList.toggle('active', i === newIdx);
+    });
+  }
+
+  function renderStationButtons() {
+    const strip = document.getElementById('station-buttons');
+    strip.innerHTML = '';
+    const list = poemStations[curPoemIdx];
+    list.forEach((st, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'st-btn' + (i === activeStationIdx ? ' active' : '');
+      btn.textContent = `${st.id} · ${st.title.split('—')[0].trim().slice(0, 22)}`;
+      btn.addEventListener('click', () => triggerStationTransition(i));
+      strip.appendChild(btn);
+    });
+  }
+
+  function selectPoemForRig(pIdx) {
+    curPoemIdx = pIdx;
+    selPoem.value = pIdx;
+    activeStationIdx = 0;
+    stA = poemStations[pIdx][0];
+    stB = poemStations[pIdx][0];
+    morphCurrent = 0.0;
+    morphTarget = 0.0;
+    renderStationButtons();
+    updateHud(stA);
+  }
+
+  window.loadPoemIntoMultiplaneRig = (pIdx) => {
+    selectPoemForRig(pIdx);
+    document.getElementById('filmmaker-rig').scrollIntoView({ behavior: 'smooth' });
+  };
+
+  selPoem.addEventListener('change', () => selectPoemForRig(parseInt(selPoem.value, 10)));
+
+  // Mode buttons
+  const btnFluid = document.getElementById('btn-mode-fluid');
+  const btnAutoSeq = document.getElementById('btn-mode-auto-seq');
+  const btnManual = document.getElementById('btn-mode-manual');
+  function setMode(m) {
+    camMode = m;
+    btnFluid.classList.toggle('active', m === 'fluid');
+    btnAutoSeq.classList.toggle('active', m === 'autoseq');
+    btnManual.classList.toggle('active', m === 'manual');
+  }
+  btnFluid.addEventListener('click', () => setMode('fluid'));
+  btnAutoSeq.addEventListener('click', () => setMode('autoseq'));
+  btnManual.addEventListener('click', () => setMode('manual'));
+
+  // Sliders
+  document.getElementById('rng-parallax').addEventListener('input', e => {
+    parallaxDeg = parseFloat(e.target.value);
+    document.getElementById('val-parallax').textContent = `${parallaxDeg.toFixed(1)}° (Fluid)`;
+  });
+  document.getElementById('rng-speed').addEventListener('input', e => {
+    glideSpeed = parseFloat(e.target.value);
+    document.getElementById('val-speed').textContent = `${glideSpeed.toFixed(2)}×`;
+  });
+  document.getElementById('rng-dolly').addEventListener('input', e => {
+    baseDolly = parseFloat(e.target.value);
+    document.getElementById('val-dolly').textContent = `${baseDolly.toFixed(2)}×`;
+  });
+  document.getElementById('rng-celmix').addEventListener('input', e => {
+    celMix = parseFloat(e.target.value) / 100.0;
+    document.getElementById('val-celmix').textContent = `${Math.round(celMix * 100)}% Angular`;
+  });
+  document.getElementById('rng-depthvis').addEventListener('input', e => {
+    depthVis = parseFloat(e.target.value) / 100.0;
+    document.getElementById('val-depthvis').textContent = `${Math.round(depthVis * 100)}%`;
+  });
+
+  selectPoemForRig(0);
+
+  let lastSeqSwitch = performance.now();
+  function animate(nowMs) {
+    const t = (nowMs * 0.001) * glideSpeed;
+
+    // Auto-sequence across stations every 5.5 seconds if enabled
+    if (camMode === 'autoseq' && (nowMs - lastSeqSwitch > 5500)) {
+      lastSeqSwitch = nowMs;
+      const list = poemStations[curPoemIdx];
+      triggerStationTransition((activeStationIdx + 1) % list.length);
+    }
+
+    // Smoothly advance morphCurrent toward morphTarget with fluid damping
+    morphCurrent += (morphTarget - morphCurrent) * 0.035;
+
+    // Compute subtle, continuous camera parallax offsets (in normalized UV units)
+    const ampUv = (parallaxDeg / 6.0) * 0.038;
+    let panAx = 0.0, panAy = 0.0, panBx = 0.0, panBy = 0.0;
+    let dollyA = baseDolly, dollyB = baseDolly;
+
+    if (camMode === 'manual' || isDragging) {
+      manualCurrent.x += (manualTarget.x - manualCurrent.x) * 0.08;
+      manualCurrent.y += (manualTarget.y - manualCurrent.y) * 0.08;
+      panAx = panBx = manualCurrent.x;
+      panAy = panBy = manualCurrent.y;
+    } else {
+      // Continuous, fluid sinusoidal + linear Steadicam drift (never boxy, never abrupt)
+      panAx = ampUv * Math.sin(t * 0.85);
+      panAy = ampUv * 0.36 * Math.cos(t * 0.65);
+      panBx = ampUv * Math.sin(t * 0.85 - 0.35);
+      panBy = ampUv * 0.36 * Math.cos(t * 0.65 - 0.35);
+      dollyA = baseDolly + 0.04 * (0.5 + 0.5 * Math.sin(t * 0.5));
+      dollyB = baseDolly + 0.04 * (0.5 + 0.5 * Math.sin(t * 0.5 - 0.4));
+    }
+
+    document.getElementById('hud-telemetry').innerHTML =
+      `PARALLAX: ${parallaxDeg.toFixed(1)}° · DOLLY: ${dollyA.toFixed(2)}×<br>60 FPS · FULL-BLEED 1280×720`;
+
+    const dirA = `out/V${stA.vn}`;
+    const dirB = `out/V${stB.vn}`;
+
+    const tCelA = loadTex(`${dirA}/cartoon/cel.png`);
+    const tAngA = loadTex(`${dirA}/program/frame0.png`);
+    const tDepA = loadTex(`${dirA}/depth.jpg`, [128,128,128]);
+
+    const tCelB = loadTex(`${dirB}/cartoon/cel.png`);
+    const tAngB = loadTex(`${dirB}/program/frame0.png`);
+    const tDepB = loadTex(`${dirB}/depth.jpg`, [128,128,128]);
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.useProgram(prog);
+
+    const bindUnit = (unit, tex, loc) => {
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.uniform1i(loc, unit);
+    };
+    bindUnit(0, tCelA, uLocs.uCelA);
+    bindUnit(1, tAngA, uLocs.uAngA);
+    bindUnit(2, tDepA, uLocs.uDepthA);
+    bindUnit(3, tCelB, uLocs.uCelB);
+    bindUnit(4, tAngB, uLocs.uAngB);
+    bindUnit(5, tDepB, uLocs.uDepthB);
+
+    gl.uniform2f(uLocs.uPanA, panAx, panAy);
+    gl.uniform1f(uLocs.uDollyA, dollyA);
+    gl.uniform2f(uLocs.uPanB, panBx, panBy);
+    gl.uniform1f(uLocs.uDollyB, dollyB);
+    gl.uniform1f(uLocs.uMorph, morphCurrent);
+    gl.uniform1f(uLocs.uCelMix, celMix);
+    gl.uniform1f(uLocs.uDepthVis, depthVis);
+
+    const gc = hexToRgbVec((morphCurrent > 0.5 ? stB : stA).glowHex);
+    gl.uniform3f(uLocs.uGlowCol, gc[0], gc[1], gc[2]);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+}
+
+// ============================================================================
+// 2. ALL 14 POEMS PAIRED SUITE WITH FRAME-ACCURATE FILMMAKER TRANSPORT
+// ============================================================================
+function formatSmpte24(sec) {
+  const s = Math.max(0, sec || 0);
+  const mm = Math.floor(s / 60);
+  const ss = Math.floor(s % 60);
+  const ff = Math.floor((s - Math.floor(s)) * 24);
+  return `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}:${String(ff).padStart(2,'0')}`;
+}
+
 async function loadPoemsSuite() {
   const res = await fetch('film/poems.json');
   const poems = await res.json();
@@ -296,7 +904,6 @@ async function loadPoemsSuite() {
   (cityRes.districts || []).forEach(d => { cityDistricts[d.id] = d; });
   const container = document.getElementById('poems-container');
 
-  // Pre-fetch all 14 atlas & dossier JSONs so we can show Common Places shared across poems + Body/Glow City Palettes
   const atlasList = await Promise.all(
     poems.map(p => fetch(`poems/atlas/${p.num}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({})))
   );
@@ -312,6 +919,9 @@ async function loadPoemsSuite() {
       if (!heroPoemsMap[h.id].includes(ptag)) heroPoemsMap[h.id].push(ptag);
     });
   });
+
+  // Initialize the interactive 60fps WebGL Multiplane Studio
+  initMultiplaneStudio(poems, atlasList, dossierList, cityDistricts, heroPoemsMap);
 
   poems.forEach((p, idx) => {
     const num = p.num;
@@ -353,7 +963,12 @@ async function loadPoemsSuite() {
         <h3>${p.title}</h3>
         <span class="pterr">${cd.name || dos.district || p.district_name} · “${p.tagline}”</span>
         <div class="pactions">
-          <button type="button" class="pill btn-sync">▶ Play Both in Sync</button>
+          <span class="tc-box">TC 00:00:00</span>
+          <button type="button" class="pill btn-step-back" title="Step Back 1 Frame (1/24s)">◀ -1f</button>
+          <button type="button" class="pill btn-sync">▶ Play Sync</button>
+          <button type="button" class="pill btn-step-fwd" title="Step Forward 1 Frame (1/24s)">+1f ▶</button>
+          <button type="button" class="pill btn-rate" data-rate="1.0" title="Toggle Slow-Motion Playback Rate">1.0×</button>
+          <button type="button" class="pill btn-rig" title="Load this poem's Common Places & Cels into the 60fps WebGL Multiplane Camera Studio">Load in Camera Rig ↑</button>
         </div>
       </div>
 
@@ -367,21 +982,21 @@ async function loadPoemsSuite() {
       <div class="pair-screens">
         <div class="screen-col">
           <div class="screen-label">
-            <span class="mono">S2 · Common Places &amp; Painted Cels Construct (5 Stations)</span>
-            <span class="mono" style="color:var(--soft)">0:30 · 4.3s Full-Screen Lock / Station</span>
+            <span class="mono">S2 · Fluid Multiplane Construct (5 Stations)</span>
+            <span class="mono" style="color:var(--soft)">0:30 · Continuous 3D Depth Parallax</span>
           </div>
           <div class="vbox">
-            <video class="vid-construct" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_${num}_construct.mp4?v=5"></video>
+            <video class="vid-construct" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_${num}_construct.mp4?v=6"></video>
           </div>
         </div>
 
         <div class="screen-col">
           <div class="screen-label">
             <span class="mono">07w · Spacetime Worm &amp; City Walk (Full-Frame Cels)</span>
-            <span class="mono" style="color:var(--soft)">Straight-Ahead Z-Corridor · 4D Trail</span>
+            <span class="mono" style="color:var(--soft)">Continuous Z-Corridor · 4D Trail</span>
           </div>
           <div class="vbox">
-            <video class="vid-worm" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_${num}_spacetime_worm.mp4?v=5"></video>
+            <video class="vid-worm" controls playsinline preload="metadata" src="data/terrarium/seeing_spacetime_films/poem_${num}_spacetime_worm.mp4?v=6"></video>
           </div>
         </div>
       </div>
@@ -391,22 +1006,65 @@ async function loadPoemsSuite() {
 
     const vC = row.querySelector('.vid-construct');
     const vW = row.querySelector('.vid-worm');
+    const tcBox = row.querySelector('.tc-box');
     const btnSync = row.querySelector('.btn-sync');
+    const btnBack = row.querySelector('.btn-step-back');
+    const btnFwd = row.querySelector('.btn-step-fwd');
+    const btnRate = row.querySelector('.btn-rate');
+    const btnRig = row.querySelector('.btn-rig');
+
+    vC.addEventListener('timeupdate', () => {
+      tcBox.textContent = `TC ${formatSmpte24(vC.currentTime)}`;
+    });
 
     btnSync.addEventListener('click', () => {
-      vC.currentTime = 0;
-      vW.currentTime = 0;
-      vC.play().catch(()=>{});
-      vW.play().catch(()=>{});
+      if (vC.paused) {
+        vC.play().catch(()=>{});
+        vW.play().catch(()=>{});
+        btnSync.textContent = '⏸ Pause Sync';
+      } else {
+        vC.pause();
+        vW.pause();
+        btnSync.textContent = '▶ Play Sync';
+      }
+    });
+
+    btnBack.addEventListener('click', () => {
+      vC.pause(); vW.pause();
+      btnSync.textContent = '▶ Play Sync';
+      vC.currentTime = Math.max(0, vC.currentTime - 1/24);
+      vW.currentTime = Math.max(0, vW.currentTime - 1/24);
+    });
+
+    btnFwd.addEventListener('click', () => {
+      vC.pause(); vW.pause();
+      btnSync.textContent = '▶ Play Sync';
+      vC.currentTime = Math.min(vC.duration || 30, vC.currentTime + 1/24);
+      vW.currentTime = Math.min(vW.duration || 45, vW.currentTime + 1/24);
+    });
+
+    const rates = [1.0, 0.5, 0.25];
+    let rIdx = 0;
+    btnRate.addEventListener('click', () => {
+      rIdx = (rIdx + 1) % rates.length;
+      const r = rates[rIdx];
+      vC.playbackRate = r;
+      vW.playbackRate = r;
+      btnRate.textContent = `${r}×`;
+    });
+
+    btnRig.addEventListener('click', () => {
+      if (window.loadPoemIntoMultiplaneRig) window.loadPoemIntoMultiplaneRig(idx);
     });
 
     row.querySelectorAll('.move-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const frac = parseFloat(chip.dataset.frac);
         vC.currentTime = frac * (vC.duration || 30.0);
-        vW.currentTime = frac * (vW.duration || 28.0);
+        vW.currentTime = frac * (vW.duration || 40.0);
         vC.play().catch(()=>{});
         vW.play().catch(()=>{});
+        btnSync.textContent = '⏸ Pause Sync';
       });
     });
 
