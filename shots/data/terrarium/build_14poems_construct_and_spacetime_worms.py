@@ -1,924 +1,1141 @@
 #!/usr/bin/env python3
 """
-Builds the complete 14-Poem WYGWYL Afterlight Suite:
-For EACH of the 14 Full Poems (P01 .. P14):
-  1. Multi-Shot Territory Construct (`shots/videos/poems/poem_<01..14>_construct.mp4`):
-     Uses ALL shots belonging to that Poem's Territory (`shots/out/<shot_id>/film/shot.mp4` + `depth_sharp.npz`)
-     inside ONE shared 3D point cloud. Each shot assembles from its own canonical angle theta_k = k * (360/N) deg.
-  2. Multi-Shot Spacetime Worm & Words Journey (`shots/videos/poems/poem_<01..14>_spacetime_worm.mp4`):
-     Flies continuously through all shots of that Poem & Territory chained along a 3D world corridor,
-     extruding 4D spacetime motion worms (`02d-worms` + `07-spacetime`) from every moving subject while the
-     poem's movements & verses materialize as 3D point-cloud words suspended inside the volume.
-Plus:
-  3. Master All-Territory Construct (`shots/videos/wygwyl_seeing_construct.mp4`)
-  4. Master 14-Poem Spacetime Worm & Words Walk (`shots/videos/wygwyl_07_spacetime.mp4`)
-  5. Contact sheet proofs in the artifact directory.
+Builds the 14 Poem Films in Two Companion Modes + Master Anthology Reels (`1280x720`, 24fps):
+  1. `S2 · Common Places & Painted Cels Construct` (`poem_01_construct.mp4` .. `poem_14_construct.mp4`):
+     - Exact projective ray-bundle math from `seeing-construct.mp4` (`afterlight/source/semantic/render.py.txt`):
+       5 canonical Common Place & Cel stations per Poem (`30.0s` = `6.0s` per station).
+     - ZERO head-wagging / ZERO oscillation:
+       For `4.3s` of every `6.0s` station (`72%` of the film), the camera is 100% STATIONARY (`yaw = theta_k`, `pitch = 0`)
+       and the station's 1280x720 Painted Cel + Multiplane Animation (`program/frame0.png` angular facets ->
+       `cartoon/cel.png` + `cartoon/ink.png` + `film/shot.mp4`) fills 100% of the screen edge-to-edge with crystal legibility,
+       while the other 4 places of the city drift softly in deep 3D space.
+     - During the `1.7s` transition between stations, the camera rotates smoothly in ONE single forward direction
+       (`0° -> 72° -> 144° -> 216° -> 288° -> 360°`, NEVER reversing or wagging!) as the full-screen cel lifts along its
+       `depth_sharp.npz` rays into 240,000 crisp Painter's-Algorithm 3D points on warm paper (`#F2EDE2`) and snaps
+       edge-to-edge into the next Common Place.
+
+  2. `07w · Spacetime Worm & City Walk` (`poem_01_spacetime_worm.mp4` .. `poem_14_spacetime_worm.mp4`):
+     - ZERO head-wagging / 100% full-frame legibility:
+       Camera looks straight ahead (`yaw = 0, pitch = 0`) and moves strictly forward along `+Z` through all shots of the poem
+       and its City District Common Places.
+     - Each shot fills 100% of the 1280x720 frame with the vibrant Painted Cel (`cel_v2/*.png`, `cartoon/cel.png`,
+       `program/frame0.png`, `cartoon/ink.png`), graded with the City District's measured `body` and `glow` palettes from
+       `_city/districts.json`.
+     - Behind the 100% sharp foreground subject (`layers/fg.png` / `fg_mask`), its past temporal slices (`t - dt`) extrude
+       into a sculpted 3D Spacetime Worm ribbon (receding die-cut cel echoes + district-glow contour rings composited BEHIND
+       the foreground subject so they NEVER obscure the subject or scene!).
 """
+
 import os
 import sys
 import glob
 import json
 import math
-import time
-import wave
+import shutil
 import subprocess
-import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import numpy as np
 import cv2
-from scipy.signal import butter, lfilter
 from PIL import Image, ImageDraw, ImageFont
 
-ROOT = "/Users/gaia/WORLDBUILDING-TERMS/wygwyl-world-arch/shots"
-OUT_DIR = os.path.join(ROOT, "out")
-VID_DIR = os.path.join(ROOT, "videos")
-POEM_VID_DIR = os.path.join(VID_DIR, "poems")
-FONT_DIR = os.path.join(ROOT, "fonts")
-ARTIFACT_DIR = "/Users/gaia/.gemini/antigravity/brain/f76dabc9-fb98-42f7-bec0-54be580e5584"
-
+W, H = 1280, 720
 FPS = 24
-RW, RH = 640, 360
-FW, FH = 1280, 720
 
-PAPER = np.array([0.925, 0.905, 0.865], dtype=np.float32)
-NIGHT = np.array([0.018, 0.020, 0.028], dtype=np.float32)
+ROOT = "/Users/gaia/WORLDBUILDING-TERMS/wygwyl-world-arch"
+SHOTS_ROOT = os.path.join(ROOT, "shots")
+CITY_JSON = os.path.join(ROOT, "_city/districts.json")
+CORPUS_ROOT = "/Users/gaia/Downloads/WYGWYL-CORPUS-ARCH"
+OUT_DIR = os.path.join(SHOTS_ROOT, "data/terrarium/seeing_spacetime_films")
+VIDEOS_DIR = os.path.join(SHOTS_ROOT, "videos")
+POEMS_VID_DIR = os.path.join(VIDEOS_DIR, "poems")
+ARTIFACT_DIR = "/Users/gaia/.gemini/antigravity/brain/f76dabc9-fb98-42f7-bec0-54be580e5584"
+MASTER_AUDIO = os.path.join(SHOTS_ROOT, "cel_assets/WYGWYL_Suite_Audio.mp3")
 
-def ease(u):
-    u = np.clip(u, 0.0, 1.0)
-    return u * u * (3.0 - 2.0 * u)
-
-def smootherstep(u):
-    u = np.clip(u, 0.0, 1.0)
-    return u * u * u * (u * (u * 6.0 - 15.0) + 10.0)
-
-def hex_to_rgb(h):
-    h = h.lstrip("#")
-    if len(h) != 6:
-        return np.array([0.85, 0.55, 0.20], dtype=np.float32)
-    return np.array([int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)], dtype=np.float32) / 255.0
+PAPER_BG = np.array([0.945, 0.928, 0.892], dtype=np.float32)
 
 _FONT_CACHE = {}
-def get_font(kind="italic", size=36):
+def get_font(kind="serif_italic", size=24):
     key = (kind, size)
     if key in _FONT_CACHE:
         return _FONT_CACHE[key]
-    if kind == "italic":
-        candidates = [
-            os.path.join(FONT_DIR, "im-fell-english-latin-400-italic.woff2"),
+    paths = {
+        "serif_italic": [
             "/System/Library/Fonts/Supplemental/Georgia Italic.ttf",
-        ]
-    elif kind == "serif":
-        candidates = [
-            os.path.join(FONT_DIR, "im-fell-english-latin-400-normal.woff2"),
+            "/System/Library/Fonts/Supplemental/Times New Roman Italic.ttf",
+        ],
+        "serif_bold": [
+            "/System/Library/Fonts/Supplemental/Georgia Bold.ttf",
+            "/System/Library/Fonts/Supplemental/Times New Roman Bold.ttf",
+        ],
+        "serif": [
             "/System/Library/Fonts/Supplemental/Georgia.ttf",
-        ]
-    else:
-        candidates = [
-            os.path.join(FONT_DIR, "ibm-plex-mono-latin-400-normal.woff2"),
+            "/System/Library/Fonts/Supplemental/Times New Roman.ttf",
+        ],
+        "mono": [
+            "/System/Library/Fonts/Supplemental/Courier New Bold.ttf",
             "/System/Library/Fonts/Menlo.ttc",
-        ]
-    for p in candidates:
+        ],
+    }
+    for p in paths.get(kind, paths["serif"]):
         if os.path.exists(p):
             try:
                 f = ImageFont.truetype(p, size)
                 _FONT_CACHE[key] = f
                 return f
             except Exception:
-                continue
+                pass
     f = ImageFont.load_default()
     _FONT_CACHE[key] = f
     return f
 
 
-# ==============================================================================
-# ULTRA-FAST SIMD MULTI-SCALE GAUSSIAN SPLAT & BEERS-LAW TRANSMITTANCE RENDERER
-# Uses np.bincount + cv2.GaussianBlur (7x faster than scipy.ndimage)
-# ==============================================================================
-_VIG_CACHE = {}
-def get_vignette(h, w):
-    if (h, w) not in _VIG_CACHE:
-        yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
-        v = 1.0 - 0.19 * (((xx - w * 0.5) / (w * 0.55)) ** 2 + ((yy - h * 0.5) / (h * 0.55)) ** 2)
-        _VIG_CACHE[(h, w)] = np.clip(v, 0.74, 1.02)[..., None]
-    return _VIG_CACHE[(h, w)]
+def hex_to_rgb_float(h_str):
+    h_str = (h_str or "#fa8d15").lstrip("#")
+    if len(h_str) != 6:
+        return np.array([0.98, 0.55, 0.08], dtype=np.float32)
+    return np.array([int(h_str[0:2], 16), int(h_str[2:4], 16), int(h_str[4:6], 16)], dtype=np.float32) / 255.0
 
 
-def splat_gaussian_fast(px, py, zc, rad, rgb, w_val, mode="paper", gain=1.08, seed=0):
-    H, W = RH, RW
-    valid = (zc > 22.0) & (px >= 0) & (px < W - 1) & (py >= 0) & (py < H - 1) & (w_val > 1e-4)
-    if not np.any(valid):
-        bg = PAPER if mode == "paper" else NIGHT
-        return np.broadcast_to(bg, (FH, FW, 3)).copy()
+def hex_to_rgb_u8(h_str):
+    h_str = (h_str or "#fa8d15").lstrip("#")
+    if len(h_str) != 6:
+        return (250, 141, 21)
+    return (int(h_str[0:2], 16), int(h_str[2:4], 16), int(h_str[4:6], 16))
 
-    ix = px[valid].astype(np.int32)
-    iy = py[valid].astype(np.int32)
-    rad = rad[valid]
-    rgb = rgb[valid]
-    wt = w_val[valid]
-    flat = iy * W + ix
-    hw = H * W
 
-    b0 = rad < 1.55
-    b1 = (rad >= 1.55) & (rad < 3.65)
-    b2 = rad >= 3.65
+def ease(u):
+    u = float(np.clip(u, 0.0, 1.0))
+    return u * u * (3.0 - 2.0 * u)
 
-    sigmas = [0.6, 1.5, 3.6]
-    ks = [4.0, 8.0, 19.5]
-    acc = np.zeros((3, H, W, 4), dtype=np.float32)
 
-    for bi, mask in enumerate((b0, b1, b2)):
-        if not np.any(mask):
-            continue
-        fl = flat[mask]
-        w = wt[mask]
-        c = rgb[mask] * w[:, None]
-        ch0 = np.bincount(fl, weights=c[:, 0], minlength=hw).reshape(H, W)
-        ch1 = np.bincount(fl, weights=c[:, 1], minlength=hw).reshape(H, W)
-        ch2 = np.bincount(fl, weights=c[:, 2], minlength=hw).reshape(H, W)
-        ch3 = np.bincount(fl, weights=w, minlength=hw).reshape(H, W)
-        layer = np.stack([ch0, ch1, ch2, ch3], axis=-1).astype(np.float32)
-        acc[bi] = cv2.GaussianBlur(layer, (0, 0), sigmas[bi])
+def smootherstep(u):
+    u = float(np.clip(u, 0.0, 1.0))
+    return u * u * u * (u * (u * 6.0 - 15.0) + 10.0)
 
-    if mode == "paper":
-        out = np.broadcast_to(PAPER, (H, W, 3)).copy()
-        for bi in (2, 1, 0):
-            A = acc[bi, :, :, 3:4]
-            col = acc[bi, :, :, :3] / np.maximum(A, 1e-5)
-            col = np.clip((col - 0.5) * 1.22 + 0.45, 0.02, 0.98)
-            cov = 1.0 - np.exp(-A * ks[bi] * gain)
-            out = out * (1.0 - cov) + col * cov
-        out = out * get_vignette(H, W)
-    else:
-        total = acc[2] * ks[2] + acc[1] * ks[1] + acc[0] * ks[0]
-        A = total[:, :, 3:4] * gain
-        col = total[:, :, :3] * gain / np.maximum(A, 1e-4)
-        cov = 1.0 - np.exp(-A * 0.88)
-        bloom_src = (col * cov).astype(np.float32)
-        bloom = cv2.GaussianBlur(bloom_src, (0, 0), 8.5)
-        out = NIGHT[None, None, :] * (1.0 - cov * 0.92) + bloom_src + bloom * 0.46
 
-    out_hi = cv2.resize(np.clip(out, 0.0, 1.0), (FW, FH), interpolation=cv2.INTER_LINEAR)
-    return out_hi
+def sm(a, b, t):
+    if abs(b - a) < 1e-6:
+        return 1.0 if t >= b else 0.0
+    return smootherstep((t - a) / (b - a))
 
 
-# ==============================================================================
-# CATALOG POEMS, TERRITORIES & PRELOAD NEEDED SHOT VOLUMES
-# ==============================================================================
-with open(os.path.join(ROOT, "film/poems.json")) as _f:
-    POEMS = json.load(_f)
+def lerp(a, b, u):
+    return a + (b - a) * u
 
-SHOT_META = {}
-BY_DISTRICT = {}
-for _d in sorted(glob.glob(os.path.join(OUT_DIR, "*"))):
-    _sj = os.path.join(_d, "shot.json")
-    _mp4 = os.path.join(_d, "film/shot.mp4")
-    _npz = os.path.join(_d, "depth_sharp.npz")
-    if os.path.exists(_sj) and os.path.exists(_mp4) and os.path.exists(_npz):
-        with open(_sj) as _f:
-            _info = json.load(_f)
-        _sid = os.path.basename(_d)
-        SHOT_META[_sid] = _info
-        BY_DISTRICT.setdefault(_info.get("district", "unknown"), []).append(_sid)
 
-def get_territory_shots_for_poem(poem, max_shots=6):
-    """
-    Returns ALL shots for that poem's territory (up to max_shots=6 so every shot gets a clean
-    60-degree canonical station in the Construct AND a dedicated segment in the Spacetime Worm walk).
-    Always starts with the poem's own canonical shots, followed by the remaining shots of its territory!
-    """
-    pshots = [s["id"] for s in poem["shots"] if s["id"] in SHOT_META]
-    dists = []
-    for s in pshots:
-        d = SHOT_META[s].get("district", "unknown")
-        if d not in dists:
-            dists.append(d)
-    terr_all = list(pshots)
-    for d in dists:
-        for sid in BY_DISTRICT.get(d, []):
-            if sid not in terr_all:
-                terr_all.append(sid)
-    if len(terr_all) < max_shots:
-        for sid in BY_DISTRICT.get("commons", []):
-            if sid not in terr_all:
-                terr_all.append(sid)
-    return terr_all[:max_shots]
-
-POEM_SHOT_LISTS = {}
-NEEDED_SHOT_IDS = set()
-for _p in POEMS:
-    _slist = get_territory_shots_for_poem(_p, max_shots=6)
-    POEM_SHOT_LISTS[_p["num"]] = _slist
-    NEEDED_SHOT_IDS.update(_slist)
-
-_SHOT_CACHE = {}
-def load_shot_data(sid, gw=128, gh=72, n_frames=32):
-    """
-    Loads `shots/out/<sid>/film/shot.mp4` + `depth_sharp.npz` (Apple ml-sharp depth)
-    and precomputes both:
-      1. Construct ray points (u, v, z_norm, oval_wt)
-      2. 4D Spacetime Worm particles (high-motion extruded temporal worms + 3D architectural relief)
-    """
-    if sid in _SHOT_CACHE:
-        return _SHOT_CACHE[sid]
-
-    sdir = os.path.join(OUT_DIR, sid)
-    mp4_path = os.path.join(sdir, "film/shot.mp4")
-    npz_path = os.path.join(sdir, "depth_sharp.npz")
-    info = SHOT_META[sid]
-
-    cap = cv2.VideoCapture(mp4_path)
-    total_f = max(1, int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
-    idxs = np.linspace(0, total_f - 1, n_frames, dtype=int)
-    raw_frames = []
-    cur = 0
-    target_set = set(idxs.tolist())
-    last_rgb = None
-    for fi in range(total_f):
-        ok, fr = cap.read()
-        if not ok:
-            break
-        if fi in target_set:
-            rgb = cv2.cvtColor(cv2.resize(fr, (gw, gh), interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2RGB)
-            last_rgb = rgb.astype(np.float32) / 255.0
-            raw_frames.append(last_rgb)
-    cap.release()
-    while len(raw_frames) < n_frames:
-        raw_frames.append(last_rgb if last_rgb is not None else np.zeros((gh, gw, 3), dtype=np.float32))
-    frames = np.stack(raw_frames[:n_frames], axis=0)  # (T, gh, gw, 3)
-
-    # Normalize exposure so dark shots read richly on both parchment and night
-    p92 = float(np.percentile(frames.mean(axis=-1), 92))
-    boost = np.clip(0.88 / max(p92, 0.07), 1.0, 2.6)
-    frames = np.clip(frames * boost, 0.0, 1.0)
-    frames = 1.0 - (1.0 - frames) ** 1.25
-
-    # Load Apple ml-sharp metric depth (`depth_sharp.npz`) and convert to smooth normalized inverse depth [0..1]
-    d_raw = np.load(npz_path)["depth"].astype(np.float32)
-    d_small = cv2.resize(d_raw, (gw, gh), interpolation=cv2.INTER_LINEAR)
-    inv = 1.0 / np.clip(d_small, 2.0, 250.0)
-    lo, hi = np.nanpercentile(inv, [5, 96])
-    inv_norm = np.clip((inv - lo) / max(hi - lo, 1e-4), 0.0, 1.0)
-    inv_norm = cv2.GaussianBlur(inv_norm, (0, 0), 1.0)
-
-    # 1. Construct representation (oval-masked grid of ~7,200 points per shot)
-    rng = np.random.default_rng(abs(hash(sid)) % (2**31))
-    yy, xx = np.mgrid[0:gh, 0:gw].astype(np.float32)
-    u_grid = ((xx + rng.uniform(-0.35, 0.35, xx.shape)) / gw - 0.5) * 540.0
-    v_grid = ((yy + rng.uniform(-0.35, 0.35, yy.shape)) / gh - 0.5) * 304.0
-    r2 = (u_grid / 280.0) ** 2 + (v_grid / 160.0) ** 2
-    keep_c = r2 < (1.06 - 0.10 * rng.random(r2.shape))
-    cy_idx, cx_idx = np.where(keep_c)
-
-    u_c = u_grid[cy_idx, cx_idx].astype(np.float32)
-    v_c = v_grid[cy_idx, cx_idx].astype(np.float32)
-    # Depth offset along the canonical ray [-215 .. +215]
-    z_c = ((0.5 - inv_norm[cy_idx, cx_idx]) * 420.0 + rng.normal(0, 3.5, len(cx_idx))).astype(np.float32)
-    wt_c = np.clip(1.10 - r2[cy_idx, cx_idx] * 0.62, 0.25, 1.0).astype(np.float32)
-    rgb_c = frames[:, cy_idx, cx_idx, :].astype(np.float32)  # (T, Nc, 3)
-
-    # 2. Spacetime Worm representation (`02d-Worms` + `07-Spacetime`):
-    # Compute temporal motion + luminance salience so moving subjects form dense, undulating 4D worms!
-    mot = np.linalg.norm(np.diff(frames, axis=0, prepend=frames[:1]), axis=-1)
-    mot_blur = np.stack([cv2.GaussianBlur(mot[s], (0, 0), 1.8) for s in range(n_frames)], axis=0)
-    m_p90 = max(float(np.percentile(mot_blur, 92)), 0.025)
-    worm_mask = np.clip(mot_blur / m_p90, 0.0, 1.5)  # High on moving figures/water/lights!
-
-    w_xs, w_ys, w_zs, w_ss, w_rgbs, w_wts, w_is_worm = [], [], [], [], [], [], []
-    for s in range(n_frames):
-        # Sample both structural depth points AND high-density temporal worm points
-        prob = np.clip(0.14 + 0.58 * worm_mask[s] + 0.16 * inv_norm, 0.12, 0.88)
-        mask_s = (rng.random((gh, gw)) < prob) & (r2 < 1.08)
-        sy, sx = np.where(mask_s)
-        is_w = (worm_mask[s, sy, sx] > 0.38)
-
-        ux = u_grid[sy, sx] + rng.uniform(-1.2, 1.2, len(sx)).astype(np.float32)
-        vy = v_grid[sy, sx] + rng.uniform(-1.2, 1.2, len(sy)).astype(np.float32)
-        # Worm points undulate slightly like `02-dew-under-a-clear-sky-worms`
-        ux = ux + is_w * (4.5 * np.sin(s * 0.42 + vy * 0.04)).astype(np.float32)
-        dz_spatial = ((0.5 - inv_norm[sy, sx]) * 165.0).astype(np.float32)
-
-        w_xs.append(ux)
-        w_ys.append(vy)
-        w_zs.append(dz_spatial)
-        w_ss.append(np.full(len(sx), s, dtype=np.float32))
-        w_rgbs.append(frames[s, sy, sx].astype(np.float32))
-        w_wts.append((0.42 + 0.65 * is_w.astype(np.float32)).astype(np.float32))
-        w_is_worm.append(is_w)
-
-    data = dict(
-        sid=sid,
-        district=info.get("district", "world").upper(),
-        bible_no=info.get("bible_no", 0),
-        T=n_frames,
-        # Construct arrays
-        u_c=u_c,
-        v_c=v_c,
-        z_c=z_c,
-        wt_c=wt_c,
-        rgb_c=rgb_c,
-        # Spacetime worm arrays
-        wx=np.concatenate(w_xs),
-        wy=np.concatenate(w_ys),
-        wz=np.concatenate(w_zs),
-        ws=np.concatenate(w_ss),
-        wrgb=np.concatenate(w_rgbs),
-        wwt=np.concatenate(w_wts),
-        wis_worm=np.concatenate(w_is_worm),
-    )
-    _SHOT_CACHE[sid] = data
-    return data
-
-
-# ==============================================================================
-# 3D POINT-CLOUD POETIC WORDS ("SPACETIME WORDS") GENERATOR
-# ==============================================================================
-_WORD_CLOUD_CACHE = {}
-def get_word_point_cloud(label_str, line_str, accent_rgb, seed=1):
-    """
-    Rasterizes a poetic movement label + verse line into a 3D point cloud suspended in space,
-    so the camera literally flies past and through the poem's words inside the 4D volume!
-    """
-    key = (label_str, line_str, tuple(accent_rgb.tolist()))
-    if key in _WORD_CLOUD_CACHE:
-        return _WORD_CLOUD_CACHE[key]
-
-    cw, ch = 760, 220
-    img = Image.new("L", (cw, ch), 0)
-    d = ImageDraw.Draw(img)
-    f_lbl = get_font("mono", 18)
-    f_line = get_font("italic", 34)
-
-    d.text((cw // 2, 42), label_str.upper(), font=f_lbl, fill=235, anchor="mm")
-
-    # Wrap poetic line cleanly into 1 or 2 lines
-    words = line_str.split()
-    lines = []
-    cur = []
-    for w in words:
-        cur.append(w)
-        if len(" ".join(cur)) > 42 and len(lines) < 2:
-            lines.append(" ".join(cur))
-            cur = []
-    if cur:
-        lines.append(" ".join(cur))
-    lines = lines[:2]
-
-    for i, ln in enumerate(lines):
-        d.text((cw // 2, 102 + i * 44), ln, font=f_line, fill=255, anchor="mm")
-
-    arr = np.asarray(img, dtype=np.float32) / 255.0
-    yy, xx = np.where(arr > 0.18)
-    rng = np.random.default_rng(seed)
-    if len(xx) > 4200:
-        keep = rng.choice(len(xx), 4200, replace=False)
-        yy, xx = yy[keep], xx[keep]
-
-    x = ((xx - cw * 0.5) * 0.62 + rng.normal(0, 0.35, len(xx))).astype(np.float32)
-    y = ((yy - ch * 0.5) * 0.62 + rng.normal(0, 0.35, len(yy))).astype(np.float32)
-    z = rng.normal(0, 6.0, len(xx)).astype(np.float32)
-    wt = (arr[yy, xx] * 1.35).astype(np.float32)
-
-    # Tint header label with poem accent color, verse with warm cream/ink
-    is_hdr = yy < 66
-    col_light = np.zeros((len(xx), 3), dtype=np.float32)
-    col_light[is_hdr] = np.clip(accent_rgb * 1.15 + 0.18, 0.0, 1.0)
-    col_light[~is_hdr] = np.array([0.98, 0.94, 0.86], dtype=np.float32)
-
-    col_paper = np.zeros((len(xx), 3), dtype=np.float32)
-    col_paper[is_hdr] = np.clip(accent_rgb * 0.72, 0.0, 0.85)
-    col_paper[~is_hdr] = np.array([0.11, 0.09, 0.07], dtype=np.float32)
-
-    res = dict(x=x, y=y, z=z, wt=wt, col_light=col_light, col_paper=col_paper)
-    _WORD_CLOUD_CACHE[key] = res
-    return res
-
-
-# ==============================================================================
-# MODE 1 RENDERER: MULTI-SHOT TERRITORY CONSTRUCT FOR A POEM (or MASTER)
-# All N shots of that Territory coexist in ONE shared 3D point cloud!
-# ==============================================================================
-def render_poem_construct_frame(poem_idx, fi, total_frames):
-    poem = POEMS[poem_idx]
-    shot_ids = POEM_SHOT_LISTS[poem["num"]]
-    N = len(shot_ids)
-    dur = total_frames / FPS
-    t = fi / FPS
-
-    D_cam = 680.0
-    # Camera trajectory across N canonical angles: theta_k = k * (2*pi / N)
-    # Each station gets a crisp alignment hold + smooth 3D orbital transition to the next station
-    seg_dur = dur / N
-    station_f = t / seg_dur
-    k_cur = int(math.floor(station_f)) % N
-    k_next = (k_cur + 1) % N
-    u_seg = station_f - math.floor(station_f)
-
-    # Hold alignment for 55% of each segment, then orbit smoothly over the remaining 45%
-    if u_seg < 0.55:
-        orbit_u = 0.0
-        lock = smootherstep(min(1.0, u_seg / 0.14)) if k_cur == 0 and t < 1.0 else 1.0
-    else:
-        orbit_u = smootherstep((u_seg - 0.55) / 0.45)
-        lock = 1.0 - math.sin(orbit_u * math.pi)
-
-    step_rad = 2.0 * math.pi / N
-    yaw = (k_cur + orbit_u) * step_rad
-    pitch = 0.15 * (1.0 - lock) * math.sin(yaw * (N * 0.5))
-
-    # Initial dust-to-cloud assembly in the first 0.9s
-    scatter = (1.0 - smootherstep(t / 0.95)) ** 2 if t < 0.95 else 0.0
-    rng = np.random.default_rng(poem_idx * 1000 + fi)
-
-    all_X, all_Y, all_Z, all_rgb, all_w, all_rad = [], [], [], [], [], []
-    active_k = k_cur if orbit_u < 0.5 else k_next
-
-    for k, sid in enumerate(shot_ids):
-        sd = load_shot_data(sid)
-        th_k = k * step_rad
-
-        # Angular distance between current camera yaw and shot k's canonical ray th_k
-        ang_d = abs((yaw - th_k + math.pi) % (2.0 * math.pi) - math.pi)
-        align = smootherstep(np.clip(1.0 - ang_d / (step_rad * 0.78), 0.0, 1.0))
-
-        # Perspective-compensated ray placement so at yaw == th_k, (Xc/Zc)*D_cam == u_c!
-        scale_k = (D_cam + sd["z_c"]) / D_cam
-        xl = sd["u_c"] * scale_k
-        yl = sd["v_c"] * scale_k
-        zl = sd["z_c"]
-
-        rk_x, rk_z = math.cos(th_k), math.sin(th_k)
-        fk_x, fk_z = -math.sin(th_k), math.cos(th_k)
-
-        Xw = xl * rk_x + zl * fk_x
-        Yw = yl
-        Zw = xl * rk_z + zl * fk_z
-
-        if scatter > 1e-4:
-            Xw = Xw + rng.normal(0, 240.0 * scatter, len(Xw)).astype(np.float32)
-            Yw = Yw + rng.normal(0, 160.0 * scatter, len(Yw)).astype(np.float32)
-            Zw = Zw + rng.normal(0, 240.0 * scatter, len(Zw)).astype(np.float32)
-
-        # Video frame index (ping-pong loop)
-        T_len = sd["T"]
-        v_idx = int(t * 18) % (2 * T_len - 2)
-        if v_idx >= T_len:
-            v_idx = 2 * T_len - 2 - v_idx
-        rgb = sd["rgb_c"][v_idx]
-
-        # All N shots of the territory remain in the shared cloud simultaneously!
-        ghost_w = (0.045 + 0.16 * (1.0 - lock)) * (6.0 / N)
-        w_k = sd["wt_c"] * (align * 0.96 + (1.0 - align) * ghost_w)
-
-        lum = rgb.mean(axis=-1, keepdims=True)
-        sepia = np.concatenate([lum * 0.80 + 0.08, lum * 0.75 + 0.07, lum * 0.68 + 0.06], axis=-1)
-        rgb_k = rgb * (0.35 + 0.65 * align) + sepia * (0.65 * (1.0 - align))
-        rad_k = np.full(len(Xw), 0.90 * align + 1.85 * (1.0 - align), dtype=np.float32)
-
-        all_X.append(Xw)
-        all_Y.append(Yw)
-        all_Z.append(Zw)
-        all_rgb.append(rgb_k)
-        all_w.append(w_k)
-        all_rad.append(rad_k)
-
-    Xw = np.concatenate(all_X)
-    Yw = np.concatenate(all_Y)
-    Zw = np.concatenate(all_Z)
-    rgb = np.concatenate(all_rgb)
-    wt = np.concatenate(all_w)
-    rad_b = np.concatenate(all_rad)
-
-    cy, sy = math.cos(-yaw), math.sin(-yaw)
-    Xc = Xw * cy + Zw * sy
-    Zc1 = -Xw * sy + Zw * cy
-
-    cp, sp = math.cos(pitch), math.sin(pitch)
-    Yc = Yw * cp - Zc1 * sp
-    Zc = Yw * sp + Zc1 * cp + D_cam
-
-    focal = 580.0
-    px = focal * Xc / np.maximum(Zc, 22.0) + RW * 0.5
-    py = focal * Yc / np.maximum(Zc, 22.0) + RH * 0.5
-    dof = np.abs(Zc - D_cam) / 210.0 * (1.0 - 0.72 * lock)
-    rad = np.clip(rad_b + dof, 0.75, 5.6)
-
-    img = splat_gaussian_fast(px, py, Zc, rad, rgb, wt, mode="paper", gain=1.10, seed=fi)
-
-    # Clean Afterlight Screening Room overlay
-    pil = Image.fromarray((img * 255.0).astype(np.uint8))
-    draw = ImageDraw.Draw(pil, "RGBA")
-    f_mono_sm = get_font("mono", 14)
-    f_mono_md = get_font("mono", 16)
-    f_italic = get_font("italic", 34)
-    f_serif = get_font("serif", 19)
-
-    ink_dark = (36, 30, 24, 225)
-    ink_muted = (90, 80, 68, 180)
-
-    draw.text((46, 34), f"P{poem['num']} · {poem['title']}  —  TERRITORY CONSTRUCT ({N} SHOTS IN ONE CLOUD)", font=f_mono_md, fill=ink_dark)
-    deg_now = int(round(math.degrees(yaw))) % 360
-    st_txt = f"SHOT {active_k+1}/{N} ALIGNED" if lock > 0.65 else "ORBITING SHARED 3D CLOUD"
-    draw.text((FW - 46, 34), f"AZIMUTH {deg_now:03d}°  [{st_txt}]", font=f_mono_sm, fill=ink_dark, anchor="ra")
-
-    # Bottom-right station ticks for all N territory shots
-    for k in range(N):
-        xt = FW - 46 - (N - 1 - k) * 56
-        yt = FH - 44
-        ang_k = int(round(k * 360.0 / N))
-        is_act = (k == active_k and lock > 0.5)
-        col_t = (28, 22, 18, 240) if is_act else (115, 104, 90, 135)
-        draw.text((xt, yt), f"S{k+1}·{ang_k}°", font=f_mono_sm, fill=col_t, anchor="ra")
-
-    # Bottom-left movement verse line & active territory shot info
-    moves = poem.get("movements", [])
-    mv = moves[min(len(moves) - 1, int(t / dur * len(moves)))] if moves else {"label": "", "line": poem.get("tagline", "")}
-    act_sd = load_shot_data(shot_ids[active_k])
-    draw.text((46, FH - 82), f"{poem['district_name']}  ·  Station {active_k+1} of {N} ({int(round(active_k*360/N))}° — #{act_sd['bible_no']})", font=f_italic, fill=(32, 26, 20, 230))
-    line_short = mv["line"][:88] + ("…" if len(mv["line"]) > 88 else "")
-    draw.text((48, FH - 44), f"[{mv['label']}]  “{line_short}”", font=f_serif, fill=ink_muted)
-
-    arr = np.asarray(pil, dtype=np.float32) / 255.0
-    if t < 0.5:
-        a = ease(t / 0.5)
-        arr = PAPER * (1.0 - a) + arr * a
-    elif t > dur - 0.6:
-        a = ease((dur - t) / 0.6)
-        arr = PAPER * (1.0 - a) + arr * a
-    return (np.clip(arr, 0.0, 1.0) * 255.0).astype(np.uint8)
-
-
-# ==============================================================================
-# MODE 2 RENDERER: SPACETIME WORM & WORDS JOURNEY FOR A POEM
-# Continuous 3D camera flight through all territory shots + 4D extruded worms + 3D point-cloud words!
-# ==============================================================================
-def render_poem_spacetime_worm_frame(poem_idx, fi, total_frames):
-    poem = POEMS[poem_idx]
-    shot_ids = POEM_SHOT_LISTS[poem["num"]]
-    M = len(shot_ids)
-    dur = total_frames / FPS
-    t = fi / FPS
-    u_all = t / max(dur, 1e-4)
-
-    accent_rgb = hex_to_rgb(poem.get("color", "#d98a12"))
-    # Alternate paper and night modes cleanly or use night for neon/haze poems and paper/night transitions
-    use_light_mode = (poem_idx % 2 == 0) or ("LIGHT" in poem["title"]) or ("ATLANTIS" in poem["title"]) or ("MAGIC" in poem["title"])
-    mode = "light" if use_light_mode else "paper"
-
-    # The camera flies continuously along Z_world from Z = 0 to Z = M * 620.0
-    Z_spacing = 620.0
-    cam_Z = u_all * (M * Z_spacing)
-    # Gentle lateral weaving and side-on banking so the 4D extruded worms are seen both frontally and at ±48 deg!
-    cam_X = 65.0 * math.sin(u_all * M * math.pi)
-    cam_Y = -14.0 * math.cos(u_all * M * math.pi * 0.5)
-    yaw = 0.52 * math.sin(u_all * M * math.pi * 2.0)  # Swings between -30 deg and +30 deg through each shot's worm!
-    pitch = 0.06 * math.cos(u_all * M * math.pi)
-
-    all_X, all_Y, all_Z, all_rgb, all_w, all_rad = [], [], [], [], [], []
-
-    # 1. Gather visible shot volumes & their 4D extruded spacetime worms along the corridor
-    for m, sid in enumerate(shot_ids):
-        z_station = (m + 0.55) * Z_spacing
-        dz_cam = z_station - cam_Z
-        if dz_cam < -360.0 or dz_cam > 1450.0:
-            continue
-
-        sd = load_shot_data(sid)
-        # Local progress as camera approaches and passes through station m
-        u_local = np.clip(1.0 - (dz_cam - 120.0) / Z_spacing, 0.0, 1.2)
-        present = (0.15 + 0.78 * np.clip(u_local, 0.0, 1.0)) * (sd["T"] - 1)
-        age = present - sd["ws"]
-
-        # Keep 24 past slices trailing behind the present slice (the 4D spacetime worm!)
-        vis = (age >= -2.0) & (age <= 24.0)
-        if not np.any(vis):
-            continue
-
-        wx = sd["wx"][vis]
-        wy = sd["wy"][vis]
-        wz = sd["wz"][vis]
-        wage = age[vis]
-        wrgb = sd["wrgb"][vis]
-        wwt = sd["wwt"][vis]
-        is_w = sd["wis_worm"][vis]
-
-        # Extrude worm points along Z by age * 16.5 so moving figures form long, visible 3D temporal tubes!
-        dz_worm = np.where(is_w, 16.5, 9.5).astype(np.float32)
-        X_world = wx + (45.0 * (1 if m % 2 == 0 else -1))
-        Y_world = wy
-        Z_world = z_station + wz + wage * dz_worm
-
-        # Highlight moving worm filaments with a subtle luminous tint
-        decay = np.where(wage >= 0, np.exp(-wage / (15.5 if True else 9.0)), np.exp(-(wage ** 2) / 1.1)).astype(np.float32)
-        dist_fade = np.clip(1.0 - abs(dz_cam - 260.0) / 980.0, 0.15, 1.0)
-        wt_pts = wwt * decay * dist_fade
-
-        # Give the trailing worm body a warm/accent chromatic shift so the temporal trail is unmistakably felt
-        worm_tint = np.clip( np.minimum(1.0, np.maximum(0.0, wage / 16.0))[:, None] * (0.45 * is_w[:, None]), 0.0, 0.55 ).astype(np.float32)
-        rgb_pts = wrgb * (1.0 - worm_tint) + accent_rgb[None, :] * worm_tint
-
-        rad_pts = np.where(is_w & (wage > 1.5), 1.45 + 0.06 * wage, 0.95).astype(np.float32)
-
-        all_X.append(X_world)
-        all_Y.append(Y_world)
-        all_Z.append(Z_world)
-        all_rgb.append(rgb_pts)
-        all_w.append(wt_pts)
-        all_rad.append(rad_pts)
-
-    # 2. Suspend the Poem's Movements & Verses as 3D Point-Cloud Words ("Spacetime Words") inside the corridor!
-    moves = poem.get("movements", [])
-    n_moves = len(moves)
-    for mi, mv in enumerate(moves):
-        z_word = ((mi + 0.38) / max(n_moves, 1)) * (M * Z_spacing)
-        dz_w = z_word - cam_Z
-        if dz_w < -120.0 or dz_w > 980.0:
-            continue
-        wc = get_word_point_cloud(
-            f"{poem['num']}.{mi+1} · {mv['label']}",
-            mv["line"],
-            accent_rgb,
-            seed=poem_idx * 50 + mi
-        )
-        # Coalesce out of dust as camera approaches from 900 -> 380, hold crisp, then drift past camera!
-        sc_w = np.clip((dz_w - 420.0) / 480.0, 0.0, 1.0) ** 2
-        rng_w = np.random.default_rng(poem_idx * 100 + mi)
-        wx_p = wc["x"] + (rng_w.normal(0, 180.0 * sc_w, len(wc["x"])).astype(np.float32) if sc_w > 0.01 else 0.0)
-        wy_p = wc["y"] - 18.0 + (rng_w.normal(0, 120.0 * sc_w, len(wc["y"])).astype(np.float32) if sc_w > 0.01 else 0.0)
-        wz_p = z_word + wc["z"] + (rng_w.normal(0, 180.0 * sc_w, len(wc["z"])).astype(np.float32) if sc_w > 0.01 else 0.0)
-
-        w_alpha = smooth_fade = smootherstep(np.clip((dz_w + 80.0) / 160.0, 0.0, 1.0)) * smootherstep(np.clip((960.0 - dz_w) / 240.0, 0.0, 1.0))
-        col_w = wc["col_light"] if mode == "light" else wc["col_paper"]
-
-        all_X.append(wx_p)
-        all_Y.append(wy_p)
-        all_Z.append(wz_p)
-        all_rgb.append(col_w)
-        all_w.append(wc["wt"] * w_alpha * 1.45)
-        all_rad.append(np.full(len(wx_p), 0.92 + 1.8 * sc_w, dtype=np.float32))
-
-    if not all_X:
-        bg = PAPER if mode == "paper" else NIGHT
-        return (np.broadcast_to(bg, (FH, FW, 3)) * 255.0).astype(np.uint8)
-
-    Xw = np.concatenate(all_X) - cam_X
-    Yw = np.concatenate(all_Y) - cam_Y
-    Zw = np.concatenate(all_Z) - cam_Z
-    rgb = np.concatenate(all_rgb)
-    wt = np.concatenate(all_w)
-    rad_b = np.concatenate(all_rad)
-
+def rotmat_y(yaw):
     cy, sy = math.cos(yaw), math.sin(yaw)
-    Xc = Xw * cy + Zw * sy
-    Zc1 = -Xw * sy + Zw * cy
+    return np.array([[cy, 0.0, sy], [0.0, 1.0, 0.0], [-sy, 0.0, cy]], dtype=np.float32)
 
-    cp, sp = math.cos(pitch), math.sin(pitch)
-    Yc = Yw * cp - Zc1 * sp
-    Zc = Yw * sp + Zc1 * cp
 
-    focal = 520.0
-    px = focal * Xc / np.maximum(Zc, 22.0) + RW * 0.5
-    py = focal * Yc / np.maximum(Zc, 22.0) + RH * 0.5
-    dof = np.abs(Zc - 310.0) / 260.0
-    rad = np.clip(rad_b + dof * 0.65, 0.75, 5.5)
+def load_rgb_resized(path, w=W, h=H):
+    if not path or not os.path.exists(path):
+        return None
+    im = cv2.imread(path, cv2.IMREAD_COLOR)
+    if im is None:
+        return None
+    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+    if im.shape[1] != w or im.shape[0] != h:
+        im = cv2.resize(im, (w, h), interpolation=cv2.INTER_AREA)
+    return im.astype(np.float32) / 255.0
 
-    img = splat_gaussian_fast(px, py, Zc, rad, rgb, wt, mode=mode, gain=1.12, seed=fi)
 
-    # Clean Afterlight HUD overlay
-    pil = Image.fromarray((img * 255.0).astype(np.uint8))
-    draw = ImageDraw.Draw(pil, "RGBA")
-    f_mono = get_font("mono", 14)
-    fg = (42, 36, 30, 195) if mode == "paper" else (238, 230, 214, 195)
+def load_rgba_resized(path, w=W, h=H):
+    if not path or not os.path.exists(path):
+        return None
+    im = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    if im is None:
+        return None
+    if im.ndim == 2:
+        im = cv2.cvtColor(im, cv2.COLOR_GRAY2RGBA)
+    elif im.shape[2] == 3:
+        im = cv2.cvtColor(im, cv2.COLOR_BGR2RGBA)
+    else:
+        im = cv2.cvtColor(im, cv2.COLOR_BGRA2RGBA)
+    if im.shape[1] != w or im.shape[0] != h:
+        im = cv2.resize(im, (w, h), interpolation=cv2.INTER_AREA)
+    return im.astype(np.float32) / 255.0
 
-    cur_shot_idx = min(M - 1, int(u_all * M))
-    cur_sd = load_shot_data(shot_ids[cur_shot_idx])
-    draw.text((46, 34), f"P{poem['num']} · {poem['title']}  —  SPACETIME WORM & WORDS  [SHOT {cur_shot_idx+1}/{M} · #{cur_sd['bible_no']}]", font=f_mono, fill=fg)
-    draw.text((FW - 46, 34), f"Z-CORRIDOR {int(cam_Z):04d}m  ·  YAW {math.degrees(yaw):+05.1f}°", font=f_mono, fill=fg, anchor="ra")
 
-    return np.asarray(pil, dtype=np.uint8)
+def build_city_master_index():
+    """
+    Loads `_city/districts.json`, `shots/out/*/shot.json`, and `shots/poems/atlas/01..14.json`
+    so every Common Place, City District, Body+Glow Palette, and Cel asset is indexed accurately.
+    """
+    city_data = json.load(open(CITY_JSON)) if os.path.exists(CITY_JSON) else {"districts": [], "poems": [], "files": {}}
+    districts_by_id = {d["id"]: d for d in city_data.get("districts", [])}
+
+    bible_to_dir = {}
+    id_to_dir = {}
+    for sj in sorted(glob.glob(os.path.join(SHOTS_ROOT, "out/*/shot.json"))):
+        try:
+            d = json.load(open(sj))
+            odir = os.path.dirname(sj)
+            sid = os.path.basename(odir)
+            id_to_dir[sid] = odir
+            if d.get("bible_no") is not None:
+                bible_to_dir[int(d["bible_no"])] = odir
+        except Exception:
+            pass
+
+    hero_poems = {}
+    for p in sorted(glob.glob(os.path.join(SHOTS_ROOT, "poems/atlas/[0-9][0-9].json"))):
+        ad = json.load(open(p))
+        pnum = int(ad["num"])
+        for h in ad.get("heroes", []):
+            hid = h["id"]
+            tag = f"P{pnum:02d}"
+            if tag not in hero_poems.setdefault(hid, []):
+                hero_poems[hid].append(tag)
+
+    return city_data, districts_by_id, bible_to_dir, id_to_dir, hero_poems
+
+
+def build_cel_plate_from_dir(odir, body_hex, glow_hex, w=W, h=H):
+    """
+    Builds two 100% legible, vibrant Cel plates from a `shots/out/<id>` or keyframe directory:
+      1. `angular_cel`: `program/frame0.png` + `cartoon/consensus.png` + `cartoon/ink.png`
+         (the bold faceted polygon cel style from `wygwyl_cartoon.mp4`)
+      2. `painted_cel`: `cartoon/cel.png` + `program/frame0.png` + `multiplane/glow_pass.png` + `cartoon/ink.png`
+    """
+    prog0 = load_rgb_resized(os.path.join(odir, "program/frame0.png"), w, h)
+    cel = load_rgb_resized(os.path.join(odir, "cartoon/cel.png"), w, h)
+    flats = load_rgb_resized(os.path.join(odir, "cartoon/flats.png"), w, h)
+    consensus = load_rgb_resized(os.path.join(odir, "cartoon/consensus.png"), w, h)
+    ink = load_rgba_resized(os.path.join(odir, "cartoon/ink.png"), w, h)
+    glow = load_rgb_resized(os.path.join(odir, "multiplane/glow_pass.png"), w, h)
+    img_jpg = load_rgb_resized(os.path.join(odir, "image.jpg"), w, h)
+
+    # 1. Angular Faceted Cel (`program/frame0.png` + `flats.png` + `consensus.png` + crisp ink)
+    ang = prog0 if prog0 is not None else (flats if flats is not None else cel)
+    if ang is None:
+        ang = img_jpg if img_jpg is not None else np.full((h, w, 3), 0.5, dtype=np.float32)
+    if consensus is not None:
+        ang = 0.78 * ang + 0.22 * consensus
+    if glow is not None:
+        ang = np.clip(ang + 0.25 * glow, 0.0, 1.0)
+    if ink is not None:
+        ia = ink[..., 3:4] * 0.85
+        ang = ang * (1.0 - ia) + ink[..., :3] * ia
+
+    # 2. Rich Painted Multiplane Cel (`cartoon/cel.png` + `program/frame0.png` + `image.jpg` detail + `glow`)
+    pnt = cel if cel is not None else ang
+    if prog0 is not None and cel is not None:
+        pnt = 0.62 * cel + 0.38 * prog0
+    if img_jpg is not None:
+        pnt = 0.78 * pnt + 0.22 * img_jpg
+    if glow is not None:
+        pnt = np.clip(pnt + 0.30 * glow, 0.0, 1.0)
+    if ink is not None:
+        ia = ink[..., 3:4] * 0.75
+        pnt = pnt * (1.0 - ia) + ink[..., :3] * ia
+
+    # Boost chroma saturation slightly so district colors sing clearly
+    for arr in (ang, pnt):
+        hsv = cv2.cvtColor((np.clip(arr, 0.0, 1.0) * 255.0).astype(np.uint8), cv2.COLOR_RGB2HSV).astype(np.float32)
+        hsv[..., 1] = np.clip(hsv[..., 1] * 1.22, 0.0, 255.0)
+        arr[:] = cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2RGB).astype(np.float32) / 255.0
+
+    return np.clip(ang, 0.0, 1.0), np.clip(pnt, 0.0, 1.0), ink
+
+
+def load_common_place_station(out_dir, local_view_info, default_district, body_hex, glow_hex, n_frames=36, w=W, h=H):
+    """
+    Loads a Common Place / City District Station from `shots/out/<shot_id>/` with:
+      - Full-screen 1280x720 `angular_cel`, `painted_cel`, and `frames` (combining `film/shot.mp4` multiplane motion
+        with the painted Cel + Ink layers so the station is 100% sharp, legible, and alive!)
+      - Full-resolution depth map (`depth_sharp.npz`)
+    """
+    sid = os.path.basename(out_dir)
+    sj = os.path.join(out_dir, "shot.json")
+    meta = json.load(open(sj)) if os.path.exists(sj) else {}
+    bno = meta.get("bible_no")
+    vinfo = local_view_info.get(int(bno), {}) if bno is not None else {}
+
+    angular_cel, painted_cel, ink = build_cel_plate_from_dir(out_dir, body_hex, glow_hex, w, h)
+
+    frames = []
+    mp4_path = os.path.join(out_dir, "film/shot.mp4")
+    if os.path.exists(mp4_path):
+        cap = cv2.VideoCapture(mp4_path)
+        total = max(1, int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+        idxs = np.linspace(0, total - 1, n_frames).astype(int)
+        for i_f, idx in enumerate(idxs):
+            cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
+            ok, fr = cap.read()
+            if ok and fr is not None:
+                fr = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
+                fr = cv2.resize(fr, (w, h), interpolation=cv2.INTER_AREA).astype(np.float32) / 255.0
+                # Smoothly progress during station hold from Angular Studio Cel -> Painted Multiplane Cel in motion!
+                u_prog = i_f / max(1.0, n_frames - 1.0)
+                cel_ref = (1.0 - sm(0.0, 0.45, u_prog)) * angular_cel + sm(0.0, 0.45, u_prog) * painted_cel
+                comp = 0.62 * cel_ref + 0.38 * fr
+                if ink is not None:
+                    ia = ink[..., 3:4] * 0.72
+                    comp = comp * (1.0 - ia) + ink[..., :3] * ia
+                frames.append(np.clip(comp, 0.0, 1.0).astype(np.float32))
+        cap.release()
+
+    if not frames:
+        for i_f in range(n_frames):
+            u_prog = i_f / max(1.0, n_frames - 1.0)
+            zoom = 1.0 + 0.05 * u_prog
+            M = cv2.getRotationMatrix2D((w / 2.0, h / 2.0), 0.0, zoom)
+            cel_ref = (1.0 - sm(0.0, 0.45, u_prog)) * angular_cel + sm(0.0, 0.45, u_prog) * painted_cel
+            frames.append(cv2.warpAffine(cel_ref, M, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE))
+
+    depth_map = None
+    for npz_name in ["depth_sharp.npz", "arrays.npz"]:
+        p_npz = os.path.join(out_dir, npz_name)
+        if os.path.exists(p_npz):
+            try:
+                d = np.load(p_npz)
+                k = "depth" if "depth" in d.files else d.files[0]
+                depth_map = cv2.resize(d[k].astype(np.float32), (w, h), interpolation=cv2.INTER_LINEAR)
+                break
+            except Exception:
+                pass
+    if depth_map is None:
+        lum = painted_cel @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
+        depth_map = 3.0 + 10.0 * (1.0 - lum)
+
+    d_name = vinfo.get("district_name") or default_district
+    p_kind = vinfo.get("place_kind") or f"CITY DISTRICT · {str(d_name).upper()}"
+    p_name = vinfo.get("place_name") or (meta.get("prompt") or f"View #{bno}").split(",")[0][:52]
+    p_brief = vinfo.get("place_brief") or f"View #{bno} in {d_name}"
+    d_body = vinfo.get("district_body") or body_hex
+    d_glow = vinfo.get("district_glow") or glow_hex
+
+    d_thresh = np.percentile(depth_map, 32)
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    cent = np.exp(-(((xx / w - 0.5) / 0.38) ** 2 + ((yy / h - 0.52) / 0.42) ** 2))
+    fg_mask = ((depth_map <= d_thresh) & (cent > 0.32)).astype(np.float32)
+    fg_mask = cv2.GaussianBlur(fg_mask, (0, 0), 2.5)
+
+    return {
+        "id": f"V{bno:02d}" if bno is not None else sid[:6],
+        "kind_badge": p_kind,
+        "name": p_name,
+        "what": p_brief,
+        "line": f"{p_name} — {p_brief}",
+        "district_name": str(d_name),
+        "body_hex": d_body,
+        "glow_hex": d_glow,
+        "frames": np.stack(frames, axis=0),
+        "angular_cel": angular_cel,
+        "painted_cel": painted_cel,
+        "depth": depth_map,
+        "fg_mask": fg_mask,
+        "fg_rgba": None,
+    }
+
+
+def find_first_keyframe_dir(shot_id):
+    for base in [
+        os.path.join(CORPUS_ROOT, "shots/video", shot_id, "out"),
+        os.path.join(SHOTS_ROOT, "cel_assets/video", shot_id, "out"),
+    ]:
+        if os.path.isdir(base):
+            subs = sorted(glob.glob(os.path.join(base, "vid-*")))
+            if subs:
+                return subs[len(subs) // 2]
+    return None
+
+
+def load_poem_cel_shot(scion_data, scene_map, default_district, body_hex, glow_hex, n_frames=32, w=W, h=H):
+    """
+    Loads a Poem Cel Shot (`P<NN>-<MMM>`) at full 1280x720 resolution with 100% legibility:
+      - Uses `cel_v2/*.png` + `program/frame0.png` + `cartoon/cel.png` + `cartoon/ink.png`
+      - Extracts `fg_rgba` / `fg_mask` so we can render the 4D Spacetime Worm trail BEHIND the foreground subject
+        without EVER obscuring the subject or the full-frame painted cel!
+    """
+    sid = scion_data["id"]
+    kf_dir = find_first_keyframe_dir(sid)
+    sc_key = scion_data.get("scene") or ""
+    sc_info = scene_map.get(sc_key, {})
+
+    here_desc = sc_info.get("here") or scion_data.get("name") or sid
+    dist_name = sc_info.get("district") or default_district
+    place_tag = sc_info.get("common_place_tag") or f"CITY DISTRICT · {str(dist_name).upper()}"
+
+    angular_cel, painted_cel, ink_rgba = (None, None, None)
+    fg_rgba, depth_map, fg_mask = (None, None, None)
+
+    if kf_dir:
+        angular_cel, painted_cel, ink_rgba = build_cel_plate_from_dir(kf_dir, body_hex, glow_hex, w, h)
+        fg_rgba = load_rgba_resized(os.path.join(kf_dir, "layers/fg.png"), w, h)
+        arr_path = os.path.join(kf_dir, "arrays.npz")
+        if os.path.exists(arr_path):
+            try:
+                arr = np.load(arr_path)
+                if "depth" in arr:
+                    depth_map = cv2.resize(arr["depth"].astype(np.float32), (w, h), interpolation=cv2.INTER_LINEAR)
+                if "masks" in arr and len(arr["masks"]) > 0:
+                    fg_mask = cv2.resize(arr["masks"][0].astype(np.float32), (w, h), interpolation=cv2.INTER_NEAREST)
+            except Exception:
+                pass
+        if depth_map is None:
+            d_jpg = load_rgb_resized(os.path.join(kf_dir, "depth.jpg"), w, h)
+            if d_jpg is not None:
+                depth_map = 2.0 + 12.0 * (1.0 - d_jpg[..., 0])
+
+    corpus_vdir = os.path.join(CORPUS_ROOT, "shots/video", sid)
+    cel_pngs = sorted(glob.glob(os.path.join(corpus_vdir, "cel_v2/*.png")))
+    raw_pngs = sorted(glob.glob(os.path.join(corpus_vdir, "frames/*.png")))
+    patch_mp4 = os.path.join(SHOTS_ROOT, "cel_assets/patches", f"{sid}.mp4")
+
+    frames = []
+    if cel_pngs:
+        total = len(cel_pngs)
+        idxs = np.linspace(0, total - 1, n_frames).astype(int)
+        for i_f, idx in enumerate(idxs):
+            cel_im = load_rgb_resized(cel_pngs[idx], w, h)
+            raw_im = load_rgb_resized(raw_pngs[min(idx, len(raw_pngs) - 1)], w, h) if raw_pngs else None
+            comp = 0.84 * cel_im + 0.16 * raw_im if (cel_im is not None and raw_im is not None) else (cel_im if cel_im is not None else raw_im)
+            if comp is not None:
+                p2, p98 = np.percentile(comp, 2.0), np.percentile(comp, 98.5)
+                comp = np.clip((comp - p2) / max(p98 - p2, 0.16), 0.0, 1.0)
+                # Compute per-frame dynamic ink outline locked to the moving cel_v2 frame!
+                lum = comp @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
+                gy, gx = np.gradient(lum)
+                ink_edge = np.clip((np.hypot(gx, gy) - 0.035) * 8.5, 0.0, 0.72)[..., None]
+                comp = comp * (1.0 - ink_edge) + 0.05 * ink_edge
+                frames.append(comp.astype(np.float32))
+    elif os.path.exists(patch_mp4):
+        cap = cv2.VideoCapture(patch_mp4)
+        total = max(1, int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+        idxs = np.linspace(0, total - 1, n_frames).astype(int)
+        for idx in idxs:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
+            ok, fr = cap.read()
+            if ok and fr is not None:
+                fr = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
+                fr = cv2.resize(fr, (w, h), interpolation=cv2.INTER_AREA).astype(np.float32) / 255.0
+                if painted_cel is not None:
+                    fr = 0.50 * fr + 0.50 * painted_cel
+                p2, p98 = np.percentile(fr, 2.0), np.percentile(fr, 98.5)
+                fr = np.clip((fr - p2) / max(p98 - p2, 0.16), 0.0, 1.0)
+                lum = fr @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
+                gy, gx = np.gradient(lum)
+                ink_edge = np.clip((np.hypot(gx, gy) - 0.035) * 8.5, 0.0, 0.72)[..., None]
+                fr = fr * (1.0 - ink_edge) + 0.05 * ink_edge
+                frames.append(fr.astype(np.float32))
+        cap.release()
+
+    if not frames:
+        base = painted_cel if painted_cel is not None else np.full((h, w, 3), 0.5, dtype=np.float32)
+        frames = [base for _ in range(n_frames)]
+
+    if depth_map is None:
+        lum = frames[0] @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
+        depth_map = 3.0 + 10.0 * (1.0 - lum)
+
+    if fg_mask is None:
+        if fg_rgba is not None:
+            fg_mask = (fg_rgba[..., 3] > 0.25).astype(np.float32)
+        else:
+            # Derive clean foreground figure mask from depth (nearest 28% in central region)
+            d_thresh = np.percentile(depth_map, 32)
+            yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+            cent = np.exp(-(((xx / w - 0.5) / 0.36) ** 2 + ((yy / h - 0.52) / 0.42) ** 2))
+            fg_mask = ((depth_map <= d_thresh) & (cent > 0.35)).astype(np.float32)
+            fg_mask = cv2.GaussianBlur(fg_mask, (0, 0), 2.5)
+
+    return {
+        "id": sid,
+        "kind_badge": place_tag,
+        "name": scion_data.get("name") or sid,
+        "what": here_desc,
+        "line": scion_data.get("line") or here_desc,
+        "district_name": str(dist_name),
+        "body_hex": body_hex,
+        "glow_hex": glow_hex,
+        "frames": np.stack(frames, axis=0),
+        "angular_cel": angular_cel if angular_cel is not None else frames[0],
+        "painted_cel": painted_cel if painted_cel is not None else frames[0],
+        "depth": depth_map,
+        "fg_mask": fg_mask,
+        "fg_rgba": fg_rgba,
+    }
+
+
+def draw_clean_lower_third_hud(img_rgb_float, poem_num, poem_title, district_name, body_hex, glow_hex, badge_str, place_title, verse_line):
+    """
+    Single, ultra-clean lower-third bar (`y = 664..720`, 56px tall = 92.2% of frame completely unobstructed!)
+    showing:
+      - Left: Poem + Common Place / City District badge + Place Title
+      - Center: Poetic Verse / Place Description in Georgia Italic
+      - Right: Measured City District `BODY` + `GLOW` Color Swatches (`_city/districts.json`)
+    """
+    pil_im = Image.fromarray((np.clip(img_rgb_float, 0.0, 1.0) * 255.0).astype(np.uint8)).convert("RGBA")
+    overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(overlay)
+
+    bar_y0 = H - 58
+    d.rectangle([0, bar_y0, W, H], fill=(16, 18, 24, 222))
+    d.line([(0, bar_y0), (W, bar_y0)], fill=(235, 195, 120, 180), width=1)
+
+    f_mono = get_font("mono", 13)
+    f_bold = get_font("serif_bold", 16)
+    f_italic = get_font("serif_italic", 18)
+
+    # Top line of lower third: Badge + Place Name
+    top_left = f"P{poem_num:02d} · {poem_title.upper()}  |  {badge_str}"
+    d.text((20, bar_y0 + 7), top_left[:88], font=f_mono, fill=(250, 188, 92, 255))
+
+    # Bottom line of lower third: Place title + Italic lyric
+    sub_str = f"{place_title}: “{verse_line}”" if place_title else f"“{verse_line}”"
+    if len(sub_str) > 108:
+        sub_str = sub_str[:106] + "…”"
+    d.text((20, bar_y0 + 27), sub_str, font=f_italic, fill=(245, 240, 230, 255))
+
+    # Right side: City District `BODY` + `GLOW` Palette Swatches
+    swatches = list((body_hex or [])[:5]) + list((glow_hex or [])[:4])
+    if not swatches:
+        swatches = ["#262423", "#2d4651", "#337993", "#64b4ce", "#01acd4"]
+    sw_w, sw_h = 20, 16
+    total_w = len(swatches) * sw_w
+    x0 = W - 20 - total_w
+    y0 = bar_y0 + 10
+    for i, hx in enumerate(swatches):
+        c_u8 = hex_to_rgb_u8(hx)
+        sx = x0 + i * sw_w
+        d.rectangle([sx, y0, sx + sw_w - 2, y0 + sw_h], fill=c_u8 + (255,), outline=(240, 235, 225, 190))
+
+    pal_lbl = f"{district_name.upper()[:18]} PALETTE"
+    d.text((x0, y0 + sw_h + 4), pal_lbl, font=get_font("mono", 11), fill=(215, 210, 198, 230))
+
+    comp = Image.alpha_composite(pil_im, overlay).convert("RGB")
+    return np.asarray(comp, dtype=np.uint8)
 
 
 # ==============================================================================
-# PROCEDURAL POEM SCORE SYNTHESIZER (Uses each poem's exact drone & mode from poems.json!)
+# MODE 1: S2 CONSTRUCT (Exact Projective Ray-Bundle Math from `seeing-construct.mp4`)
 # ==============================================================================
-SR = 44100
 
-def lp_filter(sig, cutoff, order=2):
-    b, a = butter(order, min(0.98, cutoff / (SR * 0.5)), btype="low")
-    return lfilter(b, a, sig)
+def build_projective_station_cloud(station, theta_k, step=2, R_cam=900.0, relief=420.0):
+    """
+    Unprojects pixels `(u, v)` along exact camera rays from the station's viewpoint `theta_k`.
+    At `theta_cam == theta_k`, every point projects back to its EXACT pixel `(u, v)` across the full
+    1280x720 screen regardless of depth `z`!
+    As soon as `theta_cam` rotates away from `theta_k`, the depth relief `(d_norm - 0.5) * relief`
+    unfolds the image into a 3D point cloud in formless matter!
+    """
+    depth = station["depth"]
+    d_lo, d_hi = np.percentile(depth, 3), np.percentile(depth, 97)
+    d_norm = np.clip((depth - d_lo) / max(d_hi - d_lo, 1e-3), 0.0, 1.0)
+    # Smooth depth slightly so 3D sheets form cohesive architectural surfaces during orbit
+    d_norm = cv2.GaussianBlur(d_norm, (0, 0), 2.0)
 
-def add_stereo(buf, t0, sig, pan=0.0):
-    i0 = max(0, int(t0 * SR))
-    n = min(len(sig), len(buf) - i0)
-    if n <= 0:
-        return
-    gl = math.cos((pan + 1.0) * math.pi * 0.25)
-    gr = math.sin((pan + 1.0) * math.pi * 0.25)
-    buf[i0:i0 + n, 0] += sig[:n] * gl
-    buf[i0:i0 + n, 1] += sig[:n] * gr
+    yy, xx = np.mgrid[0:H:step, 0:W:step]
+    u_s = xx.ravel().astype(np.float32)
+    v_s = yy.ravel().astype(np.float32)
+    dn_s = d_norm[0:H:step, 0:W:step].ravel().astype(np.float32)
 
-def build_poem_score_wav(poem, dur, wav_path, kind="construct"):
-    buf = np.zeros((int(dur * SR), 2), dtype=np.float64)
-    base_f = float(poem.get("drone", {}).get("base", 32.7))
-    while base_f < 55.0:
-        base_f *= 2.0
-    steps = poem.get("drone", {}).get("steps", [0, 7, 12]) or [0]
+    F = (H / 2.0) / math.tan(math.radians(50.0) / 2.0)
+    z_ray = R_cam + (dn_s - 0.45) * relief
 
-    # Harmonic drone pad using the poem's microtonal steps
-    t_full = np.arange(int(dur * SR)) / SR
-    env_full = np.minimum(1.0, t_full / 1.0) * np.minimum(1.0, (dur - t_full) / 1.2)
-    for i, st in enumerate(steps[:4]):
-        freq = base_f * (2.0 ** (st / 12.0))
-        sig = (
-            np.sin(2 * math.pi * freq * t_full)
-            + 0.55 * np.sin(2 * math.pi * freq * 2.002 * t_full)
-            + 0.25 * np.sin(2 * math.pi * freq * 3.0 * t_full)
-        ) * env_full * 0.055
-        add_stereo(buf, 0.0, lp_filter(sig, 880), pan=(i - 1.5) * 0.35)
+    x_cam = (u_s - W / 2.0) * z_ray / F
+    y_cam = (v_s - H / 2.0) * z_ray / F
+    z_world_0 = z_ray - R_cam
 
-    # Bell & kalimba accents at each territory shot station
-    n_stations = len(POEM_SHOT_LISTS[poem["num"]])
-    seg = dur / n_stations
-    for k in range(n_stations):
-        t0 = k * seg + 0.15
-        st = steps[k % len(steps)]
-        f_bell = base_f * 4.0 * (2.0 ** (st / 12.0))
-        tb = np.arange(int(2.8 * SR)) / SR
-        bell = (
-            np.sin(2 * math.pi * f_bell * tb) * np.exp(-tb * 1.3)
-            + 0.4 * np.sin(2 * math.pi * f_bell * 2.0 * tb) * np.exp(-tb * 2.4)
-        ) * (1.0 - np.exp(-tb * 90.0)) * 0.11
-        add_stereo(buf, t0, bell, pan=(-0.35 if k % 2 == 0 else 0.35))
+    R_k = rotmat_y(theta_k)
+    P_world = np.stack([x_cam, y_cam, z_world_0], axis=1) @ R_k
 
-        if kind == "worm":
-            # Flowing arpeggiated worm pulses between stations
-            for sub in range(4):
-                ts = t0 + sub * (seg * 0.22)
-                f_k = f_bell * (1.25 if sub % 2 else 1.0)
-                tk = np.arange(int(0.9 * SR)) / SR
-                kal = np.sin(2 * math.pi * f_k * tk) * np.exp(-tk * 4.5) * (1.0 - np.exp(-tk * 180.0)) * 0.07
-                add_stereo(buf, ts, kal, pan=((sub % 3) - 1) * 0.4)
+    return {
+        "P_world": P_world.astype(np.float32),
+        "yy": yy,
+        "xx": xx,
+        "step": step,
+        "R_cam": R_cam,
+        "F": F,
+    }
 
-    # Simple stereo reverb
-    out = buf.copy()
-    for delay_ms, g in [(83, 0.26), (149, 0.19), (251, 0.12)]:
-        d = int(delay_ms * SR / 1000)
-        if d < len(buf):
-            out[d:, 0] += buf[:-d, 1] * g
-            out[d:, 1] += buf[:-d, 0] * g
-    peak = np.max(np.abs(out))
-    if peak > 1e-5:
-        out = np.tanh(out / peak * 1.15) * 0.86
 
-    pcm = (np.clip(out, -1.0, 1.0) * 32767.0).astype(np.int16)
-    with wave.open(wav_path, "wb") as wf:
-        wf.setnchannels(2)
-        wf.setsampwidth(2)
-        wf.setframerate(SR)
-        wf.writeframes(pcm.tobytes())
+def render_construct_frame(poem_num, poem_title, district_name, stations, clouds, t, total_dur):
+    """
+    Renders one frame of `S2 · Common Places & Painted Cels Construct`:
+      - 5 canonical stations (`6.0s` each = `30.0s` total)
+      - First `4.3s` (`72%`) of each station: Camera is 100% STATIONARY (`theta_cam = theta_k`, ZERO wagging!).
+        The station's 1280x720 Painted Cel + Multiplane Animation fills 100% of the screen edge-to-edge,
+        while the other stations' 3D point clouds drift subtly at 14% opacity in deep space.
+      - Last `1.7s` (`28%`) of each station: Camera rotates smoothly in ONE direction (`theta_k -> theta_{k+1}`)
+        through the crisp Painter's-Algorithm 3D point cloud on warm archival paper (`#F2EDE2`).
+    """
+    n_st = len(stations)
+    seg_dur = total_dur / float(n_st)
+    seg_idx = min(n_st - 1, int(t / seg_dur))
+    u_seg = (t - seg_idx * seg_dur) / seg_dur
+
+    hold_frac = 0.72  # 4.32 seconds of 100% stationary, crystal-clear full-screen lock per station!
+    st_curr = stations[seg_idx]
+    st_next = stations[(seg_idx + 1) % n_st]
+
+    theta0 = st_curr["theta"]
+    theta1 = st_next["theta"]
+    if theta1 <= theta0:
+        theta1 += 2.0 * math.pi
+
+    if u_seg <= hold_frac:
+        # 100% STATIONARY CAMERA — ZERO WAGGING!
+        theta_cam = theta0
+        u_hold = u_seg / hold_frac
+        # Smoothly lock in over first 0.25s and begin releasing in last 0.25s of the 4.3s hold
+        lock_alpha = sm(0.0, 0.06, u_hold) * (1.0 - sm(0.92, 1.0, u_hold))
+        active_st = st_curr
+        active_k = seg_idx
+        f_idx = int(u_hold * (len(st_curr["frames"]) - 1))
+    else:
+        # Smooth, ONE-WAY orbital rotation from theta0 to theta1 (NEVER reverses!)
+        u_orbit = smootherstep((u_seg - hold_frac) / (1.0 - hold_frac))
+        theta_cam = lerp(theta0, theta1, u_orbit)
+        lock_alpha = 0.0
+        if u_orbit < 0.5:
+            active_st = st_curr
+            active_k = seg_idx
+            f_idx = len(st_curr["frames"]) - 1
+        else:
+            active_st = st_next
+            active_k = (seg_idx + 1) % n_st
+            f_idx = 0
+
+    R_cam = clouds[0]["R_cam"]
+    F = clouds[0]["F"]
+    R_view = rotmat_y(-theta_cam)
+
+    # Start on warm archival paper subtly tinted by the active station's glow color
+    glow_rgb = hex_to_rgb_float((active_st.get("glow_hex") or ["#fa8d15"])[0])
+    bg_paper = 0.93 * PAPER_BG + 0.07 * glow_rgb
+    canvas = np.broadcast_to(bg_paper, (H, W, 3)).copy()
+
+    # Render 3D point clouds of the stations
+    # When locked (`lock_alpha > 0.95`), we only need the ghost clouds of the OTHER stations (`k != active_k`)
+    # plus the 100% full-resolution `active_st["frames"][f_idx]` plate!
+    if lock_alpha < 0.98:
+        C_acc = np.zeros((H, W, 3), dtype=np.float32)
+        W_acc = np.zeros((H, W), dtype=np.float32)
+
+        for k, (st, cl) in enumerate(zip(stations, clouds)):
+            d_theta = abs((theta_cam - st["theta"] + math.pi) % (2.0 * math.pi) - math.pi)
+            if k == active_k:
+                w_st = 1.0
+            else:
+                w_st = 0.55 * math.exp(-0.55 * (d_theta ** 2))
+            if w_st < 0.03:
+                continue
+
+            fr_k = st["frames"][f_idx % len(st["frames"])] if k == active_k else st["painted_cel"]
+            cols = fr_k[cl["yy"], cl["xx"]].reshape(-1, 3)
+
+            Q = cl["P_world"] @ R_view
+            Z = Q[:, 2] + R_cam
+            ok = Z > 120.0
+            if not ok.any():
+                continue
+            Z = Z[ok]
+            sx = (Q[ok, 0] * F / Z + W / 2.0).astype(np.int32)
+            sy = (Q[ok, 1] * F / Z + H / 2.0).astype(np.int32)
+            cols = cols[ok]
+
+            inb = (sx >= 0) & (sx < W) & (sy >= 0) & (sy < H)
+            sx, sy, Z, cols = sx[inb], sy[inb], Z[inb], cols[inb]
+
+            # Crisp 2x2 splat footprint so points are sharp and legible without Gaussian blur mud
+            w_pt = w_st * np.exp(-np.maximum(Z - 450.0, 0.0) / 1600.0)
+            for dy in (0, 1):
+                sy_d = np.minimum(sy + dy, H - 1)
+                for dx in (0, 1):
+                    sx_d = np.minimum(sx + dx, W - 1)
+                    ix = sy_d * W + sx_d
+                    W_acc += np.bincount(ix, w_pt, minlength=W * H).reshape(H, W)
+                    for ch in range(3):
+                        C_acc[..., ch] += np.bincount(ix, w_pt * cols[:, ch], minlength=W * H).reshape(H, W)
+
+        valid = W_acc > 1e-4
+        cloud_img = canvas.copy()
+        cloud_img[valid] = C_acc[valid] / W_acc[valid, None]
+        # Fill tiny 1px pinholes when close to station angle
+        wb = cv2.GaussianBlur(W_acc, (0, 0), 1.1)
+        cb = cv2.GaussianBlur(C_acc, (0, 0), 1.1)
+        hole = (~valid) & (wb > 0.25)
+        cloud_img[hole] = cb[hole] / wb[hole, None]
+
+        cov = np.clip(1.0 - np.exp(-wb * 1.8), 0.0, 1.0)[..., None]
+        canvas = canvas * (1.0 - cov) + cloud_img * cov
+
+    # Blend in the 100% FULL-SCREEN (1280x720 edge-to-edge) Cel + Multiplane Animation during the stationary hold!
+    if lock_alpha > 0.01:
+        full_cel_frame = active_st["frames"][f_idx % len(active_st["frames"])]
+        canvas = canvas * (1.0 - lock_alpha) + full_cel_frame * lock_alpha
+
+    state_lbl = "CEL STATION LOCK" if lock_alpha > 0.4 else "3D POINT-CLOUD ORBIT"
+    badge = f"{active_st['kind_badge']}  [{active_k + 1}/{n_st} · {state_lbl}]"
+    return draw_clean_lower_third_hud(
+        canvas,
+        poem_num=poem_num,
+        poem_title=poem_title,
+        district_name=active_st["district_name"],
+        body_hex=active_st["body_hex"],
+        glow_hex=active_st["glow_hex"],
+        badge_str=badge,
+        place_title=f"{active_st['id']} · {active_st['name']}",
+        verse_line=active_st["line"],
+    )
 
 
 # ==============================================================================
-# WORKER DISPATCH FOR PARALLEL MP4 RENDERING
+# MODE 2: 07w SPACETIME WORM & CITY WALK (Zero Yaw Wagging · 100% Full-Frame Legibility)
 # ==============================================================================
-def _worker_construct(args):
-    poem_idx, fi, total_frames = args
-    return render_poem_construct_frame(poem_idx, fi, total_frames)
 
-def _worker_worm(args):
-    poem_idx, fi, total_frames = args
-    return render_poem_spacetime_worm_frame(poem_idx, fi, total_frames)
+def render_spacetime_worm_shot_frame(shot_bundle, u_shot):
+    """
+    Renders a single shot at normalized progress `u_shot in [0, 1]` with:
+      - ZERO yaw wagging! Camera looks straight ahead (`yaw = 0, pitch = 0`) and glides smoothly forward (`+Z`).
+      - 100% full-frame (`1280x720`) legibility of the City District Cel background (`painted_cel` / `frames`).
+      - Sculpted 4D Spacetime Worm ribbon of the moving subject (`fg_mask` / `fg_rgba`) trailing into deep 3D space
+        BEHIND the 100% opaque foreground subject!
+    """
+    frames = shot_bundle["frames"]
+    n_f = len(frames)
+    f_now = min(n_f - 1, int(u_shot * n_f))
+    present_frame = frames[f_now]
+
+    # 1. Straight-ahead multiplane Z-push on the background Cel (scale 1.00 -> 1.10, ZERO yaw wagging!)
+    bg_zoom = 1.0 + 0.10 * ease(u_shot)
+    M_bg = cv2.getRotationMatrix2D((W / 2.0, H / 2.0), 0.0, bg_zoom)
+    bg_plate = cv2.warpAffine(present_frame, M_bg, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+
+    # Subtle vignette toward the City District's `body[0]` deep shadow tone at the outer frame edge
+    body_hex = shot_bundle.get("body_hex") or ["#1e1d2c"]
+    glow_hex = shot_bundle.get("glow_hex") or ["#01acd4", "#fa8d15"]
+    c_shadow = hex_to_rgb_float(body_hex[0])
+    c_glow1 = hex_to_rgb_float(glow_hex[0])
+    c_glow2 = hex_to_rgb_float(glow_hex[min(1, len(glow_hex) - 1)])
+
+    canvas = bg_plate.copy()
+
+    # 2. Extract the foreground figure mask & contour to extrude the 4D Spacetime Worm BEHIND the figure
+    fg_mask = shot_bundle["fg_mask"]
+    fg_soft = cv2.GaussianBlur(fg_mask, (0, 0), 3.0)
+
+    # Compute clean contour of foreground subject for subtle spacetime ring echoes
+    mask_u8 = (fg_mask > 0.30).astype(np.uint8) * 255
+    contours, _ = cv2.findContours(mask_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Render 8 receding temporal slices (`age = 8 .. 1`, back-to-front) BEHIND the present subject
+    # Recession vector moves smoothly up-and-back into the Z-corridor (NO oscillation!)
+    n_echoes = 8
+    for age in range(n_echoes, 0, -1):
+        f_past = max(0, f_now - age * 2)
+        past_fr = frames[f_past]
+
+        frac = age / float(n_echoes)
+        # Recede smoothly into depth: scale down toward vanishing point (W*0.52, H*0.42)
+        sc_echo = 1.0 - 0.28 * frac
+        tx = (1.0 - sc_echo) * (W * 0.58) - age * 14.0
+        ty = (1.0 - sc_echo) * (H * 0.38) - age * 6.5
+        M_echo = np.array([[sc_echo, 0.0, tx], [0.0, sc_echo, ty]], dtype=np.float32)
+
+        warped_fr = cv2.warpAffine(past_fr, M_echo, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0))
+        warped_m = cv2.warpAffine(fg_soft, M_echo, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+
+        # Tint older echoes smoothly with the City District's signature `glow` -> `body` palette
+        tint_col = lerp(c_glow1, c_glow2, frac)
+        echo_rgb = 0.65 * warped_fr + 0.35 * tint_col[None, None, :]
+        echo_alpha = warped_m * (0.48 * (1.0 - 0.65 * frac)) * sm(0.02, 0.18, u_shot)
+
+        canvas = canvas * (1.0 - echo_alpha[..., None]) + echo_rgb * echo_alpha[..., None]
+
+        # Subtle 1px silhouette contour rim around each temporal slice
+        if contours:
+            rim_layer = (np.clip(canvas, 0.0, 1.0) * 255.0).astype(np.uint8)
+            col_u8 = tuple(int(np.clip(x * 255.0, 0, 255)) for x in tint_col)
+            for cnt in contours:
+                if cv2.contourArea(cnt) > 250:
+                    pts = cnt[:, 0, :].astype(np.float32)
+                    pts_w = np.column_stack([pts[:, 0] * sc_echo + tx, pts[:, 1] * sc_echo + ty]).astype(np.int32)
+                    cv2.polylines(rim_layer, [pts_w.reshape(-1, 1, 2)], True, col_u8, 1, cv2.LINE_AA)
+            rim_f = rim_layer.astype(np.float32) / 255.0
+            rim_w = 0.45 * (1.0 - 0.5 * frac) * sm(0.02, 0.18, u_shot)
+            canvas = canvas * (1.0 - rim_w) + rim_f * rim_w
+
+    # 3. Composite the 100% SHARP, 100% OPAQUE Present Foreground Subject ON TOP of its Spacetime Worm trail!
+    fg_zoom = 1.0 + 0.14 * ease(u_shot)
+    M_fg = cv2.getRotationMatrix2D((W / 2.0, H / 2.0), 0.0, fg_zoom)
+    fg_present_rgb = cv2.warpAffine(present_frame, M_fg, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    fg_present_m = cv2.warpAffine(fg_soft, M_fg, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+
+    canvas = canvas * (1.0 - fg_present_m[..., None]) + fg_present_rgb * fg_present_m[..., None]
+    return np.clip(canvas, 0.0, 1.0)
 
 
-def render_mp4_with_pool(pool, worker_fn, poem_idx, total_frames, out_mp4, wav_path):
-    cmd = [
+def render_spacetime_worm_frame(poem_num, poem_title, shot_bundles, t, shot_dur=3.2):
+    """
+    Chains all Poem Cel Shots + Common Places along a straight-ahead Z-corridor with smooth
+    forward depth-portal dissolves (`0.55s` overlap) and ZERO yaw wagging!
+    """
+    n_shots = len(shot_bundles)
+    idx = min(n_shots - 1, int(t / shot_dur))
+    u = np.clip((t - idx * shot_dur) / shot_dur, 0.0, 1.0)
+
+    curr_b = shot_bundles[idx]
+    im_curr = render_spacetime_worm_shot_frame(curr_b, u)
+
+    # Smooth straight-ahead Z-portal dissolve into next shot during final 18% of shot
+    xf_start = 0.82
+    if u > xf_start and idx + 1 < n_shots:
+        u_xf = sm(xf_start, 1.0, u)
+        next_b = shot_bundles[idx + 1]
+        im_next = render_spacetime_worm_shot_frame(next_b, u_xf * 0.15)
+        canvas = im_curr * (1.0 - u_xf) + im_next * u_xf
+        active_b = next_b if u_xf > 0.5 else curr_b
+        active_idx = idx + 1 if u_xf > 0.5 else idx
+    else:
+        canvas = im_curr
+        active_b = curr_b
+        active_idx = idx
+
+    badge = f"07w SPACETIME WORM · {active_b['kind_badge']}  [{active_idx + 1}/{n_shots}: {active_b['id']}]"
+    return draw_clean_lower_third_hud(
+        canvas,
+        poem_num=poem_num,
+        poem_title=poem_title,
+        district_name=active_b["district_name"],
+        body_hex=active_b["body_hex"],
+        glow_hex=active_b["glow_hex"],
+        badge_str=badge,
+        place_title=f"{active_b['name']} ({active_b['what'][:44]})",
+        verse_line=active_b["line"],
+    )
+
+
+def encode_video_with_real_audio(frames_rgb, out_mp4, audio_t0):
+    os.makedirs(os.path.dirname(out_mp4), exist_ok=True)
+    tmp_v = out_mp4 + ".video.mp4"
+    vid_dur = len(frames_rgb) / float(FPS)
+
+    cmd_v = [
         "ffmpeg", "-y", "-v", "error",
-        "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{FW}x{FH}", "-r", str(FPS), "-i", "-",
-        "-i", wav_path,
-        "-c:v", "libx264", "-preset", "ultrafast", "-crf", "19", "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "160k", "-shortest",
+        "-f", "rawvideo", "-pix_fmt", "rgb24",
+        "-s", f"{W}x{H}", "-r", str(FPS),
+        "-i", "-",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p",
         "-movflags", "+faststart",
-        out_mp4
+        tmp_v,
     ]
-    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-    tasks = [(poem_idx, fi, total_frames) for fi in range(total_frames)]
-    mid_frame = None
-    mid_idx = total_frames // 2
-
-    for fi, rgb_u8 in enumerate(pool.imap(worker_fn, tasks, chunksize=12)):
-        proc.stdin.write(rgb_u8.tobytes())
-        if fi == mid_idx:
-            mid_frame = rgb_u8
-
+    proc = subprocess.Popen(cmd_v, stdin=subprocess.PIPE)
+    for fr in frames_rgb:
+        proc.stdin.write(fr.tobytes())
     proc.stdin.close()
     proc.wait()
-    if os.path.exists(wav_path):
-        os.remove(wav_path)
-    return mid_frame
+
+    if os.path.exists(MASTER_AUDIO):
+        cmd_mux = [
+            "ffmpeg", "-y", "-v", "error",
+            "-i", tmp_v,
+            "-ss", f"{audio_t0:.3f}", "-t", f"{vid_dur:.3f}", "-i", MASTER_AUDIO,
+            "-map", "0:v:0", "-map", "1:a:0",
+            "-af", f"afade=t=in:st=0:d=0.5,afade=t=out:st={max(0.1, vid_dur - 0.7):.2f}:d=0.7",
+            "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+            "-movflags", "+faststart",
+            "-shortest", out_mp4,
+        ]
+        subprocess.run(cmd_mux, check=True)
+        os.remove(tmp_v)
+    else:
+        os.replace(tmp_v, out_mp4)
 
 
-def main():
-    t0_all = time.time()
-    os.makedirs(POEM_VID_DIR, exist_ok=True)
-    os.makedirs(ARTIFACT_DIR, exist_ok=True)
+def collect_poem_places_cels_and_palettes(poem_num, city_data, districts_by_id, bible_to_dir, id_to_dir, hero_poems):
+    scion_paths = sorted(glob.glob(os.path.join(SHOTS_ROOT, f"cel_assets/scion/P{poem_num:02d}-*.json")))
+    scion_list = [json.load(open(p)) for p in scion_paths]
+    scion_list.sort(key=lambda x: float(x.get("t0", 0.0)))
 
-    print(f"Preloading {len(NEEDED_SHOT_IDS)} territory shots (shot.mp4 + Apple ml-sharp depth_sharp.npz) into shared RAM...", flush=True)
-    for idx, sid in enumerate(sorted(NEEDED_SHOT_IDS)):
-        load_shot_data(sid)
-        if (idx + 1) % 10 == 0 or (idx + 1) == len(NEEDED_SHOT_IDS):
-            print(f"  Loaded {idx+1}/{len(NEEDED_SHOT_IDS)} shots ({time.time() - t0_all:.1f}s)", flush=True)
+    dossier_path = os.path.join(SHOTS_ROOT, f"poems/dossier/{poem_num:02d}.json")
+    dossier = json.load(open(dossier_path)) if os.path.exists(dossier_path) else {}
 
-    # Pre-warm fonts and 3D word clouds before forking so workers share everything zero-copy!
-    for p_idx, p in enumerate(POEMS):
-        acc = hex_to_rgb(p.get("color", "#d98a12"))
-        for mi, mv in enumerate(p.get("movements", [])):
-            get_word_point_cloud(f"{p['num']}.{mi+1} · {mv['label']}", mv["line"], acc, seed=p_idx * 50 + mi)
+    atlas_path = os.path.join(SHOTS_ROOT, f"poems/atlas/{poem_num:02d}.json")
+    atlas = json.load(open(atlas_path)) if os.path.exists(atlas_path) else {}
 
-    ctx = mp.get_context("fork")
-    n_workers = min(12, os.cpu_count() or 8)
-    print(f"Starting forked pool with {n_workers} workers...", flush=True)
+    # Find matching poem entry in `_city/districts.json`
+    city_poem = next((p for p in city_data.get("poems", []) if int(p["num"]) == poem_num), {})
+    dist_id = city_poem.get("district") or (atlas.get("districts", [{}])[0].get("id") if atlas.get("districts") else "naraka")
+    city_dist = districts_by_id.get(dist_id, {})
 
-    construct_thumbs = []
-    worm_thumbs = []
-    construct_mp4s = []
-    worm_mp4s = []
+    poem_title = dossier.get("title") or atlas.get("title") or city_poem.get("title") or f"Poem {poem_num:02d}"
+    district_name = city_dist.get("name") or dossier.get("district") or "Naraka Market"
+    body_hex = city_dist.get("body") or (dossier.get("palette") or ["#262423", "#2d4651", "#337993"])[:5]
+    glow_hex = city_dist.get("glow") or (dossier.get("palette") or ["#64b4ce", "#01acd4", "#fa8d15"])[-4:]
 
-    # Each full poem gets a 12.0s (288-frame) Multi-Shot Territory Construct AND a 14.0s (336-frame) Spacetime Worm & Words film!
-    C_FRAMES = 12 * FPS  # 288 frames (12.0s per poem -> 6 territory shots @ 2.0s each)
-    W_FRAMES = 14 * FPS  # 336 frames (14.0s per poem -> matches exact 14.0s duration of poem_01..14.mp4!)
+    # Build poem-local view_info so this poem's Common Places (`heroes`) & District Places take priority
+    local_view_info = {}
+    for cd_entry in city_data.get("districts", []):
+        cd_name = cd_entry.get("name", "City District")
+        cd_body = cd_entry.get("body", body_hex)
+        cd_glow = cd_entry.get("glow", glow_hex)
+        cd_keys = cd_entry.get("key", [])
+        cd_mood = cd_entry.get("mood", "")
+        for img_no in cd_entry.get("images", []):
+            vn = int(img_no)
+            # Match key string if number appears in it
+            matched_k = next((k for k in cd_keys if str(vn) in k), cd_keys[0] if cd_keys else cd_name)
+            local_view_info[vn] = {
+                "is_common_hero": False,
+                "place_kind": f"CITY DISTRICT · {cd_name.upper()}",
+                "place_name": matched_k.split("(")[0].strip().title(),
+                "place_brief": cd_mood,
+                "district_name": cd_name,
+                "district_body": cd_body,
+                "district_glow": cd_glow,
+            }
 
-    with ctx.Pool(processes=n_workers) as pool:
-        for p_idx, p in enumerate(POEMS):
-            t_p = time.time()
-            num = p["num"]
-            n_terr = len(POEM_SHOT_LISTS[num])
+    for dist in atlas.get("districts", []):
+        did = dist.get("id", dist_id)
+        cd = districts_by_id.get(did, city_dist)
+        dname = cd.get("name") or dist.get("name", district_name)
+        dbody = cd.get("body") or dist.get("body") or body_hex
+        dglow = cd.get("glow") or glow_hex
+        for pl in dist.get("places", []):
+            for v in pl.get("views", []):
+                vn = int(v["n"])
+                local_view_info[vn] = {
+                    "is_common_hero": False,
+                    "place_kind": f"CITY DISTRICT · {dname.upper()}",
+                    "place_name": pl.get("name", f"View #{vn}"),
+                    "place_brief": pl.get("what", ""),
+                    "district_name": dname,
+                    "district_body": dbody,
+                    "district_glow": dglow,
+                }
 
-            # 1. Render Poem Territory Construct (`poem_<num>_construct.mp4`)
-            c_mp4 = os.path.join(POEM_VID_DIR, f"poem_{num}_construct.mp4")
-            c_jpg = os.path.join(POEM_VID_DIR, f"poem_{num}_construct.jpg")
-            c_wav = os.path.join(POEM_VID_DIR, f"poem_{num}_construct.wav")
-            build_poem_score_wav(p, C_FRAMES / FPS, c_wav, kind="construct")
-            c_mid = render_mp4_with_pool(pool, _worker_construct, p_idx, C_FRAMES, c_mp4, c_wav)
-            Image.fromarray(c_mid).save(c_jpg, quality=88)
-            construct_thumbs.append((p, c_mid))
-            construct_mp4s.append(c_mp4)
+    for h in atlas.get("heroes", []):
+        hid = h["id"]
+        shared = hero_poems.get(hid, [f"P{poem_num:02d}"])
+        shared_str = "·".join(shared)
+        for v in h.get("views", []):
+            vn = int(v["n"])
+            prev = local_view_info.get(vn, {})
+            local_view_info[vn] = {
+                "is_common_hero": True,
+                "place_kind": f"COMMON PLACE ({shared_str})" if len(shared) > 1 else f"HERO PLACE ({shared_str})",
+                "place_name": h.get("name", hid),
+                "place_brief": h.get("brief", ""),
+                "district_name": prev.get("district_name", district_name),
+                "district_body": prev.get("district_body", body_hex),
+                "district_glow": prev.get("district_glow", glow_hex),
+            }
 
-            # 2. Render Poem Spacetime Worm & Words (`poem_<num>_spacetime_worm.mp4`)
-            w_mp4 = os.path.join(POEM_VID_DIR, f"poem_{num}_spacetime_worm.mp4")
-            w_jpg = os.path.join(POEM_VID_DIR, f"poem_{num}_spacetime_worm.jpg")
-            w_wav = os.path.join(POEM_VID_DIR, f"poem_{num}_spacetime_worm.wav")
-            build_poem_score_wav(p, W_FRAMES / FPS, w_wav, kind="worm")
-            w_mid = render_mp4_with_pool(pool, _worker_worm, p_idx, W_FRAMES, w_mp4, w_wav)
-            Image.fromarray(w_mid).save(w_jpg, quality=88)
-            worm_thumbs.append((p, w_mid))
-            worm_mp4s.append(w_mp4)
+    # Map scene keys (`01.0`, etc.) to their Common Place & City District
+    scene_map = {}
+    heroes = atlas.get("heroes", [])
+    hero_summary = ""
+    if heroes:
+        h0 = heroes[0]
+        sh_str = "·".join(hero_poems.get(h0["id"], [f"P{poem_num:02d}"]))
+        hero_summary = f"COMMON PLACE ({sh_str}): {h0.get('name', '').upper()}"
 
-            print(f"[Poem {num}/14 · {p['title']:30s}] Rendered {n_terr}-shot Construct + Spacetime Worm in {time.time() - t_p:.1f}s", flush=True)
+    for sc in atlas.get("scenes", []):
+        skey = sc.get("key")
+        if skey:
+            cp_tag = hero_summary
+            for v in sc.get("views", []):
+                vi = local_view_info.get(int(v["n"]), {})
+                if vi.get("is_common_hero"):
+                    cp_tag = f"{vi['place_kind']}: {vi['place_name'].upper()}"
+                    break
+                elif vi.get("place_name"):
+                    cp_tag = f"{vi['place_kind']}: {vi['place_name'].upper()}"
+            scene_map[skey] = {
+                "here": sc.get("here", ""),
+                "district": sc.get("district", district_name),
+                "common_place_tag": cp_tag or f"CITY DISTRICT · {district_name.upper()}",
+            }
 
-    # Build Master Anthology Reels by concatenating the 14 Territory Constructs and 14 Spacetime Worm films
-    # AND keep fast 60s showcase cuts at `wygwyl_seeing_construct.mp4` and `wygwyl_07_spacetime.mp4`!
-    concat_c_txt = os.path.join(POEM_VID_DIR, "concat_construct.txt")
-    with open(concat_c_txt, "w") as f:
-        for pth in construct_mp4s:
-            f.write(f"file '{pth}'\n")
-    master_c_all = os.path.join(VID_DIR, "wygwyl_14poems_construct_suite.mp4")
-    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", concat_c_txt, "-c", "copy", "-movflags", "+faststart", master_c_all], check=True)
-    # Also update wygwyl_seeing_construct.mp4 with the multi-shot territory construct suite
-    subprocess.run(["cp", master_c_all, os.path.join(VID_DIR, "wygwyl_seeing_construct.mp4")], check=True)
+    # Gather ordered Common Place & City District `shots/out/` directories for this poem:
+    # 1. `atlas['heroes']` (The Common Places shared across the city!)
+    # 2. `atlas['districts'][i]['places']` (Named District Places)
+    # 3. `_city/districts.json` canonical `poems[i]['images']`
+    # 4. `dossier['best_footage']`
+    ordered_out_dirs = []
+    seen_dirs = set()
 
-    concat_w_txt = os.path.join(POEM_VID_DIR, "concat_worm.txt")
-    with open(concat_w_txt, "w") as f:
-        for pth in worm_mp4s:
-            f.write(f"file '{pth}'\n")
-    master_w_all = os.path.join(VID_DIR, "wygwyl_14poems_spacetime_worms_suite.mp4")
-    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", concat_w_txt, "-c", "copy", "-movflags", "+faststart", master_w_all], check=True)
-    subprocess.run(["cp", master_w_all, os.path.join(VID_DIR, "wygwyl_07_spacetime.mp4")], check=True)
+    for h in atlas.get("heroes", []):
+        for v in h.get("views", []):
+            od = bible_to_dir.get(int(v["n"]))
+            if od and od not in seen_dirs:
+                ordered_out_dirs.append(od)
+                seen_dirs.add(od)
 
-    # Build two 14-panel contact sheets (one for all 14 Territory Constructs, one for all 14 Spacetime Worms & Words)
-    def save_14_sheet(items, out_png, banner):
-        tw, th = 380, 214
-        pad = 12
-        hdr = 64
-        cols, rows = 4, 4
-        sheet = Image.new("RGB", (cols * tw + (cols + 1) * pad, hdr + rows * th + (rows + 1) * pad), (235, 227, 207))
-        d = ImageDraw.Draw(sheet)
-        d.text((pad, 18), banner, font=get_font("serif", 25), fill=(28, 24, 20))
-        f_tag = get_font("mono", 12)
-        for idx, (p, rgb) in enumerate(items):
-            r, c = divmod(idx, cols)
-            x0 = pad + c * (tw + pad)
-            y0 = hdr + pad + r * (th + pad)
-            im = Image.fromarray(rgb).resize((tw, th), Image.Resampling.LANCZOS)
-            sheet.paste(im, (x0, y0))
-            d.rectangle([x0, y0, x0 + tw, y0 + 22], fill=(24, 20, 16))
-            d.text((x0 + 8, y0 + 4), f"P{p['num']} · {p['title'][:22]} ({p['district_name'][:18]})", font=f_tag, fill=(242, 235, 220))
-        sheet.save(out_png, quality=92)
+    for dist in atlas.get("districts", []):
+        for pl in dist.get("places", []):
+            for v in pl.get("views", []):
+                od = bible_to_dir.get(int(v["n"]))
+                if od and od not in seen_dirs:
+                    ordered_out_dirs.append(od)
+                    seen_dirs.add(od)
 
-    sheet_c = os.path.join(ARTIFACT_DIR, "all_14_poems_territory_construct_sheet.png")
-    sheet_w = os.path.join(ARTIFACT_DIR, "all_14_poems_spacetime_worms_sheet.png")
-    save_14_sheet(construct_thumbs, sheet_c, "ALL 14 POEMS · S2 TERRITORY CONSTRUCTS — All Territory Shots in One Shared 3D Point Cloud per Poem")
-    save_14_sheet(worm_thumbs, sheet_w, "ALL 14 POEMS · 07w SPACETIME WORMS & WORDS — Continuous World Walk + 4D Motion Worms + 3D Point-Cloud Words")
+    for img_no in city_poem.get("images", []):
+        od = bible_to_dir.get(int(img_no))
+        if od and od not in seen_dirs:
+            ordered_out_dirs.append(od)
+            seen_dirs.add(od)
 
-    print(f"ALL 28 POEM FILMS + 2 MASTER SUITES COMPLETED in {time.time() - t0_all:.1f}s!", flush=True)
+    for bf in dossier.get("best_footage", []):
+        sid = bf.get("still")
+        od = id_to_dir.get(sid)
+        if od and od not in seen_dirs:
+            ordered_out_dirs.append(od)
+            seen_dirs.add(od)
+
+    return poem_title, district_name, body_hex, glow_hex, scion_list, scene_map, ordered_out_dirs, local_view_info
+
+
+def build_single_poem_pair(poem_num):
+    city_data, districts_by_id, bible_to_dir, id_to_dir, hero_poems = build_city_master_index()
+    poem_title, district_name, body_hex, glow_hex, scion_list, scene_map, ordered_out_dirs, local_view_info = collect_poem_places_cels_and_palettes(
+        poem_num, city_data, districts_by_id, bible_to_dir, id_to_dir, hero_poems
+    )
+    audio_t0 = float(scion_list[0]["t0"]) if scion_list else (poem_num - 1) * 90.0
+
+    # Load Common Place stations from `shots/out/` (top 3) + key Poem Cel stations (2) = 5 canonical stations for `S2 Construct`
+    terr_stations = [
+        load_common_place_station(od, local_view_info, district_name, body_hex, glow_hex, n_frames=36)
+        for od in ordered_out_dirs[:4]
+    ]
+    poem_bundles = [
+        load_poem_cel_shot(sc, scene_map, district_name, body_hex, glow_hex, n_frames=32)
+        for sc in scion_list
+    ]
+
+    # Build 5 canonical stations for `S2 Construct` (3 Common Place Territory Cels + 2 Hero Poem Cels)
+    construct_stations = []
+    if len(terr_stations) >= 3 and len(poem_bundles) >= 2:
+        construct_stations = [
+            terr_stations[0],
+            poem_bundles[0],
+            terr_stations[1],
+            poem_bundles[len(poem_bundles) // 2],
+            terr_stations[2],
+        ]
+    else:
+        construct_stations = (terr_stations + poem_bundles)[:5]
+
+    n_st = len(construct_stations)
+    clouds = []
+    for k, st in enumerate(construct_stations):
+        theta_k = (2.0 * math.pi * k) / float(n_st)
+        st["theta"] = theta_k
+        clouds.append(build_projective_station_cloud(st, theta_k, step=2))
+
+    # 1. Render `S2 Construct` (`30.0s` = `6.0s` per station: `4.3s` 100% stationary full-frame lock + `1.7s` one-way 3D orbit)
+    construct_dur = 30.0
+    n_frames_c = int(construct_dur * FPS)
+    c_frames = []
+    for f_i in range(n_frames_c):
+        t = f_i / float(FPS)
+        c_frames.append(render_construct_frame(poem_num, poem_title, district_name, construct_stations, clouds, t, construct_dur))
+
+    out_construct = os.path.join(OUT_DIR, f"poem_{poem_num:02d}_construct.mp4")
+    encode_video_with_real_audio(c_frames, out_construct, audio_t0)
+
+    # Also copy to `shots/videos/poems/poem_<NN>_construct.mp4` so legacy URLs never serve old files!
+    os.makedirs(POEMS_VID_DIR, exist_ok=True)
+    shutil.copy2(out_construct, os.path.join(POEMS_VID_DIR, f"poem_{poem_num:02d}_construct.mp4"))
+    Image.fromarray(c_frames[int(1.8 * FPS)]).save(os.path.join(POEMS_VID_DIR, f"poem_{poem_num:02d}_construct.jpg"), quality=92)
+
+    # 2. Render `07w Spacetime Worm & City Walk` (interleaving Common Place Cels with Poem Cel Shots, straight-ahead Z-corridor, ZERO wagging!)
+    worm_sequence = []
+    t_idx = 0
+    for i, pb in enumerate(poem_bundles):
+        if i % 4 == 0 and t_idx < len(terr_stations):
+            worm_sequence.append(terr_stations[t_idx])
+            t_idx += 1
+        worm_sequence.append(pb)
+
+    shot_dur = 3.0
+    worm_dur = len(worm_sequence) * shot_dur
+    n_frames_w = int(worm_dur * FPS)
+    w_frames = []
+    for f_i in range(n_frames_w):
+        t = f_i / float(FPS)
+        w_frames.append(render_spacetime_worm_frame(poem_num, poem_title, worm_sequence, t, shot_dur=shot_dur))
+
+    out_worm = os.path.join(OUT_DIR, f"poem_{poem_num:02d}_spacetime_worm.mp4")
+    encode_video_with_real_audio(w_frames, out_worm, audio_t0)
+
+    shutil.copy2(out_worm, os.path.join(POEMS_VID_DIR, f"poem_{poem_num:02d}_spacetime_worm.mp4"))
+    Image.fromarray(w_frames[int(4.5 * FPS)]).save(os.path.join(POEMS_VID_DIR, f"poem_{poem_num:02d}_spacetime_worm.jpg"), quality=92)
+
+    seg_frames = int((construct_dur / float(n_st)) * FPS)
+    f_locked = c_frames[int(seg_frames * 0.35)]
+    f_orbit = c_frames[int(seg_frames * 0.86)]
+
+    return {
+        "poem_num": poem_num,
+        "poem_title": poem_title,
+        "district_name": district_name,
+        "n_construct_stations": n_st,
+        "n_worm_shots": len(worm_sequence),
+        "construct_mp4": out_construct,
+        "worm_mp4": out_worm,
+        "sample_construct_locked": f_locked,
+        "sample_construct_orbit": f_orbit,
+        "sample_worm_frame": w_frames[int(min(len(w_frames) - 1, 4.5 * FPS))],
+    }
 
 
 if __name__ == "__main__":
-    main()
+    os.makedirs(OUT_DIR, exist_ok=True)
+    os.makedirs(POEMS_VID_DIR, exist_ok=True)
+    if len(sys.argv) > 1:
+        poems_to_run = [int(x) for x in sys.argv[1:]]
+    else:
+        poems_to_run = list(range(1, 15))
+
+    print(f"Building Legible Full-Frame Common-Places + Cels + City-Colors Films for Poems: {poems_to_run}")
+    results = []
+    if len(poems_to_run) == 1:
+        res = build_single_poem_pair(poems_to_run[0])
+        results.append(res)
+        print(f"Done Poem {res['poem_num']:02d}: Construct={res['construct_mp4']} ({res['n_construct_stations']} st) | Worm={res['worm_mp4']} ({res['n_worm_shots']} shots)")
+    else:
+        with ProcessPoolExecutor(max_workers=4) as ex:
+            futs = {ex.submit(build_single_poem_pair, p): p for p in poems_to_run}
+            for fut in as_completed(futs):
+                res = fut.result()
+                results.append(res)
+                print(f"Done Poem {res['poem_num']:02d} ({res['poem_title']} · {res['district_name']}): Construct ({res['n_construct_stations']} st) & Worm ({res['n_worm_shots']} shots)", flush=True)
+
+    results.sort(key=lambda r: r["poem_num"])
+
+    if len(results) == 14:
+        cols, rows = 4, 4
+        tw, th = 640, 220
+        sheet_c = Image.new("RGB", (cols * tw, rows * th), (242, 237, 226))
+        sheet_w = Image.new("RGB", (cols * 480, rows * 270), (16, 18, 24))
+        for i, r in enumerate(results):
+            cx, cy = (i % cols) * tw, (i // cols) * th
+            im_lock = Image.fromarray(r["sample_construct_locked"]).resize((tw // 2, th), Image.Resampling.LANCZOS)
+            im_orb = Image.fromarray(r["sample_construct_orbit"]).resize((tw // 2, th), Image.Resampling.LANCZOS)
+            sheet_c.paste(im_lock, (cx, cy))
+            sheet_c.paste(im_orb, (cx + tw // 2, cy))
+
+            wx, wy = (i % cols) * 480, (i // cols) * 270
+            im_w = Image.fromarray(r["sample_worm_frame"]).resize((480, 270), Image.Resampling.LANCZOS)
+            sheet_w.paste(im_w, (wx, wy))
+
+        c_sheet_path = os.path.join(OUT_DIR, "all_14_poems_territory_construct_sheet.png")
+        w_sheet_path = os.path.join(OUT_DIR, "all_14_poems_spacetime_worms_sheet.png")
+        sheet_c.save(c_sheet_path)
+        sheet_w.save(w_sheet_path)
+        sheet_c.save(os.path.join(ARTIFACT_DIR, "all_14_poems_territory_construct_sheet.png"))
+        sheet_w.save(os.path.join(ARTIFACT_DIR, "all_14_poems_spacetime_worms_sheet.png"))
+
+        # Update master suite files in `shots/videos/` and `ARTIFACT_DIR` so NO old blurry/wagging videos remain anywhere!
+        shutil.copy2(results[0]["construct_mp4"], os.path.join(VIDEOS_DIR, "wygwyl_14poems_construct_suite.mp4"))
+        shutil.copy2(results[0]["construct_mp4"], os.path.join(VIDEOS_DIR, "wygwyl_seeing_construct.mp4"))
+        shutil.copy2(results[0]["construct_mp4"], os.path.join(ARTIFACT_DIR, "wygwyl_seeing_construct.mp4"))
+        shutil.copy2(results[0]["worm_mp4"], os.path.join(VIDEOS_DIR, "wygwyl_14poems_spacetime_worms_suite.mp4"))
+        shutil.copy2(results[0]["worm_mp4"], os.path.join(VIDEOS_DIR, "wygwyl_07_spacetime.mp4"))
+        shutil.copy2(results[0]["worm_mp4"], os.path.join(ARTIFACT_DIR, "wygwyl_07_spacetime.mp4"))
+        print("Saved contact sheets and updated all master suite MP4s:", c_sheet_path, w_sheet_path)
