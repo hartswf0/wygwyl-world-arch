@@ -1,1940 +1,868 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VESPER / STELLINE · 3D HDL Architectural Apparatus, TVE Point-Cloud Scope &amp; Real Corpus Inspector</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WYGWYL — Six Narrative Apparatus Paradigms (Unobstructed Real-Asset Explorer)</title>
 <style>
-:root {
-  --bg-deep: #050c10;
-  --bg-panel: #09161c;
-  --bg-slate: #13262d;
-  --cyan-bezel: #58d4e4;
-  --seam-cyan: #5fe8ff;
-  --salt-white: #ecebe4;
-  --cyan-dim: rgba(88, 212, 228, 0.32);
-  --cyan-faint: rgba(88, 212, 228, 0.12);
-  --amber-core: #ffbe44;
-  --amber-hot: #ff8811;
-  --crimson: #e83b3b;
-  --mint-wire: #7cf2b8;
-  --text-hi: #e2f6f9;
-  --text-mid: #8ab8c2;
-  --text-low: #4b747e;
-}
-
-*, *::before, *::after { box-sizing: border-box; }
-html, body {
-  margin: 0;
-  padding: 0;
-  background: var(--bg-deep);
-  color: var(--text-hi);
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 12px;
-  line-height: 1.45;
-  overflow-x: hidden;
-}
-
-/* Top Apparatus Header Bar */
-.top-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 18px;
-  background: rgba(6, 16, 22, 0.95);
-  border-bottom: 1px solid var(--cyan-dim);
-  position: sticky;
-  top: 0;
-  z-index: 60;
-}
-.brand-block {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.brand-pill {
-  padding: 3px 8px;
-  background: rgba(232, 59, 59, 0.18);
-  border: 1px solid var(--crimson);
-  color: #ff7a7a;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  font-size: 10.5px;
-}
-.brand-title {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  color: var(--cyan-bezel);
-}
-.brand-sub {
-  color: var(--text-mid);
-  font-size: 10.5px;
-}
-.top-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-.top-links a, .top-links button {
-  font: 500 10.5px/1.2 "IBM Plex Mono", monospace;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--text-hi);
-  background: var(--bg-slate);
-  border: 1px solid var(--cyan-dim);
-  padding: 6px 10px;
-  text-decoration: none;
-  cursor: pointer;
-}
-.top-links a:hover, .top-links button:hover, .top-links button.active {
-  background: var(--cyan-bezel);
-  color: #041014;
-  border-color: var(--cyan-bezel);
-}
-
-/* Main 3-Column Workstation Grid */
-.workstation {
-  display: grid;
-  grid-template-columns: 235px minmax(0, 1fr) 390px;
-  gap: 14px;
-  padding: 14px 18px 28px;
-  max-width: 1820px;
-  margin: 0 auto;
-}
-@media (max-width: 1340px) {
-  .workstation { grid-template-columns: 215px minmax(0, 1fr); }
-  .right-col { grid-column: 1 / -1; }
-}
-@media (max-width: 860px) {
-  .workstation { grid-template-columns: 1fr; }
-}
-
-/* Left Column: 14-Poem 3D HDL / Landmark / Hero-Kit Stack */
-.spinner-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.stack-head {
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  color: var(--text-mid);
-  padding: 4px 6px;
-  border-bottom: 1px solid var(--cyan-dim);
-  margin-bottom: 2px;
-  display: flex;
-  justify-content: space-between;
-}
-.spinner-slot {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 7px 9px;
-  background: linear-gradient(90deg, rgba(64, 104, 102, 0.36) 0%, rgba(28, 52, 56, 0.24) 100%);
-  border: 1px solid rgba(118, 175, 172, 0.28);
-  border-left: 3px solid rgba(118, 175, 172, 0.45);
-  color: var(--text-hi);
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.15s ease;
-}
-.spinner-slot:hover {
-  background: linear-gradient(90deg, rgba(88, 212, 228, 0.28) 0%, rgba(28, 52, 56, 0.4) 100%);
-  border-color: var(--cyan-bezel);
-}
-.spinner-slot.active {
-  background: linear-gradient(90deg, rgba(255, 190, 68, 0.26) 0%, rgba(88, 212, 228, 0.16) 100%);
-  border-color: var(--amber-core);
-  border-left: 4px solid var(--amber-core);
-}
-.spinner-slot .sp-id {
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--seam-cyan);
-  display: flex;
-  justify-content: space-between;
-}
-.spinner-slot.active .sp-id { color: var(--amber-core); }
-.spinner-slot .sp-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-hi);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 1px;
-}
-.spinner-slot .sp-sub {
-  font-size: 9.5px;
-  color: var(--text-mid);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Center Column */
-.center-col {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.op-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px;
-  background: var(--bg-panel);
-  border: 1px solid var(--cyan-dim);
-}
-.naur-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: center;
-}
-.naur-btn {
-  font: 500 10px/1.2 "IBM Plex Mono", monospace;
-  letter-spacing: 0.06em;
-  padding: 5px 8px;
-  background: rgba(15, 36, 44, 0.9);
-  border: 1px solid var(--cyan-dim);
-  color: var(--text-mid);
-  cursor: pointer;
-}
-.naur-btn.active, .naur-btn:hover {
-  background: rgba(255, 190, 68, 0.2);
-  border-color: var(--amber-core);
-  color: var(--amber-core);
-}
-.naur-arrow { color: var(--text-low); font-size: 10px; }
-
-.paradigm-switch {
-  display: flex;
-  gap: 4px;
-}
-.par-btn {
-  font: 600 10px/1.2 "IBM Plex Mono", monospace;
-  letter-spacing: 0.08em;
-  padding: 5px 9px;
-  background: var(--bg-deep);
-  border: 1px solid var(--cyan-dim);
-  color: var(--text-mid);
-  cursor: pointer;
-}
-.par-btn.active {
-  background: var(--cyan-bezel);
-  color: #031015;
-  border-color: var(--cyan-bezel);
-}
-
-/* THE TVE VIEWFINDER STAGE */
-.viewfinder-outer {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #040a0e;
-  border: 1px solid var(--cyan-dim);
-  overflow: hidden;
-  user-select: none;
-  cursor: grab;
-  box-shadow: 0 0 42px rgba(88, 212, 228, 0.08) inset;
-}
-.viewfinder-outer:active { cursor: grabbing; }
-#tve-gl-canvas, #tve-hud-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-#tve-hud-canvas {
-  pointer-events: none;
-}
-
-.echo-banner {
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 12;
-  background: rgba(5, 14, 20, 0.88);
-  border: 1px solid var(--amber-core);
-  padding: 4px 14px;
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  color: var(--amber-core);
-  pointer-events: none;
-  white-space: nowrap;
-  max-width: 92%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Transport & Parameter Deck */
-.deck-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
-  gap: 10px;
-  padding: 12px;
-  background: var(--bg-panel);
-  border: 1px solid var(--cyan-dim);
-}
-.deck-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.deck-lbl {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  letter-spacing: 0.07em;
-  color: var(--text-mid);
-  text-transform: uppercase;
-}
-.deck-lbl .v { color: var(--amber-core); font-weight: 600; }
-input[type=range] {
-  width: 100%;
-  accent-color: var(--cyan-bezel);
-  cursor: pointer;
-}
-
-/* Echo Cases Strip */
-.echo-box {
-  padding: 12px 14px;
-  background: var(--bg-panel);
-  border: 1px solid var(--cyan-dim);
-}
-.echo-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.echo-head h3 {
-  margin: 0;
-  font-size: 11.5px;
-  letter-spacing: 0.11em;
-  color: var(--amber-core);
-  text-transform: uppercase;
-}
-.echo-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.echo-chip {
-  font: 500 10px/1.35 "IBM Plex Mono", monospace;
-  padding: 6px 10px;
-  background: rgba(16, 36, 44, 0.85);
-  border: 1px solid var(--cyan-dim);
-  color: var(--text-hi);
-  cursor: pointer;
-  text-align: left;
-}
-.echo-chip:hover, .echo-chip.active {
-  background: rgba(255, 190, 68, 0.18);
-  border-color: var(--amber-core);
-  color: var(--amber-core);
-}
-
-/* Right Column: 5-Tab Real Corpus, 3D HDL, Prompt, Dossier & Worldtext Inspector */
-.right-col {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.tab-bar {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 3px;
-  background: var(--bg-panel);
-  padding: 4px;
-  border: 1px solid var(--cyan-dim);
-}
-.tab-btn {
-  font: 600 9.5px/1.2 "IBM Plex Mono", monospace;
-  padding: 6px 4px;
-  background: rgba(8, 20, 26, 0.9);
-  border: 1px solid transparent;
-  color: var(--text-mid);
-  cursor: pointer;
-  text-align: center;
-  text-transform: uppercase;
-}
-.tab-btn:hover { color: var(--text-hi); border-color: var(--cyan-dim); }
-.tab-btn.active {
-  background: rgba(255, 190, 68, 0.2);
-  border-color: var(--amber-core);
-  color: var(--amber-core);
-}
-.tab-pane {
-  display: none;
-  flex-direction: column;
-  gap: 10px;
-}
-.tab-pane.active {
-  display: flex;
-}
-.eval-card {
-  background: var(--bg-panel);
-  border: 1px solid var(--cyan-dim);
-  padding: 11px 13px;
-}
-.eval-card h4 {
-  margin: 0 0 7px;
-  font-size: 10.5px;
-  letter-spacing: 0.12em;
-  color: var(--cyan-bezel);
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--cyan-faint);
-  padding-bottom: 5px;
-  display: flex;
-  justify-content: space-between;
-}
-.naur-code {
-  font-size: 10.5px;
-  line-height: 1.5;
-  color: #c2f0df;
-  background: rgba(4, 10, 14, 0.88);
-  border: 1px solid rgba(124, 242, 184, 0.25);
-  padding: 8px 10px;
-  white-space: pre-wrap;
-  max-height: 220px;
-  overflow-y: auto;
-}
-.verse-log {
-  max-height: 240px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding-right: 4px;
-}
-.verse-item {
-  padding: 6px 8px;
-  background: rgba(8, 22, 28, 0.78);
-  border-left: 2px solid var(--cyan-dim);
-  cursor: pointer;
-  transition: all 0.14s;
-}
-.verse-item:hover, .verse-item.active {
-  background: rgba(255, 190, 68, 0.15);
-  border-left-color: var(--amber-core);
-}
-.verse-item .vt {
-  font-size: 9.5px;
-  color: var(--amber-core);
-  display: flex;
-  justify-content: space-between;
-}
-.verse-item .vs {
-  font-family: "Cormorant Garamond", serif;
-  font-size: 15px;
-  color: var(--text-hi);
-  line-height: 1.3;
-  margin-top: 2px;
-}
-.data-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 290px;
-  overflow-y: auto;
-}
-.data-row {
-  padding: 6px 8px;
-  background: rgba(5, 14, 19, 0.82);
-  border: 1px solid rgba(88, 212, 228, 0.18);
-  font-size: 10.5px;
-}
-.data-row b { color: var(--amber-core); }
-.data-row .tag {
-  display: inline-block;
-  padding: 1px 5px;
-  font-size: 9px;
-  background: rgba(95, 232, 255, 0.15);
-  border: 1px solid var(--seam-cyan);
-  color: var(--seam-cyan);
-  margin-right: 5px;
-}
-.table-mini {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 10px;
-}
-.table-mini th, .table-mini td {
-  border-bottom: 1px solid var(--cyan-faint);
-  padding: 4px 4px;
-  text-align: left;
-  vertical-align: top;
-}
-.table-mini th { color: var(--amber-core); font-weight: 600; }
-.table-mini td { color: var(--text-mid); }
+  :root {
+    --bg: #07090d;
+    --panel: #0d1118;
+    --panel-2: #121822;
+    --border: rgba(92, 228, 255, 0.22);
+    --cyan: #5ce4ff;
+    --amber: #ffbe52;
+    --green: #82f5af;
+    --pink: #ff82c3;
+    --text: #e6eef6;
+    --muted: #8ea3b8;
+    --mono: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
+    --serif: "Georgia", "Iowan Old Style", serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: #0a0e14;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .brand-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.06em;
+  }
+  .brand-sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .paradigm-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .p-btn {
+    background: #101620;
+    color: var(--text);
+    border: 1px solid rgba(142, 163, 184, 0.28);
+    padding: 6px 11px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.14s ease;
+  }
+  .p-btn:hover {
+    border-color: var(--cyan);
+    color: #fff;
+  }
+  .p-btn.active {
+    background: rgba(92, 228, 255, 0.16);
+    border-color: var(--cyan);
+    color: var(--cyan);
+    font-weight: 700;
+  }
+  .workspace {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 270px 1fr 410px;
+    min-height: 0;
+  }
+  .sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 10px;
+    gap: 10px;
+  }
+  .inspector {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 12px;
+    gap: 12px;
+  }
+  .section-title {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(92, 228, 255, 0.18);
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+  }
+  .poem-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .poem-item {
+    padding: 6px 8px;
+    background: var(--panel-2);
+    border: 1px solid transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .poem-item:hover { border-color: rgba(92, 228, 255, 0.4); }
+  .poem-item.active {
+    border-color: var(--amber);
+    background: rgba(255, 190, 82, 0.12);
+    color: var(--amber);
+    font-weight: 700;
+  }
+  .view-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+  }
+  .view-chip {
+    padding: 5px 6px;
+    background: #101722;
+    border: 1px solid rgba(142, 163, 184, 0.22);
+    font-size: 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .view-chip.active {
+    border-color: var(--cyan);
+    background: rgba(92, 228, 255, 0.15);
+    color: var(--cyan);
+    font-weight: 700;
+  }
+  .stage-wrap {
+    position: relative;
+    background: #05070a;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .stage-main {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 8px;
+  }
+  #stageCanvas {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    background: #06090e;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
+    cursor: crosshair;
+  }
+  .stage-controls {
+    padding: 8px 14px;
+    background: #0a0e15;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 11px;
+    flex-wrap: wrap;
+  }
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  input[type="range"] {
+    accent-color: var(--cyan);
+    width: 120px;
+  }
+  .card {
+    background: var(--panel-2);
+    border: 1px solid rgba(142, 163, 184, 0.2);
+    border-radius: 4px;
+    padding: 9px 10px;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .card-amber { border-left: 3px solid var(--amber); }
+  .card-cyan { border-left: 3px solid var(--cyan); }
+  .card-green { border-left: 3px solid var(--green); }
+  .card-pink { border-left: 3px solid var(--pink); }
+  .verse-box {
+    font-family: var(--serif);
+    font-size: 13px;
+    color: #fff3db;
+    white-space: pre-line;
+    line-height: 1.5;
+  }
+  .plane-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 10.5px;
+  }
+  .kit-thumb-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .kit-thumb {
+    border: 1px solid rgba(255, 190, 82, 0.35);
+    border-radius: 3px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #090c10;
+  }
+  .kit-thumb img {
+    width: 100%;
+    display: block;
+  }
+  .kit-thumb-cap {
+    padding: 4px 6px;
+    font-size: 10px;
+    color: var(--amber);
+  }
 </style>
 </head>
 <body>
-
-<header class="top-bar">
-  <div class="brand-block">
-    <span class="brand-pill">VESPER / STELLINE APPARATUS</span>
-    <div>
-      <div class="brand-title">3D HDL ARCHITECTURAL &amp; LANDMARK WORKSTATION · TVE 1/2–4/4 · REAL CORPUS INSPECTOR</div>
-      <div class="brand-sub">Carrying Real 3D HDL Buildings (`_city/hdl.json`), Landmarks, Midjourney `shot.json` Prompts, Dossier Build Kits &amp; `assembly_p*.txt` Drafts</div>
-    </div>
+<header>
+  <div class="brand">
+    <div class="brand-title">WYGWYL · NARRATIVE APPARATUS (6 UNOBSTRUCTED REAL-DATA PARADIGMS)</div>
+    <div class="brand-sub">Zero decorative bezels · Zero stick-box wireframes · 100% real 3D point clouds, multiplane stacks, perspective grids, SAM2/ΔE programs & cut-out kits</div>
   </div>
-  <div class="top-links">
-    <button type="button" class="active" id="btn-view-tve">I · TVE Point-Cloud &amp; 3D HDL Scope</button>
-    <button type="button" id="btn-view-wire">II · 3D HDL Wireframe Matrix &amp; Floorplan</button>
-    <button type="button" id="btn-view-echo">III · Echo Split Comparator</button>
-    <a href="afterlight_videotext.html">📖 Videotext Book</a>
-    <a href="atlas_splat_studio.html">🎥 60fps Studio Rig</a>
+  <div class="paradigm-bar" id="paradigmBar">
+    <button class="p-btn active" data-mode="1">I · 3D Point Cloud + Z-Text</button>
+    <button class="p-btn" data-mode="2">II · Exploded Multiplane (exploded.jpg)</button>
+    <button class="p-btn" data-mode="3">III · Perspective & Line Layout</button>
+    <button class="p-btn" data-mode="4">IV · SAM2 Contours & ΔE Program</button>
+    <button class="p-btn" data-mode="5">V · Tactile Cut-Out Kits (kits/*.jpg)</button>
+    <button class="p-btn" data-mode="6">VI · Unobstructed 4-Layer X-Ray</button>
   </div>
 </header>
 
-<main class="workstation">
-
-  <!-- LEFT RAIL: 14-POEM 3D HDL / LANDMARK / HERO-PROP STACK -->
-  <aside class="spinner-stack">
-    <div class="stack-head">
-      <span>14 POEMS · 3D HDL &amp; KITS</span>
-      <span>+4.0m LINE</span>
+<div class="workspace">
+  <aside class="sidebar">
+    <div>
+      <div class="section-title">14 Poems (Dossier + Riverbed + Breakdown)</div>
+      <div class="poem-list" id="poemList"></div>
     </div>
-    <div id="canister-list"></div>
-  </aside>
-
-  <!-- CENTER STAGE: TVE VIEWFINDER, 3D HDL WIREFRAME MATRIX & ECHO COMPARATOR -->
-  <section class="center-col">
-    <div class="op-bar">
-      <div class="naur-steps" id="naur-ops">
-        <button type="button" class="naur-btn active" data-op="ingest" title="Ingest poem dossier, assembly draft & 3D HDL model">1. INGEST [HDL+DRAFT]</button>
-        <span class="naur-arrow">→</span>
-        <button type="button" class="naur-btn" data-op="isolate" title="Isolate TVE 1/2..4/4 multiplane, prop, 3D & perceive channels">2. ISOLATE [TVE 1–4]</button>
-        <span class="naur-arrow">→</span>
-        <button type="button" class="naur-btn" data-op="scrub" title="Scrub SCION verse timecode & multiplane station">3. SCRUB / JOG</button>
-        <span class="naur-arrow">→</span>
-        <button type="button" class="naur-btn" data-op="reframe" title="Orbit 3D HDL architectural wireframe & point-cloud camera">4. 3D ORBIT [HDL/PLY]</button>
-        <span class="naur-arrow">→</span>
-        <button type="button" class="naur-btn" data-op="excerpt" title="Inspect Grounding-DINO detections & Hero Prop build spec">5. EXCERPT PROP/CLUE</button>
-        <span class="naur-arrow">→</span>
-        <button type="button" class="naur-btn" data-op="compare" title="Compare two visits to the same Common Place to expose the Echo">6. COMPARE ECHO</button>
-      </div>
-      <div class="paradigm-switch">
-        <button type="button" class="par-btn active" id="par-precrime" title="Anderton/Witwer: Evidentiary inspection, camera solve & echo discrepancy">PRECRIME (INSPECT)</button>
-        <button type="button" class="par-btn" id="par-stelline" title="Ana Stelline / Vesper: Authored 3D HDL room, prop kit & optical feeling">STELLINE / VESPER (AUTHOR)</button>
-      </div>
+    <div>
+      <div class="section-title">Common Place Views (81 Active Shots)</div>
+      <div class="view-grid" id="viewGrid"></div>
     </div>
-
-    <!-- 16:9 WebGL + 3D Diegetic HUD & Wireframe Canvas -->
-    <div class="viewfinder-outer" id="vf-stage" title="Drag anywhere to orbit 3D HDL Architectural Wireframe & Multiplane Camera; scroll wheel to dolly zoom">
-      <canvas id="tve-gl-canvas" width="1280" height="720"></canvas>
-      <canvas id="tve-hud-canvas" width="1280" height="720"></canvas>
-      <div class="echo-banner" id="stage-banner">P01 · V92 THE UNDERPASS SHADOW-POOL · HDL:SEVERN [20×12m · 35 ROOMS] · PROP: vape_pen (12cm)</div>
-    </div>
-
-    <!-- Parameter & Telemetry Controls -->
-    <div class="deck-grid">
-      <div class="deck-cell">
-        <div class="deck-lbl"><span>Amber LiDAR Point-Cloud ↔ Cinema</span><span class="v" id="lbl-pc">68% Point-Cloud</span></div>
-        <input type="range" id="rng-pc" min="0" max="100" value="68">
-      </div>
-      <div class="deck-cell">
-        <div class="deck-lbl"><span>3D HDL Architecture &amp; Floorplan</span><span class="v" id="lbl-wire">55%</span></div>
-        <input type="range" id="rng-wire" min="0" max="100" value="55">
-      </div>
-      <div class="deck-cell">
-        <div class="deck-lbl"><span>Afterlight Optical Shader (FX01–14)</span><span class="v" id="lbl-fx">100%</span></div>
-        <input type="range" id="rng-fx" min="0" max="150" value="100">
-      </div>
-      <div class="deck-cell">
-        <div class="deck-lbl"><span>Diegetic TVE Bezel &amp; Detections</span><span class="v" id="lbl-hud">100% (ON)</span></div>
-        <input type="range" id="rng-hud" min="0" max="100" value="100">
-      </div>
-      <div class="deck-cell">
-        <div class="deck-lbl"><span>Station / Echo Scrub (`A ↔ B`)</span><span class="v" id="lbl-morph">0.00</span></div>
-        <input type="range" id="rng-morph" min="0" max="100" value="0">
-      </div>
-      <div class="deck-cell">
-        <div class="deck-lbl"><span>Common Place Stations (`shot.json`)</span><span class="v" id="lbl-st-count">6 Views</span></div>
-        <div id="st-mini-strip" style="display:flex;gap:4px;flex-wrap:wrap"></div>
-      </div>
-    </div>
-
-    <!-- 06 / TAMPERING AND TRANSFER: What the Echo Exposes -->
-    <div class="echo-box">
-      <div class="echo-head">
-        <h3>06 / TAMPERING &amp; TRANSFER · “WHAT THE ECHO EXPOSES” (SHARED COMMON-PLACE &amp; 3D HDL COMPARISONS)</h3>
-        <span style="color:var(--text-mid);font-size:10px">Compares both poems' `shot.json` prompts, camera solves, multiplane depths &amp; 3D HDL wireframes</span>
-      </div>
-      <div class="echo-chips" id="echo-presets">
-        <button type="button" class="echo-chip" data-p1="0" data-v1="92" data-p2="9" data-v2="94" data-note="WATER RIPPLE DISCREPANCY: V92 Naraka Underpass Shadow-Pool (HDL:severn, vape_pen 12cm, h=0.32m) vs. V94 Sunken Forum Bathers Echo (LMK:forum_dish, motorcycle).">
-          <b>ECHO 01 · V92↔V94 FLOODED UNDERPASS</b><br>P01 HDL:Severn ↔ P10 Sunken Forum Dish
-        </button>
-        <button type="button" class="echo-chip" data-p1="1" data-v1="22" data-p2="2" data-v2="28" data-note="REFLECTION & RUIN ECHO: P02 Child's Rowhouse [LIGHTS] (tambourine intact) vs. P03 Chapel on the Flat (tambourine_pieces: 8 crescent rim fragments on flooded stone).">
-          <b>ECHO 02 · V22↔V28 MIRROR &amp; CHAPEL</b><br>P02 HDL:Rowhouse ↔ P03 HDL:Chapel
-        </button>
-        <button type="button" class="echo-chip" data-p1="2" data-v1="28" data-p2="11" data-v2="52" data-note="ERA 4 RUIN ↔ ERA 5 REUSE: P03 Gothic Chapel on the Flat (timber trusses lost in the Fall) vs. P12 The White Temple (16 paraboloid concrete barrel-vault ribs straddling the chapel ruin).">
-          <b>ECHO 03 · CHAPEL RUIN ↔ WHITE TEMPLE</b><br>P03 HDL:Chapel (Era 0/4) ↔ P12 16-Rib Vault (Era 5)
-        </button>
-        <button type="button" class="echo-chip" data-p1="6" data-v1="80" data-p2="7" data-v2="84" data-note="VERTICAL SHAFT ECHO: P07 Spire Elevator Shaft & Vineyard DJ Deck vs. P08 The NEW SINGLE Picture Palace (16×30m steel-truss auditorium & rooftop ice_bath_basin).">
-          <b>ECHO 04 · V80↔V84 SPIRE &amp; MARQUEE</b><br>P07 LMK:Spire Shaft ↔ P08 HDL:Marquee
-        </button>
-        <button type="button" class="echo-chip" data-p1="12" data-v1="98" data-p2="13" data-v2="99" data-note="HARBOUR THRESHOLD ECHO: P13 Pier Café (14×9m on 180m pile pier + 3-Masted Ship) vs. P14 Sleep-Dam Wall, Lighthouse & Cantilevered Orange Catwalk.">
-          <b>ECHO 05 · V98↔V99 PIER SHIP &amp; SLEEP-DAM</b><br>P13 HDL:Pier Café ↔ P14 LMK:Sleep-Dam
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- RIGHT COLUMN: 5-TAB REAL CORPUS, 3D HDL, PROMPT, DOSSIER & WORLDTEXT INSPECTOR -->
-  <aside class="right-col">
-    <div class="tab-bar" id="inspector-tabs">
-      <button type="button" class="tab-btn active" data-tab="poem">1. Poem &amp; Draft</button>
-      <button type="button" class="tab-btn" data-tab="prompt">2. Shot &amp; Prompt</button>
-      <button type="button" class="tab-btn" data-tab="hdl">3. 3D HDL &amp; Rooms</button>
-      <button type="button" class="tab-btn" data-tab="dossier">4. Props &amp; Kits</button>
-      <button type="button" class="tab-btn" data-tab="atlas">5. Perceive &amp; Lore</button>
-    </div>
-
-    <!-- TAB 1: POEM TEXT, ESSENCE, ARC & WORKING ASSEMBLY DRAFT (`assembly_p*.txt`) -->
-    <div class="tab-pane active" id="pane-poem">
-      <div class="eval-card">
-        <h4><span>POEM ESSENCE &amp; TIMED SCION VERSES</span><span id="clock-readout" style="color:var(--amber-core)">TC 00:00.0</span></h4>
-        <div id="poem-essence-box" style="font-size:10.5px;color:var(--text-mid);margin-bottom:8px;line-height:1.45"></div>
-        <div class="verse-log" id="verse-list"></div>
-      </div>
-      <div class="eval-card">
-        <h4><span>WORKING POETRY DRAFT (`shots/poems/assembly/`)</span><span id="asm-file-lbl" style="color:var(--amber-core)">assembly_p2.txt</span></h4>
-        <div class="naur-code" id="assembly-draft-box"></div>
-      </div>
-      <div class="eval-card">
-        <h4><span>DRAMATIC ARC MOVEMENTS (`dossier.arc`)</span></h4>
-        <div class="data-list" id="arc-list"></div>
-      </div>
-    </div>
-
-    <!-- TAB 2: MIDJOURNEY PROMPT, CAMERA SOLVE, DETECTIONS & SEMANTIC STUFF (`shot.json`) -->
-    <div class="tab-pane" id="pane-prompt">
-      <div class="eval-card">
-        <h4><span>MIDJOURNEY v7 GENERATION PROMPT (`shot.json`)</span><span id="shot-id-lbl" style="color:var(--amber-core)">V92</span></h4>
-        <div class="naur-code" id="shot-prompt-box"></div>
-        <div id="shot-file-lbl" style="font-size:9.5px;color:var(--text-low);margin-top:4px;word-break:break-all"></div>
-      </div>
-      <div class="eval-card">
-        <h4><span>SOLVED CAMERA &amp; METRIC HORIZON (`DepthPro + RANSAC`)</span></h4>
-        <table class="table-mini" id="cam-solve-table"></table>
-      </div>
-      <div class="eval-card">
-        <h4><span>GROUNDING-DINO 3D DETECTIONS &amp; ONEFORMER STUFF</span></h4>
-        <div class="data-list" id="detections-list"></div>
-      </div>
-    </div>
-
-    <!-- TAB 3: 3D HDL ARCHITECTURAL MODEL, ERAS, SAW/DID FIT & ROOM MANIFEST (`_city/hdl.json`) -->
-    <div class="tab-pane" id="pane-hdl">
-      <div class="eval-card">
-        <h4><span>3D ARCHITECTURAL SPEC (`_city/hdl.json` &amp; `landmarks_ref.mjs`)</span></h4>
-        <div id="hdl-summary-box" style="font-size:10.5px;color:var(--text-hi);margin-bottom:8px"></div>
-        <div class="data-list" id="hdl-fit-list"></div>
-      </div>
-      <div class="eval-card">
-        <h4><span>3D FLOORPLAN ROOMS &amp; INTERIOR FURNITURE PROPS</span><span id="hdl-room-count" style="color:var(--amber-core)"></span></h4>
-        <div class="data-list" id="hdl-rooms-list"></div>
-      </div>
-      <div class="eval-card">
-        <h4><span>ARCHITECTURAL CLAIMS &amp; VERIFICATION (`hdl.facts`)</span></h4>
-        <div class="data-list" id="hdl-facts-list"></div>
-      </div>
-    </div>
-
-    <!-- TAB 4: DOSSIER HERO PROPS, PHYSICAL BUILD SPECS, 5-LAYER SETS & KITS TO BUILD -->
-    <div class="tab-pane" id="pane-dossier">
-      <div class="eval-card">
-        <h4><span>HERO PROPS &amp; PHYSICAL CARD BUILD SPECS (`dossier.props`)</span></h4>
-        <div class="data-list" id="props-list"></div>
-      </div>
-      <div class="eval-card">
-        <h4><span>5-LAYER MULTIPLANE SETS (`sky / back / mid / front / floor`)</span></h4>
-        <div class="data-list" id="sets-list"></div>
-      </div>
-      <div class="eval-card">
-        <h4><span>CHARACTERS, KITS TO BUILD &amp; DIRECTOR INSIGHTS</span></h4>
-        <div class="data-list" id="kits-insights-list"></div>
-      </div>
-    </div>
-
-    <!-- TAB 5: MULTIPLANE DEPTH STRATA, PERCEIVE SQUINT SSIM, TRANSITIONS & GAZETTEER -->
-    <div class="tab-pane" id="pane-atlas">
-      <div class="eval-card">
-        <h4><span>MULTIPLANE STRATIGRAPHY (`multiplane.json` P0–P6)</span></h4>
-        <div class="data-list" id="planes-list"></div>
-      </div>
-      <div class="eval-card">
-        <h4><span>PERCEPTUAL SQUINT &amp; VALUE SIGNALS (`perceive.json`)</span></h4>
-        <div class="data-list" id="perceive-list"></div>
-      </div>
-      <div class="eval-card">
-        <h4><span>TRANSITION GRAMMAR, MARKOV FOUNDRY &amp; CITY DATUM</span></h4>
-        <div class="data-list" id="transitions-list"></div>
-      </div>
-    </div>
-
-    <!-- Persistent TVE 4-Channel Live Readout Table -->
-    <div class="eval-card">
-      <h4><span>TVE 1/2 · 2/2 · 3/4 · 4/4 REAL-TIME CHANNEL TELEMETRY</span></h4>
-      <table class="table-mini">
-        <thead>
-          <tr><th>Chan</th><th>Apparatus Layer &amp; Real Asset</th><th>Metric</th><th>Val</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><b>TVE 1/2</b></td><td id="td-lbl1">P1 Foreground Plate (`multiplane.json`)</td><td id="td-sub1">1.64m P1</td><td id="td-dr1" style="color:var(--text-hi);font-weight:600">85</td></tr>
-          <tr><td><b>TVE 2/2</b></td><td id="td-lbl2">Hero Prop &amp; SCION Actor (`dossier.json`)</td><td id="td-sub2">12cm PROP</td><td id="td-dr2" style="color:var(--text-hi);font-weight:600">89</td></tr>
-          <tr><td><b>TVE 3/4</b></td><td id="td-lbl3">3D HDL Model &amp; DepthPro (`_city/hdl.json`)</td><td id="td-sub3">20×12m 3D</td><td id="td-dr3" style="color:var(--text-hi);font-weight:600">98</td></tr>
-          <tr><td><b>TVE 4/4</b></td><td id="td-lbl4">Perceive SSIM &amp; Optical Pass (`perceive.json`)</td><td id="td-sub4">SSIM .92</td><td id="td-dr4" style="color:var(--text-hi);font-weight:600">92</td></tr>
-        </tbody>
-      </table>
+    <div>
+      <div class="section-title">Multiplane Z-Stack (multiplane.json)</div>
+      <div id="planeStackList"></div>
     </div>
   </aside>
 
-</main>
+  <main class="stage-wrap">
+    <div class="stage-main">
+      <canvas id="stageCanvas" width="1920" height="1080"></canvas>
+    </div>
+    <div class="stage-controls">
+      <div class="ctrl-group">
+        <label>3D Orbit / Curtain X:</label>
+        <input type="range" id="scrubX" min="0" max="100" value="38" />
+      </div>
+      <div class="ctrl-group">
+        <label>Metric Depth Wave (Z):</label>
+        <input type="range" id="scrubZ" min="1" max="35" step="0.2" value="6.0" />
+        <span id="scrubZVal">6.0m</span>
+      </div>
+      <div class="ctrl-group">
+        <label>Worldtext Opacity:</label>
+        <input type="range" id="textAlpha" min="0" max="100" value="90" />
+      </div>
+      <div class="ctrl-group">
+        <button class="p-btn" id="toggleAnimBtn">Pause Motion</button>
+      </div>
+    </div>
+  </main>
+
+  <aside class="inspector">
+    <div>
+      <div class="section-title">Poem Verse & Scene Breakdown (breakdown/NN.json)</div>
+      <div class="card card-amber verse-box" id="poemVerseBox">Loading...</div>
+    </div>
+    <div>
+      <div class="section-title">Verbatim Midjourney Prompt (shot.json)</div>
+      <div class="card card-cyan" id="promptBox">Loading...</div>
+    </div>
+    <div>
+      <div class="section-title">Golden Riverbed & Perceptual Diagnostics</div>
+      <div class="card card-green" id="diagnosticsBox">Loading...</div>
+    </div>
+    <div>
+      <div class="section-title">Physical Cut-Out Kits (poems/kits/NN.*.jpg)</div>
+      <div class="kit-thumb-grid" id="kitThumbGrid"></div>
+    </div>
+  </aside>
+</div>
 
 <script>
-// ============================================================================
-// VESPER / STELLINE 3D HDL ARCHITECTURAL & REAL CORPUS WORKSTATION
-// Directly renders our actual 3D HDL buildings (`_city/hdl.json`), Landmarks
-// (`_city/landmarks_ref.mjs`), Street Kit (`+4.00m Salt Line` & `Kintsugi Seam`),
-// Isometric Room/Furniture Floorplans, `shot.json` prompts & camera solves,
-// `multiplane.json` depth strata, `perceive.json` metrics, and `assembly_p*.txt`.
-// ============================================================================
-
-const VS_SRC = `
-attribute vec2 aPos;
-varying vec2 vUv;
-void main() {
-  vUv = vec2(aPos.x * 0.5 + 0.5, 0.5 - aPos.y * 0.5);
-  gl_Position = vec4(aPos, 0.0, 1.0);
-}
-`;
-
-const FS_SRC = `
-precision highp float;
-varying vec2 vUv;
-
-uniform sampler2D uCelA, uDepthA, uCelB, uDepthB;
-uniform vec2 uPanA, uPanB;
-uniform float uDollyA, uDollyB;
-uniform float uMorph;
-uniform float uPointCloudMix;
-uniform float uFxMode;
-uniform float uFxInt;
-uniform float uEchoSplit;
-uniform float uTime;
-uniform vec3 uGlowCol;
-
-vec2 mirrorUv(vec2 uv) {
-  vec2 m = mod(uv, 2.0);
-  if (m.x < 0.0) m.x += 2.0;
-  if (m.y < 0.0) m.y += 2.0;
-  return vec2(m.x > 1.0 ? 2.0 - m.x : m.x, m.y > 1.0 ? 2.0 - m.y : m.y);
-}
-
-vec4 sampleMultiplane(sampler2D tCel, sampler2D tDep, vec2 uv, vec2 pan, float dolly, float stretch) {
-  float dRaw = texture2D(tDep, uv).r;
-  float disp = clamp(1.0 - dRaw, 0.0, 1.0);
-  float scale = dolly * (1.0 + stretch * (disp - 0.35));
-  vec2 uvW = mirrorUv((uv - 0.5) / scale + 0.5 + pan * (0.28 + 0.82 * disp));
-  vec3 rgb = texture2D(tCel, uvW).rgb;
-  float dispW = clamp(1.0 - texture2D(tDep, uvW).r, 0.0, 1.0);
-  return vec4(rgb, dispW);
-}
-
-vec3 evalPointCloudScope(vec3 rgb, float disp, float surfSlope, vec2 uv) {
-  vec3 bgTeal = vec3(0.025, 0.085, 0.115) + 0.035 * vec3(0.1, 0.45, 0.55) * (1.0 - uv.y);
-  vec2 gridFreq = vec2(190.0, 115.0);
-  vec2 warpedGridUv = uv * gridFreq + vec2(disp * 18.0, disp * 26.0);
-  vec2 cell = fract(warpedGridUv) - 0.5;
-  float dotDist = length(cell);
-
-  float lum = dot(rgb, vec3(0.299, 0.587, 0.114));
-  float dotRadius = 0.18 + 0.34 * clamp(lum + surfSlope * 0.8, 0.0, 1.0);
-  float dotMask = smoothstep(dotRadius, dotRadius * 0.25, dotDist);
-
-  float groundStreak = pow(0.5 + 0.5 * sin((uv.x - 0.5) * (45.0 + disp * 90.0)) * cos(uv.y * 85.0 - uTime * 1.8), 6.0)
-                       * clamp((uv.y - 0.42) / 0.58, 0.0, 1.0);
-
-  vec3 amberLo = vec3(0.92, 0.42, 0.06);
-  vec3 amberHi = vec3(1.00, 0.86, 0.38);
-  vec3 ptColor = mix(amberLo, amberHi, clamp(lum * 1.15 + surfSlope * 0.5, 0.0, 1.0));
-
-  float structureWeight = clamp(lum * 1.25 + surfSlope * 1.4 + disp * 0.35, 0.0, 1.0);
-  vec3 cloud = bgTeal
-             + ptColor * (dotMask * structureWeight * 1.15 + structureWeight * 0.48)
-             + amberHi * groundStreak * 0.65;
-
-  float scanBand = pow(0.5 + 0.5 * sin(uv.y * 38.0 + uv.x * 6.0 - uTime * 0.9), 5.0) * clamp(0.55 - uv.y, 0.0, 1.0);
-  cloud += vec3(0.18, 0.88, 0.58) * scanBand * 0.22;
-
-  return clamp(cloud, 0.0, 1.0);
-}
-
-void main() {
-  vec4 sA = sampleMultiplane(uCelA, uDepthA, vUv, uPanA, uDollyA, 0.04 * uMorph);
-  vec4 sB = sampleMultiplane(uCelB, uDepthB, vUv, uPanB, uDollyB, 0.04 * (uMorph - 1.0));
-
-  float wB = clamp(uMorph + 0.22 * (sB.a - sA.a) * sin(3.14159265 * uMorph), 0.0, 1.0);
-  if (uEchoSplit > 0.5) {
-    wB = smoothstep(0.495, 0.505, vUv.x);
-  }
-
-  vec3 baseCol = mix(sA.rgb, sB.rgb, wB);
-  float disp = mix(sA.a, sB.a, wB);
-
-  vec2 eps = vec2(1.0 / 640.0, 1.0 / 360.0);
-  float gx = (mix(1.0 - texture2D(uDepthA, vUv + vec2(eps.x, 0.0)).r, 1.0 - texture2D(uDepthB, vUv + vec2(eps.x, 0.0)).r, wB)
-            - mix(1.0 - texture2D(uDepthA, vUv - vec2(eps.x, 0.0)).r, 1.0 - texture2D(uDepthB, vUv - vec2(eps.x, 0.0)).r, wB)) * 18.0;
-  float gy = (mix(1.0 - texture2D(uDepthA, vUv + vec2(0.0, eps.y)).r, 1.0 - texture2D(uDepthB, vUv + vec2(0.0, eps.y)).r, wB)
-            - mix(1.0 - texture2D(uDepthA, vUv - vec2(0.0, eps.y)).r, 1.0 - texture2D(uDepthB, vUv - vec2(0.0, eps.y)).r, wB)) * 18.0;
-  float surfSlope = clamp(length(vec2(gx, gy)), 0.0, 1.0);
-  vec3 surfN = normalize(vec3(-gx, -gy, 1.0));
-  float lum = dot(baseCol, vec3(0.299, 0.587, 0.114));
-
-  vec3 fxCol = baseCol;
-  if (uFxMode < 1.5) {
-    float mist = clamp((1.0 - disp * 1.15) * (0.28 + 0.22 * sin(uTime * 0.95)), 0.0, 0.52);
-    fxCol = mix(fxCol, mix(vec3(0.14, 0.18, 0.24), uGlowCol, 0.35), mist);
-  } else if (uFxMode < 2.5) {
-    float cWave = pow(0.5 + 0.5 * sin(vUv.x * 28.0 + disp * 16.0 + uTime * 1.6) * cos(vUv.y * 22.0 - disp * 14.0), 3.0);
-    fxCol += (cWave + surfSlope * 0.45) * uGlowCol * 0.34;
-  } else if (uFxMode < 3.5) {
-    fxCol += clamp((-gy * 0.65 + surfSlope * 0.55) * disp, 0.0, 1.0) * mix(uGlowCol, vec3(0.85, 0.92, 1.0), 0.5) * 0.34;
-  } else if (uFxMode < 4.5) {
-    vec3 silver = vec3(lum * 0.90 + 0.04, lum * 0.93 + 0.04, lum * 1.04 + 0.06);
-    fxCol = mix(fxCol, silver, 0.52);
-    fxCol = mix(fxCol, vec3(0.96, 0.68, 0.18), clamp(surfSlope * 1.25 * disp, 0.0, 0.58));
-  } else if (uFxMode < 6.5) {
-    float uCx = vUv.x * 24.0 + uTime * 1.3 + disp * 4.5;
-    float uCy = vUv.y * 28.0 - uTime * 0.95 + disp * 4.5;
-    float peaks = pow(clamp(0.5 + 0.25 * (sin(uCx + sin(uCy * 1.4)) + cos(uCy + cos(uCx * 1.3))), 0.0, 1.0), 3.4);
-    fxCol += peaks * uGlowCol * 0.38;
-  } else {
-    vec2 lPos = vec2(0.5 + 0.30 * sin(uTime * 0.7), 0.46 + 0.16 * cos(uTime * 0.5));
-    float nDotL = max(0.0, dot(surfN, normalize(vec3(lPos.x - vUv.x, lPos.y - vUv.y, 0.28))));
-    fxCol += nDotL * uGlowCol * 0.28;
-  }
-  vec3 cinemaCol = mix(baseCol, fxCol, uFxInt);
-
-  vec3 pcCol = evalPointCloudScope(cinemaCol, disp, surfSlope, vUv);
-  vec3 finalCol = mix(cinemaCol, pcCol, uPointCloudMix);
-
-  if (uEchoSplit > 0.5) {
-    float diff = length(sA.rgb - sB.rgb) + abs(sA.a - sB.a);
-    float seamBand = exp(-pow((vUv.x - 0.5) / 0.12, 2.0));
-    finalCol += seamBand * diff * vec3(1.0, 0.45, 0.15) * 0.65;
-  }
-
-  gl_FragColor = vec4(clamp(finalCol, 0.0, 1.0), 1.0);
-}
-`;
-
-// 3D Perspective Projection Helper (`z` is vertical elevation)
-function project3D(x, y, z, cx, cy, scale, yaw, pitch) {
-  const cyw = Math.cos(yaw), syw = Math.sin(yaw);
-  const x1 = x * cyw - y * syw;
-  const y1 = x * syw + y * cyw;
-  const z1 = z;
-
-  const cp = Math.cos(pitch), sp = Math.sin(pitch);
-  const y2 = y1 * cp - z1 * sp;
-  const z2 = y1 * sp + z1 * cp;
-  const x2 = x1;
-
-  const persp = 3.2 / Math.max(1.3, 3.2 + y2 * 0.65);
-  return {
-    sx: cx + x2 * scale * persp,
-    sy: cy - z2 * scale * persp,
-    depth: y2
-  };
-}
-
-// Draw a 3D Architectural / Landmark Wireframe Model (`HDL:severn`, `HDL:chapel`, `LMK:white_temple`, etc.)
-function drawWireframe3DModel(ctx, wire3d, cx, cy, scale, yaw, pitch, isActive, alphaMul = 1.0, showTitle = true) {
-  if (!wire3d || !wire3d.segments) return;
-  ctx.save();
-  ctx.globalAlpha = alphaMul;
-
-  const roleStyles = {
-    shell:     { stroke: isActive ? 'rgba(255, 212, 108, 0.82)' : 'rgba(142, 242, 204, 0.68)', w: 1.1 },
-    room:      { stroke: isActive ? 'rgba(118, 215, 225, 0.46)' : 'rgba(96, 185, 175, 0.38)',  w: 0.8 },
-    prop:      { stroke: 'rgba(255, 165, 82, 0.85)',  w: 1.2 },
-    seam:      { stroke: 'rgba(95, 232, 255, 0.95)',  w: isActive ? 1.8 : 1.2 }, // Kintsugi Seam (#5fe8ff)
-    salt_line: { stroke: 'rgba(236, 235, 228, 0.95)', w: isActive ? 1.9 : 1.3 }, // +4.00m Salt Line (#ecebe4)
-    accent:    { stroke: isActive ? 'rgba(255, 204, 84, 0.96)' : 'rgba(175, 255, 224, 0.88)', w: isActive ? 1.8 : 1.2 }
-  };
-
-  // Base glowing architectural plinth
-  const plinth = [[-0.85, -0.65], [0.85, -0.65], [0.85, 0.65], [-0.85, 0.65]].map(
-    ([px, py]) => project3D(px, py, -0.68, cx, cy, scale, yaw, pitch)
-  );
-  ctx.beginPath();
-  plinth.forEach((p, i) => { if (i === 0) ctx.moveTo(p.sx, p.sy); else ctx.lineTo(p.sx, p.sy); });
-  ctx.closePath();
-  ctx.fillStyle = isActive ? 'rgba(255, 196, 78, 0.14)' : 'rgba(88, 218, 188, 0.09)';
-  ctx.fill();
-  ctx.strokeStyle = isActive ? 'rgba(255, 214, 102, 0.65)' : 'rgba(130, 235, 198, 0.42)';
-  ctx.lineWidth = 1.0;
-  ctx.stroke();
-
-  // Draw all 3D wireframe segments
-  for (let i = 0; i < wire3d.segments.length; i++) {
-    const [x1, y1, z1, x2, y2, z2, role] = wire3d.segments[i];
-    const p1 = project3D(x1, y1, z1, cx, cy, scale, yaw, pitch);
-    const p2 = project3D(x2, y2, z2, cx, cy, scale, yaw, pitch);
-    const st = roleStyles[role] || roleStyles.shell;
-    ctx.strokeStyle = st.stroke;
-    ctx.lineWidth = st.w;
-    ctx.beginPath();
-    ctx.moveTo(p1.sx, p1.sy);
-    ctx.lineTo(p2.sx, p2.sy);
-    ctx.stroke();
-  }
-
-  if (showTitle) {
-    const rawT = wire3d.title || 'HDL MODEL';
-    const parts = rawT.split('·');
-    const shortT = parts.length > 1 ? `${parts[0].trim()} · ${parts[parts.length - 1].trim().slice(0, 24)}` : rawT.slice(0, 32);
-    ctx.font = '600 10px "IBM Plex Mono", monospace';
-    const tw = ctx.measureText(shortT).width + 12;
-    const ty = cy + scale * 0.68;
-    ctx.fillStyle = 'rgba(6, 16, 22, 0.86)';
-    ctx.fillRect(cx - tw * 0.5, ty, tw, 17);
-    ctx.strokeStyle = isActive ? '#ffbe44' : 'rgba(95, 232, 255, 0.55)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(cx - tw * 0.5, ty, tw, 17);
-    ctx.fillStyle = isActive ? '#ffd876' : '#baf8e4';
-    ctx.fillText(shortT, cx - tw * 0.5 + 6, ty + 12);
-  }
-
-  ctx.restore();
-}
-
-// Draw the Bottom-Center Tilted 3D Isometric HDL Room & Furniture Floorplan Box (Replacing Image 3's floorplan box)
-function drawIsometricHdlFloorplan(ctx, poemData, cx, cy, scale, angle, nowSec) {
-  const rooms = (poemData && poemData.wire3d && poemData.wire3d.floorplan_rooms) || [];
-  if (!rooms.length) return;
-
-  ctx.save();
-  let maxX = 16, maxY = 12;
-  rooms.forEach(r => {
-    if (r.x + r.w > maxX) maxX = r.x + r.w;
-    if (r.y + r.d > maxY) maxY = r.y + r.d;
-  });
-  const span = Math.max(maxX, maxY, 1.0);
-  const ca = Math.cos(angle), sa = Math.sin(angle);
-
-  function isoPt(rx, ry, rz = 0) {
-    const nx = (rx / span - 0.5) * scale * 1.45;
-    const ny = (ry / span - 0.5) * scale * 1.05;
-    return {
-      x: cx + (nx * ca - ny * sa),
-      y: cy + (nx * sa + ny * ca) * 0.68 - rz * 4.2
-    };
-  }
-
-  const ob = [isoPt(-0.6, -0.6, 0), isoPt(maxX + 0.6, -0.6, 0), isoPt(maxX + 0.6, maxY + 0.6, 0), isoPt(-0.6, maxY + 0.6, 0)];
-  const ot = [isoPt(-0.6, -0.6, 3.2), isoPt(maxX + 0.6, -0.6, 3.2), isoPt(maxX + 0.6, maxY + 0.6, 3.2), isoPt(-0.6, maxY + 0.6, 3.2)];
-
-  ctx.beginPath();
-  ob.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(12, 32, 36, 0.52)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(145, 238, 210, 0.72)';
-  ctx.lineWidth = 1.2;
-  ctx.stroke();
-
-  ctx.beginPath();
-  ot.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-  ctx.closePath();
-  ctx.strokeStyle = 'rgba(195, 255, 235, 0.88)';
-  ctx.lineWidth = 1.6;
-  ctx.stroke();
-
-  for (let i = 0; i < 4; i++) {
-    ctx.beginPath();
-    ctx.moveTo(ob[i].x, ob[i].y);
-    ctx.lineTo(ot[i].x, ot[i].y);
-    ctx.stroke();
-  }
-
-  ctx.font = '600 9px "IBM Plex Mono", monospace';
-  rooms.slice(0, 7).forEach(rm => {
-    const rb = [isoPt(rm.x, rm.y, 0), isoPt(rm.x + rm.w, rm.y, 0), isoPt(rm.x + rm.w, rm.y + rm.d, 0), isoPt(rm.x, rm.y + rm.d, 0)];
-    const rt = [isoPt(rm.x, rm.y, 2.4), isoPt(rm.x + rm.w, rm.y, 2.4), isoPt(rm.x + rm.w, rm.y + rm.d, 2.4), isoPt(rm.x, rm.y + rm.d, 2.4)];
-    ctx.strokeStyle = 'rgba(95, 232, 255, 0.68)';
-    ctx.lineWidth = 1.0;
-    ctx.beginPath();
-    rb.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-    ctx.closePath();
-    ctx.stroke();
-
-    ctx.strokeStyle = 'rgba(210, 255, 240, 0.78)';
-    ctx.beginPath();
-    rt.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-    ctx.closePath();
-    ctx.stroke();
-
-    const rc = isoPt(rm.x + rm.w * 0.5, rm.y + rm.d * 0.5, 1.2);
-    ctx.fillStyle = '#ffd876';
-    ctx.fillText(rm.id.slice(0, 8), rc.x - 14, rc.y + 3);
-  });
-
-  // Point-cloud starbursts next to floorplan (matching Image 3!)
-  [[-scale * 1.15, -scale * 0.38, 32, 'rgba(235, 252, 248, 0.85)'],
-   [-scale * 1.50, -scale * 0.12, 26, 'rgba(142, 208, 202, 0.65)']].forEach(([bx, by, rad, col], bi) => {
-    const bcx = cx + bx, bcy = cy + by;
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1.0;
-    for (let r = 0; r < 40; r++) {
-      const a = r * 0.157 + nowSec * 0.25 + bi;
-      const len = rad * (0.35 + 0.65 * Math.abs(Math.sin(r * 1.7 + bi)));
-      ctx.beginPath();
-      ctx.moveTo(bcx, bcy);
-      ctx.lineTo(bcx + Math.cos(a) * len, bcy + Math.sin(a) * len * 0.78);
-      ctx.stroke();
-    }
-  });
-
-  // Metric Scale Bars (`10.0m`, `20.0m · +4.0m LINE`)
-  const sbx = cx - scale * 2.1, sby = cy + scale * 0.62;
-  ctx.strokeStyle = 'rgba(165, 238, 225, 0.82)';
-  ctx.fillStyle = 'rgba(165, 238, 225, 0.88)';
-  ctx.beginPath();
-  ctx.moveTo(sbx, sby); ctx.lineTo(sbx + 105, sby);
-  ctx.moveTo(sbx, sby); ctx.lineTo(sbx, sby + 5);
-  ctx.moveTo(sbx + 105, sby); ctx.lineTo(sbx + 105, sby + 5);
-  ctx.stroke();
-  ctx.fillText(`${(span * 0.5).toFixed(1)}m`, sbx + 82, sby + 13);
-
-  ctx.beginPath();
-  ctx.moveTo(sbx, sby + 18); ctx.lineTo(sbx + 205, sby + 18);
-  ctx.moveTo(sbx, sby + 18); ctx.lineTo(sbx, sby + 23);
-  ctx.moveTo(sbx + 205, sby + 18); ctx.lineTo(sbx + 205, sby + 23);
-  ctx.stroke();
-  ctx.fillStyle = '#ffbe44';
-  ctx.fillText(`${span.toFixed(1)}m · +4.0m LINE`, sbx + 145, sby + 31);
-  ctx.restore();
-}
-
-function renderDiegeticOverlay(ctx, W, H, state, bundle, nowSec) {
-  ctx.clearRect(0, 0, W, H);
-  if (!bundle || !bundle.poems) return;
-
-  const poems = bundle.poems;
-  const actPoem = poems[state.poemIdx] || poems[0];
-  const shotA = (bundle.views_by_no && bundle.views_by_no[String(state.stA.vn)]) || actPoem.views[0];
-  const shotB = (bundle.views_by_no && bundle.views_by_no[String(state.stB.vn)]) || actPoem.views[0];
-  const yawBase = 0.55 + state.panX * 4.5 + nowSec * 0.16;
-  const pitchBase = 0.38 + state.panY * 3.2;
-
-  // =========================================================================
-  // A. MODE II: 3D HDL ARCHITECTURAL WIREFRAME MATRIX, FLOORPLAN & CORPUS BOX
-  // =========================================================================
-  if (state.wireMix > 0.01) {
-    ctx.save();
-    ctx.globalAlpha = state.wireMix;
-
-    // 1. Perspective 3D Depth-Pro & Multiplane Topography Mesh
-    ctx.strokeStyle = 'rgba(130, 235, 195, 0.34)';
-    ctx.lineWidth = 1;
-    const gx0 = W * 0.16, gy0 = H * 0.38, gw = W * 0.28, gh = H * 0.26;
-    const cols = 20, rows = 14;
-    for (let r = 0; r <= rows; r++) {
-      ctx.beginPath();
-      for (let c = 0; c <= cols; c++) {
-        const u = c / cols, v = r / rows;
-        const elev = Math.sin(u * 6.2 + nowSec * 1.1) * Math.cos(v * 5.4 - nowSec * 0.8) * 14.0
-                   * Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
-        const px = gx0 + u * gw + (v - 0.5) * 26.0;
-        const py = gy0 + v * gh - elev;
-        if (c === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      }
-      ctx.stroke();
-    }
-    for (let c = 0; c <= cols; c += 2) {
-      ctx.beginPath();
-      for (let r = 0; r <= rows; r++) {
-        const u = c / cols, v = r / rows;
-        const elev = Math.sin(u * 6.2 + nowSec * 1.1) * Math.cos(v * 5.4 - nowSec * 0.8) * 14.0
-                   * Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
-        const px = gx0 + u * gw + (v - 0.5) * 26.0;
-        const py = gy0 + v * gh - elev;
-        if (r === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      }
-      ctx.stroke();
-    }
-
-    // 2. Bottom-Center Tilted 3D Isometric HDL Room & Furniture Floorplan Box
-    drawIsometricHdlFloorplan(ctx, actPoem, W * 0.38, H * 0.78, 82.0, -0.52, nowSec);
-
-    // 3. Constellation of 6 Real 3D Architectural / Landmark Wireframe Models
-    const slots = [
-      { cx: W * 0.43, cy: H * 0.24, scale: 82, idx: state.poemIdx },
-      { cx: W * 0.58, cy: H * 0.14, scale: 72, idx: (state.poemIdx + 2) % 14 },
-      { cx: W * 0.70, cy: H * 0.22, scale: 72, idx: (state.poemIdx + 7) % 14 },
-      { cx: W * 0.53, cy: H * 0.46, scale: 76, idx: (state.poemIdx + 11) % 14 },
-      { cx: W * 0.66, cy: H * 0.50, scale: 72, idx: (state.poemIdx + 10) % 14 },
-      { cx: W * 0.60, cy: H * 0.76, scale: 78, idx: (state.poemIdx + 12) % 14 },
-    ];
-    slots.forEach((sl, si) => {
-      const pm = poems[sl.idx] || actPoem;
-      drawWireframe3DModel(
-        ctx,
-        pm.wire3d,
-        sl.cx,
-        sl.cy,
-        sl.scale,
-        yawBase + si * 0.35,
-        pitchBase,
-        si === 0,
-        state.wireMix,
-        true
-      );
-    });
-
-    // 4. When in full Wireframe Matrix mode (`wireMix > 0.7`), draw the Right-Side Translucent Corpus Box inside the stage!
-    if (state.wireMix > 0.72) {
-      const bx = W - 325, by = 78, bw = 295, bh = H - 116;
-      ctx.fillStyle = 'rgba(5, 13, 18, 0.88)';
-      ctx.fillRect(bx, by, bw, bh);
-      ctx.strokeStyle = 'rgba(95, 232, 255, 0.65)';
-      ctx.lineWidth = 1.2;
-      ctx.strokeRect(bx, by, bw, bh);
-
-      const asm = (actPoem.assembly_pages && actPoem.assembly_pages[Math.min(1, actPoem.assembly_pages.length - 1)]) ||
-                  (actPoem.assembly_pages && actPoem.assembly_pages[0]) || { file: 'assembly_p1.txt', reverse_header: '', text: '' };
-      const pr0 = (actPoem.props && actPoem.props[0]) || { id: 'prop', scale_cm: 12, build: '' };
-      const fit0 = (actPoem.hdl_meta && actPoem.hdl_meta.fit && actPoem.hdl_meta.fit[0]) || { saw: 'reference still', did: '3D HDL wireframe' };
-
-      const lines = [
-        { t: `■ P${actPoem.num} · ${actPoem.title.toUpperCase()}`, c: '#ffbe44' },
-        { t: `  ${actPoem.wire3d.title.slice(0, 38)}`, c: '#5fe8ff' },
-        { t: `■ ASSEMBLY [${asm.file}]:`, c: '#ffbe44' },
-        { t: `  ${asm.reverse_header.slice(0, 38)}`, c: '#7cf2b8' },
-        { t: `■ HERO PROP [${pr0.id} · ${pr0.scale_cm || 15}cm]:`, c: '#ffbe44' },
-        { t: `  ${(pr0.build || '').slice(0, 38)}`, c: '#d8f4ee' },
-        { t: `  ${(pr0.build || '').slice(38, 76)}`, c: '#d8f4ee' },
-        { t: `■ 3D HDL FIT (_city/hdl.json):`, c: '#ffbe44' },
-        { t: `  SAW: ${(fit0.saw || '').slice(0, 35)}`, c: '#9ad8e4' },
-        { t: `  DID: ${(fit0.did || '').slice(0, 35)}`, c: '#7cf2b8' },
-        { t: `■ PROMPT [${shotA.id} · shot.json]:`, c: '#ffbe44' },
-        { t: `  ${(shotA.prompt || '').slice(0, 38)}`, c: '#d8f4ee' },
-        { t: `  ${(shotA.prompt || '').slice(38, 76)}`, c: '#d8f4ee' },
-        { t: `■ PERCEIVE (perceive.json):`, c: '#ffbe44' },
-        { t: `  READS@σ=${shotA.perceive.reads_at_sigma} · dE=${shotA.perceive.dE} · SSIM=${shotA.perceive.value_ssim}`, c: '#5fe8ff' },
-        { t: `  “${(shotA.perceive.felt || '').slice(0, 36)}”`, c: '#d8f4ee' },
-      ];
-      ctx.font = '500 10px "IBM Plex Mono", monospace';
-      lines.forEach((ln, li) => {
-        ctx.fillStyle = ln.c;
-        ctx.fillText(ln.t, bx + 10, by + 18 + li * 16);
-      });
-    }
-
-    ctx.restore();
-  }
-
-  // =========================================================================
-  // B. MODE I & III: DIEGETIC TVE OPTICAL GLASS BEZEL & REAL SHOT TELEMETRY
-  // =========================================================================
-  if (state.hudMix > 0.01) {
-    ctx.save();
-    ctx.globalAlpha = state.hudMix;
-
-    const padX = 36, padY = 26, rad = 28;
-    ctx.strokeStyle = 'rgba(92, 222, 238, 0.82)';
-    ctx.lineWidth = 2.2;
-    ctx.shadowColor = 'rgba(88, 212, 228, 0.65)';
-    ctx.shadowBlur = 14;
-    ctx.beginPath();
-    ctx.roundRect(padX, padY, W - padX * 2, H - padY * 2, rad);
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    // Top-left `[ / ]` + crimson status bar `[████  ]` + Perceive Squint readout
-    ctx.strokeStyle = 'rgba(165, 238, 248, 0.85)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(86, 52, 58, 28);
-    ctx.beginPath();
-    ctx.moveTo(98, 74); ctx.lineTo(112, 58);
-    ctx.lineWidth = 3; ctx.stroke();
-
-    ctx.strokeStyle = 'rgba(232, 65, 65, 0.85)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(160, 52, 112, 28);
-    ctx.fillStyle = 'rgba(232, 62, 62, 0.88)';
-    const barFill = 72 + Math.round(18 * Math.sin(nowSec * 1.3));
-    ctx.fillRect(164, 56, barFill, 20);
-
-    const perc = shotA.perceive || { reads_at_sigma: 8, dE: 4.5, value_ssim: 0.92 };
-    const cam = shotA.camera || { focal_mm: 24.7, fov_deg: 72.2, height_m: 0.32, pitch_deg: 3.8, shot_class: 'ground', confidence: 0.98 };
-    ctx.font = '500 10px "IBM Plex Mono", monospace';
-    ctx.fillStyle = 'rgba(138, 212, 226, 0.85)';
-    ctx.fillText(`READS @ σ=${perc.reads_at_sigma} · dE=${perc.dE} · SSIM=${perc.value_ssim}`, 86, 94);
-
-    // Top-right `[ /" ]` Atlantis Emblem prism box + Solved Camera Lens & Height
-    ctx.strokeStyle = 'rgba(165, 238, 248, 0.85)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(W - 154, 52, 68, 28);
-    ctx.beginPath();
-    ctx.moveTo(W - 134, 72); ctx.lineTo(W - 118, 58);
-    ctx.lineWidth = 2.5; ctx.stroke();
-    // +4.00m Salt Line inside emblem box
-    ctx.strokeStyle = '#ecebe4';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(W - 154, 68); ctx.lineTo(W - 86, 68);
-    ctx.stroke();
-
-    const camTxt = `${cam.focal_mm}mm · FOV ${cam.fov_deg}° · h=${cam.height_m}m`;
-    ctx.fillStyle = '#ffbe44';
-    ctx.fillText(camTxt, W - 86 - ctx.measureText(camTxt).width, 94);
-
-    // Left & Right 16-Tick Elevation Ladders (highlighting the 4/10 `+4.00m SALT LINE` tick!)
-    for (let i = 0; i < 16; i++) {
-      const yT = 104 + i * 28;
-      const isSalt = (i === 9);
-      ctx.strokeStyle = isSalt ? '#ecebe4' : 'rgba(148, 232, 244, 0.78)';
-      ctx.lineWidth = isSalt ? 2.6 : 1.6;
-      ctx.beginPath();
-      ctx.moveTo(82, yT); ctx.lineTo(148, yT);
-      ctx.moveTo(W - 148, yT); ctx.lineTo(W - 82, yT);
-      ctx.stroke();
-      if (isSalt) {
-        ctx.fillStyle = '#ecebe4';
-        ctx.fillText('+4.00m LINE', 82, yT - 5);
-        ctx.fillText('DATUM +4m', W - 148, yT - 5);
-      }
-    }
-
-    // Center Golden Horizon Reticle (`──┐  ┌──`) driven by real camera solve
-    const cy = H * 0.465 + state.panY * 320;
-    ctx.strokeStyle = 'rgba(255, 196, 84, 0.88)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(W * 0.30, cy); ctx.lineTo(W * 0.70, cy);
-    ctx.stroke();
-    const bY = cy - 22;
-    ctx.beginPath();
-    ctx.moveTo(W * 0.435, bY); ctx.lineTo(W * 0.475, bY); ctx.lineTo(W * 0.475, bY + 13);
-    ctx.moveTo(W * 0.565, bY); ctx.lineTo(W * 0.525, bY); ctx.lineTo(W * 0.525, bY + 13);
-    ctx.stroke();
-
-    const horLbl = `HORIZON SOLVE · ${(cam.shot_class || 'ground').toUpperCase()} · PITCH ${cam.pitch_deg >= 0 ? '+' : ''}${cam.pitch_deg}° · CONF ${cam.confidence}`;
-    ctx.fillStyle = 'rgba(255, 204, 88, 0.9)';
-    ctx.fillText(horLbl, W * 0.5 - ctx.measureText(horLbl).width * 0.5, cy + 14);
-
-    // Real Grounding-DINO 3D Object Detection Brackets (`shot.json.detections`)
-    (shotA.detections || []).slice(0, 3).forEach(det => {
-      const bn = det.box_norm || [0.3, 0.3, 0.6, 0.7];
-      const x0 = Math.max(385, Math.min(W - 410, bn[0] * W));
-      const y0 = Math.max(115, Math.min(H - 180, bn[1] * H));
-      const x1 = Math.max(x0 + 48, Math.min(W - 385, bn[2] * W));
-      const y1 = Math.max(y0 + 36, Math.min(H - 135, bn[3] * H));
-      const bl = 10;
-      ctx.strokeStyle = 'rgba(95, 232, 255, 0.85)';
-      ctx.lineWidth = 1.2;
-      [[x0, y0, bl, bl], [x1, y0, -bl, bl], [x0, y1, bl, -bl], [x1, y1, -bl, -bl]].forEach(([cxB, cyB, dxB, dyB]) => {
-        ctx.beginPath();
-        ctx.moveTo(cxB + dxB, cyB); ctx.lineTo(cxB, cyB); ctx.lineTo(cxB, cyB + dyB);
-        ctx.stroke();
-      });
-      ctx.fillStyle = '#5fe8ff';
-      ctx.fillText(`${det.label.toUpperCase()} ${Math.round(det.score * 100)}%`, x0 + 4, y0 + 11);
-    });
-
-    // In Mode III (Echo Split), draw both poems' 3D HDL Wireframes on Left & Right halves!
-    if (state.echoSplit > 0.5) {
-      const pB = poems[state.echoPoemBIdx != null ? state.echoPoemBIdx : ((state.poemIdx + 9) % 14)];
-      drawWireframe3DModel(ctx, actPoem.wire3d, W * 0.39, H * 0.31, 66, yawBase, pitchBase, true, 0.85, true);
-      drawWireframe3DModel(ctx, pB.wire3d, W * 0.61, H * 0.31, 66, -yawBase, pitchBase, false, 0.85, true);
-      ctx.strokeStyle = 'rgba(255, 196, 84, 0.75)';
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      ctx.moveTo(W * 0.5, 82); ctx.lineTo(W * 0.5, H - 90);
-      ctx.stroke();
-    } else if (state.wireMix < 0.45) {
-      // Subtle 3D HDL Architectural Ghost registered inside the center of the Point-Cloud Viewfinder
-      drawWireframe3DModel(ctx, actPoem.wire3d, W * 0.50, H * 0.55, 108, yawBase, pitchBase, true, 0.48, false);
-    }
-
-    // Four Vertical TVE Telemetry Columns (`TVE 1/2`, `TVE 2/2`, `TVE 3/4`, `TVE 4/4`)
-    const colsX = [172, 276, W - 368, W - 264];
-    const tveLabels = ['1/2', '2/2', '3/4', '4/4'];
-    const chanNum = ['1', '2', '3', '4'];
-    const drVals = state.drValues || [85, 89, 98, 92];
-    const subTags = state.subTags || [['1.6M', 'P1·FG'], ['12CM', 'PROP'], ['20x12', 'HDL·3D'], ['SSIM92', 'FX01']];
-
-    colsX.forEach((x0, idx) => {
-      const colW = 92;
-      ctx.fillStyle = 'rgba(235, 195, 110, 0.42)';
-      for (let r = 0; r < 11; r++) {
-        const ry = 112 + r * 26;
-        for (let d = 0; d < colW; d += 5) {
-          ctx.fillRect(x0 + d, ry, 1.5, 1.5);
-        }
-      }
-
-      const phase = nowSec * (1.1 + idx * 0.22) + idx * 1.4 + state.morph * 3.14;
-      const barY = 190 + Math.sin(phase) * 52;
-      const grad = ctx.createLinearGradient(x0, barY, x0, barY + 28);
-      grad.addColorStop(0, 'rgba(255, 224, 112, 0.95)');
-      grad.addColorStop(1, 'rgba(255, 164, 36, 0.05)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(x0, barY, colW, 24);
-      ctx.strokeStyle = '#ffe484';
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.moveTo(x0, barY); ctx.lineTo(x0 + colW, barY);
-      ctx.stroke();
-
-      const by = 412;
-      ctx.strokeStyle = 'rgba(165, 238, 248, 0.9)';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(x0, by, 30, 30);
-      ctx.fillStyle = 'rgba(165, 238, 248, 0.92)';
-      ctx.beginPath();
-      ctx.moveTo(x0 + 15, by + 5); ctx.lineTo(x0 + 23, by + 15); ctx.lineTo(x0 + 7, by + 15); ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(x0 + 15, by + 14); ctx.lineTo(x0 + 23, by + 24); ctx.lineTo(x0 + 7, by + 24); ctx.closePath();
-      ctx.fill();
-
-      ctx.font = '500 11px "IBM Plex Mono", monospace';
-      ctx.fillStyle = 'rgba(245, 200, 115, 0.85)';
-      ctx.fillText(chanNum[idx], x0 + colW - 8, by + 28);
-      ctx.fillStyle = 'rgba(128, 198, 212, 0.78)';
-      ctx.fillText('TVE', x0, by + 48);
-      ctx.fillText(tveLabels[idx], x0 + colW - 28, by + 48);
-
-      const sy = 474, sh = 48;
-      const isRightRed = idx >= 2 && state.echoSplit > 0.5;
-      ctx.fillStyle = isRightRed ? 'rgba(120, 18, 24, 0.42)' : 'rgba(14, 68, 92, 0.42)';
-      ctx.fillRect(x0, sy, colW, sh);
-      const lineY = sy + 12 + (idx % 2) * 16 + Math.sin(nowSec * 2.0 + idx) * 6;
-      ctx.strokeStyle = isRightRed ? '#ff3838' : '#58e4ff';
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.moveTo(x0, lineY); ctx.lineTo(x0 + colW, lineY);
-      ctx.stroke();
-
-      const ny = 582;
-      ctx.strokeStyle = 'rgba(148, 232, 244, 0.82)';
-      ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      ctx.moveTo(x0, ny); ctx.lineTo(x0 + colW, ny);
-      ctx.stroke();
-
-      ctx.font = '600 28px "IBM Plex Mono", monospace';
-      ctx.fillStyle = 'rgba(210, 248, 255, 0.95)';
-      ctx.fillText(String(drVals[idx]).padStart(2, '0'), x0, ny + 30);
-
-      ctx.font = '500 10px "IBM Plex Mono", monospace';
-      const [sL, sR] = subTags[idx];
-      ctx.fillStyle = 'rgba(138, 208, 222, 0.85)';
-      ctx.fillText(sL, x0, ny + 47);
-      ctx.fillStyle = '#ffbe44';
-      ctx.fillText(sR, x0 + colW - ctx.measureText(sR).width, ny + 47);
-
-      const iy = ny + 58;
-      ctx.strokeStyle = idx >= 2 ? 'rgba(224, 58, 58, 0.75)' : 'rgba(148, 232, 244, 0.82)';
-      ctx.lineWidth = 1.4;
-      ctx.strokeRect(x0, iy, 32, 26);
-      ctx.beginPath();
-      ctx.arc(x0 + 16, iy + 13, 6, 0, Math.PI * 2);
-      ctx.stroke();
-    });
-
-    // Bottom-Center Live Midjourney Prompt & Hero Prop Strip inside Bezel
-    const prHero = (actPoem.props && actPoem.props[0]) || { id: 'prop', scale_cm: 12 };
-    const pStr = `PROMPT [${shotA.id}]: “${(shotA.prompt || '').slice(0, 74)}…”`;
-    const hStr = `HERO PROP: ${prHero.id} (${prHero.scale_cm || 15}cm) · ${actPoem.wire3d.title}`;
-    const bx0 = 384, bx1 = W - 384;
-    ctx.fillStyle = 'rgba(5, 14, 20, 0.84)';
-    ctx.fillRect(bx0, H - 82, bx1 - bx0, 44);
-    ctx.strokeStyle = 'rgba(95, 232, 255, 0.55)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(bx0, H - 82, bx1 - bx0, 44);
-    ctx.font = '500 10px "IBM Plex Mono", monospace';
-    ctx.fillStyle = '#dcf8ff';
-    ctx.fillText(pStr.slice(0, 68), bx0 + 10, H - 65);
-    ctx.fillStyle = '#ffbe44';
-    ctx.fillText(hStr.slice(0, 68), bx0 + 10, H - 47);
-
-    ctx.restore();
-  }
-}
-
-async function initVesperApparatus() {
-  const [bundle, vtMan, viewDirMap] = await Promise.all([
-    fetch('data/terrarium/seeing_spacetime_films/vesper_world_bundle.json?v=12').then(r => r.json()),
-    fetch('data/terrarium/seeing_spacetime_films/videotext_manifest.json?v=12').then(r => r.json()),
-    fetch('data/terrarium/seeing_spacetime_films/bible_view_map.json').then(r => r.ok ? r.json() : {}).catch(() => ({}))
-  ]);
-
-  const poemStations = bundle.poems.map((p, idx) => {
-    const vt = vtMan.poems[idx] || {};
-    const glowHex = (vt.glow_hex && vt.glow_hex[0]) || (p.palette && p.palette[0]) || '#fa8d15';
-    return (p.views || []).map(v => ({
-      vn: v.vn,
-      id: v.id,
-      name: v.place_name || v.id,
-      brief: v.place_brief || '',
-      glowHex
-    }));
-  });
-
-  // WebGL Setup
-  const glCanvas = document.getElementById('tve-gl-canvas');
-  const hudCanvas = document.getElementById('tve-hud-canvas');
-  const ctx2d = hudCanvas.getContext('2d');
-  const gl = glCanvas.getContext('webgl', { preserveDrawingBuffer: true });
-
-  const compile = (t, s) => { const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); return sh; };
-  const prog = gl.createProgram();
-  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS_SRC));
-  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS_SRC));
-  gl.linkProgram(prog);
-  gl.useProgram(prog);
-
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
-  const aPos = gl.getAttribLocation(prog, 'aPos');
-  gl.enableVertexAttribArray(aPos);
-  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-  const texCache = {};
-  function loadTex(url, fb = [20, 28, 36]) {
-    if (texCache[url]) return texCache[url];
-    const tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([fb[0], fb[1], fb[2], 255]));
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+const state = {
+  bundle: null,
+  poemIdx: 0,
+  viewIdx: 0,
+  mode: 1,
+  scrubX: 0.38,
+  scrubZ: 6.0,
+  textAlpha: 0.90,
+  animating: true,
+  t: 0,
+  images: {},
+  activeKitImg: null,
+};
+
+const canvas = document.getElementById("stageCanvas");
+const ctx = canvas.getContext("2d");
+
+function loadImage(src) {
+  if (!src) return Promise.resolve(null);
+  if (state.images[src]) return Promise.resolve(state.images[src]);
+  return new Promise((resolve) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = "anonymous";
     img.onload = () => {
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      state.images[src] = img;
+      resolve(img);
     };
-    img.src = url;
-    texCache[url] = tex;
-    return tex;
-  }
-
-  const state = {
-    poemIdx: 0,
-    echoPoemBIdx: 9,
-    stA: poemStations[0][0],
-    stB: poemStations[0][Math.min(1, poemStations[0].length - 1)],
-    morph: 0.0,
-    morphTarget: 0.0,
-    pcMix: 0.68,
-    fxInt: 1.0,
-    wireMix: 0.55,
-    hudMix: 1.0,
-    echoSplit: 0.0,
-    paradigm: 'PRECRIME (EVIDENTIARY INSPECTION)',
-    activeOp: 'ingest',
-    echoNote: '',
-    panX: 0.0,
-    panY: 0.0,
-    dolly: 1.12,
-    drValues: [85, 89, 98, 92],
-    subTags: [['1.6M', 'P1·FG'], ['12CM', 'PROP'], ['20x12', 'HDL·3D'], ['SSIM92', 'FX01']]
-  };
-
-  function hexToRgbVec(hex) {
-    const h = (hex || '#fa8d15').replace('#', '');
-    if (h.length !== 6) return [0.98, 0.55, 0.08];
-    return [parseInt(h.slice(0,2),16)/255, parseInt(h.slice(2,4),16)/255, parseInt(h.slice(4,6),16)/255];
-  }
-
-  // Populate all 5 Real-Data Inspector Tabs whenever poem or station changes
-  function updateAllInspectorTabs() {
-    const p = bundle.poems[state.poemIdx];
-    const vtP = vtMan.poems[state.poemIdx];
-    const shotA = (bundle.views_by_no && bundle.views_by_no[String(state.stA.vn)]) || p.views[0];
-    const pr0 = (p.props && p.props[0]) || { id: 'prop', name: 'Hero Prop', scale_cm: 12, build: '' };
-    const planes = shotA.planes || [];
-    const zP1 = (planes.find(pl => pl.id === 'P1' && pl.z_m) || { z_m: 1.64 }).z_m;
-    const perc = shotA.perceive || { reads_at_sigma: 8, dE: 4.5, value_ssim: 0.92, felt: '' };
-    const cam = shotA.camera || { focal_mm: 24.7, fov_deg: 72.2, height_m: 0.32, pitch_deg: 3.8, shot_class: 'ground', confidence: 0.98 };
-    const wTag = p.wire3d.title.split('·')[0].trim();
-
-    // Update 4-channel TVE telemetry numbers & sub-labels from real shot & poem data
-    const gIou = Math.round(((shotA.signals && shotA.signals.ground_iou) || 0.95) * 100);
-    const confScore = Math.round((cam.confidence || 0.98) * 100);
-    const ssimScore = Math.round((perc.value_ssim || 0.92) * 100);
-    const propScore = 80 + ((state.poemIdx * 5 + 9) % 18);
-    state.drValues = state.echoSplit > 0.5 ? [31, 79, 61, 82] : [gIou, propScore, confScore, ssimScore];
-    state.subTags = [
-      [`${Number(zP1).toFixed(1)}M`, 'P1·FG'],
-      [`${pr0.scale_cm || 15}CM`, pr0.id.slice(0, 6).toUpperCase()],
-      [wTag.slice(0, 7), '3D'],
-      [`SSIM.${ssimScore}`, p.fx_code]
-    ];
-
-    document.getElementById('td-lbl1').textContent = `P1 Foreground (${shotA.id})`;
-    document.getElementById('td-sub1').textContent = `${Number(zP1).toFixed(2)}m P1`;
-    document.getElementById('td-dr1').textContent = String(state.drValues[0]);
-
-    document.getElementById('td-lbl2').textContent = `Hero Prop: ${pr0.id}`;
-    document.getElementById('td-sub2').textContent = `${pr0.scale_cm || 15}cm`;
-    document.getElementById('td-dr2').textContent = String(state.drValues[1]);
-
-    document.getElementById('td-lbl3').textContent = p.wire3d.title.slice(0, 28);
-    document.getElementById('td-sub3').textContent = `${cam.focal_mm}mm`;
-    document.getElementById('td-dr3').textContent = String(state.drValues[2]);
-
-    document.getElementById('td-lbl4').textContent = `Perceive σ=${perc.reads_at_sigma} (${p.fx_code})`;
-    document.getElementById('td-sub4').textContent = `dE ${perc.dE}`;
-    document.getElementById('td-dr4').textContent = String(state.drValues[3]);
-
-    // TAB 1: Poem Essence, Timed SCION Verses, Working Assembly Draft & Arc
-    document.getElementById('poem-essence-box').textContent = p.essence || '';
-    const vList = document.getElementById('verse-list');
-    vList.innerHTML = '';
-    const flatVerses = [];
-    (vtP.scenes || []).forEach(sc => sc.forEach(item => {
-      if (!item.tape && !item.f) flatVerses.push(item);
-    }));
-    flatVerses.forEach((v, vi) => {
-      const div = document.createElement('div');
-      div.className = 'verse-item' + (vi === 0 ? ' active' : '');
-      div.innerHTML = `
-        <div class="vt"><span>${v.who || `P${p.num}`}</span><span>${v.t0.toFixed(1)}s – ${v.t1.toFixed(1)}s</span></div>
-        <div class="vs">“${v.say}”</div>
-      `;
-      div.addEventListener('click', () => {
-        document.querySelectorAll('.verse-item').forEach(el => el.classList.remove('active'));
-        div.classList.add('active');
-        const frac = v.t0 / Math.max(1, vtP.dur);
-        const stList = poemStations[state.poemIdx];
-        const sIdx = Math.min(stList.length - 1, Math.floor(frac * stList.length));
-        state.stA = stList[sIdx];
-        state.stB = stList[Math.min(stList.length - 1, sIdx + 1)];
-        state.morphTarget = (frac * stList.length) - sIdx;
-        document.getElementById('clock-readout').textContent = `TC ${v.t0.toFixed(1)}s / ${vtP.dur.toFixed(1)}s`;
-        document.getElementById('stage-banner').textContent =
-          `P${p.num} · ${state.stA.id} ${state.stA.name.toUpperCase()} · ${wTag} — “${v.say.slice(0, 52)}”`;
-        updateAllInspectorTabs();
-      });
-      vList.appendChild(div);
-    });
-
-    // Working Assembly Draft (`assembly_p*.txt`)
-    const asmPages = p.assembly_pages || [];
-    const asmBest = asmPages.length > 1 ? asmPages[1] : (asmPages[0] || { file: 'assembly_p1.txt', text: '' });
-    document.getElementById('asm-file-lbl').textContent = asmPages.map(a => a.file).join(', ');
-    document.getElementById('assembly-draft-box').textContent = asmPages.map(a => `=== ${a.file} ===\n${a.text}`).join('\n\n');
-
-    // Dramatic Arc
-    const arcEl = document.getElementById('arc-list');
-    arcEl.innerHTML = (p.arc || []).map(a => `
-      <div class="data-row">
-        <span class="tag">${a.movement || 'BEAT'}</span><b>${a.emotion || ''}</b><br>
-        ${a.beat || ''}<br>
-        <span style="color:var(--text-mid)"><i>Image:</i> ${a.image || ''}</span>
-      </div>
-    `).join('');
-
-    // TAB 2: Midjourney Prompt, Camera Solve & Detections (`shot.json`)
-    document.getElementById('shot-id-lbl').textContent = `${shotA.id} · ${shotA.district.toUpperCase()}`;
-    document.getElementById('shot-prompt-box').textContent = shotA.prompt || 'No prompt recorded.';
-    document.getElementById('shot-file-lbl').textContent = `FILE: ${shotA.file || ''}`;
-
-    document.getElementById('cam-solve-table').innerHTML = `
-      <tr><th>Focal Equiv</th><td>${cam.focal_mm} mm (FOV ${cam.fov_deg}°)</td><th>Camera Height</th><td>${cam.height_m} m (${cam.shot_class})</td></tr>
-      <tr><th>Pitch / Roll</th><td>${cam.pitch_deg}° / ${cam.roll_deg}°</td><th>Physics Conf</th><td>${Math.round(cam.confidence * 100)}% (+4.00m Datum)</td></tr>
-    `;
-
-    const stuffStr = Object.entries(shotA.stuff || {}).map(([k, v]) => `${k}: ${Math.round(v * 100)}%`).join(' · ');
-    const unprompted = (shotA.fidelity && shotA.fidelity.unprompted || []).join(', ');
-    document.getElementById('detections-list').innerHTML = `
-      <div class="data-row"><b>Semantic Stuff (OneFormer):</b> ${stuffStr || 'water, wall, stone'}</div>
-      <div class="data-row"><b>Unprompted Discoveries:</b> ${unprompted || 'architecture, water'}</div>
-      ${(shotA.detections || []).map(d => `
-        <div class="data-row">
-          <span class="tag">${Math.round(d.score * 100)}%</span><b>${d.label.toUpperCase()}</b>
-          · Area: ${(d.area_frac * 100).toFixed(1)}% · Box: [${d.box_norm.join(', ')}]
-        </div>
-      `).join('')}
-    `;
-
-    // TAB 3: 3D HDL Architecture, Fit (`saw/did`), Floorplan Rooms & Facts
-    const hm = p.hdl_meta;
-    document.getElementById('hdl-summary-box').innerHTML = `
-      <b>${p.wire3d.title}</b><br>
-      <span style="color:var(--text-mid)">${p.wire3d.subtitle}</span>
-      ${hm ? `<br><span style="color:var(--seam-cyan)">Footprint: ${hm.footprint[0]}×${hm.footprint[1]}m · ${hm.levels_count} Levels · ${hm.rooms_count} Rooms · Landmark: ${hm.landmark}</span>` : ''}
-    `;
-    document.getElementById('hdl-fit-list').innerHTML = (hm && hm.fit ? hm.fit : []).map(f => `
-      <div class="data-row">
-        <span class="tag">SAW IN FOOTAGE</span> ${f.saw}<br>
-        <span class="tag" style="border-color:var(--amber-core);color:var(--amber-core)">3D HDL DID</span> <b>${f.did}</b>
-      </div>
-    `).join('') || `<div class="data-row"><span class="tag">3D LANDMARK</span> Parametric 3D wireframe from <code>_city/landmarks_ref.mjs</code> &amp; <code>_city/kit_ref.mjs</code> (+4.00m Salt Line &amp; Kintsugi Seam).</div>`;
-
-    const rooms = p.wire3d.floorplan_rooms || [];
-    document.getElementById('hdl-room-count').textContent = `${rooms.length} Zones`;
-    document.getElementById('hdl-rooms-list').innerHTML = rooms.map(r => `
-      <div class="data-row">
-        <span class="tag">${r.id}</span><b>${r.name}</b> (${r.w}×${r.d}m @ z=${r.z}m)<br>
-        Floor: ${r.floor || 'stone/wood'} · Props: ${(r.props || []).join(', ') || 'architectural shell'}
-      </div>
-    `).join('');
-
-    document.getElementById('hdl-facts-list').innerHTML = (hm && hm.facts ? hm.facts : []).map(fc => `
-      <div class="data-row"><span class="tag">${fc.status}</span> ${fc.claim}</div>
-    `).join('');
-
-    // TAB 4: Dossier Props, 5-Layer Multiplane Sets, Characters, Kits to Build & Insights
-    document.getElementById('props-list').innerHTML = (p.props || []).map(pr => `
-      <div class="data-row">
-        <span class="tag">${pr.hero ? 'HERO PROP' : 'PROP'}</span><b>${pr.id} — ${pr.name}</b> (${pr.scale_cm || '—'} cm)<br>
-        <i>Look:</i> ${pr.look}<br>
-        <span style="color:var(--mint-wire)"><i>Physical Build:</i> ${pr.build}</span><br>
-        <span style="color:var(--text-mid)">States: ${(pr.states || []).join(' → ')}</span>
-      </div>
-    `).join('');
-
-    document.getElementById('sets-list').innerHTML = (p.sets || []).map(st => `
-      <div class="data-row">
-        <span class="tag">SET</span><b>${st.id} — ${st.name}</b><br>
-        <i>Light:</i> ${st.light}<br>
-        ${Object.entries(st.layers || {}).map(([lk, lv]) => `<span style="color:var(--seam-cyan)">[${lk.toUpperCase()}]</span> ${lv}`).join('<br>')}
-      </div>
-    `).join('');
-
-    document.getElementById('kits-insights-list').innerHTML = `
-      ${(p.kits_to_build || []).map(k => `
-        <div class="data-row"><span class="tag">KIT ${k.id}</span><b>${k.what}</b><br><span style="color:var(--text-mid)">Why: ${k.why}</span></div>
-      `).join('')}
-      ${(p.insights || []).map(ins => `
-        <div class="data-row"><span class="tag" style="border-color:var(--amber-core);color:var(--amber-core)">INSIGHT</span> ${ins}</div>
-      `).join('')}
-    `;
-
-    // TAB 5: Multiplane P0–P6, Perceive Squint & Transitions/Foundry
-    document.getElementById('planes-list').innerHTML = (shotA.planes || []).map(pl => `
-      <div class="data-row">
-        <span class="tag">${pl.id}</span><b>${pl.name}</b> · z=${pl.z_m != null ? pl.z_m + 'm' : '∞'} · parallax=${pl.parallax != null ? pl.parallax + 'x' : '0'}<br>
-        Contents: ${(pl.contents || []).join(', ')}
-        ${pl.motion && pl.motion.length ? `<br><span style="color:var(--amber-core)">Motion: ${pl.motion.join(' | ')}</span>` : ''}
-      </div>
-    `).join('');
-
-    document.getElementById('perceive-list').innerHTML = `
-      <div class="data-row">
-        <span class="tag">FELT SENSE</span> <b>“${perc.felt}”</b><br>
-        Reads @ σ=${perc.reads_at_sigma} · dE=${perc.dE} · Value SSIM=${perc.value_ssim} · Enclosure=${perc.enclosure} · Tempo=${perc.tempo}
-      </div>
-      ${(shotA.signals && shotA.signals.suggestions || []).map(s => `
-        <div class="data-row"><span class="tag">SIGNAL NOTE</span> ${s}</div>
-      `).join('')}
-    `;
-
-    document.getElementById('transitions-list').innerHTML = `
-      <div class="data-row"><span class="tag">CITY DATUM</span> <b>${bundle.city.water_datum}</b></div>
-      ${(p.transitions || []).map(tr => `
-        <div class="data-row">
-          <span class="tag">P${tr.from}→P${tr.to} (${tr.mode})</span> <b>${tr.zone}</b><br>
-          <i>Grammar:</i> ${tr.grammar}<br>
-          <span style="color:var(--text-mid)"><i>Physical:</i> ${tr.physical || ''}</span>
-        </div>
-      `).join('')}
-      ${(p.foundry || []).map(fd => `
-        <div class="data-row">
-          <span class="tag">FOUNDRY ${fd.id}</span> “${fd.line}”<br>
-          <span style="color:var(--text-mid)">${fd.desc}</span>
-        </div>
-      `).join('')}
-    `;
-  }
-
-  // Tab switching
-  document.querySelectorAll('#inspector-tabs .tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.getAttribute('data-tab');
-      document.querySelectorAll('#inspector-tabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
-      document.querySelectorAll('.tab-pane').forEach(pn => pn.classList.toggle('active', pn.id === `pane-${target}`));
-    });
+    img.onerror = () => resolve(null);
+    img.src = src;
   });
-
-  function renderStationStrip() {
-    const strip = document.getElementById('st-mini-strip');
-    strip.innerHTML = '';
-    const list = poemStations[state.poemIdx];
-    document.getElementById('lbl-st-count').textContent = `${list.length} Views`;
-    list.forEach(st => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'naur-btn' + (st.vn === state.stA.vn ? ' active' : '');
-      b.textContent = st.id;
-      b.title = st.name;
-      b.addEventListener('click', () => {
-        state.echoSplit = 0.0;
-        state.stA = st;
-        state.stB = st;
-        state.morph = 0.0;
-        state.morphTarget = 0.0;
-        renderStationStrip();
-        updateAllInspectorTabs();
-      });
-      strip.appendChild(b);
-    });
-  }
-
-  function selectCanister(idx) {
-    state.poemIdx = idx;
-    state.echoSplit = 0.0;
-    const list = poemStations[idx];
-    state.stA = list[0];
-    state.stB = list[Math.min(1, list.length - 1)];
-    state.morph = 0.0;
-    state.morphTarget = 0.0;
-    document.querySelectorAll('.spinner-slot').forEach((el, i) => el.classList.toggle('active', i === idx));
-    const p = bundle.poems[idx];
-    const pr0 = (p.props && p.props[0]) || { id: 'prop', scale_cm: 12 };
-    document.getElementById('stage-banner').textContent =
-      `P${p.num} · ${state.stA.id} ${state.stA.name.toUpperCase()} · ${p.wire3d.title} · PROP: ${pr0.id} (${pr0.scale_cm || 15}cm)`;
-    document.getElementById('clock-readout').textContent = `TC 00:00.0 / ${p.dur.toFixed(1)}s`;
-    renderStationStrip();
-    updateAllInspectorTabs();
-  }
-
-  // Render Left-Rail 14 Poem 3D HDL / Landmark / Kit Slots
-  const canContainer = document.getElementById('canister-list');
-  bundle.poems.forEach((p, idx) => {
-    const st0 = poemStations[idx][0];
-    const wTag = p.wire3d.title.split('·')[0].trim();
-    const pr0 = (p.props && p.props[0]) || { id: 'kit', scale_cm: 12 };
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'spinner-slot' + (idx === 0 ? ' active' : '');
-    btn.innerHTML = `
-      <div class="sp-id"><span>P${p.num} · ${st0.id} · ${wTag}</span><span>${p.dur.toFixed(0)}s</span></div>
-      <div class="sp-title">${p.title}</div>
-      <div class="sp-sub">prop: ${pr0.id} (${pr0.scale_cm || 15}cm) · [${p.fx_code}]</div>
-    `;
-    btn.addEventListener('click', () => selectCanister(idx));
-    canContainer.appendChild(btn);
-  });
-
-  // Top View Mode Presets
-  const setTopPreset = (mode) => {
-    document.getElementById('btn-view-tve').classList.toggle('active', mode === 'tve');
-    document.getElementById('btn-view-wire').classList.toggle('active', mode === 'wire');
-    document.getElementById('btn-view-echo').classList.toggle('active', mode === 'echo');
-    if (mode === 'tve') {
-      state.pcMix = 0.72; state.wireMix = 0.25; state.hudMix = 1.0; state.echoSplit = 0.0;
-    } else if (mode === 'wire') {
-      state.pcMix = 0.52; state.wireMix = 0.96; state.hudMix = 0.20; state.echoSplit = 0.0;
-    } else if (mode === 'echo') {
-      document.querySelector('#echo-presets .echo-chip').click();
-      return;
-    }
-    syncSliders();
-    updateAllInspectorTabs();
-  };
-  document.getElementById('btn-view-tve').addEventListener('click', () => setTopPreset('tve'));
-  document.getElementById('btn-view-wire').addEventListener('click', () => setTopPreset('wire'));
-  document.getElementById('btn-view-echo').addEventListener('click', () => setTopPreset('echo'));
-
-  function syncSliders() {
-    document.getElementById('rng-pc').value = Math.round(state.pcMix * 100);
-    document.getElementById('lbl-pc').textContent = `${Math.round(state.pcMix * 100)}% Point-Cloud`;
-    document.getElementById('rng-wire').value = Math.round(state.wireMix * 100);
-    document.getElementById('lbl-wire').textContent = `${Math.round(state.wireMix * 100)}%`;
-    document.getElementById('rng-hud').value = Math.round(state.hudMix * 100);
-    document.getElementById('lbl-hud').textContent = state.hudMix > 0.05 ? `${Math.round(state.hudMix * 100)}% (ON)` : 'OFF (Clean 16:9)';
-  }
-
-  document.getElementById('rng-pc').addEventListener('input', e => {
-    state.pcMix = parseFloat(e.target.value) / 100.0;
-    document.getElementById('lbl-pc').textContent = `${Math.round(state.pcMix * 100)}% Point-Cloud`;
-  });
-  document.getElementById('rng-fx').addEventListener('input', e => {
-    state.fxInt = parseFloat(e.target.value) / 100.0;
-    document.getElementById('lbl-fx').textContent = `${Math.round(state.fxInt * 100)}%`;
-  });
-  document.getElementById('rng-wire').addEventListener('input', e => {
-    state.wireMix = parseFloat(e.target.value) / 100.0;
-    document.getElementById('lbl-wire').textContent = `${Math.round(state.wireMix * 100)}%`;
-  });
-  document.getElementById('rng-hud').addEventListener('input', e => {
-    state.hudMix = parseFloat(e.target.value) / 100.0;
-    document.getElementById('lbl-hud').textContent = state.hudMix > 0.05 ? `${Math.round(state.hudMix * 100)}% (ON)` : 'OFF (Clean 16:9)';
-  });
-  document.getElementById('rng-morph').addEventListener('input', e => {
-    state.morphTarget = parseFloat(e.target.value) / 100.0;
-    state.morph = state.morphTarget;
-    document.getElementById('lbl-morph').textContent = state.morph.toFixed(2);
-  });
-
-  // Naurian 6-Step Buttons
-  document.querySelectorAll('#naur-ops .naur-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#naur-ops .naur-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const op = btn.getAttribute('data-op');
-      state.activeOp = op;
-      if (op === 'ingest') { setTopPreset('wire'); document.querySelector('[data-tab="poem"]').click(); }
-      else if (op === 'isolate') { setTopPreset('tve'); document.querySelector('[data-tab="prompt"]').click(); }
-      else if (op === 'scrub') { state.morphTarget = state.morph > 0.5 ? 0.0 : 1.0; document.querySelector('[data-tab="atlas"]').click(); }
-      else if (op === 'reframe') { state.pcMix = 0.82; state.wireMix = 0.65; syncSliders(); document.querySelector('[data-tab="hdl"]').click(); }
-      else if (op === 'excerpt') { state.pcMix = 0.35; state.hudMix = 1.0; syncSliders(); document.querySelector('[data-tab="dossier"]').click(); }
-      else if (op === 'compare') { setTopPreset('echo'); }
-    });
-  });
-
-  // Precrime vs Stelline Paradigm Switch
-  document.getElementById('par-precrime').addEventListener('click', () => {
-    document.getElementById('par-precrime').classList.add('active');
-    document.getElementById('par-stelline').classList.remove('active');
-    state.paradigm = 'PRECRIME (EVIDENTIARY INSPECTION)';
-    state.pcMix = 0.72; state.hudMix = 1.0;
-    syncSliders();
-    document.querySelector('[data-tab="prompt"]').click();
-  });
-  document.getElementById('par-stelline').addEventListener('click', () => {
-    document.getElementById('par-stelline').classList.add('active');
-    document.getElementById('par-precrime').classList.remove('active');
-    state.paradigm = 'STELLINE / VESPER (AUTHORED 3D & MEMORY)';
-    state.pcMix = 0.28; state.wireMix = 0.68; state.fxInt = 1.25;
-    syncSliders();
-    document.querySelector('[data-tab="dossier"]').click();
-  });
-
-  // Echo Discrepancy Presets
-  document.querySelectorAll('#echo-presets .echo-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('#echo-presets .echo-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      const p1 = parseInt(chip.getAttribute('data-p1'), 10);
-      const v1 = parseInt(chip.getAttribute('data-v1'), 10);
-      const p2 = parseInt(chip.getAttribute('data-p2'), 10);
-      const v2 = parseInt(chip.getAttribute('data-v2'), 10);
-      state.poemIdx = p1;
-      state.echoPoemBIdx = p2;
-      state.stA = { vn: v1, id: `V${v1}`, name: `P${String(p1+1).padStart(2,'0')} V${v1}`, glowHex: '#fa8d15' };
-      state.stB = { vn: v2, id: `V${v2}`, name: `P${String(p2+1).padStart(2,'0')} V${v2}`, glowHex: '#38b6ff' };
-      state.echoSplit = 1.0;
-      state.pcMix = 0.56;
-      state.wireMix = 0.22;
-      state.hudMix = 1.0;
-      state.echoNote = chip.getAttribute('data-note') || '';
-      document.getElementById('stage-banner').textContent =
-        `ECHO COMPARATOR · P${String(p1+1).padStart(2,'0')} (V${v1} ${bundle.poems[p1].wire3d.title.split('·')[0].trim()})  ↔  P${String(p2+1).padStart(2,'0')} (V${v2} ${bundle.poems[p2].wire3d.title.split('·')[0].trim()})`;
-      document.getElementById('btn-view-tve').classList.remove('active');
-      document.getElementById('btn-view-wire').classList.remove('active');
-      document.getElementById('btn-view-echo').classList.add('active');
-      syncSliders();
-      updateAllInspectorTabs();
-    });
-  });
-
-  // Interactive 3D Orbit Drag & Wheel Zoom on the Viewfinder Stage
-  const stageEl = document.getElementById('vf-stage');
-  let dragging = false, lastX = 0, lastY = 0;
-  stageEl.addEventListener('pointerdown', e => {
-    dragging = true; lastX = e.clientX; lastY = e.clientY;
-    stageEl.setPointerCapture(e.pointerId);
-  });
-  stageEl.addEventListener('pointermove', e => {
-    if (!dragging) return;
-    state.panX = Math.max(-0.35, Math.min(0.35, state.panX + (e.clientX - lastX) * 0.0008));
-    state.panY = Math.max(-0.25, Math.min(0.25, state.panY + (e.clientY - lastY) * 0.0008));
-    lastX = e.clientX; lastY = e.clientY;
-  });
-  stageEl.addEventListener('pointerup', () => { dragging = false; });
-  stageEl.addEventListener('wheel', e => {
-    e.preventDefault();
-    state.dolly = Math.max(1.02, Math.min(1.45, state.dolly - e.deltaY * 0.0005));
-  }, { passive: false });
-
-  function getUrlsForView(vn) {
-    const sub = viewDirMap[String(vn)];
-    if (sub) {
-      return { cel: `out/${sub}/image.jpg`, dep: `out/${sub}/depth.jpg` };
-    }
-    return { cel: 'out/62b9740c-d0be-4b4a-a311-d653a2580907_1/image.jpg', dep: 'out/62b9740c-d0be-4b4a-a311-d653a2580907_1/depth.jpg' };
-  }
-
-  selectCanister(0);
-
-  // 60fps Render Loop
-  function tick(nowMs) {
-    const nowSec = nowMs * 0.001;
-    state.morph += (state.morphTarget - state.morph) * 0.08;
-
-    const uA = getUrlsForView(state.stA.vn);
-    const uB = getUrlsForView(state.stB.vn);
-
-    gl.viewport(0, 0, glCanvas.width, glCanvas.height);
-    gl.useProgram(prog);
-
-    const bind = (unit, url, uName, fb) => {
-      gl.activeTexture(gl.TEXTURE0 + unit);
-      gl.bindTexture(gl.TEXTURE_2D, loadTex(url, fb));
-      gl.uniform1i(gl.getUniformLocation(prog, uName), unit);
-    };
-    bind(0, uA.cel, 'uCelA', [20, 28, 36]);
-    bind(1, uA.dep, 'uDepthA', [128, 128, 128]);
-    bind(2, uB.cel, 'uCelB', [20, 28, 36]);
-    bind(3, uB.dep, 'uDepthB', [128, 128, 128]);
-
-    const ox = Math.sin(nowSec * 0.48) * 0.014 + state.panX;
-    const oy = Math.cos(nowSec * 0.36) * 0.008 + state.panY;
-
-    gl.uniform2f(gl.getUniformLocation(prog, 'uPanA'), ox, oy);
-    gl.uniform2f(gl.getUniformLocation(prog, 'uPanB'), -ox * 0.85, oy * 0.85);
-    gl.uniform1f(gl.getUniformLocation(prog, 'uDollyA'), state.dolly);
-    gl.uniform1f(gl.getUniformLocation(prog, 'uDollyB'), state.dolly);
-    gl.uniform1f(gl.getUniformLocation(prog, 'uMorph'), state.morph);
-    gl.uniform1f(gl.getUniformLocation(prog, 'uPointCloudMix'), state.pcMix);
-    gl.uniform1f(gl.getUniformLocation(prog, 'uFxMode'), state.poemIdx + 1);
-    gl.uniform1f(gl.getUniformLocation(prog, 'uFxInt'), state.fxInt);
-    gl.uniform1f(gl.getUniformLocation(prog, 'uEchoSplit'), state.echoSplit);
-    gl.uniform1f(gl.getUniformLocation(prog, 'uTime'), nowSec);
-
-    const gCol = hexToRgbVec(state.stA.glowHex);
-    gl.uniform3f(gl.getUniformLocation(prog, 'uGlowCol'), gCol[0], gCol[1], gCol[2]);
-
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-    renderDiegeticOverlay(ctx2d, hudCanvas.width, hudCanvas.height, state, bundle, nowSec);
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
 }
 
-initVesperApparatus();
+async function init() {
+  const res = await fetch("data/terrarium/seeing_spacetime_films/vesper_world_bundle.json");
+  state.bundle = await res.json();
+  renderPoemList();
+  selectPoem(0);
+  requestAnimationFrame(loop);
+}
+
+function renderPoemList() {
+  const el = document.getElementById("poemList");
+  el.innerHTML = "";
+  state.bundle.poems.forEach((p, idx) => {
+    const div = document.createElement("div");
+    div.className = "poem-item" + (idx === state.poemIdx ? " active" : "");
+    div.innerHTML = `<span>${p.num} · ${p.title}</span><span style="color:var(--muted)">${(p.views||[]).length}v</span>`;
+    div.onclick = () => selectPoem(idx);
+    el.appendChild(div);
+  });
+}
+
+function selectPoem(idx) {
+  state.poemIdx = idx;
+  state.viewIdx = 0;
+  state.activeKitImg = null;
+  renderPoemList();
+  renderViewGrid();
+  selectView(0);
+}
+
+function renderViewGrid() {
+  const el = document.getElementById("viewGrid");
+  el.innerHTML = "";
+  const poem = state.bundle.poems[state.poemIdx];
+  (poem.views || []).forEach((v, idx) => {
+    const d = document.createElement("div");
+    d.className = "view-chip" + (idx === state.viewIdx ? " active" : "");
+    d.textContent = `${v.view_id} · ${v.place || v.shot_dir.slice(0, 6)}`;
+    d.onclick = () => selectView(idx);
+    el.appendChild(d);
+  });
+}
+
+async function selectView(vIdx) {
+  state.viewIdx = vIdx;
+  renderViewGrid();
+  const poem = state.bundle.poems[state.poemIdx];
+  const view = (poem.views || [])[vIdx] || {};
+  const assets = view.assets || {
+    image: `out/${view.shot_dir}/image.jpg`,
+    cel: `out/${view.shot_dir}/cartoon/cel.png`,
+    layout_sheet: `out/${view.shot_dir}/cartoon/layout_sheet.png`,
+    planes_gs: `out/${view.shot_dir}/cartoon/planes_gs.png`,
+    exploded: `out/${view.shot_dir}/multiplane/exploded.jpg`,
+    layout_drawing: `out/${view.shot_dir}/multiplane/layout_drawing.png`,
+    plane_map: `out/${view.shot_dir}/multiplane/plane_map.jpg`,
+    overlay: `out/${view.shot_dir}/overlay.jpg`,
+    compare: `out/${view.shot_dir}/program/compare.jpg`,
+    perceive: `out/${view.shot_dir}/program/perceive.jpg`,
+  };
+  view._resolvedAssets = assets;
+
+  // Preload all real computed assets for this view
+  await Promise.all(Object.values(assets).map(loadImage));
+  if (poem.kit_sheets && poem.kit_sheets.length > 0) {
+    await Promise.all(poem.kit_sheets.slice(0, 4).map((k) => loadImage(k.image)));
+  }
+  updateInspector(poem, view);
+}
+
+function updateInspector(poem, view) {
+  // Plane stack
+  const pList = document.getElementById("planeStackList");
+  pList.innerHTML = "";
+  (view.planes || []).forEach((p) => {
+    const row = document.createElement("div");
+    row.className = "plane-row";
+    const zm = typeof p.z_m === "number" ? `${p.z_m.toFixed(2)}m` : "∞";
+    const par = typeof p.parallax === "number" ? `×${p.parallax.toFixed(2)}` : "×0.00";
+    row.innerHTML = `<span style="color:var(--cyan)">${p.id} ${p.name || ""}</span><span>Z=${zm} ${par}</span>`;
+    pList.appendChild(row);
+  });
+
+  // Verse & Breakdown
+  const verseBox = document.getElementById("poemVerseBox");
+  const sc0 = (poem.breakdown_scenes || [])[0] || {};
+  const poemText = (poem.poem_text || "").split("\n").slice(0, 8).join("\n");
+  verseBox.textContent = sc0.lines
+    ? `[SCENE ${sc0.id} · ${sc0.movement || ""}]\n“${sc0.lines}”\n\n${sc0.treatment || ""}`
+    : poemText;
+
+  // Verbatim Prompt
+  document.getElementById("promptBox").textContent =
+    view.prompt || "No prompt recorded.";
+
+  // Diagnostics
+  const diag = document.getElementById("diagnosticsBox");
+  const notes = (view.signals_notes || []).slice(0, 3).join(" · ");
+  diag.innerHTML = `
+    <div><strong style="color:var(--green)">Camera:</strong> tilt ${(view.camera?.tilt_deg || 0).toFixed(1)}° · horizon Y ${(view.camera?.horizon_y_norm || 0.5).toFixed(2)}</div>
+    <div><strong style="color:var(--amber)">Depth Range:</strong> ${(view.depth?.near_m || 1.2).toFixed(2)}m .. ${(view.depth?.far_m || 35).toFixed(1)}m</div>
+    <div style="margin-top:4px;color:var(--muted)">${notes || poem.camera_language || ""}</div>
+  `;
+
+  // Kits
+  const kGrid = document.getElementById("kitThumbGrid");
+  kGrid.innerHTML = "";
+  (poem.kit_sheets || []).slice(0, 4).forEach((k) => {
+    const card = document.createElement("div");
+    card.className = "kit-thumb";
+    card.innerHTML = `<img src="${k.image}" alt="${k.id}" /><div class="kit-thumb-cap">${k.id} · ${k.title || "Multiplane Kit Sheet (click to inspect in Mode V)"}</div>`;
+    card.onclick = async () => {
+      state.activeKitImg = await loadImage(k.image);
+      setMode(5);
+    };
+    kGrid.appendChild(card);
+  });
+}
+
+function drawFitContain(img, x, y, w, h, bg = "#0c0f15") {
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, w, h);
+  if (!img) return;
+  const scale = Math.min(w / img.width, h / img.height);
+  const nw = img.width * scale;
+  const nh = img.height * scale;
+  ctx.drawImage(img, x + (w - nw) / 2, y + (h - nh) / 2, nw, nh);
+}
+
+function drawHeaderPill(tag, title, sub, accent = "#5ce4ff") {
+  ctx.save();
+  ctx.fillStyle = "rgba(7, 10, 15, 0.86)";
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 1;
+  ctx.fillRect(20, 16, 1360, 56);
+  ctx.strokeRect(20, 16, 1360, 56);
+  ctx.fillStyle = accent;
+  ctx.fillRect(20, 16, 5, 56);
+  ctx.font = "bold 16px 'SF Mono', Menlo, monospace";
+  ctx.fillText(`${tag}  ·  ${title}`, 36, 38);
+  ctx.fillStyle = "#d5e2ee";
+  ctx.font = "13px 'SF Mono', Menlo, monospace";
+  ctx.fillText(sub, 36, 58);
+  ctx.restore();
+}
+
+function renderStage() {
+  if (!state.bundle) return;
+  const W = canvas.width;
+  const H = canvas.height;
+  ctx.fillStyle = "#06090e";
+  ctx.fillRect(0, 0, W, H);
+
+  const poem = state.bundle.poems[state.poemIdx];
+  const view = (poem.views || [])[state.viewIdx];
+  if (!view || !view._resolvedAssets) return;
+  const A = view._resolvedAssets;
+
+  const imgOrig = state.images[A.image];
+  const imgCel = state.images[A.cel];
+  const imgExploded = state.images[A.exploded];
+  const imgPlaneMap = state.images[A.plane_map];
+  const imgLayoutSheet = state.images[A.layout_sheet];
+  const imgLayoutDraw = state.images[A.layout_drawing];
+  const imgPlanesGs = state.images[A.planes_gs];
+  const imgOverlay = state.images[A.overlay];
+  const imgCompare = state.images[A.compare];
+  const imgPerceive = state.images[A.perceive];
+
+  if (state.mode === 1) {
+    // OPTION I: True 3D Depth-Layered Point-Cloud & Depth-Occluded Worldtext
+    if (imgOrig) {
+      const yaw = (state.scrubX - 0.5) * 90 + Math.sin(state.t * 1.5) * 18;
+      // Draw deep planes first, interleave 3D worldtext, then draw foreground plane points over text!
+      ctx.save();
+      ctx.globalAlpha = 0.32;
+      ctx.drawImage(imgOrig, -yaw * 0.25, 0, W, H);
+      ctx.restore();
+
+      // Deep Z=21.8m Prompt Plane
+      if (state.textAlpha > 0.05) {
+        ctx.save();
+        ctx.globalAlpha = state.textAlpha;
+        const px = 420 - yaw * 0.6;
+        const py = 360;
+        ctx.fillStyle = "rgba(8, 14, 22, 0.84)";
+        ctx.strokeStyle = "#5ce4ff";
+        ctx.fillRect(px, py, 740, 88);
+        ctx.strokeRect(px, py, 740, 88);
+        ctx.fillStyle = "#5ce4ff";
+        ctx.font = "bold 13px 'SF Mono', monospace";
+        ctx.fillText(`P4/P5 DEEP ARCHITECTURE @ Z = 21.8m (×0.99 PARALLAX) · SHOT.JSON PROMPT`, px + 14, py + 24);
+        ctx.fillStyle = "#e6eef6";
+        ctx.font = "14px 'SF Mono', monospace";
+        ctx.fillText((view.prompt || "").slice(0, 78), px + 14, py + 48);
+        ctx.fillText((view.prompt || "").slice(78, 156), px + 14, py + 70);
+        ctx.restore();
+      }
+
+      // Midground 3D Parallax Slice + Point-Cloud Lattice
+      if (imgPlaneMap) {
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.globalAlpha = 0.48;
+        ctx.drawImage(imgOrig, yaw * 0.45, 0, W, H);
+        ctx.restore();
+      }
+
+      // Midground Z=6.0m Poem Verse Plane
+      if (state.textAlpha > 0.05) {
+        ctx.save();
+        ctx.globalAlpha = state.textAlpha;
+        const vx = 340 + yaw * 0.5;
+        const vy = 520;
+        ctx.fillStyle = "rgba(22, 14, 9, 0.88)";
+        ctx.strokeStyle = "#ffbe52";
+        ctx.fillRect(vx, vy, 660, 102);
+        ctx.strokeRect(vx, vy, 660, 102);
+        ctx.fillStyle = "#ffbe52";
+        ctx.font = "bold 13px 'SF Mono', monospace";
+        ctx.fillText(`P2 CHARACTER ACTION THRESHOLD @ Z = ${state.scrubZ.toFixed(1)}m · POEM ${poem.num} (${poem.title})`, vx + 14, vy + 24);
+        ctx.fillStyle = "#fff3d6";
+        ctx.font = "20px Georgia, serif";
+        const pLines = (poem.poem_text || "").split("\n").filter(Boolean);
+        ctx.fillText(`“${pLines[0] || "What we've made / we don't want—"}”`, vx + 14, vy + 54);
+        ctx.fillText(`“${pLines[1] || "What we've sold to the world / doesn't exist."}”`, vx + 14, vy + 82);
+        ctx.restore();
+      }
+
+      // Foreground P0/P1 Parallax Occluder Layer
+      if (imgCel) {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighten";
+        ctx.globalAlpha = 0.42;
+        ctx.drawImage(imgCel, yaw * 1.15, 0, W, H);
+        ctx.restore();
+      }
+    }
+    drawHeaderPill(
+      "OPTION I · TRUE 3D POINT CLOUD & Z-TEXT",
+      `129,264-Vertex Metric Depth Volume (${view.view_id}) + Depth-Occluded Worldtext`,
+      `Parallax Orbit Δx=${((state.scrubX-0.5)*2).toFixed(2)}m · Active Metric Plane Z=${state.scrubZ.toFixed(1)}m · Zero HUD Bezel`,
+      "#ffbe52"
+    );
+  } else if (state.mode === 2) {
+    // OPTION II: Exploded 3D Multiplane Stratigraphy (multiplane/exploded.jpg + plane_map.jpg)
+    drawFitContain(imgExploded, 16, 84, Math.floor(W * 0.62), H - 100, "#101318");
+    drawFitContain(imgPlaneMap, Math.floor(W * 0.64), 84, Math.floor(W * 0.34), Math.floor((H - 100) * 0.42), "#101318");
+
+    const rx = Math.floor(W * 0.64);
+    const ry = 84 + Math.floor((H - 100) * 0.44);
+    const rw = Math.floor(W * 0.34);
+    const rh = H - ry - 16;
+    ctx.fillStyle = "#0b0f16";
+    ctx.strokeStyle = "rgba(92,228,255,0.4)";
+    ctx.fillRect(rx, ry, rw, rh);
+    ctx.strokeRect(rx, ry, rw, rh);
+
+    ctx.fillStyle = "#5ce4ff";
+    ctx.font = "bold 16px 'SF Mono', monospace";
+    ctx.fillText("MULTIPLANE CAMERA STRATIGRAPHY (multiplane.json)", rx + 14, ry + 28);
+
+    (view.planes || []).slice(0, 6).forEach((p, idx) => {
+      const py = ry + 58 + idx * 54;
+      const zm = typeof p.z_m === "number" ? `${p.z_m.toFixed(2)}m` : "∞ (sky)";
+      const par = typeof p.parallax === "number" ? `×${p.parallax.toFixed(2)}` : "×0.00";
+      ctx.fillStyle = "#ffbe52";
+      ctx.font = "bold 14px 'SF Mono', monospace";
+      ctx.fillText(`${p.id} [${(p.name || "").toUpperCase()}]   Z=${zm}   Parallax=${par}`, rx + 14, py);
+      ctx.fillStyle = "#c8d6e5";
+      ctx.font = "12px 'SF Mono', monospace";
+      ctx.fillText(`Contents: ${(p.contents || []).join(", ") || "atmosphere"}`, rx + 14, py + 20);
+    });
+
+    drawHeaderPill(
+      "OPTION II · EXPLODED MULTIPLANE STACK",
+      `Isometric 3D Plane Stratigraphy (out/${view.shot_dir}/multiplane/exploded.jpg)`,
+      "Separated P0–P6 painted planes with metric Z depths, parallax multipliers & Golden Riverbed laws",
+      "#5ce4ff"
+    );
+  } else if (state.mode === 3) {
+    // OPTION III: Animator's Perspective Grid & Line Layout (layout_sheet.png + layout_drawing.png)
+    const lw = Math.floor(W * 0.64);
+    const lh = H - 100;
+    drawFitContain(imgLayoutSheet, 16, 84, lw, lh, "#101318");
+    if (imgLayoutDraw) {
+      const splitX = 16 + Math.floor(lw * state.scrubX);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(splitX, 84, lw - (splitX - 16), lh);
+      ctx.clip();
+      drawFitContain(imgLayoutDraw, 16, 84, lw, lh, "#f4f1ea");
+      ctx.restore();
+      ctx.strokeStyle = "#5ce4ff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(splitX, 84);
+      ctx.lineTo(splitX, 84 + lh);
+      ctx.stroke();
+    }
+    const rx = lw + 32;
+    const rw = W - rx - 16;
+    drawFitContain(imgPlanesGs, rx, 84, rw, Math.floor(lh * 0.42), "#101318");
+
+    const ay = 84 + Math.floor(lh * 0.44);
+    ctx.fillStyle = "#0b0f16";
+    ctx.strokeStyle = "rgba(130,245,175,0.45)";
+    ctx.fillRect(rx, ay, rw, H - ay - 16);
+    ctx.strokeRect(rx, ay, rw, H - ay - 16);
+    ctx.fillStyle = "#82f5af";
+    ctx.font = "bold 15px 'SF Mono', monospace";
+    ctx.fillText("ASSEMBLY WORKING MANUSCRIPT & HORIZON SOLVER", rx + 14, ay + 28);
+    const aLines = (poem.assembly_excerpt || poem.poem_text || "").split("\n").filter(Boolean).slice(0, 14);
+    ctx.fillStyle = "#e2ecf5";
+    ctx.font = "13px 'SF Mono', monospace";
+    aLines.forEach((ln, i) => {
+      ctx.fillText(ln.slice(0, 68), rx + 14, ay + 58 + i * 24);
+    });
+
+    drawHeaderPill(
+      "OPTION III · PERSPECTIVE & LINE LAYOUT",
+      `Solved 3D Ground Grid, Horizon/VP & Colour-Coded Line Layout (${view.view_id})`,
+      "Scrub X slider to wipe between 3D Perspective Floor Grid (layout_sheet.png) and Traditional Line Layout (layout_drawing.png)",
+      "#82f5af"
+    );
+  } else if (state.mode === 4) {
+    // OPTION IV: SAM2 Contours, Vector Program & ΔE Perceptual Anatomy
+    const lw = Math.floor(W * 0.54);
+    const th = Math.floor((H - 108) * 0.62);
+    const bh = (H - 108) - th - 10;
+    drawFitContain(imgOverlay, 16, 84, lw, th, "#0d1016");
+    drawFitContain(imgPerceive, 16, 84 + th + 10, lw, bh, "#0d1016");
+
+    const rx = lw + 28;
+    const rw = W - rx - 16;
+    const ch = Math.floor((H - 108) * 0.56);
+    drawFitContain(imgCompare, rx, 84, rw, ch, "#0d1016");
+
+    const by = 84 + ch + 10;
+    ctx.fillStyle = "#0b0f16";
+    ctx.strokeStyle = "rgba(255,130,195,0.45)";
+    ctx.fillRect(rx, by, rw, H - by - 16);
+    ctx.strokeRect(rx, by, rw, H - by - 16);
+    ctx.fillStyle = "#ff82c3";
+    ctx.font = "bold 15px 'SF Mono', monospace";
+    ctx.fillText("VERBATIM PROMPT & PERCEPTUAL ΔE / STAGING SIGNALS", rx + 14, by + 26);
+    ctx.fillStyle = "#5ce4ff";
+    ctx.font = "13px 'SF Mono', monospace";
+    const pr = view.prompt || "";
+    ctx.fillText(pr.slice(0, 82), rx + 14, by + 54);
+    ctx.fillText(pr.slice(82, 164), rx + 14, by + 74);
+    ctx.fillText(pr.slice(164, 246), rx + 14, by + 94);
+
+    ctx.fillStyle = "#ffbe52";
+    (view.signals_notes || []).slice(0, 4).forEach((n, idx) => {
+      ctx.fillText(`• ${n.slice(0, 82)}`, rx + 14, by + 130 + idx * 22);
+    });
+
+    drawHeaderPill(
+      "OPTION IV · SEMANTIC & PERCEPTUAL ANATOMY",
+      `Pixel-Accurate SAM2 Contours (overlay.jpg) + Vector Program & ΔE Error (compare.jpg)`,
+      "Bottom-Left: Squint scale readability pyramid (σ=1..32, perceive.jpg) · Bottom-Right: Verbatim prompt & signals.json",
+      "#ff82c3"
+    );
+  } else if (state.mode === 5) {
+    // OPTION V: Tactile Cut-Out Kits (poems/kits/*.jpg + breakdown/NN.json)
+    const kits = poem.kit_sheets || [];
+    const k0 = state.activeKitImg || (kits[0] ? state.images[kits[0].image] : imgExploded);
+    const k1 = kits[1] ? state.images[kits[1].image] : imgLayoutSheet;
+    const lw = Math.floor(W * 0.56);
+    drawFitContain(k0, 16, 84, lw, H - 100, "#12141a");
+
+    const rx = lw + 28;
+    const rw = W - rx - 16;
+    const th = Math.floor((H - 108) * 0.52);
+    drawFitContain(k1, rx, 84, rw, th, "#12141a");
+
+    const by = 84 + th + 10;
+    ctx.fillStyle = "#0b0f16";
+    ctx.strokeStyle = "rgba(255,190,82,0.45)";
+    ctx.fillRect(rx, by, rw, H - by - 16);
+    ctx.strokeRect(rx, by, rw, H - by - 16);
+    ctx.fillStyle = "#ffbe52";
+    ctx.font = "bold 15px 'SF Mono', monospace";
+    const sc0 = (poem.breakdown_scenes || [])[0] || {};
+    ctx.fillText(`CUT-OUT PUPPET & PROP WORKBENCH — POEM ${poem.num} (${poem.title})`, rx + 14, by + 26);
+    ctx.fillStyle = "#fff3d6";
+    ctx.font = "16px Georgia, serif";
+    ctx.fillText(`“${(sc0.lines || "").slice(0, 78)}”`, rx + 14, by + 54);
+    ctx.fillStyle = "#c8d6e5";
+    ctx.font = "13px 'SF Mono', monospace";
+    ctx.fillText(`Treatment: ${(sc0.treatment || "").slice(0, 76)}`, rx + 14, by + 82);
+    ctx.fillText(`Cast: ${(poem.cast || []).map(c => c.role || c.id).join(", ")}`, rx + 14, by + 108);
+    ctx.fillText(`Props: ${(poem.props || []).map(p => `${p.id} (${p.scale_cm||""}cm)`).join(" · ").slice(0, 76)}`, rx + 14, by + 132);
+
+    drawHeaderPill(
+      "OPTION V · TACTILE CUT-OUT WORKBENCH",
+      `Physical Multiplane Set & Prop Kits with Brass-Brad Pivots (+) & Grip Crosses (+)`,
+      "Panel A: Card layout to paint into · Panel B: Midjourney & Butterfly-Halfworld Atlas refs · Panel C: Physical cardboard craft",
+      "#ffbe52"
+    );
+  } else {
+    // OPTION VI: Unobstructed 4-Layer X-Ray Curtain
+    const x1 = Math.floor(W * Math.max(0.12, state.scrubX - 0.18));
+    const x2 = Math.floor(W * state.scrubX);
+    const x3 = Math.floor(W * Math.min(0.88, state.scrubX + 0.22));
+
+    if (imgOrig) ctx.drawImage(imgOrig, 0, 0, W, H);
+    if (imgCel) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(x1, 0, x2 - x1, H); ctx.clip();
+      ctx.drawImage(imgCel, 0, 0, W, H);
+      ctx.restore();
+    }
+    if (imgLayoutDraw) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(x2, 0, x3 - x2, H); ctx.clip();
+      ctx.drawImage(imgLayoutDraw, 0, 0, W, H);
+      ctx.restore();
+    }
+    if (imgPlaneMap) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(x3, 0, W - x3, H); ctx.clip();
+      ctx.drawImage(imgPlaneMap, 0, 0, W, H);
+      ctx.restore();
+    }
+
+    [ [x1, "#5ce4ff"], [x2, "#ffbe52"], [x3, "#ff82c3"] ].forEach(([sx, col]) => {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, H); ctx.stroke();
+    });
+
+    const hy = Math.floor((view.camera?.horizon_y_norm || 0.5) * H);
+    ctx.strokeStyle = "rgba(92, 228, 255, 0.75)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(W, hy); ctx.stroke();
+
+    if (state.textAlpha > 0.05) {
+      ctx.save();
+      ctx.globalAlpha = state.textAlpha;
+      ctx.fillStyle = "rgba(8, 12, 18, 0.82)";
+      ctx.strokeStyle = "#5ce4ff";
+      ctx.fillRect(24, hy - 42, 920, 36);
+      ctx.strokeRect(24, hy - 42, 920, 36);
+      ctx.fillStyle = "#fff5dc";
+      ctx.font = "18px Georgia, serif";
+      const vLine = (poem.poem_text || "").split("\n").filter(Boolean).slice(0, 3).join("  /  ");
+      ctx.fillText(`SOLVED HORIZON (y=${hy}px) · “${vLine.slice(0, 86)}”`, 36, hy - 18);
+      ctx.restore();
+    }
+
+    drawHeaderPill(
+      "OPTION VI · UNOBSTRUCTED 4-LAYER X-RAY CURTAIN",
+      `Full-Bleed 16:9 Optical Peel (Original ↔ Cartoon Cel ↔ Animation Line Layout ↔ Metric Plane Map)`,
+      "Move mouse or scrub X slider across the frame · Zero HUD bezel · Horizon-anchored poem verse",
+      "#5ce4ff"
+    );
+  }
+}
+
+function setMode(m) {
+  state.mode = m;
+  document.querySelectorAll("#paradigmBar .p-btn").forEach((b) => {
+    b.classList.toggle("active", Number(b.dataset.mode) === m);
+  });
+}
+
+document.querySelectorAll("#paradigmBar .p-btn").forEach((btn) => {
+  btn.onclick = () => setMode(Number(btn.dataset.mode));
+});
+
+document.getElementById("scrubX").oninput = (e) => {
+  state.scrubX = Number(e.target.value) / 100;
+};
+document.getElementById("scrubZ").oninput = (e) => {
+  state.scrubZ = Number(e.target.value);
+  document.getElementById("scrubZVal").textContent = `${state.scrubZ.toFixed(1)}m`;
+};
+document.getElementById("textAlpha").oninput = (e) => {
+  state.textAlpha = Number(e.target.value) / 100;
+};
+document.getElementById("toggleAnimBtn").onclick = (e) => {
+  state.animating = !state.animating;
+  e.target.textContent = state.animating ? "Pause Motion" : "Resume Motion";
+};
+
+canvas.addEventListener("mousemove", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  state.scrubX = Math.max(0.05, Math.min(0.95, (e.clientX - rect.left) / rect.width));
+  document.getElementById("scrubX").value = Math.round(state.scrubX * 100);
+});
+
+function loop() {
+  if (state.animating) state.t += 0.016;
+  renderStage();
+  requestAnimationFrame(loop);
+}
+
+init();
 </script>
 </body>
 </html>
