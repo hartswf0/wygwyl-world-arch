@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VESPER / STELLINE · Narrative Apparatus, TVE Point-Cloud Scope &amp; Echo Comparator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #050c10;
+  --bg-panel: #09161c;
+  --bg-slate: #13262d;
+  --cyan-bezel: #58d4e4;
+  --cyan-dim: rgba(88, 212, 228, 0.32);
+  --cyan-faint: rgba(88, 212, 228, 0.12);
+  --amber-core: #ffbe44;
+  --amber-hot: #ff8811;
+  --crimson: #e83b3b;
+  --mint-wire: #7cf2b8;
+  --text-hi: #e2f6f9;
+  --text-mid: #8ab8c2;
+  --text-low: #4b747e;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-deep);
+  color: var(--text-hi);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-x: hidden;
+}
+
+/* Top Apparatus Header Bar */
+.top-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 18px;
+  background: rgba(6, 16, 22, 0.94);
+  border-bottom: 1px solid var(--cyan-dim);
+  position: sticky;
+  top: 0;
+  z-index: 60;
+}
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brand-pill {
+  padding: 3px 8px;
+  background: rgba(232, 59, 59, 0.18);
+  border: 1px solid var(--crimson);
+  color: #ff7a7a;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  font-size: 10.5px;
+}
+.brand-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--cyan-bezel);
+}
+.brand-sub {
+  color: var(--text-mid);
+  font-size: 11px;
+}
+.top-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.top-links a, .top-links button {
+  font: 500 10.5px/1.2 "IBM Plex Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-hi);
+  background: var(--bg-slate);
+  border: 1px solid var(--cyan-dim);
+  padding: 6px 11px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.top-links a:hover, .top-links button:hover, .top-links button.active {
+  background: var(--cyan-bezel);
+  color: #041014;
+  border-color: var(--cyan-bezel);
+}
+
+/* Main 3-Column Workstation Grid (Modeled on Image 3 + Images 1 & 2) */
+.workstation {
+  display: grid;
+  grid-template-columns: 215px minmax(0, 1fr) 330px;
+  gap: 14px;
+  padding: 14px 18px 28px;
+  max-width: 1720px;
+  margin: 0 auto;
+}
+@media (max-width: 1280px) {
+  .workstation { grid-template-columns: 190px minmax(0, 1fr); }
+  .right-col { grid-column: 1 / -1; }
+}
+@media (max-width: 860px) {
+  .workstation { grid-template-columns: 1fr; }
+}
+
+/* Left Column: Image 3 "SPINNER 6C / 15G" 14-Poem Memory Canister Stack */
+.spinner-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.stack-head {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--text-mid);
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--cyan-dim);
+  margin-bottom: 2px;
+  display: flex;
+  justify-content: space-between;
+}
+.spinner-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 7px 10px;
+  background: linear-gradient(90deg, rgba(64, 104, 102, 0.36) 0%, rgba(28, 52, 56, 0.24) 100%);
+  border: 1px solid rgba(118, 175, 172, 0.28);
+  border-left: 3px solid rgba(118, 175, 172, 0.45);
+  color: var(--text-hi);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.16s ease;
+}
+.spinner-slot:hover {
+  background: linear-gradient(90deg, rgba(88, 212, 228, 0.28) 0%, rgba(28, 52, 56, 0.4) 100%);
+  border-color: var(--cyan-bezel);
+}
+.spinner-slot.active {
+  background: linear-gradient(90deg, rgba(255, 190, 68, 0.26) 0%, rgba(88, 212, 228, 0.16) 100%);
+  border-color: var(--amber-core);
+  border-left: 4px solid var(--amber-core);
+}
+.spinner-slot .sp-id {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--cyan-bezel);
+  display: flex;
+  justify-content: space-between;
+}
+.spinner-slot.active .sp-id { color: var(--amber-core); }
+.spinner-slot .sp-title {
+  font-size: 11px;
+  color: var(--text-hi);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+.spinner-slot .sp-sub {
+  font-size: 9.5px;
+  color: var(--text-mid);
+}
+
+/* Center Column: The TVE Viewfinder & Precrime/Stelline Apparatus Stage */
+.center-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Operator Mode Bar (Naurian 6 Operations + Precrime vs Stelline Switch) */
+.op-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--cyan-dim);
+}
+.naur-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.naur-btn {
+  font: 500 10px/1.2 "IBM Plex Mono", monospace;
+  letter-spacing: 0.06em;
+  padding: 5px 8px;
+  background: rgba(15, 36, 44, 0.9);
+  border: 1px solid var(--cyan-dim);
+  color: var(--text-mid);
+  cursor: pointer;
+}
+.naur-btn.active, .naur-btn:hover {
+  background: rgba(255, 190, 68, 0.2);
+  border-color: var(--amber-core);
+  color: var(--amber-core);
+}
+.naur-arrow { color: var(--text-low); font-size: 10px; }
+
+.paradigm-switch {
+  display: flex;
+  gap: 4px;
+}
+.par-btn {
+  font: 600 10px/1.2 "IBM Plex Mono", monospace;
+  letter-spacing: 0.08em;
+  padding: 5px 9px;
+  background: var(--bg-deep);
+  border: 1px solid var(--cyan-dim);
+  color: var(--text-mid);
+  cursor: pointer;
+}
+.par-btn.active {
+  background: var(--cyan-bezel);
+  color: #031015;
+  border-color: var(--cyan-bezel);
+}
+
+/* THE TVE VIEWFINDER STAGE (Images 1, 2, 3) */
+.viewfinder-outer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #040a0e;
+  border: 1px solid var(--cyan-dim);
+  overflow: hidden;
+  user-select: none;
+  box-shadow: 0 0 42px rgba(88, 212, 228, 0.08) inset;
+}
+#tve-gl-canvas, #tve-hud-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+#tve-hud-canvas {
+  pointer-events: none;
+}
+
+/*Dual Echo Comparison Overlay Bar inside Stage*/
+.echo-banner {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+  background: rgba(5, 14, 20, 0.86);
+  border: 1px solid var(--amber-core);
+  padding: 4px 14px;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--amber-core);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Transport & Parameter Deck under the Viewfinder */
+.deck-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--cyan-dim);
+}
+.deck-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.deck-lbl {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-mid);
+  text-transform: uppercase;
+}
+.deck-lbl .v { color: var(--amber-core); font-weight: 600; }
+input[type=range] {
+  width: 100%;
+  accent-color: var(--cyan-bezel);
+  cursor: pointer;
+}
+
+/* Echo Cases Strip ("06 / TAMPERING AND TRANSFER: What the echo exposes") */
+.echo-box {
+  padding: 12px 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--cyan-dim);
+}
+.echo-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.echo-head h3 {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--amber-core);
+  text-transform: uppercase;
+}
+.echo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.echo-chip {
+  font: 500 10.5px/1.3 "IBM Plex Mono", monospace;
+  padding: 6px 10px;
+  background: rgba(16, 36, 44, 0.85);
+  border: 1px solid var(--cyan-dim);
+  color: var(--text-hi);
+  cursor: pointer;
+  text-align: left;
+}
+.echo-chip:hover, .echo-chip.active {
+  background: rgba(255, 190, 68, 0.18);
+  border-color: var(--amber-core);
+  color: var(--amber-core);
+}
+
+/* Right Column: Naurian Code/Verse Evaluator & Precrime vs Stelline Dossier */
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.eval-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--cyan-dim);
+  padding: 12px 14px;
+}
+.eval-card h4 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--cyan-bezel);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--cyan-faint);
+  padding-bottom: 5px;
+}
+.naur-code {
+  font-size: 10.5px;
+  line-height: 1.55;
+  color: #b8e6d4;
+  background: rgba(4, 10, 14, 0.85);
+  border: 1px solid rgba(124, 242, 184, 0.25);
+  padding: 9px 10px;
+  white-space: pre-wrap;
+  margin-bottom: 10px;
+}
+.verse-log {
+  max-height: 250px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-right: 4px;
+}
+.verse-item {
+  padding: 6px 8px;
+  background: rgba(8, 22, 28, 0.75);
+  border-left: 2px solid var(--cyan-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.verse-item:hover, .verse-item.active {
+  background: rgba(255, 190, 68, 0.14);
+  border-left-color: var(--amber-core);
+}
+.verse-item .vt {
+  font-size: 9.5px;
+  color: var(--amber-core);
+  display: flex;
+  justify-content: space-between;
+}
+.verse-item .vs {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 15px;
+  color: var(--text-hi);
+  line-height: 1.3;
+  margin-top: 2px;
+}
+.table-mini {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5px;
+}
+.table-mini th, .table-mini td {
+  border-bottom: 1px solid var(--cyan-faint);
+  padding: 5px 4px;
+  text-align: left;
+  vertical-align: top;
+}
+.table-mini th { color: var(--amber-core); font-weight: 600; }
+.table-mini td { color: var(--text-mid); }
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <div class="brand-block">
+    <span class="brand-pill">VESPER / STELLINE APPARATUS</span>
+    <div>
+      <div class="brand-title">PRECRIME &amp; MEMORY-LAB OPTICAL WORKSTATION · TVE 1/2–4/4</div>
+      <div class="brand-sub">Framing the 14 WYGWYL Poems, 14 Wireframe Canisters, Point-Cloud Latent Space &amp; Common-Place Echoes</div>
+    </div>
+  </div>
+  <div class="top-links">
+    <button type="button" class="active" id="btn-view-tve">I · TVE Point-Cloud Viewfinder</button>
+    <button type="button" id="btn-view-wire">II · 14-Canister Wireframe Matrix</button>
+    <button type="button" id="btn-view-echo">III · Echo Split Comparator</button>
+    <a href="afterlight_videotext.html">📖 Videotext Book</a>
+    <a href="atlas_splat_studio.html">🎥 60fps Studio Rig</a>
+  </div>
+</header>
+
+<main class="workstation">
+
+  <!-- LEFT RAIL: 14-POEM "SPINNER" MEMORY CANISTER STACK (From Image 3) -->
+  <aside class="spinner-stack">
+    <div class="stack-head">
+      <span>MEMORY CANISTERS</span>
+      <span>14 VOLS</span>
+    </div>
+    <div id="canister-list"></div>
+  </aside>
+
+  <!-- CENTER STAGE: TVE VIEWFINDER, NAURIAN OPERATIONS & ECHO COMPARATOR -->
+  <section class="center-col">
+    <div class="op-bar">
+      <div class="naur-steps" id="naur-ops">
+        <button type="button" class="naur-btn active" data-op="ingest" title="Ingest memory cylinder into working set">1. INGEST</button>
+        <span class="naur-arrow">→</span>
+        <button type="button" class="naur-btn" data-op="isolate" title="Isolate TVE 1/2..4/4 channels">2. ISOLATE [TVE 1–4]</button>
+        <span class="naur-arrow">→</span>
+        <button type="button" class="naur-btn" data-op="scrub" title="Stop, reverse, advance image clock vs countdown">3. SCRUB / JOG</button>
+        <span class="naur-arrow">→</span>
+        <button type="button" class="naur-btn" data-op="reframe" title="Pan, zoom, change 3D multiplane / point-cloud view">4. PAN / 3D ORBIT</button>
+        <span class="naur-arrow">→</span>
+        <button type="button" class="naur-btn" data-op="excerpt" title="Excerpt candidate clue & carry forward">5. EXCERPT CLUE</button>
+        <span class="naur-arrow">→</span>
+        <button type="button" class="naur-btn" data-op="compare" title="Compare two visions of the same Common Place to expose the Echo">6. COMPARE ECHO</button>
+      </div>
+      <div class="paradigm-switch">
+        <button type="button" class="par-btn active" id="par-precrime" title="Anderton/Witwer: Evidentiary inspection & echo discrepancy">PRECRIME (INSPECT)</button>
+        <button type="button" class="par-btn" id="par-stelline" title="Ana Stelline / Vesper: Authored atmospheric feeling & optical branch">STELLINE / VESPER (AUTHOR)</button>
+      </div>
+    </div>
+
+    <!-- 16:9 WebGL + Diegetic TVE HUD Viewfinder -->
+    <div class="viewfinder-outer" id="vf-stage" title="Drag anywhere to orbit 3D Point-Cloud / Multiplane Camera; scroll wheel to dolly zoom">
+      <canvas id="tve-gl-canvas" width="1280" height="720"></canvas>
+      <canvas id="tve-hud-canvas" width="1280" height="720"></canvas>
+      <div class="echo-banner" id="stage-banner">CANISTER P01 · V92 THE UNDERPASS SHADOW-POOL · TVE POINT-CLOUD &amp; OPTICAL SCOPE</div>
+    </div>
+
+    <!-- Parameter & Telemetry Controls -->
+    <div class="deck-grid">
+      <div class="deck-cell">
+        <div class="deck-lbl"><span>Amber LiDAR Point-Cloud ↔ Cinema</span><span class="v" id="lbl-pc">68% Point-Cloud</span></div>
+        <input type="range" id="rng-pc" min="0" max="100" value="68">
+      </div>
+      <div class="deck-cell">
+        <div class="deck-lbl"><span>Afterlight Optical Shader (FX01–14)</span><span class="v" id="lbl-fx">100%</span></div>
+        <input type="range" id="rng-fx" min="0" max="150" value="100">
+      </div>
+      <div class="deck-cell">
+        <div class="deck-lbl"><span>3D Wireframe Matrix &amp; Canisters</span><span class="v" id="lbl-wire">35%</span></div>
+        <input type="range" id="rng-wire" min="0" max="100" value="35">
+      </div>
+      <div class="deck-cell">
+        <div class="deck-lbl"><span>Diegetic TVE Bezel &amp; Scales</span><span class="v" id="lbl-hud">100% (ON)</span></div>
+        <input type="range" id="rng-hud" min="0" max="100" value="100">
+      </div>
+      <div class="deck-cell">
+        <div class="deck-lbl"><span>Station / Echo Scrub (`A ↔ B`)</span><span class="v" id="lbl-morph">0.00</span></div>
+        <input type="range" id="rng-morph" min="0" max="100" value="0">
+      </div>
+      <div class="deck-cell">
+        <div class="deck-lbl"><span>Common Place Stations in Poem</span><span class="v" id="lbl-st-count">6 Views</span></div>
+        <div id="st-mini-strip" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+      </div>
+    </div>
+
+    <!-- 06 / TAMPERING AND TRANSFER: What the Echo Exposes -->
+    <div class="echo-box">
+      <div class="echo-head">
+        <h3>06 / TAMPERING &amp; TRANSFER · “WHAT THE ECHO EXPOSES” (SHARED COMMON-PLACE COMPARISONS)</h3>
+        <span style="color:var(--text-mid);font-size:10.5px">“Witwer compares the available versions and finds different water movement.”</span>
+      </div>
+      <div class="echo-chips" id="echo-presets">
+        <button type="button" class="echo-chip" data-p1="0" data-v1="92" data-p2="9" data-v2="94" data-note="WATER RIPPLE DISCREPANCY: Ankle-deep flooded market underpass in P01 (Breath & Embers) vs. golden bathing silhouettes in P10 (Bokeh Fireflies).">
+          <b>ECHO 01 · V92↔V94 FLOODED UNDERPASS</b><br>P01 Out of Life ↔ P10 Magic Ride (Water Mismatch)
+        </button>
+        <button type="button" class="echo-chip" data-p1="1" data-v1="22" data-p2="2" data-v2="28" data-note="REFLECTION ECHO: Inverted puddle handprints in P02 (Makyō Mirror) vs. raindrop-refracted flooded colonnade in P03 (Surface Dew).">
+          <b>ECHO 02 · V22↔V28 MIRROR THREAD BAY</b><br>P02 Flashing Lights ↔ P03 Break Off Engagement
+        </button>
+        <button type="button" class="echo-chip" data-p1="6" data-v1="80" data-p2="7" data-v2="84" data-note="ELEVATION ECHO: Vertical crimson acoustic shaft in P07 (Chronophotography) vs. upper brutalist gallery in P08 (Astral Chromatic Split).">
+          <b>ECHO 03 · V80↔V84 NARAKA / ANKHU SHAFT</b><br>P07 DJ Turn Me Up ↔ P08 Newly Single
+        </button>
+        <button type="button" class="echo-chip" data-p1="12" data-v1="98" data-p2="13" data-v2="99" data-note="SODIUM FOG ECHO: Three silhouettes in the amber tunnel in P13 (Daimonji Gate-Burn) vs. lone horizon bridge in P14 (Warm Cave Infrared).">
+          <b>ECHO 04 · V98↔V99 AMBER FOG BRIDGE</b><br>P13 Win My Heart ↔ P14 Hot Minute
+        </button>
+        <button type="button" class="echo-chip" data-p1="3" data-v1="45" data-p2="5" data-v2="62" data-note="SUBMERGENCE ECHO: Silver-gelatin inscribed viaduct in P04 (Nevermore) vs. rising turquoise caustic waterline in P06 (Resurrecting Atlantis).">
+          <b>ECHO 05 · V45↔V62 ARCHIVAL VIADUCT</b><br>P04 Nevermore ↔ P06 Resurrecting Atlantis
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT COLUMN: NAURIAN RECONSTRUCTION, CODE/VERSE EVALUATOR & DOSSIER -->
+  <aside class="right-col">
+    <div class="eval-card">
+      <h4>NAURIAN RECONSTRUCTION &amp; SCENE EVALUATOR</h4>
+      <div class="naur-code" id="naur-readout"></div>
+      <div style="font-size:10px;color:var(--text-mid);margin-bottom:6px;display:flex;justify-content:space-between">
+        <span>TWO DIFFERENT TIMES (IMAGE TC vs POEM CLOCK)</span>
+        <span id="clock-readout" style="color:var(--amber-core)">TC 00:00.0 / 01:32.4</span>
+      </div>
+      <div class="verse-log" id="verse-list"></div>
+    </div>
+
+    <div class="eval-card">
+      <h4>TVE 1/2 · 2/2 · 3/4 · 4/4 CHANNEL MAPPING</h4>
+      <table class="table-mini">
+        <thead>
+          <tr><th>Channel</th><th>Apparatus Layer</th><th> DR</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>TVE 1/2</b></td><td>Common Place Plate (`V01–V108` Architecture)</td><td id="td-dr1">85</td></tr>
+          <tr><td><b>TVE 2/2</b></td><td>SCION Painted Cel Actor (`P01–P14` Figures)</td><td id="td-dr2">89</td></tr>
+          <tr><td><b>TVE 3/4</b></td><td>`depth_sharp` 3D Point-Cloud &amp; Surface Normals</td><td id="td-dr3">96</td></tr>
+          <tr><td><b>TVE 4/4</b></td><td>Afterlight Optical Memory Pass (`FX01–FX14`)</td><td id="td-dr4">97</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="eval-card">
+      <h4>PRECRIME vs. STELLINE / VESPER OBLIGATIONS</h4>
+      <table class="table-mini">
+        <thead>
+          <tr><th>Precrime (Anderton / Witwer)</th><th>Stelline / Vesper (Ana)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Input is an <b>evidentiary fragment</b>. Scrub, zoom, excerpt, compare, infer.</td>
+            <td>Input is an <b>authored memory</b>. Select, vary, hold, jog, rehearse optical feeling.</td>
+          </tr>
+          <tr>
+            <td>Failure: collapsing two distinct visits to a Common Place into one ("The Echo").</td>
+            <td>Failure: letting an optical edit overwrite the protected architectural source.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </aside>
+
+</main>
+
+<script>
+// ============================================================================
+// VESPER / STELLINE NARRATIVE APPARATUS ENGINE
+// Combines Blade Runner 2049 TVE Amber Point-Cloud Viewfinder (Images 1 & 2),
+// 14-Canister Wireframe Matrix (Image 3), and Precrime/Vesper Echo Evaluator (PDF)
+// ============================================================================
+
+const VS_SRC = `
+attribute vec2 aPos;
+varying vec2 vUv;
+void main() {
+  vUv = vec2(aPos.x * 0.5 + 0.5, 0.5 - aPos.y * 0.5);
+  gl_Position = vec4(aPos, 0.0, 1.0);
+}
+`;
+
+// Fragment shader implementing:
+// 1. Real 3D Inverse-Depth Multiplane Parallax (`uPanA`, `uDollyA`)
+// 2. Amber LiDAR Point-Cloud / Depth-Lattice Reconstruction (`uPointCloudMix`, modeled on Images 1 & 2!)
+// 3. All 14 Afterlight Optical Shaders (`uFxMode` 1..14, `uFxInt`)
+// 4. Echo Split-Screen / Discrepancy Diff Mode (`uEchoSplit`)
+const FS_SRC = `
+precision highp float;
+varying vec2 vUv;
+
+uniform sampler2D uCelA, uDepthA, uCelB, uDepthB;
+uniform vec2 uPanA, uPanB;
+uniform float uDollyA, uDollyB;
+uniform float uMorph;
+uniform float uPointCloudMix; // 0.0 = Cinema, 1.0 = Blade Runner 2049 Amber LiDAR Point-Cloud Scope
+uniform float uFxMode;        // 1..14 Poem Optical Shaders
+uniform float uFxInt;         // 0.0..1.5
+uniform float uEchoSplit;     // 0.0 = Normal/Morph, 1.0 = Side-by-Side Echo Discrepancy Split
+uniform float uTime;
+uniform vec3 uGlowCol;
+
+vec2 mirrorUv(vec2 uv) {
+  vec2 m = mod(uv, 2.0);
+  if (m.x < 0.0) m.x += 2.0;
+  if (m.y < 0.0) m.y += 2.0;
+  return vec2(m.x > 1.0 ? 2.0 - m.x : m.x, m.y > 1.0 ? 2.0 - m.y : m.y);
+}
+
+vec4 sampleMultiplane(sampler2D tCel, sampler2D tDep, vec2 uv, vec2 pan, float dolly, float stretch) {
+  float dRaw = texture2D(tDep, uv).r;
+  float disp = clamp(1.0 - dRaw, 0.0, 1.0);
+  float scale = dolly * (1.0 + stretch * (disp - 0.35));
+  vec2 uvW = mirrorUv((uv - 0.5) / scale + 0.5 + pan * (0.28 + 0.82 * disp));
+  vec3 rgb = texture2D(tCel, uvW).rgb;
+  float dispW = clamp(1.0 - texture2D(tDep, uvW).r, 0.0, 1.0);
+  return vec4(rgb, dispW);
+}
+
+vec3 evalPointCloudScope(vec3 rgb, float disp, float surfSlope, vec2 uv) {
+  // Deep phosphor teal-indigo background (exact match to Images 1 & 2)
+  vec3 bgTeal = vec3(0.025, 0.085, 0.115) + 0.035 * vec3(0.1, 0.45, 0.55) * (1.0 - uv.y);
+
+  // Perspective ground & structure point-cloud lattice warped by 3D disparity
+  vec2 gridFreq = vec2(190.0, 115.0);
+  vec2 warpedGridUv = uv * gridFreq + vec2(disp * 18.0, disp * 26.0);
+  vec2 cell = fract(warpedGridUv) - 0.5;
+  float dotDist = length(cell);
+
+  float lum = dot(rgb, vec3(0.299, 0.587, 0.114));
+  float dotRadius = 0.18 + 0.34 * clamp(lum + surfSlope * 0.8, 0.0, 1.0);
+  float dotMask = smoothstep(dotRadius, dotRadius * 0.25, dotDist);
+
+  // Sparse glowing ground-plane perspective streaks (bottom half of Images 1 & 2)
+  float groundStreak = pow(0.5 + 0.5 * sin((uv.x - 0.5) * (45.0 + disp * 90.0)) * cos(uv.y * 85.0 - uTime * 1.8), 6.0)
+                       * clamp((uv.y - 0.42) / 0.58, 0.0, 1.0);
+
+  // Golden-amber LiDAR volumetric emission (#ff9818 -> #ffe078)
+  vec3 amberLo = vec3(0.92, 0.42, 0.06);
+  vec3 amberHi = vec3(1.00, 0.86, 0.38);
+  vec3 ptColor = mix(amberLo, amberHi, clamp(lum * 1.15 + surfSlope * 0.5, 0.0, 1.0));
+
+  float structureWeight = clamp(lum * 1.25 + surfSlope * 1.4 + disp * 0.35, 0.0, 1.0);
+  vec3 cloud = bgTeal
+             + ptColor * (dotMask * structureWeight * 1.15 + structureWeight * 0.48)
+             + amberHi * groundStreak * 0.65;
+
+  // Subtle green-cyan diagonal optical scan bands in upper canopy (from Image 2)
+  float scanBand = pow(0.5 + 0.5 * sin(uv.y * 38.0 + uv.x * 6.0 - uTime * 0.9), 5.0) * clamp(0.55 - uv.y, 0.0, 1.0);
+  cloud += vec3(0.18, 0.88, 0.58) * scanBand * 0.22;
+
+  return clamp(cloud, 0.0, 1.0);
+}
+
+void main() {
+  vec4 sA = sampleMultiplane(uCelA, uDepthA, vUv, uPanA, uDollyA, 0.04 * uMorph);
+  vec4 sB = sampleMultiplane(uCelB, uDepthB, vUv, uPanB, uDollyB, 0.04 * (uMorph - 1.0));
+
+  float wB = clamp(uMorph + 0.22 * (sB.a - sA.a) * sin(3.14159265 * uMorph), 0.0, 1.0);
+  if (uEchoSplit > 0.5) {
+    // Side-by-side Echo Comparison with central discrepancy zone
+    wB = smoothstep(0.495, 0.505, vUv.x);
+  }
+
+  vec3 baseCol = mix(sA.rgb, sB.rgb, wB);
+  float disp = mix(sA.a, sB.a, wB);
+
+  vec2 eps = vec2(1.0 / 640.0, 1.0 / 360.0);
+  float gx = (mix(1.0 - texture2D(uDepthA, vUv + vec2(eps.x, 0.0)).r, 1.0 - texture2D(uDepthB, vUv + vec2(eps.x, 0.0)).r, wB)
+            - mix(1.0 - texture2D(uDepthA, vUv - vec2(eps.x, 0.0)).r, 1.0 - texture2D(uDepthB, vUv - vec2(eps.x, 0.0)).r, wB)) * 18.0;
+  float gy = (mix(1.0 - texture2D(uDepthA, vUv + vec2(0.0, eps.y)).r, 1.0 - texture2D(uDepthB, vUv + vec2(0.0, eps.y)).r, wB)
+            - mix(1.0 - texture2D(uDepthA, vUv - vec2(0.0, eps.y)).r, 1.0 - texture2D(uDepthB, vUv - vec2(0.0, eps.y)).r, wB)) * 18.0;
+  float surfSlope = clamp(length(vec2(gx, gy)), 0.0, 1.0);
+  vec3 surfN = normalize(vec3(-gx, -gy, 1.0));
+  float lum = dot(baseCol, vec3(0.299, 0.587, 0.114));
+
+  // Apply Poem's Afterlight Optical Shader (FX01..FX14)
+  vec3 fxCol = baseCol;
+  if (uFxMode < 1.5) {
+    float mist = clamp((1.0 - disp * 1.15) * (0.28 + 0.22 * sin(uTime * 0.95)), 0.0, 0.52);
+    fxCol = mix(fxCol, mix(vec3(0.14, 0.18, 0.24), uGlowCol, 0.35), mist);
+  } else if (uFxMode < 2.5) {
+    float cWave = pow(0.5 + 0.5 * sin(vUv.x * 28.0 + disp * 16.0 + uTime * 1.6) * cos(vUv.y * 22.0 - disp * 14.0), 3.0);
+    fxCol += (cWave + surfSlope * 0.45) * uGlowCol * 0.34;
+  } else if (uFxMode < 3.5) {
+    fxCol += clamp((-gy * 0.65 + surfSlope * 0.55) * disp, 0.0, 1.0) * mix(uGlowCol, vec3(0.85, 0.92, 1.0), 0.5) * 0.34;
+  } else if (uFxMode < 4.5) {
+    vec3 silver = vec3(lum * 0.90 + 0.04, lum * 0.93 + 0.04, lum * 1.04 + 0.06);
+    fxCol = mix(fxCol, silver, 0.52);
+    fxCol = mix(fxCol, vec3(0.96, 0.68, 0.18), clamp(surfSlope * 1.25 * disp, 0.0, 0.58));
+  } else if (uFxMode < 6.5) {
+    float uCx = vUv.x * 24.0 + uTime * 1.3 + disp * 4.5;
+    float uCy = vUv.y * 28.0 - uTime * 0.95 + disp * 4.5;
+    float peaks = pow(clamp(0.5 + 0.25 * (sin(uCx + sin(uCy * 1.4)) + cos(uCy + cos(uCx * 1.3))), 0.0, 1.0), 3.4);
+    fxCol += peaks * uGlowCol * 0.38;
+  } else {
+    vec2 lPos = vec2(0.5 + 0.30 * sin(uTime * 0.7), 0.46 + 0.16 * cos(uTime * 0.5));
+    float nDotL = max(0.0, dot(surfN, normalize(vec3(lPos.x - vUv.x, lPos.y - vUv.y, 0.28))));
+    fxCol += nDotL * uGlowCol * 0.28;
+  }
+  vec3 cinemaCol = mix(baseCol, fxCol, uFxInt);
+
+  // Crossfade between Cinema/Afterlight and Blade Runner 2049 Amber LiDAR Point-Cloud Scope
+  vec3 pcCol = evalPointCloudScope(cinemaCol, disp, surfSlope, vUv);
+  vec3 finalCol = mix(cinemaCol, pcCol, uPointCloudMix);
+
+  // In Echo Split mode, highlight water/temporal discrepancy near the center seam
+  if (uEchoSplit > 0.5) {
+    float diff = length(sA.rgb - sB.rgb) + abs(sA.a - sB.a);
+    float seamBand = exp(-pow((vUv.x - 0.5) / 0.12, 2.0));
+    finalCol += seamBand * diff * vec3(1.0, 0.45, 0.15) * 0.65;
+  }
+
+  gl_FragColor = vec4(clamp(finalCol, 0.0, 1.0), 1.0);
+}
+`;
+
+// Draw the exact Diegetic TVE Viewfinder Bezel, 16-Tick Ladders, TVE 1/2..4/4 Channels & 14-Canister Wireframe Matrix
+function renderDiegeticOverlay(ctx, W, H, state, nowSec) {
+  ctx.clearRect(0, 0, W, H);
+
+  // -------------------------------------------------------------------------
+  // A. 3D WIREFRAME TOPOGRAPHY & 14 ROTATING MEMORY CANISTERS (From Image 3)
+  // -------------------------------------------------------------------------
+  if (state.wireMix > 0.01) {
+    ctx.save();
+    ctx.globalAlpha = state.wireMix;
+
+    // 1. Perspective Wireframe Topography Mesh (center-left of Image 3)
+    ctx.strokeStyle = 'rgba(130, 235, 195, 0.34)';
+    ctx.lineWidth = 1;
+    const gx0 = W * 0.16, gy0 = H * 0.44, gw = W * 0.32, gh = H * 0.30;
+    const cols = 22, rows = 16;
+    for (let r = 0; r <= rows; r++) {
+      ctx.beginPath();
+      for (let c = 0; c <= cols; c++) {
+        const u = c / cols, v = r / rows;
+        const elev = Math.sin(u * 6.2 + nowSec * 1.1) * Math.cos(v * 5.4 - nowSec * 0.8) * 14.0
+                   * Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
+        const px = gx0 + u * gw + (v - 0.5) * 28.0;
+        const py = gy0 + v * gh - elev;
+        if (c === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    for (let c = 0; c <= cols; c += 2) {
+      ctx.beginPath();
+      for (let r = 0; r <= rows; r++) {
+        const u = c / cols, v = r / rows;
+        const elev = Math.sin(u * 6.2 + nowSec * 1.1) * Math.cos(v * 5.4 - nowSec * 0.8) * 14.0
+                   * Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
+        const px = gx0 + u * gw + (v - 0.5) * 28.0;
+        const py = gy0 + v * gh - elev;
+        if (r === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+
+    // 2. Tilted 3D Wireframe Memory Cylinders (The 7 visible canister drums from Image 3)
+    const canisters = [
+      { cx: W * 0.44, cy: H * 0.25, r: 42, len: 132, ang: 0.46, idx: state.poemIdx },
+      { cx: W * 0.57, cy: H * 0.12, r: 42, len: 132, ang: 0.46, idx: (state.poemIdx + 1) % 14 },
+      { cx: W * 0.70, cy: H * 0.19, r: 42, len: 132, ang: 0.46, idx: (state.poemIdx + 2) % 14 },
+      { cx: W * 0.52, cy: H * 0.41, r: 42, len: 132, ang: 0.46, idx: (state.poemIdx + 3) % 14 },
+      { cx: W * 0.80, cy: H * 0.30, r: 42, len: 132, ang: 0.46, idx: (state.poemIdx + 4) % 14 },
+      { cx: W * 0.60, cy: H * 0.60, r: 42, len: 132, ang: 0.46, idx: (state.poemIdx + 5) % 14 },
+      { cx: W * 0.65, cy: H * 0.82, r: 42, len: 132, ang: 0.46, idx: (state.poemIdx + 6) % 14 },
+    ];
+    canisters.forEach((cn, ci) => {
+      ctx.save();
+      ctx.translate(cn.cx, cn.cy);
+      ctx.rotate(cn.ang);
+      const isAct = ci === 0;
+      ctx.strokeStyle = isAct ? 'rgba(255, 204, 84, 0.82)' : 'rgba(140, 245, 200, 0.52)';
+      ctx.lineWidth = isAct ? 1.5 : 1.0;
+
+      // Top & bottom ellipses + longitudinal ribs
+      const rx = cn.r, ry = cn.r * 0.26, h2 = cn.len * 0.5;
+      ctx.beginPath();
+      ctx.ellipse(0, -h2, rx, ry, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Glowing bottom cap (exact match to Image 3's bright bottom rim!)
+      ctx.beginPath();
+      ctx.ellipse(0, h2, rx, ry, 0, 0, Math.PI * 2);
+      ctx.fillStyle = isAct ? 'rgba(255, 215, 110, 0.28)' : 'rgba(170, 255, 220, 0.18)';
+      ctx.fill();
+      ctx.lineWidth = 2.0;
+      ctx.stroke();
+
+      ctx.lineWidth = 0.85;
+      const nRibs = 14;
+      for (let k = 0; k < nRibs; k++) {
+        const a = (k / nRibs) * Math.PI * 2 + nowSec * 0.35;
+        const x = Math.cos(a) * rx;
+        const yOff = Math.sin(a) * ry;
+        ctx.beginPath();
+        ctx.moveTo(x, -h2 + yOff);
+        ctx.lineTo(x, h2 + yOff);
+        ctx.stroke();
+      }
+      for (let ring = -3; ring <= 3; ring++) {
+        const yR = (ring / 4) * h2;
+        ctx.beginPath();
+        ctx.ellipse(0, yR, rx, ry, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.rotate(-cn.ang);
+      ctx.fillStyle = isAct ? '#ffbe44' : '#8ef6c8';
+      ctx.font = '600 10px "IBM Plex Mono", monospace';
+      ctx.fillText(`CANISTER P${String(cn.idx + 1).padStart(2, '0')}`, -38, 4);
+      ctx.restore();
+    });
+
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // B. DIEGETIC TVE OPTICAL GLASS BEZEL & 4-CHANNEL TELEMETRY (Images 1 & 2)
+  // -------------------------------------------------------------------------
+  if (state.hudMix > 0.01) {
+    ctx.save();
+    ctx.globalAlpha = state.hudMix;
+
+    // 1. Outer rounded cyan-teal CRT bezel with subtle phosphor glow
+    const padX = 36, padY = 26, rad = 28;
+    ctx.strokeStyle = 'rgba(92, 222, 238, 0.82)';
+    ctx.lineWidth = 2.2;
+    ctx.shadowColor = 'rgba(88, 212, 228, 0.65)';
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.roundRect(padX, padY, W - padX * 2, H - padY * 2, rad);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Top-left indicator boxes (`[ / ]` + crimson status bar `[████  ]`)
+    ctx.strokeStyle = 'rgba(165, 238, 248, 0.85)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(86, 52, 58, 28);
+    ctx.beginPath();
+    ctx.moveTo(98, 74); ctx.lineTo(112, 58);
+    ctx.lineWidth = 3; ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(232, 65, 65, 0.85)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(160, 52, 112, 28);
+    ctx.fillStyle = 'rgba(232, 62, 62, 0.88)';
+    const barFill = 72 + Math.round(18 * Math.sin(nowSec * 1.3));
+    ctx.fillRect(164, 56, barFill, 20);
+
+    // Top-right prism indicator box (`[ /" ]`)
+    ctx.strokeStyle = 'rgba(165, 238, 248, 0.85)';
+    ctx.strokeRect(W - 154, 52, 68, 28);
+    ctx.beginPath();
+    ctx.moveTo(W - 134, 72); ctx.lineTo(W - 118, 58);
+    ctx.lineWidth = 2.5; ctx.stroke();
+
+    // 2. Left & Right 16-Tick Elevation Ladders
+    ctx.strokeStyle = 'rgba(148, 232, 244, 0.78)';
+    ctx.lineWidth = 1.6;
+    for (let i = 0; i < 16; i++) {
+      const yT = 104 + i * 28;
+      // Left ladder
+      ctx.beginPath();
+      ctx.moveTo(82, yT);
+      ctx.lineTo(148, yT);
+      ctx.stroke();
+      // Right ladder
+      ctx.beginPath();
+      ctx.moveTo(W - 148, yT);
+      ctx.lineTo(W - 82, yT);
+      ctx.stroke();
+    }
+
+    // 3. Center Golden Horizon Reticle (`──┐  ┌──`)
+    const cy = H * 0.465 + state.panY * 320;
+    ctx.strokeStyle = 'rgba(255, 196, 84, 0.88)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.30, cy);
+    ctx.lineTo(W * 0.70, cy);
+    ctx.stroke();
+    // Inner brackets above horizon
+    const bY = cy - 22;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.435, bY); ctx.lineTo(W * 0.475, bY); ctx.lineTo(W * 0.475, bY + 13);
+    ctx.moveTo(W * 0.565, bY); ctx.lineTo(W * 0.525, bY); ctx.lineTo(W * 0.525, bY + 13);
+    ctx.stroke();
+
+    // 4. Four Vertical TVE Telemetry Columns (`TVE 1/2`, `TVE 2/2`, `TVE 3/4`, `TVE 4/4`)
+    const colsX = [172, 276, W - 368, W - 264];
+    const tveLabels = ['1/2', '2/2', '3/4', '4/4'];
+    const chanNum = ['1', '2', '3', '4'];
+    const drVals = state.drValues || [85, 89, 96, 97];
+
+    colsX.forEach((x0, idx) => {
+      const colW = 92;
+      // Dotted vertical ladder rungs
+      ctx.fillStyle = 'rgba(235, 195, 110, 0.42)';
+      for (let r = 0; r < 11; r++) {
+        const ry = 112 + r * 26;
+        for (let d = 0; d < colW; d += 5) {
+          ctx.fillRect(x0 + d, ry, 1.5, 1.5);
+        }
+      }
+
+      // Glowing Amber Level Bar inside the column
+      const phase = nowSec * (1.1 + idx * 0.22) + idx * 1.4 + state.morph * 3.14;
+      const barY = 190 + Math.sin(phase) * 52;
+      const grad = ctx.createLinearGradient(x0, barY, x0, barY + 28);
+      grad.addColorStop(0, 'rgba(255, 224, 112, 0.95)');
+      grad.addColorStop(1, 'rgba(255, 164, 36, 0.05)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x0, barY, colW, 24);
+      ctx.strokeStyle = '#ffe484';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(x0, barY); ctx.lineTo(x0 + colW, barY);
+      ctx.stroke();
+
+      // `[⬆]` Chevron Badge & `TVE n/m` label at y = 415
+      const by = 412;
+      ctx.strokeStyle = 'rgba(165, 238, 248, 0.9)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x0, by, 30, 30);
+      // Double upward chevron inside box
+      ctx.fillStyle = 'rgba(165, 238, 248, 0.92)';
+      ctx.beginPath();
+      ctx.moveTo(x0 + 15, by + 5); ctx.lineTo(x0 + 23, by + 15); ctx.lineTo(x0 + 7, by + 15); ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x0 + 15, by + 14); ctx.lineTo(x0 + 23, by + 24); ctx.lineTo(x0 + 7, by + 24); ctx.closePath();
+      ctx.fill();
+
+      ctx.font = '500 11px "IBM Plex Mono", monospace';
+      ctx.fillStyle = 'rgba(245, 200, 115, 0.85)';
+      ctx.fillText(chanNum[idx], x0 + colW - 8, by + 28);
+
+      ctx.fillStyle = 'rgba(128, 198, 212, 0.78)';
+      ctx.fillText('TVE', x0, by + 48);
+      ctx.fillText(tveLabels[idx], x0 + colW - 28, by + 48);
+
+      // Miniature Blue / Crimson Scope Box at y = 472
+      const sy = 474, sh = 48;
+      const isRightRed = idx >= 2 && state.echoSplit > 0.5;
+      ctx.fillStyle = isRightRed ? 'rgba(120, 18, 24, 0.42)' : 'rgba(14, 68, 92, 0.42)';
+      ctx.fillRect(x0, sy, colW, sh);
+      const lineY = sy + 12 + (idx % 2) * 16 + Math.sin(nowSec * 2.0 + idx) * 6;
+      ctx.strokeStyle = isRightRed ? '#ff3838' : '#58e4ff';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(x0, lineY); ctx.lineTo(x0 + colW, lineY);
+      ctx.stroke();
+
+      // Bottom Big 2-Digit Readout (`85`, `89`, `96`, `97`) + `24556 DR`
+      const ny = 582;
+      ctx.strokeStyle = 'rgba(148, 232, 244, 0.82)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(x0, ny); ctx.lineTo(x0 + colW, ny);
+      ctx.stroke();
+
+      ctx.font = '600 29px "IBM Plex Mono", monospace';
+      ctx.fillStyle = 'rgba(210, 248, 255, 0.95)';
+      ctx.fillText(String(drVals[idx]), x0, ny + 31);
+
+      ctx.font = '500 11px "IBM Plex Mono", monospace';
+      ctx.fillStyle = 'rgba(118, 188, 202, 0.78)';
+      ctx.fillText('24556', x0, ny + 49);
+      ctx.fillText('DR', x0 + colW - 18, ny + 49);
+
+      // Bottom-most Target / Compass Icon Box
+      const iy = ny + 60;
+      ctx.strokeStyle = idx >= 2 ? 'rgba(224, 58, 58, 0.75)' : 'rgba(148, 232, 244, 0.82)';
+      ctx.lineWidth = 1.4;
+      ctx.strokeRect(x0, iy, 32, 26);
+      ctx.beginPath();
+      ctx.arc(x0 + 16, iy + 13, 6, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+
+    ctx.restore();
+  }
+}
+
+async function initVesperApparatus() {
+  const [vtMan, poemsJson, cityRes, viewDirMap] = await Promise.all([
+    fetch('data/terrarium/seeing_spacetime_films/videotext_manifest.json?v=11').then(r => r.json()),
+    fetch('film/poems.json').then(r => r.json()),
+    fetch('../_city/districts.json').then(r => r.ok ? r.json() : {districts:[]}).catch(() => ({districts:[]})),
+    fetch('data/terrarium/seeing_spacetime_films/bible_view_map.json').then(r => r.ok ? r.json() : {}).catch(() => ({}))
+  ]);
+
+  const atlasList = await Promise.all(
+    poemsJson.map(p => fetch(`poems/atlas/${p.num}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({})))
+  );
+
+  // Build per-poem Common Place stations
+  const poemStations = poemsJson.map((p, idx) => {
+    const ad = atlasList[idx] || {};
+    const vt = vtMan.poems[idx] || {};
+    const glowHex = (vt.glow_hex && vt.glow_hex[0]) || '#fa8d15';
+    const views = [];
+    const seen = new Set();
+    (ad.heroes || []).forEach(h => (h.views || []).forEach(v => {
+      if (!seen.has(v.n)) { seen.add(v.n); views.push({ vn: v.n, id: `V${v.n}`, name: h.name, brief: h.brief || '', glowHex }); }
+    }));
+    (ad.districts || []).forEach(d => (d.places || []).forEach(pl => (pl.views || []).forEach(v => {
+      if (!seen.has(v.n) && views.length < 8) { seen.add(v.n); views.push({ vn: v.n, id: `V${v.n}`, name: pl.name, brief: pl.what || '', glowHex }); }
+    })));
+    if (!views.length) views.push({ vn: 92, id: 'V92', name: 'The Underpass Shadow-Pool', brief: '', glowHex });
+    return views;
+  });
+
+  // WebGL Setup
+  const glCanvas = document.getElementById('tve-gl-canvas');
+  const hudCanvas = document.getElementById('tve-hud-canvas');
+  const ctx2d = hudCanvas.getContext('2d');
+  const gl = glCanvas.getContext('webgl', { preserveDrawingBuffer: true });
+
+  const compile = (t, s) => { const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); return sh; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS_SRC));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS_SRC));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, 'aPos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const texCache = {};
+  function loadTex(url, fb = [20, 28, 36]) {
+    if (texCache[url]) return texCache[url];
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([fb[0], fb[1], fb[2], 255]));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    };
+    img.src = url;
+    texCache[url] = tex;
+    return tex;
+  }
+
+  const state = {
+    poemIdx: 0,
+    stA: poemStations[0][0],
+    stB: poemStations[0][Math.min(1, poemStations[0].length - 1)],
+    morph: 0.0,
+    morphTarget: 0.0,
+    pcMix: 0.68,
+    fxInt: 1.0,
+    wireMix: 0.35,
+    hudMix: 1.0,
+    echoSplit: 0.0,
+    paradigm: 'PRECRIME (EVIDENTIARY INSPECTION)',
+    activeOp: 'ingest',
+    echoNote: '',
+    panX: 0.0,
+    panY: 0.0,
+    dolly: 1.12,
+    drValues: [85, 89, 96, 97]
+  };
+
+  function hexToRgbVec(hex) {
+    const h = (hex || '#fa8d15').replace('#', '');
+    if (h.length !== 6) return [0.98, 0.55, 0.08];
+    return [parseInt(h.slice(0,2),16)/255, parseInt(h.slice(2,4),16)/255, parseInt(h.slice(4,6),16)/255];
+  }
+
+  function updateNaurianAndVerses() {
+    const p = vtMan.poems[state.poemIdx];
+    const naurEl = document.getElementById('naur-readout');
+    const modeNote = state.echoSplit > 0.5
+      ? `[ECHO COMPARISON ACTIVE]\n${state.echoNote}`
+      : `<fragment P${p.num}·${state.stA.id}> [enters] <working set>\n  → [isolate] <TVE 1/2..4/4: ${state.stA.name}>\n  → [reframe] <pc=${Math.round(state.pcMix*100)}% fx=${p.fx_code}>\n  → [${state.paradigm.split(' ')[0].toLowerCase()}] <${p.fx_name}>`;
+    naurEl.textContent = modeNote;
+
+    // Update DR readouts
+    state.drValues = [
+      80 + ((state.stA.vn * 3) % 19),
+      78 + ((state.poemIdx * 5 + 11) % 21),
+      90 + ((state.stB.vn * 7) % 9),
+      88 + ((state.poemIdx * 3 + 7) % 11)
+    ];
+    ['td-dr1','td-dr2','td-dr3','td-dr4'].forEach((id, i) => {
+      document.getElementById(id).textContent = String(state.drValues[i]);
+    });
+
+    // Populate SCION Verses
+    const vList = document.getElementById('verse-list');
+    vList.innerHTML = '';
+    const flatVerses = [];
+    (p.scenes || []).forEach(sc => sc.forEach(item => {
+      if (!item.tape && !item.f) flatVerses.push(item);
+    }));
+    flatVerses.forEach((v, vi) => {
+      const div = document.createElement('div');
+      div.className = 'verse-item' + (vi === 0 ? ' active' : '');
+      div.innerHTML = `
+        <div class="vt"><span>${v.who || `P${p.num}`}</span><span>${v.t0.toFixed(1)}s – ${v.t1.toFixed(1)}s</span></div>
+        <div class="vs">“${v.say}”</div>
+      `;
+      div.addEventListener('click', () => {
+        document.querySelectorAll('.verse-item').forEach(el => el.classList.remove('active'));
+        div.classList.add('active');
+        const frac = v.t0 / Math.max(1, p.dur);
+        const stList = poemStations[state.poemIdx];
+        const sIdx = Math.min(stList.length - 1, Math.floor(frac * stList.length));
+        state.stA = stList[sIdx];
+        state.stB = stList[Math.min(stList.length - 1, sIdx + 1)];
+        state.morphTarget = (frac * stList.length) - sIdx;
+        document.getElementById('clock-readout').textContent = `TC ${v.t0.toFixed(1)}s / ${p.dur.toFixed(1)}s`;
+        document.getElementById('stage-banner').textContent =
+          `CANISTER P${p.num} · ${state.stA.id} ${state.stA.name.toUpperCase()} — “${v.say.slice(0, 56)}”`;
+      });
+      vList.appendChild(div);
+    });
+  }
+
+  function renderStationStrip() {
+    const strip = document.getElementById('st-mini-strip');
+    strip.innerHTML = '';
+    const list = poemStations[state.poemIdx];
+    document.getElementById('lbl-st-count').textContent = `${list.length} Views`;
+    list.forEach((st, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'naur-btn' + (st.vn === state.stA.vn ? ' active' : '');
+      b.textContent = st.id;
+      b.title = st.name;
+      b.addEventListener('click', () => {
+        state.echoSplit = 0.0;
+        state.stA = state.stB;
+        state.stB = st;
+        state.morph = 0.0;
+        state.morphTarget = 1.0;
+        renderStationStrip();
+        updateNaurianAndVerses();
+      });
+      strip.appendChild(b);
+    });
+  }
+
+  function selectCanister(idx) {
+    state.poemIdx = idx;
+    state.echoSplit = 0.0;
+    const list = poemStations[idx];
+    state.stA = list[0];
+    state.stB = list[Math.min(1, list.length - 1)];
+    state.morph = 0.0;
+    state.morphTarget = 0.0;
+    document.querySelectorAll('.spinner-slot').forEach((el, i) => el.classList.toggle('active', i === idx));
+    const p = vtMan.poems[idx];
+    document.getElementById('stage-banner').textContent =
+      `CANISTER P${p.num} · ${state.stA.id} ${state.stA.name.toUpperCase()} · [${p.fx_code}] ${p.fx_name.toUpperCase()}`;
+    document.getElementById('clock-readout').textContent = `TC 00:00.0 / ${p.dur.toFixed(1)}s`;
+    renderStationStrip();
+    updateNaurianAndVerses();
+  }
+
+  // Render Left-Rail 14 Spinner Canister Slots
+  const canContainer = document.getElementById('canister-list');
+  vtMan.poems.forEach((p, idx) => {
+    const st0 = poemStations[idx][0];
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'spinner-slot' + (idx === 0 ? ' active' : '');
+    btn.innerHTML = `
+      <div class="sp-id"><span>SPINNER P${p.num} · ${st0.id}</span><span>${p.dur.toFixed(0)}s</span></div>
+      <div class="sp-title">${p.title}</div>
+      <div class="sp-sub">${p.district_name} · [${p.fx_code}]</div>
+    `;
+    btn.addEventListener('click', () => selectCanister(idx));
+    canContainer.appendChild(btn);
+  });
+
+  // Top View Mode Presets (I: TVE Point-Cloud, II: Wireframe Matrix, III: Echo Split)
+  const setTopPreset = (mode) => {
+    document.getElementById('btn-view-tve').classList.toggle('active', mode === 'tve');
+    document.getElementById('btn-view-wire').classList.toggle('active', mode === 'wire');
+    document.getElementById('btn-view-echo').classList.toggle('active', mode === 'echo');
+    if (mode === 'tve') {
+      state.pcMix = 0.72; state.wireMix = 0.18; state.hudMix = 1.0; state.echoSplit = 0.0;
+    } else if (mode === 'wire') {
+      state.pcMix = 0.55; state.wireMix = 0.95; state.hudMix = 0.85; state.echoSplit = 0.0;
+    } else if (mode === 'echo') {
+      document.querySelector('#echo-presets .echo-chip').click();
+      return;
+    }
+    syncSliders();
+  };
+  document.getElementById('btn-view-tve').addEventListener('click', () => setTopPreset('tve'));
+  document.getElementById('btn-view-wire').addEventListener('click', () => setTopPreset('wire'));
+  document.getElementById('btn-view-echo').addEventListener('click', () => setTopPreset('echo'));
+
+  function syncSliders() {
+    document.getElementById('rng-pc').value = Math.round(state.pcMix * 100);
+    document.getElementById('lbl-pc').textContent = `${Math.round(state.pcMix * 100)}% Point-Cloud`;
+    document.getElementById('rng-wire').value = Math.round(state.wireMix * 100);
+    document.getElementById('lbl-wire').textContent = `${Math.round(state.wireMix * 100)}%`;
+    document.getElementById('rng-hud').value = Math.round(state.hudMix * 100);
+    document.getElementById('lbl-hud').textContent = state.hudMix > 0.05 ? `${Math.round(state.hudMix * 100)}% (ON)` : 'OFF (Clean 16:9)';
+  }
+
+  // Sliders
+  document.getElementById('rng-pc').addEventListener('input', e => {
+    state.pcMix = parseFloat(e.target.value) / 100.0;
+    document.getElementById('lbl-pc').textContent = `${Math.round(state.pcMix * 100)}% Point-Cloud`;
+    updateNaurianAndVerses();
+  });
+  document.getElementById('rng-fx').addEventListener('input', e => {
+    state.fxInt = parseFloat(e.target.value) / 100.0;
+    document.getElementById('lbl-fx').textContent = `${Math.round(state.fxInt * 100)}%`;
+  });
+  document.getElementById('rng-wire').addEventListener('input', e => {
+    state.wireMix = parseFloat(e.target.value) / 100.0;
+    document.getElementById('lbl-wire').textContent = `${Math.round(state.wireMix * 100)}%`;
+  });
+  document.getElementById('rng-hud').addEventListener('input', e => {
+    state.hudMix = parseFloat(e.target.value) / 100.0;
+    document.getElementById('lbl-hud').textContent = state.hudMix > 0.05 ? `${Math.round(state.hudMix * 100)}% (ON)` : 'OFF (Clean 16:9)';
+  });
+  document.getElementById('rng-morph').addEventListener('input', e => {
+    state.morphTarget = parseFloat(e.target.value) / 100.0;
+    state.morph = state.morphTarget;
+    document.getElementById('lbl-morph').textContent = state.morph.toFixed(2);
+  });
+
+  // Echo Preset Chips
+  document.querySelectorAll('#echo-presets .echo-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#echo-presets .echo-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const p1 = parseInt(chip.dataset.p1, 10);
+      const v1 = parseInt(chip.dataset.v1, 10);
+      const p2 = parseInt(chip.dataset.p2, 10);
+      const v2 = parseInt(chip.dataset.v2, 10);
+      state.poemIdx = p1;
+      state.stA = { vn: v1, id: `V${v1}`, name: `P${String(p1+1).padStart(2,'0')} Vision`, glowHex: vtMan.poems[p1].glow_hex[0] };
+      state.stB = { vn: v2, id: `V${v2}`, name: `P${String(p2+1).padStart(2,'0')} Echo`, glowHex: vtMan.poems[p2].glow_hex[0] };
+      state.echoSplit = 1.0;
+      state.pcMix = 0.38;
+      state.wireMix = 0.15;
+      state.echoNote = chip.dataset.note;
+      syncSliders();
+      document.getElementById('stage-banner').textContent =
+        `ECHO COMPARATOR · LEFT: P${String(p1+1).padStart(2,'0')} (V${v1})  ↔  RIGHT: P${String(p2+1).padStart(2,'0')} (V${v2})`;
+      updateNaurianAndVerses();
+    });
+  });
+
+  // Naurian Operation Buttons
+  document.querySelectorAll('#naur-ops .naur-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#naur-ops .naur-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const op = btn.dataset.op;
+      state.activeOp = op;
+      if (op === 'ingest') setTopPreset('wire');
+      else if (op === 'isolate') setTopPreset('tve');
+      else if (op === 'compare') setTopPreset('echo');
+      updateNaurianAndVerses();
+    });
+  });
+
+  // Precrime vs Stelline Switch
+  document.getElementById('par-precrime').addEventListener('click', () => {
+    state.paradigm = 'PRECRIME (EVIDENTIARY INSPECTION)';
+    document.getElementById('par-precrime').classList.add('active');
+    document.getElementById('par-stelline').classList.remove('active');
+    state.pcMix = 0.72; syncSliders(); updateNaurianAndVerses();
+  });
+  document.getElementById('par-stelline').addEventListener('click', () => {
+    state.paradigm = 'STELLINE / VESPER (AUTHORED FEELING)';
+    document.getElementById('par-stelline').classList.add('active');
+    document.getElementById('par-precrime').classList.remove('active');
+    state.pcMix = 0.22; state.fxInt = 1.25; syncSliders(); updateNaurianAndVerses();
+  });
+
+  // Pointer Drag Gimbal on Stage
+  const stage = document.getElementById('vf-stage');
+  let drag = false, ds = { x: 0, y: 0 }, tgtPan = { x: 0, y: 0 };
+  stage.addEventListener('pointerdown', e => { drag = true; ds = { x: e.clientX, y: e.clientY }; stage.setPointerCapture(e.pointerId); });
+  stage.addEventListener('pointermove', e => {
+    if (!drag) return;
+    tgtPan.x = Math.max(-0.045, Math.min(0.045, tgtPan.x - ((e.clientX - ds.x) / stage.clientWidth) * 0.06));
+    tgtPan.y = Math.max(-0.025, Math.min(0.025, tgtPan.y - ((e.clientY - ds.y) / stage.clientHeight) * 0.05));
+    ds = { x: e.clientX, y: e.clientY };
+  });
+  stage.addEventListener('pointerup', () => { drag = false; });
+
+  selectCanister(0);
+
+  function animate(nowMs) {
+    const t = nowMs * 0.001;
+    state.morph += (state.morphTarget - state.morph) * 0.05;
+    state.panX += (tgtPan.x + 0.020 * Math.sin(t * 0.55) - state.panX) * 0.08;
+    state.panY += (tgtPan.y + 0.008 * Math.cos(t * 0.42) - state.panY) * 0.08;
+
+    const subA = viewDirMap[String(state.stA.vn)] || '018da7e9-231c-44d0-87f5-b0b0cb7b61cb_0';
+    const subB = viewDirMap[String(state.stB.vn)] || '018da7e9-231c-44d0-87f5-b0b0cb7b61cb_0';
+
+    gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+    gl.useProgram(prog);
+    const bind = (u, tex, n) => { gl.activeTexture(gl.TEXTURE0 + u); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(gl.getUniformLocation(prog, n), u); };
+    bind(0, loadTex(`out/${subA}/image.jpg`), 'uCelA');
+    bind(1, loadTex(`out/${subA}/depth.jpg`, [128,128,128]), 'uDepthA');
+    bind(2, loadTex(`out/${subB}/image.jpg`), 'uCelB');
+    bind(3, loadTex(`out/${subB}/depth.jpg`, [128,128,128]), 'uDepthB');
+
+    gl.uniform2f(gl.getUniformLocation(prog, 'uPanA'), state.panX, state.panY);
+    gl.uniform2f(gl.getUniformLocation(prog, 'uPanB'), state.panX * 0.9, state.panY * 0.9);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uDollyA'), state.dolly + 0.03 * Math.sin(t * 0.4));
+    gl.uniform1f(gl.getUniformLocation(prog, 'uDollyB'), state.dolly + 0.03 * Math.cos(t * 0.4));
+    gl.uniform1f(gl.getUniformLocation(prog, 'uMorph'), state.morph);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uPointCloudMix'), state.pcMix);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uFxMode'), state.poemIdx + 1);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uFxInt'), state.fxInt);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uEchoSplit'), state.echoSplit);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uTime'), t);
+
+    const gc = hexToRgbVec(state.stA.glowHex);
+    gl.uniform3f(gl.getUniformLocation(prog, 'uGlowCol'), gc[0], gc[1], gc[2]);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    renderDiegeticOverlay(ctx2d, hudCanvas.width, hudCanvas.height, state, t);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+}
+
+initVesperApparatus();
+</script>
+</body>
+</html>
