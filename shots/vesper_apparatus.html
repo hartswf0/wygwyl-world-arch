@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VESPER / STELLINE · Narrative Apparatus, TVE Point-Cloud Scope &amp; Echo Comparator</title>
+<title>VESPER / STELLINE · 3D HDL Architectural Apparatus, TVE Point-Cloud Scope &amp; Real Corpus Inspector</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -13,6 +13,8 @@
   --bg-panel: #09161c;
   --bg-slate: #13262d;
   --cyan-bezel: #58d4e4;
+  --seam-cyan: #5fe8ff;
+  --salt-white: #ecebe4;
   --cyan-dim: rgba(88, 212, 228, 0.32);
   --cyan-faint: rgba(88, 212, 228, 0.12);
   --amber-core: #ffbe44;
@@ -44,7 +46,7 @@ html, body {
   justify-content: space-between;
   gap: 12px;
   padding: 10px 18px;
-  background: rgba(6, 16, 22, 0.94);
+  background: rgba(6, 16, 22, 0.95);
   border-bottom: 1px solid var(--cyan-dim);
   position: sticky;
   top: 0;
@@ -67,26 +69,26 @@ html, body {
 .brand-title {
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   color: var(--cyan-bezel);
 }
 .brand-sub {
   color: var(--text-mid);
-  font-size: 11px;
+  font-size: 10.5px;
 }
 .top-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
 }
 .top-links a, .top-links button {
   font: 500 10.5px/1.2 "IBM Plex Mono", monospace;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--text-hi);
   background: var(--bg-slate);
   border: 1px solid var(--cyan-dim);
-  padding: 6px 11px;
+  padding: 6px 10px;
   text-decoration: none;
   cursor: pointer;
 }
@@ -96,24 +98,24 @@ html, body {
   border-color: var(--cyan-bezel);
 }
 
-/* Main 3-Column Workstation Grid (Modeled on Image 3 + Images 1 & 2) */
+/* Main 3-Column Workstation Grid */
 .workstation {
   display: grid;
-  grid-template-columns: 215px minmax(0, 1fr) 330px;
+  grid-template-columns: 235px minmax(0, 1fr) 390px;
   gap: 14px;
   padding: 14px 18px 28px;
-  max-width: 1720px;
+  max-width: 1820px;
   margin: 0 auto;
 }
-@media (max-width: 1280px) {
-  .workstation { grid-template-columns: 190px minmax(0, 1fr); }
+@media (max-width: 1340px) {
+  .workstation { grid-template-columns: 215px minmax(0, 1fr); }
   .right-col { grid-column: 1 / -1; }
 }
 @media (max-width: 860px) {
   .workstation { grid-template-columns: 1fr; }
 }
 
-/* Left Column: Image 3 "SPINNER 6C / 15G" 14-Poem Memory Canister Stack */
+/* Left Column: 14-Poem 3D HDL / Landmark / Hero-Kit Stack */
 .spinner-stack {
   display: flex;
   flex-direction: column;
@@ -121,7 +123,7 @@ html, body {
 }
 .stack-head {
   font-size: 10px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   color: var(--text-mid);
   padding: 4px 6px;
   border-bottom: 1px solid var(--cyan-dim);
@@ -134,14 +136,14 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 7px 10px;
+  padding: 7px 9px;
   background: linear-gradient(90deg, rgba(64, 104, 102, 0.36) 0%, rgba(28, 52, 56, 0.24) 100%);
   border: 1px solid rgba(118, 175, 172, 0.28);
   border-left: 3px solid rgba(118, 175, 172, 0.45);
   color: var(--text-hi);
   cursor: pointer;
   text-align: left;
-  transition: all 0.16s ease;
+  transition: all 0.15s ease;
 }
 .spinner-slot:hover {
   background: linear-gradient(90deg, rgba(88, 212, 228, 0.28) 0%, rgba(28, 52, 56, 0.4) 100%);
@@ -153,16 +155,17 @@ html, body {
   border-left: 4px solid var(--amber-core);
 }
 .spinner-slot .sp-id {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  color: var(--cyan-bezel);
+  letter-spacing: 0.08em;
+  color: var(--seam-cyan);
   display: flex;
   justify-content: space-between;
 }
 .spinner-slot.active .sp-id { color: var(--amber-core); }
 .spinner-slot .sp-title {
   font-size: 11px;
+  font-weight: 600;
   color: var(--text-hi);
   white-space: nowrap;
   overflow: hidden;
@@ -172,16 +175,17 @@ html, body {
 .spinner-slot .sp-sub {
   font-size: 9.5px;
   color: var(--text-mid);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Center Column: The TVE Viewfinder & Precrime/Stelline Apparatus Stage */
+/* Center Column */
 .center-col {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-
-/* Operator Mode Bar (Naurian 6 Operations + Precrime vs Stelline Switch) */
 .op-bar {
   display: flex;
   flex-wrap: wrap;
@@ -233,7 +237,7 @@ html, body {
   border-color: var(--cyan-bezel);
 }
 
-/* THE TVE VIEWFINDER STAGE (Images 1, 2, 3) */
+/* THE TVE VIEWFINDER STAGE */
 .viewfinder-outer {
   position: relative;
   width: 100%;
@@ -242,8 +246,10 @@ html, body {
   border: 1px solid var(--cyan-dim);
   overflow: hidden;
   user-select: none;
+  cursor: grab;
   box-shadow: 0 0 42px rgba(88, 212, 228, 0.08) inset;
 }
+.viewfinder-outer:active { cursor: grabbing; }
 #tve-gl-canvas, #tve-hud-canvas {
   position: absolute;
   inset: 0;
@@ -255,27 +261,29 @@ html, body {
   pointer-events: none;
 }
 
-/*Dual Echo Comparison Overlay Bar inside Stage*/
 .echo-banner {
   position: absolute;
-  top: 14px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 12;
-  background: rgba(5, 14, 20, 0.86);
+  background: rgba(5, 14, 20, 0.88);
   border: 1px solid var(--amber-core);
   padding: 4px 14px;
   font-size: 10.5px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--amber-core);
   pointer-events: none;
   white-space: nowrap;
+  max-width: 92%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Transport & Parameter Deck under the Viewfinder */
+/* Transport & Parameter Deck */
 .deck-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
   gap: 10px;
   padding: 12px;
   background: var(--bg-panel);
@@ -290,7 +298,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   color: var(--text-mid);
   text-transform: uppercase;
 }
@@ -301,7 +309,7 @@ input[type=range] {
   cursor: pointer;
 }
 
-/* Echo Cases Strip ("06 / TAMPERING AND TRANSFER: What the echo exposes") */
+/* Echo Cases Strip */
 .echo-box {
   padding: 12px 14px;
   background: var(--bg-panel);
@@ -317,8 +325,8 @@ input[type=range] {
 }
 .echo-head h3 {
   margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.12em;
+  font-size: 11.5px;
+  letter-spacing: 0.11em;
   color: var(--amber-core);
   text-transform: uppercase;
 }
@@ -328,7 +336,7 @@ input[type=range] {
   gap: 6px;
 }
 .echo-chip {
-  font: 500 10.5px/1.3 "IBM Plex Mono", monospace;
+  font: 500 10px/1.35 "IBM Plex Mono", monospace;
   padding: 6px 10px;
   background: rgba(16, 36, 44, 0.85);
   border: 1px solid var(--cyan-dim);
@@ -342,38 +350,73 @@ input[type=range] {
   color: var(--amber-core);
 }
 
-/* Right Column: Naurian Code/Verse Evaluator & Precrime vs Stelline Dossier */
+/* Right Column: 5-Tab Real Corpus, 3D HDL, Prompt, Dossier & Worldtext Inspector */
 .right-col {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+}
+.tab-bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  background: var(--bg-panel);
+  padding: 4px;
+  border: 1px solid var(--cyan-dim);
+}
+.tab-btn {
+  font: 600 9.5px/1.2 "IBM Plex Mono", monospace;
+  padding: 6px 4px;
+  background: rgba(8, 20, 26, 0.9);
+  border: 1px solid transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+  text-align: center;
+  text-transform: uppercase;
+}
+.tab-btn:hover { color: var(--text-hi); border-color: var(--cyan-dim); }
+.tab-btn.active {
+  background: rgba(255, 190, 68, 0.2);
+  border-color: var(--amber-core);
+  color: var(--amber-core);
+}
+.tab-pane {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+.tab-pane.active {
+  display: flex;
 }
 .eval-card {
   background: var(--bg-panel);
   border: 1px solid var(--cyan-dim);
-  padding: 12px 14px;
+  padding: 11px 13px;
 }
 .eval-card h4 {
-  margin: 0 0 8px;
-  font-size: 11px;
-  letter-spacing: 0.14em;
+  margin: 0 0 7px;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
   color: var(--cyan-bezel);
   text-transform: uppercase;
   border-bottom: 1px solid var(--cyan-faint);
   padding-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
 }
 .naur-code {
   font-size: 10.5px;
-  line-height: 1.55;
-  color: #b8e6d4;
-  background: rgba(4, 10, 14, 0.85);
+  line-height: 1.5;
+  color: #c2f0df;
+  background: rgba(4, 10, 14, 0.88);
   border: 1px solid rgba(124, 242, 184, 0.25);
-  padding: 9px 10px;
+  padding: 8px 10px;
   white-space: pre-wrap;
-  margin-bottom: 10px;
+  max-height: 220px;
+  overflow-y: auto;
 }
 .verse-log {
-  max-height: 250px;
+  max-height: 240px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -382,13 +425,13 @@ input[type=range] {
 }
 .verse-item {
   padding: 6px 8px;
-  background: rgba(8, 22, 28, 0.75);
+  background: rgba(8, 22, 28, 0.78);
   border-left: 2px solid var(--cyan-dim);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.14s;
 }
 .verse-item:hover, .verse-item.active {
-  background: rgba(255, 190, 68, 0.14);
+  background: rgba(255, 190, 68, 0.15);
   border-left-color: var(--amber-core);
 }
 .verse-item .vt {
@@ -404,14 +447,37 @@ input[type=range] {
   line-height: 1.3;
   margin-top: 2px;
 }
+.data-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 290px;
+  overflow-y: auto;
+}
+.data-row {
+  padding: 6px 8px;
+  background: rgba(5, 14, 19, 0.82);
+  border: 1px solid rgba(88, 212, 228, 0.18);
+  font-size: 10.5px;
+}
+.data-row b { color: var(--amber-core); }
+.data-row .tag {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 9px;
+  background: rgba(95, 232, 255, 0.15);
+  border: 1px solid var(--seam-cyan);
+  color: var(--seam-cyan);
+  margin-right: 5px;
+}
 .table-mini {
   width: 100%;
   border-collapse: collapse;
-  font-size: 10.5px;
+  font-size: 10px;
 }
 .table-mini th, .table-mini td {
   border-bottom: 1px solid var(--cyan-faint);
-  padding: 5px 4px;
+  padding: 4px 4px;
   text-align: left;
   vertical-align: top;
 }
@@ -425,13 +491,13 @@ input[type=range] {
   <div class="brand-block">
     <span class="brand-pill">VESPER / STELLINE APPARATUS</span>
     <div>
-      <div class="brand-title">PRECRIME &amp; MEMORY-LAB OPTICAL WORKSTATION · TVE 1/2–4/4</div>
-      <div class="brand-sub">Framing the 14 WYGWYL Poems, 14 Wireframe Canisters, Point-Cloud Latent Space &amp; Common-Place Echoes</div>
+      <div class="brand-title">3D HDL ARCHITECTURAL &amp; LANDMARK WORKSTATION · TVE 1/2–4/4 · REAL CORPUS INSPECTOR</div>
+      <div class="brand-sub">Carrying Real 3D HDL Buildings (`_city/hdl.json`), Landmarks, Midjourney `shot.json` Prompts, Dossier Build Kits &amp; `assembly_p*.txt` Drafts</div>
     </div>
   </div>
   <div class="top-links">
-    <button type="button" class="active" id="btn-view-tve">I · TVE Point-Cloud Viewfinder</button>
-    <button type="button" id="btn-view-wire">II · 14-Canister Wireframe Matrix</button>
+    <button type="button" class="active" id="btn-view-tve">I · TVE Point-Cloud &amp; 3D HDL Scope</button>
+    <button type="button" id="btn-view-wire">II · 3D HDL Wireframe Matrix &amp; Floorplan</button>
     <button type="button" id="btn-view-echo">III · Echo Split Comparator</button>
     <a href="afterlight_videotext.html">📖 Videotext Book</a>
     <a href="atlas_splat_studio.html">🎥 60fps Studio Rig</a>
@@ -440,42 +506,42 @@ input[type=range] {
 
 <main class="workstation">
 
-  <!-- LEFT RAIL: 14-POEM "SPINNER" MEMORY CANISTER STACK (From Image 3) -->
+  <!-- LEFT RAIL: 14-POEM 3D HDL / LANDMARK / HERO-PROP STACK -->
   <aside class="spinner-stack">
     <div class="stack-head">
-      <span>MEMORY CANISTERS</span>
-      <span>14 VOLS</span>
+      <span>14 POEMS · 3D HDL &amp; KITS</span>
+      <span>+4.0m LINE</span>
     </div>
     <div id="canister-list"></div>
   </aside>
 
-  <!-- CENTER STAGE: TVE VIEWFINDER, NAURIAN OPERATIONS & ECHO COMPARATOR -->
+  <!-- CENTER STAGE: TVE VIEWFINDER, 3D HDL WIREFRAME MATRIX & ECHO COMPARATOR -->
   <section class="center-col">
     <div class="op-bar">
       <div class="naur-steps" id="naur-ops">
-        <button type="button" class="naur-btn active" data-op="ingest" title="Ingest memory cylinder into working set">1. INGEST</button>
+        <button type="button" class="naur-btn active" data-op="ingest" title="Ingest poem dossier, assembly draft & 3D HDL model">1. INGEST [HDL+DRAFT]</button>
         <span class="naur-arrow">→</span>
-        <button type="button" class="naur-btn" data-op="isolate" title="Isolate TVE 1/2..4/4 channels">2. ISOLATE [TVE 1–4]</button>
+        <button type="button" class="naur-btn" data-op="isolate" title="Isolate TVE 1/2..4/4 multiplane, prop, 3D & perceive channels">2. ISOLATE [TVE 1–4]</button>
         <span class="naur-arrow">→</span>
-        <button type="button" class="naur-btn" data-op="scrub" title="Stop, reverse, advance image clock vs countdown">3. SCRUB / JOG</button>
+        <button type="button" class="naur-btn" data-op="scrub" title="Scrub SCION verse timecode & multiplane station">3. SCRUB / JOG</button>
         <span class="naur-arrow">→</span>
-        <button type="button" class="naur-btn" data-op="reframe" title="Pan, zoom, change 3D multiplane / point-cloud view">4. PAN / 3D ORBIT</button>
+        <button type="button" class="naur-btn" data-op="reframe" title="Orbit 3D HDL architectural wireframe & point-cloud camera">4. 3D ORBIT [HDL/PLY]</button>
         <span class="naur-arrow">→</span>
-        <button type="button" class="naur-btn" data-op="excerpt" title="Excerpt candidate clue & carry forward">5. EXCERPT CLUE</button>
+        <button type="button" class="naur-btn" data-op="excerpt" title="Inspect Grounding-DINO detections & Hero Prop build spec">5. EXCERPT PROP/CLUE</button>
         <span class="naur-arrow">→</span>
-        <button type="button" class="naur-btn" data-op="compare" title="Compare two visions of the same Common Place to expose the Echo">6. COMPARE ECHO</button>
+        <button type="button" class="naur-btn" data-op="compare" title="Compare two visits to the same Common Place to expose the Echo">6. COMPARE ECHO</button>
       </div>
       <div class="paradigm-switch">
-        <button type="button" class="par-btn active" id="par-precrime" title="Anderton/Witwer: Evidentiary inspection & echo discrepancy">PRECRIME (INSPECT)</button>
-        <button type="button" class="par-btn" id="par-stelline" title="Ana Stelline / Vesper: Authored atmospheric feeling & optical branch">STELLINE / VESPER (AUTHOR)</button>
+        <button type="button" class="par-btn active" id="par-precrime" title="Anderton/Witwer: Evidentiary inspection, camera solve & echo discrepancy">PRECRIME (INSPECT)</button>
+        <button type="button" class="par-btn" id="par-stelline" title="Ana Stelline / Vesper: Authored 3D HDL room, prop kit & optical feeling">STELLINE / VESPER (AUTHOR)</button>
       </div>
     </div>
 
-    <!-- 16:9 WebGL + Diegetic TVE HUD Viewfinder -->
-    <div class="viewfinder-outer" id="vf-stage" title="Drag anywhere to orbit 3D Point-Cloud / Multiplane Camera; scroll wheel to dolly zoom">
+    <!-- 16:9 WebGL + 3D Diegetic HUD & Wireframe Canvas -->
+    <div class="viewfinder-outer" id="vf-stage" title="Drag anywhere to orbit 3D HDL Architectural Wireframe & Multiplane Camera; scroll wheel to dolly zoom">
       <canvas id="tve-gl-canvas" width="1280" height="720"></canvas>
       <canvas id="tve-hud-canvas" width="1280" height="720"></canvas>
-      <div class="echo-banner" id="stage-banner">CANISTER P01 · V92 THE UNDERPASS SHADOW-POOL · TVE POINT-CLOUD &amp; OPTICAL SCOPE</div>
+      <div class="echo-banner" id="stage-banner">P01 · V92 THE UNDERPASS SHADOW-POOL · HDL:SEVERN [20×12m · 35 ROOMS] · PROP: vape_pen (12cm)</div>
     </div>
 
     <!-- Parameter & Telemetry Controls -->
@@ -485,15 +551,15 @@ input[type=range] {
         <input type="range" id="rng-pc" min="0" max="100" value="68">
       </div>
       <div class="deck-cell">
+        <div class="deck-lbl"><span>3D HDL Architecture &amp; Floorplan</span><span class="v" id="lbl-wire">55%</span></div>
+        <input type="range" id="rng-wire" min="0" max="100" value="55">
+      </div>
+      <div class="deck-cell">
         <div class="deck-lbl"><span>Afterlight Optical Shader (FX01–14)</span><span class="v" id="lbl-fx">100%</span></div>
         <input type="range" id="rng-fx" min="0" max="150" value="100">
       </div>
       <div class="deck-cell">
-        <div class="deck-lbl"><span>3D Wireframe Matrix &amp; Canisters</span><span class="v" id="lbl-wire">35%</span></div>
-        <input type="range" id="rng-wire" min="0" max="100" value="35">
-      </div>
-      <div class="deck-cell">
-        <div class="deck-lbl"><span>Diegetic TVE Bezel &amp; Scales</span><span class="v" id="lbl-hud">100% (ON)</span></div>
+        <div class="deck-lbl"><span>Diegetic TVE Bezel &amp; Detections</span><span class="v" id="lbl-hud">100% (ON)</span></div>
         <input type="range" id="rng-hud" min="0" max="100" value="100">
       </div>
       <div class="deck-cell">
@@ -501,7 +567,7 @@ input[type=range] {
         <input type="range" id="rng-morph" min="0" max="100" value="0">
       </div>
       <div class="deck-cell">
-        <div class="deck-lbl"><span>Common Place Stations in Poem</span><span class="v" id="lbl-st-count">6 Views</span></div>
+        <div class="deck-lbl"><span>Common Place Stations (`shot.json`)</span><span class="v" id="lbl-st-count">6 Views</span></div>
         <div id="st-mini-strip" style="display:flex;gap:4px;flex-wrap:wrap"></div>
       </div>
     </div>
@@ -509,71 +575,134 @@ input[type=range] {
     <!-- 06 / TAMPERING AND TRANSFER: What the Echo Exposes -->
     <div class="echo-box">
       <div class="echo-head">
-        <h3>06 / TAMPERING &amp; TRANSFER · “WHAT THE ECHO EXPOSES” (SHARED COMMON-PLACE COMPARISONS)</h3>
-        <span style="color:var(--text-mid);font-size:10.5px">“Witwer compares the available versions and finds different water movement.”</span>
+        <h3>06 / TAMPERING &amp; TRANSFER · “WHAT THE ECHO EXPOSES” (SHARED COMMON-PLACE &amp; 3D HDL COMPARISONS)</h3>
+        <span style="color:var(--text-mid);font-size:10px">Compares both poems' `shot.json` prompts, camera solves, multiplane depths &amp; 3D HDL wireframes</span>
       </div>
       <div class="echo-chips" id="echo-presets">
-        <button type="button" class="echo-chip" data-p1="0" data-v1="92" data-p2="9" data-v2="94" data-note="WATER RIPPLE DISCREPANCY: Ankle-deep flooded market underpass in P01 (Breath & Embers) vs. golden bathing silhouettes in P10 (Bokeh Fireflies).">
-          <b>ECHO 01 · V92↔V94 FLOODED UNDERPASS</b><br>P01 Out of Life ↔ P10 Magic Ride (Water Mismatch)
+        <button type="button" class="echo-chip" data-p1="0" data-v1="92" data-p2="9" data-v2="94" data-note="WATER RIPPLE DISCREPANCY: V92 Naraka Underpass Shadow-Pool (HDL:severn, vape_pen 12cm, h=0.32m) vs. V94 Sunken Forum Bathers Echo (LMK:forum_dish, motorcycle).">
+          <b>ECHO 01 · V92↔V94 FLOODED UNDERPASS</b><br>P01 HDL:Severn ↔ P10 Sunken Forum Dish
         </button>
-        <button type="button" class="echo-chip" data-p1="1" data-v1="22" data-p2="2" data-v2="28" data-note="REFLECTION ECHO: Inverted puddle handprints in P02 (Makyō Mirror) vs. raindrop-refracted flooded colonnade in P03 (Surface Dew).">
-          <b>ECHO 02 · V22↔V28 MIRROR THREAD BAY</b><br>P02 Flashing Lights ↔ P03 Break Off Engagement
+        <button type="button" class="echo-chip" data-p1="1" data-v1="22" data-p2="2" data-v2="28" data-note="REFLECTION & RUIN ECHO: P02 Child's Rowhouse [LIGHTS] (tambourine intact) vs. P03 Chapel on the Flat (tambourine_pieces: 8 crescent rim fragments on flooded stone).">
+          <b>ECHO 02 · V22↔V28 MIRROR &amp; CHAPEL</b><br>P02 HDL:Rowhouse ↔ P03 HDL:Chapel
         </button>
-        <button type="button" class="echo-chip" data-p1="6" data-v1="80" data-p2="7" data-v2="84" data-note="ELEVATION ECHO: Vertical crimson acoustic shaft in P07 (Chronophotography) vs. upper brutalist gallery in P08 (Astral Chromatic Split).">
-          <b>ECHO 03 · V80↔V84 NARAKA / ANKHU SHAFT</b><br>P07 DJ Turn Me Up ↔ P08 Newly Single
+        <button type="button" class="echo-chip" data-p1="2" data-v1="28" data-p2="11" data-v2="52" data-note="ERA 4 RUIN ↔ ERA 5 REUSE: P03 Gothic Chapel on the Flat (timber trusses lost in the Fall) vs. P12 The White Temple (16 paraboloid concrete barrel-vault ribs straddling the chapel ruin).">
+          <b>ECHO 03 · CHAPEL RUIN ↔ WHITE TEMPLE</b><br>P03 HDL:Chapel (Era 0/4) ↔ P12 16-Rib Vault (Era 5)
         </button>
-        <button type="button" class="echo-chip" data-p1="12" data-v1="98" data-p2="13" data-v2="99" data-note="SODIUM FOG ECHO: Three silhouettes in the amber tunnel in P13 (Daimonji Gate-Burn) vs. lone horizon bridge in P14 (Warm Cave Infrared).">
-          <b>ECHO 04 · V98↔V99 AMBER FOG BRIDGE</b><br>P13 Win My Heart ↔ P14 Hot Minute
+        <button type="button" class="echo-chip" data-p1="6" data-v1="80" data-p2="7" data-v2="84" data-note="VERTICAL SHAFT ECHO: P07 Spire Elevator Shaft & Vineyard DJ Deck vs. P08 The NEW SINGLE Picture Palace (16×30m steel-truss auditorium & rooftop ice_bath_basin).">
+          <b>ECHO 04 · V80↔V84 SPIRE &amp; MARQUEE</b><br>P07 LMK:Spire Shaft ↔ P08 HDL:Marquee
         </button>
-        <button type="button" class="echo-chip" data-p1="3" data-v1="45" data-p2="5" data-v2="62" data-note="SUBMERGENCE ECHO: Silver-gelatin inscribed viaduct in P04 (Nevermore) vs. rising turquoise caustic waterline in P06 (Resurrecting Atlantis).">
-          <b>ECHO 05 · V45↔V62 ARCHIVAL VIADUCT</b><br>P04 Nevermore ↔ P06 Resurrecting Atlantis
+        <button type="button" class="echo-chip" data-p1="12" data-v1="98" data-p2="13" data-v2="99" data-note="HARBOUR THRESHOLD ECHO: P13 Pier Café (14×9m on 180m pile pier + 3-Masted Ship) vs. P14 Sleep-Dam Wall, Lighthouse & Cantilevered Orange Catwalk.">
+          <b>ECHO 05 · V98↔V99 PIER SHIP &amp; SLEEP-DAM</b><br>P13 HDL:Pier Café ↔ P14 LMK:Sleep-Dam
         </button>
       </div>
     </div>
   </section>
 
-  <!-- RIGHT COLUMN: NAURIAN RECONSTRUCTION, CODE/VERSE EVALUATOR & DOSSIER -->
+  <!-- RIGHT COLUMN: 5-TAB REAL CORPUS, 3D HDL, PROMPT, DOSSIER & WORLDTEXT INSPECTOR -->
   <aside class="right-col">
-    <div class="eval-card">
-      <h4>NAURIAN RECONSTRUCTION &amp; SCENE EVALUATOR</h4>
-      <div class="naur-code" id="naur-readout"></div>
-      <div style="font-size:10px;color:var(--text-mid);margin-bottom:6px;display:flex;justify-content:space-between">
-        <span>TWO DIFFERENT TIMES (IMAGE TC vs POEM CLOCK)</span>
-        <span id="clock-readout" style="color:var(--amber-core)">TC 00:00.0 / 01:32.4</span>
+    <div class="tab-bar" id="inspector-tabs">
+      <button type="button" class="tab-btn active" data-tab="poem">1. Poem &amp; Draft</button>
+      <button type="button" class="tab-btn" data-tab="prompt">2. Shot &amp; Prompt</button>
+      <button type="button" class="tab-btn" data-tab="hdl">3. 3D HDL &amp; Rooms</button>
+      <button type="button" class="tab-btn" data-tab="dossier">4. Props &amp; Kits</button>
+      <button type="button" class="tab-btn" data-tab="atlas">5. Perceive &amp; Lore</button>
+    </div>
+
+    <!-- TAB 1: POEM TEXT, ESSENCE, ARC & WORKING ASSEMBLY DRAFT (`assembly_p*.txt`) -->
+    <div class="tab-pane active" id="pane-poem">
+      <div class="eval-card">
+        <h4><span>POEM ESSENCE &amp; TIMED SCION VERSES</span><span id="clock-readout" style="color:var(--amber-core)">TC 00:00.0</span></h4>
+        <div id="poem-essence-box" style="font-size:10.5px;color:var(--text-mid);margin-bottom:8px;line-height:1.45"></div>
+        <div class="verse-log" id="verse-list"></div>
       </div>
-      <div class="verse-log" id="verse-list"></div>
+      <div class="eval-card">
+        <h4><span>WORKING POETRY DRAFT (`shots/poems/assembly/`)</span><span id="asm-file-lbl" style="color:var(--amber-core)">assembly_p2.txt</span></h4>
+        <div class="naur-code" id="assembly-draft-box"></div>
+      </div>
+      <div class="eval-card">
+        <h4><span>DRAMATIC ARC MOVEMENTS (`dossier.arc`)</span></h4>
+        <div class="data-list" id="arc-list"></div>
+      </div>
     </div>
 
-    <div class="eval-card">
-      <h4>TVE 1/2 · 2/2 · 3/4 · 4/4 CHANNEL MAPPING</h4>
-      <table class="table-mini">
-        <thead>
-          <tr><th>Channel</th><th>Apparatus Layer</th><th> DR</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><b>TVE 1/2</b></td><td>Common Place Plate (`V01–V108` Architecture)</td><td id="td-dr1">85</td></tr>
-          <tr><td><b>TVE 2/2</b></td><td>SCION Painted Cel Actor (`P01–P14` Figures)</td><td id="td-dr2">89</td></tr>
-          <tr><td><b>TVE 3/4</b></td><td>`depth_sharp` 3D Point-Cloud &amp; Surface Normals</td><td id="td-dr3">96</td></tr>
-          <tr><td><b>TVE 4/4</b></td><td>Afterlight Optical Memory Pass (`FX01–FX14`)</td><td id="td-dr4">97</td></tr>
-        </tbody>
-      </table>
+    <!-- TAB 2: MIDJOURNEY PROMPT, CAMERA SOLVE, DETECTIONS & SEMANTIC STUFF (`shot.json`) -->
+    <div class="tab-pane" id="pane-prompt">
+      <div class="eval-card">
+        <h4><span>MIDJOURNEY v7 GENERATION PROMPT (`shot.json`)</span><span id="shot-id-lbl" style="color:var(--amber-core)">V92</span></h4>
+        <div class="naur-code" id="shot-prompt-box"></div>
+        <div id="shot-file-lbl" style="font-size:9.5px;color:var(--text-low);margin-top:4px;word-break:break-all"></div>
+      </div>
+      <div class="eval-card">
+        <h4><span>SOLVED CAMERA &amp; METRIC HORIZON (`DepthPro + RANSAC`)</span></h4>
+        <table class="table-mini" id="cam-solve-table"></table>
+      </div>
+      <div class="eval-card">
+        <h4><span>GROUNDING-DINO 3D DETECTIONS &amp; ONEFORMER STUFF</span></h4>
+        <div class="data-list" id="detections-list"></div>
+      </div>
     </div>
 
+    <!-- TAB 3: 3D HDL ARCHITECTURAL MODEL, ERAS, SAW/DID FIT & ROOM MANIFEST (`_city/hdl.json`) -->
+    <div class="tab-pane" id="pane-hdl">
+      <div class="eval-card">
+        <h4><span>3D ARCHITECTURAL SPEC (`_city/hdl.json` &amp; `landmarks_ref.mjs`)</span></h4>
+        <div id="hdl-summary-box" style="font-size:10.5px;color:var(--text-hi);margin-bottom:8px"></div>
+        <div class="data-list" id="hdl-fit-list"></div>
+      </div>
+      <div class="eval-card">
+        <h4><span>3D FLOORPLAN ROOMS &amp; INTERIOR FURNITURE PROPS</span><span id="hdl-room-count" style="color:var(--amber-core)"></span></h4>
+        <div class="data-list" id="hdl-rooms-list"></div>
+      </div>
+      <div class="eval-card">
+        <h4><span>ARCHITECTURAL CLAIMS &amp; VERIFICATION (`hdl.facts`)</span></h4>
+        <div class="data-list" id="hdl-facts-list"></div>
+      </div>
+    </div>
+
+    <!-- TAB 4: DOSSIER HERO PROPS, PHYSICAL BUILD SPECS, 5-LAYER SETS & KITS TO BUILD -->
+    <div class="tab-pane" id="pane-dossier">
+      <div class="eval-card">
+        <h4><span>HERO PROPS &amp; PHYSICAL CARD BUILD SPECS (`dossier.props`)</span></h4>
+        <div class="data-list" id="props-list"></div>
+      </div>
+      <div class="eval-card">
+        <h4><span>5-LAYER MULTIPLANE SETS (`sky / back / mid / front / floor`)</span></h4>
+        <div class="data-list" id="sets-list"></div>
+      </div>
+      <div class="eval-card">
+        <h4><span>CHARACTERS, KITS TO BUILD &amp; DIRECTOR INSIGHTS</span></h4>
+        <div class="data-list" id="kits-insights-list"></div>
+      </div>
+    </div>
+
+    <!-- TAB 5: MULTIPLANE DEPTH STRATA, PERCEIVE SQUINT SSIM, TRANSITIONS & GAZETTEER -->
+    <div class="tab-pane" id="pane-atlas">
+      <div class="eval-card">
+        <h4><span>MULTIPLANE STRATIGRAPHY (`multiplane.json` P0–P6)</span></h4>
+        <div class="data-list" id="planes-list"></div>
+      </div>
+      <div class="eval-card">
+        <h4><span>PERCEPTUAL SQUINT &amp; VALUE SIGNALS (`perceive.json`)</span></h4>
+        <div class="data-list" id="perceive-list"></div>
+      </div>
+      <div class="eval-card">
+        <h4><span>TRANSITION GRAMMAR, MARKOV FOUNDRY &amp; CITY DATUM</span></h4>
+        <div class="data-list" id="transitions-list"></div>
+      </div>
+    </div>
+
+    <!-- Persistent TVE 4-Channel Live Readout Table -->
     <div class="eval-card">
-      <h4>PRECRIME vs. STELLINE / VESPER OBLIGATIONS</h4>
+      <h4><span>TVE 1/2 · 2/2 · 3/4 · 4/4 REAL-TIME CHANNEL TELEMETRY</span></h4>
       <table class="table-mini">
         <thead>
-          <tr><th>Precrime (Anderton / Witwer)</th><th>Stelline / Vesper (Ana)</th></tr>
+          <tr><th>Chan</th><th>Apparatus Layer &amp; Real Asset</th><th>Metric</th><th>Val</th></tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Input is an <b>evidentiary fragment</b>. Scrub, zoom, excerpt, compare, infer.</td>
-            <td>Input is an <b>authored memory</b>. Select, vary, hold, jog, rehearse optical feeling.</td>
-          </tr>
-          <tr>
-            <td>Failure: collapsing two distinct visits to a Common Place into one ("The Echo").</td>
-            <td>Failure: letting an optical edit overwrite the protected architectural source.</td>
-          </tr>
+          <tr><td><b>TVE 1/2</b></td><td id="td-lbl1">P1 Foreground Plate (`multiplane.json`)</td><td id="td-sub1">1.64m P1</td><td id="td-dr1" style="color:var(--text-hi);font-weight:600">85</td></tr>
+          <tr><td><b>TVE 2/2</b></td><td id="td-lbl2">Hero Prop &amp; SCION Actor (`dossier.json`)</td><td id="td-sub2">12cm PROP</td><td id="td-dr2" style="color:var(--text-hi);font-weight:600">89</td></tr>
+          <tr><td><b>TVE 3/4</b></td><td id="td-lbl3">3D HDL Model &amp; DepthPro (`_city/hdl.json`)</td><td id="td-sub3">20×12m 3D</td><td id="td-dr3" style="color:var(--text-hi);font-weight:600">98</td></tr>
+          <tr><td><b>TVE 4/4</b></td><td id="td-lbl4">Perceive SSIM &amp; Optical Pass (`perceive.json`)</td><td id="td-sub4">SSIM .92</td><td id="td-dr4" style="color:var(--text-hi);font-weight:600">92</td></tr>
         </tbody>
       </table>
     </div>
@@ -583,9 +712,11 @@ input[type=range] {
 
 <script>
 // ============================================================================
-// VESPER / STELLINE NARRATIVE APPARATUS ENGINE
-// Combines Blade Runner 2049 TVE Amber Point-Cloud Viewfinder (Images 1 & 2),
-// 14-Canister Wireframe Matrix (Image 3), and Precrime/Vesper Echo Evaluator (PDF)
+// VESPER / STELLINE 3D HDL ARCHITECTURAL & REAL CORPUS WORKSTATION
+// Directly renders our actual 3D HDL buildings (`_city/hdl.json`), Landmarks
+// (`_city/landmarks_ref.mjs`), Street Kit (`+4.00m Salt Line` & `Kintsugi Seam`),
+// Isometric Room/Furniture Floorplans, `shot.json` prompts & camera solves,
+// `multiplane.json` depth strata, `perceive.json` metrics, and `assembly_p*.txt`.
 // ============================================================================
 
 const VS_SRC = `
@@ -597,11 +728,6 @@ void main() {
 }
 `;
 
-// Fragment shader implementing:
-// 1. Real 3D Inverse-Depth Multiplane Parallax (`uPanA`, `uDollyA`)
-// 2. Amber LiDAR Point-Cloud / Depth-Lattice Reconstruction (`uPointCloudMix`, modeled on Images 1 & 2!)
-// 3. All 14 Afterlight Optical Shaders (`uFxMode` 1..14, `uFxInt`)
-// 4. Echo Split-Screen / Discrepancy Diff Mode (`uEchoSplit`)
 const FS_SRC = `
 precision highp float;
 varying vec2 vUv;
@@ -610,10 +736,10 @@ uniform sampler2D uCelA, uDepthA, uCelB, uDepthB;
 uniform vec2 uPanA, uPanB;
 uniform float uDollyA, uDollyB;
 uniform float uMorph;
-uniform float uPointCloudMix; // 0.0 = Cinema, 1.0 = Blade Runner 2049 Amber LiDAR Point-Cloud Scope
-uniform float uFxMode;        // 1..14 Poem Optical Shaders
-uniform float uFxInt;         // 0.0..1.5
-uniform float uEchoSplit;     // 0.0 = Normal/Morph, 1.0 = Side-by-Side Echo Discrepancy Split
+uniform float uPointCloudMix;
+uniform float uFxMode;
+uniform float uFxInt;
+uniform float uEchoSplit;
 uniform float uTime;
 uniform vec3 uGlowCol;
 
@@ -635,10 +761,7 @@ vec4 sampleMultiplane(sampler2D tCel, sampler2D tDep, vec2 uv, vec2 pan, float d
 }
 
 vec3 evalPointCloudScope(vec3 rgb, float disp, float surfSlope, vec2 uv) {
-  // Deep phosphor teal-indigo background (exact match to Images 1 & 2)
   vec3 bgTeal = vec3(0.025, 0.085, 0.115) + 0.035 * vec3(0.1, 0.45, 0.55) * (1.0 - uv.y);
-
-  // Perspective ground & structure point-cloud lattice warped by 3D disparity
   vec2 gridFreq = vec2(190.0, 115.0);
   vec2 warpedGridUv = uv * gridFreq + vec2(disp * 18.0, disp * 26.0);
   vec2 cell = fract(warpedGridUv) - 0.5;
@@ -648,11 +771,9 @@ vec3 evalPointCloudScope(vec3 rgb, float disp, float surfSlope, vec2 uv) {
   float dotRadius = 0.18 + 0.34 * clamp(lum + surfSlope * 0.8, 0.0, 1.0);
   float dotMask = smoothstep(dotRadius, dotRadius * 0.25, dotDist);
 
-  // Sparse glowing ground-plane perspective streaks (bottom half of Images 1 & 2)
   float groundStreak = pow(0.5 + 0.5 * sin((uv.x - 0.5) * (45.0 + disp * 90.0)) * cos(uv.y * 85.0 - uTime * 1.8), 6.0)
                        * clamp((uv.y - 0.42) / 0.58, 0.0, 1.0);
 
-  // Golden-amber LiDAR volumetric emission (#ff9818 -> #ffe078)
   vec3 amberLo = vec3(0.92, 0.42, 0.06);
   vec3 amberHi = vec3(1.00, 0.86, 0.38);
   vec3 ptColor = mix(amberLo, amberHi, clamp(lum * 1.15 + surfSlope * 0.5, 0.0, 1.0));
@@ -662,7 +783,6 @@ vec3 evalPointCloudScope(vec3 rgb, float disp, float surfSlope, vec2 uv) {
              + ptColor * (dotMask * structureWeight * 1.15 + structureWeight * 0.48)
              + amberHi * groundStreak * 0.65;
 
-  // Subtle green-cyan diagonal optical scan bands in upper canopy (from Image 2)
   float scanBand = pow(0.5 + 0.5 * sin(uv.y * 38.0 + uv.x * 6.0 - uTime * 0.9), 5.0) * clamp(0.55 - uv.y, 0.0, 1.0);
   cloud += vec3(0.18, 0.88, 0.58) * scanBand * 0.22;
 
@@ -675,7 +795,6 @@ void main() {
 
   float wB = clamp(uMorph + 0.22 * (sB.a - sA.a) * sin(3.14159265 * uMorph), 0.0, 1.0);
   if (uEchoSplit > 0.5) {
-    // Side-by-side Echo Comparison with central discrepancy zone
     wB = smoothstep(0.495, 0.505, vUv.x);
   }
 
@@ -691,7 +810,6 @@ void main() {
   vec3 surfN = normalize(vec3(-gx, -gy, 1.0));
   float lum = dot(baseCol, vec3(0.299, 0.587, 0.114));
 
-  // Apply Poem's Afterlight Optical Shader (FX01..FX14)
   vec3 fxCol = baseCol;
   if (uFxMode < 1.5) {
     float mist = clamp((1.0 - disp * 1.15) * (0.28 + 0.22 * sin(uTime * 0.95)), 0.0, 0.52);
@@ -717,11 +835,9 @@ void main() {
   }
   vec3 cinemaCol = mix(baseCol, fxCol, uFxInt);
 
-  // Crossfade between Cinema/Afterlight and Blade Runner 2049 Amber LiDAR Point-Cloud Scope
   vec3 pcCol = evalPointCloudScope(cinemaCol, disp, surfSlope, vUv);
   vec3 finalCol = mix(cinemaCol, pcCol, uPointCloudMix);
 
-  // In Echo Split mode, highlight water/temporal discrepancy near the center seam
   if (uEchoSplit > 0.5) {
     float diff = length(sA.rgb - sB.rgb) + abs(sA.a - sB.a);
     float seamBand = exp(-pow((vUv.x - 0.5) / 0.12, 2.0));
@@ -732,29 +848,225 @@ void main() {
 }
 `;
 
-// Draw the exact Diegetic TVE Viewfinder Bezel, 16-Tick Ladders, TVE 1/2..4/4 Channels & 14-Canister Wireframe Matrix
-function renderDiegeticOverlay(ctx, W, H, state, nowSec) {
-  ctx.clearRect(0, 0, W, H);
+// 3D Perspective Projection Helper (`z` is vertical elevation)
+function project3D(x, y, z, cx, cy, scale, yaw, pitch) {
+  const cyw = Math.cos(yaw), syw = Math.sin(yaw);
+  const x1 = x * cyw - y * syw;
+  const y1 = x * syw + y * cyw;
+  const z1 = z;
 
-  // -------------------------------------------------------------------------
-  // A. 3D WIREFRAME TOPOGRAPHY & 14 ROTATING MEMORY CANISTERS (From Image 3)
-  // -------------------------------------------------------------------------
+  const cp = Math.cos(pitch), sp = Math.sin(pitch);
+  const y2 = y1 * cp - z1 * sp;
+  const z2 = y1 * sp + z1 * cp;
+  const x2 = x1;
+
+  const persp = 3.2 / Math.max(1.3, 3.2 + y2 * 0.65);
+  return {
+    sx: cx + x2 * scale * persp,
+    sy: cy - z2 * scale * persp,
+    depth: y2
+  };
+}
+
+// Draw a 3D Architectural / Landmark Wireframe Model (`HDL:severn`, `HDL:chapel`, `LMK:white_temple`, etc.)
+function drawWireframe3DModel(ctx, wire3d, cx, cy, scale, yaw, pitch, isActive, alphaMul = 1.0, showTitle = true) {
+  if (!wire3d || !wire3d.segments) return;
+  ctx.save();
+  ctx.globalAlpha = alphaMul;
+
+  const roleStyles = {
+    shell:     { stroke: isActive ? 'rgba(255, 212, 108, 0.82)' : 'rgba(142, 242, 204, 0.68)', w: 1.1 },
+    room:      { stroke: isActive ? 'rgba(118, 215, 225, 0.46)' : 'rgba(96, 185, 175, 0.38)',  w: 0.8 },
+    prop:      { stroke: 'rgba(255, 165, 82, 0.85)',  w: 1.2 },
+    seam:      { stroke: 'rgba(95, 232, 255, 0.95)',  w: isActive ? 1.8 : 1.2 }, // Kintsugi Seam (#5fe8ff)
+    salt_line: { stroke: 'rgba(236, 235, 228, 0.95)', w: isActive ? 1.9 : 1.3 }, // +4.00m Salt Line (#ecebe4)
+    accent:    { stroke: isActive ? 'rgba(255, 204, 84, 0.96)' : 'rgba(175, 255, 224, 0.88)', w: isActive ? 1.8 : 1.2 }
+  };
+
+  // Base glowing architectural plinth
+  const plinth = [[-0.85, -0.65], [0.85, -0.65], [0.85, 0.65], [-0.85, 0.65]].map(
+    ([px, py]) => project3D(px, py, -0.68, cx, cy, scale, yaw, pitch)
+  );
+  ctx.beginPath();
+  plinth.forEach((p, i) => { if (i === 0) ctx.moveTo(p.sx, p.sy); else ctx.lineTo(p.sx, p.sy); });
+  ctx.closePath();
+  ctx.fillStyle = isActive ? 'rgba(255, 196, 78, 0.14)' : 'rgba(88, 218, 188, 0.09)';
+  ctx.fill();
+  ctx.strokeStyle = isActive ? 'rgba(255, 214, 102, 0.65)' : 'rgba(130, 235, 198, 0.42)';
+  ctx.lineWidth = 1.0;
+  ctx.stroke();
+
+  // Draw all 3D wireframe segments
+  for (let i = 0; i < wire3d.segments.length; i++) {
+    const [x1, y1, z1, x2, y2, z2, role] = wire3d.segments[i];
+    const p1 = project3D(x1, y1, z1, cx, cy, scale, yaw, pitch);
+    const p2 = project3D(x2, y2, z2, cx, cy, scale, yaw, pitch);
+    const st = roleStyles[role] || roleStyles.shell;
+    ctx.strokeStyle = st.stroke;
+    ctx.lineWidth = st.w;
+    ctx.beginPath();
+    ctx.moveTo(p1.sx, p1.sy);
+    ctx.lineTo(p2.sx, p2.sy);
+    ctx.stroke();
+  }
+
+  if (showTitle) {
+    const rawT = wire3d.title || 'HDL MODEL';
+    const parts = rawT.split('·');
+    const shortT = parts.length > 1 ? `${parts[0].trim()} · ${parts[parts.length - 1].trim().slice(0, 24)}` : rawT.slice(0, 32);
+    ctx.font = '600 10px "IBM Plex Mono", monospace';
+    const tw = ctx.measureText(shortT).width + 12;
+    const ty = cy + scale * 0.68;
+    ctx.fillStyle = 'rgba(6, 16, 22, 0.86)';
+    ctx.fillRect(cx - tw * 0.5, ty, tw, 17);
+    ctx.strokeStyle = isActive ? '#ffbe44' : 'rgba(95, 232, 255, 0.55)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(cx - tw * 0.5, ty, tw, 17);
+    ctx.fillStyle = isActive ? '#ffd876' : '#baf8e4';
+    ctx.fillText(shortT, cx - tw * 0.5 + 6, ty + 12);
+  }
+
+  ctx.restore();
+}
+
+// Draw the Bottom-Center Tilted 3D Isometric HDL Room & Furniture Floorplan Box (Replacing Image 3's floorplan box)
+function drawIsometricHdlFloorplan(ctx, poemData, cx, cy, scale, angle, nowSec) {
+  const rooms = (poemData && poemData.wire3d && poemData.wire3d.floorplan_rooms) || [];
+  if (!rooms.length) return;
+
+  ctx.save();
+  let maxX = 16, maxY = 12;
+  rooms.forEach(r => {
+    if (r.x + r.w > maxX) maxX = r.x + r.w;
+    if (r.y + r.d > maxY) maxY = r.y + r.d;
+  });
+  const span = Math.max(maxX, maxY, 1.0);
+  const ca = Math.cos(angle), sa = Math.sin(angle);
+
+  function isoPt(rx, ry, rz = 0) {
+    const nx = (rx / span - 0.5) * scale * 1.45;
+    const ny = (ry / span - 0.5) * scale * 1.05;
+    return {
+      x: cx + (nx * ca - ny * sa),
+      y: cy + (nx * sa + ny * ca) * 0.68 - rz * 4.2
+    };
+  }
+
+  const ob = [isoPt(-0.6, -0.6, 0), isoPt(maxX + 0.6, -0.6, 0), isoPt(maxX + 0.6, maxY + 0.6, 0), isoPt(-0.6, maxY + 0.6, 0)];
+  const ot = [isoPt(-0.6, -0.6, 3.2), isoPt(maxX + 0.6, -0.6, 3.2), isoPt(maxX + 0.6, maxY + 0.6, 3.2), isoPt(-0.6, maxY + 0.6, 3.2)];
+
+  ctx.beginPath();
+  ob.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(12, 32, 36, 0.52)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(145, 238, 210, 0.72)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ot.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(195, 255, 235, 0.88)';
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(ob[i].x, ob[i].y);
+    ctx.lineTo(ot[i].x, ot[i].y);
+    ctx.stroke();
+  }
+
+  ctx.font = '600 9px "IBM Plex Mono", monospace';
+  rooms.slice(0, 7).forEach(rm => {
+    const rb = [isoPt(rm.x, rm.y, 0), isoPt(rm.x + rm.w, rm.y, 0), isoPt(rm.x + rm.w, rm.y + rm.d, 0), isoPt(rm.x, rm.y + rm.d, 0)];
+    const rt = [isoPt(rm.x, rm.y, 2.4), isoPt(rm.x + rm.w, rm.y, 2.4), isoPt(rm.x + rm.w, rm.y + rm.d, 2.4), isoPt(rm.x, rm.y + rm.d, 2.4)];
+    ctx.strokeStyle = 'rgba(95, 232, 255, 0.68)';
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    rb.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(210, 255, 240, 0.78)';
+    ctx.beginPath();
+    rt.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.closePath();
+    ctx.stroke();
+
+    const rc = isoPt(rm.x + rm.w * 0.5, rm.y + rm.d * 0.5, 1.2);
+    ctx.fillStyle = '#ffd876';
+    ctx.fillText(rm.id.slice(0, 8), rc.x - 14, rc.y + 3);
+  });
+
+  // Point-cloud starbursts next to floorplan (matching Image 3!)
+  [[-scale * 1.15, -scale * 0.38, 32, 'rgba(235, 252, 248, 0.85)'],
+   [-scale * 1.50, -scale * 0.12, 26, 'rgba(142, 208, 202, 0.65)']].forEach(([bx, by, rad, col], bi) => {
+    const bcx = cx + bx, bcy = cy + by;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.0;
+    for (let r = 0; r < 40; r++) {
+      const a = r * 0.157 + nowSec * 0.25 + bi;
+      const len = rad * (0.35 + 0.65 * Math.abs(Math.sin(r * 1.7 + bi)));
+      ctx.beginPath();
+      ctx.moveTo(bcx, bcy);
+      ctx.lineTo(bcx + Math.cos(a) * len, bcy + Math.sin(a) * len * 0.78);
+      ctx.stroke();
+    }
+  });
+
+  // Metric Scale Bars (`10.0m`, `20.0m · +4.0m LINE`)
+  const sbx = cx - scale * 2.1, sby = cy + scale * 0.62;
+  ctx.strokeStyle = 'rgba(165, 238, 225, 0.82)';
+  ctx.fillStyle = 'rgba(165, 238, 225, 0.88)';
+  ctx.beginPath();
+  ctx.moveTo(sbx, sby); ctx.lineTo(sbx + 105, sby);
+  ctx.moveTo(sbx, sby); ctx.lineTo(sbx, sby + 5);
+  ctx.moveTo(sbx + 105, sby); ctx.lineTo(sbx + 105, sby + 5);
+  ctx.stroke();
+  ctx.fillText(`${(span * 0.5).toFixed(1)}m`, sbx + 82, sby + 13);
+
+  ctx.beginPath();
+  ctx.moveTo(sbx, sby + 18); ctx.lineTo(sbx + 205, sby + 18);
+  ctx.moveTo(sbx, sby + 18); ctx.lineTo(sbx, sby + 23);
+  ctx.moveTo(sbx + 205, sby + 18); ctx.lineTo(sbx + 205, sby + 23);
+  ctx.stroke();
+  ctx.fillStyle = '#ffbe44';
+  ctx.fillText(`${span.toFixed(1)}m · +4.0m LINE`, sbx + 145, sby + 31);
+  ctx.restore();
+}
+
+function renderDiegeticOverlay(ctx, W, H, state, bundle, nowSec) {
+  ctx.clearRect(0, 0, W, H);
+  if (!bundle || !bundle.poems) return;
+
+  const poems = bundle.poems;
+  const actPoem = poems[state.poemIdx] || poems[0];
+  const shotA = (bundle.views_by_no && bundle.views_by_no[String(state.stA.vn)]) || actPoem.views[0];
+  const shotB = (bundle.views_by_no && bundle.views_by_no[String(state.stB.vn)]) || actPoem.views[0];
+  const yawBase = 0.55 + state.panX * 4.5 + nowSec * 0.16;
+  const pitchBase = 0.38 + state.panY * 3.2;
+
+  // =========================================================================
+  // A. MODE II: 3D HDL ARCHITECTURAL WIREFRAME MATRIX, FLOORPLAN & CORPUS BOX
+  // =========================================================================
   if (state.wireMix > 0.01) {
     ctx.save();
     ctx.globalAlpha = state.wireMix;
 
-    // 1. Perspective Wireframe Topography Mesh (center-left of Image 3)
+    // 1. Perspective 3D Depth-Pro & Multiplane Topography Mesh
     ctx.strokeStyle = 'rgba(130, 235, 195, 0.34)';
     ctx.lineWidth = 1;
-    const gx0 = W * 0.16, gy0 = H * 0.44, gw = W * 0.32, gh = H * 0.30;
-    const cols = 22, rows = 16;
+    const gx0 = W * 0.16, gy0 = H * 0.38, gw = W * 0.28, gh = H * 0.26;
+    const cols = 20, rows = 14;
     for (let r = 0; r <= rows; r++) {
       ctx.beginPath();
       for (let c = 0; c <= cols; c++) {
         const u = c / cols, v = r / rows;
         const elev = Math.sin(u * 6.2 + nowSec * 1.1) * Math.cos(v * 5.4 - nowSec * 0.8) * 14.0
                    * Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
-        const px = gx0 + u * gw + (v - 0.5) * 28.0;
+        const px = gx0 + u * gw + (v - 0.5) * 26.0;
         const py = gy0 + v * gh - elev;
         if (c === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
       }
@@ -766,81 +1078,90 @@ function renderDiegeticOverlay(ctx, W, H, state, nowSec) {
         const u = c / cols, v = r / rows;
         const elev = Math.sin(u * 6.2 + nowSec * 1.1) * Math.cos(v * 5.4 - nowSec * 0.8) * 14.0
                    * Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
-        const px = gx0 + u * gw + (v - 0.5) * 28.0;
+        const px = gx0 + u * gw + (v - 0.5) * 26.0;
         const py = gy0 + v * gh - elev;
         if (r === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
       }
       ctx.stroke();
     }
 
-    // 2. Tilted 3D Wireframe Memory Cylinders (The 7 visible canister drums from Image 3)
-    const canisters = [
-      { cx: W * 0.44, cy: H * 0.25, r: 42, len: 132, ang: 0.46, idx: state.poemIdx },
-      { cx: W * 0.57, cy: H * 0.12, r: 42, len: 132, ang: 0.46, idx: (state.poemIdx + 1) % 14 },
-      { cx: W * 0.70, cy: H * 0.19, r: 42, len: 132, ang: 0.46, idx: (state.poemIdx + 2) % 14 },
-      { cx: W * 0.52, cy: H * 0.41, r: 42, len: 132, ang: 0.46, idx: (state.poemIdx + 3) % 14 },
-      { cx: W * 0.80, cy: H * 0.30, r: 42, len: 132, ang: 0.46, idx: (state.poemIdx + 4) % 14 },
-      { cx: W * 0.60, cy: H * 0.60, r: 42, len: 132, ang: 0.46, idx: (state.poemIdx + 5) % 14 },
-      { cx: W * 0.65, cy: H * 0.82, r: 42, len: 132, ang: 0.46, idx: (state.poemIdx + 6) % 14 },
+    // 2. Bottom-Center Tilted 3D Isometric HDL Room & Furniture Floorplan Box
+    drawIsometricHdlFloorplan(ctx, actPoem, W * 0.38, H * 0.78, 82.0, -0.52, nowSec);
+
+    // 3. Constellation of 6 Real 3D Architectural / Landmark Wireframe Models
+    const slots = [
+      { cx: W * 0.43, cy: H * 0.24, scale: 82, idx: state.poemIdx },
+      { cx: W * 0.58, cy: H * 0.14, scale: 72, idx: (state.poemIdx + 2) % 14 },
+      { cx: W * 0.70, cy: H * 0.22, scale: 72, idx: (state.poemIdx + 7) % 14 },
+      { cx: W * 0.53, cy: H * 0.46, scale: 76, idx: (state.poemIdx + 11) % 14 },
+      { cx: W * 0.66, cy: H * 0.50, scale: 72, idx: (state.poemIdx + 10) % 14 },
+      { cx: W * 0.60, cy: H * 0.76, scale: 78, idx: (state.poemIdx + 12) % 14 },
     ];
-    canisters.forEach((cn, ci) => {
-      ctx.save();
-      ctx.translate(cn.cx, cn.cy);
-      ctx.rotate(cn.ang);
-      const isAct = ci === 0;
-      ctx.strokeStyle = isAct ? 'rgba(255, 204, 84, 0.82)' : 'rgba(140, 245, 200, 0.52)';
-      ctx.lineWidth = isAct ? 1.5 : 1.0;
-
-      // Top & bottom ellipses + longitudinal ribs
-      const rx = cn.r, ry = cn.r * 0.26, h2 = cn.len * 0.5;
-      ctx.beginPath();
-      ctx.ellipse(0, -h2, rx, ry, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Glowing bottom cap (exact match to Image 3's bright bottom rim!)
-      ctx.beginPath();
-      ctx.ellipse(0, h2, rx, ry, 0, 0, Math.PI * 2);
-      ctx.fillStyle = isAct ? 'rgba(255, 215, 110, 0.28)' : 'rgba(170, 255, 220, 0.18)';
-      ctx.fill();
-      ctx.lineWidth = 2.0;
-      ctx.stroke();
-
-      ctx.lineWidth = 0.85;
-      const nRibs = 14;
-      for (let k = 0; k < nRibs; k++) {
-        const a = (k / nRibs) * Math.PI * 2 + nowSec * 0.35;
-        const x = Math.cos(a) * rx;
-        const yOff = Math.sin(a) * ry;
-        ctx.beginPath();
-        ctx.moveTo(x, -h2 + yOff);
-        ctx.lineTo(x, h2 + yOff);
-        ctx.stroke();
-      }
-      for (let ring = -3; ring <= 3; ring++) {
-        const yR = (ring / 4) * h2;
-        ctx.beginPath();
-        ctx.ellipse(0, yR, rx, ry, 0, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      ctx.rotate(-cn.ang);
-      ctx.fillStyle = isAct ? '#ffbe44' : '#8ef6c8';
-      ctx.font = '600 10px "IBM Plex Mono", monospace';
-      ctx.fillText(`CANISTER P${String(cn.idx + 1).padStart(2, '0')}`, -38, 4);
-      ctx.restore();
+    slots.forEach((sl, si) => {
+      const pm = poems[sl.idx] || actPoem;
+      drawWireframe3DModel(
+        ctx,
+        pm.wire3d,
+        sl.cx,
+        sl.cy,
+        sl.scale,
+        yawBase + si * 0.35,
+        pitchBase,
+        si === 0,
+        state.wireMix,
+        true
+      );
     });
+
+    // 4. When in full Wireframe Matrix mode (`wireMix > 0.7`), draw the Right-Side Translucent Corpus Box inside the stage!
+    if (state.wireMix > 0.72) {
+      const bx = W - 325, by = 78, bw = 295, bh = H - 116;
+      ctx.fillStyle = 'rgba(5, 13, 18, 0.88)';
+      ctx.fillRect(bx, by, bw, bh);
+      ctx.strokeStyle = 'rgba(95, 232, 255, 0.65)';
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(bx, by, bw, bh);
+
+      const asm = (actPoem.assembly_pages && actPoem.assembly_pages[Math.min(1, actPoem.assembly_pages.length - 1)]) ||
+                  (actPoem.assembly_pages && actPoem.assembly_pages[0]) || { file: 'assembly_p1.txt', reverse_header: '', text: '' };
+      const pr0 = (actPoem.props && actPoem.props[0]) || { id: 'prop', scale_cm: 12, build: '' };
+      const fit0 = (actPoem.hdl_meta && actPoem.hdl_meta.fit && actPoem.hdl_meta.fit[0]) || { saw: 'reference still', did: '3D HDL wireframe' };
+
+      const lines = [
+        { t: `■ P${actPoem.num} · ${actPoem.title.toUpperCase()}`, c: '#ffbe44' },
+        { t: `  ${actPoem.wire3d.title.slice(0, 38)}`, c: '#5fe8ff' },
+        { t: `■ ASSEMBLY [${asm.file}]:`, c: '#ffbe44' },
+        { t: `  ${asm.reverse_header.slice(0, 38)}`, c: '#7cf2b8' },
+        { t: `■ HERO PROP [${pr0.id} · ${pr0.scale_cm || 15}cm]:`, c: '#ffbe44' },
+        { t: `  ${(pr0.build || '').slice(0, 38)}`, c: '#d8f4ee' },
+        { t: `  ${(pr0.build || '').slice(38, 76)}`, c: '#d8f4ee' },
+        { t: `■ 3D HDL FIT (_city/hdl.json):`, c: '#ffbe44' },
+        { t: `  SAW: ${(fit0.saw || '').slice(0, 35)}`, c: '#9ad8e4' },
+        { t: `  DID: ${(fit0.did || '').slice(0, 35)}`, c: '#7cf2b8' },
+        { t: `■ PROMPT [${shotA.id} · shot.json]:`, c: '#ffbe44' },
+        { t: `  ${(shotA.prompt || '').slice(0, 38)}`, c: '#d8f4ee' },
+        { t: `  ${(shotA.prompt || '').slice(38, 76)}`, c: '#d8f4ee' },
+        { t: `■ PERCEIVE (perceive.json):`, c: '#ffbe44' },
+        { t: `  READS@σ=${shotA.perceive.reads_at_sigma} · dE=${shotA.perceive.dE} · SSIM=${shotA.perceive.value_ssim}`, c: '#5fe8ff' },
+        { t: `  “${(shotA.perceive.felt || '').slice(0, 36)}”`, c: '#d8f4ee' },
+      ];
+      ctx.font = '500 10px "IBM Plex Mono", monospace';
+      lines.forEach((ln, li) => {
+        ctx.fillStyle = ln.c;
+        ctx.fillText(ln.t, bx + 10, by + 18 + li * 16);
+      });
+    }
 
     ctx.restore();
   }
 
-  // -------------------------------------------------------------------------
-  // B. DIEGETIC TVE OPTICAL GLASS BEZEL & 4-CHANNEL TELEMETRY (Images 1 & 2)
-  // -------------------------------------------------------------------------
+  // =========================================================================
+  // B. MODE I & III: DIEGETIC TVE OPTICAL GLASS BEZEL & REAL SHOT TELEMETRY
+  // =========================================================================
   if (state.hudMix > 0.01) {
     ctx.save();
     ctx.globalAlpha = state.hudMix;
 
-    // 1. Outer rounded cyan-teal CRT bezel with subtle phosphor glow
     const padX = 36, padY = 26, rad = 28;
     ctx.strokeStyle = 'rgba(92, 222, 238, 0.82)';
     ctx.lineWidth = 2.2;
@@ -851,7 +1172,7 @@ function renderDiegeticOverlay(ctx, W, H, state, nowSec) {
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // Top-left indicator boxes (`[ / ]` + crimson status bar `[████  ]`)
+    // Top-left `[ / ]` + crimson status bar `[████  ]` + Perceive Squint readout
     ctx.strokeStyle = 'rgba(165, 238, 248, 0.85)';
     ctx.lineWidth = 1.5;
     ctx.strokeRect(86, 52, 58, 28);
@@ -866,54 +1187,107 @@ function renderDiegeticOverlay(ctx, W, H, state, nowSec) {
     const barFill = 72 + Math.round(18 * Math.sin(nowSec * 1.3));
     ctx.fillRect(164, 56, barFill, 20);
 
-    // Top-right prism indicator box (`[ /" ]`)
+    const perc = shotA.perceive || { reads_at_sigma: 8, dE: 4.5, value_ssim: 0.92 };
+    const cam = shotA.camera || { focal_mm: 24.7, fov_deg: 72.2, height_m: 0.32, pitch_deg: 3.8, shot_class: 'ground', confidence: 0.98 };
+    ctx.font = '500 10px "IBM Plex Mono", monospace';
+    ctx.fillStyle = 'rgba(138, 212, 226, 0.85)';
+    ctx.fillText(`READS @ σ=${perc.reads_at_sigma} · dE=${perc.dE} · SSIM=${perc.value_ssim}`, 86, 94);
+
+    // Top-right `[ /" ]` Atlantis Emblem prism box + Solved Camera Lens & Height
     ctx.strokeStyle = 'rgba(165, 238, 248, 0.85)';
+    ctx.lineWidth = 1.5;
     ctx.strokeRect(W - 154, 52, 68, 28);
     ctx.beginPath();
     ctx.moveTo(W - 134, 72); ctx.lineTo(W - 118, 58);
     ctx.lineWidth = 2.5; ctx.stroke();
+    // +4.00m Salt Line inside emblem box
+    ctx.strokeStyle = '#ecebe4';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(W - 154, 68); ctx.lineTo(W - 86, 68);
+    ctx.stroke();
 
-    // 2. Left & Right 16-Tick Elevation Ladders
-    ctx.strokeStyle = 'rgba(148, 232, 244, 0.78)';
-    ctx.lineWidth = 1.6;
+    const camTxt = `${cam.focal_mm}mm · FOV ${cam.fov_deg}° · h=${cam.height_m}m`;
+    ctx.fillStyle = '#ffbe44';
+    ctx.fillText(camTxt, W - 86 - ctx.measureText(camTxt).width, 94);
+
+    // Left & Right 16-Tick Elevation Ladders (highlighting the 4/10 `+4.00m SALT LINE` tick!)
     for (let i = 0; i < 16; i++) {
       const yT = 104 + i * 28;
-      // Left ladder
+      const isSalt = (i === 9);
+      ctx.strokeStyle = isSalt ? '#ecebe4' : 'rgba(148, 232, 244, 0.78)';
+      ctx.lineWidth = isSalt ? 2.6 : 1.6;
       ctx.beginPath();
-      ctx.moveTo(82, yT);
-      ctx.lineTo(148, yT);
+      ctx.moveTo(82, yT); ctx.lineTo(148, yT);
+      ctx.moveTo(W - 148, yT); ctx.lineTo(W - 82, yT);
       ctx.stroke();
-      // Right ladder
-      ctx.beginPath();
-      ctx.moveTo(W - 148, yT);
-      ctx.lineTo(W - 82, yT);
-      ctx.stroke();
+      if (isSalt) {
+        ctx.fillStyle = '#ecebe4';
+        ctx.fillText('+4.00m LINE', 82, yT - 5);
+        ctx.fillText('DATUM +4m', W - 148, yT - 5);
+      }
     }
 
-    // 3. Center Golden Horizon Reticle (`──┐  ┌──`)
+    // Center Golden Horizon Reticle (`──┐  ┌──`) driven by real camera solve
     const cy = H * 0.465 + state.panY * 320;
     ctx.strokeStyle = 'rgba(255, 196, 84, 0.88)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(W * 0.30, cy);
-    ctx.lineTo(W * 0.70, cy);
+    ctx.moveTo(W * 0.30, cy); ctx.lineTo(W * 0.70, cy);
     ctx.stroke();
-    // Inner brackets above horizon
     const bY = cy - 22;
     ctx.beginPath();
     ctx.moveTo(W * 0.435, bY); ctx.lineTo(W * 0.475, bY); ctx.lineTo(W * 0.475, bY + 13);
     ctx.moveTo(W * 0.565, bY); ctx.lineTo(W * 0.525, bY); ctx.lineTo(W * 0.525, bY + 13);
     ctx.stroke();
 
-    // 4. Four Vertical TVE Telemetry Columns (`TVE 1/2`, `TVE 2/2`, `TVE 3/4`, `TVE 4/4`)
+    const horLbl = `HORIZON SOLVE · ${(cam.shot_class || 'ground').toUpperCase()} · PITCH ${cam.pitch_deg >= 0 ? '+' : ''}${cam.pitch_deg}° · CONF ${cam.confidence}`;
+    ctx.fillStyle = 'rgba(255, 204, 88, 0.9)';
+    ctx.fillText(horLbl, W * 0.5 - ctx.measureText(horLbl).width * 0.5, cy + 14);
+
+    // Real Grounding-DINO 3D Object Detection Brackets (`shot.json.detections`)
+    (shotA.detections || []).slice(0, 3).forEach(det => {
+      const bn = det.box_norm || [0.3, 0.3, 0.6, 0.7];
+      const x0 = Math.max(385, Math.min(W - 410, bn[0] * W));
+      const y0 = Math.max(115, Math.min(H - 180, bn[1] * H));
+      const x1 = Math.max(x0 + 48, Math.min(W - 385, bn[2] * W));
+      const y1 = Math.max(y0 + 36, Math.min(H - 135, bn[3] * H));
+      const bl = 10;
+      ctx.strokeStyle = 'rgba(95, 232, 255, 0.85)';
+      ctx.lineWidth = 1.2;
+      [[x0, y0, bl, bl], [x1, y0, -bl, bl], [x0, y1, bl, -bl], [x1, y1, -bl, -bl]].forEach(([cxB, cyB, dxB, dyB]) => {
+        ctx.beginPath();
+        ctx.moveTo(cxB + dxB, cyB); ctx.lineTo(cxB, cyB); ctx.lineTo(cxB, cyB + dyB);
+        ctx.stroke();
+      });
+      ctx.fillStyle = '#5fe8ff';
+      ctx.fillText(`${det.label.toUpperCase()} ${Math.round(det.score * 100)}%`, x0 + 4, y0 + 11);
+    });
+
+    // In Mode III (Echo Split), draw both poems' 3D HDL Wireframes on Left & Right halves!
+    if (state.echoSplit > 0.5) {
+      const pB = poems[state.echoPoemBIdx != null ? state.echoPoemBIdx : ((state.poemIdx + 9) % 14)];
+      drawWireframe3DModel(ctx, actPoem.wire3d, W * 0.39, H * 0.31, 66, yawBase, pitchBase, true, 0.85, true);
+      drawWireframe3DModel(ctx, pB.wire3d, W * 0.61, H * 0.31, 66, -yawBase, pitchBase, false, 0.85, true);
+      ctx.strokeStyle = 'rgba(255, 196, 84, 0.75)';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(W * 0.5, 82); ctx.lineTo(W * 0.5, H - 90);
+      ctx.stroke();
+    } else if (state.wireMix < 0.45) {
+      // Subtle 3D HDL Architectural Ghost registered inside the center of the Point-Cloud Viewfinder
+      drawWireframe3DModel(ctx, actPoem.wire3d, W * 0.50, H * 0.55, 108, yawBase, pitchBase, true, 0.48, false);
+    }
+
+    // Four Vertical TVE Telemetry Columns (`TVE 1/2`, `TVE 2/2`, `TVE 3/4`, `TVE 4/4`)
     const colsX = [172, 276, W - 368, W - 264];
     const tveLabels = ['1/2', '2/2', '3/4', '4/4'];
     const chanNum = ['1', '2', '3', '4'];
-    const drVals = state.drValues || [85, 89, 96, 97];
+    const drVals = state.drValues || [85, 89, 98, 92];
+    const subTags = state.subTags || [['1.6M', 'P1·FG'], ['12CM', 'PROP'], ['20x12', 'HDL·3D'], ['SSIM92', 'FX01']];
 
     colsX.forEach((x0, idx) => {
       const colW = 92;
-      // Dotted vertical ladder rungs
       ctx.fillStyle = 'rgba(235, 195, 110, 0.42)';
       for (let r = 0; r < 11; r++) {
         const ry = 112 + r * 26;
@@ -922,7 +1296,6 @@ function renderDiegeticOverlay(ctx, W, H, state, nowSec) {
         }
       }
 
-      // Glowing Amber Level Bar inside the column
       const phase = nowSec * (1.1 + idx * 0.22) + idx * 1.4 + state.morph * 3.14;
       const barY = 190 + Math.sin(phase) * 52;
       const grad = ctx.createLinearGradient(x0, barY, x0, barY + 28);
@@ -936,12 +1309,10 @@ function renderDiegeticOverlay(ctx, W, H, state, nowSec) {
       ctx.moveTo(x0, barY); ctx.lineTo(x0 + colW, barY);
       ctx.stroke();
 
-      // `[⬆]` Chevron Badge & `TVE n/m` label at y = 415
       const by = 412;
       ctx.strokeStyle = 'rgba(165, 238, 248, 0.9)';
       ctx.lineWidth = 1.5;
       ctx.strokeRect(x0, by, 30, 30);
-      // Double upward chevron inside box
       ctx.fillStyle = 'rgba(165, 238, 248, 0.92)';
       ctx.beginPath();
       ctx.moveTo(x0 + 15, by + 5); ctx.lineTo(x0 + 23, by + 15); ctx.lineTo(x0 + 7, by + 15); ctx.closePath();
@@ -953,12 +1324,10 @@ function renderDiegeticOverlay(ctx, W, H, state, nowSec) {
       ctx.font = '500 11px "IBM Plex Mono", monospace';
       ctx.fillStyle = 'rgba(245, 200, 115, 0.85)';
       ctx.fillText(chanNum[idx], x0 + colW - 8, by + 28);
-
       ctx.fillStyle = 'rgba(128, 198, 212, 0.78)';
       ctx.fillText('TVE', x0, by + 48);
       ctx.fillText(tveLabels[idx], x0 + colW - 28, by + 48);
 
-      // Miniature Blue / Crimson Scope Box at y = 472
       const sy = 474, sh = 48;
       const isRightRed = idx >= 2 && state.echoSplit > 0.5;
       ctx.fillStyle = isRightRed ? 'rgba(120, 18, 24, 0.42)' : 'rgba(14, 68, 92, 0.42)';
@@ -970,7 +1339,6 @@ function renderDiegeticOverlay(ctx, W, H, state, nowSec) {
       ctx.moveTo(x0, lineY); ctx.lineTo(x0 + colW, lineY);
       ctx.stroke();
 
-      // Bottom Big 2-Digit Readout (`85`, `89`, `96`, `97`) + `24556 DR`
       const ny = 582;
       ctx.strokeStyle = 'rgba(148, 232, 244, 0.82)';
       ctx.lineWidth = 1.6;
@@ -978,17 +1346,18 @@ function renderDiegeticOverlay(ctx, W, H, state, nowSec) {
       ctx.moveTo(x0, ny); ctx.lineTo(x0 + colW, ny);
       ctx.stroke();
 
-      ctx.font = '600 29px "IBM Plex Mono", monospace';
+      ctx.font = '600 28px "IBM Plex Mono", monospace';
       ctx.fillStyle = 'rgba(210, 248, 255, 0.95)';
-      ctx.fillText(String(drVals[idx]), x0, ny + 31);
+      ctx.fillText(String(drVals[idx]).padStart(2, '0'), x0, ny + 30);
 
-      ctx.font = '500 11px "IBM Plex Mono", monospace';
-      ctx.fillStyle = 'rgba(118, 188, 202, 0.78)';
-      ctx.fillText('24556', x0, ny + 49);
-      ctx.fillText('DR', x0 + colW - 18, ny + 49);
+      ctx.font = '500 10px "IBM Plex Mono", monospace';
+      const [sL, sR] = subTags[idx];
+      ctx.fillStyle = 'rgba(138, 208, 222, 0.85)';
+      ctx.fillText(sL, x0, ny + 47);
+      ctx.fillStyle = '#ffbe44';
+      ctx.fillText(sR, x0 + colW - ctx.measureText(sR).width, ny + 47);
 
-      // Bottom-most Target / Compass Icon Box
-      const iy = ny + 60;
+      const iy = ny + 58;
       ctx.strokeStyle = idx >= 2 ? 'rgba(224, 58, 58, 0.75)' : 'rgba(148, 232, 244, 0.82)';
       ctx.lineWidth = 1.4;
       ctx.strokeRect(x0, iy, 32, 26);
@@ -997,37 +1366,43 @@ function renderDiegeticOverlay(ctx, W, H, state, nowSec) {
       ctx.stroke();
     });
 
+    // Bottom-Center Live Midjourney Prompt & Hero Prop Strip inside Bezel
+    const prHero = (actPoem.props && actPoem.props[0]) || { id: 'prop', scale_cm: 12 };
+    const pStr = `PROMPT [${shotA.id}]: “${(shotA.prompt || '').slice(0, 74)}…”`;
+    const hStr = `HERO PROP: ${prHero.id} (${prHero.scale_cm || 15}cm) · ${actPoem.wire3d.title}`;
+    const bx0 = 384, bx1 = W - 384;
+    ctx.fillStyle = 'rgba(5, 14, 20, 0.84)';
+    ctx.fillRect(bx0, H - 82, bx1 - bx0, 44);
+    ctx.strokeStyle = 'rgba(95, 232, 255, 0.55)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx0, H - 82, bx1 - bx0, 44);
+    ctx.font = '500 10px "IBM Plex Mono", monospace';
+    ctx.fillStyle = '#dcf8ff';
+    ctx.fillText(pStr.slice(0, 68), bx0 + 10, H - 65);
+    ctx.fillStyle = '#ffbe44';
+    ctx.fillText(hStr.slice(0, 68), bx0 + 10, H - 47);
+
     ctx.restore();
   }
 }
 
 async function initVesperApparatus() {
-  const [vtMan, poemsJson, cityRes, viewDirMap] = await Promise.all([
-    fetch('data/terrarium/seeing_spacetime_films/videotext_manifest.json?v=11').then(r => r.json()),
-    fetch('film/poems.json').then(r => r.json()),
-    fetch('../_city/districts.json').then(r => r.ok ? r.json() : {districts:[]}).catch(() => ({districts:[]})),
+  const [bundle, vtMan, viewDirMap] = await Promise.all([
+    fetch('data/terrarium/seeing_spacetime_films/vesper_world_bundle.json?v=12').then(r => r.json()),
+    fetch('data/terrarium/seeing_spacetime_films/videotext_manifest.json?v=12').then(r => r.json()),
     fetch('data/terrarium/seeing_spacetime_films/bible_view_map.json').then(r => r.ok ? r.json() : {}).catch(() => ({}))
   ]);
 
-  const atlasList = await Promise.all(
-    poemsJson.map(p => fetch(`poems/atlas/${p.num}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({})))
-  );
-
-  // Build per-poem Common Place stations
-  const poemStations = poemsJson.map((p, idx) => {
-    const ad = atlasList[idx] || {};
+  const poemStations = bundle.poems.map((p, idx) => {
     const vt = vtMan.poems[idx] || {};
-    const glowHex = (vt.glow_hex && vt.glow_hex[0]) || '#fa8d15';
-    const views = [];
-    const seen = new Set();
-    (ad.heroes || []).forEach(h => (h.views || []).forEach(v => {
-      if (!seen.has(v.n)) { seen.add(v.n); views.push({ vn: v.n, id: `V${v.n}`, name: h.name, brief: h.brief || '', glowHex }); }
+    const glowHex = (vt.glow_hex && vt.glow_hex[0]) || (p.palette && p.palette[0]) || '#fa8d15';
+    return (p.views || []).map(v => ({
+      vn: v.vn,
+      id: v.id,
+      name: v.place_name || v.id,
+      brief: v.place_brief || '',
+      glowHex
     }));
-    (ad.districts || []).forEach(d => (d.places || []).forEach(pl => (pl.views || []).forEach(v => {
-      if (!seen.has(v.n) && views.length < 8) { seen.add(v.n); views.push({ vn: v.n, id: `V${v.n}`, name: pl.name, brief: pl.what || '', glowHex }); }
-    })));
-    if (!views.length) views.push({ vn: 92, id: 'V92', name: 'The Underpass Shadow-Pool', brief: '', glowHex });
-    return views;
   });
 
   // WebGL Setup
@@ -1073,13 +1448,14 @@ async function initVesperApparatus() {
 
   const state = {
     poemIdx: 0,
+    echoPoemBIdx: 9,
     stA: poemStations[0][0],
     stB: poemStations[0][Math.min(1, poemStations[0].length - 1)],
     morph: 0.0,
     morphTarget: 0.0,
     pcMix: 0.68,
     fxInt: 1.0,
-    wireMix: 0.35,
+    wireMix: 0.55,
     hudMix: 1.0,
     echoSplit: 0.0,
     paradigm: 'PRECRIME (EVIDENTIARY INSPECTION)',
@@ -1088,7 +1464,8 @@ async function initVesperApparatus() {
     panX: 0.0,
     panY: 0.0,
     dolly: 1.12,
-    drValues: [85, 89, 96, 97]
+    drValues: [85, 89, 98, 92],
+    subTags: [['1.6M', 'P1·FG'], ['12CM', 'PROP'], ['20x12', 'HDL·3D'], ['SSIM92', 'FX01']]
   };
 
   function hexToRgbVec(hex) {
@@ -1097,30 +1474,53 @@ async function initVesperApparatus() {
     return [parseInt(h.slice(0,2),16)/255, parseInt(h.slice(2,4),16)/255, parseInt(h.slice(4,6),16)/255];
   }
 
-  function updateNaurianAndVerses() {
-    const p = vtMan.poems[state.poemIdx];
-    const naurEl = document.getElementById('naur-readout');
-    const modeNote = state.echoSplit > 0.5
-      ? `[ECHO COMPARISON ACTIVE]\n${state.echoNote}`
-      : `<fragment P${p.num}·${state.stA.id}> [enters] <working set>\n  → [isolate] <TVE 1/2..4/4: ${state.stA.name}>\n  → [reframe] <pc=${Math.round(state.pcMix*100)}% fx=${p.fx_code}>\n  → [${state.paradigm.split(' ')[0].toLowerCase()}] <${p.fx_name}>`;
-    naurEl.textContent = modeNote;
+  // Populate all 5 Real-Data Inspector Tabs whenever poem or station changes
+  function updateAllInspectorTabs() {
+    const p = bundle.poems[state.poemIdx];
+    const vtP = vtMan.poems[state.poemIdx];
+    const shotA = (bundle.views_by_no && bundle.views_by_no[String(state.stA.vn)]) || p.views[0];
+    const pr0 = (p.props && p.props[0]) || { id: 'prop', name: 'Hero Prop', scale_cm: 12, build: '' };
+    const planes = shotA.planes || [];
+    const zP1 = (planes.find(pl => pl.id === 'P1' && pl.z_m) || { z_m: 1.64 }).z_m;
+    const perc = shotA.perceive || { reads_at_sigma: 8, dE: 4.5, value_ssim: 0.92, felt: '' };
+    const cam = shotA.camera || { focal_mm: 24.7, fov_deg: 72.2, height_m: 0.32, pitch_deg: 3.8, shot_class: 'ground', confidence: 0.98 };
+    const wTag = p.wire3d.title.split('·')[0].trim();
 
-    // Update DR readouts
-    state.drValues = [
-      80 + ((state.stA.vn * 3) % 19),
-      78 + ((state.poemIdx * 5 + 11) % 21),
-      90 + ((state.stB.vn * 7) % 9),
-      88 + ((state.poemIdx * 3 + 7) % 11)
+    // Update 4-channel TVE telemetry numbers & sub-labels from real shot & poem data
+    const gIou = Math.round(((shotA.signals && shotA.signals.ground_iou) || 0.95) * 100);
+    const confScore = Math.round((cam.confidence || 0.98) * 100);
+    const ssimScore = Math.round((perc.value_ssim || 0.92) * 100);
+    const propScore = 80 + ((state.poemIdx * 5 + 9) % 18);
+    state.drValues = state.echoSplit > 0.5 ? [31, 79, 61, 82] : [gIou, propScore, confScore, ssimScore];
+    state.subTags = [
+      [`${Number(zP1).toFixed(1)}M`, 'P1·FG'],
+      [`${pr0.scale_cm || 15}CM`, pr0.id.slice(0, 6).toUpperCase()],
+      [wTag.slice(0, 7), '3D'],
+      [`SSIM.${ssimScore}`, p.fx_code]
     ];
-    ['td-dr1','td-dr2','td-dr3','td-dr4'].forEach((id, i) => {
-      document.getElementById(id).textContent = String(state.drValues[i]);
-    });
 
-    // Populate SCION Verses
+    document.getElementById('td-lbl1').textContent = `P1 Foreground (${shotA.id})`;
+    document.getElementById('td-sub1').textContent = `${Number(zP1).toFixed(2)}m P1`;
+    document.getElementById('td-dr1').textContent = String(state.drValues[0]);
+
+    document.getElementById('td-lbl2').textContent = `Hero Prop: ${pr0.id}`;
+    document.getElementById('td-sub2').textContent = `${pr0.scale_cm || 15}cm`;
+    document.getElementById('td-dr2').textContent = String(state.drValues[1]);
+
+    document.getElementById('td-lbl3').textContent = p.wire3d.title.slice(0, 28);
+    document.getElementById('td-sub3').textContent = `${cam.focal_mm}mm`;
+    document.getElementById('td-dr3').textContent = String(state.drValues[2]);
+
+    document.getElementById('td-lbl4').textContent = `Perceive σ=${perc.reads_at_sigma} (${p.fx_code})`;
+    document.getElementById('td-sub4').textContent = `dE ${perc.dE}`;
+    document.getElementById('td-dr4').textContent = String(state.drValues[3]);
+
+    // TAB 1: Poem Essence, Timed SCION Verses, Working Assembly Draft & Arc
+    document.getElementById('poem-essence-box').textContent = p.essence || '';
     const vList = document.getElementById('verse-list');
     vList.innerHTML = '';
     const flatVerses = [];
-    (p.scenes || []).forEach(sc => sc.forEach(item => {
+    (vtP.scenes || []).forEach(sc => sc.forEach(item => {
       if (!item.tape && !item.f) flatVerses.push(item);
     }));
     flatVerses.forEach((v, vi) => {
@@ -1133,26 +1533,165 @@ async function initVesperApparatus() {
       div.addEventListener('click', () => {
         document.querySelectorAll('.verse-item').forEach(el => el.classList.remove('active'));
         div.classList.add('active');
-        const frac = v.t0 / Math.max(1, p.dur);
+        const frac = v.t0 / Math.max(1, vtP.dur);
         const stList = poemStations[state.poemIdx];
         const sIdx = Math.min(stList.length - 1, Math.floor(frac * stList.length));
         state.stA = stList[sIdx];
         state.stB = stList[Math.min(stList.length - 1, sIdx + 1)];
         state.morphTarget = (frac * stList.length) - sIdx;
-        document.getElementById('clock-readout').textContent = `TC ${v.t0.toFixed(1)}s / ${p.dur.toFixed(1)}s`;
+        document.getElementById('clock-readout').textContent = `TC ${v.t0.toFixed(1)}s / ${vtP.dur.toFixed(1)}s`;
         document.getElementById('stage-banner').textContent =
-          `CANISTER P${p.num} · ${state.stA.id} ${state.stA.name.toUpperCase()} — “${v.say.slice(0, 56)}”`;
+          `P${p.num} · ${state.stA.id} ${state.stA.name.toUpperCase()} · ${wTag} — “${v.say.slice(0, 52)}”`;
+        updateAllInspectorTabs();
       });
       vList.appendChild(div);
     });
+
+    // Working Assembly Draft (`assembly_p*.txt`)
+    const asmPages = p.assembly_pages || [];
+    const asmBest = asmPages.length > 1 ? asmPages[1] : (asmPages[0] || { file: 'assembly_p1.txt', text: '' });
+    document.getElementById('asm-file-lbl').textContent = asmPages.map(a => a.file).join(', ');
+    document.getElementById('assembly-draft-box').textContent = asmPages.map(a => `=== ${a.file} ===\n${a.text}`).join('\n\n');
+
+    // Dramatic Arc
+    const arcEl = document.getElementById('arc-list');
+    arcEl.innerHTML = (p.arc || []).map(a => `
+      <div class="data-row">
+        <span class="tag">${a.movement || 'BEAT'}</span><b>${a.emotion || ''}</b><br>
+        ${a.beat || ''}<br>
+        <span style="color:var(--text-mid)"><i>Image:</i> ${a.image || ''}</span>
+      </div>
+    `).join('');
+
+    // TAB 2: Midjourney Prompt, Camera Solve & Detections (`shot.json`)
+    document.getElementById('shot-id-lbl').textContent = `${shotA.id} · ${shotA.district.toUpperCase()}`;
+    document.getElementById('shot-prompt-box').textContent = shotA.prompt || 'No prompt recorded.';
+    document.getElementById('shot-file-lbl').textContent = `FILE: ${shotA.file || ''}`;
+
+    document.getElementById('cam-solve-table').innerHTML = `
+      <tr><th>Focal Equiv</th><td>${cam.focal_mm} mm (FOV ${cam.fov_deg}°)</td><th>Camera Height</th><td>${cam.height_m} m (${cam.shot_class})</td></tr>
+      <tr><th>Pitch / Roll</th><td>${cam.pitch_deg}° / ${cam.roll_deg}°</td><th>Physics Conf</th><td>${Math.round(cam.confidence * 100)}% (+4.00m Datum)</td></tr>
+    `;
+
+    const stuffStr = Object.entries(shotA.stuff || {}).map(([k, v]) => `${k}: ${Math.round(v * 100)}%`).join(' · ');
+    const unprompted = (shotA.fidelity && shotA.fidelity.unprompted || []).join(', ');
+    document.getElementById('detections-list').innerHTML = `
+      <div class="data-row"><b>Semantic Stuff (OneFormer):</b> ${stuffStr || 'water, wall, stone'}</div>
+      <div class="data-row"><b>Unprompted Discoveries:</b> ${unprompted || 'architecture, water'}</div>
+      ${(shotA.detections || []).map(d => `
+        <div class="data-row">
+          <span class="tag">${Math.round(d.score * 100)}%</span><b>${d.label.toUpperCase()}</b>
+          · Area: ${(d.area_frac * 100).toFixed(1)}% · Box: [${d.box_norm.join(', ')}]
+        </div>
+      `).join('')}
+    `;
+
+    // TAB 3: 3D HDL Architecture, Fit (`saw/did`), Floorplan Rooms & Facts
+    const hm = p.hdl_meta;
+    document.getElementById('hdl-summary-box').innerHTML = `
+      <b>${p.wire3d.title}</b><br>
+      <span style="color:var(--text-mid)">${p.wire3d.subtitle}</span>
+      ${hm ? `<br><span style="color:var(--seam-cyan)">Footprint: ${hm.footprint[0]}×${hm.footprint[1]}m · ${hm.levels_count} Levels · ${hm.rooms_count} Rooms · Landmark: ${hm.landmark}</span>` : ''}
+    `;
+    document.getElementById('hdl-fit-list').innerHTML = (hm && hm.fit ? hm.fit : []).map(f => `
+      <div class="data-row">
+        <span class="tag">SAW IN FOOTAGE</span> ${f.saw}<br>
+        <span class="tag" style="border-color:var(--amber-core);color:var(--amber-core)">3D HDL DID</span> <b>${f.did}</b>
+      </div>
+    `).join('') || `<div class="data-row"><span class="tag">3D LANDMARK</span> Parametric 3D wireframe from <code>_city/landmarks_ref.mjs</code> &amp; <code>_city/kit_ref.mjs</code> (+4.00m Salt Line &amp; Kintsugi Seam).</div>`;
+
+    const rooms = p.wire3d.floorplan_rooms || [];
+    document.getElementById('hdl-room-count').textContent = `${rooms.length} Zones`;
+    document.getElementById('hdl-rooms-list').innerHTML = rooms.map(r => `
+      <div class="data-row">
+        <span class="tag">${r.id}</span><b>${r.name}</b> (${r.w}×${r.d}m @ z=${r.z}m)<br>
+        Floor: ${r.floor || 'stone/wood'} · Props: ${(r.props || []).join(', ') || 'architectural shell'}
+      </div>
+    `).join('');
+
+    document.getElementById('hdl-facts-list').innerHTML = (hm && hm.facts ? hm.facts : []).map(fc => `
+      <div class="data-row"><span class="tag">${fc.status}</span> ${fc.claim}</div>
+    `).join('');
+
+    // TAB 4: Dossier Props, 5-Layer Multiplane Sets, Characters, Kits to Build & Insights
+    document.getElementById('props-list').innerHTML = (p.props || []).map(pr => `
+      <div class="data-row">
+        <span class="tag">${pr.hero ? 'HERO PROP' : 'PROP'}</span><b>${pr.id} — ${pr.name}</b> (${pr.scale_cm || '—'} cm)<br>
+        <i>Look:</i> ${pr.look}<br>
+        <span style="color:var(--mint-wire)"><i>Physical Build:</i> ${pr.build}</span><br>
+        <span style="color:var(--text-mid)">States: ${(pr.states || []).join(' → ')}</span>
+      </div>
+    `).join('');
+
+    document.getElementById('sets-list').innerHTML = (p.sets || []).map(st => `
+      <div class="data-row">
+        <span class="tag">SET</span><b>${st.id} — ${st.name}</b><br>
+        <i>Light:</i> ${st.light}<br>
+        ${Object.entries(st.layers || {}).map(([lk, lv]) => `<span style="color:var(--seam-cyan)">[${lk.toUpperCase()}]</span> ${lv}`).join('<br>')}
+      </div>
+    `).join('');
+
+    document.getElementById('kits-insights-list').innerHTML = `
+      ${(p.kits_to_build || []).map(k => `
+        <div class="data-row"><span class="tag">KIT ${k.id}</span><b>${k.what}</b><br><span style="color:var(--text-mid)">Why: ${k.why}</span></div>
+      `).join('')}
+      ${(p.insights || []).map(ins => `
+        <div class="data-row"><span class="tag" style="border-color:var(--amber-core);color:var(--amber-core)">INSIGHT</span> ${ins}</div>
+      `).join('')}
+    `;
+
+    // TAB 5: Multiplane P0–P6, Perceive Squint & Transitions/Foundry
+    document.getElementById('planes-list').innerHTML = (shotA.planes || []).map(pl => `
+      <div class="data-row">
+        <span class="tag">${pl.id}</span><b>${pl.name}</b> · z=${pl.z_m != null ? pl.z_m + 'm' : '∞'} · parallax=${pl.parallax != null ? pl.parallax + 'x' : '0'}<br>
+        Contents: ${(pl.contents || []).join(', ')}
+        ${pl.motion && pl.motion.length ? `<br><span style="color:var(--amber-core)">Motion: ${pl.motion.join(' | ')}</span>` : ''}
+      </div>
+    `).join('');
+
+    document.getElementById('perceive-list').innerHTML = `
+      <div class="data-row">
+        <span class="tag">FELT SENSE</span> <b>“${perc.felt}”</b><br>
+        Reads @ σ=${perc.reads_at_sigma} · dE=${perc.dE} · Value SSIM=${perc.value_ssim} · Enclosure=${perc.enclosure} · Tempo=${perc.tempo}
+      </div>
+      ${(shotA.signals && shotA.signals.suggestions || []).map(s => `
+        <div class="data-row"><span class="tag">SIGNAL NOTE</span> ${s}</div>
+      `).join('')}
+    `;
+
+    document.getElementById('transitions-list').innerHTML = `
+      <div class="data-row"><span class="tag">CITY DATUM</span> <b>${bundle.city.water_datum}</b></div>
+      ${(p.transitions || []).map(tr => `
+        <div class="data-row">
+          <span class="tag">P${tr.from}→P${tr.to} (${tr.mode})</span> <b>${tr.zone}</b><br>
+          <i>Grammar:</i> ${tr.grammar}<br>
+          <span style="color:var(--text-mid)"><i>Physical:</i> ${tr.physical || ''}</span>
+        </div>
+      `).join('')}
+      ${(p.foundry || []).map(fd => `
+        <div class="data-row">
+          <span class="tag">FOUNDRY ${fd.id}</span> “${fd.line}”<br>
+          <span style="color:var(--text-mid)">${fd.desc}</span>
+        </div>
+      `).join('')}
+    `;
   }
+
+  // Tab switching
+  document.querySelectorAll('#inspector-tabs .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-tab');
+      document.querySelectorAll('#inspector-tabs .tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.tab-pane').forEach(pn => pn.classList.toggle('active', pn.id === `pane-${target}`));
+    });
+  });
 
   function renderStationStrip() {
     const strip = document.getElementById('st-mini-strip');
     strip.innerHTML = '';
     const list = poemStations[state.poemIdx];
     document.getElementById('lbl-st-count').textContent = `${list.length} Views`;
-    list.forEach((st, i) => {
+    list.forEach(st => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'naur-btn' + (st.vn === state.stA.vn ? ' active' : '');
@@ -1160,12 +1699,12 @@ async function initVesperApparatus() {
       b.title = st.name;
       b.addEventListener('click', () => {
         state.echoSplit = 0.0;
-        state.stA = state.stB;
+        state.stA = st;
         state.stB = st;
         state.morph = 0.0;
-        state.morphTarget = 1.0;
+        state.morphTarget = 0.0;
         renderStationStrip();
-        updateNaurianAndVerses();
+        updateAllInspectorTabs();
       });
       strip.appendChild(b);
     });
@@ -1180,44 +1719,48 @@ async function initVesperApparatus() {
     state.morph = 0.0;
     state.morphTarget = 0.0;
     document.querySelectorAll('.spinner-slot').forEach((el, i) => el.classList.toggle('active', i === idx));
-    const p = vtMan.poems[idx];
+    const p = bundle.poems[idx];
+    const pr0 = (p.props && p.props[0]) || { id: 'prop', scale_cm: 12 };
     document.getElementById('stage-banner').textContent =
-      `CANISTER P${p.num} · ${state.stA.id} ${state.stA.name.toUpperCase()} · [${p.fx_code}] ${p.fx_name.toUpperCase()}`;
+      `P${p.num} · ${state.stA.id} ${state.stA.name.toUpperCase()} · ${p.wire3d.title} · PROP: ${pr0.id} (${pr0.scale_cm || 15}cm)`;
     document.getElementById('clock-readout').textContent = `TC 00:00.0 / ${p.dur.toFixed(1)}s`;
     renderStationStrip();
-    updateNaurianAndVerses();
+    updateAllInspectorTabs();
   }
 
-  // Render Left-Rail 14 Spinner Canister Slots
+  // Render Left-Rail 14 Poem 3D HDL / Landmark / Kit Slots
   const canContainer = document.getElementById('canister-list');
-  vtMan.poems.forEach((p, idx) => {
+  bundle.poems.forEach((p, idx) => {
     const st0 = poemStations[idx][0];
+    const wTag = p.wire3d.title.split('·')[0].trim();
+    const pr0 = (p.props && p.props[0]) || { id: 'kit', scale_cm: 12 };
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'spinner-slot' + (idx === 0 ? ' active' : '');
     btn.innerHTML = `
-      <div class="sp-id"><span>SPINNER P${p.num} · ${st0.id}</span><span>${p.dur.toFixed(0)}s</span></div>
+      <div class="sp-id"><span>P${p.num} · ${st0.id} · ${wTag}</span><span>${p.dur.toFixed(0)}s</span></div>
       <div class="sp-title">${p.title}</div>
-      <div class="sp-sub">${p.district_name} · [${p.fx_code}]</div>
+      <div class="sp-sub">prop: ${pr0.id} (${pr0.scale_cm || 15}cm) · [${p.fx_code}]</div>
     `;
     btn.addEventListener('click', () => selectCanister(idx));
     canContainer.appendChild(btn);
   });
 
-  // Top View Mode Presets (I: TVE Point-Cloud, II: Wireframe Matrix, III: Echo Split)
+  // Top View Mode Presets
   const setTopPreset = (mode) => {
     document.getElementById('btn-view-tve').classList.toggle('active', mode === 'tve');
     document.getElementById('btn-view-wire').classList.toggle('active', mode === 'wire');
     document.getElementById('btn-view-echo').classList.toggle('active', mode === 'echo');
     if (mode === 'tve') {
-      state.pcMix = 0.72; state.wireMix = 0.18; state.hudMix = 1.0; state.echoSplit = 0.0;
+      state.pcMix = 0.72; state.wireMix = 0.25; state.hudMix = 1.0; state.echoSplit = 0.0;
     } else if (mode === 'wire') {
-      state.pcMix = 0.55; state.wireMix = 0.95; state.hudMix = 0.85; state.echoSplit = 0.0;
+      state.pcMix = 0.52; state.wireMix = 0.96; state.hudMix = 0.20; state.echoSplit = 0.0;
     } else if (mode === 'echo') {
       document.querySelector('#echo-presets .echo-chip').click();
       return;
     }
     syncSliders();
+    updateAllInspectorTabs();
   };
   document.getElementById('btn-view-tve').addEventListener('click', () => setTopPreset('tve'));
   document.getElementById('btn-view-wire').addEventListener('click', () => setTopPreset('wire'));
@@ -1232,11 +1775,9 @@ async function initVesperApparatus() {
     document.getElementById('lbl-hud').textContent = state.hudMix > 0.05 ? `${Math.round(state.hudMix * 100)}% (ON)` : 'OFF (Clean 16:9)';
   }
 
-  // Sliders
   document.getElementById('rng-pc').addEventListener('input', e => {
     state.pcMix = parseFloat(e.target.value) / 100.0;
     document.getElementById('lbl-pc').textContent = `${Math.round(state.pcMix * 100)}% Point-Cloud`;
-    updateNaurianAndVerses();
   });
   document.getElementById('rng-fx').addEventListener('input', e => {
     state.fxInt = parseFloat(e.target.value) / 100.0;
@@ -1256,107 +1797,141 @@ async function initVesperApparatus() {
     document.getElementById('lbl-morph').textContent = state.morph.toFixed(2);
   });
 
-  // Echo Preset Chips
-  document.querySelectorAll('#echo-presets .echo-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('#echo-presets .echo-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      const p1 = parseInt(chip.dataset.p1, 10);
-      const v1 = parseInt(chip.dataset.v1, 10);
-      const p2 = parseInt(chip.dataset.p2, 10);
-      const v2 = parseInt(chip.dataset.v2, 10);
-      state.poemIdx = p1;
-      state.stA = { vn: v1, id: `V${v1}`, name: `P${String(p1+1).padStart(2,'0')} Vision`, glowHex: vtMan.poems[p1].glow_hex[0] };
-      state.stB = { vn: v2, id: `V${v2}`, name: `P${String(p2+1).padStart(2,'0')} Echo`, glowHex: vtMan.poems[p2].glow_hex[0] };
-      state.echoSplit = 1.0;
-      state.pcMix = 0.38;
-      state.wireMix = 0.15;
-      state.echoNote = chip.dataset.note;
-      syncSliders();
-      document.getElementById('stage-banner').textContent =
-        `ECHO COMPARATOR · LEFT: P${String(p1+1).padStart(2,'0')} (V${v1})  ↔  RIGHT: P${String(p2+1).padStart(2,'0')} (V${v2})`;
-      updateNaurianAndVerses();
-    });
-  });
-
-  // Naurian Operation Buttons
+  // Naurian 6-Step Buttons
   document.querySelectorAll('#naur-ops .naur-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#naur-ops .naur-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      const op = btn.dataset.op;
+      const op = btn.getAttribute('data-op');
       state.activeOp = op;
-      if (op === 'ingest') setTopPreset('wire');
-      else if (op === 'isolate') setTopPreset('tve');
-      else if (op === 'compare') setTopPreset('echo');
-      updateNaurianAndVerses();
+      if (op === 'ingest') { setTopPreset('wire'); document.querySelector('[data-tab="poem"]').click(); }
+      else if (op === 'isolate') { setTopPreset('tve'); document.querySelector('[data-tab="prompt"]').click(); }
+      else if (op === 'scrub') { state.morphTarget = state.morph > 0.5 ? 0.0 : 1.0; document.querySelector('[data-tab="atlas"]').click(); }
+      else if (op === 'reframe') { state.pcMix = 0.82; state.wireMix = 0.65; syncSliders(); document.querySelector('[data-tab="hdl"]').click(); }
+      else if (op === 'excerpt') { state.pcMix = 0.35; state.hudMix = 1.0; syncSliders(); document.querySelector('[data-tab="dossier"]').click(); }
+      else if (op === 'compare') { setTopPreset('echo'); }
     });
   });
 
-  // Precrime vs Stelline Switch
+  // Precrime vs Stelline Paradigm Switch
   document.getElementById('par-precrime').addEventListener('click', () => {
-    state.paradigm = 'PRECRIME (EVIDENTIARY INSPECTION)';
     document.getElementById('par-precrime').classList.add('active');
     document.getElementById('par-stelline').classList.remove('active');
-    state.pcMix = 0.72; syncSliders(); updateNaurianAndVerses();
+    state.paradigm = 'PRECRIME (EVIDENTIARY INSPECTION)';
+    state.pcMix = 0.72; state.hudMix = 1.0;
+    syncSliders();
+    document.querySelector('[data-tab="prompt"]').click();
   });
   document.getElementById('par-stelline').addEventListener('click', () => {
-    state.paradigm = 'STELLINE / VESPER (AUTHORED FEELING)';
     document.getElementById('par-stelline').classList.add('active');
     document.getElementById('par-precrime').classList.remove('active');
-    state.pcMix = 0.22; state.fxInt = 1.25; syncSliders(); updateNaurianAndVerses();
+    state.paradigm = 'STELLINE / VESPER (AUTHORED 3D & MEMORY)';
+    state.pcMix = 0.28; state.wireMix = 0.68; state.fxInt = 1.25;
+    syncSliders();
+    document.querySelector('[data-tab="dossier"]').click();
   });
 
-  // Pointer Drag Gimbal on Stage
-  const stage = document.getElementById('vf-stage');
-  let drag = false, ds = { x: 0, y: 0 }, tgtPan = { x: 0, y: 0 };
-  stage.addEventListener('pointerdown', e => { drag = true; ds = { x: e.clientX, y: e.clientY }; stage.setPointerCapture(e.pointerId); });
-  stage.addEventListener('pointermove', e => {
-    if (!drag) return;
-    tgtPan.x = Math.max(-0.045, Math.min(0.045, tgtPan.x - ((e.clientX - ds.x) / stage.clientWidth) * 0.06));
-    tgtPan.y = Math.max(-0.025, Math.min(0.025, tgtPan.y - ((e.clientY - ds.y) / stage.clientHeight) * 0.05));
-    ds = { x: e.clientX, y: e.clientY };
+  // Echo Discrepancy Presets
+  document.querySelectorAll('#echo-presets .echo-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#echo-presets .echo-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const p1 = parseInt(chip.getAttribute('data-p1'), 10);
+      const v1 = parseInt(chip.getAttribute('data-v1'), 10);
+      const p2 = parseInt(chip.getAttribute('data-p2'), 10);
+      const v2 = parseInt(chip.getAttribute('data-v2'), 10);
+      state.poemIdx = p1;
+      state.echoPoemBIdx = p2;
+      state.stA = { vn: v1, id: `V${v1}`, name: `P${String(p1+1).padStart(2,'0')} V${v1}`, glowHex: '#fa8d15' };
+      state.stB = { vn: v2, id: `V${v2}`, name: `P${String(p2+1).padStart(2,'0')} V${v2}`, glowHex: '#38b6ff' };
+      state.echoSplit = 1.0;
+      state.pcMix = 0.56;
+      state.wireMix = 0.22;
+      state.hudMix = 1.0;
+      state.echoNote = chip.getAttribute('data-note') || '';
+      document.getElementById('stage-banner').textContent =
+        `ECHO COMPARATOR · P${String(p1+1).padStart(2,'0')} (V${v1} ${bundle.poems[p1].wire3d.title.split('·')[0].trim()})  ↔  P${String(p2+1).padStart(2,'0')} (V${v2} ${bundle.poems[p2].wire3d.title.split('·')[0].trim()})`;
+      document.getElementById('btn-view-tve').classList.remove('active');
+      document.getElementById('btn-view-wire').classList.remove('active');
+      document.getElementById('btn-view-echo').classList.add('active');
+      syncSliders();
+      updateAllInspectorTabs();
+    });
   });
-  stage.addEventListener('pointerup', () => { drag = false; });
+
+  // Interactive 3D Orbit Drag & Wheel Zoom on the Viewfinder Stage
+  const stageEl = document.getElementById('vf-stage');
+  let dragging = false, lastX = 0, lastY = 0;
+  stageEl.addEventListener('pointerdown', e => {
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    stageEl.setPointerCapture(e.pointerId);
+  });
+  stageEl.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    state.panX = Math.max(-0.35, Math.min(0.35, state.panX + (e.clientX - lastX) * 0.0008));
+    state.panY = Math.max(-0.25, Math.min(0.25, state.panY + (e.clientY - lastY) * 0.0008));
+    lastX = e.clientX; lastY = e.clientY;
+  });
+  stageEl.addEventListener('pointerup', () => { dragging = false; });
+  stageEl.addEventListener('wheel', e => {
+    e.preventDefault();
+    state.dolly = Math.max(1.02, Math.min(1.45, state.dolly - e.deltaY * 0.0005));
+  }, { passive: false });
+
+  function getUrlsForView(vn) {
+    const sub = viewDirMap[String(vn)];
+    if (sub) {
+      return { cel: `out/${sub}/image.jpg`, dep: `out/${sub}/depth.jpg` };
+    }
+    return { cel: 'out/62b9740c-d0be-4b4a-a311-d653a2580907_1/image.jpg', dep: 'out/62b9740c-d0be-4b4a-a311-d653a2580907_1/depth.jpg' };
+  }
 
   selectCanister(0);
 
-  function animate(nowMs) {
-    const t = nowMs * 0.001;
-    state.morph += (state.morphTarget - state.morph) * 0.05;
-    state.panX += (tgtPan.x + 0.020 * Math.sin(t * 0.55) - state.panX) * 0.08;
-    state.panY += (tgtPan.y + 0.008 * Math.cos(t * 0.42) - state.panY) * 0.08;
+  // 60fps Render Loop
+  function tick(nowMs) {
+    const nowSec = nowMs * 0.001;
+    state.morph += (state.morphTarget - state.morph) * 0.08;
 
-    const subA = viewDirMap[String(state.stA.vn)] || '018da7e9-231c-44d0-87f5-b0b0cb7b61cb_0';
-    const subB = viewDirMap[String(state.stB.vn)] || '018da7e9-231c-44d0-87f5-b0b0cb7b61cb_0';
+    const uA = getUrlsForView(state.stA.vn);
+    const uB = getUrlsForView(state.stB.vn);
 
     gl.viewport(0, 0, glCanvas.width, glCanvas.height);
     gl.useProgram(prog);
-    const bind = (u, tex, n) => { gl.activeTexture(gl.TEXTURE0 + u); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(gl.getUniformLocation(prog, n), u); };
-    bind(0, loadTex(`out/${subA}/image.jpg`), 'uCelA');
-    bind(1, loadTex(`out/${subA}/depth.jpg`, [128,128,128]), 'uDepthA');
-    bind(2, loadTex(`out/${subB}/image.jpg`), 'uCelB');
-    bind(3, loadTex(`out/${subB}/depth.jpg`, [128,128,128]), 'uDepthB');
 
-    gl.uniform2f(gl.getUniformLocation(prog, 'uPanA'), state.panX, state.panY);
-    gl.uniform2f(gl.getUniformLocation(prog, 'uPanB'), state.panX * 0.9, state.panY * 0.9);
-    gl.uniform1f(gl.getUniformLocation(prog, 'uDollyA'), state.dolly + 0.03 * Math.sin(t * 0.4));
-    gl.uniform1f(gl.getUniformLocation(prog, 'uDollyB'), state.dolly + 0.03 * Math.cos(t * 0.4));
+    const bind = (unit, url, uName, fb) => {
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, loadTex(url, fb));
+      gl.uniform1i(gl.getUniformLocation(prog, uName), unit);
+    };
+    bind(0, uA.cel, 'uCelA', [20, 28, 36]);
+    bind(1, uA.dep, 'uDepthA', [128, 128, 128]);
+    bind(2, uB.cel, 'uCelB', [20, 28, 36]);
+    bind(3, uB.dep, 'uDepthB', [128, 128, 128]);
+
+    const ox = Math.sin(nowSec * 0.48) * 0.014 + state.panX;
+    const oy = Math.cos(nowSec * 0.36) * 0.008 + state.panY;
+
+    gl.uniform2f(gl.getUniformLocation(prog, 'uPanA'), ox, oy);
+    gl.uniform2f(gl.getUniformLocation(prog, 'uPanB'), -ox * 0.85, oy * 0.85);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uDollyA'), state.dolly);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uDollyB'), state.dolly);
     gl.uniform1f(gl.getUniformLocation(prog, 'uMorph'), state.morph);
     gl.uniform1f(gl.getUniformLocation(prog, 'uPointCloudMix'), state.pcMix);
     gl.uniform1f(gl.getUniformLocation(prog, 'uFxMode'), state.poemIdx + 1);
     gl.uniform1f(gl.getUniformLocation(prog, 'uFxInt'), state.fxInt);
     gl.uniform1f(gl.getUniformLocation(prog, 'uEchoSplit'), state.echoSplit);
-    gl.uniform1f(gl.getUniformLocation(prog, 'uTime'), t);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uTime'), nowSec);
 
-    const gc = hexToRgbVec(state.stA.glowHex);
-    gl.uniform3f(gl.getUniformLocation(prog, 'uGlowCol'), gc[0], gc[1], gc[2]);
+    const gCol = hexToRgbVec(state.stA.glowHex);
+    gl.uniform3f(gl.getUniformLocation(prog, 'uGlowCol'), gCol[0], gCol[1], gCol[2]);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-    renderDiegeticOverlay(ctx2d, hudCanvas.width, hudCanvas.height, state, t);
-    requestAnimationFrame(animate);
+
+    renderDiegeticOverlay(ctx2d, hudCanvas.width, hudCanvas.height, state, bundle, nowSec);
+    requestAnimationFrame(tick);
   }
-  requestAnimationFrame(animate);
+  requestAnimationFrame(tick);
 }
 
 initVesperApparatus();
