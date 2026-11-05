@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Anything Real Should Be a Mist · Dr. Ana Stelline & The Toy Wooden Horse (1:49) · 07-Spacetime</title>
+<style>
+  @font-face {
+    font-family: "IM Fell English";
+    src: url("fonts/im-fell-english-latin-400-normal.woff2") format("woff2");
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "IM Fell English";
+    src: url("fonts/im-fell-english-latin-400-italic.woff2") format("woff2");
+    font-style: italic;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "IBM Plex Mono";
+    src: url("fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+    font-weight: 400 500;
+    font-display: swap;
+  }
+
+  :root {
+    --void: #05070a;
+    --paper: #ebe3cf;
+    --ink: #1c1814;
+    --text: rgba(242, 236, 222, 0.92);
+    --whisper: rgba(215, 206, 188, 0.62);
+    --faint: rgba(215, 206, 188, 0.30);
+    --cyan: #5ce4ff;
+    --amber: #ffbe52;
+    --rose: #ff82c3;
+    --emerald: #82f5af;
+    --mono: "IBM Plex Mono", "SF Mono", Menlo, monospace;
+    --serif: "IM Fell English", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--void);
+    color: var(--text);
+    font-family: var(--serif);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ==========================================================================
+     TOP OPTICAL WHISPER BAR (VOIDBASTARD-TAO + AFTERLIGHT CHAPTER BAR)
+     ========================================================================== */
+  #topWhisperBar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 44px;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: linear-gradient(to bottom, rgba(4, 6, 10, 0.92) 0%, rgba(4, 6, 10, 0.55) 75%, transparent 100%);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .top-left-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand-mark {
+    color: var(--amber);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 190, 82, 0.4);
+    padding-bottom: 1px;
+  }
+  .mode-tabs {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .mode-tab {
+    color: var(--whisper);
+    cursor: pointer;
+    padding: 4px 0;
+    border-bottom: 1.5px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .mode-tab:hover { color: var(--text); }
+  .mode-tab.active {
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+  }
+  .top-right-state {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .state-pill {
+    color: var(--cyan);
+  }
+  .action-btn {
+    color: var(--amber);
+    border: 1px solid rgba(255, 190, 82, 0.45);
+    padding: 2px 8px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 10px;
+    background: rgba(5, 7, 10, 0.7);
+    display: none;
+  }
+  .action-btn:hover { background: rgba(255, 190, 82, 0.15); }
+
+  /* Progress hairline on the film's clock */
+  #clockProgressLine {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--amber);
+    width: 0%;
+    z-index: 90;
+    transition: width 0.08s linear;
+  }
+
+  /* ==========================================================================
+     MODE I: AFTERLIGHT · VIDEOTEXT CLOCK ("Each film with its text on the film's own clock")
+     ========================================================================== */
+  #modeVideotext {
+    min-height: 100vh;
+    padding: 68px 36px 140px;
+    max-width: 1420px;
+    margin: 0 auto;
+  }
+  .vt-header {
+    text-align: center;
+    max-width: 880px;
+    margin: 0 auto 42px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 190, 82, 0.22);
+  }
+  .vt-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--amber);
+    text-transform: uppercase;
+  }
+  .vt-header h1 {
+    font-weight: 400;
+    font-size: clamp(32px, 4.6vw, 56px);
+    line-height: 1.08;
+    margin: 10px 0;
+    color: #f7f0e0;
+  }
+  .vt-header p.sub {
+    font-style: italic;
+    font-size: 20px;
+    color: var(--whisper);
+  }
+
+  .vt-book {
+    display: grid;
+    grid-template-columns: minmax(0, 1.38fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+  }
+  @media (max-width: 960px) {
+    .vt-book { grid-template-columns: 1fr; }
+  }
+
+  .vt-screen {
+    position: sticky;
+    top: 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .vt-video-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #030407;
+    border: 1px solid rgba(255, 190, 82, 0.38);
+    overflow: hidden;
+  }
+  .vt-video-frame video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+  .vt-transport {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--whisper);
+  }
+  .vt-play-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    background: rgba(255, 190, 82, 0.08);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .vt-play-btn:hover {
+    background: rgba(255, 190, 82, 0.2);
+  }
+  .vt-live-caption {
+    min-height: 3.4em;
+    padding: 10px 14px;
+    border-left: 2px solid var(--amber);
+    background: rgba(255, 190, 82, 0.04);
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.4;
+    color: #f7f0e0;
+  }
+  .vt-live-caption .who {
+    display: block;
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--amber);
+    margin-bottom: 3px;
+  }
+
+  /* Videotext right-hand memory script */
+  .vt-script {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 35vh;
+  }
+  .vt-seg-block {
+    padding: 14px 18px;
+    border-left: 2px solid rgba(255, 255, 255, 0.10);
+    cursor: pointer;
+    transition: border-color 0.25s, background 0.25s, color 0.25s;
+    color: var(--faint);
+  }
+  .vt-seg-block.said {
+    color: var(--whisper);
+    border-left-color: rgba(92, 228, 255, 0.35);
+  }
+  .vt-seg-block.now {
+    color: #f7f0e0;
+    border-left-color: var(--amber);
+    background: rgba(255, 190, 82, 0.06);
+  }
+  .vt-seg-meta {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.09em;
+    color: var(--cyan);
+    margin-bottom: 4px;
+  }
+  .vt-seg-title {
+    font-size: 21px;
+    margin-bottom: 4px;
+  }
+  .vt-seg-say {
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.48;
+    margin-bottom: 6px;
+  }
+  .vt-seg-tape {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    color: var(--amber);
+    opacity: 0.85;
+  }
+  .vt-seg-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+  .vt-mini-btn {
+    padding: 3px 8px;
+    border: 1px solid rgba(92, 228, 255, 0.35);
+    color: var(--cyan);
+    background: transparent;
+    cursor: pointer;
+  }
+  .vt-mini-btn:hover {
+    background: rgba(92, 228, 255, 0.14);
+  }
+
+  /* ==========================================================================
+     MODE II & III: 100VW × 100VH FULL-BLEED 4D MIST CHAMBER & RAW/MIST SEAM
+     ========================================================================== */
+  #modeFullBleedStage {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 40;
+    background: var(--void);
+    display: none;
+    overflow: hidden;
+  }
+  #mistCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+  }
+  /* Right-edge Mist-vs-Detail Ruler (Law 5: Place controls beside what they change) */
+  #mistRuler {
+    position: fixed;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+  .mist-tick {
+    color: var(--whisper);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: color 0.15s;
+  }
+  .mist-tick::after {
+    content: "";
+    width: 10px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.3);
+  }
+  .mist-tick.active {
+    color: var(--amber);
+  }
+  .mist-tick.active::after {
+    width: 18px;
+    height: 2px;
+    background: var(--amber);
+  }
+
+  /* Bottom-left segment selector & bottom-right view angle whispers in Full-Bleed mode */
+  #stageBottomLeft {
+    position: fixed;
+    bottom: 16px;
+    left: 20px;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  #stageBottomRight {
+    position: fixed;
+    bottom: 16px;
+    right: 20px;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .stage-whisper-btn {
+    color: var(--whisper);
+    cursor: pointer;
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+  }
+  .stage-whisper-btn:hover, .stage-whisper-btn.active {
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+  }
+  #stageCenterSub {
+    position: fixed;
+    bottom: 52px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 55;
+    max-width: min(820px, 78vw);
+    text-align: center;
+    pointer-events: none;
+    font-style: italic;
+    font-size: clamp(19px, 2.2vw, 27px);
+    color: #f7f0e0;
+    text-shadow: 0 2px 14px rgba(0,0,0,0.95);
+  }
+
+  /* ==========================================================================
+     MODE IV: THE 747-VIDEO & 99-AUDIO MISSING MEMORY VAULT
+     ========================================================================== */
+  #modeVault {
+    display: none;
+    min-height: 100vh;
+    padding: 68px 32px 120px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+  .vault-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+  @media (max-width: 980px) {
+    .vault-grid { grid-template-columns: 1fr; }
+  }
+  .vault-player-sticky {
+    position: sticky;
+    top: 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .vault-poem-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .poem-chip {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    padding: 5px 10px;
+    border: 1px solid rgba(92, 228, 255, 0.3);
+    color: var(--whisper);
+    cursor: pointer;
+    background: rgba(8, 12, 18, 0.8);
+  }
+  .poem-chip.active, .poem-chip:hover {
+    color: var(--void);
+    background: var(--cyan);
+    border-color: var(--cyan);
+  }
+  .vault-category {
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(10, 14, 20, 0.65);
+  }
+  .vault-cat-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .vault-btn-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .vault-clip-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text);
+    background: rgba(4, 6, 10, 0.85);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .vault-clip-btn:hover, .vault-clip-btn.active {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  /* ==========================================================================
+     MODE V: THE POET'S RETELLING BOOKEND (POEMS 01-14 <-> AGENT K 1:49 PARALLEL)
+     ========================================================================== */
+  #modeBookend {
+    display: none;
+    min-height: 100vh;
+    padding: 68px 32px 120px;
+    max-width: 1460px;
+    margin: 0 auto;
+  }
+  .bookend-stages-strip {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 1180px) {
+    .bookend-stages-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  .poet-stage-card {
+    border: 1px solid rgba(255, 190, 82, 0.28);
+    background: rgba(8, 11, 16, 0.85);
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.18s, transform 0.18s;
+  }
+  .poet-stage-card:hover, .poet-stage-card.active {
+    border-color: var(--amber);
+    transform: translateY(-2px);
+  }
+  .poet-stage-card img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+  }
+  .poet-stage-meta {
+    padding: 7px 8px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    line-height: 1.35;
+  }
+  .poet-stage-meta .act-tag {
+    color: var(--amber);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .poet-stage-meta .k-tag {
+    color: var(--cyan);
+    display: block;
+    font-size: 9px;
+    opacity: 0.9;
+  }
+</style>
+</head>
+<body>
+
+<div id="clockProgressLine"></div>
+
+<div id="topWhisperBar">
+  <div class="top-left-group">
+    <a class="brand-mark" href="vesper_apparatus.html">← 14×6 APPARATUS</a>
+    <span style="color:var(--faint)">//</span>
+    <span style="color:var(--text)">STELLINE & THE POET'S RETELLING BOOKEND · 07-SPACETIME</span>
+  </div>
+  <div class="mode-tabs">
+    <span class="mode-tab active" data-tab="videotext" onclick="switchSurface('videotext')">I · WOODEN HORSE (1:49)</span>
+    <span class="mode-tab" data-tab="bookend" onclick="switchSurface('bookend')">II · POET RETELLING BOOKEND (01–14)</span>
+    <span class="mode-tab" data-tab="chamber" onclick="switchSurface('chamber')">III · 4D MIST CHAMBER (100VW)</span>
+    <span class="mode-tab" data-tab="seam" onclick="switchSurface('seam')">IV · RAW ↔ MIST SEAM</span>
+    <span class="mode-tab" data-tab="vault" onclick="switchSurface('vault')">V · 747-VIDEO & 99-AUDIO VAULT</span>
+  </div>
+  <div class="top-right-state">
+    <span class="state-pill" id="voidStateBadge">REST</span>
+    <span id="consequenceTag" style="color:var(--whisper)"></span>
+    <button class="action-btn" id="btnStop" onclick="stopActive()">■ STOP</button>
+    <button class="action-btn" id="btnRestore" onclick="restoreBaseline()">↺ RESTORE</button>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     SURFACE I: AFTERLIGHT · VIDEOTEXT CLOCK ("Each film with its text on the film's own clock")
+     ========================================================================== -->
+<main id="modeVideotext">
+  <header class="vt-header">
+    <div class="vt-eyebrow">AFTERLIGHT · 07-SPACETIME · DR. ANA STELLINE (4:16 – 4:27)</div>
+    <h1>“Anything real should be a mist.”</h1>
+    <p class="sub">
+      Memory is not an accumulation of rigid detail — we recall with our feelings. Scroll to move through the
+      segmented Toy Wooden Horse memory (starting at 1:49), or switch to <strong>II · Poet Retelling Bookend (01–14)</strong>
+      to see how the Poet's live reading at the acrylic lectern bookends all 14 Poems just like Agent K's interview.
+    </p>
+  </header>
+
+  <div class="vt-book">
+    <div class="vt-screen">
+      <div class="vt-video-frame">
+        <video id="mainFilmVideo" src="videos/stelline_wooden_horse_07_spacetime.mp4" playsinline preload="auto"></video>
+      </div>
+      <div class="vt-transport">
+        <button class="vt-play-btn" id="vtPlayBtn" onclick="toggleMainVideo()">▶ PLAY WITH DIALOGUE & SCORE</button>
+        <span id="vtTimecode">00:00 / 01:12</span>
+        <span>SCROLL MOVES FILM · CLICK ANY SEGMENT TO SEEK</span>
+      </div>
+      <div class="vt-live-caption" id="vtLiveCaption">
+        <span class="who">DR. ANA STELLINE · 07-SPACETIME</span>
+        “Memory's not about more detail — that's not how memory works. We recall with our feelings.”
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;margin-top:4px">
+        <button class="vt-mini-btn" onclick="loadAlternateMaster('videos/stelline_wooden_horse_07_spacetime.mp4', 'STELLINE & WOODEN HORSE (07-SPACETIME MIST)')">FILM 1: WOODEN HORSE 07-SPACETIME (1:12)</button>
+        <button class="vt-mini-btn" onclick="loadAlternateMaster('videos/wygwyl_poet_retelling_bookend_spacetime.mp4', 'POET RETELLING BOOKEND ANTHOLOGY')">FILM 2: POET BOOKEND ANTHOLOGY (1:48)</button>
+        <button class="vt-mini-btn" onclick="loadAlternateMaster('videos/wygwyl_07_spacetime.mp4', 'WYGWYL · 07-SPACETIME WALK (1:00)')">FILM 3: WYGWYL 07-SPACETIME (1:00)</button>
+        <button class="vt-mini-btn" onclick="loadAlternateMaster('videos/wygwyl_afterlight_feature.mp4', 'WYGWYL · AFTERLIGHT FEATURE (3:36)')">FILM 4: AFTERLIGHT FEATURE (3:36)</button>
+      </div>
+    </div>
+
+    <div class="vt-script" id="vtScriptContainer"></div>
+  </div>
+</main>
+
+<!-- ==========================================================================
+     SURFACE II (BOOKEND): THE POET'S LIVE RETELLING BOOKEND (POEMS 01–14 <-> K 1:49)
+     ========================================================================== -->
+<section id="modeBookend">
+  <header class="vt-header">
+    <div class="vt-eyebrow">PLANE-SYNCHRONIZED BOOKEND ARCHITECTURE · AGENT K (1:49 – 3:25) ↔ THE POET AT THE ACRYLIC LECTERN (POEMS 01–14)</div>
+    <h1>The Context of the Poet’s Retelling</h1>
+    <p class="sub">
+      Every Poet lectern shot (<code>poet_01..08</code>), every Agent K / Wooden Horse shot (<code>k_01..08</code>), and all 100 Poem shots are segmented into
+      7 Multiplane Layers (<code>P0..P6</code>), SAM/Mask2Former Masks, 3D Perspective Layout Blueprints (<code>HORIZON + VP</code>), Painted Animation Cels, and Angular Vector Scene Programs —
+      so transitions peel plane-by-plane from the Poet's salon mural (<code>P4/P5</code>) and clear acrylic lectern (<code>P1</code>) into the Poem's architecture while isolating each Poem's Wooden Horse anchor (<code>P2/P3</code>).
+    </p>
+  </header>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-family:var(--mono);font-size:11px">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="color:var(--amber)">SEGMENTED LAYER VIEW:</span>
+      <button class="vt-mini-btn seg-style-btn active" data-style="dope_composite" onclick="setPoetStageStyle('dope_composite')">1 · PLANE-SPLIT COMPOSITE</button>
+      <button class="vt-mini-btn seg-style-btn" data-style="angular_file" onclick="setPoetStageStyle('angular_file')">2 · ANGULAR VECTOR</button>
+      <button class="vt-mini-btn seg-style-btn" data-style="cel_file" onclick="setPoetStageStyle('cel_file')">3 · PAINTED CEL</button>
+      <button class="vt-mini-btn seg-style-btn" data-style="layout_file" onclick="setPoetStageStyle('layout_file')">4 · 3D LAYOUT GRID (P0–P6)</button>
+      <button class="vt-mini-btn seg-style-btn" data-style="overlay_file" onclick="setPoetStageStyle('overlay_file')">5 · SAM/M2F OVERLAY</button>
+      <button class="vt-mini-btn seg-style-btn" data-style="exploded_file" onclick="setPoetStageStyle('exploded_file')">6 · EXPLODED 7-PLANE</button>
+      <button class="vt-mini-btn seg-style-btn" data-style="file" onclick="setPoetStageStyle('file')">7 · RAW PHOTO</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="vt-mini-btn" id="btnToggleKRow" onclick="toggleKParallelStrip()">SHOW/HIDE AGENT K 8-STAGE STRIP</button>
+      <a class="vt-mini-btn" href="data/terrarium/seeing_spacetime_films/poet_bookend_vs_k_interview_sheet.png" target="_blank" style="text-decoration:none">4K K↔POET SEGMENTED SHEET ↗</a>
+      <a class="vt-mini-btn" href="data/terrarium/seeing_spacetime_films/poet_retelling_bookend_14poems_sheet.png" target="_blank" style="text-decoration:none">4K 14-POEM BOOKEND MATRIX ↗</a>
+    </div>
+  </div>
+
+  <div class="bookend-stages-strip" id="poetStagesStrip"></div>
+  <div class="bookend-stages-strip" id="kParallelStagesStrip" style="display:none;margin-top:-14px;margin-bottom:24px"></div>
+
+  <div class="vault-poem-selector" id="bookendPoemSelector"></div>
+
+  <div class="vt-book">
+    <div class="vt-screen">
+      <div class="vt-video-frame" id="bookendFrameWrap">
+        <video id="bookendFilmVideo" src="videos/poet_bookends/poem_01_bookend_spacetime.mp4" controls playsinline preload="auto"></video>
+        <canvas id="bookendSlitCanvas" width="1280" height="720" style="display:none;width:100%;height:100%;cursor:ew-resize"></canvas>
+      </div>
+      <div class="vt-transport">
+        <button class="vt-play-btn" id="bookendPlayBtn" onclick="toggleBookendVideo()">▶ PLAY 5-ACT SEGMENTED BOOKEND FILM</button>
+        <span id="bookendTimecode">00:00 / 00:18</span>
+        <button class="vt-mini-btn" id="btnToggleBookendSlit" onclick="toggleBookendSlitScanner()">⇄ INTERACTIVE 4-WAY CROSS-WORLD SLIT-SCAN</button>
+        <button class="vt-mini-btn" onclick="playAllPoemsBookendAnthology()">▶ MASTER ANTHOLOGY REEL</button>
+      </div>
+      <div class="vt-live-caption" id="bookendLiveCaption">
+        <span class="who" id="bookendCaptionWho">POEM 01 · OUT OF LIFE · ACT I: OPENING LECTERN BOOKEND (P0–P6)</span>
+        <span id="bookendCaptionText">“What we've made we don't want, what we've sold to the world, to ourselves, doesn't exist.”</span>
+      </div>
+    </div>
+
+    <div class="vt-script" id="bookendActsContainer" style="padding-bottom:12vh"></div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     SURFACE II & III: 100VW × 100VH FULL-BLEED 4D MIST CHAMBER & RAW/MIST SEAM
+     ========================================================================== -->
+<div id="modeFullBleedStage">
+  <canvas id="mistCanvas" width="1280" height="720"></canvas>
+  <video id="hiddenSegVideo" loop crossorigin="anonymous" playsinline style="display:none"></video>
+
+  <div id="mistRuler" title="Click or scroll to adjust Stelline's Mist vs. Rigid Detail">
+    <div class="mist-tick" data-mist="0.85" onclick="setMistLevel(0.85)">MIST 85% · PURE FEELING</div>
+    <div class="mist-tick" data-mist="0.62" onclick="setMistLevel(0.62)">MIST 62% · HAZY RECALL</div>
+    <div class="mist-tick active" data-mist="0.42" onclick="setMistLevel(0.42)">MIST 42% · STELLINE BALANCE</div>
+    <div class="mist-tick" data-mist="0.20" onclick="setMistLevel(0.20)">MIST 20% · NEAR FOCUS</div>
+    <div class="mist-tick" data-mist="0.00" onclick="setMistLevel(0.00)">MIST 0% · RIGID IMPLANT</div>
+  </div>
+
+  <div id="stageCenterSub"></div>
+
+  <div id="stageBottomLeft">
+    <span class="stage-whisper-btn" onclick="stepSegment(-1)">← PREV SEG</span>
+    <span id="activeSegLabel" style="color:var(--cyan)">SEG 08 · THE TOY WOODEN HORSE (2:27)</span>
+    <span class="stage-whisper-btn" onclick="stepSegment(1)">NEXT SEG →</span>
+    <span style="color:var(--faint)">|</span>
+    <span class="stage-whisper-btn" id="btnToggleSegAudio" onclick="toggleSegAudio()">🔊 DIALOGUE ON</span>
+  </div>
+
+  <div id="stageBottomRight">
+    <span class="stage-whisper-btn active" id="angleFrontBtn" onclick="setCameraPreset(0, 0)">FACE-ON (0°)</span>
+    <span class="stage-whisper-btn" id="angleSideBtn" onclick="setCameraPreset(1.05, 0.06)">SIDE-ON +60° (4D TIME STRATA)</span>
+    <span class="stage-whisper-btn" id="angleLeftBtn" onclick="setCameraPreset(-1.05, -0.05)">SIDE-ON −60°</span>
+    <span class="stage-whisper-btn" onclick="toggleInkMode()">INK: <strong id="inkModeReadout">LIGHT</strong></span>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     SURFACE IV: THE 747-VIDEO & 99-AUDIO MISSING MEMORY VAULT
+     ========================================================================== -->
+<section id="modeVault">
+  <header class="vt-header">
+    <div class="vt-eyebrow">ALL MISSING VIDEO & AUDIO ASSETS CONNECTED · 747 VIDEOS + 99 SPOKEN/MUSICAL AUDIO TRACKS</div>
+    <h1>The Living Video & Voice Memory Vault</h1>
+    <p class="sub">
+      Every previously unused video clip across all 14 Poems — 100 per-view motion clips, 42 Spacetime/Construct/Afterlight films,
+      165 painted-cel video patches, 126 character motion loops, 114 puppet/acting studies, and 99 spoken-word audio memories.
+    </p>
+  </header>
+
+  <div class="vault-poem-selector" id="vaultPoemSelector"></div>
+
+  <div class="vault-grid">
+    <div class="vault-player-sticky">
+      <div class="vt-video-frame">
+        <video id="vaultVideoPlayer" controls autoplay loop playsinline></video>
+      </div>
+      <div class="vt-transport">
+        <span id="vaultActiveTitle" style="color:var(--amber)">SELECT ANY CLIP OR LOAD INTO 4D MIST CHAMBER</span>
+        <button class="vt-play-btn" onclick="sendVaultClipToMistChamber()">OPEN THIS VIDEO IN 4D MIST CHAMBER →</button>
+      </div>
+      <div class="vault-category" style="margin-top:8px">
+        <div class="vault-cat-title">CONCURRENT SPOKEN-WORD VOICE READING & STANZA MEMORIES (99 AUDIO TRACKS)</div>
+        <audio id="vaultAudioPlayer" controls style="width:100%;height:34px;margin-bottom:10px"></audio>
+        <div class="vault-btn-list" id="vaultAudioList"></div>
+      </div>
+    </div>
+
+    <div id="vaultCategoriesColumn"></div>
+  </div>
+</section>
+
+<script src="data/terrarium/stelline_spacetime_data.js"></script>
+<script>
+const DATA = window.STELLINE_SPACETIME_DATA || { segments: [], poems: [] };
+
+const state = {
+  surface: "videotext", // 'videotext' | 'chamber' | 'seam' | 'vault'
+  segIdx: 7,            // Default to Seg 08: The Toy Wooden Horse in His Hand (2:27)
+  mistLevel: 0.42,
+  yaw: 0.25,
+  pitch: 0.02,
+  seamX: 0.50,
+  inkMode: "light",
+  isDragging: false,
+  dragStartX: 0,
+  dragStartY: 0,
+  ringFrames: [],       // Rolling buffer of 22 temporal slices for live 4D spacetime rendering
+  offCanvas: document.createElement("canvas"),
+  vaultPoemIdx: 0,
+  currentVaultVideo: "videos/poems/poem_01_spacetime_worm.mp4",
+};
+state.offCanvas.width = 128;
+state.offCanvas.height = 72;
+const offCtx = state.offCanvas.getContext("2d", { willReadFrequently: true });
+
+function setVoidState(st, msg = "") {
+  document.getElementById("voidStateBadge").textContent = st;
+  document.getElementById("consequenceTag").textContent = msg;
+  document.getElementById("btnStop").style.display = st === "WORKING" ? "inline-block" : "none";
+  const altered = Math.abs(state.mistLevel - 0.42) > 0.03 || Math.abs(state.yaw) > 0.05 || Math.abs(state.seamX - 0.5) > 0.03;
+  document.getElementById("btnRestore").style.display = (st === "CHANGED" || altered) ? "inline-block" : "none";
+}
+
+function stopActive() {
+  const mv = document.getElementById("mainFilmVideo");
+  const sv = document.getElementById("hiddenSegVideo");
+  mv.pause();
+  sv.pause();
+  setVoidState("CHANGED", "Stopped · frame preserved");
+}
+
+function restoreBaseline() {
+  state.mistLevel = 0.42;
+  state.yaw = 0.0;
+  state.pitch = 0.0;
+  state.seamX = 0.50;
+  updateMistRulerUI();
+  setVoidState("REST", "Baseline restored");
+}
+
+// ============================================================================
+// SURFACE I: AFTERLIGHT · VIDEOTEXT CLOCK
+// ============================================================================
+const mainVideo = document.getElementById("mainFilmVideo");
+const vtScriptContainer = document.getElementById("vtScriptContainer");
+let segAnchors = [];
+let isPlayingMain = false;
+
+function buildVideotextScript() {
+  vtScriptContainer.innerHTML = "";
+  const allItems = [
+    ...DATA.segments,
+    {
+      id: "seg_montage",
+      num: 15,
+      code: "XV · 07-SPACETIME MONTAGE (56.6s – 65.4s)",
+      title: "Every Volume Twice: Face-On Push, Then Side-On ±62° Through Time",
+      src_t0: 147.28,
+      film_t0: 56.6,
+      film_t1: 65.4,
+      who: "07-SPACETIME MONTAGE",
+      say: "Cuts tighten from 0.82s down to 0.24s across the orphanage, the furnace, the wooden horse, and Stelline's lens — exposing the 4D body of light from the side before dropping to silence.",
+      tape: "MONTAGE · 17 accelerating cuts -> 1.2s silence -> single golden ember dot",
+    },
+    {
+      id: "seg_title",
+      num: 16,
+      code: "XVI · THE DROP & CARVED BASE (65.4s – 72.0s)",
+      title: "6 · 10 · 21 — “Someone Lived This. Yes… This Happened.”",
+      src_t0: 342.0,
+      film_t0: 65.4,
+      film_t1: 72.0,
+      who: "THE CARVED WOODEN HORSE · 6 · 10 · 21",
+      say: "Out of 1.2 seconds of darkroom silence, one golden ember dot blooms into 48,000 drifting dust points forming 6 · 10 · 21.",
+      tape: "RESOLUTION · Recall tied to feelings survives when rigid detail dissolves into mist",
+    },
+  ];
+
+  allItems.forEach((seg, idx) => {
+    const div = document.createElement("div");
+    div.className = "vt-seg-block";
+    div.dataset.idx = idx;
+    div.dataset.t0 = seg.film_t0;
+    div.dataset.t1 = seg.film_t1;
+    const smm = Math.floor(seg.src_t0 / 60);
+    const sss = (seg.src_t0 % 60).toFixed(1).padStart(4, "0");
+    const fmm = Math.floor(seg.film_t0 / 60);
+    const fss = (seg.film_t0 % 60).toFixed(1).padStart(4, "0");
+    div.innerHTML = `
+      <div class="vt-seg-meta">
+        <span>${seg.code}</span>
+        <span>FILM ${fmm}:${fss} · SRC ${smm}:${sss}</span>
+      </div>
+      <div class="vt-seg-title">${seg.title}</div>
+      <div class="vt-seg-say">${seg.say}</div>
+      <div class="vt-seg-tape">${seg.tape}</div>
+      <div class="vt-seg-actions">
+        <button class="vt-mini-btn" onclick="event.stopPropagation(); seekMainFilm(${seg.film_t0})">▶ SEEK FILM (${fmm}:${fss})</button>
+        ${idx < DATA.segments.length ? `<button class="vt-mini-btn" onclick="event.stopPropagation(); openSegInChamber(${idx}, 'chamber')">OPEN IN 4D MIST CHAMBER →</button>` : ""}
+        ${idx < DATA.segments.length ? `<button class="vt-mini-btn" onclick="event.stopPropagation(); openSegInChamber(${idx}, 'seam')">COMPARE RAW ↔ MIST →</button>` : ""}
+      </div>
+    `;
+    div.onclick = () => seekMainFilm(seg.film_t0);
+    vtScriptContainer.appendChild(div);
+  });
+
+  setTimeout(computeVideotextLayout, 150);
+}
+
+function computeVideotextLayout() {
+  segAnchors = [];
+  document.querySelectorAll(".vt-seg-block").forEach((el) => {
+    const r = el.getBoundingClientRect();
+    segAnchors.push({
+      el,
+      y: r.top + window.scrollY,
+      t0: parseFloat(el.dataset.t0),
+      t1: parseFloat(el.dataset.t1),
+    });
+  });
+}
+window.addEventListener("resize", computeVideotextLayout);
+
+function mmss(sec) {
+  const s = Math.max(0, Math.floor(sec));
+  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+}
+
+function updateVideotextAtTime(t) {
+  const dur = mainVideo.duration || 72.0;
+  document.getElementById("vtTimecode").textContent = `${mmss(t)} / ${mmss(dur)}`;
+  document.getElementById("clockProgressLine").style.width = `${Math.min(100, (t / dur) * 100).toFixed(2)}%`;
+
+  let activeBlock = null;
+  segAnchors.forEach((a) => {
+    const isSaid = t >= a.t0 - 0.05;
+    const isNow = t >= a.t0 - 0.05 && t < a.t1 + 0.05;
+    a.el.classList.toggle("said", isSaid);
+    a.el.classList.toggle("now", isNow);
+    if (isNow) activeBlock = a;
+  });
+
+  if (activeBlock) {
+    const segIdx = parseInt(activeBlock.el.dataset.idx, 10);
+    const seg = DATA.segments[segIdx];
+    if (seg) {
+      document.getElementById("vtLiveCaption").innerHTML = `<span class="who">${seg.who}</span>${seg.say}`;
+    }
+  }
+}
+
+function seekMainFilm(t) {
+  mainVideo.currentTime = t;
+  updateVideotextAtTime(t);
+  mainVideo.play().then(() => {
+    isPlayingMain = true;
+    document.getElementById("vtPlayBtn").textContent = "⏸ PAUSE FILM";
+    setVoidState("WORKING", "Playing on film clock");
+  }).catch(() => {});
+}
+
+function toggleMainVideo() {
+  if (mainVideo.paused) {
+    mainVideo.play();
+    isPlayingMain = true;
+    document.getElementById("vtPlayBtn").textContent = "⏸ PAUSE FILM";
+    setVoidState("WORKING", "Playing on film clock");
+  } else {
+    mainVideo.pause();
+    isPlayingMain = false;
+    document.getElementById("vtPlayBtn").textContent = "▶ PLAY WITH DIALOGUE & SCORE";
+    setVoidState("REST", "");
+  }
+}
+
+function loadAlternateMaster(src, label) {
+  mainVideo.src = src;
+  mainVideo.currentTime = 0;
+  mainVideo.play().catch(() => {});
+  isPlayingMain = true;
+  document.getElementById("vtPlayBtn").textContent = "⏸ PAUSE FILM";
+  setVoidState("WORKING", label);
+}
+
+mainVideo.addEventListener("timeupdate", () => {
+  if (state.surface !== "videotext") return;
+  updateVideotextAtTime(mainVideo.currentTime);
+});
+
+// Scroll moves the film when paused (Afterlight videotext coupling)
+let scrollSeekTimer = null;
+window.addEventListener("scroll", () => {
+  if (state.surface !== "videotext" || ! mainVideo.paused || !segAnchors.length) return;
+  const readY = window.scrollY + window.innerHeight * 0.42;
+  let targetT = 0;
+  for (let i = 0; i < segAnchors.length; i++) {
+    const a = segAnchors[i];
+    const b = segAnchors[i + 1];
+    if (!b || readY < b.y) {
+      const spanY = b ? Math.max(1, b.y - a.y) : 260;
+      const frac = Math.max(0, Math.min(1, (readY - a.y) / spanY));
+      targetT = a.t0 + frac * (a.t1 - a.t0);
+      break;
+    }
+  }
+  updateVideotextAtTime(targetT);
+  clearTimeout(scrollSeekTimer);
+  scrollSeekTimer = setTimeout(() => {
+    if (mainVideo.paused && Math.abs(mainVideo.currentTime - targetT) > 0.15) {
+      mainVideo.currentTime = targetT;
+    }
+  }, 90);
+});
+
+// ============================================================================
+// SURFACE II & III: LIVE 4D SPACETIME MIST CHAMBER & RAW/MIST SEAM
+// ============================================================================
+const mistCanvas = document.getElementById("mistCanvas");
+const mistCtx = mistCanvas.getContext("2d");
+const hiddenSegVideo = document.getElementById("hiddenSegVideo");
+
+function openSegInChamber(idx, modeName = "chamber") {
+  state.segIdx = Math.max(0, Math.min(DATA.segments.length - 1, idx));
+  switchSurface(modeName);
+  loadActiveSegmentVideo();
+}
+
+function loadActiveSegmentVideo(customVideoSrc = null, customLabel = null) {
+  const seg = DATA.segments[state.segIdx] || DATA.segments[0];
+  const src = customVideoSrc || `videos/stelline_segments/${seg.id}.mp4`;
+  state.ringFrames = [];
+  hiddenSegVideo.src = src;
+  hiddenSegVideo.muted = false;
+  hiddenSegVideo.play().catch(() => {
+    hiddenSegVideo.muted = true;
+    hiddenSegVideo.play().catch(() => {});
+  });
+  state.inkMode = seg ? seg.mode : "light";
+  document.getElementById("inkModeReadout").textContent = state.inkMode.toUpperCase();
+  document.getElementById("activeSegLabel").textContent = customLabel || `${seg.code} · ${seg.title.toUpperCase()}`;
+  document.getElementById("stageCenterSub").textContent = seg ? seg.say : "";
+}
+
+function stepSegment(delta) {
+  state.segIdx = (state.segIdx + delta + DATA.segments.length) % DATA.segments.length;
+  loadActiveSegmentVideo();
+  setVoidState("CHANGED", `Switched to ${DATA.segments[state.segIdx].code}`);
+}
+
+function toggleSegAudio() {
+  hiddenSegVideo.muted = !hiddenSegVideo.muted;
+  document.getElementById("btnToggleSegAudio").textContent = hiddenSegVideo.muted ? "🔇 DIALOGUE MUTED" : "🔊 DIALOGUE ON";
+}
+
+function setMistLevel(val) {
+  const prev = Math.round(state.mistLevel * 100);
+  state.mistLevel = val;
+  updateMistRulerUI();
+  setVoidState("CHANGED", `Mist: ${prev}% → ${Math.round(val * 100)}%`);
+}
+
+function updateMistRulerUI() {
+  document.querySelectorAll("#mistRuler .mist-tick").forEach((el) => {
+    const m = parseFloat(el.dataset.mist);
+    el.classList.toggle("active", Math.abs(m - state.mistLevel) < 0.08);
+  });
+}
+
+function setCameraPreset(yaw, pitch) {
+  state.yaw = yaw;
+  state.pitch = pitch;
+  document.getElementById("angleFrontBtn").classList.toggle("active", Math.abs(yaw) < 0.15);
+  document.getElementById("angleSideBtn").classList.toggle("active", yaw > 0.5);
+  document.getElementById("angleLeftBtn").classList.toggle("active", yaw < -0.5);
+  setVoidState("CHANGED", `Orbit Yaw: ${Math.round((yaw * 180) / Math.PI)}°`);
+}
+
+function toggleInkMode() {
+  state.inkMode = state.inkMode === "light" ? "paper" : "light";
+  document.getElementById("inkModeReadout").textContent = state.inkMode.toUpperCase();
+}
+
+// Pointer probing on the 100vw x 100vh canvas
+mistCanvas.addEventListener("pointerdown", (e) => {
+  state.isDragging = true;
+  state.dragStartX = e.clientX;
+  state.dragStartY = e.clientY;
+});
+
+window.addEventListener("pointermove", (e) => {
+  if (state.surface !== "chamber" && state.surface !== "seam") return;
+  const rect = mistCanvas.getBoundingClientRect();
+  const nx = Math.max(0.05, Math.min(0.95, (e.clientX - rect.left) / rect.width));
+  const ny = Math.max(0.05, Math.min(0.95, (e.clientY - rect.top) / rect.height));
+  if (state.surface === "seam") {
+    if (state.isDragging || e.buttons > 0) {
+      state.seamX = nx;
+      setVoidState("CHANGED", `Seam: ${Math.round(nx * 100)}%`);
+    }
+  } else if (state.isDragging) {
+    state.yaw = (nx - 0.5) * 2.1;
+    state.pitch = (ny - 0.5) * 0.65;
+    setVoidState("CHANGED", `Yaw ${(state.yaw * 57.3).toFixed(0)}° · Pitch ${(state.pitch * 57.3).toFixed(0)}°`);
+  }
+});
+
+window.addEventListener("pointerup", () => { state.isDragging = false; });
+
+mistCanvas.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const nextMist = Math.max(0.0, Math.min(0.92, state.mistLevel + (e.deltaY > 0 ? 0.04 : -0.04)));
+  setMistLevel(nextMist);
+}, { passive: false });
+
+function renderLiveMistChamber() {
+  requestAnimationFrame(renderLiveMistChamber);
+  if (state.surface !== "chamber" && state.surface !== "seam") return;
+
+  const W = mistCanvas.width;
+  const H = mistCanvas.height;
+
+  // Sample current video frame into the 4D spacetime ring buffer (up to 18 temporal slices)
+  if (hiddenSegVideo.readyState >= 2) {
+    offCtx.drawImage(hiddenSegVideo, 0, 0, 128, 72);
+    const imgData = offCtx.getImageData(0, 0, 128, 72).data;
+    state.ringFrames.unshift(new Uint8Array(imgData));
+    if (state.ringFrames.length > 18) state.ringFrames.pop();
+  }
+
+  const isPaper = state.inkMode === "paper";
+  mistCtx.fillStyle = isPaper ? "#ebe3cf" : "#05070a";
+  mistCtx.fillRect(0, 0, W, H);
+
+  if (!state.ringFrames.length) return;
+
+  const seg = DATA.segments[state.segIdx] || { feeling_anchor: [0.5, 0.5] };
+  const [ax, ay] = seg.feeling_anchor || [0.5, 0.5];
+
+  // If in Surface III (RAW <-> MIST SEAM), draw raw video on left of seamX
+  const splitX = state.surface === "seam" ? Math.floor(W * state.seamX) : 0;
+
+  const cy = Math.cos(state.yaw), sy = Math.sin(state.yaw);
+  const cp = Math.cos(state.pitch), sp = Math.sin(state.pitch);
+  const dist = 540.0;
+  const focal = 680.0;
+  const mist = state.mistLevel;
+
+  // Render temporal slices from oldest (back) to newest (present slice in front)
+  for (let s = state.ringFrames.length - 1; s >= 0; s--) {
+    const buf = state.ringFrames[s];
+    const age = s;
+    const step = s === 0 ? 1 : (s < 5 ? 2 : 3);
+
+    for (let y = 0; y < 72; y += step) {
+      const ny = y / 72.0;
+      for (let x = 0; x < 128; x += step) {
+        const idx = (y * 128 + x) * 4;
+        const r = buf[idx], g = buf[idx + 1], b = buf[idx + 2];
+        const lum = (r * 0.3 + g * 0.59 + b * 0.11) / 255.0;
+        if (!isPaper && lum < 0.05) continue;
+
+        const nx = x / 128.0;
+        // Stelline's Feeling Salience F(x,y): warmth + proximity to emotional anchor
+        const warmth = Math.max(0, (r - b) / 255.0);
+        const d2 = ((nx - ax) / 0.35) ** 2 + ((ny - ay) / 0.38) ** 2;
+        const F = Math.min(1.0, 0.45 * Math.exp(-d2) + 0.55 * (warmth * 1.6 + lum * 0.5));
+
+        const tau = 4.0 + 14.0 * F;
+        const alpha = Math.exp(-age / tau) * (0.35 + 0.65 * F);
+        if (alpha < 0.08) continue;
+
+        // Non-feeling peripheral detail scatters into 3D mist
+        const scatter = (1.0 - F) * (1.0 - F) * mist;
+        const hash = ((x * 73856093) ^ (y * 19349663) ^ (s * 83492791)) & 1023;
+        const jx = ((hash & 31) - 15.5) * 4.2 * scatter;
+        const jy = (((hash >> 5) & 31) - 15.5) * 3.2 * scatter;
+
+        const X = (nx - 0.5) * 620.0 + jx;
+        const Y = (ny - 0.5) * 350.0 + jy;
+        const Z = age * 22.0 + (0.5 - lum) * 110.0;
+
+        const Xc = X * cy + Z * sy;
+        const Zc1 = -X * sy + Z * cy;
+        const Yc = Y * cp - Zc1 * sp;
+        const Zc = Y * sp + Zc1 * cp + dist;
+        if (Zc < 40.0) continue;
+
+        const sx = (focal * Xc) / Zc + W * 0.5;
+        const sy_scr = (focal * Yc) / Zc + H * 0.5;
+        if (sx < splitX || sx >= W || sy_scr < 0 || sy_scr >= H) continue;
+
+        const ptSize = Math.max(2, Math.min(11, (2.4 + scatter * 7.5 + age * 0.35) * (520.0 / Zc)));
+        mistCtx.fillStyle = `rgba(${r},${g},${b},${Math.min(0.95, alpha).toFixed(2)})`;
+        mistCtx.fillRect(sx | 0, sy_scr | 0, ptSize | 0, ptSize | 0);
+      }
+    }
+  }
+
+  // If in Surface III (RAW <-> MIST SEAM), draw the raw clip on the left half
+  if (state.surface === "seam" && hiddenSegVideo.readyState >= 2) {
+    mistCtx.save();
+    mistCtx.beginPath();
+    mistCtx.rect(0, 0, splitX, H);
+    mistCtx.clip();
+    mistCtx.drawImage(hiddenSegVideo, 0, 0, W, H);
+    mistCtx.restore();
+
+    mistCtx.strokeStyle = "rgba(255, 190, 82, 0.9)";
+    mistCtx.lineWidth = 1.5;
+    mistCtx.beginPath();
+    mistCtx.moveTo(splitX, 0);
+    mistCtx.lineTo(splitX, H);
+    mistCtx.stroke();
+  }
+}
+
+// ============================================================================
+// SURFACE IV: THE 747-VIDEO & 99-AUDIO MISSING MEMORY VAULT
+// ============================================================================
+function buildVaultUI() {
+  const sel = document.getElementById("vaultPoemSelector");
+  sel.innerHTML = "";
+  (DATA.poems || []).forEach((p, idx) => {
+    const ns = String(p.num).padStart(2, "0");
+    const chip = document.createElement("span");
+    chip.className = "poem-chip" + (idx === state.vaultPoemIdx ? " active" : "");
+    chip.textContent = `P${ns} · ${p.title.toUpperCase()}`;
+    chip.onclick = () => {
+      state.vaultPoemIdx = idx;
+      buildVaultUI();
+      renderVaultPoemDetails();
+    };
+    sel.appendChild(chip);
+  });
+  renderVaultPoemDetails();
+}
+
+function playVaultVideo(src, label) {
+  state.currentVaultVideo = src;
+  const v = document.getElementById("vaultVideoPlayer");
+  v.src = src;
+  v.play().catch(() => {});
+  document.getElementById("vaultActiveTitle").textContent = label;
+}
+
+function playVaultAudio(src) {
+  const a = document.getElementById("vaultAudioPlayer");
+  a.src = src;
+  a.play().catch(() => {});
+}
+
+function sendVaultClipToMistChamber() {
+  switchSurface("chamber");
+  loadActiveSegmentVideo(state.currentVaultVideo, document.getElementById("vaultActiveTitle").textContent);
+}
+
+function renderVaultPoemDetails() {
+  const poem = (DATA.poems || [])[state.vaultPoemIdx];
+  if (!poem) return;
+  const ns = String(poem.num).padStart(2, "0");
+  const mv = poem.missing_media_vault || {};
+  const col = document.getElementById("vaultCategoriesColumn");
+
+  // Audio list
+  const audioList = document.getElementById("vaultAudioList");
+  audioList.innerHTML = "";
+  const fullReadingBtn = document.createElement("button");
+  fullReadingBtn.className = "vault-clip-btn";
+  fullReadingBtn.textContent = `🔊 FULL POEM ${ns} SPOKEN READING (reading.mp3)`;
+  fullReadingBtn.onclick = () => playVaultAudio(mv.spoken_reading_audio);
+  audioList.appendChild(fullReadingBtn);
+
+  (mv.stanza_audios || []).forEach((sa) => {
+    const b = document.createElement("button");
+    b.className = "vault-clip-btn";
+    b.textContent = `🎙 STANZA ${sa.split("/").pop()}`;
+    b.onclick = () => playVaultAudio(sa);
+    audioList.appendChild(b);
+  });
+
+  // Categories of videos
+  const viewsHtml = (poem.views || []).map((v) => `
+    <button class="vault-clip-btn" onclick="playVaultVideo('${v.live_shot_video}', 'POEM ${ns} · ${v.id} ${v.place_name} (LIVE SHOT.MP4)')">
+      ▶ ${v.id} · ${v.place_name} (shot.mp4)
+    </button>
+  `).join("");
+
+  const patchesHtml = (mv.cel_patches || []).slice(0, 14).map((cp) => {
+    const nm = cp.split("/").pop();
+    return `<button class="vault-clip-btn" onclick="playVaultVideo('${cp}', 'POEM ${ns} · PAINTED CEL PATCH ${nm}')">▶ ${nm}</button>`;
+  }).join("");
+
+  const castHtml = (mv.cast_memories || []).map((cm) => `
+    <button class="vault-clip-btn" onclick="playVaultVideo('${cm.walk}', 'CAST MEMORY · ${cm.character.toUpperCase()} (WALK)')">▶ ${cm.character} · walk</button>
+    <button class="vault-clip-btn" onclick="playVaultVideo('${cm.turn}', 'CAST MEMORY · ${cm.character.toUpperCase()} (TURN)')">▶ ${cm.character} · turn</button>
+    <button class="vault-clip-btn" onclick="playVaultVideo('${cm.reach}', 'CAST MEMORY · ${cm.character.toUpperCase()} (REACH)')">▶ ${cm.character} · reach</button>
+    <button class="vault-clip-btn" onclick="playVaultVideo('${cm.fall}', 'CAST MEMORY · ${cm.character.toUpperCase()} (FALL)')">▶ ${cm.character} · fall</button>
+  `).join("");
+
+  col.innerHTML = `
+    <div class="vault-category">
+      <div class="vault-cat-title">1. SPACETIME WORM, SEEING-AS CONSTRUCT & AFTERLIGHT VIDEOTEXT FILMS (POEM ${ns})</div>
+      <div class="vault-btn-list">
+        <button class="vault-clip-btn" onclick="playVaultVideo('${mv.spacetime_worm_video}', 'POEM ${ns} · 07W SPACETIME WORM')">▶ 07w · Spacetime Worm</button>
+        <button class="vault-clip-btn" onclick="playVaultVideo('${mv.seeing_construct_video}', 'POEM ${ns} · S2 SEEING-AS CONSTRUCT')">▶ S2 · Seeing-As Construct</button>
+        <button class="vault-clip-btn" onclick="playVaultVideo('${mv.afterlight_videotext_video}', 'POEM ${ns} · AFTERLIGHT VIDEOTEXT FX')">▶ Afterlight Videotext FX</button>
+        <button class="vault-clip-btn" onclick="playVaultVideo('${mv.suite_render_video}', 'POEM ${ns} · SUITE MULTIPLANE RENDER')">▶ Suite Multiplane Render</button>
+        <button class="vault-clip-btn" onclick="playVaultVideo('${mv.cel_mix_video}', 'POEM ${ns} · ANIMATED CEL MIX')">▶ Animated Cel Mix</button>
+        <button class="vault-clip-btn" onclick="playVaultVideo('${mv.spinecel_mix_video}', 'POEM ${ns} · SPINECEL MIX')">▶ Spinecel Mix</button>
+        <button class="vault-clip-btn" onclick="playVaultVideo('${mv.film_render_video}', 'POEM ${ns} · FILM CUT')">▶ Original Film Cut</button>
+      </div>
+    </div>
+
+    <div class="vault-category">
+      <div class="vault-cat-title">2. LIVE PER-VIEW MOTION CLIPS (100 OUT/&lt;UUID&gt;/FILM/SHOT.MP4 VIDEOS)</div>
+      <div class="vault-btn-list">${viewsHtml}</div>
+    </div>
+
+    <div class="vault-category">
+      <div class="vault-cat-title">3. PAINTED-CEL VIDEO PATCHES (165 CEL_ASSETS/PATCHES/*.MP4 — "THE ARTIST'S TOUCH")</div>
+      <div class="vault-btn-list">${patchesHtml}</div>
+    </div>
+
+    <div class="vault-category">
+      <div class="vault-cat-title">4. CHARACTER MEMORY FIGURES IN MOTION & PUPPET/ACTING STUDIES (240 VIDEOS)</div>
+      <div class="vault-btn-list">
+        ${castHtml}
+        ${mv.scion_puppet_clip ? `<button class="vault-clip-btn" onclick="playVaultVideo('${mv.scion_puppet_clip}', 'SCION PUPPET TAKE')">▶ ${mv.scion_puppet_clip.split('/').pop()}</button>` : ""}
+        ${mv.acting_study_clip ? `<button class="vault-clip-btn" onclick="playVaultVideo('${mv.acting_study_clip}', 'ACTING STUDY TAKE')">▶ ${mv.acting_study_clip.split('/').pop()}</button>` : ""}
+        <button class="vault-clip-btn" onclick="playVaultVideo('weave/passage.mp4', 'WEAVE PASSAGE · P07 TURN ME UP')">▶ weave/passage.mp4</button>
+        <button class="vault-clip-btn" onclick="playVaultVideo('weave/p04_hands/passage.mp4', 'WEAVE PASSAGE · P04 HANDS')">▶ weave/p04_hands/passage.mp4</button>
+        <button class="vault-clip-btn" onclick="playVaultVideo('foundry/episode.mp4', 'FOUNDRY EPISODE · BLOODLINES')">▶ foundry/episode.mp4</button>
+      </div>
+    </div>
+  `;
+
+  playVaultVideo(mv.spacetime_worm_video, `POEM ${ns} · ${poem.title.toUpperCase()} · 07W SPACETIME WORM`);
+}
+
+// ============================================================================
+// SURFACE II (BOOKEND): THE POET'S LIVE RETELLING BOOKEND (POEMS 01–14 <-> K 1:49)
+// ============================================================================
+state.bookendPoemIdx = 0;
+state.poetStageStyle = "dope_composite";
+state.activePoetStageIdx = 1; // Default to poet_02 (Lectern Medium)
+state.showKStrip = true;
+state.bookendSlitMode = false;
+state.bookendSlitX = 0.52;
+state.slitImgCache = {};
+
+const DEFAULT_POET_STAGES = [
+  { id: "poet_01", sid: "poet_01_warm_salon_circle_wide", k_sid: "k_01_office_interview", act: "ACT I · SALON WIDE", file: "out/poet_01_warm_salon_circle_wide/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_01_dope_composite.jpg", angular_file: "out/poet_01_warm_salon_circle_wide/program/frame0.png", cel_file: "out/poet_01_warm_salon_circle_wide/cartoon/cel.png", layout_file: "out/poet_01_warm_salon_circle_wide/cartoon/layout_sheet.png", overlay_file: "out/poet_01_warm_salon_circle_wide/overlay.jpg", exploded_file: "out/poet_01_warm_salon_circle_wide/multiplane/exploded.jpg", title: "Warm Graffiti Salon & Circle", k_parallel: "K 1:49 (k_01) · Interview Room", t_seek: 0.2 },
+  { id: "poet_02", sid: "poet_02_warm_lectern_medium", k_sid: "k_01_office_interview", act: "ACT I · LECTERN MEDIUM", file: "out/poet_02_warm_lectern_medium/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_02_dope_composite.jpg", angular_file: "out/poet_02_warm_lectern_medium/program/frame0.png", cel_file: "out/poet_02_warm_lectern_medium/cartoon/cel.png", layout_file: "out/poet_02_warm_lectern_medium/cartoon/layout_sheet.png", overlay_file: "out/poet_02_warm_lectern_medium/overlay.jpg", exploded_file: "out/poet_02_warm_lectern_medium/multiplane/exploded.jpg", title: "At the Clear Acrylic Lectern", k_parallel: "K 1:54 (k_01) · 'Tell me a memory'", t_seek: 1.3 },
+  { id: "poet_03", sid: "poet_03_standing_graffiti_gesture", k_sid: "k_02_k_eyes_threshold", act: "ACT I · INCITING GESTURE", file: "out/poet_03_standing_graffiti_gesture/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_03_dope_composite.jpg", angular_file: "out/poet_03_standing_graffiti_gesture/program/frame0.png", cel_file: "out/poet_03_standing_graffiti_gesture/cartoon/cel.png", layout_file: "out/poet_03_standing_graffiti_gesture/cartoon/layout_sheet.png", overlay_file: "out/poet_03_standing_graffiti_gesture/overlay.jpg", exploded_file: "out/poet_03_standing_graffiti_gesture/multiplane/exploded.jpg", title: "Standing Gesture Before Mural", k_parallel: "K 2:00 (k_02) · 'I had a little toy horse'", t_seek: 2.5 },
+  { id: "poet_04", sid: "poet_04_standing_hands_heart", k_sid: "k_02_k_eyes_threshold", act: "ACT II · HANDS TO HEART", file: "out/poet_04_standing_hands_heart/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_04_dope_composite.jpg", angular_file: "out/poet_04_standing_hands_heart/program/frame0.png", cel_file: "out/poet_04_standing_hands_heart/cartoon/cel.png", layout_file: "out/poet_04_standing_hands_heart/cartoon/layout_sheet.png", overlay_file: "out/poet_04_standing_hands_heart/overlay.jpg", exploded_file: "out/poet_04_standing_hands_heart/multiplane/exploded.jpg", title: "Recall Tied to Feeling", k_parallel: "K 2:03 (k_02) · 'Everything's grey'", t_seek: 3.7 },
+  { id: "poet_05", sid: "poet_05_close_pages_threshold", k_sid: "k_03_orphanage_catwalks", act: "ACT II · GLASS LECTERN PRISM", file: "out/poet_05_close_pages_threshold/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_05_dope_composite.jpg", angular_file: "out/poet_05_close_pages_threshold/program/frame0.png", cel_file: "out/poet_05_close_pages_threshold/cartoon/cel.png", layout_file: "out/poet_05_close_pages_threshold/cartoon/layout_sheet.png", overlay_file: "out/poet_05_close_pages_threshold/overlay.jpg", exploded_file: "out/poet_05_close_pages_threshold/multiplane/exploded.jpg", title: "Acrylic Lectern Plane Prism", k_parallel: "K 2:06 (k_03) · Orphanage Catwalks", t_seek: 4.5 },
+  { id: "poet_06", sid: "poet_06_chiaroscuro_open_hands", k_sid: "k_06_wooden_horse_palm", act: "ACT II→III · CHIAROSCURO HAND-OFF", file: "out/poet_06_chiaroscuro_open_hands/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_06_dope_composite.jpg", angular_file: "out/poet_06_chiaroscuro_open_hands/program/frame0.png", cel_file: "out/poet_06_chiaroscuro_open_hands/cartoon/cel.png", layout_file: "out/poet_06_chiaroscuro_open_hands/cartoon/layout_sheet.png", overlay_file: "out/poet_06_chiaroscuro_open_hands/overlay.jpg", exploded_file: "out/poet_06_chiaroscuro_open_hands/multiplane/exploded.jpg", title: "Chiaroscuro Open Hands Release", k_parallel: "K 2:27 (k_06) · Wooden Horse in Palm", t_seek: 5.4 },
+  { id: "poet_07", sid: "poet_07_chiaroscuro_wide_circle", k_sid: "k_07_burying_horse_ash", act: "ACT V · DARKENED CIRCLE", file: "out/poet_07_chiaroscuro_wide_circle/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_07_dope_composite.jpg", angular_file: "out/poet_07_chiaroscuro_wide_circle/program/frame0.png", cel_file: "out/poet_07_chiaroscuro_wide_circle/cartoon/cel.png", layout_file: "out/poet_07_chiaroscuro_wide_circle/cartoon/layout_sheet.png", overlay_file: "out/poet_07_chiaroscuro_wide_circle/overlay.jpg", exploded_file: "out/poet_07_chiaroscuro_wide_circle/multiplane/exploded.jpg", title: "Return to Chiaroscuro Circle", k_parallel: "K 2:36 (k_07) · Burying Horse in Ash", t_seek: 14.8 },
+  { id: "poet_08", sid: "poet_08_ots_circle_listeners", k_sid: "k_08_stelline_scanner_return", act: "ACT V · CIRCLE OF LISTENERS", file: "out/poet_08_ots_circle_listeners/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_08_dope_composite.jpg", angular_file: "out/poet_08_ots_circle_listeners/program/frame0.png", cel_file: "out/poet_08_ots_circle_listeners/cartoon/cel.png", layout_file: "out/poet_08_ots_circle_listeners/cartoon/layout_sheet.png", overlay_file: "out/poet_08_ots_circle_listeners/overlay.jpg", exploded_file: "out/poet_08_ots_circle_listeners/multiplane/exploded.jpg", title: "OTS Circle Receiving Memory", k_parallel: "K 3:06 (k_08) · 'Someone lived this'", t_seek: 16.4 },
+];
+
+const DEFAULT_K_STAGES = [
+  { id: "k_01", sid: "k_01_office_interview", act: "K STAGE 1 · 1:49 BOOKEND", title: "Officer K & Joshi Interview", file: "out/k_01_office_interview/image.jpg", dope_composite: "out/k_01_office_interview/program/frame0.png", angular_file: "out/k_01_office_interview/program/frame0.png", cel_file: "out/k_01_office_interview/cartoon/cel.png", layout_file: "out/k_01_office_interview/cartoon/layout_sheet.png", overlay_file: "out/k_01_office_interview/overlay.jpg", exploded_file: "out/k_01_office_interview/multiplane/exploded.jpg" },
+  { id: "k_02", sid: "k_02_k_eyes_threshold", act: "K STAGE 2 · 2:00 THRESHOLD", title: "K Eyes Lower ('Toy Horse')", file: "out/k_02_k_eyes_threshold/image.jpg", dope_composite: "out/k_02_k_eyes_threshold/program/frame0.png", angular_file: "out/k_02_k_eyes_threshold/program/frame0.png", cel_file: "out/k_02_k_eyes_threshold/cartoon/cel.png", layout_file: "out/k_02_k_eyes_threshold/cartoon/layout_sheet.png", overlay_file: "out/k_02_k_eyes_threshold/overlay.jpg", exploded_file: "out/k_02_k_eyes_threshold/multiplane/exploded.jpg" },
+  { id: "k_03", sid: "k_03_orphanage_catwalks", act: "K STAGE 3 · 2:06 ORPHANAGE", title: "Orphanage Abyss Catwalks", file: "out/k_03_orphanage_catwalks/image.jpg", dope_composite: "out/k_03_orphanage_catwalks/program/frame0.png", angular_file: "out/k_03_orphanage_catwalks/program/frame0.png", cel_file: "out/k_03_orphanage_catwalks/cartoon/cel.png", layout_file: "out/k_03_orphanage_catwalks/cartoon/layout_sheet.png", overlay_file: "out/k_03_orphanage_catwalks/overlay.jpg", exploded_file: "out/k_03_orphanage_catwalks/multiplane/exploded.jpg" },
+  { id: "k_04", sid: "k_04_clockwork_gears", act: "K STAGE 4 · 2:15 GEARS", title: "Iron Clockwork Gears", file: "out/k_04_clockwork_gears/image.jpg", dope_composite: "out/k_04_clockwork_gears/program/frame0.png", angular_file: "out/k_04_clockwork_gears/program/frame0.png", cel_file: "out/k_04_clockwork_gears/cartoon/cel.png", layout_file: "out/k_04_clockwork_gears/cartoon/layout_sheet.png", overlay_file: "out/k_04_clockwork_gears/overlay.jpg", exploded_file: "out/k_04_clockwork_gears/multiplane/exploded.jpg" },
+  { id: "k_05", sid: "k_05_furnace_sanctuary", act: "K STAGE 5 · 2:21 FURNACE", title: "Roaring Furnace Sanctuary", file: "out/k_05_furnace_sanctuary/image.jpg", dope_composite: "out/k_05_furnace_sanctuary/program/frame0.png", angular_file: "out/k_05_furnace_sanctuary/program/frame0.png", cel_file: "out/k_05_furnace_sanctuary/cartoon/cel.png", layout_file: "out/k_05_furnace_sanctuary/cartoon/layout_sheet.png", overlay_file: "out/k_05_furnace_sanctuary/overlay.jpg", exploded_file: "out/k_05_furnace_sanctuary/multiplane/exploded.jpg" },
+  { id: "k_06", sid: "k_06_wooden_horse_palm", act: "K STAGE 6 · 2:27 ANCHOR P2", title: "Carved Wooden Horse (6·10·21)", file: "out/k_06_wooden_horse_palm/image.jpg", dope_composite: "out/k_06_wooden_horse_palm/program/frame0.png", angular_file: "out/k_06_wooden_horse_palm/program/frame0.png", cel_file: "out/k_06_wooden_horse_palm/cartoon/cel.png", layout_file: "out/k_06_wooden_horse_palm/cartoon/layout_sheet.png", overlay_file: "out/k_06_wooden_horse_palm/overlay.jpg", exploded_file: "out/k_06_wooden_horse_palm/multiplane/exploded.jpg" },
+  { id: "k_07", sid: "k_07_burying_horse_ash", act: "K STAGE 7 · 2:36 ASH SECRET", title: "Hiding Wooden Horse in Ash", file: "out/k_07_burying_horse_ash/image.jpg", dope_composite: "out/k_07_burying_horse_ash/program/frame0.png", angular_file: "out/k_07_burying_horse_ash/program/frame0.png", cel_file: "out/k_07_burying_horse_ash/cartoon/cel.png", layout_file: "out/k_07_burying_horse_ash/cartoon/layout_sheet.png", overlay_file: "out/k_07_burying_horse_ash/overlay.jpg", exploded_file: "out/k_07_burying_horse_ash/multiplane/exploded.jpg" },
+  { id: "k_08", sid: "k_08_stelline_scanner_return", act: "K STAGE 8 · 3:06 RETURN", title: "'Someone Lived This'", file: "out/k_08_stelline_scanner_return/image.jpg", dope_composite: "out/k_08_stelline_scanner_return/program/frame0.png", angular_file: "out/k_08_stelline_scanner_return/program/frame0.png", cel_file: "out/k_08_stelline_scanner_return/cartoon/cel.png", layout_file: "out/k_08_stelline_scanner_return/cartoon/layout_sheet.png", overlay_file: "out/k_08_stelline_scanner_return/overlay.jpg", exploded_file: "out/k_08_stelline_scanner_return/multiplane/exploded.jpg" },
+];
+
+const bookendVideo = document.getElementById("bookendFilmVideo");
+const bookendSlitCanvas = document.getElementById("bookendSlitCanvas");
+const bookendSlitCtx = bookendSlitCanvas ? bookendSlitCanvas.getContext("2d") : null;
+
+function getSlitImg(src) {
+  if (!src) return null;
+  if (state.slitImgCache[src]) return state.slitImgCache[src];
+  const img = new Image();
+  img.src = src;
+  img.onload = () => { if (state.bookendSlitMode) drawBookendSlitScanner(); };
+  state.slitImgCache[src] = img;
+  return img;
+}
+
+function setPoetStageStyle(styleKey) {
+  state.poetStageStyle = styleKey;
+  document.querySelectorAll(".seg-style-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.style === styleKey);
+  });
+  renderPoetStagesStrip();
+  if (state.bookendSlitMode) drawBookendSlitScanner();
+  setVoidState("CHANGED", `Segmented Layer: ${styleKey.toUpperCase()}`);
+}
+
+function toggleKParallelStrip() {
+  state.showKStrip = !state.showKStrip;
+  const el = document.getElementById("kParallelStagesStrip");
+  if (el) el.style.display = state.showKStrip ? "grid" : "none";
+}
+
+function selectPoetStageCard(idx, tSeek) {
+  state.activePoetStageIdx = idx;
+  renderPoetStagesStrip();
+  if (state.bookendSlitMode) {
+    drawBookendSlitScanner();
+  } else {
+    seekBookendVideo(tSeek);
+  }
+}
+
+function renderPoetStagesStrip() {
+  const strip = document.getElementById("poetStagesStrip");
+  if (!strip) return;
+  const stages = (DATA.poet_lectern_stages && DATA.poet_lectern_stages.length) ? DATA.poet_lectern_stages : DEFAULT_POET_STAGES;
+  const seekTimes = [0.2, 1.3, 2.5, 3.7, 4.5, 5.4, 14.8, 16.4];
+  strip.innerHTML = stages.map((st, idx) => {
+    const defSt = DEFAULT_POET_STAGES[idx] || st;
+    const imgSrc = st[state.poetStageStyle] || defSt[state.poetStageStyle] || st.dope_composite || st.file;
+    const tSeek = st.t_seek !== undefined ? st.t_seek : (seekTimes[idx] || 0);
+    const activeCls = idx === state.activePoetStageIdx ? " active" : "";
+    return `
+      <div class="poet-stage-card${activeCls}" onclick="selectPoetStageCard(${idx}, ${tSeek})">
+        <img src="${imgSrc}" alt="${st.title}" loading="lazy" />
+        <div class="poet-stage-meta">
+          <span class="act-tag">${st.act}</span>
+          <strong style="color:var(--text);display:block;margin-bottom:2px">${st.title}</strong>
+          <span class="k-tag">${st.k_parallel}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  const kStrip = document.getElementById("kParallelStagesStrip");
+  if (kStrip) {
+    kStrip.style.display = state.showKStrip ? "grid" : "none";
+    const kStages = (DATA.k_wooden_horse_stages && DATA.k_wooden_horse_stages.length) ? DATA.k_wooden_horse_stages : DEFAULT_K_STAGES;
+    kStrip.innerHTML = kStages.map((ks, idx) => {
+      const defK = DEFAULT_K_STAGES[idx] || ks;
+      const styleKey = state.poetStageStyle === "dope_composite" ? "angular_file" : state.poetStageStyle;
+      const imgSrc = ks[styleKey] || defK[styleKey] || ks.angular_file || ks.file;
+      const tSeek = seekTimes[idx] || 0;
+      return `
+        <div class="poet-stage-card" style="border-color:rgba(92,228,255,0.32)" onclick="selectPoetStageCard(${idx}, ${tSeek})">
+          <img src="${imgSrc}" alt="${ks.title}" loading="lazy" />
+          <div class="poet-stage-meta">
+            <span class="act-tag" style="color:var(--cyan)">${ks.act || ("K STAGE " + (idx+1))}</span>
+            <strong style="color:var(--text);display:block;margin-bottom:2px">${ks.title}</strong>
+            <span class="k-tag" style="color:var(--amber)">SEGMENTED K PARALLEL (P0–P6)</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+}
+
+function toggleBookendSlitScanner() {
+  state.bookendSlitMode = !state.bookendSlitMode;
+  const btn = document.getElementById("btnToggleBookendSlit");
+  if (state.bookendSlitMode) {
+    bookendVideo.pause();
+    bookendVideo.style.display = "none";
+    bookendSlitCanvas.style.display = "block";
+    if (btn) btn.textContent = "▶ RETURN TO 5-ACT BOOKEND FILM";
+    drawBookendSlitScanner();
+    setVoidState("CHANGED", "4-Way Cross-World Slit-Scanner Active");
+  } else {
+    bookendSlitCanvas.style.display = "none";
+    bookendVideo.style.display = "block";
+    if (btn) btn.textContent = "⇄ INTERACTIVE 4-WAY CROSS-WORLD SLIT-SCAN";
+    setVoidState("REST", "");
+  }
+}
+
+function drawBookendSlitScanner() {
+  if (!bookendSlitCtx) return;
+  const W = bookendSlitCanvas.width;
+  const H = bookendSlitCanvas.height;
+  const st = DEFAULT_POET_STAGES[state.activePoetStageIdx] || DEFAULT_POET_STAGES[1];
+  const ks = DEFAULT_K_STAGES[state.activePoetStageIdx] || DEFAULT_K_STAGES[1];
+  const poem = (DATA.poems || [])[state.bookendPoemIdx] || {};
+  const heroView = (poem.views || [])[0] || {};
+  const poemHeroDir = (poem.poet_bookend && poem.poet_bookend.hero_shot_dir) || heroView.dir || "017dd279-1457-49f1-829f-9ee94b981a54";
+
+  const imgPoetDope = getSlitImg(st.dope_composite);
+  const imgPoetLayout = getSlitImg(st.layout_file);
+  const imgPoemAngular = getSlitImg(`out/${poemHeroDir}/program/frame0.png`);
+  const imgPoemLayout = getSlitImg(`out/${poemHeroDir}/cartoon/layout_sheet.png`);
+  const imgKAngular = getSlitImg(ks.angular_file);
+
+  bookendSlitCtx.fillStyle = "#05070a";
+  bookendSlitCtx.fillRect(0, 0, W, H);
+
+  const cx = state.bookendSlitX;
+  const s1 = Math.floor(W * Math.max(0.12, cx - 0.22));
+  const s2 = Math.floor(W * cx);
+  const s3 = Math.floor(W * Math.min(0.88, cx + 0.22));
+
+  const drawFull = (im, x0, x1) => {
+    if (!im || !im.complete || !im.naturalWidth) return;
+    bookendSlitCtx.save();
+    bookendSlitCtx.beginPath();
+    bookendSlitCtx.rect(x0, 0, x1 - x0, H);
+    bookendSlitCtx.clip();
+    bookendSlitCtx.drawImage(im, 0, 0, W, H);
+    bookendSlitCtx.restore();
+  };
+
+  drawFull(imgPoetDope, 0, s1);
+  drawFull(imgPoetLayout, s1, s2);
+  drawFull(imgPoemAngular, s2, s3);
+  drawFull(imgPoemLayout, s3, W);
+
+  // DrawAgent K parallel PiP in top right
+  if (imgKAngular && imgKAngular.complete && imgKAngular.naturalWidth) {
+    const pw = 230, ph = 130, px = W - pw - 16, py = 46;
+    bookendSlitCtx.fillStyle = "#05070a";
+    bookendSlitCtx.fillRect(px - 2, py - 2, pw + 4, ph + 22);
+    bookendSlitCtx.strokeStyle = "#5ce4ff";
+    bookendSlitCtx.strokeRect(px - 2, py - 2, pw + 4, ph + 22);
+    bookendSlitCtx.drawImage(imgKAngular, px, py, pw, ph);
+    bookendSlitCtx.fillStyle = "#ffbe52";
+    bookendSlitCtx.font = "11px monospace";
+    bookendSlitCtx.fillText(`K PARALLEL: ${ks.id.toUpperCase()}`, px + 6, py + ph + 14);
+  }
+
+  // Curtain dividers & labels
+  [[s1, "#ffbe52", "POET P0-P6 LAYOUT GRID"], [s2, "#5ce4ff", `POEM ${String(poem.num||1).padStart(2,"0")} ANGULAR VECTOR`], [s3, "#ff82c3", `POEM ${String(poem.num||1).padStart(2,"0")} LAYOUT BLUEPRINT`]].forEach(([sx, col, lbl]) => {
+    bookendSlitCtx.strokeStyle = col;
+    bookendSlitCtx.lineWidth = 2;
+    bookendSlitCtx.beginPath();
+    bookendSlitCtx.moveTo(sx, 0);
+    bookendSlitCtx.lineTo(sx, H);
+    bookendSlitCtx.stroke();
+    bookendSlitCtx.fillStyle = "rgba(5, 7, 10, 0.85)";
+    bookendSlitCtx.fillRect(sx + 6, H - 34, 210, 22);
+    bookendSlitCtx.fillStyle = col;
+    bookendSlitCtx.font = "11px monospace";
+    bookendSlitCtx.fillText(lbl, sx + 12, H - 19);
+  });
+}
+
+if (bookendSlitCanvas) {
+  bookendSlitCanvas.addEventListener("pointermove", (e) => {
+    if (!state.bookendSlitMode) return;
+    const r = bookendSlitCanvas.getBoundingClientRect();
+    state.bookendSlitX = Math.max(0.15, Math.min(0.85, (e.clientX - r.left) / r.width));
+    drawBookendSlitScanner();
+  });
+}
+
+function buildPoetBookendUI() {
+  renderPoetStagesStrip();
+  const sel = document.getElementById("bookendPoemSelector");
+  if (!sel) return;
+  sel.innerHTML = "";
+  (DATA.poems || []).forEach((p, idx) => {
+    const ns = String(p.num).padStart(2, "0");
+    const chip = document.createElement("span");
+    chip.className = "poem-chip" + (idx === state.bookendPoemIdx ? " active" : "");
+    chip.textContent = `P${ns} · ${p.title.toUpperCase()}`;
+    chip.onclick = () => {
+      state.bookendPoemIdx = idx;
+      buildPoetBookendUI();
+      if (state.bookendSlitMode) drawBookendSlitScanner();
+    };
+    sel.appendChild(chip);
+  });
+  renderBookendPoemActs();
+}
+
+function renderBookendPoemActs() {
+  const poem = (DATA.poems || [])[state.bookendPoemIdx];
+  if (!poem) return;
+  const ns = String(poem.num).padStart(2, "0");
+  const pb = poem.poet_bookend || {
+    bookend_video: `videos/poet_bookends/poem_${ns}_bookend_spacetime.mp4`,
+    wooden_horse_anchor: "Emotional Anchor in b0",
+    anchor_detail: poem.essence || "",
+    opening_cue: poem.essence || "",
+    peak_cue: poem.arc || "",
+    closing_cue: "The mist condenses back into the circle of listeners.",
+    acts: [
+      { act: "ACT I · OPENING BOOKEND (0:00 – 0:03.5)", t0: 0.0, t1: 3.5, title: "Warm Graffiti Salon & Acrylic Lectern", k_parallel: "1:49 – 2:00 · K & Joshi across the interview table", cue: poem.essence || "" },
+      { act: "ACT II · CHIAROSCURO THRESHOLD (0:03.5 – 0:06.0)", t0: 3.5, t1: 6.0, title: "The Room Dims Into Feeling — Scattering Into Mist", k_parallel: "2:00 – 2:06 · 'I had a little toy horse... Everything's grey'", cue: "The studio walls fall away into darkness and 07-spacetime dust." },
+      { act: "ACT III · RECALLED MEMORY IN 07-SPACETIME MIST (0:06.0 – 0:10.5)", t0: 6.0, t1: 10.5, title: `Recalled Common Place Mist · ${poem.title}`, k_parallel: "2:06 – 2:24 · Orphanage catwalks & gears in mist", cue: poem.arc || "" },
+      { act: "ACT IV · THE WOODEN HORSE EMOTIONAL ANCHOR b0 (0:10.5 – 0:14.5)", t0: 10.5, t1: 14.5, title: `Emotional Talisman (b0) · ${poem.title}`, k_parallel: "2:24 – 2:47 · Carved Wooden Horse (6·10·21) before the furnace", cue: poem.essence || "" },
+      { act: "ACT V · CLOSING BOOKEND — CIRCLE OF LISTENERS (0:14.5 – 0:18.0)", t0: 14.5, t1: 18.0, title: "Over-the-Shoulder Return to the Circle of Listeners", k_parallel: "3:06 – 3:25 · Return to room & listener ('Someone lived this')", cue: "Looking past the Poet's silhouette at the circle of listeners receiving the memory." },
+    ],
+  };
+
+  bookendVideo.src = pb.bookend_video;
+  bookendVideo.currentTime = 0;
+
+  const container = document.getElementById("bookendActsContainer");
+  container.innerHTML = "";
+  (pb.acts || []).forEach((actObj, aIdx) => {
+    const div = document.createElement("div");
+    div.className = "vt-seg-block" + (aIdx === 0 ? " now" : "");
+    div.dataset.t0 = actObj.t0;
+    div.dataset.t1 = actObj.t1;
+    div.innerHTML = `
+      <div class="vt-seg-meta">
+        <span>${actObj.act}</span>
+        <span>${actObj.k_parallel}</span>
+      </div>
+      <div class="vt-seg-title">${actObj.title}</div>
+      <div class="vt-seg-say">“${actObj.cue}”</div>
+      <div class="vt-seg-tape">WOODEN HORSE ANCHOR (b0): ${pb.wooden_horse_anchor}</div>
+      <div class="vt-seg-actions">
+        <button class="vt-mini-btn" onclick="event.stopPropagation(); seekBookendVideo(${actObj.t0})">▶ SEEK TO ${actObj.t0.toFixed(1)}s</button>
+        <button class="vt-mini-btn" onclick="event.stopPropagation(); openBookendInMistChamber('${pb.bookend_video}', 'POEM ${ns} · ${poem.title.toUpperCase()} (BOOKEND)')">OPEN IN 100VW 4D MIST CHAMBER →</button>
+      </div>
+    `;
+    div.onclick = () => seekBookendVideo(actObj.t0);
+    container.appendChild(div);
+  });
+}
+
+function seekBookendVideo(t) {
+  bookendVideo.currentTime = t;
+  bookendVideo.play().catch(() => {});
+  document.getElementById("bookendPlayBtn").textContent = "⏸ PAUSE BOOKENDED POEM";
+  setVoidState("WORKING", `Playing Poem ${String(state.bookendPoemIdx + 1).padStart(2, "0")} Bookend`);
+}
+
+function toggleBookendVideo() {
+  if (bookendVideo.paused) {
+    bookendVideo.play().catch(() => {});
+    document.getElementById("bookendPlayBtn").textContent = "⏸ PAUSE BOOKENDED POEM";
+    setVoidState("WORKING", "Playing Poet Retelling Bookend");
+  } else {
+    bookendVideo.pause();
+    document.getElementById("bookendPlayBtn").textContent = "▶ PLAY 5-ACT BOOKENDED POEM WITH SPOKEN VOICE";
+    setVoidState("REST", "");
+  }
+}
+
+function playAllPoemsBookendAnthology() {
+  bookendVideo.src = DATA.poet_bookend_master_video || "videos/wygwyl_poet_retelling_bookend_spacetime.mp4";
+  bookendVideo.currentTime = 0;
+  bookendVideo.play().catch(() => {});
+  document.getElementById("bookendPlayBtn").textContent = "⏸ PAUSE ANTHOLOGY REEL";
+  setVoidState("WORKING", "Playing Master Poet Retelling Bookend Anthology");
+}
+
+function openBookendInMistChamber(src, label) {
+  switchSurface("chamber");
+  loadActiveSegmentVideo(src, label);
+}
+
+bookendVideo.addEventListener("timeupdate", () => {
+  if (state.surface !== "bookend") return;
+  const t = bookendVideo.currentTime;
+  const dur = bookendVideo.duration || 18.0;
+  document.getElementById("bookendTimecode").textContent = `${mmss(t)} / ${mmss(dur)}`;
+  document.getElementById("clockProgressLine").style.width = `${Math.min(100, (t / dur) * 100).toFixed(2)}%`;
+
+  document.querySelectorAll("#bookendActsContainer .vt-seg-block").forEach((el) => {
+    const t0 = parseFloat(el.dataset.t0);
+    const t1 = parseFloat(el.dataset.t1);
+    const isNow = (t % 18.0) >= t0 - 0.05 && (t % 18.0) < t1 + 0.05;
+    el.classList.toggle("now", isNow);
+    el.classList.toggle("said", (t % 18.0) >= t0);
+    if (isNow) {
+      const title = el.querySelector(".vt-seg-title")?.textContent || "";
+      const say = el.querySelector(".vt-seg-say")?.textContent || "";
+      document.getElementById("bookendCaptionWho").textContent = `POEM ${String(state.bookendPoemIdx + 1).padStart(2, "0")} · ${title.toUpperCase()}`;
+      document.getElementById("bookendCaptionText").textContent = say;
+    }
+  });
+});
+
+function switchSurface(surf) {
+  state.surface = surf;
+  document.querySelectorAll(".mode-tab").forEach((el) => {
+    el.classList.toggle("active", el.dataset.tab === surf);
+  });
+
+  document.getElementById("modeVideotext").style.display = surf === "videotext" ? "block" : "none";
+  document.getElementById("modeBookend").style.display = surf === "bookend" ? "block" : "none";
+  document.getElementById("modeFullBleedStage").style.display = (surf === "chamber" || surf === "seam") ? "block" : "none";
+  document.getElementById("modeVault").style.display = surf === "vault" ? "block" : "none";
+
+  if (surf !== "videotext") mainVideo.pause();
+  if (surf !== "bookend") bookendVideo.pause();
+
+  if (surf === "chamber" || surf === "seam") {
+    if (!hiddenSegVideo.src) loadActiveSegmentVideo();
+    else hiddenSegVideo.play().catch(() => {});
+  } else {
+    hiddenSegVideo.pause();
+  }
+}
+
+buildVideotextScript();
+buildPoetBookendUI();
+buildVaultUI();
+mainVideo.addEventListener("loadedmetadata", () => {
+  if (mainVideo.currentTime < 0.5) {
+    mainVideo.currentTime = 28.8; // Seg 08: The Toy Wooden Horse in His Palm against the furnace fire
+    updateVideotextAtTime(28.8);
+  }
+}, { once: true });
+const initHash = (location.hash || "").replace("#", "");
+if (["videotext", "bookend", "chamber", "seam", "vault"].includes(initHash)) {
+  switchSurface(initHash);
+}
+requestAnimationFrame(renderLiveMistChamber);
+</script>
+</body>
+</html>

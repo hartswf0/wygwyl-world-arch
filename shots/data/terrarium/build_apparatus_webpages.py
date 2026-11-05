@@ -449,6 +449,7 @@ def build_voidbastard_instrument_html(
 <div id="stageWrap">
   <canvas id="stageCanvas" width="1920" height="1080"></canvas>
   <video id="stageVideo" loop muted playsinline></video>
+  <audio id="poemVoiceAudio"></audio>
 </div>
 
 <div class="optical-edge-gradient-top"></div>
@@ -490,6 +491,9 @@ def build_voidbastard_instrument_html(
   <span class="whisper-link" onclick="toggleIndexOverlay()">INDEX [TAB]</span>
   <span class="whisper-link" id="toggleManuscriptLink" onclick="toggleManuscriptGlass()">MANUSCRIPT [M]</span>
   <span class="whisper-link" id="toggleVerseLink" onclick="toggleVerseVisibility()">VERSE [V]</span>
+  <span class="whisper-link" id="toggleVoiceLink" onclick="toggleVoiceReading()">VOICE [A]</span>
+  <a class="whisper-link" href="stelline_memory_spacetime.html#bookend" style="text-decoration:none;color:var(--cyan)">BOOKEND [B]</a>
+  <a class="whisper-link" href="stelline_memory_spacetime.html" style="text-decoration:none;color:var(--amber)">MIST [07]</a>
 </div>
 
 <div id="bottomRightLenses">
@@ -515,6 +519,8 @@ def build_voidbastard_instrument_html(
       <div style="font-size:10px;letter-spacing:0.08em;color:var(--whisper);margin-bottom:8px">DEDICATED PARADIGM INSTRUMENTS (100VW × 100VH):</div>
       <div class="paradigm-index-row">
         <a class="paradigm-index-link" href="vesper_apparatus.html">ALL 14×6 MASTER</a>
+        <a class="paradigm-index-link" href="stelline_memory_spacetime.html#bookend">POET BOOKEND (01–14) ↔ AGENT K (1:49)</a>
+        <a class="paradigm-index-link" href="stelline_memory_spacetime.html">07 · STELLINE MIST & 747-VIDEO VAULT</a>
         <a class="paradigm-index-link" href="apparatus_opt1_pointcloud.html">I · POINT FIELD</a>
         <a class="paradigm-index-link" href="apparatus_opt2_multiplane.html">II · MULTIPLANE GLASS</a>
         <a class="paradigm-index-link" href="apparatus_opt3_perspective.html">III · SURVEYOR LINE</a>
@@ -564,6 +570,24 @@ const state = {{
 const canvas = document.getElementById("stageCanvas");
 const ctx = canvas.getContext("2d");
 const videoEl = document.getElementById("stageVideo");
+const voiceAudioEl = document.getElementById("poemVoiceAudio");
+
+function toggleVoiceReading() {{
+  if (!state.bundle) return;
+  const poem = state.bundle.poems[state.poemIdx];
+  const ns = String(poem.num).padStart(2, "0");
+  const src = `play/levels/${{ns}}/reading.mp3`;
+  if (!voiceAudioEl.paused && voiceAudioEl.src.endsWith(src)) {{
+    voiceAudioEl.pause();
+    document.getElementById("toggleVoiceLink").classList.remove("active");
+    setVoidState("CHANGED", "Voice paused");
+  }} else {{
+    voiceAudioEl.src = src;
+    voiceAudioEl.play().catch(() => {{}});
+    document.getElementById("toggleVoiceLink").classList.add("active");
+    setVoidState("WORKING", `Playing Poem ${{ns}} reading.mp3`);
+  }}
+}}
 
 function setVoidState(newState, consequenceText = "") {{
   state.voidState = newState;
@@ -690,6 +714,18 @@ function setDepthFraction(frac) {{
   const nextZ = (18.0 - state.depthFrac * 16.8).toFixed(1);
   updateRulerTicks();
   updateVerseWhisper();
+  if (state.mode === 8 && state.bundle) {{
+    const poem = state.bundle.poems[state.poemIdx];
+    const view = (poem.views || [])[state.viewIdx];
+    if (view && view._assets && view._assets.film_strata) {{
+      const sIdx = Math.min(4, Math.floor(state.depthFrac * 4.99));
+      const stratum = view._assets.film_strata[sIdx];
+      videoEl.src = stratum.src;
+      videoEl.play().catch(() => {{}});
+      setVoidState("WORKING", `Playing ${{stratum.label}}`);
+      return;
+    }}
+  }}
   setVoidState("CHANGED", `Z: ${{prevZ}}m → ${{nextZ}}m`);
 }}
 
@@ -807,12 +843,21 @@ async function selectView(vIdx) {{
     echo_image: `out/${{esd}}/image.jpg`,
     sheet: `data/terrarium/seeing_spacetime_films/poem_${{ns}}_apparatus_6options.png`,
     video: `data/terrarium/seeing_spacetime_films/poem_${{ns}}_apparatus.mp4`,
+    film_strata: [
+      {{ label: "Poet Bookend", src: `videos/poet_bookends/poem_${{ns}}_bookend_spacetime.mp4` }},
+      {{ label: "07w · Spacetime", src: `videos/poems/poem_${{ns}}_spacetime_worm.mp4` }},
+      {{ label: "Afterlight FX", src: `videos/poems/poem_${{ns}}_videotext_fx.mp4` }},
+      {{ label: `${{view.id}} · Shot.mp4`, src: `out/${{sd}}/film/shot.mp4` }},
+      {{ label: "6-Opt Reel", src: `data/terrarium/seeing_spacetime_films/poem_${{ns}}_apparatus.mp4` }},
+    ],
   }};
 
   const ticks = document.querySelectorAll("#rightEdgeRuler .ruler-tick");
   const planes = (view.planes || []).slice(0, 5);
   ticks.forEach((t, i) => {{
-    if (state.mode === 2 && planes[i]) {{
+    if (state.mode === 8 && view._assets.film_strata[i]) {{
+      t.textContent = view._assets.film_strata[i].label;
+    }} else if (state.mode === 2 && planes[i]) {{
       const zm = typeof planes[i].z_m === "number" ? `${{planes[i].z_m.toFixed(1)}}m` : "∞";
       t.textContent = `${{planes[i].id}} · ${{zm}}`;
     }} else if (state.mode === 5 && poem.kit_sheets && poem.kit_sheets[i]) {{
@@ -824,7 +869,8 @@ async function selectView(vIdx) {{
   }});
 
   if (state.mode === 8) {{
-    videoEl.src = view._assets.video;
+    const sIdx = Math.min(4, Math.floor(state.depthFrac * 5));
+    videoEl.src = view._assets.film_strata[sIdx].src;
     videoEl.play().catch(() => {{}});
   }}
 
@@ -858,12 +904,31 @@ async function selectMode(m) {{
   updateVerseWhisper();
   const poem = state.bundle ? state.bundle.poems[state.poemIdx] : null;
   const view = poem ? (poem.views || [])[state.viewIdx] : null;
+  if (view) {{
+    const ticks = document.querySelectorAll("#rightEdgeRuler .ruler-tick");
+    const planes = (view.planes || []).slice(0, 5);
+    ticks.forEach((t, i) => {{
+      if (m === 8 && view._assets && view._assets.film_strata && view._assets.film_strata[i]) {{
+        t.textContent = view._assets.film_strata[i].label;
+      }} else if (m === 2 && planes[i]) {{
+        const zm = typeof planes[i].z_m === "number" ? `${{planes[i].z_m.toFixed(1)}}m` : "∞";
+        t.textContent = `${{planes[i].id}} · ${{zm}}`;
+      }} else if (m === 5 && poem.kit_sheets && poem.kit_sheets[i]) {{
+        t.textContent = poem.kit_sheets[i].id;
+      }} else {{
+        const zVals = ["18.0m", "9.4m", "4.4m", "2.2m", "1.2m"];
+        t.textContent = `P${{5 - i}} · ${{zVals[i]}}`;
+      }}
+    }});
+  }}
   if (m === 8 && view && view._assets) {{
     canvas.style.display = "none";
     videoEl.style.display = "block";
-    videoEl.src = view._assets.video;
+    const sIdx = Math.min(4, Math.floor(state.depthFrac * 4.99));
+    const stratum = (view._assets.film_strata && view._assets.film_strata[sIdx]) || {{ label: "H.264 Film", src: view._assets.video }};
+    videoEl.src = stratum.src;
     videoEl.play().catch(() => {{}});
-    setVoidState("WORKING", "Playing H.264 film");
+    setVoidState("WORKING", `Playing ${{stratum.label}}`);
   }} else {{
     videoEl.pause();
     videoEl.style.display = "none";
