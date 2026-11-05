@@ -226,12 +226,26 @@ def _build_teardrop_kernel(radius_px=26):
 _DROP_H, _DROP_DX, _DROP_DY, _DROP_FRES = _build_teardrop_kernel(24)
 
 
-def apply_poem_afterlight_fx(poem_num, curr_rgb, past_rgb, disp, u_seg, t, body_hex, glow_hex):
+def apply_poem_afterlight_fx(poem_num, curr_rgb, past_rgb, mp_or_disp, u_seg, t, body_hex, glow_hex):
     """
     Applies the poem's bespoke 3D Afterlight Picture Technique (`FX01..FX14`) to `curr_rgb` (`float32 [0..1]`),
-    using pure optical/physical 3D depth-coupled transforms (ZERO geometric 2D circles, boxes, or flat lines),
+    using precomputed 3D surface normals (`mp['gx'], mp['gy'], mp['nx'], mp['ny'], mp['nz']`) and
+    pure optical/physical 3D depth-coupled transforms (ZERO geometric 2D circles, boxes, or flat lines),
     returning a 100% legible, unobstructed `1280x720` cinema image (`float32 [0..1]`).
     """
+    if isinstance(mp_or_disp, dict):
+        disp = mp_or_disp["disp"]
+        mp_gx = mp_or_disp.get("gx")
+        mp_gy = mp_or_disp.get("gy")
+        mp_caustic = mp_or_disp.get("caustic")
+        mp_slope = mp_or_disp.get("surf_slope")
+        mp_nx = mp_or_disp.get("nx")
+        mp_ny = mp_or_disp.get("ny")
+        mp_nz = mp_or_disp.get("nz")
+    else:
+        disp = mp_or_disp
+        mp_gx = mp_gy = mp_caustic = mp_slope = mp_nx = mp_ny = mp_nz = None
+
     c_glow1 = hex_to_rgb_float((glow_hex or ["#01acd4"])[0])
     c_glow2 = hex_to_rgb_float((glow_hex or ["#01acd4", "#fa8d15"])[min(1, len(glow_hex) - 1)])
     c_body1 = hex_to_rgb_float((body_hex or ["#1c2430"])[0])
@@ -267,10 +281,13 @@ def apply_poem_afterlight_fx(poem_num, curr_rgb, past_rgb, disp, u_seg, t, body_
 
     elif poem_num == 2:
         # FX02: 05 Makyō 3D Normal-Refracted Caustic Double + 3D Depth-Projected Slats + L2 Anamorphic Streak
-        gx = cv2.Sobel(disp, cv2.CV_32F, 1, 0, ksize=5)
-        gy = cv2.Sobel(disp, cv2.CV_32F, 0, 1, ksize=5)
-        lap = cv2.Laplacian(disp, cv2.CV_32F, ksize=5)
-        caustic = cv2.GaussianBlur(np.clip(np.abs(lap) * 16.0, 0.0, 1.0), (0, 0), 7.0)[..., None]
+        gx = mp_gx if mp_gx is not None else cv2.Sobel(disp, cv2.CV_32F, 1, 0, ksize=5)
+        gy = mp_gy if mp_gy is not None else cv2.Sobel(disp, cv2.CV_32F, 0, 1, ksize=5)
+        if mp_caustic is not None:
+            caustic = mp_caustic
+        else:
+            lap = cv2.Laplacian(disp, cv2.CV_32F, ksize=5)
+            caustic = cv2.GaussianBlur(np.clip(np.abs(lap) * 16.0, 0.0, 1.0), (0, 0), 7.0)[..., None]
 
         # Refract `past_rgb` along the 3D surface normal gradients (`makyō` hidden mirror double)
         map_x = (_XX + gx * 48.0 * math.sin(t * 0.9)).astype(np.float32)
@@ -292,9 +309,8 @@ def apply_poem_afterlight_fx(poem_num, curr_rgb, past_rgb, disp, u_seg, t, body_
 
     elif poem_num == 3:
         # FX03: 02c/02d True Snell-Refracting Water-Droplet Heightfield & Wet Time-Rivulets + M4 Wet Stone Relief
-        # 1. Subtle wet-stone depth-contour sheen (`M4`)
-        gx = cv2.Sobel(disp, cv2.CV_32F, 1, 0, ksize=5)
-        gy = cv2.Sobel(disp, cv2.CV_32F, 0, 1, ksize=5)
+        gx = mp_gx if mp_gx is not None else cv2.Sobel(disp, cv2.CV_32F, 1, 0, ksize=5)
+        gy = mp_gy if mp_gy is not None else cv2.Sobel(disp, cv2.CV_32F, 0, 1, ksize=5)
         wet_sheen = np.clip((-gx * 0.6 - gy * 0.8) * 2.2, 0.0, 1.0)[..., None]
         out = np.clip(out * (0.96 + 0.08 * wet_sheen) + wet_sheen * c_glow1[None, None, :] * 0.10, 0.0, 1.0)
 
@@ -344,20 +360,20 @@ def apply_poem_afterlight_fx(poem_num, curr_rgb, past_rgb, disp, u_seg, t, body_
 
         # Second linocut block: burnished gold leaf on temporal motion relief & foreground depth edges
         motion_delta = cv2.GaussianBlur(np.mean(np.abs(curr_rgb - past_rgb), axis=2), (0, 0), 2.0)
-        gx = cv2.Sobel(lum, cv2.CV_32F, 1, 0, ksize=3)
-        gy = cv2.Sobel(lum, cv2.CV_32F, 0, 1, ksize=3)
-        grad = np.clip(np.hypot(gx, gy) * 1.6, 0.0, 1.0)
-        gold_block = np.clip(motion_delta * 3.4 + grad * 0.24 * disp, 0.0, 0.80)[..., None]
+        surf_s = mp_slope if mp_slope is not None else 0.6
+        gold_block = np.clip(motion_delta * 3.4 + (surf_s - 0.35) * 0.32 * disp, 0.0, 0.80)[..., None]
         gold_ink = np.array([0.95, 0.68, 0.18], dtype=np.float32)[None, None, :]
         out = np.clip(out * (1.0 - gold_block * 0.58) + gold_ink * (gold_block * 0.58), 0.0, 1.0)
 
     elif poem_num == 5:
         # FX05: 23/24 Volumetric 3D Depth-Scan Sheet + 09 Ancestral Diffraction Star-Field (ZERO CAD rectangles!)
-        # 1. Sweeping 3D depth-scan wave illuminating 3D surface normals (`∇disp`)
         z_front = (t * 0.24) % 1.0
-        gx = cv2.Sobel(disp, cv2.CV_32F, 1, 0, ksize=5)
-        gy = cv2.Sobel(disp, cv2.CV_32F, 0, 1, ksize=5)
-        surf_slope = np.clip(np.hypot(gx, gy) * 6.0 + 0.35, 0.35, 1.25)
+        if mp_slope is not None:
+            surf_slope = mp_slope
+        else:
+            gx = cv2.Sobel(disp, cv2.CV_32F, 1, 0, ksize=5)
+            gy = cv2.Sobel(disp, cv2.CV_32F, 0, 1, ksize=5)
+            surf_slope = np.clip(np.hypot(gx, gy) * 6.0 + 0.35, 0.35, 1.25)
         band = (np.exp(-((disp - z_front) / 0.050) ** 2) * surf_slope)[..., None]
         scan_col = (0.55 * c_glow1 + 0.45 * c_glow2)[None, None, :]
         out = np.clip(out + band * scan_col * 0.46, 0.0, 1.0)
@@ -381,7 +397,6 @@ def apply_poem_afterlight_fx(poem_num, curr_rgb, past_rgb, disp, u_seg, t, body_
             dx_s = np.abs(_XX[y0:y1, x0:x1] - sx)
             dy_s = np.abs(_YY[y0:y1, x0:x1] - sy)
             r_s = np.hypot(dx_s, dy_s)
-            # Core + 4-point optical star-diffraction cross
             core = np.exp(-(r_s / 3.2) ** 2)
             diff_h = np.exp(-(dy_s / 1.2) ** 2) * np.exp(-(dx_s / 14.0))
             diff_v = np.exp(-(dx_s / 1.2) ** 2) * np.exp(-(dy_s / 14.0))
@@ -392,22 +407,18 @@ def apply_poem_afterlight_fx(poem_num, curr_rgb, past_rgb, disp, u_seg, t, body_
 
     elif poem_num == 6:
         # FX06: 10/22 3D Surface-Projected Underwater Caustic Net & 3D Depth-Coupled Resurrecting Atlantis
-        # (ZERO flat 2D horizontal line — true 3D elevation + depth water volume!)
-        gx = cv2.Sobel(disp, cv2.CV_32F, 1, 0, ksize=5)
-        gy = cv2.Sobel(disp, cv2.CV_32F, 0, 1, ksize=5)
+        gx = mp_gx if mp_gx is not None else cv2.Sobel(disp, cv2.CV_32F, 1, 0, ksize=5)
+        gy = mp_gy if mp_gy is not None else cv2.Sobel(disp, cv2.CV_32F, 0, 1, ksize=5)
 
-        # 3D world height combines screen altitude `(1 - y/H)` and 3D closeness `disp`
         world_elev = (1.0 - _YY / float(H)) * 0.68 + disp * 0.42
         water_level = 0.76 - 0.38 * u_seg + 0.025 * np.sin(_XX * 0.012 + disp * 5.0 + t * 1.8)
         submerged = np.clip((water_level - world_elev) / 0.14, 0.0, 1.0)
 
-        # 3D surface-normal-warped caustic light net projected across the stone columns & plaza
         u_cx = (_XX + gx * 85.0) * 0.020 + t * 1.2 + 2.8 * disp
         u_cy = (_YY + gy * 85.0) * 0.026 - t * 0.9 + 2.8 * disp
         c_net = 0.5 + 0.25 * (np.sin(u_cx + np.sin(u_cy * 1.35)) + np.cos(u_cy + np.cos(u_cx * 1.25)))
         c_peaks = np.power(np.clip(c_net, 0.0, 1.0), 3.4)[..., None]
 
-        # Gentle underwater optical refraction
         wx = (_XX + submerged * 3.0 * np.sin(_YY * 0.05 + t * 2.4)).astype(np.float32)
         wy = (_YY + submerged * 2.2 * np.cos(_XX * 0.045 + t * 2.0)).astype(np.float32)
         rippled = cv2.remap(out, wx, wy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
@@ -419,7 +430,6 @@ def apply_poem_afterlight_fx(poem_num, curr_rgb, past_rgb, disp, u_seg, t, body_
 
     elif poem_num == 7:
         # FX07: 01 Borrowed Light Radial Time-Delay Watercolour + 16 Optical Turntable Phase Wave & Bokeh Petals
-        # 1. Optical turntable phase ripple (`cv2.remap` radial harmonic wave)
         r_wave = 2.8 * np.sin(_RAD * 24.0 - t * 3.0) * np.clip(_RAD, 0.0, 1.0) * (1.0 - 0.5 * disp)
         wx = (_XX + np.cos(_ANG) * r_wave).astype(np.float32)
         wy = (_YY + np.sin(_ANG) * r_wave).astype(np.float32)
@@ -429,7 +439,6 @@ def apply_poem_afterlight_fx(poem_num, curr_rgb, past_rgb, disp, u_seg, t, body_
         r_weight = np.clip((_RAD - 0.16) / 0.72, 0.0, 1.0)[..., None]
         out = curr_rgb * (1.0 - 0.52 * r_weight) + soft_past * (0.52 * r_weight)
 
-        # 2. Eleven drifting bokeh petals ("eleven years — each plucked off as a petal")
         petal_layer = np.zeros_like(out)
         for p_i in range(11):
             ang_p = t * 0.55 + p_i * (2.0 * math.pi / 11.0)
@@ -452,23 +461,24 @@ def apply_poem_afterlight_fx(poem_num, curr_rgb, past_rgb, disp, u_seg, t, body_
         shift_x = 42.0 * sep_env * math.sin(t * 1.05)
         shift_y = -22.0 * sep_env * (0.5 + 0.5 * math.cos(t * 0.8))
 
-        # Curl-noise distortion on the displaced astral soul double (`A2b Smoke`)
         curl_x = (_XX - shift_x + 8.0 * sep_env * np.sin(_YY * 0.035 + t * 2.2)).astype(np.float32)
         curl_y = (_YY - shift_y + 8.0 * sep_env * np.cos(_XX * 0.035 - t * 1.9)).astype(np.float32)
         soul_rgb = cv2.remap(past_rgb, curl_x, curl_y, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
         soul_m = cv2.remap(fg_w[..., 0], curl_x, curl_y, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)[..., None]
 
-        # 14 Warm Phosphor glow on astral double
         soul_tinted = 0.52 * soul_rgb + 0.48 * (0.6 * c_glow1 + 0.4 * c_glow2)[None, None, :]
         alpha_soul = soul_m * (0.40 * sep_env)
         out = np.clip(out * (1.0 - alpha_soul) + soul_tinted * alpha_soul, 0.0, 1.0)
 
     elif poem_num == 9:
         # FX09: 09 Carry the Glow 3D Surface-Normal Relighting + Depth-Occluded Soft Aurora Voice Ribbons
-        dz_dx = cv2.Sobel(disp, cv2.CV_32F, 1, 0, ksize=5) * 4.5
-        dz_dy = cv2.Sobel(disp, cv2.CV_32F, 0, 1, ksize=5) * 4.5
-        norm_len = np.sqrt(dz_dx ** 2 + dz_dy ** 2 + 1.0)
-        nx, ny, nz = -dz_dx / norm_len, -dz_dy / norm_len, 1.0 / norm_len
+        if mp_nx is not None and mp_ny is not None and mp_nz is not None:
+            nx, ny, nz = mp_nx, mp_ny, mp_nz
+        else:
+            dz_dx = cv2.Sobel(disp, cv2.CV_32F, 1, 0, ksize=5) * 4.5
+            dz_dy = cv2.Sobel(disp, cv2.CV_32F, 0, 1, ksize=5) * 4.5
+            norm_len = np.sqrt(dz_dx ** 2 + dz_dy ** 2 + 1.0)
+            nx, ny, nz = -dz_dx / norm_len, -dz_dy / norm_len, 1.0 / norm_len
 
         lx = W * (0.5 + 0.34 * math.sin(t * 0.62))
         ly = H * (0.44 + 0.18 * math.cos(t * 0.46))
@@ -483,7 +493,6 @@ def apply_poem_afterlight_fx(poem_num, curr_rgb, past_rgb, disp, u_seg, t, body_
         warm_col = np.array([1.0, 0.76, 0.36], dtype=np.float32)[None, None, :]
         out = np.clip(out * (0.84 + 0.26 * warm_light) + warm_light * warm_col * 0.25, 0.0, 1.0)
 
-        # Three soft, depth-occluded aurora voice ribbons (`sigma = 16px`, passing behind foreground actors!)
         bg_weight = np.clip(1.0 - disp * 0.75, 0.15, 1.0)[..., None]
         for call_i in range(3):
             y_base = H * (0.26 + call_i * 0.16)
@@ -712,7 +721,7 @@ def render_poem_afterlight_float(poem_num, stations, multiplanes, t, total_dur):
 
     curr_rgb, past_rgb = eval_station_with_past(st_curr, mp_curr, u_seg, t)
     fx_curr = apply_poem_afterlight_fx(
-        poem_num, curr_rgb, past_rgb, mp_curr["disp"], u_seg, t, st_curr["body_hex"], st_curr["glow_hex"]
+        poem_num, curr_rgb, past_rgb, mp_curr, u_seg, t, st_curr["body_hex"], st_curr["glow_hex"]
     )
 
     trans_start = 0.70
@@ -724,7 +733,7 @@ def render_poem_afterlight_float(poem_num, stations, multiplanes, t, total_dur):
         u_next_local = 0.25 * u_tr
         next_rgb, next_past = eval_station_with_past(st_next, mp_next, u_next_local, t)
         fx_next = apply_poem_afterlight_fx(
-            poem_num, next_rgb, next_past, mp_next["disp"], u_next_local, t, st_next["body_hex"], st_next["glow_hex"]
+            poem_num, next_rgb, next_past, mp_next, u_next_local, t, st_next["body_hex"], st_next["glow_hex"]
         )
         depth_bias = 0.16 * (mp_next["disp"] - mp_curr["disp"])
         w_next = np.clip(u_tr + depth_bias * math.sin(math.pi * u_tr), 0.0, 1.0)[..., None]
@@ -750,67 +759,100 @@ def render_poem_afterlight_frame(poem_num, poem_title, district_name, stations, 
     )
 
 
-def build_poem_videotext_entry(poem_num, poem_meta, poem_title, district_name, body_hex, glow_hex, construct_stations, scion_list, total_dur=30.0):
+def build_poem_videotext_entry(poem_num, poem_meta, poem_title, district_name, body_hex, glow_hex, construct_stations, scion_list, total_dur=90.0):
     """
-    Constructs the exact Sosuke Afterlight Videotext data structure for `poem_num`, laying out:
+    Constructs the full-length Sosuke Afterlight Videotext data structure for `poem_num`, laying out:
       - Movements (`f: true`, centered display cards)
       - Apparatus / Common Place / Painted Cel / Afterlight FX margin logs (`tape: true`, monospace)
-      - Poetic lyric lines (`f: false, tape: false`, indented serif with drop-cap on the first line)
-    on the film's 30.0s clock so scrolling through the text seeks the film and playing the film scrolls the text.
+      - ALL 9–16 SCION Poetic Lyric Verses (`f: false, tape: false`, indented serif with drop-cap on the first line)
+        anchored to their exact real song timestamps (`sc["t0"] - audio_t0 .. sc["t1"] - audio_t0`) across the
+        full-length (`66.5s .. 135.0s`) musical movement!
     """
     spec = POEM_AFTERLIGHT_SPEC[poem_num]
     movements = poem_meta.get("movements", [])
+    audio_t0 = float(scion_list[0]["t0"]) if scion_list else 0.0
+    n_sc = len(scion_list)
     n_st = len(construct_stations)
-    seg_dur = total_dur / float(max(1, n_st))
 
     scenes = []
     scenes.append([
-        {"t0": 0.15, "t1": 2.6, "who": f"POEM {poem_num:02d} · {district_name.upper()}", "say": f"{poem_title} — {spec['fx_name']}", "f": True, "tape": False},
-        {"t0": 0.35, "t1": 3.2, "who": "", "say": f"AFTERLIGHT VIDEOTEXT FX [{spec['fx_code']}] · {spec['afterlight_ref']}", "f": False, "tape": True},
+        {"t0": 0.15, "t1": 3.4, "who": f"POEM {poem_num:02d} · {district_name.upper()}", "say": f"{poem_title} — {spec['fx_name']}", "f": True, "tape": False},
+        {"t0": 0.35, "t1": 4.2, "who": "", "say": f"AFTERLIGHT VIDEOTEXT FX [{spec['fx_code']}] · {spec['afterlight_ref']} · FULL {total_dur:.1f}s MOVEMENT ({n_st} STATIONS)", "f": False, "tape": True},
     ])
 
-    for k, st in enumerate(construct_stations):
-        t_start = k * seg_dur
-        t_end = (k + 1) * seg_dur
-        mv = movements[min(k, len(movements) - 1)] if movements else {"label": f"STATION {k+1}", "line": st["line"]}
-        block = []
-        if k < len(movements):
+    if n_sc > 0:
+        # Group the 9..16 SCION verses into movements (roughly 2-3 verses per movement block)
+        n_groups = max(3, min(6, len(movements) if movements else 4))
+        for g_idx in range(n_groups):
+            i0 = int(round(g_idx * n_sc / float(n_groups)))
+            i1 = int(round((g_idx + 1) * n_sc / float(n_groups)))
+            if i0 >= i1:
+                continue
+            group_sc = scion_list[i0:i1]
+            g_t0 = max(0.2, round(float(group_sc[0]["t0"]) - audio_t0, 2))
+            g_t1 = min(round(total_dur - 0.1, 2), round(float(group_sc[-1]["t1"]) - audio_t0, 2))
+
+            block = []
+            if g_idx < len(movements):
+                mv = movements[g_idx]
+                block.append({
+                    "t0": round(g_t0 + 0.1, 2),
+                    "t1": round(min(g_t1, g_t0 + 3.8), 2),
+                    "who": f"MOVEMENT {g_idx + 1} · {mv.get('label', '')}",
+                    "say": mv.get("line", group_sc[0].get("line", "")),
+                    "f": True,
+                    "tape": False,
+                })
+
+            # Pick matching Common Place / Cel station active during this movement window
+            st_idx = min(n_st - 1, int((g_t0 / max(1.0, total_dur)) * n_st))
+            st = construct_stations[st_idx]
             block.append({
-                "t0": round(t_start + 0.25, 2),
-                "t1": round(t_start + 2.4, 2),
-                "who": f"MOVEMENT {k+1} · {mv.get('label', '')}",
-                "say": mv.get("line", st["line"]),
-                "f": True,
-                "tape": False,
-            })
-        block.append({
-            "t0": round(t_start + 0.55, 2),
-            "t1": round(t_start + 3.6, 2),
-            "who": "",
-            "say": f"{st['kind_badge']} · {st['id']} · {st['name']} · PALETTE {' '.join((body_hex or [])[:2] + (glow_hex or [])[:2])}",
-            "f": False,
-            "tape": True,
-        })
-        block.append({
-            "t0": round(t_start + 1.4, 2),
-            "t1": round(t_end - 1.2, 2),
-            "who": st["name"],
-            "say": st["line"],
-            "f": False,
-            "tape": False,
-        })
-        sc_idx = min(len(scion_list) - 1, k * 2 + 1) if scion_list else -1
-        if sc_idx >= 0 and scion_list[sc_idx].get("line") and scion_list[sc_idx].get("line") != st["line"]:
-            sc_item = scion_list[sc_idx]
-            block.append({
-                "t0": round(t_start + 3.1, 2),
-                "t1": round(t_end - 0.3, 2),
-                "who": sc_item.get("name", sc_item.get("id", "")),
-                "say": sc_item.get("line", ""),
+                "t0": round(g_t0 + 0.3, 2),
+                "t1": round(min(g_t1, g_t0 + 4.5), 2),
+                "who": "",
+                "say": f"{st['kind_badge']} · {st['id']} · {st['name']} · PALETTE {' '.join((body_hex or [])[:2] + (glow_hex or [])[:2])}",
                 "f": False,
-                "tape": False,
+                "tape": True,
             })
-        scenes.append(block)
+
+            for sc_item in group_sc:
+                v_t0 = max(0.2, round(float(sc_item["t0"]) - audio_t0, 2))
+                v_t1 = min(round(total_dur - 0.1, 2), round(float(sc_item["t1"]) - audio_t0, 2))
+                if v_t1 <= v_t0:
+                    v_t1 = round(v_t0 + 3.5, 2)
+                block.append({
+                    "t0": v_t0,
+                    "t1": v_t1,
+                    "who": f"{sc_item.get('id', '')} · {sc_item.get('name', st['name'])}".strip(" ·"),
+                    "say": sc_item.get("line", st["line"]),
+                    "f": False,
+                    "tape": False,
+                })
+            scenes.append(block)
+    else:
+        seg_dur = total_dur / float(max(1, n_st))
+        for k, st in enumerate(construct_stations):
+            t_start = k * seg_dur
+            t_end = (k + 1) * seg_dur
+            scenes.append([
+                {
+                    "t0": round(t_start + 0.3, 2),
+                    "t1": round(t_start + 3.4, 2),
+                    "who": "",
+                    "say": f"{st['kind_badge']} · {st['id']} · {st['name']}",
+                    "f": False,
+                    "tape": True,
+                },
+                {
+                    "t0": round(t_start + 0.8, 2),
+                    "t1": round(t_end - 0.4, 2),
+                    "who": st["name"],
+                    "say": st["line"],
+                    "f": False,
+                    "tape": False,
+                },
+            ])
 
     return {
         "num": f"{poem_num:02d}",
@@ -825,9 +867,11 @@ def build_poem_videotext_entry(poem_num, poem_meta, poem_title, district_name, b
         "afterlight_ref": spec["afterlight_ref"],
         "idea": spec["idea"],
         "dur": total_dur,
-        "video_fx": f"data/terrarium/seeing_spacetime_films/poem_{poem_num:02d}_videotext_fx.mp4?v=10",
-        "video_construct": f"data/terrarium/seeing_spacetime_films/poem_{poem_num:02d}_construct.mp4?v=10",
-        "video_worm": f"data/terrarium/seeing_spacetime_films/poem_{poem_num:02d}_spacetime_worm.mp4?v=10",
+        "station_count": n_st,
+        "scion_count": n_sc,
+        "video_fx": f"data/terrarium/seeing_spacetime_films/poem_{poem_num:02d}_videotext_fx.mp4?v=11",
+        "video_construct": f"data/terrarium/seeing_spacetime_films/poem_{poem_num:02d}_construct.mp4?v=11",
+        "video_worm": f"data/terrarium/seeing_spacetime_films/poem_{poem_num:02d}_spacetime_worm.mp4?v=11",
         "poster": f"videos/poems/poem_{poem_num:02d}_videotext_fx.jpg",
         "picture": spec["picture"],
         "sound": spec["sound"],
@@ -835,6 +879,79 @@ def build_poem_videotext_entry(poem_num, poem_meta, poem_title, district_name, b
         "after": spec["after"],
         "scenes": scenes,
     }
+
+
+def stream_encode_poem_afterlight_fx(
+    poem_num, poem_title, district_name, stations, multiplanes, total_dur, out_mp4, audio_t0
+):
+    """
+    Streams each rendered `1280x720` uint8 frame directly into `ffmpeg` stdin over the full-length
+    poem duration (`66.5s .. 135.0s`), keeping peak RAM low while retaining:
+      - `sample_fr`: frame at `t = 2.4s` for contact sheet & poster
+      - `passage_frames`: `288` frames (`12.0s`) for the Master Sundance Feature
+    """
+    os.makedirs(os.path.dirname(out_mp4), exist_ok=True)
+    n_frames_total = int(round(total_dur * FPS))
+    has_audio = os.path.exists(MASTER_AUDIO)
+
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "rawvideo",
+        "-vcodec", "rawvideo",
+        "-s", f"{W}x{H}",
+        "-pix_fmt", "rgb24",
+        "-r", str(FPS),
+        "-i", "-",
+    ]
+    if has_audio:
+        cmd += [
+            "-ss", f"{audio_t0:.2f}",
+            "-t", f"{total_dur:.2f}",
+            "-i", MASTER_AUDIO,
+            "-c:v", "libx264",
+            "-preset", "fast",
+            "-crf", "18",
+            "-pix_fmt", "yuv420p",
+            "-c:a", "aac",
+            "-b:a", "192k",
+            "-af", f"afade=t=in:st=0:d=1.2,afade=t=out:st={max(0.5, total_dur - 1.8):.2f}:d=1.8",
+            "-shortest",
+            "-movflags", "+faststart",
+            out_mp4,
+        ]
+    else:
+        cmd += [
+            "-c:v", "libx264",
+            "-preset", "fast",
+            "-crf", "18",
+            "-pix_fmt", "yuv420p",
+            "-movflags", "+faststart",
+            out_mp4,
+        ]
+
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    sample_idx = int(2.4 * FPS)
+    sample_fr = None
+    n_passage = int(12.0 * FPS)
+    passage_frames = []
+
+    try:
+        for f_i in range(n_frames_total):
+            t = f_i / float(FPS)
+            fr_u8 = render_poem_afterlight_frame(poem_num, poem_title, district_name, stations, multiplanes, t, total_dur)
+            proc.stdin.write(fr_u8.tobytes())
+            if f_i == sample_idx:
+                sample_fr = fr_u8
+            if f_i < n_passage:
+                passage_frames.append(fr_u8)
+    finally:
+        if proc.stdin:
+            proc.stdin.close()
+        proc.wait()
+
+    if sample_fr is None and passage_frames:
+        sample_fr = passage_frames[-1]
+    return sample_fr, passage_frames
 
 
 def build_single_poem_afterlight_fx(poem_num, reuse_existing_mp4=False):
@@ -846,39 +963,42 @@ def build_single_poem_afterlight_fx(poem_num, reuse_existing_mp4=False):
     poem_meta = next((p for p in poems_json if int(p["num"]) == poem_num), {})
 
     audio_t0 = float(scion_list[0]["t0"]) if scion_list else (poem_num - 1) * 90.0
+    if scion_list and len(scion_list) >= 2:
+        dur = round(max(45.0, float(scion_list[-1]["t1"]) - float(scion_list[0]["t0"])), 1)
+    else:
+        dur = 90.0
 
+    n_load_frames = 6 if reuse_existing_mp4 else 24
     terr_stations = [
-        load_common_place_station(od, local_view_info, district_name, body_hex, glow_hex, n_frames=8 if reuse_existing_mp4 else 48)
-        for od in ordered_out_dirs[:4]
+        load_common_place_station(od, local_view_info, district_name, body_hex, glow_hex, n_frames=n_load_frames)
+        for od in ordered_out_dirs[:6]
     ]
     poem_bundles = [
-        load_poem_cel_shot(sc, scene_map, district_name, body_hex, glow_hex, n_frames=8 if reuse_existing_mp4 else 48)
-        for sc in scion_list[:4]
+        load_poem_cel_shot(sc, scene_map, district_name, body_hex, glow_hex, n_frames=n_load_frames)
+        for sc in scion_list
     ]
 
-    if len(terr_stations) >= 3 and len(poem_bundles) >= 2:
-        if poem_num in (8, 10, 14):
-            # Ensure Poems 08, 10, and 14 open on their own distinct Common Place / Painted Cel station
-            # rather than repeating the opening hero of P07 (V80), P01 (V92), or P13 (V98)!
-            stations = [
-                terr_stations[1],
-                poem_bundles[0],
-                terr_stations[2],
-                poem_bundles[min(1, len(poem_bundles) - 1)],
-                terr_stations[0],
-            ]
-        else:
-            stations = [
-                terr_stations[0],
-                poem_bundles[0],
-                terr_stations[1],
-                poem_bundles[min(1, len(poem_bundles) - 1)],
-                terr_stations[2],
-            ]
+    # Reorder `terr_stations` for Poems 08, 10, 14 so they open on their own distinct Common Place (`V84`, `V94`, `V99`)
+    if poem_num in (8, 10, 14) and len(terr_stations) >= 2:
+        terr_ordered = [terr_stations[1]] + terr_stations[2:] + [terr_stations[0]]
     else:
-        stations = (terr_stations + poem_bundles)[:5]
+        terr_ordered = list(terr_stations)
 
-    dur = 30.0
+    # Interleave ALL SCION painted cel shots (`9..16`) with the territory's Common Places (`6`)
+    # so the full-length 66.5s..135.0s Director's Cut journeys through every single verse and Common Place!
+    stations = []
+    if terr_ordered:
+        stations.append(terr_ordered[0])
+    t_ptr = 1
+    for idx_b, b_st in enumerate(poem_bundles):
+        stations.append(b_st)
+        if idx_b % 2 == 0 and t_ptr < len(terr_ordered):
+            stations.append(terr_ordered[t_ptr])
+            t_ptr += 1
+    while t_ptr < len(terr_ordered):
+        stations.append(terr_ordered[t_ptr])
+        t_ptr += 1
+
     out_mp4 = os.path.join(OUT_DIR, f"poem_{poem_num:02d}_videotext_fx.mp4")
 
     if reuse_existing_mp4 and os.path.exists(out_mp4):
@@ -900,22 +1020,13 @@ def build_single_poem_afterlight_fx(poem_num, reuse_existing_mp4=False):
             sample_fr = passage_frames[-1]
     else:
         multiplanes = [prepare_station_multiplane(st, k) for k, st in enumerate(stations)]
-        n_frames_total = int(dur * FPS)
-        frames_out = []
-        for f_i in range(n_frames_total):
-            t = f_i / float(FPS)
-            frames_out.append(
-                render_poem_afterlight_frame(poem_num, poem_title, district_name, stations, multiplanes, t, dur)
-            )
-
-        encode_video_with_real_audio(frames_out, out_mp4, audio_t0)
+        sample_fr, passage_frames = stream_encode_poem_afterlight_fx(
+            poem_num, poem_title, district_name, stations, multiplanes, dur, out_mp4, audio_t0
+        )
 
         os.makedirs(POEMS_VID_DIR, exist_ok=True)
         shutil.copy2(out_mp4, os.path.join(POEMS_VID_DIR, f"poem_{poem_num:02d}_videotext_fx.mp4"))
-
-        sample_fr = frames_out[int(2.4 * FPS)]
         Image.fromarray(sample_fr).save(os.path.join(POEMS_VID_DIR, f"poem_{poem_num:02d}_videotext_fx.jpg"), quality=92)
-        passage_frames = frames_out[: int(12.0 * FPS)]
 
     vtext_entry = build_poem_videotext_entry(
         poem_num, poem_meta, poem_title, district_name, body_hex, glow_hex, stations, scion_list, total_dur=dur
@@ -928,6 +1039,8 @@ def build_single_poem_afterlight_fx(poem_num, reuse_existing_mp4=False):
         "glow_hex": glow_hex,
         "fx_code": POEM_AFTERLIGHT_SPEC[poem_num]["fx_code"],
         "fx_name": POEM_AFTERLIGHT_SPEC[poem_num]["fx_name"],
+        "dur": dur,
+        "station_count": len(stations),
         "mp4": out_mp4,
         "sample_frame": sample_fr,
         "passage_frames": passage_frames,
@@ -1215,7 +1328,7 @@ if __name__ == "__main__":
             for fut in as_completed(futs):
                 r = fut.result()
                 results.append(r)
-                print(f"Done P{r['poem_num']:02d} ({r['poem_title']} · {r['district_name']}) -> [{r['fx_code']}] {r['fx_name']}", flush=True)
+                print(f"Done P{r['poem_num']:02d} ({r['poem_title']} · {r['district_name']} · {r['dur']:.1f}s · {r['station_count']} stations) -> [{r['fx_code']}] {r['fx_name']}", flush=True)
 
     results.sort(key=lambda x: x["poem_num"])
 
@@ -1225,7 +1338,7 @@ if __name__ == "__main__":
         manifest = {
             "title": "WYGWYL · Afterlight Videotext & Sundance Feature Suite",
             "subtitle": "Fourteen poems, ten city districts, Common Places, painted cels, and fourteen 3D optical techniques.",
-            "feature_video": "data/terrarium/seeing_spacetime_films/wygwyl_afterlight_feature.mp4?v=10",
+            "feature_video": "data/terrarium/seeing_spacetime_films/wygwyl_afterlight_feature.mp4?v=11",
             "feature_dur": feature_chapters[-1]["t1"] if feature_chapters else 216.0,
             "feature_chapters": feature_chapters,
             "poems": [r["vtext_entry"] for r in results],

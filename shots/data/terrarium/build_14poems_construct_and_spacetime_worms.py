@@ -484,51 +484,46 @@ def load_poem_cel_shot(scion_data, scene_map, default_district, body_hex, glow_h
     }
 
 
-def draw_clean_lower_third_hud(img_rgb_float, poem_num, poem_title, district_name, body_hex, glow_hex, badge_str, place_title, verse_line):
+def draw_clean_lower_third_hud(img_rgb_float, poem_num, poem_title, district_name, body_hex, glow_hex, badge_str, place_title, verse_line, u_local=0.5):
     """
-    Single, ultra-clean lower-third bar (`y = 664..720`, 56px tall = 92.2% of frame completely unobstructed!)
-    showing:
-      - Left: Poem + Common Place / City District badge + Place Title
-      - Center: Poetic Verse / Place Description in Georgia Italic
-      - Right: Measured City District `BODY` + `GLOW` Color Swatches (`_city/districts.json`)
+    SUNDANCE UNOBSTRUCTED 16:9 FRAME RULE:
+      - Zero permanent opaque bottom bar!
+      - During only the opening 1.4s of a station (`u_local in [0.02, 0.26]`), a whisper-quiet,
+        self-dissolving archival title grace (`Georgia Italic`) fades in and dissolves completely
+        to `0%` opacity, leaving 100% of the `1280x720` frame pure unobstructed cinema!
     """
-    pil_im = Image.fromarray((np.clip(img_rgb_float, 0.0, 1.0) * 255.0).astype(np.uint8)).convert("RGBA")
+    base_u8 = (np.clip(img_rgb_float, 0.0, 1.0) * 255.0).astype(np.uint8)
+    if u_local < 0.02 or u_local > 0.26:
+        return base_u8
+
+    if u_local < 0.08:
+        alpha_f = smootherstep((u_local - 0.02) / 0.06)
+    else:
+        alpha_f = 1.0 - smootherstep((u_local - 0.08) / 0.18)
+
+    if alpha_f <= 0.01:
+        return base_u8
+
+    pil_im = Image.fromarray(base_u8).convert("RGBA")
     overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(overlay)
 
-    bar_y0 = H - 58
-    d.rectangle([0, bar_y0, W, H], fill=(16, 18, 24, 222))
-    d.line([(0, bar_y0), (W, bar_y0)], fill=(235, 195, 120, 180), width=1)
+    f_mono = get_font("mono", 12)
+    f_italic = get_font("serif_italic", 20)
 
-    f_mono = get_font("mono", 13)
-    f_bold = get_font("serif_bold", 16)
-    f_italic = get_font("serif_italic", 18)
+    a_main = int(215 * alpha_f)
+    a_shadow = int(155 * alpha_f)
 
-    # Top line of lower third: Badge + Place Name
-    top_left = f"P{poem_num:02d} · {poem_title.upper()}  |  {badge_str}"
-    d.text((20, bar_y0 + 7), top_left[:88], font=f_mono, fill=(250, 188, 92, 255))
-
-    # Bottom line of lower third: Place title + Italic lyric
+    top_left = f"P{poem_num:02d} · {poem_title.upper()}  ·  {badge_str}"[:92]
     sub_str = f"{place_title}: “{verse_line}”" if place_title else f"“{verse_line}”"
-    if len(sub_str) > 108:
-        sub_str = sub_str[:106] + "…”"
-    d.text((20, bar_y0 + 27), sub_str, font=f_italic, fill=(245, 240, 230, 255))
+    if len(sub_str) > 96:
+        sub_str = sub_str[:94] + "…”"
 
-    # Right side: City District `BODY` + `GLOW` Palette Swatches
-    swatches = list((body_hex or [])[:5]) + list((glow_hex or [])[:4])
-    if not swatches:
-        swatches = ["#262423", "#2d4651", "#337993", "#64b4ce", "#01acd4"]
-    sw_w, sw_h = 20, 16
-    total_w = len(swatches) * sw_w
-    x0 = W - 20 - total_w
-    y0 = bar_y0 + 10
-    for i, hx in enumerate(swatches):
-        c_u8 = hex_to_rgb_u8(hx)
-        sx = x0 + i * sw_w
-        d.rectangle([sx, y0, sx + sw_w - 2, y0 + sw_h], fill=c_u8 + (255,), outline=(240, 235, 225, 190))
+    d.text((37, H - 67), top_left, font=f_mono, fill=(10, 12, 16, a_shadow))
+    d.text((36, H - 68), top_left, font=f_mono, fill=(248, 196, 104, a_main))
 
-    pal_lbl = f"{district_name.upper()[:18]} PALETTE"
-    d.text((x0, y0 + sw_h + 4), pal_lbl, font=get_font("mono", 11), fill=(215, 210, 198, 230))
+    d.text((37, H - 45), sub_str, font=f_italic, fill=(10, 12, 16, a_shadow))
+    d.text((36, H - 46), sub_str, font=f_italic, fill=(246, 241, 231, a_main))
 
     comp = Image.alpha_composite(pil_im, overlay).convert("RGB")
     return np.asarray(comp, dtype=np.uint8)
@@ -546,17 +541,28 @@ _BASE_YY, _BASE_XX = np.mgrid[0:H, 0:W].astype(np.float32)
 def prepare_station_multiplane(station, k_idx):
     """
     Precomputes a wide-smoothed, artifact-free normalized closeness (inverse depth / disparity) field
-    `disp in [0, 1]` (`1.0` = near foreground, `0.0` = deep background) so `cv2.remap` produces
-    silky-smooth 3D multiplane camera parallax across the full 1280x720 frame without local shearing
-    or edge glitches.
+    `disp in [0, 1]` (`1.0` = near foreground, `0.0` = deep background) plus 3D surface normals
+    `gx, gy, nx, ny, nz, surf_slope, caustic` so `cv2.remap` and 3D Afterlight optical shaders
+    execute with zero per-frame derivative overhead.
     """
     depth = station["depth"]
     d_lo, d_hi = np.percentile(depth, 3), np.percentile(depth, 97)
     d_norm = np.clip((depth - d_lo) / max(d_hi - d_lo, 1e-3), 0.0, 1.0)
     disp = 1.0 - d_norm
-    # Wide Gaussian smoothing (sigma=18) ensures multiplane depth sheets glide like real glass cinema planes
-    # without warping or tearing fine lines
     disp_smooth = cv2.GaussianBlur(disp, (0, 0), 18.0).astype(np.float32)
+
+    gx = cv2.Sobel(disp_smooth, cv2.CV_32F, 1, 0, ksize=5)
+    gy = cv2.Sobel(disp_smooth, cv2.CV_32F, 0, 1, ksize=5)
+    lap = cv2.Laplacian(disp_smooth, cv2.CV_32F, ksize=5)
+    caustic = cv2.GaussianBlur(np.clip(np.abs(lap) * 16.0, 0.0, 1.0), (0, 0), 7.0)[..., None].astype(np.float32)
+    surf_slope = np.clip(np.hypot(gx, gy) * 6.0 + 0.35, 0.35, 1.25).astype(np.float32)
+
+    dz_dx = gx * 4.5
+    dz_dy = gy * 4.5
+    norm_len = np.sqrt(dz_dx ** 2 + dz_dy ** 2 + 1.0)
+    nx = (-dz_dx / norm_len).astype(np.float32)
+    ny = (-dz_dy / norm_len).astype(np.float32)
+    nz = (1.0 / norm_len).astype(np.float32)
 
     angle_bias = (k_idx * 1.15)
     pan_dir = 1.0 if (k_idx % 2 == 0) else -1.0
@@ -564,6 +570,13 @@ def prepare_station_multiplane(station, k_idx):
 
     return {
         "disp": disp_smooth,
+        "gx": gx,
+        "gy": gy,
+        "caustic": caustic,
+        "surf_slope": surf_slope,
+        "nx": nx,
+        "ny": ny,
+        "nz": nz,
         "pan_dir": pan_dir,
         "tilt_dir": tilt_dir,
     }
@@ -683,6 +696,7 @@ def render_construct_frame(poem_num, poem_title, district_name, stations, multip
         badge_str=badge,
         place_title=f"{active_st['id']} · {active_st['name']}",
         verse_line=active_st["line"],
+        u_local=u_seg,
     )
 
 
@@ -804,6 +818,7 @@ def render_spacetime_worm_frame(poem_num, poem_title, shot_bundles, t, shot_dur=
         badge_str=badge,
         place_title=f"{active_b['name']} ({active_b['what'][:44]})",
         verse_line=active_b["line"],
+        u_local=u,
     )
 
 
@@ -1008,13 +1023,22 @@ def build_single_poem_pair(poem_num):
     # Build 5 canonical stations for `S2 Construct` (3 Common Place Territory Cels + 2 Hero Poem Cels)
     construct_stations = []
     if len(terr_stations) >= 3 and len(poem_bundles) >= 2:
-        construct_stations = [
-            terr_stations[0],
-            poem_bundles[0],
-            terr_stations[1],
-            poem_bundles[len(poem_bundles) // 2],
-            terr_stations[2],
-        ]
+        if poem_num in (8, 10, 14):
+            construct_stations = [
+                terr_stations[1],
+                poem_bundles[0],
+                terr_stations[2],
+                poem_bundles[len(poem_bundles) // 2],
+                terr_stations[0],
+            ]
+        else:
+            construct_stations = [
+                terr_stations[0],
+                poem_bundles[0],
+                terr_stations[1],
+                poem_bundles[len(poem_bundles) // 2],
+                terr_stations[2],
+            ]
     else:
         construct_stations = (terr_stations + poem_bundles)[:5]
 

@@ -501,9 +501,11 @@ function chapterView(numStr) {
             <button type="button" class="active" data-src="${esc(f.video_fx)}">✦ Afterlight FX (${esc(f.fx_code)})</button>
             <button type="button" data-src="${esc(f.video_construct)}">S2 · Fluid Construct</button>
             <button type="button" data-src="${esc(f.video_worm)}">07w · Spacetime Worm</button>
+            <button type="button" data-mode="webgl" title="Run live 60fps WebGL 3D Multiplane + ${esc(f.fx_code)} Optical Shader driven by scroll & pointer drag">⚡ Live 60fps 3D GLSL</button>
           </div>
-          <div class="vbox">
+          <div class="vbox" id="vbox-wrap">
             <video id="v" playsinline preload="auto" poster="${esc(f.poster)}" src="${esc(f.video_fx)}"></video>
+            <canvas id="vt-gl-canvas" width="1280" height="720" style="display:none;width:100%;aspect-ratio:16/9;cursor:grab;background:#121318" title="Drag for 3D Multiplane Gimbal or scroll the poem text to depth-morph across Common Places"></canvas>
           </div>
           <div class="ctl">
             <button class="play" id="pb" aria-label="Play"></button>
@@ -547,18 +549,37 @@ function chapterView(numStr) {
     </article>
   `;
 
-  const v = $('#v'), ch = $('#ch'), els = $$('#text p, #text .gap'), ps = $$('#text p'), pr = $('#pr'), tc = $('#tc'), pb = $('#pb'), cap = $('#cap'), hint = $('#hint');
+  const v = $('#v'), glCanvas = $('#vt-gl-canvas'), ch = $('#ch'), els = $$('#text p, #text .gap'), ps = $$('#text p'), pr = $('#pr'), tc = $('#tc'), pb = $('#pb'), cap = $('#cap'), hint = $('#hint');
 
-  // Reel switcher preserves playhead & playing state
+  let glController = null;
+  let isWebGlActive = false;
+
+  // Reel switcher preserves playhead & playing state, or activates the live 60fps 3D GLSL rig
   $$('.reel-tabs button').forEach(btn => {
     btn.addEventListener('click', () => {
       $$('.reel-tabs button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      const curT = v.currentTime || 0;
-      const wasPlaying = !v.paused;
-      v.src = btn.dataset.src;
-      v.currentTime = curT;
-      if (wasPlaying) v.play().catch(()=>{});
+      if (btn.dataset.mode === 'webgl') {
+        isWebGlActive = true;
+        v.style.display = 'none';
+        glCanvas.style.display = 'block';
+        if (!glController) {
+          glController = mountVideotextWebGL(f, glCanvas);
+        }
+        glController.setActive(true);
+        hint.textContent = 'Scroll text to depth-morph Common Places · Drag screen for 3D gimbal';
+      } else {
+        isWebGlActive = false;
+        if (glController) glController.setActive(false);
+        glCanvas.style.display = 'none';
+        v.style.display = 'block';
+        const curT = v.currentTime || 0;
+        const wasPlaying = !v.paused;
+        v.src = btn.dataset.src;
+        v.currentTime = curT;
+        if (wasPlaying) v.play().catch(()=>{});
+        hint.textContent = following ? 'Scroll to take the film back' : 'Scroll to move through the film';
+      }
     });
   });
 
@@ -634,6 +655,7 @@ function chapterView(numStr) {
     const ff = Math.floor(((t % 1) + 1e-4) * 24);
     tc.textContent = `${mmss(t)}:${String(ff).padStart(2,'0')} / ${mmss(f.dur)}`;
     pr.style.width = (100 * Math.min(1, t / f.dur)).toFixed(2) + '%';
+    if (glController) glController.setProgress(Math.max(0, Math.min(1, t / Math.max(1, f.dur))));
   };
 
   let target = 0, seeking = false, idle = 0, following = false;
@@ -688,7 +710,9 @@ function chapterView(numStr) {
     cancelAnimationFrame(fr);
     pb.classList.remove('on');
     pb.setAttribute('aria-label', 'Play');
-    hint.textContent = 'Scroll to move through the film';
+    hint.textContent = isWebGlActive
+      ? 'Scroll text to depth-morph Common Places · Drag screen for 3D gimbal'
+      : 'Scroll to move through the film';
   };
 
   pb.addEventListener('click', () => (following ? stop() : play()));
@@ -745,6 +769,7 @@ function chapterView(numStr) {
 
   cleanup = () => {
     stop();
+    if (glController) glController.destroy();
     removeEventListener('scroll', onScroll);
     removeEventListener('wheel', userMove);
     removeEventListener('touchstart', userMove);
@@ -754,8 +779,242 @@ function chapterView(numStr) {
   show(0);
 }
 
+// ============================================================================
+// LIVE 60FPS WEBGL 3D MULTIPLANE & AFTERLIGHT OPTICAL SHADER FOR VIDEOTEXT
+// ============================================================================
+let VIEW_DIR_MAP = {};
+const VT_VS = `
+attribute vec2 aPos;
+varying vec2 vUv;
+void main() {
+  vUv = vec2(aPos.x * 0.5 + 0.5, 0.5 - aPos.y * 0.5);
+  gl_Position = vec4(aPos, 0.0, 1.0);
+}
+`;
+const VT_FS = `
+precision highp float;
+varying vec2 vUv;
+uniform sampler2D uCelA, uDepthA, uCelB, uDepthB;
+uniform vec2 uPanA, uPanB;
+uniform float uDollyA, uDollyB, uMorph, uFxMode, uTime;
+uniform vec3 uGlowCol;
+
+vec2 mirrorUv(vec2 uv) {
+  vec2 m = mod(uv, 2.0);
+  if (m.x < 0.0) m.x += 2.0;
+  if (m.y < 0.0) m.y += 2.0;
+  return vec2(m.x > 1.0 ? 2.0 - m.x : m.x, m.y > 1.0 ? 2.0 - m.y : m.y);
+}
+vec4 evalMP(sampler2D tCel, sampler2D tDep, vec2 pan, float dolly, float stretch) {
+  float disp = clamp(1.0 - texture2D(tDep, vUv).r, 0.0, 1.0);
+  float localScale = dolly * (1.0 + stretch * (disp - 0.35));
+  vec2 uvW = mirrorUv((vUv - 0.5) / localScale + 0.5 + pan * (0.28 + 0.82 * disp));
+  return vec4(texture2D(tCel, uvW).rgb, clamp(1.0 - texture2D(tDep, uvW).r, 0.0, 1.0));
+}
+void main() {
+  vec4 sA = evalMP(uCelA, uDepthA, uPanA, uDollyA, 0.05 * uMorph);
+  vec4 sB = evalMP(uCelB, uDepthB, uPanB, uDollyB, 0.05 * (uMorph - 1.0));
+  float wB = clamp(uMorph + 0.24 * (sB.a - sA.a) * sin(3.14159265 * uMorph), 0.0, 1.0);
+  vec3 col = mix(sA.rgb, sB.rgb, wB);
+  float disp = mix(sA.a, sB.a, wB);
+
+  vec2 eps = vec2(1.0 / 640.0, 1.0 / 360.0);
+  float gx = (mix(1.0 - texture2D(uDepthA, vUv + vec2(eps.x, 0.0)).r, 1.0 - texture2D(uDepthB, vUv + vec2(eps.x, 0.0)).r, wB)
+            - mix(1.0 - texture2D(uDepthA, vUv - vec2(eps.x, 0.0)).r, 1.0 - texture2D(uDepthB, vUv - vec2(eps.x, 0.0)).r, wB)) * 18.0;
+  float gy = (mix(1.0 - texture2D(uDepthA, vUv + vec2(0.0, eps.y)).r, 1.0 - texture2D(uDepthB, vUv + vec2(0.0, eps.y)).r, wB)
+            - mix(1.0 - texture2D(uDepthA, vUv - vec2(0.0, eps.y)).r, 1.0 - texture2D(uDepthB, vUv - vec2(0.0, eps.y)).r, wB)) * 18.0;
+  float surfSlope = clamp(length(vec2(gx, gy)), 0.0, 1.0);
+  vec3 surfN = normalize(vec3(-gx, -gy, 1.0));
+  float lum = dot(col, vec3(0.299, 0.587, 0.114));
+
+  if (uFxMode < 1.5) {
+    float mist = clamp((1.0 - disp * 1.15) * (0.30 + 0.24 * (0.5 + 0.5 * sin(uTime * 0.95))), 0.0, 0.55);
+    col = mix(col, mix(vec3(0.14, 0.18, 0.24), uGlowCol, 0.35), mist);
+    float emb = pow(0.5 + 0.5 * sin(vUv.x * 42.0 + sin(vUv.y * 18.0 + uTime * 1.5)) * cos(vUv.y * 36.0 + uTime * 2.2), 8.0);
+    col += emb * (0.4 + 0.6 * disp) * uGlowCol * 0.55;
+  } else if (uFxMode < 2.5) {
+    float cWave = pow(0.5 + 0.5 * sin(vUv.x * 28.0 + disp * 16.0 + uTime * 1.6) * cos(vUv.y * 22.0 - disp * 14.0), 3.0);
+    col += (cWave + surfSlope * 0.45) * (1.0 - 0.45 * disp) * uGlowCol * 0.36;
+  } else if (uFxMode < 3.5) {
+    vec2 uvDew = mirrorUv(vUv + vec2(gx, gy) * 0.011);
+    col = mix(col, mix(texture2D(uCelA, uvDew).rgb, texture2D(uCelB, uvDew).rgb, wB), clamp(surfSlope * 0.72, 0.0, 0.62));
+    col += clamp((-gy * 0.65 + surfSlope * 0.55) * disp, 0.0, 1.0) * mix(uGlowCol, vec3(0.85, 0.92, 1.0), 0.5) * 0.34;
+  } else if (uFxMode < 4.5) {
+    vec3 silver = vec3(lum * 0.90 + 0.04, lum * 0.93 + 0.04, lum * 1.04 + 0.06);
+    col = mix(col, silver, 0.55 * (1.0 - 0.35 * disp));
+    col = mix(col, vec3(0.96, 0.68, 0.18), clamp(surfSlope * 1.35 * (0.35 + 0.65 * disp), 0.0, 0.62));
+  } else if (uFxMode < 5.5) {
+    float scanBand = exp(-pow((disp - fract(uTime * 0.22)) / 0.065, 2.0));
+    col += scanBand * (0.45 + 0.85 * surfSlope) * uGlowCol * 0.52;
+  } else if (uFxMode < 6.5) {
+    float uCx = vUv.x * 24.0 + uTime * 1.3 + disp * 4.5 + gx * 1.6;
+    float uCy = vUv.y * 28.0 - uTime * 0.95 + disp * 4.5 + gy * 1.6;
+    float peaks = pow(clamp(0.5 + 0.25 * (sin(uCx + sin(uCy * 1.4)) + cos(uCy + cos(uCx * 1.3))), 0.0, 1.0), 3.4);
+    float sub = clamp(((vUv.y + (1.0 - disp) * 0.22) - (0.36 + 0.10 * sin(uTime * 0.45))) / 0.18, 0.0, 1.0);
+    col = mix(col, col * 0.86 + 0.14 * vec3(0.05, 0.55, 0.72) + peaks * uGlowCol * 0.54, sub);
+  } else if (uFxMode < 7.5) {
+    vec2 shearUv = mirrorUv(vUv + vec2((0.5 - disp) * 0.018 * sin(uTime * 1.2), 0.0));
+    col = mix(col, mix(texture2D(uCelA, shearUv).rgb, texture2D(uCelB, shearUv).rgb, wB), clamp((1.0 - disp) * 0.45, 0.0, 0.42));
+    col += exp(-pow((vUv.y - 0.56 - (disp - 0.5) * 0.14) / 0.06, 2.0)) * uGlowCol * 0.30;
+  } else if (uFxMode < 8.5) {
+    float split = (disp - 0.45) * 0.014 * sin(uTime * 1.1);
+    float rCh = mix(texture2D(uCelA, mirrorUv(vUv + vec2(split, 0.0))).r, texture2D(uCelB, mirrorUv(vUv + vec2(split, 0.0))).r, wB);
+    float bCh = mix(texture2D(uCelA, mirrorUv(vUv - vec2(split, 0.0))).b, texture2D(uCelB, mirrorUv(vUv - vec2(split, 0.0))).b, wB);
+    col = mix(col, vec3(rCh, col.g, bCh), 0.65);
+  } else if (uFxMode < 9.5) {
+    vec2 lPos = vec2(0.5 + 0.32 * sin(uTime * 0.75), 0.46 + 0.18 * cos(uTime * 0.55));
+    float nDotL = max(0.0, dot(surfN, normalize(vec3(lPos.x - vUv.x, lPos.y - vUv.y, 0.28))));
+    float torch = exp(-dot((vUv - lPos) * vec2(1.0, 0.56), (vUv - lPos) * vec2(1.0, 0.56)) * 5.2) * (0.45 + 0.65 * nDotL);
+    float rim = pow(clamp(1.0 - surfN.z, 0.0, 1.0), 1.4) * (0.35 + 0.65 * disp);
+    col = col * (0.68 + 0.42 * torch) + torch * vec3(1.0, 0.76, 0.34) * 0.38 + rim * uGlowCol * 0.44;
+  } else if (uFxMode < 10.5) {
+    vec3 riso = mix(vec3(0.10, 0.16, 0.28), mix(uGlowCol, vec3(0.98, 0.82, 0.52), 0.4), lum);
+    col = mix(col, riso, 0.28);
+  } else if (uFxMode < 11.5) {
+    vec2 toSun = vec2(0.5 + 0.16 * sin(uTime * 0.35), 0.12) - vUv;
+    float rayAcc = 0.0;
+    for (int s = 1; s <= 5; s++) {
+      vec2 sUv = clamp(vUv + toSun * (float(s) * 0.06), 0.0, 1.0);
+      rayAcc += clamp(0.55 - mix(1.0 - texture2D(uDepthA, sUv).r, 1.0 - texture2D(uDepthB, sUv).r, wB), 0.0, 1.0);
+    }
+    col += (rayAcc / 5.0) * (1.0 - vUv.y * 0.55) * mix(uGlowCol, vec3(1.0, 0.92, 0.74), 0.45) * 0.44;
+  } else if (uFxMode < 12.5) {
+    float wind = pow(0.5 + 0.5 * sin((vUv.x * 22.0 - uTime * 2.8) + (vUv.y * 14.0 - uTime * 1.2) + disp * 6.0), 4.0);
+    col += (wind * 0.24 + clamp((vUv.y - 0.52) / 0.45, 0.0, 1.0) * surfSlope * 0.28) * mix(uGlowCol, vec3(0.98, 0.78, 0.36), 0.5);
+  } else if (uFxMode < 13.5) {
+    float edgeField = max(abs(vUv.x - 0.5) * 1.7, abs(vUv.y - 0.5) * 1.9) + 0.18 * sin(vUv.x * 9.0 + uTime) * cos(vUv.y * 11.0 - uTime);
+    float leak = pow(clamp((edgeField - (0.68 - 0.14 * sin(uTime * 0.8))) / 0.42, 0.0, 1.0), 1.8);
+    col += leak * vec3(0.98, 0.42, 0.12) * 0.48 + pow(leak, 2.4) * vec3(1.0, 0.86, 0.52) * 0.34;
+  } else {
+    float worldElev = (1.0 - vUv.y) * 0.65 + (1.0 - disp) * 0.35;
+    float irEnv = exp(-pow((worldElev - fract(uTime * 0.18)) / 0.24, 2.0));
+    vec3 irCol = vec3(clamp(lum * 1.32, 0.0, 1.0), clamp(lum * 0.74, 0.0, 1.0), clamp(0.22 + (1.0 - lum) * 0.42, 0.0, 1.0));
+    col = mix(col, irCol, 0.32 * irEnv);
+  }
+
+  gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+}
+`;
+
+function mountVideotextWebGL(poemEntry, canvas) {
+  const gl = canvas.getContext('webgl', { preserveDrawingBuffer: true });
+  if (!gl) return { setActive() {}, setProgress() {}, destroy() {} };
+
+  const compile = (t, src) => { const s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VT_VS));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, VT_FS));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, 'aPos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const texCache = {};
+  const loadTex = (url, fb = [24, 28, 36]) => {
+    if (texCache[url]) return texCache[url];
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([fb[0], fb[1], fb[2], 255]));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    };
+    img.src = url;
+    texCache[url] = tex;
+    return tex;
+  };
+
+  let viewNums = [92, 94];
+  fetch(`poems/atlas/${poemEntry.num}.json`).then(r => r.ok ? r.json() : {}).then(ad => {
+    const vns = [];
+    (ad.heroes || []).forEach(h => (h.views || []).forEach(v => { if (!vns.includes(v.n)) vns.push(v.n); }));
+    (ad.districts || []).forEach(d => (d.places || []).forEach(pl => (pl.views || []).forEach(v => { if (!vns.includes(v.n)) vns.push(v.n); })));
+    if (vns.length >= 2) viewNums = vns.slice(0, 6);
+  }).catch(()=>{});
+
+  let active = false, destroyed = false, progress = 0.0, rafId = 0;
+  let drag = false, dStart = { x: 0, y: 0 }, mTgt = { x: 0, y: 0 }, mCur = { x: 0, y: 0 };
+
+  canvas.addEventListener('pointerdown', e => { drag = true; dStart = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointermove', e => {
+    if (!drag) return;
+    mTgt.x = Math.max(-0.045, Math.min(0.045, mTgt.x - ((e.clientX - dStart.x) / canvas.clientWidth) * 0.06));
+    mTgt.y = Math.max(-0.025, Math.min(0.025, mTgt.y - ((e.clientY - dStart.y) / canvas.clientHeight) * 0.05));
+    dStart = { x: e.clientX, y: e.clientY };
+  });
+  canvas.addEventListener('pointerup', () => { drag = false; });
+
+  const gh = ((poemEntry.glow_hex && poemEntry.glow_hex[0]) || '#fa8d15').replace('#', '');
+  const glowRgb = gh.length === 6 ? [parseInt(gh.slice(0,2),16)/255, parseInt(gh.slice(2,4),16)/255, parseInt(gh.slice(4,6),16)/255] : [0.98, 0.55, 0.08];
+  const poemIdx = Math.max(1, Math.min(14, parseInt(poemEntry.num, 10) || 1));
+
+  function loop(nowMs) {
+    if (destroyed || !active) return;
+    const t = nowMs * 0.001;
+    mCur.x += (mTgt.x - mCur.x) * 0.08;
+    mCur.y += (mTgt.y - mCur.y) * 0.08;
+
+    const nSt = Math.max(1, viewNums.length);
+    const fPos = progress * Math.max(1, nSt - 1);
+    const idxA = Math.min(nSt - 1, Math.floor(fPos));
+    const idxB = Math.min(nSt - 1, idxA + 1);
+    const morph = fPos - idxA;
+
+    const dirA = `out/${VIEW_DIR_MAP[String(viewNums[idxA])] || '018da7e9-231c-44d0-87f5-b0b0cb7b61cb_0'}`;
+    const dirB = `out/${VIEW_DIR_MAP[String(viewNums[idxB])] || '018da7e9-231c-44d0-87f5-b0b0cb7b61cb_0'}`;
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.useProgram(prog);
+    const bind = (u, tex, name) => { gl.activeTexture(gl.TEXTURE0 + u); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(gl.getUniformLocation(prog, name), u); };
+    bind(0, loadTex(`${dirA}/image.jpg`), 'uCelA');
+    bind(1, loadTex(`${dirA}/depth.jpg`, [128,128,128]), 'uDepthA');
+    bind(2, loadTex(`${dirB}/image.jpg`), 'uCelB');
+    bind(3, loadTex(`${dirB}/depth.jpg`, [128,128,128]), 'uDepthB');
+
+    const px = mCur.x + 0.018 * Math.sin(t * 0.55);
+    const py = mCur.y + 0.007 * Math.cos(t * 0.42);
+    gl.uniform2f(gl.getUniformLocation(prog, 'uPanA'), px, py);
+    gl.uniform2f(gl.getUniformLocation(prog, 'uPanB'), px * 0.9, py * 0.9);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uDollyA'), 1.11 + 0.03 * Math.sin(t * 0.35));
+    gl.uniform1f(gl.getUniformLocation(prog, 'uDollyB'), 1.11 + 0.03 * Math.cos(t * 0.35));
+    gl.uniform1f(gl.getUniformLocation(prog, 'uMorph'), morph);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uFxMode'), poemIdx);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uTime'), t);
+    gl.uniform3f(gl.getUniformLocation(prog, 'uGlowCol'), glowRgb[0], glowRgb[1], glowRgb[2]);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    rafId = requestAnimationFrame(loop);
+  }
+
+  return {
+    setActive(on) {
+      active = on;
+      cancelAnimationFrame(rafId);
+      if (on) rafId = requestAnimationFrame(loop);
+    },
+    setProgress(p) { progress = p; },
+    destroy() { destroyed = true; cancelAnimationFrame(rafId); }
+  };
+}
+
 async function initApp() {
-  MANIFEST = await fetch('data/terrarium/seeing_spacetime_films/videotext_manifest.json?v=10').then(r => r.json());
+  const [man, vMap] = await Promise.all([
+    fetch('data/terrarium/seeing_spacetime_films/videotext_manifest.json?v=11').then(r => r.json()),
+    fetch('data/terrarium/seeing_spacetime_films/bible_view_map.json').then(r => r.ok ? r.json() : {}).catch(() => ({}))
+  ]);
+  MANIFEST = man;
+  VIEW_DIR_MAP = vMap || {};
   function route() {
     if (cleanup) { cleanup(); cleanup = null; }
     const h = location.hash || '';
