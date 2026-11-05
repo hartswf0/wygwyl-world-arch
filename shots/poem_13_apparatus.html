@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Poem 13: How to Win My Heart — 6 Narrative Apparatus Paradigms</title>
+<style>
+  :root {
+    --bg: #07090d;
+    --panel: #0d1118;
+    --panel-2: #121822;
+    --border: rgba(92, 228, 255, 0.22);
+    --cyan: #5ce4ff;
+    --amber: #ffbe52;
+    --green: #82f5af;
+    --pink: #ff82c3;
+    --text: #e6eef6;
+    --muted: #8ea3b8;
+    --mono: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
+    --serif: "Georgia", "Iowan Old Style", serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .global-apparatus-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px 14px;
+    background: #05070b;
+    border-bottom: 1px solid rgba(92, 228, 255, 0.22);
+    font-family: "SF Mono", "Menlo", "Monaco", monospace;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  .gnav-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .gnav-label {
+    color: #8ea3b8;
+    font-weight: 700;
+    margin-right: 4px;
+    letter-spacing: 0.05em;
+  }
+  .nav-pill, .poem-pill {
+    color: #d5e2ee;
+    text-decoration: none;
+    padding: 3px 7px;
+    border-radius: 3px;
+    background: #0e141d;
+    border: 1px solid rgba(142, 163, 184, 0.25);
+    transition: all 0.12s ease;
+  }
+  .nav-pill:hover, .poem-pill:hover {
+    border-color: #5ce4ff;
+    color: #ffffff;
+    background: rgba(92, 228, 255, 0.14);
+  }
+  .nav-pill.active, .poem-pill.active {
+    background: rgba(92, 228, 255, 0.22);
+    border-color: #5ce4ff;
+    color: #5ce4ff;
+    font-weight: 700;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: #0a0e14;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .brand-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.05em;
+  }
+  .brand-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .mode-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .m-btn {
+    background: #101620;
+    color: var(--text);
+    border: 1px solid rgba(142, 163, 184, 0.28);
+    padding: 6px 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 3px;
+    text-decoration: none;
+  }
+  .m-btn.active, .m-btn:hover {
+    background: rgba(92, 228, 255, 0.18);
+    border-color: var(--cyan);
+    color: var(--cyan);
+    font-weight: 700;
+  }
+  .workspace {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    min-height: 0;
+  }
+  .main-stage {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: #05070b;
+    overflow-y: auto;
+    padding: 12px;
+    gap: 12px;
+  }
+  .six-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .opt-grid-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.14s ease;
+  }
+  .opt-grid-card:hover {
+    border-color: var(--amber);
+    transform: translateY(-2px);
+  }
+  .opt-grid-card img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+  }
+  .opt-grid-cap {
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+  }
+  .hero-viewer {
+    flex: 1;
+    min-height: 440px;
+    background: #030508;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-viewer img, .hero-viewer video {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .inspector {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 12px;
+    gap: 12px;
+  }
+  .section-title {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(92, 228, 255, 0.18);
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+  }
+  .data-card {
+    background: var(--panel-2);
+    border: 1px solid rgba(142, 163, 184, 0.2);
+    border-radius: 4px;
+    padding: 9px;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .view-strip {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .view-thumb {
+    background: #0d131c;
+    border: 1px solid rgba(142, 163, 184, 0.22);
+    border-radius: 3px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .view-thumb:hover {
+    border-color: var(--green);
+  }
+  .view-thumb img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+  }
+  .view-thumb-cap {
+    padding: 4px 6px;
+    font-size: 10px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+</head>
+<body>
+
+<nav class="global-apparatus-nav">
+  <div class="gnav-group">
+    <span class="gnav-label">PARADIGM WEBPAGES:</span>
+    <a class="nav-pill" href="vesper_apparatus.html">ALL 14×6 HUB</a><a class="nav-pill" href="apparatus_opt1_pointcloud.html">OPT I · 3D POINT CLOUD</a><a class="nav-pill" href="apparatus_opt2_multiplane.html">OPT II · EXPLODED MULTIPLANE</a><a class="nav-pill" href="apparatus_opt3_perspective.html">OPT III · PERSPECTIVE & LAYOUT</a><a class="nav-pill" href="apparatus_opt4_perceptual.html">OPT IV · SAM2 & ΔE COMPILER</a><a class="nav-pill" href="apparatus_opt5_kits.html">OPT V · TACTILE CUT-OUT KITS</a><a class="nav-pill" href="apparatus_opt6_xray.html">OPT VI · X-RAY & ECHO CURTAIN</a>
+  </div>
+  <div class="gnav-group">
+    <span class="gnav-label">POEM WEBPAGES (01–14):</span>
+    <a class="poem-pill" href="poem_01_apparatus.html" title="Poem 01: Out of Life">P01</a><a class="poem-pill" href="poem_02_apparatus.html" title="Poem 02: Flashing Lights">P02</a><a class="poem-pill" href="poem_03_apparatus.html" title="Poem 03: How to break off an engagement">P03</a><a class="poem-pill" href="poem_04_apparatus.html" title="Poem 04: Nevermore">P04</a><a class="poem-pill" href="poem_05_apparatus.html" title="Poem 05: Bloodlines">P05</a><a class="poem-pill" href="poem_06_apparatus.html" title="Poem 06: Resurrecting Atlantis">P06</a><a class="poem-pill" href="poem_07_apparatus.html" title="Poem 07: DJ Turn Me Up">P07</a><a class="poem-pill" href="poem_08_apparatus.html" title="Poem 08: Newly Single">P08</a><a class="poem-pill" href="poem_09_apparatus.html" title="Poem 09: Yet, Heard">P09</a><a class="poem-pill" href="poem_10_apparatus.html" title="Poem 10: Magic Ride">P10</a><a class="poem-pill" href="poem_11_apparatus.html" title="Poem 11: New Day">P11</a><a class="poem-pill" href="poem_12_apparatus.html" title="Poem 12: Reunion">P12</a><a class="poem-pill active" href="poem_13_apparatus.html" title="Poem 13: How to Win My Heart">P13</a><a class="poem-pill" href="poem_14_apparatus.html" title="Poem 14: Hot Minute">P14</a>
+  </div>
+</nav>
+
+<header>
+  <div>
+    <div class="brand-title">POEM 13 · HOW TO WIN MY HEART — ALL 6 NARRATIVE APPARATUS PARADIGMS</div>
+    <div class="brand-sub">Hero Common Place: V84 ↔ Paired Echo Common Place: V23 · Click any of the 6 paradigm plates below to inspect at full resolution</div>
+  </div>
+  <div class="mode-bar">
+    <a class="m-btn" href="poem_12_apparatus.html">← POEM 12</a>
+    <button class="m-btn active" id="btnOpt0" onclick="openOptionStage(0)">6-PARADIGM OVERVIEW</button>
+    <button class="m-btn" id="btnOpt1" onclick="openOptionStage(1)">I · 3D PLY</button>
+    <button class="m-btn" id="btnOpt2" onclick="openOptionStage(2)">II · MULTIPLANE</button>
+    <button class="m-btn" id="btnOpt3" onclick="openOptionStage(3)">III · PERSPECTIVE</button>
+    <button class="m-btn" id="btnOpt4" onclick="openOptionStage(4)">IV · SAM2/ΔE</button>
+    <button class="m-btn" id="btnOpt5" onclick="openOptionStage(5)">V · CUT-OUT KITS</button>
+    <button class="m-btn" id="btnOpt6" onclick="openOptionStage(6)">VI · X-RAY ECHO</button>
+    <button class="m-btn" id="btnOpt7" onclick="openOptionStage(7)">4K SHEET</button>
+    <button class="m-btn" id="btnOpt8" onclick="openOptionStage(8)">▶ PLAY H.264 FILM</button>
+    <a class="m-btn" href="poem_14_apparatus.html">POEM 14 →</a>
+  </div>
+</header>
+
+<div class="workspace">
+  <main class="main-stage">
+    <div class="six-grid" id="sixGrid">
+      
+        <div class="opt-grid-card" onclick="openOptionStage(1)">
+          <img src="data/terrarium/seeing_spacetime_films/poem_13_opt1.jpg" alt="Poem 13 Option 1" />
+          <div class="opt-grid-cap">
+            <span style="color:#ffbe52;font-weight:700">OPT I · 3D POINT CLOUD</span>
+            <a href="apparatus_opt1_pointcloud.html?poem=13" onclick="event.stopPropagation()" style="color:#8ea3b8;text-decoration:none;font-size:10px">Open Paradigm Page →</a>
+          </div>
+        </div>
+        
+        <div class="opt-grid-card" onclick="openOptionStage(2)">
+          <img src="data/terrarium/seeing_spacetime_films/poem_13_opt2.jpg" alt="Poem 13 Option 2" />
+          <div class="opt-grid-cap">
+            <span style="color:#5ce4ff;font-weight:700">OPT II · EXPLODED MULTIPLANE</span>
+            <a href="apparatus_opt2_multiplane.html?poem=13" onclick="event.stopPropagation()" style="color:#8ea3b8;text-decoration:none;font-size:10px">Open Paradigm Page →</a>
+          </div>
+        </div>
+        
+        <div class="opt-grid-card" onclick="openOptionStage(3)">
+          <img src="data/terrarium/seeing_spacetime_films/poem_13_opt3.jpg" alt="Poem 13 Option 3" />
+          <div class="opt-grid-cap">
+            <span style="color:#82f5af;font-weight:700">OPT III · PERSPECTIVE & LAYOUT</span>
+            <a href="apparatus_opt3_perspective.html?poem=13" onclick="event.stopPropagation()" style="color:#8ea3b8;text-decoration:none;font-size:10px">Open Paradigm Page →</a>
+          </div>
+        </div>
+        
+        <div class="opt-grid-card" onclick="openOptionStage(4)">
+          <img src="data/terrarium/seeing_spacetime_films/poem_13_opt4.jpg" alt="Poem 13 Option 4" />
+          <div class="opt-grid-cap">
+            <span style="color:#ff82c3;font-weight:700">OPT IV · SAM2 & ΔE COMPILER</span>
+            <a href="apparatus_opt4_perceptual.html?poem=13" onclick="event.stopPropagation()" style="color:#8ea3b8;text-decoration:none;font-size:10px">Open Paradigm Page →</a>
+          </div>
+        </div>
+        
+        <div class="opt-grid-card" onclick="openOptionStage(5)">
+          <img src="data/terrarium/seeing_spacetime_films/poem_13_opt5.jpg" alt="Poem 13 Option 5" />
+          <div class="opt-grid-cap">
+            <span style="color:#ffbe52;font-weight:700">OPT V · TACTILE CUT-OUT KITS</span>
+            <a href="apparatus_opt5_kits.html?poem=13" onclick="event.stopPropagation()" style="color:#8ea3b8;text-decoration:none;font-size:10px">Open Paradigm Page →</a>
+          </div>
+        </div>
+        
+        <div class="opt-grid-card" onclick="openOptionStage(6)">
+          <img src="data/terrarium/seeing_spacetime_films/poem_13_opt6.jpg" alt="Poem 13 Option 6" />
+          <div class="opt-grid-cap">
+            <span style="color:#5ce4ff;font-weight:700">OPT VI · X-RAY & ECHO CURTAIN</span>
+            <a href="apparatus_opt6_xray.html?poem=13" onclick="event.stopPropagation()" style="color:#8ea3b8;text-decoration:none;font-size:10px">Open Paradigm Page →</a>
+          </div>
+        </div>
+        
+    </div>
+    <div class="hero-viewer" id="heroViewer">
+      <img id="heroImg" src="data/terrarium/seeing_spacetime_films/poem_13_apparatus_6options.png" alt="Poem 13 6-Option Sheet" />
+      <video id="heroVid" src="data/terrarium/seeing_spacetime_films/poem_13_apparatus.mp4" controls loop muted playsinline style="display:none"></video>
+    </div>
+  </main>
+
+  <aside class="inspector">
+    <div>
+      <div class="section-title">Poem 13 Full Verse & Scene Breakdown</div>
+      <div class="data-card" id="verseBox" style="font-family:var(--serif);font-size:13px;color:#f5ecda;white-space:pre-line">Loading...</div>
+    </div>
+    <div>
+      <div class="section-title">Common Place Views in Poem 13 (Click to Inspect Layer Stack)</div>
+      <div class="view-strip" id="viewStrip"></div>
+    </div>
+    <div>
+      <div class="section-title">Multiplane Kit Sheets (poems/kits/13.*.jpg)</div>
+      <div class="view-strip" id="kitStrip"></div>
+    </div>
+    <div>
+      <div class="section-title">Working Assembly Manuscript</div>
+      <div class="data-card" id="assemblyBox" style="white-space:pre-line;color:var(--muted)">Loading...</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+const POEM_NUM = 13;
+const POEM_NS = "13";
+
+function openOptionStage(idx) {
+  for (let i = 0; i <= 8; i++) {
+    const b = document.getElementById("btnOpt" + i);
+    if (b) b.classList.toggle("active", i === idx);
+  }
+  const img = document.getElementById("heroImg");
+  const vid = document.getElementById("heroVid");
+  if (idx === 8) {
+    img.style.display = "none";
+    vid.style.display = "block";
+    vid.play().catch(() => {});
+  } else {
+    vid.pause();
+    vid.style.display = "none";
+    img.style.display = "block";
+    if (idx === 0 || idx === 7) {
+      img.src = `data/terrarium/seeing_spacetime_films/poem_${POEM_NS}_apparatus_6options.png`;
+    } else {
+      img.src = `data/terrarium/seeing_spacetime_films/poem_${POEM_NS}_opt${idx}.jpg`;
+    }
+  }
+}
+
+fetch("data/terrarium/seeing_spacetime_films/vesper_world_bundle.json")
+  .then((r) => r.json())
+  .then((b) => {
+    const poem = b.poems.find((p) => Number(p.num) === POEM_NUM) || b.poems[0];
+    const pText = (poem.poem_text && !poem.poem_text.startsWith("{"))
+      ? poem.poem_text
+      : (poem.full_text || []).map((x) => (x && typeof x === "object" ? x.line || "" : String(x))).join("\n");
+    document.getElementById("verseBox").textContent = pText;
+    document.getElementById("assemblyBox").textContent = poem.assembly_excerpt || "";
+
+    const vStrip = document.getElementById("viewStrip");
+    (poem.views || []).forEach((v) => {
+      const sd = v.dir || v.shot_dir || "";
+      const card = document.createElement("div");
+      card.className = "view-thumb";
+      card.innerHTML = `<img src="out/${sd}/multiplane/exploded.jpg" alt="${v.id}" /><div class="view-thumb-cap">${v.id} · ${v.place_name || ""}</div>`;
+      card.onclick = () => {
+        const img = document.getElementById("heroImg");
+        const vid = document.getElementById("heroVid");
+        vid.pause(); vid.style.display = "none"; img.style.display = "block";
+        img.src = `out/${sd}/multiplane/exploded.jpg`;
+      };
+      vStrip.appendChild(card);
+    });
+
+    const kStrip = document.getElementById("kitStrip");
+    (poem.kit_sheets || []).forEach((k) => {
+      const card = document.createElement("div");
+      card.className = "view-thumb";
+      card.innerHTML = `<img src="${k.image}" alt="${k.id}" /><div class="view-thumb-cap">${k.id}</div>`;
+      card.onclick = () => {
+        const img = document.getElementById("heroImg");
+        const vid = document.getElementById("heroVid");
+        vid.pause(); vid.style.display = "none"; img.style.display = "block";
+        img.src = k.image;
+      };
+      kStrip.appendChild(card);
+    });
+  });
+</script>
+</body>
+</html>
