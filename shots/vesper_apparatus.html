@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>WYGWYL — Six Narrative Apparatus Paradigms (Unobstructed Real-Asset Explorer)</title>
+<title>WYGWYL — All 14 Poems × 6 Narrative Apparatus Paradigms</title>
 <style>
   :root {
     --bg: #07090d;
@@ -83,7 +83,7 @@
   .workspace {
     flex: 1;
     display: grid;
-    grid-template-columns: 270px 1fr 410px;
+    grid-template-columns: 280px 1fr 410px;
     min-height: 0;
   }
   .sidebar {
@@ -177,7 +177,7 @@
     overflow: hidden;
     padding: 8px;
   }
-  #stageCanvas {
+  #stageCanvas, #stageVideo {
     max-width: 100%;
     max-height: 100%;
     width: auto;
@@ -187,13 +187,16 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
     cursor: crosshair;
   }
+  #stageVideo {
+    display: none;
+  }
   .stage-controls {
     padding: 8px 14px;
     background: #0a0e15;
     border-top: 1px solid var(--border);
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
     font-size: 11px;
     flex-wrap: wrap;
   }
@@ -204,7 +207,7 @@
   }
   input[type="range"] {
     accent-color: var(--cyan);
-    width: 120px;
+    width: 115px;
   }
   .card {
     background: var(--panel-2);
@@ -258,27 +261,29 @@
 <body>
 <header>
   <div class="brand">
-    <div class="brand-title">WYGWYL · NARRATIVE APPARATUS (6 UNOBSTRUCTED REAL-DATA PARADIGMS)</div>
-    <div class="brand-sub">Zero decorative bezels · Zero stick-box wireframes · 100% real 3D point clouds, multiplane stacks, perspective grids, SAM2/ΔE programs & cut-out kits</div>
+    <div class="brand-title">WYGWYL · ALL 14 POEMS × 6 UNOBSTRUCTED NARRATIVE APPARATUS PARADIGMS</div>
+    <div class="brand-sub">Zero decorative bezels · Zero stick-box wireframes · 100% real 3D point clouds (points.ply), exploded multiplanes, perspective grids, SAM2/ΔE programs & cut-out kits</div>
   </div>
   <div class="paradigm-bar" id="paradigmBar">
-    <button class="p-btn active" data-mode="1">I · 3D Point Cloud + Z-Text</button>
-    <button class="p-btn" data-mode="2">II · Exploded Multiplane (exploded.jpg)</button>
+    <button class="p-btn active" data-mode="1">I · 3D Point Cloud (points.ply)</button>
+    <button class="p-btn" data-mode="2">II · Exploded Multiplane</button>
     <button class="p-btn" data-mode="3">III · Perspective & Line Layout</button>
     <button class="p-btn" data-mode="4">IV · SAM2 Contours & ΔE Program</button>
-    <button class="p-btn" data-mode="5">V · Tactile Cut-Out Kits (kits/*.jpg)</button>
+    <button class="p-btn" data-mode="5">V · Tactile Cut-Out Kits</button>
     <button class="p-btn" data-mode="6">VI · Unobstructed 4-Layer X-Ray</button>
+    <button class="p-btn" data-mode="7">VII · 6-Option 4K Contact Sheet</button>
+    <button class="p-btn" data-mode="8">VIII · Play Poem Apparatus Reel</button>
   </div>
 </header>
 
 <div class="workspace">
   <aside class="sidebar">
     <div>
-      <div class="section-title">14 Poems (Dossier + Riverbed + Breakdown)</div>
+      <div class="section-title">All 14 Poems (Click or ↑/↓ Keys)</div>
       <div class="poem-list" id="poemList"></div>
     </div>
     <div>
-      <div class="section-title">Common Place Views (81 Active Shots)</div>
+      <div class="section-title">Common Place Views in Poem</div>
       <div class="view-grid" id="viewGrid"></div>
     </div>
     <div>
@@ -290,6 +295,7 @@
   <main class="stage-wrap">
     <div class="stage-main">
       <canvas id="stageCanvas" width="1920" height="1080"></canvas>
+      <video id="stageVideo" controls loop playsinline></video>
     </div>
     <div class="stage-controls">
       <div class="ctrl-group">
@@ -306,6 +312,7 @@
         <input type="range" id="textAlpha" min="0" max="100" value="90" />
       </div>
       <div class="ctrl-group">
+        <button class="p-btn" id="toggleExactBtn">Mode: Pre-Rendered 3D Plate + Live Scrub</button>
         <button class="p-btn" id="toggleAnimBtn">Pause Motion</button>
       </div>
     </div>
@@ -321,7 +328,7 @@
       <div class="card card-cyan" id="promptBox">Loading...</div>
     </div>
     <div>
-      <div class="section-title">Golden Riverbed & Perceptual Diagnostics</div>
+      <div class="section-title">Perceptual Compiler & Staging Signals</div>
       <div class="card card-green" id="diagnosticsBox">Loading...</div>
     </div>
     <div>
@@ -341,6 +348,7 @@ const state = {
   scrubZ: 6.0,
   textAlpha: 0.90,
   animating: true,
+  useExactPlate: true,
   t: 0,
   images: {},
   activeKitImg: null,
@@ -348,6 +356,7 @@ const state = {
 
 const canvas = document.getElementById("stageCanvas");
 const ctx = canvas.getContext("2d");
+const videoEl = document.getElementById("stageVideo");
 
 function loadImage(src) {
   if (!src) return Promise.resolve(null);
@@ -378,7 +387,8 @@ function renderPoemList() {
   state.bundle.poems.forEach((p, idx) => {
     const div = document.createElement("div");
     div.className = "poem-item" + (idx === state.poemIdx ? " active" : "");
-    div.innerHTML = `<span>${p.num} · ${p.title}</span><span style="color:var(--muted)">${(p.views||[]).length}v</span>`;
+    const hid = p.hero_view_id || (p.views && p.views[0] ? p.views[0].id : "");
+    div.innerHTML = `<span>${p.num} · ${p.title}</span><span style="color:var(--muted)">${hid} (${(p.views||[]).length}v)</span>`;
     div.onclick = () => selectPoem(idx);
     el.appendChild(div);
   });
@@ -386,11 +396,18 @@ function renderPoemList() {
 
 function selectPoem(idx) {
   state.poemIdx = idx;
-  state.viewIdx = 0;
+  const poem = state.bundle.poems[idx];
+  const heroId = poem.hero_view_id;
+  let vIdx = 0;
+  if (heroId && poem.views) {
+    const found = poem.views.findIndex((v) => v.id === heroId);
+    if (found >= 0) vIdx = found;
+  }
+  state.viewIdx = vIdx;
   state.activeKitImg = null;
   renderPoemList();
   renderViewGrid();
-  selectView(0);
+  selectView(vIdx);
 }
 
 function renderViewGrid() {
@@ -400,7 +417,9 @@ function renderViewGrid() {
   (poem.views || []).forEach((v, idx) => {
     const d = document.createElement("div");
     d.className = "view-chip" + (idx === state.viewIdx ? " active" : "");
-    d.textContent = `${v.view_id} · ${v.place || v.shot_dir.slice(0, 6)}`;
+    const vid = v.id || v.view_id || "";
+    const place = v.place_name || v.place || "";
+    d.textContent = `${vid} · ${place}`;
     d.onclick = () => selectView(idx);
     el.appendChild(d);
   });
@@ -411,30 +430,68 @@ async function selectView(vIdx) {
   renderViewGrid();
   const poem = state.bundle.poems[state.poemIdx];
   const view = (poem.views || [])[vIdx] || {};
+  const sd = view.dir || view.shot_dir || "";
   const assets = view.assets || {
-    image: `out/${view.shot_dir}/image.jpg`,
-    cel: `out/${view.shot_dir}/cartoon/cel.png`,
-    layout_sheet: `out/${view.shot_dir}/cartoon/layout_sheet.png`,
-    planes_gs: `out/${view.shot_dir}/cartoon/planes_gs.png`,
-    exploded: `out/${view.shot_dir}/multiplane/exploded.jpg`,
-    layout_drawing: `out/${view.shot_dir}/multiplane/layout_drawing.png`,
-    plane_map: `out/${view.shot_dir}/multiplane/plane_map.jpg`,
-    overlay: `out/${view.shot_dir}/overlay.jpg`,
-    compare: `out/${view.shot_dir}/program/compare.jpg`,
-    perceive: `out/${view.shot_dir}/program/perceive.jpg`,
+    image: `out/${sd}/image.jpg`,
+    cel: `out/${sd}/cartoon/cel.png`,
+    layout_sheet: `out/${sd}/cartoon/layout_sheet.png`,
+    planes_gs: `out/${sd}/cartoon/planes_gs.png`,
+    exploded: `out/${sd}/multiplane/exploded.jpg`,
+    layout_drawing: `out/${sd}/multiplane/layout_drawing.png`,
+    plane_map: `out/${sd}/multiplane/plane_map.jpg`,
+    overlay: `out/${sd}/overlay.jpg`,
+    compare: `out/${sd}/program/compare.jpg`,
+    perceive: `out/${sd}/program/perceive.jpg`,
   };
   view._resolvedAssets = assets;
 
-  // Preload all real computed assets for this view
-  await Promise.all(Object.values(assets).map(loadImage));
+  const numStr = String(poem.num).padStart(2, "0");
+  const app = poem.apparatus || {
+    opt1: `data/terrarium/seeing_spacetime_films/poem_${numStr}_opt1.jpg`,
+    opt2: `data/terrarium/seeing_spacetime_films/poem_${numStr}_opt2.jpg`,
+    opt3: `data/terrarium/seeing_spacetime_films/poem_${numStr}_opt3.jpg`,
+    opt4: `data/terrarium/seeing_spacetime_films/poem_${numStr}_opt4.jpg`,
+    opt5: `data/terrarium/seeing_spacetime_films/poem_${numStr}_opt5.jpg`,
+    opt6: `data/terrarium/seeing_spacetime_films/poem_${numStr}_opt6.jpg`,
+    sheet: `data/terrarium/seeing_spacetime_films/poem_${numStr}_apparatus_6options.png`,
+    video: `data/terrarium/seeing_spacetime_films/poem_${numStr}_apparatus.mp4`,
+  };
+  poem._resolvedApparatus = app;
+
+  if (state.mode === 8) {
+    videoEl.src = app.video;
+    videoEl.play().catch(() => {});
+  }
+
+  await Promise.all([
+    ...Object.values(assets).map(loadImage),
+    loadImage(app.opt1),
+    loadImage(app.opt2),
+    loadImage(app.opt3),
+    loadImage(app.opt4),
+    loadImage(app.opt5),
+    loadImage(app.opt6),
+    loadImage(app.sheet),
+  ]);
   if (poem.kit_sheets && poem.kit_sheets.length > 0) {
     await Promise.all(poem.kit_sheets.slice(0, 4).map((k) => loadImage(k.image)));
   }
   updateInspector(poem, view);
 }
 
+function getPoemTextString(poem) {
+  if (typeof poem.poem_text === "string" && poem.poem_text.trim() && !poem.poem_text.startsWith("{")) return poem.poem_text;
+  if (Array.isArray(poem.full_text)) {
+    return poem.full_text
+      .map((x) => (x && typeof x === "object" ? x.line || "" : String(x)))
+      .filter((s) => s.trim())
+      .join("\n");
+  }
+  if (typeof poem.full_text === "string") return poem.full_text;
+  return "";
+}
+
 function updateInspector(poem, view) {
-  // Plane stack
   const pList = document.getElementById("planeStackList");
   pList.innerHTML = "";
   (view.planes || []).forEach((p) => {
@@ -446,34 +503,33 @@ function updateInspector(poem, view) {
     pList.appendChild(row);
   });
 
-  // Verse & Breakdown
   const verseBox = document.getElementById("poemVerseBox");
   const sc0 = (poem.breakdown_scenes || [])[0] || {};
-  const poemText = (poem.poem_text || "").split("\n").slice(0, 8).join("\n");
+  const poemText = getPoemTextString(poem).split("\n").slice(0, 8).join("\n");
   verseBox.textContent = sc0.lines
     ? `[SCENE ${sc0.id} · ${sc0.movement || ""}]\n“${sc0.lines}”\n\n${sc0.treatment || ""}`
     : poemText;
 
-  // Verbatim Prompt
   document.getElementById("promptBox").textContent =
     view.prompt || "No prompt recorded.";
 
-  // Diagnostics
   const diag = document.getElementById("diagnosticsBox");
-  const notes = (view.signals_notes || []).slice(0, 3).join(" · ");
+  const sugs = view.signals?.suggestions || view.signals_notes || [];
+  const notes = sugs.slice(0, 3).join(" · ");
+  const felt = view.perceive?.felt || "";
   diag.innerHTML = `
-    <div><strong style="color:var(--green)">Camera:</strong> tilt ${(view.camera?.tilt_deg || 0).toFixed(1)}° · horizon Y ${(view.camera?.horizon_y_norm || 0.5).toFixed(2)}</div>
-    <div><strong style="color:var(--amber)">Depth Range:</strong> ${(view.depth?.near_m || 1.2).toFixed(2)}m .. ${(view.depth?.far_m || 35).toFixed(1)}m</div>
-    <div style="margin-top:4px;color:var(--muted)">${notes || poem.camera_language || ""}</div>
+    <div><strong style="color:var(--green)">Common Place:</strong> ${view.id || ""} · ${view.place_name || ""}</div>
+    <div><strong style="color:var(--cyan)">Camera:</strong> pitch ${(view.camera?.pitch_deg || 0).toFixed(1)}° · horizon Y ${(view.camera?.horizon_y_norm || 0.5).toFixed(2)} · ${view.camera?.shot_class || ""}</div>
+    <div><strong style="color:var(--amber)">Perceptual Felt:</strong> ${felt}</div>
+    <div style="margin-top:4px;color:var(--muted)">${notes}</div>
   `;
 
-  // Kits
   const kGrid = document.getElementById("kitThumbGrid");
   kGrid.innerHTML = "";
   (poem.kit_sheets || []).slice(0, 4).forEach((k) => {
     const card = document.createElement("div");
     card.className = "kit-thumb";
-    card.innerHTML = `<img src="${k.image}" alt="${k.id}" /><div class="kit-thumb-cap">${k.id} · ${k.title || "Multiplane Kit Sheet (click to inspect in Mode V)"}</div>`;
+    card.innerHTML = `<img src="${k.image}" alt="${k.id}" /><div class="kit-thumb-cap">${k.id} · ${k.title || "Multiplane Kit Sheet (click for Mode V)"}</div>`;
     card.onclick = async () => {
       state.activeKitImg = await loadImage(k.image);
       setMode(5);
@@ -497,8 +553,8 @@ function drawHeaderPill(tag, title, sub, accent = "#5ce4ff") {
   ctx.fillStyle = "rgba(7, 10, 15, 0.86)";
   ctx.strokeStyle = accent;
   ctx.lineWidth = 1;
-  ctx.fillRect(20, 16, 1360, 56);
-  ctx.strokeRect(20, 16, 1360, 56);
+  ctx.fillRect(20, 16, 1460, 56);
+  ctx.strokeRect(20, 16, 1460, 56);
   ctx.fillStyle = accent;
   ctx.fillRect(20, 16, 5, 56);
   ctx.font = "bold 16px 'SF Mono', Menlo, monospace";
@@ -510,7 +566,7 @@ function drawHeaderPill(tag, title, sub, accent = "#5ce4ff") {
 }
 
 function renderStage() {
-  if (!state.bundle) return;
+  if (!state.bundle || state.mode === 8) return;
   const W = canvas.width;
   const H = canvas.height;
   ctx.fillStyle = "#06090e";
@@ -520,7 +576,16 @@ function renderStage() {
   const view = (poem.views || [])[state.viewIdx];
   if (!view || !view._resolvedAssets) return;
   const A = view._resolvedAssets;
+  const PApp = poem._resolvedApparatus || {};
 
+  // Mode VII: Full 4K 6-Option Contact Sheet for this Poem
+  if (state.mode === 7) {
+    const sheetImg = state.images[PApp.sheet];
+    drawFitContain(sheetImg, 0, 0, W, H, "#06090e");
+    return;
+  }
+
+  // If user is on the poem's hero view and useExactPlate is enabled for Mode I, blend the true 129,264-vertex points.ply render with interactive scrubbing!
   const imgOrig = state.images[A.image];
   const imgCel = state.images[A.cel];
   const imgExploded = state.images[A.exploded];
@@ -533,66 +598,66 @@ function renderStage() {
   const imgPerceive = state.images[A.perceive];
 
   if (state.mode === 1) {
-    // OPTION I: True 3D Depth-Layered Point-Cloud & Depth-Occluded Worldtext
-    if (imgOrig) {
-      const yaw = (state.scrubX - 0.5) * 90 + Math.sin(state.t * 1.5) * 18;
-      // Draw deep planes first, interleave 3D worldtext, then draw foreground plane points over text!
+    const opt1Img = state.images[PApp.opt1];
+    const yaw = (state.scrubX - 0.38) * 90 + Math.sin(state.t * 1.5) * 14;
+    if (opt1Img && state.useExactPlate && view.id === poem.hero_view_id) {
+      drawFitContain(opt1Img, -yaw * 0.25, 0, W, H, "#06090e");
+      if (imgCel) {
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.globalAlpha = 0.18;
+        ctx.drawImage(imgCel, yaw * 0.55, 0, W, H);
+        ctx.restore();
+      }
+    } else if (imgOrig) {
       ctx.save();
-      ctx.globalAlpha = 0.32;
+      ctx.globalAlpha = 0.38;
       ctx.drawImage(imgOrig, -yaw * 0.25, 0, W, H);
       ctx.restore();
-
-      // Deep Z=21.8m Prompt Plane
       if (state.textAlpha > 0.05) {
         ctx.save();
         ctx.globalAlpha = state.textAlpha;
         const px = 420 - yaw * 0.6;
-        const py = 360;
-        ctx.fillStyle = "rgba(8, 14, 22, 0.84)";
+        const py = 320;
+        ctx.fillStyle = "rgba(8, 14, 22, 0.86)";
         ctx.strokeStyle = "#5ce4ff";
         ctx.fillRect(px, py, 740, 88);
         ctx.strokeRect(px, py, 740, 88);
         ctx.fillStyle = "#5ce4ff";
         ctx.font = "bold 13px 'SF Mono', monospace";
-        ctx.fillText(`P4/P5 DEEP ARCHITECTURE @ Z = 21.8m (×0.99 PARALLAX) · SHOT.JSON PROMPT`, px + 14, py + 24);
+        ctx.fillText(`P4/P5 DEEP ARCHITECTURE @ Z = 21.8m · ${view.id} (${view.place_name || ""})`, px + 14, py + 24);
         ctx.fillStyle = "#e6eef6";
         ctx.font = "14px 'SF Mono', monospace";
         ctx.fillText((view.prompt || "").slice(0, 78), px + 14, py + 48);
         ctx.fillText((view.prompt || "").slice(78, 156), px + 14, py + 70);
         ctx.restore();
       }
-
-      // Midground 3D Parallax Slice + Point-Cloud Lattice
       if (imgPlaneMap) {
         ctx.save();
         ctx.globalCompositeOperation = "screen";
-        ctx.globalAlpha = 0.48;
+        ctx.globalAlpha = 0.45;
         ctx.drawImage(imgOrig, yaw * 0.45, 0, W, H);
         ctx.restore();
       }
-
-      // Midground Z=6.0m Poem Verse Plane
       if (state.textAlpha > 0.05) {
         ctx.save();
         ctx.globalAlpha = state.textAlpha;
-        const vx = 340 + yaw * 0.5;
+        const vx = 320 + yaw * 0.5;
         const vy = 520;
         ctx.fillStyle = "rgba(22, 14, 9, 0.88)";
         ctx.strokeStyle = "#ffbe52";
-        ctx.fillRect(vx, vy, 660, 102);
-        ctx.strokeRect(vx, vy, 660, 102);
+        ctx.fillRect(vx, vy, 680, 102);
+        ctx.strokeRect(vx, vy, 680, 102);
         ctx.fillStyle = "#ffbe52";
         ctx.font = "bold 13px 'SF Mono', monospace";
-        ctx.fillText(`P2 CHARACTER ACTION THRESHOLD @ Z = ${state.scrubZ.toFixed(1)}m · POEM ${poem.num} (${poem.title})`, vx + 14, vy + 24);
+        ctx.fillText(`P2 ACTION THRESHOLD @ Z = ${state.scrubZ.toFixed(1)}m · POEM ${poem.num} (${poem.title})`, vx + 14, vy + 24);
         ctx.fillStyle = "#fff3d6";
         ctx.font = "20px Georgia, serif";
-        const pLines = (poem.poem_text || "").split("\n").filter(Boolean);
-        ctx.fillText(`“${pLines[0] || "What we've made / we don't want—"}”`, vx + 14, vy + 54);
-        ctx.fillText(`“${pLines[1] || "What we've sold to the world / doesn't exist."}”`, vx + 14, vy + 82);
+        const pLines = getPoemTextString(poem).split("\n").filter(Boolean);
+        ctx.fillText(`“${pLines[0] || poem.title}”`, vx + 14, vy + 54);
+        ctx.fillText(`“${pLines[1] || poem.essence || ""}”`, vx + 14, vy + 82);
         ctx.restore();
       }
-
-      // Foreground P0/P1 Parallax Occluder Layer
       if (imgCel) {
         ctx.save();
         ctx.globalCompositeOperation = "lighten";
@@ -600,20 +665,19 @@ function renderStage() {
         ctx.drawImage(imgCel, yaw * 1.15, 0, W, H);
         ctx.restore();
       }
+      drawHeaderPill(
+        `POEM ${poem.num} · ${poem.title.toUpperCase()} · OPTION I`,
+        `3D Metric Depth Volume (${view.id} · ${view.place_name || ""}) + Depth-Occluded Worldtext`,
+        `Parallax Orbit Δx=${((state.scrubX-0.5)*2).toFixed(2)}m · Active Metric Plane Z=${state.scrubZ.toFixed(1)}m · Zero HUD Bezel`,
+        "#ffbe52"
+      );
     }
-    drawHeaderPill(
-      "OPTION I · TRUE 3D POINT CLOUD & Z-TEXT",
-      `129,264-Vertex Metric Depth Volume (${view.view_id}) + Depth-Occluded Worldtext`,
-      `Parallax Orbit Δx=${((state.scrubX-0.5)*2).toFixed(2)}m · Active Metric Plane Z=${state.scrubZ.toFixed(1)}m · Zero HUD Bezel`,
-      "#ffbe52"
-    );
   } else if (state.mode === 2) {
-    // OPTION II: Exploded 3D Multiplane Stratigraphy (multiplane/exploded.jpg + plane_map.jpg)
     drawFitContain(imgExploded, 16, 84, Math.floor(W * 0.62), H - 100, "#101318");
-    drawFitContain(imgPlaneMap, Math.floor(W * 0.64), 84, Math.floor(W * 0.34), Math.floor((H - 100) * 0.42), "#101318");
+    drawFitContain(imgPlaneMap, Math.floor(W * 0.64), 84, Math.floor(W * 0.34), Math.floor((H - 100) * 0.40), "#101318");
 
     const rx = Math.floor(W * 0.64);
-    const ry = 84 + Math.floor((H - 100) * 0.44);
+    const ry = 84 + Math.floor((H - 100) * 0.42);
     const rw = Math.floor(W * 0.34);
     const rh = H - ry - 16;
     ctx.fillStyle = "#0b0f16";
@@ -623,7 +687,7 @@ function renderStage() {
 
     ctx.fillStyle = "#5ce4ff";
     ctx.font = "bold 16px 'SF Mono', monospace";
-    ctx.fillText("MULTIPLANE CAMERA STRATIGRAPHY (multiplane.json)", rx + 14, ry + 28);
+    ctx.fillText(`MULTIPLANE STRATIGRAPHY (${view.id} · multiplane.json)`, rx + 14, ry + 28);
 
     (view.planes || []).slice(0, 6).forEach((p, idx) => {
       const py = ry + 58 + idx * 54;
@@ -638,13 +702,12 @@ function renderStage() {
     });
 
     drawHeaderPill(
-      "OPTION II · EXPLODED MULTIPLANE STACK",
-      `Isometric 3D Plane Stratigraphy (out/${view.shot_dir}/multiplane/exploded.jpg)`,
+      `POEM ${poem.num} · ${poem.title.toUpperCase()} · OPTION II`,
+      `Isometric 3D Exploded Multiplane Stack (out/${view.dir}/multiplane/exploded.jpg)`,
       "Separated P0–P6 painted planes with metric Z depths, parallax multipliers & Golden Riverbed laws",
       "#5ce4ff"
     );
   } else if (state.mode === 3) {
-    // OPTION III: Animator's Perspective Grid & Line Layout (layout_sheet.png + layout_drawing.png)
     const lw = Math.floor(W * 0.64);
     const lh = H - 100;
     drawFitContain(imgLayoutSheet, 16, 84, lw, lh, "#101318");
@@ -674,8 +737,9 @@ function renderStage() {
     ctx.strokeRect(rx, ay, rw, H - ay - 16);
     ctx.fillStyle = "#82f5af";
     ctx.font = "bold 15px 'SF Mono', monospace";
-    ctx.fillText("ASSEMBLY WORKING MANUSCRIPT & HORIZON SOLVER", rx + 14, ay + 28);
-    const aLines = (poem.assembly_excerpt || poem.poem_text || "").split("\n").filter(Boolean).slice(0, 14);
+    ctx.fillText(`ASSEMBLY WORKING MANUSCRIPT — POEM ${poem.num}`, rx + 14, ay + 28);
+    const aText = poem.assembly_excerpt || (poem.assembly_pages && poem.assembly_pages[0] && poem.assembly_pages[0].text) || getPoemTextString(poem);
+    const aLines = String(aText).split("\n").filter(Boolean).slice(0, 14);
     ctx.fillStyle = "#e2ecf5";
     ctx.font = "13px 'SF Mono', monospace";
     aLines.forEach((ln, i) => {
@@ -683,13 +747,12 @@ function renderStage() {
     });
 
     drawHeaderPill(
-      "OPTION III · PERSPECTIVE & LINE LAYOUT",
-      `Solved 3D Ground Grid, Horizon/VP & Colour-Coded Line Layout (${view.view_id})`,
-      "Scrub X slider to wipe between 3D Perspective Floor Grid (layout_sheet.png) and Traditional Line Layout (layout_drawing.png)",
+      `POEM ${poem.num} · ${poem.title.toUpperCase()} · OPTION III`,
+      `Solved 3D Ground Grid, Horizon/VP & Colour-Coded Line Layout (${view.id} · ${view.place_name || ""})`,
+      "Move mouse or scrub X slider to wipe between 3D Perspective Floor Grid (layout_sheet.png) and Traditional Line Layout (layout_drawing.png)",
       "#82f5af"
     );
   } else if (state.mode === 4) {
-    // OPTION IV: SAM2 Contours, Vector Program & ΔE Perceptual Anatomy
     const lw = Math.floor(W * 0.54);
     const th = Math.floor((H - 108) * 0.62);
     const bh = (H - 108) - th - 10;
@@ -708,7 +771,7 @@ function renderStage() {
     ctx.strokeRect(rx, by, rw, H - by - 16);
     ctx.fillStyle = "#ff82c3";
     ctx.font = "bold 15px 'SF Mono', monospace";
-    ctx.fillText("VERBATIM PROMPT & PERCEPTUAL ΔE / STAGING SIGNALS", rx + 14, by + 26);
+    ctx.fillText(`VERBATIM PROMPT & PERCEPTUAL ΔE / STAGING SIGNALS (${view.id})`, rx + 14, by + 26);
     ctx.fillStyle = "#5ce4ff";
     ctx.font = "13px 'SF Mono', monospace";
     const pr = view.prompt || "";
@@ -717,18 +780,18 @@ function renderStage() {
     ctx.fillText(pr.slice(164, 246), rx + 14, by + 94);
 
     ctx.fillStyle = "#ffbe52";
-    (view.signals_notes || []).slice(0, 4).forEach((n, idx) => {
+    const sugs = view.signals?.suggestions || view.signals_notes || [];
+    sugs.slice(0, 4).forEach((n, idx) => {
       ctx.fillText(`• ${n.slice(0, 82)}`, rx + 14, by + 130 + idx * 22);
     });
 
     drawHeaderPill(
-      "OPTION IV · SEMANTIC & PERCEPTUAL ANATOMY",
+      `POEM ${poem.num} · ${poem.title.toUpperCase()} · OPTION IV`,
       `Pixel-Accurate SAM2 Contours (overlay.jpg) + Vector Program & ΔE Error (compare.jpg)`,
       "Bottom-Left: Squint scale readability pyramid (σ=1..32, perceive.jpg) · Bottom-Right: Verbatim prompt & signals.json",
       "#ff82c3"
     );
   } else if (state.mode === 5) {
-    // OPTION V: Tactile Cut-Out Kits (poems/kits/*.jpg + breakdown/NN.json)
     const kits = poem.kit_sheets || [];
     const k0 = state.activeKitImg || (kits[0] ? state.images[kits[0].image] : imgExploded);
     const k1 = kits[1] ? state.images[kits[1].image] : imgLayoutSheet;
@@ -755,17 +818,15 @@ function renderStage() {
     ctx.fillStyle = "#c8d6e5";
     ctx.font = "13px 'SF Mono', monospace";
     ctx.fillText(`Treatment: ${(sc0.treatment || "").slice(0, 76)}`, rx + 14, by + 82);
-    ctx.fillText(`Cast: ${(poem.cast || []).map(c => c.role || c.id).join(", ")}`, rx + 14, by + 108);
-    ctx.fillText(`Props: ${(poem.props || []).map(p => `${p.id} (${p.scale_cm||""}cm)`).join(" · ").slice(0, 76)}`, rx + 14, by + 132);
+    ctx.fillText(`Props: ${(poem.props || []).map(p => `${p.id || p.name || ""}`).join(" · ").slice(0, 76)}`, rx + 14, by + 110);
 
     drawHeaderPill(
-      "OPTION V · TACTILE CUT-OUT WORKBENCH",
+      `POEM ${poem.num} · ${poem.title.toUpperCase()} · OPTION V`,
       `Physical Multiplane Set & Prop Kits with Brass-Brad Pivots (+) & Grip Crosses (+)`,
       "Panel A: Card layout to paint into · Panel B: Midjourney & Butterfly-Halfworld Atlas refs · Panel C: Physical cardboard craft",
       "#ffbe52"
     );
-  } else {
-    // OPTION VI: Unobstructed 4-Layer X-Ray Curtain
+  } else if (state.mode === 6) {
     const x1 = Math.floor(W * Math.max(0.12, state.scrubX - 0.18));
     const x2 = Math.floor(W * state.scrubX);
     const x3 = Math.floor(W * Math.min(0.88, state.scrubX + 0.22));
@@ -810,14 +871,14 @@ function renderStage() {
       ctx.strokeRect(24, hy - 42, 920, 36);
       ctx.fillStyle = "#fff5dc";
       ctx.font = "18px Georgia, serif";
-      const vLine = (poem.poem_text || "").split("\n").filter(Boolean).slice(0, 3).join("  /  ");
+      const vLine = getPoemTextString(poem).split("\n").filter(Boolean).slice(0, 3).join("  /  ");
       ctx.fillText(`SOLVED HORIZON (y=${hy}px) · “${vLine.slice(0, 86)}”`, 36, hy - 18);
       ctx.restore();
     }
 
     drawHeaderPill(
-      "OPTION VI · UNOBSTRUCTED 4-LAYER X-RAY CURTAIN",
-      `Full-Bleed 16:9 Optical Peel (Original ↔ Cartoon Cel ↔ Animation Line Layout ↔ Metric Plane Map)`,
+      `POEM ${poem.num} · ${poem.title.toUpperCase()} · OPTION VI`,
+      `Full-Bleed 16:9 Optical Peel (${view.id} Original ↔ Cartoon Cel ↔ Animation Line Layout ↔ Metric Plane Map)`,
       "Move mouse or scrub X slider across the frame · Zero HUD bezel · Horizon-anchored poem verse",
       "#5ce4ff"
     );
@@ -829,6 +890,17 @@ function setMode(m) {
   document.querySelectorAll("#paradigmBar .p-btn").forEach((b) => {
     b.classList.toggle("active", Number(b.dataset.mode) === m);
   });
+  const poem = state.bundle ? state.bundle.poems[state.poemIdx] : null;
+  if (m === 8 && poem && poem._resolvedApparatus) {
+    canvas.style.display = "none";
+    videoEl.style.display = "block";
+    videoEl.src = poem._resolvedApparatus.video;
+    videoEl.play().catch(() => {});
+  } else {
+    videoEl.pause();
+    videoEl.style.display = "none";
+    canvas.style.display = "block";
+  }
 }
 
 document.querySelectorAll("#paradigmBar .p-btn").forEach((btn) => {
@@ -845,6 +917,12 @@ document.getElementById("scrubZ").oninput = (e) => {
 document.getElementById("textAlpha").oninput = (e) => {
   state.textAlpha = Number(e.target.value) / 100;
 };
+document.getElementById("toggleExactBtn").onclick = (e) => {
+  state.useExactPlate = !state.useExactPlate;
+  e.target.textContent = state.useExactPlate
+    ? "Mode: Pre-Rendered 3D Plate + Live Scrub"
+    : "Mode: Live Multi-Layer 3D Synthesis";
+};
 document.getElementById("toggleAnimBtn").onclick = (e) => {
   state.animating = !state.animating;
   e.target.textContent = state.animating ? "Pause Motion" : "Resume Motion";
@@ -854,6 +932,17 @@ canvas.addEventListener("mousemove", (e) => {
   const rect = canvas.getBoundingClientRect();
   state.scrubX = Math.max(0.05, Math.min(0.95, (e.clientX - rect.left) / rect.width));
   document.getElementById("scrubX").value = Math.round(state.scrubX * 100);
+});
+
+window.addEventListener("keydown", (e) => {
+  if (!state.bundle) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+    selectPoem((state.poemIdx + 1) % state.bundle.poems.length);
+  } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+    selectPoem((state.poemIdx - 1 + state.bundle.poems.length) % state.bundle.poems.length);
+  } else if (e.key >= "1" && e.key <= "8") {
+    setMode(Number(e.key));
+  }
 });
 
 function loop() {
