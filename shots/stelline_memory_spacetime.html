@@ -630,12 +630,15 @@
       <button class="vt-mini-btn seg-style-btn" data-style="layout_file" onclick="setPoetStageStyle('layout_file')">4 · 3D LAYOUT GRID (P0–P6)</button>
       <button class="vt-mini-btn seg-style-btn" data-style="overlay_file" onclick="setPoetStageStyle('overlay_file')">5 · SAM/M2F OVERLAY</button>
       <button class="vt-mini-btn seg-style-btn" data-style="exploded_file" onclick="setPoetStageStyle('exploded_file')">6 · EXPLODED 7-PLANE</button>
-      <button class="vt-mini-btn seg-style-btn" data-style="file" onclick="setPoetStageStyle('file')">7 · RAW PHOTO</button>
+      <button class="vt-mini-btn seg-style-btn" data-style="splat_file" onclick="setPoetStageStyle('splat_file')">7 · 3D GAUSSIAN SPLAT</button>
+      <button class="vt-mini-btn seg-style-btn" data-style="file" onclick="setPoetStageStyle('file')">8 · RAW PHOTO</button>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="vt-mini-btn" id="btnToggleKRow" onclick="toggleKParallelStrip()">SHOW/HIDE AGENT K 8-STAGE STRIP</button>
-      <a class="vt-mini-btn" href="data/terrarium/seeing_spacetime_films/poet_bookend_vs_k_interview_sheet.png" target="_blank" style="text-decoration:none">4K K↔POET SEGMENTED SHEET ↗</a>
-      <a class="vt-mini-btn" href="data/terrarium/seeing_spacetime_films/poet_retelling_bookend_14poems_sheet.png" target="_blank" style="text-decoration:none">4K 14-POEM BOOKEND MATRIX ↗</a>
+      <a class="vt-mini-btn" id="linkOpenPointCloudStudio" href="pointcloud.html?shot=poet_02_warm_lectern_medium" target="_blank" style="text-decoration:none;border-color:rgba(92,228,255,0.55);color:var(--cyan)">3D POINT CLOUD & .SPLAT STUDIO ↗</a>
+      <a class="vt-mini-btn" href="atlas_splat_studio.html" target="_blank" style="text-decoration:none">APPLE ML-SHARP & L3G-MEM SPLATS ↗</a>
+      <a class="vt-mini-btn" href="data/terrarium/seeing_spacetime_films/pointcloud_splat_collar_rhythm_sheet.png" target="_blank" style="text-decoration:none">4K POINT-CLOUD & COLLAR RHYTHM SHEET ↗</a>
+      <a class="vt-mini-btn" href="data/terrarium/seeing_spacetime_films/poet_bookend_vs_k_interview_sheet.png" target="_blank" style="text-decoration:none">4K K↔POET SHEET ↗</a>
     </div>
   </div>
 
@@ -648,13 +651,14 @@
     <div class="vt-screen">
       <div class="vt-video-frame" id="bookendFrameWrap">
         <video id="bookendFilmVideo" src="videos/poet_bookends/poem_01_bookend_spacetime.mp4" controls playsinline preload="auto"></video>
-        <canvas id="bookendSlitCanvas" width="1280" height="720" style="display:none;width:100%;height:100%;cursor:ew-resize"></canvas>
+        <canvas id="bookendSlitCanvas" width="1280" height="720" style="display:none;width:100%;height:100%;cursor:crosshair"></canvas>
       </div>
       <div class="vt-transport">
-        <button class="vt-play-btn" id="bookendPlayBtn" onclick="toggleBookendVideo()">▶ PLAY 5-ACT SEGMENTED BOOKEND FILM</button>
+        <button class="vt-play-btn" id="bookendPlayBtn" onclick="toggleBookendVideo()">▶ PLAY 5-ACT POINT-CLOUD & SPLAT BOOKEND</button>
         <span id="bookendTimecode">00:00 / 00:18</span>
-        <button class="vt-mini-btn" id="btnToggleBookendSlit" onclick="toggleBookendSlitScanner()">⇄ INTERACTIVE 4-WAY CROSS-WORLD SLIT-SCAN</button>
-        <button class="vt-mini-btn" onclick="playAllPoemsBookendAnthology()">▶ MASTER ANTHOLOGY REEL</button>
+        <button class="vt-mini-btn" id="btnTogglePointCloudMorph" onclick="toggleBookendPointCloudMorph()" style="border-color:rgba(92,228,255,0.55);color:var(--cyan)">◈ LIVE 3D POINT-CLOUD & COLLAR RHYTHM MORPH</button>
+        <button class="vt-mini-btn" id="btnToggleBookendSlit" onclick="toggleBookendSlitScanner()">⇄ 4-WAY SLIT-SCAN</button>
+        <button class="vt-mini-btn" onclick="playAllPoemsBookendAnthology()">▶ MASTER ANTHOLOGY</button>
       </div>
       <div class="vt-live-caption" id="bookendLiveCaption">
         <span class="who" id="bookendCaptionWho">POEM 01 · OUT OF LIFE · ACT I: OPENING LECTERN BOOKEND (P0–P6)</span>
@@ -1290,29 +1294,33 @@ state.poetStageStyle = "dope_composite";
 state.activePoetStageIdx = 1; // Default to poet_02 (Lectern Medium)
 state.showKStrip = true;
 state.bookendSlitMode = false;
+state.bookendPcMorphMode = false;
 state.bookendSlitX = 0.52;
+state.bookendPcMorphU = 0.48;
+state.bookendPcYaw = 0.28;
 state.slitImgCache = {};
+state.plyCache = {};
 
 const DEFAULT_POET_STAGES = [
-  { id: "poet_01", sid: "poet_01_warm_salon_circle_wide", k_sid: "k_01_office_interview", act: "ACT I · SALON WIDE", file: "out/poet_01_warm_salon_circle_wide/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_01_dope_composite.jpg", angular_file: "out/poet_01_warm_salon_circle_wide/program/frame0.png", cel_file: "out/poet_01_warm_salon_circle_wide/cartoon/cel.png", layout_file: "out/poet_01_warm_salon_circle_wide/cartoon/layout_sheet.png", overlay_file: "out/poet_01_warm_salon_circle_wide/overlay.jpg", exploded_file: "out/poet_01_warm_salon_circle_wide/multiplane/exploded.jpg", title: "Warm Graffiti Salon & Circle", k_parallel: "K 1:49 (k_01) · Interview Room", t_seek: 0.2 },
-  { id: "poet_02", sid: "poet_02_warm_lectern_medium", k_sid: "k_01_office_interview", act: "ACT I · LECTERN MEDIUM", file: "out/poet_02_warm_lectern_medium/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_02_dope_composite.jpg", angular_file: "out/poet_02_warm_lectern_medium/program/frame0.png", cel_file: "out/poet_02_warm_lectern_medium/cartoon/cel.png", layout_file: "out/poet_02_warm_lectern_medium/cartoon/layout_sheet.png", overlay_file: "out/poet_02_warm_lectern_medium/overlay.jpg", exploded_file: "out/poet_02_warm_lectern_medium/multiplane/exploded.jpg", title: "At the Clear Acrylic Lectern", k_parallel: "K 1:54 (k_01) · 'Tell me a memory'", t_seek: 1.3 },
-  { id: "poet_03", sid: "poet_03_standing_graffiti_gesture", k_sid: "k_02_k_eyes_threshold", act: "ACT I · INCITING GESTURE", file: "out/poet_03_standing_graffiti_gesture/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_03_dope_composite.jpg", angular_file: "out/poet_03_standing_graffiti_gesture/program/frame0.png", cel_file: "out/poet_03_standing_graffiti_gesture/cartoon/cel.png", layout_file: "out/poet_03_standing_graffiti_gesture/cartoon/layout_sheet.png", overlay_file: "out/poet_03_standing_graffiti_gesture/overlay.jpg", exploded_file: "out/poet_03_standing_graffiti_gesture/multiplane/exploded.jpg", title: "Standing Gesture Before Mural", k_parallel: "K 2:00 (k_02) · 'I had a little toy horse'", t_seek: 2.5 },
-  { id: "poet_04", sid: "poet_04_standing_hands_heart", k_sid: "k_02_k_eyes_threshold", act: "ACT II · HANDS TO HEART", file: "out/poet_04_standing_hands_heart/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_04_dope_composite.jpg", angular_file: "out/poet_04_standing_hands_heart/program/frame0.png", cel_file: "out/poet_04_standing_hands_heart/cartoon/cel.png", layout_file: "out/poet_04_standing_hands_heart/cartoon/layout_sheet.png", overlay_file: "out/poet_04_standing_hands_heart/overlay.jpg", exploded_file: "out/poet_04_standing_hands_heart/multiplane/exploded.jpg", title: "Recall Tied to Feeling", k_parallel: "K 2:03 (k_02) · 'Everything's grey'", t_seek: 3.7 },
-  { id: "poet_05", sid: "poet_05_close_pages_threshold", k_sid: "k_03_orphanage_catwalks", act: "ACT II · GLASS LECTERN PRISM", file: "out/poet_05_close_pages_threshold/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_05_dope_composite.jpg", angular_file: "out/poet_05_close_pages_threshold/program/frame0.png", cel_file: "out/poet_05_close_pages_threshold/cartoon/cel.png", layout_file: "out/poet_05_close_pages_threshold/cartoon/layout_sheet.png", overlay_file: "out/poet_05_close_pages_threshold/overlay.jpg", exploded_file: "out/poet_05_close_pages_threshold/multiplane/exploded.jpg", title: "Acrylic Lectern Plane Prism", k_parallel: "K 2:06 (k_03) · Orphanage Catwalks", t_seek: 4.5 },
-  { id: "poet_06", sid: "poet_06_chiaroscuro_open_hands", k_sid: "k_06_wooden_horse_palm", act: "ACT II→III · CHIAROSCURO HAND-OFF", file: "out/poet_06_chiaroscuro_open_hands/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_06_dope_composite.jpg", angular_file: "out/poet_06_chiaroscuro_open_hands/program/frame0.png", cel_file: "out/poet_06_chiaroscuro_open_hands/cartoon/cel.png", layout_file: "out/poet_06_chiaroscuro_open_hands/cartoon/layout_sheet.png", overlay_file: "out/poet_06_chiaroscuro_open_hands/overlay.jpg", exploded_file: "out/poet_06_chiaroscuro_open_hands/multiplane/exploded.jpg", title: "Chiaroscuro Open Hands Release", k_parallel: "K 2:27 (k_06) · Wooden Horse in Palm", t_seek: 5.4 },
-  { id: "poet_07", sid: "poet_07_chiaroscuro_wide_circle", k_sid: "k_07_burying_horse_ash", act: "ACT V · DARKENED CIRCLE", file: "out/poet_07_chiaroscuro_wide_circle/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_07_dope_composite.jpg", angular_file: "out/poet_07_chiaroscuro_wide_circle/program/frame0.png", cel_file: "out/poet_07_chiaroscuro_wide_circle/cartoon/cel.png", layout_file: "out/poet_07_chiaroscuro_wide_circle/cartoon/layout_sheet.png", overlay_file: "out/poet_07_chiaroscuro_wide_circle/overlay.jpg", exploded_file: "out/poet_07_chiaroscuro_wide_circle/multiplane/exploded.jpg", title: "Return to Chiaroscuro Circle", k_parallel: "K 2:36 (k_07) · Burying Horse in Ash", t_seek: 14.8 },
-  { id: "poet_08", sid: "poet_08_ots_circle_listeners", k_sid: "k_08_stelline_scanner_return", act: "ACT V · CIRCLE OF LISTENERS", file: "out/poet_08_ots_circle_listeners/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_08_dope_composite.jpg", angular_file: "out/poet_08_ots_circle_listeners/program/frame0.png", cel_file: "out/poet_08_ots_circle_listeners/cartoon/cel.png", layout_file: "out/poet_08_ots_circle_listeners/cartoon/layout_sheet.png", overlay_file: "out/poet_08_ots_circle_listeners/overlay.jpg", exploded_file: "out/poet_08_ots_circle_listeners/multiplane/exploded.jpg", title: "OTS Circle Receiving Memory", k_parallel: "K 3:06 (k_08) · 'Someone lived this'", t_seek: 16.4 },
+  { id: "poet_01", sid: "poet_01_warm_salon_circle_wide", k_sid: "k_01_office_interview", act: "ACT I · SALON WIDE", file: "out/poet_01_warm_salon_circle_wide/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_01_dope_composite.jpg", angular_file: "out/poet_01_warm_salon_circle_wide/program/frame0.png", cel_file: "out/poet_01_warm_salon_circle_wide/cartoon/cel.png", layout_file: "out/poet_01_warm_salon_circle_wide/cartoon/layout_sheet.png", overlay_file: "out/poet_01_warm_salon_circle_wide/overlay.jpg", exploded_file: "out/poet_01_warm_salon_circle_wide/multiplane/exploded.jpg", splat_file: "out/poet_01_warm_salon_circle_wide/cartoon/planes_gs.png", title: "Warm Graffiti Salon & Circle", k_parallel: "K 1:49 (k_01) · Interview Room", t_seek: 0.2 },
+  { id: "poet_02", sid: "poet_02_warm_lectern_medium", k_sid: "k_01_office_interview", act: "ACT I · LECTERN MEDIUM", file: "out/poet_02_warm_lectern_medium/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_02_dope_composite.jpg", angular_file: "out/poet_02_warm_lectern_medium/program/frame0.png", cel_file: "out/poet_02_warm_lectern_medium/cartoon/cel.png", layout_file: "out/poet_02_warm_lectern_medium/cartoon/layout_sheet.png", overlay_file: "out/poet_02_warm_lectern_medium/overlay.jpg", exploded_file: "out/poet_02_warm_lectern_medium/multiplane/exploded.jpg", splat_file: "out/poet_02_warm_lectern_medium/cartoon/planes_gs.png", title: "At the Clear Acrylic Lectern", k_parallel: "K 1:54 (k_01) · 'Tell me a memory'", t_seek: 1.3 },
+  { id: "poet_03", sid: "poet_03_standing_graffiti_gesture", k_sid: "k_02_k_eyes_threshold", act: "ACT I · INCITING GESTURE", file: "out/poet_03_standing_graffiti_gesture/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_03_dope_composite.jpg", angular_file: "out/poet_03_standing_graffiti_gesture/program/frame0.png", cel_file: "out/poet_03_standing_graffiti_gesture/cartoon/cel.png", layout_file: "out/poet_03_standing_graffiti_gesture/cartoon/layout_sheet.png", overlay_file: "out/poet_03_standing_graffiti_gesture/overlay.jpg", exploded_file: "out/poet_03_standing_graffiti_gesture/multiplane/exploded.jpg", splat_file: "out/poet_03_standing_graffiti_gesture/cartoon/planes_gs.png", title: "Standing Gesture Before Mural", k_parallel: "K 2:00 (k_02) · 'I had a little toy horse'", t_seek: 2.5 },
+  { id: "poet_04", sid: "poet_04_standing_hands_heart", k_sid: "k_02_k_eyes_threshold", act: "ACT II · HANDS TO HEART", file: "out/poet_04_standing_hands_heart/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_04_dope_composite.jpg", angular_file: "out/poet_04_standing_hands_heart/program/frame0.png", cel_file: "out/poet_04_standing_hands_heart/cartoon/cel.png", layout_file: "out/poet_04_standing_hands_heart/cartoon/layout_sheet.png", overlay_file: "out/poet_04_standing_hands_heart/overlay.jpg", exploded_file: "out/poet_04_standing_hands_heart/multiplane/exploded.jpg", splat_file: "out/poet_04_standing_hands_heart/cartoon/planes_gs.png", title: "Recall Tied to Feeling", k_parallel: "K 2:03 (k_02) · 'Everything's grey'", t_seek: 3.7 },
+  { id: "poet_05", sid: "poet_05_close_pages_threshold", k_sid: "k_03_orphanage_catwalks", act: "ACT II · GLASS LECTERN PRISM", file: "out/poet_05_close_pages_threshold/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_05_dope_composite.jpg", angular_file: "out/poet_05_close_pages_threshold/program/frame0.png", cel_file: "out/poet_05_close_pages_threshold/cartoon/cel.png", layout_file: "out/poet_05_close_pages_threshold/cartoon/layout_sheet.png", overlay_file: "out/poet_05_close_pages_threshold/overlay.jpg", exploded_file: "out/poet_05_close_pages_threshold/multiplane/exploded.jpg", splat_file: "out/poet_05_close_pages_threshold/cartoon/planes_gs.png", title: "Acrylic Lectern Plane Prism", k_parallel: "K 2:06 (k_03) · Orphanage Catwalks", t_seek: 4.5 },
+  { id: "poet_06", sid: "poet_06_chiaroscuro_open_hands", k_sid: "k_06_wooden_horse_palm", act: "ACT II→III · CHIAROSCURO HAND-OFF", file: "out/poet_06_chiaroscuro_open_hands/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_06_dope_composite.jpg", angular_file: "out/poet_06_chiaroscuro_open_hands/program/frame0.png", cel_file: "out/poet_06_chiaroscuro_open_hands/cartoon/cel.png", layout_file: "out/poet_06_chiaroscuro_open_hands/cartoon/layout_sheet.png", overlay_file: "out/poet_06_chiaroscuro_open_hands/overlay.jpg", exploded_file: "out/poet_06_chiaroscuro_open_hands/multiplane/exploded.jpg", splat_file: "out/poet_06_chiaroscuro_open_hands/cartoon/planes_gs.png", title: "Chiaroscuro Open Hands Release", k_parallel: "K 2:27 (k_06) · Wooden Horse in Palm", t_seek: 5.4 },
+  { id: "poet_07", sid: "poet_07_chiaroscuro_wide_circle", k_sid: "k_07_burying_horse_ash", act: "ACT V · DARKENED CIRCLE", file: "out/poet_07_chiaroscuro_wide_circle/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_07_dope_composite.jpg", angular_file: "out/poet_07_chiaroscuro_wide_circle/program/frame0.png", cel_file: "out/poet_07_chiaroscuro_wide_circle/cartoon/cel.png", layout_file: "out/poet_07_chiaroscuro_wide_circle/cartoon/layout_sheet.png", overlay_file: "out/poet_07_chiaroscuro_wide_circle/overlay.jpg", exploded_file: "out/poet_07_chiaroscuro_wide_circle/multiplane/exploded.jpg", splat_file: "out/poet_07_chiaroscuro_wide_circle/cartoon/planes_gs.png", title: "Return to Chiaroscuro Circle", k_parallel: "K 2:36 (k_07) · Burying Horse in Ash", t_seek: 14.8 },
+  { id: "poet_08", sid: "poet_08_ots_circle_listeners", k_sid: "k_08_stelline_scanner_return", act: "ACT V · CIRCLE OF LISTENERS", file: "out/poet_08_ots_circle_listeners/image.jpg", dope_composite: "data/terrarium/poet_lectern/poet_08_dope_composite.jpg", angular_file: "out/poet_08_ots_circle_listeners/program/frame0.png", cel_file: "out/poet_08_ots_circle_listeners/cartoon/cel.png", layout_file: "out/poet_08_ots_circle_listeners/cartoon/layout_sheet.png", overlay_file: "out/poet_08_ots_circle_listeners/overlay.jpg", exploded_file: "out/poet_08_ots_circle_listeners/multiplane/exploded.jpg", splat_file: "out/poet_08_ots_circle_listeners/cartoon/planes_gs.png", title: "OTS Circle Receiving Memory", k_parallel: "K 3:06 (k_08) · 'Someone lived this'", t_seek: 16.4 },
 ];
 
 const DEFAULT_K_STAGES = [
-  { id: "k_01", sid: "k_01_office_interview", act: "K STAGE 1 · 1:49 BOOKEND", title: "Officer K & Joshi Interview", file: "out/k_01_office_interview/image.jpg", dope_composite: "out/k_01_office_interview/program/frame0.png", angular_file: "out/k_01_office_interview/program/frame0.png", cel_file: "out/k_01_office_interview/cartoon/cel.png", layout_file: "out/k_01_office_interview/cartoon/layout_sheet.png", overlay_file: "out/k_01_office_interview/overlay.jpg", exploded_file: "out/k_01_office_interview/multiplane/exploded.jpg" },
-  { id: "k_02", sid: "k_02_k_eyes_threshold", act: "K STAGE 2 · 2:00 THRESHOLD", title: "K Eyes Lower ('Toy Horse')", file: "out/k_02_k_eyes_threshold/image.jpg", dope_composite: "out/k_02_k_eyes_threshold/program/frame0.png", angular_file: "out/k_02_k_eyes_threshold/program/frame0.png", cel_file: "out/k_02_k_eyes_threshold/cartoon/cel.png", layout_file: "out/k_02_k_eyes_threshold/cartoon/layout_sheet.png", overlay_file: "out/k_02_k_eyes_threshold/overlay.jpg", exploded_file: "out/k_02_k_eyes_threshold/multiplane/exploded.jpg" },
-  { id: "k_03", sid: "k_03_orphanage_catwalks", act: "K STAGE 3 · 2:06 ORPHANAGE", title: "Orphanage Abyss Catwalks", file: "out/k_03_orphanage_catwalks/image.jpg", dope_composite: "out/k_03_orphanage_catwalks/program/frame0.png", angular_file: "out/k_03_orphanage_catwalks/program/frame0.png", cel_file: "out/k_03_orphanage_catwalks/cartoon/cel.png", layout_file: "out/k_03_orphanage_catwalks/cartoon/layout_sheet.png", overlay_file: "out/k_03_orphanage_catwalks/overlay.jpg", exploded_file: "out/k_03_orphanage_catwalks/multiplane/exploded.jpg" },
-  { id: "k_04", sid: "k_04_clockwork_gears", act: "K STAGE 4 · 2:15 GEARS", title: "Iron Clockwork Gears", file: "out/k_04_clockwork_gears/image.jpg", dope_composite: "out/k_04_clockwork_gears/program/frame0.png", angular_file: "out/k_04_clockwork_gears/program/frame0.png", cel_file: "out/k_04_clockwork_gears/cartoon/cel.png", layout_file: "out/k_04_clockwork_gears/cartoon/layout_sheet.png", overlay_file: "out/k_04_clockwork_gears/overlay.jpg", exploded_file: "out/k_04_clockwork_gears/multiplane/exploded.jpg" },
-  { id: "k_05", sid: "k_05_furnace_sanctuary", act: "K STAGE 5 · 2:21 FURNACE", title: "Roaring Furnace Sanctuary", file: "out/k_05_furnace_sanctuary/image.jpg", dope_composite: "out/k_05_furnace_sanctuary/program/frame0.png", angular_file: "out/k_05_furnace_sanctuary/program/frame0.png", cel_file: "out/k_05_furnace_sanctuary/cartoon/cel.png", layout_file: "out/k_05_furnace_sanctuary/cartoon/layout_sheet.png", overlay_file: "out/k_05_furnace_sanctuary/overlay.jpg", exploded_file: "out/k_05_furnace_sanctuary/multiplane/exploded.jpg" },
-  { id: "k_06", sid: "k_06_wooden_horse_palm", act: "K STAGE 6 · 2:27 ANCHOR P2", title: "Carved Wooden Horse (6·10·21)", file: "out/k_06_wooden_horse_palm/image.jpg", dope_composite: "out/k_06_wooden_horse_palm/program/frame0.png", angular_file: "out/k_06_wooden_horse_palm/program/frame0.png", cel_file: "out/k_06_wooden_horse_palm/cartoon/cel.png", layout_file: "out/k_06_wooden_horse_palm/cartoon/layout_sheet.png", overlay_file: "out/k_06_wooden_horse_palm/overlay.jpg", exploded_file: "out/k_06_wooden_horse_palm/multiplane/exploded.jpg" },
-  { id: "k_07", sid: "k_07_burying_horse_ash", act: "K STAGE 7 · 2:36 ASH SECRET", title: "Hiding Wooden Horse in Ash", file: "out/k_07_burying_horse_ash/image.jpg", dope_composite: "out/k_07_burying_horse_ash/program/frame0.png", angular_file: "out/k_07_burying_horse_ash/program/frame0.png", cel_file: "out/k_07_burying_horse_ash/cartoon/cel.png", layout_file: "out/k_07_burying_horse_ash/cartoon/layout_sheet.png", overlay_file: "out/k_07_burying_horse_ash/overlay.jpg", exploded_file: "out/k_07_burying_horse_ash/multiplane/exploded.jpg" },
-  { id: "k_08", sid: "k_08_stelline_scanner_return", act: "K STAGE 8 · 3:06 RETURN", title: "'Someone Lived This'", file: "out/k_08_stelline_scanner_return/image.jpg", dope_composite: "out/k_08_stelline_scanner_return/program/frame0.png", angular_file: "out/k_08_stelline_scanner_return/program/frame0.png", cel_file: "out/k_08_stelline_scanner_return/cartoon/cel.png", layout_file: "out/k_08_stelline_scanner_return/cartoon/layout_sheet.png", overlay_file: "out/k_08_stelline_scanner_return/overlay.jpg", exploded_file: "out/k_08_stelline_scanner_return/multiplane/exploded.jpg" },
+  { id: "k_01", sid: "k_01_office_interview", act: "K STAGE 1 · 1:49 BOOKEND", title: "Officer K & Joshi Interview", file: "out/k_01_office_interview/image.jpg", dope_composite: "out/k_01_office_interview/program/frame0.png", angular_file: "out/k_01_office_interview/program/frame0.png", cel_file: "out/k_01_office_interview/cartoon/cel.png", layout_file: "out/k_01_office_interview/cartoon/layout_sheet.png", overlay_file: "out/k_01_office_interview/overlay.jpg", exploded_file: "out/k_01_office_interview/multiplane/exploded.jpg", splat_file: "out/k_01_office_interview/cartoon/planes_gs.png" },
+  { id: "k_02", sid: "k_02_k_eyes_threshold", act: "K STAGE 2 · 2:00 THRESHOLD", title: "K Eyes Lower ('Toy Horse')", file: "out/k_02_k_eyes_threshold/image.jpg", dope_composite: "out/k_02_k_eyes_threshold/program/frame0.png", angular_file: "out/k_02_k_eyes_threshold/program/frame0.png", cel_file: "out/k_02_k_eyes_threshold/cartoon/cel.png", layout_file: "out/k_02_k_eyes_threshold/cartoon/layout_sheet.png", overlay_file: "out/k_02_k_eyes_threshold/overlay.jpg", exploded_file: "out/k_02_k_eyes_threshold/multiplane/exploded.jpg", splat_file: "out/k_02_k_eyes_threshold/cartoon/planes_gs.png" },
+  { id: "k_03", sid: "k_03_orphanage_catwalks", act: "K STAGE 3 · 2:06 ORPHANAGE", title: "Orphanage Abyss Catwalks", file: "out/k_03_orphanage_catwalks/image.jpg", dope_composite: "out/k_03_orphanage_catwalks/program/frame0.png", angular_file: "out/k_03_orphanage_catwalks/program/frame0.png", cel_file: "out/k_03_orphanage_catwalks/cartoon/cel.png", layout_file: "out/k_03_orphanage_catwalks/cartoon/layout_sheet.png", overlay_file: "out/k_03_orphanage_catwalks/overlay.jpg", exploded_file: "out/k_03_orphanage_catwalks/multiplane/exploded.jpg", splat_file: "out/k_03_orphanage_catwalks/cartoon/planes_gs.png" },
+  { id: "k_04", sid: "k_04_clockwork_gears", act: "K STAGE 4 · 2:15 GEARS", title: "Iron Clockwork Gears", file: "out/k_04_clockwork_gears/image.jpg", dope_composite: "out/k_04_clockwork_gears/program/frame0.png", angular_file: "out/k_04_clockwork_gears/program/frame0.png", cel_file: "out/k_04_clockwork_gears/cartoon/cel.png", layout_file: "out/k_04_clockwork_gears/cartoon/layout_sheet.png", overlay_file: "out/k_04_clockwork_gears/overlay.jpg", exploded_file: "out/k_04_clockwork_gears/multiplane/exploded.jpg", splat_file: "out/k_04_clockwork_gears/cartoon/planes_gs.png" },
+  { id: "k_05", sid: "k_05_furnace_sanctuary", act: "K STAGE 5 · 2:21 FURNACE", title: "Roaring Furnace Sanctuary", file: "out/k_05_furnace_sanctuary/image.jpg", dope_composite: "out/k_05_furnace_sanctuary/program/frame0.png", angular_file: "out/k_05_furnace_sanctuary/program/frame0.png", cel_file: "out/k_05_furnace_sanctuary/cartoon/cel.png", layout_file: "out/k_05_furnace_sanctuary/cartoon/layout_sheet.png", overlay_file: "out/k_05_furnace_sanctuary/overlay.jpg", exploded_file: "out/k_05_furnace_sanctuary/multiplane/exploded.jpg", splat_file: "out/k_05_furnace_sanctuary/cartoon/planes_gs.png" },
+  { id: "k_06", sid: "k_06_wooden_horse_palm", act: "K STAGE 6 · 2:27 ANCHOR P2", title: "Carved Wooden Horse (6·10·21)", file: "out/k_06_wooden_horse_palm/image.jpg", dope_composite: "out/k_06_wooden_horse_palm/program/frame0.png", angular_file: "out/k_06_wooden_horse_palm/program/frame0.png", cel_file: "out/k_06_wooden_horse_palm/cartoon/cel.png", layout_file: "out/k_06_wooden_horse_palm/cartoon/layout_sheet.png", overlay_file: "out/k_06_wooden_horse_palm/overlay.jpg", exploded_file: "out/k_06_wooden_horse_palm/multiplane/exploded.jpg", splat_file: "out/k_06_wooden_horse_palm/cartoon/planes_gs.png" },
+  { id: "k_07", sid: "k_07_burying_horse_ash", act: "K STAGE 7 · 2:36 ASH SECRET", title: "Hiding Wooden Horse in Ash", file: "out/k_07_burying_horse_ash/image.jpg", dope_composite: "out/k_07_burying_horse_ash/program/frame0.png", angular_file: "out/k_07_burying_horse_ash/program/frame0.png", cel_file: "out/k_07_burying_horse_ash/cartoon/cel.png", layout_file: "out/k_07_burying_horse_ash/cartoon/layout_sheet.png", overlay_file: "out/k_07_burying_horse_ash/overlay.jpg", exploded_file: "out/k_07_burying_horse_ash/multiplane/exploded.jpg", splat_file: "out/k_07_burying_horse_ash/cartoon/planes_gs.png" },
+  { id: "k_08", sid: "k_08_stelline_scanner_return", act: "K STAGE 8 · 3:06 RETURN", title: "'Someone Lived This'", file: "out/k_08_stelline_scanner_return/image.jpg", dope_composite: "out/k_08_stelline_scanner_return/program/frame0.png", angular_file: "out/k_08_stelline_scanner_return/program/frame0.png", cel_file: "out/k_08_stelline_scanner_return/cartoon/cel.png", layout_file: "out/k_08_stelline_scanner_return/cartoon/layout_sheet.png", overlay_file: "out/k_08_stelline_scanner_return/overlay.jpg", exploded_file: "out/k_08_stelline_scanner_return/multiplane/exploded.jpg", splat_file: "out/k_08_stelline_scanner_return/cartoon/planes_gs.png" },
 ];
 
 const bookendVideo = document.getElementById("bookendFilmVideo");
@@ -1324,9 +1332,59 @@ function getSlitImg(src) {
   if (state.slitImgCache[src]) return state.slitImgCache[src];
   const img = new Image();
   img.src = src;
-  img.onload = () => { if (state.bookendSlitMode) drawBookendSlitScanner(); };
+  img.onload = () => {
+    if (state.bookendSlitMode) drawBookendSlitScanner();
+    if (state.bookendPcMorphMode) drawBookendPointCloudMorph();
+  };
   state.slitImgCache[src] = img;
   return img;
+}
+
+async function loadBookendPLY(sid) {
+  if (!sid) return null;
+  if (state.plyCache[sid]) return state.plyCache[sid];
+  try {
+    const resp = await fetch(`out/${sid}/points.ply`);
+    if (!resp.ok) return null;
+    const buf = await resp.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let hdrEnd = 0;
+    for (let i = 0; i < Math.min(bytes.length - 11, 1024); i++) {
+      if (bytes[i] === 101 && bytes[i+1] === 110 && bytes[i+2] === 100 && bytes[i+3] === 95 && bytes[i+9] === 114 && bytes[i+10] === 10) {
+        hdrEnd = i + 11;
+        break;
+      }
+    }
+    if (!hdrEnd) return null;
+    const stride = 15; // 3 float32 (12B) + 3 uint8 (3B)
+    const nTotal = Math.floor((buf.byteLength - hdrEnd) / stride);
+    const step = Math.max(1, Math.floor(nTotal / 18000));
+    const nKeep = Math.floor(nTotal / step);
+    const pts = new Float32Array(nKeep * 3);
+    const cols = new Uint8Array(nKeep * 3);
+    const dv = new DataView(buf, hdrEnd);
+    let sumZ = 0;
+    for (let k = 0; k < nKeep; k++) {
+      const off = (k * step) * stride;
+      const x = dv.getFloat32(off, true);
+      const y = dv.getFloat32(off + 4, true);
+      const z = -dv.getFloat32(off + 8, true); // positive Z depth
+      pts[k * 3] = x;
+      pts[k * 3 + 1] = y;
+      pts[k * 3 + 2] = z;
+      cols[k * 3] = dv.getUint8(off + 12);
+      cols[k * 3 + 1] = dv.getUint8(off + 13);
+      cols[k * 3 + 2] = dv.getUint8(off + 14);
+      sumZ += z;
+    }
+    const medZ = sumZ / Math.max(1, nKeep);
+    const parsed = { pts, cols, nKeep, medZ };
+    state.plyCache[sid] = parsed;
+    if (state.bookendPcMorphMode) drawBookendPointCloudMorph();
+    return parsed;
+  } catch (err) {
+    return null;
+  }
 }
 
 function setPoetStageStyle(styleKey) {
@@ -1336,6 +1394,7 @@ function setPoetStageStyle(styleKey) {
   });
   renderPoetStagesStrip();
   if (state.bookendSlitMode) drawBookendSlitScanner();
+  if (state.bookendPcMorphMode) drawBookendPointCloudMorph();
   setVoidState("CHANGED", `Segmented Layer: ${styleKey.toUpperCase()}`);
 }
 
@@ -1347,8 +1406,13 @@ function toggleKParallelStrip() {
 
 function selectPoetStageCard(idx, tSeek) {
   state.activePoetStageIdx = idx;
+  const st = DEFAULT_POET_STAGES[idx] || DEFAULT_POET_STAGES[1];
+  const linkEl = document.getElementById("linkOpenPointCloudStudio");
+  if (linkEl && st) linkEl.href = `pointcloud.html?shot=${st.sid}`;
   renderPoetStagesStrip();
-  if (state.bookendSlitMode) {
+  if (state.bookendPcMorphMode) {
+    drawBookendPointCloudMorph();
+  } else if (state.bookendSlitMode) {
     drawBookendSlitScanner();
   } else {
     seekBookendVideo(tSeek);
@@ -1400,9 +1464,110 @@ function renderPoetStagesStrip() {
   }
 }
 
+function toggleBookendPointCloudMorph() {
+  state.bookendPcMorphMode = !state.bookendPcMorphMode;
+  if (state.bookendPcMorphMode) state.bookendSlitMode = false;
+  const btnPc = document.getElementById("btnTogglePointCloudMorph");
+  const btnSlit = document.getElementById("btnToggleBookendSlit");
+  if (btnSlit) btnSlit.textContent = "⇄ 4-WAY SLIT-SCAN";
+  if (state.bookendPcMorphMode) {
+    bookendVideo.pause();
+    bookendVideo.style.display = "none";
+    bookendSlitCanvas.style.display = "block";
+    if (btnPc) btnPc.textContent = "▶ RETURN TO 5-ACT BOOKEND FILM";
+    drawBookendPointCloudMorph();
+    setVoidState("CHANGED", "Live 3D Point-Cloud & Collar Rhythm Morph Active");
+  } else {
+    bookendSlitCanvas.style.display = "none";
+    bookendVideo.style.display = "block";
+    if (btnPc) btnPc.textContent = "◈ LIVE 3D POINT-CLOUD & COLLAR RHYTHM MORPH";
+    setVoidState("REST", "");
+  }
+}
+
+function drawBookendPointCloudMorph() {
+  if (!bookendSlitCtx) return;
+  const W = bookendSlitCanvas.width;
+  const H = bookendSlitCanvas.height;
+  const st = DEFAULT_POET_STAGES[state.activePoetStageIdx] || DEFAULT_POET_STAGES[1];
+  const poem = (DATA.poems || [])[state.bookendPoemIdx] || {};
+  const heroView = (poem.views || [])[0] || {};
+  const poemHeroDir = (poem.poet_bookend && poem.poet_bookend.hero_shot_dir) || heroView.dir || "017dd279-1457-49f1-829f-9ee94b981a54";
+
+  const plyA = state.plyCache[st.sid];
+  const plyB = state.plyCache[poemHeroDir];
+  if (!plyA) loadBookendPLY(st.sid);
+  if (!plyB) loadBookendPLY(poemHeroDir);
+
+  bookendSlitCtx.fillStyle = "#04060a";
+  bookendSlitCtx.fillRect(0, 0, W, H);
+
+  const u = state.bookendPcMorphU;
+  const yaw = state.bookendPcYaw;
+  const cy = Math.cos(yaw), sy = Math.sin(yaw);
+
+  if (plyA && plyB) {
+    const n = Math.min(plyA.nKeep, plyB.nKeep);
+    const zPivot = (1 - u) * plyA.medZ + u * plyB.medZ;
+    const f = W * 0.92;
+    for (let i = 0; i < n; i++) {
+      const i3 = i * 3;
+      const zA = plyA.pts[i3 + 2];
+      // P2 Hero / Collar region (near camera + central X) holds coherence longest; background mural lifts first!
+      const isHeroCollar = (Math.abs(plyA.pts[i3]) < 0.85 && zA < plyA.medZ * 1.05);
+      const tStart = isHeroCollar ? 0.34 : 0.04;
+      const tSpan = isHeroCollar ? 0.62 : 0.62;
+      const lu = Math.max(0, Math.min(1, (u - tStart) / tSpan));
+      const s = lu * lu * (3 - 2 * lu);
+      const arc = Math.sin(lu * Math.PI);
+
+      const x = (1 - s) * plyA.pts[i3] + s * plyB.pts[i3];
+      const y = (1 - s) * plyA.pts[i3 + 1] + s * plyB.pts[i3 + 1] + (isHeroCollar ? 0.05 : 0.32) * arc;
+      const z = (1 - s) * zA + s * plyB.pts[i3 + 2] + (isHeroCollar ? -0.18 : 0.65) * arc;
+
+      const dz = z - zPivot;
+      const xr = cy * x + sy * dz;
+      const zr = -sy * x + cy * dz + zPivot;
+      if (zr <= 0.25) continue;
+
+      const sx = (W * 0.5) + (xr * f) / zr;
+      const syPx = (H * 0.5) - (y * f) / zr;
+      if (sx < 0 || sx >= W || syPx < 0 || syPx >= H) continue;
+
+      // Perceptual District Glow crest at mid-flight
+      const r = Math.min(255, Math.floor((1 - s) * plyA.cols[i3] + s * plyB.cols[i3] + 65 * arc));
+      const g = Math.min(255, Math.floor((1 - s) * plyA.cols[i3 + 1] + s * plyB.cols[i3 + 1] + 38 * arc));
+      const b = Math.min(255, Math.floor((1 - s) * plyA.cols[i3 + 2] + s * plyB.cols[i3 + 2] + (isHeroCollar ? 15 : 58) * arc));
+
+      const sz = isHeroCollar ? 3.2 : 2.3;
+      bookendSlitCtx.fillStyle = `rgb(${r},${g},${b})`;
+      bookendSlitCtx.fillRect(sx, syPx, sz, sz);
+    }
+  } else {
+    bookendSlitCtx.fillStyle = "#ffbe52";
+    bookendSlitCtx.font = "14px monospace";
+    bookendSlitCtx.fillText("Loading binary points.ply for Poet Lectern & Poem Hero...", 42, H * 0.5);
+  }
+
+  // HUD Overlay
+  bookendSlitCtx.fillStyle = "rgba(5, 7, 11, 0.86)";
+  bookendSlitCtx.fillRect(0, 0, W, 38);
+  bookendSlitCtx.fillStyle = "#ffbe52";
+  bookendSlitCtx.font = "12px monospace";
+  bookendSlitCtx.fillText(
+    `LIVE 3D POINT-CLOUD & COLLAR RHYTHM MORPH · ${st.id.toUpperCase()} -> P${String(poem.num||1).padStart(2,"0")} (${Math.round(u*100)}% MORPH · YAW ${(yaw*57.3).toFixed(1)}°)`,
+    18, 23
+  );
+  bookendSlitCtx.fillStyle = "#5ce4ff";
+  bookendSlitCtx.fillText("MOVE CURSOR HORIZONTALLY TO MORPH (P5 MURAL FIRST -> P2 COLLAR/HANDS LAST) · VERTICALLY TO ORBIT 3D YAW", 18, H - 18);
+}
+
 function toggleBookendSlitScanner() {
   state.bookendSlitMode = !state.bookendSlitMode;
+  if (state.bookendSlitMode) state.bookendPcMorphMode = false;
   const btn = document.getElementById("btnToggleBookendSlit");
+  const btnPc = document.getElementById("btnTogglePointCloudMorph");
+  if (btnPc) btnPc.textContent = "◈ LIVE 3D POINT-CLOUD & COLLAR RHYTHM MORPH";
   if (state.bookendSlitMode) {
     bookendVideo.pause();
     bookendVideo.style.display = "none";
@@ -1413,7 +1578,7 @@ function toggleBookendSlitScanner() {
   } else {
     bookendSlitCanvas.style.display = "none";
     bookendVideo.style.display = "block";
-    if (btn) btn.textContent = "⇄ INTERACTIVE 4-WAY CROSS-WORLD SLIT-SCAN";
+    if (btn) btn.textContent = "⇄ 4-WAY SLIT-SCAN";
     setVoidState("REST", "");
   }
 }
@@ -1488,10 +1653,17 @@ function drawBookendSlitScanner() {
 
 if (bookendSlitCanvas) {
   bookendSlitCanvas.addEventListener("pointermove", (e) => {
-    if (!state.bookendSlitMode) return;
     const r = bookendSlitCanvas.getBoundingClientRect();
-    state.bookendSlitX = Math.max(0.15, Math.min(0.85, (e.clientX - r.left) / r.width));
-    drawBookendSlitScanner();
+    const nx = Math.max(0.0, Math.min(1.0, (e.clientX - r.left) / r.width));
+    const ny = Math.max(0.0, Math.min(1.0, (e.clientY - r.top) / r.height));
+    if (state.bookendPcMorphMode) {
+      state.bookendPcMorphU = nx;
+      state.bookendPcYaw = (ny - 0.5) * 1.45;
+      drawBookendPointCloudMorph();
+    } else if (state.bookendSlitMode) {
+      state.bookendSlitX = Math.max(0.15, Math.min(0.85, nx));
+      drawBookendSlitScanner();
+    }
   });
 }
 
@@ -1508,6 +1680,7 @@ function buildPoetBookendUI() {
     chip.onclick = () => {
       state.bookendPoemIdx = idx;
       buildPoetBookendUI();
+      if (state.bookendPcMorphMode) drawBookendPointCloudMorph();
       if (state.bookendSlitMode) drawBookendSlitScanner();
     };
     sel.appendChild(chip);
