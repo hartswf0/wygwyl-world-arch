@@ -3,424 +3,533 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>WYGWYL — Option II — 3D Isometric Exploded Multiplane Stratigraphy & Golden Riverbed Laws</title>
+<title>WYGWYL — II · PLANES · Isometric Multiplane Stratigraphy & Golden Riverbed Laws</title>
 <style>
   :root {
-    --bg: #07090d;
-    --panel: #0d1118;
-    --panel-2: #121822;
-    --border: rgba(92, 228, 255, 0.22);
-    --accent: #5ce4ff;
+    --bg: #040609;
     --cyan: #5ce4ff;
     --amber: #ffbe52;
     --green: #82f5af;
     --pink: #ff82c3;
-    --text: #e6eef6;
-    --muted: #8ea3b8;
+    --text: rgba(238, 244, 250, 0.92);
+    --whisper: rgba(190, 206, 222, 0.62);
+    --faint: rgba(142, 163, 184, 0.28);
     --mono: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
-    --serif: "Georgia", "Iowan Old Style", serif;
+    --serif: "Georgia", "Iowan Old Style", "Palatino", serif;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
     background: var(--bg);
     color: var(--text);
     font-family: var(--mono);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  
-  .global-apparatus-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 6px 14px;
-    background: #05070b;
-    border-bottom: 1px solid rgba(92, 228, 255, 0.22);
-    font-family: "SF Mono", "Menlo", "Monaco", monospace;
-    font-size: 10px;
-    flex-shrink: 0;
-  }
-  .gnav-group {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-wrap: wrap;
-  }
-  .gnav-label {
-    color: #8ea3b8;
-    font-weight: 700;
-    margin-right: 4px;
-    letter-spacing: 0.05em;
-  }
-  .nav-pill, .poem-pill {
-    color: #d5e2ee;
-    text-decoration: none;
-    padding: 3px 7px;
-    border-radius: 3px;
-    background: #0e141d;
-    border: 1px solid rgba(142, 163, 184, 0.25);
-    transition: all 0.12s ease;
-  }
-  .nav-pill:hover, .poem-pill:hover {
-    border-color: #5ce4ff;
-    color: #ffffff;
-    background: rgba(92, 228, 255, 0.14);
-  }
-  .nav-pill.active, .poem-pill.active {
-    background: rgba(92, 228, 255, 0.22);
-    border-color: #5ce4ff;
-    color: #5ce4ff;
-    font-weight: 700;
+    -webkit-font-smoothing: antialiased;
   }
 
-  header {
+  /* 100vw x 100vh OPEN SCENE CENTER — ZERO SIDEBARS, ZERO PANELS */
+  #stageWrap {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #040609;
+    overflow: hidden;
+  }
+  #stageCanvas, #stageVideo {
+    position: absolute;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    cursor: crosshair;
+  }
+  #stageVideo {
+    display: none;
+    object-fit: contain;
+    background: #030508;
+  }
+
+  /* Subtle top/bottom optical vignette so 11px viewfinder engravings are always legible */
+  .optical-edge-gradient-top {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 58px;
+    background: linear-gradient(to bottom, rgba(3,5,8,0.76), rgba(3,5,8,0.0));
+    pointer-events: none;
+    z-index: 8;
+  }
+  .optical-edge-gradient-bottom {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 92px;
+    background: linear-gradient(to top, rgba(3,5,8,0.82), rgba(3,5,8,0.0));
+    pointer-events: none;
+    z-index: 8;
+  }
+
+  /* 35mm Optical Viewfinder Corner Registration Ticks (10px hairlines) */
+  .reg-corner {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+    z-index: 12;
+    opacity: 0.48;
+  }
+  .reg-tl { top: 16px; left: 16px; border-top: 1px solid var(--cyan); border-left: 1px solid var(--cyan); }
+  .reg-tr { top: 16px; right: 16px; border-top: 1px solid var(--cyan); border-right: 1px solid var(--cyan); }
+  .reg-bl { bottom: 16px; left: 16px; border-bottom: 1px solid var(--cyan); border-left: 1px solid var(--cyan); }
+  .reg-br { bottom: 16px; right: 16px; border-bottom: 1px solid var(--cyan); border-right: 1px solid var(--cyan); }
+
+  /* Top-Left Optical Engraving: Current Poem & Common Place View */
+  #topLeftWhisper {
+    position: fixed;
+    top: 16px;
+    left: 34px;
+    z-index: 20;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 8px 16px;
-    background: #0a0e14;
-    border-bottom: 1px solid var(--border);
     gap: 12px;
-    flex-shrink: 0;
-  }
-  .brand-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 0.05em;
-  }
-  .brand-sub {
     font-size: 11px;
-    color: var(--muted);
-    margin-top: 2px;
+    letter-spacing: 0.08em;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.98);
   }
-  .view-mode-bar {
-    display: flex;
-    gap: 6px;
-  }
-  .v-btn {
-    background: #101620;
+  .scene-trigger {
     color: var(--text);
-    border: 1px solid rgba(142, 163, 184, 0.3);
-    padding: 6px 12px;
-    font-family: var(--mono);
-    font-size: 11px;
     cursor: pointer;
-    border-radius: 3px;
+    border-bottom: 1px solid transparent;
+    transition: color 0.14s ease, border-color 0.14s ease;
   }
-  .v-btn.active, .v-btn:hover {
-    background: rgba(92, 228, 255, 0.16);
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: 700;
+  .scene-trigger:hover {
+    color: var(--cyan);
+    border-bottom-color: var(--cyan);
   }
-  .workspace {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 310px 1fr 410px;
-    min-height: 0;
+  .view-cycler {
+    color: var(--whisper);
+    cursor: pointer;
+    transition: color 0.14s ease;
   }
-  .sidebar {
-    background: var(--panel);
-    border-right: 1px solid var(--border);
+  .view-cycler:hover {
+    color: var(--green);
+  }
+
+  /* Top-Right VOIDBASTARD-TAO State, Consequence, Stop & Recovery */
+  #topRightState {
+    position: fixed;
+    top: 16px;
+    right: 34px;
+    z-index: 20;
     display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 10px;
-    gap: 10px;
-  }
-  .inspector {
-    background: var(--panel);
-    border-left: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 12px;
+    align-items: center;
     gap: 12px;
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.98);
   }
-  .section-title {
+  .state-badge { color: var(--whisper); }
+  .state-badge[data-state="WORKING"] { color: var(--amber); }
+  .state-badge[data-state="CHANGED"] { color: var(--cyan); }
+  .state-badge[data-state="FAULT"]   { color: var(--pink); }
+  .state-badge[data-state="RECOVERY"]{ color: var(--green); }
+
+  .inline-action {
+    color: var(--amber);
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 190, 82, 0.55);
+    padding-bottom: 1px;
+    display: none;
+  }
+  .inline-action:hover {
+    color: #fff;
+    border-bottom-color: #fff;
+  }
+
+  /* In-Situ Consequence Tag right beside the manipulated seam / lens (Laws 5 & 6) */
+  #inSituTag {
+    position: fixed;
+    pointer-events: none;
+    z-index: 18;
+    font-size: 10px;
+    letter-spacing: 0.07em;
+    color: var(--cyan);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.98);
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    white-space: nowrap;
+  }
+
+  /* Right-Edge Unboxed Metric Z / Layer Ruler (Law 5: Control beside what it changes) */
+  #rightEdgeRuler {
+    position: fixed;
+    right: 22px;
+    top: 25%;
+    bottom: 25%;
+    width: 92px;
+    z-index: 16;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+    cursor: ns-resize;
+  }
+  .ruler-line {
+    position: absolute;
+    right: 5px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, rgba(92,228,255,0.10), rgba(92,228,255,0.42), rgba(92,228,255,0.10));
+  }
+  .ruler-tick {
+    position: relative;
+    padding-right: 15px;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    color: var(--whisper);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.98);
+    cursor: pointer;
+    transition: color 0.12s ease;
+  }
+  .ruler-tick::after {
+    content: "";
+    position: absolute;
+    right: 1px;
+    top: 50%;
+    width: 8px;
+    height: 1px;
+    background: rgba(92, 228, 255, 0.5);
+  }
+  .ruler-tick:hover, .ruler-tick.active {
+    color: var(--amber);
+  }
+  .ruler-tick.active::after {
+    width: 12px;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  /* Criterion-Grade Single Verse Whisper (Hidden in Mode I where verse lives inside 3D point space) */
+  #cinemaVerseWhisper {
+    position: fixed;
+    left: 50%;
+    bottom: 50px;
+    transform: translateX(-50%);
+    z-index: 15;
+    max-width: 74vw;
+    text-align: center;
+    pointer-events: none;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(17px, 1.85vw, 24px);
+    line-height: 1.36;
+    color: rgba(252, 246, 232, 0.94);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.98), 0 0 20px rgba(0,0,0,0.92);
+    transition: opacity 0.2s ease;
+  }
+
+  /* Bottom-Left Compact Whisper (Never overlaps Bottom-Right) */
+  #bottomLeftWhisper {
+    position: fixed;
+    bottom: 16px;
+    left: 34px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 16px;
     font-size: 10px;
     letter-spacing: 0.08em;
-    color: var(--accent);
-    text-transform: uppercase;
-    border-bottom: 1px solid rgba(92, 228, 255, 0.18);
-    padding-bottom: 4px;
-    margin-bottom: 6px;
+    color: var(--whisper);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.98);
   }
-  .poem-card {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    padding: 6px;
-    background: var(--panel-2);
-    border: 1px solid transparent;
-    border-radius: 4px;
+  .whisper-link {
+    color: var(--whisper);
     cursor: pointer;
-    margin-bottom: 5px;
-    transition: all 0.12s ease;
+    transition: color 0.14s ease;
   }
-  .poem-card:hover {
-    border-color: rgba(92, 228, 255, 0.4);
+  .whisper-link:hover, .whisper-link.active {
+    color: var(--cyan);
   }
-  .poem-card.active {
-    border-color: var(--accent);
-    background: rgba(92, 228, 255, 0.12);
-  }
-  .poem-card img {
-    width: 84px;
-    height: 47px;
-    object-fit: cover;
-    border-radius: 2px;
-    border: 1px solid rgba(255,255,255,0.12);
-    flex-shrink: 0;
-  }
-  .poem-card-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-  .poem-card-num {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--accent);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .poem-card-sub {
-    font-size: 10px;
-    color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .view-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 5px;
-  }
-  .view-chip {
-    padding: 5px 6px;
-    background: #0f151f;
-    border: 1px solid rgba(142, 163, 184, 0.22);
-    border-radius: 3px;
-    font-size: 10px;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .view-chip.active {
-    border-color: var(--green);
-    color: var(--green);
-    background: rgba(130, 245, 175, 0.12);
-    font-weight: 700;
-  }
-  .stage-wrap {
-    position: relative;
-    background: #040609;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
-  }
-  .canvas-box {
-    flex: 1;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
-    overflow: hidden;
-  }
-  canvas {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    aspect-ratio: 16 / 9;
-    display: block;
-    background: #06090e;
-  }
-  #matrixGridView {
-    display: none;
-    flex: 1;
-    overflow-y: auto;
-    padding: 14px;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 12px;
-    align-content: start;
-  }
-  .matrix-cell {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.12s ease, border-color 0.12s ease;
-  }
-  .matrix-cell:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-  }
-  .matrix-cell img {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-    display: block;
-  }
-  .matrix-cell-cap {
-    padding: 7px 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
-  }
-  .controls-bar {
-    padding: 8px 14px;
-    background: #0a0e15;
-    border-top: 1px solid var(--border);
+
+  /* Bottom-Right Compact Optical Lens Numerals */
+  #bottomRightLenses {
+    position: fixed;
+    bottom: 16px;
+    right: 34px;
+    z-index: 20;
     display: flex;
     align-items: center;
     gap: 14px;
-    flex-wrap: wrap;
-    font-size: 11px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.98);
   }
-  .ctrl-group {
-    display: flex;
+  .lens-mark {
+    color: var(--whisper);
+    cursor: pointer;
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+    transition: all 0.14s ease;
+  }
+  .lens-mark:hover { color: #fff; }
+  .lens-mark.active {
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+  }
+
+  /* Transient Diegetic Law / Manuscript Glass (Summoned only on demand [M]) */
+  #transientManuscriptGlass {
+    position: fixed;
+    left: 34px;
+    bottom: 44px;
+    z-index: 30;
+    max-width: min(600px, 84vw);
+    max-height: 54vh;
+    overflow-y: auto;
+    padding: 16px 20px;
+    background: rgba(4, 7, 12, 0.86);
+    backdrop-filter: blur(12px);
+    border-left: 1px solid var(--cyan);
+    display: none;
+    font-size: 11px;
+    line-height: 1.55;
+    color: rgba(230, 238, 246, 0.92);
+  }
+
+  /* Transient Index Overlay (Hidden at REST, summoned by [TAB] or clicking Scene Title) */
+  #transientIndexOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(4, 6, 10, 0.90);
+    backdrop-filter: blur(14px);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 6px;
+    padding: 36px;
   }
-  input[type="range"] {
-    accent-color: var(--accent);
-    width: 120px;
+  .index-inner {
+    width: min(1160px, 92vw);
+    max-height: 86vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
   }
-  .data-card {
-    background: var(--panel-2);
-    border: 1px solid rgba(142, 163, 184, 0.2);
-    border-radius: 4px;
-    padding: 9px;
+  .index-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid rgba(92, 228, 255, 0.22);
+    padding-bottom: 10px;
     font-size: 11px;
-    line-height: 1.45;
+    letter-spacing: 0.1em;
+    color: var(--cyan);
   }
-  .verse-text {
-    font-family: var(--serif);
-    font-size: 13px;
-    color: #f4ebd9;
-    white-space: pre-line;
-    line-height: 1.45;
+  .poem-index-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+    gap: 10px;
+  }
+  .poem-index-item {
+    padding: 9px 12px;
+    border: 1px solid rgba(142, 163, 184, 0.18);
+    background: rgba(10, 15, 22, 0.65);
+    cursor: pointer;
+    transition: border-color 0.14s ease;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .poem-index-item:hover, .poem-index-item.active {
+    border-color: var(--cyan);
+  }
+  .paradigm-index-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .paradigm-index-link {
+    padding: 7px 12px;
+    border: 1px solid rgba(255, 190, 82, 0.28);
+    color: var(--amber);
+    text-decoration: none;
+    font-size: 10px;
+    letter-spacing: 0.07em;
+  }
+  .paradigm-index-link:hover {
+    background: rgba(255, 190, 82, 0.12);
+    border-color: var(--amber);
   }
 </style>
 </head>
 <body>
 
-<nav class="global-apparatus-nav">
-  <div class="gnav-group">
-    <span class="gnav-label">PARADIGM WEBPAGES:</span>
-    <a class="nav-pill" href="vesper_apparatus.html">ALL 14×6 HUB</a><a class="nav-pill" href="apparatus_opt1_pointcloud.html">OPT I · 3D POINT CLOUD</a><a class="nav-pill active" href="apparatus_opt2_multiplane.html">OPT II · EXPLODED MULTIPLANE</a><a class="nav-pill" href="apparatus_opt3_perspective.html">OPT III · PERSPECTIVE & LAYOUT</a><a class="nav-pill" href="apparatus_opt4_perceptual.html">OPT IV · SAM2 & ΔE COMPILER</a><a class="nav-pill" href="apparatus_opt5_kits.html">OPT V · TACTILE CUT-OUT KITS</a><a class="nav-pill" href="apparatus_opt6_xray.html">OPT VI · X-RAY & ECHO CURTAIN</a>
-  </div>
-  <div class="gnav-group">
-    <span class="gnav-label">POEM WEBPAGES (01–14):</span>
-    <a class="poem-pill" href="poem_01_apparatus.html" title="Poem 01: Out of Life">P01</a><a class="poem-pill" href="poem_02_apparatus.html" title="Poem 02: Flashing Lights">P02</a><a class="poem-pill" href="poem_03_apparatus.html" title="Poem 03: How to break off an engagement">P03</a><a class="poem-pill" href="poem_04_apparatus.html" title="Poem 04: Nevermore">P04</a><a class="poem-pill" href="poem_05_apparatus.html" title="Poem 05: Bloodlines">P05</a><a class="poem-pill" href="poem_06_apparatus.html" title="Poem 06: Resurrecting Atlantis">P06</a><a class="poem-pill" href="poem_07_apparatus.html" title="Poem 07: DJ Turn Me Up">P07</a><a class="poem-pill" href="poem_08_apparatus.html" title="Poem 08: Newly Single">P08</a><a class="poem-pill" href="poem_09_apparatus.html" title="Poem 09: Yet, Heard">P09</a><a class="poem-pill" href="poem_10_apparatus.html" title="Poem 10: Magic Ride">P10</a><a class="poem-pill" href="poem_11_apparatus.html" title="Poem 11: New Day">P11</a><a class="poem-pill" href="poem_12_apparatus.html" title="Poem 12: Reunion">P12</a><a class="poem-pill" href="poem_13_apparatus.html" title="Poem 13: How to Win My Heart">P13</a><a class="poem-pill" href="poem_14_apparatus.html" title="Poem 14: Hot Minute">P14</a>
-  </div>
-</nav>
+<div id="stageWrap">
+  <canvas id="stageCanvas" width="1920" height="1080"></canvas>
+  <video id="stageVideo" loop muted playsinline></video>
+</div>
 
-<header>
-  <div>
-    <div class="brand-title">OPTION II — 3D ISOMETRIC EXPLODED MULTIPLANE STRATIGRAPHY & GOLDEN RIVERBED LAWS</div>
-    <div class="brand-sub">Separated P0–P6 painted planes (multiplane/exploded.jpg) with metric Z medians, parallax multipliers & Golden Riverbed laws (riverbed_NN.json)</div>
-  </div>
-  <div class="view-mode-bar">
-    <button class="v-btn active" id="btnInteractive" onclick="setDisplayMode('interactive')">INTERACTIVE STAGE (16:9)</button>
-    <button class="v-btn" id="btnAll14Grid" onclick="setDisplayMode('grid')">ALL 14 POEMS MATRIX GRID</button>
-    <button class="v-btn" id="btnMaster4K" onclick="setDisplayMode('master4k')">4K 14-POEM CONTACT SHEET</button>
-    <a class="v-btn" id="btnOpenPoemPage" href="poem_01_apparatus.html" style="text-decoration:none">OPEN POEM WEBPAGE →</a>
-  </div>
-</header>
+<div class="optical-edge-gradient-top"></div>
+<div class="optical-edge-gradient-bottom"></div>
 
-<div class="workspace">
-  <aside class="sidebar">
-    <div>
-      <div class="section-title">All 14 Poems (OPT II · EXPLODED MULTIPLANE)</div>
-      <div id="poemList"></div>
+<div class="reg-corner reg-tl"></div>
+<div class="reg-corner reg-tr"></div>
+<div class="reg-corner reg-bl"></div>
+<div class="reg-corner reg-br"></div>
+
+<div id="topLeftWhisper">
+  <span class="scene-trigger" id="sceneTitleTrigger" title="Click or press TAB to switch Poem / Instrument">01 / 14 · OUT OF LIFE</span>
+  <span style="color:var(--faint)">//</span>
+  <span class="view-cycler" id="viewCycleTrigger" title="Click to cycle Common Place Views in this Poem">V92 THE UNDERPASS SHADOW-POOL ↻</span>
+</div>
+
+<div id="topRightState">
+  <span class="state-badge" id="stateBadge" data-state="REST">REST</span>
+  <span id="consequenceReadout" style="color:var(--whisper)"></span>
+  <span class="inline-action" id="btnStop" onclick="stopActiveWork()">■ STOP</span>
+  <span class="inline-action" id="btnRestore" onclick="restoreBaseline()">↺ RESTORE</span>
+  <span class="inline-action" id="btnRetry" onclick="retryLastOperation()">↻ RETRY</span>
+</div>
+
+<div id="inSituTag"></div>
+
+<div id="rightEdgeRuler" title="Click or scroll to shift metric depth plane Z">
+  <div class="ruler-line"></div>
+  <div class="ruler-tick" data-frac="0.0" onclick="setDepthFraction(0.0)">P5 · 18.0m</div>
+  <div class="ruler-tick" data-frac="0.25" onclick="setDepthFraction(0.25)">P4 · 9.4m</div>
+  <div class="ruler-tick active" data-frac="0.50" onclick="setDepthFraction(0.50)">P2 · 4.4m</div>
+  <div class="ruler-tick" data-frac="0.75" onclick="setDepthFraction(0.75)">P1 · 2.2m</div>
+  <div class="ruler-tick" data-frac="1.0" onclick="setDepthFraction(1.0)">P0 · 1.2m</div>
+</div>
+
+<div id="cinemaVerseWhisper"></div>
+
+<div id="bottomLeftWhisper">
+  <span class="whisper-link" onclick="toggleIndexOverlay()">INDEX [TAB]</span>
+  <span class="whisper-link" id="toggleManuscriptLink" onclick="toggleManuscriptGlass()">MANUSCRIPT [M]</span>
+  <span class="whisper-link" id="toggleVerseLink" onclick="toggleVerseVisibility()">VERSE [V]</span>
+</div>
+
+<div id="bottomRightLenses">
+  <span class="lens-mark" data-mode="1" onclick="selectMode(1)">I · POINT</span>
+  <span class="lens-mark" data-mode="2" onclick="selectMode(2)">II · PLANES</span>
+  <span class="lens-mark" data-mode="3" onclick="selectMode(3)">III · LINE</span>
+  <span class="lens-mark" data-mode="4" onclick="selectMode(4)">IV · LENS</span>
+  <span class="lens-mark" data-mode="5" onclick="selectMode(5)">V · KITS</span>
+  <span class="lens-mark" data-mode="6" onclick="selectMode(6)">VI · ECHO</span>
+  <span class="lens-mark" data-mode="7" onclick="selectMode(7)">VII · SHEET</span>
+  <span class="lens-mark" data-mode="8" onclick="selectMode(8)">▶ FILM</span>
+</div>
+
+<div id="transientManuscriptGlass" onclick="this.style.display='none'"></div>
+
+<div id="transientIndexOverlay" onclick="if(event.target===this) toggleIndexOverlay(false)">
+  <div class="index-inner">
+    <div class="index-header">
+      <span>WHERE YOU GO WHEN YOU LEAVE — 14 POEMS × 6 NARRATIVE APPARATUS INSTRUMENTS</span>
+      <span style="cursor:pointer;color:var(--amber)" onclick="toggleIndexOverlay(false)">[ESC · CLOSE]</span>
     </div>
     <div>
-      <div class="section-title">Common Place Views in Poem</div>
-      <div class="view-grid" id="viewGrid"></div>
-    </div>
-  </aside>
-
-  <main class="stage-wrap">
-    <div class="canvas-box" id="canvasBox">
-      <canvas id="stageCanvas" width="1920" height="1080"></canvas>
-    </div>
-    <div id="matrixGridView"></div>
-    <div class="controls-bar">
-      <div class="ctrl-group">
-        <label>Camera / Curtain Scrub (X):</label>
-        <input type="range" id="scrubX" min="0" max="100" value="35" />
+      <div style="font-size:10px;letter-spacing:0.08em;color:var(--whisper);margin-bottom:8px">DEDICATED PARADIGM INSTRUMENTS (100VW × 100VH):</div>
+      <div class="paradigm-index-row">
+        <a class="paradigm-index-link" href="vesper_apparatus.html">ALL 14×6 MASTER</a>
+        <a class="paradigm-index-link" href="apparatus_opt1_pointcloud.html">I · POINT FIELD</a>
+        <a class="paradigm-index-link" href="apparatus_opt2_multiplane.html">II · MULTIPLANE GLASS</a>
+        <a class="paradigm-index-link" href="apparatus_opt3_perspective.html">III · SURVEYOR LINE</a>
+        <a class="paradigm-index-link" href="apparatus_opt4_perceptual.html">IV · SAM2 LENS</a>
+        <a class="paradigm-index-link" href="apparatus_opt5_kits.html">V · LIGHT-TABLE KITS</a>
+        <a class="paradigm-index-link" href="apparatus_opt6_xray.html">VI · ECHO SLIT-SCAN</a>
       </div>
-      <div class="ctrl-group">
-        <label>Metric Depth Plane (Z):</label>
-        <input type="range" id="scrubZ" min="1.2" max="24.0" step="0.2" value="4.8" />
-        <span id="scrubZVal">4.8m</span>
-      </div>
-      <div class="ctrl-group">
-        <label>Worldtext / Layer Opacity:</label>
-        <input type="range" id="textAlpha" min="0" max="100" value="95" />
-      </div>
-      <button class="v-btn" id="toggleExactBtn">Mode: Pre-Rendered 3D Plate + Live Scrub</button>
-      <button class="v-btn" id="togglePlyBtn" style="display:none">Load Live Binary points.ply (129K pts)</button>
-    </div>
-  </main>
-
-  <aside class="inspector">
-    <div>
-      <div class="section-title">Poem Verse & Scene Treatment</div>
-      <div class="data-card verse-text" id="verseBox">Loading...</div>
     </div>
     <div>
-      <div class="section-title">Golden Riverbed Law & Architecture</div>
-      <div class="data-card" id="riverbedBox">Loading...</div>
+      <div style="font-size:10px;letter-spacing:0.08em;color:var(--whisper);margin-bottom:8px">ALL 14 POEMS:</div>
+      <div class="poem-index-grid" id="poemIndexGrid"></div>
     </div>
-    <div>
-      <div class="section-title">Multiplane Stack (P0–P6) & Camera</div>
-      <div class="data-card" id="planesBox">Loading...</div>
-    </div>
-    <div>
-      <div class="section-title">Verbatim Midjourney Prompt & Staging</div>
-      <div class="data-card" id="promptBox" style="color:var(--muted)">Loading...</div>
-    </div>
-  </aside>
+  </div>
 </div>
 
 <script>
-const PARADIGM_MODE = 2;
-const MASTER_SHEET_URL = "data/terrarium/seeing_spacetime_films/all_14_poems_exploded_multiplane_sheet.png";
+const DEFAULT_POEM_NUM = 1;
+const DEFAULT_MODE = 2;
+
+const BASELINE = {
+  seamX: 0.50,
+  cursorY: 0.50,
+  depthFrac: 0.50,
+  lensRadius: 270,
+};
+
 const state = {
   bundle: null,
-  poemIdx: 0,
+  poemIdx: Math.max(0, DEFAULT_POEM_NUM - 1),
   viewIdx: 0,
-  displayMode: "interactive",
-  scrubX: 0.35,
-  scrubZ: 4.8,
-  textAlpha: 0.95,
-  useExactPlate: true,
-  livePlyMode: false,
+  mode: DEFAULT_MODE,
+  voidState: "REST",
+  seamX: BASELINE.seamX,
+  cursorY: BASELINE.cursorY,
+  depthFrac: BASELINE.depthFrac,
+  lensRadius: BASELINE.lensRadius,
+  plyAbortCtrl: null,
   plyPoints: null,
+  plyViewId: null,
+  isDragging: false,
+  pointerActive: false,
+  showVerse: true,
   images: {},
   t: 0,
 };
 
 const canvas = document.getElementById("stageCanvas");
 const ctx = canvas.getContext("2d");
+const videoEl = document.getElementById("stageVideo");
+
+function setVoidState(newState, consequenceText = "") {
+  state.voidState = newState;
+  const badge = document.getElementById("stateBadge");
+  badge.textContent = newState;
+  badge.dataset.state = newState;
+  document.getElementById("consequenceReadout").textContent = consequenceText;
+
+  const isAltered =
+    Math.abs(state.seamX - BASELINE.seamX) > 0.02 ||
+    Math.abs(state.depthFrac - BASELINE.depthFrac) > 0.02 ||
+    state.lensRadius !== BASELINE.lensRadius;
+
+  document.getElementById("btnStop").style.display = newState === "WORKING" ? "inline" : "none";
+  document.getElementById("btnRestore").style.display = (newState === "CHANGED" || newState === "RECOVERY" || isAltered) ? "inline" : "none";
+  document.getElementById("btnRetry").style.display = newState === "FAULT" ? "inline" : "none";
+}
+
+function stopActiveWork() {
+  if (state.plyAbortCtrl) {
+    state.plyAbortCtrl.abort();
+    state.plyAbortCtrl = null;
+  }
+  state.isDragging = false;
+  if (state.mode === 8) videoEl.pause();
+  setVoidState("CHANGED", "Stopped · state preserved");
+}
+
+function restoreBaseline() {
+  state.seamX = BASELINE.seamX;
+  state.cursorY = BASELINE.cursorY;
+  state.depthFrac = BASELINE.depthFrac;
+  state.lensRadius = BASELINE.lensRadius;
+  updateRulerTicks();
+  updateVerseWhisper();
+  setVoidState("RECOVERY", "Restored baseline");
+  setTimeout(() => {
+    if (state.voidState === "RECOVERY") setVoidState("REST", "");
+  }, 1200);
+}
+
+function retryLastOperation() {
+  selectView(state.viewIdx);
+}
 
 function loadImage(src) {
   if (!src) return Promise.resolve(null);
@@ -433,110 +542,164 @@ function loadImage(src) {
   });
 }
 
-function getPoemTextString(poem) {
-  if (typeof poem.poem_text === "string" && poem.poem_text.trim() && !poem.poem_text.startsWith("{")) return poem.poem_text;
-  if (Array.isArray(poem.full_text)) {
-    return poem.full_text.map((x) => (x && typeof x === "object" ? x.line || "" : String(x))).filter(Boolean).join("\n");
+function getCleanPoemLines(poem) {
+  if (!poem) return [];
+  if (Array.isArray(poem.full_text) && poem.full_text.length) {
+    return poem.full_text
+      .map((x) => (x && typeof x === "object" ? x.line || "" : String(x)).trim())
+      .filter((s) => s && !s.startsWith("{"));
   }
-  return String(poem.full_text || "");
+  if (typeof poem.poem_text === "string" && !poem.poem_text.startsWith("{")) {
+    return poem.poem_text.split("\n").map((s) => s.trim()).filter(Boolean);
+  }
+  return [poem.title || ""];
 }
 
-async function loadBinaryPly(plyUrl) {
-  const res = await fetch(plyUrl);
-  const buf = await res.arrayBuffer();
-  const bytes = new Uint8Array(buf);
-  let headerEnd = 0;
-  const dec = new TextDecoder("ascii");
-  const headStr = dec.decode(bytes.slice(0, 2048));
-  const idx = headStr.indexOf("end_header\n");
-  if (idx === -1) return null;
-  headerEnd = idx + "end_header\n".length;
-  const body = buf.slice(headerEnd);
-  const stride = 15; // float32 x,y,z (12) + uint8 r,g,b (3)
-  const count = Math.floor(body.byteLength / stride);
-  const dv = new DataView(body);
-  const step = Math.max(1, Math.floor(count / 65000));
-  const pts = [];
-  for (let i = 0; i < count; i += step) {
-    const off = i * stride;
-    const x = dv.getFloat32(off, true);
-    const y = dv.getFloat32(off + 4, true);
-    const z = -dv.getFloat32(off + 8, true);
-    const r = dv.getUint8(off + 12);
-    const g = dv.getUint8(off + 13);
-    const b = dv.getUint8(off + 14);
-    if (z > 0.4) pts.push({ x, y, z, r, g, b });
-  }
-  pts.sort((a, b) => b.z - a.z);
-  return pts;
+async function ensureBinaryPlyLoaded(view) {
+  if (!view || !view._assets) return;
+  if (state.plyViewId === view.id && state.plyPoints) return;
+  if (state.plyAbortCtrl) state.plyAbortCtrl.abort();
+  state.plyAbortCtrl = new AbortController();
+  try {
+    const res = await fetch(view._assets.points_ply, { signal: state.plyAbortCtrl.signal });
+    if (!res.ok) return;
+    const buf = await res.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    const dec = new TextDecoder("ascii");
+    const headStr = dec.decode(bytes.slice(0, 2048));
+    const idx = headStr.indexOf("end_header\n");
+    if (idx === -1) return;
+    const headerEnd = idx + "end_header\n".length;
+    const body = buf.slice(headerEnd);
+    const stride = 15;
+    const count = Math.floor(body.byteLength / stride);
+    const dv = new DataView(body);
+    const step = Math.max(1, Math.floor(count / 82000));
+    const pts = [];
+    const zs = [];
+    for (let i = 0; i < count; i += step) {
+      const off = i * stride;
+      const x = dv.getFloat32(off, true);
+      const y = dv.getFloat32(off + 4, true);
+      const z = -dv.getFloat32(off + 8, true);
+      const r = dv.getUint8(off + 12);
+      const g = dv.getUint8(off + 13);
+      const b = dv.getUint8(off + 14);
+      if (z > 0.45) {
+        pts.push({ x, y, z, r, g, b });
+        if (i % (step * 8) === 0) zs.push(z);
+      }
+    }
+    pts.sort((a, b) => b.z - a.z);
+    zs.sort((a, b) => a - b);
+    const zMed = zs.length ? zs[Math.floor(zs.length * 0.5)] : 4.4;
+    state.plyPoints = pts;
+    state.plyZMed = Math.max(2.2, Math.min(14.0, zMed));
+    state.plyViewId = view.id;
+  } catch (_) {}
 }
 
-function setDisplayMode(m) {
-  state.displayMode = m;
-  document.getElementById("btnInteractive").classList.toggle("active", m === "interactive");
-  document.getElementById("btnAll14Grid").classList.toggle("active", m === "grid");
-  document.getElementById("btnMaster4K").classList.toggle("active", m === "master4k");
-  const cBox = document.getElementById("canvasBox");
-  const gBox = document.getElementById("matrixGridView");
-  if (m === "grid") {
-    cBox.style.display = "none";
-    gBox.style.display = "grid";
-  } else {
-    cBox.style.display = "flex";
-    gBox.style.display = "none";
-    if (m === "master4k") loadImage(MASTER_SHEET_URL);
-  }
-}
-
-function renderSidebar() {
-  const pList = document.getElementById("poemList");
-  pList.innerHTML = "";
-  state.bundle.poems.forEach((p, idx) => {
-    const ns = String(p.num).padStart(2, "0");
-    const optImg = `data/terrarium/seeing_spacetime_films/poem_${ns}_opt${PARADIGM_MODE}.jpg`;
-    const card = document.createElement("div");
-    card.className = "poem-card" + (idx === state.poemIdx ? " active" : "");
-    card.innerHTML = `
-      <img src="${optImg}" alt="Poem ${ns}" />
-      <div class="poem-card-info">
-        <div class="poem-card-num">${ns} · ${p.title}</div>
-        <div class="poem-card-sub">Hero ${p.hero_view_id || ''} ↔ Echo ${p.echo_view_id || ''}</div>
-      </div>
-    `;
-    card.onclick = () => selectPoem(idx);
-    pList.appendChild(card);
+function updateRulerTicks() {
+  document.querySelectorAll("#rightEdgeRuler .ruler-tick").forEach((el) => {
+    const f = Number(el.dataset.frac);
+    el.classList.toggle("active", Math.abs(f - state.depthFrac) < 0.13);
   });
+}
 
-  const gBox = document.getElementById("matrixGridView");
-  gBox.innerHTML = "";
+function setDepthFraction(frac) {
+  const prevZ = (18.0 - state.depthFrac * 16.8).toFixed(1);
+  state.depthFrac = Math.max(0, Math.min(1, frac));
+  const nextZ = (18.0 - state.depthFrac * 16.8).toFixed(1);
+  updateRulerTicks();
+  updateVerseWhisper();
+  setVoidState("CHANGED", `Z: ${prevZ}m → ${nextZ}m`);
+}
+
+function updateVerseWhisper() {
+  const el = document.getElementById("cinemaVerseWhisper");
+  // In Mode I & Mode VII, the verse is rendered inside the 3D point cloud / sheet so we never double-render!
+  if (!state.showVerse || !state.bundle || state.mode === 1 || state.mode === 7) {
+    el.style.opacity = "0";
+    return;
+  }
+  const poem = state.bundle.poems[state.poemIdx];
+  const lines = getCleanPoemLines(poem);
+  if (!lines.length) {
+    el.style.opacity = "0";
+    return;
+  }
+  const pairIdx = Math.min(lines.length - 1, Math.floor(state.depthFrac * Math.max(1, lines.length - 1)));
+  const l1 = lines[pairIdx] || "";
+  const l2 = lines[pairIdx + 1] || "";
+  el.textContent = l2 ? `“${l1} / ${l2}”` : `“${l1}”`;
+  el.style.opacity = "1";
+}
+
+function toggleVerseVisibility() {
+  state.showVerse = !state.showVerse;
+  document.getElementById("toggleVerseLink").classList.toggle("active", state.showVerse);
+  updateVerseWhisper();
+}
+
+function toggleManuscriptGlass() {
+  const el = document.getElementById("transientManuscriptGlass");
+  if (el.style.display === "block") {
+    el.style.display = "none";
+    return;
+  }
+  if (!state.bundle) return;
+  const poem = state.bundle.poems[state.poemIdx];
+  const view = (poem.views || [])[state.viewIdx] || {};
+  const ns = String(poem.num).padStart(2, "0");
+  const lines = getCleanPoemLines(poem).slice(0, 12).join("\n");
+  const ms = (poem.assembly_excerpt || "").slice(0, 480);
+  el.innerHTML = `
+    <div style="color:var(--cyan);font-size:10px;letter-spacing:0.1em;margin-bottom:8px">
+      POEM ${ns} · ${poem.title.toUpperCase()} // ${view.id || ""} ${view.place_name || ""} [CLICK TO DISMISS]
+    </div>
+    <div style="font-family:var(--serif);font-style:italic;color:#f6eedc;white-space:pre-line;margin-bottom:12px">${lines}</div>
+    <div style="color:var(--amber);font-size:10px;letter-spacing:0.08em;margin-bottom:4px">WORKING ASSEMBLY MANUSCRIPT & PROMPT:</div>
+    <div style="color:var(--whisper);white-space:pre-line;font-size:11px">${ms}\n\nPrompt: ${view.prompt || ""}</div>
+  `;
+  el.style.display = "block";
+}
+
+function toggleIndexOverlay(force) {
+  const el = document.getElementById("transientIndexOverlay");
+  const show = typeof force === "boolean" ? force : el.style.display !== "flex";
+  el.style.display = show ? "flex" : "none";
+}
+
+function buildIndexGrid() {
+  const grid = document.getElementById("poemIndexGrid");
+  grid.innerHTML = "";
   state.bundle.poems.forEach((p, idx) => {
     const ns = String(p.num).padStart(2, "0");
-    const optImg = `data/terrarium/seeing_spacetime_films/poem_${ns}_opt${PARADIGM_MODE}.jpg`;
-    const cell = document.createElement("div");
-    cell.className = "matrix-cell";
-    cell.innerHTML = `
-      <img src="${optImg}" alt="Poem ${ns}" />
-      <div class="matrix-cell-cap">
-        <strong style="color:var(--accent)">POEM ${ns} · ${p.title.toUpperCase()}</strong>
-        <span style="color:var(--muted)">Hero ${p.hero_view_id || ''} ↔ Echo ${p.echo_view_id || ''}</span>
+    const card = document.createElement("div");
+    card.className = "poem-index-item" + (idx === state.poemIdx ? " active" : "");
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;font-size:11px">
+        <strong style="color:var(--cyan)">${ns} · ${p.title.toUpperCase()}</strong>
+        <span style="color:var(--whisper)">${p.hero_view_id} ↔ ${p.echo_view_id}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--whisper)">
+        <span>Watch here</span>
+        <a href="poem_${ns}_apparatus.html" onclick="event.stopPropagation()" style="color:var(--amber);text-decoration:none">Poem Page →</a>
       </div>
     `;
-    cell.onclick = () => {
-      selectPoem(idx);
-      setDisplayMode("interactive");
+    card.onclick = async () => {
+      toggleIndexOverlay(false);
+      await selectPoem(idx);
     };
-    gBox.appendChild(cell);
+    grid.appendChild(card);
   });
 }
 
 async function selectPoem(pIdx) {
   state.poemIdx = pIdx;
   const poem = state.bundle.poems[pIdx];
-  const ns = String(poem.num).padStart(2, "0");
-  document.getElementById("btnOpenPoemPage").href = `poem_${ns}_apparatus.html`;
-  renderSidebar();
-  const heroId = poem.hero_view_id;
-  const hIdx = Math.max(0, (poem.views || []).findIndex((v) => v.id === heroId));
+  const hIdx = Math.max(0, (poem.views || []).findIndex((v) => v.id === poem.hero_view_id));
+  buildIndexGrid();
   await selectView(hIdx);
 }
 
@@ -544,22 +707,16 @@ async function selectView(vIdx) {
   state.viewIdx = vIdx;
   const poem = state.bundle.poems[state.poemIdx];
   const views = poem.views || [];
-  const vGrid = document.getElementById("viewGrid");
-  vGrid.innerHTML = "";
-  views.forEach((v, idx) => {
-    const chip = document.createElement("div");
-    chip.className = "view-chip" + (idx === vIdx ? " active" : "");
-    chip.textContent = `${v.id} · ${v.place_name || ""}`;
-    chip.onclick = () => selectView(idx);
-    vGrid.appendChild(chip);
-  });
-
-  const view = views[vIdx] || {};
-  const sd = view.dir || view.shot_dir || "";
+  const view = views[vIdx] || views[0] || {};
+  const echoView = views.find((v) => v.id === poem.echo_view_id) || views[views.length - 1] || view;
   const ns = String(poem.num).padStart(2, "0");
-  const optPath = `data/terrarium/seeing_spacetime_films/poem_${ns}_opt${PARADIGM_MODE}.jpg`;
-  view._optPath = optPath;
-  view._assets = view.assets || {
+
+  document.getElementById("sceneTitleTrigger").textContent = `${ns} / 14 · ${poem.title.toUpperCase()}`;
+  document.getElementById("viewCycleTrigger").textContent = `${view.id} ${(view.place_name || "").toUpperCase()} (${vIdx + 1}/${views.length}) ↻`;
+
+  const sd = view.dir || view.shot_dir || "";
+  const esd = echoView.dir || echoView.shot_dir || sd;
+  view._assets = {
     image: `out/${sd}/image.jpg`,
     cel: `out/${sd}/cartoon/cel.png`,
     layout_sheet: `out/${sd}/cartoon/layout_sheet.png`,
@@ -568,13 +725,33 @@ async function selectView(vIdx) {
     layout_drawing: `out/${sd}/multiplane/layout_drawing.png`,
     plane_map: `out/${sd}/multiplane/plane_map.jpg`,
     overlay: `out/${sd}/overlay.jpg`,
-    compare: `out/${sd}/program/compare.jpg`,
-    perceive: `out/${sd}/program/perceive.jpg`,
     points_ply: `out/${sd}/points.ply`,
+    echo_image: `out/${esd}/image.jpg`,
+    sheet: `data/terrarium/seeing_spacetime_films/poem_${ns}_apparatus_6options.png`,
+    video: `data/terrarium/seeing_spacetime_films/poem_${ns}_apparatus.mp4`,
   };
 
+  const ticks = document.querySelectorAll("#rightEdgeRuler .ruler-tick");
+  const planes = (view.planes || []).slice(0, 5);
+  ticks.forEach((t, i) => {
+    if (state.mode === 2 && planes[i]) {
+      const zm = typeof planes[i].z_m === "number" ? `${planes[i].z_m.toFixed(1)}m` : "∞";
+      t.textContent = `${planes[i].id} · ${zm}`;
+    } else if (state.mode === 5 && poem.kit_sheets && poem.kit_sheets[i]) {
+      t.textContent = poem.kit_sheets[i].id;
+    } else {
+      const zVals = ["18.0m", "9.4m", "4.4m", "2.2m", "1.2m"];
+      t.textContent = `P${5 - i} · ${zVals[i]}`;
+    }
+  });
+
+  if (state.mode === 8) {
+    videoEl.src = view._assets.video;
+    videoEl.play().catch(() => {});
+  }
+
+  setVoidState("WORKING", `Loading ${view.id}...`);
   await Promise.all([
-    loadImage(optPath),
     loadImage(view._assets.image),
     loadImage(view._assets.cel),
     loadImage(view._assets.exploded),
@@ -582,38 +759,53 @@ async function selectView(vIdx) {
     loadImage(view._assets.layout_sheet),
     loadImage(view._assets.layout_drawing),
     loadImage(view._assets.overlay),
-    loadImage(view._assets.compare),
-    loadImage(view._assets.perceive),
+    loadImage(view._assets.echo_image),
+    loadImage(view._assets.sheet),
   ]);
-
-  if (state.livePlyMode && PARADIGM_MODE === 1) {
-    state.plyPoints = await loadBinaryPly(view._assets.points_ply);
+  if (poem.kit_sheets && poem.kit_sheets.length) {
+    await Promise.all(poem.kit_sheets.map((k) => loadImage(k.image)));
   }
-
-  // Update Inspector
-  const sc0 = (poem.breakdown_scenes || [])[0] || {};
-  const pText = getPoemTextString(poem).split("\n").slice(0, 8).join("\n");
-  document.getElementById("verseBox").textContent = sc0.lines
-    ? `[SCENE ${sc0.id} · ${sc0.movement || ""}]\n“${sc0.lines}”\n\n${pText}`
-    : pText;
-
-  const rb = poem.riverbed || {};
-  document.getElementById("riverbedBox").innerHTML = `
-    <div><strong style="color:var(--amber)">Core Identity:</strong> ${rb.core_identity || poem.essence || ""}</div>
-    <div style="margin-top:4px"><strong style="color:var(--cyan)">Mutable Flow:</strong> ${(rb.mutable_variables || []).join(", ")}</div>
-    <div style="margin-top:4px"><strong style="color:var(--green)">World Rules:</strong> ${(rb.world_rules || []).join(" · ")}</div>
-  `;
-
-  const planesHtml = (view.planes || []).map((pl) => {
-    const zm = typeof pl.z_m === "number" ? `${pl.z_m.toFixed(2)}m` : "∞";
-    const par = typeof pl.parallax === "number" ? `×${pl.parallax.toFixed(2)}` : "";
-    return `<div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06);padding:2px 0"><span style="color:var(--cyan)">${pl.id} ${pl.name || ""}</span><span>Z=${zm} ${par}</span></div>`;
-  }).join("");
-  document.getElementById("planesBox").innerHTML = planesHtml || "No plane metadata.";
-  document.getElementById("promptBox").textContent = view.prompt || "";
+  if (state.mode === 1) {
+    await ensureBinaryPlyLoaded(view);
+  }
+  setVoidState("REST", "");
+  updateVerseWhisper();
 }
 
-function drawFitContain(img, x, y, w, h, bg = "#06090e") {
+async function selectMode(m) {
+  state.mode = m;
+  document.querySelectorAll("#bottomRightLenses .lens-mark").forEach((el) => {
+    el.classList.toggle("active", Number(el.dataset.mode) === m);
+  });
+  updateVerseWhisper();
+  const poem = state.bundle ? state.bundle.poems[state.poemIdx] : null;
+  const view = poem ? (poem.views || [])[state.viewIdx] : null;
+  if (m === 8 && view && view._assets) {
+    canvas.style.display = "none";
+    videoEl.style.display = "block";
+    videoEl.src = view._assets.video;
+    videoEl.play().catch(() => {});
+    setVoidState("WORKING", "Playing H.264 film");
+  } else {
+    videoEl.pause();
+    videoEl.style.display = "none";
+    canvas.style.display = "block";
+    if (m === 1 && view) await ensureBinaryPlyLoaded(view);
+    setVoidState("REST", "");
+  }
+}
+
+function drawCover(img, x, y, w, h, offsetX = 0, offsetY = 0) {
+  if (!img) return;
+  const scale = Math.max(w / img.width, h / img.height);
+  const nw = img.width * scale;
+  const nh = img.height * scale;
+  const dx = x + (w - nw) / 2 + offsetX;
+  const dy = y + (h - nh) / 2 + offsetY;
+  ctx.drawImage(img, dx, dy, nw, nh);
+}
+
+function drawContain(img, x, y, w, h, bg = "#040609") {
   ctx.fillStyle = bg;
   ctx.fillRect(x, y, w, h);
   if (!img) return;
@@ -624,108 +816,343 @@ function drawFitContain(img, x, y, w, h, bg = "#06090e") {
 }
 
 function renderStage() {
-  if (!state.bundle || state.displayMode === "grid") return;
+  if (!state.bundle || state.mode === 8) return;
   const W = canvas.width;
   const H = canvas.height;
-  ctx.fillStyle = "#06090e";
+  ctx.fillStyle = "#040609";
   ctx.fillRect(0, 0, W, H);
-
-  if (state.displayMode === "master4k") {
-    drawFitContain(state.images[MASTER_SHEET_URL], 0, 0, W, H);
-    return;
-  }
 
   const poem = state.bundle.poems[state.poemIdx];
   const view = (poem.views || [])[state.viewIdx];
   if (!view || !view._assets) return;
+  const A = view._assets;
 
-  if (state.livePlyMode && PARADIGM_MODE === 1 && state.plyPoints) {
-    const pts = state.plyPoints;
-    const angle = (state.scrubX - 0.5) * 0.45 + Math.sin(state.t * 1.3) * 0.05;
-    const ca = Math.cos(angle), sa = Math.sin(angle);
-    const fx = W * 0.72, fy = W * 0.72, cx = W * 0.5, cy = H * 0.52;
-    const zPiv = state.scrubZ;
-    for (let i = 0; i < pts.length; i++) {
-      const p = pts[i];
-      const dz = p.z - zPiv;
-      const xr = p.x * ca + dz * sa;
-      const zr = -p.x * sa + dz * ca + zPiv;
-      if (zr <= 0.5) continue;
-      const u = (cx + (xr / zr) * fx) | 0;
-      const v = (cy - (p.y / zr) * fy) | 0;
-      if (u >= 0 && u < W && v >= 0 && v < H) {
-        ctx.fillStyle = `rgb(${p.r},${p.g},${p.b})`;
-        ctx.fillRect(u, v, 3, 3);
-      }
-    }
+  // MODE VII: 4K 6-Option Contact Sheet
+  if (state.mode === 7) {
+    drawContain(state.images[A.sheet], 0, 0, W, H);
     return;
   }
 
-  const optImg = state.images[view._optPath];
-  const A = view._assets;
-  if (state.useExactPlate && optImg && view.id === poem.hero_view_id) {
-    const shift = (state.scrubX - 0.35) * 28;
-    drawFitContain(optImg, shift * 0.3, 0, W, H);
-  } else {
-    // Live multi-asset composite for ANY of the 97 Common Place views!
-    if (PARADIGM_MODE === 1) {
-      drawFitContain(state.images[A.image], 0, 0, W, H);
-    } else if (PARADIGM_MODE === 2) {
-      drawFitContain(state.images[A.exploded], 0, 0, W * 0.62, H);
-      drawFitContain(state.images[A.plane_map], W * 0.62, 0, W * 0.38, H);
-    } else if (PARADIGM_MODE === 3) {
-      drawFitContain(state.images[A.layout_sheet], 0, 0, W * state.scrubX, H);
-      drawFitContain(state.images[A.layout_drawing], W * state.scrubX, 0, W * (1 - state.scrubX), H);
-    } else if (PARADIGM_MODE === 4) {
-      drawFitContain(state.images[A.overlay], 0, 0, W * 0.5, H);
-      drawFitContain(state.images[A.compare], W * 0.5, 0, W * 0.5, H * 0.65);
-      drawFitContain(state.images[A.perceive], W * 0.5, H * 0.65, W * 0.5, H * 0.35);
-    } else if (PARADIGM_MODE === 5) {
-      drawFitContain( optImg || state.images[A.image], 0, 0, W, H);
+  const imgOrig = state.images[A.image];
+  const imgCel = state.images[A.cel];
+  const imgExploded = state.images[A.exploded];
+  const imgPlaneMap = state.images[A.plane_map];
+  const imgLayoutSheet = state.images[A.layout_sheet];
+  const imgLayoutDraw = state.images[A.layout_drawing];
+  const imgOverlay = state.images[A.overlay];
+  const imgEcho = state.images[A.echo_image] || imgPlaneMap;
+
+  // MODE I: Real Binary 3D Point Cloud (points.ply) + Depth-Occluded Worldtext
+  if (state.mode === 1) {
+    if (state.plyPoints && state.plyPoints.length && state.plyViewId === view.id) {
+      const pts = state.plyPoints;
+      const zMed = state.plyZMed || 4.4;
+      const zThresh = zMed * (1.5 - state.depthFrac);
+      const angle = (state.seamX - 0.5) * 0.34 + Math.sin(state.t * 0.7) * 0.04;
+      const camTx = ((state.seamX - 0.5) * 0.22 + Math.sin(state.t * 0.7) * 0.03) * zMed;
+      const camTy = (state.cursorY - 0.5) * 0.12 * zMed;
+      const ca = Math.cos(angle), sa = Math.sin(angle);
+      const fx = W * 0.74, fy = W * 0.74, cx = W * 0.5, cy = H * 0.51;
+
+      // 1. Splat Far & Midground points (z > zThresh)
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        if (p.z <= zThresh) continue;
+        const dx = p.x - camTx;
+        const dy = p.y - camTy;
+        const dz = p.z - zMed;
+        const xr = dx * ca + dz * sa;
+        const zr = -dx * sa + dz * ca + zMed;
+        if (zr <= 0.5) continue;
+        const u = (cx + (xr / zr) * fx) | 0;
+        const v = (cy - (dy / zr) * fy) | 0;
+        if (u >= 0 && u < W && v >= 0 && v < H) {
+          ctx.fillStyle = `rgb(${p.r},${p.g},${p.b})`;
+          ctx.fillRect(u, v, 3, 3);
+        }
+      }
+
+      // 2. Unboxed Diegetic Worldtext at Z = zThresh
+      if (state.showVerse) {
+        const lines = getCleanPoemLines(poem);
+        const pairIdx = Math.min(lines.length - 1, Math.floor(state.depthFrac * Math.max(1, lines.length - 1)));
+        const l1 = lines[pairIdx] || poem.title;
+        const l2 = lines[pairIdx + 1] || "";
+        const tx = Math.floor(W * 0.16 - angle * 220);
+        const ty = Math.floor(H * 0.50);
+        ctx.save();
+        ctx.strokeStyle = "rgba(255, 190, 82, 0.45)";
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(tx - 20, ty - 42); ctx.lineTo(tx + 540, ty - 42); ctx.stroke();
+        ctx.font = "12px 'SF Mono', Menlo, monospace";
+        ctx.fillStyle = "rgba(255, 190, 82, 0.88)";
+        ctx.fillText(`Z = ${zThresh.toFixed(2)}m · P2 ACTION THRESHOLD`, tx, ty - 50);
+        ctx.font = "italic 42px Georgia, serif";
+        ctx.shadowColor = "rgba(0,0,0,0.95)";
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = "rgba(255, 246, 225, 0.96)";
+        ctx.fillText(`“${l1.slice(0, 56)}”`, tx, ty);
+        if (l2) {
+          ctx.font = "italic 32px Georgia, serif";
+          ctx.fillStyle = "rgba(235, 215, 175, 0.90)";
+          ctx.fillText(`“${l2.slice(0, 58)}”`, tx + 22, ty + 48);
+        }
+        ctx.restore();
+      }
+
+      // 3. Splat Foreground points (z <= zThresh) — physically occluding the verse!
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        if (p.z > zThresh) continue;
+        const dx = p.x - camTx;
+        const dy = p.y - camTy;
+        const dz = p.z - zMed;
+        const xr = dx * ca + dz * sa;
+        const zr = -dx * sa + dz * ca + zMed;
+        if (zr <= 0.5) continue;
+        const u = (cx + (xr / zr) * fx) | 0;
+        const v = (cy - (dy / zr) * fy) | 0;
+        if (u >= 0 && u < W && v >= 0 && v < H) {
+          ctx.fillStyle = `rgb(${p.r},${p.g},${p.b})`;
+          ctx.fillRect(u, v, 3, 3);
+        }
+      }
     } else {
-      const s1 = Math.floor(W * state.scrubX * 0.65);
-      const s2 = Math.floor(W * (0.35 + state.scrubX * 0.55));
-      drawFitContain(state.images[A.image], 0, 0, W, H);
-      if (state.images[A.cel]) {
-        ctx.save();
-        ctx.beginPath(); ctx.rect(s1, 0, s2 - s1, H); ctx.clip();
-        drawFitContain(state.images[A.cel], 0, 0, W, H);
-        ctx.restore();
-      }
-      if (state.images[A.layout_drawing]) {
-        ctx.save();
-        ctx.beginPath(); ctx.rect(s2, 0, W - s2, H); ctx.clip();
-        drawFitContain(state.images[A.layout_drawing], 0, 0, W, H);
-        ctx.restore();
-      }
+      drawCover(imgOrig, 0, 0, W, H);
     }
+  }
+
+  // MODE II: Full-Bleed Multiplane Glass Stand (Live Peel between Living Shot & Exploded Stack)
+  else if (state.mode === 2) {
+    const splitX = Math.floor(W * state.seamX);
+    drawContain(imgExploded || imgOrig, 0, 0, W, H, "#040609");
+    if (imgOrig) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(0, 0, splitX, H); ctx.clip();
+      drawCover(imgOrig, 0, 0, W, H, (state.seamX - 0.5) * -32, 0);
+      ctx.restore();
+    }
+    ctx.strokeStyle = "rgba(92, 228, 255, 0.85)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(splitX, 0); ctx.lineTo(splitX, H); ctx.stroke();
+  }
+
+  // MODE III: Full-Bleed Surveyor's Perspective Grid & Darkroom Line Layout Wipe
+  else if (state.mode === 3) {
+    const splitX = Math.floor(W * state.seamX);
+    drawCover(imgLayoutSheet || imgOrig, 0, 0, W, H);
+    if (imgLayoutDraw) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(splitX, 0, W - splitX, H); ctx.clip();
+      ctx.fillStyle = "#060a10";
+      ctx.fillRect(splitX, 0, W - splitX, H);
+      ctx.filter = "invert(1) hue-rotate(175deg) brightness(1.15) contrast(1.25)";
+      drawCover(imgLayoutDraw, 0, 0, W, H);
+      ctx.filter = "none";
+      ctx.restore();
+    }
+    const hy = Math.floor((view.camera?.horizon_y_norm || 0.5) * H);
+    ctx.strokeStyle = "rgba(130, 245, 175, 0.82)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(splitX, 0); ctx.lineTo(splitX, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(W, hy); ctx.stroke();
+  }
+
+  // MODE IV: Full-Bleed Machine-Eye SAM2 Optical Aperture Reticle
+  else if (state.mode === 4) {
+    drawCover(imgOrig, 0, 0, W, H);
+    const cx = Math.floor(W * state.seamX);
+    const cy = Math.floor(H * state.cursorY);
+    const r = state.lensRadius;
+    if (imgOverlay) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.clip();
+      drawCover(imgOverlay, 0, 0, W, H);
+      ctx.restore();
+    }
+    ctx.strokeStyle = "rgba(255, 130, 195, 0.9)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = "rgba(92, 228, 255, 0.55)";
+    ctx.beginPath(); ctx.arc(cx, cy, r + 8, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  // MODE V: Darkroom Cut-Out Light-Table (Obsidian mat + Brass-Brad Optical Loupe)
+  else if (state.mode === 5) {
+    if (imgOrig) {
+      drawCover(imgOrig, 0, 0, W, H);
+      ctx.fillStyle = "rgba(4, 6, 10, 0.86)";
+      ctx.fillRect(0, 0, W, H);
+    }
+    const kits = poem.kit_sheets || [];
+    const kIdx = Math.min(kits.length - 1, Math.floor(state.depthFrac * Math.max(1, kits.length)));
+    const activeKit = kits[Math.max(0, kIdx)];
+    const kitImg = activeKit ? state.images[activeKit.image] : imgOrig;
+    const boxX = Math.floor(W * 0.14);
+    const boxY = Math.floor(H * 0.08);
+    const boxW = Math.floor(W * 0.68);
+    const boxH = Math.floor(H * 0.72);
+    drawContain(kitImg || imgOrig, boxX, boxY, boxW, boxH, "#06080d");
+    ctx.strokeStyle = "rgba(255, 190, 82, 0.32)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+    // 2.2x optical loupe over the cut-out kit sheet
+    if (kitImg) {
+      const lx = state.pointerActive ? state.seamX : 0.28;
+      const ly = state.pointerActive ? state.cursorY : 0.78;
+      const cx = Math.floor(boxX + boxW * lx);
+      const cy = Math.floor(boxY + boxH * ly);
+      const r = Math.floor(state.lensRadius * 0.62);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.clip();
+      const scale = Math.min(boxW / kitImg.width, boxH / kitImg.height) * 2.15;
+      const nw = kitImg.width * scale;
+      const nh = kitImg.height * scale;
+      const dx = cx - lx * nw;
+      const dy = cy - ly * nh;
+      ctx.fillStyle = "#080a0f";
+      ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+      ctx.drawImage(kitImg, dx, dy, nw, nh);
+      ctx.restore();
+      ctx.strokeStyle = "rgba(255, 190, 82, 0.92)";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = "rgba(92, 228, 255, 0.45)";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, r + 7, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+
+  // MODE VI: Full-Bleed 4-Layer Optical Slit-Scan & Echo Curtain
+  else if (state.mode === 6) {
+    const s1 = Math.floor(W * Math.max(0.12, state.seamX - 0.24));
+    const s2 = Math.floor(W * state.seamX);
+    const s3 = Math.floor(W * Math.min(0.90, state.seamX + 0.24));
+
+    drawCover(imgOrig, 0, 0, W, H);
+    if (imgCel) {
+      ctx.save(); ctx.beginPath(); ctx.rect(s1, 0, s2 - s1, H); ctx.clip();
+      drawCover(imgCel, 0, 0, W, H); ctx.restore();
+    }
+    if (imgLayoutDraw) {
+      ctx.save(); ctx.beginPath(); ctx.rect(s2, 0, s3 - s2, H); ctx.clip();
+      ctx.fillStyle = "#060a10"; ctx.fillRect(s2, 0, s3 - s2, H);
+      ctx.filter = "invert(1) hue-rotate(175deg) brightness(1.15)";
+      drawCover(imgLayoutDraw, 0, 0, W, H);
+      ctx.filter = "none"; ctx.restore();
+    }
+    if (imgEcho) {
+      ctx.save(); ctx.beginPath(); ctx.rect(s3, 0, W - s3, H); ctx.clip();
+      drawCover(imgEcho, 0, 0, W, H); ctx.restore();
+    }
+    [ [s1, "#5ce4ff"], [s2, "#ffbe52"], [s3, "#ff82c3"] ].forEach(([sx, col]) => {
+      ctx.strokeStyle = col; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, H); ctx.stroke();
+    });
+    const hy = Math.floor((view.camera?.horizon_y_norm || 0.5) * H);
+    ctx.strokeStyle = "rgba(92, 228, 255, 0.55)";
+    ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(W, hy); ctx.stroke();
   }
 }
 
-document.getElementById("scrubX").oninput = (e) => { state.scrubX = Number(e.target.value) / 100; };
-document.getElementById("scrubZ").oninput = (e) => {
-  state.scrubZ = Number(e.target.value);
-  document.getElementById("scrubZVal").textContent = `${state.scrubZ.toFixed(1)}m`;
-};
-document.getElementById("textAlpha").oninput = (e) => { state.textAlpha = Number(e.target.value) / 100; };
-document.getElementById("toggleExactBtn").onclick = (e) => {
-  state.useExactPlate = !state.useExactPlate;
-  e.target.textContent = state.useExactPlate ? "Mode: Pre-Rendered 3D Plate + Live Scrub" : "Mode: Live Any-View Composite";
-};
-document.getElementById("togglePlyBtn").onclick = async (e) => {
-  state.livePlyMode = !state.livePlyMode;
-  e.target.textContent = state.livePlyMode ? "Showing Live Binary points.ply (Click for Plate)" : "Load Live Binary points.ply (129K pts)";
-  if (state.livePlyMode) {
-    const poem = state.bundle.poems[state.poemIdx];
-    const view = (poem.views || [])[state.viewIdx];
-    if (view && view._assets) state.plyPoints = await loadBinaryPly(view._assets.points_ply);
+const inSituTag = document.getElementById("inSituTag");
+
+function handlePointerProbe(e, isDrag) {
+  const rect = canvas.getBoundingClientRect();
+  const nx = Math.max(0.04, Math.min(0.96, (e.clientX - rect.left) / rect.width));
+  const ny = Math.max(0.04, Math.min(0.96, (e.clientY - rect.top) / rect.height));
+  state.seamX = nx;
+  state.cursorY = ny;
+  state.pointerActive = true;
+
+  inSituTag.style.left = `${Math.min(window.innerWidth - 220, e.clientX + 18)}px`;
+  inSituTag.style.top = `${Math.max(44, e.clientY - 18)}px`;
+  inSituTag.style.opacity = "1";
+
+  const zMeters = (18.0 - state.depthFrac * 16.8).toFixed(1);
+  const modeNames = ["", "3D ORBIT", "MULTIPLANE SEAM", "SURVEYOR PLUMB", "SAM2 APERTURE", "BRASS-BRAD LOUPE", "ECHO SLIT-SCAN"];
+  inSituTag.textContent = `${modeNames[state.mode] || "PROBE"} · X=${Math.round(nx * 100)}% · Z=${zMeters}m`;
+
+  if (isDrag) {
+    setVoidState("WORKING", `${modeNames[state.mode] || "Probing"} @ ${Math.round(nx * 100)}%`);
+  } else if (state.voidState === "REST") {
+    setVoidState("READY", "");
   }
+}
+
+canvas.addEventListener("pointerdown", (e) => {
+  state.isDragging = true;
+  handlePointerProbe(e, true);
+});
+
+window.addEventListener("pointermove", (e) => {
+  if (document.getElementById("transientIndexOverlay").style.display === "flex") return;
+  handlePointerProbe(e, state.isDragging);
+});
+
+window.addEventListener("pointerup", () => {
+  if (state.isDragging) {
+    state.isDragging = false;
+    setVoidState("CHANGED", `Seam ${Math.round(state.seamX * 100)}%`);
+  }
+});
+
+canvas.addEventListener("mouseleave", () => {
+  state.pointerActive = false;
+  inSituTag.style.opacity = "0";
+  if (state.voidState === "READY") setVoidState("REST", "");
+});
+
+window.addEventListener("wheel", (e) => {
+  if (document.getElementById("transientIndexOverlay").style.display === "flex") return;
+  if (state.mode === 4 || state.mode === 5) {
+    state.lensRadius = Math.max(90, Math.min(520, state.lensRadius - e.deltaY * 0.4));
+    setVoidState("CHANGED", `R = ${Math.round(state.lensRadius)}px`);
+  } else {
+    setDepthFraction(state.depthFrac + (e.deltaY > 0 ? 0.06 : -0.06));
+  }
+}, { passive: true });
+
+document.getElementById("sceneTitleTrigger").onclick = () => toggleIndexOverlay();
+document.getElementById("viewCycleTrigger").onclick = () => {
+  if (!state.bundle) return;
+  const views = state.bundle.poems[state.poemIdx].views || [];
+  selectView((state.viewIdx + 1) % Math.max(1, views.length));
 };
 
-canvas.addEventListener("mousemove", (e) => {
-  const r = canvas.getBoundingClientRect();
-  state.scrubX = Math.max(0.05, Math.min(0.95, (e.clientX - r.left) / r.width));
-  document.getElementById("scrubX").value = Math.round(state.scrubX * 100);
+window.addEventListener("keydown", (e) => {
+  if (!state.bundle) return;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    toggleIndexOverlay();
+  } else if (e.key === "Escape") {
+    toggleIndexOverlay(false);
+    document.getElementById("transientManuscriptGlass").style.display = "none";
+    if (state.voidState === "WORKING") stopActiveWork();
+  } else if (e.key === "ArrowRight") {
+    selectPoem((state.poemIdx + 1) % state.bundle.poems.length);
+  } else if (e.key === "ArrowLeft") {
+    selectPoem((state.poemIdx - 1 + state.bundle.poems.length) % state.bundle.poems.length);
+  } else if (e.key === "ArrowUp") {
+    const views = state.bundle.poems[state.poemIdx].views || [];
+    selectView((state.viewIdx + 1) % Math.max(1, views.length));
+  } else if (e.key === "ArrowDown") {
+    const views = state.bundle.poems[state.poemIdx].views || [];
+    selectView((state.viewIdx - 1 + views.length) % Math.max(1, views.length));
+  } else if (e.key >= "1" && e.key <= "8") {
+    selectMode(Number(e.key));
+  } else if (e.key.toLowerCase() === "v") {
+    toggleVerseVisibility();
+  } else if (e.key.toLowerCase() === "m") {
+    toggleManuscriptGlass();
+  } else if (e.key.toLowerCase() === "r") {
+    restoreBaseline();
+  }
 });
 
 function loop() {
@@ -739,9 +1166,11 @@ fetch("data/terrarium/seeing_spacetime_films/vesper_world_bundle.json")
   .then(async (b) => {
     state.bundle = b;
     const params = new URLSearchParams(window.location.search);
-    const pParam = Number(params.get("poem") || 1);
+    const pParam = Number(params.get("poem") || DEFAULT_POEM_NUM);
+    const mParam = Number(params.get("mode") || DEFAULT_MODE);
     const pIdx = Math.max(0, Math.min(b.poems.length - 1, pParam - 1));
     await selectPoem(pIdx);
+    await selectMode(mParam);
     loop();
   });
 </script>

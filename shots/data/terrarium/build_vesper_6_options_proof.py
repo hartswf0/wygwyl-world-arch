@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-All 14 Poems — Six Unobstructed Narrative Apparatus Paradigms
-==============================================================
-Generates the 6 unobstructed, real-asset Narrative Apparatus Options for
-EVERY SINGLE POEM (01 through 14) in Where You Go When You Leave:
+VOIDBASTARD-TAO — All 14 Poems × 6 Unobstructed Diegetic Cinema Apparatus Paradigms
+====================================================================================
+"I will first construct the way of the surface, then remove obstruction until the
+operation can proceed without force. Leave the center open."
 
-  1. Per-Poem Full-HD Option Plates (84 plates: poem_01_opt1.jpg .. poem_14_opt6.jpg)
-  2. Per-Poem 4K 6-Option Contact Sheets (14 sheets: poem_01_apparatus_6options.png .. poem_14_apparatus_6options.png)
-  3. Per-Poem H.264 6-Paradigm Films (14 MP4s: poem_01_apparatus.mp4 .. poem_14_apparatus.mp4)
-  4. Master 14-Poem 4K Contact Sheets:
-       - all_14_poems_pointcloud_worldtext_sheet.png (All 14 Poems in Option I: True 3D points.ply + Depth-Occluded Text)
-       - all_14_poems_exploded_multiplane_sheet.png  (All 14 Poems in Option II: 3D Isometric Exploded Multiplane + Riverbed)
-       - all_14_poems_apparatus_6options_sheet.png   (All 14 Poems Master Apparatus Matrix)
-  5. Master All-14-Poems Feature Reel (wygwyl_all_14_poems_apparatus_reel.mp4 & wygwyl_vesper_apparatus_reel.mp4)
+Generates 100% full-bleed (1920x1080) cinema-grade plates with ZERO rectangular HUD
+boxes, ZERO split-screen text sidebars, and ZERO decorative chrome across all 14 poems:
+
+  Option I   : Full-Bleed 3D Metric Point Cloud (points.ply) + Depth-Occluded Worldtext
+  Option II  : Full-Bleed 3D Isometric Exploded Multiplane (exploded.jpg) + Optical Plane Hairlines
+  Option III : Full-Bleed Surveyor's Perspective Grid & Darkroom Line Layout Wipe + Horizon Manuscript
+  Option IV  : Full-Bleed Machine-Eye Optical Aperture Lens (Photographic Still ↔ SAM2 Contours & Vector ΔE)
+  Option V   : Full-Bleed Darkroom Animator's Light-Table Cut-Out Kit (poems/kits/NN.*.jpg) + Registration Marks
+  Option VI  : Full-Bleed 4-Layer Optical Slit-Scan & Shared Common-Place Echo Curtain + Horizon Verse
 """
 
 import json
@@ -29,7 +30,6 @@ SHOTS_DIR = ROOT / "shots"
 OUT_DIR = SHOTS_DIR / "data/terrarium/seeing_spacetime_films"
 ARTIFACT_DIR = Path("/Users/gaia/.gemini/antigravity/brain/f76dabc9-fb98-42f7-bec0-54be580e5584")
 
-# 14 unique Hero Common Place views + 14 paired Echo views across the 14 poems
 HERO_AND_ECHO_VIEWS = {
     1: ("V92", "V26"),
     2: ("V57", "V88"),
@@ -48,7 +48,7 @@ HERO_AND_ECHO_VIEWS = {
 }
 
 
-def load_font(size: int, mono: bool = True, bold: bool = False):
+def load_font(size: int, mono: bool = True, italic: bool = False):
     candidates = (
         [
             "/System/Library/Fonts/SFNSMono.ttf",
@@ -57,13 +57,11 @@ def load_font(size: int, mono: bool = True, bold: bool = False):
         ]
         if mono
         else [
+            "/System/Library/Fonts/Supplemental/Georgia Italic.ttf" if italic else "/System/Library/Fonts/Supplemental/Georgia.ttf",
             "/System/Library/Fonts/Supplemental/Georgia.ttf",
             "/System/Library/Fonts/HelveticaNeue.ttc",
-            "/System/Library/Fonts/Helvetica.ttc",
         ]
     )
-    if bold and mono:
-        candidates = ["/System/Library/Fonts/Menlo.ttc"] + candidates
     for p in candidates:
         if Path(p).exists():
             try:
@@ -73,17 +71,19 @@ def load_font(size: int, mono: bool = True, bold: bool = False):
     return ImageFont.load_default()
 
 
-FONT_XS = load_font(12, mono=True)
-FONT_SM = load_font(14, mono=True)
-FONT_MD = load_font(17, mono=True, bold=True)
-FONT_LG = load_font(22, mono=True, bold=True)
-FONT_XL = load_font(28, mono=True, bold=True)
-FONT_SERIF_MD = load_font(20, mono=False)
-FONT_SERIF_LG = load_font(26, mono=False)
+FONT_MICRO = load_font(11, mono=True)
+FONT_XS = load_font(13, mono=True)
+FONT_SM = load_font(15, mono=True)
+FONT_MD = load_font(18, mono=True)
+FONT_LG = load_font(22, mono=True)
+FONT_XL = load_font(28, mono=True)
+FONT_SERIF_SM = load_font(19, mono=False, italic=True)
+FONT_SERIF_MD = load_font(24, mono=False, italic=True)
+FONT_SERIF_LG = load_font(34, mono=False, italic=True)
+FONT_SERIF_XL = load_font(44, mono=False, italic=True)
 
 
 def load_ply_points(ply_path: Path, max_pts: int = 129264):
-    """Load binary_little_endian PLY (x, y, z, r, g, b)."""
     with open(ply_path, "rb") as f:
         while True:
             line = f.readline().decode("ascii", errors="ignore").strip()
@@ -99,7 +99,7 @@ def load_ply_points(ply_path: Path, max_pts: int = 129264):
 
 def cover_crop(img_bgr: np.ndarray, target_w: int, target_h: int) -> np.ndarray:
     if img_bgr is None:
-        return np.full((target_h, target_w, 3), (10, 12, 16), dtype=np.uint8)
+        return np.full((target_h, target_w, 3), (6, 8, 11), dtype=np.uint8)
     h, w = img_bgr.shape[:2]
     scale = max(target_w / max(w, 1), target_h / max(h, 1))
     nw, nh = max(1, int(round(w * scale))), max(1, int(round(h * scale)))
@@ -109,7 +109,7 @@ def cover_crop(img_bgr: np.ndarray, target_w: int, target_h: int) -> np.ndarray:
     return resized[y0 : y0 + target_h, x0 : x0 + target_w].copy()
 
 
-def fit_contain(img_bgr: np.ndarray, target_w: int, target_h: int, bg_color=(10, 12, 16)) -> np.ndarray:
+def fit_contain(img_bgr: np.ndarray, target_w: int, target_h: int, bg_color=(6, 8, 11)) -> np.ndarray:
     if img_bgr is None:
         return np.full((target_h, target_w, 3), bg_color, dtype=np.uint8)
     h, w = img_bgr.shape[:2]
@@ -123,19 +123,60 @@ def fit_contain(img_bgr: np.ndarray, target_w: int, target_h: int, bg_color=(10,
     return canvas
 
 
-def draw_pill_header(draw: ImageDraw.ImageDraw, x: int, y: int, tag: str, title: str, subtitle: str, accent=(92, 228, 255)):
-    top_str = f"{tag}  ·  {title}"
-    w1 = len(top_str) * 10 + 44
-    w2 = len(subtitle) * 8 + 44
-    box_w = min(1860, max(780, w1, w2))
-    draw.rectangle([x, y, x + box_w, y + 60], fill=(7, 10, 14, 218), outline=(accent[0], accent[1], accent[2], 130), width=1)
-    draw.rectangle([x, y, x + 5, y + 60], fill=(accent[0], accent[1], accent[2], 255))
-    draw.text((x + 16, y + 8), top_str, font=FONT_MD, fill=accent)
-    draw.text((x + 16, y + 34), subtitle, font=FONT_SM, fill=(215, 226, 236))
+def extract_clean_lines(poem_meta: dict, breakdown_json: dict) -> list[str]:
+    scenes = breakdown_json.get("scenes", [])
+    sc0 = scenes[0] if scenes else {}
+    raw = [s.strip() for s in sc0.get("lines", "").split("/") if s.strip()]
+    if not raw:
+        ft = poem_meta.get("full_text", [])
+        raw = [
+            (s.get("line", "") if isinstance(s, dict) else str(s)).strip()
+            for s in (ft if isinstance(ft, list) else str(ft).splitlines())
+        ]
+        raw = [s for s in raw if s]
+    return raw if raw else [poem_meta.get("title", "")]
+
+
+def draw_shadow_text(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, font, fill=(240, 244, 248, 235), shadow=(0, 0, 0, 210)):
+    """Draws unboxed optical viewfinder text with a crisp 1px dark halo — zero background rectangles."""
+    x, y = xy
+    for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1), (0, 2)]:
+        draw.text((x + dx, y + dy), text, font=font, fill=shadow)
+    draw.text((x, y), text, font=font, fill=fill)
+
+
+def draw_viewfinder_whisper(
+    draw: ImageDraw.ImageDraw,
+    W: int,
+    H: int,
+    left_mark: str,
+    right_mark: str,
+    bottom_left_mark: str = "",
+    bottom_right_mark: str = "",
+    accent=(92, 228, 255, 215),
+):
+    """Whisper-quiet 35mm optical viewfinder marks at the extreme margin — no boxes, no panels."""
+    # Tiny 8px corner registration ticks
+    m = 22
+    tlen = 10
+    col = (accent[0], accent[1], accent[2], 140)
+    for cx, cy, sx, sy in [(m, m, 1, 1), (W - m, m, -1, 1), (m, H - m, 1, -1), (W - m, H - m, -1, -1)]:
+        draw.line([(cx, cy), (cx + sx * tlen, cy)], fill=col, width=1)
+        draw.line([(cx, cy), (cx, cy + sy * tlen)], fill=col, width=1)
+
+    draw_shadow_text(draw, (m + 14, m + 2), left_mark, FONT_XS, fill=accent)
+    rw = len(right_mark) * 8
+    draw_shadow_text(draw, (W - m - 14 - rw, m + 2), right_mark, FONT_XS, fill=(210, 222, 235, 200))
+
+    if bottom_left_mark:
+        draw_shadow_text(draw, (m + 14, H - m - 18), bottom_left_mark, FONT_MICRO, fill=(185, 200, 215, 190))
+    if bottom_right_mark:
+        brw = len(bottom_right_mark) * 7
+        draw_shadow_text(draw, (W - m - 14 - brw, H - m - 18), bottom_right_mark, FONT_MICRO, fill=accent)
 
 
 # ==============================================================================
-# OPTION I: True 3D Metric Point-Cloud & Depth-Occluded Worldtext (points.ply)
+# OPTION I: Full-Bleed 3D Metric Point Cloud (points.ply) + Depth-Occluded Worldtext
 # ==============================================================================
 def render_option_1_pointcloud_worldtext(
     W: int,
@@ -148,7 +189,7 @@ def render_option_1_pointcloud_worldtext(
     breakdown_json: dict,
     t_phase: float = 0.35,
 ) -> np.ndarray:
-    canvas = np.full((H, W, 3), (6, 9, 13), dtype=np.uint8)
+    canvas = np.full((H, W, 3), (5, 7, 10), dtype=np.uint8)
     num_str = poem_meta.get("num", "01")
     title_str = poem_meta.get("title", "")
     place_name = view_meta.get("place_name", "")
@@ -159,10 +200,10 @@ def render_option_1_pointcloud_worldtext(
     z_p75 = float(np.clip(np.percentile(raw_z, 75), z_med + 1.5, 24.0))
     z_p25 = float(np.clip(np.percentile(raw_z, 25), 1.2, z_med - 0.5))
 
-    angle = math.sin(t_phase * math.tau) * 0.13 + 0.07
-    cam_tx = (math.sin(t_phase * math.tau) * 0.11 + 0.06) * z_med
-    cam_ty = (math.cos(t_phase * math.tau) * 0.03 + 0.01) * z_med
-    cam_tz = -0.07 * z_med + 0.04 * z_med * math.sin(t_phase * math.pi)
+    angle = math.sin(t_phase * math.tau) * 0.13 + 0.06
+    cam_tx = (math.sin(t_phase * math.tau) * 0.10 + 0.05) * z_med
+    cam_ty = (math.cos(t_phase * math.tau) * 0.025 + 0.01) * z_med
+    cam_tz = -0.08 * z_med + 0.04 * z_med * math.sin(t_phase * math.pi)
 
     x = pts["x"].astype(np.float32) - cam_tx
     y = pts["y"].astype(np.float32) - cam_ty
@@ -180,9 +221,9 @@ def render_option_1_pointcloud_worldtext(
     g = pts["g"][valid].astype(np.float32)
     b = pts["b"][valid].astype(np.float32)
 
-    fx = W * 0.72
-    fy = W * 0.72
-    cx, cy = W * 0.50, H * 0.52
+    fx = W * 0.74
+    fy = W * 0.74
+    cx, cy = W * 0.50, H * 0.51
     u = np.round(cx + (xr / zr) * fx).astype(np.int32)
     v = np.round(cy - (y / zr) * fy).astype(np.int32)
 
@@ -192,7 +233,7 @@ def render_option_1_pointcloud_worldtext(
     order = np.argsort(-zr)
     u, v, zr, r, g, b = u[order], v[order], zr[order], r[order], g[order], b[order]
 
-    scan_z = z_p25 + ((t_phase * 1.2) % 1.0) * max(2.0, z_p75 - z_p25)
+    scan_z = z_p25 + ((t_phase * 1.15) % 1.0) * max(2.0, z_p75 - z_p25)
 
     def splat_depth_band(img_bgr: np.ndarray, z_far: float, z_near: float):
         mask = (zr <= z_far) & (zr > z_near)
@@ -202,12 +243,12 @@ def render_option_1_pointcloud_worldtext(
         rr, gg, bb = r[mask], g[mask], b[mask]
 
         dist_scan = np.abs(zz - scan_z)
-        pulse = np.exp(-0.5 * (dist_scan / max(0.6, 0.18 * z_med)) ** 2)
+        pulse = np.exp(-0.5 * (dist_scan / max(0.55, 0.16 * z_med)) ** 2)
         lum = 0.299 * rr + 0.587 * gg + 0.114 * bb
 
-        out_r = np.clip(rr * 1.35 * (1.0 - 0.50 * pulse) + (lum * 1.5 + 125) * (0.85 * pulse), 0, 255).astype(np.uint8)
-        out_g = np.clip(gg * 1.35 * (1.0 - 0.50 * pulse) + (lum * 1.05 + 65) * (0.85 * pulse), 0, 255).astype(np.uint8)
-        out_b = np.clip(bb * 1.35 * (1.0 - 0.50 * pulse) + (lum * 0.40 + 20) * (0.85 * pulse), 0, 255).astype(np.uint8)
+        out_r = np.clip(rr * 1.38 * (1.0 - 0.45 * pulse) + (lum * 1.45 + 115) * (0.80 * pulse), 0, 255).astype(np.uint8)
+        out_g = np.clip(gg * 1.38 * (1.0 - 0.45 * pulse) + (lum * 1.05 + 60) * (0.80 * pulse), 0, 255).astype(np.uint8)
+        out_b = np.clip(bb * 1.38 * (1.0 - 0.45 * pulse) + (lum * 0.40 + 18) * (0.80 * pulse), 0, 255).astype(np.uint8)
 
         img_bgr[vv, uu, 0] = out_b
         img_bgr[vv, uu, 1] = out_g
@@ -219,104 +260,66 @@ def render_option_1_pointcloud_worldtext(
         img_bgr[vv + 1, uu, 1] = (out_g.astype(np.uint16) * 4 // 5).astype(np.uint8)
         img_bgr[vv + 1, uu, 2] = (out_r.astype(np.uint16) * 4 // 5).astype(np.uint8)
 
-    def project_3d_pt(wx: float, wy: float, wz: float):
-        dx = wx - cam_tx
-        dy = wy - cam_ty
-        dz_c = wz - cam_tz - z_piv
-        xr_p = dx * ca + dz_c * sa
-        zr_p = -dx * sa + dz_c * ca + z_piv
-        if zr_p <= 0.5:
-            zr_p = 0.5
-        px = int(round(cx + (xr_p / zr_p) * fx))
-        py = int(round(cy - (dy / zr_p) * fy))
-        return px, py, zr_p
+    # 1. Far & Mid-Deep Point Cloud (100m -> z_med)
+    splat_depth_band(canvas, 100.0, z_med)
 
-    # 1. Far Background (Z: 100m -> z_p75)
-    splat_depth_band(canvas, 100.0, z_p75)
-
-    # Interleave 3D Prompt Plane at z_p75
+    # 2. Unboxed Diegetic Worldtext floating inside the 3D space at Z = z_med
     pil = Image.fromarray(cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)).convert("RGBA")
-    ov1 = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    d1 = ImageDraw.Draw(ov1)
-    p4_x, p4_y, _ = project_3d_pt(-0.12 * z_p75, 0.10 * z_p75, z_p75)
-    p4_x = int(np.clip(p4_x, 40, W - 680))
-    p4_y = int(np.clip(p4_y, 120, H - 280))
-    prompt_str = shot_json.get("prompt", "")
-    d1.rectangle([p4_x, p4_y, p4_x + 640, p4_y + 84], fill=(8, 14, 22, 195), outline=(92, 228, 255, 175), width=1)
-    d1.text((p4_x + 14, p4_y + 8), f"P4/P5 DEEP ARCHITECTURE @ Z = {z_p75:.1f}m · {vid} ({place_name[:28]})", font=FONT_XS, fill=(92, 228, 255, 250))
-    d1.text((p4_x + 14, p4_y + 30), prompt_str[:78], font=FONT_SM, fill=(235, 242, 248, 240))
-    d1.text((p4_x + 14, p4_y + 52), prompt_str[78:156], font=FONT_SM, fill=(190, 208, 225, 225))
-    pil = Image.alpha_composite(pil, ov1)
+    ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(ov)
+
+    raw_lines = extract_clean_lines(poem_meta, breakdown_json)
+    line_a = raw_lines[0] if raw_lines else title_str
+    line_b = raw_lines[1] if len(raw_lines) > 1 else ""
+
+    tx = int(W * 0.16 - angle * 180)
+    ty = int(H * 0.48)
+    # Thin 1px horizontal datum hairline at Z = z_med
+    d.line([(tx - 30, ty - 14), (tx + 520, ty - 14)], fill=(255, 195, 90, 120), width=1)
+    draw_shadow_text(d, (tx, ty - 34), f"Z = {z_med:.2f}m · P2 ACTION THRESHOLD", FONT_MICRO, fill=(255, 195, 90, 210))
+    draw_shadow_text(d, (tx, ty), f"“{line_a[:58]}”", FONT_SERIF_XL, fill=(255, 246, 225, 248))
+    if line_b:
+        draw_shadow_text(d, (tx + 24, ty + 54), f"“{line_b[:58]}”", FONT_SERIF_LG, fill=(235, 215, 175, 230))
+
+    pil = Image.alpha_composite(pil, ov)
     canvas = cv2.cvtColor(np.array(pil.convert("RGB")), cv2.COLOR_RGB2BGR)
 
-    # 2. Midground Architecture (Z: z_p75 -> z_med) — occludes the deep prompt plane!
-    splat_depth_band(canvas, z_p75, z_med)
-
-    # Interleave 3D Poem Verse Plane at z_med
-    pil = Image.fromarray(cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)).convert("RGBA")
-    ov2 = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    d2 = ImageDraw.Draw(ov2)
-    p2_x, p2_y, _ = project_3d_pt(-0.08 * z_med, -0.02 * z_med, z_med)
-    p2_x = int(np.clip(p2_x, 60, W - 620))
-    p2_y = int(np.clip(p2_y, 240, H - 180))
-
-    scenes = breakdown_json.get("scenes", [])
-    sc0 = scenes[0] if scenes else {}
-    raw_lines = [s.strip() for s in sc0.get("lines", "").split("/") if s.strip()]
-    if not raw_lines:
-        ft = poem_meta.get("full_text", [])
-        raw_lines = [
-            (s.get("line", "") if isinstance(s, dict) else str(s)).strip()
-            for s in (ft if isinstance(ft, list) else str(ft).splitlines())
-        ]
-        raw_lines = [s for s in raw_lines if s]
-    line_a = " / ".join(raw_lines[:2]) if raw_lines else title_str
-    line_b = " / ".join(raw_lines[2:4]) if len(raw_lines) > 2 else str(poem_meta.get("essence", ""))[:64]
-
-    d2.rectangle([p2_x, p2_y, p2_x + 580, p2_y + 94], fill=(22, 14, 9, 205), outline=(255, 190, 82, 195), width=1)
-    d2.text((p2_x + 14, p2_y + 8), f"P2 ACTION THRESHOLD @ Z = {z_med:.2f}m · POEM {num_str} ({title_str.upper()})", font=FONT_XS, fill=(255, 190, 82, 250))
-    d2.text((p2_x + 14, p2_y + 30), f"“{line_a[:56]}", font=FONT_SERIF_MD, fill=(255, 242, 215, 255))
-    d2.text((p2_x + 14, p2_y + 58), f" {line_b[:56]}”", font=FONT_SERIF_MD, fill=(255, 220, 165, 245))
-    pil = Image.alpha_composite(pil, ov2)
-    canvas = cv2.cvtColor(np.array(pil.convert("RGB")), cv2.COLOR_RGB2BGR)
-
-    # 3. Foreground Architecture (Z: z_med -> 0.55m) — naturally occludes edges of z_med verse!
+    # 3. Foreground Point Cloud (z_med -> 0.55m) — naturally occludes the unboxed worldtext in 3D space!
     splat_depth_band(canvas, z_med, 0.55)
 
-    # Foreground P0/P1 Plane Callout
-    pil = Image.fromarray(cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)).convert("RGBA")
-    ov3 = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    d3 = ImageDraw.Draw(ov3)
-    planes = multiplane_json.get("planes", [])
-    p_fg = planes[1] if len(planes) > 1 else (planes[0] if planes else {})
-    fg_contents = ", ".join(p_fg.get("contents", [])[:4]) or "foreground architecture"
-    d3.rectangle([28, H - 78, 610, H - 20], fill=(8, 16, 18, 208), outline=(125, 245, 185, 180), width=1)
-    d3.text((40, H - 70), f"P0/P1 FOREGROUND OCCLUDER @ Z = {z_p25:.2f}m · {len(pts):,} METRIC VERTICES (points.ply)", font=FONT_XS, fill=(125, 245, 185, 250))
-    d3.text((40, H - 50), f"Objects: {fg_contents[:58]} · occludes deeper 3D text planes", font=FONT_SM, fill=(225, 240, 232, 240))
-    pil = Image.alpha_composite(pil, ov3)
-    canvas = cv2.cvtColor(np.array(pil.convert("RGB")), cv2.COLOR_RGB2BGR)
+    # Subtle optical bloom
+    blur = cv2.GaussianBlur(canvas, (0, 0), sigmaX=3.5)
+    canvas = cv2.addWeighted(canvas, 0.90, blur, 0.22, 0)
 
-    blur = cv2.GaussianBlur(canvas, (0, 0), sigmaX=4.0)
-    canvas = cv2.addWeighted(canvas, 0.88, blur, 0.24, 0)
-
+    # Minimal right-margin metric Z ruler + corner viewfinder whisper
     pil = Image.fromarray(cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)).convert("RGBA")
-    hdr = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    hdraw = ImageDraw.Draw(hdr)
-    draw_pill_header(
-        hdraw,
-        24,
-        20,
-        f"POEM {num_str} · {title_str.upper()} · OPTION I (3D POINT CLOUD)",
-        f"{vid} {place_name} ({len(pts):,} Vertices in points.ply + Depth-Occluded Worldtext)",
-        f"Camera Δx={cam_tx:+.2f}m yaw={math.degrees(angle):+.1f}° · Scan wave Z={scan_z:.1f}m · Text placed at metric Z planes ({z_med:.1f}m, {z_p75:.1f}m)",
-        accent=(255, 190, 82),
+    hud = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    hd = ImageDraw.Draw(hud)
+
+    rx = W - 44
+    y_top, y_bot = int(H * 0.22), int(H * 0.78)
+    hd.line([(rx, y_top), (rx, y_bot)], fill=(255, 195, 90, 110), width=1)
+    for frac, z_val, lbl in [(0.0, z_p75, f"{z_p75:.1f}m P5"), (0.5, z_med, f"{z_med:.1f}m P2"), (1.0, z_p25, f"{z_p25:.1f}m P1")]:
+        yy = int(y_top + frac * (y_bot - y_top))
+        hd.line([(rx - 8, yy), (rx + 4, yy)], fill=(255, 195, 90, 180), width=1)
+        draw_shadow_text(hd, (rx - 82, yy - 7), lbl, FONT_MICRO, fill=(255, 195, 90, 195))
+
+    draw_viewfinder_whisper(
+        hd,
+        W,
+        H,
+        f"{num_str} · {title_str.upper()}  //  {vid} {place_name.upper()}",
+        f"I · METRIC POINT FIELD ({len(pts):,} PTS · Δx={cam_tx:+.2f}m)",
+        bottom_left_mark=f"P0/P1 FOREGROUND OCCLUSION @ Z < {z_med:.2f}m",
+        bottom_right_mark=f"SCAN WAVE Z = {scan_z:.2f}m",
+        accent=(255, 195, 90, 225),
     )
-    pil = Image.alpha_composite(pil, hdr)
+    pil = Image.alpha_composite(pil, hud)
     return cv2.cvtColor(np.array(pil.convert("RGB")), cv2.COLOR_RGB2BGR)
 
 
 # ==============================================================================
-# OPTION II: 3D Isometric Exploded Multiplane Stratigraphy (multiplane/exploded.jpg)
+# OPTION II: Full-Bleed 3D Isometric Exploded Multiplane Stratigraphy
 # ==============================================================================
 def render_option_2_exploded_multiplane(
     W: int,
@@ -329,89 +332,69 @@ def render_option_2_exploded_multiplane(
     dossier_json: dict,
     t_phase: float = 0.0,
 ) -> np.ndarray:
-    canvas = np.full((H, W, 3), (12, 14, 18), dtype=np.uint8)
-    exploded_img = cv2.imread(str(shot_dir / "multiplane/exploded.jpg"))
-    plane_map_img = cv2.imread(str(shot_dir / "multiplane/plane_map.jpg"))
     num_str = poem_meta.get("num", "01")
     title_str = poem_meta.get("title", "")
     vid = view_meta.get("id", "V92")
     place_name = view_meta.get("place_name", "")
 
-    left_w = int(W * 0.60)
+    exploded_img = cv2.imread(str(shot_dir / "multiplane/exploded.jpg"))
+    plane_map_img = cv2.imread(str(shot_dir / "multiplane/plane_map.jpg"))
+    orig_img = cv2.imread(str(shot_dir / "image.jpg"))
+
+    # Full-bleed atmospheric background from heavily darkened & blurred depth map
+    bg = cover_crop(plane_map_img if plane_map_img is not None else orig_img, W, H)
+    bg = (bg.astype(np.float32) * 0.16).astype(np.uint8)
+    bg = cv2.GaussianBlur(bg, (0, 0), sigmaX=18.0)
+
+    # Full-bleed centered isometric exploded stack occupying the open center
     if exploded_img is not None:
-        fitted = fit_contain(exploded_img, left_w - 24, H - 104, bg_color=(16, 18, 22))
-        canvas[88 : 88 + fitted.shape[0], 16 : 16 + fitted.shape[1]] = fitted
+        eh, ew = exploded_img.shape[:2]
+        scale = min((W * 0.88) / max(ew, 1), (H * 0.84) / max(eh, 1))
+        nw, nh = int(round(ew * scale)), int(round(eh * scale))
+        exp_resized = cv2.resize(exploded_img, (nw, nh), interpolation=cv2.INTER_AREA if scale < 1 else cv2.INTER_CUBIC)
+        x0 = (W - nw) // 2
+        y0 = (H - nh) // 2
+        bg[y0 : y0 + nh, x0 : x0 + nw] = exp_resized
 
-    rx = left_w + 8
-    rw = W - rx - 20
-    if plane_map_img is not None:
-        pm_h = int(H * 0.33)
-        pm_fit = fit_contain(plane_map_img, rw, pm_h, bg_color=(14, 17, 22))
-        canvas[88 : 88 + pm_h, rx : rx + rw] = pm_fit
-
-    pil = Image.fromarray(cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)).convert("RGBA")
+    pil = Image.fromarray(cv2.cvtColor(bg, cv2.COLOR_BGR2RGB)).convert("RGBA")
     ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(ov)
 
-    draw_pill_header(
-        d,
-        20,
-        16,
-        f"POEM {num_str} · {title_str.upper()} · OPTION II (EXPLODED MULTIPLANE)",
-        f"{vid} {place_name} — Isometric Plane Stratigraphy (multiplane/exploded.jpg + riverbed_{num_str}.json)",
-        "Separated P0–P6 painted planes with metric Z medians, parallax multipliers, loop cycles & Golden Riverbed laws",
-        accent=(92, 228, 255),
-    )
-
-    ty = 88 + int(H * 0.33) + 12
-    d.rectangle([rx, ty, rx + rw, H - 18], fill=(9, 13, 18, 238), outline=(92, 228, 255, 115), width=1)
-    d.text((rx + 14, ty + 10), f"MULTIPLANE CAMERA STRATIGRAPHY ({vid} · multiplane.json)", font=FONT_MD, fill=(92, 228, 255))
-
-    planes = [p for p in multiplane_json.get("planes", []) if p.get("area_frac", 0) > 0 or p.get("id") in ("P0", "P1", "P2", "P4", "P5", "P6")]
-    plane_colors = {
-        "P0": (140, 220, 255),
-        "P1": (255, 185, 90),
-        "P2": (255, 110, 110),
-        "P4": (120, 240, 170),
-        "P5": (180, 165, 255),
-        "P6": (210, 220, 235),
-    }
-    row_y = ty + 38
-    active_idx = int((t_phase * len(planes))) % max(1, len(planes))
-    for idx, p in enumerate(planes[:6]):
+    # Delicate unboxed optical callout hairlines along the right side of the exploded stack
+    planes = [p for p in multiplane_json.get("planes", []) if (p.get("area_frac") or 0) > 0.01][:5]
+    active_idx = int(t_phase * max(1, len(planes))) % max(1, len(planes))
+    for idx, p in enumerate(planes):
         pid = p.get("id", f"P{idx}")
-        name = p.get("name", "")
-        z_m = p.get("z_median_m")
-        z_str = f"{z_m:.2f}m" if isinstance(z_m, (int, float)) else "∞ (sky)"
+        pname = p.get("name", "").upper()
+        zm = p.get("z_median_m")
+        z_str = f"{zm:.2f}m" if isinstance(zm, (int, float)) else "∞"
         par = p.get("parallax") or 0.0
-        area_pct = int(round((p.get("area_frac") or 0.0) * 100))
-        motions = p.get("motion", [])
-        mot_str = ", ".join(str(m) for m in motions[:2]) if motions else "static hold"
-        contents = ", ".join(p.get("contents", [])[:4]) or "atmosphere"
-        col = plane_colors.get(pid, (200, 220, 240))
-        if idx == active_idx:
-            d.rectangle([rx + 8, row_y - 2, rx + rw - 8, row_y + 42], fill=(col[0], col[1], col[2], 32), outline=(col[0], col[1], col[2], 165), width=1)
-        d.text((rx + 16, row_y + 2), f"{pid} [{name.upper()}]  Z={z_str}  ×{par:.2f}  ({area_pct}% frame)", font=FONT_SM, fill=col)
-        d.text((rx + 16, row_y + 21), f"Motion: {mot_str[:46]} · Objects: {contents[:38]}", font=FONT_XS, fill=(195, 208, 222))
-        row_y += 45
+        yy = int(H * (0.24 + idx * 0.12))
+        col = (92, 228, 255, 240) if idx == active_idx else (180, 205, 225, 175)
+        d.line([(int(W * 0.72), yy), (int(W * 0.78), yy)], fill=col, width=1)
+        draw_shadow_text(d, (int(W * 0.78) + 10, yy - 8), f"{pid} {pname} · Z={z_str} · ×{par:.2f}", FONT_XS, fill=col)
 
-    rb_y = max(row_y + 6, H - 150)
-    d.line([(rx + 12, rb_y), (rx + rw - 12, rb_y)], fill=(92, 228, 255, 90), width=1)
-    rb_core = riverbed_json.get("riverbed", {}).get("core_identity", "")
-    rb_diegesis = riverbed_json.get("diegesis", {})
-    rb_flow = ", ".join(riverbed_json.get("flow", {}).get("mutable_variables", [])[:5])
-    rb_rules = " · ".join(rb_diegesis.get("world_rules", [])[:2])
-    d.text((rx + 16, rb_y + 8), f"GOLDEN RIVERBED LAW — {riverbed_json.get('source_profile', {}).get('source_title', f'WYGWYL {num_str}')}", font=FONT_SM, fill=(255, 195, 90))
-    d.text((rx + 16, rb_y + 28), f"Identity: {rb_core[:74]}", font=FONT_XS, fill=(225, 235, 245))
-    d.text((rx + 16, rb_y + 46), f"Mutable Flow: {rb_flow[:74]}", font=FONT_XS, fill=(185, 205, 222))
-    d.text((rx + 16, rb_y + 64), f"World Rules: {rb_rules[:76]}", font=FONT_XS, fill=(130, 245, 175))
+    # Whisper the Golden Riverbed law along the lower center without any box
+    rb_core = riverbed_json.get("riverbed", {}).get("core_identity", "") or poem_meta.get("essence", "")
+    if rb_core:
+        draw_shadow_text(d, (int(W * 0.12), H - 64), f"“{rb_core[:112]}”", FONT_SERIF_SM, fill=(242, 232, 210, 220))
 
+    draw_viewfinder_whisper(
+        d,
+        W,
+        H,
+        f"{num_str} · {title_str.upper()}  //  {vid} {place_name.upper()}",
+        "II · MULTIPLANE GLASS STRATIGRAPHY (P0–P6)",
+        bottom_left_mark="ISOMETRIC PLANE SEPARATION · TRUE METRIC PARALLAX",
+        bottom_right_mark=f"GOLDEN RIVERBED · WYGWYL {num_str}",
+        accent=(92, 228, 255, 225),
+    )
     pil = Image.alpha_composite(pil, ov)
     return cv2.cvtColor(np.array(pil.convert("RGB")), cv2.COLOR_RGB2BGR)
 
 
 # ==============================================================================
-# OPTION III: Architectural Perspective Grid, Horizon/VP & Line Layout
+# OPTION III: Full-Bleed Surveyor's Perspective Grid & Darkroom Line Layout Wipe
 # ==============================================================================
 def render_option_3_perspective_layout(
     W: int,
@@ -425,80 +408,63 @@ def render_option_3_perspective_layout(
     assembly_page_num: int,
     t_phase: float = 0.0,
 ) -> np.ndarray:
-    canvas = np.full((H, W, 3), (12, 14, 18), dtype=np.uint8)
-    layout_sheet = cv2.imread(str(shot_dir / "cartoon/layout_sheet.png"))
-    layout_draw = cv2.imread(str(shot_dir / "multiplane/layout_drawing.png"))
-    planes_gs = cv2.imread(str(shot_dir / "cartoon/planes_gs.png"))
     num_str = poem_meta.get("num", "01")
     title_str = poem_meta.get("title", "")
     vid = view_meta.get("id", "V92")
     place_name = view_meta.get("place_name", "")
 
-    left_w = int(W * 0.62)
-    if layout_sheet is not None and layout_draw is not None:
-        ls_fit = fit_contain(layout_sheet, left_w - 24, H - 104, bg_color=(16, 18, 22))
-        ld_fit = fit_contain(layout_draw, left_w - 24, H - 104, bg_color=(245, 242, 235))
-        split_x = int((0.58 + 0.25 * math.sin(t_phase * math.tau)) * ls_fit.shape[1])
-        combined = ls_fit.copy()
-        combined[:, split_x:] = ld_fit[:, split_x:]
-        cv2.line(combined, (split_x, 0), (split_x, combined.shape[0]), (92, 228, 255), 2)
-        canvas[88 : 88 + combined.shape[0], 16 : 16 + combined.shape[1]] = combined
+    layout_sheet = cv2.imread(str(shot_dir / "cartoon/layout_sheet.png"))
+    layout_draw = cv2.imread(str(shot_dir / "multiplane/layout_drawing.png"))
+    orig_img = cv2.imread(str(shot_dir / "image.jpg"))
 
-    rx = left_w + 8
-    rw = W - rx - 20
-    if planes_gs is not None:
-        pg_h = int(H * 0.35)
-        pg_fit = fit_contain(planes_gs, rw, pg_h, bg_color=(14, 16, 20))
-        canvas[88 : 88 + pg_h, rx : rx + rw] = pg_fit
+    # Full-bleed Left: Solved 3D perspective floor grid (layout_sheet) blended with dark original
+    left_full = cover_crop(layout_sheet if layout_sheet is not None else orig_img, W, H)
+    # Full-bleed Right: Darkroom architectural blueprint of traditional animation linework (layout_drawing)
+    raw_line = cover_crop(layout_draw if layout_draw is not None else orig_img, W, H)
+    inv_line = 255 - raw_line
+    right_full = np.zeros_like(inv_line)
+    right_full[:, :, 0] = np.clip(inv_line[:, :, 0].astype(np.int32) * 1.15 + 16, 0, 255).astype(np.uint8)
+    right_full[:, :, 1] = np.clip(inv_line[:, :, 1].astype(np.int32) * 1.05 + 12, 0, 255).astype(np.uint8)
+    right_full[:, :, 2] = np.clip(inv_line[:, :, 2].astype(np.int32) * 0.75 + 8, 0, 255).astype(np.uint8)
+    if orig_img is not None:
+        orig_cov = cover_crop(orig_img, W, H)
+        right_full = cv2.addWeighted(orig_cov, 0.24, right_full, 0.88, 0)
+
+    split_x = int(W * (0.48 + 0.18 * math.sin(t_phase * math.tau)))
+    canvas = left_full.copy()
+    canvas[:, split_x:] = right_full[:, split_x:]
+
+    # 1px surveyor's plumb-line at split_x and solved horizon line across full width
+    hy = int(shot_json.get("camera", {}).get("horizon_y_norm", 0.50) * H)
+    cv2.line(canvas, (split_x, 0), (split_x, H), (130, 245, 175), 1, cv2.LINE_AA)
+    cv2.line(canvas, (0, hy), (W, hy), (130, 245, 175), 1, cv2.LINE_AA)
 
     pil = Image.fromarray(cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)).convert("RGBA")
     ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(ov)
 
-    draw_pill_header(
+    # Whisper assembly manuscript line right along the solved horizon datum — zero boxes
+    ms_lines = [ln.strip() for ln in str(assembly_text).splitlines() if ln.strip() and not ln.strip().startswith("{")]
+    ms_excerpt = "  /  ".join(ms_lines[:3]) if ms_lines else title_str
+    draw_shadow_text(d, (split_x + 18, hy - 30), f"HORIZON Y={hy}px · ASSEMBLY P.{assembly_page_num}", FONT_MICRO, fill=(130, 245, 175, 225))
+    draw_shadow_text(d, (split_x + 18, hy + 8), f"“{ms_excerpt[:78]}”", FONT_SERIF_MD, fill=(245, 242, 230, 240))
+
+    draw_viewfinder_whisper(
         d,
-        20,
-        16,
-        f"POEM {num_str} · {title_str.upper()} · OPTION III (PERSPECTIVE & LINE LAYOUT)",
-        f"{vid} {place_name} — Solved 3D Ground Grid, Horizon/VP & Colour-Coded Line Layout",
-        f"Left: 3D perspective floor grid (layout_sheet.png) · Curtain: Traditional animation linework (layout_drawing.png) + assembly_p{assembly_page_num}.txt",
-        accent=(130, 245, 175),
+        W,
+        H,
+        f"{num_str} · {title_str.upper()}  //  {vid} {place_name.upper()}",
+        f"III · SURVEYOR PERSPECTIVE & LINE TABLE (SEAM X={split_x}px)",
+        bottom_left_mark="◀ SOLVED 3D PERSPECTIVE FLOOR GRID (layout_sheet.png)",
+        bottom_right_mark="DARKROOM ANIMATION LINEWORK (layout_drawing.png) ▶",
+        accent=(130, 245, 175, 225),
     )
-
-    ay = 88 + int(H * 0.35) + 12
-    d.rectangle([rx, ay, rx + rw, H - 18], fill=(10, 14, 19, 238), outline=(130, 245, 175, 120), width=1)
-    cam = shot_json.get("camera", {})
-    vp = signals_json.get("vp", [])
-    ink = signals_json.get("ink_coverage", {})
-    d.text((rx + 14, ay + 10), f"SOLVED PERSPECTIVE & HORIZON GEOMETRY ({vid} · cartoon/signals.json)", font=FONT_MD, fill=(130, 245, 175))
-    d.text(
-        (rx + 14, ay + 34),
-        f"Horizon Y: {cam.get('horizon_y_norm', 0.50):.2f} · Tilt: {cam.get('tilt_deg', 0.0):.1f}° · VP: {str(vp)[:34]} · Ink: {str(ink)[:28]}",
-        font=FONT_SM,
-        fill=(225, 235, 245),
-    )
-    sugs = signals_json.get("suggestions", [])
-    if sugs:
-        d.text((rx + 14, ay + 54), f"Staging Note: {sugs[0][:74]}", font=FONT_XS, fill=(195, 212, 228))
-
-    d.line([(rx + 12, ay + 78), (rx + rw - 12, ay + 78)], fill=(130, 245, 175, 80), width=1)
-    d.text((rx + 14, ay + 86), f"ASSEMBLY WORKING MANUSCRIPT (poems/assembly/assembly_p{assembly_page_num}.txt)", font=FONT_SM, fill=(255, 200, 95))
-
-    lines = [ln.strip() for ln in assembly_text.splitlines() if ln.strip()][:14]
-    ly = ay + 110
-    for ln in lines:
-        col = (255, 185, 95) if ("[strikethrough" in ln or "Open on" in ln or "POET" in ln) else (225, 232, 240)
-        d.text((rx + 14, ly), ln[:68], font=FONT_XS if len(ln) > 46 else FONT_SM, fill=col)
-        ly += 21
-        if ly > H - 34:
-            break
-
     pil = Image.alpha_composite(pil, ov)
     return cv2.cvtColor(np.array(pil.convert("RGB")), cv2.COLOR_RGB2BGR)
 
 
 # ==============================================================================
-# OPTION IV: Pixel-Accurate SAM2 Contours, Vector Program & ΔE Perceptual Anatomy
+# OPTION IV: Full-Bleed Machine-Eye Optical Aperture Lens (SAM2 & Vector ΔE)
 # ==============================================================================
 def render_option_4_semantic_perceptual(
     W: int,
@@ -511,87 +477,68 @@ def render_option_4_semantic_perceptual(
     signals_json: dict,
     t_phase: float = 0.0,
 ) -> np.ndarray:
-    canvas = np.full((H, W, 3), (10, 12, 16), dtype=np.uint8)
-    overlay_img = cv2.imread(str(shot_dir / "overlay.jpg"))
-    compare_img = cv2.imread(str(shot_dir / "program/compare.jpg"))
-    perceive_img = cv2.imread(str(shot_dir / "program/perceive.jpg"))
     num_str = poem_meta.get("num", "01")
     title_str = poem_meta.get("title", "")
     vid = view_meta.get("id", "V92")
     place_name = view_meta.get("place_name", "")
 
-    left_w = int(W * 0.54)
-    top_h = int((H - 104) * 0.62)
-    if overlay_img is not None:
-        ov_fit = fit_contain(overlay_img, left_w - 20, top_h, bg_color=(12, 15, 20))
-        canvas[88 : 88 + top_h, 16 : 16 + ov_fit.shape[1]] = ov_fit
+    orig_img = cover_crop(cv2.imread(str(shot_dir / "image.jpg")), W, H)
+    overlay_img = cover_crop(cv2.imread(str(shot_dir / "overlay.jpg")), W, H)
+    cel_img = cover_crop(cv2.imread(str(shot_dir / "cartoon/cel.png")), W, H)
 
-    bot_h = (H - 104) - top_h - 10
-    if perceive_img is not None:
-        pr_fit = fit_contain(perceive_img, left_w - 20, bot_h, bg_color=(14, 16, 20))
-        canvas[88 + top_h + 10 : 88 + top_h + 10 + bot_h, 16 : 16 + pr_fit.shape[1]] = pr_fit
+    # Outer field: darkened photographic still blended with subtle cel edges
+    outer = cv2.addWeighted(orig_img, 0.55, cel_img, 0.25, 0)
+    # Inner lens aperture: full-clarity pixel-accurate SAM2 object boundaries (overlay.jpg)
+    cx = int(W * (0.50 + 0.14 * math.cos(t_phase * math.tau)))
+    cy = int(H * (0.50 + 0.08 * math.sin(t_phase * math.tau)))
+    radius = int(H * 0.37)
 
-    rx = left_w + 8
-    rw = W - rx - 20
-    comp_h = int((H - 104) * 0.54)
-    if compare_img is not None:
-        cp_fit = fit_contain(compare_img, rw, comp_h, bg_color=(14, 16, 20))
-        canvas[88 : 88 + comp_h, rx : rx + rw] = cp_fit
+    yy, xx = np.ogrid[:H, :W]
+    dist = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
+    alpha = np.clip((radius - dist) / 3.0, 0.0, 1.0)[..., None]
+    canvas = (overlay_img.astype(np.float32) * alpha + outer.astype(np.float32) * (1.0 - alpha)).astype(np.uint8)
+
+    # Crisp 1px optical reticle ring & crosshair ticks
+    cv2.circle(canvas, (cx, cy), radius, (255, 130, 195), 1, cv2.LINE_AA)
+    cv2.circle(canvas, (cx, cy), radius + 8, (92, 228, 255), 1, cv2.LINE_AA)
+    for deg in range(0, 360, 15):
+        rad = math.radians(deg)
+        r_in = radius + 8
+        r_out = radius + (18 if deg % 45 == 0 else 12)
+        x1, y1 = int(cx + r_in * math.cos(rad)), int(cy + r_in * math.sin(rad))
+        x2, y2 = int(cx + r_out * math.cos(rad)), int(cy + r_out * math.sin(rad))
+        cv2.line(canvas, (x1, y1), (x2, y2), (92, 228, 255), 1, cv2.LINE_AA)
 
     pil = Image.fromarray(cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)).convert("RGBA")
     ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(ov)
 
-    draw_pill_header(
+    felt_str = perceive_json.get("felt", "enclosed, close walls, no horizon to escape to")
+    n_reg = perceive_json.get("n_regions", 0)
+    draw_shadow_text(
         d,
-        20,
-        16,
-        f"POEM {num_str} · {title_str.upper()} · OPTION IV (SAM2 CONTOURS & ΔE PROGRAM)",
-        f"{vid} {place_name} — Pixel-Accurate SAM2 Contours (overlay.jpg) + Vector Program & ΔE Error",
-        "Exact SAM2 object boundaries, SVG vector compilation (compare.jpg), squint SSIM (σ=1..32) & verbatim Midjourney prompt",
-        accent=(255, 130, 195),
+        (cx - radius + 20, cy + radius + 22),
+        f"SAM2 RETICLE ({n_reg} REGIONS) · FELT: “{felt_str[:76]}”",
+        FONT_XS,
+        fill=(255, 130, 195, 235),
     )
 
-    by = 88 + comp_h + 10
-    d.rectangle([rx, by, rx + rw, H - 18], fill=(10, 13, 18, 238), outline=(255, 130, 195, 120), width=1)
-    sq = perceive_json.get("squint", {})
-    if isinstance(sq, dict):
-        ssim_str = " · ".join([f"{k}={v.get('ssim', 0):.3f}" if isinstance(v, dict) else f"{k}={v}" for k, v in list(sq.items())[:5]])
-    elif isinstance(sq, list):
-        ssim_str = " · ".join([f"σ{x.get('sigma', i)}={x.get('ssim', 0):.2f}" if isinstance(x, dict) else str(x) for i, x in enumerate(sq[:5])])
-    else:
-        ssim_str = ""
-    reads_sigma = perceive_json.get("reads_at_sigma", 8)
-    senses = perceive_json.get("senses", {})
-    felt_str = senses.get("felt", view_meta.get("perceive", {}).get("felt", "")) if isinstance(senses, dict) else ""
-
-    d.text(
-        (rx + 14, by + 10),
-        f"PERCEPTUAL COMPILER ({vid}): Reads at σ={reads_sigma} · Regions={signals_json.get('regions', 140)} · {felt_str[:48]}",
-        font=FONT_SM,
-        fill=(255, 130, 195),
+    draw_viewfinder_whisper(
+        d,
+        W,
+        H,
+        f"{num_str} · {title_str.upper()}  //  {vid} {place_name.upper()}",
+        f"IV · MACHINE-EYE SAM2 APERTURE (R={radius}px)",
+        bottom_left_mark="OUTER FIELD: PHOTOGRAPHIC STILL (image.jpg)",
+        bottom_right_mark="APERTURE: PIXEL-ACCURATE SAM2 CONTOURS (overlay.jpg)",
+        accent=(255, 130, 195, 225),
     )
-    if ssim_str:
-        d.text((rx + 14, by + 32), f"SQUINT PYRAMID (program/perceive.json): {ssim_str[:76]}", font=FONT_XS, fill=(215, 228, 240))
-
-    prompt = shot_json.get("prompt", "")
-    d.text((rx + 14, by + 54), "VERBATIM MIDJOURNEY PROMPT (shot.json):", font=FONT_XS, fill=(92, 228, 255))
-    for i, chunk in enumerate([prompt[j : j + 78] for j in range(0, min(len(prompt), 234), 78)]):
-        d.text((rx + 14, by + 72 + i * 18), chunk, font=FONT_XS, fill=(235, 240, 245))
-
-    sugs = signals_json.get("suggestions", [])
-    ny = by + 132
-    d.text((rx + 14, ny), "COMPUTED STAGING & VALUE DIAGNOSTICS (cartoon/signals.json):", font=FONT_XS, fill=(255, 195, 90))
-    for s in sugs[:4]:
-        d.text((rx + 14, ny + 18), f"• {s[:80]}", font=FONT_XS, fill=(205, 215, 228))
-        ny += 18
-
     pil = Image.alpha_composite(pil, ov)
     return cv2.cvtColor(np.array(pil.convert("RGB")), cv2.COLOR_RGB2BGR)
 
 
 # ==============================================================================
-# OPTION V: Tactile Physical Cut-Out Workbench (kits/*.jpg + breakdown/NN.json)
+# OPTION V: Full-Bleed Darkroom Animator's Light-Table Cut-Out Kit
 # ==============================================================================
 def render_option_5_tactile_kits(
     W: int,
@@ -601,7 +548,7 @@ def render_option_5_tactile_kits(
     breakdown_json: dict,
     t_phase: float = 0.0,
 ) -> np.ndarray:
-    canvas = np.full((H, W, 3), (12, 13, 16), dtype=np.uint8)
+    canvas = np.full((H, W, 3), (8, 9, 12), dtype=np.uint8)
     num_str = poem_meta.get("num", "01")
     title_str = poem_meta.get("title", "")
     kits_dir = SHOTS_DIR / "poems/kits"
@@ -613,81 +560,47 @@ def render_option_5_tactile_kits(
 
     kit_a_path = set_kits[0] if set_kits else (all_kits[0] if all_kits else None)
     kit_b_path = prop_kits[0] if prop_kits else (all_kits[1] if len(all_kits) > 1 else kit_a_path)
-    kit_c_path = hero_kits[0] if hero_kits else (all_kits[2] if len(all_kits) > 2 else kit_b_path)
 
-    kit_set = cv2.imread(str(kit_a_path)) if kit_a_path else None
-    kit_props = cv2.imread(str(kit_b_path)) if kit_b_path else None
-    kit_hero = cv2.imread(str(kit_c_path)) if kit_c_path else None
+    kit_main = cv2.imread(str(kit_a_path)) if kit_a_path else None
+    kit_sub = cv2.imread(str(kit_b_path)) if kit_b_path else None
 
-    left_w = int(W * 0.52)
-    if kit_set is not None:
-        ks_fit = fit_contain(kit_set, left_w - 20, H - 104, bg_color=(18, 19, 22))
-        canvas[88 : 88 + ks_fit.shape[0], 16 : 16 + ks_fit.shape[1]] = ks_fit
+    # Full-bleed primary cut-out sheet centered on the darkroom light-table
+    if kit_main is not None:
+        fitted = fit_contain(kit_main, int(W * 0.90), int(H * 0.84), bg_color=(8, 9, 12))
+        y0 = (H - fitted.shape[0]) // 2
+        x0 = (W - fitted.shape[1]) // 2
+        canvas[y0 : y0 + fitted.shape[0], x0 : x0 + fitted.shape[1]] = fitted
 
-    rx = left_w + 8
-    rw = W - rx - 20
-    top_h = int((H - 104) * 0.54)
-    if kit_props is not None and kit_hero is not None:
-        w_half = (rw - 8) // 2
-        kp_fit = fit_contain(kit_props, w_half, top_h, bg_color=(18, 19, 22))
-        kh_fit = fit_contain(kit_hero, w_half, top_h, bg_color=(18, 19, 22))
-        canvas[88 : 88 + top_h, rx : rx + w_half] = kp_fit
-        canvas[88 : 88 + top_h, rx + w_half + 8 : rx + w_half + 8 + w_half] = kh_fit
+    # Subtle optical loupe / inset of the prop kit sheet in bottom-right corner if distinct
+    if kit_sub is not None and kit_b_path != kit_a_path:
+        sub_w, sub_h = int(W * 0.25), int(H * 0.25)
+        sub_fit = fit_contain(kit_sub, sub_w, sub_h, bg_color=(12, 14, 18))
+        sy0, sx0 = H - sub_h - 48, W - sub_w - 42
+        canvas[sy0 : sy0 + sub_h, sx0 : sx0 + sub_w] = sub_fit
+        cv2.rectangle(canvas, (sx0, sy0), (sx0 + sub_w - 1, sy0 + sub_h - 1), (255, 195, 90), 1)
 
     pil = Image.fromarray(cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)).convert("RGBA")
     ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(ov)
 
-    draw_pill_header(
-        d,
-        20,
-        16,
-        f"POEM {num_str} · {title_str.upper()} · OPTION V (TACTILE CUT-OUT WORKBENCH)",
-        f"Multiplane Set & Prop Kits with Brass-Brad Pivots (+) & Grip Crosses (+) (poems/kits/{num_str}.*.jpg)",
-        f"Showing: {kit_a_path.name if kit_a_path else ''} · {kit_b_path.name if kit_b_path else ''} · {kit_c_path.name if kit_c_path else ''}",
-        accent=(255, 200, 90),
-    )
-
-    by = 88 + top_h + 10
-    d.rectangle([rx, by, rx + rw, H - 18], fill=(12, 14, 18, 240), outline=(255, 200, 90, 130), width=1)
-    scenes = breakdown_json.get("scenes", [])
-    sc0 = scenes[0] if scenes else {}
-    sh0 = sc0.get("shots", [{}])[0] if sc0.get("shots") else {}
-    d.text(
-        (rx + 14, by + 10),
-        f"SHOT BREAKDOWN {sh0.get('id', f'{num_str}.1a')} · SET: {str(sh0.get('set', '')).upper()} · {sc0.get('movement', '')} ({sc0.get('seconds', 12)}s)",
-        font=FONT_MD,
-        fill=(255, 200, 90),
-    )
-    d.text((rx + 14, by + 34), f"Lines: “{sc0.get('lines', '')[:78]}”", font=FONT_SERIF_MD, fill=(245, 238, 220))
-    d.text((rx + 14, by + 60), f"Action: {sh0.get('action', '')[:86]}", font=FONT_XS, fill=(200, 212, 225))
-
-    ry = by + 84
-    for b in sh0.get("bodies", [])[:2]:
-        hands = b.get("hands", {}) if isinstance(b.get("hands"), dict) else {}
-        hl = (hands.get("L", {}).get("holds") or hands.get("L", {}).get("shape", "")) if isinstance(hands.get("L"), dict) else ""
-        hr = (hands.get("R", {}).get("holds") or hands.get("R", {}).get("shape", "")) if isinstance(hands.get("R"), dict) else ""
-        pos = b.get("position", {}) if isinstance(b.get("position"), dict) else {}
-        d.text(
-            (rx + 14, ry),
-            f"• PUPPET [{b.get('role')}]: costume={b.get('costume')} · view={b.get('view')} · expr={b.get('expression')} · L={hl} R={hr} @ ({pos.get('x')},{pos.get('depth')})",
-            font=FONT_XS,
-            fill=(130, 245, 175),
-        )
-        ry += 20
-
     props = dossier_json.get("props", [])
-    prop_summary = " · ".join([f"{p.get('id','')} ({p.get('scale_cm', '')}cm: {', '.join(p.get('states', [])[:2])})" for p in props[:3]])
-    d.text((rx + 14, ry + 6), f"PROP CARDS (dossier/{num_str}.json): {prop_summary[:82]}", font=FONT_XS, fill=(92, 228, 255))
-    if props:
-        d.text((rx + 14, ry + 24), f"HERO PROP BUILD ({props[0]['id']}): {props[0].get('build', '')[:84]}", font=FONT_XS, fill=(215, 225, 235))
-
+    prop_note = f"{props[0]['id']}: {props[0].get('build', '')[:88]}" if props else ""
+    draw_viewfinder_whisper(
+        d,
+        W,
+        H,
+        f"{num_str} · {title_str.upper()}  //  MULTIPLANE CUT-OUT LIGHT-TABLE",
+        f"V · PHYSICAL CRAFT KIT ({kit_a_path.name if kit_a_path else ''})",
+        bottom_left_mark=f"BRASS-BRAD PIVOTS (+) · {prop_note}",
+        bottom_right_mark=f"INSET: {kit_b_path.name if kit_b_path else ''}",
+        accent=(255, 195, 90, 225),
+    )
     pil = Image.alpha_composite(pil, ov)
     return cv2.cvtColor(np.array(pil.convert("RGB")), cv2.COLOR_RGB2BGR)
 
 
 # ==============================================================================
-# OPTION VI: Unobstructed Spatial X-Ray & Common-Place Echo Curtain
+# OPTION VI: Full-Bleed 4-Layer Optical Slit-Scan & Echo Curtain
 # ==============================================================================
 def render_option_6_unobstructed_xray_curtain(
     W: int,
@@ -717,9 +630,9 @@ def render_option_6_unobstructed_xray_curtain(
     img_echo = cover_crop(cv2.imread(str(echo_img_path)), W, H)
 
     shift = math.sin(t_phase * math.tau) * 0.06
-    x1 = int(W * (0.28 + shift))
-    x2 = int(W * (0.54 + shift * 0.5))
-    x3 = int(W * (0.77 - shift * 0.5))
+    x1 = int(W * (0.27 + shift))
+    x2 = int(W * (0.53 + shift * 0.5))
+    x3 = int(W * (0.76 - shift * 0.5))
 
     canvas = img_orig.copy()
     canvas[:, x1:x2] = img_cel[:, x1:x2]
@@ -731,8 +644,9 @@ def render_option_6_unobstructed_xray_curtain(
     canvas[:, x2:x3] = cv2.addWeighted(img_orig[:, x2:x3], 0.28, line_blueprint[:, x2:x3], 0.88, 0)
     canvas[:, x3:] = img_echo[:, x3:]
 
+    # Razor-thin 1px vertical optical hairlines — zero heavy bars
     for sx, col in [(x1, (92, 228, 255)), (x2, (255, 195, 90)), (x3, (255, 130, 195))]:
-        cv2.line(canvas, (sx, 0), (sx, H), col, 2, cv2.LINE_AA)
+        cv2.line(canvas, (sx, 0), (sx, H), col, 1, cv2.LINE_AA)
 
     hy = int(shot_json.get("camera", {}).get("horizon_y_norm", 0.50) * H)
     cv2.line(canvas, (0, hy), (W, hy), (92, 228, 255), 1, cv2.LINE_AA)
@@ -741,25 +655,15 @@ def render_option_6_unobstructed_xray_curtain(
     ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(ov)
 
-    draw_pill_header(
-        d,
-        24,
-        20,
-        f"POEM {num_str} · {title_str.upper()} · OPTION VI (X-RAY & ECHO CURTAIN)",
-        f"{vid} ({place_name}) ↔ Cartoon Cel ↔ Blueprint Line Layout ↔ {evid} ({echo_place})",
-        "Zero HUD chrome · Every seam exposes a real computed layer of the shot + poem verses anchored on the solved horizon",
-        accent=(92, 228, 255),
-    )
-
+    # Unboxed micro-engravings at top of each optical curtain band
     bands = [
-        (16, f"I. {vid} ORIGINAL STILL (image.jpg)", (225, 235, 245)),
-        (x1 + 12, f"II. {vid} CARTOON CEL + DEPTH CONTOURS (cel.png)", (92, 228, 255)),
-        (x2 + 12, f"III. {vid} MULTIPLANE LINE LAYOUT (layout_drawing.png)", (255, 195, 90)),
-        (x3 + 12, f"IV. PAIRED ECHO VIEW: {evid} ({echo_place[:22]})", (255, 130, 195)),
+        (36, f"I · {vid} STILL", (225, 235, 245, 210)),
+        (x1 + 14, f"II · {vid} CARTOON CEL", (92, 228, 255, 225)),
+        (x2 + 14, f"III · {vid} LINE LAYOUT", (255, 195, 90, 225)),
+        (x3 + 14, f"IV · ECHO {evid} ({echo_place[:20]})", (255, 130, 195, 235)),
     ]
     for bx, btxt, bcol in bands:
-        d.rectangle([bx, H - 46, bx + 380, H - 16], fill=(8, 11, 16, 210), outline=(bcol[0], bcol[1], bcol[2], 130), width=1)
-        d.text((bx + 10, H - 39), btxt[:46], font=FONT_XS, fill=bcol)
+        draw_shadow_text(d, (bx, H - 44), btxt, FONT_MICRO, fill=bcol)
 
     ft = poem_meta.get("full_text", [])
     poem_lines = [
@@ -767,62 +671,53 @@ def render_option_6_unobstructed_xray_curtain(
         for ln in (ft if isinstance(ft, list) else str(ft).splitlines())
     ]
     poem_lines = [ln for ln in poem_lines if ln]
-    v_str = "  /  ".join(poem_lines[:4]) if poem_lines else title_str
-    d.rectangle([24, hy - 38, 24 + 920, hy - 4], fill=(8, 12, 18, 190), outline=(92, 228, 255, 130), width=1)
-    d.text((36, hy - 32), f"SOLVED HORIZON (y={hy}px) · “{v_str[:96]}”", font=FONT_SERIF_MD, fill=(245, 240, 225))
+    v_str = "  /  ".join(poem_lines[:2]) if poem_lines else title_str
+    draw_shadow_text(d, (42, hy - 36), f"“{v_str[:88]}”", FONT_SERIF_MD, fill=(250, 244, 228, 245))
 
+    draw_viewfinder_whisper(
+        d,
+        W,
+        H,
+        f"{num_str} · {title_str.upper()}  //  {vid} ({place_name.upper()}) ↔ {evid} ({echo_place.upper()})",
+        f"VI · 4-LAYER OPTICAL SLIT-SCAN (HORIZON Y={hy}px)",
+        accent=(92, 228, 255, 225),
+    )
     pil = Image.alpha_composite(pil, ov)
     return cv2.cvtColor(np.array(pil.convert("RGB")), cv2.COLOR_RGB2BGR)
 
 
 def build_14_poem_master_sheet(items: list, out_path: Path, title_banner: str):
-    """Build a 3840x2160 14-cell master contact sheet (4 cols x 4 rows, with 2-col header banner)."""
-    sheet = np.full((2160, 3840, 3), (6, 8, 12), dtype=np.uint8)
+    sheet = np.full((2160, 3840, 3), (5, 7, 10), dtype=np.uint8)
     cw, ch = 960, 540
-    # 14 poems placed in cells 0..13 of the 16-cell 4x4 grid, cells 14..15 hold summary legend
     for idx, (num_str, title_str, img) in enumerate(items[:14]):
         r = idx // 4
         c = idx % 4
-        cell = fit_contain(img, cw, ch, bg_color=(8, 10, 14))
+        cell = fit_contain(img, cw, ch, bg_color=(6, 8, 11))
         y0, x0 = r * ch, c * cw
         sheet[y0 : y0 + ch, x0 : x0 + cw] = cell
-        cv2.rectangle(sheet, (x0, y0), (x0 + cw - 1, y0 + ch - 1), (45, 75, 105), 1)
+        cv2.rectangle(sheet, (x0, y0), (x0 + cw - 1, y0 + ch - 1), (32, 48, 66), 1)
 
-    # Bottom-right 2 cells (row 3, cols 2..3 -> x=1920..3840, y=1620..2160): Title & Legend Card
     pil = Image.fromarray(cv2.cvtColor(sheet, cv2.COLOR_BGR2RGB)).convert("RGBA")
     d = ImageDraw.Draw(pil)
     x0, y0 = 1920, 1620
-    d.rectangle([x0 + 12, y0 + 12, 3840 - 12, 2160 - 12], fill=(10, 14, 20, 245), outline=(92, 228, 255, 180), width=2)
-    d.text((x0 + 40, y0 + 38), "WHERE YOU GO WHEN YOU LEAVE — ALL 14 POEMS", font=FONT_XL, fill=(92, 228, 255))
-    d.text((x0 + 40, y0 + 82), title_banner, font=FONT_LG, fill=(255, 195, 90))
-    d.text(
-        (x0 + 40, y0 + 128),
-        "Every poem is driven 100% by its real computed 3D point cloud (points.ply), exploded multiplane stack (exploded.jpg),",
-        font=FONT_MD,
-        fill=(220, 232, 242),
-    )
-    d.text(
-        (x0 + 40, y0 + 156),
-        "solved 3D ground grid & horizon (layout_sheet.png), SAM2/SVG perceptual compiler (overlay.jpg / compare.jpg),",
-        font=FONT_MD,
-        fill=(220, 232, 242),
-    )
-    d.text(
-        (x0 + 40, y0 + 184),
-        "physical multiplane cardboard craft kits (poems/kits/NN.*.jpg), and Golden Riverbed structural laws (riverbed_NN.json).",
-        font=FONT_MD,
-        fill=(220, 232, 242),
+    draw_shadow_text(d, (x0 + 48, y0 + 48), "WHERE YOU GO WHEN YOU LEAVE — ALL 14 POEMS", FONT_XL, fill=(92, 228, 255, 245))
+    draw_shadow_text(d, (x0 + 48, y0 + 92), title_banner, FONT_LG, fill=(255, 195, 90, 240))
+    draw_shadow_text(
+        d,
+        (x0 + 48, y0 + 138),
+        "VOIDBASTARD-TAO UNOBSTRUCTED SURFACE · 100% FULL-BLEED CINEMA PLATES · ZERO HUD BOXES",
+        FONT_SM,
+        fill=(195, 212, 228, 220),
     )
 
-    # List the 14 poems and their Hero → Echo Common Place pairings
-    py = y0 + 232
+    py = y0 + 196
     for col_idx in range(2):
         subset = items[col_idx * 7 : (col_idx + 1) * 7]
-        px = x0 + 40 + col_idx * 920
+        px = x0 + 48 + col_idx * 910
         for i, (ns, ts, _) in enumerate(subset):
             p_num = int(ns)
             hid, eid = HERO_AND_ECHO_VIEWS[p_num]
-            d.text((px, py + i * 36), f"• POEM {ns} ({ts[:24]:24s}) — Hero {hid:4s} ↔ Echo {eid:4s}", font=FONT_MD, fill=(130, 245, 175))
+            draw_shadow_text(d, (px, py + i * 40), f"{ns} · {ts[:24]:24s}  [{hid} ↔ {eid}]", FONT_MD, fill=(130, 245, 175, 230))
 
     out_bgr = cv2.cvtColor(np.array(pil.convert("RGB")), cv2.COLOR_RGB2BGR)
     cv2.imwrite(str(out_path), out_bgr)
@@ -835,17 +730,12 @@ def main():
     bundle_path = OUT_DIR / "vesper_world_bundle.json"
     bundle = json.loads(bundle_path.read_text())
 
-    opt1_all = []
-    opt2_all = []
-    opt3_all = []
-    opt4_all = []
-    opt5_all = []
-    opt6_all = []
+    opt1_all, opt2_all, opt3_all, opt4_all, opt5_all, opt6_all = [], [], [], [], [], []
     per_poem_mp4s = []
 
     W, H = 1920, 1080
     fps = 24
-    frames_per_opt = 12  # 6 options * 12f = 72 frames (3.0s per poem, 42s across all 14 poems)
+    frames_per_opt = 12
 
     for p in bundle["poems"]:
         num = int(p["num"])
@@ -856,7 +746,6 @@ def main():
         hv = vmap.get(hid, p["views"][0])
         ev = vmap.get(eid, p["views"][-1])
 
-        # Ensure every view in bundle has both dir and shot_dir + assets populated
         for v in p.get("views", []):
             sd_str = v.get("dir") or v.get("shot_dir", "")
             v["shot_dir"] = sd_str
@@ -887,6 +776,7 @@ def main():
             )
         else:
             p["poem_text"] = str(ft_val)
+
         bd_path = SHOTS_DIR / f"poems/breakdown/{num_str}.json"
         breakdown_json = json.loads(bd_path.read_text()) if bd_path.exists() else {}
         p["breakdown_sets"] = breakdown_json.get("sets", [])
@@ -922,14 +812,14 @@ def main():
         apages = p.get("assembly_pages", [])
         if apages and isinstance(apages[0], dict):
             apage_num = apages[0].get("file", "assembly_p1.txt").replace("assembly_p", "").replace(".txt", "")
-            assembly_text = apages[0].get("text", "") or p.get("full_text", "")
+            assembly_text = apages[0].get("text", "") or p.get("poem_text", "")
         else:
             apage_num = apages[0] if apages else 1
             apage_path = SHOTS_DIR / f"poems/assembly/assembly_p{apage_num}.txt"
-            assembly_text = apage_path.read_text() if apage_path.exists() else p.get("full_text", "")
-        p["assembly_excerpt"] = assembly_text[:1200]
+            assembly_text = apage_path.read_text() if apage_path.exists() else p.get("poem_text", "")
+        p["assembly_excerpt"] = str(assembly_text)[:1200]
 
-        print(f"[poem {num_str}] Rendering 6 Apparatus Options for Poem {num_str} ({title_str}) — Hero {hid} / Echo {eid}...")
+        print(f"[poem {num_str}] Rendering 6 Full-Bleed VOIDBASTARD-TAO Plates for Poem {num_str} ({title_str})...")
         opt1 = render_option_1_pointcloud_worldtext(W, H, p, hv, pts, shot_json, multiplane_json, breakdown_json, t_phase=0.32)
         opt2 = render_option_2_exploded_multiplane(W, H, p, hv, shot_dir, multiplane_json, riverbed_json, dossier_json, t_phase=0.25)
         opt3 = render_option_3_perspective_layout(W, H, p, hv, shot_dir, shot_json, signals_json, assembly_text, apage_num, t_phase=0.20)
@@ -941,7 +831,7 @@ def main():
         opt_paths = {}
         for o_idx, o_img in enumerate(opt_imgs, start=1):
             o_name = f"poem_{num_str}_opt{o_idx}.jpg"
-            cv2.imwrite(str(OUT_DIR / o_name), o_img, [int(cv2.IMWRITE_JPEG_QUALITY), 92])
+            cv2.imwrite(str(OUT_DIR / o_name), o_img, [int(cv2.IMWRITE_JPEG_QUALITY), 93])
             opt_paths[f"opt{o_idx}"] = f"data/terrarium/seeing_spacetime_films/{o_name}"
 
         opt1_all.append((num_str, title_str, opt1))
@@ -951,22 +841,20 @@ def main():
         opt5_all.append((num_str, title_str, opt5))
         opt6_all.append((num_str, title_str, opt6))
 
-        # Per-Poem 4K 6-Options Contact Sheet (3840x2160)
-        sheet = np.full((2160, 3840, 3), (6, 8, 12), dtype=np.uint8)
+        sheet = np.full((2160, 3840, 3), (5, 7, 10), dtype=np.uint8)
         for idx, o_img in enumerate(opt_imgs):
             r = idx // 2
             c = idx % 2
-            cell = fit_contain(o_img, 1920, 720, bg_color=(8, 10, 14))
+            cell = fit_contain(o_img, 1920, 720, bg_color=(6, 8, 11))
             y0, x0 = r * 720, c * 1920
             sheet[y0 : y0 + 720, x0 : x0 + 1920] = cell
-            cv2.rectangle(sheet, (x0, y0), (x0 + 1919, y0 + 719), (45, 70, 95), 1)
+            cv2.rectangle(sheet, (x0, y0), (x0 + 1919, y0 + 719), (32, 48, 66), 1)
 
         sheet_name = f"poem_{num_str}_apparatus_6options.png"
         cv2.imwrite(str(OUT_DIR / sheet_name), sheet)
         shutil.copy2(OUT_DIR / sheet_name, ARTIFACT_DIR / sheet_name)
         opt_paths["sheet"] = f"data/terrarium/seeing_spacetime_films/{sheet_name}"
 
-        # Per-Poem 6-Paradigm H.264 Film (poem_NN_apparatus.mp4)
         mp4_raw = OUT_DIR / f"_tmp_poem_{num_str}_apparatus.mp4"
         mp4_final = OUT_DIR / f"poem_{num_str}_apparatus.mp4"
         writer = cv2.VideoWriter(str(mp4_raw), cv2.VideoWriter_fourcc(*"mp4v"), fps, (W, H))
@@ -1014,43 +902,40 @@ def main():
         p["hero_view_id"] = hid
         p["echo_view_id"] = eid
 
-    # Save enriched bundle with all 14 poems' apparatus paths and fixed view assets
     bundle_path.write_text(json.dumps(bundle, indent=2))
     print(f"[bundle] Saved enriched 14-poem bundle -> {bundle_path}")
 
-    # Build Master 14-Poem 4K Sheets
     build_14_poem_master_sheet(
         opt1_all,
         OUT_DIR / "all_14_poems_pointcloud_worldtext_sheet.png",
-        "OPTION I ACROSS ALL 14 POEMS — True 3D Metric Point Clouds (points.ply) + Depth-Occluded 3D Worldtext",
+        "I · METRIC 3D POINT CLOUD (points.ply) + UNBOXED DEPTH-OCCLUDED WORLDTEXT",
     )
     build_14_poem_master_sheet(
         opt2_all,
         OUT_DIR / "all_14_poems_exploded_multiplane_sheet.png",
-        "OPTION II ACROSS ALL 14 POEMS — Isometric 3D Exploded Multiplane Stacks (exploded.jpg) + Golden Riverbed Laws",
+        "II · FULL-BLEED ISOMETRIC EXPLODED MULTIPLANE STACKS (exploded.jpg)",
     )
     build_14_poem_master_sheet(
         opt3_all,
         OUT_DIR / "all_14_poems_perspective_layout_sheet.png",
-        "OPTION III ACROSS ALL 14 POEMS — Solved 3D Perspective Grids, Horizon/VP & Animation Line Layouts",
+        "III · SURVEYOR 3D PERSPECTIVE FLOOR GRID ↔ DARKROOM LINE LAYOUT WIPE",
     )
     build_14_poem_master_sheet(
         opt4_all,
         OUT_DIR / "all_14_poems_semantic_perceptual_sheet.png",
-        "OPTION IV ACROSS ALL 14 POEMS — Pixel-Accurate SAM2 Contours, Vector Programs & Perceptual ΔE Maps",
+        "IV · MACHINE-EYE SAM2 OPTICAL APERTURE RETICLE (image.jpg ↔ overlay.jpg)",
     )
     build_14_poem_master_sheet(
         opt5_all,
         OUT_DIR / "all_14_poems_tactile_kits_sheet.png",
-        "OPTION V ACROSS ALL 14 POEMS — Tactile Cut-Out Multiplane Set & Prop Kits with Brass-Brad Pivots",
+        "V · DARKROOM ANIMATOR'S LIGHT-TABLE CUT-OUT KITS (poems/kits/NN.*.jpg)",
     )
     build_14_poem_master_sheet(
         opt6_all,
         OUT_DIR / "all_14_poems_xray_echo_sheet.png",
-        "OPTION VI ACROSS ALL 14 POEMS — Unobstructed 4-Layer X-Ray & Shared Common-Place Echo Curtains",
+        "VI · 4-LAYER OPTICAL SLIT-SCAN & SHARED COMMON-PLACE ECHO CURTAIN",
     )
 
-    # Concatenate all 14 per-poem apparatus MP4s into the master anthology reel
     concat_txt = OUT_DIR / "_concat_14_apparatus.txt"
     concat_txt.write_text("\n".join([f"file '{p.name}'" for p in per_poem_mp4s]) + "\n")
     master_mp4 = OUT_DIR / "wygwyl_all_14_poems_apparatus_reel.mp4"
@@ -1078,7 +963,7 @@ def main():
     shutil.copy2(master_mp4, OUT_DIR / "wygwyl_vesper_apparatus_reel.mp4")
     shutil.copy2(master_mp4, ARTIFACT_DIR / "wygwyl_all_14_poems_apparatus_reel.mp4")
     shutil.copy2(master_mp4, ARTIFACT_DIR / "wygwyl_vesper_apparatus_reel.mp4")
-    print(f"[master-reel] Saved 14-Poem Master Apparatus Reel -> {master_mp4} ({master_mp4.stat().st_size / (1024*1024):.2f} MB)")
+    print(f"[master-reel] Saved 14-Poem Master Apparatus Reel -> {master_mp4}")
 
 
 if __name__ == "__main__":
