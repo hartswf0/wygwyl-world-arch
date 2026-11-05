@@ -610,21 +610,25 @@ def eval_station_fluid_view(station, mp, u_local, phase_t):
     """
     Evaluates a single station at continuous normalized time `u_local` (`0.0` -> `1.0` during its segment,
     and smoothly extending beyond `[0, 1]` during overlapping cross-depth transitions so camera velocity
-    NEVER stops or jerks!).
-    Uses 100% pure moving frame (`base_cel`) with ZERO static keyframe overlay so moving subjects never ghost!
+    and video frame playback NEVER stop, freeze, or jerk!).
+    Uses continuous sub-frame temporal interpolation at 24fps so 12fps cel patches glide smoothly like film!
     """
     frames = station["frames"]
     n_f = len(frames)
-    f_pos = np.clip(u_local, 0.0, 1.0) * (n_f - 1)
-    plate = frames[min(n_f - 1, max(0, int(round(f_pos))))]
+    # Map [-0.15 .. 1.05] continuously onto [0 .. n_f - 1] so transitions NEVER freeze on frame 0 or frame N-1!
+    u_play = np.clip((u_local + 0.15) / 1.20, 0.0, 1.0)
+    f_exact = u_play * max(0, n_f - 1.001)
+    i0 = min(n_f - 1, max(0, int(f_exact)))
+    i1 = min(n_f - 1, i0 + 1)
+    frac = float(f_exact - i0)
+    plate = frames[i0] * (1.0 - frac) + frames[i1] * frac
 
     # Continuous, never-stopping Steadicam glide:
-    # Subtle lateral parallax (`-18px` -> `+18px` = ~2.6° optical rotation) + continuous forward Z-dolly (`1.07` -> `1.14`)
     u_centered = u_local - 0.5
-    pan_x = mp["pan_dir"] * (u_centered * 34.0 + 4.0 * math.sin(phase_t * 0.45))
-    tilt_y = mp["tilt_dir"] * (u_centered * 12.0 + 2.5 * math.cos(phase_t * 0.38))
-    dolly_scale = 1.07 + 0.07 * u_local
-    depth_stretch = 0.045 * u_local
+    pan_x = mp["pan_dir"] * (u_centered * 30.0 + 3.5 * math.sin(phase_t * 0.45))
+    tilt_y = mp["tilt_dir"] * (u_centered * 10.0 + 2.0 * math.cos(phase_t * 0.38))
+    dolly_scale = 1.06 + 0.065 * np.clip(u_local, -0.15, 1.15)
+    depth_stretch = 0.042 * np.clip(u_local, 0.0, 1.0)
 
     warped_rgb = warp_multiplane_3d(plate, mp["disp"], pan_x, tilt_y, dolly_scale, depth_stretch)
     return warped_rgb
@@ -707,16 +711,19 @@ def render_construct_frame(poem_num, poem_title, district_name, stations, multip
 def render_spacetime_worm_shot_frame(shot_bundle, u_shot, global_t=0.0):
     """
     Renders a single shot at normalized progress `u_shot in [0, 1]` with:
-      - Continuous, fluid 2.5D/3D multiplane camera glide (`cv2.remap` using wide-smoothed `depth_sharp.npz` disparity)
-        with subtle lateral Steadicam drift (`±14px`) and smooth forward Z-dolly (`1.06 -> 1.13`).
-      - Halo-free, silky-smooth 4D Spacetime Worm motion ribbon (`6` softly-feathered temporal echoes in the
-        City District's `glow` palette receding along the optical Z-axis into the background) with ZERO
-        double-warped foreground cutout halos and ZERO jagged polygon contour lines!
+      - Continuous sub-frame 24fps temporal interpolation (`frames[i0]*(1-frac) + frames[i1]*frac`) so 12fps patches
+        and transitions NEVER hold static frames or stutter like a GIF.
+      - Continuous, fluid 2.5D/3D multiplane camera glide (`cv2.remap` using wide-smoothed `depth_sharp.npz` disparity).
+      - Clean, subtle 4D Spacetime Worm motion ribbon (`4` softly-feathered temporal echoes in the City District's
+        `glow` palette receding along the optical Z-axis) with zero muddy full-frame ghosting.
     """
     frames = shot_bundle["frames"]
     n_f = len(frames)
-    f_pos = np.clip(u_shot, 0.0, 1.0) * (n_f - 1)
-    present_frame = frames[min(n_f - 1, max(0, int(round(f_pos))))]
+    f_pos = np.clip(u_shot, 0.0, 1.0) * max(0, n_f - 1.001)
+    i0 = min(n_f - 1, max(0, int(f_pos)))
+    i1 = min(n_f - 1, i0 + 1)
+    frac_f = float(f_pos - i0)
+    present_frame = frames[i0] * (1.0 - frac_f) + frames[i1] * frac_f
 
     if "disp_smooth" not in shot_bundle:
         depth = shot_bundle["depth"]
@@ -741,31 +748,31 @@ def render_spacetime_worm_shot_frame(shot_bundle, u_shot, global_t=0.0):
     c_glow1 = hex_to_rgb_float(glow_hex[0])
     c_glow2 = hex_to_rgb_float(glow_hex[min(1, len(glow_hex) - 1)])
 
-    # Compute smooth per-frame subject salience for the present frame so echoes tuck cleanly behind the subject
-    # without needing a second mismatched affine cutout!
     curr_diff = np.mean(np.abs(present_frame - median_fr), axis=2)
     curr_sal = np.clip(curr_diff * 3.2 + 0.35 * disp * center_env, 0.0, 1.0)
     curr_sal_soft = cv2.GaussianBlur(curr_sal.astype(np.float32), (0, 0), 16.0)
-    # Protect the core of the present foreground figure so receding echoes emerge around/behind it
-    bg_receptive = np.clip(1.0 - 0.72 * curr_sal_soft, 0.15, 1.0)
+    bg_receptive = np.clip(1.0 - 0.78 * curr_sal_soft, 0.12, 1.0)
 
     canvas = bg_plate.copy()
 
-    # 2. Render 6 softly-feathered receding temporal slices (`age = 6 .. 1`) along the optical Z-corridor
-    n_echoes = 6
+    # 2. Render 4 softly-feathered receding temporal slices (`age = 4 .. 1`) along the optical Z-corridor
+    n_echoes = 4
     trail_env = sm(0.0, 0.15, u_shot) * (1.0 - 0.35 * sm(0.85, 1.0, u_shot))
     for age in range(n_echoes, 0, -1):
-        f_past_pos = max(0.0, f_pos - age * 2.5)
-        past_fr = frames[min(n_f - 1, max(0, int(round(f_past_pos))))]
+        f_past_pos = max(0.0, f_pos - age * 2.2)
+        pi0 = min(n_f - 1, max(0, int(f_past_pos)))
+        pi1 = min(n_f - 1, pi0 + 1)
+        pfrac = float(f_past_pos - pi0)
+        past_fr = frames[pi0] * (1.0 - pfrac) + frames[pi1] * pfrac
 
         past_diff = np.mean(np.abs(past_fr - median_fr), axis=2)
-        past_sal = np.clip(past_diff * 3.2 + 0.30 * disp * center_env, 0.0, 1.0)
+        past_sal = np.clip(past_diff * 3.0 + 0.25 * disp * center_env, 0.0, 1.0)
         past_matte = cv2.GaussianBlur(past_sal.astype(np.float32), (0, 0), 18.0)
 
         frac = age / float(n_echoes)
-        sc_echo = 1.0 - 0.18 * frac
-        tx = (1.0 - sc_echo) * (W * 0.54) - age * 9.5
-        ty = (1.0 - sc_echo) * (H * 0.42) - age * 4.2
+        sc_echo = 1.0 - 0.14 * frac
+        tx = (1.0 - sc_echo) * (W * 0.54) - age * 7.5
+        ty = (1.0 - sc_echo) * (H * 0.42) - age * 3.2
         M_echo = np.array([[sc_echo, 0.0, tx], [0.0, sc_echo, ty]], dtype=np.float32)
 
         warped_fr = cv2.warpAffine(past_fr, M_echo, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
@@ -773,7 +780,7 @@ def render_spacetime_worm_shot_frame(shot_bundle, u_shot, global_t=0.0):
 
         tint_col = lerp(c_glow1, c_glow2, frac)
         echo_rgb = 0.72 * warped_fr + 0.28 * tint_col[None, None, :]
-        echo_alpha = (warped_m * bg_receptive * (0.26 * (1.0 - 0.60 * frac)) * trail_env)[..., None]
+        echo_alpha = (warped_m * bg_receptive * (0.18 * (1.0 - 0.60 * frac)) * trail_env)[..., None]
 
         canvas = canvas * (1.0 - echo_alpha) + echo_rgb * echo_alpha
 
@@ -861,8 +868,29 @@ def encode_video_with_real_audio(frames_rgb, out_mp4, audio_t0):
 
 def collect_poem_places_cels_and_palettes(poem_num, city_data, districts_by_id, bible_to_dir, id_to_dir, hero_poems):
     scion_paths = sorted(glob.glob(os.path.join(SHOTS_ROOT, f"cel_assets/scion/P{poem_num:02d}-*.json")))
-    scion_list = [json.load(open(p)) for p in scion_paths]
-    scion_list.sort(key=lambda x: float(x.get("t0", 0.0)))
+    raw_scions = [json.load(open(p)) for p in scion_paths]
+    raw_scions.sort(key=lambda x: float(x.get("t0", 0.0)))
+
+    # Deduplicate consecutive scion entries that share the exact same `scene` key (e.g. `01.3` x3, `01.4` x4, `09.4` x8)
+    # keeping the longest clip per scene so NO scene ever plays twice in a row!
+    scion_list = []
+    scene_groups = {}
+    for sc in raw_scions:
+        skey = sc.get("scene") or sc["id"]
+        dur_sc = float(sc.get("t1", 0.0)) - float(sc.get("t0", 0.0))
+        if skey not in scene_groups:
+            scene_groups[skey] = sc
+            scion_list.append(sc)
+        else:
+            prev = scene_groups[skey]
+            prev_dur = float(prev.get("t1", 0.0)) - float(prev.get("t0", 0.0))
+            if dur_sc > prev_dur:
+                idx_prev = scion_list.index(prev)
+                # Preserve earliest t0 for audio sync on the first station
+                if idx_prev == 0:
+                    sc = dict(sc, t0=prev.get("t0", sc.get("t0")))
+                scion_list[idx_prev] = sc
+                scene_groups[skey] = sc
 
     dossier_path = os.path.join(SHOTS_ROOT, f"poems/dossier/{poem_num:02d}.json")
     dossier = json.load(open(dossier_path)) if os.path.exists(dossier_path) else {}
@@ -1010,13 +1038,13 @@ def build_single_poem_pair(poem_num):
     )
     audio_t0 = float(scion_list[0]["t0"]) if scion_list else (poem_num - 1) * 90.0
 
-    # Load Common Place stations from `shots/out/` (top 3) + key Poem Cel stations (2) = 5 canonical stations for `S2 Construct`
+    # Load Common Place stations from `shots/out/` (top 4) + deduplicated Poem Cel stations (`n_frames=84` for smooth 24fps)
     terr_stations = [
-        load_common_place_station(od, local_view_info, district_name, body_hex, glow_hex, n_frames=48)
+        load_common_place_station(od, local_view_info, district_name, body_hex, glow_hex, n_frames=84)
         for od in ordered_out_dirs[:4]
     ]
     poem_bundles = [
-        load_poem_cel_shot(sc, scene_map, district_name, body_hex, glow_hex, n_frames=48)
+        load_poem_cel_shot(sc, scene_map, district_name, body_hex, glow_hex, n_frames=84)
         for sc in scion_list
     ]
 
@@ -1174,11 +1202,41 @@ if __name__ == "__main__":
         sheet_c.save(os.path.join(ARTIFACT_DIR, "all_14_poems_territory_construct_sheet.png"))
         sheet_w.save(os.path.join(ARTIFACT_DIR, "all_14_poems_spacetime_worms_sheet.png"))
 
-        # Update master suite files in `shots/videos/` and `ARTIFACT_DIR` so NO old blurry/wagging videos remain anywhere!
-        shutil.copy2(results[0]["construct_mp4"], os.path.join(VIDEOS_DIR, "wygwyl_14poems_construct_suite.mp4"))
-        shutil.copy2(results[0]["construct_mp4"], os.path.join(VIDEOS_DIR, "wygwyl_seeing_construct.mp4"))
-        shutil.copy2(results[0]["construct_mp4"], os.path.join(ARTIFACT_DIR, "wygwyl_seeing_construct.mp4"))
-        shutil.copy2(results[0]["worm_mp4"], os.path.join(VIDEOS_DIR, "wygwyl_14poems_spacetime_worms_suite.mp4"))
-        shutil.copy2(results[0]["worm_mp4"], os.path.join(VIDEOS_DIR, "wygwyl_07_spacetime.mp4"))
-        shutil.copy2(results[0]["worm_mp4"], os.path.join(ARTIFACT_DIR, "wygwyl_07_spacetime.mp4"))
-        print("Saved contact sheets and updated all master suite MP4s:", c_sheet_path, w_sheet_path)
+        # Build true distinct Master Anthology Reels (NEVER copy poem_01 over the Master Suite MP4s!)
+        def _concat_excerpts(src_mp4s, out_dest, clip_dur=6.0):
+            tmp_parts = []
+            for idx_p, smp4 in enumerate(src_mp4s):
+                part = f"/tmp/suite_part_{os.getpid()}_{idx_p}.mp4"
+                subprocess.run([
+                    "ffmpeg", "-y", "-v", "error", "-ss", "0.5", "-t", f"{clip_dur:.1f}",
+                    "-i", smp4, "-c:v", "libx264", "-preset", "veryfast", "-crf", "19",
+                    "-c:a", "aac", "-b:a", "192k", part
+                ], check=True)
+                tmp_parts.append(part)
+            lst_file = f"/tmp/suite_concat_{os.getpid()}.txt"
+            with open(lst_file, "w") as lf:
+                for pt in tmp_parts:
+                    lf.write(f"file '{pt}'\n")
+            subprocess.run([
+                "ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
+                "-i", lst_file, "-c", "copy", "-movflags", "+faststart", out_dest
+            ], check=True)
+            for pt in tmp_parts:
+                if os.path.exists(pt):
+                    os.remove(pt)
+            if os.path.exists(lst_file):
+                os.remove(lst_file)
+
+        c_suite_mp4 = os.path.join(VIDEOS_DIR, "wygwyl_14poems_construct_suite.mp4")
+        c_seeing_mp4 = os.path.join(VIDEOS_DIR, "wygwyl_seeing_construct.mp4")
+        w_suite_mp4 = os.path.join(VIDEOS_DIR, "wygwyl_14poems_spacetime_worms_suite.mp4")
+        w_07_mp4 = os.path.join(VIDEOS_DIR, "wygwyl_07_spacetime.mp4")
+
+        _concat_excerpts([results[i]["construct_mp4"] for i in [0, 1, 3, 5, 7, 9, 13]], c_suite_mp4, clip_dur=6.0)
+        _concat_excerpts([results[i]["construct_mp4"] for i in [2, 4, 6, 10, 12]], c_seeing_mp4, clip_dur=6.0)
+        _concat_excerpts([results[i]["worm_mp4"] for i in [0, 2, 3, 5, 8, 11, 13]], w_suite_mp4, clip_dur=6.0)
+        _concat_excerpts([results[i]["worm_mp4"] for i in [1, 4, 7, 9, 13]], w_07_mp4, clip_dur=6.0)
+
+        shutil.copy2(c_seeing_mp4, os.path.join(ARTIFACT_DIR, "wygwyl_seeing_construct.mp4"))
+        shutil.copy2(w_07_mp4, os.path.join(ARTIFACT_DIR, "wygwyl_07_spacetime.mp4"))
+        print("Saved contact sheets and distinct multi-poem master suite MP4s:", c_sheet_path, w_sheet_path)

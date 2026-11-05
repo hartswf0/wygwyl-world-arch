@@ -319,12 +319,39 @@ def splat_gaussian_multiscale(
     return cv2.resize(np.clip(out_lo, 0.0, 1.0), (W, H), interpolation=cv2.INTER_CUBIC)
 
 
+_BASE_YY, _BASE_XX = np.mgrid[0:H, 0:W].astype(np.float32)
+
+
+def warp_multiplane_plate(img_rgb: np.ndarray, disp: np.ndarray, pan_x: float, tilt_y: float, dolly_scale: float, depth_stretch: float = 0.042) -> np.ndarray:
+    """
+    True 2.5D/3D multiplane camera transform using per-pixel inverse-depth parallax (`cv2.remap`).
+    """
+    local_scale = dolly_scale * (1.0 + depth_stretch * (disp - 0.38))
+    parallax_weight = 0.28 + 0.72 * disp
+    map_x = (_BASE_XX - W * 0.5) / local_scale + W * 0.5 + pan_x * parallax_weight
+    map_y = (_BASE_YY - H * 0.5) / local_scale + H * 0.5 + tilt_y * parallax_weight
+    return cv2.remap(
+        img_rgb,
+        map_x.astype(np.float32),
+        map_y.astype(np.float32),
+        interpolation=cv2.INTER_LINEAR,
+        borderMode=cv2.BORDER_REFLECT_101,
+    )
+
+
+_BUNDLE_CACHE = {}
+
+
 def load_pointcloud_shot_bundle(sid: str, step_grid: int = 4) -> dict:
     """
-    Loads a shot's 6 visual plates (`raw`, `cel`, `angular`, `layout`, `overlay`, `glow`) PLUS
+    Loads a shot's 6 visual plates (`raw`, `cel`, `angular`, `layout`, `overlay`, `glow`),
+    loads its native 24fps moving cinema video (`out/<sid>/film/shot.mp4`) if present, PLUS
     builds its Plane-Stratified 3D Point Cloud (`X, Y, Z, plane_id, collar_mask, rgb_cel, rgb_ang, rgb_lay`)
     on a `step_grid` lattice (`320x180 = 57,600` points) so any two shots can morph 1-to-1 in 3D space!
     """
+    if sid in _BUNDLE_CACHE:
+        return _BUNDLE_CACHE[sid]
+
     od = OUT_DIR / sid
     if not od.exists():
         raise FileNotFoundError(f"Missing shot directory: {od}")
@@ -344,9 +371,26 @@ def load_pointcloud_shot_bundle(sid: str, step_grid: int = 4) -> dict:
     layout = _ld("cartoon/layout_sheet.png", cel)
     overlay = _ld("overlay.jpg", raw)
     glow = _ld("cartoon/glow_pass.png", np.zeros_like(raw))
+    if not (od / "cartoon/glow_pass.png").exists() and (od / "multiplane/glow_pass.png").exists():
+        glow = _ld("multiplane/glow_pass.png", glow)
 
-    # Stylized clean composite (Angular + Cel + Glow, zero jagged superpixel noise)
-    stylized = np.clip(0.52 * cel + 0.34 * angular + 0.14 * raw + 0.22 * glow, 0.0, 1.0)
+    # Stylized clean composite (blend raw cinema fidelity with painted cel & optical glow, zero superpixel noise)
+    stylized = np.clip(0.54 * raw + 0.30 * cel + 0.16 * angular + 0.20 * glow, 0.0, 1.0)
+
+    # Load native 24fps moving video frames from `film/shot.mp4` (120 frames / 5.0s @ 24fps)
+    video_frames = []
+    mp4_path = od / "film" / "shot.mp4"
+    if mp4_path.exists():
+        cap = cv2.VideoCapture(str(mp4_path))
+        while len(video_frames) < 120:
+            ok, fr = cap.read()
+            if not ok or fr is None:
+                break
+            fr = cv2.cvtColor(cv2.resize(fr, (W, H), interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
+            if glow is not None:
+                fr = np.clip(fr + 0.16 * glow, 0.0, 1.0)
+            video_frames.append(fr)
+        cap.release()
 
     # Load planes.npz and depth
     pl_path = od / "multiplane" / "planes.npz"
@@ -370,6 +414,7 @@ def load_pointcloud_shot_bundle(sid: str, step_grid: int = 4) -> dict:
 
     d_lo, d_hi = float(np.percentile(depth, 3)), float(np.percentile(depth, 97))
     d_norm = np.clip((depth - d_lo) / max(d_hi - d_lo, 1e-3), 0.0, 1.0)
+    disp_smooth = cv2.GaussianBlur((1.0 - d_norm).astype(np.float32), (0, 0), 18.0)
 
     # Identify the Hero's Collar / Neck / Upper-Torso zone within P2 (the vertical band where neck meets shoulders)
     yy_full, xx_full = np.mgrid[0:H, 0:W]
@@ -377,13 +422,16 @@ def load_pointcloud_shot_bundle(sid: str, step_grid: int = 4) -> dict:
         p2_ys, p2_xs = np.where(P2)
         y_min, y_max = float(np.percentile(p2_ys, 5)), float(np.percentile(p2_ys, 95))
         y_span = max(20.0, y_max - y_min)
-        # Collar & shoulder zone is at 24%..48% down from top of P2 (just below head/chin)
         collar_band = P2 & (yy_full >= y_min + 0.22 * y_span) & (yy_full <= y_min + 0.50 * y_span)
         p2_cx = float(np.mean(p2_xs)) / W - 0.5
         p2_cy = float(np.mean(p2_ys)) / H - 0.5
     else:
         collar_band = np.zeros((H, W), dtype=bool)
         p2_cx, p2_cy = 0.0, 0.0
+
+    p2_soft = cv2.GaussianBlur(P2.astype(np.float32), (0, 0), 6.0)
+    p1_soft = cv2.GaussianBlur((L == 1).astype(np.float32), (0, 0), 5.0)
+    p0_soft = cv2.GaussianBlur((L == 0).astype(np.float32), (0, 0), 10.0)
 
     # Plane boundary contours for crisp architectural/collar edge highlights
     p2_edge = cv2.Canny((P2.astype(np.uint8) * 255), 50, 150) > 0
@@ -400,14 +448,10 @@ def load_pointcloud_shot_bundle(sid: str, step_grid: int = 4) -> dict:
     is_collar_edge = collar_edge[vg, ug].ravel()
     dn_pts = d_norm[vg, ug].ravel()
 
-    # Metric-scaled 3D coordinates in camera space:
-    # Zc in [1.8m .. 12.5m]; X, Y unprojected so at canonical camera (yaw=0, pitch=0, dist=5.5m)
-    # every point projects back to its exact pixel (uf, vf)!
     D_cam = 5.5
     focal = 560.0
-    z_local = (dn_pts - 0.35) * 3.8  # [-1.33m .. +2.47m] around origin
+    z_local = (dn_pts - 0.35) * 3.8
     zc_canon = D_cam + z_local
-    # Exact perspective unprojection for RW x RH grid:
     ux_rw = uf * (RW / float(W)) - RW * 0.5
     vy_rh = vf * (RH / float(H)) - RH * 0.5
     X_3d = ux_rw * zc_canon / focal
@@ -418,10 +462,9 @@ def load_pointcloud_shot_bundle(sid: str, step_grid: int = 4) -> dict:
     rgb_ang_pts = angular[vg, ug].reshape(-1, 3)
     rgb_lay_pts = layout[vg, ug].reshape(-1, 3)
 
-    # Convert stylized RGB to OpenCV CIELAB (float32: L in [0..100], a in [-127..127], b in [-127..127])
     lab_sty_pts = cv2.cvtColor(rgb_sty_pts.reshape(1, -1, 3), cv2.COLOR_RGB2LAB).reshape(-1, 3)
 
-    return {
+    bundle = {
         "sid": sid,
         "raw": raw,
         "cel": cel,
@@ -429,12 +472,17 @@ def load_pointcloud_shot_bundle(sid: str, step_grid: int = 4) -> dict:
         "layout": layout,
         "overlay": overlay,
         "stylized": stylized,
+        "video_frames": video_frames,
         "L": L,
         "P2": P2,
         "P3": P3,
+        "p2_soft": p2_soft,
+        "p1_soft": p1_soft,
+        "p0_soft": p0_soft,
         "collar_band": collar_band,
         "collar_edge": collar_edge,
         "d_norm": d_norm,
+        "disp_smooth": disp_smooth,
         "p2_center": (p2_cx, p2_cy),
         "pts_X": X_3d.astype(np.float32),
         "pts_Y": Y_3d.astype(np.float32),
@@ -450,6 +498,73 @@ def load_pointcloud_shot_bundle(sid: str, step_grid: int = 4) -> dict:
         "D_cam": D_cam,
         "focal": focal,
     }
+    _BUNDLE_CACHE[sid] = bundle
+    return bundle
+
+
+def eval_bundle_moving_plate(
+    bundle: dict,
+    u_local: float,
+    global_t: float,
+    vocal_rms: float = 0.5,
+    pan_dir: float = 1.0,
+    glow_rgb: np.ndarray = None,
+) -> np.ndarray:
+    """
+    Evaluates a continuous 24fps moving multiplane cinema plate for `bundle`:
+      - If `bundle['video_frames']` is present (e.g. `out/<uuid>/film/shot.mp4`), interpolates smoothly
+        at sub-frame 24fps precision across the native moving cinema frames AND blends subtle painted cel
+        depth parallax (`warp_multiplane_plate`).
+      - For Poet Lectern / Agent K multiplane shots, animates the 7 depth planes (`P0` audience foreground,
+        `P1` acrylic lectern prism with vocal-synced acoustic light ripples, `P2` Poet with living breathing /
+        collar & hand cadence motion, `P3..P6` salon room) with continuous 24fps Steadicam parallax!
+    """
+    vframes = bundle.get("video_frames") or []
+    disp = bundle["disp_smooth"]
+
+    pan_x = pan_dir * ((u_local - 0.5) * 26.0 + 3.5 * math.sin(global_t * 0.52))
+    tilt_y = (0.5 - u_local) * 9.0 + 2.2 * math.cos(global_t * 0.44)
+    dolly_scale = 1.05 + 0.065 * np.clip(u_local, 0.0, 1.25)
+
+    if len(vframes) > 1:
+        n_f = len(vframes)
+        # Continuous sub-frame interpolation across all native 24fps frames (never freezes during transitions!)
+        f_exact = np.clip(u_local, 0.0, 1.0) * (n_f - 1.001)
+        i0 = int(f_exact)
+        i1 = min(n_f - 1, i0 + 1)
+        frac = float(f_exact - i0)
+        mov_fr = vframes[i0] * (1.0 - frac) + vframes[i1] * frac
+        # Blend 84% moving 24fps cinema video + 16% stylized cel/glow harmony
+        base_plate = 0.84 * mov_fr + 0.16 * bundle["stylized"]
+        warped = warp_multiplane_plate(base_plate, disp, pan_x, tilt_y, dolly_scale, depth_stretch=0.042)
+        return np.clip(warped, 0.0, 1.0)
+
+    # Multiplane living articulation for Poet Salon (`poet_01..08`) and K parallel shots:
+    base = bundle["stylized"]
+    # 1. Background & midground multiplane warp
+    bg_warp = warp_multiplane_plate(base, disp * 0.75, pan_x * 0.75, tilt_y * 0.75, dolly_scale, depth_stretch=0.035)
+
+    # 2. Living P2 Actor (Poet / K) breathing & vocal-synced gesture micro-motion
+    breath_y = -2.8 * math.sin(global_t * 2.1) - 3.6 * (vocal_rms - 0.45)
+    gesture_x = pan_dir * (u_local - 0.5) * 32.0 + 2.4 * math.cos(global_t * 1.6)
+    p2_scale = dolly_scale * (1.012 + 0.014 * vocal_rms)
+    p2_warp = warp_multiplane_plate(base, np.ones_like(disp), gesture_x, tilt_y + breath_y, p2_scale, depth_stretch=0.0)
+    p2_m = warp_multiplane_plate(bundle["p2_soft"], np.ones_like(disp), gesture_x, tilt_y + breath_y, p2_scale, depth_stretch=0.0)[..., None]
+
+    comp = bg_warp * (1.0 - p2_m) + p2_warp * p2_m
+
+    # 3. Foreground P0 audience silhouette stronger counter-parallax
+    if bundle["p0_soft"].mean() > 0.01:
+        p0_warp = warp_multiplane_plate(base, np.ones_like(disp), pan_x * 1.65, tilt_y * 1.25, dolly_scale * 1.04, depth_stretch=0.0)
+        p0_m = warp_multiplane_plate(bundle["p0_soft"], np.ones_like(disp), pan_x * 1.65, tilt_y * 1.25, dolly_scale * 1.04, depth_stretch=0.0)[..., None]
+        comp = comp * (1.0 - p0_m * 0.85) + p0_warp * (p0_m * 0.85)
+
+    # 4. Subtle vocal-synced light refraction on P1 Acrylic Lectern & P2 Collar Rim
+    if glow_rgb is not None and bundle["p1_soft"].mean() > 0.005:
+        lectern_glow = bundle["p1_soft"][..., None] * glow_rgb[None, None, :] * (0.08 + 0.16 * vocal_rms)
+        comp = np.clip(comp + lectern_glow, 0.0, 1.0)
+
+    return np.clip(comp, 0.0, 1.0)
 
 
 # Plane departure schedule: far background (`P6, P5, P4`) lifts first; `P1` lectern second; `P3` third; `P2` Hero & Collar last!
@@ -473,17 +588,53 @@ def render_pointcloud_splat_transition(
     vocal_rms: float = 0.5,
     orbit_sign: float = 1.0,
     side_cut: bool = False,
+    global_t: float = None,
 ) -> np.ndarray:
     """
-    Transitions Shot A -> Shot B using Plane-Stratified 3D Point-Cloud & Multi-Scale Gaussian Splatting
-    with:
-      1. Plane-Staggered 3D Cubic Hermite Trajectories (`P6/P5/P4` -> `P1` -> `P3` -> `P2` Collar/Hero)
-      2. Perceptual CIELAB "Color's Rhythm" Transport (cresting through the Poem's District `glow` & `body` palette)
-      3. Spoken-Word Vocal Rhythm Coupling (`vocal_rms` modulates collar breath pulse & focal lock sharpness)
+    Transitions Shot A -> Shot B as a 100% Continuous, Tear-Free 24fps Cinema Transition:
+      1. Evaluates true 24fps moving multiplane plates `plate_a` and `plate_b` (`eval_bundle_moving_plate`).
+      2. Performs a Plane-Stratified (`P6/P5/P4` -> `P1` lectern -> `P3` listeners -> `P2` Hero & Collar)
+         multiplane depth dissolve with cinema rack-focus softness so ZERO black disocclusion stripes EVER occur!
+      3. Projects the 3D Metric Point Cloud (`points.ply`) & Gaussian Splat (`scene.splat`) along a 3D Hermite
+         arc at natural cinema parallax (`±8°..13°`), layering volumetric 3D Gaussian bokeh & vocal-synced
+         CIELAB collar/District color rhythm seamlessly over the multiplane transition!
     """
     u_trans = float(np.clip(u_trans, 0.0, 1.0))
+    if global_t is None:
+        global_t = u_trans * 4.0
 
-    # Compute per-point local progress `u_pt` based on its semantic plane `P0..P6`
+    # 1. Evaluate continuous 24fps moving multiplane plates for both Shot A and Shot B
+    plate_a = eval_bundle_moving_plate(bundle_a, u_trans, global_t, vocal_rms=vocal_rms, pan_dir=orbit_sign, glow_rgb=glow_rgb)
+    plate_b = eval_bundle_moving_plate(bundle_b, u_trans, global_t, vocal_rms=vocal_rms, pan_dir=-orbit_sign, glow_rgb=glow_rgb)
+
+    # 2. Plane-Stratified Multiplane Depth Dissolve (P6/P5/P4 dissolve first, P2 Hero & Collar hold longest)
+    L_a = bundle_a["L"]
+    w_plane = np.zeros((H, W), dtype=np.float32)
+    for p_id, (u0, u1) in PLANE_U_WINDOW.items():
+        m = (L_a == p_id)
+        if np.any(m):
+            u_raw = np.clip((u_trans - u0) / max(u1 - u0, 1e-4), 0.0, 1.0)
+            w_plane[m] = u_raw * u_raw * (3.0 - 2.0 * u_raw)
+    w_plane = cv2.GaussianBlur(w_plane, (0, 0), 14.0)[..., None]
+
+    overall_bell = math.sin(math.pi * u_trans)
+    # Subtle cinema lens rack-focus during mid-transition
+    if overall_bell > 0.12:
+        sigma_dof = 2.6 * overall_bell
+        pa_soft = cv2.GaussianBlur(plate_a, (0, 0), sigma_dof)
+        pb_soft = cv2.GaussianBlur(plate_b, (0, 0), sigma_dof)
+        plate_a_mix = plate_a * (1.0 - 0.42 * overall_bell) + pa_soft * (0.42 * overall_bell)
+        plate_b_mix = plate_b * (1.0 - 0.42 * overall_bell) + pb_soft * (0.42 * overall_bell)
+    else:
+        plate_a_mix, plate_b_mix = plate_a, plate_b
+
+    bg_multiplane = plate_a_mix * (1.0 - w_plane) + plate_b_mix * w_plane
+
+    # If near endpoints (`u_trans < 0.06` or `u_trans > 0.94`), return pure moving multiplane plate directly
+    if overall_bell < 0.15:
+        return np.clip(bg_multiplane, 0.0, 1.0)
+
+    # 3. 3D Point-Cloud & Gaussian Splat Bokeh Transport (active during transition crest)
     pl_a = bundle_a["pts_plane"]
     u_pt = np.zeros_like(bundle_a["pts_X"])
     for p_id, (u0, u1) in PLANE_U_WINDOW.items():
@@ -492,62 +643,48 @@ def render_pointcloud_splat_transition(
             u_raw = np.clip((u_trans - u0) / max(u1 - u0, 1e-4), 0.0, 1.0)
             u_pt[m] = u_raw * u_raw * (3.0 - 2.0 * u_raw)
 
-    # Collar & Hero P2 points get an extra vocal-rhythm breath micro-lift on stressed syllables
     is_collar = bundle_a["pts_is_collar"]
     is_p2 = bundle_a["pts_is_p2"]
     flight_bell = np.sin(np.pi * u_pt)
 
-    # 3D Hermite arc between Shot A's 3D points and Shot B's 3D points
     Xa, Ya, Za = bundle_a["pts_X"], bundle_a["pts_Y"], bundle_a["pts_Z"]
     Xb, Yb, Zb = bundle_b["pts_X"], bundle_b["pts_Y"], bundle_b["pts_Z"]
 
-    # Deterministic spatial curl tangent at mid-flight so points swirl like a volumetric wind rather than moving in stiff straight lines
-    curl_x = np.sin(Ya * 1.4 + Za * 0.9) * 0.55 * orbit_sign
-    curl_y = np.cos(Xa * 1.2 - Za * 1.1) * 0.38 - (0.08 * vocal_rms * is_collar.astype(np.float32))
-    curl_z = np.sin(Xa * 1.1 + Ya * 1.3) * 0.75
+    curl_x = np.sin(Ya * 1.4 + Za * 0.9) * 0.36 * orbit_sign
+    curl_y = np.cos(Xa * 1.2 - Za * 1.1) * 0.24 - (0.06 * vocal_rms * is_collar.astype(np.float32))
+    curl_z = np.sin(Xa * 1.1 + Ya * 1.3) * 0.48
 
-    # P2 Hero & Collar points move along a tighter, coherent ribbon (40% scatter) so the Poet's silhouette hands off cleanly to the Poem Hero
-    scatter_scale = np.where(is_p2, 0.38, 1.0)
+    scatter_scale = np.where(is_p2, 0.32, 0.85)
     X = (1.0 - u_pt) * Xa + u_pt * Xb + flight_bell * curl_x * scatter_scale
     Y = (1.0 - u_pt) * Ya + u_pt * Yb + flight_bell * curl_y * scatter_scale
     Z = (1.0 - u_pt) * Za + u_pt * Zb + flight_bell * curl_z * scatter_scale
 
-    # COLOR'S RHYTHM: Perceptual CIELAB interpolation + mid-flight District `glow`/`body` chromatic pulse
+    # COLOR'S RHYTHM: Perceptual CIELAB interpolation + District `glow`/`body` chromatic pulse
     lab_a = bundle_a["pts_lab"]
     lab_b = bundle_b["pts_lab"]
     lab_mix = (1.0 - u_pt[:, None]) * lab_a + u_pt[:, None] * lab_b
     rgb_linear = cv2.cvtColor(lab_mix.reshape(1, -1, 3).astype(np.float32), cv2.COLOR_LAB2RGB).reshape(-1, 3)
 
-    # At mid-flight (`flight_bell`), high-luminance / P2 / collar points pulse with the District's `glow_rgb`,
-    # while deep background P4/P5 points pulse with `body_rgb` + layout blueprint tint!
     lum_pt = rgb_linear.mean(axis=-1, keepdims=True)
     district_rhythm_col = np.where(
         (is_p2 | (lum_pt[:, 0] > 0.42))[:, None],
         glow_rgb[None, :],
         0.55 * body_rgb[None, :] + 0.45 * bundle_b["pts_lay"],
     )
-    # Collar edge gets a luminous cyan/amber cadence rim pulse synced to `vocal_rms`
     collar_rim_boost = (bundle_a["pts_is_collar_edge"] | bundle_b["pts_is_collar_edge"]).astype(np.float32)[:, None]
-    rhythm_weight = (0.34 * flight_bell)[:, None] * (0.85 + 0.30 * vocal_rms)
+    rhythm_weight = (0.30 * flight_bell)[:, None] * (0.85 + 0.30 * vocal_rms)
     rgb_pts = np.clip(
-        rgb_linear * (1.0 - rhythm_weight) + district_rhythm_col * rhythm_weight + collar_rim_boost * glow_rgb[None, :] * (0.38 * flight_bell[:, None]),
+        rgb_linear * (1.0 - rhythm_weight) + district_rhythm_col * rhythm_weight + collar_rim_boost * glow_rgb[None, :] * (0.42 * flight_bell[:, None]),
         0.0,
         1.0,
     )
 
-    # Camera orbit rhythm:
-    # At u=0 and u=1, camera is locked face-on (`yaw=0, pitch=0`) for 100% full-frame legibility.
-    # During mid-transition (or when `side_cut=True`), camera swings smoothly in 3D (`yaw` up to 24° or 56° side-on)
-    # exposing the 3D metric depth strata!
-    overall_bell = math.sin(math.pi * u_trans)
-    if side_cut:
-        yaw = orbit_sign * (0.82 * overall_bell)
-        pitch = 0.10 * overall_bell
-    else:
-        yaw = orbit_sign * (0.34 * overall_bell)
-        pitch = 0.06 * math.sin(2.0 * math.pi * u_trans)
+    # Keep 3D camera yaw within natural cinema lens bounds (±8°..13°) so ZERO black disocclusion zebra stripes appear!
+    yaw_amp = 0.22 if side_cut else 0.14
+    yaw = orbit_sign * (yaw_amp * overall_bell)
+    pitch = 0.04 * math.sin(2.0 * math.pi * u_trans)
 
-    D_cam = bundle_a["D_cam"] - 0.35 * overall_bell
+    D_cam = bundle_a["D_cam"] - 0.25 * overall_bell
     focal = bundle_a["focal"]
 
     cy, sy = math.cos(yaw), math.sin(yaw)
@@ -561,23 +698,16 @@ def render_pointcloud_splat_transition(
     px = focal * Xc / np.maximum(Zc, 0.25) + RW * 0.5
     py = focal * Yc / np.maximum(Zc, 0.25) + RH * 0.5
 
-    # Gaussian splat radius rhythm:
-    # Sharp (`0.88px`) at endpoints and on P2 Hero/Collar; expands into volumetric bokeh (`1.6..3.4px`) during flight
-    dof = np.abs(Zc - D_cam) * 0.42 * overall_bell
-    rad = np.clip(0.88 + 1.55 * flight_bell * scatter_scale + dof, 0.78, 4.6).astype(np.float32)
-    wt = np.where(is_p2, 1.35, 0.95).astype(np.float32)
+    dof = np.abs(Zc - D_cam) * 0.35 * overall_bell
+    rad = np.clip(0.95 + 1.45 * flight_bell * scatter_scale + dof, 0.85, 4.2).astype(np.float32)
+    wt = np.where(is_p2, 1.35, 0.90).astype(np.float32)
 
-    # Background plate under the 3D Gaussian splats: subtle darkroom blueprint blend during mid-flight,
-    # locking 100% into the crisp stylized plate at the endpoints (`u -> 0` and `u -> 1`)
-    bg_plate = (1.0 - smootherstep(u_trans)) * bundle_a["stylized"] + smootherstep(u_trans) * bundle_b["stylized"]
-    bg_dark = 0.22 * bg_plate * (1.0 - 0.72 * overall_bell) + NIGHT_BG[None, None, :] * (0.78 * overall_bell)
+    # Render the 3D Gaussian splats directly over `bg_multiplane` (NEVER over empty black void!)
+    splat_img = splat_gaussian_multiscale(px, py, Zc, rad, rgb_pts, wt, bg_rgb=bg_multiplane, gain=1.18)
 
-    splat_img = splat_gaussian_multiscale(px, py, Zc, rad, rgb_pts, wt, bg_rgb=bg_dark, gain=1.22)
-
-    # Endpoint lock blend so at u <= 0.12 and u >= 0.88 the image resolves with 100% razor-sharp cel/vector clarity
-    lock_a = max(0.0, 1.0 - smootherstep(min(1.0, u_trans / 0.18)))
-    lock_b = max(0.0, smootherstep(max(0.0, (u_trans - 0.82) / 0.18)))
-    out = splat_img * (1.0 - lock_a - lock_b) + bundle_a["stylized"] * lock_a + bundle_b["stylized"] * lock_b
+    # Smoothly blend the volumetric 3D Gaussian splat layer over the continuous multiplane plate at mid-transition
+    splat_env = (overall_bell ** 1.25) * 0.62
+    out = bg_multiplane * (1.0 - splat_env) + splat_img * splat_env
     return np.clip(out, 0.0, 1.0)
 
 
@@ -625,37 +755,31 @@ def draw_pointcloud_hud(
     pip_rgb: np.ndarray = None,
     pip_label: str = "",
 ) -> np.ndarray:
+    """
+    VOIDBASTARD-TAO / Cinema Film Typography:
+      - Zero Picture-in-Picture rectangles blocking the 16:9 image.
+      - Zero heavy opaque HUD boxes.
+      - Whisper-quiet top archival hairline + softly shadowed cinema subtitles at the bottom.
+    """
     pil = Image.fromarray((np.clip(frame_rgb, 0.0, 1.0) * 255.0).astype(np.uint8)).convert("RGBA")
     ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(ov)
 
     f_mono = get_font(12, mono=True)
     f_who = get_font(13, mono=True)
-    f_verse = get_font(22, italic=True)
+    f_verse = get_font(23, italic=True)
 
-    # Subtle top bar
-    d.rectangle([0, 0, W, 34], fill=(5, 7, 11, 180))
-    d.text((20, 9), top_left[:76], font=f_mono, fill=(255, 190, 82, 240))
-    d.text((W - 20, 9), top_right[:68], font=f_mono, fill=(92, 228, 255, 230), anchor="ra")
+    # Whisper-quiet top archival header (unboxed with soft drop shadow)
+    d.text((25, 17), top_left[:78], font=f_mono, fill=(6, 8, 12, 185))
+    d.text((24, 16), top_left[:78], font=f_mono, fill=(255, 196, 92, 210))
+    d.text((W - 23, 17), top_right[:68], font=f_mono, fill=(6, 8, 12, 185), anchor="ra")
+    d.text((W - 24, 16), top_right[:68], font=f_mono, fill=(140, 224, 248, 200), anchor="ra")
 
-    # Vocal RMS & Color Rhythm meter bar along top hairline
-    c_rgb = tuple((hex_to_rgb_f32(color_hex) * 255).astype(int).tolist())
-    meter_w = int(180 * (0.25 + 0.75 * vocal_rms))
-    d.rectangle([20, 32, 20 + meter_w, 34], fill=c_rgb + (235,))
-
-    # Optional PiP inset (e.g. 3D Layout Blueprint or K Parallel)
-    if pip_rgb is not None:
-        pw, ph = 208, 117
-        px0, py0 = W - pw - 20, 46
-        d.rectangle([px0 - 2, py0 - 2, px0 + pw + 2, py0 + ph + 20], fill=(6, 9, 14, 225), outline=c_rgb + (215,), width=1)
-        pip_im = Image.fromarray((np.clip(pip_rgb, 0.0, 1.0) * 255.0).astype(np.uint8)).resize((pw, ph), Image.Resampling.LANCZOS)
-        pil.paste(pip_im.convert("RGBA"), (px0, py0))
-        d.text((px0 + 6, py0 + ph + 3), pip_label[:32], font=f_mono, fill=(255, 190, 82, 235))
-
-    # Bottom caption bar
-    d.rectangle([0, H - 72, W, H], fill=(5, 7, 11, 185))
-    d.text((24, H - 62), bottom_who[:92], font=f_who, fill=(255, 190, 82, 235))
-    d.text((24, H - 40), f"“{bottom_verse[:102]}”", font=f_verse, fill=(246, 240, 228, 248))
+    # Subtle bottom cinema subtitle with soft shadow (no opaque box!)
+    d.text((W // 2 + 1, H - 59), bottom_who[:92], font=f_who, fill=(6, 8, 12, 205), anchor="mm")
+    d.text((W // 2, H - 60), bottom_who[:92], font=f_who, fill=(255, 196, 92, 225), anchor="mm")
+    d.text((W // 2 + 1, H - 31), f"“{bottom_verse[:102]}”", font=f_verse, fill=(6, 8, 12, 220), anchor="mm")
+    d.text((W // 2, H - 32), f"“{bottom_verse[:102]}”", font=f_verse, fill=(246, 240, 228, 242), anchor="mm")
 
     return np.asarray(Image.alpha_composite(pil, ov).convert("RGB"), dtype=np.uint8)
 
@@ -674,6 +798,7 @@ def render_single_poem_pointcloud_bookend(poem_meta: dict) -> dict:
     title = poem_meta["title"]
     hero_dir = poem_meta["hero_dir"]
     echo_dir = poem_meta["echo_dir"]
+    third_dir = poem_meta.get("third_dir") or echo_dir
     glow_hex = poem_meta["glow_hex"]
     body_hex = poem_meta["body_hex"]
     anchor_info = POEM_WOODEN_HORSE_ANCHORS.get(pnum, POEM_WOODEN_HORSE_ANCHORS[1])
@@ -681,22 +806,17 @@ def render_single_poem_pointcloud_bookend(poem_meta: dict) -> dict:
     glow_rgb = hex_to_rgb_f32(glow_hex[0] if glow_hex else "#fa8d15")
     body_rgb = hex_to_rgb_f32(body_hex[0] if body_hex else "#1c2430")
 
-    # Load Point-Cloud & Multiplane bundles for Poet Lectern stages, Poem Hero & Echo, and K parallel
+    # Load Point-Cloud & Multiplane bundles for Poet Lectern stages and 3 distinct Poem 24fps moving views
     b_p01 = load_pointcloud_shot_bundle("poet_01_warm_salon_circle_wide")
     b_p02 = load_pointcloud_shot_bundle("poet_02_warm_lectern_medium")
     b_p04 = load_pointcloud_shot_bundle("poet_04_standing_hands_heart")
-    b_p05 = load_pointcloud_shot_bundle("poet_05_close_pages_threshold")
     b_p06 = load_pointcloud_shot_bundle("poet_06_chiaroscuro_open_hands")
     b_p07 = load_pointcloud_shot_bundle("poet_07_chiaroscuro_wide_circle")
     b_p08 = load_pointcloud_shot_bundle("poet_08_ots_circle_listeners")
 
     b_hero = load_pointcloud_shot_bundle(hero_dir)
     b_echo = load_pointcloud_shot_bundle(echo_dir)
-
-    b_k01 = load_pointcloud_shot_bundle("k_01_office_interview")
-    b_k02 = load_pointcloud_shot_bundle("k_02_k_eyes_threshold")
-    b_k06 = load_pointcloud_shot_bundle("k_06_wooden_horse_palm")
-    b_k08 = load_pointcloud_shot_bundle("k_08_stelline_scanner_return")
+    b_third = load_pointcloud_shot_bundle(third_dir)
 
     audio_mp3 = SHOTS_DIR / f"play/levels/{ns}/reading.mp3"
     dur = 18.0
@@ -712,44 +832,36 @@ def render_single_poem_pointcloud_bookend(poem_meta: dict) -> dict:
         col_hex = glow_hex[0] if glow_hex else "#fa8d15"
 
         if t < 3.6:
-            # ACT I: OPENING LECTERN BOOKEND — Poet Salon (poet_01 -> poet_02) via 3D Point-Cloud & Collar Rhythm
+            # ACT I: OPENING LECTERN BOOKEND — Poet Salon (poet_01 -> poet_02) via 3D Multiplane & Collar Rhythm
             u = t / 3.6
             fr = render_pointcloud_splat_transition(
-                b_p01, b_p02, u, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=1.0
+                b_p01, b_p02, u, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=1.0, global_t=t
             )
             u8 = draw_pointcloud_hud(
                 fr,
-                top_left=f"P{ns} · {title.upper()} · ACT I: SALON POINT-CLOUD & COLLAR RHYTHM (P0–P6)",
+                top_left=f"P{ns} · {title.upper()} · ACT I: SALON MULTIPLANE & COLLAR RHYTHM (P0–P6)",
                 top_right="K PARALLEL (1:49): Officer K & Joshi Interview",
-                bottom_who="Act I · Opening Lectern Bookend — P2 Collar/Face Locked, P4/P5 Mural Point-Cloud Glide",
+                bottom_who="Act I · Opening Lectern Bookend — P2 Collar/Face Locked, P0–P6 Multiplane Glide",
                 bottom_verse=anchor_info["opening_cue"],
                 vocal_rms=v_rms,
                 color_hex=col_hex,
-                pip_rgb=b_p02["layout"],
-                pip_label="3D LAYOUT + POINTS.PLY",
             )
             if fi == int(1.6 * FPS):
                 act_thumbs["act1"] = u8
 
         elif t < 7.2:
-            # ACT II: CROSS-WORLD 3D POINT-CLOUD HAND-OFF (poet_05/06 -> Poem Hero points.ply)
-            # Far mural planes (P5/P4) lift into 3D Gaussian splats first, cresting in CIELAB District glow,
-            # while the Poet's segmented collar & open hands (P2) morph along 3D Hermite arcs into the Poem Hero!
+            # ACT II: CROSS-WORLD 3D POINT-CLOUD HAND-OFF (poet_04/06 -> Moving Poem Hero Shot 1)
             u = (t - 3.6) / 3.6
-            if u < 0.38:
-                u_sub = u / 0.38
+            if u < 0.35:
+                u_sub = u / 0.35
                 fr = render_pointcloud_splat_transition(
-                    b_p04, b_p06, u_sub, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=-1.0
+                    b_p04, b_p06, u_sub, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=-1.0, global_t=t
                 )
-                pip_im = b_p05["angular"]
-                pip_lbl = "P1 LECTERN PRISM -> SPLAT"
             else:
-                u_sub = (u - 0.38) / 0.62
+                u_sub = (u - 0.35) / 0.65
                 fr = render_pointcloud_splat_transition(
-                    b_p06, b_hero, u_sub, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=1.0, side_cut=True
+                    b_p06, b_hero, u_sub, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=1.0, side_cut=True, global_t=t
                 )
-                pip_im = b_k02["angular"]
-                pip_lbl = "K 2:00 THRESHOLD PARALLEL"
 
             u8 = draw_pointcloud_hud(
                 fr,
@@ -759,49 +871,43 @@ def render_single_poem_pointcloud_bookend(poem_meta: dict) -> dict:
                 bottom_verse=anchor_info["opening_cue"],
                 vocal_rms=v_rms,
                 color_hex=col_hex,
-                pip_rgb=pip_im,
-                pip_label=pip_lbl,
             )
             if fi == int(5.6 * FPS):
                 act_thumbs["act2"] = u8
 
         elif t < 11.0:
-            # ACT III: POEM 3D POINT-CLOUD & GAUSSIAN SPLAT FLIGHT (Hero points.ply <-> Echo points.ply)
-            # Alternating Face-On lock and Side-On ±56° 4D depth-strata orbit synced to vocal cadence
+            # ACT III: POEM 24FPS MOVING MULTIPLANE & GAUSSIAN SPLAT FLIGHT (Moving Hero Shot 1 -> Moving Echo Shot 2)
             u = (t - 7.2) / 3.8
             fr = render_pointcloud_splat_transition(
-                b_hero, b_echo, u, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=-1.0, side_cut=(0.28 < u < 0.72)
+                b_hero, b_echo, u, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=-1.0, side_cut=(0.28 < u < 0.72), global_t=t
             )
             u8 = draw_pointcloud_hud(
                 fr,
-                top_left=f"P{ns} · ACT III: 3D GAUSSIAN SPLAT & POINT-CLOUD ORBIT ({hero_dir[:8]} -> {echo_dir[:8]})",
+                top_left=f"P{ns} · ACT III: 24FPS MULTIPLANE & GAUSSIAN SPLAT GLIDE ({hero_dir[:8]} -> {echo_dir[:8]})",
                 top_right="K PARALLEL (2:06–2:24): Orphanage Catwalks & Gears",
-                bottom_who=f"Act III · Metric points.ply + scene.splat Flight — {title}",
+                bottom_who=f"Act III · 24fps Moving Cinema + 3D Depth Flight — {title}",
                 bottom_verse=anchor_info["peak_cue"],
                 vocal_rms=v_rms,
                 color_hex=col_hex,
-                pip_rgb=b_hero["layout"],
-                pip_label="HERO P0-P6 LAYOUT GRID",
             )
             if fi == int(9.0 * FPS):
                 act_thumbs["act3"] = u8
 
         elif t < 14.5:
-            # ACT IV: THE "WOODEN HORSE" EMOTIONAL ANCHOR (P2/P3 Sharp Core + Surrounding Point-Cloud Bokeh & Blueprint)
+            # ACT IV: THE "WOODEN HORSE" EMOTIONAL ANCHOR (Moving Shot 3 P2/P3 Sharp Core + Peripheral Feeling-Mist)
             u = (t - 11.0) / 3.5
-            # Render surrounding P4/P5/P6 as a gentle 3D Gaussian splat cloud while keeping P2/P3 Hero & Anchor 100% razor-sharp!
+            # Continuous 24fps moving cinema plate on `b_third` (NEVER frozen!)
+            mov_core = eval_bundle_moving_plate(b_third, u, t, vocal_rms=v_rms, pan_dir=1.0, glow_rgb=glow_rgb)
             splat_bg = render_pointcloud_splat_transition(
-                b_echo, b_hero, 0.35 + 0.30 * math.sin(math.pi * u), glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=1.0
+                b_echo, b_third, u, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=1.0, global_t=t
             )
-            anchor_mask = (b_hero["P2"] | b_hero["P3"]).astype(np.float32)
-            if anchor_mask.mean() < 0.03:
-                anchor_mask = (b_hero["d_norm"] < 0.45).astype(np.float32)
-            anchor_soft = cv2.GaussianBlur(anchor_mask, (0, 0), 8.0)[..., None]
-            edge = cv2.Canny((anchor_mask > 0.4).astype(np.uint8) * 255, 50, 150)
-            edge_d = cv2.dilate(edge, np.ones((3, 3), np.uint8)).astype(np.float32)[..., None] / 255.0
+            anchor_mask = (b_third["P2"] | b_third["P3"]).astype(np.float32)
+            if anchor_mask.mean() < 0.04:
+                anchor_mask = (b_third["d_norm"] < 0.48).astype(np.float32)
+            anchor_soft = cv2.GaussianBlur(anchor_mask, (0, 0), 16.0)[..., None]
 
-            bg_blueprint = 0.58 * splat_bg + 0.42 * b_hero["layout"]
-            fr = np.clip(bg_blueprint * (1.0 - anchor_soft) + b_hero["stylized"] * anchor_soft + edge_d * glow_rgb[None, None, :] * 0.9, 0.0, 1.0)
+            periph_mist = cv2.GaussianBlur(splat_bg, (0, 0), 9.0) * 0.78 + body_rgb[None, None, :] * 0.22
+            fr = np.clip(periph_mist * (1.0 - anchor_soft) + mov_core * anchor_soft, 0.0, 1.0)
 
             u8 = draw_pointcloud_hud(
                 fr,
@@ -811,36 +917,32 @@ def render_single_poem_pointcloud_bookend(poem_meta: dict) -> dict:
                 bottom_verse=anchor_info["anchor_detail"],
                 vocal_rms=v_rms,
                 color_hex=col_hex,
-                pip_rgb=b_k06["angular"],
-                pip_label="K_06 WOODEN HORSE P2",
             )
             if fi == int(12.6 * FPS):
                 act_thumbs["act4"] = u8
 
         else:
-            # ACT V: CLOSING BOOKEND — 3D POINT-CLOUD CONDENSATION INTO THE CIRCLE OF LISTENERS (poet_07 -> poet_08)
+            # ACT V: CLOSING BOOKEND — CONDENSATION INTO THE CIRCLE OF LISTENERS (poet_07 -> poet_08)
             u = (t - 14.5) / 3.5
             if u < 0.52:
                 u_sub = u / 0.52
                 fr = render_pointcloud_splat_transition(
-                    b_hero, b_p07, u_sub, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=-1.0, side_cut=True
+                    b_third, b_p07, u_sub, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=-1.0, side_cut=True, global_t=t
                 )
             else:
                 u_sub = (u - 0.52) / 0.48
                 fr = render_pointcloud_splat_transition(
-                    b_p07, b_p08, u_sub, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=1.0
+                    b_p07, b_p08, u_sub, glow_rgb=glow_rgb, body_rgb=body_rgb, vocal_rms=v_rms, orbit_sign=1.0, global_t=t
                 )
 
             u8 = draw_pointcloud_hud(
                 fr,
-                top_left=f"P{ns} · ACT V: POINT-CLOUD CONDENSATION INTO THE CIRCLE OF LISTENERS (P2 COLLAR OTS -> P3 CIRCLE)",
+                top_left=f"P{ns} · ACT V: RETURN TO THE CIRCLE OF LISTENERS (P2 COLLAR OTS -> P3 CIRCLE)",
                 top_right="K PARALLEL (3:06–3:25): 'Someone Lived This'",
                 bottom_who="Act V · Over-the-Shoulder Collar Silhouette (P2) & 8 Segmented Listeners (P3) Receive the Memory",
                 bottom_verse=anchor_info["closing_cue"],
                 vocal_rms=v_rms,
                 color_hex=col_hex,
-                pip_rgb=b_k08["angular"],
-                pip_label="K_08 STELLINE RETURN",
             )
             if fi == int(16.6 * FPS):
                 act_thumbs["act5"] = u8
@@ -881,7 +983,14 @@ def render_single_poem_pointcloud_bookend(poem_meta: dict) -> dict:
     else:
         tmp_mp4.replace(out_mp4)
 
-    print(f"  -> Rendered P{ns} 3D Point-Cloud & Collar-Rhythm Bookend Film: {out_mp4}")
+    # Also replace the 3-second static screenshot slideshow in `seeing_spacetime_films/poem_<ns>_apparatus.mp4`!
+    import shutil
+    app_mp4 = SEEING_DIR / f"poem_{ns}_apparatus.mp4"
+    shutil.copy2(out_mp4, app_mp4)
+    if pnum == 1 and ARTIFACT_DIR.exists():
+        shutil.copy2(out_mp4, ARTIFACT_DIR / "poem_01_bookend_spacetime.mp4")
+
+    print(f"  -> Rendered P{ns} 24fps Cinema Bookend & Apparatus Film: {out_mp4}", flush=True)
     return {"num": pnum, "ns": ns, "title": title, "video": str(out_mp4), "thumbs": act_thumbs}
 
 
@@ -1032,6 +1141,12 @@ def main():
         views = p.get("views", [])
         hero_v = next((v for v in views if v["id"] == p.get("hero_view_id")), views[0] if views else {})
         echo_v = next((v for v in views if v["id"] == p.get("echo_view_id")), views[-1] if views else hero_v)
+        third_v = views[len(views) // 2] if len(views) >= 3 else echo_v
+        if third_v.get("dir") in (hero_v.get("dir"), echo_v.get("dir")) and len(views) >= 3:
+            for cand in views:
+                if cand.get("dir") not in (hero_v.get("dir"), echo_v.get("dir")):
+                    third_v = cand
+                    break
         cp = next((x for x in city_data.get("poems", []) if int(x["num"]) == pnum), {})
         dist = districts_by_id.get(cp.get("district", "naraka"), {})
         poem_metas.append({
@@ -1039,11 +1154,12 @@ def main():
             "title": p.get("title", f"Poem {pnum:02d}"),
             "hero_dir": hero_v.get("dir", "017dd279-1457-49f1-829f-9ee94b981a54"),
             "echo_dir": echo_v.get("dir", hero_v.get("dir", "017dd279-1457-49f1-829f-9ee94b981a54")),
+            "third_dir": third_v.get("dir", echo_v.get("dir", "017dd279-1457-49f1-829f-9ee94b981a54")),
             "glow_hex": dist.get("glow", ["#fa8d15", "#5ce4ff"]),
             "body_hex": dist.get("body", ["#181e29", "#2d4651"]),
         })
 
-    print("Step 2: Compiling all 14 Poems' 3D Point-Cloud & Gaussian Splat Bookend Films with Spoken-Word & CIELAB Color Rhythm...")
+    print("Step 2: Compiling all 14 Poems' 24fps Cinema Bookend Films with Spoken-Word & CIELAB Color Rhythm...")
     results = []
     with ProcessPoolExecutor(max_workers=4) as ex:
         futs = {ex.submit(render_single_poem_pointcloud_bookend, pm): pm["num"] for pm in poem_metas}
@@ -1070,9 +1186,10 @@ def main():
         check=True,
     )
     concat_txt.unlink(missing_ok=True)
+    import shutil
+    shutil.copy2(master_mp4, VIDEOS_DIR / "wygwyl_vesper_apparatus_reel.mp4")
     if ARTIFACT_DIR.exists():
-        import shutil
-        shutil.copyfile(master_mp4, ARTIFACT_DIR / "wygwyl_poet_retelling_bookend_spacetime.mp4")
+        shutil.copy2(master_mp4, ARTIFACT_DIR / "wygwyl_poet_retelling_bookend_spacetime.mp4")
     print(f"  -> Updated Master Point-Cloud & Gaussian Splat Bookend Anthology: {master_mp4}")
 
 

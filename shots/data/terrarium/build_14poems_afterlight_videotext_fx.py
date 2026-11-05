@@ -685,22 +685,38 @@ def apply_dissolving_station_grace(
 def eval_station_with_past(station, mp, u_local, phase_t):
     """
     Evaluates both the present multiplane-warped frame (`curr_warped`) and a delayed frame
-    (`past_warped`, ~0.6s earlier) with direct integer frame indexing so moving figures never ghost.
+    (`past_warped`, ~0.25s earlier) with continuous sub-frame interpolation so moving figures
+    advance smoothly at 24fps without integer-rounding frame holds.
     """
     frames = station["frames"]
     n_f = len(frames)
-    f_pos = np.clip(u_local, 0.0, 1.0) * (n_f - 1)
-    idx_curr = min(n_f - 1, max(0, int(round(f_pos))))
-    idx_past = min(n_f - 1, max(0, idx_curr - 7))
+    u_span = np.clip((u_local + 0.08) / 1.12, 0.0, 1.0)
+    f_pos = u_span * (n_f - 1)
+    i0 = min(n_f - 1, max(0, int(math.floor(f_pos))))
+    i1 = min(n_f - 1, i0 + 1)
+    frac = float(f_pos - i0)
+    if i0 == i1 or frac < 1e-4:
+        fr_curr = frames[i0]
+    else:
+        fr_curr = (frames[i0] * (1.0 - frac) + frames[i1] * frac).astype(np.float32)
+
+    f_past = max(0.0, f_pos - 5.5)
+    p0 = min(n_f - 1, max(0, int(math.floor(f_past))))
+    p1 = min(n_f - 1, p0 + 1)
+    pfrac = float(f_past - p0)
+    if p0 == p1 or pfrac < 1e-4:
+        fr_past = frames[p0]
+    else:
+        fr_past = (frames[p0] * (1.0 - pfrac) + frames[p1] * pfrac).astype(np.float32)
 
     u_centered = u_local - 0.5
-    pan_x = mp["pan_dir"] * (u_centered * 32.0 + 3.5 * math.sin(phase_t * 0.45))
-    tilt_y = mp["tilt_dir"] * (u_centered * 10.0 + 2.2 * math.cos(phase_t * 0.38))
-    dolly_scale = 1.07 + 0.07 * np.clip(u_local, 0.0, 1.0)
-    depth_stretch = 0.045 * np.clip(u_local, 0.0, 1.0)
+    pan_x = mp["pan_dir"] * (u_centered * 28.0 + 3.0 * math.sin(phase_t * 0.45))
+    tilt_y = mp["tilt_dir"] * (u_centered * 9.0 + 1.8 * math.cos(phase_t * 0.38))
+    dolly_scale = 1.06 + 0.06 * np.clip(u_local, 0.0, 1.0)
+    depth_stretch = 0.040 * np.clip(u_local, 0.0, 1.0)
 
-    curr_w = warp_multiplane_3d(frames[idx_curr], mp["disp"], pan_x, tilt_y, dolly_scale, depth_stretch)
-    past_w = warp_multiplane_3d(frames[idx_past], mp["disp"], pan_x * 0.85, tilt_y * 0.85, dolly_scale, depth_stretch)
+    curr_w = warp_multiplane_3d(fr_curr, mp["disp"], pan_x, tilt_y, dolly_scale, depth_stretch)
+    past_w = warp_multiplane_3d(fr_past, mp["disp"], pan_x * 0.85, tilt_y * 0.85, dolly_scale, depth_stretch)
     return curr_w, past_w
 
 
@@ -963,12 +979,10 @@ def build_single_poem_afterlight_fx(poem_num, reuse_existing_mp4=False):
     poem_meta = next((p for p in poems_json if int(p["num"]) == poem_num), {})
 
     audio_t0 = float(scion_list[0]["t0"]) if scion_list else (poem_num - 1) * 90.0
-    if scion_list and len(scion_list) >= 2:
-        dur = round(max(45.0, float(scion_list[-1]["t1"]) - float(scion_list[0]["t0"])), 1)
-    else:
-        dur = 90.0
+    n_total_stations = len(ordered_out_dirs[:6]) + len(scion_list)
+    dur = round(max(27.0, min(42.0, n_total_stations * 2.8)), 1)
 
-    n_load_frames = 6 if reuse_existing_mp4 else 24
+    n_load_frames = 12 if reuse_existing_mp4 else 72
     terr_stations = [
         load_common_place_station(od, local_view_info, district_name, body_hex, glow_hex, n_frames=n_load_frames)
         for od in ordered_out_dirs[:6]
@@ -1218,12 +1232,11 @@ def build_master_sundance_feature(results):
         "t0": t_av_start,
     })
 
-    # Pass 1: all 14 poems at 12 frames (0.50s) each; Pass 2: all 14 poems at 5 frames (0.21s) each; Pass 3: 7 poems at 3 frames (0.125s)
-    avalanche_schedule = (
-        [(r, 12, 85) for r in results]
-        + [(r, 5, 155) for r in results]
-        + [(r, 3, 210) for r in results[::2]]
-    )
+    # Single accelerating pass across all 14 poems (14 frames down to 5 frames) so no poem replays twice
+    avalanche_schedule = [
+        (r, max(5, 15 - idx_r), 85 + idx_r * 6)
+        for idx_r, r in enumerate(results)
+    ]
     for step_i, (r_item, n_cut, start_off) in enumerate(avalanche_schedule):
         pf = r_item["passage_frames"]
         accel_progress = step_i / float(max(1, len(avalanche_schedule) - 1))

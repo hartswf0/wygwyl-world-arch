@@ -438,13 +438,14 @@ MEMORY_SEGMENTS = [
 
 
 # ==============================================================================
-# STEP 1: EXTRACT & ENCODE THE 14 REAL MEMORY VIDEO SEGMENTS + AUDIO
+# STEP 1: EXTRACT & ENCODE THE 14 REAL MEMORY VIDEO SEGMENTS + AUDIO (1280x720 @ 24fps)
 # ==============================================================================
 def extract_memory_segments():
-    print("[1/5] Extracting segmented memory clips (starting at 1:49) with real dialogue...")
+    print("[1/5] Extracting 1280x720 @ 24fps segmented memory clips (starting at 1:49) with real dialogue...")
     for seg in MEMORY_SEGMENTS:
         out_mp4 = os.path.join(SEG_DIR, f"{seg['id']}.mp4")
-        if os.path.exists(out_mp4) and os.path.getsize(out_mp4) > 20000:
+        # Re-extract if missing or if older low-res 640x360 build (< 650 KB)
+        if os.path.exists(out_mp4) and os.path.getsize(out_mp4) > 850000:
             continue
         src = SRC_HORSE if seg["source"] == "horse" else SRC_STELLINE
         t0 = seg["src_t0"]
@@ -452,36 +453,56 @@ def extract_memory_segments():
         cmd = [
             "ffmpeg", "-y", "-v", "error",
             "-ss", f"{t0:.2f}", "-i", src, "-t", f"{dur:.2f}",
-            "-vf", "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2",
-            "-c:v", "libx264", "-preset", "fast", "-crf", "23", "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "128k",
+            "-vf", "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,fps=24",
+            "-c:v", "libx264", "-preset", "fast", "-crf", "19", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-b:a", "160k",
             out_mp4
         ]
         subprocess.run(cmd, check=True)
 
 
 # ==============================================================================
-# STEP 2: 07-SPACETIME FEELING-MIST VOLUME BUILDER & MULTI-SCALE SPLATTER
+# STEP 2: BELIEVABLE 24FPS CINEMA MULTIPLANE + 07-SPACETIME FEELING-MIST ENGINE
 # ==============================================================================
 _VIG_CACHE = {}
 def get_vignette(h, w):
     if (h, w) not in _VIG_CACHE:
         yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
-        v = 1.0 - 0.22 * (((xx - w * 0.5) / (w * 0.54)) ** 2 + ((yy - h * 0.5) / (h * 0.54)) ** 2)
-        _VIG_CACHE[(h, w)] = np.clip(v, 0.70, 1.02)[..., None]
+        v = 1.0 - 0.24 * (((xx - w * 0.5) / (w * 0.55)) ** 2 + ((yy - h * 0.5) / (h * 0.55)) ** 2)
+        _VIG_CACHE[(h, w)] = np.clip(v, 0.68, 1.0)[..., None]
     return _VIG_CACHE[(h, w)]
 
 
-def splat_gaussian_multiscale(px, py, zc, rad, rgb, w_val, mode="paper", gain=1.08, seed=0):
+_BASE_YY, _BASE_XX = np.mgrid[0:FH, 0:FW].astype(np.float32)
+
+def warp_multiplane_cinema(img_rgb, disp, pan_x, tilt_y, dolly_scale, depth_stretch=0.042):
     """
-    Exact 3-bucket multi-scale Gaussian density & Beer's-Law exponential transmittance
-    resolve from bolas/afterlight/source/trailer-1/spacetime.py.txt.
+    True 2.5D/3D multiplane camera transform using per-pixel inverse-depth parallax (`cv2.remap`).
+    Keeps 100% of the 1280x720 cinema frame intact with zero disocclusion holes or tears.
+    """
+    local_scale = dolly_scale * (1.0 + depth_stretch * (disp - 0.38))
+    parallax_weight = 0.28 + 0.72 * disp
+    map_x = (_BASE_XX - FW * 0.5) / local_scale + FW * 0.5 + pan_x * parallax_weight
+    map_y = (_BASE_YY - FH * 0.5) / local_scale + FH * 0.5 + tilt_y * parallax_weight
+    return cv2.remap(
+        img_rgb,
+        map_x.astype(np.float32),
+        map_y.astype(np.float32),
+        interpolation=cv2.INTER_LINEAR,
+        borderMode=cv2.BORDER_REFLECT_101,
+    )
+
+
+def splat_gaussian_multiscale(px, py, zc, rad, rgb, w_val, mode="light", gain=1.08, seed=0):
+    """
+    3-bucket multi-scale Gaussian bokeh & volumetric memory-mote renderer (`spacetime.py`).
+    Renders luminous 3D depth particles and temporal feeling-echoes that layer cleanly over
+    the full-resolution 24fps cinema plate without ever turning into an opaque white stain.
     """
     H, W = RH, RW
     valid = (zc > 25.0) & (px >= -8) & (px < W + 8) & (py >= -8) & (py < H + 8) & (w_val > 1e-4)
     if not np.any(valid):
-        bg = PAPER if mode == "paper" else NIGHT
-        return np.broadcast_to(bg, (FH, FW, 3)).copy()
+        return np.zeros((FH, FW, 3), dtype=np.float32)
 
     px = px[valid]
     py = py[valid]
@@ -492,16 +513,12 @@ def splat_gaussian_multiscale(px, py, zc, rad, rgb, w_val, mode="paper", gain=1.
     ix = np.clip(np.round(px).astype(np.int32), 0, W - 1)
     iy = np.clip(np.round(py).astype(np.int32), 0, H - 1)
 
-    # 3 optical buckets:
-    # b0: sharp emotional focal core (< 1.55px)
-    # b1: mid-ground structural body (1.55 .. 3.65px)
-    # b2: Stelline's peripheral mist (> 3.65px)
     b0 = rad < 1.55
     b1 = (rad >= 1.55) & (rad < 3.65)
     b2 = rad >= 3.65
 
-    sigmas = [0.55, 1.55, 4.10]
-    ks = [3.8, 7.6, 19.5]
+    sigmas = [0.65, 1.75, 4.20]
+    ks = [3.2, 6.4, 14.0]
     acc = np.zeros((3, H, W, 4), dtype=np.float32)
 
     for bi, mask in enumerate((b0, b1, b2)):
@@ -517,29 +534,15 @@ def splat_gaussian_multiscale(px, py, zc, rad, rgb, w_val, mode="paper", gain=1.
         for ch in range(4):
             acc[bi, :, :, ch] = gaussian_filter(acc[bi, :, :, ch], sigma=s, mode="constant")
 
-    if mode == "paper":
-        out = np.broadcast_to(PAPER, (H, W, 3)).copy()
-        for bi in (2, 1, 0):
-            A = acc[bi, :, :, 3:4]
-            col = acc[bi, :, :, :3] / np.maximum(A, 1e-5)
-            col = np.clip((col - 0.5) * 1.18 + 0.45, 0.02, 0.98)
-            cov = 1.0 - np.exp(-A * ks[bi] * gain)
-            out = out * (1.0 - cov) + col * cov
-        out = out * get_vignette(H, W)
-    else:
-        total = np.zeros((H, W, 4), dtype=np.float32)
-        for bi in (2, 1, 0):
-            total += acc[bi] * ks[bi]
-        A = total[:, :, 3:4] * gain
-        col = total[:, :, :3] * gain / np.maximum(A, 1e-4)
-        cov = 1.0 - np.exp(-A * 0.90)
-        bloom = np.stack([gaussian_filter(col[:, :, c] * cov[:, :, 0], sigma=9.5) for c in range(3)], axis=-1)
-        out = NIGHT[None, None, :] * (1.0 - cov * 0.94) + col * cov + bloom * 0.46
-
+    total = np.zeros((H, W, 4), dtype=np.float32)
+    for bi in (2, 1, 0):
+        total += acc[bi] * ks[bi]
+    A = total[:, :, 3:4] * gain
+    col = total[:, :, :3] * gain / np.maximum(A, 1e-4)
+    cov = 1.0 - np.exp(-A * 0.85)
+    bloom = np.stack([gaussian_filter(col[:, :, c] * cov[:, :, 0], sigma=8.5) for c in range(3)], axis=-1)
+    out = col * cov + bloom * 0.42
     out_hi = cv2.resize(np.clip(out, 0.0, 1.0), (FW, FH), interpolation=cv2.INTER_CUBIC)
-    rng = np.random.default_rng(seed)
-    grain = rng.normal(0.0, 0.009, (FH // 2, FW // 2, 1)).astype(np.float32)
-    out_hi = np.clip(out_hi + cv2.resize(grain, (FW, FH))[..., None], 0.0, 1.0)
     return out_hi
 
 
@@ -550,63 +553,88 @@ def get_segment_volume(seg_id):
     seg = next(s for s in MEMORY_SEGMENTS if s["id"] == seg_id)
     src = SRC_HORSE if seg["source"] == "horse" else SRC_STELLINE
 
-    vw, vh = 136, 76
+    # 1. Load true contiguous 24fps full-HD (1280x720) cinema frames covering the segment + transition tail
     cap = cv2.VideoCapture(src)
     fps_src = cap.get(cv2.CAP_PROP_FPS) or 24.0
     t0 = seg["clip_t0"]
-    dur = seg["clip_dur"]
-    max_frames = 44
-    frames = []
-    for i in range(max_frames):
-        t_sample = t0 + (dur * i) / max(1, max_frames - 1)
-        cap.set(cv2.CAP_PROP_POS_MSEC, t_sample * 1000.0)
+    seg_dur = (seg["film_t1"] - seg["film_t0"]) + 0.90  # Extra 0.9s tail so transitions NEVER freeze!
+    n_hd_frames = max(48, int(round(seg_dur * FPS)))
+
+    cap.set(cv2.CAP_PROP_POS_MSEC, t0 * 1000.0)
+    hd_frames = []
+    # Step smoothly at 24fps through source video
+    step_frames = max(1.0, fps_src / float(FPS))
+    raw_read = []
+    max_to_read = int(round(n_hd_frames * step_frames)) + 4
+    for _ in range(max_to_read):
         ok, fr = cap.read()
-        if not ok:
+        if not ok or fr is None:
             break
-        fr = cv2.cvtColor(cv2.resize(fr, (vw, vh), interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2RGB)
-        frames.append(fr.astype(np.float32) / 255.0)
+        raw_read.append(fr)
     cap.release()
-    frames = np.stack(frames, axis=0)  # (T, vh, vw, 3)
-    T = len(frames)
 
-    # Normalize dark orphanage/furnace shots so both subtle shadow mist and bright firelight sing
-    p92 = float(np.percentile(frames.mean(axis=-1), 94))
-    boost = float(np.clip(0.88 / max(p92, 0.07), 1.0, 2.8))
-    frames = np.clip((frames * boost) ** 0.82, 0.0, 1.0)
+    if not raw_read:
+        raw_read = [np.zeros((FH, FW, 3), dtype=np.uint8)]
 
-    # Compute Stelline's Emotional Feeling Salience Field F(t, y, x) in [0, 1]:
-    # 1. Warmth chroma (amber firelight, wooden horse, skin tone, candle glow: R - B)
-    warmth = np.clip((frames[..., 0] - frames[..., 2]) * 1.85 + frames.mean(axis=-1) * 0.55, 0.0, 1.0)
-    # 2. Temporal motion delta (running boy, raking ashes, turning head)
-    motion = np.linalg.norm(np.diff(frames, axis=0, prepend=frames[:1]), axis=-1)
-    motion = np.clip(motion * 3.2, 0.0, 1.0)
-    # 3. Spatial distance to the segment's Emotional Anchor (ax, ay)
+    for i in range(n_hd_frames):
+        f_idx = min(len(raw_read) - 1, int(round(i * (len(raw_read) - 1) / max(1, n_hd_frames - 1))))
+        fr = cv2.cvtColor(cv2.resize(raw_read[f_idx], (FW, FH), interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2RGB)
+        hd_frames.append(fr.astype(np.float32) / 255.0)
+
+    hd_frames = np.stack(hd_frames, axis=0)  # (N_hd, 720, 1280, 3)
+
+    # Gentle shadow recovery on dark orphanage/furnace interiors while preserving Roger Deakins chiaroscuro
+    mid_fr = hd_frames[len(hd_frames) // 2]
+    p95 = float(np.percentile(mid_fr, 95))
+    boost = float(np.clip(0.90 / max(p95, 0.14), 1.0, 2.1))
+    hd_frames = np.clip((hd_frames * boost) ** 0.88, 0.0, 1.0).astype(np.float32)
+
+    # 2. Compute smooth 1280x720 Inverse-Depth Disparity & Stelline Emotional Feeling Mask `F_mask(y, x)`
     ax, ay = seg["feeling_anchor"]
-    yy, xx = np.mgrid[0:vh, 0:vw].astype(np.float32)
-    dist2 = ((xx / vw - ax) / 0.36) ** 2 + ((yy / vh - ay) / 0.38) ** 2
-    anchor_gauss = np.exp(-dist2)[None, :, :]
+    yy, xx = np.mgrid[0:FH, 0:FW].astype(np.float32)
+    # Wide elliptical focal zone around the emotional anchor (face, hands holding wooden horse, furnace, scanner)
+    dist2 = ((xx / FW - ax) / 0.36) ** 2 + ((yy / FH - ay) / 0.40) ** 2
+    anchor_field = np.exp(-dist2).astype(np.float32)
 
-    feeling = np.clip(0.38 * anchor_gauss + 0.36 * warmth + 0.26 * motion, 0.05, 1.0).astype(np.float32)
+    mean_rgb = hd_frames[::max(1, len(hd_frames) // 8)].mean(axis=0)
+    lum = (mean_rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32))
+    warmth = np.clip((mean_rgb[..., 0] - mean_rgb[..., 2]) * 1.6 + lum * 0.45, 0.0, 1.0)
 
-    # Pseudo-depth relief from luminance + vertical gradient + feeling salience
-    lum0 = frames.mean(axis=(0, -1))
-    d_map = cv2.GaussianBlur(0.65 * lum0 + 0.35 * anchor_gauss[0], (0, 0), 1.4)
+    feeling_hd = np.clip(0.62 * anchor_field + 0.38 * warmth, 0.08, 1.0)
+    feeling_hd = cv2.GaussianBlur(feeling_hd.astype(np.float32), (0, 0), 32.0)
+
+    # Smooth inverse-depth disparity for 2.5D multiplane parallax (`1.0` = near anchor, `0.0` = far periphery)
+    ground_ramp = (yy / float(FH)) * 0.25
+    disp_hd = cv2.GaussianBlur((0.55 * feeling_hd + 0.25 * lum + ground_ramp).astype(np.float32), (0, 0), 24.0)
+    d_lo, d_hi = float(np.percentile(disp_hd, 3)), float(np.percentile(disp_hd, 97))
+    disp_hd = np.clip((disp_hd - d_lo) / max(d_hi - d_lo, 1e-3), 0.0, 1.0).astype(np.float32)
+
+    # 3. Extract sparse 4D luminous contour/ember points (`vw=120, vh=68, T=32`) for subtle 3D Gaussian bokeh motes
+    vw, vh, T_vol = 120, 68, min(32, len(hd_frames))
+    sub_idxs = np.linspace(0, len(hd_frames) - 1, T_vol).astype(int)
+    small_frames = np.stack([cv2.resize(hd_frames[idx], (vw, vh), interpolation=cv2.INTER_AREA) for idx in sub_idxs], axis=0)
+    small_feel = cv2.resize(feeling_hd, (vw, vh), interpolation=cv2.INTER_AREA)
+    small_disp = cv2.resize(disp_hd, (vw, vh), interpolation=cv2.INTER_AREA)
 
     rng = np.random.default_rng(abs(hash(seg_id)) % (2**31))
     xs, ys, ss, ds, cols, wts, fls = [], [], [], [], [], [], []
-    for s in range(T):
-        prob = np.clip(0.24 + 0.62 * feeling[s], 0.20, 0.86)
+    for s in range(T_vol):
+        fr_s = small_frames[s]
+        lum_s = fr_s.mean(axis=-1)
+        # Keep only luminous highlights & warm emotional contours so bokeh motes look like golden dust/embers, NEVER mud!
+        sal_s = np.clip(lum_s * 0.7 + (fr_s[..., 0] - fr_s[..., 2]) * 0.8, 0.0, 1.0)
+        prob = np.clip(0.06 + 0.28 * (sal_s ** 1.4), 0.04, 0.35)
         keep = rng.random((vh, vw)) < prob
         ky, kx = np.where(keep)
-        jx = rng.uniform(-0.45, 0.45, len(kx)).astype(np.float32)
-        jy = rng.uniform(-0.45, 0.45, len(ky)).astype(np.float32)
+        jx = rng.uniform(-0.4, 0.4, len(kx)).astype(np.float32)
+        jy = rng.uniform(-0.4, 0.4, len(ky)).astype(np.float32)
 
         x = ((kx + jx) / vw - 0.5) * 540.0
         y = ((ky + jy) / vh - 0.5) * 304.0
-        d_val = (0.5 - d_map[ky, kx]) * 135.0
-        c = frames[s, ky, kx]
-        f_val = feeling[s, ky, kx]
-        w = (0.35 + 0.65 * f_val).astype(np.float32)
+        d_val = (0.5 - small_disp[ky, kx]) * 110.0
+        c = np.clip(fr_s[ky, kx] * 1.18 + np.array([0.12, 0.06, -0.02], dtype=np.float32), 0.0, 1.0)
+        f_val = small_feel[ky, kx]
+        w = (0.25 + 0.75 * sal_s[ky, kx]).astype(np.float32)
 
         xs.append(x.astype(np.float32))
         ys.append(y.astype(np.float32))
@@ -618,9 +646,12 @@ def get_segment_volume(seg_id):
 
     vol = dict(
         seg=seg,
-        T=T,
-        raw_frames=frames,
-        feeling_map=feeling.mean(axis=0),
+        T=T_vol,
+        hd_frames=hd_frames,
+        raw_frames=small_frames,
+        feeling_hd=feeling_hd,
+        disp_hd=disp_hd,
+        feeling_map=small_feel,
         x=np.concatenate(xs),
         y=np.concatenate(ys),
         s=np.concatenate(ss),
@@ -628,7 +659,7 @@ def get_segment_volume(seg_id):
         rgb=np.concatenate(cols),
         w=np.concatenate(wts),
         feeling=np.concatenate(fls),
-        dz=15.5,
+        dz=12.0,
     )
     _VOL_CACHE[seg_id] = vol
     return vol
@@ -636,16 +667,15 @@ def get_segment_volume(seg_id):
 
 def build_master_timeline():
     """
-    Builds the complete 72.0s (1728 frames at 24fps) 07-Spacetime timeline:
-      - 0.0s .. 56.6s: All 14 Memory Segments (starting at 1:49 + Stelline's Mist Philosophy)
-      - 56.6s .. 65.4s: The Signature 07-Spacetime Accelerating Montage (face-on push then side-on ±62°
-                        4D spacetime strata cut, tightening from 0.85s down to 0.24s)
-      - 65.4s .. 66.6s: The Drop to Silence (1.2s before one golden dot)
-      - 66.6s .. 72.0s: 3D Point-Cloud Engraving ("6 · 10 · 21  /  ANYTHING REAL SHOULD BE A MIST")
+    Builds the complete 63.0s (1512 frames at 24fps) 07-Spacetime Cinema Film:
+      - 0.0s .. 56.6s: All 14 Memory Segments in chronological order (ZERO duplicate "Every Volume Twice" replays!)
+      - 56.6s .. 57.8s: The Drop to Silence (1.2s before one golden dot)
+      - 57.8s .. 63.0s: 3D Point-Cloud Engraving ("6 · 10 · 21  /  ANYTHING REAL SHOULD BE A MIST")
     """
     shots = []
-    for seg in MEMORY_SEGMENTS:
+    for idx, seg in enumerate(MEMORY_SEGMENTS):
         shots.append(dict(
+            idx=idx,
             t0=seg["film_t0"],
             t1=seg["film_t1"],
             seg_id=seg["id"],
@@ -660,53 +690,13 @@ def build_master_timeline():
             montage=None,
         ))
 
-    # THE 07-SPACETIME MONTAGE (56.6s -> 65.4s):
-    # Every key wooden-horse & Stelline volume twice: face-on push, then side-on ±62° 4D strata view
-    montage_seq = [
-        ("seg_02", "paper", "front", +1, 0.82),
-        ("seg_02", "paper", "side",  +1, 0.74),
-        ("seg_04", "paper", "front", -1, 0.68),
-        ("seg_05", "paper", "side",  -1, 0.62),
-        ("seg_06", "light", "front", +1, 0.58),
-        ("seg_07", "light", "side",  +1, 0.54),
-        ("seg_08", "light", "front", -1, 0.50),
-        ("seg_08", "light", "side",  -1, 0.46),
-        ("seg_09", "paper", "front", +1, 0.42),
-        ("seg_11", "light", "side",  +1, 0.38),
-        ("seg_11", "light", "front", -1, 0.35),
-        ("seg_12", "light", "side",  -1, 0.32),
-        ("seg_12", "light", "front", +1, 0.30),
-        ("seg_13", "paper", "side",  +1, 0.28),
-        ("seg_14", "light", "front", -1, 0.26),
-        ("seg_08", "light", "side",  +1, 0.25),
-        ("seg_14", "light", "side",  -1, 0.24),
-    ]
-    t_cur = 56.6
-    for sid, md, akind, sgn, dur in montage_seq:
-        t_next = round(t_cur + dur, 4)
-        if akind == "front":
-            cam0 = (0.0, 0.0, 680.0, 0.06 * sgn, 0.0)
-            cam1 = (0.0, 0.0, 260.0, -0.06 * sgn, 0.0)
-        else:
-            cam0 = (210.0 * sgn, -14.0, 560.0, 1.06 * sgn, 0.05)
-            cam1 = (175.0 * sgn,   8.0, 430.0, 0.88 * sgn, -0.03)
-        shots.append(dict(
-            t0=t_cur, t1=t_next, seg_id=sid, mode=md, assemble=False,
-            cam0=cam0, cam1=cam1, mist_level=0.35,
-            who="07-SPACETIME MONTAGE",
-            say="Every volume twice: face-on push, then side-on ±62° through the body of light in time.",
-            code="MONTAGE · 4D STRATA",
-            montage=akind,
-        ))
-        t_cur = t_next
-
-    t_drop = round(t_cur + 1.15, 4)
-    shots.append(dict(t0=t_cur, t1=t_drop, seg_id=None, mode="drop"))
-    shots.append(dict(t0=t_drop, t1=72.0, seg_id=None, mode="title"))
+    shots.append(dict(idx=14, t0=56.6, t1=57.8, seg_id=None, mode="drop"))
+    shots.append(dict(idx=15, t0=57.8, t1=63.0, seg_id=None, mode="title"))
     return shots
 
 
 MASTER_SHOTS = build_master_timeline()
+MASTER_DURATION = 63.0
 
 _HORSE_TITLE_CLOUD = None
 def get_horse_title_cloud():
@@ -735,7 +725,6 @@ def get_horse_title_cloud():
     sy = rng.normal(0, 270.0, len(xx)).astype(np.float32)
     sz = rng.uniform(-520.0, 520.0, len(xx)).astype(np.float32)
 
-    # Warm amber-gold gradient across the carved date
     ux = np.clip((xx / 960.0), 0.0, 1.0).astype(np.float32)
     rgb = np.stack([
         np.ones_like(ux) * 0.98,
@@ -745,6 +734,92 @@ def get_horse_title_cloud():
 
     _HORSE_TITLE_CLOUD = dict(x=x, y=y, z=z, sx=sx, sy=sy, sz=sz, rgb=rgb, w=arr[yy, xx].astype(np.float32))
     return _HORSE_TITLE_CLOUD
+
+
+def eval_segment_cinema_plate(shot, u_local, global_t, fi):
+    """
+    Renders a single segment at normalized time `u_local` (which can smoothly extend past 1.0 during
+    exit cross-dissolves so motion NEVER freezes!):
+      - Full-resolution 1280x720 24fps moving cinema frame on focal plane P2/P3 (`feeling_hd -> 1`)
+      - Multiplane 2.5D depth parallax (`warp_multiplane_cinema`)
+      - Soft peripheral depth-of-field + atmospheric Beer's-Law feeling-mist (`Air A1`) + subtle 3D Gaussian
+        memory-maker bokeh motes in the peripheral region (`1 - feeling_hd`), NEVER obliterating the actors!
+    """
+    vol = get_segment_volume(shot["seg_id"])
+    hd_frames = vol["hd_frames"]
+    n_hd = len(hd_frames)
+
+    # Continuous sub-frame interpolation at true 24fps (including transition tail)
+    seg_dur = shot["t1"] - shot["t0"]
+    f_exact = np.clip(u_local * seg_dur * FPS, 0.0, n_hd - 1.001)
+    i0 = int(f_exact)
+    i1 = min(n_hd - 1, i0 + 1)
+    frac = float(f_exact - i0)
+    raw_plate = hd_frames[i0] * (1.0 - frac) + hd_frames[i1] * frac
+
+    eu = ease(np.clip(u_local, 0.0, 1.0))
+    cam0, cam1 = shot["cam0"], shot["cam1"]
+    pan_dir = 1.0 if (shot["idx"] % 2 == 0) else -1.0
+    pan_x = pan_dir * ((u_local - 0.5) * 26.0 + 3.0 * math.sin(global_t * 0.45))
+    tilt_y = (0.5 - u_local) * 9.0 + 2.0 * math.cos(global_t * 0.38)
+    dolly_scale = 1.05 + 0.06 * np.clip(u_local, 0.0, 1.2)
+
+    warped_plate = warp_multiplane_cinema(raw_plate, vol["disp_hd"], pan_x, tilt_y, dolly_scale, depth_stretch=0.042 * eu)
+    warped_feel = warp_multiplane_cinema(vol["feeling_hd"], vol["disp_hd"], pan_x, tilt_y, dolly_scale, depth_stretch=0.042 * eu)
+
+    # Peripheral memory mist ("Everything's grey / Anything real should be a mist"):
+    # Keep focal emotional core (`warped_feel -> 1`) 100% sharp; soften outer periphery (`periph = 1 - warped_feel`)
+    mist_amt = shot.get("mist_level", 0.42)
+    periph = np.clip((1.0 - warped_feel) ** 1.35 * mist_amt * 1.15, 0.0, 0.78)[..., None]
+
+    blur_plate = cv2.GaussianBlur(warped_plate, (0, 0), 14.0)
+    # Atmospheric tint in periphery: cool slate-amber memory mist (never a harsh white/beige stain!)
+    if shot["mode"] == "paper":
+        mist_tint = np.array([0.16, 0.18, 0.22], dtype=np.float32)[None, None, :]
+    else:
+        mist_tint = np.array([0.14, 0.11, 0.08], dtype=np.float32)[None, None, :]
+
+    periph_mist = 0.72 * blur_plate + 0.28 * mist_tint
+    comp = warped_plate * (1.0 - periph) + periph_mist * periph
+
+    # Subtle 3D Gaussian Memory-Maker bokeh motes drifting across peripheral depth strata
+    cx = lerp(cam0[0], cam1[0], eu) * 0.35
+    cy_cam = lerp(cam0[1], cam1[1], eu) * 0.35
+    dist = lerp(cam0[2], cam1[2], eu)
+    # Constrain yaw to natural cinema parallax (±10°) so bokeh aligns with the scene
+    yaw = np.clip(lerp(cam0[3], cam1[3], eu) * 0.35, -0.18, 0.18)
+    pitch = np.clip(lerp(cam0[4], cam1[4], eu) * 0.35, -0.08, 0.08)
+
+    present = (0.12 + 0.80 * np.clip(u_local, 0.0, 1.0)) * (vol["T"] - 1)
+    age = present - vol["s"]
+    vis = (age >= -1.5) & (age <= 14.0)
+    if np.any(vis):
+        x = vol["x"][vis].copy() - cx
+        y = vol["y"][vis].copy() - cy_cam
+        z = age[vis] * vol["dz"] + vol["d"][vis]
+        rgb_pts = vol["rgb"][vis]
+        fl_pts = vol["feeling"][vis]
+        tau = 6.0 + 10.0 * fl_pts
+        t_decay = np.where(age[vis] >= 0, np.exp(-age[vis] / tau), np.exp(-(age[vis] ** 2) / 1.0)).astype(np.float32)
+        wt = vol["w"][vis] * t_decay * 0.45
+
+        cy_r, sy_r = math.cos(yaw), math.sin(yaw)
+        Xc = x * cy_r + z * sy_r
+        Zc1 = -x * sy_r + z * cy_r
+        cp_r, sp_r = math.cos(pitch), math.sin(pitch)
+        Yc = y * cp_r - Zc1 * sp_r
+        Zc = y * sp_r + Zc1 * cp_r + dist
+
+        px = 520.0 * Xc / np.maximum(Zc, 30.0) + RW * 0.5
+        py = 520.0 * Yc / np.maximum(Zc, 30.0) + RH * 0.5
+        rad = np.clip(1.2 + (1.0 - fl_pts) * 2.2, 1.0, 4.8).astype(np.float32)
+        bokeh_layer = splat_gaussian_multiscale(px, py, Zc, rad, rgb_pts, wt, mode="light", gain=0.65, seed=fi)
+        # Blend bokeh gently (stronger in periphery/transition, subtle in focal core so faces stay 100% clean)
+        bokeh_weight = (0.10 + 0.28 * (1.0 - warped_feel))[..., None]
+        comp = np.clip(comp + bokeh_layer * bokeh_weight, 0.0, 1.0)
+
+    comp = comp * get_vignette(FH, FW)
+    return np.clip(comp, 0.0, 1.0), mist_amt, yaw
 
 
 def render_master_frame(fi):
@@ -758,130 +833,90 @@ def render_master_frame(fi):
     # 1. THE DROP TO SILENCE + SINGLE GOLD EMBER MOTE
     if shot["mode"] == "drop":
         u = (t - shot["t0"]) / max(shot["t1"] - shot["t0"], 1e-4)
-        out = np.broadcast_to(NIGHT, (FH, FW, 3)).copy()
-        mote = smootherstep(min(1.0, u * 1.4))
+        # Smooth dissolve from segment 14 into the dark chamber with single gold ember
+        prev_shot = MASTER_SHOTS[13]
+        prev_img, _, _ = eval_segment_cinema_plate(prev_shot, 1.0, t, fi)
+        fade = smootherstep(min(1.0, u * 1.6))
+        out = prev_img * (1.0 - fade) + NIGHT[None, None, :] * fade
+        mote = smootherstep(max(0.0, (u - 0.25) / 0.75))
         yy, xx = np.ogrid[:FH, :FW]
-        glow = mote * np.exp(-((xx - FW * 0.5) ** 2 + (yy - FH * 0.5) ** 2) / 55.0)
+        glow = mote * np.exp(-((xx - FW * 0.5) ** 2 + (yy - FH * 0.5) ** 2) / 65.0)
         out += glow[..., None] * np.array([1.0, 0.82, 0.48], dtype=np.float32)
         return (np.clip(out, 0.0, 1.0) * 255.0).astype(np.uint8)
 
-    # 2. THE 3D DUST-BUILT TITLE ("6 · 10 · 21 / Anything real should be a mist")
+    # 2. THE 3D DUST-BUILT TITLE ("6 · 10 · 21 / Anything real should be a mist") OVER WOODEN HORSE MEMORY
     if shot["mode"] == "title":
         tc = get_horse_title_cloud()
         u = (t - shot["t0"]) / max(shot["t1"] - shot["t0"], 1e-4)
-        k_scatter = (1.0 - smootherstep(min(1.0, u / 0.52))) ** 2.2
+        # Subtle darkened background recall of seg_08 (the carved wooden horse in hand)
+        horse_shot = MASTER_SHOTS[7]
+        bg_horse, _, _ = eval_segment_cinema_plate(horse_shot, 0.35 + 0.45 * u, t, fi)
+        bg_plate = bg_horse * 0.28 + NIGHT[None, None, :] * 0.72
+
+        k_scatter = (1.0 - smootherstep(min(1.0, u / 0.48))) ** 2.0
         X = tc["x"] * (1.0 - k_scatter) + tc["sx"] * k_scatter
         Y = tc["y"] * (1.0 - k_scatter) + tc["sy"] * k_scatter
         Z = tc["z"] * (1.0 - k_scatter) + tc["sz"] * k_scatter
 
-        yaw = (1.0 - smootherstep(min(1.0, u / 0.58))) * 0.48 + 0.04 * math.sin(u * 3.0)
-        dist = 560.0 - 65.0 * ease(u)
+        yaw = (1.0 - smootherstep(min(1.0, u / 0.55))) * 0.35 + 0.03 * math.sin(u * 2.5)
+        dist = 540.0 - 50.0 * ease(u)
         cy, sy = math.cos(yaw), math.sin(yaw)
         Xc = X * cy + Z * sy
         Zc = -X * sy + Z * cy + dist
 
         px = 520.0 * Xc / np.maximum(Zc, 30.0) + RW * 0.5
         py = 520.0 * Y / np.maximum(Zc, 30.0) + RH * 0.5
-        rad = np.clip(0.90 + 2.9 * k_scatter + np.abs(Zc - dist) / 160.0, 0.8, 5.6).astype(np.float32)
-        img = splat_gaussian_multiscale(px, py, Zc, rad, tc["rgb"], tc["w"] * 1.4, mode="light", gain=1.22, seed=fi)
+        rad = np.clip(0.85 + 2.4 * k_scatter + np.abs(Zc - dist) / 170.0, 0.8, 5.2).astype(np.float32)
+        title_splat = splat_gaussian_multiscale(px, py, Zc, rad, tc["rgb"], tc["w"] * 1.45, mode="light", gain=1.25, seed=fi)
+        img = np.clip(bg_plate + title_splat, 0.0, 1.0)
         return (np.clip(img, 0.0, 1.0) * 255.0).astype(np.uint8)
 
-    # 3. 4D SPACETIME VOLUME + STELLINE FEELING-MIST FIELD
-    vol = get_segment_volume(shot["seg_id"])
-    u = (t - shot["t0"]) / max(shot["t1"] - shot["t0"], 1e-4)
-    eu = ease(u)
+    # 3. CONTINUOUS 24FPS MULTIPLANE CINEMA SEGMENT + DEPTH-ORDERED CROSS-DISSOLVE
+    seg_dur = max(shot["t1"] - shot["t0"], 1e-4)
+    u = (t - shot["t0"]) / seg_dur
+    img, mist_amt, yaw = eval_segment_cinema_plate(shot, u, t, fi)
 
-    cam0, cam1 = shot["cam0"], shot["cam1"]
-    cx = lerp(cam0[0], cam1[0], eu)
-    cy_cam = lerp(cam0[1], cam1[1], eu)
-    dist = lerp(cam0[2], cam1[2], eu)
-    yaw = lerp(cam0[3], cam1[3], eu)
-    pitch = lerp(cam0[4], cam1[4], eu)
+    # Seamless 0.70s depth-plane dissolve into the next segment so the film flows unbroken
+    xf_dur = 0.70
+    rem = shot["t1"] - t
+    if rem < xf_dur and shot["idx"] + 1 < 14:
+        next_shot = MASTER_SHOTS[shot["idx"] + 1]
+        u_xf = smootherstep(1.0 - rem / xf_dur)
+        next_img, _, _ = eval_segment_cinema_plate(next_shot, u_xf * (xf_dur / (next_shot["t1"] - next_shot["t0"])), t, fi)
+        img = img * (1.0 - u_xf) + next_img * u_xf
 
-    present = (0.14 + 0.78 * u) * (vol["T"] - 1)
-    age = present - vol["s"]
-
-    vis = (age >= -2.0) & (age <= 28.0)
-    x = vol["x"][vis].copy()
-    y = vol["y"][vis].copy()
-    d = vol["d"][vis]
-    age = age[vis]
-    rgb = vol["rgb"][vis]
-    w_base = vol["w"][vis]
-    fl = vol["feeling"][vis]
-
-    z = age * vol["dz"] + d
-
-    # Stelline's Mist Law: peripheral non-emotional detail (1 - fl) scatters into 3D mist!
-    mist_amt = shot.get("mist_level", 0.45)
-    if shot.get("assemble", False):
-        mist_amt = max(mist_amt, (1.0 - smootherstep(min(1.0, u / 0.55))) ** 1.8)
-
-    non_feeling = (1.0 - fl) ** 1.7 * mist_amt
-    rng = np.random.default_rng(fi % 97 + 11)
-    x += rng.normal(0.0, 1.0, len(x)).astype(np.float32) * (165.0 * non_feeling)
-    y += rng.normal(0.0, 1.0, len(y)).astype(np.float32) * (115.0 * non_feeling)
-    z += rng.normal(0.0, 1.0, len(z)).astype(np.float32) * (190.0 * non_feeling)
-
-    # Emotional feeling anchors have longer temporal persistence tau (up to 26 slices)!
-    tau_feeling = 9.0 + 18.0 * fl
-    time_decay = np.where(age >= 0, np.exp(-age / tau_feeling), np.exp(-(age ** 2) / 1.2)).astype(np.float32)
-    wt = w_base * time_decay * (0.42 + 0.68 * np.exp(-(age ** 2) / 2.8)).astype(np.float32)
-
-    X = x - cx
-    Y = y - cy_cam
-    Z = z
-
-    cy_r, sy_r = math.cos(yaw), math.sin(yaw)
-    Xc = X * cy_r + Z * sy_r
-    Zc1 = -X * sy_r + Z * cy_r
-
-    cp_r, sp_r = math.cos(pitch), math.sin(pitch)
-    Yc = Y * cp_r - Zc1 * sp_r
-    Zc = Y * sp_r + Zc1 * cp_r + dist
-
-    focal = 520.0
-    px = focal * Xc / np.maximum(Zc, 25.0) + RW * 0.5
-    py = focal * Yc / np.maximum(Zc, 25.0) + RH * 0.5
-
-    # Points with high emotional feeling F stay sharp in bucket b0; low-F points bloom into bucket b2 mist!
-    dof = np.abs(Zc - dist) / (230.0 if shot["mode"] == "paper" else 195.0)
-    mist_rad = (1.0 - fl) * 2.35 * mist_amt
-    rad = np.clip(0.80 + dof + mist_rad + 0.05 * np.maximum(0.0, age), 0.72, 5.8).astype(np.float32)
-
-    img = splat_gaussian_multiscale(px, py, Zc, rad, rgb, wt, mode=shot["mode"], gain=1.10, seed=fi)
-
-    # Unboxed, whisper-quiet Afterlight / VOIDBASTARD-TAO engravings (zero rectangular HUD boxes!)
+    # Whisper-quiet Afterlight / VOIDBASTARD-TAO typography (zero rectangular boxes, high legibility)
     pil = Image.fromarray((img * 255.0).astype(np.uint8))
     draw = ImageDraw.Draw(pil, "RGBA")
-    is_paper = (shot["mode"] == "paper")
-    fg_main = (34, 28, 22) if is_paper else (244, 236, 220)
-    fg_sub = (96, 84, 72) if is_paper else (178, 168, 152)
-    fg_gold = (168, 96, 18) if is_paper else (255, 195, 92)
+    fg_main = (244, 236, 220)
+    fg_sub = (182, 174, 158)
+    fg_gold = (255, 198, 96)
 
-    f_mono = get_font("mono", 13)
-    f_who = get_font("mono", 14)
-    f_italic = get_font("italic", 31)
+    f_mono = get_font("mono", 12)
+    f_who = get_font("mono", 13)
+    f_italic = get_font("italic", 27)
 
-    angle_tag = "SIDE-ON ±62° · 4D SPACETIME STRATA" if shot.get("montage") == "side" else (
-        "FACE-ON PUSH · PRESENT SLICE" if shot.get("montage") == "front" else f"MIST={int(mist_amt*100)}% · YAW {math.degrees(yaw):+05.1f}°"
-    )
-    draw.text((36, 26), f"07 · SPACETIME MIST   {shot['code']}", font=f_mono, fill=fg_sub + (195,))
-    draw.text((FW - 36, 26), angle_tag, font=f_mono, fill=fg_sub + (195,), anchor="ra")
+    angle_tag = f"FEELING CORE + PERIPHERAL MIST={int(mist_amt*100)}% · PARALLAX {math.degrees(yaw):+04.1f}°"
+    draw.text((36, 26), f"07 · SPACETIME MIST   {shot['code']}", font=f_mono, fill=fg_sub + (185,))
+    draw.text((FW - 36, 26), angle_tag, font=f_mono, fill=fg_sub + (185,), anchor="ra")
 
-    if shot.get("montage") is None:
-        ca = sm(shot["t0"], shot["t0"] + 0.45, t) * (1.0 - sm(shot["t1"] - 0.45, shot["t1"], t))
-        if ca > 0.02:
-            alpha = int(242 * ca)
-            draw.text((FW // 2, FH - 82), shot["who"], font=f_who, fill=fg_gold + (int(alpha * 0.9),), anchor="mm")
-            say_txt = shot["say"]
-            if len(say_txt) > 86:
-                mid = say_txt.rfind(" ", 0, 78)
-                l1, l2 = say_txt[:mid], say_txt[mid+1:]
-                draw.text((FW // 2, FH - 52), l1, font=f_italic, fill=fg_main + (alpha,), anchor="mm")
-                draw.text((FW // 2, FH - 22), l2, font=f_italic, fill=fg_main + (alpha,), anchor="mm")
-            else:
-                draw.text((FW // 2, FH - 42), say_txt, font=f_italic, fill=fg_main + (alpha,), anchor="mm")
+    ca = sm(shot["t0"], shot["t0"] + 0.45, t) * (1.0 - sm(shot["t1"] - 0.50, shot["t1"], t))
+    if ca > 0.02:
+        alpha = int(238 * ca)
+        sh_a = int(175 * ca)
+        draw.text((FW // 2 + 1, FH - 79), shot["who"], font=f_who, fill=(8, 10, 14, sh_a), anchor="mm")
+        draw.text((FW // 2, FH - 80), shot["who"], font=f_who, fill=fg_gold + (int(alpha * 0.92),), anchor="mm")
+        say_txt = shot["say"]
+        if len(say_txt) > 86:
+            mid = say_txt.rfind(" ", 0, 78)
+            l1, l2 = say_txt[:mid], say_txt[mid+1:]
+            draw.text((FW // 2 + 1, FH - 51), l1, font=f_italic, fill=(8, 10, 14, sh_a), anchor="mm")
+            draw.text((FW // 2, FH - 52), l1, font=f_italic, fill=fg_main + (alpha,), anchor="mm")
+            draw.text((FW // 2 + 1, FH - 21), l2, font=f_italic, fill=(8, 10, 14, sh_a), anchor="mm")
+            draw.text((FW // 2, FH - 22), l2, font=f_italic, fill=fg_main + (alpha,), anchor="mm")
+        else:
+            draw.text((FW // 2 + 1, FH - 41), say_txt, font=f_italic, fill=(8, 10, 14, sh_a), anchor="mm")
+            draw.text((FW // 2, FH - 42), say_txt, font=f_italic, fill=fg_main + (alpha,), anchor="mm")
 
     return np.asarray(pil, dtype=np.uint8)
 
@@ -892,25 +927,25 @@ def render_master_frame(fi):
 def build_master_audio(out_wav):
     print("[2/5] Mixing real Stelline & Officer K dialogue with 07-spacetime harmonic bed...")
     sr = 44100
-    dur = 72.0
+    dur = MASTER_DURATION
     total_samples = int(dur * sr)
     mix = np.zeros((total_samples, 2), dtype=np.float32)
 
     # 1. Warm sub-bass & Vangelis/Afterlight harmonic drone bed
     t = np.arange(total_samples, dtype=np.float32) / sr
     drone = (
-        0.055 * np.sin(2 * np.pi * 55.0 * t) +
-        0.035 * np.sin(2 * np.pi * 82.41 * t + 0.3 * np.sin(2 * np.pi * 0.18 * t)) +
-        0.025 * np.sin(2 * np.pi * 110.0 * t) +
-        0.018 * np.sin(2 * np.pi * 164.81 * t)
+        0.048 * np.sin(2 * np.pi * 55.0 * t) +
+        0.032 * np.sin(2 * np.pi * 82.41 * t + 0.3 * np.sin(2 * np.pi * 0.18 * t)) +
+        0.022 * np.sin(2 * np.pi * 110.0 * t) +
+        0.015 * np.sin(2 * np.pi * 164.81 * t)
     )
-    # Silence during the 07-spacetime Drop (65.4s .. 66.6s)
-    drop_env = 1.0 - ((t >= 65.35) & (t <= 66.65)).astype(np.float32) * 0.95
+    # Silence during the 07-spacetime Drop (56.6s .. 57.8s)
+    drop_env = 1.0 - ((t >= 56.55) & (t <= 57.85)).astype(np.float32) * 0.92
     drone *= drop_env
     mix[:, 0] += drone
     mix[:, 1] += drone
 
-    # 2. Overlay the real extracted dialogue audio from each segment
+    # 2. Overlay the real extracted dialogue audio from each segment (once, in chronological order)
     for seg in MEMORY_SEGMENTS:
         seg_mp4 = os.path.join(SEG_DIR, f"{seg['id']}.mp4")
         if not os.path.exists(seg_mp4):
@@ -925,29 +960,17 @@ def build_master_audio(out_wav):
         arr = np.frombuffer(raw, dtype=np.float32).reshape(-1, 2)
         if len(arr) == 0:
             continue
-        # Soft 0.18s fade-in / fade-out per segment
-        fade_len = min(int(0.18 * sr), len(arr) // 3)
+        fade_len = min(int(0.22 * sr), len(arr) // 3)
         env = np.ones(len(arr), dtype=np.float32)
         if fade_len > 1:
             env[:fade_len] = np.linspace(0.0, 1.0, fade_len)
             env[-fade_len:] = np.linspace(1.0, 0.0, fade_len)
-        arr = arr * env[:, None] * 1.15
+        arr = arr * env[:, None] * 1.18
         start_idx = int(seg["film_t0"] * sr)
         end_idx = min(total_samples, start_idx + len(arr))
         mix[start_idx:end_idx] += arr[:end_idx - start_idx]
 
-    # 3. Accelerating montage pulse hits (56.6s .. 65.4s) + Golden Dot chime at 66.65s
-    for s in MASTER_SHOTS:
-        if s.get("montage") is not None:
-            idx = int(s["t0"] * sr)
-            plen = min(int(0.22 * sr), total_samples - idx)
-            if plen > 0:
-                pt = np.arange(plen, dtype=np.float32) / sr
-                hit = 0.16 * np.exp(-pt * 18.0) * np.sin(2 * np.pi * (92.0 - 40.0 * pt) * pt)
-                mix[idx:idx+plen, 0] += hit
-                mix[idx:idx+plen, 1] += hit
-
-    chime_idx = int(66.65 * sr)
+    chime_idx = int(57.85 * sr)
     clen = min(int(4.5 * sr), total_samples - chime_idx)
     if clen > 0:
         ct = np.arange(clen, dtype=np.float32) / sr
@@ -977,14 +1000,14 @@ def build_master_audio(out_wav):
 # ==============================================================================
 def build_master_film_and_sheet():
     extract_memory_segments()
-    print("[2/5] Pre-warming 14 4D Spacetime Feeling-Mist Volumes...")
+    print("[2/5] Pre-warming 14 24fps Cinema Multiplane + Feeling-Mist Volumes...")
     for seg in MEMORY_SEGMENTS:
         get_segment_volume(seg["id"])
 
     out_wav = "/tmp/stelline_07_spacetime_audio.wav"
     build_master_audio(out_wav)
 
-    total_frames = int(72.0 * FPS)
+    total_frames = int(MASTER_DURATION * FPS)
     print(f"[3/5] Rendering {total_frames} frames of stelline_wooden_horse_07_spacetime.mp4 (1280x720 @ 24fps)...")
 
     out_mp4 = os.path.join(VID_DIR, "stelline_wooden_horse_07_spacetime.mp4")
@@ -992,22 +1015,22 @@ def build_master_film_and_sheet():
         "ffmpeg", "-y", "-v", "error",
         "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{FW}x{FH}", "-r", str(FPS), "-i", "-",
         "-i", out_wav,
-        "-c:v", "libx264", "-preset", "fast", "-crf", "20", "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "192k", "-shortest",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "19", "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-shortest",
         out_mp4
     ]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
-    # Render in parallel batches of 48 frames so memory stays low and speed is high
+    from concurrent.futures import ThreadPoolExecutor
     batch_size = 48
-    with ProcessPoolExecutor(max_workers=8) as ex:
+    with ThreadPoolExecutor(max_workers=8) as ex:
         for b0 in range(0, total_frames, batch_size):
             b1 = min(total_frames, b0 + batch_size)
             frames = list(ex.map(render_master_frame, range(b0, b1)))
             for fr in frames:
                 proc.stdin.write(fr.tobytes())
-            if b0 % 240 == 0:
-                print(f"  Rendered {b1}/{total_frames} frames ({b1/FPS:.1f}s / 72.0s)")
+            if b0 % 240 == 0 or b1 == total_frames:
+                print(f"  Rendered {b1}/{total_frames} frames ({b1/FPS:.1f}s / {MASTER_DURATION:.1f}s)", flush=True)
 
     proc.stdin.close()
     proc.wait()
@@ -1017,7 +1040,7 @@ def build_master_film_and_sheet():
     shutil.copy2(out_mp4, os.path.join(FILM_OUT_DIR, "stelline_wooden_horse_07_spacetime.mp4"))
     shutil.copy2(out_mp4, os.path.join(ARTIFACT_DIR, "stelline_wooden_horse_07_spacetime.mp4"))
 
-    # Build the 4K Contact Sheet (3840 x 2160) showing all 14 Memory Segments + Montage + 6·10·21 Title
+    # Build the 4K Contact Sheet (3840 x 2160) showing all 14 Memory Segments + Drop + 6·10·21 Title
     print("[5/5] Building 4K Contact Sheet: stelline_wooden_horse_spacetime_sheet.png...")
     sw, sh = 3840, 2160
     sheet = Image.new("RGB", (sw, sh), (8, 10, 14))
@@ -1027,10 +1050,10 @@ def build_master_film_and_sheet():
     f_cell = get_font("mono", 14)
     f_quote = get_font("italic", 20)
 
-    draw.text((64, 34), "DR. ANA STELLINE & THE TOY WOODEN HORSE (1:49 – 3:25)  ·  07-SPACETIME MIST OF FEELING", font=f_hdr, fill=(244, 236, 220))
+    draw.text((64, 34), "DR. ANA STELLINE & THE TOY WOODEN HORSE (1:49 – 3:25)  ·  24FPS MULTIPLANE & FEELING-MIST FILM", font=f_hdr, fill=(244, 236, 220))
     draw.text((64, 88), "“Memory's not about more detail — that's not how memory works. We recall with our feelings. Anything real should be a mist.” (4:16 – 4:27)", font=f_sub, fill=(255, 195, 92))
 
-    sample_times = [s["film_t0"] + 0.55 * (s["film_t1"] - s["film_t0"]) for s in MEMORY_SEGMENTS] + [60.8, 69.5]
+    sample_times = [s["film_t0"] + 0.50 * (s["film_t1"] - s["film_t0"]) for s in MEMORY_SEGMENTS] + [57.2, 60.8]
     cols, rows = 4, 4
     cw, ch = 910, 475
     ox, oy = 64, 136
@@ -1044,23 +1067,17 @@ def build_master_film_and_sheet():
         im_Main = Image.fromarray(fr).resize((cw, ch - 54), Image.Resampling.LANCZOS)
         sheet.paste(im_Main, (x0, y0))
 
-        # Inset raw reference frame in top-right of cell for direct raw-vs-mist comparison
         if idx < len(MEMORY_SEGMENTS):
             seg = MEMORY_SEGMENTS[idx]
-            vol = get_segment_volume(seg["id"])
-            raw_fr = (vol["raw_frames"][len(vol["raw_frames"]) // 2] * 255.0).astype(np.uint8)
-            im_raw = Image.fromarray(raw_fr).resize((192, 108), Image.Resampling.BILINEAR)
-            sheet.paste(im_raw, (x0 + cw - 200, y0 + 8))
-            draw.rectangle([x0 + cw - 200, y0 + 8, x0 + cw - 8, y0 + 116], outline=(255, 195, 92), width=1)
             src_mm = int(seg["src_t0"]) // 60
             src_ss = seg["src_t0"] - src_mm * 60
             draw.text((x0 + 8, y0 + ch - 46), f"{seg['code']}  [SRC {src_mm}:{src_ss:05.2f}]  ·  {seg['title']}", font=f_cell, fill=(92, 228, 255))
             draw.text((x0 + 8, y0 + ch - 24), seg["say"][:92] + ("…" if len(seg["say"]) > 92 else ""), font=f_quote, fill=(230, 222, 206))
         elif idx == 14:
-            draw.text((x0 + 8, y0 + ch - 46), "XV · 07-SPACETIME MONTAGE  [SIDE-ON ±62° 4D STRATA]", font=f_cell, fill=(255, 195, 92))
-            draw.text((x0 + 8, y0 + ch - 24), "Every memory volume twice: face-on push, then side-on ±62° exposing the body of light through time.", font=f_quote, fill=(230, 222, 206))
+            draw.text((x0 + 8, y0 + ch - 46), "XV · THE DROP TO SILENCE  [SINGLE GOLD EMBER]", font=f_cell, fill=(255, 195, 92))
+            draw.text((x0 + 8, y0 + ch - 24), "Chamber darkness before the carved date of the wooden horse coalesces in 3D light.", font=f_quote, fill=(230, 222, 206))
         else:
-            draw.text((x0 + 8, y0 + ch - 46), "XVI · THE DROP & SINGLE GOLD EMBER  [6 · 10 · 21]", font=f_cell, fill=(255, 195, 92))
+            draw.text((x0 + 8, y0 + ch - 46), "XVI · THE WOODEN HORSE ENGRAVING  [6 · 10 · 21]", font=f_cell, fill=(255, 195, 92))
             draw.text((x0 + 8, y0 + ch - 24), "“Someone lived this. Yes… this happened.” — Carved wooden horse base in 3D dust.", font=f_quote, fill=(230, 222, 206))
 
     sheet_path = os.path.join(FILM_OUT_DIR, "stelline_wooden_horse_spacetime_sheet.png")
@@ -1145,9 +1162,9 @@ def build_complete_media_vault_bundle():
         "proof_sheet": "data/terrarium/seeing_spacetime_films/stelline_wooden_horse_spacetime_sheet.png",
         "segments": MEMORY_SEGMENTS,
         "montage_t0": 56.6,
-        "drop_t0": 65.4,
-        "title_t0": 66.6,
-        "duration": 72.0,
+        "drop_t0": 56.6,
+        "title_t0": 57.8,
+        "duration": 63.0,
         "vault_counts": {
             "total_videos": 747,
             "view_shot_videos": 100,
