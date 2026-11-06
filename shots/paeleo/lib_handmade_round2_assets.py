@@ -86,6 +86,14 @@ def load_debradded_cut(path, fill_armhole=False, remove_text_islands=True, flip_
         _DEBRAD_CACHE[ck] = out
         return out.copy()
 
+    if "ex.ex_jacket.body.back__p13" in bname or "ex.ex_jacket.body.back__p14" in bname:
+        solid = a > 25
+        rgb[solid] = (rgb[solid].astype(np.float32) * 0.28 + np.array([24.0, 26.0, 22.0])).clip(0, 255).astype(np.uint8)
+        a_eroded = cv2.erode(a, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)), iterations=1)
+        out = Image.fromarray(np.dstack([rgb, a_eroded]))
+        _DEBRAD_CACHE[ck] = out
+        return out.copy()
+
     is_hand_or_head = (
         any(k in bname for k in (".face", ".heads", ".hands", "31_sunglasses", "profile_sunglasses"))
         or ("poet.red_black_sunglasses.body." in bname and ("__p06" in bname or "__p07" in bname) and ("profile__p07" not in bname))

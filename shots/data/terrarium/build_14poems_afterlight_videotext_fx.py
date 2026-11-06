@@ -40,6 +40,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # Import the verified, glitch-free asset loaders & multiplane camera engine
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "paeleo"))
 from build_14poems_construct_and_spacetime_worms import (
     W, H, FPS, SHOTS_ROOT, CORPUS_ROOT, MASTER_AUDIO, OUT_DIR, VIDEOS_DIR, POEMS_VID_DIR, ARTIFACT_DIR,
     sm, smootherstep, lerp, hex_to_rgb_float, hex_to_rgb_u8, get_font,
@@ -47,6 +48,7 @@ from build_14poems_construct_and_spacetime_worms import (
     load_common_place_station, load_poem_cel_shot,
     prepare_station_multiplane, warp_multiplane_3d, encode_video_with_real_audio
 )
+from blend_afterlight_scion import blend_multiplane_and_handmade_scion
 
 _YY, _XX = np.mgrid[0:H, 0:W].astype(np.float32)
 _XN = (_XX - W * 0.5) / (W * 0.5)
@@ -736,6 +738,9 @@ def render_poem_afterlight_float(poem_num, stations, multiplanes, t, total_dur):
     mp_next = multiplanes[(seg_idx + 1) % n_st]
 
     curr_rgb, past_rgb = eval_station_with_past(st_curr, mp_curr, u_seg, t)
+    curr_rgb, past_rgb = blend_multiplane_and_handmade_scion(
+        poem_num, curr_rgb, past_rgb, st_curr, mp_curr, u_seg, t, total_dur
+    )
     fx_curr = apply_poem_afterlight_fx(
         poem_num, curr_rgb, past_rgb, mp_curr, u_seg, t, st_curr["body_hex"], st_curr["glow_hex"]
     )
@@ -748,6 +753,9 @@ def render_poem_afterlight_float(poem_num, stations, multiplanes, t, total_dur):
         u_tr = smootherstep((u_seg - trans_start) / (1.0 - trans_start))
         u_next_local = 0.25 * u_tr
         next_rgb, next_past = eval_station_with_past(st_next, mp_next, u_next_local, t)
+        next_rgb, next_past = blend_multiplane_and_handmade_scion(
+            poem_num, next_rgb, next_past, st_next, mp_next, u_next_local, t, total_dur
+        )
         fx_next = apply_poem_afterlight_fx(
             poem_num, next_rgb, next_past, mp_next, u_next_local, t, st_next["body_hex"], st_next["glow_hex"]
         )
