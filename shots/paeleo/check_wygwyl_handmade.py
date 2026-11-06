@@ -81,6 +81,23 @@ def check_folder(folder, all_scores):
         "constraint": score["signature_constraint"],
     }
 
+    # I5: Standalone handmade package check (`build/render.py`, `build/make.sh`, `film.mp4`, 4 stills, `proof/layers_and_props.jpg`)
+    req_files = [
+        "build/render.py",
+        "build/make.sh",
+        "film.mp4",
+        "stills/still_03.6s.jpg",
+        "stills/still_09.0s.jpg",
+        "stills/still_19.0s.jpg",
+        "stills/still_28.0s.jpg",
+        "proof/layers_and_props.jpg",
+    ]
+    missing = [rf for rf in req_files if not os.path.exists(os.path.join(folder, rf))]
+    res["I5_handmade_package"] = {
+        "ok": len(missing) == 0,
+        "missing": missing,
+    }
+
     res["all_ok"] = all(v["ok"] for k, v in res.items() if k.startswith("I"))
     with open(os.path.join(folder, "invariants.json"), "w") as fp:
         json.dump(res, fp, indent=2)

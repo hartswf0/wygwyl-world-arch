@@ -33,6 +33,7 @@ MEDIA_STILL = os.path.join(PAELEO, "media", "still")
 
 sys.path.insert(0, PAELEO)
 import lib_clean_puppet as LCP  # noqa: E402
+import lib_handmade_craft as LHC  # noqa: E402
 
 W, H = 1280, 720
 FPS = 24
@@ -1205,32 +1206,42 @@ def build_single_poem_swarm(spec):
     stills_dir = os.path.join(folder, "stills")
     proof_dir = os.path.join(folder, "proof")
     reviews_dir = os.path.join(folder, "reviews")
-    for d in [folder, stills_dir, proof_dir, reviews_dir]:
+    build_dir = os.path.join(folder, "build")
+    for d in [folder, stills_dir, proof_dir, reviews_dir, build_dir]:
         os.makedirs(d, exist_ok=True)
+
+    # Write standalone per-folder `build/render.py` and `build/make.sh` matching `bolas_repo/paeleo/handmade/01..54`
+    render_py_path = os.path.join(build_dir, "render.py")
+    with open(render_py_path, "w") as f_rp:
+        f_rp.write(f'''#!/usr/bin/env python3
+"""Standalone handmade builder for {spec["pae_id"]} · Poem {num:02d} ({spec["title"]}) · {spec["swarm_id"]}."""
+import os, sys
+sys.path.insert(0, "/Users/gaia/WORLDBUILDING-TERMS/wygwyl-world-arch/shots/data/terrarium")
+import run_wygwyl_paeleo_swarms as R
+
+if __name__ == "__main__":
+    R.build_scores_json()
+    spec = [s for s in R.POEM_SWARM_SPECS if s["num"] == {num}][0]
+    R.build_single_poem_swarm(spec)
+''')
+    os.chmod(render_py_path, 0o755)
+
+    make_sh_path = os.path.join(build_dir, "make.sh")
+    with open(make_sh_path, "w") as f_ms:
+        f_ms.write('''#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+python3 render.py
+''')
+    os.chmod(make_sh_path, 0o755)
 
     scores = json.load(open(os.path.join(SCORE_DIR, "wygwyl_scores.json")))
     score = scores[str(num)]
     score_frames = score["frames"]
     choices = score["choices"]
 
-    # Load clean whole-figure actors and props (zero brass rivets, zero white sticker rims)
+    # Load clean whole-figure actors and props for provenance manifest
     actors, props = LCP.load_clean_cast_for_poem(num, spec["pack_dirs"])
-
-    # Load clean multiplane plate sets for this poem
-    plate_sets = []
-    pdirs_used = []
-    for pid in spec["plate_ids"]:
-        layers, pdir = load_multiplane_set(pid, spec["puppet_style"])
-        plate_sets.append(layers)
-        pdirs_used.append(pdir)
-
-    # Load segmented Live Poet retelling frame
-    lectern_path = os.path.join(SHOTS, "data", "terrarium", "poet_lectern", spec["lectern_id"])
-    lectern_bgr = None
-    if os.path.exists(lectern_path):
-        lectern_bgr = cv2.imread(lectern_path)
-        if lectern_bgr is not None:
-            lectern_bgr = cv2.resize(lectern_bgr, (W, H), interpolation=cv2.INTER_AREA)
 
     raw_video = os.path.join(folder, "_raw_video.mp4")
     final_video = os.path.join(folder, "film.mp4")
@@ -1241,7 +1252,7 @@ def build_single_poem_swarm(spec):
     for fi in range(TITLE_FRAMES):
         vw.write(render_card_frame(spec, is_title=True, progress=(fi + 1) / TITLE_FRAMES))
 
-    # 2. Render 32.0s Score-Locked Unique Swarm Scene (768 frames)
+    # 2. Render 32.0s Score-Locked Handmade Swarm Scene (768 frames) from the bottom up
     trace_records = []
     still_targets = {
         "still_03.6s.jpg": int(3.6 * FPS),
@@ -1262,9 +1273,8 @@ def build_single_poem_swarm(spec):
             if t >= c["t"]:
                 state_idx = ci
 
-        comp_bgr = render_unique_poem_frame(spec, i, t, u, state_idx, actors, props, plate_sets, lectern_bgr)
         verse_line = spec["verses"][min(len(spec["verses"]) - 1, state_idx)]
-        comp_bgr = render_verse_subtitle_and_tag(comp_bgr, spec, state, choices[state_idx]["label"], verse_line, q_score, t)
+        comp_bgr = LHC.render_handmade_poem_frame(num, i, t, u, verse_line)
 
         vw.write(comp_bgr)
 
