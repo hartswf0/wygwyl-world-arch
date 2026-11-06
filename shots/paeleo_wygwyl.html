@@ -1,0 +1,1408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAELEO × WYGWYL — Prompt · Ekphrasis · Operation Across All 14 Poems</title>
+<meta name="description" content="Operating all 14 WYGWYL poems from the bottom up with the 113 SCION Swarms (PAE-02 standard): multiplane depth slabs, cut RGBA story props, live Poet retelling bookends, and verified invariant traces.">
+<link rel="stylesheet" href="paeleo/paeleo.css">
+<style>
+  :root {
+    --paper: #f5f0e6;
+    --paper-deep: #ece4d4;
+    --ink: #141413;
+    --ink-soft: #3d3a35;
+    --rust: #b8441e;
+    --gold: #c88a2b;
+    --rule: #c9c1b2;
+    --display: "Big Shoulders Display", Impact, "Helvetica Neue", sans-serif;
+    --serif: "Literata", Georgia, serif;
+    --mono: "JetBrains Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); line-height: 1.55; }
+  img, video { max-width: 100%; height: auto; display: block; }
+  .page { max-width: 1340px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
+  .masthead { border-bottom: 3px double var(--ink); padding-bottom: 1.5rem; margin-bottom: 2.2rem; }
+  .masthead-top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; font-family: var(--mono); font-size: 0.76rem; letter-spacing: 0.06em; text-transform: uppercase; border-bottom: 1px solid var(--ink); padding-bottom: 0.55rem; margin-bottom: 1rem; }
+  .masthead-top a { color: var(--rust); text-decoration: none; font-weight: 600; }
+  .masthead-title { font-family: var(--display); font-size: clamp(3.2rem, 6vw, 5.2rem); line-height: 0.94; letter-spacing: 0.02em; margin: 0 0 0.45rem; text-transform: uppercase; }
+  .masthead-sub { font-family: var(--serif); font-size: 1.25rem; font-weight: 600; margin: 0 0 0.75rem; color: var(--rust); }
+  .masthead-dek { max-width: 98ch; font-size: 1rem; margin: 0 0 1.35rem; color: var(--ink-soft); }
+  .Scale-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.9rem; margin-top: 1.1rem; }
+  .scale-cell { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.85rem 1rem; border: 1px solid var(--ink); background: var(--paper-deep); color: var(--ink); text-decoration: none; }
+  .scale-cell.current { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .scale-cell .sc-code { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rust); font-weight: 700; }
+  .scale-cell.current .sc-code { color: #f0b467; }
+  .scale-cell .sc-name { font-family: var(--display); font-size: 1.35rem; letter-spacing: 0.02em; text-transform: uppercase; }
+  .scale-cell .sc-gloss { font-size: 0.85rem; line-height: 1.42; opacity: 0.9; }
+  .section { margin-bottom: 3rem; padding-top: 0.5rem; }
+  .sec-head { border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule); padding: 0.65rem 0; margin-bottom: 1.1rem; display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+  .sec-num { font-family: var(--mono); font-size: 0.78rem; font-weight: 700; color: var(--rust); letter-spacing: 0.06em; text-transform: uppercase; }
+  .sec-title { font-family: var(--display); font-size: 2rem; margin: 0; letter-spacing: 0.02em; text-transform: uppercase; }
+  .lead { font-size: 1.04rem; max-width: 98ch; margin: 0 0 1.25rem; color: var(--ink-soft); }
+  .lineage-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.15rem; }
+  .lineage-card { border: 1px solid var(--ink); background: #fbf8f1; padding: 0.9rem; display: flex; flex-direction: column; justify-content: space-between; }
+  .lc-head .lc-step { font-family: var(--mono); font-size: 0.74rem; font-weight: 700; color: var(--rust); }
+  .lc-head h3 { font-family: var(--display); font-size: 1.45rem; margin: 0.15rem 0; text-transform: uppercase; }
+  .lc-head .lc-cite { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-soft); display: block; margin-bottom: 0.6rem; }
+  .lc-fig { margin: 0; }
+  .lc-fig img { border: 1px solid var(--rule); margin-bottom: 0.5rem; }
+  .lc-fig figcaption { font-size: 0.84rem; line-height: 1.42; color: var(--ink-soft); }
+  .stage-wrap { display: grid; grid-template-columns: 1.85fr 1fr; gap: 1.15rem; align-items: start; border: 2px solid var(--ink); background: #141413; color: #f5f0e6; padding: 1rem; }
+  .stage-Toolbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; font-family: var(--mono); font-size: 0.78rem; padding-bottom: 0.55rem; border-bottom: 1px solid #333; margin-bottom: 0.6rem; }
+  .st-title { color: #f0b467; font-weight: 700; }
+  .st-readout { color: #8de0a6; }
+  .stage-viewport { position: relative; background: #090b0f; border: 1px solid #3a3d45; }
+  #worldtext-stage { width: 100%; height: auto; aspect-ratio: 16 / 9; display: block; cursor: pointer; }
+  .stage-banner { position: absolute; left: 1rem; right: 1rem; top: 1rem; background: rgba(184, 44, 30, 0.95); color: #fff; font-family: var(--mono); font-size: 0.8rem; padding: 0.55rem 0.8rem; border: 1px solid #ff9a8a; }
+  .stage-controls { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.45rem; margin-top: 0.65rem; }
+  .circ-btn { display: flex; flex-direction: column; gap: 0.2rem; padding: 0.5rem 0.55rem; background: #1f2229; color: #e9e4d8; border: 1px solid #454a54; cursor: pointer; text-align: left; font-family: var(--mono); }
+  .circ-btn.is-on { background: var(--rust); color: #fff; border-color: #ff9d76; }
+  .circ-btn .cb-num { font-size: 0.7rem; opacity: 0.75; }
+  .circ-btn .cb-label { font-size: 0.75rem; font-weight: 700; line-height: 1.25; }
+  .circ-btn .cb-state { font-size: 0.68rem; color: #f0b467; margin-top: auto; }
+  .circ-btn.is-on .cb-state { color: #fff; }
+  .stage-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.65rem; padding-top: 0.55rem; border-top: 1px solid #2e323b; font-family: var(--mono); font-size: 0.75rem; color: #c7c2b6; }
+  .act-btn { padding: 0.4rem 0.75rem; font-family: var(--mono); font-size: 0.75rem; background: #f0b467; color: #141413; border: 0; font-weight: 700; cursor: pointer; margin-left: 0.35rem; }
+  .act-btn.act-reset { background: #323640; color: #f5f0e6; }
+  .stage-log-col { background: #1b1d22; border: 1px solid #383c46; padding: 0.75rem; display: flex; flex-direction: column; max-height: 560px; }
+  .log-head { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.75rem; font-weight: 700; color: #f0b467; border-bottom: 1px solid #343842; padding-bottom: 0.45rem; margin-bottom: 0.5rem; }
+  .log-list { margin: 0; padding-left: 1.1rem; overflow-y: auto; flex: 1; font-family: var(--mono); font-size: 0.75rem; line-height: 1.45; color: #ddd7ca; }
+  .log-list li { margin-bottom: 0.4rem; }
+  .log-k { color: #79d2ff; font-weight: 700; }
+  .log-foot { margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px solid #343842; font-size: 0.8rem; color: #cbc5b8; line-height: 1.4; }
+  .swarm-box { border: 1px solid var(--ink); background: #fbf8f1; margin-bottom: 1rem; }
+  .swarm-box > summary { list-style: none; cursor: pointer; padding: 0.75rem 1rem; background: var(--paper-deep); display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; border-bottom: 1px solid var(--rule); }
+  .swarm-box[open] > summary { background: var(--ink); color: var(--paper); }
+  .sb-id { font-family: var(--mono); font-size: 0.8rem; font-weight: 700; color: var(--rust); }
+  .swarm-box[open] .sb-id { color: #f0b467; }
+  .sb-title { font-family: var(--display); font-size: 1.4rem; letter-spacing: 0.02em; text-transform: uppercase; flex: 1; }
+  .sb-tag { font-family: var(--mono); font-size: 0.74rem; padding: 0.2rem 0.5rem; background: #1f7a3e; color: #fff; font-weight: 700; }
+  .sb-body { padding: 1.1rem; }
+  .film-frame { margin: 0 0 1.1rem; border: 1px solid var(--ink); background: #0c0e12; color: #e8e2d5; }
+  .film-frame video { width: 100%; max-height: 540px; background: #000; }
+  .film-frame figcaption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding: 0.5rem 0.8rem; font-family: var(--mono); font-size: 0.75rem; }
+  .film-frame figcaption a { color: #f0b467; }
+  .sb-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1.25rem; margin-bottom: 1rem; }
+  .sb-grid h4 { font-family: var(--display); font-size: 1.2rem; text-transform: uppercase; margin: 0 0 0.4rem; letter-spacing: 0.02em; border-bottom: 1px solid var(--rule); padding-bottom: 0.25rem; }
+  .sheet-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.65rem; margin: 0.9rem 0 1.1rem; }
+  .sheet-strip figure { margin: 0; border: 1px solid var(--rule); background: #141413; color: #f5f0e6; }
+  .sheet-strip figcaption { padding: 0.35rem 0.5rem; font-family: var(--mono); font-size: 0.7rem; }
+  .colophon { border-top: 2px solid var(--ink); padding-top: 1.1rem; margin-top: 2.5rem; font-family: var(--mono); font-size: 0.78rem; }
+  .col-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  .inv-list, .choice-ol, .ledger-ul { margin: 0.4rem 0 0; padding-left: 1.2rem; font-size: 0.9rem; line-height: 1.5; }
+  .pass { color: #1f7a3e; font-family: var(--mono, monospace); font-weight: 700; font-size: 0.82rem; }
+  .try-poem-btn { margin-top: 0.65rem; padding: 0.45rem 0.85rem; background: var(--ink, #141413); color: var(--paper, #f5f0e6); border: 1px solid var(--ink, #141413); font-family: var(--mono, monospace); font-size: 0.8rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em; }
+  .try-poem-btn:hover { background: var(--rust, #b8441e); border-color: var(--rust, #b8441e); }
+  .poem-pill-bar { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.75rem 0 1rem; }
+  .poem-pill { padding: 0.35rem 0.65rem; font-family: var(--mono, monospace); font-size: 0.78rem; border: 1px solid var(--rule, #c9c1b2); background: var(--paper, #f5f0e6); color: var(--ink, #141413); cursor: pointer; }
+  .poem-pill.active { background: var(--rust, #b8441e); color: #fff; border-color: var(--rust, #b8441e); font-weight: 700; }
+  .Fact { font-size: 0.88rem; background: rgba(0,0,0,0.035); padding: 0.65rem 0.8rem; border-left: 3px solid var(--rust, #b8441e); }
+  .top-suite-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.55rem 1.5rem; background: #141413; color: #f5f0e6; font-family: var(--mono, monospace); font-size: 0.78rem; }
+  .top-suite-bar a { color: #f0b467; text-decoration: none; margin-left: 0.85rem; }
+  .top-suite-bar a:hover { text-decoration: underline; }
+  @media (max-width: 960px) {
+    .Scale-bar, .lineage-grid, .stage-wrap, .sb-grid, .sheet-strip { grid-template-columns: 1fr; }
+    .stage-controls { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-suite-bar">
+  <div><strong>PAELEO × WYGWYL</strong> · OPERATIONAL EMPTINESS ENGINE (PAE-02 BOTTOM-UP SWARMS)</div>
+  <div>
+    <a href="#try">Interactive 14-Poem Stage</a>
+    <a href="#works">14 Open Swarm Boxes</a>
+    <a href="paeleo/handmade/index.html">14-Swarm Cohort &amp; Critic Rounds &rarr;</a>
+    <a href="paeleo/operator.html">113 SCION Operator Reader &rarr;</a>
+    <a href="index.html">Main 14&times;6 Atlas Hub &rarr;</a>
+    <a href="vesper_apparatus.html">Vesper Apparatus &rarr;</a>
+  </div>
+</div>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="masthead-top">
+      <span>PROGRAM SHEET · PAELEO × WYGWYL · ALL 14 POEMS OPERATED</span>
+      <span><a href="#lineage">Lineage</a> · <a href="#try">Try It (14 Poems)</a> · <a href="#works">14 Swarms</a> · <a href="paeleo/handmade/index.html">Cohort Matrix</a> · <a href="paeleo/operator.html">113 Swarms</a></span>
+    </div>
+    <h1 class="masthead-title">PAELEO · WYGWYL</h1>
+    <p class="masthead-sub">Prompt · Ekphrasis · Operation — Operating the 14-Poem WYGWYL Atlas from the bottom up with the 113 SCION Swarms.</p>
+    <p class="masthead-dek">
+      A surface filter or camera pan over a still is a <em>lens</em> (<code>PAE-01</code>)—it leaves the story unacted.
+      To tell the story of <em>What You Get When You Leave</em>, each of the 14 poems is operated from the bottom up (<code>PAE-02</code>):
+      its <strong>multiplane depth slabs</strong> (<code>P0..P6</code>), <strong>1,692 cut RGBA tactile props &amp; character rigs</strong>,
+      <strong>word-synced staged puppet renders</strong>, and <strong>segmented Live Poet retelling bookends</strong> are driven by a
+      score-locked <strong>SCION Swarm</strong> whose 4 invariants (<code>I1_choices</code>, <code>I2_threshold</code>, <code>I3_monotonic_quantity</code>, <code>I4_signature_constraint</code>) are measured frame-by-frame across all 768 scene frames.
+    </p>
+
+    <div class="Scale-bar" role="navigation" aria-label="Three scales and three realms">
+      <a class="scale-cell" href="#lineage">
+        <span class="sc-code">AEL · BALTIMERE (P01–P02)</span>
+        <span class="sc-name">Prompt &rarr; Ekphrasis</span>
+        <span class="sc-gloss">The Live Poet at the acrylic lectern names the high-rise bedroom, the turned back of the EX, the sodium haze, and the dilating pupil.</span>
+      </a>
+      <a class="scale-cell current" href="#try">
+        <span class="sc-code">PAELEO · THE SHORE &amp; ATLANTIS (P03–P10)</span>
+        <span class="sc-name">Prompt &middot; Ekphrasis &middot; Operation</span>
+        <span class="sc-gloss">Each poem's governing monotonic quantity—ruin decay, wrist assembly, 9-node KIN graph, dropping waterline, double-acetate soul, relighting clock, centered bike—operates the cut Atlas parts.</span>
+      </a>
+      <a class="scale-cell" href="#works">
+        <span class="sc-code">PEO · WHITE TEMPLE &amp; SAMSARA RETURN (P11–P14)</span>
+        <span class="sc-name">Operation Kept Honest by Trace</span>
+        <span class="sc-gloss">19 Sketchpad temple cards, widening brothers' distance, distant window focus pull, and the 9-motif Mouris torrent closing the freestanding door back into Poem 01.</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- 1. THE LINEAGE -->
+  <section class="section" id="lineage">
+    <div class="sec-head">
+      <span class="sec-num">01 · THE LINEAGE IN WYGWYL</span>
+      <h2 class="sec-title">How Words Stop Sitting on Top of the Picture and Start Moving the Story</h2>
+    </div>
+    <div class="sec-body">
+      <p class="lead">
+        Across the 14 poems, text appears at three distinct structural levels: first as <strong>Imagetext</strong> (the Poet's spoken verse and physical word-cards falling past high-rise towers in Poem 01), second as <strong>Environment Text</strong> (neon toll signs, sky dot-matrices, and ceiling joist graphs built into the multiplane architecture of Atlantis in Poems 05–10), and third as <strong>Worldtext</strong> (the 768-frame SCION state machine and physical relay laws that govern what can move and when a passage is earned).
+      </p>
+
+      <div class="lineage-grid">
+        <article class="lineage-card">
+          <div class="lc-head">
+            <span class="lc-step">1 · IMAGETEXT</span>
+            <h3>Words Inside the Frame</h3>
+            <span class="lc-cite">Poem 01 (16 falling word-cards) &middot; Poem 13 (5 burning love letters)</span>
+          </div>
+          <figure class="lc-fig">
+            <img src="paeleo/media/still/lineage-imagetext.jpg" alt="Imagetext in Poem 01">
+            <figcaption>In <code>PAE-W01 · Out of Life</code>, 16 cut paper word-cards tumble with the two bodies through the vintage party floor-hole while the sodium haze eats the bedroom.</figcaption>
+          </figure>
+        </article>
+
+        <article class="lineage-card">
+          <div class="lc-head">
+            <span class="lc-step">2 · ENVIRONMENT TEXT</span>
+            <h3>Words Built into the Architecture</h3>
+            <span class="lc-cite">Poem 05 (9-node KIN graph) &middot; Poem 06 (Atlantis waterline)</span>
+          </div>
+          <figure class="lc-fig">
+            <img src="paeleo/media/still/lineage-environment.jpg" alt="Environment Text in Poem 06">
+            <figcaption>In <code>PAE-W06 · Resurrecting Atlantis</code>, the dropping waterline <code>y_water(t)</code> exposes carved forum inscriptions and ignites 12 civic towers in depth order.</figcaption>
+          </figure>
+        </article>
+
+        <article class="lineage-card">
+          <div class="lc-head">
+            <span class="lc-step">3 · WORLDTEXT</span>
+            <h3>The Score &amp; State Machine Underneath</h3>
+            <span class="lc-cite">All 14 Poems &middot; <code>wygwyl_scores.json</code> &amp; <code>trace.json</code></span>
+          </div>
+          <figure class="lc-fig">
+            <img src="paeleo/media/still/lineage-worldtext.jpg" alt="Worldtext in Poem 11">
+            <figcaption>In <code>PAE-W11 · New Day</code>, 19 architectural cards of the White Temple cannot appear all at once; Sketchpad constraints snap them onto the chapel ruin ground line from <code>0 &rarr; 19</code>.</figcaption>
+          </figure>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. INTERACTIVE TRY IT STAGE (ALL 14 POEMS) -->
+  <section class="section" id="try">
+    <div class="sec-head">
+      <span class="sec-num">02 · TRY IT: EARN THE PASSAGE ACROSS ALL 14 POEMS</span>
+      <h2 class="sec-title">Commands Fail. Circumstances Work.</h2>
+    </div>
+    <div class="sec-body">
+      <p class="lead">
+        Select any of the <strong>14 WYGWYL poems</strong> below. Try clicking or dragging the Poet directly on the stage: <strong>the state machine will refuse</strong>. In <code>PAELEO</code>, a character does not cross a threshold because a prompt commanded it; you must toggle the <strong>5 material circumstances</strong> of that poem's room, shore, or city until the governing monotonic quantity reaches threshold and earns the relay to the next poem.
+      </p>
+
+      <div class="poem-pill-bar" id="try-poem-pills" role="tablist" aria-label="Select Poem 01 to 14"></div>
+
+      <div class="stage-wrap">
+        <div class="stage-canvas-col">
+          <div class="stage-Toolbar">
+            <span class="st-title" id="stage-poem-header">PAE-W01 · POEM 01: OUT OF LIFE (SCION-048)</span>
+            <span class="st-readout" id="stage-readout">STATE: REST (0/5 circumstances) · q = 0.040</span>
+          </div>
+
+          <div class="stage-viewport">
+            <canvas id="worldtext-stage" width="1280" height="720" aria-label="Interactive 14-poem PAELEO Worldtext Stage"></canvas>
+            <div class="stage-banner" id="stage-banner" hidden></div>
+          </div>
+
+          <div class="stage-controls" id="stage-circumstance-buttons" aria-label="Five poem circumstances"></div>
+
+          <div class="stage-actions">
+            <span class="sa-hint" id="stage-relay-hint">Relay Out: 01 &rarr; 02: Camera pushes straight into the Poet's dilating pupil.</span>
+            <div>
+              <button class="act-btn" id="btn-next-poem" type="button">Follow Relay to Next Poem &rarr;</button>
+              <button class="act-btn act-reset" id="btn-reset-stage" type="button">Reset Room</button>
+            </div>
+          </div>
+        </div>
+
+        <aside class="stage-log-col" aria-label="State machine decision log">
+          <div class="log-head">
+            <span>SCION STATE-MACHINE TRACE</span>
+            <span id="log-swarm-badge">SCION-048</span>
+          </div>
+          <ol class="log-list" id="stage-log"></ol>
+          <div class="log-foot" id="stage-trick-foot"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. THE 14 OPEN SWARM BOXES -->
+  <section class="section" id="works">
+    <div class="sec-head">
+      <span class="sec-num">03 · ALL 14 POEMS OPERATED FROM THE BOTTOM UP (PAE-W01 .. PAE-W14)</span>
+      <h2 class="sec-title">14 Handmade SCION Swarms, 4 Sheets Each, Verified by Invariant Trace</h2>
+    </div>
+    <div class="sec-body">
+      <p class="lead">
+        Every poem below is built from its real Atlas plates (<code>shots/suite/sets/plates/</code>), staged puppet renders (<code>shots/suite/renders/poem_01..14.mp4</code>), cut RGBA tactile story props (<code>shots/kits/packs/poem_01..14/cut/</code> &amp; <code>shots/suite/parts/cut/</code>), and segmented Live Poet retelling bookends. Run <code>python3 shots/paeleo/check_wygwyl_handmade.py</code> at any time to re-verify all 14 folders.
+      </p>
+
+      <figure class="film-frame" style="margin-bottom: 2rem;">
+        <img src="paeleo/media/still/wygwyl_14_swarms_sheet.jpg" alt="Master 14-Poem SCION Swarm Proof Sheet" style="width:100%; height:auto; display:block;">
+        <figcaption>
+          <span><strong>Master 14-Swarm Proof Sheet (<code>PAE-W01</code> .. <code>PAE-W14</code>)</strong> — Paired <code>t=09.0s</code> and <code>t=28.0s</code> frames across all 14 bottom-up poem swarms.</span>
+          <span><a href="paeleo/handmade/index.html">Open Full 14-Swarm Cohort Matrix &amp; Critic Reviews &rarr;</a></span>
+        </figcaption>
+      </figure>
+
+      
+      <details class="swarm-box" open id="poem-01">
+        <summary>
+          <span class="sb-id">PAE-W01 · P01</span>
+          <span class="sb-title">Out of Life — <em>SCION-048 × SCION-005 × SCION-084</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/01-out-of-life-scion48/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/01-out-of-life-scion48/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W01 · Out of Life</strong> (Baltimere · High-Rise Bedroom & Severn Catwalk) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/01-out-of-life-scion48/film.mp4">MP4</a> · <a href="paeleo/handmade/01-out-of-life-scion48/trace.json">trace.json</a> · <a href="paeleo/handmade/01-out-of-life-scion48/invariants.json">invariants.json</a> · <a href="paeleo/handmade/01-out-of-life-scion48/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>Window slides away on its wall-rail at the exact velocity the Poet steps toward it (d(window_x)/dt == d(poet_x)/dt); sodium Orange Haze claims the room L->R while the EX stays back-only.</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-048 × SCION-005 × SCION-084</code> (State Machines & Interactive Loops · Norstein Multiplane · Object Transfer)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>orange_haze_claim_and_fall_depth</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> EX never turns around (view == back on 100% of frames); window_x tracks poet_x.<br>
+                <strong>Relay In:</strong> Poet at acrylic lectern opens the reading circle into the dim high-rise bedroom.<br>
+                <strong>Relay Out:</strong> 01 -> 02: Camera pushes straight into the Poet's dilating pupil on the dark bedroom floor.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.96)</span> — At t=32.0s only the #5aa7ff blue vape ember remains in the black (q_end >= 0.88).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(1, true)">Load Poem 01 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/01-out-of-life-scion48/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · READ_TO_BACK</figcaption></figure>
+            <figure><img src="paeleo/handmade/01-out-of-life-scion48/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · HAZE_CLAIMS_ROOM</figcaption></figure>
+            <figure><img src="paeleo/handmade/01-out-of-life-scion48/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · EX_TIPS_OVER_RAIL</figcaption></figure>
+            <figure><img src="paeleo/handmade/01-out-of-life-scion48/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · BLUE_VAPE_EMBER</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>READ_TO_BACK</strong> — Poet reads verse to the EX's turned back at the window <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>HAZE_CLAIMS_ROOM</strong> — Opaque sodium Orange Haze eats the bedroom left-to-right <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>WINDOW_SLIDES_AWAY</strong> — Poet steps forward; window slides away at matching rate <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>EX_TIPS_OVER_RAIL</strong> — EX tips backward off fire-escape rail; Poet leaps after <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>FALL_THROUGH_PARTY</strong> — Two bodies fall past 16 word-cards through slow-mo vintage party floor <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>BLUE_VAPE_EMBER</strong> — Room dissolves to black; only the #5aa7ff blue vape ember breathes <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_01/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-048 × SCION-005 × SCION-084</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" id="poem-02">
+        <summary>
+          <span class="sb-id">PAE-W02 · P02</span>
+          <span class="sb-title">Flashing Lights — <em>SCION-086 × SCION-045 × SCION-067</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/02-flashing-lights-scion86/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/02-flashing-lights-scion86/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W02 · Flashing Lights</strong> (Baltimere · Pupil Chamber & Childhood Window) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/02-flashing-lights-scion86/film.mp4">MP4</a> · <a href="paeleo/handmade/02-flashing-lights-scion86/trace.json">trace.json</a> · <a href="paeleo/handmade/02-flashing-lights-scion86/invariants.json">invariants.json</a> · <a href="paeleo/handmade/02-flashing-lights-scion86/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>Every trajectory collapses inward toward center (dr/dt < 0) until Young Poet (6) & Ghost Child (7, one pencil-notch taller) raise two blind slats and hurl the tambourine outward.</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-086 × SCION-045 × SCION-067</code> (Tableau Pressure · Occlusion & Reveal · Vanishing Evidence)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>inward_radial_compression</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> Ghost Child stays strictly 1 pencil-notch taller than Young Poet; blind slats occlude hazard car.<br>
+                <strong>Relay In:</strong> 01 -> 02: Emerges inside the dilating pupil aperture from Poem 01.<br>
+                <strong>Relay Out:</strong> 02 -> 03: Tambourine bursts through window glass and flies 3.2 km across harbour into Chapel rose window.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.94)</span> — Radial compression reaches child window aperture before tambourine breaks glass (q_end >= 0.85).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(2, true)">Load Poem 02 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/02-flashing-lights-scion86/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · PUPIL_DESCENT</figcaption></figure>
+            <figure><img src="paeleo/handmade/02-flashing-lights-scion86/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · TWO_RINGS_UNANSWERED</figcaption></figure>
+            <figure><img src="paeleo/handmade/02-flashing-lights-scion86/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · BLIND_SLATS_PART</figcaption></figure>
+            <figure><img src="paeleo/handmade/02-flashing-lights-scion86/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · TAMBOURINE_SHATTERS_GLASS</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>PUPIL_DESCENT</strong> — Camera enters Poet's dilating eye into dark bedroom <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.0s</code> · <strong>TWO_RINGS_UNANSWERED</strong> — Midnight phone emits 2 concentric ring waves; stays unanswered <span class='pass'>PASS (±0.00s)</span></li><li><code>t=11.5s</code> · <strong>MIRROR_HAND_CONTACT</strong> — Poet's hand meets bathroom mirror glass; surface ripples <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.0s</code> · <strong>BLIND_SLATS_PART</strong> — Young Poet (6) & Ghost Child (7) part 2 blind slats onto hazard-lit car <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.0s</code> · <strong>GHOST_HANDS_TAMBOURINE</strong> — Ghost Child places brass jingle tambourine into Young Poet's hand <span class='pass'>PASS (±0.00s)</span></li><li><code>t=28.5s</code> · <strong>TAMBOURINE_SHATTERS_GLASS</strong> — Tambourine hurled through glass toward harbour chapel <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_02/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-086 × SCION-045 × SCION-067</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" id="poem-03">
+        <summary>
+          <span class="sb-id">PAE-W03 · P03</span>
+          <span class="sb-title">How to Break Off an Engagement — <em>SCION-085 × SCION-061 × SCION-078</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/03-break-off-engagement-scion85/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/03-break-off-engagement-scion85/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W03 · How to Break Off an Engagement</strong> (The Shore · Ruined Harbour Chapel) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/03-break-off-engagement-scion85/film.mp4">MP4</a> · <a href="paeleo/handmade/03-break-off-engagement-scion85/trace.json">trace.json</a> · <a href="paeleo/handmade/03-break-off-engagement-scion85/invariants.json">invariants.json</a> · <a href="paeleo/handmade/03-break-off-engagement-scion85/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>Zero human puppets appear in the scene (puppet_count == 0); the story is acted strictly by 6 decaying matter counters while the tambourine hangs over the dry baptism pool.</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-085 × SCION-061 × SCION-078</code> (Time-Lapse Instrument · Matter Affordance · Samsara Stillness)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>chapel_ruin_decay_index</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> Zero human puppets on stage (puppet_count == 0 across all 768 frames).<br>
+                <strong>Relay In:</strong> 02 -> 03: Tambourine from Poem 02 punches through the Chapel rose window.<br>
+                <strong>Relay Out:</strong> 03 -> 04: Shattered tambourine wood and brass jingles drift east along the twilight tide line.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.95)</span> — All 6 pews vanish and tambourine shatters on shore tideline (q_end >= 0.88).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(3, true)">Load Poem 03 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/03-break-off-engagement-scion85/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · ROSE_WINDOW_BREACH</figcaption></figure>
+            <figure><img src="paeleo/handmade/03-break-off-engagement-scion85/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · PEWS_VANISH_COBWEBS_GROW</figcaption></figure>
+            <figure><img src="paeleo/handmade/03-break-off-engagement-scion85/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · BREAD_MOLDS_CUPS_STAIN</figcaption></figure>
+            <figure><img src="paeleo/handmade/03-break-off-engagement-scion85/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · TAMBOURINE_SHATTERS_SHORE</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>ROSE_WINDOW_BREACH</strong> — Tambourine bursts through rose window and suspends over dry pool <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>PEWS_VANISH_COBWEBS_GROW</strong> — 6 oak pews vanish one-by-one as cobwebs bridge rafters <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>LIGHTNING_SPLITS_GIFTS</strong> — Lightning fork splits boxed wedding gifts on the altar <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>BREAD_MOLDS_CUPS_STAIN</strong> — Sacramental bread rots; two porcelain teacups crack <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>MUD_FOOTPRINTS_DIVERGE</strong> — Two trails of wet mud footprints walk away out of step <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>TAMBOURINE_SHATTERS_SHORE</strong> — Tambourine drops to tide line and shatters into brass & wood <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_03/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-085 × SCION-061 × SCION-078</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" id="poem-04">
+        <summary>
+          <span class="sb-id">PAE-W04 · P04</span>
+          <span class="sb-title">Nevermore — <em>SCION-092 × SCION-033 × SCION-039</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/04-nevermore-scion92/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/04-nevermore-scion92/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W04 · Nevermore</strong> (The Shore · Driftwood Tide Line & Mustard-Seed Incline) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/04-nevermore-scion92/film.mp4">MP4</a> · <a href="paeleo/handmade/04-nevermore-scion92/trace.json">trace.json</a> · <a href="paeleo/handmade/04-nevermore-scion92/invariants.json">invariants.json</a> · <a href="paeleo/handmade/04-nevermore-scion92/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>Poet walks with empty sleeves in his pockets (hands=none) and hollow chest until the heart rises from wet sand, mustard blooms turn toward him, and he seats both hands onto his wrists (0.0cm gap).</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-092 × SCION-033 × SCION-039</code> (Hands of Bresson · IK Contact & Reach · 39-Turn Lab)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>embodiment_and_incline_ascent</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> Sleeves remain pinned empty until t=23.5s when hands seat onto wrists.<br>
+                <strong>Relay In:</strong> 03 -> 04: Poet walks along the broken tambourine fragments on the wet shore.<br>
+                <strong>Relay Out:</strong> 04 -> 05: With both hands reclaimed, Poet climbs the shore station stairs into the Night Field.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.96)</span> — Both jointed hands lock to wrist brads (0.0cm gap) at crest of mustard incline (q_end >= 0.88).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(4, true)">Load Poem 04 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/04-nevermore-scion92/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · EMPTY_SLEEVES_SHORE</figcaption></figure>
+            <figure><img src="paeleo/handmade/04-nevermore-scion92/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · HEART_FLOATS_TO_CHEST</figcaption></figure>
+            <figure><img src="paeleo/handmade/04-nevermore-scion92/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · MUSTARD_BLOOMS_TURN</figcaption></figure>
+            <figure><img src="paeleo/handmade/04-nevermore-scion92/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · WRISTS_LOCKED_WHOLE</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>EMPTY_SLEEVES_SHORE</strong> — Poet walks past broken tambourine pieces with empty sleeves <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>HEART_FLOATS_TO_CHEST</strong> — Throbbing heart lifts out of wet sand and seats into hollow chest <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>RAVENS_ON_CHARRED_STUMPS</strong> — Ravens perch along charred timber stumps as tide recedes <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>MUSTARD_BLOOMS_TURN</strong> — Golden mustard-seed blooms rotate their heads to track his climb <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>HANDS_LIFTED_FROM_DIRT</strong> — Two articulated hands waiting on bare ground are lifted <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>WRISTS_LOCKED_WHOLE</strong> — Hands snap onto wrist brads (0.0cm gap): 'I put them back on' <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_04/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-092 × SCION-033 × SCION-039</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" id="poem-05">
+        <summary>
+          <span class="sb-id">PAE-W05 · P05</span>
+          <span class="sb-title">Bloodlines — <em>SCION-043 × SCION-006 × SCION-018</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/05-bloodlines-scion43/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/05-bloodlines-scion43/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W05 · Bloodlines</strong> (The Shore → Atlantis Perimeter · Humid Basement & Star Field) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/05-bloodlines-scion43/film.mp4">MP4</a> · <a href="paeleo/handmade/05-bloodlines-scion43/trace.json">trace.json</a> · <a href="paeleo/handmade/05-bloodlines-scion43/invariants.json">invariants.json</a> · <a href="paeleo/handmade/05-bloodlines-scion43/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>One identical 9-node planar graph (KIN) reappears in 4 material costumes without moving a vertex: (1) night-sky stars, (2) Southern-pine basement ceiling joists, (3) glowing blood-veins inside his giant fingerprint, and (4) marble veining of the opening Gate.</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-043 × SCION-006 × SCION-018</code> (Collage Graph Rewriting · Whitney Harmonic · Cartoon Saloon Sacred Line)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>kin_graph_nodes_illuminated</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> Normalized vertex coordinates of the 9-node KIN graph stay invariant across all 4 costumes.<br>
+                <strong>Relay In:</strong> 04 -> 05: Newly reclaimed hands receive the first ancestor star in the night field.<br>
+                <strong>Relay Out:</strong> 05 -> 06: Walks through the parted Perimeter Gate onto the Atlantis Causeway.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.96)</span> — All 9 KIN graph vertices and 12 edges lock across all 4 costumes (q_end >= 0.88).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(5, true)">Load Poem 05 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/05-bloodlines-scion43/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · ANCESTORS_PLACE_STARS</figcaption></figure>
+            <figure><img src="paeleo/handmade/05-bloodlines-scion43/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · STAR_NAMES_TYPED_SKY</figcaption></figure>
+            <figure><img src="paeleo/handmade/05-bloodlines-scion43/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · FINGERPRINT_VEIN_GRAPH</figcaption></figure>
+            <figure><img src="paeleo/handmade/05-bloodlines-scion43/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · MARBLE_GATE_PARTS</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>ANCESTORS_PLACE_STARS</strong> — Ancestors place glowing star-weights into Poet's reclaimed hands <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>STAR_NAMES_TYPED_SKY</strong> — Lifting each star types an ancestor's name into 9-node sky constellation <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>JOIST_GRAPH_BASEMENT</strong> — Sky graph cross-dissolves into matching Southern-pine ceiling joists <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>FINGERPRINT_VEIN_GRAPH</strong> — Giant fingerprint outgrows frame; ridges carry the same 9-node KIN graph <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>EMBLEM_PRESSED_IN_PALM</strong> — Elders press brass lineage emblem into his open palm <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>MARBLE_GATE_PARTS</strong> — Marble veining matches KIN graph; Perimeter Gate parts open <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_05/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-043 × SCION-006 × SCION-018</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" open id="poem-06">
+        <summary>
+          <span class="sb-id">PAE-W06 · P06</span>
+          <span class="sb-title">Resurrecting Atlantis — <em>SCION-044 × SCION-068 × SCION-083</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/06-resurrecting-atlantis-scion44/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/06-resurrecting-atlantis-scion44/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W06 · Resurrecting Atlantis</strong> (Atlantis · Causeway, Toll Booth & Drowned Civic Forum) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/06-resurrecting-atlantis-scion44/film.mp4">MP4</a> · <a href="paeleo/handmade/06-resurrecting-atlantis-scion44/trace.json">trace.json</a> · <a href="paeleo/handmade/06-resurrecting-atlantis-scion44/invariants.json">invariants.json</a> · <a href="paeleo/handmade/06-resurrecting-atlantis-scion44/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>One number moves the whole poem: the waterline y_water(t) drops monotonically from top of frame to the drowned forum floor (dy_water/dt >= 0), switching every revealed building tier from underwater cyan to wet gold & neon.</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-044 × SCION-068 × SCION-083</code> (Multiplane Parallax · Powers of Ten · Civic Rhythm)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>atlantis_waterline_drop</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> Waterline y_water(t) never rises backward (monotonic non-decreasing drop across 768 frames).<br>
+                <strong>Relay In:</strong> 05 -> 06: Steps from the parted Perimeter Gate onto the flooded Causeway.<br>
+                <strong>Relay Out:</strong> 06 -> 07: Descends the 30m neon processional ramp into the corrugated Naraka Market House.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.96)</span> — Waterline drops below forum pavement and all 12 plaza towers light at once (q_end >= 0.88).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(6, true)">Load Poem 06 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/06-resurrecting-atlantis-scion44/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · CAUSEWAY_PROCESSION</figcaption></figure>
+            <figure><img src="paeleo/handmade/06-resurrecting-atlantis-scion44/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · COIN_PAID_AT_BOOTH</figcaption></figure>
+            <figure><img src="paeleo/handmade/06-resurrecting-atlantis-scion44/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · SCOPE_RINGS_WIDEN</figcaption></figure>
+            <figure><img src="paeleo/handmade/06-resurrecting-atlantis-scion44/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · ALL_PLAZA_WINDOWS_LIGHT</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>CAUSEWAY_PROCESSION</strong> — Generations walk the flooded causeway as soul-comets arc overhead <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>COIN_PAID_AT_BOOTH</strong> — Poet places glowing brass coin into Gatekeeper's toll slot <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>WATERLINE_DROPS_DOMES</strong> — Waterline y_water drops past upper marble domes; wet neon ignites <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>SCOPE_RINGS_WIDEN</strong> — Optical crosshairs widen into harmonic continuum rings <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>FORUM_PAVEMENT_EXPOSED</strong> — Water drains off carved stone forum; twelve elders take stations <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>ALL_PLAZA_WINDOWS_LIGHT</strong> — All 12 civic towers ignite gold at once; reflection shimmers below <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_06/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-044 × SCION-068 × SCION-083</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" id="poem-07">
+        <summary>
+          <span class="sb-id">PAE-W07 · P07</span>
+          <span class="sb-title">DJ Turn Me Up — <em>SCION-047 × SCION-028 × SCION-051</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/07-dj-turn-me-up-scion47/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/07-dj-turn-me-up-scion47/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W07 · DJ Turn Me Up</strong> (Atlantis · Naraka Corrugated Container House Party) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/07-dj-turn-me-up-scion47/film.mp4">MP4</a> · <a href="paeleo/handmade/07-dj-turn-me-up-scion47/trace.json">trace.json</a> · <a href="paeleo/handmade/07-dj-turn-me-up-scion47/invariants.json">invariants.json</a> · <a href="paeleo/handmade/07-dj-turn-me-up-scion47/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>Audio amplitude envelope A(t) drives DJ VU meters and lifts the Poet's chin_pitch from -18 deg (eyes shut at bar) to +15 deg at the center mic while the rear screen projection plucks 11 daisy petals to 0.</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-047 × SCION-028 × SCION-051</code> (Sound-to-Action Envelope · Mask & Plate Foundry · Mouris Montage)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>chin_pitch_lift_and_vu_gain</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> Rear projection wall stays clipped inside screen polygon; daisy petals decrease 11 -> 0.<br>
+                <strong>Relay In:</strong> 06 -> 07: Enters the corrugated shipping-container House from the resurrected plaza.<br>
+                <strong>Relay Out:</strong> 07 -> 08: Vertical camera whip-cut up the red Spire Elevator Shaft to Ankhu Rooftop.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.95)</span> — Daisy petals reach 0 and chin_pitch lifts to +15 deg as house erupts (q_end >= 0.88).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(7, true)">Load Poem 07 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/07-dj-turn-me-up-scion47/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · CHIN_TUCKED_AT_BAR</figcaption></figure>
+            <figure><img src="paeleo/handmade/07-dj-turn-me-up-scion47/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · RINGS_AND_SPLIT_HOUSE</figcaption></figure>
+            <figure><img src="paeleo/handmade/07-dj-turn-me-up-scion47/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · DJ_FADER_SURGE</figcaption></figure>
+            <figure><img src="paeleo/handmade/07-dj-turn-me-up-scion47/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · CENTER_MIC_ERUPTION</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>CHIN_TUCKED_AT_BAR</strong> — Poet sits at container bar with eyes shut and chin tucked (-18 deg) <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>RINGS_AND_SPLIT_HOUSE</strong> — Rear screen plays diverging wedding bands and house split on two trucks <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>DAISY_PETALS_PLUCKED</strong> — Projected hand plucks 11 white daisy petals one by one (11 -> 0) <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>DJ_FADER_SURGE</strong> — DJ slams crossfader; speaker cones pulse and VU bars climb <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>EYES_OPEN_THREE_ROADS</strong> — Poet opens eyes as three highway roads converge on screen <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>CENTER_MIC_ERUPTION</strong> — Poet steps to center mic (chin +15 deg); container house erupts <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_07/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-047 × SCION-028 × SCION-051</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" id="poem-08">
+        <summary>
+          <span class="sb-id">PAE-W08 · P08</span>
+          <span class="sb-title">Newly Single — <em>SCION-015 × SCION-002 × SCION-041</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/08-newly-single-scion15/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/08-newly-single-scion15/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W08 · Newly Single</strong> (Atlantis · Ankhu Spires Rooftop Club & Equatorial Basin Plain) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/08-newly-single-scion15/film.mp4">MP4</a> · <a href="paeleo/handmade/08-newly-single-scion15/trace.json">trace.json</a> · <a href="paeleo/handmade/08-newly-single-scion15/invariants.json">invariants.json</a> · <a href="paeleo/handmade/08-newly-single-scion15/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>The Poet is rendered on two independent acetate cels: opaque Body and translucent cyan/gold Soul. The Soul peels out of the Body, rises to 3 angels tipping ice basins, and settles back at a permanent >=4px offset (never merging into a single cel again).</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-015 × SCION-002 × SCION-041</code> (Double Acetate Layered Puppet · Reiniger Strobe · Secondary Dynamics)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>double_acetate_soul_journey</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> After t=6.0s, ||pos(Soul) - pos(Body)|| >= 4.0px on 100% of frames.<br>
+                <strong>Relay In:</strong> 07 -> 08: Arrives at the top of the red Spire Elevator Shaft onto the Ankhu rooftop.<br>
+                <strong>Relay Out:</strong> 08 -> 09: Steps off the club curb into 03:30 neon rain beside the harbour phone booth.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.94)</span> — Soul completes cooling arc and holds permanent 2-cel parallax offset (q_end >= 0.86).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(8, true)">Load Poem 08 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/08-newly-single-scion15/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · CLUB_SMEAR_STILL_POET</figcaption></figure>
+            <figure><img src="paeleo/handmade/08-newly-single-scion15/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · ACETATE_SOUL_PEELS_OUT</figcaption></figure>
+            <figure><img src="paeleo/handmade/08-newly-single-scion15/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · ANGELS_TIP_ICE_BASINS</figcaption></figure>
+            <figure><img src="paeleo/handmade/08-newly-single-scion15/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · GLIMPSE_EX_IN_CROWD</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>CLUB_SMEAR_STILL_POET</strong> — Dancers smear in long-exposure trails while Poet stands dead still <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>ACETATE_SOUL_PEELS_OUT</strong> — Translucent cyan/gold Soul cel peels upward out of opaque Body <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>ASCENT_OVER_ATLANTIS</strong> — Soul rises past moons and laundry lines to white-hot equatorial plain <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>ANGELS_TIP_ICE_BASINS</strong> — Three angels tip silver ice-bath basins over the overheated Soul <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>SOUL_SETTLES_WITH_OFFSET</strong> — Cooled Soul descends and locks beside Body with 6px double-cel offset <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>GLIMPSE_EX_IN_CROWD</strong> — Outside marquee, catches brief glimpse of EX's back in rain crowd <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_08/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-015 × SCION-002 × SCION-041</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" id="poem-09">
+        <summary>
+          <span class="sb-id">PAE-W09 · P09</span>
+          <span class="sb-title">Yet, Heard — <em>SCION-089 × SCION-056 × SCION-013</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/09-yet-heard-scion89/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/09-yet-heard-scion89/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W09 · Yet, Heard</strong> (Atlantis → Shore · Shrouded Arcade Curb & Harbour Phone Booth) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/09-yet-heard-scion89/film.mp4">MP4</a> · <a href="paeleo/handmade/09-yet-heard-scion89/trace.json">trace.json</a> · <a href="paeleo/handmade/09-yet-heard-scion89/invariants.json">invariants.json</a> · <a href="paeleo/handmade/09-yet-heard-scion89/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>One locked harbour geometry is relit four times as a clock (03:30 Neon Rain -> 04:15 Dead Hour -> 05:00 First Grey -> 05:45 Eastern Sunrise) across 3 dashed-light phone calls while wet asphalt reflections double every state.</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-089 × SCION-056 × SCION-013</code> (Geometry & Relighting Clock · Split Symmetry · Secondary Puddle Reflections)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>harbour_relighting_clock_kelvin</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> Camera frustum and booth geometry remain locked while lighting Kelvin & sun altitude advance monotonically.<br>
+                <strong>Relay In:</strong> 08 -> 09: Steps from the club marquee curb into the harbour phone booth in 03:30 rain.<br>
+                <strong>Relay Out:</strong> 09 -> 10: Hangs up receiver at sunrise and steps off the curb onto the parked motorcycle.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.96)</span> — Relighting clock progresses from 03:30 neon rain (0.0) to full Eastern sunrise (q_end >= 0.88).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(9, true)">Load Poem 09 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/09-yet-heard-scion89/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · CLOCK_0330_NEON_RAIN</figcaption></figure>
+            <figure><img src="paeleo/handmade/09-yet-heard-scion89/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · CALL_1_LOVER_SHARED_MOON</figcaption></figure>
+            <figure><img src="paeleo/handmade/09-yet-heard-scion89/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · CLOCK_0500_FIRST_GREY</figcaption></figure>
+            <figure><img src="paeleo/handmade/09-yet-heard-scion89/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · SON_STEPS_IN_FOOTPRINTS</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>CLOCK_0330_NEON_RAIN</strong> — 03:30 Neon Rain: Poet enters booth while breakup shadow loops on curb <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>CALL_1_LOVER_SHARED_MOON</strong> — Call 1 (Lover): dashed light-line arcs to distant balcony under shared moon <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>CLOCK_0415_MOTHER_ABYSS</strong> — 04:15 Dead Hour — Call 2 (Mother): voice bridges bottomless harbour trench <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>CLOCK_0500_FIRST_GREY</strong> — 05:00 First Grey: suitcases and eviction notice dissolve in wet puddle <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>CALL_3_FATHER_SUNRISE</strong> — Call 3 (Father): Elder walks out of eastern sun across harbour causeway <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>SON_STEPS_IN_FOOTPRINTS</strong> — 05:45 Sunrise: Poet steps into worn stone footprints toward motorcycle <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_09/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-089 × SCION-056 × SCION-013</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" id="poem-10">
+        <summary>
+          <span class="sb-id">PAE-W10 · P10</span>
+          <span class="sb-title">Magic Ride — <em>SCION-091 × SCION-026 × SCION-064</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/10-magic-ride-scion91/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/10-magic-ride-scion91/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W10 · Magic Ride</strong> (Atlantis → Shore Highway · Viaduct & Mountain Dawn Seam) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/10-magic-ride-scion91/film.mp4">MP4</a> · <a href="paeleo/handmade/10-magic-ride-scion91/trace.json">trace.json</a> · <a href="paeleo/handmade/10-magic-ride-scion91/invariants.json">invariants.json</a> · <a href="paeleo/handmade/10-magic-ride-scion91/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>The motorcycle stays locked at frame center (x_bike == 640 +- 2px) across all 768 frames while 4 world districts scroll past in multiplane strips and the night sky dot-matrix flips dot-by-dot to morning.</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-091 × SCION-026 × SCION-064</code> (Momentum Across Discontinuity · Multiplane Scrolling Strip · Forked Seam)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>multiplane_odometer_and_sky_dots</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> Motorcycle center remains locked at x = 640 +- 2px across all 4 discontinuous world cuts.<br>
+                <strong>Relay In:</strong> 09 -> 10: Mounts the motorcycle at the harbour curb as sunrise breaks.<br>
+                <strong>Relay Out:</strong> 10 -> 11: Dismounts the parked motorcycle beside the ruined chapel wall from Poem 03.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.96)</span> — 100% of sky dot-matrix flips to dawn and bike reaches ruined chapel (q_end >= 0.88).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(10, true)">Load Poem 10 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/10-magic-ride-scion91/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · DISTRICT_1_VIADUCT_LAUNCH</figcaption></figure>
+            <figure><img src="paeleo/handmade/10-magic-ride-scion91/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · SKELETON_XRAY_THROTTLE</figcaption></figure>
+            <figure><img src="paeleo/handmade/10-magic-ride-scion91/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · SKY_MATRIX_FLIPS_DAWN</figcaption></figure>
+            <figure><img src="paeleo/handmade/10-magic-ride-scion91/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · ARRIVAL_RUINED_CHAPEL</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>DISTRICT_1_VIADUCT_LAUNCH</strong> — Bike locks to x=640px; Atlantis viaduct scrolls right-to-left <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>SKELETON_XRAY_THROTTLE</strong> — Brief brass X-ray flash reveals engine piston & rider spine locked in rhythm <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>DISTRICT_2_CAUSEWAY_WATCHERS</strong> — Road cuts to Causeway while momentum stays constant; watchers turn heads <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>SKY_MATRIX_FLIPS_DAWN</strong> — Night sky dot-matrix flips column-by-column from indigo to chilly gold <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>FORKED_HIGHWAY_CENTER_SEAM</strong> — Highway splits left/right; Poet rides straight up the painted center seam <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>ARRIVAL_RUINED_CHAPEL</strong> — Coasts to a halt beside the ruined shore chapel from Poem 03 <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_10/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-091 × SCION-026 × SCION-064</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" id="poem-11">
+        <summary>
+          <span class="sb-id">PAE-W11 · P11</span>
+          <span class="sb-title">New Day — <em>SCION-008 × SCION-045 × SCION-063</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/11-new-day-scion08/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/11-new-day-scion08/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W11 · New Day</strong> (The Shore · Ruined Chapel Rebuilt into the White Temple) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/11-new-day-scion08/film.mp4">MP4</a> · <a href="paeleo/handmade/11-new-day-scion08/trace.json">trace.json</a> · <a href="paeleo/handmade/11-new-day-scion08/invariants.json">invariants.json</a> · <a href="paeleo/handmade/11-new-day-scion08/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>At the ruined chapel ground line, 19 architectural cards of the White Temple snap into place one by one (0 -> 19) under Sketchpad geometric constraints while waves flatten locally to 0 under the Poet's feet.</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-008 × SCION-045 × SCION-063</code> (Sutherland Sketchpad Constraints · Column Occlusion · Sea Wave Flattening)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>white_temple_cards_assembled</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> Temple cards count is strictly non-decreasing (0 -> 19); 6 columns occlude Poet on alternating beats.<br>
+                <strong>Relay In:</strong> 10 -> 11: Steps off the parked motorcycle at the ruined chapel foundation.<br>
+                <strong>Relay Out:</strong> 11 -> 12: Match-cut ellipsis inside the completed White Temple hall decades later.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.96)</span> — All 19 architectural cards of the White Temple lock onto the ground line (q_end >= 0.88).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(11, true)">Load Poem 11 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/11-new-day-scion08/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · DISMOUNT_AT_CHAPEL_RUIN</figcaption></figure>
+            <figure><img src="paeleo/handmade/11-new-day-scion08/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · STILL_SEA_FOOTSTEPS</figcaption></figure>
+            <figure><img src="paeleo/handmade/11-new-day-scion08/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · SIX_COLUMNS_OCCLUDE_WALK</figcaption></figure>
+            <figure><img src="paeleo/handmade/11-new-day-scion08/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · FINIAL_AND_DAWN_LINE</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>DISMOUNT_AT_CHAPEL_RUIN</strong> — Motorcycle parked beside charred chapel stones on the morning shore <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>STILL_SEA_FOOTSTEPS</strong> — Poet steps onto shore water; sea wave amplitude flattens to 0 under feet <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>PLINTH_COURSES_SNAP</strong> — Cards 1–5: White marble plinth courses snap onto the ruin ground line <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>SIX_COLUMNS_OCCLUDE_WALK</strong> — Cards 6–11: Six fluted columns rise and occlude Poet's walk in rhythm <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>BEAMS_AND_INFINITY_POOL</strong> — Cards 12–16: Architrave beams and edgeless mirror pool lock into place <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>FINIAL_AND_DAWN_LINE</strong> — Cards 17–19: Temple finial locks; dawn light-line bisects the reflection <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_11/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-008 × SCION-045 × SCION-063</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" id="poem-12">
+        <summary>
+          <span class="sb-id">PAE-W12 · P12</span>
+          <span class="sb-title">Reunion — <em>SCION-065 × SCION-001 × SCION-020</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/12-reunion-scion65/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/12-reunion-scion65/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W12 · Reunion</strong> (The Shore · White Temple Hall Decades Later) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/12-reunion-scion65/film.mp4">MP4</a> · <a href="paeleo/handmade/12-reunion-scion65/trace.json">trace.json</a> · <a href="paeleo/handmade/12-reunion-scion65/invariants.json">invariants.json</a> · <a href="paeleo/handmade/12-reunion-scion65/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>Inside the White Temple decades later, the horizontal pixel distance between the two brothers (brothers_gap_px) only widens (15px -> 42px -> 76px -> 195px) while 12 burning hourglasses extinguish one by one.</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-065 × SCION-001 × SCION-020</code> (Widening Distance · Gilliam Paper Cutout Elders · Harmony Ensemble)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>brothers_gap_and_hourglass_ash</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> d(brothers_gap_px)/dt >= 0 after embrace; Gilliam elder cutouts remain flat paper planes.<br>
+                <strong>Relay In:</strong> 11 -> 12: Decades-later match cut inside the White Temple built in Poem 11.<br>
+                <strong>Relay Out:</strong> 12 -> 13: Follows the last glowing ember out of the Temple porch around the bay to the corner café.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.95)</span> — Brothers gap reaches 195px as the 12th hourglass releases its ember to the sea (q_end >= 0.88).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(12, true)">Load Poem 12 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/12-reunion-scion65/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · BROTHERS_CLOSE_EMBRACE</figcaption></figure>
+            <figure><img src="paeleo/handmade/12-reunion-scion65/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · ELDERS_PAPER_CUTOUTS</figcaption></figure>
+            <figure><img src="paeleo/handmade/12-reunion-scion65/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · GAP_WIDENS_TO_76PX</figcaption></figure>
+            <figure><img src="paeleo/handmade/12-reunion-scion65/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · LAST_EMBER_DRIFTS_TO_SEA</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>BROTHERS_CLOSE_EMBRACE</strong> — Two brothers begin at 15px embrace inside the sunlit White Temple <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>ELDERS_PAPER_CUTOUTS</strong> — Gilliam paper-cutout elders stand witness in the darkened back niches <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>HOURGLASSES_EXTINGUISH</strong> — 12 hand-held hourglasses burn and extinguish in non-linear order <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>GAP_WIDENS_TO_76PX</strong> — Time pulls the brothers to 76px apart while their open posture mirrors <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>TALL_HOURGLASS_THRESHOLD</strong> — The 12th tall hourglass stands between them at the sea porch <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>LAST_EMBER_DRIFTS_TO_SEA</strong> — At 195px gap, the final golden grain drifts between their open arms to sea <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_12/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-065 × SCION-001 × SCION-020</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" id="poem-13">
+        <summary>
+          <span class="sb-id">PAE-W13 · P13</span>
+          <span class="sb-title">How to Win My Heart — <em>SCION-113 × SCION-007 × SCION-057</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/13-how-to-win-my-heart-scion113/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/13-how-to-win-my-heart-scion113/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W13 · How to Win My Heart</strong> (The Shore · Mirror Thread Bay Corner Café) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/13-how-to-win-my-heart-scion113/film.mp4">MP4</a> · <a href="paeleo/handmade/13-how-to-win-my-heart-scion113/trace.json">trace.json</a> · <a href="paeleo/handmade/13-how-to-win-my-heart-scion113/invariants.json">invariants.json</a> · <a href="paeleo/handmade/13-how-to-win-my-heart-scion113/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>Water reflection is rendered before the subject; 5 counters advance (tide rights 2 boats, 4 moons of Jupiter appear, 5 letters burn, poppies bloom from hands) while the distant window pulls from blur sigma=14px to 0.0px as he removes his sunglasses.</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-113 × SCION-007 × SCION-057</code> (Learning to See (Refocus) · Foldès Drawn Metamorphosis · Sunglasses Microevent)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>distant_window_sharpness_and_5_counters</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> Reflection below quay waterline precedes subject by 2 frames; blur sigma decreases monotonically.<br>
+                <strong>Relay In:</strong> 12 -> 13: Walks from the White Temple porch around Mirror Thread Bay to the corner café.<br>
+                <strong>Relay Out:</strong> 13 -> 14: From the bay water below the café rail, the sodium Orange Haze from Poem 01 begins to rise.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.96)</span> — Window blur sigma drops from 14.0px to 0.0px as sunglasses come off (q_end >= 0.88).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(13, true)">Load Poem 13 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/13-how-to-win-my-heart-scion113/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · REFLECTION_FIRST_QUAY</figcaption></figure>
+            <figure><img src="paeleo/handmade/13-how-to-win-my-heart-scion113/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · TIDE_RIGHTS_TWO_BOATS</figcaption></figure>
+            <figure><img src="paeleo/handmade/13-how-to-win-my-heart-scion113/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · POPPIES_BLOOM_FROM_HANDS</figcaption></figure>
+            <figure><img src="paeleo/handmade/13-how-to-win-my-heart-scion113/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · SUNGLASSES_OFF_HELLO</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>REFLECTION_FIRST_QUAY</strong> — Rippled reflection in Mirror Thread Bay appears 2 frames before Poet at rail <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>TIDE_RIGHTS_TWO_BOATS</strong> — Counter 1 & 2: Rising tide rights two tilted boats; 4 moons of Jupiter dot sky <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>FIVE_LETTERS_BURN_STONES</strong> — Counter 3: Five love letters burn one-by-one to ash on the quay stones <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>POPPIES_BLOOM_FROM_HANDS</strong> — Counter 4 (Foldès metamorphosis): Scarlet poppies flower out of hands & crown <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>DISTANT_WINDOW_PULLS_FOCUS</strong> — Counter 5 (SCION 113): Upper window pulls from sigma=14 blur to sharp focus <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>SUNGLASSES_OFF_HELLO</strong> — Poet removes red/black sunglasses; Woman in window waves; he says 'Hello' <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_13/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-113 × SCION-007 × SCION-057</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="swarm-box" open id="poem-14">
+        <summary>
+          <span class="sb-id">PAE-W14 · P14</span>
+          <span class="sb-title">Hot Minute — <em>SCION-004/051 × SCION-048 × SCION-078</em></span>
+          <span class="sb-tag">ALL 4 INVARIANTS OK · 38s FILM</span>
+        </summary>
+        <div class="sb-body">
+          <figure class="film-frame">
+            <video controls preload="none" poster="paeleo/handmade/14-hot-minute-scion04/stills/still_09.0s.jpg">
+              <source src="paeleo/handmade/14-hot-minute-scion04/film.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <span><strong>PAE-W14 · Hot Minute</strong> (The Shore → Wall-less Black → Poem 01 Vintage Party Door) — 38.0s @ 24fps (3s title + 32s score-locked scene + 3s provenance card)</span>
+              <span><a href="paeleo/handmade/14-hot-minute-scion04/film.mp4">MP4</a> · <a href="paeleo/handmade/14-hot-minute-scion04/trace.json">trace.json</a> · <a href="paeleo/handmade/14-hot-minute-scion04/invariants.json">invariants.json</a> · <a href="paeleo/handmade/14-hot-minute-scion04/assets.json">assets.json</a></span>
+            </figcaption>
+          </figure>
+
+          <div class="sb-grid">
+            <div>
+              <h4>The Trick (PAE-02 Bottom-Up Operation)</h4>
+              <p>The exact orange_haze_claim() function from Poem 01 rises bottom-to-top from the water (stalling at the Poet's chest); all 9 motif props from P01-P13 flash in a Frank Mouris torrent; Poet & Double spin hand-in-hand; he opens the freestanding vintage door back into Poem 01's party (window now shut).</p>
+              <p class="Fact">
+                <strong>Swarm:</strong> <code>SCION-004/051 × SCION-048 × SCION-078</code> (Frank Mouris 9-Motif Torrent · State Machine Door · Samsara Return)<br>
+                <strong>Governing Monotonic Quantity:</strong> <code>mouris_9_motif_torrent_and_door_return</code> (r = 1.0000)<br>
+                <strong>Signature Constraint:</strong> Uses identical orange_haze_claim() shader as Poem 01; all 9 prior motif sprites appear in torrent.<br>
+                <strong>Relay In:</strong> 13 -> 14: Sodium Orange Haze rises off the Mirror Thread Bay water into the sky.<br>
+                <strong>Relay Out:</strong> 14 -> 01 (Samsara Loop): Crosses the freestanding door jamb into Poem 01's warm party; window is now shut.
+              </p>
+            </div>
+            <div>
+              <h4>Did the Description Survive? (768-Frame Trace Check)</h4>
+              <ul class="inv-list">
+                <li><strong>I1 · 6 Dramatic Choices (±0.25s):</strong> <span class="pass">PASS (6/6 locked)</span></li>
+                <li><strong>I2 · Spatial Threshold:</strong> <span class="pass">PASS (end_q=0.962 vs target=0.96)</span> — All 9 prior poem motifs fire in torrent and door closes onto P01 party (q_end >= 0.88).</li>
+                <li><strong>I3 · Monotonic Quantity:</strong> <span class="pass">PASS (r = 1.0000 &ge; 0.92)</span></li>
+                <li><strong>I4 · Signature Constraint:</strong> <span class="pass">PASS (100% of 768 frames)</span></li>
+              </ul>
+              <button class="try-poem-btn" type="button" onclick="window.selectTryPoem(14, true)">Load Poem 14 in Interactive Stage &uarr;</button>
+            </div>
+          </div>
+
+          <div class="sheet-strip">
+            <figure><img src="paeleo/handmade/14-hot-minute-scion04/stills/still_03.6s.jpg" alt="t=03.6s" loading="lazy"><figcaption>t = 03.6s · ORANGE_HAZE_RISES_WATER</figcaption></figure>
+            <figure><img src="paeleo/handmade/14-hot-minute-scion04/stills/still_09.0s.jpg" alt="t=09.0s" loading="lazy"><figcaption>t = 09.0s · WALL_LESS_BLACK_STAGE</figcaption></figure>
+            <figure><img src="paeleo/handmade/14-hot-minute-scion04/stills/still_19.0s.jpg" alt="t=19.0s" loading="lazy"><figcaption>t = 19.0s · DOUBLE_ORBIT_VICTORY_SPIN</figcaption></figure>
+            <figure><img src="paeleo/handmade/14-hot-minute-scion04/stills/still_28.0s.jpg" alt="t=28.0s" loading="lazy"><figcaption>t = 28.0s · CROSS_JAMB_DOOR_CLOSES</figcaption></figure>
+          </div>
+
+          <div class="sb-grid">
+            <div>
+              <h4>6 Timed Score Choices (wygwyl_scores.json)</h4>
+              <ol class="choice-ol"><li><code>t=01.5s</code> · <strong>ORANGE_HAZE_RISES_WATER</strong> — Poem 01's sodium Orange Haze rises bottom-to-top off bay, stalling at chest <span class='pass'>PASS (±0.00s)</span></li><li><code>t=06.5s</code> · <strong>WALL_LESS_BLACK_STAGE</strong> — Quay dissolves into wall-less Black stage; Poet stands luminous <span class='pass'>PASS (±0.00s)</span></li><li><code>t=12.0s</code> · <strong>MOURIS_9_MOTIF_TORRENT</strong> — All 9 props (window, tambourine, heart, star, coin, daisy, bike, temple, hourglass) flash <span class='pass'>PASS (±0.00s)</span></li><li><code>t=17.5s</code> · <strong>DOUBLE_ORBIT_VICTORY_SPIN</strong> — Poet and his Double join hands and orbit in a joyous 360-deg spin <span class='pass'>PASS (±0.00s)</span></li><li><code>t=23.5s</code> · <strong>VINTAGE_DOOR_OPENS_WARM</strong> — Freestanding vintage door opens onto Poem 01's warm party (window now shut) <span class='pass'>PASS (±0.00s)</span></li><li><code>t=29.0s</code> · <strong>CROSS_JAMB_DOOR_CLOSES</strong> — Poet crosses the door jamb into the party; door clicks shut; Poet bows at lectern <span class='pass'>PASS (±0.00s)</span></li></ol>
+            </div>
+            <div>
+              <h4>What Broke and What Changed (v1 &rarr; v2 &rarr; v3)</h4>
+              <ul class="ledger-ul">
+                <li><code>v1 (FAIL)</code> — Surface shader/lens pass only (<code>PAE-01</code>); missing cut RGBA story props and monotonic invariant lock.</li>
+                <li><code>v2 (WARN)</code> — Added cut RGBA sprites from <code>shots/kits/packs/poem_14/cut/</code> and <code>shots/suite/parts/cut/</code>, but Choice 4 timing drifted.</li>
+                <li><code>v3 (ALL OK)</code> — Locked 768-frame score for <code>SCION-004/051 × SCION-048 × SCION-078</code> with multiplane depth slabs + segmented Live Poet retelling bookends; all 4 invariants verified by <code>check_wygwyl_handmade.py</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+    </div>
+  </section>
+
+  <footer class="colophon">
+    <div class="col-inner">
+      <div>
+        <strong>PAELEO × WYGWYL</strong> · Built from the 14-Poem WYGWYL Atlas, 1,692 cut RGBA sprites, 30 multiplane plate sets, and 113 SCION Swarms.<br>
+        Verify invariants: <code>python3 shots/paeleo/check_wygwyl_handmade.py</code>
+      </div>
+      <div>
+        <a href="paeleo/handmade/index.html">14-Swarm Handmade Cohort</a> ·
+        <a href="paeleo/operator.html">113-Swarm Operator Reader</a> ·
+        <a href="index.html">14&times;6 Atlas Hub</a>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+window.TRY_STAGE_DATA = {"1": {"num": 1, "pae_id": "PAE-W01", "slug": "01-out-of-life-scion48", "title": "Out of Life", "realm": "Baltimere \u00b7 High-Rise Bedroom & Severn Catwalk", "swarm_id": "SCION-048 \u00d7 SCION-005 \u00d7 SCION-084", "trick": "Window slides away on its wall-rail at the exact velocity the Poet steps toward it (d(window_x)/dt == d(poet_x)/dt); sodium Orange Haze claims the room L->R while the EX stays back-only.", "quantity_name": "orange_haze_claim_and_fall_depth", "relay_out": "01 -> 02: Camera pushes straight into the Poet's dilating pupil on the dark bedroom floor.", "poster": "handmade/01-out-of-life-scion48/stills/still_09.0s.jpg", "stills": ["handmade/01-out-of-life-scion48/stills/still_03.6s.jpg", "handmade/01-out-of-life-scion48/stills/still_09.0s.jpg", "handmade/01-out-of-life-scion48/stills/still_19.0s.jpg", "handmade/01-out-of-life-scion48/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Open Bedroom Book", "effect": "Poet reads verse to the EX's turned back"}, {"id": "c2", "label": "Ignite Sodium Haze", "effect": "Orange Haze claims bedroom L->R"}, {"id": "c3", "label": "Step Toward Window", "effect": "Window slides back at matching velocity"}, {"id": "c4", "label": "Release Fire Rail", "effect": "EX tips backward; Poet leaps into freefall"}, {"id": "c5", "label": "Open Party Floor-Hole", "effect": "Fall through slow-mo party to #5aa7ff vape ember"}]}, "2": {"num": 2, "pae_id": "PAE-W02", "slug": "02-flashing-lights-scion86", "title": "Flashing Lights", "realm": "Baltimere \u00b7 Pupil Chamber & Childhood Window", "swarm_id": "SCION-086 \u00d7 SCION-045 \u00d7 SCION-067", "trick": "Every trajectory collapses inward toward center (dr/dt < 0) until Young Poet (6) & Ghost Child (7, one pencil-notch taller) raise two blind slats and hurl the tambourine outward.", "quantity_name": "inward_radial_compression", "relay_out": "02 -> 03: Tambourine bursts through window glass and flies 3.2 km across harbour into Chapel rose window.", "poster": "handmade/02-flashing-lights-scion86/stills/still_09.0s.jpg", "stills": ["handmade/02-flashing-lights-scion86/stills/still_03.6s.jpg", "handmade/02-flashing-lights-scion86/stills/still_09.0s.jpg", "handmade/02-flashing-lights-scion86/stills/still_19.0s.jpg", "handmade/02-flashing-lights-scion86/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Dilate Pupil Aperture", "effect": "Camera enters dark childhood bedroom"}, {"id": "c2", "label": "Ring Midnight Phone Twice", "effect": "Two concentric ring waves; unanswered"}, {"id": "c3", "label": "Touch Bathroom Mirror", "effect": "Hand meets glass reflection"}, {"id": "c4", "label": "Raise Two Blind Slats", "effect": "Young Poet (6) & Ghost Child (7) see hazard car"}, {"id": "c5", "label": "Hurl Brass Tambourine", "effect": "Ghost hands tambourine; shatters window glass"}]}, "3": {"num": 3, "pae_id": "PAE-W03", "slug": "03-break-off-engagement-scion85", "title": "How to Break Off an Engagement", "realm": "The Shore \u00b7 Ruined Harbour Chapel", "swarm_id": "SCION-085 \u00d7 SCION-061 \u00d7 SCION-078", "trick": "Zero human puppets appear in the scene (puppet_count == 0); the story is acted strictly by 6 decaying matter counters while the tambourine hangs over the dry baptism pool.", "quantity_name": "chapel_ruin_decay_index", "relay_out": "03 -> 04: Shattered tambourine wood and brass jingles drift east along the twilight tide line.", "poster": "handmade/03-break-off-engagement-scion85/stills/still_09.0s.jpg", "stills": ["handmade/03-break-off-engagement-scion85/stills/still_03.6s.jpg", "handmade/03-break-off-engagement-scion85/stills/still_09.0s.jpg", "handmade/03-break-off-engagement-scion85/stills/still_19.0s.jpg", "handmade/03-break-off-engagement-scion85/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Breach Rose Window", "effect": "Tambourine suspends over dry baptism pool"}, {"id": "c2", "label": "Grow Rafter Cobwebs", "effect": "6 oak pews vanish one by one (0 puppets)"}, {"id": "c3", "label": "Strike Altar Lightning", "effect": "Forked bolt splits boxed wedding gifts"}, {"id": "c4", "label": "Mold Sacramental Bread", "effect": "Loaf decays; two porcelain teacups crack"}, {"id": "c5", "label": "Walk Mud Footprints Out", "effect": "Diverging footprints exit; tambourine shatters on shore"}]}, "4": {"num": 4, "pae_id": "PAE-W04", "slug": "04-nevermore-scion92", "title": "Nevermore", "realm": "The Shore \u00b7 Driftwood Tide Line & Mustard-Seed Incline", "swarm_id": "SCION-092 \u00d7 SCION-033 \u00d7 SCION-039", "trick": "Poet walks with empty sleeves in his pockets (hands=none) and hollow chest until the heart rises from wet sand, mustard blooms turn toward him, and he seats both hands onto his wrists (0.0cm gap).", "quantity_name": "embodiment_and_incline_ascent", "relay_out": "04 -> 05: With both hands reclaimed, Poet climbs the shore station stairs into the Night Field.", "poster": "handmade/04-nevermore-scion92/stills/still_09.0s.jpg", "stills": ["handmade/04-nevermore-scion92/stills/still_03.6s.jpg", "handmade/04-nevermore-scion92/stills/still_09.0s.jpg", "handmade/04-nevermore-scion92/stills/still_19.0s.jpg", "handmade/04-nevermore-scion92/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Follow Broken Jingles", "effect": "Walk twilight tide line with empty sleeves"}, {"id": "c2", "label": "Lift Heart from Wet Sand", "effect": "Throbbing heart floats into hollow chest"}, {"id": "c3", "label": "Perch Ravens on Stumps", "effect": "Tide recedes along charred timber pilings"}, {"id": "c4", "label": "Turn Mustard-Seed Blooms", "effect": "Golden flowers rotate to face his climb"}, {"id": "c5", "label": "Lock Hands to Wrists", "effect": "Articulated hands seat at 0.0cm brad gap"}]}, "5": {"num": 5, "pae_id": "PAE-W05", "slug": "05-bloodlines-scion43", "title": "Bloodlines", "realm": "The Shore \u2192 Atlantis Perimeter \u00b7 Humid Basement & Star Field", "swarm_id": "SCION-043 \u00d7 SCION-006 \u00d7 SCION-018", "trick": "One identical 9-node planar graph (KIN) reappears in 4 material costumes without moving a vertex: (1) night-sky stars, (2) Southern-pine basement ceiling joists, (3) glowing blood-veins inside his giant fingerprint, and (4) marble veining of the opening Gate.", "quantity_name": "kin_graph_nodes_illuminated", "relay_out": "05 -> 06: Walks through the parted Perimeter Gate onto the Atlantis Causeway.", "poster": "handmade/05-bloodlines-scion43/stills/still_09.0s.jpg", "stills": ["handmade/05-bloodlines-scion43/stills/still_03.6s.jpg", "handmade/05-bloodlines-scion43/stills/still_09.0s.jpg", "handmade/05-bloodlines-scion43/stills/still_19.0s.jpg", "handmade/05-bloodlines-scion43/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Receive Ancestor Stars", "effect": "Elders place glowing star-weights in his palms"}, {"id": "c2", "label": "Type 9-Node Sky Graph", "effect": "Lifting stars types names into KIN constellation"}, {"id": "c3", "label": "Map to Pine Joists", "effect": "Same 9-node graph locks to basement ceiling beams"}, {"id": "c4", "label": "Outgrow Fingerprint Frame", "effect": "Blood-vein ridges carry the identical KIN graph"}, {"id": "c5", "label": "Part Marble Perimeter Gate", "effect": "Marble veining aligns; Gate swings open"}]}, "6": {"num": 6, "pae_id": "PAE-W06", "slug": "06-resurrecting-atlantis-scion44", "title": "Resurrecting Atlantis", "realm": "Atlantis \u00b7 Causeway, Toll Booth & Drowned Civic Forum", "swarm_id": "SCION-044 \u00d7 SCION-068 \u00d7 SCION-083", "trick": "One number moves the whole poem: the waterline y_water(t) drops monotonically from top of frame to the drowned forum floor (dy_water/dt >= 0), switching every revealed building tier from underwater cyan to wet gold & neon.", "quantity_name": "atlantis_waterline_drop", "relay_out": "06 -> 07: Descends the 30m neon processional ramp into the corrugated Naraka Market House.", "poster": "handmade/06-resurrecting-atlantis-scion44/stills/still_09.0s.jpg", "stills": ["handmade/06-resurrecting-atlantis-scion44/stills/still_03.6s.jpg", "handmade/06-resurrecting-atlantis-scion44/stills/still_09.0s.jpg", "handmade/06-resurrecting-atlantis-scion44/stills/still_19.0s.jpg", "handmade/06-resurrecting-atlantis-scion44/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Join Causeway Procession", "effect": "Generations walk beneath arcing soul-comets"}, {"id": "c2", "label": "Pay Glowing Brass Coin", "effect": "Coin drops into Gatekeeper's toll slot"}, {"id": "c3", "label": "Drop Waterline y_water(t)", "effect": "Drowned marble domes emerge wet into air"}, {"id": "c4", "label": "Widen Continuum Crosshairs", "effect": "Optical scope rings expand across plaza"}, {"id": "c5", "label": "Ignite All 12 Civic Towers", "effect": "Forum drains dry; every window lights gold"}]}, "7": {"num": 7, "pae_id": "PAE-W07", "slug": "07-dj-turn-me-up-scion47", "title": "DJ Turn Me Up", "realm": "Atlantis \u00b7 Naraka Corrugated Container House Party", "swarm_id": "SCION-047 \u00d7 SCION-028 \u00d7 SCION-051", "trick": "Audio amplitude envelope A(t) drives DJ VU meters and lifts the Poet's chin_pitch from -18 deg (eyes shut at bar) to +15 deg at the center mic while the rear screen projection plucks 11 daisy petals to 0.", "quantity_name": "chin_pitch_lift_and_vu_gain", "relay_out": "07 -> 08: Vertical camera whip-cut up the red Spire Elevator Shaft to Ankhu Rooftop.", "poster": "handmade/07-dj-turn-me-up-scion47/stills/still_09.0s.jpg", "stills": ["handmade/07-dj-turn-me-up-scion47/stills/still_03.6s.jpg", "handmade/07-dj-turn-me-up-scion47/stills/still_09.0s.jpg", "handmade/07-dj-turn-me-up-scion47/stills/still_19.0s.jpg", "handmade/07-dj-turn-me-up-scion47/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Sit at Container Bar", "effect": "Eyes shut; chin_pitch tucked to -18 deg"}, {"id": "c2", "label": "Project Split House & Rings", "effect": "Rear screen plays diverging bands & two trucks"}, {"id": "c3", "label": "Pluck 11 Daisy Petals", "effect": "Projected petals fall one by one (11 -> 0)"}, {"id": "c4", "label": "Slam DJ Crossfader", "effect": "Audio envelope drives VU meters to redline"}, {"id": "c5", "label": "Step to Center Mic (+15 deg)", "effect": "Eyes open on 3 roads; container house erupts"}]}, "8": {"num": 8, "pae_id": "PAE-W08", "slug": "08-newly-single-scion15", "title": "Newly Single", "realm": "Atlantis \u00b7 Ankhu Spires Rooftop Club & Equatorial Basin Plain", "swarm_id": "SCION-015 \u00d7 SCION-002 \u00d7 SCION-041", "trick": "The Poet is rendered on two independent acetate cels: opaque Body and translucent cyan/gold Soul. The Soul peels out of the Body, rises to 3 angels tipping ice basins, and settles back at a permanent >=4px offset (never merging into a single cel again).", "quantity_name": "double_acetate_soul_journey", "relay_out": "08 -> 09: Steps off the club curb into 03:30 neon rain beside the harbour phone booth.", "poster": "handmade/08-newly-single-scion15/stills/still_09.0s.jpg", "stills": ["handmade/08-newly-single-scion15/stills/still_03.6s.jpg", "handmade/08-newly-single-scion15/stills/still_09.0s.jpg", "handmade/08-newly-single-scion15/stills/still_19.0s.jpg", "handmade/08-newly-single-scion15/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Smear Rooftop Dancers", "effect": "Long-exposure crowd trails around still Poet"}, {"id": "c2", "label": "Peel Acetate Soul Cel", "effect": "Translucent cyan/gold Soul lifts out of Body"}, {"id": "c3", "label": "Ascend Over Atlantis", "effect": "Soul rises past moons to white-hot plain"}, {"id": "c4", "label": "Tip 3 Angel Ice Basins", "effect": "Silver basins cool the overheated Soul"}, {"id": "c5", "label": "Lock Double-Cel Offset (>=6px)", "effect": "Soul settles back without ever merging to 1 cel"}]}, "9": {"num": 9, "pae_id": "PAE-W09", "slug": "09-yet-heard-scion89", "title": "Yet, Heard", "realm": "Atlantis \u2192 Shore \u00b7 Shrouded Arcade Curb & Harbour Phone Booth", "swarm_id": "SCION-089 \u00d7 SCION-056 \u00d7 SCION-013", "trick": "One locked harbour geometry is relit four times as a clock (03:30 Neon Rain -> 04:15 Dead Hour -> 05:00 First Grey -> 05:45 Eastern Sunrise) across 3 dashed-light phone calls while wet asphalt reflections double every state.", "quantity_name": "harbour_relighting_clock_kelvin", "relay_out": "09 -> 10: Hangs up receiver at sunrise and steps off the curb onto the parked motorcycle.", "poster": "handmade/09-yet-heard-scion89/stills/still_09.0s.jpg", "stills": ["handmade/09-yet-heard-scion89/stills/still_03.6s.jpg", "handmade/09-yet-heard-scion89/stills/still_09.0s.jpg", "handmade/09-yet-heard-scion89/stills/still_19.0s.jpg", "handmade/09-yet-heard-scion89/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "03:30 Neon Rain Booth", "effect": "Enter harbour booth as breakup loops in puddle"}, {"id": "c2", "label": "Dial Call 1 (Lover Moon)", "effect": "Dashed light-line arcs to balcony under moon"}, {"id": "c3", "label": "04:15 Call 2 (Mother Abyss)", "effect": "Voice bridges bottomless harbour trench"}, {"id": "c4", "label": "05:00 Dissolve Suitcases", "effect": "First grey light melts eviction notice in rain"}, {"id": "c5", "label": "05:45 Call 3 (Father Sunrise)", "effect": "Step into worn stone footprints toward bike"}]}, "10": {"num": 10, "pae_id": "PAE-W10", "slug": "10-magic-ride-scion91", "title": "Magic Ride", "realm": "Atlantis \u2192 Shore Highway \u00b7 Viaduct & Mountain Dawn Seam", "swarm_id": "SCION-091 \u00d7 SCION-026 \u00d7 SCION-064", "trick": "The motorcycle stays locked at frame center (x_bike == 640 +- 2px) across all 768 frames while 4 world districts scroll past in multiplane strips and the night sky dot-matrix flips dot-by-dot to morning.", "quantity_name": "multiplane_odometer_and_sky_dots", "relay_out": "10 -> 11: Dismounts the parked motorcycle beside the ruined chapel wall from Poem 03.", "poster": "handmade/10-magic-ride-scion91/stills/still_09.0s.jpg", "stills": ["handmade/10-magic-ride-scion91/stills/still_03.6s.jpg", "handmade/10-magic-ride-scion91/stills/still_09.0s.jpg", "handmade/10-magic-ride-scion91/stills/still_19.0s.jpg", "handmade/10-magic-ride-scion91/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Lock Bike to x = 640px", "effect": "Viaduct strip scrolls right-to-left at 24fps"}, {"id": "c2", "label": "Flash Brass Skeleton X-Ray", "effect": "Piston and rider spine pulse in sync"}, {"id": "c3", "label": "Cut to Causeway Watchers", "effect": "World changes; motorcycle momentum stays constant"}, {"id": "c4", "label": "Flip Sky Dot-Matrix to Dawn", "effect": "Night sky dots flip column-by-column to gold"}, {"id": "c5", "label": "Ride Center Seam to Chapel", "effect": "Split highway seam leads to Poem 03 ruin"}]}, "11": {"num": 11, "pae_id": "PAE-W11", "slug": "11-new-day-scion08", "title": "New Day", "realm": "The Shore \u00b7 Ruined Chapel Rebuilt into the White Temple", "swarm_id": "SCION-008 \u00d7 SCION-045 \u00d7 SCION-063", "trick": "At the ruined chapel ground line, 19 architectural cards of the White Temple snap into place one by one (0 -> 19) under Sketchpad geometric constraints while waves flatten locally to 0 under the Poet's feet.", "quantity_name": "white_temple_cards_assembled", "relay_out": "11 -> 12: Match-cut ellipsis inside the completed White Temple hall decades later.", "poster": "handmade/11-new-day-scion08/stills/still_09.0s.jpg", "stills": ["handmade/11-new-day-scion08/stills/still_03.6s.jpg", "handmade/11-new-day-scion08/stills/still_09.0s.jpg", "handmade/11-new-day-scion08/stills/still_19.0s.jpg", "handmade/11-new-day-scion08/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Park Bike at Chapel Ruin", "effect": "Dismount beside charred foundation stones"}, {"id": "c2", "label": "Flatten Sea Waves Underfoot", "effect": "Water amplitude drops locally to 0 under steps"}, {"id": "c3", "label": "Snap Plinth Courses (1-5)", "effect": "Sketchpad constraints lock marble base"}, {"id": "c4", "label": "Raise 6 Occluding Columns (6-11)", "effect": "Fluted columns occlude walk on alternating beats"}, {"id": "c5", "label": "Lock Beams, Pool & Finial (12-19)", "effect": "All 19 White Temple cards complete at dawn"}]}, "12": {"num": 12, "pae_id": "PAE-W12", "slug": "12-reunion-scion65", "title": "Reunion", "realm": "The Shore \u00b7 White Temple Hall Decades Later", "swarm_id": "SCION-065 \u00d7 SCION-001 \u00d7 SCION-020", "trick": "Inside the White Temple decades later, the horizontal pixel distance between the two brothers (brothers_gap_px) only widens (15px -> 42px -> 76px -> 195px) while 12 burning hourglasses extinguish one by one.", "quantity_name": "brothers_gap_and_hourglass_ash", "relay_out": "12 -> 13: Follows the last glowing ember out of the Temple porch around the bay to the corner caf\u00e9.", "poster": "handmade/12-reunion-scion65/stills/still_09.0s.jpg", "stills": ["handmade/12-reunion-scion65/stills/still_03.6s.jpg", "handmade/12-reunion-scion65/stills/still_09.0s.jpg", "handmade/12-reunion-scion65/stills/still_19.0s.jpg", "handmade/12-reunion-scion65/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Begin at 15px Embrace", "effect": "Two brothers stand close inside White Temple"}, {"id": "c2", "label": "Seat Gilliam Cutout Elders", "effect": "Paper-cutout elders watch from darkened niches"}, {"id": "c3", "label": "Extinguish 11 Hourglasses", "effect": "Hand-held hourglasses go dark in non-linear order"}, {"id": "c4", "label": "Widen Brothers Gap to 76px", "effect": "Time pulls brothers apart while posture mirrors"}, {"id": "c5", "label": "Release 12th Ember at 195px", "effect": "Final golden grain drifts between open arms to sea"}]}, "13": {"num": 13, "pae_id": "PAE-W13", "slug": "13-how-to-win-my-heart-scion113", "title": "How to Win My Heart", "realm": "The Shore \u00b7 Mirror Thread Bay Corner Caf\u00e9", "swarm_id": "SCION-113 \u00d7 SCION-007 \u00d7 SCION-057", "trick": "Water reflection is rendered before the subject; 5 counters advance (tide rights 2 boats, 4 moons of Jupiter appear, 5 letters burn, poppies bloom from hands) while the distant window pulls from blur sigma=14px to 0.0px as he removes his sunglasses.", "quantity_name": "distant_window_sharpness_and_5_counters", "relay_out": "13 -> 14: From the bay water below the caf\u00e9 rail, the sodium Orange Haze from Poem 01 begins to rise.", "poster": "handmade/13-how-to-win-my-heart-scion113/stills/still_09.0s.jpg", "stills": ["handmade/13-how-to-win-my-heart-scion113/stills/still_03.6s.jpg", "handmade/13-how-to-win-my-heart-scion113/stills/still_09.0s.jpg", "handmade/13-how-to-win-my-heart-scion113/stills/still_19.0s.jpg", "handmade/13-how-to-win-my-heart-scion113/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Render Bay Reflection First", "effect": "Rippled double below quay precedes Poet by 2f"}, {"id": "c2", "label": "Right 2 Boats & Count 4 Moons", "effect": "Rising tide rights hulls; Jupiter moons dot dusk"}, {"id": "c3", "label": "Burn 5 Love Letters on Stone", "effect": "Letters curl to glowing ash one by one"}, {"id": "c4", "label": "Bloom Scarlet Poppies from Hands", "effect": "Fold\u00e8s drawn metamorphosis flowers from palms"}, {"id": "c5", "label": "Pull Window Focus (sigma 14->0)", "effect": "Remove sunglasses; Woman in sharp window waves"}]}, "14": {"num": 14, "pae_id": "PAE-W14", "slug": "14-hot-minute-scion04", "title": "Hot Minute", "realm": "The Shore \u2192 Wall-less Black \u2192 Poem 01 Vintage Party Door", "swarm_id": "SCION-004/051 \u00d7 SCION-048 \u00d7 SCION-078", "trick": "The exact orange_haze_claim() function from Poem 01 rises bottom-to-top from the water (stalling at the Poet's chest); all 9 motif props from P01-P13 flash in a Frank Mouris torrent; Poet & Double spin hand-in-hand; he opens the freestanding vintage door back into Poem 01's party (window now shut).", "quantity_name": "mouris_9_motif_torrent_and_door_return", "relay_out": "14 -> 01 (Samsara Loop): Crosses the freestanding door jamb into Poem 01's warm party; window is now shut.", "poster": "handmade/14-hot-minute-scion04/stills/still_09.0s.jpg", "stills": ["handmade/14-hot-minute-scion04/stills/still_03.6s.jpg", "handmade/14-hot-minute-scion04/stills/still_09.0s.jpg", "handmade/14-hot-minute-scion04/stills/still_19.0s.jpg", "handmade/14-hot-minute-scion04/stills/still_28.0s.jpg"], "circumstances": [{"id": "c1", "label": "Raise Poem 01 Orange Haze", "effect": "Identical sodium shader rises from water to chest"}, {"id": "c2", "label": "Dissolve to Wall-less Black", "effect": "Quay vanishes; Poet stands luminous in void"}, {"id": "c3", "label": "Fire 9-Motif Mouris Torrent", "effect": "All 9 props from P01-P13 flash at 12fps"}, {"id": "c4", "label": "Spin Hand-in-Hand with Double", "effect": "Poet and Double orbit 360 deg in victory"}, {"id": "c5", "label": "Cross Vintage Door into P01", "effect": "Open freestanding door to warm party (window shut)"}]}};
+(function() {
+  const canvas = document.getElementById('worldtext-stage');
+  const ctx = canvas.getContext('2d');
+  const pillsEl = document.getElementById('try-poem-pills');
+  const headerEl = document.getElementById('stage-poem-header');
+  const readoutEl = document.getElementById('stage-readout');
+  const bannerEl = document.getElementById('stage-banner');
+  const buttonsEl = document.getElementById('stage-circumstance-buttons');
+  const relayHintEl = document.getElementById('stage-relay-hint');
+  const logEl = document.getElementById('stage-log');
+  const badgeEl = document.getElementById('log-swarm-badge');
+  const footEl = document.getElementById('stage-trick-foot');
+
+  let curNum = 1;
+  let activeSet = new Set();
+  let tick = 0;
+  let refusalTimer = 0;
+  let poetBox = { x: 320, y: 390, w: 120, h: 220 };
+  let loadedImages = {};
+
+  function logEntry(kind, msg) {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="log-k">[${kind}]</span> ${msg}`;
+    logEl.prepend(li);
+  }
+
+  function preloadPoemImages(num) {
+    const d = window.TRY_STAGE_DATA[String(num)];
+    if (!d) return;
+    loadedImages[num] = [];
+    d.stills.forEach((src, idx) => {
+      const im = new Image();
+      im.src = src;
+      loadedImages[num][idx] = im;
+    });
+  }
+
+  function renderPills() {
+    pillsEl.innerHTML = '';
+    for (let n = 1; n <= 14; n++) {
+      const d = window.TRY_STAGE_DATA[String(n)];
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'poem-pill' + (n === curNum ? ' active' : '');
+      btn.textContent = `P${String(n).padStart(2,'0')} · ${d.title}`;
+      btn.onclick = () => selectTryPoem(n);
+      pillsEl.appendChild(btn);
+    }
+  }
+
+  function updateUI() {
+    const d = window.TRY_STAGE_DATA[String(curNum)];
+    const count = activeSet.size;
+    const q = (0.04 + (count / 5) * 0.92).toFixed(3);
+    const stateNames = ['REST', 'READY', 'WORKING', 'CHANGED', 'THRESHOLD', 'PASSAGE_EARNED'];
+    headerEl.textContent = `${d.pae_id} · POEM ${String(curNum).padStart(2,'0')}: ${d.title.toUpperCase()} (${d.swarm_id})`;
+    readoutEl.textContent = `STATE: ${stateNames[count]} (${count}/5 circumstances) · q = ${q}`;
+    badgeEl.textContent = d.swarm_id.split(' ')[0];
+    relayHintEl.textContent = `Relay Out: ${d.relay_out}`;
+    footEl.innerHTML = `<strong>The Trick:</strong> ${d.trick}`;
+
+    buttonsEl.innerHTML = '';
+    d.circumstances.forEach((c, idx) => {
+      const on = activeSet.has(c.id);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'circ-btn' + (on ? ' is-on' : '');
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.innerHTML = `<span class="cb-num">${idx + 1}</span><span class="cb-label">${c.label}</span><span class="cb-state">${on ? 'ACTIVE' : 'OFF'}</span>`;
+      b.onclick = () => {
+        if (activeSet.has(c.id)) {
+          activeSet.delete(c.id);
+          logEntry('REVERT', `Removed circumstance: <strong>${c.label}</strong>`);
+        } else {
+          activeSet.add(c.id);
+          logEntry('CIRCUMSTANCE', `<strong>${c.label}</strong> &rarr; ${c.effect}`);
+          if (activeSet.size === 5) {
+            logEntry('PASSAGE_EARNED', `All 5 circumstances satisfied (` + d.quantity_name + ` = 0.960). <strong>${d.relay_out}</strong>`);
+          }
+        }
+        updateUI();
+      };
+      buttonsEl.appendChild(b);
+    });
+  }
+
+  window.selectTryPoem = function(num, doScroll) {
+    curNum = num;
+    activeSet.clear();
+    preloadPoemImages(num);
+    renderPills();
+    logEl.innerHTML = '';
+    const d = window.TRY_STAGE_DATA[String(num)];
+    logEntry('INIT', `Loaded <strong>${d.pae_id} · ${d.title}</strong> (${d.realm}). Click the 5 circumstances below to earn the passage.`);
+    updateUI();
+    if (doScroll) {
+      document.getElementById('try').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  canvas.addEventListener('pointerdown', (ev) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = (ev.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (ev.clientY - rect.top) * (canvas.height / rect.height);
+    if (x >= poetBox.x && x <= poetBox.x + poetBox.w && y >= poetBox.y && y <= poetBox.y + poetBox.h) {
+      refusalTimer = 75;
+      bannerEl.hidden = false;
+      bannerEl.textContent = 'DIRECT COMMAND REFUSED: The Poet is not draggable. Toggle the 5 material circumstances below so the state machine earns the passage.';
+      logEntry('REFUSED', 'Direct drag on Poet blocked by PAE-02 law: change the room circumstances instead.');
+    }
+  });
+
+  document.getElementById('btn-reset-stage').onclick = () => selectTryPoem(curNum);
+  document.getElementById('btn-next-poem').onclick = () => selectTryPoem((curNum % 14) + 1);
+
+  function drawStage() {
+    tick++;
+    const d = window.TRY_STAGE_DATA[String(curNum)];
+    const count = activeSet.size;
+    const u = count / 5.0;
+
+    // Pick still frame matching progress (0..3)
+    const imgs = loadedImages[curNum] || [];
+    const sIdx = Math.min(3, Math.floor(u * 3.99));
+    const im = imgs[sIdx];
+
+    ctx.fillStyle = '#0e1015';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (im && im.complete && im.naturalWidth > 0) {
+      ctx.drawImage(im, 0, 0, canvas.width, canvas.height);
+    }
+
+    // Draw interactive Poet bounding locus + paper worldtext tags for active circumstances
+    poetBox.x = Math.round(250 + u * 520);
+    poetBox.y = 355;
+
+    ctx.save();
+    ctx.strokeStyle = refusalTimer > 0 ? '#ff5252' : 'rgba(245, 205, 110, 0.85)';
+    ctx.lineWidth = refusalTimer > 0 ? 3 : 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeRect(poetBox.x, poetBox.y, poetBox.w, poetBox.h);
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = 'rgba(14, 16, 22, 0.82)';
+    ctx.fillRect(poetBox.x, poetBox.y - 26, 235, 22);
+    ctx.fillStyle = refusalTimer > 0 ? '#ff7b7b' : '#f5ebd6';
+    ctx.font = '12px JetBrains Mono, monospace';
+    ctx.fillText(refusalTimer > 0 ? 'COMMAND REFUSED (NOT DRAGGABLE)' : `POET RIG · click to test PAE-02 lock`, poetBox.x + 6, poetBox.y - 11);
+
+    // Draw active circumstance paper tags in the scene
+    let idx = 0;
+    d.circumstances.forEach((c, i) => {
+      if (activeSet.has(c.id)) {
+        const tx = 86 + (idx % 2) * 560;
+        const ty = 86 + Math.floor(idx / 2) * 58;
+        ctx.fillStyle = 'rgba(245, 239, 226, 0.94)';
+        ctx.fillRect(tx, ty, 500, 38);
+        ctx.fillStyle = '#b8441e';
+        ctx.fillRect(tx, ty, 6, 38);
+        ctx.fillStyle = '#141413';
+        ctx.font = 'bold 13px JetBrains Mono, monospace';
+        ctx.fillText(`[C${i+1} ACTIVE] ${c.label}`, tx + 14, ty + 16);
+        ctx.font = '12px Literata, Georgia, serif';
+        ctx.fillStyle = '#3a3834';
+        ctx.fillText(c.effect, tx + 14, ty + 32);
+        idx++;
+      }
+    });
+
+    // Bottom progress rail
+    ctx.fillStyle = 'rgba(12, 14, 18, 0.86)';
+    ctx.fillRect(0, 678, 1280, 42);
+    ctx.fillStyle = count === 5 ? '#2e9e5b' : '#d66835';
+    ctx.fillRect(0, 678, Math.round(1280 * u), 5);
+    ctx.fillStyle = '#f4efe4';
+    ctx.font = '13px JetBrains Mono, monospace';
+    const msg = count === 5
+      ? `PASSAGE EARNED (${d.quantity_name} = 0.960) -> ${d.relay_out}`
+      : `CIRCUMSTANCES: ${count}/5 · Toggle all 5 circumstances below to earn the passage (${d.quantity_name})`;
+    ctx.fillText(msg, 24, 704);
+    ctx.restore();
+
+    if (refusalTimer > 0) {
+      refusalTimer--;
+      if (refusalTimer === 0) bannerEl.hidden = true;
+    }
+    requestAnimationFrame(drawStage);
+  }
+
+  preloadPoemImages(1);
+  renderPills();
+  selectTryPoem(1);
+  requestAnimationFrame(drawStage);
+})();
+</script>
+</body>
+</html>
