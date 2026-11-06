@@ -1372,6 +1372,9 @@ python3 render.py
             "choices": choices,
         }, f, indent=2)
 
+    # Populate Round 2 existing-asset provenance (`sources/sources.json`, `build/fetch_sources.py`, `reviews/round-02-critic.md`)
+    LHC.R2.populate_poem_sources(num, folder)
+
     return num, slug, final_video
 
 

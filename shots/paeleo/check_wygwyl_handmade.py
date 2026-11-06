@@ -81,10 +81,13 @@ def check_folder(folder, all_scores):
         "constraint": score["signature_constraint"],
     }
 
-    # I5: Standalone handmade package check (`build/render.py`, `build/make.sh`, `film.mp4`, 4 stills, `proof/layers_and_props.jpg`)
+    # I5: Standalone handmade package check (`build/render.py`, `build/make.sh`, `sources/sources.json`, `film.mp4`, 4 stills, `proof/layers_and_props.jpg`)
     req_files = [
         "build/render.py",
         "build/make.sh",
+        "build/fetch_sources.py",
+        "sources/sources.json",
+        "reviews/round-02-critic.md",
         "film.mp4",
         "stills/still_03.6s.jpg",
         "stills/still_09.0s.jpg",
