@@ -94,6 +94,18 @@ for (const [label, transform] of [
   rejects(label, clone(plan), sources);
 }
 {
+  // A local copy and a cross-repository original still name the same image.
+  // Explicit aliases must participate in ownership, not only visible src paths.
+  const sources = clone(manifest);
+  const original = 'https://hartswf0.github.io/butterfly-halfworld/wygwyl/world/archive/source-image.jpg';
+  sources[first.scene].aliases = [original];
+  sources[second.scene].poster = original + '?grade=night#crop';
+  rejects('a cross-repository original also allocated as a local-copy alias', clone(plan), sources);
+  sources[second.scene].poster = 'landing/different-visible-name/poster.webp';
+  sources[second.scene].aliases = [original.replace('/archive/', '/archive/temporary/../')];
+  rejects('two local copies sharing a cross-repository source alias', clone(plan), sources);
+}
+{
   const sources = clone(manifest);
   sources[second.scene].planes[0].src = './' + sources[first.scene].planes[0].src + '?variant=2';
   rejects('a shared layer between separate scene owners', clone(plan), sources);
@@ -184,6 +196,7 @@ class Node {
     this.tagName = tag ? tag.toUpperCase() : '';
     this.attrs = {...attrs}; this.childNodes = []; this.parentNode = null; this.text = text;
     this.listeners = {}; this.value = ''; this.scrollTop = 0; this.currentTime = 0; this.paused = true;
+    this.playCalls = 0;
     this.clientWidth = 1200; this.clientHeight = 680; this.scrollHeight = 680; this.offsetTop = 0;
     this.style = {setProperty(key, value) { this[key] = String(value); }};
     this.dataset = new Proxy({}, {
@@ -203,6 +216,7 @@ class Node {
   get children() { return this.childNodes.filter(node => node.tagName); }
   get firstChild() { return this.childNodes[0] || null; }
   get lastChild() { return this.childNodes[this.childNodes.length - 1] || null; }
+  get ownerDocument() { let root = this; while (root.parentNode) root = root.parentNode; return root; }
   get id() { return this.attrs.id || ''; }
   set id(value) { this.attrs.id = String(value); }
   get className() { return this.attrs.class || ''; }
@@ -231,14 +245,23 @@ class Node {
   contains(node) { for (; node; node = node.parentNode) if (node === this) return true; return false; }
   addEventListener(type, handler) { (this.listeners[type] ||= []).push(handler); }
   removeEventListener(type, handler) { this.listeners[type] = (this.listeners[type] || []).filter(fn => fn !== handler); }
-  dispatchEvent(event) { event.target ||= this; event.preventDefault ||= () => {}; [...(this.listeners[event.type] || [])].forEach(handler => handler.call(this, event)); if (this['on' + event.type]) this['on' + event.type](event); return true; }
+  dispatchEvent(event) {
+    event.target ||= this; event.currentTarget = this;
+    event.preventDefault ||= () => { event.defaultPrevented = true; };
+    event.stopPropagation ||= () => { event.cancelBubble = true; };
+    [...(this.listeners[event.type] || [])].forEach(handler => handler.call(this, event));
+    if (this['on' + event.type]) this['on' + event.type](event);
+    if (event.bubbles && !event.cancelBubble && this.parentNode) this.parentNode.dispatchEvent(event);
+    return !event.defaultPrevented;
+  }
   getBoundingClientRect() { const top = this.id === 'hero' ? 0 : this.id === 'made' ? 900 : 3000; return {top, bottom: top + 700, left: 0, right: 1200, width: 1200, height: 700}; }
   getClientRects() { return this.hidden ? [] : [this.getBoundingClientRect()]; }
   scrollIntoView() {}
-  focus() {}
+  focus() { this.ownerDocument.activeElement = this; }
+  click() { this.dispatchEvent({type: 'click', bubbles: true}); }
   select() {}
-  play() { this.paused = false; return Promise.resolve(); }
-  pause() { this.paused = true; }
+  play() { this.playCalls++; const changed = this.paused; this.paused = false; if (changed) this.dispatchEvent({type: 'play'}); return Promise.resolve(); }
+  pause() { const changed = !this.paused; this.paused = true; if (changed) this.dispatchEvent({type: 'pause'}); }
 }
 const VOID = new Set('area base br col embed hr img input link meta param source track wbr'.split(' '));
 function serialize(node) {
@@ -273,6 +296,7 @@ function runPage(page, {extraTool = false} = {}) {
   document.getElementById = id => document.querySelector('#' + id);
   document.documentElement = document.querySelector('html');
   document.body = document.querySelector('body');
+  document.activeElement = document.body;
   const staticOwners = document.querySelectorAll('[data-scene-owner]').map(node => node.dataset.sceneOwner);
   for (const entry of plan.filter(entry => entry.page === page && entry.kind !== 'chapter')) {
     assert.equal(staticOwners.filter(owner => owner === entry.owner).length, 1, page + ' must declare ' + entry.owner + ' exactly once');
@@ -287,7 +311,7 @@ function runPage(page, {extraTool = false} = {}) {
   }
   const errors = [], timers = [];
   const context = vm.createContext({
-    URL, document, console: {error: message => errors.push(message), log() {}, warn() {}},
+    URL, URLSearchParams, document, console: {error: message => errors.push(message), log() {}, warn() {}},
     innerWidth: 1200, innerHeight: 800, scrollY: 0,
     matchMedia: () => ({matches: false}), getComputedStyle: () => ({overflowY: 'visible'}),
     requestAnimationFrame: () => 0, cancelAnimationFrame() {},
@@ -307,7 +331,7 @@ function runPage(page, {extraTool = false} = {}) {
     if (code.trim()) vm.runInContext(code, context, {filename: attrs.src || page + ':inline', timeout: 3000});
   }
   assert.equal(errors.length, 0, page + ' logged a media ownership failure: ' + errors.join('; '));
-  return {page, document, context, html};
+  return {page, document, context, html, extraTool};
 }
 
 function assertTextOnly(node, label) {
@@ -352,6 +376,7 @@ function inspectPage(run) {
   assert.equal(document.querySelectorAll('#expModal,#expModalImg').length, 0, 'Proof images must open at their source, not duplicate in an inline modal');
   if (page === 'index.html') {
     const tools = document.querySelectorAll('#tools a');
+    assert.equal(tools.length, Object.keys(requiredTools).length + (run.extraTool ? 1 : 0), 'The complete directory must retain exactly the baseline tools plus the explicit text-only test addition');
     for (const [key, href] of Object.entries(requiredTools)) {
       const links = tools.filter(node => node.dataset.key === key);
       assert.equal(links.length, 1, 'Missing or repeated tool ' + key);
@@ -385,9 +410,181 @@ function inspectPage(run) {
   return {owners, paths};
 }
 
+function inspectConnections(run) {
+  const {document} = run;
+  const worlds = document.getElementById('worlds');
+  const tabs = worlds.querySelectorAll('[data-route-tab]');
+  const panels = worlds.querySelectorAll('[data-route-panel]');
+  const cards = worlds.querySelectorAll('article[data-connection]');
+  const showAll = document.getElementById('routeShowAll');
+  const selector = document.getElementById('routePoem');
+  const reading = document.getElementById('worldReading');
+  const film = document.getElementById('vid');
+  const routeNames = ['read', 'build', 'stage', 'walk', 'listen'];
+  const routeCounts = {read: 2, build: 3, stage: 5, walk: 2, listen: 2};
+  const connectionNames = ['language', 'atlantis', 'foundry', 'inverse', 'severn', 'weave', 'shots', 'sets', 'archive', 'points', 'island', 'moviemap', 'score', 'duets'];
+  assert.deepEqual(tabs.map(tab => tab.dataset.routeTab), routeNames, 'The five journeys must remain directly selectable');
+  assert.equal(panels.length, 5, 'The five journeys need five distinct panels');
+  assert.equal(cards.length, 14, 'All fourteen connected entries must remain in the document');
+  assert.deepEqual(cards.map(card => card.dataset.connection).sort(), connectionNames.sort(), 'Connected entries must not be duplicated or silently removed');
+  const primaryDestinations = cards.map(card => {
+    const opens = card.querySelectorAll('a.connection-open');
+    assert.equal(opens.length, 1, card.id + ' needs exactly one primary tool destination');
+    assert.ok(card.querySelector('a.connection-next'), card.id + ' needs its next useful step');
+    return canonical(opens[0].href);
+  });
+  assert.equal(new Set(primaryDestinations).size, 14, 'Different modes of one tool must not inflate the connected entry count');
+  for (const panel of panels) {
+    assert.equal(panel.querySelectorAll('article[data-connection]').length, routeCounts[panel.dataset.routePanel], panel.id + ' lost or duplicated an entry');
+  }
+  assert.equal(cards.filter(card => card.querySelector('img[data-scene-owner]')).length, 13, 'Thirteen entries have unique source artwork; the duet entry has its original voice');
+  assert.equal(document.getElementById('connection-duets').querySelectorAll('img').length, 0, 'The voice entry must not recycle an image');
+
+  const originalOwners = new Map(document.querySelectorAll('[data-scene-owner]').map(root => [root.dataset.sceneOwner, root]));
+  function retainedPresentations() {
+    const roots = document.querySelectorAll('[data-scene-owner]');
+    assert.equal(roots.length, originalOwners.size, 'Changing journeys must not duplicate or remove scene owners');
+    for (const root of roots) {
+      assert.equal(root, originalOwners.get(root.dataset.sceneOwner), 'Changing journeys must retain each original claimed DOM presentation');
+      assert.equal(root.hidden, false, root.dataset.sceneOwner + ' must not be hidden to conceal duplicate allocation');
+    }
+    assert.equal(new Set(roots.map(root => root.dataset.sceneId)).size, roots.length, 'Journey switches must retain source uniqueness');
+  }
+  function selectedRoute(name) {
+    const selected = tabs.filter(tab => tab.getAttribute('aria-selected') === 'true');
+    assert.equal(selected.length, 1, 'Tab mode must expose one selected journey');
+    assert.equal(selected[0].dataset.routeTab, name);
+    assert.equal(worlds.dataset.routeMode, 'tabs');
+    assert.equal(document.getElementById('routeTabs').getAttribute('role'), 'tablist');
+    assert.deepEqual(panels.filter(panel => !panel.hidden).map(panel => panel.dataset.routePanel), [name], 'Tab mode must display only the selected journey');
+    for (const tab of tabs) {
+      const panel = panels.find(item => item.dataset.routePanel === tab.dataset.routeTab);
+      assert.equal(tab.getAttribute('role'), 'tab');
+      assert.equal(tab.getAttribute('aria-controls'), panel.id);
+      assert.equal(panel.getAttribute('aria-labelledby'), tab.id);
+      assert.equal(panel.getAttribute('role'), 'tabpanel');
+      assert.equal(tab.tabIndex, tab === selected[0] ? 0 : -1, 'Only the selected tab belongs in the keyboard tab order');
+    }
+    retainedPresentations();
+  }
+  assert.ok(showAll && !showAll.hidden, 'Show all journeys must become available after initialization');
+  assert.ok(selector, 'A visible poem selector must connect supported tools');
+  for (const tab of tabs) {
+    tab.click();
+    selectedRoute(tab.dataset.routeTab);
+  }
+  tabs[0].dispatchEvent({type: 'keydown', key: 'ArrowRight', bubbles: true});
+  selectedRoute('build');
+  assert.equal(document.activeElement, tabs[1], 'Arrow keys must move focus with the selected tab');
+  tabs[1].dispatchEvent({type: 'keydown', key: 'End', bubbles: true});
+  selectedRoute('listen');
+  assert.equal(document.activeElement, tabs[4]);
+  tabs[4].dispatchEvent({type: 'keydown', key: 'Home', bubbles: true});
+  selectedRoute('read');
+  tabs[0].dispatchEvent({type: 'keydown', key: 'ArrowLeft', bubbles: true});
+  selectedRoute('listen');
+  showAll.click();
+  assert.equal(worlds.dataset.routeMode, 'all');
+  assert.equal(panels.filter(panel => !panel.hidden).length, 5, 'Show all must display every journey');
+  assert.equal(showAll.getAttribute('aria-pressed'), 'true');
+  assert.equal(document.getElementById('routeTabs').getAttribute('role'), null, 'All-routes mode must not pretend several regions form a single selected tabpanel');
+  panels.forEach(panel => assert.equal(panel.getAttribute('role'), 'region'));
+  retainedPresentations();
+  showAll.click();
+  selectedRoute('listen');
+
+  // Assert the destination contracts, not merely that a URL changed. In WAG,
+  // global t overrides poem; Foundry filters and its shot hash can conflict with
+  // a new poem; Movie Map's e/i/d/v describe a different saved view.
+  const links = worlds.querySelectorAll('a[data-poem-route]');
+  const bases = new Map(links.map(link => [link, link.getAttribute('href')]));
+  assert.deepEqual([...new Set(links.map(link => link.dataset.poemRoute))].sort(), ['dossier', 'moviemap', 'shots', 'wag']);
+  const unchanged = worlds.querySelectorAll('a').filter(link => !link.hasAttribute('data-poem-route'));
+  const originalLinks = new Map(unchanged.map(link => [link, link.getAttribute('href')]));
+  const originalReading = reading.getAttribute('src');
+  function poemContext(poem) {
+    assert.equal(selector.value, poem, 'The selector must reflect the active poem');
+    for (const link of links) {
+      if (!poem) {
+        assert.equal(link.getAttribute('href'), bases.get(link), 'Reset must restore the exact original study view');
+        continue;
+      }
+      const url = new URL(link.href);
+      const base = new URL(bases.get(link), BASE);
+      if (link.dataset.poemRoute === 'dossier') {
+        assert.ok(url.pathname.endsWith('/shots/poems/' + poem + '.html'), 'The dossier must select the real numbered HTML page');
+        assert.equal(url.search, '');
+        assert.equal(url.hash, '');
+      } else {
+        assert.equal(url.pathname, base.pathname, 'Poem selection must retain the chosen tool');
+        assert.equal(url.searchParams.get('poem'), poem);
+        if (link.dataset.poemRoute === 'wag') {
+          assert.equal(url.hash, base.hash, 'Spine and score keep their intended view');
+          assert.equal(url.searchParams.has('t'), false, 'A stale global time must not override the chosen poem');
+          const line = url.searchParams.get('line');
+          assert.ok(!line || line.startsWith(poem + '_L'), 'A retained WAG line must belong to the selected poem');
+        } else if (link.dataset.poemRoute === 'shots') {
+          ['world', 'kind', 'q'].forEach(key => assert.equal(url.searchParams.has(key), false, 'Stale Foundry ' + key + ' must not hide the chosen poem'));
+          assert.equal(url.hash, '', 'The previous exact shot must not override the new poem filter');
+        } else if (link.dataset.poemRoute === 'moviemap') {
+          ['e', 'i', 'd', 'v'].forEach(key => assert.equal(url.searchParams.has(key), false, 'Stale Movie Map ' + key + ' must not override the selected poem'));
+        }
+      }
+    }
+    unchanged.forEach(link => assert.equal(link.getAttribute('href'), originalLinks.get(link), 'Unsupported destinations must keep their actual URL contract'));
+    assert.equal(reading.getAttribute('src'), originalReading, 'The clearly labeled poem 01 excerpt must not silently become another reading');
+    assert.equal(reading.playCalls, 0, 'Choosing a route or poem must not start the reading');
+    assert.equal(film.playCalls, 0, 'Choosing a route or poem must not start the film');
+    retainedPresentations();
+  }
+  for (const poem of ['07', '14', '01', '']) {
+    selector.value = poem; selector.dispatchEvent({type: 'change', bubbles: true});
+    poemContext(poem);
+  }
+  const stripButton = document.querySelectorAll('.wag-pbtn').find(button => button.dataset.p === '10');
+  stripButton.click(); poemContext('10');
+  document.getElementById('wagReset').click(); poemContext('');
+  for (const [key, href] of Object.entries(requiredTools)) {
+    assert.equal(document.querySelectorAll('#tools a').find(link => link.dataset.key === key).getAttribute('href'), href, 'Reset must also restore the complete directory at ' + key);
+  }
+
+  assert.ok(reading.hasAttribute('controls'), 'The original reading must expose native playback controls');
+  for (const medium of [reading, film]) {
+    assert.equal(medium.hasAttribute('autoplay'), false, 'Media must wait for an explicit play action');
+    assert.notEqual(medium.autoplay, true);
+    assert.equal(medium.hasAttribute('loop'), false, 'Media must not repeat automatically');
+    assert.notEqual(medium.loop, true);
+    assert.equal(medium.playCalls, 0, 'Initialization must not programmatically autoplay media');
+  }
+  film.play();
+  reading.play(); reading.dispatchEvent({type: 'playing'});
+  assert.equal(film.paused, true, 'Starting the original reading must pause the film');
+  assert.equal(reading.paused, false);
+  film.play();
+  assert.equal(reading.paused, true, 'Starting the film must pause the original reading');
+  assert.equal(film.paused, false);
+  tabs.find(tab => tab.dataset.routeTab === 'listen').click();
+  reading.play(); reading.dispatchEvent({type: 'playing'});
+  tabs.find(tab => tab.dataset.routeTab === 'build').click();
+  assert.equal(reading.paused, true, 'Leaving the listening journey must pause its hidden reading');
+  const status = document.getElementById('readingStatus');
+  assert.equal(status.getAttribute('role'), 'status', 'Playback feedback must be announced');
+  reading.dispatchEvent({type: 'error'});
+  assert.match(status.textContent, /could not load|unavailable|failed/i, 'A failed reading must produce usable visible feedback');
+  const fallback = document.querySelector('a.reading-source');
+  assert.ok(fallback && new URL(fallback.href).protocol === 'https:', 'A failed embedded reading needs its source recording link');
+  assert.equal(fallback.href, new URL(originalReading, BASE).href, 'The fallback must open the same original recording');
+  reading.currentTime = 3.7;
+  reading.dispatchEvent({type: 'ended'});
+  assert.equal(reading.currentTime, 3.7, 'Ending the reading must not rewind or repeat it');
+  assert.equal(reading.playCalls, 2, 'An error or end event must not trigger automatic replay');
+  retainedPresentations();
+}
+
 const main = runPage('index.html');
 const design = runPage('design-prompts.html');
 const mainResult = inspectPage(main), designResult = inspectPage(design);
+inspectConnections(main);
 const ownership = new Map();
 for (const {owners} of [mainResult, designResult]) for (const root of owners) {
   assert.ok(!ownership.has(root.dataset.sceneId), 'A source scene repeats across the landing and design page');
@@ -434,4 +631,5 @@ if (process.env.CI) assert.equal(missing.length, 0, 'CI must check every poster;
 if (missing.length) console.warn('Poster-byte check skipped unavailable local files: ' + missing.join(', '));
 console.log('PASS: ' + ownership.size + ' exclusive scene owners across two pages; three curated chapters; all 45 tools and 68 archive entries retained.');
 console.log('PASS: real page initialization, category/search rerenders, and an added text-only tool produce no repeated media; film end does not rewind.');
+console.log('PASS: five keyboard-accessible route panels, fourteen distinct entries, show-all ownership, supported poem context/reset, and non-autoplaying mutually exclusive audio/video.');
 console.log('PASS: ' + negativeCases + ' duplicate/alias rejection cases; ' + hashes.size + ' unique poster byte hashes.');

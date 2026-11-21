@@ -5,16 +5,124 @@
 (function (root) {
   'use strict';
   var plan = [
-    { owner: 'entrance', scene: 'arcade', kind: 'stage', page: 'index.html' },
-    { owner: 'construction', scene: 'cortex', kind: 'layers', page: 'index.html' },
-    { owner: 'route-weave', scene: 'commons', kind: 'poster', page: 'index.html' },
-    { owner: 'route-foundry', scene: 'temple', kind: 'poster', page: 'index.html' },
-    { owner: 'route-worldtext', scene: 'haze', kind: 'poster', page: 'index.html' },
-    { owner: 'chapter-foundry', scene: 'overseer', kind: 'chapter', tool: 'worldfoundry', page: 'index.html' },
-    { owner: 'chapter-weave', scene: 'hive', kind: 'chapter', tool: 'weave', page: 'index.html' },
-    { owner: 'chapter-score', scene: 'cenotaph', kind: 'chapter', tool: 'wagstack', page: 'index.html' },
-    { owner: 'design-cover', scene: 'moon', kind: 'poster', page: 'design-prompts.html' }
-  ];
+  {
+    "owner": "entrance",
+    "scene": "arcade",
+    "kind": "stage",
+    "page": "index.html"
+  },
+  {
+    "owner": "construction",
+    "scene": "cortex",
+    "kind": "layers",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-language",
+    "scene": "haze",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-atlantis",
+    "scene": "atlantis-plan",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-foundry",
+    "scene": "foundry-harbour",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-inverse",
+    "scene": "inverse-interior",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-severn",
+    "scene": "hero-severn",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-weave",
+    "scene": "weave-hands",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-shots",
+    "scene": "foundry-shot",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-sets",
+    "scene": "chapel-set",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-archive",
+    "scene": "archive-bar",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-points",
+    "scene": "naraka-points",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-island",
+    "scene": "island-map",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-moviemap",
+    "scene": "moviemap-city",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "route-score",
+    "scene": "commons",
+    "kind": "poster",
+    "page": "index.html"
+  },
+  {
+    "owner": "chapter-foundry",
+    "scene": "overseer",
+    "kind": "chapter",
+    "tool": "worldfoundry",
+    "page": "index.html"
+  },
+  {
+    "owner": "chapter-weave",
+    "scene": "hive",
+    "kind": "chapter",
+    "tool": "weave",
+    "page": "index.html"
+  },
+  {
+    "owner": "chapter-score",
+    "scene": "cenotaph",
+    "kind": "chapter",
+    "tool": "wagstack",
+    "page": "index.html"
+  },
+  {
+    "owner": "design-cover",
+    "scene": "moon",
+    "kind": "poster",
+    "page": "design-prompts.html"
+  }
+];
 
   function validatePlan(entries, manifest) {
     var owners = Object.create(null), scenes = Object.create(null), assets = Object.create(null), errors = [];
@@ -26,7 +134,7 @@
       var identity = scene.sourceSid || scene.sid;
       if (scenes[identity]) errors.push('Scene ' + identity + ' belongs to both ' + scenes[identity] + ' and ' + entry.owner);
       else scenes[identity] = entry.owner;
-      [scene.poster].concat((scene.planes || []).map(function (plane) { return plane.src; })).forEach(function (src) {
+      [scene.poster].concat(scene.aliases || [], (scene.planes || []).map(function (plane) { return plane.src; })).forEach(function (src) {
         var url = new URL(src, 'https://hartswf0.github.io/wygwyl-world-arch/');
         url.search = ''; url.hash = '';
         var canonical = url.href;
