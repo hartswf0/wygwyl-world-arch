@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Word Scan · WYGWYL</title>
+<meta property="og:title" content="Word Scan — every analysed shot rebuilt from its own nouns, flat or as lidar">
+<meta property="og:description" content="The shot lab already knows what is in each picture and how far away it is. Here each shot is redrawn in letters: escalator in ESCALATOR, floor in FLOOR, and a pulse of water that travels out from the camera turning noise into the place.">
+<style>
+:root{--bg:#00087a;--ink:#fff;--grey:#aab4ff;--edge:rgba(255,255,255,.28)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 ui-monospace,"Lucida Console","DejaVu Sans Mono",Menlo,Consolas,monospace}
+main{max-width:1320px;margin:0 auto;padding:16px 16px 60px}
+a{color:inherit}
+.k{font-size:12px;letter-spacing:.08em;color:var(--grey)}
+h1{font-size:clamp(20px,4vw,30px);font-weight:400;margin:10px 0 4px}
+.note{color:var(--grey);max-width:900px;font-size:14px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 0}
+.bar+.bar{margin:8px 0 10px}
+select,button{background:var(--bg);color:var(--ink);border:1px solid var(--edge);padding:8px 12px;min-height:38px;font:inherit;font-size:13px;cursor:pointer;max-width:100%}
+select{flex:1;min-width:200px}
+button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+input[type=range]{flex:1;min-width:140px;accent-color:#fff}
+.lab{font-size:11px;color:var(--grey);letter-spacing:.08em}
+.sep{width:1px;height:26px;background:var(--edge)}
+#cv{display:block;width:100%;aspect-ratio:16/9;border:1px solid var(--edge);background:var(--bg)}
+.under{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;margin-top:12px;align-items:start}
+@media(max-width:760px){.under{grid-template-columns:1fr}}
+#head{font-size:16px}
+#lines{margin-top:4px}
+#what,#sees,#prompt{color:var(--grey);font-size:13px;margin-top:8px}
+#orig{width:100%;display:block;border:1px solid var(--edge)}
+.cap{font-size:11px;color:var(--grey);margin-top:3px}
+h2{font-size:18px;font-weight:400;margin:30px 0 6px}
+.ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px 26px;font-size:13.5px}
+.ideas b{display:block;font-weight:400}.ideas b::before{content:"*  "}
+.ideas p{color:var(--grey);padding-left:3ch}
+</style>
+</head>
+<body>
+<main>
+<div class="k"><a href="../index.html">WYGWYL</a> / <a href="index.html">SHOT LAB</a> / <a href="pointcloud.html">POINT CLOUDS</a> / WORD SCAN</div>
+<h1>Word Scan</h1>
+<p class="note">The shot lab has already named what is in each picture and measured how far away it is. Here the picture is rebuilt from only that: every cell is a letter of the thing it belongs to, placed at its measured distance. A pulse travels out from the camera; what it has reached is wet and legible, what it has not is noise.</p>
+
+<div class="bar">
+  <button id="prev" aria-label="Previous shot">&lt;</button>
+  <select id="shot" aria-label="Shot"></select>
+  <button id="next" aria-label="Next shot">&gt;</button>
+  <button id="auto" class="on">AUTO</button>
+</div>
+<div class="bar">
+  <span class="lab">VIEW</span><button data-view="flat" class="on">FLAT</button><button data-view="lidar">LIDAR</button>
+  <span class="sep"></span>
+  <span class="lab">WRITTEN IN</span><button data-text="nouns" class="on">NOUNS</button><button data-text="line">THE POEM</button>
+  <span class="sep"></span>
+  <span class="lab">COLOUR</span><button data-colour="picture" class="on">PICTURE</button><button data-colour="height">HEIGHT</button>
+  <span class="sep"></span>
+  <span class="lab">WATER</span><input type="range" id="h" min="0" max="1" step="0.002" value="0" aria-label="How far the pulse has travelled">
+</div>
+<canvas id="cv"></canvas>
+<div class="under">
+  <div><div id="head"></div><div id="lines"></div><div id="what"></div><div id="sees"></div><div id="prompt"></div></div>
+  <div><img id="orig" alt="The original picture"><div class="cap">the original</div></div>
+</div>
+
+<h2>How to read it</h2>
+<div class="ideas">
+  <div><b>NOUNS</b><p>Each cell is a letter of what the detector or the scene segmenter called it. Small named things (a neon sign, a street lamp) sit on top of the large ones (floor, wall, sky).</p></div>
+  <div><b>THE POEM</b><p>Where the scene book ties this shot to a scene of a poem, the picture is written in that scene's lines instead.</p></div>
+  <div><b>LIDAR</b><p>The same cells pushed out to their measured depth with the shot's own focal length, on every second row, so the ground reads as scan rings around the camera. The view swings to show it is a place.</p></div>
+  <div><b>The pulse</b><p>Water leaves the camera and reaches near things first. Drag WATER, or leave AUTO on.</p></div>
+</div>
+</main>
+<script>
+const $=s=>document.querySelector(s),cv=$('#cv'),g=cv.getContext('2d');
+const NOISE='aeiourstlnmdhcgpbfywvk,;/|-_='.split(''),RAMP=[[79,123,255],[39,199,255],[53,240,160],[216,240,56],[255,176,32]];
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const hash=(c,r)=>{let h=(c*374761393+r*668265263)|0;h=(h^h>>>13)*1274126177|0;return((h^h>>>16)>>>0)/4294967296};
+let IX,GW,GH,si=0,S=null,view='flat',text='nouns',colour='picture',auto=true,h=0,hold=0,last=0;
+const off=document.createElement('canvas'),og=off.getContext('2d',{willReadFrequently:true});
+const img=u=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=u});
+const pad=n=>String(n).padStart(3,'0');
+
+async function load(i){
+  si=(i+IX.length)%IX.length;const m=IX[si];$('#shot').value=si;h=0;hold=0;$('#h').value=0;
+  const [a,b]=await Promise.all([img(`wordscan/${pad(m.n)}.jpg`),img(`wordscan/${pad(m.n)}.png`)]);
+  if(IX[si]!==m)return;
+  off.width=GW;off.height=GH;og.clearRect(0,0,GW,GH);og.drawImage(a,0,0,GW,GH);const col=og.getImageData(0,0,GW,GH).data;
+  og.clearRect(0,0,GW,GH);og.drawImage(b,0,0);const pk=og.getImageData(0,0,GW,GH).data;
+  const N=GW*GH,lab=new Uint8Array(N),d=new Float32Array(N),sky=new Uint8Array(N),rank=new Float32Array(N).fill(1);
+  for(let k=0;k<N;k++){lab[k]=pk[k*4];const q=(pk[k*4+1]*256+pk[k*4+2])/65535;sky[k]=q>.998?1:0;d[k]=.3*Math.pow(2000,q)}
+  const ord=[];for(let k=0;k<N;k++)if(!sky[k])ord.push(k);ord.sort((x,y)=>d[x]-d[y]);ord.forEach((k,r)=>rank[k]=r/ord.length*.94);
+  const med=ord.length?d[ord[ord.length>>1]]:10,far=ord.length?d[ord[Math.floor(ord.length*.97)]]*1.15:50;
+  // world points, camera at the origin; y up
+  const X=new Float32Array(N),Y=new Float32Array(N);let ymin=1e9,ymax=-1e9;
+  for(let j=0;j<GH;j++)for(let c=0;c<GW;c++){const k=j*GW+c;X[k]=(c+.5-GW/2)/m.f*d[k];Y[k]=-(j+.5-GH/2)/m.f*d[k];if(!sky[k]&&d[k]<far){if(Y[k]<ymin)ymin=Y[k];if(Y[k]>ymax)ymax=Y[k]}}
+  const words=m.labels.map(w=>w+' '),line=((m.lines||[]).join(' / ')||m.prompt.split('--')[0]).replace(/\s+/g,' ')+' ';
+  S={m,col,lab,d,sky,rank,X,Y,med,far,ymin,ymax,words,line};
+  $('#orig').src=`wordscan/${pad(m.n)}.jpg`;
+  $('#head').textContent=m.poem?`POEM ${m.poem}: ${m.title.toUpperCase()} — ${m.scene}`:`${m.district.toUpperCase()} — not tied to a poem yet`;
+  $('#lines').textContent=m.lines?m.lines.map(l=>'“'+l+'”').join('  '):'';
+  $('#what').textContent=m.what||'';
+  const n={};for(let k=0;k<N;k++)n[lab[k]]=(n[lab[k]]||0)+1;
+  $('#sees').textContent='The machine sees: '+Object.entries(n).sort((a,b)=>b[1]-a[1]).map(([l,v])=>`${m.labels[l]} ${Math.max(1,Math.round(100*v/N))}%`).join(' · ')+`   [${m.cam}, camera ${m.h} m up]`;
+  $('#prompt').textContent='Prompt: '+m.prompt.split('--')[0].trim();
+}
+function glyph(k,c,j){return text==='line'?S.line[k%S.line.length]:(w=>w[(c+j*2)%w.length])(S.words[S.lab[k]]||'? ')}
+function tint(k){
+  if(colour==='height'){const u=clamp((S.Y[k]-S.ymin)/Math.max(.1,S.ymax-S.ymin))*3.999,i=Math.floor(u),f=u-i,a=RAMP[i],b=RAMP[i+1];return[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f]}
+  const r=S.col[k*4],gg=S.col[k*4+1],b=S.col[k*4+2],l=(r*.3+gg*.59+b*.11)/255,s=(150+105*clamp(l*1.5))/Math.max(r,gg,b,1);
+  return[Math.min(255,r*s),Math.min(255,gg*s),Math.min(255,b*s)]}
+
+function draw(ts){
+  const dt=Math.min(.1,(ts-last)/1000);last=ts;requestAnimationFrame(draw);if(!S)return;
+  if(auto){if(h<1)h=Math.min(1,h+dt/9);else if((hold+=dt)>4){load(si+1);return}$('#h').value=h}
+  const t=ts/1000,dpr=Math.min(2,devicePixelRatio||1),W=cv.clientWidth,H=cv.clientHeight;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
+  g.setTransform(dpr,0,0,dpr,0,0);g.fillStyle='#00087a';g.fillRect(0,0,W,H);g.textAlign='center';g.textBaseline='middle';
+  const front=h*1.02,FONT='px ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace',st=W<620?2:1;
+  if(view==='flat'){
+    const cw=W/GW,ch=H/GH,fs=Math.max(5,Math.floor(ch*.9*st));g.font=fs+FONT;
+    for(let j=0;j<GH;j+=st)for(let c=0;c<GW;c+=st){const k=j*GW+c,wet=S.rank[k]<front,x=(c+.5)*cw,y=(j+.5)*ch;
+      if(wet){const [r,gg,b]=tint(k),edge=front-S.rank[k]<.018&&h<1;
+        if(colour==='picture'){g.fillStyle=`rgba(${S.col[k*4]},${S.col[k*4+1]},${S.col[k*4+2]},.5)`;g.fillRect(c*cw,j*ch,cw*st+.5,ch*st+.5)}
+        const chr=edge?NOISE[(c*7+j*3+Math.floor(t*12))%NOISE.length]:glyph(k,c,j);if(chr===' ')continue;
+        g.fillStyle=edge?'#fff':`rgb(${r|0},${gg|0},${b|0})`;g.fillText(chr,x,y)}
+      else{if(hash(c,j)>.22+.25*(.5+.5*Math.sin(j*.3+c*.05+t*.5)))continue;
+        g.fillStyle='rgba(170,180,255,.34)';g.fillText(NOISE[(c*5+j*11+Math.floor(t*1.3+c*.1))%NOISE.length],x+Math.sin(j*.6+t*.8)*cw,y)}}
+  }else{
+    // swing a camera around the middle of the scene
+    const yaw=.55*Math.sin(t*.22),pit=.24,cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pit),sp=Math.sin(pit),zc=S.med,F=S.m.f*W/GW*1.05,back=zc*1.12,lift=zc*.05;
+    const B={};
+    for(let j=0;j<GH;j+=2)for(let c=0;c<GW;c+=st){const k=j*GW+c;if(S.sky[k]||S.d[k]>S.far)continue;
+      const x0=S.X[k],y0=S.Y[k]-lift,z0=S.d[k]-zc,x1=x0*cy-z0*sy,z1=x0*sy+z0*cy,y2=y0*cp-z1*sp,z2=y0*sp+z1*cp+back;if(z2<zc*.08)continue;
+      const sx=W/2+x1*F/z2,sY=H*.5-y2*F/z2;if(sx<-10||sx>W+10||sY<-10||sY>H+10)continue;
+      const fs=Math.max(4,Math.min(18,Math.round(W/GW*1.7*zc/z2)));(B[fs]||(B[fs]=[])).push(k,sx,sY,c,j)}
+    for(const fs of Object.keys(B).map(Number).sort((a,b)=>a-b)){g.font=fs+FONT;const L=B[fs];
+      for(let q=0;q<L.length;q+=5){const k=L[q],c=L[q+3],j=L[q+4],wet=S.rank[k]<front;
+        if(wet){const edge=front-S.rank[k]<.018&&h<1,[r,gg,b]=tint(k),chr=edge?NOISE[(c*7+j*3+Math.floor(t*12))%NOISE.length]:glyph(k,c,j);if(chr===' ')continue;
+          g.fillStyle=edge?'#fff':`rgb(${r|0},${gg|0},${b|0})`;g.fillText(chr,L[q+1],L[q+2])}
+        else{if(hash(c,j)>.45)continue;g.fillStyle='rgba(170,180,255,.26)';g.fillText(NOISE[(c*5+j*11+Math.floor(t*1.3))%NOISE.length],L[q+1],L[q+2])}}}
+    // the sensor
+    const z1=-zc*cy,x1=zc*sy,y2=-lift*cp-z1*sp,z2=-lift*sp+z1*cp+back;if(z2>0){const sx=W/2+x1*F/z2,sY=H*.5-y2*F/z2;g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.arc(sx,sY,5,0,7);g.stroke();g.beginPath();g.arc(sx,sY,1.5,0,7);g.fillStyle='#fff';g.fill()}
+  }
+  const fz=Math.max(10,Math.min(13,W/62));g.textAlign='left';g.font=fz+FONT;g.fillStyle='#fff';
+  g.fillText(`*** SHOT ${pad(S.m.n)}  ${S.m.district.toUpperCase()}   HYDRATION ${String(Math.round(h*100)).padStart(3)}%   ${S.m.labels.length} NOUNS`,10,14);
+}
+const pick=(attr,fn)=>document.querySelectorAll(`[data-${attr}]`).forEach(b=>b.onclick=()=>{document.querySelectorAll(`[data-${attr}]`).forEach(x=>x.classList.toggle('on',x===b));fn(b.dataset[attr])});
+pick('view',v=>view=v);pick('text',v=>text=v);pick('colour',v=>colour=v);
+$('#auto').onclick=()=>{auto=!auto;$('#auto').classList.toggle('on',auto)};
+$('#h').oninput=e=>{h=+e.target.value;auto=false;$('#auto').classList.remove('on')};
+$('#prev').onclick=()=>load(si-1);$('#next').onclick=()=>load(si+1);$('#shot').onchange=e=>load(+e.target.value);
+fetch('wordscan/index.json').then(r=>r.json()).then(d=>{IX=d.shots;GW=d.gw;GH=d.gh;
+  const grp={};IX.forEach((m,i)=>{const k=m.poem?`${m.poem} · ${m.title}`:'No poem yet';(grp[k]||(grp[k]=[])).push(`<option value="${i}">${pad(m.n)} · ${(m.scene||m.district).replace(/</g,'&lt;')}</option>`)});
+  $('#shot').innerHTML=Object.entries(grp).map(([k,v])=>`<optgroup label="${k}">${v.join('')}</optgroup>`).join('');
+  const q=new URLSearchParams(location.search);
+  for(const a of['view','text','colour'])if(q.get(a))document.querySelector(`[data-${a}=${q.get(a)}]`)?.click();
+  const want=q.get('n')?IX.findIndex(m=>m.n===+q.get('n')):0;
+  load(Math.max(0,want)).then(()=>{if(q.get('h')){auto=false;$('#auto').classList.remove('on');h=+q.get('h');$('#h').value=h}});
+  requestAnimationFrame(draw)});
+</script>
+</body>
+</html>
