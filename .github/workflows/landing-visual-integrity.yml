@@ -1,0 +1,40 @@
+name: Landing visual integrity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - design-prompts.html
+      - landing/**
+      - scripts/check-landing-scenes.cjs
+      - .github/workflows/landing-visual-integrity.yml
+  pull_request:
+    paths:
+      - index.html
+      - design-prompts.html
+      - landing/**
+      - scripts/check-landing-scenes.cjs
+      - .github/workflows/landing-visual-integrity.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unique-scenes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out the entrance sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            index.html
+            design-prompts.html
+            landing
+            scripts/check-landing-scenes.cjs
+          sparse-checkout-cone-mode: false
+      - name: Reject repeated scenes and images
+        run: node scripts/check-landing-scenes.cjs
