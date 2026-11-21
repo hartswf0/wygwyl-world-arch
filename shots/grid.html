@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>The Grid · WYGWYL</title>
+<meta property="og:title" content="The Grid — he reads on an empty floor and the words set the city down around him">
+<meta property="og:description" content="An empty blue grid. Each word he says sets down one real object cut from the shots, at the distance it was measured. Each finished line sends out a wave that washes the pale exposure blue.">
+<style>
+:root{--bg:#020a3a;--ink:#fff;--grey:#9fb0ff;--edge:rgba(255,255,255,.26)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 ui-monospace,"Lucida Console","DejaVu Sans Mono",Menlo,Consolas,monospace}
+main{max-width:1320px;margin:0 auto;padding:16px 16px 60px}
+a{color:inherit}
+.k{font-size:12px;letter-spacing:.08em;color:var(--grey)}
+h1{font-size:clamp(20px,4vw,30px);font-weight:400;margin:10px 0 4px}
+.note{color:var(--grey);max-width:900px;font-size:14px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 10px}
+select,button{background:var(--bg);color:var(--ink);border:1px solid var(--edge);padding:8px 12px;min-height:38px;font:inherit;font-size:13px;cursor:pointer;max-width:100%}
+button.go,button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button.go{min-width:96px;font-weight:700}
+input[type=range]{flex:1;min-width:140px;accent-color:#fff}
+#clock{font-size:12px;color:var(--grey);min-width:96px;text-align:right}
+.sep{width:1px;height:26px;background:var(--edge)}
+.lab{font-size:11px;color:var(--grey);letter-spacing:.08em}
+#cv{display:block;width:100%;aspect-ratio:16/9;border:1px solid var(--edge);background:var(--bg);touch-action:pan-y}
+@media(max-width:700px){#cv{aspect-ratio:4/5}}
+#say{font-size:17px;min-height:56px;margin-top:12px}
+#say i{font-style:normal;color:var(--grey);opacity:.55}
+#place{color:var(--grey);font-size:13.5px;margin-top:4px;min-height:40px}
+h2{font-size:18px;font-weight:400;margin:28px 0 6px}
+.ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px 26px;font-size:13.5px}
+.ideas b{display:block;font-weight:400}.ideas b::before{content:"*  "}
+.ideas p{color:var(--grey);padding-left:3ch}
+</style>
+</head>
+<body>
+<main>
+<div class="k"><a href="../index.html">WYGWYL</a> / <a href="index.html">SHOT LAB</a> / <a href="wordscan.html">WORD SCAN</a> / THE GRID</div>
+<h1>The Grid</h1>
+<p class="note">He stands on an empty floor. Every word he says sets down one real thing cut out of the shots for that scene, at the distance it was measured from the camera. It arrives pale, like an unwashed print. When the line ends a wave goes out from him and washes it blue.</p>
+
+<div class="bar">
+  <select id="poem" aria-label="Poem"></select>
+  <button class="go" id="play">&gt; PLAY</button>
+  <input type="range" id="seek" min="0" max="100" step="0.05" value="0" aria-label="Position in the reading">
+  <span id="clock">0:00 / 0:00</span>
+  <span class="sep"></span>
+  <span class="lab">PRINT</span><button data-look="cyan" class="on">CYANOTYPE</button><button data-look="colour">COLOUR</button>
+  <span class="sep"></span>
+  <button id="orbit">LOOK AROUND</button>
+</div>
+<canvas id="cv"></canvas>
+<div id="say">_</div>
+<div id="place"></div>
+
+<h2>How it works</h2>
+<div class="ideas">
+  <div><b>One word, one thing</b><p>The line he is saying belongs to a scene; the scene has shots; the shots have named, masked objects. Each word takes the next object, far things first. If the word is the object's own name, that object jumps the queue and keeps its label.</p></div>
+  <div><b>Where it lands</b><p>At its measured bearing and distance from that shot's camera, with him standing where the camera stood. Far distances are compressed so the whole scene fits on the floor; each thing keeps the size it had in the picture.</p></div>
+  <div><b>Exposure, then water</b><p>A thing arrives as a pale latent print. The wave at the end of the line develops it, as water does a cyanotype. COLOUR shows the cut-outs as they were shot.</p></div>
+  <div><b>Around the clock</b><p>Each scene of the poem takes its own bearing around him, in order. By the end he is standing inside a ring of everything he said.</p></div>
+</div>
+</main>
+<audio id="au" preload="metadata"></audio>
+<script>
+const $=s=>document.querySelector(s),cv=$('#cv'),g=cv.getContext('2d'),au=$('#au');
+let D,P,items=[],look='cyan',orbit=false,fake=0,fakeOn=false,noAudio=false,lastTick=0,shown=-2,camYaw=0,dragYaw=0,byShot={},rings=[];
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),ease=x=>1-Math.pow(1-clamp(x),3);
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const now=()=>noAudio?fake:au.currentTime,playing=()=>noAudio?fakeOn:!au.paused;
+const squash=z=>5+15*Math.log2(1+z/7);                      // metres measured → metres on the floor
+const stem=w=>w.toLowerCase().replace(/[^a-z]/g,'').replace(/(ies)$/,'y').replace(/(es|s)$/,'');
+const ALIAS={people:'person',man:'person',men:'person',woman:'person',crowd:'person',friend:'person',lover:'person',light:'street lamp',lamp:'street lamp',lights:'street lamp',tower:'tower',city:'building',house:'building',home:'building',sky:'cloud',car:'vehicle',road:'vehicle',gate:'gate',door:'door',stair:'stairs',tree:'tree'};
+
+// two prints of every cut-out: pale latent, and washed blue
+function prints(c){if(c.im)return;c.im=new Image();c.im.onload=()=>{
+  const w=c.im.naturalWidth,h=c.im.naturalHeight,mk=()=>{const o=document.createElement('canvas');o.width=w;o.height=h;return o};
+  const a=mk(),ax=a.getContext('2d');ax.drawImage(c.im,0,0);let px;try{px=ax.getImageData(0,0,w,h)}catch(e){c.col=c.lat=c.cy=c.im;return}
+  const L=mk(),C=mk(),ld=new ImageData(w,h),cd=new ImageData(w,h),s=px.data;
+  for(let i=0;i<s.length;i+=4){const l=Math.pow((s[i]*.3+s[i+1]*.59+s[i+2]*.11)/255,.7),al=s[i+3];
+    ld.data[i]=176+50*l;ld.data[i+1]=190+46*l;ld.data[i+2]=150+40*l;ld.data[i+3]=al*.62;
+    cd.data[i]=8+232*l*l;cd.data[i+1]=40+208*l;cd.data[i+2]=120+135*Math.sqrt(l);cd.data[i+3]=al}
+  L.getContext('2d').putImageData(ld,0,0);C.getContext('2d').putImageData(cd,0,0);c.col=a;c.lat=L;c.cy=C};
+  c.im.src='gridcuts/'+c.f}
+
+function load(i){P=D.poems[i];au.src=encodeURI(P.audio);noAudio=false;fake=0;fakeOn=false;shown=-2;items=[];rings=[];
+  $('#seek').max=P.dur;$('#seek').value=0;$('#play').textContent='> PLAY';
+  const r=rng(900+i*53),NS=P.scenes.length;
+  P.scenes.forEach((sc,si)=>{
+    const words=[];P.lines.forEach((L,li)=>{if(L.scene!==si)return;const span=Math.max(.2,L.t1-L.t0);
+      const ws=L.words.length?L.words:L.text.split(/\s+/).map((w,j,a)=>[w,L.t0+span*j/a.length,L.t0+span*(j+1)/a.length]);ws.forEach(w=>words.push({w:w[0].trim(),s:w[1],li}))});
+    if(!words.length)return;
+    let pool=[];sc.views.forEach((n,vi)=>(byShot[n]||[]).forEach(c=>pool.push({c,off:(vi-(sc.views.length-1)/2)*.5})));
+    pool.sort((a,b)=>b.c.z-a.c.z);
+    const head=-Math.PI/2+si/NS*2*Math.PI,take=Math.min(pool.length,words.length),used=new Set();
+    for(let q=0;q<take;q++){const w=words[Math.floor(q*words.length/take)],key=ALIAS[stem(w.w)]||stem(w.w);
+      let pi=pool.findIndex((p,k)=>!used.has(k)&&key.length>2&&p.c.label.split(' ').some(x=>stem(x)===key)),named=pi>=0;
+      if(pi<0)pi=pool.findIndex((p,k)=>!used.has(k));used.add(pi);const {c,off}=pool[pi];prints(c);
+      const zz=squash(c.z),k=zz/c.z,a=head+off+Math.atan2(c.x,c.z)*.9;
+      items.push({c,t:w.s,li:w.li,word:w.w,named,x:Math.cos(a)*zz,z:Math.sin(a)*zz,rr:zz,y:c.y*k,h:Math.max(.5,c.h*k),si})}
+    sc.head=head});
+  P.lines.forEach((L,li)=>rings.push({t:L.t1,li}));items.sort((a,b)=>a.t-b.t)}
+
+function draw(){
+  const t=now(),dpr=Math.min(2,devicePixelRatio||1),W=cv.clientWidth,H=cv.clientHeight;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
+  g.setTransform(dpr,0,0,dpr,0,0);
+  let cur=-1;for(let i=0;i<P.lines.length;i++)if(P.lines[i].t0<=t)cur=i;
+  const L=cur>=0?P.lines[cur]:null,sc=P.scenes[(L||P.lines[0]).scene];
+  // sky and floor
+  const sky=g.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#01062a');sky.addColorStop(.52,'#0a1f7a');sky.addColorStop(.56,'#06135a');sky.addColorStop(1,'#020a3a');g.fillStyle=sky;g.fillRect(0,0,W,H);
+  // camera: behind and above him, turning to face the scene being spoken
+  const want=orbit?camYaw+.004:(sc.head??-Math.PI/2);let dy=want-camYaw;while(dy>Math.PI)dy-=2*Math.PI;while(dy<-Math.PI)dy+=2*Math.PI;camYaw+=orbit?.004:dy*.04;
+  const yaw=camYaw+dragYaw,fx=Math.cos(yaw),fz=Math.sin(yaw),back=W<700?13:10,ch=4.2,pit=.2,cp=Math.cos(pit),sp=Math.sin(pit),F=W<700?W*1.05:W*.78,hz=H*.5;
+  const cx=-fx*back,cz=-fz*back;
+  const pr=(x,y,z)=>{const dx=x-cx,dz=z-cz,vz=dx*fx+dz*fz,vx=-dx*fz+dz*fx,vy=y-ch,Y=vy*cp+vz*sp,Z=-vy*sp+vz*cp;return Z<.4?null:[W/2+vx*F/Z,hz-Y*F/Z,F/Z,Z]};
+  // the grid
+  g.lineWidth=1;const G=3,N=30;
+  for(let i=-N;i<=N;i++)for(const horiz of[0,1]){let prev=null;g.beginPath();
+    for(let j=-N;j<=N;j+=2){const p=horiz?pr(j*G,0,i*G):pr(i*G,0,j*G);if(p&&prev)g.lineTo(p[0],p[1]);else if(p)g.moveTo(p[0],p[1]);prev=p}
+    g.strokeStyle=`rgba(110,160,255,${i%5===0?.42:.2})`;g.stroke()}
+  // waves from finished lines
+  const wave=[];for(const r of rings){const age=t-r.t;if(age<0)continue;const rad=age*14;wave[r.li]=rad;if(rad>75)continue;
+    g.strokeStyle=`rgba(190,225,255,${.75*(1-rad/75)})`;g.lineWidth=2;g.beginPath();let st=false;
+    for(let a=0;a<=72;a++){const p=pr(Math.cos(a/72*6.2832)*rad,.02,Math.sin(a/72*6.2832)*rad);if(!p){st=false;continue}st?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]);st=true}g.stroke()}
+  // things, far to near, with him among them
+  const out=[];for(const it of items){if(it.t>t)break;const p=pr(it.x,it.y,it.z);if(p)out.push([p[3],it,p])}
+  const me=pr(0,0,0);if(me)out.push([me[3],null,me]);out.sort((a,b)=>b[0]-a[0]);
+  g.textAlign='center';g.textBaseline='top';
+  for(const [,it,p] of out){
+    if(!it){const s=p[2],x=p[0],y=p[1],hh=1.8*s;g.fillStyle='#01041c';g.strokeStyle='#dfe9ff';g.lineWidth=1.5;
+      g.beginPath();g.ellipse(x,y-hh*.94,hh*.085,hh*.1,0,0,7);g.fill();g.stroke();
+      g.beginPath();g.moveTo(x-hh*.17,y-hh*.8);g.lineTo(x+hh*.17,y-hh*.8);g.lineTo(x+hh*.12,y);g.lineTo(x-hh*.12,y);g.closePath();g.fill();g.stroke();
+      g.fillStyle='rgba(200,225,255,.85)';g.fillRect(x-hh*.2+fzSign(yaw)*0,y-hh*.58,hh*.4,hh*.05);g.fillRect(x-1,y-hh*.55,2,hh*.55);continue}
+    const c=it.c,age=t-it.t,drop=ease(age/.7),washed=(wave[it.li]||0)>=it.rr,since=washed?(t-(P.lines[it.li].t1+it.rr/14)):0;
+    const hpx=it.h*p[2],wpx=hpx*c.ar,x=p[0]-wpx/2,y=p[1]-hpx-(1-drop)*hpx*.6;
+    if(!c.col){g.strokeStyle='rgba(255,255,255,.3)';g.strokeRect(x,y,wpx,hpx);continue}
+    if(hpx<2||x>W||x+wpx<0)continue;
+    g.globalAlpha=clamp(age/.35);
+    if(!washed)g.drawImage(c.lat,x,y,wpx,hpx);
+    else{const k=clamp(since/.9);if(k<1){g.globalAlpha=1-k;g.drawImage(c.lat,x,y,wpx,hpx);g.globalAlpha=k}g.drawImage(look==='cyan'?c.cy:c.col,x,y,wpx,hpx)}
+    g.globalAlpha=1;
+    if(age<2.2||it.named){const a=it.named?1:clamp(1.6-age/1.4),fs=Math.max(9,Math.min(13,W/90));g.font=(it.named?'700 ':'')+fs+'px ui-monospace,Menlo,Consolas,monospace';
+      g.fillStyle=it.named?`rgba(255,210,63,${a})`:`rgba(255,255,255,${a})`;g.fillText(it.named?it.word.toUpperCase()+' = '+c.label.toUpperCase():it.word,p[0],p[1]+3)}}
+  // status
+  const f=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`,fs=Math.max(10,Math.min(13,W/62));
+  g.textAlign='left';g.textBaseline='alphabetic';g.font=fs+'px ui-monospace,Menlo,monospace';g.fillStyle='#fff';
+  const placed=items.filter(i=>i.t<=t).length;
+  g.fillText(`*** POEM ${P.num}: ${P.title.toUpperCase()}   LINE ${String(Math.max(0,cur+1)).padStart(2,'0')}/${P.lines.length}   ${placed}/${items.length} THINGS SET DOWN`,10,18);
+  $('#clock').textContent=f(t)+' / '+f(P.dur);if(playing())$('#seek').value=t;
+  if(cur!==shown){shown=cur;
+    if(cur<0){$('#say').textContent='_';$('#place').textContent='An empty floor.'}
+    else{$('#say').innerHTML=L.words.map(w=>`<i>${w[0].trim().replace(/</g,'&lt;')}</i>`).join(' ')||L.text;$('#place').textContent=`${sc.name} · ${sc.d} — ${sc.what}`}}
+  if(cur>=0){const el=$('#say').children;L.words.forEach((w,j)=>{if(el[j]&&w[1]<=t&&el[j].tagName==='I'){const b=document.createElement('b');b.style.fontWeight='400';b.textContent=el[j].textContent;el[j].replaceWith(b)}})}
+}
+const fzSign=()=>0;
+function loop(ts){if(fakeOn&&noAudio){fake=Math.min(P.dur,fake+(ts-lastTick)/1000);if(fake>=P.dur)fakeOn=false}lastTick=ts;if(P)draw();requestAnimationFrame(loop)}
+$('#play').onclick=async()=>{
+  if(noAudio){fakeOn=!fakeOn;if(fake>=P.dur)fake=0}
+  else if(au.paused){try{await au.play()}catch(e){noAudio=true;fakeOn=true;fake=+$('#seek').value}}else au.pause();
+  $('#play').textContent=playing()?'|| PAUSE':'> PLAY'};
+au.onended=()=>$('#play').textContent='> PLAY';au.onerror=()=>{noAudio=true};
+$('#seek').oninput=e=>{const v=+e.target.value;fake=v;if(!noAudio){try{au.currentTime=v}catch(_){}}shown=-2};
+$('#poem').onchange=e=>{au.pause();load(+e.target.value)};
+document.querySelectorAll('[data-look]').forEach(b=>b.onclick=()=>{look=b.dataset.look;document.querySelectorAll('[data-look]').forEach(x=>x.classList.toggle('on',x===b))});
+$('#orbit').onclick=()=>{orbit=!orbit;$('#orbit').classList.toggle('on',orbit)};
+let dragX=null;cv.onpointerdown=e=>{dragX=e.clientX;cv.setPointerCapture(e.pointerId)};cv.onpointermove=e=>{if(dragX!==null){dragYaw-=(e.clientX-dragX)*.006;dragX=e.clientX}};cv.onpointerup=()=>dragX=null;
+fetch('gridcuts/index.json').then(r=>r.json()).then(d=>{D=d;d.cuts.forEach(c=>(byShot[c.n]||(byShot[c.n]=[])).push(c));
+  $('#poem').innerHTML=D.poems.map((p,i)=>`<option value="${i}">${p.num} ${p.title}</option>`).join('');
+  const q=new URLSearchParams(location.search),pi=Math.max(0,D.poems.findIndex(p=>p.num===(q.get('p')||'07')));
+  $('#poem').value=pi;load(pi);if(q.get('t')){noAudio=true;fake=+q.get('t');$('#seek').value=fake}
+  if(q.get('look'))document.querySelector(`[data-look=${q.get('look')}]`)?.click();
+  if(P.scenes[0].head!==undefined)camYaw=P.scenes[0].head;
+  requestAnimationFrame(loop)});
+</script>
+</body>
+</html>
